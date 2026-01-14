@@ -1,0 +1,208 @@
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB, isDBConfigured } from "@/lib/db";
+import { BlogPost, Webinar, Interview, Speaker, ContactSubmission } from "@/models";
+import {
+  FileText,
+  Video,
+  Mic,
+  Users,
+  MessageSquare,
+  Plus,
+  ArrowRight,
+} from "lucide-react";
+
+async function getStats() {
+  if (!isDBConfigured()) {
+    return { posts: 0, webinars: 0, interviews: 0, speakers: 0, contacts: 0 };
+  }
+  try {
+    await connectDB();
+    const [posts, webinars, interviews, speakers, contacts] = await Promise.all([
+      BlogPost.countDocuments(),
+      Webinar.countDocuments(),
+      Interview.countDocuments(),
+      Speaker.countDocuments(),
+      ContactSubmission.countDocuments({ status: "new" }),
+    ]);
+    return { posts, webinars, interviews, speakers, contacts };
+  } catch {
+    return { posts: 0, webinars: 0, interviews: 0, speakers: 0, contacts: 0 };
+  }
+}
+
+export default async function AdminDashboard() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/admin/login");
+  }
+
+  const stats = await getStats();
+
+  const cards = [
+    {
+      title: "Blog Posts",
+      count: stats.posts,
+      icon: FileText,
+      href: "/admin/blog",
+      color: "bg-blue-500",
+    },
+    {
+      title: "Webinars",
+      count: stats.webinars,
+      icon: Video,
+      href: "/admin/webinars",
+      color: "bg-purple-500",
+    },
+    {
+      title: "Interviews",
+      count: stats.interviews,
+      icon: Mic,
+      href: "/admin/interviews",
+      color: "bg-green-500",
+    },
+    {
+      title: "Speakers",
+      count: stats.speakers,
+      icon: Users,
+      href: "/admin/speakers",
+      color: "bg-orange-500",
+    },
+    {
+      title: "New Contacts",
+      count: stats.contacts,
+      icon: MessageSquare,
+      href: "/admin/contacts",
+      color: "bg-red-500",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Admin Dashboard
+            </h1>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Welcome, {session.user?.name}
+              </span>
+              <Link
+                href="/api/auth/signout"
+                className="text-sm text-red-600 hover:underline"
+              >
+                Sign Out
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Quick Actions
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/admin/blog/new"
+              className="inline-flex items-center rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Blog Post
+            </Link>
+            <Link
+              href="/admin/webinars/new"
+              className="inline-flex items-center rounded-lg bg-purple-500 px-4 py-2 text-sm font-medium text-white hover:bg-purple-600"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Webinar
+            </Link>
+            <Link
+              href="/admin/contacts"
+              className="inline-flex items-center rounded-lg bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              View Messages
+            </Link>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          {cards.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="group rounded-xl bg-white p-6 shadow transition-shadow hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-lg ${card.color} text-white`}
+                >
+                  <card.icon className="h-6 w-6" />
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1" />
+              </div>
+              <div className="mt-4">
+                <p className="text-3xl font-bold text-gray-900">{card.count}</p>
+                <p className="text-sm text-gray-600">{card.title}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Recent Activity */}
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+          {/* Recent Blog Posts */}
+          <div className="rounded-xl bg-white p-6 shadow">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Recent Blog Posts
+              </h2>
+              <Link
+                href="/admin/blog"
+                className="text-sm text-primary-500 hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Recent posts will appear here once you add content.
+              </p>
+            </div>
+          </div>
+
+          {/* Recent Contact Submissions */}
+          <div className="rounded-xl bg-white p-6 shadow">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Recent Messages
+              </h2>
+              <Link
+                href="/admin/contacts"
+                className="text-sm text-primary-500 hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                New contact submissions will appear here.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
