@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Building2,
   Brain,
@@ -102,8 +103,20 @@ export default function ServicesPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-16 md:py-20">
-        <div className="container-wide">
+      <section className="relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/site/hero-education.jpg"
+            alt="Educational technology background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-white/80" />
+        </div>
+
+        <div className="container-wide relative py-16 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="heading-1">Our Services</h1>
             <p className="mt-4 text-lg text-gray-600">

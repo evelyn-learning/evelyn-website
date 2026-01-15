@@ -25,7 +25,7 @@ const navigation = [
     href: "/resources",
     children: [
       { name: "Blog", href: "/blog" },
-      { name: "Webinars", href: "/webinars" },
+      // { name: "Webinars", href: "/webinars" }, // TODO: Re-enable when YouTube videos are available
       { name: "Interviews", href: "/interviews" },
       { name: "Speakers", href: "/speakers" },
     ],
@@ -70,16 +70,18 @@ export function Header() {
 
               {/* Dropdown */}
               {item.children && openDropdown === item.name && (
-                <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-lg bg-white py-2 shadow-lg ring-1 ring-gray-900/5">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.name}
-                      href={child.href}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-500"
-                    >
-                      {child.name}
-                    </Link>
-                  ))}
+                <div className="absolute left-0 top-full z-50 w-48 pt-2">
+                  <div className="rounded-lg bg-white py-2 shadow-lg ring-1 ring-gray-900/5">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.name}
+                        href={child.href}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-500"
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

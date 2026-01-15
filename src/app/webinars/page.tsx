@@ -1,9 +1,9 @@
 import { Metadata } from "next";
-import Link from "next/link";
 import { connectDB, isDBConfigured } from "@/lib/db";
 import { Webinar } from "@/models";
 import { formatDate } from "@/lib/utils";
 import { Calendar, Clock, Play, ExternalLink } from "lucide-react";
+import { WebinarCard } from "./WebinarCard";
 
 export const metadata: Metadata = {
   title: "Webinars",
@@ -49,113 +49,7 @@ export default async function WebinarsPage() {
           {webinars.length > 0 ? (
             <div className="space-y-8">
               {webinars.map((webinar: any) => (
-                <article
-                  key={webinar._id}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md"
-                >
-                  <div className="grid md:grid-cols-3">
-                    {/* Thumbnail */}
-                    <div className="relative aspect-video bg-gradient-to-br from-primary-100 to-secondary-100 md:aspect-auto">
-                      {webinar.featuredImage ? (
-                        <img
-                          src={webinar.featuredImage}
-                          alt={webinar.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center">
-                          <Play className="h-16 w-16 text-primary-300" />
-                        </div>
-                      )}
-                      {webinar.status === "past" && webinar.youtubeId && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <div className="rounded-full bg-white/90 p-4">
-                            <Play className="h-8 w-8 text-primary-500" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6 md:col-span-2">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            webinar.status === "upcoming"
-                              ? "bg-green-100 text-green-700"
-                              : webinar.status === "live"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {webinar.status === "upcoming"
-                            ? "Upcoming"
-                            : webinar.status === "live"
-                            ? "Live Now"
-                            : "Watch Recording"}
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-gray-500">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(webinar.date)}
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-gray-500">
-                          <Clock className="h-4 w-4" />
-                          {webinar.time} {webinar.timezone}
-                        </span>
-                      </div>
-
-                      <h2 className="mt-4 text-xl font-bold text-gray-900 group-hover:text-primary-500">
-                        {webinar.title}
-                      </h2>
-                      <p className="mt-2 text-gray-600 line-clamp-2">
-                        {webinar.description}
-                      </p>
-
-                      {webinar.speakers && webinar.speakers.length > 0 && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-500">Featuring:</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {webinar.speakers.map((speaker: any) => (
-                              <span
-                                key={speaker.name}
-                                className="text-sm font-medium text-gray-700"
-                              >
-                                {speaker.name}
-                                {speaker.title && `, ${speaker.title}`}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-6">
-                        {webinar.status === "upcoming" &&
-                          webinar.registrationUrl && (
-                            <a
-                              href={webinar.registrationUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-primary"
-                            >
-                              Register Now
-                              <ExternalLink className="ml-2 h-4 w-4" />
-                            </a>
-                          )}
-                        {webinar.status === "past" && webinar.youtubeId && (
-                          <a
-                            href={`https://www.youtube.com/watch?v=${webinar.youtubeId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-primary"
-                          >
-                            Watch Recording
-                            <Play className="ml-2 h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </article>
+                <WebinarCard key={webinar._id} webinar={webinar} />
               ))}
             </div>
           ) : (
@@ -165,6 +59,27 @@ export default async function WebinarsPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-gray-50 py-12">
+        <div className="container-wide">
+          <div className="rounded-2xl bg-primary-500 p-8 text-center md:p-12">
+            <h2 className="text-2xl font-bold text-white md:text-3xl">
+              Want to Be a Speaker?
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-primary-100">
+              Share your expertise with our community. We are always looking for
+              thought leaders to join our Ed-Confabs series.
+            </p>
+            <a
+              href="/contact"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-500 transition-colors hover:bg-gray-100"
+            >
+              Get in Touch
+            </a>
+          </div>
         </div>
       </section>
     </>

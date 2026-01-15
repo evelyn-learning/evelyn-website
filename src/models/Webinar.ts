@@ -57,7 +57,7 @@ const WebinarSchema = new Schema<IWebinar>(
   }
 );
 
-WebinarSchema.index({ slug: 1 });
+// slug index created by unique: true
 WebinarSchema.index({ status: 1, date: -1 });
 
 export const Webinar =

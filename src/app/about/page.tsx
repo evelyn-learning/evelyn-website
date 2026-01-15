@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Target,
   Eye,
@@ -56,8 +57,20 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-16 md:py-20">
-        <div className="container-wide">
+      <section className="relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/site/hero-education.jpg"
+            alt="Educational technology background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-white/80" />
+        </div>
+
+        <div className="container-wide relative py-16 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="heading-1">About Evelyn Learning</h1>
             <p className="mt-4 text-lg text-gray-600">
@@ -148,8 +161,45 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our Values */}
+      {/* Leadership */}
       <section className="section-padding bg-white">
+        <div className="container-wide">
+          <div className="text-center">
+            <h2 className="heading-2">Leadership</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
+              Meet the visionary behind Evelyn Learning.
+            </p>
+          </div>
+
+          <div className="mt-12 flex justify-center">
+            <div className="max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+              <div className="mx-auto h-32 w-32 overflow-hidden rounded-full">
+                <Image
+                  src="/images/site/praveen-tyagi.webp"
+                  alt="Praveen Tyagi - Founder & CEO"
+                  width={128}
+                  height={128}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <h3 className="mt-6 text-xl font-bold text-gray-900">
+                Praveen Tyagi
+              </h3>
+              <p className="text-primary-500 font-medium">Founder & CEO</p>
+              <p className="mt-4 text-sm text-gray-600">
+                An alumnus of IIT Roorkee and University of Alabama, Praveen
+                founded Evelyn Learning in 2003 with a vision to provide the
+                most authentic and reliable educational content. With over two
+                decades of experience in education technology, he has led the
+                company to serve 500+ clients across 50+ countries.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Values */}
+      <section className="section-padding bg-gray-50">
         <div className="container-wide">
           <div className="text-center">
             <h2 className="heading-2">Our Core Values</h2>

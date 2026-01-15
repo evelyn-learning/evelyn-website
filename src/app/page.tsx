@@ -1,14 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpen,
   Brain,
   GraduationCap,
   Building2,
   Users,
-  TrendingUp,
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
+import { connectDB } from "@/lib/db";
+import { BlogPost } from "@/models";
 
 const services = [
   {
@@ -57,12 +59,38 @@ const features = [
   "Multi-language localization",
 ];
 
-export default function HomePage() {
+async function getLatestPosts() {
+  try {
+    await connectDB();
+    const posts = await BlogPost.find({ status: "published" })
+      .sort({ publishedAt: -1 })
+      .limit(3)
+      .lean();
+    return JSON.parse(JSON.stringify(posts));
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const latestPosts = await getLatestPosts();
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-        <div className="container-wide py-20 md:py-28">
+      <section className="relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/site/hero-education.jpg"
+            alt="Educational technology background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-white/80" />
+        </div>
+
+        <div className="container-wide relative py-20 md:py-28">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="heading-1">
               Transforming Education Through{" "}
@@ -84,10 +112,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* Background decoration */}
-        <div className="absolute -bottom-1/2 -right-1/4 h-96 w-96 rounded-full bg-primary-100 opacity-50 blur-3xl" />
-        <div className="absolute -left-1/4 -top-1/2 h-96 w-96 rounded-full bg-secondary-100 opacity-50 blur-3xl" />
       </section>
 
       {/* Stats Section */}
@@ -170,11 +194,13 @@ export default function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="aspect-video overflow-hidden rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100">
-                {/* Placeholder for image or video */}
-                <div className="flex h-full items-center justify-center">
-                  <Users className="h-24 w-24 text-primary-300" />
-                </div>
+              <div className="aspect-video overflow-hidden rounded-2xl">
+                <Image
+                  src="/images/site/hero-education.jpg"
+                  alt="Online education and digital learning"
+                  fill
+                  className="object-cover"
+                />
               </div>
             </div>
           </div>
@@ -224,30 +250,38 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 grid gap-8 md:grid-cols-3">
-            {/* Placeholder for blog posts - will be dynamic */}
-            {[1, 2, 3].map((i) => (
-              <article
-                key={i}
+            {latestPosts.map((post: any) => (
+              <Link
+                key={post._id}
+                href={`/blog/${post.slug}`}
                 className="group overflow-hidden rounded-xl border border-gray-100 bg-white transition-shadow hover:shadow-md"
               >
-                <div className="aspect-video bg-gradient-to-br from-primary-50 to-secondary-50" />
+                <div className="aspect-video relative bg-gradient-to-br from-primary-50 to-secondary-50">
+                  {post.featuredImage && (
+                    <Image
+                      src={post.featuredImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
+                </div>
                 <div className="p-6">
                   <span className="text-xs font-medium uppercase tracking-wider text-primary-500">
-                    Education
+                    {post.category}
                   </span>
-                  <h3 className="mt-2 text-lg font-semibold text-gray-900 group-hover:text-primary-500">
-                    Sample Blog Post Title
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900 group-hover:text-primary-500 line-clamp-2">
+                    {post.title}
                   </h3>
                   <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                    do eiusmod tempor incididunt ut labore.
+                    {post.excerpt}
                   </p>
                   <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                    <span>5 min read</span>
-                    <span>Jan 14, 2026</span>
+                    <span>{post.readingTime} min read</span>
+                    <span>{new Date(post.publishedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
 

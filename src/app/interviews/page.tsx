@@ -1,9 +1,7 @@
 import { Metadata } from "next";
-import Link from "next/link";
 import { connectDB, isDBConfigured } from "@/lib/db";
 import { Interview } from "@/models";
-import { formatDate } from "@/lib/utils";
-import { Play, ExternalLink, Linkedin } from "lucide-react";
+import { InterviewCard } from "./InterviewCard";
 
 export const metadata: Metadata = {
   title: "Ed-Insights Interviews",
@@ -50,96 +48,7 @@ export default async function InterviewsPage() {
           {interviews.length > 0 ? (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {interviews.map((interview: any) => (
-                <article
-                  key={interview._id}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md"
-                >
-                  {/* Video Thumbnail */}
-                  <a
-                    href={interview.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative block aspect-video bg-gradient-to-br from-primary-100 to-secondary-100"
-                  >
-                    {interview.youtubeId && (
-                      <img
-                        src={`https://img.youtube.com/vi/${interview.youtubeId}/maxresdefault.jpg`}
-                        alt={interview.title}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-                      <div className="rounded-full bg-white/90 p-3 transition-transform group-hover:scale-110">
-                        <Play className="h-6 w-6 text-primary-500" />
-                      </div>
-                    </div>
-                    <span className="absolute left-4 top-4 rounded bg-primary-500 px-2 py-1 text-xs font-bold text-white">
-                      Episode {interview.episode}
-                    </span>
-                  </a>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <h2 className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-primary-500">
-                      {interview.title}
-                    </h2>
-
-                    {/* Guest Info */}
-                    <div className="mt-4 flex items-center gap-3">
-                      {interview.guest.image ? (
-                        <img
-                          src={interview.guest.image}
-                          alt={interview.guest.name}
-                          className="h-12 w-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-500">
-                          {interview.guest.name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {interview.guest.name}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {interview.guest.title}
-                          {interview.guest.company &&
-                            `, ${interview.guest.company}`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="mt-4 text-sm text-gray-600 line-clamp-2">
-                      {interview.description}
-                    </p>
-
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {formatDate(interview.publishedAt)}
-                      </span>
-                      <div className="flex gap-2">
-                        {interview.guest.linkedIn && (
-                          <a
-                            href={interview.guest.linkedIn}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-primary-500"
-                          >
-                            <Linkedin className="h-5 w-5" />
-                          </a>
-                        )}
-                        <a
-                          href={interview.youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-primary-500"
-                        >
-                          <ExternalLink className="h-5 w-5" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </article>
+                <InterviewCard key={interview._id} interview={interview} />
               ))}
             </div>
           ) : (
@@ -149,6 +58,27 @@ export default async function InterviewsPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-gray-50 py-12">
+        <div className="container-wide">
+          <div className="rounded-2xl bg-primary-500 p-8 text-center md:p-12">
+            <h2 className="text-2xl font-bold text-white md:text-3xl">
+              Share Your Insights
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-primary-100">
+              Are you an education leader with insights to share? We would love
+              to feature you in our Ed-Insights series.
+            </p>
+            <a
+              href="/contact"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-500 transition-colors hover:bg-gray-100"
+            >
+              Get in Touch
+            </a>
+          </div>
         </div>
       </section>
     </>

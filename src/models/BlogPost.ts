@@ -43,8 +43,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
   }
 );
 
-// Index for faster queries
-BlogPostSchema.index({ slug: 1 });
+// Index for faster queries (slug index created by unique: true)
 BlogPostSchema.index({ status: 1, publishedAt: -1 });
 BlogPostSchema.index({ category: 1 });
 BlogPostSchema.index({ tags: 1 });

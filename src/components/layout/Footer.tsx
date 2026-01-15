@@ -11,7 +11,7 @@ const footerLinks = {
   ],
   resources: [
     { name: "Blog", href: "/blog" },
-    { name: "Webinars", href: "/webinars" },
+    // { name: "Webinars", href: "/webinars" }, // TODO: Re-enable when YouTube videos are available
     { name: "Interviews", href: "/interviews" },
     { name: "Speakers Hall of Fame", href: "/speakers" },
   ],
@@ -49,15 +49,15 @@ export function Footer() {
                 contact@evelynlearning.com
               </a>
               <a
-                href="tel:+1234567890"
+                href="tel:+13022120975"
                 className="flex items-center gap-2 text-sm hover:text-white"
               >
                 <Phone className="h-4 w-4" />
-                +1 (234) 567-890
+                +1 (302) 212-0975
               </a>
               <p className="flex items-start gap-2 text-sm">
                 <MapPin className="h-4 w-4 flex-shrink-0" />
-                <span>New Delhi, India | Bay Area, California</span>
+                <span>Bay Area, California | New Delhi, India</span>
               </p>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function Footer() {
           </p>
           <div className="mt-4 flex space-x-4 md:mt-0">
             <a
-              href="https://linkedin.com/company/evelyn-learning"
+              href="https://www.linkedin.com/company/evelyn-learning-systems/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-white transition-colors"
@@ -136,7 +136,7 @@ export function Footer() {
               <Linkedin className="h-5 w-5" />
             </a>
             <a
-              href="https://twitter.com/evelynlearning"
+              href="https://x.com/evelyn_learning"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-white transition-colors"
@@ -144,7 +144,7 @@ export function Footer() {
               <Twitter className="h-5 w-5" />
             </a>
             <a
-              href="https://youtube.com/@evelynlearning"
+              href="https://www.youtube.com/@EvelynSystems"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-white transition-colors"

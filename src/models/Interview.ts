@@ -45,7 +45,7 @@ const InterviewSchema = new Schema<IInterview>(
   }
 );
 
-InterviewSchema.index({ slug: 1 });
+// slug index created by unique: true
 InterviewSchema.index({ episode: -1 });
 
 export const Interview =

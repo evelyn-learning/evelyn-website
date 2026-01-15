@@ -43,7 +43,7 @@ const SpeakerSchema = new Schema<ISpeaker>(
   }
 );
 
-SpeakerSchema.index({ slug: 1 });
+// slug index created by unique: true
 SpeakerSchema.index({ year: -1, name: 1 });
 
 export const Speaker =

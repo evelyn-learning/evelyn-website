@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { connectDB, isDBConfigured } from "@/lib/db";
 import { BlogPost, Webinar, Interview, Speaker, ContactSubmission } from "@/models";
 import {

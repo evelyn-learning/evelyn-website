@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { ContactForm } from "@/components/ContactForm";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
@@ -18,13 +19,13 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Phone",
-    details: "+1 (234) 567-890",
-    href: "tel:+1234567890",
+    details: "+1 (302) 212-0975",
+    href: "tel:+13022120975",
   },
   {
     icon: MapPin,
     title: "Offices",
-    details: "New Delhi, India | Bay Area, California",
+    details: "Bay Area, California | New Delhi, India",
   },
   {
     icon: Clock,
@@ -37,8 +38,20 @@ export default function ContactPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-16 md:py-20">
-        <div className="container-wide">
+      <section className="relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/site/hero-education.jpg"
+            alt="Educational technology background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-white/80" />
+        </div>
+
+        <div className="container-wide relative py-16 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="heading-1">Get in Touch</h1>
             <p className="mt-4 text-lg text-gray-600">
