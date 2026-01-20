@@ -1,14 +1,34 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connectDB } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { formatDate } from "@/lib/utils";
 import { marked } from "marked";
 import { ArrowLeft, Clock, Calendar, Tag } from "lucide-react";
+import { BlogPostingJsonLd } from "@/components/seo/JsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+// Generate static params for all published blog posts (enables sitemap discovery)
+// Returns empty array if DB unavailable (pages will render on-demand)
+export async function generateStaticParams() {
+  if (!isDBConfigured()) {
+    return [];
+  }
+
+  try {
+    await connectDB();
+    const posts = await BlogPost.find({ status: "published" }).select("slug").lean();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    console.warn("Could not fetch blog posts for static generation:", error);
+    return [];
+  }
 }
 
 async function getBlogPost(slug: string) {
@@ -41,6 +61,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.metaTitle || post.title,
     description: post.metaDescription || post.excerpt,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -65,6 +88,17 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
+      <BlogPostingJsonLd
+        title={post.title}
+        description={post.excerpt}
+        slug={slug}
+        publishedAt={post.publishedAt}
+        modifiedAt={post.updatedAt}
+        author={post.author}
+        featuredImage={post.featuredImage}
+        category={post.category}
+      />
+
       {/* Article Header */}
       <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12 md:py-16">
         <div className="container-wide">

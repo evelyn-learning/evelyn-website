@@ -3,6 +3,11 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoscript,
+} from "@/components/analytics/GoogleTagManager";
+import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,6 +31,13 @@ export const metadata: Metadata = {
     default: "Evelyn Learning - Educational Content & Services",
     template: "%s | Evelyn Learning",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/favicon.png",
+  },
   description:
     "Evelyn Learning provides comprehensive educational content solutions, AI-powered learning services, and expert content development for organizations, publishers, and educational institutions.",
   keywords: [
@@ -39,6 +51,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Evelyn Learning" }],
   creator: "Evelyn Learning",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -83,7 +98,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <head>
+        <OrganizationJsonLd />
+      </head>
+      <GoogleTagManager />
       <body className="flex min-h-screen flex-col font-sans">
+        <GoogleTagManagerNoscript />
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />

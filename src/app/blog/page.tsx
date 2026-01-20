@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Blog",
   description:
     "Explore insights, trends, and best practices in education, e-learning, AI in education, and curriculum development from Evelyn Learning experts.",
+  alternates: {
+    canonical: "/blog",
+  },
 };
 
 async function getBlogPosts(page = 1, limit = 12) {
