@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, BookOpen, Shield, Cloud, Smartphone } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'AI for Educational Publishers',
@@ -168,8 +168,106 @@ export default function PublishersIndustryPage() {
         </div>
       </section>
 
-      {/* Content Services */}
+      {/* PageVault Featured Product */}
       <section className="py-20 bg-white">
+        <div className="container-wide">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                  <span>Featured Product</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                  PageVault
+                </h2>
+                <p className="text-xl text-slate-600 mb-6">
+                  A secure digital library platform built for publishers. Deliver your eBooks with
+                  enterprise-grade protection while giving readers a premium experience across all devices.
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <BookOpen className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">EPUB & PDF Support</h4>
+                      <p className="text-sm text-slate-600">Optimized reading experience for both formats</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Shield className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Content Protection</h4>
+                      <p className="text-sm text-slate-600">Secure authentication and access controls</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Cloud className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Cloud Sync</h4>
+                      <p className="text-sm text-slate-600">Progress, highlights & notes across devices</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Smartphone className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Any Device</h4>
+                      <p className="text-sm text-slate-600">Desktop, tablet, and mobile optimized</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  <a
+                    href="https://pagevault.us"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition"
+                  >
+                    Visit PageVault <ArrowRight className="w-5 h-5" />
+                  </a>
+                  <Link
+                    href="/contact?product=pagevault"
+                    className="px-6 py-3 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-slate-300 hover:bg-slate-50 transition"
+                  >
+                    Request Demo
+                  </Link>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 border border-emerald-100">
+                  <div className="relative aspect-[3/2] bg-white rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
+                    <div className="text-center p-8">
+                      <div className="text-6xl mb-4">📚</div>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-2">PageVault</h3>
+                      <p className="text-slate-600">Secure eBook Platform</p>
+                      <a
+                        href="https://pagevault.us"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-4 text-emerald-600 hover:text-emerald-700 font-medium"
+                      >
+                        Visit pagevault.us →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Services */}
+      <section className="py-20 bg-slate-50">
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             <div>
@@ -204,7 +302,7 @@ export default function PublishersIndustryPage() {
       </section>
 
       {/* Integration */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-20 bg-white">
         <div className="container-wide">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
