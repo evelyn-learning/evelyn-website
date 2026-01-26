@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Plus,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 
@@ -113,6 +114,13 @@ export default async function AdminDashboard() {
             Quick Actions
           </h2>
           <div className="flex flex-wrap gap-4">
+            <Link
+              href="/admin/blog/generator"
+              className="inline-flex items-center rounded-lg bg-gradient-to-r from-purple-500 to-primary-500 px-4 py-2 text-sm font-medium text-white hover:from-purple-600 hover:to-primary-600"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Blog Generator
+            </Link>
             <Link
               href="/admin/blog/new"
               className="inline-flex items-center rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600"
