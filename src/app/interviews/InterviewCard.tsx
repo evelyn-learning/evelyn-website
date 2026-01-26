@@ -32,9 +32,14 @@ export function InterviewCard({ interview }: InterviewCardProps) {
     ? `https://img.youtube.com/vi/${interview.youtubeId}/hqdefault.jpg`
     : null;
 
+  // Generate anchor ID from guest's last name (lowercase)
+  const guestLastName = interview.guest.name.split(' ').pop()?.toLowerCase() || '';
+
   return (
     <>
-      <article className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md">
+      <article
+        id={guestLastName}
+        className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md scroll-mt-24">
         {/* Video Thumbnail */}
         <button
           onClick={() => setShowVideo(true)}

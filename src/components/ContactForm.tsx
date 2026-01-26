@@ -13,7 +13,7 @@ const contactSchema = z.object({
   phone: z.string().optional(),
   company: z.string().optional(),
   subject: z.string().min(3, "Subject must be at least 3 characters"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
+  message: z.string().min(1, "Message is required"),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;

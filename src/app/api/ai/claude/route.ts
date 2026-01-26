@@ -1,0 +1,281 @@
+import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+const CONFIG = {
+  // Maximum tokens allowed per request (caps high values, doesn't reject)
+  MAX_TOKENS_LIMIT: 4000,
+
+  // Rate limiting: requests per window
+  RATE_LIMIT_REQUESTS: 20,
+  RATE_LIMIT_WINDOW_MS: 60 * 1000, // 1 minute
+
+  // Allowed models (whitelist to prevent using expensive models)
+  ALLOWED_MODELS: [
+    'claude-sonnet-4-20250514',
+    'claude-3-5-sonnet-20241022',
+    'claude-3-haiku-20240307',
+  ],
+
+  // Default model if not specified or not allowed
+  DEFAULT_MODEL: 'claude-sonnet-4-20250514',
+};
+
+// ============================================================================
+// RATE LIMITING (In-memory - for production, use Redis/Upstash)
+// ============================================================================
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+// In-memory store for rate limiting (resets on server restart)
+// For production, consider using @upstash/ratelimit with Redis
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+function getRateLimitKey(request: NextRequest): string {
+  // Use IP address for rate limiting
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+  return `rate_limit:${ip}`;
+}
+
+function checkRateLimit(key: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  // Clean up expired entries periodically
+  if (rateLimitStore.size > 10000) {
+    for (const [k, v] of rateLimitStore.entries()) {
+      if (v.resetTime < now) rateLimitStore.delete(k);
+    }
+  }
+
+  if (!entry || entry.resetTime < now) {
+    // Create new window
+    rateLimitStore.set(key, {
+      count: 1,
+      resetTime: now + CONFIG.RATE_LIMIT_WINDOW_MS,
+    });
+    return {
+      allowed: true,
+      remaining: CONFIG.RATE_LIMIT_REQUESTS - 1,
+      resetIn: CONFIG.RATE_LIMIT_WINDOW_MS
+    };
+  }
+
+  if (entry.count >= CONFIG.RATE_LIMIT_REQUESTS) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetIn: entry.resetTime - now
+    };
+  }
+
+  entry.count++;
+  return {
+    allowed: true,
+    remaining: CONFIG.RATE_LIMIT_REQUESTS - entry.count,
+    resetIn: entry.resetTime - now
+  };
+}
+
+// ============================================================================
+// REQUEST LOGGING
+// ============================================================================
+interface RequestLog {
+  timestamp: string;
+  ip: string;
+  model: string;
+  requestedTokens: number;
+  actualTokens: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  success: boolean;
+  error?: string;
+  durationMs?: number;
+}
+
+function logRequest(log: RequestLog) {
+  // Format: [TIMESTAMP] IP=xxx MODEL=xxx TOKENS=xxx SUCCESS=xxx DURATION=xxxms
+  const logLine = [
+    `[${log.timestamp}]`,
+    `IP=${log.ip}`,
+    `MODEL=${log.model}`,
+    `REQ_TOKENS=${log.requestedTokens}`,
+    `ACTUAL_TOKENS=${log.actualTokens}`,
+    log.inputTokens !== undefined ? `IN=${log.inputTokens}` : '',
+    log.outputTokens !== undefined ? `OUT=${log.outputTokens}` : '',
+    `SUCCESS=${log.success}`,
+    log.durationMs !== undefined ? `DURATION=${log.durationMs}ms` : '',
+    log.error ? `ERROR="${log.error}"` : '',
+  ].filter(Boolean).join(' ');
+
+  console.log(`[CLAUDE_API] ${logLine}`);
+
+  // In production, you might want to:
+  // - Send to a logging service (DataDog, LogTail, etc.)
+  // - Store in a database for analytics
+  // - Send alerts for high error rates
+}
+
+// ============================================================================
+// ANTHROPIC CLIENT
+// ============================================================================
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// ============================================================================
+// API ROUTE HANDLER
+// ============================================================================
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+
+  // Initialize log entry
+  const logEntry: RequestLog = {
+    timestamp: new Date().toISOString(),
+    ip,
+    model: CONFIG.DEFAULT_MODEL,
+    requestedTokens: 0,
+    actualTokens: 0,
+    success: false,
+  };
+
+  try {
+    // ========================================================================
+    // RATE LIMITING CHECK
+    // ========================================================================
+    const rateLimitKey = getRateLimitKey(request);
+    const rateLimit = checkRateLimit(rateLimitKey);
+
+    if (!rateLimit.allowed) {
+      logEntry.error = 'Rate limit exceeded';
+      logRequest(logEntry);
+
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': CONFIG.RATE_LIMIT_REQUESTS.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': Math.ceil(rateLimit.resetIn / 1000).toString(),
+            'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString(),
+          }
+        }
+      );
+    }
+
+    // ========================================================================
+    // PARSE AND VALIDATE REQUEST
+    // ========================================================================
+    const body = await request.json();
+    const {
+      messages,
+      system,
+      max_tokens = 2000,
+      model = CONFIG.DEFAULT_MODEL
+    } = body;
+
+    logEntry.requestedTokens = max_tokens;
+
+    if (!messages || !Array.isArray(messages)) {
+      logEntry.error = 'Invalid messages array';
+      logRequest(logEntry);
+
+      return NextResponse.json(
+        { error: 'Messages array is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logEntry.error = 'API key not configured';
+      logRequest(logEntry);
+
+      return NextResponse.json(
+        { error: 'API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    // ========================================================================
+    // SANITIZE PARAMETERS
+    // ========================================================================
+
+    // Cap max_tokens to prevent excessive costs (don't reject, just cap)
+    const sanitizedMaxTokens = Math.min(
+      Math.max(1, Number(max_tokens) || 2000),
+      CONFIG.MAX_TOKENS_LIMIT
+    );
+    logEntry.actualTokens = sanitizedMaxTokens;
+
+    // Validate model - use default if not in allowed list
+    const sanitizedModel = CONFIG.ALLOWED_MODELS.includes(model)
+      ? model
+      : CONFIG.DEFAULT_MODEL;
+    logEntry.model = sanitizedModel;
+
+    // ========================================================================
+    // MAKE API REQUEST
+    // ========================================================================
+    const response = await anthropic.messages.create({
+      model: sanitizedModel,
+      max_tokens: sanitizedMaxTokens,
+      system: system || undefined,
+      messages: messages.map((msg: { role: string; content: string }) => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      })),
+    });
+
+    // Extract the text content from the response
+    const textContent = response.content.find(block => block.type === 'text');
+
+    // Log successful request
+    logEntry.success = true;
+    logEntry.inputTokens = response.usage?.input_tokens;
+    logEntry.outputTokens = response.usage?.output_tokens;
+    logEntry.durationMs = Date.now() - startTime;
+    logRequest(logEntry);
+
+    return NextResponse.json({
+      content: response.content,
+      text: textContent?.type === 'text' ? textContent.text : '',
+      usage: response.usage,
+    }, {
+      headers: {
+        'X-RateLimit-Limit': CONFIG.RATE_LIMIT_REQUESTS.toString(),
+        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+      }
+    });
+
+  } catch (error) {
+    logEntry.durationMs = Date.now() - startTime;
+
+    console.error('Claude API error:', error);
+
+    if (error instanceof Anthropic.APIError) {
+      logEntry.error = error.message;
+      logRequest(logEntry);
+
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status || 500 }
+      );
+    }
+
+    logEntry.error = error instanceof Error ? error.message : 'Unknown error';
+    logRequest(logEntry);
+
+    return NextResponse.json(
+      { error: 'An error occurred while processing your request' },
+      { status: 500 }
+    );
+  }
+}

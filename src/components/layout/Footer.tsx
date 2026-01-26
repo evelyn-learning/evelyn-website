@@ -1,19 +1,24 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Phone, MapPin, Linkedin, Twitter, Youtube } from "lucide-react";
 
 const footerLinks = {
-  services: [
-    { name: "For Organizations", href: "/services/organizations" },
-    { name: "AI Services", href: "/services/ai" },
-    { name: "Publishing", href: "/services/publishing" },
-    { name: "K-12 Solutions", href: "/services/k12" },
-    { name: "Test Preparation", href: "/services/test-prep" },
+  whatWeOffer: [
+    { name: "AI Products", href: "/products" },
+    { name: "Custom AI Development", href: "/services/custom-ai" },
+    { name: "Content Services", href: "/services/content" },
+  ],
+  whoWeServe: [
+    { name: "Test Prep & Tutoring", href: "/industries/test-prep" },
+    { name: "K-12 Schools", href: "/industries/k12" },
+    { name: "Higher Education", href: "/industries/higher-ed" },
+    { name: "Publishers", href: "/industries/publishers" },
+    { name: "Enterprise", href: "/industries/enterprise" },
   ],
   resources: [
     { name: "Blog", href: "/blog" },
-    // { name: "Webinars", href: "/webinars" }, // TODO: Re-enable when YouTube videos are available
     { name: "Interviews", href: "/interviews" },
-    { name: "Speakers Hall of Fame", href: "/speakers" },
+    { name: "Speakers", href: "/speakers" },
   ],
   company: [
     { name: "About Us", href: "/about" },
@@ -27,14 +32,25 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container-wide py-12 md:py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand & Contact */}
           <div className="lg:col-span-2">
             <Link
               href="/"
-              className="font-heading text-xl font-bold text-white"
+              className="flex items-center gap-2 font-heading text-xl"
             >
-              Evelyn Learning
+              <Image
+                src="/images/site/logo-icon.png"
+                alt="Evelyn Learning"
+                width={28}
+                height={28}
+                className="h-7 w-auto brightness-110"
+              />
+              <span>
+                <span className="font-normal" style={{ color: '#c77cb8' }}>Evelyn</span>
+                {' '}
+                <span className="font-bold text-white">Learning</span>
+              </span>
             </Link>
             <p className="mt-4 text-sm text-gray-400">
               Empowering education through innovative content solutions and
@@ -55,20 +71,42 @@ export function Footer() {
                 <Phone className="h-4 w-4" />
                 +1 (302) 212-0975
               </a>
-              <p className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 flex-shrink-0" />
-                <span>Bay Area, California | New Delhi, India</span>
-              </p>
+              <div className="flex items-start gap-2 text-sm">
+                <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p>San Francisco, CA</p>
+                  <p>New Delhi, India</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Services */}
+          {/* What We Offer */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              Services
+              What We Offer
             </h3>
             <ul className="mt-4 space-y-3">
-              {footerLinks.services.map((link) => (
+              {footerLinks.whatWeOffer.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm hover:text-white transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Who We Serve */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
+              Who We Serve
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {footerLinks.whoWeServe.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}

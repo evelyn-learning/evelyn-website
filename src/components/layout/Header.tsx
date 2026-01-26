@@ -1,37 +1,55 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigation = [
+interface NavChild {
+  name: string;
+  href: string;
+  description?: string;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  children?: NavChild[];
+}
+
+const navigation: NavItem[] = [
   { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
   {
-    name: "Services",
-    href: "/services",
+    name: "What We Offer",
+    href: "/products",
     children: [
-      { name: "For Organizations", href: "/services/organizations" },
-      { name: "AI Services", href: "/services/ai" },
-      { name: "Publishing", href: "/services/publishing" },
-      { name: "University", href: "/services/university" },
-      { name: "K-12", href: "/services/k12" },
-      { name: "Test Prep", href: "/services/test-prep" },
+      { name: "AI Products", href: "/products", description: "Ready-to-deploy AI tools with live demos" },
+      { name: "Custom AI Development", href: "/services/custom-ai", description: "Bespoke AI solutions for your business" },
+      { name: "Content Services", href: "/services/content", description: "Curriculum, assessments & content development" },
     ],
   },
   {
+    name: "Who We Serve",
+    href: "/industries",
+    children: [
+      { name: "Test Prep & Tutoring", href: "/industries/test-prep", description: "Scale your tutoring business with AI" },
+      { name: "K-12 Schools", href: "/industries/k12", description: "AI tools for classrooms & districts" },
+      { name: "Higher Education", href: "/industries/higher-ed", description: "University & college solutions" },
+      { name: "Publishers", href: "/industries/publishers", description: "Transform content with AI" },
+      { name: "Enterprise", href: "/industries/enterprise", description: "Workforce learning & upskilling" },
+    ],
+  },
+  { name: "About", href: "/about" },
+  {
     name: "Resources",
-    href: "/resources",
+    href: "/blog",
     children: [
       { name: "Blog", href: "/blog" },
-      // { name: "Webinars", href: "/webinars" }, // TODO: Re-enable when YouTube videos are available
       { name: "Interviews", href: "/interviews" },
       { name: "Speakers", href: "/speakers" },
     ],
   },
-  { name: "Careers", href: "/careers" },
-  { name: "Contact", href: "/contact" },
 ];
 
 export function Header() {
@@ -42,9 +60,18 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <nav className="container-wide flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="font-heading text-xl font-bold text-primary-500">
-            Evelyn Learning
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/images/site/logo-icon.png"
+            alt="Evelyn Learning"
+            width={32}
+            height={32}
+            className="h-8 w-auto"
+          />
+          <span className="font-heading text-xl">
+            <span className="font-normal" style={{ color: '#982c7c' }}>Evelyn</span>
+            {' '}
+            <span className="font-bold text-gray-900">Learning</span>
           </span>
         </Link>
 
@@ -70,15 +97,22 @@ export function Header() {
 
               {/* Dropdown */}
               {item.children && openDropdown === item.name && (
-                <div className="absolute left-0 top-full z-50 w-48 pt-2">
+                <div className="absolute left-0 top-full z-50 w-64 pt-2">
                   <div className="rounded-lg bg-white py-2 shadow-lg ring-1 ring-gray-900/5">
                     {item.children.map((child) => (
                       <Link
                         key={child.name}
                         href={child.href}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-500"
+                        className="block px-4 py-3 hover:bg-gray-50"
                       >
-                        {child.name}
+                        <span className="block text-sm font-medium text-gray-900 hover:text-primary-500">
+                          {child.name}
+                        </span>
+                        {child.description && (
+                          <span className="block text-xs text-gray-500 mt-0.5">
+                            {child.description}
+                          </span>
+                        )}
                       </Link>
                     ))}
                   </div>
@@ -88,10 +122,13 @@ export function Header() {
           ))}
         </div>
 
-        {/* CTA Button */}
-        <div className="hidden lg:block">
-          <Link href="/contact" className="btn-primary">
-            Get in Touch
+        {/* CTA Buttons */}
+        <div className="hidden lg:flex lg:items-center lg:gap-3">
+          <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-primary-500 transition-colors">
+            Contact
+          </Link>
+          <Link href="/contact?demo=true" className="btn-primary">
+            Book Demo
           </Link>
         </div>
 
@@ -139,11 +176,11 @@ export function Header() {
               </div>
             ))}
             <Link
-              href="/contact"
+              href="/contact?demo=true"
               className="btn-primary mt-4 block w-full text-center"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Get in Touch
+              Book Demo
             </Link>
           </div>
         </div>

@@ -108,23 +108,23 @@ export function ContactActions({ contact }: { contact: Contact }) {
               </button>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4 text-left">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-medium uppercase text-gray-500">Name</label>
+                  <label className="block text-xs font-medium uppercase text-gray-500">Name</label>
                   <p className="text-gray-900">{contact.name}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-medium uppercase text-gray-500">Email</label>
+                  <label className="block text-xs font-medium uppercase text-gray-500">Email</label>
                   <p>
-                    <a href={`mailto:${contact.email}`} className="text-primary-500 hover:underline">
+                    <a href={`mailto:${contact.email}`} className="text-primary-500 hover:underline break-all">
                       {contact.email}
                     </a>
                   </p>
                 </div>
                 {contact.phone && (
                   <div>
-                    <label className="text-xs font-medium uppercase text-gray-500">Phone</label>
+                    <label className="block text-xs font-medium uppercase text-gray-500">Phone</label>
                     <p>
                       <a href={`tel:${contact.phone}`} className="text-primary-500 hover:underline">
                         {contact.phone}
@@ -134,12 +134,12 @@ export function ContactActions({ contact }: { contact: Contact }) {
                 )}
                 {contact.company && (
                   <div>
-                    <label className="text-xs font-medium uppercase text-gray-500">Company</label>
+                    <label className="block text-xs font-medium uppercase text-gray-500">Company</label>
                     <p className="text-gray-900">{contact.company}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-xs font-medium uppercase text-gray-500">Date</label>
+                  <label className="block text-xs font-medium uppercase text-gray-500">Date</label>
                   <p className="text-gray-900">
                     {new Date(contact.createdAt).toLocaleString()}
                   </p>
@@ -148,14 +148,14 @@ export function ContactActions({ contact }: { contact: Contact }) {
 
               {contact.subject && (
                 <div>
-                  <label className="text-xs font-medium uppercase text-gray-500">Subject</label>
+                  <label className="block text-xs font-medium uppercase text-gray-500">Subject</label>
                   <p className="text-gray-900">{contact.subject}</p>
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-medium uppercase text-gray-500">Message</label>
-                <div className="mt-1 whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-gray-900">
+                <label className="block text-xs font-medium uppercase text-gray-500">Message</label>
+                <div className="mt-1 whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-left text-gray-900">
                   {contact.message}
                 </div>
               </div>

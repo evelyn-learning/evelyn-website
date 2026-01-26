@@ -6,15 +6,17 @@ import {
   Eye,
   Heart,
   Users,
-  Award,
-  Globe,
+  Code,
+  GraduationCap,
+  Cpu,
+  BookOpen,
   ArrowRight,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about Evelyn Learning - over 20 years of experience in educational content development, AI-powered learning solutions, and curriculum expertise.",
+    "Learn about Evelyn Learning - a decade of experience in educational content development, AI-powered learning solutions, and curriculum expertise. We combine educators and engineers to build transformative education technology.",
 };
 
 const values = [
@@ -45,12 +47,39 @@ const values = [
 ];
 
 const milestones = [
-  { year: "2003", event: "Evelyn Learning founded in New Delhi, India" },
-  { year: "2008", event: "Expanded services to US educational publishers" },
-  { year: "2012", event: "Launched digital content development division" },
-  { year: "2018", event: "Opened Bay Area office in California" },
+  { year: "2013", event: "Evelyn Learning founded" },
+  { year: "2015", event: "Expanded services to US educational publishers" },
+  { year: "2017", event: "Launched digital content development division" },
+  { year: "2019", event: "Opened San Francisco office" },
   { year: "2022", event: "Introduced AI-powered content solutions" },
   { year: "2024", event: "Serving 500+ clients across 50+ countries" },
+];
+
+const teamStrengths = [
+  {
+    icon: GraduationCap,
+    title: "Educators First",
+    description:
+      "Every team member has classroom experience. Teaching is a prerequisite for joining Evelyn—we believe you can't build great education tools without having taught.",
+  },
+  {
+    icon: Code,
+    title: "Technical Depth",
+    description:
+      "Our educators aren't just subject matter experts—many are also proficient in technology, data, and AI. This dual fluency is rare and powerful.",
+  },
+  {
+    icon: Cpu,
+    title: "AI Engineering Excellence",
+    description:
+      "Our engineering team specializes in AI/ML for education, building intelligent systems that understand pedagogy, not just patterns.",
+  },
+  {
+    icon: BookOpen,
+    title: "Content Mastery",
+    description:
+      "With millions of content items developed, we understand curriculum design, assessment creation, and learning science at scale.",
+  },
 ];
 
 export default function AboutPage() {
@@ -71,12 +100,11 @@ export default function AboutPage() {
         </div>
 
         <div className="container-wide relative py-16 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="max-w-3xl">
             <h1 className="heading-1">About Evelyn Learning</h1>
             <p className="mt-4 text-lg text-gray-600">
-              For over two decades, we have been at the forefront of educational
-              content innovation, helping institutions and organizations
-              transform the way they teach and learn.
+              We&apos;re a team of educators and engineers building AI-powered tools
+              that transform how people teach and learn.
             </p>
           </div>
         </div>
@@ -93,7 +121,7 @@ export default function AboutPage() {
               </h2>
               <p className="mt-4 text-gray-700">
                 To empower educational institutions, publishers, and
-                organizations with innovative content solutions that enhance
+                organizations with innovative AI solutions and content that enhance
                 learning outcomes and make quality education accessible to all.
               </p>
             </div>
@@ -104,9 +132,8 @@ export default function AboutPage() {
                 Our Vision
               </h2>
               <p className="mt-4 text-gray-700">
-                To be the global leader in educational content development,
-                recognized for our commitment to quality, innovation, and the
-                transformative impact of our solutions on learners worldwide.
+                To be the partner of choice for education companies seeking AI transformation—
+                recognized for our unique combination of pedagogical expertise and technical innovation.
               </p>
             </div>
           </div>
@@ -121,21 +148,24 @@ export default function AboutPage() {
               <h2 className="heading-2">Our Story</h2>
               <div className="mt-6 space-y-4 text-gray-600">
                 <p>
-                  Founded in 2003, Evelyn Learning began with a simple yet
-                  powerful vision: to bridge the gap between educational content
-                  needs and innovative solutions that truly make a difference in
-                  learners lives.
+                  Founded in 2013, Evelyn Learning began with a simple observation:
+                  the best educational technology is built by people who understand
+                  both education AND technology deeply.
                 </p>
                 <p>
-                  What started as a small team of passionate educators and
-                  content specialists has grown into a global organization
-                  serving publishers, educational institutions, and corporations
-                  across more than 50 countries.
+                  We started as a content development company, building curriculum
+                  and assessments for publishers and test prep companies. This gave
+                  us deep expertise in what makes learning work.
                 </p>
                 <p>
-                  Today, we combine deep educational expertise with cutting-edge
-                  AI technology to deliver content solutions that are not just
-                  informative, but transformative.
+                  When AI emerged as a transformative force, we were uniquely positioned
+                  to build intelligent education tools—because our team already spoke
+                  both languages: pedagogy and technology.
+                </p>
+                <p>
+                  Today, we combine content development services with AI-powered products,
+                  serving education companies worldwide who want to harness AI without
+                  losing the human expertise that makes education effective.
                 </p>
               </div>
             </div>
@@ -161,37 +191,43 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Leadership */}
+      {/* Our Team - What Makes Us Different */}
       <section className="section-padding bg-white">
         <div className="container-wide">
-          <div className="text-center">
-            <h2 className="heading-2">Leadership</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Meet the visionary behind Evelyn Learning.
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="heading-2">What Makes Our Team Unique</h2>
+            <p className="mt-4 text-gray-600">
+              We&apos;re not just a tech company that works in education, and we&apos;re not
+              just educators dabbling in technology. We&apos;re both—and that combination
+              is what makes Evelyn different.
             </p>
           </div>
 
-          <div className="mt-12 flex justify-center">
-            <div className="max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-              <div className="mx-auto h-32 w-32 overflow-hidden rounded-full">
-                <Image
-                  src="/images/site/praveen-tyagi.webp"
-                  alt="Praveen Tyagi - Founder & CEO"
-                  width={128}
-                  height={128}
-                  className="h-full w-full object-cover"
-                />
+          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+            {teamStrengths.map((strength) => (
+              <div
+                key={strength.title}
+                className="rounded-2xl border border-gray-100 bg-gray-50 p-8"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                  <strength.icon className="h-7 w-7" />
+                </div>
+                <h3 className="mt-6 text-xl font-bold text-gray-900">
+                  {strength.title}
+                </h3>
+                <p className="mt-3 text-gray-600">{strength.description}</p>
               </div>
-              <h3 className="mt-6 text-xl font-bold text-gray-900">
-                Praveen Tyagi
-              </h3>
-              <p className="text-primary-500 font-medium">Founder & CEO</p>
-              <p className="mt-4 text-sm text-gray-600">
-                An alumnus of IIT Roorkee and University of Alabama, Praveen
-                founded Evelyn Learning in 2003 with a vision to provide the
-                most authentic and reliable educational content. With over two
-                decades of experience in education technology, he has led the
-                company to serve 500+ clients across 50+ countries.
+            ))}
+          </div>
+
+          <div className="mt-12 max-w-3xl mx-auto">
+            <div className="bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl p-8 text-white">
+              <h3 className="text-xl font-bold mb-4">The Evelyn Advantage</h3>
+              <p className="text-primary-100 leading-relaxed">
+                When you work with Evelyn, you get a team that can discuss Bloom&apos;s taxonomy
+                and neural networks in the same conversation. Our content experts understand
+                API integration. Our engineers understand cognitive load theory. This cross-functional
+                fluency means we build AI tools that actually work for educators—because we are educators.
               </p>
             </div>
           </div>
@@ -233,7 +269,7 @@ export default function AboutPage() {
         <div className="container-wide">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-4xl font-bold text-white">20+</div>
+              <div className="text-4xl font-bold text-white">10+</div>
               <div className="mt-1 text-primary-100">Years Experience</div>
             </div>
             <div className="text-center">
@@ -257,8 +293,8 @@ export default function AboutPage() {
         <div className="container-wide text-center">
           <h2 className="heading-2">Ready to Work With Us?</h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-            Discover how Evelyn Learning can help you achieve your educational
-            content goals. Let us start a conversation.
+            Whether you need AI-powered products, content development services, or
+            a custom solution—let&apos;s talk about how we can help.
           </p>
           <Link href="/contact" className="btn-primary mt-8">
             Get in Touch

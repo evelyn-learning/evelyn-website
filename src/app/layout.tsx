@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://evelynlearning.com"
   ),
   title: {
-    default: "Evelyn Learning - Educational Content & Services",
+    default: "Evelyn Learning - AI-Powered Learning Solutions",
     template: "%s | Evelyn Learning",
   },
   icons: {
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://evelynlearning.com",
     siteName: "Evelyn Learning",
-    title: "Evelyn Learning - Educational Content & Services",
+    title: "Evelyn Learning - AI-Powered Learning Solutions",
     description:
       "Comprehensive educational content solutions and AI-powered learning services.",
     images: [
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Evelyn Learning - Educational Content & Services",
+    title: "Evelyn Learning - AI-Powered Learning Solutions",
     description:
       "Comprehensive educational content solutions and AI-powered learning services.",
     images: ["/images/og-image.jpg"],

@@ -84,7 +84,11 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   const relatedPosts = await getRelatedPosts(post.category, slug);
-  const contentHtml = marked(post.content);
+
+  // Check if content is already HTML (from WordPress migration) or Markdown
+  // If it starts with HTML tags, use it directly; otherwise parse as Markdown
+  const isHtml = post.content.trim().startsWith('<');
+  const contentHtml = isHtml ? post.content : marked(post.content);
 
   return (
     <>

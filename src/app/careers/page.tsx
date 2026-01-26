@@ -45,7 +45,7 @@ const openings = [
   {
     title: "Senior Content Developer",
     department: "Content",
-    location: "Remote / Bay Area",
+    location: "Remote / San Francisco",
     type: "Full-time",
     description:
       "Create engaging educational content for K-12 and higher education markets.",
@@ -53,7 +53,7 @@ const openings = [
   {
     title: "AI/ML Engineer",
     department: "Technology",
-    location: "Remote / Bay Area",
+    location: "Remote / San Francisco",
     type: "Full-time",
     description:
       "Build AI-powered learning solutions and content generation tools.",
@@ -61,7 +61,7 @@ const openings = [
   {
     title: "Instructional Designer",
     department: "Content",
-    location: "Remote / India",
+    location: "Remote",
     type: "Full-time",
     description:
       "Design effective learning experiences and curriculum frameworks.",
@@ -82,7 +82,7 @@ export default function CareersPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-16 md:py-20">
         <div className="container-wide">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="max-w-3xl">
             <h1 className="heading-1">Join Our Team</h1>
             <p className="mt-4 text-lg text-gray-600">
               Help us transform education through innovative content and

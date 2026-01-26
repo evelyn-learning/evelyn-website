@@ -1,17 +1,17 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { connectDB, isDBConfigured } from "@/lib/db";
+import { AdminUser } from "@/models";
 
-// Simple admin users (in production, use a database)
-const ADMIN_USERS = [
-  {
-    id: "1",
-    email: "admin@evelynlearning.com",
-    name: "Admin",
-    // Hash of "admin123" - change in production!
-    passwordHash: "$2a$10$QXEk.Jl/pUTJEScgf5vwKev6UXxn9JjWU/ytSzm2wRjphM4zfSivu",
-  },
-];
+// Fallback admin user (used only if no admin exists in database)
+const FALLBACK_ADMIN = {
+  id: "1",
+  email: "admin@evelynlearning.com",
+  name: "Admin",
+  // Hash of "admin123" - change in production!
+  passwordHash: "$2a$10$QXEk.Jl/pUTJEScgf5vwKev6UXxn9JjWU/ytSzm2wRjphM4zfSivu",
+};
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -26,24 +26,47 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const user = ADMIN_USERS.find((u) => u.email === credentials.email);
-        if (!user) {
-          return null;
+        // Try database first
+        if (isDBConfigured()) {
+          try {
+            await connectDB();
+            const dbUser = await AdminUser.findOne({ email: credentials.email });
+
+            if (dbUser) {
+              const isValid = await bcrypt.compare(
+                credentials.password,
+                dbUser.passwordHash
+              );
+              if (isValid) {
+                return {
+                  id: dbUser._id.toString(),
+                  email: dbUser.email,
+                  name: dbUser.name,
+                };
+              }
+              return null;
+            }
+          } catch (error) {
+            console.error("Database auth error:", error);
+          }
         }
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-        if (!isValid) {
-          return null;
+        // Fallback to hardcoded admin
+        if (credentials.email === FALLBACK_ADMIN.email) {
+          const isValid = await bcrypt.compare(
+            credentials.password,
+            FALLBACK_ADMIN.passwordHash
+          );
+          if (isValid) {
+            return {
+              id: FALLBACK_ADMIN.id,
+              email: FALLBACK_ADMIN.email,
+              name: FALLBACK_ADMIN.name,
+            };
+          }
         }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
+        return null;
       },
     }),
   ],

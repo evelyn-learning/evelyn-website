@@ -34,9 +34,16 @@ const BlogPostSchema = new mongoose.Schema({
 
 const BlogPost = mongoose.model("BlogPost", BlogPostSchema);
 
-// Helper function to strip HTML tags
+// Helper function to strip HTML tags (loops until all tags removed to prevent injection)
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").trim();
+  let result = html;
+  let previous = "";
+  // Loop until no more tags are found (prevents incomplete sanitization)
+  while (result !== previous) {
+    previous = result;
+    result = result.replace(/<[^>]*>/g, "");
+  }
+  return result.trim();
 }
 
 // Calculate reading time

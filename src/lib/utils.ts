@@ -14,11 +14,16 @@ export function formatDate(date: Date | string): string {
 }
 
 export function slugify(text: string): string {
-  return text
+  // Limit input length to prevent ReDoS attacks
+  const safeText = text.slice(0, 200);
+  return safeText
     .toLowerCase()
     .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/\s+/g, "-")
+    .replace(/_+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-/, "")
+    .replace(/-$/, "");
 }
 
 export function truncateText(text: string, maxLength: number): string {

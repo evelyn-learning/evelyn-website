@@ -25,12 +25,12 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Offices",
-    details: "Bay Area, California | New Delhi, India",
+    details: ["San Francisco, CA", "New Delhi, India"],
   },
   {
     icon: Clock,
     title: "Business Hours",
-    details: "Mon - Fri: 9:00 AM - 6:00 PM IST",
+    details: "Mon - Fri: 8:00 AM - 5:00 PM PST",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function ContactPage() {
         </div>
 
         <div className="container-wide relative py-16 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="max-w-3xl">
             <h1 className="heading-1">Get in Touch</h1>
             <p className="mt-4 text-lg text-gray-600">
               Have a question or want to discuss a project? We would love to hear
@@ -90,6 +90,12 @@ export default function ContactPage() {
                         >
                           {item.details}
                         </a>
+                      ) : Array.isArray(item.details) ? (
+                        <div className="mt-1 text-gray-600">
+                          {item.details.map((detail) => (
+                            <p key={detail}>{detail}</p>
+                          ))}
+                        </div>
                       ) : (
                         <p className="mt-1 text-gray-600">{item.details}</p>
                       )}

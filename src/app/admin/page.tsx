@@ -13,6 +13,7 @@ import {
   Plus,
   ArrowRight,
 } from "lucide-react";
+import { AdminSettings } from "@/components/admin/AdminSettings";
 
 async function getStats() {
   if (!isDBConfigured()) {
@@ -161,7 +162,7 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        <div className="mt-8 grid gap-8 lg:grid-cols-3">
           {/* Recent Blog Posts */}
           <div className="rounded-xl bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
@@ -201,6 +202,9 @@ export default async function AdminDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Settings */}
+          <AdminSettings />
         </div>
       </main>
     </div>
