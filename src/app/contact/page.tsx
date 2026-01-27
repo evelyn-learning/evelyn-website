@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Image from "next/image";
+import { Suspense } from "react";
 import { ContactForm } from "@/components/ContactForm";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
@@ -112,7 +113,9 @@ export default function ContactPage() {
                 <p className="mt-2 text-gray-600">
                   Fill out the form below and we will respond within 24 hours.
                 </p>
-                <ContactForm />
+                <Suspense fallback={<div className="mt-8 text-center text-gray-500">Loading form...</div>}>
+                  <ContactForm />
+                </Suspense>
               </div>
             </div>
           </div>
