@@ -27,6 +27,9 @@ yarn-error.log*
 .env*.local
 .env.local.production
 
+# Reference files (not part of deployed app)
+AI Offerings/
+
 # Vercel
 .vercel
 
