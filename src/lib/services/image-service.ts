@@ -138,16 +138,25 @@ export async function generateBlogImage(
   }
 }
 
+// Sanitize filename to prevent path traversal attacks
+function sanitizeFilename(filename: string): string {
+  // Get basename to strip any path components
+  const basename = path.basename(filename);
+  // Remove all non-alphanumeric characters except hyphens
+  return basename
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+    .slice(0, 50) || "image"; // Fallback if empty
+}
+
 // Upload image to Cloudinary
 async function uploadToCloudinary(
   imageUrl: string,
   filename: string
 ): Promise<string> {
   const timestamp = Date.now();
-  const safeFilename = filename
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .slice(0, 50);
+  const safeFilename = sanitizeFilename(filename);
   const publicId = `blog/${safeFilename}-${timestamp}`;
 
   const result = await cloudinary.uploader.upload(imageUrl, {
@@ -172,12 +181,9 @@ async function saveToLocalStorage(
     fs.mkdirSync(publicDir, { recursive: true });
   }
 
-  // Generate unique filename with timestamp
+  // Generate unique filename with timestamp (sanitized to prevent path traversal)
   const timestamp = Date.now();
-  const safeFilename = filename
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .slice(0, 50);
+  const safeFilename = sanitizeFilename(filename);
   const fullFilename = `${safeFilename}-${timestamp}.png`;
   const filePath = path.join(publicDir, fullFilename);
 

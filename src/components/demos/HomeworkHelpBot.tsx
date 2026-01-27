@@ -164,8 +164,18 @@ Remember: Your goal is to build understanding and confidence, not dependency.`;
   };
 
   const renderMarkdown = (text: string) => {
-    // Simple markdown rendering
-    const html = text
+    // Escape HTML entities first to prevent XSS
+    const escapeHtml = (str: string) =>
+      str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    // Escape the text first, then apply safe markdown transformations
+    const escaped = escapeHtml(text);
+    const html = escaped
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>')
