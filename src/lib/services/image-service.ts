@@ -2,6 +2,7 @@
 // Generates custom blog images using OpenAI's DALL-E 3
 
 import OpenAI from "openai";
+import { v2 as cloudinary } from "cloudinary";
 import { ImageSuggestion, ImageStyle } from "@/types/blog-generator";
 import { getImagePrompt } from "@/lib/prompts/blog-prompts";
 import fs from "fs";
@@ -11,6 +12,21 @@ import https from "https";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Configure Cloudinary if credentials are available
+const isCloudinaryConfigured = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 // Style-specific DALL-E prompt modifiers
 const STYLE_MODIFIERS: Record<ImageStyle, string> = {
@@ -122,8 +138,30 @@ export async function generateBlogImage(
   }
 }
 
-// Download and save image to local storage
-export async function saveImageLocally(
+// Upload image to Cloudinary
+async function uploadToCloudinary(
+  imageUrl: string,
+  filename: string
+): Promise<string> {
+  const timestamp = Date.now();
+  const safeFilename = filename
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .slice(0, 50);
+  const publicId = `blog/${safeFilename}-${timestamp}`;
+
+  const result = await cloudinary.uploader.upload(imageUrl, {
+    public_id: publicId,
+    folder: "evelyn-blog",
+    resource_type: "image",
+    format: "png",
+  });
+
+  return result.secure_url;
+}
+
+// Download and save image to local storage (fallback when Cloudinary not configured)
+async function saveToLocalStorage(
   imageUrl: string,
   filename: string
 ): Promise<string> {
@@ -161,6 +199,20 @@ export async function saveImageLocally(
         reject(err);
       });
   });
+}
+
+// Save image - uses Cloudinary if configured, otherwise local storage
+export async function saveImageLocally(
+  imageUrl: string,
+  filename: string
+): Promise<string> {
+  if (isCloudinaryConfigured) {
+    console.log("[Image Service] Uploading to Cloudinary...");
+    return uploadToCloudinary(imageUrl, filename);
+  } else {
+    console.log("[Image Service] Saving to local storage (Cloudinary not configured)");
+    return saveToLocalStorage(imageUrl, filename);
+  }
 }
 
 // Generate and save blog image (combined helper)

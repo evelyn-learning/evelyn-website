@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -18,7 +19,28 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
+// Map URL params to human-readable subjects
+const SUBJECT_MAP: Record<string, string> = {
+  'integration': 'Integration Inquiry',
+  'demo': 'Request a Demo',
+  'essay-ai': 'AI Essay Scoring & Feedback',
+  'homework-bot': '24/7 AI Homework Helper',
+  'test-generator': 'AI Practice Test Generator',
+  'tutor-copilot': 'AI Tutoring Co-Pilot',
+  'math-solver': 'AI Math Solver',
+  'content-authoring': 'Content Authoring AI',
+  'plagiarism-detection': 'Plagiarism & AI Detection',
+  'reading-comprehension': 'Reading Comprehension AI',
+  'adaptive-learning': 'Adaptive Learning Engine',
+  'language-learning': 'Language Learning AI',
+  'analytics-dashboard': 'Student Analytics Dashboard',
+  'virtual-labs': 'Virtual Lab Simulations',
+  'curriculum-designer': 'AI Curriculum Designer',
+  'accessibility-ai': 'Content Accessibility AI',
+};
+
 export function ContactForm() {
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
@@ -28,10 +50,31 @@ export function ContactForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
+
+  // Pre-fill form based on URL params
+  useEffect(() => {
+    const product = searchParams.get('product');
+    const subject = searchParams.get('subject');
+    const demo = searchParams.get('demo');
+
+    if (product) {
+      const productName = SUBJECT_MAP[product] || product;
+      const subjectText = demo === 'true'
+        ? `Demo Request: ${productName}`
+        : `Inquiry: ${productName}`;
+      setValue('subject', subjectText);
+    } else if (subject) {
+      const subjectText = SUBJECT_MAP[subject] || subject;
+      setValue('subject', subjectText);
+    } else if (demo === 'true') {
+      setValue('subject', 'Request a Demo');
+    }
+  }, [searchParams, setValue]);
 
   const onSubmit = async (data: ContactFormData) => {
     setStatus("loading");

@@ -40,6 +40,14 @@ const navigation: NavItem[] = [
       { name: "Enterprise", href: "/industries/enterprise", description: "Workforce learning & upskilling" },
     ],
   },
+  {
+    name: "Platform",
+    href: "/integrations",
+    children: [
+      { name: "Integrations", href: "/integrations", description: "LMS integrations & API access" },
+      { name: "Security & Compliance", href: "/security", description: "Enterprise-grade data protection" },
+    ],
+  },
   { name: "About", href: "/about" },
   {
     name: "Resources",

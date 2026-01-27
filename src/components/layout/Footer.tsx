@@ -15,6 +15,10 @@ const footerLinks = {
     { name: "Publishers", href: "/industries/publishers" },
     { name: "Enterprise", href: "/industries/enterprise" },
   ],
+  platform: [
+    { name: "Integrations", href: "/integrations" },
+    { name: "Security", href: "/security" },
+  ],
   resources: [
     { name: "Blog", href: "/blog" },
     { name: "Interviews", href: "/interviews" },
@@ -32,7 +36,7 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container-wide py-12 md:py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-7">
           {/* Brand & Contact */}
           <div className="lg:col-span-2">
             <Link
@@ -107,6 +111,25 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-3">
               {footerLinks.whoWeServe.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm hover:text-white transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Platform */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
+              Platform
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {footerLinks.platform.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}

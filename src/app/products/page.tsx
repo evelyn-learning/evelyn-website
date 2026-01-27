@@ -1,95 +1,149 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-// Product data
-const products = [
+// Product categories with all 14 products
+const productCategories = [
   {
-    id: 'essay-ai',
-    title: 'AI Essay Scoring & Feedback',
-    tagline: 'Professional essay feedback in 10 seconds',
-    description: 'Our Essay Scoring system delivers instant, rubric-aligned feedback on student writing. Calibrated to SAT, ACT, AP, and college application standards.',
-    icon: '📝',
-    color: 'purple',
-    gradient: 'from-purple-500 to-primary-600',
-    features: [
-      'Multiple rubric support (SAT, ACT, AP, College App, Custom)',
-      'Detailed scoring across all categories',
-      'Specific, actionable improvement suggestions',
-      'Sentence-level rewrite examples',
-    ],
-    benefits: [
-      { metric: '80%', label: 'Grading time saved' },
-      { metric: '10 sec', label: 'Average feedback time' },
-      { metric: '95%', label: 'Human grader correlation' }
-    ],
-    useCases: ['Test prep companies', 'Writing tutors', 'Schools', 'College counselors'],
-    demoAvailable: true
+    name: 'Assessment AI',
+    description: 'Evaluate student work with accuracy and consistency',
+    products: [
+      {
+        id: 'essay-ai',
+        title: 'AI Essay Scoring & Feedback',
+        tagline: 'Professional essay feedback in 10 seconds',
+        icon: '📝',
+        gradient: 'from-purple-500 to-primary-600',
+        demoAvailable: true
+      },
+      {
+        id: 'test-generator',
+        title: 'AI Practice Test Generator',
+        tagline: 'Unlimited unique practice tests, every time',
+        icon: '📊',
+        gradient: 'from-emerald-500 to-teal-600',
+        demoAvailable: true
+      },
+      {
+        id: 'plagiarism-detection',
+        title: 'Plagiarism & AI Detection',
+        tagline: 'Multi-source originality and AI content analysis',
+        icon: '🔍',
+        gradient: 'from-orange-500 to-red-600',
+        demoAvailable: true
+      }
+    ]
   },
   {
-    id: 'homework-bot',
-    title: '24/7 AI Homework Helper',
-    tagline: 'Instant help, any hour—without adding staff',
-    description: 'The Homework Help Bot provides students with on-demand tutoring support. Our solution guides students to discover answers rather than simply providing them.',
-    icon: '🤖',
-    color: 'purple',
-    gradient: 'from-purple-500 to-pink-600',
-    features: [
-      'Step-by-step problem breakdown',
-      'Socratic questioning approach',
-      'Multi-subject coverage (Math, Science, English, History)',
-      'White-label branding with your logo'
-    ],
-    benefits: [
-      { metric: '24/7', label: 'Availability' },
-      { metric: '40%', label: 'Reduction in churn' },
-      { metric: '< 3 sec', label: 'Response time' }
-    ],
-    useCases: ['Tutoring companies', 'Test prep centers', 'Online learning platforms', 'Schools'],
-    demoAvailable: true
+    name: 'Tutoring AI',
+    description: 'Scale personalized learning support',
+    products: [
+      {
+        id: 'homework-bot',
+        title: '24/7 AI Homework Helper',
+        tagline: 'Instant help, any hour—without adding staff',
+        icon: '🤖',
+        gradient: 'from-purple-500 to-pink-600',
+        demoAvailable: true
+      },
+      {
+        id: 'tutor-copilot',
+        title: 'AI Tutoring Co-Pilot',
+        tagline: 'Make every tutor your best tutor',
+        icon: '👨‍🏫',
+        gradient: 'from-orange-500 to-red-600',
+        demoAvailable: true
+      },
+      {
+        id: 'math-solver',
+        title: 'AI Math Solver',
+        tagline: 'Step-by-step solutions for any math problem',
+        icon: '🔢',
+        gradient: 'from-blue-500 to-cyan-600',
+        demoAvailable: true
+      },
+      {
+        id: 'language-learning',
+        title: 'Language Learning AI',
+        tagline: 'Conversational practice in real-world scenarios',
+        icon: '🌍',
+        gradient: 'from-indigo-500 to-purple-600',
+        demoAvailable: true
+      }
+    ]
   },
   {
-    id: 'test-generator',
-    title: 'AI Practice Test Generator',
-    tagline: 'Unlimited unique practice tests, every time',
-    description: 'Generate original, test-aligned practice questions on demand. Our AI creates novel problems that match the style, difficulty, and format of real standardized tests.',
-    icon: '📊',
-    color: 'emerald',
-    gradient: 'from-emerald-500 to-teal-600',
-    features: [
-      'SAT, ACT, PSAT, AP exam alignment',
-      'Difficulty calibration (Easy/Medium/Hard)',
-      'Topic-specific targeting',
-      'Detailed explanations for every answer'
-    ],
-    benefits: [
-      { metric: '∞', label: 'Unique questions' },
-      { metric: '$50K+', label: 'Test bank savings' },
-      { metric: '100%', label: 'Fresh every time' }
-    ],
-    useCases: ['Test prep companies', 'Schools', 'Publishers', 'Online tutoring platforms'],
-    demoAvailable: true
+    name: 'Content AI',
+    description: 'Create and enhance educational content at scale',
+    products: [
+      {
+        id: 'content-authoring',
+        title: 'Content Authoring AI',
+        tagline: 'Transform any text into interactive learning',
+        icon: '✍️',
+        gradient: 'from-emerald-500 to-teal-600',
+        demoAvailable: true
+      },
+      {
+        id: 'reading-comprehension',
+        title: 'Reading Comprehension AI',
+        tagline: 'Deep passage analysis with auto-generated questions',
+        icon: '📖',
+        gradient: 'from-purple-500 to-pink-600',
+        demoAvailable: true
+      },
+      {
+        id: 'curriculum-designer',
+        title: 'AI Curriculum Designer',
+        tagline: 'Standards-aligned curriculum maps in minutes',
+        icon: '📋',
+        gradient: 'from-violet-500 to-purple-600',
+        demoAvailable: true
+      },
+      {
+        id: 'accessibility-ai',
+        title: 'Content Accessibility AI',
+        tagline: 'WCAG 2.1 AA compliance scanning and fixes',
+        icon: '♿',
+        gradient: 'from-green-500 to-teal-600',
+        demoAvailable: true
+      }
+    ]
   },
   {
-    id: 'tutor-copilot',
-    title: 'AI Tutoring Co-Pilot',
-    tagline: 'Make every tutor your best tutor',
-    description: "The Tutoring Co-Pilot works alongside your instructors, providing real-time suggestions, student insights, and teaching strategies during live sessions.",
-    icon: '👨‍🏫',
-    color: 'orange',
-    gradient: 'from-orange-500 to-red-600',
-    features: [
-      'Real-time teaching suggestions',
-      'Student learning profile integration',
-      'Misconception detection alerts',
-      'Session summary auto-generation'
-    ],
-    benefits: [
-      { metric: '2-3x', label: 'Tutor capacity' },
-      { metric: '50%', label: 'Faster onboarding' },
-      { metric: '100%', label: 'Consistent quality' }
-    ],
-    useCases: ['Tutoring companies', 'Test prep centers', 'Learning centers', 'Online tutoring'],
-    demoAvailable: true
+    name: 'Analytics & Adaptive',
+    description: 'Data-driven insights for personalized learning',
+    products: [
+      {
+        id: 'adaptive-learning',
+        title: 'Adaptive Learning Engine',
+        tagline: 'AI-powered personalized learning paths',
+        icon: '🎯',
+        gradient: 'from-cyan-500 to-blue-600',
+        demoAvailable: true
+      },
+      {
+        id: 'analytics-dashboard',
+        title: 'Student Analytics Dashboard',
+        tagline: 'Real-time insights into student progress',
+        icon: '📈',
+        gradient: 'from-slate-700 to-blue-800',
+        demoAvailable: true
+      }
+    ]
+  },
+  {
+    name: 'Simulations',
+    description: 'Interactive hands-on learning experiences',
+    products: [
+      {
+        id: 'virtual-labs',
+        title: 'Virtual Lab Simulations',
+        tagline: 'Interactive science experiments—safe and scalable',
+        icon: '🔬',
+        gradient: 'from-teal-500 to-green-600',
+        demoAvailable: true
+      }
+    ]
   }
 ];
 
@@ -101,15 +155,15 @@ function HeroSection() {
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="text-emerald-300 text-sm font-medium">Interactive demos available</span>
+            <span className="text-emerald-300 text-sm font-medium">14 AI products with live demos</span>
           </span>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
             AI Products for Education
           </h1>
           <p className="text-xl text-slate-300 mb-8">
-            Explore our most popular AI tools built specifically for education companies.
-            White-label ready, enterprise-grade, designed by educators—and this is just the beginning.
+            Explore our complete suite of AI tools built specifically for education companies.
+            White-label ready, enterprise-grade, designed by educators.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -132,83 +186,70 @@ function HeroSection() {
   );
 }
 
-// Product Card Component
-function ProductCard({ product }: { product: typeof products[0] }) {
-  const colorClasses: Record<string, { bg: string; border: string; text: string }> = {
-    purple: { bg: 'bg-purple-50', border: 'hover:border-purple-200', text: 'text-purple-600' },
-    emerald: { bg: 'bg-emerald-50', border: 'hover:border-emerald-200', text: 'text-emerald-600' },
-    orange: { bg: 'bg-orange-50', border: 'hover:border-orange-200', text: 'text-orange-600' },
-  };
-
-  const colors = colorClasses[product.color] || colorClasses.purple;
-
+// Quick Navigation
+function QuickNav() {
   return (
-    <div className={`bg-white rounded-3xl border border-slate-100 ${colors.border} transition-all hover:shadow-2xl overflow-hidden`}>
-      {/* Header */}
-      <div className={`bg-gradient-to-r ${product.gradient} p-8 text-white`}>
-        <span className="text-5xl mb-4 block">{product.icon}</span>
-        <h2 className="text-2xl md:text-3xl font-bold mb-2">{product.title}</h2>
-        <p className="text-white/80">{product.tagline}</p>
-      </div>
-
-      {/* Content */}
-      <div className="p-8">
-        <p className="text-slate-600 mb-6 leading-relaxed">{product.description}</p>
-
-        {/* Benefits */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {product.benefits.map((benefit, idx) => (
-            <div key={idx} className={`${colors.bg} rounded-xl p-4 text-center`}>
-              <div className={`text-2xl font-bold ${colors.text}`}>{benefit.metric}</div>
-              <div className="text-xs text-slate-500">{benefit.label}</div>
-            </div>
+    <section className="py-6 bg-white border-b border-slate-100 sticky top-16 z-40">
+      <div className="container-wide">
+        <div className="flex flex-wrap justify-center gap-4">
+          {productCategories.map((category) => (
+            <a
+              key={category.name}
+              href={`#${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            >
+              {category.name}
+            </a>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* Features */}
-        <div className="mb-8">
-          <h3 className="font-semibold text-slate-900 mb-3">Features</h3>
-          <ul className="space-y-2">
-            {product.features.map((feature, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                <svg className={`w-5 h-5 ${colors.text} flex-shrink-0 mt-0.5`} fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </div>
+// Product Card Component
+function ProductCard({ product }: { product: typeof productCategories[0]['products'][0] }) {
+  return (
+    <Link
+      href={`/products/${product.id}`}
+      className="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-xl overflow-hidden"
+    >
+      {/* Header */}
+      <div className={`bg-gradient-to-r ${product.gradient} p-6 text-white`}>
+        <span className="text-4xl mb-3 block">{product.icon}</span>
+        <h3 className="text-xl font-bold mb-1 group-hover:underline">{product.title}</h3>
+        <p className="text-white/80 text-sm">{product.tagline}</p>
+      </div>
 
-        {/* Use Cases */}
-        <div className="mb-8">
-          <h3 className="font-semibold text-slate-900 mb-3">Best For</h3>
-          <div className="flex flex-wrap gap-2">
-            {product.useCases.map((useCase, idx) => (
-              <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-600 text-sm rounded-full">
-                {useCase}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* Footer */}
+      <div className="p-4 flex items-center justify-between">
+        {product.demoAvailable && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+            Live Demo
+          </span>
+        )}
+        <span className="text-sm text-slate-500 group-hover:text-primary-600 flex items-center gap-1">
+          Learn more
+          <ArrowRight className="w-3 h-3" />
+        </span>
+      </div>
+    </Link>
+  );
+}
 
-        {/* CTAs */}
-        <div className="flex gap-4">
-          {product.demoAvailable && (
-            <Link
-              href={`/products/${product.id}`}
-              className={`flex-1 py-3 bg-gradient-to-r ${product.gradient} text-white font-semibold rounded-xl text-center hover:opacity-90 transition-opacity`}
-            >
-              Try Live Demo
-            </Link>
-          )}
-          <Link
-            href={`/contact?product=${product.id}`}
-            className="flex-1 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl text-center hover:bg-slate-200 transition-colors"
-          >
-            Get Pricing
-          </Link>
-        </div>
+// Category Section Component
+function CategorySection({ category }: { category: typeof productCategories[0] }) {
+  return (
+    <div id={category.name.toLowerCase().replace(/\s+/g, '-')} className="scroll-mt-32">
+      <div className="mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{category.name}</h2>
+        <p className="text-slate-600">{category.description}</p>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {category.products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </div>
     </div>
   );
@@ -217,30 +258,23 @@ function ProductCard({ product }: { product: typeof products[0] }) {
 // Products Grid Section
 function ProductsSection() {
   return (
-    <section id="products" className="py-24 bg-slate-50">
+    <section id="products" className="py-16 bg-slate-50">
       <div className="container-wide">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Featured Products
-          </h2>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Our most popular solutions—each available standalone or as part of a custom package tailored to your needs.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className="space-y-16">
+          {productCategories.map((category) => (
+            <CategorySection key={category.name} category={category} />
           ))}
         </div>
 
         {/* Custom Solutions CTA */}
-        <div className="mt-16 max-w-4xl mx-auto">
+        <div className="mt-20 max-w-4xl mx-auto">
           <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-12 text-center">
             <h3 className="text-2xl font-bold text-slate-900 mb-4">
-              Looking for Something Different?
+              Need Something Custom?
             </h3>
             <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
-              These are just a few of the AI solutions we offer. We build custom AI products for education companies every day—from adaptive learning engines to automated content generation. Let&apos;s discuss what you need.
+              These are our pre-built solutions, but we specialize in custom AI development for education.
+              From adaptive learning engines to automated content pipelines—let&apos;s build exactly what you need.
             </p>
             <Link
               href="/contact"
@@ -256,48 +290,25 @@ function ProductsSection() {
   );
 }
 
-// Comparison Section
-function ComparisonSection() {
-  return (
-    <section className="py-24 bg-white">
-      <div className="container-wide">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Before vs. After Evelyn AI
-            </h2>
-            <p className="text-xl text-slate-600">
-              See the impact our AI products can have on your business
-            </p>
-          </div>
+// Stats Section
+function StatsSection() {
+  const stats = [
+    { value: '14', label: 'AI Products' },
+    { value: '100%', label: 'White-label ready' },
+    { value: '<1 week', label: 'To deployment' },
+    { value: '24/7', label: 'Support' }
+  ];
 
-          <div className="bg-slate-50 rounded-2xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-100">
-                  <th className="px-6 py-4 text-left text-slate-600 font-semibold">Capability</th>
-                  <th className="px-6 py-4 text-left text-slate-400">Without Evelyn</th>
-                  <th className="px-6 py-4 text-left text-primary-500 font-semibold">With Evelyn AI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {[
-                  { capability: 'After-hours support', before: 'None or expensive', after: '24/7 AI assistance' },
-                  { capability: 'Essay feedback time', before: '15-30 min per essay', after: '10 seconds' },
-                  { capability: 'Practice test content', before: 'Licensed, limited', after: 'Unlimited, unique' },
-                  { capability: 'Tutor effectiveness', before: 'Varies by experience', after: 'Consistently excellent' },
-                  { capability: 'Session documentation', before: 'Manual, inconsistent', after: 'Automatic, detailed' },
-                  { capability: 'Student insights', before: 'Scattered data', after: 'Unified AI analysis' }
-                ].map((row, idx) => (
-                  <tr key={idx}>
-                    <td className="px-6 py-4 font-medium text-slate-900">{row.capability}</td>
-                    <td className="px-6 py-4 text-slate-400">{row.before}</td>
-                    <td className="px-6 py-4 text-primary-500 font-medium">{row.after}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+  return (
+    <section className="py-16 bg-white">
+      <div className="container-wide">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="text-center">
+              <div className="text-4xl font-bold text-primary-600 mb-2">{stat.value}</div>
+              <div className="text-slate-600">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -307,14 +318,14 @@ function ComparisonSection() {
 // Integration Section
 function IntegrationSection() {
   return (
-    <section className="py-24 bg-slate-900 text-white">
+    <section className="py-20 bg-slate-900 text-white">
       <div className="container-wide">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Easy Integration, Your Way
+            Deploy Your Way
           </h2>
           <p className="text-xl text-slate-300 mb-12">
-            Deploy our AI products however works best for your business
+            Every product works with your existing tech stack
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -342,6 +353,16 @@ function IntegrationSection() {
               </div>
             ))}
           </div>
+
+          <div className="mt-12">
+            <Link
+              href="/integrations"
+              className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+            >
+              View all integration options
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>
@@ -351,15 +372,15 @@ function IntegrationSection() {
 // CTA Section
 function CTASection() {
   return (
-    <section className="py-24 bg-gradient-to-br from-primary-600 to-purple-700">
+    <section className="py-20 bg-gradient-to-br from-primary-600 to-purple-700">
       <div className="container-wide">
         <div className="max-w-3xl mx-auto text-center text-white">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             See Our AI in Action
           </h2>
           <p className="text-xl text-primary-100 mb-8">
-            Schedule a personalized demo. Whether you need one of our featured products, a combination,
-            or something entirely custom—we&apos;ll show you exactly how our AI can work with your content and workflows.
+            Schedule a personalized demo. Whether you need one product or the entire suite,
+            we&apos;ll show you exactly how our AI can transform your education business.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
@@ -369,10 +390,10 @@ function CTASection() {
               Book a Demo
             </Link>
             <Link
-              href="/contact"
+              href="/security"
               className="px-8 py-4 bg-transparent border-2 border-white/50 text-white font-semibold rounded-xl hover:bg-white/10 transition-all"
             >
-              Contact Sales
+              Security & Compliance
             </Link>
           </div>
         </div>
@@ -386,8 +407,9 @@ export default function ProductsPage() {
   return (
     <main>
       <HeroSection />
+      <QuickNav />
       <ProductsSection />
-      <ComparisonSection />
+      <StatsSection />
       <IntegrationSection />
       <CTASection />
     </main>
