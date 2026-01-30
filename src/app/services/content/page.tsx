@@ -1,10 +1,19 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, FileText, CheckCircle, PenTool, BarChart3, Globe } from 'lucide-react';
+import { ServiceJsonLd, FAQPageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
+import { FAQ } from '@/components/ui/FAQ';
+import { serviceFAQs } from '@/data/faqs/services';
+import { getKeywordsForService } from '@/lib/seo/keywords';
+
+const serviceId = 'content';
+const serviceName = 'Content Transformation';
+const serviceDescription = 'Professional educational content development services. Curriculum design, assessment creation, content conversion, and more from a team of 300+ educators.';
 
 export const metadata: Metadata = {
-  title: 'Content Services',
-  description: 'Professional educational content development services. Curriculum design, assessment creation, content conversion, and more from a team of 300+ educators.',
+  title: `${serviceName} | Evelyn Learning`,
+  description: serviceDescription,
+  keywords: getKeywordsForService(serviceId),
 };
 
 const services = [
@@ -60,8 +69,23 @@ const stats = [
 ];
 
 export default function ContentServicesPage() {
+  const faqs = serviceFAQs[serviceId] || [];
+
   return (
     <main>
+      <ServiceJsonLd
+        name={serviceName}
+        description={serviceDescription}
+        serviceType="Content Services"
+        url={`/services/${serviceId}`}
+      />
+      <FAQPageJsonLd faqs={faqs} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Services', url: '/services' },
+          { name: serviceName, url: `/services/${serviceId}` },
+        ]}
+      />
       {/* Hero */}
       <section className="py-20 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700">
         <div className="container-wide">
@@ -214,6 +238,19 @@ export default function ContentServicesPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="container-wide">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-xl text-slate-600">Common questions about Content Transformation</p>
+          </div>
+          <div className="max-w-3xl mx-auto">
+            <FAQ items={faqs} />
           </div>
         </div>
       </section>

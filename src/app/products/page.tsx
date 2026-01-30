@@ -1,7 +1,27 @@
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-// Product categories with all 14 products
+export const metadata: Metadata = {
+  title: 'AI Products for Education | Adaptive Learning & Intelligent Tutoring',
+  description: 'Explore 23 AI-powered learning products: adaptive learning platforms, intelligent tutoring systems, automated grading, learning analytics, and personalized learning solutions for K-12, higher education, and corporate training.',
+  keywords: [
+    'AI-Powered Learning',
+    'Adaptive Learning Platform',
+    'Intelligent Tutoring Systems',
+    'Personalized Learning',
+    'Automated Grading',
+    'Learning Analytics',
+    'EdTech Products',
+    'AI Education Tools',
+    'Student Success Platform',
+  ],
+};
+
+// Demo status types
+type DemoStatus = 'live' | 'interactive' | 'request';
+
+// Product categories with all 23 products
 const productCategories = [
   {
     name: 'Assessment AI',
@@ -13,7 +33,7 @@ const productCategories = [
         tagline: 'Professional essay feedback in 10 seconds',
         icon: '📝',
         gradient: 'from-purple-500 to-primary-600',
-        demoAvailable: true
+        demoStatus: 'live' as DemoStatus
       },
       {
         id: 'test-generator',
@@ -21,7 +41,7 @@ const productCategories = [
         tagline: 'Unlimited unique practice tests, every time',
         icon: '📊',
         gradient: 'from-emerald-500 to-teal-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'plagiarism-detection',
@@ -29,7 +49,15 @@ const productCategories = [
         tagline: 'Multi-source originality and AI content analysis',
         icon: '🔍',
         gradient: 'from-orange-500 to-red-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
+      },
+      {
+        id: 'proctoring-suite',
+        title: 'AI Proctoring Suite',
+        tagline: 'Real-time exam monitoring with AI face detection',
+        icon: '🎥',
+        gradient: 'from-rose-500 to-red-600',
+        demoStatus: 'live' as DemoStatus
       }
     ]
   },
@@ -43,7 +71,7 @@ const productCategories = [
         tagline: 'Instant help, any hour—without adding staff',
         icon: '🤖',
         gradient: 'from-purple-500 to-pink-600',
-        demoAvailable: true
+        demoStatus: 'live' as DemoStatus
       },
       {
         id: 'tutor-copilot',
@@ -51,7 +79,7 @@ const productCategories = [
         tagline: 'Make every tutor your best tutor',
         icon: '👨‍🏫',
         gradient: 'from-orange-500 to-red-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'math-solver',
@@ -59,7 +87,7 @@ const productCategories = [
         tagline: 'Step-by-step solutions for any math problem',
         icon: '🔢',
         gradient: 'from-blue-500 to-cyan-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'language-learning',
@@ -67,7 +95,7 @@ const productCategories = [
         tagline: 'Conversational practice in real-world scenarios',
         icon: '🌍',
         gradient: 'from-indigo-500 to-purple-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       }
     ]
   },
@@ -81,7 +109,7 @@ const productCategories = [
         tagline: 'Transform any text into interactive learning',
         icon: '✍️',
         gradient: 'from-emerald-500 to-teal-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'reading-comprehension',
@@ -89,7 +117,7 @@ const productCategories = [
         tagline: 'Deep passage analysis with auto-generated questions',
         icon: '📖',
         gradient: 'from-purple-500 to-pink-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'curriculum-designer',
@@ -97,7 +125,7 @@ const productCategories = [
         tagline: 'Standards-aligned curriculum maps in minutes',
         icon: '📋',
         gradient: 'from-violet-500 to-purple-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'accessibility-ai',
@@ -105,7 +133,23 @@ const productCategories = [
         tagline: 'WCAG 2.1 AA compliance scanning and fixes',
         icon: '♿',
         gradient: 'from-green-500 to-teal-600',
-        demoAvailable: true
+        demoStatus: 'request' as DemoStatus
+      },
+      {
+        id: 'course-creator-studio',
+        title: 'AI Course Creator Studio',
+        tagline: 'Transform any content into structured courses',
+        icon: '🎓',
+        gradient: 'from-cyan-500 to-blue-600',
+        demoStatus: 'interactive' as DemoStatus
+      },
+      {
+        id: 'textbook-digitizer',
+        title: 'Textbook Digitizer',
+        tagline: 'Convert print to interactive digital textbooks',
+        icon: '📚',
+        gradient: 'from-amber-500 to-orange-600',
+        demoStatus: 'live' as DemoStatus
       }
     ]
   },
@@ -119,7 +163,7 @@ const productCategories = [
         tagline: 'AI-powered personalized learning paths',
         icon: '🎯',
         gradient: 'from-cyan-500 to-blue-600',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
       },
       {
         id: 'analytics-dashboard',
@@ -127,7 +171,73 @@ const productCategories = [
         tagline: 'Real-time insights into student progress',
         icon: '📈',
         gradient: 'from-slate-700 to-blue-800',
-        demoAvailable: true
+        demoStatus: 'interactive' as DemoStatus
+      },
+      {
+        id: 'student-success-predictor',
+        title: 'Student Success Predictor',
+        tagline: 'AI early warning system for at-risk students',
+        icon: '🔮',
+        gradient: 'from-amber-500 to-orange-600',
+        demoStatus: 'interactive' as DemoStatus
+      },
+      {
+        id: 'career-pathways',
+        title: 'Career Pathways AI',
+        tagline: 'Skill gap analysis and career recommendations',
+        icon: '🛤️',
+        gradient: 'from-violet-500 to-purple-600',
+        demoStatus: 'live' as DemoStatus
+      }
+    ]
+  },
+  {
+    name: 'Institutional AI',
+    description: 'Administrative automation for schools and universities',
+    products: [
+      {
+        id: 'admissions-assistant',
+        title: 'AI Admissions Assistant',
+        tagline: '24/7 student support and application review',
+        icon: '🎓',
+        gradient: 'from-blue-500 to-indigo-600',
+        demoStatus: 'live' as DemoStatus
+      },
+      {
+        id: 'parent-engagement',
+        title: 'Parent Engagement Portal',
+        tagline: 'Multilingual progress reports and communications',
+        icon: '👨‍👩‍👧',
+        gradient: 'from-teal-500 to-cyan-600',
+        demoStatus: 'live' as DemoStatus
+      }
+    ]
+  },
+  {
+    name: 'Enterprise L&D',
+    description: 'Corporate training and professional development',
+    products: [
+      {
+        id: 'corporate-training',
+        title: 'Corporate Training AI',
+        tagline: 'Microlearning, compliance, and skill gap analysis',
+        icon: '🏢',
+        gradient: 'from-indigo-500 to-purple-600',
+        demoStatus: 'live' as DemoStatus
+      }
+    ]
+  },
+  {
+    name: 'Research & Higher Ed',
+    description: 'Tools for academic research and scholarship',
+    products: [
+      {
+        id: 'research-assistant',
+        title: 'Research Assistant AI',
+        tagline: 'Literature search, citations, and methodology help',
+        icon: '🔬',
+        gradient: 'from-emerald-500 to-teal-600',
+        demoStatus: 'interactive' as DemoStatus
       }
     ]
   },
@@ -139,9 +249,9 @@ const productCategories = [
         id: 'virtual-labs',
         title: 'Virtual Lab Simulations',
         tagline: 'Interactive science experiments—safe and scalable',
-        icon: '🔬',
+        icon: '🧪',
         gradient: 'from-teal-500 to-green-600',
-        demoAvailable: true
+        demoStatus: 'request' as DemoStatus
       }
     ]
   }
@@ -155,15 +265,15 @@ function HeroSection() {
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="text-emerald-300 text-sm font-medium">14 AI products with live demos</span>
+            <span className="text-emerald-300 text-sm font-medium">23 AI products with live demos</span>
           </span>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            AI Products for Education
+            AI-Powered Learning Products
           </h1>
           <p className="text-xl text-slate-300 mb-8">
-            Explore our complete suite of AI tools built specifically for education companies.
-            White-label ready, enterprise-grade, designed by educators.
+            Explore our complete suite of adaptive learning platforms, intelligent tutoring systems, and personalized learning solutions.
+            White-label ready, enterprise-grade, designed by educators for data-driven learning outcomes.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -207,6 +317,31 @@ function QuickNav() {
   );
 }
 
+// Demo badge component
+function DemoBadge({ status }: { status: DemoStatus }) {
+  if (status === 'live') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+        Live Demo
+      </span>
+    );
+  }
+  if (status === 'interactive') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+        Interactive Preview
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+      Request Demo
+    </span>
+  );
+}
+
 // Product Card Component
 function ProductCard({ product }: { product: typeof productCategories[0]['products'][0] }) {
   return (
@@ -223,12 +358,7 @@ function ProductCard({ product }: { product: typeof productCategories[0]['produc
 
       {/* Footer */}
       <div className="p-4 flex items-center justify-between">
-        {product.demoAvailable && (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-            Live Demo
-          </span>
-        )}
+        <DemoBadge status={product.demoStatus} />
         <span className="text-sm text-slate-500 group-hover:text-primary-600 flex items-center gap-1">
           Learn more
           <ArrowRight className="w-3 h-3" />
@@ -260,6 +390,31 @@ function ProductsSection() {
   return (
     <section id="products" className="py-16 bg-slate-50">
       <div className="container-wide">
+        {/* Demo Status Legend */}
+        <div className="mb-12 flex flex-wrap items-center justify-center gap-6 p-4 bg-white rounded-xl border border-slate-200">
+          <span className="text-sm text-slate-600 font-medium">Demo availability:</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              Live Demo
+            </span>
+            <span className="text-xs text-slate-500">Try it now</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+              Interactive Preview
+            </span>
+            <span className="text-xs text-slate-500">Sample experience</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+              Request Demo
+            </span>
+            <span className="text-xs text-slate-500">Personalized walkthrough</span>
+          </div>
+        </div>
+
         <div className="space-y-16">
           {productCategories.map((category) => (
             <CategorySection key={category.name} category={category} />
@@ -293,7 +448,7 @@ function ProductsSection() {
 // Stats Section
 function StatsSection() {
   const stats = [
-    { value: '14', label: 'AI Products' },
+    { value: '23', label: 'AI Products' },
     { value: '100%', label: 'White-label ready' },
     { value: '<1 week', label: 'To deployment' },
     { value: '24/7', label: 'Support' }

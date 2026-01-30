@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const AccessibilityAIDemo = dynamic(
   () => import('@/components/demos/AccessibilityAIDemo'),
@@ -229,6 +231,18 @@ function UseCasesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['accessibility-ai'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about Content Accessibility AI"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-green-600 to-teal-700">
@@ -298,6 +312,7 @@ export default function AccessibilityAIPage() {
       <DemoSection />
       <FeaturesSection />
       <UseCasesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

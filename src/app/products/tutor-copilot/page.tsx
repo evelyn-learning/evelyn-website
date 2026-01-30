@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const TutoringCoPilot = dynamic(
   () => import('@/components/demos/TutoringCoPilot'),
@@ -131,6 +133,18 @@ function FeaturesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['tutor-copilot'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about AI Tutoring Co-Pilot"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-orange-600 to-red-700">
@@ -183,6 +197,7 @@ export default function TutorCopilotProductPage() {
       <MetricsSection />
       <DemoSection />
       <FeaturesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 // Dynamically import the demo component (client-side only)
 const EssayScoringDemo = dynamic(
@@ -303,6 +305,18 @@ function RelatedProductsSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['essay-ai'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about AI Essay Scoring"
+    />
+  );
+}
+
 // Main Page
 export default function EssayAIProductPage() {
   return (
@@ -312,6 +326,7 @@ export default function EssayAIProductPage() {
       <DemoSection />
       <FeaturesSection />
       <UseCasesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

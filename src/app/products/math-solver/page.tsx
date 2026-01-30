@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const MathSolverDemo = dynamic(
   () => import('@/components/demos/MathSolverDemo'),
@@ -229,6 +231,18 @@ function UseCasesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['math-solver'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about AI Math Solver"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-blue-600 to-cyan-700">
@@ -298,6 +312,7 @@ export default function MathSolverPage() {
       <DemoSection />
       <FeaturesSection />
       <UseCasesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

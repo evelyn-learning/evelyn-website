@@ -14,9 +14,18 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Us",
+  title: "About Us | AI-Powered Learning Company",
   description:
-    "Learn about Evelyn Learning - a decade of experience in educational content development, AI-powered learning solutions, and curriculum expertise. We combine educators and engineers to build transformative education technology.",
+    "Learn about Evelyn Learning - 10+ years building adaptive learning platforms, intelligent tutoring systems, and AI-powered learning solutions. 300+ educators and engineers creating personalized learning experiences for 500+ clients worldwide.",
+  keywords: [
+    'AI-Powered Learning Company',
+    'EdTech Company',
+    'Adaptive Learning Provider',
+    'Intelligent Tutoring Systems',
+    'Educational AI Development',
+    'Learning Analytics Company',
+    'Personalized Learning Solutions',
+  ],
 };
 
 const values = [
@@ -103,8 +112,8 @@ export default function AboutPage() {
           <div className="max-w-3xl">
             <h1 className="heading-1">About Evelyn Learning</h1>
             <p className="mt-4 text-lg text-gray-600">
-              We&apos;re a team of educators and engineers building AI-powered tools
-              that transform how people teach and learn.
+              We&apos;re a team of 300+ educators and engineers building adaptive learning platforms
+              and intelligent tutoring systems that deliver personalized learning at scale.
             </p>
           </div>
         </div>

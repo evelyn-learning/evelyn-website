@@ -75,15 +75,15 @@ function HeroSection() {
 
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            AI That Understands
+            AI-Powered Learning
             <span className="block bg-gradient-to-r from-primary-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Education
+              That Works
             </span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl leading-relaxed">
-            We build intelligent tools for test prep companies, tutoring businesses, publishers, and EdTech platforms.
+            Adaptive learning platforms, intelligent tutoring systems, and personalized learning solutions for test prep companies, tutoring businesses, publishers, and EdTech platforms.
             <span className="text-white font-medium"> Powered by 20+ years of teaching expertise.</span>
           </p>
 
@@ -234,49 +234,75 @@ function AIProductsSection() {
       color: 'from-purple-500 to-primary-600',
       stats: '80% grading time saved',
       href: '/products/essay-ai',
-      hasDemo: true
+      market: 'K-12 & Higher Ed',
+      demoType: 'live'
     },
     {
-      id: 'homework-bot',
-      title: '24/7 Homework Helper',
-      description: 'AI tutor that guides students through problems step-by-step, available around the clock.',
-      icon: '🤖',
-      color: 'from-purple-500 to-pink-600',
-      stats: 'Always available',
-      href: '/products/homework-bot',
-      hasDemo: true
+      id: 'proctoring',
+      title: 'AI Proctoring Suite',
+      description: 'Real-time exam monitoring with AI face detection, browser lockdown, and anomaly detection.',
+      icon: '🎥',
+      color: 'from-rose-500 to-red-600',
+      stats: 'Real AI face detection',
+      href: '/products/proctoring-suite',
+      market: 'Higher Ed & Certification',
+      demoType: 'live'
     },
     {
-      id: 'test-generator',
-      title: 'Practice Test Generator',
-      description: 'Unlimited unique practice questions. Every test is different—no answer memorization.',
-      icon: '📊',
-      color: 'from-emerald-500 to-teal-600',
-      stats: 'Infinite fresh content',
-      href: '/products/test-generator',
-      hasDemo: true
+      id: 'corporate-training',
+      title: 'Corporate Training AI',
+      description: 'Microlearning generator, compliance tracking, and skill gap analysis for enterprise L&D.',
+      icon: '🏢',
+      color: 'from-indigo-500 to-purple-600',
+      stats: 'SCORM/xAPI ready',
+      href: '/products/corporate-training',
+      market: 'Enterprise',
+      demoType: 'live'
     },
     {
-      id: 'tutor-copilot',
-      title: 'Tutoring Co-Pilot',
-      description: 'Real-time AI assistance for tutors. Teaching suggestions and student insights on the fly.',
-      icon: '👨‍🏫',
-      color: 'from-orange-500 to-red-600',
-      stats: '2-3x tutor capacity',
-      href: '/products/tutor-copilot',
-      hasDemo: true
+      id: 'admissions',
+      title: 'AI Admissions Assistant',
+      description: '24/7 prospective student chatbot, application review, and enrollment prediction.',
+      icon: '🎓',
+      color: 'from-blue-500 to-indigo-600',
+      stats: '80% inquiry automation',
+      href: '/products/admissions-assistant',
+      market: 'Higher Ed',
+      demoType: 'live'
+    },
+    {
+      id: 'textbook-digitizer',
+      title: 'Textbook Digitizer',
+      description: 'Convert print textbooks to interactive digital formats with auto-generated quizzes and study tools.',
+      icon: '📚',
+      color: 'from-amber-500 to-orange-600',
+      stats: '10x faster digitization',
+      href: '/products/textbook-digitizer',
+      market: 'Publishers',
+      demoType: 'live'
+    },
+    {
+      id: 'career-pathways',
+      title: 'Career Pathways AI',
+      description: 'Skill gap analysis, career matching, and personalized learning recommendations.',
+      icon: '🛤️',
+      color: 'from-violet-500 to-purple-600',
+      stats: 'Real job market data',
+      href: '/products/career-pathways',
+      market: 'Workforce Dev',
+      demoType: 'live'
     }
   ];
 
   const additionalProducts = [
-    { title: 'Adaptive Learning Engine', description: 'Personalized learning paths based on student performance', icon: '🧠' },
-    { title: 'Content Authoring AI', description: 'Accelerate content creation with AI-assisted writing', icon: '✍️' },
-    { title: 'Plagiarism Detection', description: 'AI-powered academic integrity tools', icon: '🔍' },
-    { title: 'Language Learning AI', description: 'Conversational practice and pronunciation feedback', icon: '🗣️' },
-    { title: 'Math Solver & Explainer', description: 'Step-by-step solutions with visual explanations', icon: '🔢' },
-    { title: 'Reading Comprehension AI', description: 'Passage analysis and question generation', icon: '📖' },
-    { title: 'Student Analytics Dashboard', description: 'AI-driven insights into learning progress', icon: '📈' },
-    { title: 'Virtual Lab Simulations', description: 'Interactive science experiments powered by AI', icon: '🧪' },
+    { title: '24/7 Homework Helper', description: 'AI tutoring available around the clock', icon: '🤖', market: 'K-12' },
+    { title: 'Practice Test Generator', description: 'Unlimited unique practice questions', icon: '📊', market: 'Test Prep' },
+    { title: 'Student Success Predictor', description: 'Early warning system for at-risk students', icon: '🔮', market: 'K-12 & Higher Ed' },
+    { title: 'Parent Engagement Portal', description: 'Multilingual progress reports for families', icon: '👨‍👩‍👧', market: 'K-12' },
+    { title: 'Research Assistant AI', description: 'Literature search and citation management', icon: '🔬', market: 'Higher Ed' },
+    { title: 'Content Authoring AI', description: 'Transform text into interactive learning', icon: '✍️', market: 'Publishers' },
+    { title: 'Adaptive Learning Engine', description: 'Personalized learning paths', icon: '🎯', market: 'All Markets' },
+    { title: 'AI Curriculum Designer', description: 'Standards-aligned curriculum in minutes', icon: '📋', market: 'K-12' },
   ];
 
   return (
@@ -286,42 +312,45 @@ function AIProductsSection() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-primary-500 font-semibold text-sm uppercase tracking-wider">AI Products</span>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mt-4 mb-6">
-            Intelligent Tools Built for Education
+            Adaptive Learning & Intelligent Tutoring Systems
           </h2>
           <p className="text-xl text-slate-600">
-            Production-ready AI products you can deploy today. White-label ready, enterprise-grade, built by educators.
+            Production-ready AI-powered learning solutions you can deploy today. Personalized learning, automated grading, and learning analytics—white-label ready and enterprise-grade.
             <span className="font-medium text-slate-800"> Complete technology transfer available.</span>
           </p>
         </div>
 
         {/* Featured Products Grid - With Live Demos */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-16">
           {featuredProducts.map((product) => (
             <Link
               key={product.id}
               href={product.href}
-              className="group relative bg-slate-50 rounded-2xl p-8 hover:bg-white hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-primary-100"
+              className="group relative bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-primary-100"
             >
-              {/* Demo Badge */}
-              {product.hasDemo && (
-                <div className="absolute top-4 right-4">
+              {/* Badges Row */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                  {product.market}
+                </span>
+                {product.demoType === 'live' && (
                   <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-medium px-2 py-1 rounded-full">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                     Live Demo
                   </span>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${product.color} flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform`}>
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${product.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
                 {product.icon}
               </div>
 
               {/* Content */}
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-primary-500 transition-colors">
+              <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-500 transition-colors">
                 {product.title}
               </h3>
-              <p className="text-slate-600 mb-4 leading-relaxed">
+              <p className="text-slate-600 text-sm mb-4 leading-relaxed">
                 {product.description}
               </p>
 
@@ -332,18 +361,18 @@ function AIProductsSection() {
               </div>
 
               {/* Arrow */}
-              <div className="absolute bottom-8 right-8 w-10 h-10 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all group-hover:translate-x-1">
-                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-primary-600" />
+              <div className="absolute bottom-6 right-6 w-8 h-8 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all group-hover:translate-x-1">
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600" />
               </div>
             </Link>
           ))}
         </div>
 
         {/* Additional Products */}
-        <div className="bg-slate-50 rounded-3xl p-8 md:p-12 max-w-5xl mx-auto">
+        <div className="bg-slate-50 rounded-3xl p-8 md:p-12 max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">More AI Solutions We&apos;ve Built</h3>
-            <p className="text-slate-600">Custom products developed for our education partners</p>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Complete AI Product Suite</h3>
+            <p className="text-slate-600">23 products across all education market segments</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -354,13 +383,16 @@ function AIProductsSection() {
               >
                 <span className="text-2xl mb-2 block">{product.icon}</span>
                 <h4 className="font-semibold text-slate-800 text-sm mb-1">{product.title}</h4>
-                <p className="text-xs text-slate-500">{product.description}</p>
+                <p className="text-xs text-slate-500 mb-2">{product.description}</p>
+                <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
+                  {product.market}
+                </span>
               </div>
             ))}
           </div>
 
           <p className="text-center text-slate-500 text-sm mt-6">
-            ...and many more customized solutions for specific business needs
+            All products available as white-label solutions with API access
           </p>
         </div>
 

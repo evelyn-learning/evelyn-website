@@ -21,8 +21,30 @@ type ContactFormData = z.infer<typeof contactSchema>;
 
 // Map URL params to human-readable subjects
 const SUBJECT_MAP: Record<string, string> = {
+  // General inquiries
   'integration': 'Integration Inquiry',
   'demo': 'Request a Demo',
+  'security': 'Security & Compliance Inquiry',
+
+  // Services
+  'services': 'Professional Services Inquiry',
+  'ai-readiness': 'AI Readiness Assessment',
+  'implementation': 'Implementation & Integration Services',
+  'ethics-governance': 'AI Ethics & Governance Consulting',
+  'training': 'Faculty & Staff Training',
+  'managed-services': 'Managed AI Services',
+  'custom-ai': 'Custom AI Development',
+  'content': 'Content Services',
+
+  // Research & Case Studies
+  'research': 'Research Inquiry',
+  'research-report': 'Research Report Request',
+  'research-partnership': 'Research Partnership Inquiry',
+  'whitepaper': 'White Paper Request',
+  'industry-report': 'Industry Report Request',
+  'case-study': 'Case Study Inquiry',
+
+  // Products
   'essay-ai': 'AI Essay Scoring & Feedback',
   'homework-bot': '24/7 AI Homework Helper',
   'test-generator': 'AI Practice Test Generator',
@@ -37,6 +59,15 @@ const SUBJECT_MAP: Record<string, string> = {
   'virtual-labs': 'Virtual Lab Simulations',
   'curriculum-designer': 'AI Curriculum Designer',
   'accessibility-ai': 'Content Accessibility AI',
+  'proctoring-suite': 'AI Proctoring Suite',
+  'student-success-predictor': 'Student Success Predictor',
+  'course-creator-studio': 'AI Course Creator Studio',
+  'corporate-training': 'Corporate Training AI',
+  'admissions-assistant': 'AI Admissions Assistant',
+  'textbook-digitizer': 'Textbook Digitizer',
+  'parent-engagement': 'Parent Engagement Portal',
+  'career-pathways': 'Career Pathways AI',
+  'research-assistant': 'Research Assistant AI',
 };
 
 export function ContactForm() {
@@ -60,7 +91,9 @@ export function ContactForm() {
   useEffect(() => {
     const product = searchParams.get('product');
     const subject = searchParams.get('subject');
+    const inquiry = searchParams.get('inquiry');
     const demo = searchParams.get('demo');
+    const paper = searchParams.get('paper');
 
     if (product) {
       const productName = SUBJECT_MAP[product] || product;
@@ -68,6 +101,16 @@ export function ContactForm() {
         ? `Demo Request: ${productName}`
         : `Inquiry: ${productName}`;
       setValue('subject', subjectText);
+    } else if (inquiry) {
+      // Handle inquiry param (used in services, research, case studies links)
+      const inquiryName = SUBJECT_MAP[inquiry] || inquiry.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      setValue('subject', inquiryName);
+
+      // Also add context to message if it's a whitepaper request
+      if (paper) {
+        const paperName = SUBJECT_MAP[paper] || paper.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        setValue('message', `I'm interested in downloading the white paper: "${paperName}"\n\nPlease send me access to this resource.`);
+      }
     } else if (subject) {
       const subjectText = SUBJECT_MAP[subject] || subject;
       setValue('subject', subjectText);

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const LanguageLearningDemo = dynamic(
   () => import('@/components/demos/LanguageLearningDemo'),
@@ -229,6 +231,18 @@ function UseCasesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['language-learning'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about Language Learning AI"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-indigo-600 to-purple-700">
@@ -298,6 +312,7 @@ export default function LanguageLearningPage() {
       <DemoSection />
       <FeaturesSection />
       <UseCasesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

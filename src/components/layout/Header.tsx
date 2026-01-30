@@ -21,12 +21,24 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: "Home", href: "/" },
   {
-    name: "What We Offer",
+    name: "Products",
     href: "/products",
     children: [
-      { name: "AI Products", href: "/products", description: "Ready-to-deploy AI tools with live demos" },
-      { name: "Custom AI Development", href: "/services/custom-ai", description: "Bespoke AI solutions for your business" },
-      { name: "Content Services", href: "/services/content", description: "Curriculum, assessments & content development" },
+      { name: "All AI Products", href: "/products", description: "23 ready-to-deploy AI tools with live demos" },
+      { name: "Assessment AI", href: "/products#assessment-ai", description: "Essay scoring, proctoring, test generation" },
+      { name: "Tutoring AI", href: "/products#tutoring-ai", description: "Homework help, tutoring co-pilot, math solver" },
+      { name: "Content AI", href: "/products#content-ai", description: "Authoring, curriculum, accessibility" },
+    ],
+  },
+  {
+    name: "Services",
+    href: "/services",
+    children: [
+      { name: "All Services", href: "/services", description: "Professional services for AI success" },
+      { name: "AI Readiness Assessment", href: "/services/ai-readiness", description: "Strategic roadmap development" },
+      { name: "Implementation & Integration", href: "/services/implementation", description: "LMS, SSO, and API setup" },
+      { name: "Training", href: "/services/training", description: "Faculty and staff AI training" },
+      { name: "Managed AI Services", href: "/services/managed-services", description: "Hosting, monitoring, support" },
     ],
   },
   {
@@ -53,7 +65,9 @@ const navigation: NavItem[] = [
     name: "Resources",
     href: "/blog",
     children: [
-      { name: "Blog", href: "/blog" },
+      { name: "Blog", href: "/blog", description: "Latest insights on AI in education" },
+      { name: "Case Studies", href: "/case-studies", description: "Real results from real clients" },
+      { name: "Research & White Papers", href: "/research", description: "Original research and reports" },
       { name: "Interviews", href: "/interviews" },
       { name: "Speakers", href: "/speakers" },
     ],

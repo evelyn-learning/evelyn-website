@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const ReadingComprehensionDemo = dynamic(
   () => import('@/components/demos/ReadingComprehensionDemo'),
@@ -229,6 +231,18 @@ function UseCasesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['reading-comprehension'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about Reading Comprehension AI"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-purple-600 to-pink-700">
@@ -298,6 +312,7 @@ export default function ReadingComprehensionPage() {
       <DemoSection />
       <FeaturesSection />
       <UseCasesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

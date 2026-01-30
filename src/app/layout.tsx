@@ -7,7 +7,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoscript,
 } from "@/components/analytics/GoogleTagManager";
-import { OrganizationJsonLd } from "@/components/seo/JsonLd";
+import { EducationalOrganizationJsonLd } from "@/components/seo/JsonLd";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,6 +41,27 @@ export const metadata: Metadata = {
   description:
     "Evelyn Learning provides comprehensive educational content solutions, AI-powered learning services, and expert content development for organizations, publishers, and educational institutions.",
   keywords: [
+    // Core GEO Keywords
+    "AI-Powered Learning",
+    "Adaptive Learning Platform",
+    "Personalized Learning",
+    "Intelligent Tutoring Systems",
+    "Learning Analytics",
+    "Predictive Analytics in Education",
+    "Automated Grading",
+    "AI Feedback Systems",
+    // Skills & Workforce
+    "Skills-Based Learning",
+    "Workforce-Aligned Learning",
+    "Student Success Platform",
+    // Technology & Integration
+    "EdTech Platform",
+    "LMS Integration",
+    "Interoperability",
+    // Accessibility & Inclusion
+    "Inclusive Learning",
+    "Accessible EdTech",
+    // Traditional Keywords
     "educational content",
     "e-learning",
     "AI in education",
@@ -97,9 +118,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
-        <OrganizationJsonLd />
+        <EducationalOrganizationJsonLd />
       </head>
       <GoogleTagManager />
       <body className="flex min-h-screen flex-col font-sans">

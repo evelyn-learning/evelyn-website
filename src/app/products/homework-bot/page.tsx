@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const HomeworkHelpBot = dynamic(
   () => import('@/components/demos/HomeworkHelpBot'),
@@ -131,6 +133,18 @@ function FeaturesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['homework-bot'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about 24/7 AI Homework Helper"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-purple-600 to-pink-700">
@@ -183,6 +197,7 @@ export default function HomeworkBotProductPage() {
       <MetricsSection />
       <DemoSection />
       <FeaturesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>

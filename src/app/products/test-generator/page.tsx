@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { FAQ } from '@/components/ui/FAQ';
+import { productFAQs } from '@/data/faqs/products';
 
 const PracticeTestGenerator = dynamic(
   () => import('@/components/demos/PracticeTestGenerator'),
@@ -131,6 +133,18 @@ function FeaturesSection() {
   );
 }
 
+// FAQ Section
+function FAQSection() {
+  const faqs = productFAQs['test-generator'] || [];
+  return (
+    <FAQ
+      items={faqs}
+      title="Frequently Asked Questions"
+      description="Common questions about AI Practice Test Generator"
+    />
+  );
+}
+
 function CTASection() {
   return (
     <section className="py-16 bg-gradient-to-br from-emerald-600 to-teal-700">
@@ -183,6 +197,7 @@ export default function TestGeneratorProductPage() {
       <MetricsSection />
       <DemoSection />
       <FeaturesSection />
+      <FAQSection />
       <CTASection />
       <RelatedProductsSection />
     </main>
