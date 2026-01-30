@@ -46,7 +46,7 @@ async function generateWithClaude(
 ): Promise<AIBlogResponse> {
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [
       {
         role: "user",
@@ -100,7 +100,7 @@ async function generateWithGPT4(
       },
     ],
     response_format: { type: "json_object" },
-    max_tokens: 4096,
+    max_tokens: 8192,
     temperature: 0.7,
   });
 
