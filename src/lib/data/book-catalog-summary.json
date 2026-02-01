@@ -1,0 +1,188 @@
+{
+  "syncedAt": "2026-01-31T00:35:27.724Z",
+  "totalBooks": 1288,
+  "withFolderId": 354,
+  "byDiscipline": {
+    "unknown": 944,
+    "Adv Math": 13,
+    "Chemistry": 18,
+    "Calculus": 30,
+    "Statistics": 25,
+    "Precalculus": 16,
+    "Linear Algebra": 4,
+    "CS": 70,
+    "Finance": 6,
+    "Math": 103,
+    "Business": 29,
+    "Accounting": 9,
+    "Stats": 2,
+    "CSE": 3,
+    "Stat": 2,
+    "Math Stat": 10,
+    "Economics": 2,
+    "Adv Biology": 1,
+    "Finite Math": 1
+  },
+  "sampleBooks": [
+    {
+      "folderId": "",
+      "title": "Advanced Math",
+      "author": "",
+      "discipline": "",
+      "isbn": "",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Chemistry",
+      "author": "",
+      "discipline": "",
+      "isbn": "9780073048765",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Calculus",
+      "author": "",
+      "discipline": "",
+      "isbn": "",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Discrete Maths",
+      "author": "",
+      "discipline": "",
+      "isbn": "",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Mathematical applications for the management, life and Social Sciences",
+      "author": "Harshbarger",
+      "discipline": "",
+      "isbn": "9780547145099",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Calculus for Business, Economics, and the Social and Life Sciences",
+      "author": "Laurence Hoffmann, Gerald Bradley",
+      "discipline": "",
+      "isbn": "9780077292737",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Statistical inference",
+      "author": "Casella/Berger",
+      "discipline": "",
+      "isbn": "9780534243128",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Discrete Mathematics and it applications (PDF)",
+      "author": "Kenneth Rosen",
+      "discipline": "",
+      "isbn": "9780073383095",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "College Mathematics for Business, Economics, Life Sciences and Social Sciences (Scanning)",
+      "author": "Barnett, Ziegler, Byleen",
+      "discipline": "",
+      "isbn": "9780321614001",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Chemistry for engineering students (PDF)",
+      "author": "Larry Brown, Tom Holme",
+      "discipline": "",
+      "isbn": "9781439047910",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Probability and Statistics for Engineers and Scientists (with CD-ROM) (Scanning)",
+      "author": "",
+      "discipline": "",
+      "isbn": "9780495107576",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Linear Algebra with Applications, Seventh Edition",
+      "author": "Gareth Williams",
+      "discipline": "",
+      "isbn": "9780763782481",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Organic Chemistry",
+      "author": "K. Peter C. Vollhardt",
+      "discipline": "",
+      "isbn": "9781429204941",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Precalculus",
+      "author": "Ron Larson",
+      "discipline": "",
+      "isbn": "9781439045770",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Calculus and Its Applications",
+      "author": "Larry J. Goldstein, David I. Schneider,  David C. Lay, Nakhle H. Asmar",
+      "discipline": "",
+      "isbn": "9780321571304",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Introduction to Linear Algebra",
+      "author": "Gilbert Strang",
+      "discipline": "",
+      "isbn": "9780980232714",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Fundamentals of Organic Chemistry",
+      "author": "John E. McMurry",
+      "discipline": "",
+      "isbn": "9781439049716",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Introductory Chemistry: Concepts and Critical Thinking",
+      "author": "Charles H. Corwin",
+      "discipline": "",
+      "isbn": "9780321663054",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Mathematics A Discrete Introduction",
+      "author": "Edward R.Scheinerman",
+      "discipline": "",
+      "isbn": "9780840049421",
+      "source": "Sheet_0"
+    },
+    {
+      "folderId": "",
+      "title": "Multivariable Calculus",
+      "author": "Ron Larson ,Bruce H. Edwards",
+      "discipline": "",
+      "isbn": "9780547209975",
+      "source": "Sheet_0"
+    }
+  ]
+}

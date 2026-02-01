@@ -33,6 +33,37 @@ export const productFAQs: Record<string, FAQItem[]> = {
     },
   ],
 
+  'voice-tutor': [
+    {
+      question: 'What is the AI Voice Tutor?',
+      answer: 'The AI Voice Tutor is an intelligent tutoring system that provides real-time voice-based instruction with a visual whiteboard. Students can speak naturally and receive spoken explanations while seeing equations, diagrams, and step-by-step solutions appear on screen.',
+    },
+    {
+      question: 'How does voice interaction work?',
+      answer: 'Students click to speak and the AI transcribes their questions in real-time. The tutor responds with natural speech and can simultaneously draw on the whiteboard to explain concepts visually. This mirrors the experience of a real tutoring session.',
+    },
+    {
+      question: 'What subjects does the Voice Tutor support?',
+      answer: 'Currently optimized for physics with topics like kinematics and projectile motion. We are expanding to cover mathematics, chemistry, and other STEM subjects. The system can be customized for your specific curriculum needs.',
+    },
+    {
+      question: 'Can students also type their questions?',
+      answer: 'Yes, students can choose between voice chat and text chat modes. Voice mode offers a more natural tutoring experience, while text mode works well in quiet environments or for students who prefer typing.',
+    },
+    {
+      question: 'What is the visual whiteboard feature?',
+      answer: 'The AI can generate mathematical equations, graphs, diagrams, and step-by-step solutions that appear on a digital whiteboard during the session. This helps visual learners understand concepts better than voice-only tutoring.',
+    },
+    {
+      question: 'Can students upload their homework for help?',
+      answer: 'Yes, students can take a photo of their homework and upload it directly in the session. The AI extracts the problem and guides them through solving it step-by-step without simply giving the answer.',
+    },
+    {
+      question: 'Is the AI Voice Tutor available as a white-label solution?',
+      answer: 'Absolutely. We offer full white-label deployment with your branding, custom voice settings, and curriculum integration. The AI can be embedded in your existing learning platform via API or as a standalone application.',
+    },
+  ],
+
   'homework-bot': [
     {
       question: 'What is the 24/7 AI Homework Helper?',

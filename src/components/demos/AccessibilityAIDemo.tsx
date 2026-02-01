@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface AccessibilityIssue {
   type: string;
@@ -111,8 +112,9 @@ Provide analysis in this JSON format:
   "improvedContent": "the corrected ${contentType === 'html' ? 'HTML' : 'text'} with all fixes applied"
 }`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -120,29 +122,30 @@ Provide analysis in this JSON format:
           system: systemPrompt,
           max_tokens: 3000,
         }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsAnalyzing(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as AccessibilityReport;
           setReport(parsed);
-        } else {
+        } catch {
           setError('Could not parse report. Please try again.');
         }
+      } else {
+        setError('Could not parse report. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsAnalyzing(false);
     }
+
+    setIsAnalyzing(false);
   };
 
   const loadSample = (quality: keyof typeof SAMPLE_CONTENT) => {

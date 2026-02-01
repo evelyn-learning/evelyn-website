@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface CourseModule {
   id: string;
@@ -111,8 +112,9 @@ Create a complete course structure in this JSON format:
 Include 4-6 modules with a mix of content types (readings, videos, quizzes, activities).
 Each quiz should have 2-3 questions.`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -120,32 +122,33 @@ Each quiz should have 2-3 questions.`;
           system: systemPrompt,
           max_tokens: 3000,
         }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsGenerating(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as GeneratedCourse;
           setGeneratedCourse(parsed);
           if (parsed.modules.length > 0) {
             setExpandedModule(parsed.modules[0].id);
           }
-        } else {
+        } catch {
           setError('Could not parse course structure. Please try again.');
         }
+      } else {
+        setError('Could not parse course structure. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsGenerating(false);
     }
+
+    setIsGenerating(false);
   };
 
   const loadSample = () => {

@@ -24,6 +24,70 @@ const CONFIG = {
 };
 
 // ============================================================================
+// API ERROR CLASSIFICATION
+// ============================================================================
+type APIErrorType = 'billing' | 'rate_limit' | 'overloaded' | 'auth' | 'server' | 'unknown';
+
+interface APIErrorInfo {
+  type: APIErrorType;
+  userMessage: string;
+  retryable: boolean;
+}
+
+function classifyAPIError(error: unknown): APIErrorInfo {
+  if (error instanceof Anthropic.APIError) {
+    const message = error.message.toLowerCase();
+
+    if (message.includes('credit balance') || message.includes('billing') ||
+        message.includes('purchase credits') || message.includes('upgrade')) {
+      return {
+        type: 'billing',
+        userMessage: 'AI service temporarily unavailable. Please try again later.',
+        retryable: false,
+      };
+    }
+
+    if (error.status === 429 || message.includes('rate limit')) {
+      return {
+        type: 'rate_limit',
+        userMessage: 'Too many requests. Please wait a moment.',
+        retryable: true,
+      };
+    }
+
+    if (error.status === 529 || message.includes('overloaded')) {
+      return {
+        type: 'overloaded',
+        userMessage: 'AI service is busy. Please try again shortly.',
+        retryable: true,
+      };
+    }
+
+    if (error.status === 401) {
+      return {
+        type: 'auth',
+        userMessage: 'Service configuration error.',
+        retryable: false,
+      };
+    }
+
+    if (error.status && error.status >= 500) {
+      return {
+        type: 'server',
+        userMessage: 'AI service experiencing issues. Please try later.',
+        retryable: true,
+      };
+    }
+  }
+
+  return {
+    type: 'unknown',
+    userMessage: 'Something went wrong. Please try again.',
+    retryable: true,
+  };
+}
+
+// ============================================================================
 // RATE LIMITING (In-memory - for production, use Redis/Upstash)
 // ============================================================================
 interface RateLimitEntry {
@@ -260,22 +324,17 @@ export async function POST(request: NextRequest) {
 
     console.error('Claude API error:', error);
 
-    if (error instanceof Anthropic.APIError) {
-      logEntry.error = error.message;
-      logRequest(logEntry);
-
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status || 500 }
-      );
-    }
-
+    const errorInfo = classifyAPIError(error);
     logEntry.error = error instanceof Error ? error.message : 'Unknown error';
     logRequest(logEntry);
 
     return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
-      { status: 500 }
+      {
+        error: errorInfo.userMessage,
+        errorType: errorInfo.type,
+        retryable: errorInfo.retryable,
+      },
+      { status: errorInfo.type === 'billing' ? 503 : (error instanceof Anthropic.APIError ? error.status || 500 : 500) }
     );
   }
 }

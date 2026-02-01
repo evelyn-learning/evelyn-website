@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 // Types
 interface Message {
@@ -113,8 +114,9 @@ Remember: Your goal is to build understanding and confidence, not dependency.`;
     }));
     conversationHistory.push({ role: 'user', content: messageText });
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,35 +126,39 @@ Remember: Your goal is to build understanding and confidence, not dependency.`;
           system: systemPrompt,
           max_tokens: 1500
         })
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
       }
+    );
 
-      if (data.text) {
-        const assistantMessage: Message = {
-          role: 'assistant',
-          content: data.text,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        throw new Error('No response received');
-      }
-    } catch (err) {
+    if (apiError) {
       const errorMessage: Message = {
         role: 'assistant',
-        content: "I'm having trouble connecting right now. In a production environment, this would be connected to your secure backend. Please try again!",
+        content: apiError.message,
         timestamp: new Date(),
         isError: true
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    if (data?.text) {
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.text,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+    } else {
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'No response received. Please try again.',
+        timestamp: new Date(),
+        isError: true
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+
+    setIsLoading(false);
   };
 
   const handleSampleQuestion = (question: string) => {

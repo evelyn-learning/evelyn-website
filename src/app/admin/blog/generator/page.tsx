@@ -94,6 +94,17 @@ const LENGTHS: { value: BlogLength; label: string; description: string }[] = [
   { value: "long", label: "Long", description: "~2500 words" },
 ];
 
+// Sanitize image URL to prevent XSS via javascript: or data: URLs
+function sanitizeImageUrl(url: string): string {
+  if (!url) return "";
+  const trimmed = url.trim().toLowerCase();
+  // Only allow http, https, and relative paths (starting with /)
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+    return url;
+  }
+  return "";
+}
+
 export default function BlogGeneratorPage() {
   const router = useRouter();
 
@@ -934,10 +945,10 @@ export default function BlogGeneratorPage() {
                         Generate
                       </button>
                     </div>
-                    {editedFeaturedImage && (
+                    {editedFeaturedImage && sanitizeImageUrl(editedFeaturedImage) && (
                       <div className="mt-2">
                         <img
-                          src={editedFeaturedImage}
+                          src={sanitizeImageUrl(editedFeaturedImage)}
                           alt="Featured"
                           className="h-32 w-full rounded-lg object-cover"
                         />

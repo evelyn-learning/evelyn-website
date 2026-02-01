@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface ComprehensionQuestion {
   question: string;
@@ -102,8 +103,9 @@ Provide analysis in this JSON format:
 
 Generate at least 5 questions: 2 literal, 2 inferential, 1 evaluative.`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,29 +113,30 @@ Generate at least 5 questions: 2 literal, 2 inferential, 1 evaluative.`;
           system: systemPrompt,
           max_tokens: 2500,
         }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsAnalyzing(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as ReadingAnalysis;
           setAnalysis(parsed);
-        } else {
+        } catch {
           setError('Could not parse analysis. Please try again.');
         }
+      } else {
+        setError('Could not parse analysis. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsAnalyzing(false);
     }
+
+    setIsAnalyzing(false);
   };
 
   const loadSample = (type: keyof typeof SAMPLE_PASSAGES) => {

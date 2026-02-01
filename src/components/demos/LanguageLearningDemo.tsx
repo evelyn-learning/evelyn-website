@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -82,8 +83,9 @@ Format your response as JSON:
   "translation": "English translation"
 }`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,26 +93,32 @@ Format your response as JSON:
           system: systemPrompt,
           max_tokens: 500,
         }),
-      });
+      }
+    );
 
-      const data = await response.json();
+    if (apiError) {
+      console.error('Error starting conversation:', apiError.message);
+      setIsLoading(false);
+      return;
+    }
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]);
           setMessages([{
             role: 'assistant',
             content: parsed.message,
             translation: parsed.translation
           }]);
+        } catch {
+          console.error('Error parsing conversation response');
         }
       }
-    } catch (err) {
-      console.error('Error starting conversation:', err);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const sendMessage = async () => {
@@ -144,8 +152,9 @@ Always respond in JSON format:
     }));
     conversationHistory.push({ role: 'user', content: input });
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,13 +162,19 @@ Always respond in JSON format:
           system: systemPrompt,
           max_tokens: 500,
         }),
-      });
+      }
+    );
 
-      const data = await response.json();
+    if (apiError) {
+      console.error('Error sending message:', apiError.message);
+      setIsLoading(false);
+      return;
+    }
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]);
           setMessages(prev => [...prev, {
             role: 'assistant',
@@ -173,13 +188,13 @@ Always respond in JSON format:
               content: `💡 Tip: ${parsed.correction}`
             }]);
           }
+        } catch {
+          console.error('Error parsing message response');
         }
       }
-    } catch (err) {
-      console.error('Error sending message:', err);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const suggestResponse = async () => {
@@ -193,8 +208,9 @@ Always respond in JSON format:
 
     const lastAssistantMessage = [...messages].reverse().find(m => m.role === 'assistant');
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -214,13 +230,19 @@ Format as JSON:
           system: systemPrompt,
           max_tokens: 300,
         }),
-      });
+      }
+    );
 
-      const data = await response.json();
+    if (apiError) {
+      console.error('Error getting suggestions:', apiError.message);
+      setIsLoading(false);
+      return;
+    }
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]);
           // Show suggestions as a system message
           const suggestionText = parsed.suggestions
@@ -230,13 +252,13 @@ Format as JSON:
             role: 'system',
             content: `💬 Suggestions:\n${suggestionText}`
           }]);
+        } catch {
+          console.error('Error parsing suggestions');
         }
       }
-    } catch (err) {
-      console.error('Error getting suggestions:', err);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (

@@ -1,0 +1,2532 @@
+the s ystem.
+c.The child mo ves a way from the c enter of the
+platform, incr easing the t otal ang ular
+momentum o f the s ystem.
+d.The child mo ves a way from the c enter of the
+platform, decr easing the r otational iner tia o f
+the s ystem.
+16.
+FIGURE 10.41 A point labeled “Moon ” lies on a dashed
+ellipse . Two other points , labeled “ A” and “B” , lie at opposit e
+ends o f the el lipse . A point labeled “Planet ” lies inside the
+ellipse .
+A moon is in an el liptical orbit about a planet as
+shown abo ve. At point Athe moon has speed uA
+and is at dis tanc eRAfrom the planet. A t point B
+the moon has speed uB. Has the moon 's ang ular
+momentum chang ed? Explain y our ans wer.
+17.A hams ter sits 0.10 m fr om the c enter of a lazy
+Susan o f negligible mas s. The wheel spins with a
+frequency o f 1.0 r ev/s. Ho w wil l the fr equency o f
+the lazy Susan chang e if the hams ter w alks to 0.30
+m fr om the c enter of rotation? As sume z ero
+friction and no e xternal t orque.
+a.It wil l speed up t o 2.0 r ev/s.
+b.It wil l speed up t o 9.0 r ev/s.
+c.It wil l slo w to 0.11 r ev/s.
+d.It wil l slo w to 0.22 r ev/s.
+18.Earth has a mas s of 6.0 × 1024kg, a radius o f 6.4 ×
+106m, and a r otational fr equency o f 1.2 × 10–5
+rev/s. How would the planet's r otational fr equency
+chang e if a la yer of Ear th with mas s 1.0 × 1023kg
+broke off of the Ear th, decr easing Ear th's radius b y
+0.2 × 106m? As sume no friction.
+19.Consider s ystem A , consis ting o f two disk s of
+radius R, with both r otating clockwise . No w
+consider s ystem B , consis ting o f one disk o f radius
+Rrotating c ount erclockwise and another disk o f
+radius 2 Rrotating clockwise . All of the disk s ha ve
+the same mas s, and al l have the same magnitude
+of ang ular v elocity .
+Which s ystem has the gr eatest ang ular
+momentum?
+a.Ab.B
+c.They're equal .
+d.Not enough inf ormation
+20.Assume that a basebal l bat being s wung at 3π
+rad/s b y a bat ting machine is equiv alent t o a 1.1 m
+thin r od with a mas s of 1.0 k g. Ho w fas t would a
+0.15 k g basebal l that squar ely hits the v ery tip o f
+the bat ha ve to be g oing f or the net ang ular
+momentum o f the bat -bal l system t o be z ero?
+10.6 Collisions o f Ext ended Bodies in T wo
+Dimensions
+21.A bo x with a mas s of 2.0 k g rests on one end o f a
+seesa w. The seesa w is 6.0 m long , and w e can
+assume it has negligible mas s. Appr oximat ely
+what ang ular momentum wil l the bo x ha ve if
+someone with a mas s of 65 k g sits on the other
+end o f the seesa w quickl y, with a v elocity o f 1.2
+m/s?
+a.702 k g•m2/s
+b.39 k g•m2/s
+c.18 k g•m2/s
+d.1.2 k g•m2/s
+22.A spinner in a boar d game can be thought o f as a
+thin r od that spins about an axis at its c enter. The
+spinner in a c ertain g ame is 12 cm long and has a
+mas s of 10 g . Ho w wil l its ang ular v elocity chang e
+when it is flick ed at one end with a f orce
+equiv alent t o 15 g tr avelling at 5.0 m/s if al l the
+ener gy of the c ollision is tr ansferred to the
+spinner? ( You can use the table in Figure 10.12 to
+estimat e the r otational iner tia o f the spinner .)
+23.A cy clist pedals t o exert a torque on the r ear
+wheel o f the bicy cle. When the cy clist chang es to a
+higher g ear, the t orque incr eases . Which o f the
+following w ould be the mos t eff ectiv e strategy to
+help y ou det ermine the chang e in ang ular
+momentum o f the bicy cle wheel?
+a.multiplying the r atio betw een the tw o torques
+by the mas s of the bicy cle and rider
+b.adding the tw o torques t ogether , and
+multiplying b y the time f or which both t orques
+are applied
+c.multiplying the diff erence in the tw o torques
+by the time f or which the ne w torque is
+applied
+d.multiplying both t orques b y the mas s of the
+bicy cle and rider
+24.An electric scr ewdriver has tw o speeds , each o f
+which e xerts a diff erent t orque on a scr ew.10 • T est Prep for AP ® Courses 467
+Describe what calculations y ou c ould use t o help
+you c ompar e the ang ular momentum o f a scr ew at
+each speed. What measur ements w ould y ou need
+to mak e in or der t o calculat e this?
+25.Why is it impor tant t o consider the shape o f an
+object when det ermining the object's ang ular
+momentum?
+a.The shape det ermines the location o f the
+center of mas s. The location o f the c enter of
+mas s in turn det ermines the ang ular v elocity
+of the object.
+b.The shape helps y ou det ermine the location
+of the object's out er edg e, wher e rotational
+velocity wil l be gr eatest.
+c.The shape helps y ou det ermine the location
+of the c enter of rotation.
+d.The shape det ermines the location o f the
+center of mas s. The location o f the c enter of
+mas s contribut es to the object's r otational
+inertia, which c ontribut es to its ang ular
+momentum.
+26.How could y ou c ollect and anal yze data t o test the
+difference betw een the t orques pr ovided b y tw o
+speeds on a tablet op fan?27.Describe a r otational s ystem y ou c ould use t o
+demons trate the eff ect on the s ystem's ang ular
+momentum o f appl ying diff erent amounts o f
+external t orque.
+28.How could y ou use simple equipment such as
+balls and s tring t o study the chang es in ang ular
+momentum o f a s ystem when it int eracts with
+another s ystem?
+10.7 Gyroscopic E ffects: V ector Aspec ts of
+Angular Momentum
+29.A globe (model o f the Ear th) is a hol low spher e
+with a r adius o f 16 cm. B y wr apping a c ord around
+the equat or of a globe and pul ling on it, a person
+exerts a t orque on the globe o f 120 N • m f or 1.2 s .
+What ang ular momentum does the globe ha ve
+after 1.2 s?
+30.How could y ou use a fishing r eel t o test the
+relationship betw een the t orque applied t o a
+system, the time f or which the t orque w as applied,
+and the r esul ting ang ular momentum o f the
+system? Ho w would y ou measur e ang ular
+momentum?468 10 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+CONNECT ION F OR AP® C OURSESCHAP TER 11
+Fluid S tatics
+11.1 Wha t Is a Fluid?
+11.2 Density
+11.3 Pressure
+11.4 Varia tion o f Pressure with Dep th in a Fluid
+11.5 Pascal ’s Principle
+11.6 Gaug e Pressure, Absolut e Pressure, and P ressure Measur ement
+11.7 Archimedes ’ Principle
+11.8 Cohesion and Adhesion in Liquids: Sur face Tension and Capil lary Action
+11.9 Pressures in the Body
+Much o f what w e value in lif e is fluid: a br eath o f fresh wint er air; the w ater w e
+drink, s wim in, and bathe in; the blood in our v eins . But what e xactl y is a fluid? Can w e unders tand fluids with the
+laws alr eady pr esent ed, or wil l new la ws emer ge from their s tudy?
+As y ou read this chap ter, you wil l learn ho w the arr angement and int eraction o f the par ticles —atoms and
+molecules —that mak e up a fluid define man y of its macr oscopic char acteristics, like density and pr essure (Big I deaFIGURE 11.1 The fluid es sential t o all life has a beauty o f its o wn. It also helps suppor t the w eight o f this s wimmer . (credit: 12019, Pixaba y)
+CHAP TER OUTLINE
+•State the common phases of matter.
+•Explain the physical characteristics of solids, liquids, and gases.
+•Describe the arrangement of atoms in solids, liquids, and gases.
+Matter most commonly exists as a solid, liquid, gas, or plasma; these states are known as the common phases of
+matter . Solids have a definite shape and a specific volume, liquids have a definite volume but their shape changes
+depending on the container in which they are held, gases have neither a definite shape nor a specific volume as their
+molecules move to fill the container in which they are held, and plasmas also have neither definite shape nor
+volume. (See Figure 11.2.) Liquids, gases, and plasmas are considered to be fluids because they yield to shearing
+forces, whereas solids resist them. Note that the extent to which fluids yield to shearing forces (and hence flow
+easily and quickly) depends on a quantity called the viscosity which is discussed in detail in Viscosity and Laminar
+Flow; Poiseuille’s Law. We can understand the phases of matter and what constitutes a fluid by considering the
+forces between atoms that make up matter in the three phases.
+FIGURE 11.2 (a) Atoms in a solid always have the same neighbors, held near home by forces represented here by springs. These atoms are
+essentially in contact with one another. A rock is an example of a solid. This rock retains its shape because of the forces holding its atoms
+together. (b) Atoms in a liquid are also in close contact but can slide over one another. Forces between them strongly resist attempts to
+push them closer together and also hold them in close contact. Water is an example of a liquid. Water can flow, but it also remains in an
+open container because of the forces between its atoms. (c) Atoms in a gas are separated by distances that are considerably larger than the
+size of the atoms themselves, and they move about freely. A gas must be held in a closed container to prevent it from moving out freely. (d)
+A plasma is composed of electrons, protons, and ions that, like gases, are spaced far apart and move about freely.
+Atoms in solids are in close contact, with forces between them that allow the atoms to vibrate but not to change
+positions with neighboring atoms. (These forces can be thought of as springs that can be stretched or compressed,
+but not easily broken.) Thus a solid resists all types of stress. A solid cannot be easily deformed because the atoms470 11 • Fluid Statics
+1, Enduring Understanding 1.E, Essential Knowledge 1.E.1). While the number of particles in a fluid is often 
+immense, you will be able to use a probabilistic approach in order to explain how a fluid affects its environment in a 
+variety of ways (Big Idea 7, Enduring Understanding 7.A, Essential Knowledge 7.A.1). From the pressure a fluid 
+places on the walls of a hydraulic system to a variety of biological and medical applications, understanding a fluid's 
+properties begins with understanding its internal structure.
+Big Idea 1 Objects and systems have properties such as mass and charge. Systems may have internal structure.
+Enduring Understanding 1.E Materials have many macroscopic properties that result from the arrangement and 
+interactions of the atoms and molecules that make up the material.
+Essential Knowledge 1.E.1 Matter has a property called density.
+Big Idea 7 The mathematics of probability can be used to describe the behavior of complex systems and to interpret 
+the behavior of quantum mechanical systems.
+Enduring Understanding 7.A The properties of an ideal gas can be explained in terms of a small number of 
+macroscopic variables including temperature and pressure.
+Essential Knowledge 7.A.1 The pressure of a system determines the force that the system exerts on the walls of its 
+container and is a measure of the average change in the momentum or impulse of the molecules colliding with the 
+walls of the container. The pressure also exists inside the system itself, not just at the walls of the container.
+Click to view content (https:/ /openstax.org/books/college-physics-ap-courses-2e/pages/11-connection-for-ap-r-
+courses)
+11.1 What Is a Fluid?
+LEARNING OBJECTIVES
+By the end of this section, you will be able to:
+Access for free at openstax.org
+that mak e up the solid ar e not able t o mo ve about fr eely. Solids also r esist compr ession, because their at oms f orm
+part of a lat tice structur e in which the at oms ar e a r elativ ely fix ed dis tanc e apar t. Under c ompr ession, the at oms
+would be f orced int o one another . Mos t of the e xamples w e ha ve studied so far ha ve involved solid objects which
+deform v ery little when s tressed.
+In contr ast,liquids deform easil y when s tressed and do not spring back t o their original shape onc e the f orce is
+remo ved because the at oms ar e free to slide about and chang e neighbors —that is , the yflow(so the y are a type o f
+fluid), with the molecules held t ogether b y their mutual at traction. When a liquid is plac ed in a c ontainer with no lid
+on, it r emains in the c ontainer (pr oviding the c ontainer has no holes belo w the sur face of the liquid!). Because the
+atoms ar e closel y pack ed, liquids , like solids , resist compr ession.
+Atoms in gases and char ged par ticles in plasmas are separ ated b y dis tanc es that ar e lar ge compar ed with the siz e of
+the par ticles . The f orces betw een the par ticles ar e ther efore very weak, e xcept when the y collide with one another .
+Gases and plasmas thus not onl y flo w (and ar e ther efore consider ed to be fluids) but the y are relativ ely eas y to
+compr ess because ther e is much spac e and lit tle force betw een the par ticles . When plac ed in an open c ontainer
+gases , unlik e liquids , wil l escape . The major dis tinction is that g ases ar e easil y compr essed, wher eas liquids ar e not.
+Plasmas ar e difficul t to contain because the y ha ve so much ener gy. When discus sing ho w subs tanc es flo w, we shal l
+gener ally refer to both g ases and liquids simpl y as fluids , and mak e a dis tinction betw een them onl y when the y
+beha ve diff erently.
+PHE T EXPLORATIONS
+States o f Ma tter—Basics
+Heat, c ool, and c ompr ess atoms and molecules and w atch as the y chang e betw een solid, liquid, and g as phases .
+Click t o vie w content(https:/ /opens tax.org/book s/college-physics-ap-courses -2e/pag es/11-1- what -is-a-fluid)
+11.2 Densit y
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define density .
+•Calculat e the mas s of a reser voir fr om its density .
+•Compar e and c ontr ast the densities o f various subs tanc es.
+Which w eighs mor e, a ton o f feathers or a t on o f brick s? This old riddle pla ys with the dis tinction betw een mas s and
+density . A ton is a t on, o f course; but brick s ha ve much gr eater density than f eathers , and so w e are temp ted to think
+of them as hea vier. (See Figure 11.3 .)
+Density , as y ou wil l see , is an impor tant char acteristic o f subs tanc es. It is crucial , for example , in det ermining
+whether an object sink s or floats in a fluid. Density is the mas s per unit v olume o f a subs tanc e or object. In equation
+form, density is defined as
+wher e the Gr eek let ter (rho) is the s ymbol f or density ,is the mas s, and is the v olume oc cupied b y theCONNE CTIONS: SUBMICR OSCOPIC E XPLANA TION OF SOLIDS AND LIQUIDS
+Atomic and molecular char acteristics e xplain and underlie the macr oscopic char acteristics o f solids and fluids .
+This submicr oscopic e xplanation is one theme o f this t ext and is highlight ed in the Things Gr eat and Smal l
+featur es in Conser vation o f Momentum . See , for example , micr oscopic descrip tion o f collisions and momentum
+or micr oscopic descrip tion o f pressure in a g as. This pr esent section is de voted entir ely to the submicr oscopic
+explanation o f solids and liquids .
+11.111.2 • Densit y 471
+subs tanc e.
+In the riddle r egarding the f eathers and brick s, the mas ses ar e the same , but the v olume oc cupied b y the f eathers is
+much gr eater, sinc e their density is much lo wer. The SI unit o f density is , representativ e values ar e giv en in
+Table 11.1 . The metric s ystem w as original ly de vised so that w ater w ould ha ve a density o f , equiv alent t o
+. Thus the basic mas s unit, the kilogr am, w as firs t devised t o be the mas s of 1000 mL o f water, which has
+a volume o f 1000 cm3.
+Subs tanc eorSubs tanc eorSubs tanc eor
+Solids Liquids Gases
+Aluminum 2.7Water
+(4ºC)1.000 Air
+Brass 8.44 Blood 1.05Carbon
+dioxide
+Copper (a verage) 8.8 Sea w ater 1.025Carbon
+mono xide
+Gold 19.32 Mercury 13.6 Hydrogen
+Iron or s teel 7.8Ethyl
+alcohol0.79 Helium
+Lead 11.3 Gasoline 0.68 Methane
+Polystyrene 0.10 Glycerin 1.26 Nitrogen
+Tungs ten 19.30 Olive oil 0.92Nitrous
+oxide
+Uranium 18.70 Oxygen
+Concr ete 2.30–3.0Steam
+Cork 0.24
+TABLE 11.1 Densities o f Various Subs tanc esDENSIT Y
+Density is mas s per unit v olume .
+wher eis the s ymbol f or density ,is the mas s, and is the v olume oc cupied b y the subs tanc e.11.2472 11 • Fluid S tatics
+Access f or free at opens tax.org
+Subs tanc eorSubs tanc eorSubs tanc eor
+Glas s, common
+(average)2.6
+Granite 2.7
+Earth’s crus t 3.3
+Wood 0.3–0.9
+Ice (0°C) 0.917
+Bone 1.7–2.0
+Silver 10.49
+TABLE 11.1 Densities o f Various Subs tanc es
+FIGURE 11.3 A ton o f feathers and a t on o f brick s ha ve the same mas s, but the f eathers mak e a much big ger pile because the y ha ve a much
+lower density .
+As y ou can see b y examining Table 11.1 , the density o f an object ma y help identif y its c omposition. The density o f
+gold, f or example , is about 2.5 times the density o f iron, which is about 2.5 times the density o f aluminum. Density
+also r eveals something about the phase o f the mat ter and its subs tructur e. Notic e that the densities o f liquids and
+solids ar e roughl y compar able , consis tent with the fact that their at oms ar e in close c ontact. The densities o f gases
+are much les s than those o f liquids and solids , because the at oms in g ases ar e separ ated b y lar ge amounts o f emp ty
+spac e.
+EXAMPLE 11.1
+Calcula ting the Mas s of a R eser voir F rom Its V olume
+A reser voir has a sur face area o f and an a verage dep th of 40.0 m. What mas s of water is held behind the
+dam? (See Figure 11.4 for a vie w of a lar ge reser voir—the Thr ee Gor ges Dam sit e on the Y angtz e Riv er in c entr al
+China .)TAKE-HOME E XPERIMENT SUGAR AND S ALT
+A pile o f sug ar and a pile o f sal t look pr etty similar , but which w eighs mor e? If the v olumes o f both piles ar e the
+same , any diff erence in mas s is due t o their diff erent densities (including the air spac e betw een cr ystals). Which
+do y ou think has the gr eater density? What v alues did y ou find? What method did y ou use t o det ermine these
+values?
+11.2 • Densit y 473
+Strategy
+We can calculat e the v olume of the r eser voir fr om its dimensions , and find the density o f water inTable 11.1 .
+Then the mas s can be f ound fr om the definition o f density
+Solution
+Solving equation for gives .
+The v olume of the r eser voir is its sur face area times its a verage dep th:
+The density o f water fromTable 11.1 is . Subs tituting and into the e xpression f or mas s
+gives
+Discus sion
+A lar ge reser voir c ontains a v ery lar ge mas s of water. In this e xample , the w eight o f the w ater in the r eser voir is
+, wher eis the ac celeration due t o the Ear th’s gravity (about ). It is r easonable t o
+ask whether the dam mus t suppl y a f orce equal t o this tr emendous w eight. The ans wer is no . As w e shal l see in the
+following sections , the f orce the dam mus t suppl y can be much smal ler than the w eight o f the w ater it holds back.
+FIGURE 11.4 Three Gor ges Dam in c entr al China . When c omplet ed in 2008, this became the w orld’ s lar gest hydroelectric plant, g ener ating
+power equiv alent t o that g ener ated b y 22 a verage-sized nuclear po wer plants . The c oncr ete dam is 181 m high and 2.3 km acr oss. The
+reser voir made b y this dam is 660 km long . Over 1 mil lion people w ere displac ed b y the cr eation o f the r eser voir. (credit: L e Gr and P ortage)
+11.3 Pressur e
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define pr essure.
+•Explain the r elationship betw een pr essure and f orce.
+•Calculat e force giv en pr essure and ar ea.
+You ha ve no doub t hear d the w ordpressurebeing used in r elation t o blood (high or lo w blood pr essure) and in
+relation t o the w eather (high- and lo w-pressure weather s ystems). These ar e onl y tw o of man y examples o f
+pressures in fluids . Pressure is defined as11.3
+11.4
+11.5474 11 • Fluid S tatics
+Access f or free at opens tax.org
+wher e is a f orce applied t o an ar ea that is perpendicular t o the f orce.
+A giv en force can ha ve a significantl y diff erent eff ect depending on the ar ea o ver which the f orce is e xerted, as
+shown in Figure 11.5 . The SI unit f or pr essure is the pascal , wher e
+In addition t o the pascal , ther e are man y other units f or pr essure that ar e in c ommon use . In met eorolog y,
+atmospheric pr essure is o ften described in units o f mil libar (mb), wher e
+Pounds per squar e inch is still sometimes used as a measur e of tire pressure, and mil limet ers o f
+mer cury (mm Hg ) is s till often used in the measur ement o f blood pr essure. Pressure is defined f or al l states o f
+matter but is par ticularl y impor tant when discus sing fluids .
+FIGURE 11.5 (a) While the person being pok ed with the fing er might be irritat ed, the f orce has lit tle las ting eff ect. (b) In c ontr ast, the same
+force applied t o an ar ea the siz e of the sharp end o f a needle is gr eat enough t o break the skin.
+EXAMPLE 11.2
+Calcula ting F orce Ex erted b y the Air: Wha t Force Does a P ressure Ex ert?
+An as tronaut is w orking outside the Int ernational Spac e Station wher e the atmospheric pr essure is es sential ly zero.
+The pr essure gauge on her air tank r eads . What f orce does the air inside the tank e xert on the flat end
+of the cylindrical tank, a disk 0.150 m in diamet er?
+Strategy
+We can find the f orce exerted fr om the definition o f pressure giv en in , provided w e can find the ar ea acted
+upon.
+Solution
+By rearr anging the definition o f pressure to sol ve for force, we see that
+Here, the pr essure is giv en, as is the ar ea o f the end o f the cylinder , giv en b y . Thus ,11.6
+PRESSURE
+Pressure is defined as the f orce divided b y the ar ea perpendicular t o the f orce over which the f orce is applied, or
+11.7
+11.8
+11.9
+11.1011.3 • P ressur e 475
+Discus sion
+Wow! No w onder the tank mus t be s trong. Sinc e we found , we see that the f orce exerted b y a pr essure is
+directly propor tional t o the ar ea act ed upon as w ell as the pr essure itself .
+The f orce exerted on the end o f the tank is perpendicular t o its inside sur face. This dir ection is because the f orce is
+exerted b y a s tatic or s tationar y fluid. W e ha ve alr eady seen that fluids cannot withs tand shearing (side ways) forces;
+they cannot exertshearing f orces, either . Fluid pr essure has no dir ection, being a scalar quantity . The f orces due t o
+pressure ha ve well-defined dir ections: the y are always exerted perpendicular t o an y sur face. (See the tir e in Figure
+11.6 , for example .) Final ly, not e that pr essure is e xerted on al l sur faces. Swimmers , as w ell as the tir e, feel pr essure
+on al l sides . (See Figure 11.7 .)
+FIGURE 11.6 Pressure inside this tir e exerts forces perpendicular t o all sur faces it c ontacts . The arr ows giv e representativ e dir ections and
+magnitudes o f the f orces e xerted at v arious points . Not e that s tatic fluids do not e xert shearing f orces.
+FIGURE 11.7 Pressure is e xerted on al l sides o f this s wimmer , sinc e the w ater w ould flo w int o the spac e he oc cupies if he w ere not ther e.
+The arr ows represent the dir ections and magnitudes o f the f orces e xerted at v arious points on the s wimmer . Not e that the f orces ar e lar ger
+underneath, due t o greater dep th, giving a net up ward or buo yant f orce that is balanc ed b y the w eight o f the s wimmer .
+PHE T EXPLORATIONS
+Gas P roper ties
+Pump g as molecules t o a bo x and see what happens as y ou chang e the v olume , add or r emo ve heat, chang e gravity,
+and mor e. Measur e the t emper atur e and pr essure, and disc over ho w the pr oper ties o f the g as vary in r elation t o
+each other .
+Click t o vie w content(https:/ /opens tax.org/book s/college-physics-ap-courses -2e/pag es/11-3-pr essure)11.11
+476 11 • Fluid S tatics
+Access f or free at opens tax.org
+11.4 Variation o f Pressur e with Dep th in a Fluid
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define pr essure in t erms o f weight.
+•Explain the v ariation o f pressure with dep th in a fluid.
+•Calculat e density giv en pr essure and al titude .
+If your ears ha ve ever popped on a plane flight or ached during a deep div e in a s wimming pool , you ha ve
+experienc ed the eff ect o f dep th on pr essure in a fluid. A t the Ear th’s sur face, the air pr essure exerted on y ou is a
+resul t of the w eight o f air abo ve you. This pr essure is r educ ed as y ou climb up in al titude and the w eight o f air abo ve
+you decr eases . Under w ater, the pr essure exerted on y ou incr eases with incr easing dep th. In this case , the pr essure
+being e xerted upon y ou is a r esul t of both the w eight o f water abo ve youand that o f the atmospher e abo ve you. Y ou
+may notic e an air pr essure chang e on an ele vator ride that tr anspor ts you man y stories , but y ou need onl y div e a
+meter or so belo w the sur face of a pool t o feel a pr essure incr ease . The diff erence is that w ater is much denser than
+air, about 775 times as dense .
+Consider the c ontainer in Figure 11.8 . Its bot tom suppor ts the w eight o f the fluid in it. L et us calculat e the pr essure
+exerted on the bot tom b y the w eight o f the fluid. That pressureis the w eight o f the fluid divided b y the ar ea
+suppor ting it (the ar ea o f the bot tom o f the c ontainer):
+We can find the mas s of the fluid fr om its v olume and density:
+The v olume o f the fluid is related to the dimensions o f the c ontainer . It is
+wher e is the cr oss-sectional ar ea and is the dep th. Combining the las t two equations giv es
+If we ent er this int o the e xpression f or pr essure, we ob tain
+The ar ea canc els, and r earr anging the v ariables yields
+This v alue is the pressure due t o the w eight o f a fluid . The equation has g ener al validity be yond the special
+conditions under which it is deriv ed her e. Even if the c ontainer w ere not ther e, the surr ounding fluid w ould s till exert
+this pr essure, keeping the fluid s tatic. Thus the equation represents the pr essure due t o the w eight o f any
+fluid o faverage density at an y dep th belo w its sur face. For liquids , which ar e nearl y inc ompr essible , this
+equation holds t o great dep ths. For gases , which ar e quit e compr essible , one can appl y this equation as long as the
+density chang es ar e smal l over the dep th consider ed.Example 11.4 illustrates this situation.11.12
+11.13
+11.14
+11.15
+11.16
+11.1711.4 • V ariation o f Pressur e with Dep th in a Fluid 477
+FIGURE 11.8 The bot tom o f this c ontainer suppor ts the entir e weight o f the fluid in it. The v ertical sides cannot e xert an up ward force on
+the fluid (sinc e it cannot withs tand a shearing f orce), and so the bot tom mus t suppor t it al l.
+EXAMPLE 11.3
+Calcula ting the A verage Pressure and F orce Ex erted: Wha t Force Mus t a Dam Withs tand?
+InExample 11.1 , we calculat ed the mas s of water in a lar ge reser voir. We wil l now consider the pr essure and f orce
+acting on the dam r etaining w ater. (See Figure 11.9 .) The dam is 500 m wide , and the w ater is 80.0 m deep at the
+dam. (a) What is the a verage pressure on the dam due t o the w ater? (b) Calculat e the f orce exerted ag ains t the dam
+and c ompar e it with the w eight o f water in the dam (pr eviousl y found t o be ).
+Strategy for (a)
+The a verage pressure due t o the w eight o f the w ater is the pr essure at the a verage dep th of 40.0 m, sinc e
+pressure incr eases linearl y with dep th.
+Solution f or (a)
+The a verage pressure due t o the w eight o f a fluid is
+Entering the density o f water fr omTable 11.1 and taking to be the a verage dep th of 40.0 m, w e ob tain
+Strategy for (b)
+The f orce exerted on the dam b y the w ater is the a verage pressure times the ar ea o f contact:
+Solution f or (b)
+We ha ve alr eady f ound the v alue f or . The ar ea o f the dam is , so that
+Discus sion
+Although this f orce seems lar ge, it is smal l compar ed with the weight o f the w ater in the r eser voir—in
+fact, it is onl y of the w eight. Not e that the pr essure found in par t (a) is c omplet ely independent o f the width
+and length o f the lak e—it depends onl y on its a verage dep th at the dam. Thus the f orce depends onl y on the w ater’s
+average dep th and the dimensions o f the dam, noton the horiz ontal e xtent o f the r eser voir. In the diagr am, the
+11.18
+11.19
+11.20
+11.21478 11 • Fluid S tatics
+Access f or free at opens tax.org
+thicknes s of the dam incr eases with dep th to balanc e the incr easing f orce due t o the incr easing pr essure.epth to
+balanc e the incr easing f orce due t o the incr easing pr essure.
+FIGURE 11.9 The dam mus t withs tand the f orce exerted ag ains t it b y the w ater it r etains . This f orce is smal l compar ed with the w eight o f
+the w ater behind the dam.
+Atmospheric pr essureis another e xample o f pressure due t o the w eight o f a fluid, in this case due t o the w eight o f
+airabove a giv en height. The atmospheric pr essure at the Ear th’s sur face varies a lit tle due t o the lar ge-scale flo w of
+the atmospher e induc ed b y the Ear th’s rotation (this cr eates w eather “highs” and “lo ws”). Ho wever, the a verage
+pressure at sea le vel is giv en b y the standar d atmospheric pr essure , measur ed to be
+This r elationship means that, on a verage, at sea le vel, a c olumn o f air abo ve of the Ear th’s sur face has a
+weight o f , equiv alent t o . (See Figure 11.10 .)
+FIGURE 11.10 Atmospheric pr essure at sea le vel averages (equiv alent t o 1 atm), sinc e the c olumn o f air o ver this ,
+extending t o the t op o f the atmospher e, weighs .
+EXAMPLE 11.4
+Calcula ting A verage Density: Ho w Dense I s the Air?
+Calculat e the a verage density o f the atmospher e, giv en that it e xtends t o an al titude o f 120 km. Compar e this
+density with that o f air lis ted in Table 11.1 .
+Strategy
+If we sol ve for density , we see that11.22
+11.4 • V ariation o f Pressur e with Dep th in a Fluid 479
+We then tak e to be atmospheric pr essure,is giv en, and is kno wn, and so w e can use this t o calculat e.
+Solution
+Entering kno wn v alues int o the e xpression f or yields
+Discus sion
+This r esul t is the a verage density o f air betw een the Ear th’s sur face and the t op o f the Ear th’s atmospher e, which
+essential ly ends at 120 km. The density o f air at sea le vel is giv en in Table 11.1 as —about 15 times its
+average value . Because air is so c ompr essible , its density has its highes t value near the Ear th’s sur face and declines
+rapidl y with al titude .
+EXAMPLE 11.5
+Calcula ting Dep th Belo w the Sur face of Water: Wha t Dep th o f Water Cr eates the Same
+Pressure as the Entir e Atmospher e?
+Calculat e the dep th belo w the sur face of water at which the pr essure due t o the w eight o f the w ater equals 1.00
+atm.
+Strategy
+We begin b y sol ving the equation for dep th:
+Then w e tak e to be 1.00 atm and to be the density o f the w ater that cr eates the pr essure.
+Solution
+Entering the kno wn v alues int o the e xpression f or gives
+Discus sion
+Just 10.3 m o f water cr eates the same pr essure as 120 km o f air. Sinc e water is nearl y inc ompr essible , we can
+neglect an y chang e in its density o ver this dep th.
+What do y ou suppose is the total pressure at a dep th of 10.3 m in a s wimming pool? Does the atmospheric pr essure
+on the w ater’s sur face aff ect the pr essure belo w? The ans wer is y es. This seems onl y logical , sinc e both the w ater’s
+weight and the atmospher e’s weight mus t be suppor ted. So the total pressure at a dep th of 10.3 m is 2 atm—half
+from the w ater abo ve and half fr om the air abo ve. We shal l see in Pascal ’s Principle that fluid pr essures al ways add
+in this w ay.11.23
+11.24
+11.25
+11.26480 11 • Fluid S tatics
+Access f or free at opens tax.org
+11.5 Pascal’s Principle
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define pr essure.
+•Stat e Pascal ’s principle .
+•Unders tand applications o f Pascal ’s principle .
+•Deriv e relationships betw een f orces in a h ydraulic s ystem.
+Pressureis defined as f orce per unit ar ea. Can pr essure be incr eased in a fluid b y pushing dir ectly on the fluid? Y es,
+but it is much easier if the fluid is enclosed. The hear t, for example , incr eases blood pr essure by pushing dir ectly on
+the blood in an enclosed s ystem (v alves closed in a chamber). If y ou tr y to push on a fluid in an open s ystem, such
+as a riv er, the fluid flo ws away. An enclosed fluid cannot flo w away, and so pr essure is mor e easil y incr eased b y an
+applied f orce.
+What happens t o a pr essure in an enclosed fluid? Sinc e atoms in a fluid ar e free to mo ve about, the y transmit the
+pressure to all par ts of the fluid and t o the w alls of the c ontainer . Remark ably, the pr essure is tr ansmit ted
+undiminished . This phenomenon is cal ledPascal ’s principle , because it w as firs t clearl y stated b y the F rench
+philosopher and scientis t Blaise P ascal (1623–1662): A chang e in pr essure applied t o an enclosed fluid is
+transmit ted undiminished t o all por tions o f the fluid and t o the w alls of its c ontainer .
+Pascal ’s principle , an e xperimental ly verified fact, is what mak es pr essure so impor tant in fluids . Sinc e a chang e in
+pressure is tr ansmit ted undiminished in an enclosed fluid, w e often kno w mor e about pr essure than other ph ysical
+quantities in fluids . Mor eover, Pascal ’s principle implies that the t otal pr essure in a fluid is the sum o f the pr essures
+from diff erent sour ces. We shal l find this fact —that pr essures add— very useful .
+Blaise P ascal had an int eresting lif e in that he w as home -schooled b y his father who r emo ved al l of the mathematics
+textbook s from his house and f orbade him t o study mathematics until the ag e of 15. This , of course , raised the bo y’s
+curiosity , and b y the ag e of 12, he s tarted to teach himself g eometr y. Despit e this earl y depriv ation, P ascal w ent on
+to mak e major c ontributions in the mathematical fields o f probability theor y, number theor y, and g eometr y. He is
+also w ell kno wn f or being the in ventor of the firs t mechanical digital calculat or, in addition t o his c ontributions in the
+field o f fluid s tatics .
+Applic ation o f Pascal’s Principle
+One o f the mos t impor tant t echnological applications o f Pascal ’s principle is f ound in a hydraulic s ystem, which is an
+enclosed fluid s ystem used t o exert forces. The mos t common h ydraulic s ystems ar e those that oper ate car br akes.
+Let us firs t consider the simple h ydraulic s ystem sho wn in Figure 11.11 .PASCAL’S PRINCIPLE
+A chang e in pr essure applied t o an enclosed fluid is tr ansmit ted undiminished t o all por tions o f the fluid and t o
+the w alls of its c ontainer .11.5 • P ascal’s Principle 481
+FIGURE 11.11 A typical h ydraulic s ystem with tw o fluid-fil led cylinders , capped with pis tons and c onnect ed b y a tube cal led a h ydraulic
+line. A do wnward force on the left pis ton cr eates a pr essure that is tr ansmit ted undiminished t o all par ts of the enclosed fluid. This
+resul ts in an up ward force on the right pis ton that is lar ger than because the right pis ton has a lar ger ar ea.
+Relationship Be tween F orces in a Hy draulic S ystem
+We can deriv e a r elationship betw een the f orces in the simple h ydraulic s ystem sho wn in Figure 11.11 by appl ying
+Pascal ’s principle . Not e firs t that the tw o pis tons in the s ystem ar e at the same height, and so ther e wil l be no
+difference in pr essure due t o a diff erence in dep th. No w the pr essure due t o acting on ar ea is simpl y
+, as defined b y . According t o Pascal ’s principle , this pr essure is tr ansmit ted undiminished
+throughout the fluid and t o all walls of the c ontainer . Thus , a pr essure is felt at the other pis ton that is equal t o
+. That is .
+But sinc e , we see that .
+This equation r elates the r atios o f force to area in an y hydraulic s ystem, pr oviding the pis tons ar e at the same
+vertical height and that friction in the s ystem is negligible . Hydraulic s ystems can incr ease or decr ease the f orce
+applied t o them. T o mak e the f orce lar ger, the pr essure is applied t o a lar ger ar ea. For example , if a 100-N f orce is
+applied t o the left cylinder in Figure 11.11 and the right one has an ar ea fiv e times gr eater, then the f orce out is 500
+N. Hy draulic s ystems ar e analog ous t o simple le vers, but the y ha ve the adv antag e that pr essure can be sent thr ough
+tortuousl y cur ved lines t o se veral plac es at onc e.
+EXAMPLE 11.6
+Calcula ting F orce of Wheel Cylinders: P ascal Puts on the Br akes
+Consider the aut omobile h ydraulic s ystem sho wn in Figure 11.12 .
+482 11 • Fluid S tatics
+Access f or free at opens tax.org
+FIGURE 11.12 Hydraulic br akes use P ascal ’s principle . The driv er exerts a f orce of 100 N on the br ake pedal . This f orce is incr eased b y the
+simple le ver and ag ain b y the h ydraulic s ystem. Each o f the identical wheel cylinders r eceives the same pr essure and, ther efore, creates the
+same f orce output . The cir cular cr oss-sectional ar eas o f the pedal and wheel cylinders ar e represent ed b y and , respectiv ely
+A force of 100 N is applied t o the br ake pedal , which acts on the pedal cylinder thr ough a le ver. A force of 500 N is
+exerted on the pedal cylinder . (The r eader can v erify that the f orce is 500 N using t echniques o f statics fr om
+Applications o f Statics , Including P roblem-Sol ving Str ategies .) Pressure created in the pedal cylinder is tr ansmit ted
+to four wheel cylinders . The pedal cylinder has a diamet er of 0.500 cm, and each wheel cylinder has a diamet er of
+2.50 cm. Calculat e the f orce created at each o f the wheel cylinders .
+Strategy
+We are giv en the f orce that is applied t o the pedal cylinder . The cr oss-sectional ar eas and can be
+calculat ed fr om their giv en diamet ers. Then can be used t o find the f orce . Manipulat e this
+algebraical ly to get on one side and subs titut e kno wn v alues:
+Solution
+Pascal ’s principle applied t o hydraulic s ystems is giv en b y :
+Discus sion
+This v alue is the f orce exerted b y each o f the f our wheel cylinders . Not e that w e can add as man y wheel cylinders as
+we wish. If each has a 2.50- cm diamet er, each wil l exert
+A simple h ydraulic s ystem, such as a simple machine , can incr ease f orce but cannot do mor e work than done on it.
+Work is f orce times dis tanc e mo ved, and the wheel cylinder mo ves thr ough a smal ler dis tanc e than the pedal
+cylinder . Furthermor e, the mor e wheels added, the smal ler the dis tanc e each mo ves. Man y hydraulic s ystems —such
+as po wer br akes and those in bul ldozers—ha ve a mot orized pump that actual ly does mos t of the w ork in the s ystem.
+The mo vement o f the legs o f a spider is achie ved par tly by hydraulics . Using h ydraulics , a jumping spider can cr eate
+a force that mak es it capable o f jumping 25 times its length!11.2711.5 • P ascal’s Principle 483
+11.6 Gauge P ressur e, Absolut e Pressur e, and P ressur e Measur ement
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define g auge pressure and absolut e pressure.
+•Unders tand the w orking o f aner oid and open-tube bar omet ers.
+If you limp int o a g as station with a nearl y flat tir e, you wil l notic e the tir e gauge on the airline r eads nearl y zero
+when y ou begin t o fill it. In fact, if ther e were a g aping hole in y our tir e, the g auge would r ead z ero, even though
+atmospheric pr essure exists in the tir e. Wh y does the g auge read z ero? Ther e is no m ystery her e. Tire gauges ar e
+simpl y designed t o read z ero at atmospheric pr essure and positiv e when pr essure is gr eater than atmospheric.
+Similarl y, atmospheric pr essure adds t o blood pr essure in e very par t of the cir culat ory system. (As not ed in Pascal ’s
+Principle , the t otal pr essure in a fluid is the sum o f the pr essures fr om diff erent sour ces—her e, the hear t and the
+atmospher e.) But atmospheric pr essure has no net eff ect on blood flo w sinc e it adds t o the pr essure coming out o f
+the hear t and g oing back int o it, t oo. What is impor tant is ho w much greaterblood pr essure is than atmospheric
+pressure. Blood pr essure measur ements , like tire pressures, are thus made r elativ e to atmospheric pr essure.
+In brief , it is v ery common f or pr essure gauges to ignor e atmospheric pr essure—that is , to read z ero at atmospheric
+pressure. We ther efore define gauge pr essureto be the pr essure relativ e to atmospheric pr essure. Gaug e pressure
+is positiv e for pr essures abo ve atmospheric pr essure, and neg ative for pr essures belo w it.
+In fact, atmospheric pr essure does add t o the pr essure in an y fluid not enclosed in a rigid c ontainer . This happens
+because o f Pascal ’s principle . The t otal pr essure, orabsolut e pr essure, is thus the sum o f gauge pressure and
+atmospheric pr essure: wher e is absolut e pressure, is gauge pressure, and is
+atmospheric pr essure. For example , if y our tir e gauge reads 34 psi (pounds per squar e inch), then the absolut e
+pressure is 34 psi plus 14.7 psi ( in psi), or 48.7 psi (equiv alent t o 336 kP a).
+For reasons w e wil l explor e lat er, in mos t cases the absolut e pressure in fluids cannot be neg ative. Fluids push
+rather than pul l, so the smal lest absolut e pressure is z ero. (A neg ative absolut e pressure is a pul l.) Thus the smal lest
+possible g auge pressure is (this mak es zero). Ther e is no theor etical limit t o ho w lar ge a g auge
+pressure can be .
+Ther e are a hos t of devices for measuring pr essure, ranging fr om tir e gauges to blood pr essure cuffs . Pascal ’s
+principle is o f major impor tanc e in these de vices. The undiminished tr ansmis sion o f pressure thr ough a fluid al lows
+precise r emot e sensing o f pressures. Remot e sensing is o ften mor e convenient than put ting a measuring de vice int o
+a system, such as a person ’s artery.
+Figure 11.13 shows one o f the man y types o f mechanical pr essure gauges in use t oday. In al l mechanical pr essureMAKING C ONNE CTIONS: C ONSER VATION OF ENER GY
+Conser vation o f ener gy applied t o a h ydraulic s ystem t ells us that the s ystem cannot do mor e work than is done
+on it. W ork tr ansfers ener gy, and so the w ork output cannot e xceed the w ork input. P ower br akes and other
+similar h ydraulic s ystems use pumps t o suppl y extra ener gy when needed.
+GAUGE PRE SSURE
+Gaug e pressure is the pr essure relativ e to atmospheric pr essure. Gaug e pressure is positiv e for pr essures abo ve
+atmospheric pr essure, and neg ative for pr essures belo w it.
+ABSOL UTE PRE SSURE
+Absolut e pressure is the sum o f gauge pressure and atmospheric pr essure.484 11 • Fluid S tatics
+Access f or free at opens tax.org
+gauges, pressure resul ts in a f orce that is c onverted (or tr ansduc ed) int o some type o f readout.
+FIGURE 11.13 This aner oid g auge utiliz es fle xible bel lows connect ed to a mechanical indicat or to measur e pressure.
+An entir e clas s of gauges uses the pr oper ty that pr essure due t o the w eight o f a fluid is giv en b y Consider
+the U-shaped tube sho wn in Figure 11.14 , for example . This simple tube is cal led a manomet er. InFigure 11.14 (a),
+both sides o f the tube ar e open t o the atmospher e. Atmospheric pr essure ther efore pushes do wn on each side
+equal ly so its eff ect canc els. If the fluid is deeper on one side , ther e is a gr eater pr essure on the deeper side , and the
+fluid flo ws away from that side until the dep ths ar e equal .
+Let us e xamine ho w a manomet er is used t o measur e pressure. Suppose one side o f the U-tube is c onnect ed to
+some sour ce of pressure such as the t oy bal loon in Figure 11.14 (b) or the v acuum-pack ed peanut jar sho wn in
+Figure 11.14 (c). P ressure is tr ansmit ted undiminished t o the manomet er, and the fluid le vels ar e no long er equal . In
+Figure 11.14 (b), is gr eater than atmospheric pr essure, wher eas in Figure 11.14 (c), is les s than
+atmospheric pr essure. In both cases , differs fr om atmospheric pr essure by an amount , wher eis the
+density o f the fluid in the manomet er. InFigure 11.14 (b), can suppor t a c olumn o f fluid o f height , and so it
+mus t exert a pr essure greater than atmospheric pr essure (the g auge pressure is positiv e). In Figure
+11.14 (c), atmospheric pr essure can suppor t a c olumn o f fluid o f height , and so is les s than atmospheric
+pressure by an amount (the g auge pressure is neg ative). A manomet er with one side open t o the
+atmospher e is an ideal de vice for measuring g auge pressures. The g auge pressure is and is f ound b y
+measuring .
+FIGURE 11.14 An open-tube manomet er has one side open t o the atmospher e. (a) Fluid dep th mus t be the same on both sides , or the
+pressure each side e xerts at the bot tom wil l be unequal and ther e wil l be flo w from the deeper side . (b) A positiv e gauge pressure
+transmit ted to one side o f the manomet er can suppor t a c olumn o f fluid o f height . (c) Similarl y, atmospheric pr essure is gr eater than a
+negative gauge pressure by an amount . The jar ’s rigidity pr events atmospheric pr essure from being tr ansmit ted to the peanuts .
+Mercury manomet ers ar e often used t o measur e arterial blood pr essure. An inflatable cuff is plac ed on the upper
+arm as sho wn in Figure 11.15 . By squee zing the bulb , the person making the measur ement e xerts pr essure, which is
+transmit ted undiminished t o both the main ar tery in the arm and the manomet er. When this applied pr essure
+exceeds blood pr essure, blood flo w belo w the cuff is cut o ff. The person making the measur ement then slo wly
+lowers the applied pr essure and lis tens f or blood flo w to resume . Blood pr essure pulsat es because o f the pumping
+action o f the hear t, reaching a maximum, cal ledsystolic pr essure, and a minimum, cal leddias tolic pr essure, with11.6 • Gauge P ressur e, Absolut e Pressur e, and P ressur e Measur ement 485
+each hear tbeat. Sy stolic pr essure is measur ed b y noting the v alue o fwhen blood flo w firs t begins as cuff pr essure
+is lo wered. Dias tolic pr essure is measur ed b y noting when blood flo ws without int errup tion. The typical blood
+pressure of a y oung adul t raises the mer cury to a height o f 120 mm at s ystolic and 80 mm at dias tolic. This is
+commonl y quot ed as 120 o ver 80, or 120/80. The firs t pressure is r epresentativ e of the maximum output o f the
+hear t; the sec ond is due t o the elas ticity o f the ar teries in maintaining the pr essure betw een beats . The density o f
+the mer cury fluid in the manomet er is 13.6 times gr eater than w ater, so the height o f the fluid wil l be 1/13.6 o f that
+in a w ater manomet er. This r educ ed height can mak e measur ements difficul t, so mer cury manomet ers ar e used t o
+measur e lar ger pr essures, such as blood pr essure. The density o f mer cury is such that .
+FIGURE 11.15 In routine blood pr essure measur ements , an inflatable cuff is plac ed on the upper arm at the same le vel as the hear t. Blood
+flow is det ected jus t belo w the cuff , and c orresponding pr essures ar e transmit ted to a mer cury-filled manomet er. (credit: U .S. Arm y phot o
+by Spc. Micah E. Clar e\4TH BCT )
+EXAMPLE 11.7
+Calcula ting Height o f IV Bag: Blood P ressure and Intr avenous Infusions
+Intravenous infusions ar e usual ly made with the help o f the gr avitational f orce. Assuming that the density o f theSYSTOLIC PRE SSURE
+Systolic pr essure is the maximum blood pr essure.
+DIASTOLIC PRE SSURE
+Dias tolic pr essure is the minimum blood pr essure.
+486 11 • Fluid S tatics
+Access f or free at opens tax.org
+fluid being adminis tered is 1.00 g /ml, at what height should the IV bag be plac ed abo ve the entr y point so that the
+fluid jus t ent ers the v ein if the blood pr essure in the v ein is 18 mm Hg abo ve atmospheric pr essure? As sume that the
+IV bag is c ollapsible .
+Strategy for (a)
+For the fluid t o jus t ent er the v ein, its pr essure at entr y mus t exceed the blood pr essure in the v ein (18 mm Hg abo ve
+atmospheric pr essure). W e ther efore need t o find the height o f fluid that c orresponds t o this g auge pressure.
+Solution
+We firs t need t o convert the pr essure int o SI units . Sinc e ,
+Rearr anging for gives . Subs tituting kno wn v alues int o this equation giv es
+Discus sion
+The IV bag mus t be plac ed at 0.24 m abo ve the entr y point int o the arm f or the fluid t o jus t ent er the arm. Gener ally,
+IV bags ar e plac ed higher than this . You ma y ha ve notic ed that the bags used f or blood c ollection ar e plac ed belo w
+the donor t o allow blood t o flo w easil y from the arm t o the bag , which is the opposit e dir ection o f flow than r equir ed
+in the e xample pr esent ed her e.
+Abaromet eris a de vice that measur es atmospheric pr essure. A mer cury bar omet er is sho wn in Figure 11.16 . This
+device measur es atmospheric pr essure, rather than g auge pressure, because ther e is a nearl y pur e vacuum abo ve
+the mer cury in the tube . The height o f the mer cury is such that . When atmospheric pr essure varies , the
+mer cury rises or fal ls, giving impor tant clues t o weather f orecas ters. The bar omet er can also be used as an
+altimet er, sinc e average atmospheric pr essure varies with al titude . Mer cury bar omet ers and manomet ers ar e so
+common that units o f mm Hg ar e often quot ed for atmospheric pr essure and blood pr essures.Table 11.2 gives
+conversion fact ors f or some o f the mor e commonl y used units o f pressure.
+FIGURE 11.16 A mer cury bar omet er measur es atmospheric pr essure. The pr essure due t o the mer cury’s weight, , equals atmospheric
+pressure. The atmospher e is able t o force mer cury in the tube t o a height because the pr essure abo ve the mer cury is z ero.11.28
+11.2911.6 • Gauge P ressur e, Absolut e Pressur e, and P ressur e Measur ement 487
+Conversion t o N/m2(Pa) Conversion fr om atm
+TABLE 11.2 Conversion F actors f or Various P ressure Units
+11.7 Archimedes ’ Principle
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Define buo yant f orce.
+•Stat e Ar chimedes’ principle .
+•Unders tand wh y objects float or sink.
+•Unders tand the r elationship betw een density and Ar chimedes’ principle .
+When y ou rise fr om lounging in a w arm bath, y our arms f eel s trangely hea vy. This is because y ou no long er ha ve the
+buoyant suppor t of the w ater. Wher e does this buo yant f orce come fr om? Wh y is it that some things float and others
+do not? Do objects that sink g et an y suppor t at al l from the fluid? Is y our body buo yed b y the atmospher e, or ar e
+only helium bal loons aff ected? (See Figure 11.17 .)
+FIGURE 11.17 (a) Ev en objects that sink, lik e this anchor , are par tly suppor ted b y water when submer ged. (b) Submarines ha ve adjus table
+density (bal last tank s) so that the y ma y float or sink as desir ed. (cr edit: Al lied Na vy) (c) Helium-fil led bal loons tug up ward on their s trings ,
+demons trating air ’s buo yant eff ect. (cr edit: Cr ystl)
+Answers t o all these ques tions , and man y others , are based on the fact that pr essure incr eases with dep th in a fluid.
+This means that the up ward force on the bot tom o f an object in a fluid is gr eater than the do wnward force on the t op
+of the object. Ther e is a net up ward, or buoyant f orceon an y object in an y fluid. (See Figure 11.18 .) If the buo yant
+force is gr eater than the object ’s weight, the object wil l rise t o the sur face and float. If the buo yant f orce is les s than488 11 • Fluid S tatics
+Access f or free at opens tax.org
+the object ’s weight, the object wil l sink. If the buo yant f orce equals the object ’s weight, the object wil l remain
+suspended at that dep th. The buo yant f orce is al ways present whether the object floats , sink s, or is suspended in a
+fluid.
+FIGURE 11.18 Pressure due t o the w eight o f a fluid incr eases with dep th sinc e . This pr essure and as sociat ed up ward force on the
+bottom o f the cylinder ar e greater than the do wnward force on the t op o f the cylinder . Their diff erence is the buo yant f orce . (Horiz ontal
+forces canc el.)
+Just how gr eat is this buo yant f orce? To ans wer this ques tion, think about what happens when a submer ged object
+is remo ved fr om a fluid, as in Figure 11.19 .
+FIGURE 11.19 (a) An object submer ged in a fluid e xperienc es a buo yant f orce . If is gr eater than the w eight o f the object, the object
+will rise . If is les s than the w eight o f the object, the object wil l sink. (b) If the object is r emo ved, it is r eplac ed b y fluid ha ving w eight .
+Sinc e this w eight is suppor ted b y surr ounding fluid, the buo yant f orce mus t equal the w eight o f the fluid displac ed. That is , ,a
+statement o f Archimedes’ principle .
+The spac e it oc cupied is fil led b y fluid ha ving a w eight . This w eight is suppor ted b y the surr ounding fluid, and so
+the buo yant f orce mus t equal , the w eight o f the fluid displac ed b y the object. It is a tribut e to the g enius o f theBUO YANT F ORCE
+The buo yant f orce is the net up ward force on an y object in an y fluid.11.7 • Ar chimedes ’ Principle 489
+Greek mathematician and in ventor Ar chimedes (ca . 287–212 B .C.) that he s tated this principle long bef ore concepts
+of force were well established. Stat ed in w ords,Archimedes ’ principle is as f ollows: The buo yant f orce on an object
+equals the w eight o f the fluid it displac es. In equation f orm, Ar chimedes’ principle is
+wher e is the buo yant f orce and is the w eight o f the fluid displac ed b y the object. Ar chimedes’ principle is
+valid in g ener al, for an y object in an y fluid, whether par tially or t otally submer ged.
+Humm … High-t ech body s wimsuits w ere intr oduc ed in 2008 in pr epar ation f or the Beijing Ol ympics . One c oncern
+(and int ernational rule) w as that these suits should not pr ovide an y buo yancy adv antag e. Ho w do y ou think that this
+rule c ould be v erified?
+Floating and Sinking
+Drop a lump o f cla y in w ater. It wil l sink. Then mold the lump o f cla y int o the shape o f a boat, and it wil l float.
+Because o f its shape , the boat displac es mor e water than the lump and e xperienc es a gr eater buo yant f orce. The
+same is true o f steel ships .
+EXAMPLE 11.8
+Calcula ting buo yant f orce: dependency on shape
+(a) Calculat e the buo yant f orce on 10,000 metric t ons of solid s teel c omplet ely submer ged in w ater,
+and c ompar e this with the s teel’s weight. (b) What is the maximum buo yant f orce that w ater could e xert on this
+same s teel if it w ere shaped int o a boat that c ould displac e of water?
+Strategy for (a)
+To find the buo yant f orce, we mus t find the w eight o f water displac ed. W e can do this b y using the densities o f water
+and s teel giv en in Table 11.1 . We not e that, sinc e the s teel is c omplet ely submer ged, its v olume and the w ater’s
+volume ar e the same . Onc e we kno w the v olume o f water, we can find its mas s and w eight.
+Solution f or (a)
+First, we use the definition o f density to find the s teel’s volume , and then w e subs titut e values f or mas s and
+density . This giv es
+Because the s teel is c omplet ely submer ged, this is also the v olume o f water displac ed, . We can no w find the
+mas s of water displac ed fr om the r elationship betw een its v olume and density , both o f which ar e kno wn. This giv es11.30
+ARCHIMEDE S’ PRINCIPLE
+According t o this principle the buo yant f orce on an object equals the w eight o f the fluid it displac es. In equation
+form, Ar chimedes’ principle is
+wher e is the buo yant f orce and is the w eight o f the fluid displac ed b y the object.11.31
+MAKING C ONNE CTIONS: T AKE-HOME INVE STIGA TION
+The density o f aluminum f oil is 2.7 times the density o f water. Take a piec e of foil, roll it up int o a bal l and dr op it
+into water. Does it sink? Wh y or wh y not? Can y ou mak e it sink?
+11.32490 11 • Fluid S tatics
+Access f or free at opens tax.org
+By Archimedes’ principle , the w eight o f water displac ed is , so the buo yant f orce is
+The s teel’s weight is , which is much gr eater than the buo yant f orce, so the s teel wil l remain
+submer ged. Not e that the buo yant f orce is r ounded t o tw o digits because the density o f steel is giv en to onl y tw o
+digits .
+Strategy for (b)
+Here we are giv en the maximum v olume o f water the s teel boat can displac e. The buo yant f orce is the w eight o f this
+volume o f water.
+Solution f or (b)
+The mas s of water displac ed is f ound fr om its r elationship t o density and v olume , both o f which ar e kno wn. That is ,
+The maximum buo yant f orce is the w eight o f this much w ater, or
+Discus sion
+The maximum buo yant f orce is t en times the w eight o f the s teel, meaning the ship can carr y a load nine times its
+own w eight without sinking .
+Densit y and Ar chimedes ’ Principle
+Density pla ys a crucial r ole in Ar chimedes’ principle . The a verage density o f an object is what ul timat ely det ermines
+whether it floats . If its a verage density is les s than that o f the surr ounding fluid, it wil l float. This is because the fluid,
+having a higher density , contains mor e mas s and henc e mor e weight in the same v olume . The buo yant f orce, which
+equals the w eight o f the fluid displac ed, is thus gr eater than the w eight o f the object. Lik ewise , an object denser
+than the fluid wil l sink.
+The e xtent t o which a floating object is submer ged depends on ho w the object ’s density is r elated to that o f the
+fluid. In Figure 11.20 , for example , the unloaded ship has a lo wer density and les s of it is submer ged c ompar ed with
+the same ship loaded. W e can deriv e a quantitativ e expression f or the fr action submer ged b y considering density .
+The fr action submer ged is the r atio o f the v olume submer ged to the v olume o f the object, or
+The v olume submer ged equals the v olume o f fluid displac ed, which w e cal l . No w we can ob tain the r elationship11.33
+11.34
+11.35
+11.36
+MAKING C ONNE CTIONS: T AKE-HOME INVE STIGA TION
+A piec e of household aluminum f oil is 0.016 mm thick. Use a piec e of foil that measur es 10 cm b y 15 cm. (a)
+What is the mas s of this amount o f foil? (b) If the f oil is f olded t o giv e it f our sides , and paper clips or w ashers ar e
+added t o this “boat, ” what shape o f the boat w ould al low it t o hold the mos t “cargo” when plac ed in w ater? T est
+your pr ediction.
+11.3711.7 • Ar chimedes ’ Principle 491
+betw een the densities b y subs tituting into the e xpression. This giv es
+wher e is the a verage density o f the object and is the density o f the fluid. Sinc e the object floats , its mas s
+and that o f the displac ed fluid ar e equal , and so the y canc el from the equation, lea ving
+FIGURE 11.20 An unloaded ship (a) floats higher in the w ater than a loaded ship (b).
+We use this las t relationship t o measur e densities . This is done b y measuring the fr action o f a floating object that is
+submer ged—f or example , with a h ydromet er. It is useful t o define the r atio o f the density o f an object t o a fluid
+(usual ly water) as specific gr avity:
+wher eis the a verage density o f the object or subs tanc e and is the density o f water at 4.00°C. Specific gr avity is
+dimensionles s, independent o f what ever units ar e used f or. If an object floats , its specific gr avity is les s than one .
+If it sink s, its specific gr avity is gr eater than one . Mor eover, the fr action o f a floating object that is submer ged equals
+its specific gr avity. If an object ’s specific gr avity is e xactl y 1, then it wil l remain suspended in the fluid, neither
+sinking nor floating . Scuba div ers tr y to ob tain this s tate so that the y can ho ver in the w ater. We measur e the specific
+gravity o f fluids , such as bat tery acid, r adiat or fluid, and urine , as an indicat or of their c ondition. One de vice for
+measuring specific gr avity is sho wn in Figure 11.21 .
+FIGURE 11.21 This h ydromet er is floating in a fluid o f specific gr avity 0.87. The glas s hydromet er is fil led with air and w eight ed with lead at
+the bot tom. It floats highes t in the denses t fluids and has been calibr ated and labeled so that specific gr avity can be r ead fr om it dir ectly.11.38
+11.39
+11.40
+SPECIFIC GR AVITY
+Specific gr avity is the r atio o f the density o f an object t o a fluid (usual ly water).492 11 • Fluid S tatics
+Access f or free at opens tax.org
+EXAMPLE 11.9
+Calcula ting A verage Density: Floa ting W oman
+Suppose a 60.0-k g woman floats in fr eshwater with of her v olume submer ged when her lungs ar e ful l of air.
+What is her a verage density?
+Strategy
+We can find the w oman ’s density b y sol ving the equation
+for the density o f the object. This yields
+We kno w both the fr action submer ged and the density o f water, and so w e can calculat e the w oman ’s density .
+Solution
+Entering the kno wn v alues int o the e xpression f or her density , we ob tain
+Discus sion
+Her density is les s than the fluid density . We expect this because she floats . Body density is one indicat or of a
+person ’s per cent body fat, o f interest in medical diagnos tics and athletic tr aining . (See Figure 11.22 .)
+FIGURE 11.22 Subject in a h ydrostatis w eighing de vice, wher e the y are weighed while c omplet ely submer ged as par t of a body density
+determination. The subject mus t complet ely emp ty their lungs and hold a metal w eight in or der t o sink. Corr ections ar e made f or the
+residual air in the lungs (measur ed separ ately) and the metal w eight. Their c orrected submer ged w eight, their w eight in air , and pinch t ests
+of strategic fat ty ar eas ar e used t o calculat e the per cent body fat.
+Ther e are man y ob vious e xamples o f lower-density objects or subs tanc es floating in higher -density fluids —oil on
+water, a hot -air bal loon, a bit o f cork in wine , an ic eber g, and hot w ax in a “la va lamp ,” to name a f ew. Less ob vious
+11.41
+11.42
+11.4311.7 • Ar chimedes ’ Principle 493
+examples include la va rising in a v olcano and mountain r anges floating on the higher -density crus t and mantle
+beneath them. Ev en seemingl y solid Ear th has fluid char acteristics.
+More Densit y Measur ements
+One o f the mos t common t echniques f or det ermining density is sho wn in Figure 11.23 .
+FIGURE 11.23 (a) A c oin is w eighed in air . (b) The appar ent w eight o f the c oin is det ermined while it is c omplet ely submer ged in a fluid o f
+known density . These tw o measur ements ar e used t o calculat e the density o f the c oin.
+An object, her e a c oin, is w eighed in air and then w eighed ag ain while submer ged in a liquid. The density o f the c oin,
+an indication o f its authenticity , can be calculat ed if the fluid density is kno wn. This same t echnique can also be
+used t o det ermine the density o f the fluid if the density o f the c oin is kno wn. Al l of these calculations ar e based on
+Archimedes’ principle .
+Archimedes’ principle s tates that the buo yant f orce on the object equals the w eight o f the fluid displac ed. This , in
+turn, means that the object appears to weigh les s when submer ged; w e cal l this measur ement the object ’sappar ent
+weight . The object suff ers an appar ent w eight los sequal t o the w eight o f the fluid displac ed. Al ternativ ely, on
+balanc es that measur e mas s, the object suff ers an appar ent mas s los sequal t o the mas s of fluid displac ed. That is
+or
+The ne xt example il lustrates the use o f this t echnique .
+EXAMPLE 11.10
+Calcula ting Density: I s the Coin Authentic?
+The mas s of an ancient Gr eek c oin is det ermined in air t o be 8.630 g . When the c oin is submer ged in w ater as sho wn
+inFigure 11.23 , its appar ent mas s is 7.800 g . Calculat e its density , giv en that w ater has a density o f
+and that eff ects caused b y the wir e suspending the c oin ar e negligible .
+Strategy
+To calculat e the c oin’s density , we need its mas s (which is giv en) and its v olume . The v olume o f the c oin equals the
+volume o f water displac ed. The v olume o f water displac ed can be f ound b y sol ving the equation f or density
+for .
+Solution
+The v olume o f water is wher e is the mas s of water displac ed. As not ed, the mas s of the w ater
+displac ed equals the appar ent mas s los s, which is . Thus the v olume o f water is
+. This is also the v olume o f the c oin, sinc e it is c omplet ely submer ged. W e can no w
+find the density o f the c oin using the definition o f density:11.44
+11.45
+494 11 • Fluid S tatics
+Access f or free at opens tax.org
+Discus sion
+You can see fr omTable 11.1 that this density is v ery close t o that o f pur e sil ver, appr opriat e for this type o f ancient
+coin. Mos t modern c ount erfeits ar e not pur e sil ver.
+This brings us back t o Ar chimedes’ principle and ho w it came int o being . As the s tory goes, the king o f Syr acuse
+gave Ar chimedes the task o f det ermining whether the r oyal cr own mak er w as suppl ying a cr own o f pur e gold. The
+purity o f gold is difficul t to det ermine b y color (it can be dilut ed with other metals and s till look as y ellow as pur e
+gold), and other anal ytical t echniques had not y et been c onceived. Ev en ancient peoples , however, realiz ed that the
+density o f gold w as gr eater than that o f any other then-kno wn subs tanc e. Archimedes purpor tedly ag oniz ed o ver his
+task and had his inspir ation one da y while at the public baths , pondering the suppor t the w ater gave his body . He
+came up with his no w-famous principle , saw ho w to appl y it t o det ermine density , and r an nak ed do wn the s treets o f
+Syracuse cr ying “Eur eka!” (Gr eek f or “I ha ve found it ”). Similar beha vior can be obser ved in c ontempor ary ph ysicis ts
+from time t o time!
+11.8 Cohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Unders tand c ohesiv e and adhesiv e forces.
+•Define sur face tension.
+•Unders tand capil lary action.
+Cohesion and A dhesion in Liquids
+Childr en blo w soap bubbles and pla y in the spr ay of a sprinkler on a hot summer da y. (See Figure 11.24 .) An
+under water spider k eeps his air suppl y in a shin y bubble he carries wr apped ar ound him. A t echnician dr aws blood
+into a smal l-diamet er tube jus t by touching it t o a dr op on a prick ed fing er. A pr ematur e infant s trug gles t o inflat e her
+lungs . What is the c ommon thr ead? Al l these activities ar e dominat ed b y the at tractiv e forces betw een at oms and
+molecules in liquids —both within a liquid and betw een the liquid and its surr oundings .
+Attractiv e forces betw een molecules o f the same type ar e cal ledcohesiv e forces. Liquids can, f or example , be held
+in open c ontainers because c ohesiv e forces hold the molecules t ogether . Attractiv e forces betw een molecules o f
+different types ar e cal ledadhesiv e forces. Such f orces cause liquid dr ops t o cling t o windo w panes , for example . In
+this section w e examine eff ects dir ectly attributable t o cohesiv e and adhesiv e forces in liquids .11.46
+COHE SIVE F ORCES
+Attractiv e forces betw een molecules o f the same type ar e cal led c ohesiv e forces.
+ADHE SIVE F ORCES
+Attractiv e forces betw een molecules o f diff erent types ar e cal led adhesiv e forces.11.8 • C ohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action 495
+FIGURE 11.24 The soap bubbles in this phot ograph ar e caused b y cohesiv e forces among molecules in liquids . (credit: St eve Ford Elliott)
+Surface Tension
+Cohesiv e forces betw een molecules cause the sur face of a liquid t o contr act t o the smal lest pos sible sur face area.
+This g ener al eff ect is cal ledsurface tension . Molecules on the sur face are pul led in ward by cohesiv e forces,
+reducing the sur face area. Molecules inside the liquid e xperienc e zero net f orce, sinc e the y ha ve neighbors on al l
+sides .
+The model o f a liquid sur face acting lik e a s tretched elas tic sheet can eff ectiv ely explain sur face tension eff ects . For
+example , some insects can w alk on w ater (as opposed t o floating in it) as w e would w alk on a tr ampoline —the y dent
+the sur face as sho wn in Figure 11.25 (a).Figure 11.25 (b) sho ws another e xample , wher e a needle r ests on a w ater
+surface. The ir on needle cannot, and does not, float, because its density is gr eater than that o f water. Rather , its
+weight is suppor ted b y forces in the s tretched sur face that tr y to mak e the sur face smal ler or flat ter. If the needle
+were plac ed point do wn on the sur face, its w eight acting on a smal ler ar ea w ould br eak the sur face, and it w ould
+sink.SURF ACE TENSION
+Cohesiv e forces betw een molecules cause the sur face of a liquid t o contr act t o the smal lest pos sible sur face
+area. This g ener al eff ect is cal led sur face tension.
+MAKING C ONNE CTIONS: SURF ACE TENSION
+Forces betw een at oms and molecules underlie the macr oscopic eff ect cal led sur face tension. These at tractiv e
+forces pul l the molecules closer t ogether and t end t o minimiz e the sur face area. This is another e xample o f a
+submicr oscopic e xplanation f or a macr oscopic phenomenon.496 11 • Fluid S tatics
+Access f or free at opens tax.org
+FIGURE 11.25 Surface tension suppor ting the w eight o f an insect and an ir on needle , both o f which r est on the sur face without penetr ating
+it. The y are not floating; r ather , the y are suppor ted b y the sur face of the liquid. (a) An insect leg dents the w ater sur face. is a r estoring
+force (sur face tension) par allel to the sur face. (b) An ir on needle similarl y dents a w ater sur face until the r estoring f orce (sur face tension)
+grows to equal its w eight.
+Surface tension is pr opor tional t o the s trength o f the c ohesiv e force, which v aries with the type o f liquid. Sur face
+tension is defined t o be the f orceFper unit length exerted b y a s tretched liquid membr ane:
+Table 11.3 lists values o ffor some liquids . For the insect o fFigure 11.25 (a), its w eight is suppor ted b y the
+upward components o f the sur face tension f orce: , wher e is the cir cumf erence of the insect ’s foot in
+contact with the w ater.Figure 11.26 shows one w ay to measur e sur face tension. The liquid film e xerts a f orce on the
+movable wir e in an at temp t to reduc e its sur face area. The magnitude o f this f orce depends on the sur face tension
+of the liquid and can be measur ed ac curately.
+Surface tension is the r eason wh y liquids f orm bubbles and dr oplets . The in ward sur face tension f orce causes
+bubbles t o be appr oximat ely spherical and r aises the pr essure of the g as tr apped inside r elativ e to atmospheric
+pressure outside . It can be sho wn that the g auge pressure inside a spherical bubble is giv en b y
+wher eis the r adius o f the bubble . Thus the pr essure inside a bubble is gr eatest when the bubble is the smal lest.
+Another bit o f evidenc e for this is il lustrated in Figure 11.27 . When air is al lowed to flo w betw een tw o bal loons o f
+unequal siz e, the smal ler bal loon t ends t o collapse , filling the lar ger bal loon.11.47
+11.4811.8 • C ohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action 497
+FIGURE 11.26 Sliding wir e de vice used f or measuring sur face tension; the de vice exerts a f orce to reduc e the film ’s sur face area. The f orce
+needed t o hold the wir e in plac e is , sinc e ther e aretwoliquid sur faces at tached t o the wir e. This f orce remains nearl y
+constant as the film is s tretched, until the film appr oaches its br eaking point.
+FIGURE 11.27 With the v alve closed, tw o bal loons o f diff erent siz es ar e attached t o each end o f a tube . Upon opening the v alve, the smal ler
+balloon decr eases in siz e with the air mo ving t o fill the lar ger bal loon. The pr essure in a spherical bal loon is in versel y propor tional t o its
+radius , so that the smal ler bal loon has a gr eater int ernal pr essure than the lar ger bal loon, r esul ting in this flo w.
+Liquid Surface tension γ (N/m)
+Water at 0.0756
+Water at 0.0728
+Water at 0.0589
+Soap y water (typical) 0.0370
+Ethyl alc ohol 0.0223
+Glycerin 0.0631
+Mercury 0.465
+TABLE 11.3 Surface Tension o f Some Liquids1
+1At 20ºC unles s other wise s tated.498 11 • Fluid S tatics
+Access f or free at opens tax.org
+Liquid Surface tension γ (N/m)
+Olive oil 0.032
+Tissue fluids (typical) 0.050
+Blood, whole at 0.058
+Blood plasma at 0.073
+Gold at 1.000
+Oxygen at 0.0157
+Helium at 0.00012
+TABLE 11.3 Surface Tension o f Some Liquids1
+EXAMPLE 11.11
+Surface Tension: P ressure Inside a Bubble
+Calculat e the g auge pressure inside a soap bubble in radius using the sur face tension f or soap y
+water in Table 11.3 . Con vert this pr essure to mm Hg .
+Strategy
+The r adius is giv en and the sur face tension can be f ound in Table 11.3 , and so can be f ound dir ectly from the
+equation .
+Solution
+Subs tituting and into the equation , we ob tain
+We use a c onversion fact or to get this int o units o f mm Hg:
+Discus sion
+Note that if a hole w ere to be made in the bubble , the air w ould be f orced out, the bubble w ould decr ease in r adius ,
+and the g auge pressure would r educ e to zero, and the absolut e pressure inside w ould decr ease to atmospheric
+pressure (760 mm Hg ).
+Our lungs c ontain hundr eds o f mil lions o f mucus -lined sacs cal ledalveoli, which ar e very similar in siz e, and about
+0.1 mm in diamet er. (See Figure 11.28 .) You can e xhale without muscle action b y allowing sur face tension t o
+contr act these sacs . Medical patients whose br eathing is aided b y a positiv e pressure respir ator ha ve air blo wn int o
+the lungs , but ar e gener ally allowed to exhale on their o wn. Ev en if ther e is par alysis, sur face tension in the al veoli
+will expel air fr om the lungs . Sinc e pressure incr eases as the r adii o f the al veoli decr ease , an oc casional deep
+cleansing br eath is needed t o ful ly reinflat e the al veoli. R espir ators ar e programmed t o do this and w e find it natur al,
+as do our c ompanion dogs and cats , to tak e a cleansing br eath bef ore set tling int o a nap .
+11.49
+11.5011.8 • C ohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action 499
+FIGURE 11.28 Bronchial tubes in the lungs br anch int o ever-smal ler s tructur es, final ly ending in al veoli. The al veoli act lik e tin y bubbles .
+The sur face tension o f their muc ous lining aids in e xhalation and can pr event inhalation if t oo gr eat.
+The t ension in the w alls of the al veoli r esul ts from the membr ane tis sue and a liquid on the w alls of the al veoli
+containing a long lipopr otein that acts as a sur factant (a sur face-tension r educing subs tanc e). The need f or the
+surfactant r esul ts from the t endency o f smal l alveoli t o collapse and the air t o fill into the lar ger al veoli making them
+even lar ger (as demons trated in Figure 11.27 ). During inhalation, the lipopr otein molecules ar e pul led apar t and the
+wall tension incr eases as the r adius incr eases (incr eased sur face tension). During e xhalation, the molecules slide
+back t ogether and the sur face tension decr eases , helping t o prevent a c ollapse o f the al veoli. The sur factant
+ther efore ser ves to chang e the w all tension so that smal l alveoli don ’t collapse and lar ge alveoli ar e prevented fr om
+expanding t oo much. This t ension chang e is a unique pr oper ty of these sur factants , and is not shar ed b y det ergents
+(which simpl y lower sur face tension). (See Figure 11.29 .)
+FIGURE 11.29 Surface tension as a function o f sur face area. The sur face tension f or lung sur factant decr eases with decr easing ar ea. This
+ensur es that smal l alveoli don ’t collapse and lar ge alveoli ar e not able t o over expand.
+If water gets int o the lungs , the sur face tension is t oo gr eat and y ou cannot inhale . This is a se vere problem in
+resuscitating dr owning victims . A similar pr oblem oc curs in ne wborn infants who ar e born without this
+surfactant —their lungs ar e very difficul t to inflat e. This c ondition is kno wn as hyaline membr ane disease and is a
+leading cause o f death f or infants , par ticularl y in pr ematur e bir ths. Some suc cess has been achie ved in tr eating
+hyaline membr ane disease b y spr aying a sur factant int o the infant ’s breathing pas sages. Emph ysema pr oduc es the
+opposit e problem with al veoli. Al veolar w alls of emph ysema victims det erior ate, and the sacs c ombine t o form
+larger sacs . Because pr essure produc ed b y sur face tension decr eases with incr easing r adius , these lar ger sacs
+produc e smal ler pr essure, reducing the ability o f emph ysema victims t o exhale . A c ommon t est for emph ysema is t o
+measur e the pr essure and v olume o f air that can be e xhaled.
+MAKING C ONNE CTIONS: T AKE-HOME INVE STIGA TION
+(1) T ry floating a se wing needle on w ater. In or der f or this activity t o work, the needle needs t o be v ery clean as
+even the oil fr om y our fing ers can be sufficient t o aff ect the sur face proper ties o f the needle . (2) Plac e the
+bristles o f a paint brush int o water. Pul l the brush out and notic e that f or a shor t while , the bris tles wil l stick500 11 • Fluid S tatics
+Access f or free at opens tax.org
+Adhesion and C apillar y Action
+Why is it that w ater beads up on a w axed car but does not on bar e paint? The ans wer is that the adhesiv e forces
+betw een w ater and w ax ar e much smal ler than those betw een w ater and paint. Competition betw een the f orces o f
+adhesion and c ohesion ar e impor tant in the macr oscopic beha vior o f liquids . An impor tant fact or in s tudying the
+roles o f these tw o forces is the angle betw een the tang ent t o the liquid sur face and the sur face. (See Figure
+11.30 .) The contact angle is dir ectly related to the r elativ e strength o f the c ohesiv e and adhesiv e forces. The
+larger the s trength o f the c ohesiv e force relativ e to the adhesiv e force, the lar ger is, and the mor e the liquid t ends
+to form a dr oplet. The smal ler is, the smal ler the r elativ e strength, so that the adhesiv e force is able t o flat ten the
+drop.Table 11.4 lists contact angles f or se veral combinations o f liquids and solids .
+FIGURE 11.30 In the phot ograph, w ater beads on the w axed car paint and flat tens on the un waxed paint. (a) W ater forms beads on the
+waxed sur face because the c ohesiv e forces responsible f or sur face tension ar e lar ger than the adhesiv e forces, which t end t o flat ten the
+drop. (b) W ater beads on bar e paint ar e flat tened c onsider ably because the adhesiv e forces betw een w ater and paint ar e strong,
+overcoming sur face tension. The c ontact angle is dir ectly related to the r elativ e strengths o f the c ohesiv e and adhesiv e forces. The lar ger
+is, the lar ger the r atio o f cohesiv e to adhesiv e forces. (credit: P . P. Urone)
+One impor tant phenomenon r elated to the r elativ e strength o f cohesiv e and adhesiv e forces is capil lary action —the
+tendency o f a fluid t o be r aised or suppr essed in a narr ow tube , orcapil lary tube . This action causes blood t o be
+drawn int o a smal l-diamet er tube when the tube t ouches a dr op.
+If a capil lary tube is plac ed v ertical ly int o a liquid, as sho wn in Figure 11.31 , capil lary action wil l raise or suppr ess
+the liquid inside the tube depending on the c ombination o f subs tanc es. The actual eff ect depends on the r elativ e
+strength o f the c ohesiv e and adhesiv e forces and, thus , the c ontact angle given in the table . If is les s than ,together . The sur face tension o f the w ater surr ounding the bris tles is sufficient t o hold the bris tles t ogether . As
+the bris tles dr y out, the sur face tension eff ect dis sipat es. (3) Plac e a loop o f thr ead on the sur face of still water
+in such a w ay that al l of the thr ead is in c ontact with the w ater. Not e the shape o f the loop . No w plac e a dr op o f
+detergent int o the middle o f the loop . What happens t o the shape o f the loop? Wh y? (4) Sprinkle pepper ont o the
+surface of water. Add a dr op o f det ergent. What happens? Wh y? (5) Float tw o mat ches par allel to each other and
+add a dr op o f det ergent betw een them. What happens? Not e: For each ne w experiment, the w ater needs t o be
+replac ed and the bo wl w ashed t o free it o f any residual det ergent.
+CONTACT ANGLE
+The angle betw een the tang ent t o the liquid sur face and the sur face is cal led the c ontact angle .
+CAPILL ARY ACTION
+The t endency o f a fluid t o be r aised or suppr essed in a narr ow tube , or capil lary tube , is cal led capil lary action.11.8 • C ohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action 501
+then the fluid wil l be r aised; if is gr eater than , it wil l be suppr essed. Mer cury, for example , has a v ery lar ge
+surface tension and a lar ge contact angle with glas s. When plac ed in a tube , the sur face of a c olumn o f mer cury
+curves do wnward, some what lik e a dr op. The cur ved sur face of a fluid in a tube is cal led a meniscus . The t endency
+of sur face tension is al ways to reduc e the sur face area. Sur face tension thus flat tens the cur ved liquid sur face in a
+capil lary tube . This r esul ts in a do wnward force in mer cury and an up ward force in w ater, as seen in Figure 11.31 .
+FIGURE 11.31 (a) Mer cury is suppr essed in a glas s tube because its c ontact angle is gr eater than . Sur face tension e xerts a do wnward
+force as it flat tens the mer cury, suppr essing it in the tube . The dashed line sho ws the shape the mer cury sur face would ha ve without the
+flattening eff ect o f sur face tension. (b) W ater is r aised in a glas s tube because its c ontact angle is nearl y. Sur face tension ther efore exerts
+an up ward force when it flat tens the sur face to reduc e its ar ea.
+Interface Contac t angle Θ
+Mercury–glas s
+Water–glas s
+Water–par affin
+Water–silver
+Organic liquids (mos t)–glas s
+Ethyl alc ohol –glas s
+Kerosene –glas s
+TABLE 11.4 Contact Angles o f Some Subs tanc es
+Capil lary action can mo ve liquids horiz ontal ly over very lar ge dis tanc es, but the height t o which it can r aise or
+suppr ess a liquid in a tube is limit ed b y its w eight. It can be sho wn that this height is giv en b y
+If we look at the diff erent fact ors in this e xpression, w e might see ho w it mak es g ood sense . The height is dir ectly11.51502 11 • Fluid S tatics
+Access f or free at opens tax.org
+propor tional t o the sur face tension , which is its dir ect cause . Furthermor e, the height is in versel y propor tional t o
+tube r adius —the smal ler the r adius , the higher the fluid can be r aised, sinc e a smal ler tube holds les s mas s. The
+height is also in versel y propor tional t o fluid density , sinc e a lar ger density means a gr eater mas s in the same
+volume . (See Figure 11.32 .)
+FIGURE 11.32 (a) Capil lary action depends on the r adius o f a tube . The smal ler the tube , the gr eater the height r eached. The height is
+negligible f or lar ge-radius tubes . (b) A denser fluid in the same tube rises t o a smal ler height, al l other fact ors being the same .
+EXAMPLE 11.12
+Calcula ting R adius o f a Capil lary Tube: Capil lary Action: T ree Sap
+Can capil lary action be solel y responsible f or sap rising in tr ees? T o ans wer this ques tion, calculat e the r adius o f a
+capil lary tube that w ould r aise sap 100 m t o the t op o f a giant r edw ood, as suming that sap ’s density is ,
+its c ontact angle is z ero, and its sur face tension is the same as that o f water at .
+Strategy
+The height t o which a liquid wil l rise as a r esul t of capil lary action is giv en b y , and e very quantity is
+known e xcept for.
+Solution
+Solving f or and subs tituting kno wn v alues pr oduc es
+Discus sion
+This r esul t is unr easonable . Sap in tr ees mo ves thr ough the xylem , which f orms tubes with r adii as smal l as
+. This v alue is about 180 times as lar ge as the r adius f ound nec essary her e to raise sap . This
+means that capil lary action alone cannot be solel y responsible f or sap g etting t o the t ops o f trees.
+Howdoes sap g et to the t ops o f tall trees? (R ecal l that a c olumn o f water can onl y rise t o a height o f 10 m when
+ther e is a v acuum at the t op—see Example 11.5 .) The ques tion has not been c omplet ely resol ved, but it appears that
+it is pul led up lik e a chain held t ogether b y cohesiv e forces. As each molecule o f sap ent ers a leaf and e vapor ates (a
+process cal led tr anspir ation), the entir e chain is pul led up a not ch. So a neg ative pressure created b y water
+evapor ation mus t be pr esent t o pul l the sap up thr ough the xylem v essels . In mos t situations ,fluids can push but
+can e xert onl y negligible pul l, because the c ohesiv e forces seem t o be t oo smal l to hold the molecules tightl y
+together . But in this case , the c ohesiv e force of water molecules pr ovides a v ery strong pul l.Figure 11.33 shows one
+11.5211.8 • C ohesion and A dhesion in Liquids: Sur face Tension and C apillar y Action 503
+device for studying neg ative pressure. Some e xperiments ha ve demons trated that neg ative pressures sufficient t o
+pull sap t o the t ops o f the tal lest trees can be achie ved.
+FIGURE 11.33 (a) When the pis ton is r aised, it s tretches the liquid slightl y, put ting it under t ension and cr eating a neg ative absolut e
+pressure . (b) The liquid e ventual ly separ ates, giving an e xperimental limit t o neg ative pressure in this liquid.
+11.9 Pressur es in the Body
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Explain the c oncept of pressure the in human body .
+•Explain s ystolic and dias tolic blood pr essures.
+•Describe pr essures in the e ye, lungs , spinal c olumn, bladder , and sk eletal s ystem.
+Pressur e in the Body
+Next to taking a person ’s temper atur e and w eight, measuring blood pr essure is the mos t common o f all medical
+examinations . Contr ol of high blood pr essure is lar gely responsible f or the significant decr eases in hear t attack and
+stroke fatalities achie ved in the las t thr ee decades . The pr essures in v arious par ts of the body can be measur ed and
+often pr ovide v aluable medical indicat ors. In this section, w e consider a f ew examples t ogether with some o f the
+physics that ac companies them.
+Table 11.5 lists some o f the measur ed pr essures in mm Hg , the units mos t commonl y quot ed.
+Body s ystem Gauge pr essur e in mm Hg
+Blood pr essures in lar ge arteries (r esting)
+Maximum (s ystolic) 100–140
+Minimum (dias tolic) 60–90
+Blood pr essure in lar ge veins 4–15
+Eye 12–24
+Brain and spinal fluid (l ying do wn) 5–12
+Bladder
+TABLE 11.5 Typical P ressures in Humans504 11 • Fluid S tatics
+Access f or free at opens tax.org
+Body s ystem Gauge pr essur e in mm Hg
+While fil ling 0–25
+When ful l 100–150
+Ches t cavity betw een lungs and ribs −8 t o −4
+Inside lungs −2 t o +3
+Digestive tract
+Esophag us −2
+Stomach 0–20
+Intestines 10–20
+Middle ear <1
+TABLE 11.5 Typical P ressures in Humans
+Blood P ressur e
+Common ar terial blood pr essure measur ements typical ly produc e values o f 120 mm Hg and 80 mm Hg ,
+respectiv ely, for systolic and dias tolic pr essures. Both pr essures ha ve heal th implications . When s ystolic pr essure is
+chronical ly high, the risk o f stroke and hear t attack is incr eased. If , however, it is t oo lo w, fainting is a pr oblem.
+Systolic pr essureincreases dr amatical ly during e xercise t o incr ease blood flo w and r eturns t o normal aft erward.
+This chang e produc es no il l effects and, in fact, ma y be beneficial t o the t one o f the cir culat ory system. Dias tolic
+pressurecan be an indicat or of fluid balanc e. When lo w, it ma y indicat e that a person is hemorrhaging int ernal ly and
+needs a tr ansfusion. Con versel y, high dias tolic pr essure indicat es a bal looning o f the blood v essels , which ma y be
+due t o the tr ansfusion o f too much fluid int o the cir culat ory system. High dias tolic pr essure is also an indication that
+blood v essels ar e not dilating pr operl y to pas s blood thr ough. This can seriousl y strain the hear t in its at temp t to
+pump blood.
+Blood lea ves the hear t at about 120 mm Hg but its pr essure continues t o decr ease (t o almos t 0) as it g oes fr om the
+aorta to smal ler ar teries t o smal l veins (see Figure 11.34 ). The pr essure diff erences in the cir culation s ystem ar e
+caused b y blood flo w thr ough the s ystem as w ell as the position o f the person. F or a person s tanding up , the
+pressure in the f eet wil l be lar ger than at the hear t due t o the w eight o f the blood . If w e as sume that the
+distanc e betw een the hear t and the f eet o f a person in an upright position is 1.4 m, then the incr ease in pr essure in
+the f eet r elativ e to that in the hear t (for a s tatic c olumn o f blood) is giv en b y
+Standing a long time can lead t o an ac cumulation o f blood in the legs and s welling. This is the r eason wh y soldiers
+who ar e requir ed to stand s till for long periods o f time ha ve been kno wn t o faint. Elas tic bandag es ar ound the calf
+can help pr event this ac cumulation and can also help pr ovide incr eased pr essure to enable the v eins t o send blood
+back up t o the hear t. For similar r easons , doct ors r ecommend tight s tockings f or long-haul flights .
+Blood pr essure ma y also be measur ed in the major v eins , the hear t chambers , arteries t o the br ain, and the lungs .11.53
+INCRE ASE IN PRE SSURE IN THE FEE T OF A PER SON
+11.5411.9 • P ressur es in the Body 505
+But these pr essures ar e usual ly onl y monit ored during sur gery or f or patients in int ensiv e car e sinc e the
+measur ements ar e invasive. To ob tain these pr essure measur ements , qualified heal th car e workers thr ead thin
+tubes , cal led cathet ers, into appr opriat e locations t o transmit pr essures to external measuring de vices.
+The hear t consis ts of two pumps —the right side f orcing blood thr ough the lungs and the left causing blood t o flo w
+through the r est of the body ( Figure 11.34 ). Right -hear t failur e, for example , resul ts in a rise in the pr essure in the
+vena ca vae and a dr op in pr essure in the ar teries t o the lungs . Left-hear t failur e resul ts in a rise in the pr essure
+entering the left side o f the hear t and a dr op in aor tal pr essure. Implications o f these and other pr essures on flo w in
+the cir culat ory system wil l be discus sed in mor e detail in Fluid Dynamics and Its Biological and Medical
+Applications .
+FIGURE 11.34 Schematic o f the cir culat ory system sho wing typical pr essures. The tw o pumps in the hear t incr ease pr essure and that
+pressure is r educ ed as the blood flo ws thr ough the body . Long-t erm de viations fr om these pr essures ha ve medical implications discus sed
+in some detail in the Fluid Dynamics and Its Biological and Medical Applications . Onl y aor tal or ar terial blood pr essure can be measur ed
+nonin vasively.
+Pressur e in the E ye
+The shape o f the e ye is maintained b y fluid pr essure, cal ledintraocular pr essure, which is normal ly in the r ange of
+12.0 t o 24.0 mm Hg . When the cir culation o f fluid in the e ye is block ed, it can lead t o a buildup in pr essure, a
+condition cal ledglauc oma . The net pr essure can bec ome as gr eat as 85.0 mm Hg , an abnormal ly lar ge pressureTWO PUMPS OF THE HE ART
+The hear t consis ts of two pumps —the right side f orcing blood thr ough the lungs and the left causing blood t o
+flow thr ough the r est of the body .506 11 • Fluid S tatics
+Access f or free at opens tax.org
+that can permanentl y damag e the op tic ner ve. To get an idea o f the f orce involved, suppose the back o f the e ye has
+an ar ea o f , and the net pr essure is 85.0 mm Hg . Force is giv en b y . To get in ne wtons, we convert
+the ar ea to ( ). Then w e calculat e as f ollows:
+This f orce is the w eight o f about a 680-g mas s. A mas s of 680 g r esting on the e ye (imagine 1.5 lb r esting on y our
+eye) w ould be sufficient t o cause it damag e. (A normal f orce her e would be the w eight o f about 120 g , les s than one -
+quar ter of our initial v alue .)
+People o ver 40 y ears o f age are at gr eatest risk o f developing glauc oma and should ha ve their intr aocular pr essure
+tested routinel y. Mos t measur ements in volve exerting a f orce on the (anes thetiz ed) e ye over some ar ea (a pr essure)
+and obser ving the e ye’s response . A nonc ontact appr oach uses a puff o f air and a measur ement is made o f the f orce
+needed t o indent the e ye (Figure 11.35 ). If the intr aocular pr essure is high, the e ye wil l def orm les s and r ebound
+mor e vig orousl y than normal . Excessive intr aocular pr essures can be det ected reliabl y and sometimes c ontr olled
+effectiv ely.
+FIGURE 11.35 The intr aocular e ye pressure can be r ead with a t onomet er. (credit: De velopAl l at the Wikipedia P roject.)
+EXAMPLE 11.13
+Calcula ting Gaug e Pressure and Dep th: Damag e to the Ear drum
+Suppose a 3.00-N f orce can rup ture an ear drum. (a) If the ear drum has an ar ea o f , calculat e the maximum
+tolerable g auge pressure on the ear drum in ne wtons per met er squar ed and c onvert it t o mil limet ers o f mer cury. (b)
+At what dep th in fr eshwater w ould this person ’s ear drum rup ture, assuming the g auge pressure in the middle ear is
+zero?
+Strategy for (a)
+The pr essure can be f ound dir ectly from its definition sinc e we kno w the f orce and ar ea. We are looking f or the
+gauge pressure.11.55
+EYE PRE SSURE
+The shape o f the e ye is maintained b y fluid pr essure, cal led intr aocular pr essure. When the cir culation o f fluid in
+the e ye is block ed, it can lead t o a buildup in pr essure, a c ondition cal led glauc oma . The f orce is calculat ed as
+11.56
+11.9 • P ressur es in the Body 507
+Solution f or (a)
+We no w need t o convert this t o units o f mm Hg:
+Strategy for (b)
+Here we wil l use the fact that the w ater pr essure varies linearl y with dep th belo w the sur face.
+Solution f or (b)
+and ther efore . Using the v alue abo ve for , we ha ve
+Discus sion
+Similarl y, incr eased pr essure exerted upon the ear drum fr om the middle ear can arise when an inf ection causes a
+fluid buildup .
+Pressur e Associat ed with the L ungs
+The pr essure inside the lungs incr eases and decr eases with each br eath. The pr essure drops t o belo w atmospheric
+pressure (neg ative gauge pressure) when y ou inhale , causing air t o flo w int o the lungs . It incr eases abo ve
+atmospheric pr essure (positiv e gauge pressure) when y ou e xhale , forcing air out.
+Lung pr essure is c ontr olled b y several mechanisms . Muscle action in the diaphr agm and rib cag e is nec essary for
+inhalation; this muscle action incr eases the v olume o f the lungs ther eby reducing the pr essure within them Figure
+11.36 . Sur face tension in the al veoli cr eates a positiv e pressure opposing inhalation. (See Cohesion and Adhesion in
+Liquids: Sur face Tension and Capil lary Action .) You can e xhale without muscle action b y let ting sur face tension in
+the al veoli cr eate its o wn positiv e pressure. Muscle action can add t o this positiv e pressure to produc e forced
+exhalation, such as when y ou blo w up a bal loon, blo w out a candle , or c ough.
+The lungs , in fact, w ould c ollapse due t o the sur face tension in the al veoli, if the y were not at tached t o the inside o f
+the ches t wall by liquid adhesion. The g auge pressure in the liquid at taching the lungs t o the inside o f the ches t wall
+is thus neg ative, ranging fr om to during e xhalation and inhalation, r espectiv ely. If air is al lowed to
+enter the ches t cavity, it br eaks the at tachment, and one or both lungs ma y collapse . Suction is applied t o the ches t
+cavity o f sur gery patients and tr auma victims t o reestablish neg ative pressure and inflat e the lungs .
+FIGURE 11.36 (a) During inhalation, muscles e xpand the ches t, and the diaphr agm mo ves do wnward, reducing pr essure inside the lungs t o
+less than atmospheric (neg ative gauge pressure). P ressure betw een the lungs and ches t wall is e ven lo wer to overcome the positiv e
+pressure created b y sur face tension in the lungs . (b) During g entle e xhalation, the muscles simpl y relax and sur face tension in the al veoli
+creates a positiv e pressure inside the lungs , forcing air out. P ressure betw een the ches t wall and lungs r emains neg ative to keep them
+attached t o the ches t wall, but it is les s neg ative than during inhalation.11.57
+11.58
+11.59508 11 • Fluid S tatics
+Access f or free at opens tax.org
+Other P ressur es in the Body
+Spinal C olumn and Skull
+Normal ly, ther e is a 5- t o12-mm Hg pr essure in the fluid surr ounding the br ain and fil ling the spinal c olumn. This
+cerebrospinal fluid ser ves man y purposes , one o f which is t o suppl y flotation t o the br ain. The buo yant f orce
+supplied b y the fluid nearl y equals the w eight o f the br ain, sinc e their densities ar e nearl y equal . If ther e is a los s of
+fluid, the br ain r ests on the inside o f the sk ull, causing se vere headaches , constrict ed blood flo w, and serious
+damag e. Spinal fluid pr essure is measur ed b y means o f a needle inser ted betw een v ertebrae that tr ansmits the
+pressure to a suitable measuring de vice.
+Bladder P ressur e
+This bodil y pressure is one o f which w e are often a ware. In fact, ther e is a r elationship betw een our a warenes s of
+this pr essure and a subsequent incr ease in it. Bladder pr essure climbs s teadil y from z ero to about 25 mm Hg as the
+bladder fil ls to its normal capacity o f . This pr essure trig gers the micturition r efle x, which s timulat es the
+feeling o f needing t o urinat e. What is mor e, it also causes muscles ar ound the bladder t o contr act, r aising the
+pressure to over 100 mm Hg , accentuating the sensation. Coughing , straining , tensing in c old w eather , wearing tight
+clothes , and e xperiencing simple ner vous t ension al l can incr ease bladder pr essure and trig ger this r eflex. So can
+the w eight o f a pr egnant w oman ’s fetus , especial ly if it is kicking vig orousl y or pushing do wn with its head! Bladder
+pressure can be measur ed b y a cathet er or b y inser ting a needle thr ough the bladder w all and tr ansmit ting the
+pressure to an appr opriat e measuring de vice. One hazar d of high bladder pr essure (sometimes cr eated b y an
+obstruction), is that such pr essure can f orce urine back int o the kidne ys, causing pot ential ly severe damag e.
+Pressur es in the Sk eletal S ystem
+These pr essures ar e the lar gest in the body , due both t o the high v alues o f initial f orce, and the smal l areas t o which
+this f orce is applied, such as in the joints .. For example , when a person lifts an object impr operl y, a force of 5000 N
+may be cr eated betw een v ertebrae in the spine , and this ma y be applied t o an ar ea as smal l as . The
+pressure created is or about 50 atm! This pr essure can
+damag e both the spinal discs (the car tilag e betw een v ertebrae), as w ell as the bon y vertebrae themsel ves. Even
+under normal cir cums tanc es, forces betw een v ertebrae in the spine ar e lar ge enough t o create pressures o f several
+atmospher es. Mos t causes o f excessive pressure in the sk eletal s ystem can be a voided b y lifting pr operl y and
+avoiding e xtreme ph ysical activity . (See Forces and T orques in Muscles and Joints .)
+Ther e are man y other int eresting and medical ly significant pr essures in the body . For example , pressure caused b y
+various muscle actions driv es food and w aste thr ough the dig estive system. St omach pr essure beha ves much lik e
+bladder pr essure and is tied t o the sensation o f hung er. Pressure in the r elax ed esophag us is normal ly neg ative
+because pr essure in the ches t cavity is normal ly neg ative. Positiv e pressure in the s tomach ma y thus f orce acid int o
+the esophag us, causing “hear tburn. ” Pressure in the middle ear can r esul t in significant f orce on the ear drum if it
+differs gr eatly from atmospheric pr essure, such as while scuba diving . The decr ease in e xternal pr essure is also
+notic eable during plane flights (due t o a decr ease in the w eight o f air abo ve relativ e to that at the Ear th’s sur face).
+The Eus tachian tubes c onnect the middle ear t o the thr oat and al low us t o equaliz e pressure in the middle ear t o
+avoid an imbalanc e of force on the ear drum.
+Man y pressures in the human body ar e as sociat ed with the flo w of fluids . Fluid flo w wil l be discus sed in detail in the
+Fluid Dynamics and Its Biological and Medical Applications .11.9 • P ressur es in the Body 509
+Glossar y
+absolut e pr essurethe sum o f gauge pressure and
+atmospheric pr essure
+adhesiv e forces the at tractiv e forces betw een
+molecules o f diff erent types
+Archimedes ’ principle the buo yant f orce on an
+object equals the w eight o f the fluid it displac es
+buoyant f orcethe net up ward force on an y object in
+any fluid
+capil lary action the t endency o f a fluid t o be r aised or
+lowered in a narr ow tube
+cohesiv e forces the at tractiv e forces betw een
+molecules o f the same type
+contact angle the angle betw een the tang ent t o the
+liquid sur face and the sur face
+density the mas s per unit v olume o f a subs tanc e or
+object
+dias tolic pr essureminimum ar terial blood pr essure;
+indicat or for the fluid balanc e
+dias tolic pr essurethe minimum blood pr essure in
+the ar tery
+fluids liquids and g ases; a fluid is a s tate of mat ter
+that yields t o shearing f orces
+gauge pr essurethe pr essure relativ e to atmosphericpressure
+glauc oma condition caused b y the buildup o f fluid
+pressure in the e ye
+intraocular pr essurefluid pr essure in the e ye
+micturition r efle xstimulat es the f eeling o f needing
+to urinat e, trig gered b y bladder pr essure
+Pascal ’s Principle a chang e in pr essure applied t o an
+enclosed fluid is tr ansmit ted undiminished t o all
+portions o f the fluid and t o the w alls of its c ontainer
+pressurethe f orce per unit ar ea perpendicular t o the
+force, over which the f orce acts
+pressurethe w eight o f the fluid divided b y the ar ea
+suppor ting it
+specific gr avity the r atio o f the density o f an object t o
+a fluid (usual ly water)
+surface tension the c ohesiv e forces betw een
+molecules which cause the sur face of a liquid t o
+contr act t o the smal lest pos sible sur face area
+systolic pr essuremaximum ar terial blood pr essure;
+indicat or for the blood flo w
+systolic pr essurethe maximum blood pr essure in the
+artery
+Section Summar y
+11.1 What Is a Fluid?
+•A fluid is a s tate of mat ter that yields t o side ways
+or shearing f orces. Liquids and g ases ar e both
+fluids . Fluid s tatics is the ph ysics o f stationar y
+fluids .
+11.2 Densit y
+•Density is the mas s per unit v olume o f a subs tanc e
+or object. In equation f orm, density is defined as
+•The SI unit o f density is .
+11.3 Pressur e
+•Pressure is the f orce per unit perpendicular ar ea
+over which the f orce is applied. In equation f orm,
+pressure is defined as
+•The SI unit o f pressure is pascal and
+.
+11.4 Variation o f Pressur e with Dep th in a
+Fluid
+•Pressure is the w eight o f the fluid divided b y
+the ar ea suppor ting it (the ar ea o f the bot tom o fthe c ontainer):
+•Pressure due t o the w eight o f a liquid is giv en b y
+wher e is the pr essure,is the height o f the
+liquid, is the density o f the liquid, and is the
+acceleration due t o gravity.
+11.5 Pascal’s Principle
+•Pressure is f orce per unit ar ea.
+•A chang e in pr essure applied t o an enclosed fluid
+is transmit ted undiminished t o all por tions o f the
+fluid and t o the w alls of its c ontainer .
+•A hydraulic s ystem is an enclosed fluid s ystem
+used t o exert forces.
+11.6 Gauge P ressur e, Absolut e Pressur e,
+and P ressur e Measur ement
+•Gaug e pressure is the pr essure relativ e to
+atmospheric pr essure.
+•Absolut e pressure is the sum o f gauge pressure
+and atmospheric pr essure.
+•Aner oid g auge measur es pr essure using a bel lows-
+and-spring arr angement c onnect ed to the point er
+of a calibr ated scale .
+•Open-tube manomet ers ha ve U-shaped tubes and510 11 • Glossar y
+Access f or free at opens tax.org
+one end is al ways open. It is used t o measur e
+pressure.
+•A mer cury bar omet er is a de vice that measur es
+atmospheric pr essure.
+11.7 Archimedes ’ Principle
+•Buo yant f orce is the net up ward force on an y
+object in an y fluid. If the buo yant f orce is gr eater
+than the object ’s weight, the object wil l rise t o the
+surface and float. If the buo yant f orce is les s than
+the object ’s weight, the object wil l sink. If the
+buoyant f orce equals the object ’s weight, the
+object wil l remain suspended at that dep th. The
+buoyant f orce is al ways present whether the
+object floats , sink s, or is suspended in a fluid.
+•Archimedes’ principle s tates that the buo yant
+force on an object equals the w eight o f the fluid it
+displac es.
+•Specific gr avity is the r atio o f the density o f an
+object t o a fluid (usual ly water).
+11.8 Cohesion and A dhesion in Liquids:
+Surface Tension and C apillar y Action
+•Attractiv e forces betw een molecules o f the same
+type ar e cal led c ohesiv e forces.•Attractiv e forces betw een molecules o f diff erent
+types ar e cal led adhesiv e forces.
+•Cohesiv e forces betw een molecules cause the
+surface of a liquid t o contr act t o the smal lest
+possible sur face area. This g ener al eff ect is cal led
+surface tension.
+•Capil lary action is the t endency o f a fluid t o be
+raised or suppr essed in a narr ow tube , or capil lary
+tube which is due t o the r elativ e strength o f
+cohesiv e and adhesiv e forces.
+11.9 Pressur es in the Body
+•Measuring blood pr essure is among the mos t
+common o f all medical e xaminations .
+•The pr essures in v arious par ts of the body can be
+measur ed and o ften pr ovide v aluable medical
+indicat ors.
+•The shape o f the e ye is maintained b y fluid
+pressure, cal led intr aocular pr essure.
+•When the cir culation o f fluid in the e ye is block ed,
+it can lead t o a buildup in pr essure, a c ondition
+called glauc oma .
+•Some o f the other pr essures in the body ar e spinal
+and sk ull pressures, bladder pr essure, pressures in
+the sk eletal s ystem.
+Conceptual Ques tions
+11.1 What Is a Fluid?
+1.What ph ysical char acteristic dis tinguishes a fluid
+from a solid?
+2.Which o f the f ollowing subs tanc es ar e fluids at
+room t emper atur e: air , mer cury, water, glas s?
+3.Why are gases easier t o compr ess than liquids and
+solids?
+4.How do g ases diff er fr om liquids?
+11.2 Densit y
+5.Appr oximat ely ho w does the density o f air v ary with
+altitude?
+6.Give an e xample in which density is used t o identif y
+the subs tanc e composing an object. W ould
+information in addition t o average density be
+needed t o identif y the subs tanc es in an object
+composed o f mor e than one mat erial?
+7.Figure 11.37 shows a glas s of ice water fil led t o the
+brim. Wil l the w ater overflow when the ic e mel ts?
+Explain y our ans wer.
+FIGURE 11.37
+11.3 Pressur e
+8.How is pr essure related to the sharpnes s of a knif e
+and its ability t o cut?
+9.Why does a dul l hypodermic needle hur t mor e than
+a sharp one?
+10.The outw ard force on one end o f an air tank w as
+calculat ed in Example 11.2 . Ho w is this f orce
+balanc ed? ( The tank does not ac celerate, so the
+force mus t be balanc ed.)
+11.Why is f orce exerted b y static fluids al ways
+perpendicular t o a sur face?11 • C onceptual Ques tions 511
+12.In a r emot e location near the Nor th Pole, an
+iceber g floats in a lak e. Next to the lak e (as sume it
+is not fr ozen) sits a c ompar ably siz ed glacier
+sitting on land. If both chunk s of ice should mel t
+due t o rising global t emper atur es (and the mel ted
+ice all goes int o the lak e), which ic e chunk w ould
+give the gr eatest incr ease in the le vel of the lak e
+water, if an y?
+13.How do jog ging on so ft gr ound and w earing
+padded shoes r educ e the pr essures to which the
+feet and legs ar e subject ed?
+14.Toe dancing (as in bal let) is much har der on t oes
+than normal dancing or w alking . Explain in t erms
+of pressure.
+15.How do y ou c onvert pressure units lik e mil limet ers
+of mer cury, centimet ers o f water, and inches o f
+mer cury int o units lik e ne wtons per met er squar ed
+without r esor ting t o a table o f pressure conversion
+factors?
+11.4 Variation o f Pressur e with Dep th in a
+Fluid
+16.Atmospheric pr essure exerts a lar ge force (equal
+to the w eight o f the atmospher e abo ve your
+body —about 10 t ons) on the t op o f your body
+when y ou ar e lying on the beach sunbathing . Wh y
+are you able t o get up?
+17.Why does atmospheric pr essure decr ease mor e
+rapidl y than linearl y with al titude?
+18.What ar e tw o reasons wh y mer cury rather than
+water is used in bar omet ers?
+19.Figure 11.38 shows ho w sandbags plac ed ar ound a
+leak outside a riv er le vee can eff ectiv ely stop the flo w
+of water under the le vee. Explain ho w the smal l
+amount o f water inside the c olumn f ormed b y the
+sandbags is able t o balanc e the much lar ger body o f
+water behind the le vee.
+FIGURE 11.38 Because the riv er le vel is v ery high, it has s tarted to
+leak under the le vee. Sandbags ar e plac ed ar ound the leak, and
+the w ater held b y them rises until it is the same le vel as the riv er,at which point the w ater ther e stops rising .
+20.Why is it difficul t to swim under w ater in the Gr eat
+Salt Lake?
+21.Is ther e a net f orce on a dam due t o atmospheric
+pressure? Explain y our ans wer.
+22.Does atmospheric pr essure add t o the g as
+pressure in a rigid tank? In a t oy bal loon? When, in
+gener al, does atmospheric pr essurenotaffect the
+total pr essure in a fluid?
+23.You can br eak a s trong wine bot tle b y pounding a
+cork int o it with y our fis t, but the c ork mus t press
+directly ag ains t the liquid fil ling the bot tle—ther e
+can be no air betw een the c ork and liquid. Explain
+why the bot tle br eaks, and wh y it wil l not if ther e
+is air betw een the c ork and liquid.
+11.5 Pascal’s Principle
+24.Suppose the pedal cylinder in a h ydraulic s ystem
+is at a gr eater height than the wheel cylinder .
+Explain ho w this wil l affect the f orce produc ed at
+the wheel cylinder .
+11.6 Gauge P ressur e, Absolut e Pressur e,
+and P ressur e Measur ement
+25.Explain wh y the fluid r eaches equal le vels on
+either side o f a manomet er if both sides ar e open
+to the atmospher e, even if the tubes ar e of
+different diamet ers.
+26.Figure 11.15 shows ho w a c ommon measur ement
+of arterial blood pr essure is made . Is ther e an y
+effect on the measur ed pr essure if the manomet er
+is lo wered? What is the eff ect o f raising the arm
+above the shoulder? What is the eff ect o f placing
+the cuff on the upper leg with the person
+standing? Explain y our ans wers in t erms o f
+pressure created b y the w eight o f a fluid.
+27.Considering the magnitude o f typical ar terial blood
+pressures, wh y are mer cury rather than w ater
+manomet ers used f or these measur ements?
+11.7 Archimedes ’ Principle
+28.More force is r equir ed to pul l the plug in a ful l
+bathtub than when it is emp ty. Does this
+contr adict Ar chimedes’ principle? Explain y our
+answer.
+29.Do fluids e xert buo yant f orces in a “ weightles s”
+environment, such as in the spac e shut tle? Explain
+your ans wer.
+30.Will the same ship float higher in sal t water than in512 11 • C onceptual Ques tions
+Access f or free at opens tax.org
+freshwater? Explain y our ans wer.
+31.Marbles dr opped int o a par tially filled bathtub sink
+to the bot tom. P art of their w eight is suppor ted b y
+buoyant f orce, yet the do wnward force on the
+bottom o f the tub incr eases b y exactl y the w eight
+of the marbles . Explain wh y.
+11.8 Cohesion and A dhesion in Liquids:
+Surface Tension and C apillar y Action
+32.The density o f oil is les s than that o f water, yet a
+loaded oil tank er sits lo wer in the w ater than an
+emp ty one . Wh y?
+33.Is sur face tension due t o cohesiv e or adhesiv e
+forces, or both?
+34.Is capil lary action due t o cohesiv e or adhesiv e
+forces, or both?
+35.Birds such as duck s, geese , and s wans ha ve
+greater densities than w ater, yet the y are able t osit on its sur face. Explain this ability , noting that
+water does not w et their f eathers and that the y
+cannot sit on soap y water.
+36.Water beads up on an oil y sunbather , but not on
+her neighbor , whose skin is not oiled. Explain in
+terms o f cohesiv e and adhesiv e forces.
+37.Could capil lary action be used t o mo ve fluids in a
+“weightles s” en vironment, such as in an orbiting
+spac e probe?
+38.What eff ect does capil lary action ha ve on the
+reading o f a manomet er with unif orm diamet er?
+Explain y our ans wer.
+39.Pressure betw een the inside ches t wall and the
+outside o f the lungs normal ly remains neg ative.
+Explain ho w pr essure inside the lungs can bec ome
+positiv e (to cause e xhalation) without muscle
+action.
+Problems & Ex ercises
+11.2 Densit y
+1.Gold is sold b y the tr oy ounc e (31.103 g ). What is
+the v olume o f 1 tr oy ounc e of pur e gold?
+2.Mercury is c ommonl y supplied in flask s containing
+34.5 k g (about 76 lb). What is the v olume in lit ers o f
+this much mer cury?
+3.(a) What is the mas s of a deep br eath o f air ha ving a
+volume o f 2.00 L ? (b) Discus s the eff ect taking such
+a breath has on y our body ’s volume and density .
+4.A straight forward method o f finding the density o f
+an object is t o measur e its mas s and then measur e
+its v olume b y submer ging it in a gr aduat ed cylinder .
+What is the density o f a 240-g r ock that displac es
+of water? (Not e that the ac curacy and
+practical applications o f this t echnique ar e mor e
+limit ed than a v ariety o f others that ar e based on
+Archimedes’ principle .)
+5.Suppose y ou ha ve a c offee mug with a cir cular
+cross section and v ertical sides (unif orm r adius).
+What is its inside r adius if it holds 375 g o f coffee
+when fil led t o a dep th of 7.50 cm? As sume c offee
+has the same density as w ater.
+6.(a) A r ectang ular g asoline tank can hold 50.0 k g of
+gasoline when ful l. What is the dep th of the tank if it
+is 0.500-m wide b y 0.900-m long? (b) Discus s
+whether this g as tank has a r easonable v olume f or a
+passeng er car .7.A trash c ompact or can r educ e the v olume o f its
+contents t o 0.350 their original v alue . Neglecting
+the mas s of air e xpel led, b y what fact or is the
+density o f the rubbish incr eased?
+8.A 2.50-k g steel g asoline can holds 20.0 L o f
+gasoline when ful l. What is the a verage density o f
+the ful l gas can, taking int o ac count the v olume
+occupied b y steel as w ell as b y gasoline?
+9.What is the density o f 18.0-k arat gold that is a
+mixtur e of 18 par ts gold, 5 par ts sil ver, and 1 par t
+copper? ( These v alues ar e par ts by mas s, not
+volume .) As sume that this is a simple mixtur e
+having an a verage density equal t o the w eight ed
+densities o f its c onstituents .
+10.Ther e is r elativ ely little emp ty spac e betw een
+atoms in solids and liquids , so that the a verage
+density o f an at om is about the same as mat ter on
+a macr oscopic scale —appr oximat ely .
+The nucleus o f an at om has a r adius about
+that o f the at om and c ontains nearl y all the mas s
+of the entir e atom. (a) What is the appr oximat e
+density o f a nucleus? (b) One r emnant o f a
+superno va, cal led a neutr on s tar, can ha ve the
+density o f a nucleus . What w ould be the r adius o f
+a neutr on s tar with a mas s 10 times that o f our
+Sun (the r adius o f the Sun is )?
+11.3 Pressur e
+11.As a w oman w alks, her entir e weight is11 • P roblems & Ex ercises 513
+momentaril y plac ed on one heel o f her high-
+heeled shoes . Calculat e the pr essure exerted on
+the floor b y the heel if it has an ar ea o f
+and the w oman ’s mas s is 55.0 k g. Expr ess the
+pressure in P a. (In the earl y da ys of commer cial
+flight, w omen w ere not al lowed to wear high-
+heeled shoes because air craft floors w ere too thin
+to withs tand such lar ge pressures.)
+12.The pr essure exerted b y a phonogr aph needle on
+a record is surprisingl y lar ge. If the equiv alent o f
+1.00 g is suppor ted b y a needle , the tip o f which is
+a cir cle 0.200 mm in r adius , what pr essure is
+exerted on the r ecord in ?
+13.Nail tips e xert tremendous pr essures when the y
+are hit b y hammers because the y exert a lar ge
+force over a smal l area. What f orce mus t be
+exerted on a nail with a cir cular tip o f 1.00 mm
+diamet er to create a pr essure of
+(This high pr essure is pos sible
+because the hammer s triking the nail is br ought t o
+rest in such a shor t dis tanc e.)
+11.4 Variation o f Pressur e with Dep th in a
+Fluid
+14.What dep th of mer cury creates a pr essure of 1.00
+atm?
+15.The gr eatest ocean dep ths on the Ear th ar e found
+in the Marianas T rench near the Philippines .
+Calculat e the pr essure due t o the oc ean at the
+bottom o f this tr ench, giv en its dep th is 11.0 km
+and as suming the density o f sea water is c onstant
+all the w ay do wn.
+16.Verify that the SI unit o f is .
+17.Water towers s tore water abo ve the le vel of
+consumers f or times o f hea vy use , eliminating the
+need f or high-speed pumps . Ho w high abo ve a
+user mus t the w ater le vel be t o create a g auge
+pressure of ?
+18.The aqueous humor in a person ’s eye is e xerting a
+force of 0.300 N on the area o f the
+cornea . (a) What pr essure is this in mm Hg? (b) Is
+this v alue within the normal r ange for pr essures in
+the e ye?
+19.How much f orce is e xerted on one side o f an 8.50
+cm b y 11.0 cm sheet o f paper b y the atmospher e?
+How can the paper withs tand such a f orce?
+20.What pr essure is e xerted on the bot tom o f a
+0.500-m-wide b y 0.900-m-long g as tank that can
+hold 50.0 k g of gasoline b y the w eight o f thegasoline in it when it is ful l?
+21.Calculat e the a verage pressure exerted on the
+palm o f a shot -put ter’s hand b y the shot if the
+area o f contact is and he e xerts a f orce
+of 800 N on it. Expr ess the pr essure in and
+compar e it with the pressures
+sometimes enc ount ered in the sk eletal s ystem.
+22.The left side o f the hear t creates a pr essure of 120
+mm Hg b y exerting a f orce dir ectly on the blood
+over an eff ectiv e area o f What f orce
+does it e xert to ac complish this?
+23.Show that the t otal f orce on a r ectang ular dam
+due t o the w ater behind it incr eases with the
+squar eof the w ater dep th. In par ticular , sho w that
+this f orce is giv en b y , wher eis
+the density o f water,is its dep th at the dam, and
+is the length o f the dam. Y ou ma y assume the
+face of the dam is v ertical . (Hint: Calculat e the
+average pressure exerted and mul tiply this b y the
+area in c ontact with the w ater. (See Figure 11.39 .)
+FIGURE 11.39
+11.5 Pascal’s Principle
+24.How much pr essure is tr ansmit ted in the h ydraulic
+system c onsider ed in Example 11.6 ? Expr ess your
+answer in pascals and in atmospher es.
+25.What f orce mus t be e xerted on the pedal cylinder
+of a h ydraulic lift t o suppor t the w eight o f a
+2000-k g car (a lar ge car) r esting on the wheel
+cylinder? The pedal cylinder has a 2.00- cm
+diamet er and the wheel has a 24.0- cm diamet er.
+26.A crass hos t pours the r emnants o f several bot tles
+of wine int o a jug aft er a par ty. He then inser ts a
+cork with a 2.00- cm diamet er int o the bot tle,
+placing it in dir ect c ontact with the wine . He is
+amaz ed when he pounds the c ork int o plac e and
+the bot tom o f the jug (with a 14.0- cm diamet er)
+breaks away. Calculat e the e xtra force exerted514 11 • P roblems & Ex ercises
+Access f or free at opens tax.org
+agains t the bot tom if he pounded the c ork with a
+120-N f orce.
+27.A certain h ydraulic s ystem is designed t o exert a
+force 100 times as lar ge as the one put int o it. (a)
+What mus t be the r atio o f the ar ea o f the wheel
+cylinder t o the ar ea o f the pedal cylinder? (b) What
+mus t be the r atio o f their diamet ers? (c) B y what
+factor is the dis tanc e thr ough which the output
+force mo ves reduc ed relativ e to the dis tanc e
+through which the input f orce mo ves? As sume no
+losses t o friction.
+28.(a) V erify that w ork input equals w ork output f or a
+hydraulic s ystem as suming no los ses t o friction.
+Do this b y sho wing that the dis tanc e the output
+force mo ves is r educ ed b y the same fact or that
+the output f orce is incr eased. As sume the v olume
+of the fluid is c onstant. (b) What eff ect w ould
+friction within the fluid and betw een c omponents
+in the s ystem ha ve on the output f orce? Ho w
+would this depend on whether or not the fluid is
+moving?
+11.6 Gauge P ressur e, Absolut e Pressur e,
+and P ressur e Measur ement
+29.Find the g auge and absolut e pressures in the
+balloon and peanut jar sho wn in Figure 11.14 ,
+assuming the manomet er connect ed to the
+balloon uses w ater wher eas the manomet er
+connect ed to the jar c ontains mer cury. Expr ess in
+units o f centimet ers o f water for the bal loon and
+millimet ers o f mer cury for the jar , taking
+for each.
+30.(a) Con vert normal blood pr essure readings o f 120
+over 80 mm Hg t o ne wtons per met er squar ed
+using the r elationship f or pr essure due t o the
+weight o f a fluid rather than a
+conversion fact or. (b) Discus s wh y blood pr essures
+for an infant c ould be smal ler than those f or an
+adul t. Specifical ly, consider the smal ler height t o
+which blood mus t be pumped.
+31.How tal l mus t a w ater-filled manomet er be t o
+measur e blood pr essures as high as 300 mm Hg?
+32.Pressure cookers ha ve been ar ound f or mor e than
+300 y ears , although their use has s trongl y
+declined in r ecent y ears (earl y models had a nas ty
+habit o f exploding ). Ho w much f orce mus t the
+latches holding the lid ont o a pr essure cooker be
+able t o withs tand if the cir cular lid is in
+diamet er and the g auge pressure inside is 300
+atm? Neglect the w eight o f the lid.33.Suppose y ou measur e a s tanding person ’s blood
+pressure by placing the cuff on his leg 0.500 m
+belo w the hear t. Calculat e the pr essure you w ould
+obser ve (in units o f mm Hg ) if the pr essure at the
+hear t were 120 o ver 80 mm Hg . Assume that
+ther e is no los s of pressure due t o resistanc e in
+the cir culat ory system (a r easonable as sump tion,
+sinc e major ar teries ar e lar ge).
+34.A submarine is s tranded on the bot tom o f the
+ocean with its hat ch 25.0 m belo w the sur face.
+Calculat e the f orce needed t o open the hat ch fr om
+the inside , giv en it is cir cular and 0.450 m in
+diamet er. Air pr essure inside the submarine is
+1.00 atm.
+35.Assuming bicy cle tir es ar e per fectly fle xible and
+suppor t the w eight o f bicy cle and rider b y
+pressure alone , calculat e the t otal ar ea o f the tir es
+in contact with the gr ound. The bicy cle plus rider
+has a mas s of 80.0 k g, and the g auge pressure in
+the tir es is .
+11.7 Archimedes ’ Principle
+36.What fr action o f ice is submer ged when it floats in
+freshwater, giv en the density o f water at 0°C is
+very close t o ?
+37.Logs sometimes float v ertical ly in a lak e because
+one end has bec ome w ater-logged and denser
+than the other . What is the a verage density o f a
+uniform-diamet er log that floats with of its
+length abo ve water?
+38.Find the density o f a fluid in which a h ydromet er
+having a density o f floats with
+of its v olume submer ged.
+39.If your body has a density o f , what
+fraction o f you wil l be submer ged when floating
+gently in: (a) fr eshwater? (b) sal t water, which has
+a density o f ?
+40.Bird bones ha ve air pock ets in them t o reduc e
+their w eight —this also giv es them an a verage
+density significantl y les s than that o f the bones o f
+other animals . Suppose an ornithologis t weighs a
+bird bone in air and in w ater and finds its mas s is
+and its appar ent mas s when submer ged is
+(the bone is w atertight). (a) What mas s of
+water is displac ed? (b) What is the v olume o f the
+bone? (c) What is its a verage density?
+41.A rock with a mas s of 540 g in air is f ound t o ha ve
+an appar ent mas s of 342 g when submer ged in
+water. (a) What mas s of water is displac ed? (b)11 • P roblems & Ex ercises 515
+What is the v olume o f the r ock? (c) What is its
+average density? Is this c onsis tent with the v alue
+for gr anite?
+42.Archimedes’ principle can be used t o calculat e the
+density o f a fluid as w ell as that o f a solid.
+Suppose a chunk o f iron with a mas s of 390.0 g in
+air is f ound t o ha ve an appar ent mas s of 350.5 g
+when c omplet ely submer ged in an unkno wn
+liquid. (a) What mas s of fluid does the ir on
+displac e? (b) What is the v olume o f iron, using its
+density as giv en in Table 11.1 (c) Calculat e the
+fluid’ s density and identif y it.
+43.In an immersion measur ement o f a w oman ’s
+density , she is f ound t o ha ve a mas s of 62.0 k g in
+air and an appar ent mas s of 0.0850 k g when
+complet ely submer ged with lungs emp ty. (a) What
+mas s of water does she displac e? (b) What is her
+volume? (c) Calculat e her density . (d) If her lung
+capacity is 1.75 L , is she able t o float without
+treading w ater with her lungs fil led with air?
+44.Some fish ha ve a density slightl y les s than that o f
+water and mus t exert a force (swim) t o stay
+submer ged. What f orce mus t an 85.0-k g grouper
+exert to stay submer ged in sal t water if its body
+density is ?
+45.(a) Calculat e the buo yant f orce on a 2.00-L helium
+balloon. (b) Giv en the mas s of the rubber in the
+balloon is 1.50 g , what is the net v ertical f orce on
+the bal loon if it is let g o? Y ou can neglect the
+volume o f the rubber .
+46.(a) What is the density o f a w oman who floats in
+freshwater with of her v olume abo ve the
+surface? This c ould be measur ed b y placing her in
+a tank with mark s on the side t o measur e ho w
+much w ater she displac es when floating and when
+held under w ater (briefl y). (b) What per cent o f her
+volume is abo ve the sur face when she floats in
+seawater?
+47.A certain man has a mas s of 80 k g and a density o f
+(excluding the air in his lungs). (a)
+Calculat e his v olume . (b) Find the buo yant f orce
+air e xerts on him. (c) What is the r atio o f the
+buoyant f orce to his w eight?
+48.A simple c ompas s can be made b y placing a smal l
+bar magnet on a c ork floating in w ater. (a) What
+fraction o f a plain c ork wil l be submer ged when
+floating in w ater? (b) If the c ork has a mas s of
+10.0 g and a 20.0-g magnet is plac ed on it, what
+fraction o f the c ork wil l be submer ged? (c) Wil l the
+bar magnet and c ork float in eth yl alc ohol?49.What fr action o f an ir on anchor ’s weight wil l be
+suppor ted b y buo yant f orce when submer ged in
+saltwater?
+50.Scurrilous c on ar tists ha ve been kno wn t o
+represent g old-plat ed tungs ten ing ots as pur e
+gold and sel l them at pric es much belo w gold
+value but deser vedly far abo ve the c ost of
+tungs ten. With what ac curacy mus t you be able t o
+measur e the mas s of such an ing ot in and out o f
+water to tell that it is almos t pur e tungs ten rather
+than pur e gold?
+51.A twin-siz ed air mat tress used f or camping has
+dimensions o f 100 cm b y 200 cm b y 15 cm when
+blown up . The w eight o f the mat tress is 2 k g. How
+heavy a person c ould the air mat tress hold if it is
+plac ed in fr eshwater?
+52.Referring t oFigure 11.19 , prove that the buo yant
+force on the cylinder is equal t o the w eight o f the
+fluid displac ed (Ar chimedes’ principle). Y ou ma y
+assume that the buo yant f orce is and
+that the ends o f the cylinder ha ve equal ar eas .
+Note that the v olume o f the cylinder (and that o f
+the fluid it displac es) equals .
+53.(a) A 75.0-k g man floats in fr eshwater with
+of his v olume abo ve water when his lungs ar e
+emp ty, and of his v olume abo ve water
+when his lungs ar e ful l. Calculat e the v olume o f air
+he inhales —called his lung capacity —in lit ers. (b)
+Does this lung v olume seem r easonable?
+11.8 Cohesion and A dhesion in Liquids:
+Surface Tension and C apillar y Action
+54.What is the pr essure inside an al veolus ha ving a
+radius o f if the sur face tension o f
+the fluid-lined w all is the same as f or soap y water?
+You ma y assume the pr essure is the same as that
+created b y a spherical bubble .
+55.(a) The pr essure inside an al veolus with a
+-m r adius is , due t o its
+fluid-lined w alls. Assuming the al veolus acts lik e a
+spherical bubble , what is the sur face tension o f
+the fluid? (b) I dentif y the lik ely fluid. ( You ma y
+need t o extrapolat e betw een v alues in Table
+11.3 .)
+56.What is the g auge pressure in mil limet ers o f
+mer cury inside a soap bubble 0.100 m in
+diamet er?
+57.Calculat e the f orce on the slide wir e in Figure
+11.26 if it is 3.50 cm long and the fluid is eth yl516 11 • P roblems & Ex ercises
+Access f or free at opens tax.org
+alcohol .
+58.Figure 11.32 (a) sho ws the eff ect o f tube r adius on
+the height t o which capil lary action can r aise a
+fluid. (a) Calculat e the height for w ater in a glas s
+tube with a r adius o f 0.900 cm—a r ather lar ge
+tube lik e the one on the left. (b) What is the r adius
+of the glas s tube on the right if it r aises w ater to
+4.00 cm?
+59.We stated in Example 11.12 that a xylem tube is
+of radius . Verify that such a tube
+raises sap les s than a met er by finding for it,
+making the same as sump tions that sap ’s density
+is , its c ontact angle is z ero, and its
+surface tension is the same as that o f water at
+.
+60.What fluid is in the de vice sho wn in Figure 11.26 if
+the f orce is and the length o f the
+wire is 2.50 cm? Calculat e the sur face tension
+and find a lik ely mat ch fr omTable 11.3 .
+61.If the g auge pressure inside a rubber bal loon with
+a 10.0- cm r adius is 1.50 cm o f water, what is the
+effectiv e sur face tension o f the bal loon?
+62.Calculat e the g auge pressures inside 2.00- cm-
+radius bubbles o f water, alc ohol , and soap y water.
+Which liquid f orms the mos t stable bubbles ,
+neglecting an y eff ects o f evapor ation?
+63.Suppose w ater is r aised b y capil lary action t o a
+height o f 5.00 cm in a glas s tube . (a) T o what
+height wil l it be r aised in a par affin tube o f the
+same r adius? (b) In a sil ver tube o f the same
+radius?
+64.Calculat e the c ontact angle for oliv e oil if
+capil lary action r aises it t o a height o f 7.07 cm in a
+glas s tube with a r adius o f 0.100 mm. Is this v alue
+consis tent with that f or mos t organic liquids?
+65.When tw o soap bubbles t ouch, the lar ger is
+inflat ed b y the smal ler until the y form a single
+bubble . (a) What is the g auge pressure inside a
+soap bubble with a 1.50- cm r adius? (b) Inside a
+4.00- cm-r adius soap bubble? (c) Inside the single
+bubble the y form if no air is los t when the y touch?
+66.Calculat e the r atio o f the heights t o which w ater
+and mer cury are raised b y capil lary action in the
+same glas s tube .
+67.What is the r atio o f heights t o which eth yl alc ohol
+and w ater ar e raised b y capil lary action in the
+same glas s tube?11.9 Pressur es in the Body
+68.During f orced e xhalation, such as when blo wing
+up a bal loon, the diaphr agm and ches t muscles
+create a pr essure of 60.0 mm Hg betw een the
+lungs and ches t wall. What f orce in ne wtons does
+this pr essure create on the surface area
+of the diaphr agm?
+69.You can che w thr ough v ery tough objects with
+your incisors because the y exert a lar ge force on
+the smal l area o f a point ed tooth. What pr essure in
+pascals can y ou cr eate by exerting a f orce of
+with y our t ooth on an ar ea o f ?
+70.One w ay to force air int o an unc onscious person ’s
+lungs is t o squee ze on a bal loon appr opriat ely
+connect ed to the subject. What f orce mus t you
+exert on the bal loon with y our hands t o create a
+gauge pressure of 4.00 cm w ater, assuming y ou
+squee ze on an eff ectiv e area o f ?
+71.Heroes in mo vies hide beneath w ater and br eathe
+through a hol low reed (vil lains ne ver cat ch on t o
+this trick). In pr actic e, you cannot inhale in this
+manner if y our lungs ar e mor e than 60.0 cm belo w
+the sur face. What is the maximum neg ative gauge
+pressure you can cr eate in y our lungs on dr y land,
+assuming y ou can achie ve water
+pressure with y our lungs 60.0 cm belo w the
+surface?
+72.Gaug e pressure in the fluid surr ounding an infant ’s
+brain ma y rise as high as 85.0 mm Hg (5 t o 12 mm
+Hg is normal), cr eating an outw ard force lar ge
+enough t o mak e the sk ull grow abnormal ly lar ge.
+(a) Calculat e this outw ard force in ne wtons on
+each side o f an infant ’s skull if the eff ectiv e area o f
+each side is . (b) What is the net f orce
+acting on the sk ull?
+73.A ful l-term f etus typical ly has a mas s of 3.50 k g.
+(a) What pr essure does the w eight o f such a f etus
+create if it r ests on the mother ’s bladder ,
+suppor ted on an ar ea o f ? (b) Con vert
+this pr essure to mil limet ers o f mer cury and
+determine if it alone is gr eat enough t o trig ger the
+micturition r eflex (it wil l add t o an y pressure
+already e xisting in the bladder).
+74.If the pr essure in the esophag us is
+while that in the s tomach is , to
+what height c ould s tomach fluid rise in the
+esophag us, assuming a density o f 1.10 g /mL?
+(This mo vement wil l not oc cur if the muscle
+closing the lo wer end o f the esophag us is w orking11 • P roblems & Ex ercises 517
+properl y.)
+75.Pressure in the spinal fluid is measur ed as sho wn
+inFigure 11.40 . If the pr essure in the spinal fluid
+is 10.0 mm Hg: (a) What is the r eading o f the
+water manomet er in cm w ater? (b) What is the
+reading if the person sits up , placing the t op o f the
+fluid 60 cm abo ve the tap? The fluid density is
+1.05 g /mL .
+FIGURE 11.40 A water manomet er used t o measur e
+pressure in the spinal fluid. The height o f the fluid in the
+manomet er is measur ed relativ e to the spinal c olumn, and
+the manomet er is open t o the atmospher e. The measur ed
+pressure wil l be c onsider ably greater if the person sits up .
+76.Calculat e the maximum f orce in ne wtons e xerted
+by the blood on an aneur ysm, or bal looning , in a
+major ar tery, giv en the maximum blood pr essure
+for this person is 150 mm Hg and the eff ectiv e
+area o f the aneur ysm is . Not e that this
+force is gr eat enough t o cause fur ther
+enlar gement and subsequentl y greater force on
+the e ver-thinner v essel w all.
+77.During hea vy lifting , a disk betw een spinal
+vertebrae is subject ed to a 5000-N c ompr essional
+force. (a) What pr essure is cr eated, as suming that
+the disk has a unif orm cir cular cr oss section 2.00
+cm in r adius? (b) What def ormation is pr oduc ed if
+the disk is 0.800 cm thick and has a Y oung ’s
+modulus o f ?
+78.When a person sits er ect, incr easing the v ertical
+position o f their br ain b y 36.0 cm, the hear t mus t
+continue t o pump blood t o the br ain at the same
+rate. (a) What is the g ain in gr avitational pot ential
+ener gy for 100 mL o f blood r aised 36.0 cm? (b)
+What is the dr op in pr essure, neglecting an y los ses
+due t o friction? (c) Discus s ho w the g ain in
+gravitational pot ential ener gy and the decr ease in
+pressure are related.
+79.(a) Ho w high wil l water rise in a glas s capil lary
+tube with a 0.500-mm r adius? (b) Ho w much
+gravitational pot ential ener gy does the w ater gain?
+(c) Discus s pos sible sour ces o f this ener gy.
+80.A neg ative pressure of 25.0 atm can sometimes
+be achie ved with the de vice in Figure 11.41 before
+the w ater separ ates. (a) T o what height c ould such
+a neg ative gauge pressure raise w ater? (b) Ho wmuch w ould a s teel wir e of the same diamet er and
+length as this capil lary stretch if suspended fr om
+above?
+FIGURE 11.41 (a) When the pis ton is r aised, it s tretches the
+liquid slightl y, put ting it under t ension and cr eating a
+negative absolut e pressure (b) The liquid
+eventual ly separ ates, giving an e xperimental limit t o
+negative pressure in this liquid.
+81.Suppose y ou hit a s teel nail with a 0.500-k g
+hammer , initial ly mo ving at and br ought
+to rest in 2.80 mm. (a) What a verage force is
+exerted on the nail? (b) Ho w much is the nail
+compr essed if it is 2.50 mm in diamet er and
+6.00- cm long? (c) What pr essure is cr eated on the
+1.00-mm-diamet er tip o f the nail?
+82.Calculat e the pr essure due t o the oc ean at the
+bottom o f the Marianas T rench near the
+Philippines , giv en its dep th is and
+assuming the density o f sea w ater is c onstant al l
+the w ay do wn. (b) Calculat e the per cent decr ease
+in volume o f sea w ater due t o such a pr essure,
+assuming its bulk modulus is the same as w ater
+and is c onstant. (c) What w ould be the per cent
+increase in its density? Is the as sump tion o f
+constant density v alid? Wil l the actual pr essure be
+greater or smal ler than that calculat ed under this
+assump tion?
+83.The h ydraulic s ystem o f a backhoe is used t o lift a
+load as sho wn in Figure 11.42 . (a) Calculat e the
+force the sec ondar y cylinder mus t exert to
+suppor t the 400-k g load and the 150-k g brace and
+shovel. (b) What is the pr essure in the h ydraulic
+fluid if the sec ondar y cylinder is 2.50 cm in518 11 • P roblems & Ex ercises
+Access f or free at opens tax.org
+diamet er? (c) What f orce would y ou ha ve to exert
+on a le ver with a mechanical adv antag e of 5.00
+acting on a primar y cylinder 0.800 cm in diamet er
+to create this pr essure?
+FIGURE 11.42 Hydraulic and mechanical le ver systems ar e
+used in hea vy machiner y such as this back hoe .
+84.Some miners wish t o remo ve water fr om a mine
+shaft. A pipe is lo wered to the w ater 90 m belo w,
+and a neg ative pressure is applied t o raise the
+water. (a) Calculat e the pr essure needed t o raisethe w ater. (b) What is unr easonable about this
+pressure? (c) What is unr easonable about the
+premise?
+85.You ar e pumping up a bicy cle tir e with a hand
+pump , the pis ton o f which has a 2.00- cm r adius .
+(a) What f orce in ne wtons mus t you e xert to create
+a pressure of (b) What is
+unreasonable about this (a) r esul t? (c) Which
+premises ar e unr easonable or inc onsis tent?
+86.Consider a gr oup o f people tr ying t o stay afloat
+after their boat s trikes a log in a lak e. Cons truct a
+problem in which y ou calculat e the number o f
+people that can cling t o the log and k eep their
+heads out o f the w ater. Among the v ariables t o be
+consider ed ar e the siz e and density o f the log , and
+what is needed t o keep a person ’s head and arms
+above water without s wimming or tr eading w ater.
+87.The al veoli in emph ysema victims ar e damag ed
+and eff ectiv ely form lar ger sacs . Cons truct a
+problem in which y ou calculat e the los s of
+pressure due t o sur face tension in the al veoli
+because o f their lar ger average diamet ers. (Part of
+the lung ’s ability t o expel air r esul ts from pr essure
+created b y sur face tension in the al veoli.) Among
+the things t o consider ar e the normal sur face
+tension o f the fluid lining the al veoli, the a verage
+alveolar r adius in normal individuals and its
+average in emph ysema suff erers.
+Test Prep for AP ® Courses
+11.2 Densit y
+1.An under -inflat ed v olleybal l is pumped ful l of air so
+that its r adius incr eases b y 10%. Ignoring the mas s
+of the air inser ted int o the bal l, what wil l happen t o
+the v olleybal l's density?
+a.The density o f the v olleybal l wil l incr ease b y
+appr oximat ely 25%.
+b.The density o f the v olleybal l wil l incr ease b y
+appr oximat ely 10%.
+c.The density o f the v olleybal l wil l decr ease b y
+appr oximat ely 10%.
+d.The density o f the v olleybal l wil l decr ease b y
+appr oximat ely 17%.
+e.The density o f the v olleybal l wil l decr ease b y
+appr oximat ely 25%.
+2.A piec e of aluminum f oil has a kno wn sur face
+density o f 15 g /cm2. If a 100-gr am hol low cube
+were construct ed using this f oil, det ermine the
+appr oximat e side length o f this cube .a.1.05 cm
+b.1.10 cm
+c.2.6 cm
+d.6.67 cm
+e.15 cm
+3.A cube o f pol ystyrene measuring 10 cm per side
+lies par tially submer ged in a lar ge container o f
+water.
+a.If 90% o f the pol ystyrene floats abo ve the
+surface of the w ater, what is the density o f the
+polystyrene? (Not e: The density o f water is
+1000 k g/m3.)
+b.A 0.5 k g mas s is plac ed on the block o f
+polystyrene. What per centag e of the block no w
+remains abo ve water?
+c.The w ater is pour ed out o f the c ontainer and
+replac ed with eth yl alc ohol (density = 790
+kg/m3).
+i.Will the block be able t o remain par tially11 • T est Prep for AP ® Courses 519
+submer ged in this ne w fluid? Explain.
+ii.Will the block be able t o remain par tially
+submer ged in this ne w fluid with the 0.5 k g
+mas s plac ed on t op? Explain.
+d.Without using a c ontainer o f water, explain ho w
+you c ould det ermine the density o f the
+polystyrene mentioned abo ve if the mat erial
+instead w ere spherical .
+4.Four spher es ar e hung fr om a v ariety o f diff erent
+springs . The table belo w describes the char acteristics
+of both the spher es and the springs fr om which the y
+are hung . Use this inf ormation t o rank the density o f
+each spher e from leas t to greatest. Sho w work
+suppor ting y our r anking .
+Material
+TypeRadius o f
+Spher eStretch of
+Spring
+(from
+equilibrium)Spring
+Constant
+A 10 cm 5 cm 2 N/m
+B 5 cm 8 cm 8 N/m
+C 8 cm 10 cm 6 N/m
+D 8 cm 12 cm 10 N/m
+TABLE 11.6Rank the densities o f the objects lis ted abo ve, from
+greatest to leas t. Sho w work suppor ting y our r anking .
+11.3 Pressur e
+5.A cylindrical drum o f radius 0.5 m is used t o hold
+400 lit ers o f petr oleum ether (density = .68 g /mL or
+680 k g/m3).
+(Not e: 1 lit er = 0.001 m3)
+a.Determine the amount o f pressure applied t o
+the w alls of the drum if the petr oleum ether
+fills the drum t o its t op.
+b.Determine the amount o f pressure applied t o
+the floor o f the drum if the petr oleum ether fil ls
+the drum t o its t op.
+c.If the drum w ere redesigned t o hold 800 lit ers
+of petr oleum ether:
+i.How would the pr essure on the w alls
+chang e?
+Would it incr ease , decr ease , or s tay the
+same?
+ii.How would the pr essure on the floor
+chang e?
+Would it incr ease , decr ease , or s tay the
+same?520 11 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+CONNECT ION F OR AP® C OURSESCHAP TER 12
+Fluid Dynamics and Its Biological and Medical
+Applica tions
+12.1 Flow Rate and Its R elation t o Velocity
+12.2 Bernoul li’s Equation
+12.3 The Mos t Gener al Applica tions o f Bernoul li’s Equation
+12.4 Visc osity and L aminar Flo w; P oiseuil le’s Law
+12.5 The Onset o f Turbulenc e
+12.6 Motion o f an Object in a Visc ous Fluid
+12.7 Molecular T ranspor t Phenomena: Dif fusion, Osmosis , and R elated P rocesses
+How do planes fl y? Ho w do w e model blood flo w? Ho w do spr ayers w ork f or
+paints or aer osols? What is the purpose o f a w ater tower? T o ans wer these ques tions , we wil l examine fluid
+dynamics . The equations g overning fluid dynamics ar e deriv ed fr om the same equations that r epresent ener gy
+conser vation. One o f the mos t powerful equations in fluid dynamics is Bernoul li's equation, which g overns the
+relationship betw een fluid pr essure, kinetic ener gy, and pot ential ener gy (Es sential K nowledg e 5.B .10). W e wil l see
+how Bernoul li's equation e xplains the pr essure diff erence that pr ovides lift f or airplanes and pr ovides the means f or
+fluids (lik e water or paint or per fume) t o mo ve in useful w ays.
+The c ontent in this chap ter suppor ts:FIGURE 12.1 Man y fluids ar e flo wing in this sc ene. Water fr om the hose and smok e from the fir e are visible flo ws. Less visible ar e the flo w
+of air and the flo w of fluids on the gr ound and within the people fighting the fir e. (credit: Andr ew Magil l, Flickr)
+CHAP TER OUTLINE
+•Calculate flow rate.
+•Define units of volume.
+•Describe incompressible fluids.
+•Explain the consequences of the equation of continuity.
+Flow rate is defined to be the volume of fluid passing by some location through an area during a period of time, as
+seen in Figure 12.2. In symbols, this can be written as
+where is the volume and is the elapsed time.
+The SI unit for flow rate is , but a number of other units for are in common use. For example, the heart of a
+resting adult pumps blood at a rate of 5.00 liters per minute (L/min). Note that a liter (L) is 1/1000 of a cubic meter
+or 1000 cubic centimeters ( or ). In this text we shall use whatever metric units are most
+convenient for a given situation.
+FIGURE 12.2 Flow rate is the volume of fluid per unit time flowing past a point through the area . Here the shaded cylinder of fluid flows
+past point in a uniform pipe in time . The volume of the cylinder is and the average velocity is so that the flow rate is
+.
+EXAMPLE 12.1
+Calculating Volume from Flow Rate: The Heart Pumps a Lot of Blood in a Lifetime
+How many cubic meters of blood does the heart pump in a 75-year lifetime, assuming the average flow rate is 5.00
+L/min?
+Strategy
+Time and flow rate are given, and so the volume can be calculated from the definition of flow rate.
+Solution
+Solving for volume gives12.1
+522 12 • Fluid Dynamics and Its Biological and Medical Applications
+Big Idea 5 Changes that occur as a result of interactions are constrained by conservation laws.
+Enduring Understanding 5.B The energy of a system is conserved.
+Essential Knowledge 5.B.10 Bernoulli's equation describes the conservation of energy in a fluid flow.
+Enduring Understanding 5.F Classically, the mass of a system is conserved.
+Essential Knowledge 5.F.1 The continuity equation describes conservation of mass flow rate in fluids.
+Click to view content (https:/ /openstax.org/books/college-physics-ap-courses-2e/pages/12-connection-for-
+ap-r-courses)
+12.1 Flow Rate and Its R elation to Velocity
+LEARNING OBJECTIVES
+By the end of this section, you will be able to:
+Access for free at openstax.org
+Subs tituting kno wn v alues yields
+Discus sion
+This amount is about 200,000 t ons o f blood. F or comparison, this v alue is equiv alent t o about 200 times the v olume
+of water contained in a 6-lane 50-m lap pool .
+Flow rate and v elocity ar e related, but quit e diff erent, ph ysical quantities . To mak e the dis tinction clear , think about
+the flo w rate of a riv er. The gr eater the v elocity o f the w ater, the gr eater the flo w rate of the riv er. But flo w rate also
+depends on the siz e of the riv er. A rapid mountain s tream carries far les s water than the Amaz on Riv er in Br azil, for
+example . The pr ecise r elationship betw een flo w rate and v elocity is
+wher e is the cr oss-sectional ar ea and is the a verage velocity . This equation seems logical enough. The
+relationship t ells us that flo w rate is dir ectly propor tional t o both the magnitude o f the a verage velocity (her eafter
+referred to as the speed) and the siz e of a riv er, pipe , or other c onduit. The lar ger the c onduit, the gr eater its cr oss-
+sectional ar ea.Figure 12.2 illustrates ho w this r elationship is ob tained. The shaded cylinder has a v olume
+which flo ws pas t the point in a time . Dividing both sides o f this r elationship b ygives
+We not e that and the a verage speed is . Thus the equation bec omes .
+Figure 12.3 shows an inc ompr essible fluid flo wing along a pipe o f decr easing r adius . Because the fluid is
+incompr essible , the same amount o f fluid mus t flow pas t any point in the tube in a giv en time t o ensur e continuity o f
+flow. In this case , because the cr oss-sectional ar ea o f the pipe decr eases , the v elocity mus t nec essaril y incr ease .
+This logic can be e xtended t o sa y that the flo w rate mus t be the same at al l points along the pipe . In par ticular , for
+points 1 and 2,
+This is cal led the equation o f continuity and is v alid f or an y inc ompr essible fluid. The c onsequenc es o f the equation
+of continuity can be obser ved when w ater flo ws from a hose int o a narr ow spr ay no zzle: it emer ges with a lar ge
+speed—that is the purpose o f the no zzle. Con versel y, when a riv er emp ties int o one end o f a reser voir, the w ater
+slows consider ably, perhaps picking up speed ag ain when it lea ves the other end o f the r eser voir. In other w ords,
+speed incr eases when cr oss-sectional ar ea decr eases , and speed decr eases when cr oss-sectional ar ea incr eases .
+FIGURE 12.3 When a tube narr ows, the same v olume oc cupies a gr eater length. F or the same v olume t o pas s points 1 and 2 in a giv en time ,
+the speed mus t be gr eater at point 2. The pr ocess is e xactl y reversible . If the fluid flo ws in the opposit e dir ection, its speed wil l decr ease
+when the tube widens . (Not e that the r elativ e volumes o f the tw o cylinders and the c orresponding v elocity v ector arr ows are not dr awn t o
+scale .)12.2
+12.3
+12.4
+12.5
+12.6
+12.712.1 • Flo w Rate and Its R elation t o Velocit y 523
+Sinc e liquids ar e es sential ly inc ompr essible , the equation o f continuity is v alid f or al l liquids . Ho wever, gases ar e
+compr essible , and so the equation mus t be applied with caution t o gases if the y are subject ed to compr ession or
+expansion.
+EXAMPLE 12.2
+Calcula ting Fluid Speed: Speed Incr eases When a T ube Narr ows
+A no zzle with a r adius o f 0.250 cm is at tached t o a g arden hose with a r adius o f 0.900 cm. The flo w rate thr ough
+hose and no zzle is 0.500 L /s. Calculat e the speed o f the w ater (a) in the hose and (b) in the no zzle.
+Strategy
+We can use the r elationship betw een flo w rate and speed t o find both v elocities . We wil l use the subscrip t 1 for the
+hose and 2 f or the no zzle.
+Solution f or (a)
+First, we sol ve for and not e that the cr oss-sectional ar ea is , yielding
+Subs tituting kno wn v alues and making appr opriat e unit c onversions yields
+Solution f or (b)
+We could r epeat this calculation t o find the speed in the no zzle , but w e wil l use the equation o f continuity t o giv e
+a some what diff erent insight. Using the equation which s tates
+solving f or and subs tituting for the cr oss-sectional ar ea yields
+Subs tituting kno wn v alues ,
+Discus sion
+A speed o f 1.96 m/s is about right f or w ater emer ging fr om a no zzleles s hose . The no zzle pr oduc es a c onsider ably
+faster stream mer ely by constricting the flo w to a narr ower tube .
+The solution t o the las t par t of the e xample sho ws that speed is in versel y propor tional t o the squar eof the r adius o f
+the tube , making f or lar ge eff ects when r adius v aries . We can blo w out a candle at quit e a dis tanc e, for example , by
+pursing our lips , wher eas blo wing on a candle with our mouth wide open is quit e ineff ectiv e.
+In man y situations , including in the car diovascular s ystem, br anching o f the flo w oc curs . The blood is pumped fr om
+the hear t into arteries that subdivide int o smal ler ar teries (ar terioles) which br anch int o very fine v essels cal led
+capil laries . In this situation, c ontinuity o f flow is maintained but it is the sum of the flo w rates in each o f the
+branches in an y por tion along the tube that is maintained. The equation o f continuity in a mor e gener al form
+becomes
+12.8
+12.9
+12.10
+12.11
+12.12
+12.13524 12 • Fluid Dynamics and Its Biologic al and Medic al Applic ations
+Access f or free at opens tax.org
+wher e and are the number o f branches in each o f the sections along the tube .
+EXAMPLE 12.3
+Calcula ting Flo w Speed and V essel Diamet er: Br anching in the Car diovascular Sy stem
+The aor ta is the principal blood v essel thr ough which blood lea ves the hear t in or der t o cir culat e around the body . (a)
+Calculat e the a verage speed o f the blood in the aor ta if the flo w rate is 5.0 L /min. The aor ta has a r adius o f 10 mm.
+(b) Blood also flo ws thr ough smal ler blood v essels kno wn as capil laries . When the r ate of blood flo w in the aor ta is
+5.0 L /min, the speed o f blood in the capil laries is about 0.33 mm/s . Giv en that the a verage diamet er of a capil lary is
+, calculat e the number o f capil laries in the blood cir culat ory system.
+Strategy
+We can use to calculat e the speed o f flow in the aor ta and then use the g ener al form o f the equation o f
+continuity t o calculat e the number o f capil laries as al l of the other v ariables ar e kno wn.
+Solution f or (a)
+The flo w rate is giv en b y or for a cylindrical v essel.
+Subs tituting the kno wn v alues (c onverted to units o f met ers and sec onds) giv es
+Solution f or (b)
+Using , assigning the subscrip t 1 t o the aor ta and 2 t o the capil laries , and sol ving f or (the
+number o f capil laries) giv es . Con verting al l quantities t o units o f met ers and sec onds and subs tituting
+into the equation abo ve giv es
+Discus sion
+Note that the speed o f flow in the capil laries is c onsider ably reduc ed relativ e to the speed in the aor ta due t o the
+significant incr ease in the t otal cr oss-sectional ar ea at the capil laries . This lo w speed is t o allow sufficient time f or
+effectiv e exchang e to oc cur al though it is equal ly impor tant f or the flo w not t o bec ome s tationar y in or der t o avoid
+the pos sibility o f clot ting. Does this lar ge number o f capil laries in the body seem r easonable? In activ e muscle , one
+finds about 200 capil laries per , or about per 1 k g of muscle . For 20 k g of muscle , this amounts t o
+about capil laries .
+12.2 Bernoulli’ s Equation
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Explain the t erms in Bernoul li’s equation.
+•Explain ho w Bernoul li’s equation is r elated to conser vation o f ener gy.
+•Explain ho w to deriv e Bernoul li’s principle fr om Bernoul li’s equation.
+•Calculat e with Bernoul li’s principle .
+•List some applications o f Bernoul li’s principle .
+When a fluid flo ws int o a narr ower channel , its speed incr eases . That means its kinetic ener gy also incr eases . Wher e
+does that chang e in kinetic ener gy come fr om? The incr eased kinetic ener gy comes fr om the net w ork done on the
+fluid t o push it int o the channel and the w ork done on the fluid b y the gr avitational f orce, if the fluid chang es vertical
+12.14
+12.1512.2 • Bernoulli’ s Equation 525
+position. R ecal l the w ork-ener gy theor em,
+Ther e is a pr essure diff erence when the channel narr ows. This pr essure diff erence resul ts in a net f orce on the fluid:
+recal l that pr essure times ar ea equals f orce. The net w ork done incr eases the fluid’ s kinetic ener gy. As a r esul t, the
+pressure wil l drop in a r apidl y-mo ving fluid , whether or not the fluid is c onfined t o a tube .
+Ther e are a number o f common e xamples o f pressure dropping in r apidl y-mo ving fluids . Sho wer cur tains ha ve a
+disagr eeable habit o f bulging int o the sho wer stall when the sho wer is on. The high-v elocity s tream o f water and air
+creates a r egion o f lower pr essure inside the sho wer, and s tandar d atmospheric pr essure on the other side . The
+pressure diff erence resul ts in a net f orce inward pushing the cur tain in. Y ou ma y also ha ve notic ed that when
+passing a truck on the high way, your car t ends t o veer t oward it. The r eason is the same —the high v elocity o f the air
+betw een the car and the truck cr eates a r egion o f lower pr essure, and the v ehicles ar e pushed t ogether b y greater
+pressure on the outside . (See Figure 12.4 .) This eff ect w as obser ved as far back as the mid-1800s , when it w as
+found that tr ains pas sing in opposit e dir ections tipped pr ecariousl y toward one another .
+FIGURE 12.4 An o verhead vie w of a car pas sing a truck on a high way. Air pas sing betw een the v ehicles flo ws in a narr ower channel and
+mus t incr ease its speed ( is gr eater than ), causing the pr essure betw een them t o drop ( is les s than ). Gr eater pr essure on the
+outside pushes the car and truck t ogether .
+Bernoulli’ s Equation
+The r elationship betw een pr essure and v elocity in fluids is described quantitativ ely byBernoul li’s equa tion , named
+after its disc overer, the Swis s scientis t Daniel Bernoul li (1700–1782). Bernoul li’s equation s tates that f or an
+incompr essible , frictionles s fluid, the f ollowing sum is c onstant:
+wher e is the absolut e pressure,is the fluid density ,is the v elocity o f the fluid, is the height abo ve some
+reference point, and is the ac celeration due t o gravity. If w e follow a smal l volume o f fluid along its path, v arious
+quantities in the sum ma y chang e, but the t otal r emains c onstant. L et the subscrip ts 1 and 2 r efer to an y tw o points
+along the path that the bit o f fluid f ollows; Bernoul li’s equation bec omes
+Bernoul li’s equation is a f orm o f the c onser vation o f ener gy principle . Not e that the sec ond and thir d terms ar e the12.16
+MAKING C ONNE CTIONS: T AKE-HOME INVE STIGA TION WITH A SHEE T OF P APER
+Hold the shor t edg e of a sheet o f paper par allel to your mouth with one hand on each side o f your mouth. The
+page should slant do wnward over your hands . Blo w over the t op o f the pag e. Describe what happens and e xplain
+the r eason f or this beha vior.
+12.17
+12.18526 12 • Fluid Dynamics and Its Biologic al and Medic al Applic ations
+Access f or free at opens tax.org
+kinetic and pot ential ener gy with replac ed b y. In fact, each t erm in the equation has units o f ener gy per unit
+volume . We can pr ove this f or the sec ond t erm b y subs tituting into it and g athering t erms:
+So is the kinetic ener gy per unit v olume . Making the same subs titution int o the thir d term in the equation, w e
+find
+so is the gr avitational pot ential ener gy per unit v olume . Not e that pr essure has units o f ener gy per unit
+volume , too. Sinc e , its units ar e . If w e mul tiply these b y m/m, w e ob tain , or
+ener gy per unit v olume . Bernoul li’s equation is , in fact, jus t a c onvenient s tatement o f conser vation o f ener gy for an
+incompr essible fluid in the absenc e of friction.
+The g ener al form o f Bernoul li’s equation has thr ee terms in it, and it is br oadl y applicable . To unders tand it bet ter,
+we wil l look at a number o f specific situations that simplif y and il lustrate its use and meaning .
+Bernoulli’ s Equation f or Static Fluids
+Let us firs t consider the v ery simple situation wher e the fluid is s tatic—that is , . Bernoul li’s equation in
+that case is
+We can fur ther simplif y the equation b y taking (we can al ways choose some height t o be z ero, jus t as w e
+often ha ve done f or other situations in volving the gr avitational f orce, and tak e all other heights t o be r elativ e to this).
+In that case , we get
+This equation t ells us that, in s tatic fluids , pressure incr eases with dep th. As w e go from point 1 t o point 2 in the
+fluid, the dep th incr eases b y , and c onsequentl y, is gr eater than by an amount . In the v ery simples t
+case , is zero at the t op o f the fluid, and w e get the familiar r elationship . (Recal l that and
+) Bernoul li’s equation includes the fact that the pr essure due t o the w eight o f a fluid is . Although
+we intr oduc e Bernoul li’s equation f or fluid flo w, it includes much o f what w e studied f or static fluids in the pr eceding
+chap ter.
+Bernoulli’ s Principle —Bernoulli’ s Equation at C onstant Dep th
+Another impor tant situation is one in which the fluid mo ves but its dep th is c onstant —that is , . Under that
+condition, Bernoul li’s equation bec omes
+Situations in which fluid flo ws at a c onstant dep th ar e so impor tant that this equation is o ften cal ledBernoul li’s
+principle . It is Bernoul li’s equation f or fluids at c onstant dep th. (Not e ag ain that this applies t o a smal l volume o f
+fluid as w e follow it along its path.) As w e ha ve jus t discus sed, pr essure drops as speed incr eases in a mo ving fluid.
+We can see this fr om Bernoul li’s principle . For example , if is gr eater than in the equation, then mus t be
+less than for the equality t o hold.12.19
+12.20
+MAKING C ONNE CTIONS: C ONSER VATION OF ENER GY
+Conser vation o f ener gy applied t o fluid flo w pr oduc es Bernoul li’s equation. The net w ork done b y the fluid’ s
+pressure resul ts in chang es in the fluid’ s and per unit v olume . If other f orms o f ener gy are involved in
+fluid flo w, Bernoul li’s equation can be modified t o tak e these f orms int o ac count. Such f orms o f ener gy include
+thermal ener gy dis sipat ed because o f fluid visc osity .
+12.21
+12.22
+12.2312.2 • Bernoulli’ s Equation 527
+EXAMPLE 12.4
+Calcula ting P ressure: P ressure Dr ops as a Fluid Speeds Up
+InExample 12.2 , we found that the speed o f water in a hose incr eased fr om 1.96 m/s t o 25.5 m/s g oing fr om the
+hose t o the no zzle. Calculat e the pr essure in the hose , giv en that the absolut e pressure in the no zzle is
+(atmospheric, as it mus t be) and as suming le vel, frictionles s flo w.
+Strategy
+Level flo w means c onstant dep th, so Bernoul li’s principle applies . We use the subscrip t 1 for values in the hose and
+2 for those in the no zzle. We are thus ask ed to find .
+Solution
+Solving Bernoul li’s principle f or yields
+Subs tituting kno wn v alues ,
+Discus sion
+This absolut e pressure in the hose is gr eater than in the no zzle, as e xpect ed sinc eis gr eater in the no zzle. The
+pressure in the no zzle mus t be atmospheric sinc e it emer ges int o the atmospher e without other chang es in
+conditions .
+Applic ations o f Bernoulli’ s Principle
+Ther e are a number o f devices and situations in which fluid flo ws at a c onstant height and, thus , can be anal yzed
+with Bernoul li’s principle .
+Entrainment
+People ha ve long put the Bernoul li principle t o work b y using r educ ed pr essure in high-v elocity fluids t o mo ve things
+about. With a higher pr essure on the outside , the high-v elocity fluid f orces other fluids int o the s tream. This pr ocess
+is cal ledentr ainment . Entr ainment de vices ha ve been in use sinc e ancient times , par ticularl y as pumps t o raise
+water smal l heights , as in dr aining s wamps , fields , or other lo w-lying ar eas. Some other de vices that use the c oncept
+of entr ainment ar e sho wn in Figure 12.5 .
+FIGURE 12.5 Examples o f entr ainment de vices that use incr eased fluid speed t o create low pr essures, which then entr ain one fluid int o
+another . (a) A Bunsen burner uses an adjus table g as no zzle, entr aining air f or pr oper c ombus tion. (b) An at omiz er uses a squee ze bulb t o
+create a jet o f air that entr ains dr ops o f per fume . Paint spr ayers and carbur etors use v ery similar t echniques t o mo ve their r espectiv e
+liquids . (c) A c ommon aspir ator uses a high-speed s tream o f water to create a r egion o f lower pr essure. Aspir ators ma y be used as suction
+pumps in dental and sur gical situations or f or dr aining a flooded basement or pr oducing a r educ ed pr essure in a v essel. (d) The chimne y of
+a water heat er is designed t o entr ain air int o the pipe leading thr ough the c eiling .
+12.24
+12.25528 12 • Fluid Dynamics and Its Biologic al and Medic al Applic ations
+Access f or free at opens tax.org
+Wings and Sails
+The airplane wing is a beautiful e xample o f Bernoul li’s principle in action. Figure 12.6 (a) sho ws the char acteristic
+shape o f a wing . The wing is til ted up ward at a smal l angle and the upper sur face is long er, causing air t o flo w fas ter
+over it. The pr essure on t op o f the wing is ther efore reduc ed, cr eating a net up ward force or lift. ( Wings can also g ain
+lift b y pushing air do wnward, utilizing the c onser vation o f momentum principle . The deflect ed air molecules r esul t in
+an up ward force on the wing — Ne wton’s thir d law.) Sails also ha ve the char acteristic shape o f a wing . (See Figure
+12.6 (b).) The pr essure on the fr ont side o f the sail , , is lo wer than the pr essure on the back o f the sail , .
+This r esul ts in a f orward force and e ven al lows you to sail int o the wind.
+Velocit y measur ement
+Figure 12.7 shows tw o de vices that measur e fluid v elocity based on Bernoul li’s principle . The manomet er in Figure
+12.7 (a) is c onnect ed to tw o tubes that ar e smal l enough not t o appr eciabl y dis turb the flo w. The tube facing the
+oncoming fluid cr eates a dead spot ha ving z ero velocity ( ) in fr ont o f it, while fluid pas sing the other tube has
+velocity . This means that Bernoul li’s principle as s tated in becomes
+FIGURE 12.6 (a) The Bernoul li principle helps e xplain lift g ener ated b y a wing . (b) Sails use the same t echnique t o gener ate par t of their
+thrus t.
+Thus pr essure over the sec ond opening is r educ ed b y , and so the fluid in the manomet er rises b yon the
+side c onnect ed to the sec ond opening , wher e
+(Recal l that the s ymbol means “ propor tional t o.”) Sol ving f or , we see that
+Figure 12.7 (b) sho ws a v ersion o f this de vice that is in c ommon use f or measuring v arious fluid v elocities; such
+devices ar e frequentl y used as air speed indicat ors in air craft.MAKING C ONNE CTIONS: T AKE-HOME INVE STIGA TION WITH T WO STRIPS OF
+PAPER
+For a g ood il lustration o f Bernoul li’s principle , mak e tw o strips o f paper , each about 15 cm long and 4 cm wide .
+Hold the smal l end o f one s trip up t o your lips and let it dr ape o ver your fing er. Blo w acr oss the paper . What
+happens? No w hold tw o strips o f paper up t o your lips , separ ated b y your fing ers. Blo w betw een the s trips . What
+happens?
+12.26
+12.27
+12.2812.2 • Bernoulli’ s Equation 529
+FIGURE 12.7 Measur ement o f fluid speed based on Bernoul li’s principle . (a) A manomet er is c onnect ed to tw o tubes that ar e close t ogether
+and smal l enough not t o dis turb the flo w. Tube 1 is open at the end facing the flo w. A dead spot ha ving z ero speed is cr eated ther e. Tube 2
+has an opening on the side , and so the fluid has a speed across the opening; thus , pressure ther e drops. The diff erence in pr essure at the
+manomet er is , and so is pr opor tional t o . (b) This type o f velocity measuring de vice is a P randtl tube , also kno wn as a pit ot
+tube .
+12.3 The Mos t Gener al Applic ations o f Bernoulli’ s Equation
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Calculat e using T orric elli’s theor em.
+•Calculat e po wer in fluid flo w.
+Torric elli’s Theor em
+Figure 12.8 shows water gushing fr om a lar ge tube thr ough a dam. What is its speed as it emer ges? Int erestingl y, if
+resistanc e is negligible , the speed is jus t what it w ould be if the w ater fell a dis tanc efrom the sur face of the
+reser voir; the w ater’s speed is independent o f the siz e of the opening . Let us check this out. Bernoul li’s equation
+mus t be used sinc e the dep th is not c onstant. W e consider w ater flo wing fr om the sur face (point 1) t o the tube ’s
+outlet (point 2). Bernoul li’s equation as s tated in pr eviousl y is
+Both and equal atmospheric pr essure( is atmospheric pr essure because it is the pr essure at the t op o f the
+reser voir. mus t be atmospheric pr essure, sinc e the emer ging w ater is surr ounded b y the atmospher e and cannot
+have a pr essure diff erent fr om atmospheric pr essure.) and sub tract out o f the equation, lea ving
+Solving this equation f or , noting that the density canc els (because the fluid is inc ompr essible), yields
+We let ; the equation then bec omes
+wher eis the height dr opped b y the w ater. This is simpl y a kinematic equation f or an y object fal ling a dis tanc e
+with negligible r esistanc e. In fluids , this las t equation is cal ledTorric elli’s theor em. Not e that the r esul t is
+independent o f the v elocity ’s dir ection, jus t as w e found when appl ying c onser vation o f ener gy to fal ling objects .12.29
+12.30
+12.31
+12.32530 12 • Fluid Dynamics and Its Biologic al and Medic al Applic ations
+Access f or free at opens tax.org
+FIGURE 12.8 (a) W ater gushes fr om the base o f the Studen Kladenetz dam in Bulg aria. (credit: Kiril K apus tin;
+http://www .Imag esFromBulg aria.com) (b) In the absenc e of significant r esistanc e, water flo ws from the r eser voir with the same speed it
+would ha ve if it f ell the dis tanc ewithout friction. This is an e xample o f Torric elli’s theor em.
+FIGURE 12.9 Pressure in the no zzle o f this fir e hose is les s than at gr ound le vel for tw o reasons: the w ater has t o go uphil l to get to the
+nozzle, and speed incr eases in the no zzle. In spit e of its lo wered pr essure, the w ater can e xert a lar ge force on an ything it s trikes, by vir tue
+of its kinetic ener gy. Pressure in the w ater stream bec omes equal t o atmospheric pr essure onc e it emer ges int o the air .
+All preceding applications o f Bernoul li’s equation in volved simplif ying c onditions , such as c onstant height or
+constant pr essure. The ne xt example is a mor e gener al application o f Bernoul li’s equation in which pr essure,12.3 • The Mos t Gener al Applic ations o f Bernoulli’ s Equation 531
+velocity , and height al l chang e. (See Figure 12.9 .)
+EXAMPLE 12.5
+Calcula ting P ressure: A Fir e Hose No zzle
+Fire hoses used in major s tructur e fires ha ve inside diamet ers o f 6.40 cm. Suppose such a hose carries a flo w of
+40.0 L /s starting at a g auge pressure of . The hose g oes 10.0 m up a ladder t o a no zzle ha ving an
+inside diamet er of 3.00 cm. As suming negligible r esistanc e, what is the pr essure in the no zzle?
+Strategy
+Here we mus t use Bernoul li’s equation t o sol ve for the pr essure, sinc e dep th is not c onstant.
+Solution
+Bernoul li’s equation s tates
+wher e the subscrip ts 1 and 2 r efer to the initial c onditions at gr ound le vel and the final c onditions inside the no zzle,
+respectiv ely. We mus t firs t find the speeds and . Sinc e , we get
+Similarl y, we find
+(This r ather lar ge speed is help ful in r eaching the fir e.) No w, taking to be z ero, we sol ve Bernoul li’s equation f or
+:
+Subs tituting kno wn v alues yields
+Discus sion
+This v alue is a g auge pressure, sinc e the initial pr essure was giv en as a g auge pressure. Thus the no zzle pr essure is
+very close t o atmospheric pr essure, as it mus t because the w ater exits int o the atmospher e without chang es in its
+conditions .
+Power in Fluid Flo w
+Power is the rateat which w ork is done or ener gy in an y form is used or supplied. T o see the r elationship o f power to
+fluid flo w, consider Bernoul li’s equation:
+All thr ee terms ha ve units o f ener gy per unit v olume , as discus sed in the pr evious section. No w, considering units , if
+we mul tiply ener gy per unit v olume b y flo w rate (volume per unit time), w e get units o f power. That is ,
+. This means that if w e mul tiply Bernoul li’s equation b y flo w rate, we get po wer. In equation
+form, this is
+12.33
+12.34
+12.35
+12.36
+12.37
+12.38532 12 • Fluid Dynamics and Its Biologic al and Medic al Applic ations
+Access f or free at opens tax.org

@@ -1,0 +1,486 @@
+/**
+ * Knowledge Module Types
+ *
+ * These interfaces define the structure of knowledge modules that can be
+ * plugged into the AI tutor. They are designed to be subject-agnostic,
+ * working for physics, math, history, languages, and any other subject.
+ */
+
+// =============================================================================
+// CORE MODULE INTERFACE
+// =============================================================================
+
+export type Subject =
+  | 'physics'
+  | 'math'
+  | 'chemistry'
+  | 'biology'
+  | 'history'
+  | 'english'
+  | 'languages'
+  | 'economics';
+
+export type Level =
+  | 'middle-school'
+  | 'high-school'
+  | 'AP'
+  | 'SAT'
+  | 'ACT'
+  | 'college-intro'
+  | 'college-advanced';
+
+/**
+ * A Knowledge Module contains everything the tutor needs to teach
+ * one topic at one level.
+ */
+export interface KnowledgeModule {
+  // Identity
+  id: string; // e.g., 'physics-kinematics-ap'
+  subject: Subject;
+  topic: string;
+  level: Level;
+  version: string;
+
+  // Display
+  displayName: string; // e.g., "AP Physics 1: Kinematics"
+  description: string;
+  estimatedHours: number; // How long to master
+
+  // Content
+  concepts: Concept[];
+  problems: Problem[];
+  workedExamples: WorkedExample[];
+  misconceptions: Misconception[];
+  realWorldConnections: RealWorldExample[];
+
+  // Subject-specific content
+  equations?: Equation[]; // For math/science
+  vocabulary?: VocabTerm[]; // For languages/history
+
+  // Visuals
+  diagramTypes: string[]; // Which diagram plugins this module uses
+  defaultDiagrams?: WhiteboardCommand[];
+
+  // AI Behavior
+  systemPromptAdditions: string; // Topic-specific instructions
+
+  // Prerequisites
+  prerequisites: string[]; // Module IDs that should come first
+
+  // Assessment
+  masteryThreshold: number; // 0-100, when is topic "mastered"?
+}
+
+// =============================================================================
+// CONCEPTS
+// =============================================================================
+
+export interface Concept {
+  id: string;
+  name: string;
+  category: 'foundational' | 'core' | 'advanced';
+
+  // Prerequisites within this module
+  prerequisiteConcepts: string[];
+
+  // Core content
+  definition: {
+    formal: string; // Textbook/formal definition
+    intuitive: string; // Plain language
+    forVoice: string; // Conversational (optimized for speech)
+  };
+
+  keyPoints: string[];
+
+  // Symbols and units (for math/science)
+  symbols?: ConceptSymbol[];
+
+  // Multiple explanation strategies
+  explanations: Explanation[];
+
+  // Connect to real world
+  realWorldExamples: RealWorldExample[];
+
+  // What students get wrong
+  commonErrors: CommonError[];
+
+  // Practice progression
+  practiceProgression: PracticeLevel[];
+
+  // Assessment
+  checkQuestions: string[]; // Quick verbal checks
+  masteryIndicators: string[]; // Signs they understand
+
+  // Default visuals
+  defaultDiagrams?: WhiteboardCommand[];
+}
+
+export interface ConceptSymbol {
+  symbol: string;
+  meaning: string;
+  unit: string;
+  unitSymbol: string;
+}
+
+export interface Explanation {
+  id: string;
+  approach: 'graphical' | 'algebraic' | 'intuitive' | 'analogy' | 'experimental' | 'step-by-step';
+  name: string;
+  content: string; // The explanation (voice-ready)
+  bestFor: string; // When to use this approach
+  whiteboard?: WhiteboardCommand[];
+}
+
+export interface RealWorldExample {
+  id: string;
+  scenario: string;
+  connection: string; // How it relates to concept
+  difficulty: 'simple' | 'moderate' | 'complex';
+  numbers?: Record<string, { value: number; unit: string }>;
+  followUpQuestions?: string[];
+}
+
+export interface CommonError {
+  error: string;
+  why: string; // Why students make this error
+  detection: string[]; // Phrases/behaviors that indicate this
+  correction: string; // How to address it
+}
+
+export interface PracticeLevel {
+  level: 'recognition' | 'application' | 'analysis' | 'synthesis';
+  description: string;
+  exampleTask: string;
+  successCriteria: string;
+}
+
+// =============================================================================
+// EQUATIONS (for math/science)
+// =============================================================================
+
+export interface Equation {
+  id: string;
+  name: string;
+  latex: string;
+  description: string;
+
+  variables: EquationVariable[];
+
+  // When to use
+  useWhen: string[];
+  limitations: string[];
+
+  // Derivation
+  derivation?: {
+    steps: string[];
+    fromEquations?: string[]; // equation IDs
+  };
+
+  // Common mistakes
+  commonMistakes: string[];
+
+  // Visual meaning
+  graphicalMeaning?: {
+    description: string;
+    whiteboard: WhiteboardCommand;
+  };
+}
+
+export interface EquationVariable {
+  symbol: string;
+  name: string;
+  description: string;
+  unit: string;
+}
+
+// =============================================================================
+// VOCABULARY (for languages/history)
+// =============================================================================
+
+export interface VocabTerm {
+  id: string;
+  term: string;
+  definition: string;
+  context: string;
+  examples: string[];
+  relatedTerms: string[];
+}
+
+// =============================================================================
+// MISCONCEPTIONS
+// =============================================================================
+
+export interface Misconception {
+  id: string;
+  name: string;
+  relatedConcepts: string[];
+  severity: 'minor' | 'moderate' | 'critical';
+
+  // What they believe
+  description: string;
+
+  // Where this comes from
+  origin: string;
+
+  // Detection patterns
+  detectPatterns: {
+    verbal: string[]; // Things they might say
+    problemSolving: string[]; // Errors in their work
+    graphical?: string[]; // Misreadings of graphs
+  };
+
+  // Correction strategy
+  correction: {
+    acknowledge: string; // Validate their thinking first
+    conflictQuestion: string; // Socratic question that reveals issue
+    conflictExample: string; // Concrete counterexample
+    correctExplanation: string;
+    whiteboard?: WhiteboardCommand[];
+    verificationQuestion: string; // Check if it stuck
+  };
+
+  // How persistent
+  persistence: 'low' | 'medium' | 'high';
+
+  // Related misconceptions
+  relatedMisconceptions?: string[];
+}
+
+// =============================================================================
+// PROBLEMS
+// =============================================================================
+
+export type ProblemType =
+  | 'calculation'
+  | 'conceptual'
+  | 'graphical'
+  | 'multi-step'
+  | 'multiple-choice'
+  | 'free-response'
+  | 'analysis'
+  | 'estimation';
+
+export type ProblemSource = 'curated' | 'ai-generated' | 'student-provided' | 'pdf-extracted';
+
+export interface Problem {
+  id: string;
+  source: ProblemSource;
+  sourceReference?: string; // e.g., "Giancoli Ch.2 #15"
+
+  // Classification
+  concepts: string[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  type: ProblemType;
+  estimatedMinutes: number;
+
+  // The problem
+  title?: string;
+  statement: string;
+  context?: string;
+  stimulus?: Stimulus; // For reading passages, images, etc.
+
+  // Given information (for quantitative problems)
+  givenValues?: GivenValue[];
+  unknowns?: Unknown[];
+
+  // Diagram
+  diagram?: {
+    type: string;
+    params: Record<string, unknown>;
+  };
+
+  // Solution
+  solution: ProblemSolution;
+
+  // Progressive hints
+  hints: ProblemHint[];
+
+  // Common errors on THIS problem
+  problemSpecificErrors?: {
+    error: string;
+    howToDetect: string;
+    feedback: string;
+  }[];
+
+  // For follow-up
+  variations?: string[]; // Problem IDs
+  relatedConcepts?: string[];
+  tags: string[];
+}
+
+export interface Stimulus {
+  type: 'text' | 'image' | 'graph' | 'table' | 'diagram';
+  content: string; // Text or URL
+  description?: string; // For accessibility
+}
+
+export interface GivenValue {
+  symbol: string;
+  value: number | 'variable';
+  unit: string;
+  description?: string;
+}
+
+export interface Unknown {
+  symbol: string;
+  description: string;
+  unit: string;
+}
+
+export interface ProblemSolution {
+  approach: string; // Strategy description
+  steps: SolutionStep[];
+  finalAnswer: Answer;
+  alternativeApproaches?: AlternativeApproach[];
+  conceptualAnswer?: string; // For conceptual problems
+}
+
+export interface SolutionStep {
+  stepNumber: number;
+  description: string; // What we're doing
+  explanation?: string; // Why we're doing it
+  equation?: string; // LaTeX
+  substitution?: string; // LaTeX with numbers
+  result?: string; // LaTeX result
+  whiteboard?: WhiteboardCommand;
+}
+
+export interface Answer {
+  value?: number;
+  unit?: string;
+  text?: string; // For non-numeric answers
+  significantFigures?: number;
+  acceptableRange?: [number, number]; // For estimation problems
+}
+
+export interface AlternativeApproach {
+  name: string;
+  description: string;
+  steps: SolutionStep[];
+}
+
+export interface ProblemHint {
+  level: 1 | 2 | 3; // 1 = gentle nudge, 3 = nearly gives it away
+  hint: string;
+  whiteboard?: WhiteboardCommand;
+}
+
+// =============================================================================
+// WORKED EXAMPLES
+// =============================================================================
+
+export interface WorkedExample {
+  id: string;
+  title: string;
+  concepts: string[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+
+  // The problem
+  problem: {
+    statement: string;
+    givenValues: GivenValue[];
+    find: string;
+  };
+
+  // Step-by-step walkthrough with teaching notes
+  walkthrough: WorkedExampleStep[];
+
+  // Wrap up
+  keyTakeaways: string[];
+  practiceNow?: string; // Problem ID to try next
+}
+
+export interface WorkedExampleStep {
+  step: number;
+  tutorSays: string; // What to say out loud
+  tutorDoes?: WhiteboardCommand; // What to show
+  checkQuestion?: string; // Optional understanding check
+  commonStumble?: string; // Where students often get lost here
+}
+
+// =============================================================================
+// WHITEBOARD COMMANDS
+// =============================================================================
+
+export type Point = { x: number; y: number };
+
+export type GraphType = 'position-time' | 'velocity-time' | 'acceleration-time' | 'generic-xy';
+
+export interface GraphData {
+  title?: string;
+  xLabel: string;
+  yLabel: string;
+  xRange: [number, number];
+  yRange: [number, number];
+  functions?: GraphFunction[];
+  points?: GraphPoint[];
+  annotations?: GraphAnnotation[];
+}
+
+export interface GraphFunction {
+  fn: string; // e.g., "2*t + 5" or "-4.9*t^2 + 20*t"
+  color?: string;
+  label?: string;
+  domain?: [number, number];
+}
+
+export interface GraphPoint {
+  x: number;
+  y: number;
+  label?: string;
+  color?: string;
+}
+
+export interface GraphAnnotation {
+  type: 'slope' | 'area' | 'tangent' | 'secant' | 'point-label';
+  from?: number;
+  to?: number;
+  at?: number;
+  label?: string;
+  color?: string;
+}
+
+export type WhiteboardCommand =
+  | { action: 'clear' }
+  | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }
+  | { action: 'showGraph'; type: GraphType; data: GraphData }
+  | { action: 'showDiagram'; type: string; params: Record<string, unknown> }
+  | { action: 'drawVector'; from: Point; to: Point; label?: string; color?: string }
+  | { action: 'annotate'; text: string; position: Point; style?: 'normal' | 'highlight' | 'warning' }
+  | { action: 'highlight'; elementId: string; color?: string }
+  | { action: 'showProblem'; problem: Partial<Problem> }
+  | { action: 'showSolution'; steps: SolutionStep[] }
+  | { action: 'showWorkedExample'; example: Partial<WorkedExample> }
+  | { action: 'showTable'; headers: string[]; rows: string[][] }
+  | { action: 'showImage'; url: string; alt: string };
+
+// =============================================================================
+// STUDENT PROGRESS
+// =============================================================================
+
+export interface ConceptMastery {
+  conceptId: string;
+  level: 0 | 1 | 2 | 3 | 4;
+  // 0 = not assessed
+  // 1 = recognition (can identify concept)
+  // 2 = comprehension (can explain it)
+  // 3 = application (can use in problems)
+  // 4 = mastery (can teach it, handle edge cases)
+  lastAssessed: Date;
+  problemsCorrect: number;
+  problemsAttempted: number;
+  evidenceNotes?: string[];
+}
+
+export interface StudentModuleProgress {
+  moduleId: string;
+  conceptMastery: Record<string, ConceptMastery>;
+  identifiedMisconceptions: string[];
+  correctedMisconceptions: string[];
+  problemsAttempted: number;
+  problemsCorrect: number;
+  averageHintsUsed: number;
+  totalTimeSpent: number; // seconds
+  sessionsCompleted: number;
+  lastSessionAt: Date;
+}

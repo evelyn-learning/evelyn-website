@@ -276,6 +276,17 @@ export async function generateAutoBlogPost(): Promise<{
       return { success: false, error: "Auto blog generation is disabled" };
     }
 
+    // Prevent duplicate generation within 5 minutes (handles race conditions from multiple workers/schedulers)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (settings.lastGeneratedAt && settings.lastGeneratedAt > fiveMinutesAgo) {
+      console.log("[Auto Blog] Skipping - already generated within last 5 minutes");
+      return { success: false, error: "Already generated recently, skipping to prevent duplicate" };
+    }
+
+    // Immediately update lastGeneratedAt to prevent race conditions
+    settings.lastGeneratedAt = new Date();
+    await settings.save();
+
     console.log("[Auto Blog] Starting automatic blog generation...");
 
     // Step 1: AI decides parameters

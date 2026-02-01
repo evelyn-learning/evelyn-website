@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 // Types
 interface SessionMessage {
@@ -119,8 +120,9 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
   "warningSign": "Any misconception or struggle pattern detected (or null)"
 }`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,22 +132,28 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
           system: systemPrompt,
           max_tokens: 1000
         })
-      });
+      }
+    );
 
-      const data = await response.json();
+    if (apiError) {
+      console.error('Error:', apiError.message);
+      setIsAnalyzing(false);
+      return;
+    }
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as AISuggestions;
           setAiSuggestions(parsed);
+        } catch {
+          console.error('Error parsing suggestions');
         }
       }
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setIsAnalyzing(false);
     }
+
+    setIsAnalyzing(false);
   };
 
   const handleStudentMessage = () => {

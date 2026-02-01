@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'AI Products for Education | Adaptive Learning & Intelligent Tutoring',
-  description: 'Explore 23 AI-powered learning products: adaptive learning platforms, intelligent tutoring systems, automated grading, learning analytics, and personalized learning solutions for K-12, higher education, and corporate training.',
+  description: 'Explore 24 AI-powered learning products: adaptive learning platforms, intelligent tutoring systems, automated grading, learning analytics, and personalized learning solutions for K-12, higher education, and corporate training.',
   keywords: [
     'AI-Powered Learning',
     'Adaptive Learning Platform',
@@ -65,6 +65,14 @@ const productCategories = [
     name: 'Tutoring AI',
     description: 'Scale personalized learning support',
     products: [
+      {
+        id: 'voice-tutor',
+        title: 'AI Voice Tutor',
+        tagline: 'Real-time voice tutoring with visual whiteboard',
+        icon: '🎙️',
+        gradient: 'from-blue-500 to-indigo-600',
+        demoStatus: 'live' as DemoStatus
+      },
       {
         id: 'homework-bot',
         title: '24/7 AI Homework Helper',
@@ -265,7 +273,7 @@ function HeroSection() {
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="text-emerald-300 text-sm font-medium">23 AI products with live demos</span>
+            <span className="text-emerald-300 text-sm font-medium">24 AI products with live demos</span>
           </span>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -448,7 +456,7 @@ function ProductsSection() {
 // Stats Section
 function StatsSection() {
   const stats = [
-    { value: '23', label: 'AI Products' },
+    { value: '24', label: 'AI Products' },
     { value: '100%', label: 'White-label ready' },
     { value: '<1 week', label: 'To deployment' },
     { value: '24/7', label: 'Support' }

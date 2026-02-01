@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface LearningObjective {
   code: string;
@@ -126,8 +127,9 @@ Create a comprehensive curriculum map in this JSON format:
 
 Include ${parseInt(duration) || 4} weeks of lessons. Make it practical and detailed.`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,30 +137,31 @@ Include ${parseInt(duration) || 4} weeks of lessons. Make it practical and detai
           system: systemPrompt,
           max_tokens: 3500,
         }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsGenerating(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as CurriculumMap;
           setCurriculum(parsed);
           setExpandedWeek(1);
-        } else {
+        } catch {
           setError('Could not parse curriculum. Please try again.');
         }
+      } else {
+        setError('Could not parse curriculum. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsGenerating(false);
     }
+
+    setIsGenerating(false);
   };
 
   const loadSample = (type: keyof typeof SAMPLE_INPUTS) => {

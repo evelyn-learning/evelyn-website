@@ -1,17 +1,13 @@
-// Image Service for DALL-E Image Generation
-// Generates custom blog images using OpenAI's DALL-E 3
+// Image Service for Blog Images
+// Fetches high-quality stock photos from Unsplash API
 
-import OpenAI from "openai";
 import { v2 as cloudinary } from "cloudinary";
 import { ImageSuggestion, ImageStyle } from "@/types/blog-generator";
-import { getImagePrompt } from "@/lib/prompts/blog-prompts";
 import fs from "fs";
 import path from "path";
 import https from "https";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
 
 // Configure Cloudinary if credentials are available
 const isCloudinaryConfigured = !!(
@@ -28,14 +24,11 @@ if (isCloudinaryConfigured) {
   });
 }
 
-// Style-specific DALL-E prompt modifiers
+// Style-specific Unsplash search modifiers
 const STYLE_MODIFIERS: Record<ImageStyle, string> = {
-  professional:
-    "professional corporate photography, clean minimal design, soft lighting, modern office or educational setting, high quality, sharp focus",
-  illustrative:
-    "modern digital illustration, flat design with depth, vibrant gradient colors, educational iconography, clean vector-style art",
-  abstract:
-    "abstract conceptual art, geometric shapes, flowing gradients, blue and purple color palette, modern minimalist design, technology-inspired patterns",
+  professional: "office business corporate professional",
+  illustrative: "colorful creative design modern",
+  abstract: "abstract technology digital minimal",
 };
 
 // Extract keywords from blog title and content
@@ -94,46 +87,132 @@ export function extractImageKeywords(
   return foundKeywords.slice(0, 5);
 }
 
-// Generate image using DALL-E 3
+// Unsplash API response types
+interface UnsplashPhoto {
+  id: string;
+  description: string | null;
+  alt_description: string | null;
+  urls: {
+    raw: string;
+    full: string;
+    regular: string;
+    small: string;
+    thumb: string;
+  };
+  user: {
+    name: string;
+    username: string;
+  };
+  links: {
+    download_location: string;
+  };
+}
+
+interface UnsplashSearchResponse {
+  total: number;
+  total_pages: number;
+  results: UnsplashPhoto[];
+}
+
+// Build search query from title and keywords
+function buildSearchQuery(title: string, keywords: string[], style: ImageStyle): string {
+  // Extract key terms from title
+  const titleWords = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(" ")
+    .filter(word => word.length > 3)
+    .slice(0, 3);
+
+  // Combine with keywords and style modifier
+  const styleModifier = STYLE_MODIFIERS[style];
+  const allTerms = [...titleWords, ...keywords.slice(0, 2), styleModifier];
+
+  // Create focused search query
+  return allTerms.join(" ");
+}
+
+// Trigger download event for Unsplash API compliance
+async function triggerDownloadEvent(downloadLocation: string): Promise<void> {
+  if (!UNSPLASH_ACCESS_KEY) return;
+
+  try {
+    await fetch(`${downloadLocation}?client_id=${UNSPLASH_ACCESS_KEY}`);
+  } catch (error) {
+    console.warn("[Unsplash] Failed to trigger download event:", error);
+  }
+}
+
+// Search and get image from Unsplash
 export async function generateBlogImage(
   title: string,
   keywords: string[],
-  style: ImageStyle = "professional"
+  style: ImageStyle = "professional",
+  isFallback: boolean = false
 ): Promise<ImageSuggestion> {
-  // Build the DALL-E prompt
-  const basePrompt = getImagePrompt(title, keywords, style);
-  const styleModifier = STYLE_MODIFIERS[style];
-  const fullPrompt = `${basePrompt}\n\nStyle requirements: ${styleModifier}`;
+  if (!UNSPLASH_ACCESS_KEY) {
+    throw new Error("UNSPLASH_ACCESS_KEY is not configured");
+  }
+
+  const searchQuery = buildSearchQuery(title, keywords, style);
+  console.log(`[Unsplash] Searching for: "${searchQuery}"`);
 
   try {
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: fullPrompt,
-      n: 1,
-      size: "1792x1024", // Landscape for blog hero images
-      quality: "standard", // Use "hd" for higher quality (more expensive)
-      response_format: "url",
+    // Search Unsplash for relevant images
+    const searchUrl = new URL("https://api.unsplash.com/search/photos");
+    searchUrl.searchParams.set("query", searchQuery);
+    searchUrl.searchParams.set("orientation", "landscape");
+    searchUrl.searchParams.set("per_page", "10");
+    searchUrl.searchParams.set("order_by", "relevant");
+
+    const response = await fetch(searchUrl.toString(), {
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+        "Accept-Version": "v1",
+      },
     });
 
-    if (!response.data || response.data.length === 0) {
-      throw new Error("No data in DALL-E response");
-    }
-    const imageUrl = response.data[0]?.url;
-    if (!imageUrl) {
-      throw new Error("No image URL in DALL-E response");
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Unsplash API error: ${response.status} - ${errorText}`);
     }
 
-    // Generate alt text based on title and keywords
-    const altText = `${title} - ${keywords.slice(0, 3).join(", ")} illustration`;
+    const data: UnsplashSearchResponse = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      if (isFallback) {
+        throw new Error("No images found even with fallback search");
+      }
+      // Fallback to generic education search (only once)
+      console.log("[Unsplash] No results, trying fallback search...");
+      return generateBlogImage("education technology", ["education", "technology", "learning"], style, true);
+    }
+
+    // Pick a random image from top results for variety
+    const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 5));
+    const photo = data.results[randomIndex];
+
+    // Trigger download event (required by Unsplash API guidelines)
+    await triggerDownloadEvent(photo.links.download_location);
+
+    // Use regular size (1080px width) - good balance of quality and size
+    const imageUrl = photo.urls.regular;
+
+    // Generate alt text
+    const altText = photo.alt_description ||
+      photo.description ||
+      `${title} - Photo by ${photo.user.name} on Unsplash`;
+
+    console.log(`[Unsplash] Found image by ${photo.user.name}`);
 
     return {
       imageUrl,
       altText,
-      prompt: fullPrompt,
+      prompt: searchQuery, // Store search query as "prompt" for reference
       style,
     };
   } catch (error) {
-    console.error("DALL-E image generation failed:", error);
+    console.error("[Unsplash] Image search failed:", error);
     throw error;
   }
 }
@@ -142,12 +221,13 @@ export async function generateBlogImage(
 function sanitizeFilename(filename: string): string {
   // Get basename to strip any path components
   const basename = path.basename(filename);
+  // Limit input length to prevent ReDoS attacks before regex operations
+  const truncated = basename.slice(0, 200).toLowerCase();
   // Remove all non-alphanumeric characters except hyphens
-  return basename
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
-    .slice(0, 50) || "image"; // Fallback if empty
+  const sanitized = truncated.replace(/[^a-z0-9]+/g, "-");
+  // Remove leading/trailing hyphens without using alternation regex
+  const trimmed = sanitized.replace(/^-+/, "").replace(/-+$/, "");
+  return trimmed.slice(0, 50) || "image"; // Fallback if empty
 }
 
 // Upload image to Cloudinary
@@ -235,7 +315,7 @@ export async function generateAndSaveBlogImage(
   // Extract keywords from title/content
   const keywords = extractImageKeywords(title, content);
 
-  // Generate image with DALL-E
+  // Search for image on Unsplash
   const imageResult = await generateBlogImage(title, keywords, style);
 
   // Save locally

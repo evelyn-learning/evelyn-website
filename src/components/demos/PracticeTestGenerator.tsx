@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 // Types
 interface TestType {
@@ -102,8 +103,9 @@ Format your response as JSON with this exact structure:
 
 Make the questions authentic to ${testInfo?.name} style and ${difficulty} difficulty. Include word problems, graphs descriptions, or passage-based questions as appropriate for this test type.`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,31 +115,32 @@ Make the questions authentic to ${testInfo?.name} style and ${difficulty} diffic
           system: systemPrompt,
           max_tokens: 4000
         })
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsGenerating(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]);
           setQuestions(parsed.questions);
-        } else {
+        } catch {
           setError('Could not parse questions. Please try again.');
         }
       } else {
-        setError('No response received. Please check your API configuration.');
+        setError('Could not parse questions. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsGenerating(false);
+    } else {
+      setError('No response received. Please try again.');
     }
+
+    setIsGenerating(false);
   };
 
   const handleAnswerSelect = (questionId: number, answer: string) => {

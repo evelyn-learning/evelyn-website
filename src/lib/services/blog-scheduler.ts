@@ -282,8 +282,8 @@ export async function startAutoBlogScheduler(): Promise<{
     }
 
     if (isAutoBlogSchedulerRunning) {
-      // Stop existing scheduler before restarting
-      stopAutoBlogScheduler();
+      console.log("[Auto Blog Scheduler] Already running, skipping duplicate start");
+      return { success: true, message: "Auto blog scheduler already running" };
     }
 
     const cronExpression = getCronExpression(settings);

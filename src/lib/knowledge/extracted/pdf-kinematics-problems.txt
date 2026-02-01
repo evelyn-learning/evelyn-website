@@ -1,0 +1,1634 @@
+are meaningful , but in others , such as the abo ve, onl y one solution is r easonable . The 10.0 s ans wer seems
+reasonable f or a typical fr eeway on-r amp .
+With the basics o f kinematics es tablished, w e can g o on t o man y other int eresting e xamples and applications . In the
+process of developing kinematics , we ha ve also glimpsed a g ener al appr oach t o problem sol ving that pr oduc es both
+correct ans wers and insights int o ph ysical r elationships .Problem-Sol ving Basics discus ses pr oblem-sol ving basics
+and outlines an appr oach that wil l help y ou suc ceed in this in valuable task.
+CHE CK Y OUR UNDER STANDING
+A rocket ac celerates at a r ate of during launch. Ho w long does it tak e the r ocket to reach a v elocity o f 400
+m/s?
+Solution
+To ans wer this , choose an equation that al lows you to sol ve for time , giv en onl y,, and .
+Rearr ange to sol ve for.
+2.6Problem-Solving Basics f or One -Dimensional Kinematics
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Appl y problem-sol ving s teps and s trategies t o sol ve problems o f one -dimensional kinematics .
+•Appl y strategies t o det ermine whether or not the r esul t of a pr oblem is r easonable , and if not, det ermine
+the cause .
+FIGURE 2.36 Problem-sol ving skil ls ar e es sential t o your suc cess in Ph ysics. (credit: scui3as teveo, Flickr)
+Problem-sol ving skil ls ar e ob viousl y essential t o suc cess in a quantitativ e course in ph ysics. Mor e impor tantl y, theMAKING C ONNE CTIONS: T AKE-HOME E XPERIMENT —BRE AKING NE WS
+We ha ve been using SI units o f met ers per sec ond squar ed to describe some e xamples o f acceleration or
+deceleration o f cars , runners , and tr ains . To achie ve a bet ter feel f or these numbers , one can measur e the
+braking dec eleration o f a car doing a slo w (and saf e) stop. Recal l that, f or average ac celeration, .
+While tr aveling in a car , slo wly appl y the br akes as y ou c ome up t o a s top sign. Ha ve a pas seng er not e the initial
+speed in miles per hour and the time tak en (in sec onds) t o stop. From this , calculat e the dec eleration in miles
+per hour per sec ond. Con vert this t o met ers per sec ond squar ed and c ompar e with other dec elerations
+mentioned in this chap ter. Calculat e the dis tanc e traveled in br aking .
+2.70
+2.712.6 • P roblem-Solving Basics f or One -Dimensional Kinematics 71
+ability t o appl y broad ph ysical principles , usual ly represent ed b y equations , to specific situations is a v ery po werful
+form o f kno wledg e. It is much mor e po werful than memorizing a lis t of facts . Anal ytical skil ls and pr oblem-sol ving
+abilities can be applied t o ne w situations , wher eas a lis t of facts cannot be made long enough t o contain e very
+possible cir cums tanc e. Such anal ytical skil ls ar e useful both f or sol ving pr oblems in this t ext and f or appl ying
+physics in e veryday and pr ofessional lif e.
+Problem-Solving S teps
+While ther e is no simple s tep-by-step method that w orks for every problem, the f ollowing g ener al pr ocedur es
+facilitat e problem sol ving and mak e it mor e meaningful . A c ertain amount o f creativity and insight is r equir ed as
+well.
+Step 1
+Examine the situation t o det ermine which ph ysical principles ar e involved. It o ften helps t odraw a simple sk etchat
+the outset. Y ou wil l also need t o decide which dir ection is positiv e and not e that on y our sk etch. Onc e you ha ve
+identified the ph ysical principles , it is much easier t o find and appl y the equations r epresenting those principles .
+Although finding the c orrect equation is es sential , keep in mind that equations r epresent ph ysical principles , laws of
+natur e, and r elationships among ph ysical quantities . Without a c onceptual unders tanding o f a pr oblem, a numerical
+solution is meaningles s.
+Step 2
+Mak e a lis t of what is giv en or can be inf erred fr om the pr oblem as s tated (identif y the kno wns) . Man y problems ar e
+stated v ery suc cinctl y and r equir e some inspection t o det ermine what is kno wn. A sk etch can also be v ery useful at
+this point. F ormal ly identif ying the kno wns is o f par ticular impor tanc e in appl ying ph ysics t o real-world situations .
+Remember , “stopped” means v elocity is z ero, and w e often can tak e initial time and position as z ero.
+Step 3
+Identif y exactl y what needs t o be det ermined in the pr oblem (identif y the unkno wns) . In c omple x problems ,
+especial ly, it is not al ways ob vious what needs t o be f ound or in what sequenc e. Making a lis t can help .
+Step 4
+Find an equation or set o f equations that can help y ou sol ve the pr oblem . Your lis t of kno wns and unkno wns can
+help her e. It is easies t if y ou can find equations that c ontain onl y one unkno wn—that is , all of the other v ariables ar e
+known, so y ou can easil y sol ve for the unkno wn. If the equation c ontains mor e than one unkno wn, then an
+additional equation is needed t o sol ve the pr oblem. In some pr oblems , several unkno wns mus t be det ermined t o
+get at the one needed mos t. In such pr oblems it is especial ly impor tant t o keep ph ysical principles in mind t o avoid
+going as tray in a sea o f equations . You ma y ha ve to use tw o (or mor e) diff erent equations t o get the final ans wer.
+Step 5
+Subs titut e the kno wns along with their units int o the appr opriat e equation, and ob tain numerical solutions c omplet e
+with units . This s tep pr oduc es the numerical ans wer; it also pr ovides a check on units that can help y ou find err ors.
+If the units o f the ans wer ar e inc orrect, then an err or has been made . Ho wever, be w arned that c orrect units do not
+guarantee that the numerical par t of the ans wer is also c orrect.
+Step 6
+Check the ans wer to see if it is r easonable: Does it mak e sense? This final s tep is e xtremel y impor tant —the g oal o f
+physics is t o ac curately describe natur e. To see if the ans wer is r easonable , check both its magnitude and its sign, in
+addition t o its units . Your judgment wil l impr ove as y ou sol ve mor e and mor e ph ysics pr oblems , and it wil l bec ome
+possible f or you to mak e finer and finer judgments r egarding whether natur e is adequat ely described b y the ans wer
+to a pr oblem. This s tep brings the pr oblem back t o its c onceptual meaning . If y ou can judg e whether the ans wer is
+reasonable , you ha ve a deeper unders tanding o f physics than jus t being able t o mechanical ly sol ve a pr oblem.
+When sol ving pr oblems , we often per form these s teps in diff erent or der, and w e also t end t o do se veral steps
+simul taneousl y. Ther e is no rigid pr ocedur e that wil l work e very time . Creativity and insight gr ow with e xperienc e,
+and the basics o f problem sol ving bec ome almos t aut omatic. One w ay to get pr actic e is t o work out the t ext’s
+examples f or yourself as y ou read. Another is t o work as man y end-o f-section pr oblems as pos sible , starting with
+the easies t to build c onfidenc e and pr ogressing t o the mor e difficul t. Onc e you bec ome in volved in ph ysics, you wil l72 2 • Kinematics
+Access f or free at opens tax.org
+see it al l around y ou, and y ou can begin t o appl y it t o situations y ou enc ount er outside the clas sroom, jus t as is done
+in man y of the applications in this t ext.
+Unreasonable R esults
+Physics mus t describe natur e ac curately. Some pr oblems ha ve resul ts that ar e unr easonable because one pr emise
+is unr easonable or because c ertain pr emises ar e inc onsis tent with one another . The ph ysical principle applied
+correctly then pr oduc es an unr easonable r esul t. For example , if a person s tarting a f oot r ace ac celerates at
+for 100 s , his final speed wil l be 40 m/s (about 150 km/h)— clearl y unr easonable because the time o f 100
+s is an unr easonable pr emise . The ph ysics is c orrect in a sense , but ther e is mor e to describing natur e than jus t
+manipulating equations c orrectly. Checking the r esul t of a pr oblem t o see if it is r easonable does mor e than help
+uncover err ors in pr oblem sol ving—it also builds intuition in judging whether natur e is being ac curately described.
+Use the f ollowing s trategies t o det ermine whether an ans wer is r easonable and, if it is not, t o det ermine what is the
+cause .
+Step 1
+Solve the pr oblem using s trategies as outlined and in the f ormat f ollowed in the w orked e xamples in the t ext. In the
+example giv en in the pr eceding par agraph, y ou w ould identif y the giv ens as the ac celeration and time and use the
+equation belo w to find the unkno wn final v elocity . That is ,
+Step 2
+Check t o see if the ans wer is r easonable . Is it t oo lar ge or t oo smal l, or does it ha ve the wr ong sign, impr oper units ,
+…? In this case , you ma y need t o convert met ers per sec ond int o a mor e familiar unit, such as miles per hour .
+This v elocity is about f our times gr eater than a person can run—so it is t oo lar ge.
+Step 3
+If the ans wer is unr easonable , look f or what specifical ly could cause the identified difficul ty. In the e xample o f the
+runner , ther e are onl y tw o as sump tions that ar e suspect. The ac celeration c ould be t oo gr eat or the time t oo long .
+First look at the ac celeration and think about what the number means . If someone ac celerates at , their
+velocity is incr easing b y 0.4 m/s each sec ond. Does this seem r easonable? If so , the time mus t be t oo long . It is not
+possible f or someone t o ac celerate at a c onstant r ate of for 100 s (almos t two minut es).
+2.7Falling Objec ts
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Describe the eff ects o f gravity on objects in motion.
+•Describe the motion o f objects that ar e in fr ee fal l.
+•Calculat e the position and v elocity o f objects in fr ee fal l.
+Falling objects f orm an int eresting clas s of motion pr oblems . For example , we can es timat e the dep th of a v ertical
+mine shaft b y dropping a r ock int o it and lis tening f or the r ock t o hit the bot tom. B y appl ying the kinematics
+developed so far t o fal ling objects , we can e xamine some int eresting situations and learn much about gr avity in the
+process.
+Gravity
+The mos t remark able and une xpect ed fact about fal ling objects is that, if air r esistanc e and friction ar e negligible ,
+then in a giv en location al l objects fal l toward the c enter of Ear th with the same c onstant ac celeration ,independent
+of their mas s. This e xperimental ly det ermined fact is une xpect ed, because w e are so ac customed t o the eff ects o f
+air resistanc e and friction that w e expect light objects t o fal l slo wer than hea vy ones .2.72
+2.732.7 • F alling Objec ts 73
+FIGURE 2.37 A hammer and a f eather wil l fall with the same c onstant ac celeration if air r esistanc e is c onsider ed negligible . This is a
+gener al char acteristic o f gravity not unique t o Ear th, as as tronaut Da vid R. Sc ott demons trated on the Moon in 1971, wher e the ac celeration
+due t o gravity is onl y .
+In the r eal w orld, air r esistanc e can cause a light er object t o fal l slo wer than a hea vier object o f the same siz e. A
+tennis bal l wil l reach the gr ound aft er a har d basebal l dropped at the same time . (It might be difficul t to obser ve the
+difference if the height is not lar ge.) Air r esistanc e opposes the motion o f an object thr ough the air , while friction
+betw een objects —such as betw een clothes and a laundr y chut e or betw een a s tone and a pool int o which it is
+dropped—also opposes motion betw een them. F or the ideal situations o f these firs t few chap ters, an object falling
+without air r esistanc e or friction is defined t o be in free-fall.
+The f orce of gravity causes objects t o fal l toward the c enter of Ear th. The ac celeration o f free-falling objects is
+ther efore cal led the acceler ation due t o gravity. The ac celeration due t o gravity is constant , which means w e can
+appl y the kinematics equations t o an y fal ling object wher e air r esistanc e and friction ar e negligible . This opens a
+broad clas s of interesting situations t o us . The ac celeration due t o gravity is so impor tant that its magnitude is giv en
+its o wn s ymbol ,. It is c onstant at an y giv en location on Ear th and has the a verage value
+Although varies fr om to , depending on latitude , altitude , underl ying g eological f ormations ,
+and local t opogr aphy, the a verage value o f will be used in this t ext unles s other wise specified. The
+direction o f the ac celeration due t o gravity is downward (towards the c enter of Ear th). In fact, its dir ection defines
+what w e cal l vertical . Not e that whether the ac celeration in the kinematic equations has the v alue or
+depends on ho w we define our c oordinat e system. If w e define the up ward dir ection as positiv e, then
+, and if w e define the do wnward dir ection as positiv e, then .
+One-Dimensional Mo tion In volving Gr avity
+The bes t way to see the basic f eatur es o f motion in volving gr avity is t o start with the simples t situations and then
+progress toward mor e comple x ones . So w e start by considering s traight up and do wn motion with no air r esistanc e
+or friction. These as sump tions mean that the v elocity (if ther e is an y) is v ertical . If the object is dr opped, w e kno w
+the initial v elocity is z ero. Onc e the object has left c ontact with what ever held or thr ew it, the object is in fr ee-fall.
+Under these cir cums tanc es, the motion is one -dimensional and has c onstant ac celeration o f magnitude . We wil l
+also r epresent v ertical displac ement with the s ymbol and use for horiz ontal displac ement.2.74
+KINEMA TIC E QUATIONS F OR OB JECTS IN FREE -FALL WHERE A CCELER ATION = - G
+2.75
+2.76
+2.7774 2 • Kinematics
+Access f or free at opens tax.org
+EXAMPLE 2.14
+Calcula ting P osition and V elocity o f a F alling Object: A R ock Thr own Up ward
+A person s tanding on the edg e of a high cliff thr ows a r ock s traight up with an initial v elocity o f 13.0 m/s .The r ock
+misses the edg e of the cliff as it fal ls back t o ear th. Calculat e the position and v elocity o f the r ock 1.00 s , 2.00 s , and
+3.00 s aft er it is thr own, neglecting the eff ects o f air r esistanc e.
+Strategy
+Draw a sk etch.
+FIGURE 2.38
+We are ask ed to det ermine the position at various times . It is r easonable t o tak e the initial position to be z ero.
+This pr oblem in volves one -dimensional motion in the v ertical dir ection. W e use plus and minus signs t o indicat e
+direction, with up being positiv e and do wn neg ative. Sinc e up is positiv e, and the r ock is thr own up ward, the initial
+velocity mus t be positiv e too. The ac celeration due t o gravity is do wnward, so is neg ative. It is crucial that the
+initial v elocity and the ac celeration due t o gravity ha ve opposit e signs . Opposit e signs indicat e that the ac celeration
+due t o gravity opposes the initial motion and wil l slo w and e ventual ly reverse it.
+Sinc e we are ask ed for values o f position and v elocity at thr ee times , we wil l refer to these as and ; and ;
+and and .
+Solution f or P osition
+1. Identif y the kno wns . We kno w that ; ; ; and .
+2. Identif y the bes t equation t o use . We wil l use because it includes onl y one unkno wn, (or
+, her e), which is the v alue w e want t o find.
+3. Plug in the kno wn v alues and sol ve for .
+Discus sion
+The r ock is 8.10 m abo ve its s tarting point at s, sinc e . It c ould be moving up or do wn; the onl y way
+to tell is t o calculat e and find out if it is positiv e or neg ative.
+Solution f or V elocity
+1. Identif y the kno wns . We kno w that ; ; ; and . We also kno w
+from the solution abo ve that .
+2. Identif y the bes t equation t o use . The mos t straight forward is (from , wher e
+).
+3. Plug in the kno wns and sol ve.
+2.78
+2.792.7 • F alling Objec ts 75
+Discus sion
+The positiv e value f or means that the r ock is s till heading up ward at . Ho wever, it has slo wed fr om its
+original 13.0 m/s , as e xpect ed.
+Solution f or R emaining Times
+The pr ocedur es for calculating the position and v elocity at and are the same as those abo ve. The
+resul ts ar e summariz ed in Table 2.1 and il lustrated in Figure 2.39 .
+Time, tPosition, yVelocit y,vAcceleration, a
+TABLE 2.1Resul ts
+Graphing the data helps us unders tand it mor e clearl y.76 2 • Kinematics
+Access f or free at opens tax.org
+FIGURE 2.39 Vertical position, v ertical v elocity , and v ertical ac celeration vs . time f or a r ock thr own v ertical ly up at the edg e of a cliff . Notic e
+that v elocity chang es linearl y with time and that ac celeration is c onstant. Misc onception Aler t!Notic e that the position vs . time gr aph sho ws
+vertical position onl y. It is eas y to get the impr ession that the gr aph sho ws some horiz ontal motion—the shape o f the gr aph look s like the
+path o f a pr ojectile . But this is not the case; the horiz ontal axis is time , not spac e. The actual path o f the r ock in spac e is s traight up , and
+straight do wn.
+Discus sion
+The int erpr etation o f these r esul ts is impor tant. A t 1.00 s the r ock is abo ve its s tarting point and heading up ward,
+sinc e and are both positiv e. At 2.00 s , the r ock is s till abo ve its s tarting point, but the neg ative velocity means
+it is mo ving do wnward. At 3.00 s , both and are neg ative, meaning the r ock is belo w its s tarting point and
+continuing t o mo ve do wnward. Notic e that when the r ock is at its highes t point (at 1.5 s), its v elocity is z ero, but its
+acceleration is s till . Its ac celeration is for the whole trip —while it is mo ving up and while it
+is mo ving do wn. Not e that the v alues f or are the positions (or displac ements) o f the r ock, not the t otal dis tanc es
+traveled. Final ly, not e that fr ee-fall applies t o up ward motion as w ell as do wnward. Both ha ve the same
+acceleration—the ac celeration due t o gravity, which r emains c onstant the entir e time . Astronauts tr aining in the
+famous V omit Comet, f or example , experienc e free-fall while ar cing up as w ell as do wn, as w e wil l discus s in mor e
+detail lat er.2.7 • F alling Objec ts 77
+EXAMPLE 2.15
+Calcula ting V elocity o f a F alling Object: A R ock Thr own Do wn
+What happens if the person on the cliff thr ows the r ock s traight do wn, ins tead o f straight up? T o explor e this
+ques tion, calculat e the v elocity o f the r ock when it is 5.10 m belo w the s tarting point, and has been thr own
+downward with an initial speed o f 13.0 m/s .
+Strategy
+Draw a sk etch.
+FIGURE 2.40
+Sinc e up is positiv e, the final position o f the r ock wil l be neg ative because it finishes belo w the s tarting point at
+. Similarl y, the initial v elocity is do wnward and ther efore neg ative, as is the ac celeration due t o gravity. We
+expect the final v elocity t o be neg ative sinc e the r ock wil l continue t o mo ve do wnward.
+Solution
+1. Identif y the kno wns . ; ; ; .
+2. Choose the kinematic equation that mak es it easies t to sol ve the pr oblem. The equation
+works well because the onl y unkno wn in it is . (We wil l plug in for.)
+3. Ent er the kno wn v alues
+wher e we ha ve retained e xtra significant fig ures because this is an int ermediat e resul t.
+Taking the squar e root, and noting that a squar e root can be positiv e or neg ative, giv es
+The neg ative root is chosen t o indicat e that the r ock is s till heading do wn. Thus ,
+Discus sion
+Note that this is e xactl y the same v elocity the r ock had at this position when it w as thr own s traight up ward with the
+same initial speed . (See Example 2.14 and Figure 2.41 (a).) This is not a c oincidental r esul t. Because w e onl y
+consider the ac celeration due t o gravity in this pr oblem, the speed of a fal ling object depends onl y on its initialMAKING C ONNE CTIONS: T AKE-HOME E XPERIMENT —RE ACTION TIME
+A simple e xperiment can be done t o det ermine y our r eaction time . Have a friend hold a ruler betw een y our
+thumb and inde x fing er, separ ated b y about 1 cm. Not e the mark on the ruler that is right betw een y our fing ers.
+Have your friend dr op the ruler une xpect edly, and tr y to cat ch it betw een y our tw o fing ers. Not e the ne w reading
+on the ruler . Assuming ac celeration is that due t o gravity, calculat e your r eaction time . Ho w far w ould y ou tr avel
+in a car (mo ving at 30 m/s) if the time it t ook y our f oot t o go from the g as pedal t o the br ake was twic e this
+reaction time?
+2.80
+2.81
+2.8278 2 • Kinematics
+Access f or free at opens tax.org
+speed and its v ertical position r elativ e to the s tarting point. F or example , if the v elocity o f the r ock is calculat ed at a
+height o f 8.10 m abo ve the s tarting point (using the method fr omExample 2.14 ) when the initial v elocity is 13.0 m/s
+straight up , a resul t of is ob tained. Her e both signs ar e meaningful; the positiv e value oc curs when the
+rock is at 8.10 m and heading up , and the neg ative value oc curs when the r ock is at 8.10 m and heading back do wn.
+It has the same speed but the opposit e dir ection.
+FIGURE 2.41 (a) A person thr ows a r ock s traight up , as e xplor ed in Example 2.14 . The arr ows are velocity v ectors at 0, 1.00, 2.00, and 3.00
+s. (b) A person thr ows a r ock s traight do wn fr om a cliff with the same initial speed as bef ore, as in Example 2.15 . Not e that at the same
+distanc e belo w the point o f release , the r ock has the same v elocity in both cases .
+Another w ay to look at it is this: In Example 2.14 , the r ock is thr own up with an initial v elocity o f . It rises
+and then fal ls back do wn. When its position is on its w ay back do wn, its v elocity is . That is , it has
+the same speed on its w ay do wn as on its w ay up . We would then e xpect its v elocity at a position o f to
+be the same whether w e ha ve thr own it up wards at or thr own it do wnwards at . The v elocity o f
+the r ock on its w ay do wn fr om is the same whether w e ha ve thr own it up or do wn t o start with, as long as the
+speed with which it w as initial ly thr own is the same .2.7 • F alling Objec ts 79
+EXAMPLE 2.16
+Find gfrom Da ta on a F alling Object
+The ac celeration due t o gravity on Ear th diff ers slightl y from plac e to plac e, depending on t opogr aphy (e.g., whether
+you ar e on a hil l or in a v alley) and subsur face geolog y (whether ther e is dense r ock lik e iron or e as opposed t o light
+rock lik e sal t beneath y ou.) The pr ecise ac celeration due t o gravity can be calculat ed fr om data tak en in an
+introduct ory ph ysics labor atory course . An object, usual ly a metal bal l for which air r esistanc e is negligible , is
+dropped and the time it tak es to fal l a kno wn dis tanc e is measur ed. See , for example ,Figure 2.42 . Very precise
+resul ts can be pr oduc ed with this method if sufficient car e is tak en in measuring the dis tanc e fal len and the elapsed
+time .
+FIGURE 2.42 Positions and v elocities o f a metal bal l released fr om r est when air r esistanc e is negligible . Velocity is seen t o incr ease linearl y
+with time while displac ement incr eases with time squar ed. Ac celeration is a c onstant and is equal t o gravitational ac celeration.
+80 2 • Kinematics
+Access f or free at opens tax.org
+Suppose the bal l falls 1.0000 m in 0.45173 s . Assuming the bal l is not aff ected b y air r esistanc e, what is the pr ecise
+acceleration due t o gravity at this location?
+Strategy
+Draw a sk etch.
+FIGURE 2.43
+We need t o sol ve for ac celeration . Not e that in this case , displac ement is do wnward and ther efore neg ative, as is
+acceleration.
+Solution
+1. Identif y the kno wns . ; ; ; .
+2. Choose the equation that al lows you to sol ve for using the kno wn v alues .
+3. Subs titut e 0 f or and r earr ange the equation t o sol ve for. Subs tituting 0 f or yields
+Solving f or gives
+4. Subs titut e kno wn v alues yields
+so, because with the dir ections w e ha ve chosen,
+Discus sion
+The neg ative value f or indicat es that the gr avitational ac celeration is do wnward, as e xpect ed. W e expect the v alue
+to be some wher e around the a verage value o f , so mak es sense . Sinc e the data g oing int o
+the calculation ar e relativ ely precise , this v alue f or is mor e precise than the a verage value o f ; it
+represents the local v alue f or the ac celeration due t o gravity.
+CHE CK Y OUR UNDER STANDING
+A chunk o f ice breaks off a glacier and fal ls 30.0 met ers bef ore it hits the w ater. Assuming it fal ls freely (ther e is no
+air resistanc e), ho w long does it tak e to hit the w ater?
+Solution
+We kno w that initial position , final position , and . We can then use the
+equation to sol ve for. Inser ting , we ob tain2.83
+2.84
+2.85
+2.86
+2.87
+2.7 • F alling Objec ts 81
+wher e we tak e the positiv e value as the ph ysical ly relevant ans wer. Thus , it tak es about 2.5 sec onds f or the piec e of
+ice to hit the w ater.
+PHE T EXPLORATIONS
+Equation Gr apher
+Learn about gr aphing pol ynomials . The shape o f the cur ve chang es as the c onstants ar e adjus ted. Vie w the cur ves
+for the individual t erms (e .g. ) to see ho w the y add t o gener ate the pol ynomial cur ve.
+Click t o vie w content(https:/ /opens tax.org/book s/college-physics-ap-courses -2e/pag es/2-7-fal ling-objects)
+2.8Graphic al Analy sis o f One -Dimensional Mo tion
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Describe a s traight -line gr aph in t erms o f its slope and y-intercept.
+•Determine a verage velocity or ins tantaneous v elocity fr om a gr aph o f position vs . time .
+•Determine a verage or ins tantaneous ac celeration fr om a gr aph o f velocity vs . time .
+•Deriv e a gr aph o f velocity vs . time fr om a gr aph o f position vs . time .
+•Deriv e a gr aph o f acceleration vs . time fr om a gr aph o f velocity vs . time .
+A graph, lik e a pictur e, is w orth a thousand w ords. Graphs not onl y contain numerical inf ormation; the y also r eveal
+relationships betw een ph ysical quantities . This section uses gr aphs o f position, v elocity , and ac celeration v ersus
+time t o illustrate one -dimensional kinematics .
+Slopes and Gener al Relationships
+First not e that gr aphs in this t ext ha ve perpendicular ax es, one horiz ontal and the other v ertical . When tw o ph ysical
+quantities ar e plot ted ag ains t one another in such a gr aph, the horiz ontal axis is usual ly consider ed to be an
+independent v ariable and the v ertical axis a dependent v ariable . If w e cal l the horiz ontal axis the -axis and the
+vertical axis the -axis , as in Figure 2.44 , a straight -line gr aph has the g ener al form
+Here is the slope , defined t o be the rise divided b y the run (as seen in the fig ure) of the s traight line . The let ter is
+used f or the y-intercept, which is the point at which the line cr osses the v ertical axis .
+FIGURE 2.44 A straight -line gr aph. The equation f or a s traight line is .2.88
+2.8982 2 • Kinematics
+Access f or free at opens tax.org
+Graph o f Position v s. Time ( a= 0, so vis constant )
+Time is usual ly an independent v ariable that other quantities , such as position, depend upon. A gr aph o f position
+versus time w ould, thus , haveon the v ertical axis and on the horiz ontal axis .Figure 2.45 is jus t such a s traight -
+line gr aph. It sho ws a gr aph o f position v ersus time f or a jet -powered car on a v ery flat dr y lak e bed in Ne vada.
+FIGURE 2.45 Graph o f position v ersus time f or a jet -powered car on the Bonne ville Sal t Flats .
+Using the r elationship betw een dependent and independent v ariables , we see that the slope in the gr aph abo ve is
+average velocity and the int ercept is position at time z ero—that is ,. Subs tituting these s ymbols int o
+gives
+or
+Thus a gr aph o f position v ersus time giv es a g ener al relationship among displac ement(chang e in position), v elocity ,
+and time , as w ell as giving detailed numerical inf ormation about a specific situation.
+From the fig ure we can see that the car has a position o f 525 m at 0.50 s and 2000 m at 6.40 s . Its position at other
+times can be r ead fr om the gr aph; fur thermor e, information about its v elocity and ac celeration can also be ob tained
+from the gr aph.
+EXAMPLE 2.17
+Determining A verage Velocity fr om a Gr aph o f Position v ersus Time: Jet Car
+Find the a verage velocity o f the car whose position is gr aphed in Figure 2.45 .
+Strategy
+The slope o f a gr aph o fvs.is average velocity , sinc e slope equals rise o ver run. In this case , rise = chang e in
+position and run = chang e in time , so that2.90
+2.91
+THE SL OPE OF XVS.T
+The slope o f the gr aph o f position vs. time is velocity .
+Notic e that this equation is the same as that deriv ed alg ebraical ly from other motion equations in Motion
+Equations f or Cons tant Ac celeration in One Dimension .2.92
+2.8 • Gr aphic al Analy sis o f One -Dimensional Mo tion 83
+Sinc e the slope is c onstant her e, any tw o points on the gr aph can be used t o find the slope . (Gener ally speaking , it is
+mos t accurate to use tw o widel y separ ated points on the s traight line . This is because an y err or in r eading data fr om
+the gr aph is pr opor tional ly smal ler if the int erval is lar ger.)
+Solution
+1. Choose tw o points on the line . In this case , we choose the points labeled on the gr aph: (6.4 s , 2000 m) and (0.50
+s, 525 m). (Not e, however, that y ou c ould choose an y tw o points .)
+2. Subs titut e the and values o f the chosen points int o the equation. R emember in calculating chang e we
+always use final v alue minus initial v alue .
+yielding
+Discus sion
+This is an impr essively lar ge land speed (900 km/h, or about 560 mi/h): much gr eater than the typical high way
+speed limit o f 60 mi/h (27 m/s or 96 km/h), but c onsider ably sh y of the r ecord of 343 m/s (1234 km/h or 766 mi/h)
+set in 1997.
+Graphs o f Mo tion when is constant but
+The gr aphs in Figure 2.46 belo w represent the motion o f the jet -powered car as it ac celerates toward its t op speed,
+but onl y during the time when its ac celeration is c onstant. Time s tarts at z ero for this motion (as if measur ed with a
+stopwatch), and the position and v elocity ar e initial ly 200 m and 15 m/s , respectiv ely.2.93
+2.94
+2.9584 2 • Kinematics
+Access f or free at opens tax.org
+FIGURE 2.46 Graphs o f motion o f a jet -powered car during the time span when its ac celeration is c onstant. (a) The slope o f an vs.graph
+is velocity . This is sho wn at tw o points , and the ins tantaneous v elocities ob tained ar e plot ted in the ne xt gr aph. Ins tantaneous v elocity at
+any point is the slope o f the tang ent at that point. (b) The slope o f the vs.graph is c onstant f or this par t of the motion, indicating
+constant ac celeration. (c) Ac celeration has the c onstant v alue o f over the time int erval plot ted.2.8 • Gr aphic al Analy sis o f One -Dimensional Mo tion 85
+FIGURE 2.47 A U.S. Air F orce jet car speeds do wn a tr ack. (cr edit: Mat t Trostle, Flickr)
+The gr aph o f position v ersus time in Figure 2.46 (a) is a cur ve rather than a s traight line . The slope o f the cur ve
+becomes s teeper as time pr ogresses, sho wing that the v elocity is incr easing o ver time . The slope at an y point on a
+position-v ersus -time gr aph is the ins tantaneous v elocity at that point. It is f ound b y drawing a s traight line tang ent
+to the cur ve at the point o f interest and taking the slope o f this s traight line . Tangent lines ar e sho wn f or tw o points
+inFigure 2.46 (a). If this is done at e very point on the cur ve and the v alues ar e plot ted ag ains t time , then the gr aph o f
+velocity v ersus time sho wn in Figure 2.46 (b) is ob tained. F urthermor e, the slope o f the gr aph o f velocity v ersus time
+is ac celeration, which is sho wn in Figure 2.46 (c).
+EXAMPLE 2.18
+Determining Ins tantaneous V elocity fr om the Slope a t a P oint: Jet Car
+Calculat e the v elocity o f the jet car at a time o f 25 s b y finding the slope o f the vs.graph in the gr aph belo w.
+FIGURE 2.48 The slope o f an vs.graph is v elocity . This is sho wn at tw o points . Ins tantaneous v elocity at an y point is the slope o f the
+tang ent at that point.
+Strategy
+The slope o f a cur ve at a point is equal t o the slope o f a s traight line tang ent t o the cur ve at that point. This principle
+is illustrated in Figure 2.48 , wher e Q is the point at .
+Solution
+1. Find the tang ent line t o the cur ve at .
+2. Det ermine the endpoints o f the tang ent. These c orrespond t o a position o f 1300 m at time 19 s and a position o f
+3120 m at time 32 s .
+3. Plug these endpoints int o the equation t o sol ve for the slope ,.
+86 2 • Kinematics
+Access f or free at opens tax.org
+Thus ,
+Discus sion
+This is the v alue giv en in this fig ure’s table f or at . The v alue o f 140 m/s f or is plot ted in Figure 2.48 .
+The entir e graph o fvs.can be ob tained in this fashion.
+Carr ying this one s tep fur ther, we not e that the slope o f a v elocity v ersus time gr aph is ac celeration. Slope is rise
+divided b y run; on a vs.graph, rise = chang e in v elocity and run = chang e in time .
+Sinc e the v elocity v ersus time gr aph in Figure 2.46 (b) is a s traight line , its slope is the same e verywher e, impl ying
+that ac celeration is c onstant. Ac celeration v ersus time is gr aphed in Figure 2.46 (c).
+Additional g ener al inf ormation can be ob tained fr omFigure 2.48 and the e xpression f or a s traight line , .
+In this case , the v ertical axis is , the int erceptis , the slope is, and the horiz ontal axis is. Subs tituting
+these s ymbols yields
+A gener al relationship f or velocity , acceleration, and time has ag ain been ob tained fr om a gr aph. Notic e that this
+equation w as also deriv ed alg ebraical ly from other motion equations in Motion E quations f or Cons tant Ac celeration
+in One Dimension .
+It is not ac cidental that the same equations ar e ob tained b y graphical anal ysis as b y alg ebraic t echniques . In fact, an
+impor tant w ay todisc overphysical r elationships is t o measur e various ph ysical quantities and then mak e graphs o f
+one quantity ag ains t another t o see if the y are correlated in an y way. Corr elations impl y ph ysical r elationships and
+might be sho wn b y smooth gr aphs such as those abo ve. From such gr aphs , mathematical r elationships can
+sometimes be pos tulat ed. F urther e xperiments ar e then per formed t o det ermine the v alidity o f the h ypothesiz ed
+relationships .
+Graphs o f Mo tion Wher e Acceleration is No t Constant
+Now consider the motion o f the jet car as it g oes fr om 165 m/s t o its t op v elocity o f 250 m/s , graphed in Figure 2.49 .
+Time ag ain s tarts at z ero, and the initial v elocity is 165 m/s . (This w as the final v elocity o f the car in the motion
+graphed in Figure 2.46 .) Ac celeration gr adual ly decr eases fr om to zero when the car hits 250 m/s . The
+velocity incr eases until 55 s and then bec omes c onstant, sinc e ac celeration decr eases t o zero at 55 s and r emains
+zero aft erward.2.96
+2.97
+THE SL OPE OF VVS.T
+The slope o f a gr aph o f velocity vs. time is ac celeration .
+2.98
+2.992.8 • Gr aphic al Analy sis o f One -Dimensional Mo tion 87
+FIGURE 2.49 Graphs o f motion o f a jet -powered car as it r eaches its t op v elocity . This motion begins wher e the motion in Figure 2.46 ends .
+(a) The v elocity gr adual ly appr oaches its t op v alue . The slope o f this gr aph is ac celeration. It is plot ted in the final gr aph. (b) Ac celeration
+gradual ly declines t o zero when v elocity bec omes c onstant. Notic e in each o f the thr ee gr aphs that the ac celeration dr ops do wn t o zero and
+the v elocity le vels out. This r esul ts in a position-time gr aph that is almos t linear . A close -up o f the position time gr aph w ould sho w a slight
+curvatur e, as indicat ed in the v elocity gr aph.
+EXAMPLE 2.19
+Calcula ting Ac celer ation fr om a Gr aph o f Velocity v ersus Time
+Calculat e the ac celeration o f the jet car at a time o f 25 s b y finding the slope o f the vs.graph in Figure 2.49 (a).
+Strategy
+The slope o f the cur ve at is equal t o the slope o f the line tang ent at that point, as il lustrated in Figure
+2.49 (a).
+Solution
+Determine endpoints o f the tang ent line fr om the fig ure, and then plug them int o the equation t o sol ve for slope ,.
+Discus sion
+Note that this v alue f or is consis tent with the v alue plot ted in Figure 2.49 (b) at .
+A graph o f position v ersus time can be used t o gener ate a gr aph o f velocity v ersus time , and a gr aph o f velocity
+2.100
+2.10188 2 • Kinematics
+Access f or free at opens tax.org
+versus time can be used t o gener ate a gr aph o f acceleration v ersus time . We do this b y finding the slope o f the
+graphs at e very point. If the gr aph is linear (i. e., a line with a c onstant slope), it is eas y to find the slope at an y point
+and y ou ha ve the slope f or every point. Gr aphical anal ysis o f motion can be used t o describe both specific and
+gener al char acteristics o f kinematics . Graphs can also be used f or other t opics in ph ysics. An impor tant aspect o f
+exploring ph ysical r elationships is t o graph them and look f or underl ying r elationships .
+CHE CK Y OUR UNDER STANDING
+A graph o f velocity vs . time o f a ship c oming int o a harbor is sho wn belo w. (a) Describe the motion o f the ship based
+on the gr aph. (b)What w ould a gr aph o f the ship ’s acceleration look lik e?
+FIGURE 2.50
+Solution
+(a) The ship mo ves at c onstant v elocity and then begins t o dec elerate at a c onstant r ate. At some point, its
+deceleration r ate decr eases . It maintains this lo wer dec eleration r ate until it s tops mo ving .
+(b) A gr aph o f acceleration vs . time w ould sho w zero ac celeration in the firs t leg , large and c onstant neg ative
+acceleration in the sec ond leg , and c onstant neg ative ac celeration.
+FIGURE 2.51
+2.8 • Gr aphic al Analy sis o f One -Dimensional Mo tion 89
+Glossar y
+acceler ation the r ate of chang e in v elocity; the
+chang e in v elocity o ver time
+acceler ation due t o gravity acceleration o f an object
+as a r esul t of gravity
+average ac celer ation the chang e in v elocity divided
+by the time o ver which it chang es
+average speed distanc e traveled divided b y time
+during which motion oc curs
+average velocity displac ement divided b y time o ver
+which displac ement oc curs
+deceler ation acceleration in the dir ection opposit e to
+velocity; ac celeration that r esul ts in a decr ease in
+velocity
+dependent v ariable the v ariable that is being
+measur ed; usual ly plot ted along the -axis
+displac ement the chang e in position o f an object
+distanc ethe magnitude o f displac ement betw een
+two positions
+distanc e traveled the t otal length o f the path
+traveled betw een tw o positions
+elapsed time the diff erence betw een the ending time
+and beginning time
+free-fallthe s tate of mo vement that r esul ts from
+gravitational f orce onl y
+independent v ariable the v ariable that thedependent v ariable is measur ed with r espect t o;
+usual ly plot ted along the -axis
+instantaneous ac celer ation acceleration at a specific
+point in time
+instantaneous speed magnitude o f the
+instantaneous v elocity
+instantaneous v elocity velocity at a specific ins tant,
+or the a verage velocity o ver an infinit esimal time
+interval
+kinema tics the s tudy o f motion without c onsidering
+its causes
+model simplified descrip tion that c ontains onl y those
+elements nec essary to describe the ph ysics o f a
+physical situation
+position the location o f an object at a par ticular time
+scalar a quantity that is described b y magnitude , but
+not dir ection
+slope the diff erence in -value (the rise) divided b y
+the diff erence in -value (the run) o f two points on a
+straight line
+time chang e, or the int erval over which chang e oc curs
+vector a quantity that is described b y both magnitude
+and dir ection
+y-interceptthe value when = 0, or when the
+graph cr osses the -axis
+Section Summar y
+2.1Displac ement
+•Kinematics is the s tudy o f motion without
+considering its causes . In this chap ter, it is limit ed
+to motion along a s traight line , cal led one -
+dimensional motion.
+•Displac ement is the chang e in position o f an
+object.
+•In symbols , displac ement is defined t o be
+wher e is the initial position and is the final
+position. In this t ext, the Gr eek let ter (delta)
+always means “ chang e in” what ever quantity
+follows it. The SI unit f or displac ement is the
+meter (m). Displac ement has a dir ection as w ell as
+a magnitude .
+•When y ou s tart a pr oblem, as sign which dir ection
+will be positiv e.
+•Distanc e is the magnitude o f displac ement
+betw een tw o positions .
+•Distanc e traveled is the t otal length o f the path
+traveled betw een tw o positions .2.2Vectors, Scalars, and C oordinat e
+Systems
+•A vector is an y quantity that has magnitude and
+direction.
+•A scalar is an y quantity that has magnitude but no
+direction.
+•Displac ement and v elocity ar e vectors, wher eas
+distanc e and speed ar e scalars .
+•In one -dimensional motion, dir ection is specified
+by a plus or minus sign t o signif y left or right, up or
+down, and the lik e.
+2.3Time, V elocit y, and Speed
+•Time is measur ed in t erms o f chang e, and its SI
+unit is the sec ond (s). Elapsed time f or an e vent is
+wher e is the final time and is the initial time .
+The initial time is o ften tak en to be z ero, as if
+measur ed with a s topwatch; the elapsed time is
+then jus t.
+•Average velocity is defined as displac ement
+divided b y the tr avel time . In s ymbols , average
+velocity is90 2 • Glossar y
+Access f or free at opens tax.org
+•The SI unit f or velocity is m/s .
+•Velocity is a v ector and thus has a dir ection.
+•Instantaneous v elocity is the v elocity at a
+specific ins tant or the a verage velocity f or an
+infinit esimal int erval.
+•Instantaneous speed is the magnitude o f the
+instantaneous v elocity .
+•Instantaneous speed is a scalar quantity , as it has
+no dir ection specified.
+•Average speed is the t otal dis tanc e traveled
+divided b y the elapsed time . (Average speed is not
+the magnitude o f the a verage velocity .) Speed is a
+scalar quantity; it has no dir ection as sociat ed with
+it.
+2.4Acceleration
+•Acceleration is the r ate at which v elocity chang es.
+In symbols ,average ac celer ation is
+•The SI unit f or ac celeration is .
+•Acceleration is a v ector, and thus has a both a
+magnitude and dir ection.
+•Acceleration can be caused b y either a chang e in
+the magnitude or the dir ection o f the v elocity .
+•Instantaneous ac celeration is the ac celeration at
+a specific ins tant in time .
+•Deceleration is an ac celeration with a dir ection
+opposit e to that o f the v elocity .
+2.5Motion E quations f or Constant
+Acceleration in One Dimension
+•To simplif y calculations w e tak e ac celeration t o be
+constant, so that at al l times .
+•We also tak e initial time t o be z ero.
+•Initial position and v elocity ar e giv en a subscrip t 0;
+final v alues ha ve no subscrip t. Thus ,
+•The f ollowing kinematic equations f or motion with
+constant are useful:
+•In vertical motion, is subs titut ed for .2.6Problem-Solving Basics f or One -
+Dimensional Kinematics
+•The six basic pr oblem sol ving s teps f or ph ysics
+are:
+Step 1 . Examine the situation t o det ermine which
+physical principles ar e involved.
+Step 2 . Mak e a lis t of what is giv en or can be
+inferred fr om the pr oblem as s tated (identif y the
+knowns).
+Step 3 . Identif y exactl y what needs t o be
+determined in the pr oblem (identif y the
+unkno wns).
+Step 4 . Find an equation or set o f equations that
+can help y ou sol ve the pr oblem.
+Step 5 . Subs titut e the kno wns along with their
+units int o the appr opriat e equation, and ob tain
+numerical solutions c omplet e with units .
+Step 6 . Check the ans wer to see if it is r easonable:
+Does it mak e sense?
+2.7Falling Objec ts
+•An object in fr ee-fall experienc es constant
+acceleration if air r esistanc e is negligible .
+•On Ear th, al l free-falling objects ha ve an
+acceleration due t o gravity , which a verages
+•Whether the ac celeration ashould be tak en as
+or is det ermined b y your choic e of coordinat e
+system. If y ou choose the up ward dir ection as
+positiv e, is neg ative. In the
+opposit e case , is positiv e.
+Sinc e ac celeration is c onstant, the kinematic
+equations abo ve can be applied with the
+appr opriat e or subs titut ed for.
+•For objects in fr ee-fall, up is normal ly tak en as
+positiv e for displac ement, v elocity , and
+acceleration.
+2.8Graphic al Analy sis o f One -Dimensional
+Motion
+•Graphs o f motion can be used t o anal yze motion.
+•Graphical solutions yield identical solutions t o
+mathematical methods f or deriving motion
+equations .
+•The slope o f a gr aph o f displac ement vs. time is
+velocity .
+•The slope o f a gr aph o f velocity vs. time graph
+is ac celeration .
+•Average velocity , ins tantaneous v elocity , and
+acceleration can al l be ob tained b y anal yzing2 • Sec tion Summar y91
+graphs .
+Conceptual Ques tions
+2.1Displac ement
+1.Give an e xample in which ther e are clear
+distinctions among dis tanc e traveled,
+displac ement, and magnitude o f displac ement.
+Specifical ly identif y each quantity in y our e xample .
+2.Under what cir cums tanc es does dis tanc e traveled
+equal magnitude o f displac ement? What is the onl y
+case in which magnitude o f displac ement and
+displac ement ar e exactl y the same?
+3.Bact eria mo ve back and f orth by using their flag ella
+(structur es that look lik e little tails). Speeds o f up t o
+have been obser ved.
+The t otal dis tanc e traveled b y a bact erium is lar ge
+for its siz e, while its displac ement is smal l. Wh y is
+this?
+2.2Vectors, Scalars, and C oordinat e
+Systems
+4.A student writ es, “A bir d that is diving f or pr ey has a
+speed o f .” What is wr ong with the
+student ’s statement? What has the s tudent actual ly
+described? Explain.
+5.What is the speed o f the bir d in Exercise 2.4 ?
+6.Acceleration is the chang e in v elocity o ver time .
+Given this inf ormation, is ac celeration a v ector or a
+scalar quantity? Explain.
+7.A weather f orecas t states that the t emper atur e is
+predict ed to be the f ollowing da y. Is this
+temper atur e a v ector or a scalar quantity? Explain.
+2.3Time, V elocit y, and Speed
+8.Give an e xample (but not one fr om the t ext) o f a
+device used t o measur e time and identif y what
+chang e in that de vice indicat es a chang e in time .
+9.Ther e is a dis tinction betw een a verage speed and
+the magnitude o f average velocity . Giv e an e xample
+that il lustrates the diff erence betw een these tw o
+quantities .
+10.Does a car ’s odomet er measur e dis tanc e traveled
+or displac ement? Does its speedomet er measur e
+speed or v elocity?
+11.If you divide the t otal dis tanc e traveled on a car
+trip (as det ermined b y the odomet er) b y the time
+for the trip , are you calculating the a verage speed
+or the magnitude o f the a verage velocity? Underwhat cir cums tanc es ar e these tw o quantities the
+same?
+12.How ar e ins tantaneous v elocity and ins tantaneous
+speed r elated to one another? Ho w do the y diff er?
+2.4Acceleration
+13.Is it pos sible f or speed t o be c onstant while
+acceleration is not z ero? Giv e an e xample o f such
+a situation.
+14.Is it pos sible f or velocity t o be c onstant while
+acceleration is not z ero? Explain.
+15.Give an e xample in which v elocity is z ero yet
+acceleration is not.
+16.If a sub way train is mo ving t o the left (has a
+negative velocity) and then c omes t o a s top, what
+is the dir ection o f its ac celeration? Is the
+acceleration positiv e or neg ative?
+17.Plus and minus signs ar e used in one -dimensional
+motion t o indicat e dir ection. What is the sign o f an
+acceleration that r educ es the magnitude o f a
+negative velocity? Of a positiv e velocity?
+2.6Problem-Solving Basics f or One -
+Dimensional Kinematics
+18.What inf ormation do y ou need in or der t o choose
+which equation or equations t o use t o sol ve a
+problem? Explain.
+19.What is the las t thing y ou should do when sol ving
+a problem? Explain.
+2.7Falling Objec ts
+20.What is the ac celeration o f a rock thr own s traight
+upward on the w ay up? A t the t op o f its flight? On
+the w ay do wn?
+21.An object that is thr own s traight up fal ls back t o
+Earth. This is one -dimensional motion. (a) When is
+its v elocity z ero? (b) Does its v elocity chang e
+direction? (c) Does the ac celeration due t o gravity
+have the same sign on the w ay up as on the w ay
+down?
+22.Suppose y ou thr ow a r ock nearl y straight up at a
+coconut in a palm tr ee, and the r ock mis ses on the
+way up but hits the c oconut on the w ay do wn.
+Neglecting air r esistanc e, how does the speed o f
+the r ock when it hits the c oconut on the w ay do wn
+compar e with what it w ould ha ve been if it had hit92 2 • C onceptual Ques tions
+Access f or free at opens tax.org
+the c oconut on the w ay up? Is it mor e lik ely to
+dislodg e the c oconut on the w ay up or do wn?
+Explain.
+23.If an object is thr own s traight up and air
+resistanc e is negligible , then its speed when it
+returns t o the s tarting point is the same as when it
+was released. If air r esistanc e were not negligible ,
+how would its speed upon r eturn c ompar e with its
+initial speed? Ho w would the maximum height t o
+which it rises be aff ected?
+24.The se verity o f a fal l depends on y our speed when
+you s trike the gr ound. Al l fact ors but the
+acceleration due t o gravity being the same , how
+man y times higher c ould a saf e fal l on the Moon
+be than on Ear th (gravitational ac celeration on the
+Moon is about 1/6 that o f the Ear th)?
+25.How man y times higher c ould an as tronaut jump
+on the Moon than on Ear th if his tak eoff speed is
+the same in both locations ( gravitational
+acceleration on the Moon is about 1/6 o fon
+Earth)?
+2.8Graphic al Analy sis o f One -Dimensional
+Motion
+26.(a) Explain ho w you can use the gr aph o f position
+versus time in Figure 2.52 to describe the chang e in
+velocity o ver time . Identif y (b) the time ( ,,,, or
+) at which the ins tantaneous v elocity is gr eatest, (c)
+the time at which it is z ero, and (d) the time at which it
+is neg ative.
+FIGURE 2.52
+27.(a) Sk etch a gr aph o f velocity v ersus time
+corresponding t o the gr aph o f position v ersus time
+given in Figure 2.53 . (b) I dentif y the time or times ( ,
+,, etc.) at which the ins tantaneous v elocity is
+greatest. (c) A t which times is it z ero? (d) A t which
+times is it neg ative?
+FIGURE 2.53
+28.(a) Explain ho w you can det ermine the ac celeration
+over time fr om a v elocity v ersus time gr aph such as the
+one in Figure 2.54 . (b) Based on the gr aph, ho w does
+acceleration chang e over time?
+FIGURE 2.54
+29.(a) Sk etch a gr aph o f acceleration v ersus time
+corresponding t o the gr aph o f velocity v ersus time
+given in Figure 2.55 . (b) I dentif y the time or times ( ,
+,, etc.) at which the ac celeration is gr eatest. (c) A t
+which times is it z ero? (d) A t which times is it neg ative?2 • C onceptual Ques tions 93
+FIGURE 2.55
+30.Consider the v elocity vs . time gr aph o f a person in an
+elevator sho wn in Figure 2.56 . Suppose the ele vator is
+initial ly at r est. It then ac celerates for 3 sec onds ,
+maintains that v elocity f or 15 sec onds , then
+decelerates for 5 sec onds until it s tops. The
+acceleration f or the entir e trip is not c onstant so w e
+cannot use the equations o f motion fr omMotion
+Equations f or Cons tant Ac celeration in One Dimensionfor the c omplet e trip . (We could, ho wever, use them in
+the thr ee individual sections wher e ac celeration is a
+constant.) Sk etch gr aphs o f (a) position vs . time and (b)
+acceleration vs . time f or this trip .
+FIGURE 2.56
+31.A cylinder is giv en a push and then r olls up an
+inclined plane . If the origin is the s tarting point,
+sketch the position, v elocity , and ac celeration o f
+the cylinder vs . time as it g oes up and then do wn
+the plane .
+Problems & Ex ercises
+2.1Displac ement
+FIGURE 2.57
+1.Find the f ollowing f or path A in Figure 2.57 : (a) The
+distanc e traveled. (b) The magnitude o f the
+displac ement fr om s tart to finish. (c) The
+displac ement fr om s tart to finish.
+2.Find the f ollowing f or path B in Figure 2.57 : (a) The
+distanc e traveled. (b) The magnitude o f the
+displac ement fr om s tart to finish. (c) The
+displac ement fr om s tart to finish.
+3.Find the f ollowing f or path C in Figure 2.57 : (a) The
+distanc e traveled. (b) The magnitude o f the
+displac ement fr om s tart to finish. (c) The
+displac ement fr om s tart to finish.4.Find the f ollowing f or path D in Figure 2.57 : (a) The
+distanc e traveled. (b) The magnitude o f the
+displac ement fr om s tart to finish. (c) The
+displac ement fr om s tart to finish.
+2.3Time, V elocit y, and Speed
+5.(a) Calculat e Ear th’s average speed r elativ e to the
+Sun. (b) What is its a verage velocity o ver a period o f
+one y ear?
+6.A helic opter blade spins at e xactl y 100 r evolutions
+per minut e. Its tip is 5.00 m fr om the c enter of
+rotation. (a) Calculat e the a verage speed o f the
+blade tip in the helic opter’s frame o f reference. (b)
+What is its a verage velocity o ver one r evolution?
+7.The Nor th American and Eur opean c ontinents ar e
+moving apar t at a r ate of about 3 cm/y . At this r ate
+how long wil l it tak e them t o drift 500 km far ther
+apar t than the y are at pr esent?
+8.Land w est of the San Andr eas faul t in southern
+Calif ornia is mo ving at an a verage velocity o f about
+6 cm/y nor thwest relativ e to land eas t of the faul t.
+Los Ang eles is w est of the faul t and ma y thus
+someda y be at the same latitude as San F rancisc o,
+which is eas t of the faul t. Ho w far in the futur e wil l
+this oc cur if the displac ement t o be made is 590 km94 2 • P roblems & Ex ercises
+Access f or free at opens tax.org
+northwest, as suming the motion r emains c onstant?
+9.On Ma y 26, 1934, a s treamlined, s tainles s steel
+diesel tr ain cal led the Z ephyr set the w orld’ s
+nons top long-dis tanc e speed r ecord for tr ains . Its
+run fr om Den ver to Chicag o took 13 hours , 4
+minut es, 58 sec onds , and w as witnes sed b y mor e
+than a mil lion people along the r oute. The t otal
+distanc e traveled w as 1633.8 km. What w as its
+average speed in km/h and m/s?
+10.Tidal friction is slo wing the r otation o f the Ear th.
+As a r esul t, the orbit o f the Moon is incr easing in
+radius at a r ate of appr oximat ely 4 cm/y ear.
+Assuming this t o be a c onstant r ate, how man y
+years wil l pas s bef ore the r adius o f the Moon ’s
+orbit incr eases b y (1%)?
+11.A student dr ove to the univ ersity fr om their home
+and not ed that the odomet er reading o f their car
+increased b y 12.0 km. The trip t ook 18.0 min. (a)
+What w as their a verage speed? (b) If the s traight -
+line dis tanc e from their home t o the univ ersity is
+10.3 km in a dir ection south o f eas t, what
+was their a verage velocity? (c) If the y returned
+home b y the same path 7 h 30 min aft er the y left,
+what w ere their a verage speed and v elocity f or the
+entir e trip?
+12.The speed o f propag ation o f the action pot ential
+(an electrical signal) in a ner ve cell depends
+(inversel y) on the diamet er of the ax on (ner ve
+fiber). If the ner ve cell connecting the spinal c ord
+to your f eet is 1.1 m long , and the ner ve impulse
+speed is 18 m/s , how long does it tak e for the
+nerve signal t o travel this dis tanc e?
+13.Conversations with as tronauts on the lunar
+surface were char acterized b y a kind o f echo in
+which the ear thbound person ’s voice was so loud
+in the as tronaut ’s spac e helmet that it w as pick ed
+up b y the as tronaut ’s micr ophone and tr ansmit ted
+back t o Ear th. It is r easonable t o as sume that the
+echo time equals the time nec essary for the r adio
+wave to travel from the Ear th to the Moon and
+back (that is , neglecting an y time dela ys in the
+electr onic equipment). Calculat e the dis tanc e
+from Ear th to the Moon giv en that the echo time
+was 2.56 s and that r adio w aves tr avel at the
+speed o f light .
+14.A footbal l quar terback runs 15.0 m s traight do wn
+the pla ying field in 2.50 s . He is then hit and
+pushed 3.00 m s traight backw ard in 1.75 s . He
+breaks the tackle and runs s traight f orward
+another 21.0 m in 5.20 s . Calculat e his a veragevelocity (a) f or each o f the thr ee int ervals and (b)
+for the entir e motion.
+15.The planetar y model o f the at om pictur es
+electr ons orbiting the at omic nucleus much as
+planets orbit the Sun. In this model y ou can vie w
+hydrogen, the simples t atom, as ha ving a single
+electr on in a cir cular orbit in
+diamet er. (a) If the a verage speed o f the electr on
+in this orbit is kno wn t o be ,
+calculat e the number o f revolutions per sec ond it
+mak es about the nucleus . (b) What is the
+electr on’s average velocity per r evolution?
+2.4Acceleration
+16.A cheetah can ac celerate from r est to a speed o f
+30.0 m/s in 7.00 s . What is its ac celeration?
+17.Professional Application
+Dr. John P aul Stapp w as U .S. Air F orce officer who
+studied the eff ects o f extreme dec eleration on the
+human body . On Dec ember 10, 1954, Stapp r ode
+a rocket sled, ac celerating fr om r est to a t op
+speed o f 282 m/s (1015 km/h) in 5.00 s , and w as
+brought jarringl y back t o rest in onl y 1.40 s!
+Calculat e his (a) ac celeration and (b) dec eleration.
+Expr ess each in mul tiples o f by
+taking its r atio t o the ac celeration o f gravity.
+18.A commut er back s her car out o f her g arage with
+an ac celeration o f . (a) Ho w long does it
+take her t o reach a speed o f 2.00 m/s? (b) If she
+then br akes to a s top in 0.800 s , what is her
+deceleration?
+19.Assume that an int ercontinental bal listic mis sile
+goes fr om r est to a suborbital speed o f 6.50 km/s
+in 60.0 s (the actual speed and time ar e
+clas sified). What is its a verage ac celeration in
+and in mul tiples o f
+2.5Motion E quations f or Constant
+Acceleration in One Dimension
+20.An Ol ympic-clas s sprint er starts a r ace with an
+acceleration o f . (a) What is her speed
+2.40 s lat er? (b) Sk etch a gr aph o f her position vs .
+time f or this period.
+21.A well-thrown bal l is caught in a w ell-padded mit t.
+If the dec eleration o f the bal l is ,
+and 1.85 ms elapses fr om the
+time the bal l firs t touches the mit t until it s tops,
+what w as the initial v elocity o f the bal l?
+22.A bul let in a g un is ac celerated fr om the firing
+chamber t o the end o f the barr el at an a verage2 • P roblems & Ex ercises 95
+rate of for . What
+is its muzzle v elocity (that is , its final v elocity)?
+23.(a) A light -rail c ommut er tr ain ac celerates at a r ate
+of . Ho w long does it tak e to reach its
+top speed o f 80.0 km/h, s tarting fr om r est? (b) The
+same tr ain or dinaril y dec elerates at a r ate of
+. Ho w long does it tak e to come t o a
+stop fr om its t op speed? (c) In emer gencies the
+train can dec elerate mor e rapidl y, coming t o rest
+from 80.0 km/h in 8.30 s . What is its emer gency
+deceleration in ?
+24.While ent ering a fr eeway, a car ac celerates fr om
+rest at a r ate of for 12.0 s . (a) Dr aw a
+sketch o f the situation. (b) Lis t the kno wns in this
+problem. (c) Ho w far does the car tr avel in those
+12.0 s? T o sol ve this par t, firs t identif y the
+unkno wn, and then discus s ho w you chose the
+appr opriat e equation t o sol ve for it. Aft er choosing
+the equation, sho w your s teps in sol ving f or the
+unkno wn, check y our units , and discus s whether
+the ans wer is r easonable . (d) What is the car ’s
+final v elocity? Sol ve for this unkno wn in the same
+manner as in par t (c), sho wing al l steps e xplicitl y.
+25.At the end o f a race, a runner dec elerates fr om a
+velocity o f 9.00 m/s at a r ate of . (a)
+How far does she tr avel in the ne xt 5.00 s? (b)
+What is her final v elocity? (c) Ev aluat e the r esul t.
+Does it mak e sense?
+26.Professional Application:
+Blood is ac celerated fr om r est to 30.0 cm/s in a
+distanc e of 1.80 cm b y the left v entricle o f the
+hear t. (a) Mak e a sk etch o f the situation. (b) Lis t
+the kno wns in this pr oblem. (c) Ho w long does the
+acceleration tak e? To sol ve this par t, firs t identif y
+the unkno wn, and then discus s ho w you chose the
+appr opriat e equation t o sol ve for it. Aft er choosing
+the equation, sho w your s teps in sol ving f or the
+unkno wn, checking y our units . (d) Is the ans wer
+reasonable when c ompar ed with the time f or a
+hear tbeat?
+27.In a slap shot, a hock ey pla yer ac celerates the
+puck fr om a v elocity o f 8.00 m/s t o 40.0 m/s in the
+same dir ection. If this shot tak es ,
+calculat e the dis tanc e over which the puck
+accelerates.
+28.A po werful mot orcycle can ac celerate from r est to
+26.8 m/s (100 km/h) in onl y 3.90 s . (a) What is its
+average ac celeration? (b) Ho w far does it tr avel in
+that time?29.Freight tr ains can pr oduc e onl y relativ ely smal l
+accelerations and dec elerations . (a) What is the
+final v elocity o f a fr eight tr ain that ac celerates at a
+rate of for 8.00 min, s tarting with an
+initial v elocity o f 4.00 m/s? (b) If the tr ain can
+slow do wn at a r ate of , how long wil l it
+take to come t o a s top fr om this v elocity? (c) Ho w
+far wil l it tr avel in each case?
+30.A fir eworks shel l is ac celerated fr om r est to a
+velocity o f 65.0 m/s o ver a dis tanc e of 0.250 m.
+(a) Ho w long did the ac celeration las t? (b)
+Calculat e the ac celeration.
+31.A swan on a lak e gets airborne b y flapping its
+wings and running on t op o f the w ater. (a) If the
+swan mus t reach a v elocity o f 6.00 m/s t o tak e off
+and it ac celerates fr om r est at an a verage rate of
+, how far wil l it tr avel bef ore bec oming
+airborne? (b) Ho w long does this tak e?
+32.Professional Applica tion:
+A woodpeck er’s brain is special ly protected fr om
+large dec elerations b y tendon-lik e attachments
+inside the sk ull. While pecking on a tr ee, the
+woodpeck er’s head c omes t o a s top fr om an initial
+velocity o f 0.600 m/s in a dis tanc e of onl y 2.00
+mm. (a) Find the ac celeration in and in
+multiples o f . (b) Calculat e the
+stopping time . (c) The t endons cr adling the br ain
+stretch, making its s topping dis tanc e 4.50 mm
+(greater than the head and, henc e, les s
+deceleration o f the br ain). What is the br ain’s
+deceleration, e xpressed in mul tiples o f?
+33.An un wary footbal l pla yer collides with a padded
+goalpos t while running at a v elocity o f 7.50 m/s
+and c omes t o a ful l stop aft er compr essing the
+padding and his body 0.350 m. (a) What is his
+deceleration? (b) Ho w long does the c ollision las t?
+34.In W orld W ar II, ther e were se veral repor ted cases
+of airmen who jumped fr om their flaming airplanes
+with no par achut e to escape c ertain death. Some
+fell about 20,000 f eet (6000 m), and some o f
+them sur vived, with f ew lif e-threatening injuries .
+For these lucky pilots , the tr ee br anches and sno w
+drifts on the gr ound al lowed their dec eleration t o
+be relativ ely smal l. If w e as sume that a pilot ’s
+speed upon impact w as 123 mph (54 m/s), then
+what w as his dec eleration? As sume that the tr ees
+and sno w stopped him o ver a dis tanc e of 3.0 m.
+35.Consider a gr ey squirr el fal ling out o f a tr ee to the
+ground. (a) If w e ignor e air r esistanc e in this case
+(only for the sak e of this pr oblem), det ermine a96 2 • P roblems & Ex ercises
+Access f or free at opens tax.org
+squirr el’s velocity jus t bef ore hit ting the gr ound,
+assuming it f ell from a height o f 3.0 m. (b) If the
+squirr el stops in a dis tanc e of 2.0 cm thr ough
+bending its limbs , compar e its dec eleration with
+that o f the airman in the pr evious pr oblem.
+36.An e xpress train pas ses thr ough a s tation. It
+enters with an initial v elocity o f 22.0 m/s and
+decelerates at a r ate of as it g oes
+through. The s tation is 210 m long . (a) Ho w long
+did the nose o f the tr ain s tay in the s tation? (b)
+How fas t is it g oing when the nose lea ves the
+station? (c) If the tr ain is 130 m long , when does
+the end o f the tr ain lea ve the s tation? (d) What is
+the v elocity o f the end o f the tr ain as it lea ves?
+37.Dragsters can actual ly reach a t op speed o f 145
+m/s in onl y 4.45 s —consider ably les s time than
+given in Example 2.10 and Example 2.11 . (a)
+Calculat e the a verage ac celeration f or such a
+dragster. (b) Find the final v elocity o f this dr agster
+starting fr om r est and ac celerating at the r ate
+found in (a) f or 402 m (a quar ter mile) without
+using an y inf ormation on time . (c) Wh y is the final
+velocity gr eater than that used t o find the a verage
+acceleration? Hint : Consider whether the
+assump tion o f constant ac celeration is v alid f or a
+dragster. If not, discus s whether the ac celeration
+would be gr eater at the beginning or end o f the
+run and what eff ect that w ould ha ve on the final
+velocity .
+38.A bicy cle r acer sprints at the end o f a race to
+clinch a vict ory. The r acer has an initial v elocity o f
+11.5 m/s and ac celerates at the r ate of
+for 7.00 s . (a) What is his final
+velocity? (b) The r acer continues at this v elocity t o
+the finish line . If he w as 300 m fr om the finish line
+when he s tarted to ac celerate, how much time did
+he sa ve? (c) One other r acer w as 5.00 m ahead
+when the winner s tarted to ac celerate, but he w as
+unable t o ac celerate, and tr aveled at 11.8 m/s
+until the finish line . Ho w far ahead o f him (in
+meters and in sec onds) did the winner finish?
+39.In 1967, Ne w Zealander Bur t Munr o set the w orld
+record for an Indian mot orcycle, on the Bonne ville
+Salt Flats in Utah, with a maximum speed o f
+183.58 mi/h. The one -way course w as 5.00 mi
+long . Acceleration r ates ar e often described b y the
+time it tak es to reach 60.0 mi/h fr om r est. If this
+time w as 4.00 s , and Bur t accelerated at this r ate
+until he r eached his maximum speed, ho w long
+did it tak e Bur t to complet e the c ourse?
+40.(a) A w orld r ecord was set f or the men ’s 100-mdash in the 2008 Ol ympic Games in Beijing b y
+Usain Bol t of Jamaica . Bol t “coasted” acr oss the
+finish line with a time o f 9.69 s . If w e as sume that
+Bolt accelerated for 3.00 s t o reach his maximum
+speed, and maintained that speed f or the r est of
+the r ace, calculat e his maximum speed and his
+acceleration. (b) During the same Ol ympics , Bol t
+also set the w orld r ecord in the 200-m dash with a
+time o f 19.30 s . Using the same as sump tions as
+for the 100-m dash, what w as his maximum speed
+for this r ace?
+2.7Falling Objec ts
+Assume air r esistanc e is negligible unles s other wise
+stated.
+41.Calculat e the displac ement and v elocity at times
+of (a) 0.500, (b) 1.00, (c) 1.50, and (d) 2.00 s f or a
+ball thr own s traight up with an initial v elocity o f
+15.0 m/s . Take the point o f release t o be .
+42.Calculat e the displac ement and v elocity at times
+of (a) 0.500, (b) 1.00, (c) 1.50, (d) 2.00, and (e)
+2.50 s f or a r ock thr own s traight do wn with an
+initial v elocity o f 14.0 m/s fr om the V errazano
+Narr ows Bridg e in Ne w York City . The r oadw ay of
+this bridg e is 70.0 m abo ve the w ater.
+43.A bask etbal l referee tosses the bal l straight up f or
+the s tarting tip -off. At what v elocity mus t a
+bask etbal l pla yer lea ve the gr ound t o rise 1.25 m
+above the floor in an at temp t to get the bal l?
+44.A rescue helic opter is ho vering o ver a person
+whose boat has sunk. One o f the r escuers thr ows
+a life preser ver straight do wn t o the victim with an
+initial v elocity o f 1.40 m/s and obser ves that it
+takes 1.8 s t o reach the w ater. (a) Lis t the kno wns
+in this pr oblem. (b) Ho w high abo ve the w ater w as
+the pr eser ver released? Not e that the do wndr aft
+of the helic opter reduc es the eff ects o f air
+resistanc e on the fal ling lif e preser ver, so that an
+acceleration equal t o that o f gravity is r easonable .
+45.A dolphin in an aquatic sho w jumps s traight up out
+of the w ater at a v elocity o f 13.0 m/s . (a) Lis t the
+knowns in this pr oblem. (b) Ho w high does his
+body rise abo ve the w ater? T o sol ve this par t, firs t
+note that the final v elocity is no w a kno wn and
+identif y its v alue . Then identif y the unkno wn, and
+discus s ho w you chose the appr opriat e equation
+to sol ve for it. Aft er choosing the equation, sho w
+your s teps in sol ving f or the unkno wn, checking
+units , and discus s whether the ans wer is
+reasonable . (c) Ho w long is the dolphin in the air?
+Neglect an y eff ects due t o his siz e or orientation.2 • P roblems & Ex ercises 97
+46.A swimmer bounc es straight up fr om a diving
+boar d and fal ls feet firs t into a pool . She s tarts
+with a v elocity o f 4.00 m/s , and her tak eoff point is
+1.80 m abo ve the pool . (a) Ho w long ar e her f eet in
+the air? (b) What is her highes t point abo ve the
+boar d? (c) What is her v elocity when her f eet hit
+the w ater?
+47.(a) Calculat e the height o f a cliff if it tak es 2.35 s
+for a r ock t o hit the gr ound when it is thr own
+straight up fr om the cliff with an initial v elocity o f
+8.00 m/s . (b) Ho w long w ould it tak e to reach the
+ground if it is thr own s traight do wn with the same
+speed?
+48.A very strong, but inep t, shot put ter puts the shot
+straight up v ertical ly with an initial v elocity o f 11.0
+m/s. How long does he ha ve to get out o f the w ay
+if the shot w as released at a height o f 2.20 m, and
+he is 1.80 m tal l?
+49.You thr ow a bal l straight up with an initial v elocity
+of 15.0 m/s . It pas ses a tr ee br anch on the w ay up
+at a height o f 7.00 m. Ho w much additional time
+will pas s bef ore the bal l pas ses the tr ee br anch on
+the w ay back do wn?
+50.A kangaroo can jump o ver an object 2.50 m high.
+(a) Calculat e its v ertical speed when it lea ves the
+ground. (b) Ho w long is it in the air?
+51.Standing at the base o f one o f the cliffs o f Mt.
+Arapiles in Vict oria, Aus tralia, a hik er hears a r ock
+break loose fr om a height o f 105 m. He can ’t see
+the r ock right a way but then does , 1.50 s lat er. (a)
+How far abo ve the hik er is the r ock when he can
+see it? (b) Ho w much time does he ha ve to mo ve
+before the r ock hits his head?
+52.An object is dr opped fr om a height o f 75.0 m
+above ground le vel. (a) Det ermine the dis tanc e
+traveled during the firs t sec ond. (b) Det ermine the
+final v elocity at which the object hits the gr ound.
+(c) Det ermine the dis tanc e traveled during the las t
+second o f motion bef ore hit ting the gr ound.
+53.Ther e is a 250-m-high cliff at Half Dome in
+Yosemit e National P ark in Calif ornia . Suppose a
+boulder br eaks loose fr om the t op o f this cliff . (a)
+How fas t wil l it be g oing when it s trikes the
+ground? (b) As suming a r eaction time o f 0.300 s ,
+how long wil l a touris t at the bot tom ha ve to get
+out o f the w ay aft er hearing the sound o f the r ock
+breaking loose (neglecting the height o f the
+touris t, which w ould bec ome negligible an yway if
+hit)? The speed o f sound is 335 m/s on this da y.54.A bal l is thr own s traight up . It pas ses a 2.00-m-
+high windo w 7.50 m o ff the gr ound on its path up
+and tak es 0.312 s t o go pas t the windo w. What
+was the bal l’s initial v elocity? Hint: Firs t consider
+only the dis tanc e along the windo w, and sol ve for
+the bal l's velocity at the bot tom o f the windo w.
+Next, c onsider onl y the dis tanc e from the gr ound
+to the bot tom o f the windo w, and sol ve for the
+initial v elocity using the v elocity at the bot tom o f
+the windo w as the final v elocity .
+55.Suppose y ou dr op a r ock int o a dark w ell and,
+using pr ecision equipment, y ou measur e the time
+for the sound o f a splash t o return. (a) Neglecting
+the time r equir ed for sound t o travel up the w ell,
+calculat e the dis tanc e to the w ater if the sound
+returns in 2.0000 s . (b) No w calculat e the dis tanc e
+taking int o ac count the time f or sound t o travel up
+the w ell. The speed o f sound is 332.00 m/s in this
+well.
+56.A steel bal l is dr opped ont o a har d floor fr om a
+height o f 1.50 m and r ebounds t o a height o f 1.45
+m. (a) Calculat e its v elocity jus t bef ore it s trikes
+the floor . (b) Calculat e its v elocity jus t aft er it
+leaves the floor on its w ay back up . (c) Calculat e
+its ac celeration during c ontact with the floor if that
+contact las ts 0.0800 ms . (d) Ho w
+much did the bal l compr ess during its c ollision
+with the floor , assuming the floor is absolut ely
+rigid?
+57.A coin is dr opped fr om a hot -air bal loon that is
+300 m abo ve the gr ound and rising at 10.0 m/s
+upward. For the c oin, find (a) the maximum height
+reached, (b) its position and v elocity 4.00 s aft er
+being r eleased, and (c) the time bef ore it hits the
+ground.
+58.A so ft tennis bal l is dr opped ont o a har d floor fr om
+a height o f 1.50 m and r ebounds t o a height o f
+1.10 m. (a) Calculat e its v elocity jus t bef ore it
+strikes the floor . (b) Calculat e its v elocity jus t aft er
+it lea ves the floor on its w ay back up . (c) Calculat e
+its ac celeration during c ontact with the floor if that
+contact las ts 3.50 ms . (d) Ho w
+much did the bal l compr ess during its c ollision
+with the floor , assuming the floor is absolut ely
+rigid?
+2.8Graphic al Analy sis o f One -Dimensional
+Motion
+Note: Ther e is al ways unc ertainty in numbers tak en
+from gr aphs . If y our ans wers diff er fr om e xpect ed
+values , examine them t o see if the y are within data98 2 • P roblems & Ex ercises
+Access f or free at opens tax.org
+extraction unc ertainties es timat ed b y you.
+59.(a) B y taking the slope o f the cur ve in Figure 2.58 ,
+verify that the v elocity o f the jet car is 115 m/s at
+. (b) B y taking the slope o f the cur ve at
+any point in Figure 2.59 , verify that the jet car ’s
+acceleration is .
+FIGURE 2.58
+FIGURE 2.59
+60.Using appr oximat e values , calculat e the slope o f
+the cur ve in Figure 2.60 to verify that the v elocity
+at is appr oximat ely 0.24 m/s . Assume
+all values ar e kno wn t o 2 significant fig ures.
+FIGURE 2.60
+61.Using appr oximat e values , calculat e the slope o f
+the cur ve in Figure 2.60 to verify that the v elocity
+at is appr oximat ely 0.24 m/s .
+62.By taking the slope o f the cur ve in Figure 2.61 ,
+verify that the ac celeration is at .
+FIGURE 2.61
+63.Cons truct the position gr aph f or the sub way
+shut tle tr ain as sho wn in Figure 2.18 (a). Y our
+graph should sho w the position o f the tr ain, in
+kilomet ers, from t = 0 t o 20 s . You wil l need t o use
+the inf ormation on ac celeration and v elocity giv en
+in the e xamples f or this fig ure.
+64.(a) T ake the slope o f the cur ve in Figure 2.62 to find the
+jogger’s velocity at . (b) R epeat at 7.5 s . These
+values mus t be c onsis tent with the gr aph in Figure
+2.63 .
+FIGURE 2.62
+FIGURE 2.632 • P roblems & Ex ercises 99
+FIGURE 2.64
+65.A graph o f is sho wn f or a w orld-clas s track
+sprint er in a 100-m r ace. (See Figure 2.65 ). (a)
+What is his a verage velocity f or the firs t 4 s? (b)
+What is his ins tantaneous v elocity at ? (c)
+What is his a verage ac celeration betw een 0 and 4
+s? (d) What is his time f or the r ace?
+FIGURE 2.65
+66.Figure 2.66 shows the position gr aph f or a par ticle
+for 6 s . (a) Dr aw the c orresponding V elocity vs .Time gr aph. (b) What is the ac celeration betw een
+0 s and 2 s? (c) What happens t o the ac celeration
+at exactl y 2 s?
+FIGURE 2.66
+67.Critical Thinking Two cars ar e side b y side on a
+path wher e friction is negligible . Car A s tarts from
+rest and has a positiv e, constant ac celeration
+while car B tr avels at a c onstant speed. The cars
+reach the same check point do wn the r oad at the
+same time . (a) Which car is tr aveling fas ter at the
+check point? Briefl y explain y our r easoning . (b)
+Based on e xperimental data , an equation that fits
+the data is sug gested for the speed o f car A at the
+check point, V, which ma y not be c orrect:
+, wher eKis a c onstant with appr opriat e
+units and is the initial v elocity o f car B . Is this
+equation c onsis tent with y our ans wer fr om par t a?
+Explain wh y or wh y not. Does this equation mak e
+sense? Explain wh y or wh y not. (c) Gr aph the
+velocity o f car A and the v elocity o f car B vs .
+distanc e along the path, s tarting when the cars ar e
+side b y side .
+Test Prep for AP ® Courses
+2.1Displac ement
+1.Which o f the f ollowing s tatements c omparing
+position, dis tanc e traveled, and displac ement is
+correct?
+a.An object ma y record a dis tanc e traveled o f
+zero while r ecording a non-z ero displac ement.
+b.An object ma y record a non-z ero dis tanc e
+traveled while r ecording a displac ement o f
+zero.
+c.An object ma y record a non-z ero dis tanc e
+traveled while maintaining a position o f zero.
+d.An object ma y record a non-z ero displac ement
+while maintaining a position o f zero.
+2.2Vectors, Scalars, and C oordinat e
+Systems
+2.A student is tr ying t o det ermine the ac celeration o fa feather as she dr ops it t o the gr ound. If the
+student is looking t o achie ve a positiv e velocity and
+positiv e ac celeration, what is the mos t sensible way
+to set up her c oordinat e system?
+a.Her hand should be a c oordinat e of zero and
+the up ward dir ection should be c onsider ed
+positiv e.
+b.Her hand should be a c oordinat e of zero and
+the do wnward dir ection should be c onsider ed
+positiv e.
+c.The floor should be a c oordinat e of zero and
+the up ward dir ection should be c onsider ed
+positiv e.
+d.The floor should be a c oordinat e of zero and
+the do wnward dir ection should be c onsider ed
+positiv e.100 2 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+2.3Time, V elocit y, and Speed
+3.A group o f students has tw o car ts,Aand B, with
+wheels that turn with negligible friction. The tw o
+carts tr avel along a s traight horiz ontal tr ack and
+eventual ly collide. Bef ore the c ollision, car tA
+travels t o the right and car tBis initial ly at r est. Aft er
+the c ollision, the car ts stick t ogether .
+a.Describe an e xperimental pr ocedur e to
+determine the v elocities o f the car ts bef ore and
+after the c ollision, including al l the additional
+equipment y ou w ould need. Y ou ma y include a
+labeled diagr am o f your setup t o help in y our
+descrip tion. Indicat e what measur ements y ou
+would tak e and ho w you w ould tak e them.
+Include enough detail so that another s tudent
+could carr y out y our pr ocedur e.
+b.Ther e wil l be sour ces o f err or in the
+measur ements tak en in the e xperiment both
+before and aft er the c ollision. Which v elocity
+will be mor e greatly aff ected b y this err or: the
+velocity prior t o the c ollision or the v elocity
+after the c ollision? Or wil l both sets o f data be
+affected equal ly? Jus tify your ans wer.
+2.4Acceleration
+4.
+FIGURE 2.68 Graph sho wing V elocity vs . Time o f a car t.
+A car t is c onstrained t o mo ve along a s traight line . A
+varying net f orce along the dir ection o f motion is
+exerted on the car t. The car t's v elocity vas a
+function o f time tis sho wn in the gr aph. The fiv e
+labeled points divide the gr aph int o four sections .
+Which o f the f ollowing c orrectly ranks the
+magnitude o f the a verage ac celeration o f the car t
+during the f our sections o f the gr aph?
+a.aCD>aAB>aBC>aDE
+b.aBC>aAB>aCD>aDE
+c.aAB>aBC>aDE>aCD
+d.aCD>aAB>aDE>aBC
+5.Push a book acr oss a table and obser ve it slo w to astop.
+Draw gr aphs sho wing the book's position vs . time
+and v elocity vs . time if the dir ection o f its motion is
+consider ed positiv e.
+Draw gr aphs sho wing the book's position vs . time
+and v elocity vs . time if the dir ection o f its motion is
+consider ed neg ative.
+2.5Motion E quations f or Constant
+Acceleration in One Dimension
+6.A group o f students is at temp ting t o det ermine the
+average ac celeration o f a marble r eleased fr om the t op
+of a long r amp . Belo w is a set o f data r epresenting the
+marble 's position with r espect t o time .
+Position ( cm) Time (s)
+0.0 0.0
+0.3 0.5
+1.25 1.0
+2.8 1.5
+5.0 2.0
+7.75 2.5
+11.3 3.0
+TABLE 2.2
+Use the data table abo ve to construct a gr aph
+determining the ac celeration o f the marble . Select a
+set o f data points fr om the table and plot those points
+on the gr aph. Fil l in the blank c olumn in the table f or
+any quantities y ou gr aph other than the giv en data .
+Label the ax es and indicat e the scale f or each. Dr aw a
+best-fit line or cur ve thr ough y our data points .
+Using the bes t-fit line , det ermine the v alue o f the
+marble 's ac celeration.
+2.7Falling Objec ts
+7.Obser ving a spac ecraft land on a dis tant as teroid,
+scientis ts notic e that the cr aft is fal ling at a r ate of 5
+m/s. When it is 100 m closer t o the sur face of the
+asteroid, the cr aft r epor ts a v elocity o f 8 m/s .
+According t o their data , what is the appr oximat e
+gravitational ac celeration on this as teroid?
+a.0 m/s2
+b.0.03 m/s22 • T est Prep for AP ® Courses 101
+c.0.20 m/s2
+d.0.65 m/s2e.33 m/s2102 2 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+CONNECT ION F OR AP® C OURSESCHAP TER 3
+Two-Dimensional Kinema tics
+3.1Kinema tics in T wo Dimensions: An Intr oduction
+3.2Vector Addition and Sub traction: Gr aphical Methods
+3.3Vector Addition and Sub traction: Anal ytical Methods
+3.4Projectile Mo tion
+3.5Addition o f Velocities
+Mos t ins tanc es o f motion in e veryday life involve chang es in displac ement and
+velocity that oc cur in mor e than one dir ection. F or example , when y ou tak e a long r oad trip , you driv e on diff erent
+roads in diff erent dir ections f or diff erent amounts o f time at diff erent speeds . Ho w can these motions al l be
+combined t o det ermine inf ormation about the trip such as the t otal displac ement and a verage velocity? If y ou kick a
+ball from gr ound le vel at some angle abo ve the horiz ontal , how can y ou describe its motion? T o what maximum
+height does the object rise abo ve the gr ound? Ho w long is the object in the air? Ho w much horiz ontal dis tanc e is
+covered bef ore the bal l lands? T o ans wer ques tions such as these , we need t o describe motion in tw o dimensions .
+Examining tw o-dimensional motion r equir es an unders tanding o f both the scalar and the v ector quantities
+associat ed with the motion. Y ou wil l learn ho w to combine v ectors t o inc orpor ate both the magnitude and dir ection
+of vectors int o your anal ysis. You wil l learn s trategies f or simplif ying the calculations in volved b y choosing the
+appr opriat e reference frame and b y treating each dimension o f the motion separ ately as a one -dimensional
+problem, but y ou wil l also see that the motion itself oc curs in the same w ay regardles s of your chosen r eference
+frame (Es sential K nowledg e 3.A.1).FIGURE 3.1Hitting a t ennis bal l is difficul t enough when it is tr aveling at high speeds in a r elativ ely straight line . However, mos t motion is in
+curved, r ather than s traight -line , paths . Tennis pla yers mus t account f or the ar c of the bal l and the impact o f its spin, while the y also pr edict
+how it wil l bounc e and plan the location o f their shot. Motion along a cur ved path is tw o- or thr ee-dimensional motion, and can be
+described in a similar fashion t o one -dimensional motion. (cr edit: E dwin Mar tinez/Flickr)
+CHAP TER OUTLINE
+•Observe that motion in two dimensions consists of horizontal and vertical components.
+•Understand the independence of horizontal and vertical vectors in two-dimensional motion.
+FIGURE 3.2 Walkers and drivers in a city like New York are rarely able to travel in straight lines to reach their destinations. Instead, they
+must follow roads and sidewalks, making two-dimensional, zigzagged paths. (credit: Margaret W. Carruthers)
+Two-Dimensional Motion: Walking in a City
+Suppose you want to walk from one point to another in a city with uniform square blocks, as pictured in Figure 3.3.
+FIGURE 3.3 A pedestrian walks a two-dimensional path between two points in a city. In this scene, all blocks are square and are the same
+size.
+The straight-line path that a helicopter might fly is blocked to you as a pedestrian, and so you are forced to take a104 3 • Two-Dimensional Kinematics
+This chapter lays a necessary foundation for examining interactions of objects described by forces (Big Idea 3). 
+Changes in direction result from acceleration, which necessitates force on an object. In this chapte r, you will 
+concentrate on describing motion that involves changes in direction. In later chapters, you will apply this 
+understanding as you learn about how forces cause these motions (Enduring Understanding 3.A). The concepts in 
+this chapter support:
+Big Idea 3 The interactions of an object with other objects can be described by forces.
+Enduring Understanding 3.A All forces share certain common characteristics when considered by observers in 
+inertial reference frames.
+Essential Knowledge 3.A.1 An observer in a particular reference frame can describe the motion of an object using 
+such quantities as position, displacement, distance, velocity, speed, and acceleration.
+Click to view content (https:/ /openstax.org/books/college-physics-ap-courses-2e/pages/3-connection-for-ap-r-
+courses)
+3.1 Kinematics in Two Dimensions: An Introduction
+LEARNING OBJECTIVES
+By the end of this section, you will be able to:
+Access for free at openstax.org
+two-dimensional path, such as the one sho wn. Y ou w alk 14 block s in al l, 9 eas t followed b y 5 nor th. What is the
+straight -line dis tanc e?
+An old adag e states that the shor test dis tanc e betw een tw o points is a s traight line . The tw o legs o f the trip and the
+straight -line path f orm a right triangle , and so the Pythag orean theor em, , can be used t o find the
+straight -line dis tanc e.
+FIGURE 3.4The Pythag orean theor em r elates the length o f the legs o f a right triangle , labeled and , with the h ypot enuse , labeled . The
+relationship is giv en b y: . This can be r ewritten, sol ving f or : .
+The h ypot enuse o f the triangle is the s traight -line path, and so in this case its length in units o f city block s is
+, consider ably shor ter than the 14 block s you w alked. (Not e that w e are
+using thr ee significant fig ures in the ans wer. Although it appears that “9” and “5” ha ve onl y one significant digit,
+they are discr ete numbers . In this case “9 block s” is the same as “9.0 or 9.00 block s.” We ha ve decided t o use thr ee
+significant fig ures in the ans wer in or der t o sho w the r esul t mor e precisel y.)
+FIGURE 3.5The s traight -line path f ollowed b y a helic opter betw een the tw o points is shor ter than the 14 block s walked b y the pedes trian.
+All block s are squar e and the same siz e.
+The fact that the s traight -line dis tanc e (10.3 block s) in Figure 3.5 is les s than the t otal dis tanc e walked (14 block s)
+is one e xample o f a g ener al char acteristic o f vectors. (Recal l that vectorsare quantities that ha ve both magnitude
+and dir ection.)
+As for one -dimensional kinematics , we use arr ows to represent v ectors. The length o f the arr ow is pr opor tional t o
+the v ector’s magnitude . The arr ow’s length is indicat ed b y hash mark s in Figure 3.3 and Figure 3.5 . The arr ow points
+in the same dir ection as the v ector. For tw o-dimensional motion, the path o f an object can be r epresent ed with thr ee
+vectors: one v ector sho ws the s traight -line path betw een the initial and final points o f the motion, one v ector sho ws
+the horiz ontal c omponent o f the motion, and one v ector sho ws the v ertical c omponent o f the motion. The horiz ontal
+and v ertical c omponents o f the motion add t ogether t o giv e the s traight -line path. F or example , obser ve the thr ee
+vectors in Figure 3.5 . The firs t represents a 9-block displac ement eas t. The sec ond r epresents a 5-block
+displac ement nor th. These v ectors ar e added t o giv e the thir d vector, with a 10.3-block t otal displac ement. The thir d
+vector is the s traight -line path betw een the tw o points . Not e that in this e xample , the v ectors that w e are adding ar e
+perpendicular t o each other and thus f orm a right triangle . This means that w e can use the Pythag orean theor em t o
+calculat e the magnitude o f the t otal displac ement. (Not e that w e cannot use the Pythag orean theor em t o add
+vectors that ar e not perpendicular . We wil l develop t echniques f or adding v ectors ha ving an y dir ection, not jus t
+those perpendicular t o one another , inVector Addition and Sub traction: Gr aphical Methods and Vector Addition and
+Subtraction: Anal ytical Methods .)
+The Independenc e of Perpendicular Mo tions
+The person taking the path sho wn in Figure 3.5 walks eas t and then nor th (tw o perpendicular dir ections). Ho w far3.1 • Kinematics in T wo Dimensions: An Intr oduc tion 105
+they walk eas t is onl y aff ected b y their motion eas tward. Similarl y, how far the y walk nor th is onl y aff ected b y their
+motion nor thward.
+This is true in a simple sc enario lik e that o f walking in one dir ection firs t, followed b y another . It is also true o f mor e
+complicat ed motion in volving mo vement in tw o dir ections at onc e. For example , let’s compar e the motions o f two
+basebal ls. One basebal l is dr opped fr om r est. At the same ins tant, another is thr own horiz ontal ly from the same
+height and f ollows a cur ved path. A s trobosc ope has cap tured the positions o f the bal ls at fix ed time int ervals as
+they fal l.
+FIGURE 3.6This sho ws the motions o f two identical bal ls—one fal ls from r est, the other has an initial horiz ontal v elocity . Each subsequent
+position is an equal time int erval. Arr ows represent horiz ontal and v ertical v elocities at each position. The bal l on the right has an initial
+horiz ontal v elocity , while the bal l on the left has no horiz ontal v elocity . Despit e the diff erence in horiz ontal v elocities , the v ertical v elocities
+and positions ar e identical f or both bal ls. This sho ws that the v ertical and horiz ontal motions ar e independent.
+It is r emark able that f or each flash o f the s trobe, the v ertical positions o f the tw o bal ls ar e the same . This similarity
+implies that the v ertical motion is independent o f whether or not the bal l is mo ving horiz ontal ly. (As suming no air
+resistanc e, the v ertical motion o f a fal ling object is influenc ed b y gravity onl y, and not b y an y horiz ontal f orces.)
+Careful e xamination o f the bal l thr own horiz ontal ly sho ws that it tr avels the same horiz ontal dis tanc e betw een
+flashes . This is due t o the fact that ther e are no additional f orces on the bal l in the horiz ontal dir ection aft er it is
+thrown. This r esul t means that the horiz ontal v elocity is c onstant, and aff ected neither b y vertical motion nor b y
+gravity (which is v ertical). Not e that this case is true onl y for ideal c onditions . In the r eal w orld, air r esistanc e wil l
+affect the speed o f the bal ls in both dir ections .
+The tw o-dimensional cur ved path o f the horiz ontal ly thr own bal l is c omposed o f two independent one -dimensional
+motions (horiz ontal and v ertical). The k ey to anal yzing such motion, cal ledprojectile motion , is t oresol ve(break) it
+into motions along perpendicular dir ections . Resol ving tw o-dimensional motion int o perpendicular c omponents is
+possible because the c omponents ar e independent. W e shal l see ho w to resol ve vectors in Vector Addition and
+Subtraction: Gr aphical Methods and Vector Addition and Sub traction: Anal ytical Methods . We wil l find such
+techniques t o be useful in man y areas o f physics.
+PHE T EXPLORATIONS
+Ladybug Mo tion 2D
+Learn about position, v elocity and ac celeration v ectors. Mo ve the ladybug b y set ting the position, v elocity or
+acceleration, and see ho w the v ectors chang e. Choose linear , circular or el liptical motion, and r ecord and pla yback
+the motion t o anal yze the beha vior.INDEPENDENCE OF MO TION
+The horiz ontal and v ertical c omponents o f two-dimensional motion ar e independent o f each other . Any motion
+in the horiz ontal dir ection does not aff ect motion in the v ertical dir ection, and vic e versa .
+106 3 • T wo-Dimensional Kinematics
+Access f or free at opens tax.org
+Click t o vie w content(https:/ /opens tax.org/l/28ladybugmotion) .
+3.2Vector Addition and Sub traction: Gr aphic al Me thods
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Unders tand the rules o f vector addition, sub traction, and mul tiplication.
+•Appl y graphical methods o f vector addition and sub traction t o det ermine the displac ement o f mo ving
+objects .
+FIGURE 3.7Displac ement can be det ermined gr aphical ly using a scale map , such as this one o f the Ha waiian Islands . A journe y from
+Hawai’i t o Molok a’i has a number o f legs , or journe y segments . These segments can be added gr aphical ly with a ruler t o det ermine the t otal
+two-dimensional displac ement o f the journe y. (credit: US Geological Sur vey)
+Vectors in T wo Dimensions
+Avectoris a quantity that has magnitude and dir ection. Displac ement, v elocity , acceleration, and f orce, for example ,
+are all vectors. In one -dimensional , or s traight -line , motion, the dir ection o f a v ector can be giv en simpl y by a plus or
+minus sign. In tw o dimensions (2- d), ho wever, we specif y the dir ection o f a v ector relativ e to some r eference frame
+(i.e., coordinat e system), using an arr ow ha ving length pr opor tional t o the v ector’s magnitude and pointing in the
+direction o f the v ector.
+Figure 3.8 shows such a graphical r epresentation o f a v ector, using as an e xample the t otal displac ement f or the
+person w alking in a city c onsider ed in Kinematics in T wo Dimensions: An Intr oduction . We shal l use the notation
+that a boldfac e symbol , such as , stands f or a v ector. Its magnitude is r epresent ed b y the s ymbol in italics ,, and
+its dir ection b y.
+VECTORS IN THIS TE XT
+In this t ext, w e wil l represent a v ector with a boldfac e variable . For example , we wil l represent the quantity f orce
+with the v ector , which has both magnitude and dir ection. The magnitude o f the v ector wil l be r epresent ed b y a
+variable in italics , such as , and the dir ection o f the v ariable wil l be giv en b y an angle .3.2 • V ector Addition and Sub traction: Gr aphic al Me thods 107
+FIGURE 3.8A person w alks 9 block s eas t and 5 block s nor th. The displac ement is 10.3 block s at an angle north of eas t.
+FIGURE 3.9To describe the r esul tant v ector for the person w alking in a city c onsider ed in Figure 3.8 graphical ly, draw an arr ow to represent
+the t otal displac ement v ector . Using a pr otractor, draw a line at an angle relativ e to the eas t-west axis . The length of the arr ow is
+propor tional t o the v ector’s magnitude and is measur ed along the line with a ruler . In this e xample , the magnitude of the v ector is 10.3
+units , and the dir ection is north of eas t.
+Vector Addition: Head-t o-Tail Me thod
+The head-t o-tail method is a gr aphical w ay to add v ectors, described in Figure 3.10 belo w and in the s teps
+following . The tail of the v ector is the s tarting point o f the v ector, and the head (or tip) o f a v ector is the final ,
+point ed end o f the arr ow.
+FIGURE 3.10 Head-t o-Tail Method: The head-t o-tail method o f graphical ly adding v ectors is il lustrated for the tw o displac ements o f the
+person w alking in a city c onsider ed in Figure 3.8 . (a) Dr aw a v ector representing the displac ement t o the eas t. (b) Dr aw a v ector
+representing the displac ement t o the nor th. The tail o f this v ector should originat e from the head o f the firs t, eas t-pointing v ector. (c) Dr aw a
+line fr om the tail o f the eas t-pointing v ector to the head o f the nor th-pointing v ector to form the sum or resul tant v ector . The length o f
+the arr ow is pr opor tional t o the v ector’s magnitude and is measur ed to be 10.3 units . Its dir ection, described as the angle with r espect
+to the eas t (or horiz ontal axis) is measur ed with a pr otractor to be .108 3 • T wo-Dimensional Kinematics
+Access f or free at opens tax.org
+Step 1. Draw an arr ow to represent the firs t vector (9 block s to the eas t) using a ruler and pr otractor.
+FIGURE 3.11
+Step 2. Now dr aw an arr ow to represent the sec ond v ector (5 block s to the nor th).Plac e the tail o f the sec ond v ector
+at the head o f the firs t vector.
+FIGURE 3.12
+Step 3. If ther e are mor e than tw o vectors, continue this pr ocess for each v ector to be added. Not e that in our
+example , we ha ve onl y tw o vectors, so w e ha ve finished placing arr ows tip t o tail .
+Step 4. Draw an arr ow from the tail o f the firs t vector to the head o f the las t vector. This is the resul tant , or the sum,
+of the other v ectors.
+FIGURE 3.13
+Step 5. To get the magnitude of the r esul tant, measur e its length with a ruler . (Not e that in mos t calculations , we3.2 • V ector Addition and Sub traction: Gr aphic al Me thods 109
+will use the Pythag orean theor em t o det ermine this length.)
+Step 6. To get the direction of the r esul tant, measur e the angle it mak es with the r eference frame using a
+protractor. (Not e that in mos t calculations , we wil l use trig onometric r elationships t o det ermine this angle .)
+The gr aphical addition o f vectors is limit ed in ac curacy onl y by the pr ecision with which the dr awings can be made
+and the pr ecision o f the measuring t ools . It is v alid f or an y number o f vectors.
+EXAMPLE 3.1
+Adding V ectors Gr aphical ly Using the Head-t o-Tail Method: A W oman T akes a W alk
+Use the gr aphical t echnique f or adding v ectors t o find the t otal displac ement o f a person who w alks the f ollowing
+three paths (displac ements) on a flat field. Firs t, she w alks 25.0 m in a dir ection north of eas t. Then, she w alks
+23.0 m heading north of eas t. Final ly, she turns and w alks 32.0 m in a dir ection 68.0° south o f eas t.
+Strategy
+Represent each displac ement v ector gr aphical ly with an arr ow, labeling the firs t, the sec ond , and the thir d,
+making the lengths pr opor tional t o the dis tanc e and the dir ections as specified r elativ e to an eas t-west line . The
+head-t o-tail method outlined abo ve wil l giv e a w ay to det ermine the magnitude and dir ection o f the r esul tant
+displac ement, denot ed .
+Solution
+(1) Dr aw the thr ee displac ement v ectors.
+FIGURE 3.14
+(2) Plac e the v ectors head t o tail r etaining both their initial magnitude and dir ection.
+FIGURE 3.15
+(3) Dr aw the r esul tant v ector,.
+110 3 • T wo-Dimensional Kinematics
+Access f or free at opens tax.org
+FIGURE 3.16
+(4) Use a ruler t o measur e the magnitude o f, and a pr otractor to measur e the dir ection o f. While the dir ection o f
+the v ector can be specified in man y ways, the easies t way is t o measur e the angle betw een the v ector and the
+near est horiz ontal or v ertical axis . Sinc e the r esul tant v ector is south o f the eas tward pointing axis , we flip the
+protractor upside do wn and measur e the angle betw een the eas tward axis and the v ector.
+FIGURE 3.17
+In this case , the t otal displac ement is seen t o ha ve a magnitude o f 50.8 m and t o lie in a dir ection south o f
+east. By using its magnitude and dir ection, this v ector can be e xpressed as and south o f eas t.
+Discus sion
+The head-t o-tail gr aphical method o f vector addition w orks for an y number o f vectors. It is also impor tant t o not e
+that the r esul tant is independent o f the or der in which the v ectors ar e added. Ther efore, we could add the v ectors in
+any order as il lustrated in Figure 3.18 and w e wil l still get the same solution.
+FIGURE 3.18
+Here, we see that when the same v ectors ar e added in a diff erent or der, the r esul t is the same . This char acteristic is
+true in e very case and is an impor tant char acteristic o f vectors. Vector addition is commuta tive. Vectors can be3.2 • V ector Addition and Sub traction: Gr aphic al Me thods 111
+added in an y order.
+(This is true f or the addition o f ordinar y numbers as w ell—you g et the same r esul t whether y ou add or ,
+for example).
+Vector Sub traction
+Vector sub traction is a s traight forward extension o f vector addition. T o define sub traction (sa y we want t o sub tract
+from , writ ten , we mus t firs t define what w e mean b y sub traction. The negativeof a v ector is defined t o
+be ; that is , graphical lythe neg ative of any vector has the same magnitude but the opposit e dir ection , as sho wn in
+Figure 3.19 . In other w ords,has the same length as , but points in the opposit e dir ection. Es sential ly, we jus t
+flip the v ector so it points in the opposit e dir ection.
+FIGURE 3.19 The neg ative of a v ector is jus t another v ector of the same magnitude but pointing in the opposit e dir ection. So is the
+negative of ; it has the same length but opposit e dir ection.
+The subtraction of vector from v ector is then simpl y defined t o be the addition o f to. Not e that v ector
+subtraction is the addition o f a neg ative vector. The or der o f sub traction does not aff ect the r esul ts.
+This is analog ous t o the sub traction o f scalars (wher e, for example , ). Ag ain, the r esul t is
+independent o f the or der in which the sub traction is made . When v ectors ar e sub tracted gr aphical ly, the t echniques
+outlined abo ve are used, as the f ollowing e xample il lustrates.
+EXAMPLE 3.2
+Sub tracting V ectors Gr aphical ly: A W oman Sailing a Boa t
+A woman sailing a boat at night is f ollowing dir ections t o a dock. The ins tructions r ead t o firs t sail 27.5 m in a
+direction north of eas t from her curr ent location, and then tr avel 30.0 m in a dir ection north of eas t (or
+west of nor th). If the w oman mak es a mis take and tr avels in the opposit edirection f or the sec ond leg o f the
+trip, wher e wil l she end up? Compar e this location with the location o f the dock.3.1
+3.2
+112 3 • T wo-Dimensional Kinematics
+Access f or free at opens tax.org

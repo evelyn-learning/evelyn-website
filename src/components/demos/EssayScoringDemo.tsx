@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 // Types
 interface Category {
@@ -141,43 +142,40 @@ ESSAY TO EVALUATE:
 ${essay}
 """`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: userPrompt }],
-          system: systemPrompt,
-          max_tokens: 2000
-        })
-      });
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>('/api/ai/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: userPrompt }],
+        system: systemPrompt,
+        max_tokens: 2000
+      })
+    });
 
-      const data = await response.json();
+    if (apiError) {
+      setError(apiError.message);
+      setIsAnalyzing(false);
+      return;
+    }
 
-      if (data.error) {
-        setError(data.error);
-        return;
-      }
-
-      if (data.text) {
-        // Extract JSON from response
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (data?.text) {
+      // Extract JSON from response
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as FeedbackData;
           setFeedback(parsed);
-        } else {
+        } catch {
           setError('Could not parse feedback. Please try again.');
         }
       } else {
-        setError('No response received. Please check your API configuration.');
+        setError('Could not parse feedback. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}. Make sure the API is properly configured.`);
-    } finally {
-      setIsAnalyzing(false);
+    } else {
+      setError('No response received. Please try again.');
     }
+
+    setIsAnalyzing(false);
   };
 
   const loadSample = (quality: 'good' | 'needsWork') => {

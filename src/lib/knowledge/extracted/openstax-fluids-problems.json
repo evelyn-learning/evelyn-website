@@ -1,0 +1,949 @@
+[
+  {
+    "id": "openstax-ch14-p41",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 41",
+    "concepts": [
+      "density"
+    ],
+    "difficulty": 1,
+    "type": "calculation",
+    "estimatedMinutes": 3,
+    "title": "Volume of Gold from Mass and Density",
+    "statement": "Gold is sold by the troy ounce (31.103 g). What is the volume of 1 troy ounce of pure gold?",
+    "givenValues": [
+      {
+        "symbol": "m",
+        "value": 31.103,
+        "unit": "g",
+        "description": "Mass of 1 troy ounce of gold"
+      },
+      {
+        "symbol": "\\rho_{gold}",
+        "value": 19300,
+        "unit": "kg/m³",
+        "description": "Density of gold"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "V",
+        "description": "Volume of gold",
+        "unit": "m³"
+      }
+    ],
+    "solution": {
+      "approach": "Use the density formula to find volume from mass and density",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Convert mass to SI units",
+          "explanation": "Density is given in kg/m³, so we need mass in kg",
+          "equation": "m = 31.103 \\text{ g} = 0.031103 \\text{ kg}",
+          "result": "m = 0.031103 \\text{ kg}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Apply density formula",
+          "explanation": "Density relates mass and volume",
+          "equation": "\\rho = \\frac{m}{V}",
+          "result": "V = \\frac{m}{\\rho}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Substitute values",
+          "equation": "V = \\frac{0.031103 \\text{ kg}}{19300 \\text{ kg/m³}}",
+          "substitution": "V = \\frac{0.031103}{19300} \\text{ m³}",
+          "result": "V = 1.61 \\times 10^{-6} \\text{ m³}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 0.00000161,
+        "unit": "m³"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "You need the density of gold and the relationship between density, mass, and volume."
+      },
+      {
+        "level": 2,
+        "hint": "Use ρ = m/V and solve for V. Don't forget to convert grams to kilograms."
+      },
+      {
+        "level": 3,
+        "hint": "V = m/ρ = (0.031103 kg)/(19300 kg/m³)"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Forgetting unit conversion",
+        "howToDetect": "Answer is off by factor of 1000",
+        "feedback": "Make sure to convert grams to kilograms to match the density units"
+      }
+    ],
+    "tags": [
+      "density",
+      "unit-conversion",
+      "basic-calculation"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p42",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 42",
+    "concepts": [
+      "density"
+    ],
+    "difficulty": 1,
+    "type": "calculation",
+    "estimatedMinutes": 3,
+    "title": "Volume of Mercury from Mass and Density",
+    "statement": "Mercury is commonly supplied in flasks containing 34.5 kg (about 76 lb.). What is the volume in liters of this much mercury?",
+    "givenValues": [
+      {
+        "symbol": "m",
+        "value": 34.5,
+        "unit": "kg",
+        "description": "Mass of mercury"
+      },
+      {
+        "symbol": "\\rho_{Hg}",
+        "value": 13600,
+        "unit": "kg/m³",
+        "description": "Density of mercury"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "V",
+        "description": "Volume of mercury",
+        "unit": "L"
+      }
+    ],
+    "solution": {
+      "approach": "Use density formula to find volume, then convert to liters",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Apply density formula",
+          "equation": "\\rho = \\frac{m}{V}",
+          "result": "V = \\frac{m}{\\rho}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Substitute values",
+          "equation": "V = \\frac{34.5 \\text{ kg}}{13600 \\text{ kg/m³}}",
+          "substitution": "V = \\frac{34.5}{13600} \\text{ m³}",
+          "result": "V = 2.54 \\times 10^{-3} \\text{ m³}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Convert to liters",
+          "explanation": "1 m³ = 1000 L",
+          "equation": "V = 2.54 \\times 10^{-3} \\text{ m³} \\times 1000 \\text{ L/m³}",
+          "result": "V = 2.54 \\text{ L}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 2.54,
+        "unit": "L"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Use the relationship between density, mass, and volume to find the volume in m³."
+      },
+      {
+        "level": 2,
+        "hint": "V = m/ρ, then convert m³ to liters using 1 m³ = 1000 L."
+      },
+      {
+        "level": 3,
+        "hint": "V = (34.5 kg)/(13600 kg/m³) = 2.54 × 10⁻³ m³ = 2.54 L"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Forgetting to convert to liters",
+        "howToDetect": "Answer in m³ instead of L",
+        "feedback": "The problem asks for volume in liters. Convert using 1 m³ = 1000 L"
+      }
+    ],
+    "tags": [
+      "density",
+      "unit-conversion",
+      "basic-calculation"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p43",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 43",
+    "concepts": [
+      "density"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Mass of Air in Deep Breath",
+    "statement": "What is the mass of a deep breath of air having a volume of 2.00 L? Discuss the effect taking such a breath has on your body's volume and density.",
+    "givenValues": [
+      {
+        "symbol": "V",
+        "value": 2,
+        "unit": "L",
+        "description": "Volume of air breath"
+      },
+      {
+        "symbol": "\\rho_{air}",
+        "value": 1.29,
+        "unit": "kg/m³",
+        "description": "Density of air at sea level"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "m",
+        "description": "Mass of air",
+        "unit": "kg"
+      }
+    ],
+    "solution": {
+      "approach": "Use density formula to find mass, then discuss physiological effects",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Convert volume to SI units",
+          "explanation": "Density is in kg/m³, so volume must be in m³",
+          "equation": "V = 2.00 \\text{ L} = 0.002 \\text{ m³}",
+          "result": "V = 0.002 \\text{ m³}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Apply density formula",
+          "equation": "\\rho = \\frac{m}{V}",
+          "result": "m = \\rho V"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Calculate mass",
+          "equation": "m = 1.29 \\text{ kg/m³} \\times 0.002 \\text{ m³}",
+          "substitution": "m = 1.29 \\times 0.002 \\text{ kg}",
+          "result": "m = 0.00258 \\text{ kg} = 2.58 \\text{ g}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 0.00258,
+        "unit": "kg"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Use the density of air and the volume to find mass. Remember to convert units properly."
+      },
+      {
+        "level": 2,
+        "hint": "m = ρV, where ρ = 1.29 kg/m³ for air. Convert 2.00 L to m³ first."
+      },
+      {
+        "level": 3,
+        "hint": "Convert: 2.00 L = 0.002 m³, then m = (1.29 kg/m³)(0.002 m³)"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Not converting liters to cubic meters",
+        "howToDetect": "Answer is 1000 times too large",
+        "feedback": "Convert liters to m³: 1 L = 0.001 m³"
+      }
+    ],
+    "tags": [
+      "density",
+      "unit-conversion",
+      "air",
+      "physiology"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p44",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 44",
+    "concepts": [
+      "density"
+    ],
+    "difficulty": 1,
+    "type": "calculation",
+    "estimatedMinutes": 3,
+    "title": "Rock Density from Displacement Method",
+    "statement": "A straightforward method of finding the density of an object is to measure its mass and then measure its volume by submerging it in a graduated cylinder. What is the density of a 240-g rock that displaces 89.0 cm³ of water?",
+    "givenValues": [
+      {
+        "symbol": "m",
+        "value": 240,
+        "unit": "g",
+        "description": "Mass of rock"
+      },
+      {
+        "symbol": "V",
+        "value": 89,
+        "unit": "cm³",
+        "description": "Volume of displaced water (= volume of rock)"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "\\rho",
+        "description": "Density of rock",
+        "unit": "kg/m³"
+      }
+    ],
+    "solution": {
+      "approach": "Use the definition of density with given mass and volume",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Convert to SI units",
+          "explanation": "Convert mass to kg and volume to m³",
+          "equation": "m = 240 \\text{ g} = 0.240 \\text{ kg}, \\quad V = 89.0 \\text{ cm³} = 89.0 \\times 10^{-6} \\text{ m³}",
+          "result": "m = 0.240 \\text{ kg}, \\quad V = 8.90 \\times 10^{-5} \\text{ m³}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Apply density formula",
+          "equation": "\\rho = \\frac{m}{V}",
+          "substitution": "\\rho = \\frac{0.240 \\text{ kg}}{8.90 \\times 10^{-5} \\text{ m³}}",
+          "result": "\\rho = 2696 \\text{ kg/m³}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Round to appropriate significant figures",
+          "explanation": "Given data has 3 significant figures",
+          "result": "\\rho = 2.70 \\times 10^3 \\text{ kg/m³}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 2700,
+        "unit": "kg/m³"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "The volume of water displaced equals the volume of the rock. Use the definition of density."
+      },
+      {
+        "level": 2,
+        "hint": "ρ = m/V. Convert grams to kg and cm³ to m³ before calculating."
+      },
+      {
+        "level": 3,
+        "hint": "ρ = (0.240 kg)/(89.0 × 10⁻⁶ m³)"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Unit conversion errors",
+        "howToDetect": "Answer differs by powers of 10",
+        "feedback": "Carefully convert: 1 g = 0.001 kg, 1 cm³ = 10⁻⁶ m³"
+      }
+    ],
+    "tags": [
+      "density",
+      "displacement-method",
+      "unit-conversion"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p45",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 45",
+    "concepts": [
+      "density"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Coffee Mug Radius from Volume and Depth",
+    "statement": "Suppose you have a coffee mug with a circular cross-section and vertical sides (uniform radius). What is its inside radius if it holds 375 g of coffee when filled to a depth of 7.50 cm? Assume coffee has the same density as water.",
+    "givenValues": [
+      {
+        "symbol": "m",
+        "value": 375,
+        "unit": "g",
+        "description": "Mass of coffee"
+      },
+      {
+        "symbol": "h",
+        "value": 7.5,
+        "unit": "cm",
+        "description": "Depth of coffee in mug"
+      },
+      {
+        "symbol": "\\rho_{coffee}",
+        "value": 1000,
+        "unit": "kg/m³",
+        "description": "Density of coffee (same as water)"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "r",
+        "description": "Inside radius of mug",
+        "unit": "cm"
+      }
+    ],
+    "solution": {
+      "approach": "Find volume from mass and density, then use cylindrical volume formula to find radius",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Find volume of coffee",
+          "equation": "V = \\frac{m}{\\rho} = \\frac{0.375 \\text{ kg}}{1000 \\text{ kg/m³}}",
+          "result": "V = 3.75 \\times 10^{-4} \\text{ m³}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Use cylindrical volume formula",
+          "explanation": "For a cylinder: V = πr²h",
+          "equation": "V = \\pi r^2 h",
+          "result": "r^2 = \\frac{V}{\\pi h}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Convert height to meters and substitute",
+          "equation": "r^2 = \\frac{3.75 \\times 10^{-4} \\text{ m³}}{\\pi \\times 0.075 \\text{ m}}",
+          "substitution": "r^2 = \\frac{3.75 \\times 10^{-4}}{\\pi \\times 0.075} = 1.59 \\times 10^{-3} \\text{ m²}",
+          "result": "r = 0.040 \\text{ m} = 4.0 \\text{ cm}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 4,
+        "unit": "cm"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "First find the volume of coffee using its mass and density, then use the volume formula for a cylinder."
+      },
+      {
+        "level": 2,
+        "hint": "V = m/ρ gives the volume, then V = πr²h for a cylinder. Solve for r."
+      },
+      {
+        "level": 3,
+        "hint": "V = 0.375 kg / 1000 kg/m³ = 3.75×10⁻⁴ m³, then r = √(V/πh)"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Mixing units in calculation",
+        "howToDetect": "Unrealistic radius value",
+        "feedback": "Keep all units consistent - use meters throughout or convert at the end"
+      }
+    ],
+    "tags": [
+      "density",
+      "cylindrical-volume",
+      "unit-conversion"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p50",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 50",
+    "concepts": [
+      "pressure"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Force on Nail Tip from High Pressure",
+    "statement": "The tip of a nail exerts tremendous pressure when hit by a hammer because it exerts a large force over a small area. What force must be exerted on a nail with a circular tip of 1.00-mm diameter to create a pressure of 3.00 × 10⁹ N/m²?",
+    "givenValues": [
+      {
+        "symbol": "d",
+        "value": 1,
+        "unit": "mm",
+        "description": "Diameter of nail tip"
+      },
+      {
+        "symbol": "P",
+        "value": 3000000000,
+        "unit": "N/m²",
+        "description": "Pressure to be created"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "F",
+        "description": "Force required",
+        "unit": "N"
+      }
+    ],
+    "solution": {
+      "approach": "Use pressure definition P = F/A to find force, calculating area from diameter",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Calculate radius and convert to meters",
+          "equation": "r = \\frac{d}{2} = \\frac{1.00 \\text{ mm}}{2} = 0.50 \\text{ mm} = 0.0005 \\text{ m}",
+          "result": "r = 5.0 \\times 10^{-4} \\text{ m}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Calculate area of circular tip",
+          "equation": "A = \\pi r^2 = \\pi (5.0 \\times 10^{-4})^2",
+          "substitution": "A = \\pi \\times 2.5 \\times 10^{-7} \\text{ m²}",
+          "result": "A = 7.85 \\times 10^{-7} \\text{ m²}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Apply pressure formula to find force",
+          "equation": "P = \\frac{F}{A} \\Rightarrow F = PA",
+          "substitution": "F = 3.00 \\times 10^9 \\text{ N/m²} \\times 7.85 \\times 10^{-7} \\text{ m²}",
+          "result": "F = 2.36 \\times 10^3 \\text{ N} = 2360 \\text{ N}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 2360,
+        "unit": "N"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Use P = F/A. You'll need to find the area of the circular nail tip first."
+      },
+      {
+        "level": 2,
+        "hint": "Area = πr², where r = d/2. Convert diameter to meters, then calculate area and use F = PA."
+      },
+      {
+        "level": 3,
+        "hint": "r = 0.5 mm = 5×10⁻⁴ m, A = π(5×10⁻⁴)² m², then F = (3×10⁹ N/m²) × A"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Using diameter instead of radius",
+        "howToDetect": "Force is 4 times too large",
+        "feedback": "Remember A = πr², where r = d/2, not A = πd²"
+      },
+      {
+        "error": "Unit conversion error",
+        "howToDetect": "Answer differs by powers of 10",
+        "feedback": "Convert mm to m: 1 mm = 0.001 m"
+      }
+    ],
+    "tags": [
+      "pressure",
+      "circular-area",
+      "unit-conversion"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p51",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 51",
+    "concepts": [
+      "pressure-depth"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Mercury Column Height for 1 atm Pressure",
+    "statement": "A glass tube contains mercury. What would be the height of the column of mercury which would create pressure equal to 1.00 atm?",
+    "givenValues": [
+      {
+        "symbol": "P",
+        "value": 101325,
+        "unit": "Pa",
+        "description": "1 atmosphere pressure"
+      },
+      {
+        "symbol": "\\rho_{Hg}",
+        "value": 13600,
+        "unit": "kg/m³",
+        "description": "Density of mercury"
+      },
+      {
+        "symbol": "g",
+        "value": 9.81,
+        "unit": "m/s²",
+        "description": "Gravitational acceleration"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "h",
+        "description": "Height of mercury column",
+        "unit": "m"
+      }
+    ],
+    "solution": {
+      "approach": "Use hydrostatic pressure formula P = ρgh",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Apply hydrostatic pressure formula",
+          "explanation": "Pressure at bottom of fluid column due to fluid weight",
+          "equation": "P = \\rho g h",
+          "result": "h = \\frac{P}{\\rho g}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Substitute known values",
+          "equation": "h = \\frac{101325 \\text{ Pa}}{13600 \\text{ kg/m³} \\times 9.81 \\text{ m/s²}}",
+          "substitution": "h = \\frac{101325}{133416} \\text{ m}",
+          "result": "h = 0.759 \\text{ m}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Convert to more convenient units",
+          "equation": "h = 0.759 \\text{ m} = 75.9 \\text{ cm} = 759 \\text{ mm}",
+          "result": "h = 760 \\text{ mm Hg}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 0.76,
+        "unit": "m"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "The pressure at the bottom of a fluid column is P = ρgh. Solve for h."
+      },
+      {
+        "level": 2,
+        "hint": "Use P = ρgh with P = 1 atm = 101,325 Pa and the density of mercury."
+      },
+      {
+        "level": 3,
+        "hint": "h = P/(ρg) = 101,325 Pa / (13,600 kg/m³ × 9.81 m/s²)"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Using wrong value for atmospheric pressure",
+        "howToDetect": "Height significantly different from ~760 mm",
+        "feedback": "1 atm = 101,325 Pa = 1.013 × 10⁵ Pa"
+      }
+    ],
+    "tags": [
+      "pressure-depth",
+      "hydrostatic-pressure",
+      "mercury-barometer"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p52",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 52",
+    "concepts": [
+      "pressure-depth"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Ocean Pressure at Mariana Trench Depth",
+    "statement": "The greatest ocean depths on Earth are found in the Marianas Trench near the Philippines. Calculate the pressure due to the ocean at the bottom of this trench, given its depth is 11.0 km and assuming the density of seawater is constant all the way down.",
+    "givenValues": [
+      {
+        "symbol": "h",
+        "value": 11,
+        "unit": "km",
+        "description": "Depth of Mariana Trench"
+      },
+      {
+        "symbol": "\\rho_{seawater}",
+        "value": 1025,
+        "unit": "kg/m³",
+        "description": "Density of seawater"
+      },
+      {
+        "symbol": "g",
+        "value": 9.81,
+        "unit": "m/s²",
+        "description": "Gravitational acceleration"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "P",
+        "description": "Pressure at bottom of trench",
+        "unit": "Pa"
+      }
+    ],
+    "solution": {
+      "approach": "Use hydrostatic pressure formula P = ρgh for the pressure due to water column",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Convert depth to meters",
+          "equation": "h = 11.0 \\text{ km} = 11000 \\text{ m}",
+          "result": "h = 1.10 \\times 10^4 \\text{ m}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Apply hydrostatic pressure formula",
+          "explanation": "This gives pressure due to water column only",
+          "equation": "P = \\rho g h",
+          "substitution": "P = 1025 \\text{ kg/m³} \\times 9.81 \\text{ m/s²} \\times 1.10 \\times 10^4 \\text{ m}",
+          "result": "P = 1.11 \\times 10^8 \\text{ Pa}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Express in terms of atmospheres",
+          "explanation": "1 atm = 1.013 × 10⁵ Pa",
+          "equation": "P = \\frac{1.11 \\times 10^8 \\text{ Pa}}{1.013 \\times 10^5 \\text{ Pa/atm}}",
+          "result": "P \\approx 1100 \\text{ atm}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 111000000,
+        "unit": "Pa"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Use P = ρgh to find the pressure due to the water column. Don't forget atmospheric pressure acts at the surface."
+      },
+      {
+        "level": 2,
+        "hint": "Convert 11.0 km to meters first, then apply P = ρgh with seawater density."
+      },
+      {
+        "level": 3,
+        "hint": "P = (1025 kg/m³)(9.81 m/s²)(11,000 m) - this gives pressure from water only"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Forgetting unit conversion",
+        "howToDetect": "Answer is 1000 times too small",
+        "feedback": "Convert km to m: 11.0 km = 11,000 m"
+      },
+      {
+        "error": "Adding atmospheric pressure",
+        "howToDetect": "Answer includes additional ~100,000 Pa",
+        "feedback": "Problem asks for pressure 'due to the ocean' - this means just the water pressure"
+      }
+    ],
+    "tags": [
+      "pressure-depth",
+      "hydrostatic-pressure",
+      "unit-conversion",
+      "ocean"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p64",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 64",
+    "concepts": [
+      "buoyancy"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 4,
+    "title": "Fraction of Ice Submerged in Water",
+    "statement": "What fraction of ice is submerged when it floats in freshwater, given the density of water at 0°C is very close to 1000 kg/m³?",
+    "givenValues": [
+      {
+        "symbol": "\\rho_{water}",
+        "value": 1000,
+        "unit": "kg/m³",
+        "description": "Density of water"
+      },
+      {
+        "symbol": "\\rho_{ice}",
+        "value": 917,
+        "unit": "kg/m³",
+        "description": "Density of ice"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "f_{sub}",
+        "description": "Fraction of ice submerged",
+        "unit": "dimensionless"
+      }
+    ],
+    "solution": {
+      "approach": "Apply Archimedes' principle: buoyant force equals weight of floating object",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Set up equilibrium condition",
+          "explanation": "For floating object: weight = buoyant force",
+          "equation": "m_{ice} g = \\rho_{water} V_{sub} g",
+          "result": "\\rho_{ice} V_{ice} g = \\rho_{water} V_{sub} g"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Simplify and solve for volume ratio",
+          "equation": "\\rho_{ice} V_{ice} = \\rho_{water} V_{sub}",
+          "result": "\\frac{V_{sub}}{V_{ice}} = \\frac{\\rho_{ice}}{\\rho_{water}}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Calculate fraction submerged",
+          "equation": "f_{sub} = \\frac{V_{sub}}{V_{ice}} = \\frac{917 \\text{ kg/m³}}{1000 \\text{ kg/m³}}",
+          "substitution": "f_{sub} = \\frac{917}{1000} = 0.917",
+          "result": "f_{sub} = 0.917 = 91.7\\%"
+        }
+      ],
+      "finalAnswer": {
+        "value": 0.917,
+        "unit": "fraction"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "When an object floats, the buoyant force equals its weight. Use Archimedes' principle."
+      },
+      {
+        "level": 2,
+        "hint": "Weight of ice = buoyant force = weight of displaced water. This leads to ρ_ice × V_ice = ρ_water × V_submerged."
+      },
+      {
+        "level": 3,
+        "hint": "Fraction submerged = V_sub/V_total = ρ_ice/ρ_water = 917/1000"
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Using wrong density ratio",
+        "howToDetect": "Getting fraction > 1 or using water density in numerator",
+        "feedback": "Fraction submerged = ρ_object/ρ_fluid for floating objects"
+      }
+    ],
+    "tags": [
+      "buoyancy",
+      "archimedes-principle",
+      "floating",
+      "density-ratio"
+    ]
+  },
+  {
+    "id": "openstax-ch14-p66",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 14, Problem 66",
+    "concepts": [
+      "buoyancy"
+    ],
+    "difficulty": 3,
+    "type": "multi-step",
+    "estimatedMinutes": 6,
+    "title": "Rock Properties from Apparent Mass in Water",
+    "statement": "A rock with a mass of 540 g in air is found to have an apparent mass of 342 g when submerged in water. (a) What mass of water is displaced? (b) What is the volume of the rock? (c) What is its average density? Is this consistent with the value for granite?",
+    "givenValues": [
+      {
+        "symbol": "m_{air}",
+        "value": 540,
+        "unit": "g",
+        "description": "Mass of rock in air"
+      },
+      {
+        "symbol": "m_{app}",
+        "value": 342,
+        "unit": "g",
+        "description": "Apparent mass in water"
+      },
+      {
+        "symbol": "\\rho_{water}",
+        "value": 1000,
+        "unit": "kg/m³",
+        "description": "Density of water"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "m_{displaced}",
+        "description": "Mass of displaced water",
+        "unit": "g"
+      },
+      {
+        "symbol": "V_{rock}",
+        "description": "Volume of rock",
+        "unit": "m³"
+      },
+      {
+        "symbol": "\\rho_{rock}",
+        "description": "Density of rock",
+        "unit": "kg/m³"
+      }
+    ],
+    "solution": {
+      "approach": "Use the difference between actual and apparent mass to find buoyant force, then calculate volume and density",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Find mass of displaced water",
+          "explanation": "Buoyant force equals weight of displaced water",
+          "equation": "m_{displaced} = m_{air} - m_{app}",
+          "substitution": "m_{displaced} = 540 \\text{ g} - 342 \\text{ g}",
+          "result": "m_{displaced} = 198 \\text{ g}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Calculate volume of rock",
+          "explanation": "Volume of displaced water equals volume of rock",
+          "equation": "V_{rock} = V_{displaced} = \\frac{m_{displaced}}{\\rho_{water}}",
+          "substitution": "V_{rock} = \\frac{0.198 \\text{ kg}}{1000 \\text{ kg/m³}}",
+          "result": "V_{rock} = 1.98 \\times 10^{-4} \\text{ m³}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Calculate density of rock",
+          "equation": "\\rho_{rock} = \\frac{m_{air}}{V_{rock}}",
+          "substitution": "\\rho_{rock} = \\frac{0.540 \\text{ kg}}{1.98 \\times 10^{-4} \\text{ m³}}",
+          "result": "\\rho_{rock} = 2730 \\text{ kg/m³}"
+        }
+      ],
+      "finalAnswer": {
+        "text": "(a) 198 g, (b) 1.98×10⁻⁴ m³, (c) 2730 kg/m³ (consistent with granite ~2700 kg/m³)"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "The difference between mass in air and apparent mass in water tells you about the buoyant force."
+      },
+      {
+        "level": 2,
+        "hint": "Buoyant force = (mass in air - apparent mass) × g. This equals the weight of displaced water."
+      },
+      {
+        "level": 3,
+        "hint": "Mass of displaced water = 540g - 342g = 198g. This water has volume 198 cm³ = volume of rock."
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Confusing apparent mass with actual mass",
+        "howToDetect": "Using 342g as the rock's actual mass",
+        "feedback": "Apparent mass is what the scale reads underwater. True mass is 540g."
+      },
+      {
+        "error": "Not recognizing volume relationship",
+        "howToDetect": "Not connecting displaced water volume to rock volume",
+        "feedback": "The volume of displaced water equals the volume of the submerged object"
+      }
+    ],
+    "tags": [
+      "buoyancy",
+      "apparent-mass",
+      "displaced-volume",
+      "density-calculation"
+    ]
+  }
+]

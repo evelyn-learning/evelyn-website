@@ -192,6 +192,7 @@ export function getKeywordsForProduct(productId: string): string[] {
     'tutor-copilot': 'tutoring',
     'math-solver': 'tutoring',
     'language-learning': 'tutoring',
+    'voice-tutor': 'tutoring',
     'content-authoring': 'content',
     'reading-comprehension': 'content',
     'curriculum-designer': 'content',

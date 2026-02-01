@@ -1,0 +1,3232 @@
+following e xpression can be sho wn t o be a g ood appr oximation f or the ac celeration o f the r ocket.
+“The r ocket” is that par t of the s ystem r emaining aft er the g as is eject ed, and is the ac celeration due t o gravity.
+FIGURE 8.12 (a) This r ocket has a mas s and an up ward velocity . The net e xternal f orce on the s ystem is ,if air r esistanc e is
+neglect ed. (b) A time later the s ystem has tw o main par ts, the eject ed g as and the r emainder o f the r ocket. The r eaction f orce on the
+rocket is what o vercomes the gr avitational f orce and ac celerates it up ward.
+A rocket’s acceleration depends on thr ee major fact ors, consis tent with the equation f or ac celeration o f a rocket.
+First, the gr eater the e xhaus t velocity o f the g ases r elativ e to the r ocket, , the gr eater the ac celeration is . The
+practical limit f or is about for conventional (non-nuclear) hot -gas pr opulsion s ystems . The sec ond
+factor is the r ate at which mas s is eject ed fr om the r ocket. This is the fact or in the equation. The quantity
+, with units o f newtons, is cal led "thrus t.” The fas ter the r ocket burns its fuel , the gr eater its thrus t, and
+the gr eater its ac celeration. The thir d fact or is the mas s of the r ocket. The smal ler the mas s is (al l other fact ors
+being the same), the gr eater the ac celeration. The r ocket mas s decr eases dr amatical ly during flight because mos t
+of the r ocket is fuel t o begin with, so that ac celeration incr eases c ontinuousl y, reaching a maximum jus t bef ore the
+fuel is e xhaus ted.8.77
+ACCELER ATION OF A R OCKE T
+Acceleration o f a rocket is
+wher eis the ac celeration o f the r ocket, is the e xhaus t velocity ,is the mas s of the r ocket, is the mas s
+of the eject ed g as, and is the time in which the g as is eject ed.8.78362 8 • Linear Momentum and C ollisions
+Access f or free at opens tax.org
+
+EXAMPLE 8.8
+Calcula ting Ac celer ation: Initial Ac celer ation o f a Moon L aunch
+A Saturn V ’s mas s at lift off was , its fuel -burn r ate was , and the e xhaus t velocity w as
+. Calculat e its initial ac celeration.
+Strategy
+This pr oblem is a s traight forward application o f the e xpression f or ac celeration because is the unkno wn and al l of
+the t erms on the right side o f the equation ar e giv en.
+Solution
+Subs tituting the giv en v alues int o the equation f or ac celeration yields
+Discus sion
+This v alue is fairl y smal l, even for an initial ac celeration. The ac celeration does incr ease s teadil y as the r ocket burns
+fuel, because decr eases while and remain c onstant. K nowing this ac celeration and the mas s of the r ocket,
+you can sho w that the thrus t of the engines w as .
+To achie ve the high speeds needed t o hop c ontinents , obtain orbit, or escape Ear th’s gravity al together , the mas s of
+the r ocket other than fuel mus t be as smal l as pos sible . It can be sho wn that, in the absenc e of air r esistanc e and
+neglecting gr avity, the final v elocity o f a one -stage rocket initial ly at r est is
+wher e is the natur al log arithm o f the r atio o f the initial mas s of the r ocket to what is left after
+all of the fuel is e xhaus ted. (Not e that is actual ly the chang e in v elocity , so the equation can be used f or an y
+segment o f the flight. If w e start from r est, the chang e in v elocity equals the final v elocity .) For example , let us
+calculat e the mas s ratio needed t o escape Ear th’s gravity s tarting fr om r est, giv en that the escape v elocity fr om
+Earth is about , and as suming an e xhaus t velocity .
+Solving f or gives
+Thus , the mas s of the r ocket isFACTORS AFFE CTING A R OCKE T’S ACCELER ATION
+•The gr eater the e xhaus t velocity of the g ases r elativ e to the r ocket, the gr eater the ac celeration.
+•The fas ter the r ocket burns its fuel , the gr eater its ac celeration.
+•The smal ler the r ocket’s mas s (al l other fact ors being the same), the gr eater the ac celeration.
+8.79
+8.80
+8.81
+8.82
+8.838.7 • Intr oduc tion t o Rocket Propulsion 363
+
+This r esul t means that onl y of the mas s is left when the fuel is burnt, and of the initial mas s was fuel .
+Expr essed as per centag es, 98.9% o f the r ocket is fuel , while pa yload, engines , fuel tank s, and other c omponents
+mak e up onl y 1.10%. T aking air r esistanc e and gr avitational f orce int o ac count, the mas s remaining can onl y be
+about . It is difficul t to build a r ocket in which the fuel has a mas s 180 times e verything else . The solution is
+multistage rockets. Each s tage onl y needs t o achie ve par t of the final v elocity and is discar ded aft er it burns its fuel .
+The r esul t is that each suc cessive stage can ha ve smal ler engines and mor e pa yload r elativ e to its fuel . Onc e out o f
+the atmospher e, the r atio o f payload t o fuel bec omes mor e favorable , too.
+The spac e shut tle w as an at temp t at an ec onomical v ehicle with some r eusable par ts, such as the solid fuel
+boos ters and the cr aft itself . (See Figure 8.13 ) The shut tle’s need t o be oper ated b y humans , however, made it at
+leas t as c ostly for launching sat ellites as e xpendable , unpilot ed rockets. Ideal ly, the shut tle w ould onl y ha ve been
+used when human activities w ere requir ed for the suc cess of a mis sion, such as the r epair o f the Hubble spac e
+telesc ope. Rockets with sat ellites can also be launched fr om airplanes . Using airplanes has the double adv antag e
+that the initial v elocity is significantl y abo ve zero and a r ocket can a void mos t of the atmospher e’s resistanc e.
+FIGURE 8.13 The spac e shut tle had a number o f reusable par ts. Solid fuel boos ters on either side w ere recovered and r efueled aft er each
+flight, and the entir e orbit er returned t o Ear th for use in subsequent flights . The lar ge liquid fuel tank w as e xpended. The spac e shut tle w as
+a comple x assemblag e of technologies , emplo ying both solid and liquid fuel and pioneering c eramic tiles as r eentr y heat shields . As a
+resul t, it permit ted mul tiple launches as opposed t o single -use r ockets. (credit: NASA)364 8 • Linear Momentum and C ollisions
+Access f or free at opens tax.org
+
+Glossar y
+chang e in momentum the diff erence betw een the
+final and initial momentum; the mas s times the
+chang e in v elocity
+conser vation o f momentum principle when the net
+external f orce is z ero, the t otal momentum o f the
+system is c onser ved or c onstant
+elas tic c ollision a collision that also c onser ves
+internal kinetic ener gy
+impulse the a verage net e xternal f orce times the time
+it acts; equal t o the chang e in momentum
+inelas tic c ollision a collision in which int ernal kinetic
+ener gy is not c onser ved
+internal kinetic ener gythe sum o f the kinetic
+ener gies o f the objects in a s ystemisola ted s ystem a system in which the net e xternal
+force is z ero
+linear momentum the pr oduct o f mas s and v elocity
+perfectly inelas tic c ollision a collision in which the
+colliding objects s tick t ogether
+point mas ses structur eles s par ticles with no r otation
+or spin
+quark fundamental c onstituent o f mat ter and an
+elementar y par ticle
+second la w of mo tion physical la w that s tates that
+the net e xternal f orce equals the chang e in
+momentum o f a s ystem divided b y the time o ver
+which it chang es
+Section Summar y
+8.1Linear Momentum and F orce
+•Linear momentum ( momentum for br evity) is
+defined as the pr oduct o f a s ystem’s mas s
+multiplied b y its v elocity .
+•In symbols , linear momentum is defined t o be
+wher e is the mas s of the s ystem and is its
+velocity .
+•The SI unit f or momentum is .
+•Newton’s sec ond la w of motion in t erms o f
+momentum s tates that the net e xternal f orce
+equals the chang e in momentum o f a s ystem
+divided b y the time o ver which it chang es.
+•In symbols , Newton’s sec ond la w of motion is
+defined t o be
+is the net e xternal f orce, is the chang e in
+momentum, and is the chang e time .
+8.2Impulse
+•Impulse , or chang e in momentum, equals the
+average net e xternal f orce mul tiplied b y the time
+this f orce acts:
+•Forces ar e usual ly not c onstant o ver a period o f
+time .
+8.3Conser vation o f Momentum
+•The c onser vation o f momentum principle is
+written
+or
+is the initial t otal momentum and is thetotal momentum some time lat er.
+•An isolat ed s ystem is defined t o be one f or which
+the net e xternal f orce is z ero
+•During pr ojectile motion and wher e air r esistanc e
+is negligible , momentum is c onser ved in the
+horiz ontal dir ection because horiz ontal f orces ar e
+zero.
+•Conser vation o f momentum applies onl y when the
+net e xternal f orce is z ero.
+•The c onser vation o f momentum principle is v alid
+when c onsidering s ystems o f par ticles .
+8.4Elastic C ollisions in One Dimension
+•An elas tic c ollision is one that c onser ves int ernal
+kinetic ener gy.
+•Conser vation o f kinetic ener gy and momentum
+together al low the final v elocities t o be calculat ed
+in terms o f initial v elocities and mas ses in one
+dimensional tw o-body c ollisions .
+8.5Inelas tic C ollisions in One Dimension
+•An inelas tic c ollision is one in which the int ernal
+kinetic ener gy chang es (it is not c onser ved).
+•A collision in which the objects s tick t ogether is
+sometimes cal led per fectly inelas tic because it
+reduc es int ernal kinetic ener gy mor e than does
+any other type o f inelas tic c ollision.
+•Spor ts scienc e and t echnologies also use ph ysics
+concepts such as momentum and r otational
+motion and vibr ations .
+8.6Collisions o f Point Masses in T wo
+Dimensions
+•The appr oach t o tw o-dimensional c ollisions is t o
+choose a c onvenient c oordinat e system and br eak8 • Glossar y365
+
+the motion int o components along perpendicular
+axes. Choose a c oordinat e system with the -axis
+parallel to the v elocity o f the inc oming par ticle .
+•Two-dimensional c ollisions o f point mas ses wher e
+mas s 2 is initial ly at r est conser ve momentum
+along the initial dir ection o f mas s 1 (the -axis),
+stated b y
+and along the dir ection perpendicular t o the initial
+direction (the -axis) s tated b y
+.
+•The int ernal kinetic bef ore and aft er the c ollision
+of two objects that ha ve equal mas ses is
+•Point mas ses ar e structur eles s par ticles thatcannot spin.
+8.7Introduc tion t o Rocket Propulsion
+•Newton’s thir d law of motion s tates that t o every
+action, ther e is an equal and opposit e reaction.
+•Acceleration o f a rocket is .
+•A rocket’s acceleration depends on thr ee main
+factors. The y are
+1.The gr eater the e xhaus t velocity o f the g ases ,
+the gr eater the ac celeration.
+2.The fas ter the r ocket burns its fuel , the gr eater
+its ac celeration.
+3.The smal ler the r ocket's mas s, the gr eater the
+acceleration.
+Conceptual Ques tions
+8.1Linear Momentum and F orce
+1.An object that has a smal l mas s and an object that
+has a lar ge mas s ha ve the same momentum. Which
+object has the lar gest kinetic ener gy?
+2.An object that has a smal l mas s and an object that
+has a lar ge mas s ha ve the same kinetic ener gy.
+Which mas s has the lar gest momentum?
+3.Professional Application
+Footbal l coaches advise pla yers t o block, hit, and
+tackle with their f eet on the gr ound r ather than b y
+leaping thr ough the air . Using the c oncepts of
+momentum, w ork, and ener gy, explain ho w a
+footbal l pla yer can be mor e eff ectiv e with his f eet
+on the gr ound.
+4.How can a smal l force impar t the same momentum
+to an object as a lar ge force?
+8.2Impulse
+5.Professional Application
+Explain in t erms o f impulse ho w padding r educ es
+forces in a c ollision. Stat e this in t erms o f a real
+example , such as the adv antag es o f a carpet ed vs .
+tile floor f or a da y car e center.
+6.While jumping on a tr ampoline , sometimes y ou land
+on y our back and other times on y our f eet. In which
+case can y ou reach a gr eater height and wh y?
+7.Professional Application
+Tennis r acquets ha ve “sweet spots .” If the bal l hits
+a sweet spot then the pla yer's arm is not jarr ed as
+much as it w ould be other wise . Explain wh y this is
+the case .8.3Conser vation o f Momentum
+8.Professional Application
+If you div e int o water, you reach gr eater dep ths
+than if y ou do a bel ly flop . Explain this diff erence in
+depth using the c oncept of conser vation o f ener gy.
+Explain this diff erence in dep th using what y ou ha ve
+learned in this chap ter.
+9.Under what cir cums tanc es is momentum
+conser ved?
+10.Can momentum be c onser ved for a s ystem if ther e
+are external f orces acting on the s ystem? If so ,
+under what c onditions? If not, wh y not?
+11.Momentum f or a s ystem can be c onser ved in one
+direction while not being c onser ved in another .
+What is the angle betw een the dir ections? Giv e an
+example .
+12.Professional Application
+Explain in t erms o f momentum and Ne wton’s laws
+how a car ’s air r esistanc e is due in par t to the fact
+that it pushes air in its dir ection o f motion.
+13.Can objects in a s ystem ha ve momentum while
+the momentum o f the s ystem is z ero? Explain y our
+answer.
+14.Mus t the t otal ener gy of a s ystem be c onser ved
+whene ver its momentum is c onser ved? Explain
+why or wh y not.
+8.4Elastic C ollisions in One Dimension
+15.What is an elas tic c ollision?
+8.5Inelas tic C ollisions in One Dimension
+16.What is an inelas tic c ollision? What is a per fectly
+inelas tic c ollision?366 8 • C onceptual Ques tions
+Access f or free at opens tax.org
+
+17.Mixed-pair ic e sk aters per forming in a sho w ar e
+standing motionles s at arms length jus t bef ore
+starting a r outine . The y reach out, clasp hands ,
+and pul l themsel ves together b y onl y using their
+arms . Assuming ther e is no friction betw een the
+blades o f their sk ates and the ic e, what is their
+velocity aft er their bodies meet?
+18.A smal l pick up truck that has a camper shel l
+slowly coasts toward a r ed light with negligible
+friction. T wo dogs in the back o f the truck ar e
+moving and making v arious inelas tic c ollisions
+with each other and the w alls. What is the eff ect o f
+the dogs on the motion o f the c enter of mas s of
+the s ystem (truck plus entir e load)? What is their
+effect on the motion o f the truck?
+8.6Collisions o f Point Masses in T wo
+Dimensions
+19.Figure 8.14 shows a cube at r est and a smal l object
+heading t oward it. (a) Describe the dir ections (angle
+) at which the smal l object can emer ge aft er colliding
+elas tical ly with the cube . Ho w does depend on ,
+the so -called impact par amet er? Ignor e an y eff ects
+that might be due t o rotation aft er the c ollision, and
+assume that the cube is much mor e mas sive than the
+smal l object. (b) Ans wer the same ques tions if the
+smal l object ins tead c ollides with a mas sive spher e.
+FIGURE 8.14 A smal l object appr oaches a c ollision with a muchmor e mas sive cube , after which its v elocity has the dir ection .
+The angles at which the smal l object can be scat tered ar e
+determined b y the shape o f the object it s trikes and the impact
+paramet er .
+8.7Introduc tion t o Rocket Propulsion
+20.Professional Application
+Suppose a fir eworks shel l explodes , breaking int o
+three lar ge piec es for which air r esistanc e is
+negligible . Ho w is the motion o f the c enter of mas s
+affected b y the e xplosion? Ho w would it be
+affected if the piec es e xperienc ed significantl y
+mor e air r esistanc e than the intact shel l?
+21.Professional Application
+During a visit t o the Int ernational Spac e Station,
+an as tronaut w as positioned motionles s in the
+center of the s tation, out o f reach o f any solid
+object on which he c ould e xert a force. Sug gest a
+method b y which he c ould mo ve himself a way
+from this position, and e xplain the ph ysics
+involved.
+22.Professional Application
+It is pos sible f or the v elocity o f a rocket to be
+greater than the e xhaus t velocity o f the g ases it
+ejects . When that is the case , the g as velocity and
+gas momentum ar e in the same dir ection as that
+of the r ocket. Ho w is the r ocket still able t o ob tain
+thrus t by ejecting the g ases?
+Problems & Ex ercises
+8.1Linear Momentum and F orce
+1.(a) Calculat e the momentum o f a 2000-k g elephant
+char ging a hunt er at a speed o f . (b)
+Compar e the elephant ’s momentum with the
+momentum o f a 0.0400-k g tranquiliz er dar t fired at
+a speed o f . (c) What is the momentum o f
+the 90.0-k g hunt er running at after
+missing the elephant?
+2.(a) What is the mas s of a lar ge ship that has a
+momentum o f , when the ship
+is mo ving at a speed o f (b) Compar e theship ’s momentum t o the momentum o f a 1100-k g
+artillery shel l fired at a speed o f .
+3.(a) A t what speed w ould a airplane
+have to fly to ha ve a momentum o f
+(the same as the ship ’s
+momentum in the pr oblem abo ve)? (b) What is the
+plane ’s momentum when it is taking o ff at a speed
+of ? (c) If the ship is an air craft carrier that
+launches these airplanes with a catapul t, discus s
+the implications o f your ans wer to (b) as it r elates to
+recoil eff ects o f the catapul t on the ship .8 • P roblems & Ex ercises 367
+
+4.(a) What is the momentum o f a g arbag e truck that is
+and is mo ving at ? (b) A t
+what speed w ould an 8.00-k g trash can ha ve the
+same momentum as the truck?
+5.A runa way train car that has a mas s of 15,000 k g
+travels at a speed o f down a tr ack.
+Comput e the time r equir ed for a f orce of 1500 N t o
+bring the car t o rest.
+6.The mas s of Ear th is and its orbital
+radius is an a verage of . Calculat e
+its linear momentum.
+8.2Impulse
+7.A bul let is ac celerated do wn the barr el of a g un b y
+hot g ases pr oduc ed in the c ombus tion o f gun
+powder. What is the a verage force exerted on a
+0.0300-k g bul let to ac celerate it t o a speed o f
+600.0 m/s in a time o f 2.00 ms (mil lisec onds)?
+8.Professional Application
+A car mo ving at 10.0 m/s cr ashes int o a tr ee and
+stops in 0.26 s . Calculat e the f orce the seat bel t
+exerts on a pas seng er in the car t o bring him t o a
+halt. The mas s of the pas seng er is 70.0 k g.
+9.A person slaps her leg with her hand, bringing her
+hand t o rest in 2.50 mil lisec onds fr om an initial
+speed o f 4.00 m/s . (a) What is the a verage force
+exerted on the leg , taking the eff ectiv e mas s of the
+hand and f orearm t o be 1.50 k g? (b) W ould the
+force be an y diff erent if the w oman clapped her
+hands t ogether at the same speed and br ought
+them t o rest in the same time? Explain wh y or wh y
+not.
+10.Professional Application
+A pr ofessional bo xer hits his opponent with a
+1000-N horiz ontal blo w that las ts for 0.150 s . (a)
+Calculat e the impulse impar ted b y this blo w. (b)
+What is the opponent ’s final v elocity , if his mas s is
+105 k g and he is motionles s in midair when s truck
+near his c enter of mas s? (c) Calculat e the r ecoil
+velocity o f the opponent ’s 10.0-k g head if hit in
+this manner , assuming the head does not initial ly
+transfer significant momentum t o the bo xer’s
+body . (d) Discus s the implications o f your ans wers
+for par ts (b) and (c).
+11.Professional Application
+Suppose a child driv es a bumper car head on int o
+the side r ail, which e xerts a f orce of 4000 N on the
+car f or 0.200 s . (a) What impulse is impar ted b y
+this f orce? (b) Find the final v elocity o f the bumper
+car if its initial v elocity w as 2.80 m/s and the carplus driv er ha ve a mas s of 200 k g. You ma y
+neglect friction betw een the car and floor .
+12.Professional Application
+One hazar d of spac e travel is debris left b y
+previous mis sions . Ther e are se veral thousand
+objects orbiting Ear th that ar e lar ge enough t o be
+detected b y radar , but ther e are far gr eater
+numbers o f very smal l objects , such as flak es o f
+paint. Calculat e the f orce exerted b y a 0.100-mg
+chip o f paint that s trikes a spac ecraft windo w at a
+relativ e speed o f , giv en the
+collision las ts .
+13.Professional Application
+A 75.0-k g person is riding in a car mo ving at 20.0
+m/s when the car runs int o a bridg e abutment. (a)
+Calculat e the a verage force on the person if he is
+stopped b y a padded dashboar d that c ompr esses
+an a verage of 1.00 cm. (b) Calculat e the a verage
+force on the person if he is s topped b y an air bag
+that c ompr esses an a verage of 15.0 cm.
+14.Professional Application
+Militar y rifles ha ve a mechanism f or reducing the
+recoil forces o f the g un on the person firing it. An
+internal par t recoils o ver a r elativ ely lar ge dis tanc e
+and is s topped b y damping mechanisms in the
+gun. The lar ger dis tanc e reduc es the a verage force
+needed t o stop the int ernal par t. (a) Calculat e the
+recoil v elocity o f a 1.00-k g plung er that dir ectly
+interacts with a 0.0200-k g bul let fir ed at 600 m/s
+from the g un. (b) If this par t is s topped o ver a
+distanc e of 20.0 cm, what a verage force is e xerted
+upon it b y the g un? (c) Compar e this t o the f orce
+exerted on the g un if the bul let is ac celerated to
+its v elocity in 10.0 ms (mil lisec onds).
+15.A cruise ship with a mas s of strikes
+a pier at a speed o f 0.750 m/s . It c omes t o rest
+6.00 m lat er, damaging the ship , the pier , and the
+tugboat cap tain’s financ es. Calculat e the a verage
+force exerted on the pier using the c oncept of
+impulse . (Hint: Firs t calculat e the time it t ook t o
+bring the ship t o rest.)
+16.Calculat e the final speed o f a 110-k g rugb y pla yer
+who is initial ly running at 8.00 m/s but c ollides
+head-on with a padded g oalpos t and e xperienc es
+a backw ard force of for
+.
+17.Water fr om a fir e hose is dir ected horiz ontal ly
+agains t a w all at a r ate of 50.0 k g/s and a speed o f
+42.0 m/s . Calculat e the magnitude o f the f orce
+exerted on the w all, assuming the w ater’s368 8 • P roblems & Ex ercises
+Access f or free at opens tax.org
+
+horiz ontal momentum is r educ ed to zero.
+18.A 0.450-k g hammer is mo ving horiz ontal ly at 7.00
+m/s when it s trikes a nail and c omes t o rest aft er
+driving the nail 1.00 cm int o a boar d. (a) Calculat e
+the dur ation o f the impact. (b) What w as the
+average force exerted on the nail?
+19.Star ting with the definitions o f momentum and
+kinetic ener gy, deriv e an equation f or the kinetic
+ener gy of a par ticle e xpressed as a function o f its
+momentum.
+20.A bal l with an initial v elocity o f 10 m/s mo ves at an
+angle above the -direction. The bal l hits a
+vertical w all and bounc es o ff so that it is mo ving
+above the -direction with the same speed.
+In terms o f m, the mas s of the bal l, what is the
+impulse deliv ered b y the w all?
+21.When ser ving a t ennis bal l, a pla yer hits the bal l
+when its v elocity is z ero (at the highes t point o f a
+vertical t oss). The r acquet e xerts a f orce of 540 N
+on the bal l for 5.00 ms , giving it a final v elocity o f
+45.0 m/s . Using these data , find the mas s of the
+ball.
+22.A punt er dr ops a bal l from r est vertical ly 1 met er
+down ont o his f oot. The bal l lea ves the f oot with a
+speed o f 18 m/s at an angle above the
+horiz ontal . In t erms o f m, the mas s of the bal l,
+what is the impulse deliv ered b y the f oot
+(magnitude and dir ection)?
+8.3Conser vation o f Momentum
+23.Professional Application
+Train cars ar e coupled t ogether b y being bumped
+into one another . Suppose tw o loaded tr ain cars
+are mo ving t oward one another , the firs t having a
+mas s of 150,000 k g and a v elocity o f 0.300 m/s ,
+and the sec ond ha ving a mas s of 110,000 k g and a
+velocity o f . (The minus indicat es
+direction o f motion.) What is their final v elocity?
+24.Suppose a cla y model o f a k oala bear has a mas s
+of 0.200 k g and slides on ic e at a speed o f 0.750
+m/s. It runs int o another cla y model , which is
+initial ly motionles s and has a mas s of 0.350 k g.
+Both being so ft cla y, the y natur ally stick t ogether .
+What is their final v elocity?
+25.Professional Application
+Consider the f ollowing ques tion: A car mo ving at
+10 m/s cr ashes int o a tr ee and s tops in 0.26 s .
+Calculat e the f orce the seatbel t exerts on a
+passeng er in the car t o bring him t o a hal t. The
+mas s of the pas seng er is 70 k g.Would the ans werto this ques tion be diff erent if the car with the
+70-k g pas seng er had c ollided with a car that has a
+mas s equal t o and is tr aveling in the opposit e
+direction and at the same speed? Explain y our
+answer.
+26.What is the v elocity o f a 900-k g car initial ly
+moving at 30.0 m/s , jus t aft er it hits a 150-k g deer
+initial ly running at 12.0 m/s in the same dir ection?
+Assume the deer r emains on the car .
+27.A 1.80-k g falc on cat ches a 0.650-k g do ve from
+behind in midair . What is their v elocity aft er
+impact if the falc on’s velocity is initial ly 28.0 m/s
+and the do ve’s velocity is 7.00 m/s in the same
+direction?
+8.4Elastic C ollisions in One Dimension
+28.Two identical objects (such as bil liard bal ls) ha ve a
+one-dimensional c ollision in which one is initial ly
+motionles s. Aft er the c ollision, the mo ving object
+is stationar y and the other mo ves with the same
+speed as the other original ly had. Sho w that both
+momentum and kinetic ener gy are conser ved.
+29.Professional Application
+Two pilot ed sat ellites appr oach one another at a
+relativ e speed o f 0.250 m/s , intending t o dock.
+The firs t has a mas s of , and the
+second a mas s of . If the tw o
+satellites collide elas tical ly rather than dock, what
+is their final r elativ e velocity?
+30.A 70.0-k g ice hock ey goalie , original ly at r est,
+catches a 0.150-k g hock ey puck slapped at him at
+a velocity o f 35.0 m/s . Suppose the g oalie and the
+ice puck ha ve an elas tic c ollision and the puck is
+reflect ed back in the dir ection fr om which it came .
+What w ould their final v elocities be in this case?
+8.5Inelas tic C ollisions in One Dimension
+31.A 0.240-k g bil liard bal l that is mo ving at 3.00 m/s
+strikes the bumper o f a pool table and bounc es
+straight back at 2.40 m/s (80% o f its original
+speed). The c ollision las ts 0.0150 s . (a) Calculat e
+the a verage force exerted on the bal l by the
+bumper . (b) Ho w much kinetic ener gy in joules is
+lost during the c ollision? (c) What per cent o f the
+original ener gy is left?
+32.During an ic e sho w, a 60.0-k g sk ater leaps int o the
+air and is caught b y an initial ly stationar y 75.0-k g
+skater. (a) What is their final v elocity as suming
+negligible friction and that the 60.0-k g sk ater’s
+original horiz ontal v elocity is 4.00 m/s? (b) Ho w8 • P roblems & Ex ercises 369
+
+much kinetic ener gy is los t?
+33.Professional Application
+Using mas s and speed data fr omExample 8.1 and
+assuming that the f ootbal l pla yer cat ches the bal l
+with his f eet o ff the gr ound with both o f them
+moving horiz ontal ly, calculat e: (a) the final v elocity
+if the bal l and pla yer ar e going in the same
+direction and (b) the los s of kinetic ener gy in this
+case . (c) R epeat par ts (a) and (b) f or the situation
+in which the bal l and the pla yer ar e going in
+opposit e dir ections . Might the los s of kinetic
+ener gy be r elated to ho w much it hur ts to cat ch
+the pas s?
+34.A bat tleship that is and is original ly
+at rest fires a 1100-k g artillery shel l horiz ontal ly
+with a v elocity o f 575 m/s . (a) If the shel l is fir ed
+straight aft (t oward the r ear o f the ship), ther e wil l
+be negligible friction opposing the ship ’s recoil.
+Calculat e its r ecoil v elocity . (b) Calculat e the
+increase in int ernal kinetic ener gy (that is , for the
+ship and the shel l). This ener gy is les s than the
+ener gy released b y the g un po wder—significant
+heat tr ansfer oc curs .
+35.Professional Application
+Two pilot ed sat ellites appr oaching one another , at
+a relativ e speed o f 0.250 m/s , intending t o dock.
+The firs t has a mas s of , and the
+second a mas s of . (a) Calculat e the
+final v elocity (aft er docking ) by using the fr ame o f
+reference in which the firs t sat ellite was original ly
+at rest. (b) What is the los s of kinetic ener gy in this
+inelas tic c ollision? (c) R epeat both par ts by using
+the fr ame o f reference in which the sec ond
+satellite was original ly at r est. Explain wh y the
+chang e in v elocity is diff erent in the tw o frames ,
+wher eas the chang e in kinetic ener gy is the same
+in both.
+36.Professional Application
+A 30,000-k g freight car is c oasting at 0.850 m/s
+with negligible friction under a hopper that dumps
+110,000 k g of scr ap metal int o it. (a) What is the
+final v elocity o f the loaded fr eight car? (b) Ho w
+much kinetic ener gy is los t?
+37.Professional Application
+Spac e probes ma y be separ ated fr om their
+launchers b y exploding bol ts. (They bol t away
+from one another .) Suppose a 4800-k g sat ellite
+uses this method t o separ ate from the 1500-k g
+remains o f its launcher , and that 5000 J o f kinetic
+ener gy is supplied t o the tw o par ts. What ar e their
+subsequent v elocities using the fr ame o f referencein which the y were at r est bef ore separ ation?
+38.A 0.0250-k g bul let is ac celerated fr om r est to a
+speed o f 550 m/s in a 3.00-k g rifle . The pain o f the
+rifle’s kick is much w orse if y ou hold the g un
+loosel y a f ew centimet ers fr om y our shoulder
+rather than holding it tightl y ag ains t your shoulder .
+(a) Calculat e the r ecoil v elocity o f the rifle if it is
+held loosel y away from the shoulder . (b) Ho w
+much kinetic ener gy does the rifle g ain? (c) What
+is the r ecoil v elocity if the rifle is held tightl y
+agains t the shoulder , making the eff ectiv e mas s
+28.0 k g? (d) Ho w much kinetic ener gy is
+transferred to the rifle -shoulder c ombination? The
+pain is r elated to the amount o f kinetic ener gy,
+which is significantl y les s in this lat ter situation.
+(e) Calculat e the momentum o f a 110-k g footbal l
+player running at 8.00 m/s . Compar e the pla yer’s
+momentum with the momentum o f a har d-thr own
+0.410-k g footbal l that has a speed o f 25.0 m/s .
+Discus s its r elationship t o this pr oblem.
+39.Professional Application
+One o f the w aste products o f a nuclear r eact or is
+plutonium-239 . This nucleus is
+radioactiv e and deca ys by split ting int o a helium-4
+nucleus and a ur anium-235 nucleus
+, the lat ter of which is also
+radioactiv e and wil l itself deca y some time lat er.
+The ener gy emit ted in the plut onium deca y is
+and is entir ely converted to kinetic
+ener gy of the helium and ur anium nuclei. The
+mas s of the helium nucleus is ,
+while that o f the ur anium is (not e
+that the r atio o f the mas ses is 4 t o 235). (a)
+Calculat e the v elocities o f the tw o nuclei,
+assuming the plut onium nucleus is original ly at
+rest. (b) Ho w much kinetic ener gy does each
+nucleus carr y away? Not e that the data giv en her e
+are ac curate to thr ee digits onl y.
+40.Professional Application
+The Moon ’s craters ar e remnants o f met eorit e
+collisions . Suppose a fairl y lar ge as teroid that has
+a mas s of (about a kilomet er
+across) strikes the Moon at a speed o f 15.0 km/s .
+(a) A t what speed does the Moon r ecoil aft er the
+perfectly inelas tic c ollision (the mas s of the Moon
+is ) ? (b) Ho w much kinetic ener gy
+is los t in the c ollision? Such an e vent ma y ha ve
+been obser ved b y medie val English monk s who
+repor ted obser ving a r ed glo w and subsequent
+haze about the Moon. (c) In Oct ober 2009, NASA
+crashed a r ocket int o the Moon, and anal yzed the370 8 • P roblems & Ex ercises
+Access f or free at opens tax.org
+
+plume pr oduc ed b y the impact. (Significant
+amounts o f water w ere det ected.) Ans wer par t (a)
+and (b) f or this r eal-life experiment. The mas s of
+the r ocket w as 2000 k g and its speed upon impact
+was 9000 km/h. Ho w does the plume pr oduc ed
+alter these r esul ts?
+41.Professional Application
+Two footbal l pla yers c ollide head-on in midair
+while tr ying t o cat ch a thr own f ootbal l. The firs t
+player is 95.0 k g and has an initial v elocity o f 6.00
+m/s, while the sec ond pla yer is 115 k g and has an
+initial v elocity o f –3.50 m/s . What is their v elocity
+just aft er impact if the y cling t ogether?
+42.What is the speed o f a g arbag e truck that is
+and is initial ly mo ving at 25.0 m/s
+just aft er it hits and adher es to a tr ash can that is
+80.0 k g and is initial ly at r est?
+43.During a cir cus act, an elderl y per former thril ls the
+crowd by cat ching a cannon bal l shot at him. The
+cannon bal l has a mas s of 10.0 k g and the
+horiz ontal c omponent o f its v elocity is 8.00 m/s
+when the 65.0-k g per former cat ches it. If the
+performer is on nearl y frictionles s roller sk ates,
+what is his r ecoil v elocity?
+44.(a) During an ic e sk ating per formanc e, an initial ly
+motionles s 80.0-k g clo wn thr ows a fak e barbel l
+away. The clo wn’s ice sk ates al low her t o recoil
+frictionles sly. If the clo wn r ecoils with a v elocity o f
+0.500 m/s and the barbel l is thr own with a
+velocity o f 10.0 m/s , what is the mas s of the
+barbel l? (b) Ho w much kinetic ener gy is g ained b y
+this maneuv er? (c) Wher e does the kinetic ener gy
+come fr om?
+8.6Collisions o f Point Masses in T wo
+Dimensions
+45.Two identical puck s collide on an air hock ey table .
+One puck w as original ly at r est. (a) If the inc oming
+puck has a speed o f 6.00 m/s and scat ters t o an
+angle o f ,what is the v elocity (magnitude and
+direction) o f the sec ond puck? ( You ma y use the
+resul t that for elas tic c ollisions o f
+objects that ha ve identical mas ses.) (b) Confirm
+that the c ollision is elas tic.
+46.Confirm that the r esul ts of the e xample Example
+8.7do c onser ve momentum in both the - and
+-directions .
+47.A 3000-k g cannon is mount ed so that it can r ecoil
+only in the horiz ontal dir ection. (a) Calculat e its
+recoil v elocity when it fir es a 15.0-k g shel l at 480m/s at an angle o f above the horiz ontal . (b)
+What is the kinetic ener gy of the cannon? This
+ener gy is dis sipat ed as heat tr ansfer in shock
+absorbers that s top its r ecoil. (c) What happens t o
+the v ertical c omponent o f momentum that is
+impar ted to the cannon when it is fir ed?
+48.Professional Applica tion
+A 5.50-k g bo wling bal l mo ving at 9.00 m/s c ollides
+with a 0.850-k g bo wling pin, which is scat tered at
+an angle o f to the initial dir ection o f the
+bowling bal l and with a speed o f 15.0 m/s . (a)
+Calculat e the final v elocity (magnitude and
+direction) o f the bo wling bal l. (b) Is the c ollision
+elas tic? (c) Linear kinetic ener gy is gr eater aft er
+the c ollision. Discus s ho w spin on the bal l might
+be c onverted to linear kinetic ener gy in the
+collision.
+49.Professional Applica tion
+Ernes t Ruther ford (the firs t Ne w Zealander t o be
+awarded the Nobel P rize in Chemis try)
+demons trated that nuclei w ere very smal l and
+dense b y scat tering helium-4 nuclei from
+gold-197 nuclei . The ener gy of the
+incoming helium nucleus w as , and
+the mas ses o f the helium and g old nuclei w ere
+and ,
+respectiv ely (not e that their mas s ratio is 4 t o
+197). (a) If a helium nucleus scat ters t o an angle
+of during an elas tic c ollision with a g old
+nucleus , calculat e the helium nucleus’ s final
+speed and the final v elocity (magnitude and
+direction) o f the g old nucleus . (b) What is the final
+kinetic ener gy of the helium nucleus?
+50.Professional Application
+Two cars c ollide at an icy int ersection and s tick
+together aft erward. The firs t car has a mas s of
+1200 k g and is appr oaching at due
+south. The sec ond car has a mas s of 850 k g and is
+appr oaching at due w est. (a) Calculat e
+the final v elocity (magnitude and dir ection) o f the
+cars . (b) Ho w much kinetic ener gy is los t in the
+collision? ( This ener gy goes int o def ormation o f
+the cars .) Not e that because both cars ha ve an
+initial v elocity , you cannot use the equations f or
+conser vation o f momentum along the -axis and
+-axis; ins tead, y ou mus t look f or other simplif ying
+aspects .
+51.Star ting with equations
+and
+for conser vation
+of momentum in the - and -directions and8 • P roblems & Ex ercises 371
+
+assuming that one object is original ly stationar y,
+prove that f or an elas tic c ollision o f two objects o f
+equal mas ses,
+as discus sed in the t ext.
+52.Integrated Conc epts
+A 90.0-k g ice hock ey pla yer hits a 0.150-k g puck,
+giving the puck a v elocity o f 45.0 m/s . If both ar e
+initial ly at r est and if the ic e is frictionles s, how far
+does the pla yer recoil in the time it tak es the puck
+to reach the g oal 15.0 m a way?
+8.7Introduc tion t o Rocket Propulsion
+53.Professional Application
+Antibal listic mis siles (ABMs) ar e designed t o ha ve
+very lar ge ac celerations so that the y ma y int ercept
+fast-mo ving inc oming mis siles in the shor t time
+available . What is the tak eoff ac celeration o f a
+10,000-k g ABM that e xpels 196 k g of gas per
+second at an e xhaus t velocity o f
+54.Professional Application
+What is the ac celeration o f a 5000-k g rocket
+taking o ff from the Moon, wher e the ac celeration
+due t o gravity is onl y , if the r ocket expels
+8.00 k g of gas per sec ond at an e xhaus t velocity o f
+55.Professional Application
+Calculat e the incr ease in v elocity o f a 4000-k g
+spac e probe that e xpels 3500 k g of its mas s at an
+exhaus t velocity o f . You ma y
+assume the gr avitational f orce is negligible at the
+probe’s location.
+56.Professional Application
+Ion-pr opulsion r ockets ha ve been pr oposed f or
+use in spac e. The y emplo y atomic ionization
+techniques and nuclear ener gy sour ces to produc e
+extremel y high e xhaus t velocities , perhaps as
+great as . These t echniques al low a
+much mor e favorable pa yload-t o-fuel r atio. To
+illustrate this fact: (a) Calculat e the incr ease in
+velocity o f a 20,000-k g spac e probe that e xpels
+only 40.0-k g of its mas s at the giv en e xhaus t
+velocity . (b) These engines ar e usual ly designed t o
+produc e a v ery smal l thrus t for a v ery long
+time —the type o f engine that might be useful on a
+trip t o the out er planets , for example . Calculat e
+the ac celeration o f such an engine if it e xpels
+at the giv en v elocity , assumingthe ac celeration due t o gravity is negligible .
+57.Deriv e the equation f or the v ertical ac celeration o f
+a rocket.
+58.Professional Application
+(a) Calculat e the maximum r ate at which a r ocket
+can e xpel g ases if its ac celeration cannot e xceed
+seven times that o f gravity. The mas s of the r ocket
+just as it runs out o f fuel is 75,000-k g, and its
+exhaus t velocity is . Assume that
+the ac celeration o f gravity is the same as on
+Earth’s sur face . (b) Wh y might it be
+necessary to limit the ac celeration o f a rocket?
+59.Given the f ollowing data f or a fir e exting uisher -toy
+wagon rocket experiment, calculat e the a verage
+exhaus t velocity o f the g ases e xpel led fr om the
+exting uisher . Star ting fr om r est, the final v elocity is
+10.0 m/s . The t otal mas s is initial ly 75.0 k g and is
+70.0 k g aft er the e xting uisher is fir ed.
+60.How much o f a single -stage rocket that is 100,000
+kg can be an ything but fuel if the r ocket is t o ha ve
+a final speed o f , giv en that it e xpels
+gases at an e xhaus t velocity o f
+61.Professional Application
+(a) A 5.00-k g squid initial ly at r est ejects 0.250-k g
+of fluid with a v elocity o f 10.0 m/s . What is the
+recoil v elocity o f the squid if the ejection is done in
+0.100 s and ther e is a 5.00-N frictional f orce
+opposing the squid’ s mo vement. (b) Ho w much
+ener gy is los t to work done ag ains t friction?
+62.Unreasonable R esul ts
+Squids ha ve been r epor ted to jump fr om the
+ocean and tr avel (measur ed horiz ontal ly)
+before re-ent ering the w ater. (a) Calculat e the
+initial speed o f the squid if it lea ves the w ater at
+an angle o f , assuming negligible lift fr om the
+air and negligible air r esistanc e. (b) The squid
+propels itself b y squir ting w ater. What fr action o f
+its mas s would it ha ve to eject in or der t o achie ve
+the speed f ound in the pr evious par t? The w ater is
+eject ed at ; gravitational f orce and friction
+are neglect ed. (c) What is unr easonable about the
+resul ts? (d) Which pr emise is unr easonable , or
+which pr emises ar e inc onsis tent?
+63.Cons truct Y our Own P roblem
+Consider an as tronaut in deep spac e cut fr ee fr om
+her spac e ship and needing t o get back t o it. The
+astronaut has a f ew pack ages that she can thr ow
+away to mo ve herself t oward the ship . Cons truct a
+problem in which y ou calculat e the time it tak es372 8 • P roblems & Ex ercises
+Access f or free at opens tax.org
+
+her t o get back b y thr owing al l the pack ages at
+one time c ompar ed to thr owing them one at a
+time . Among the things t o be c onsider ed ar e the
+mas ses in volved, the f orce she can e xert on the
+pack ages thr ough some dis tanc e, and the dis tanc e
+to the ship .
+64.Cons truct Y our Own P roblem
+Consider an ar tillery projectile s triking armorplating . Cons truct a pr oblem in which y ou find the
+force exerted b y the pr ojectile on the plat e.
+Among the things t o be c onsider ed ar e the mas s
+and speed o f the pr ojectile and the dis tanc e over
+which its speed is r educ ed. Y our ins truct or ma y
+also wish f or you to consider the r elativ e merits o f
+deplet ed ur anium v ersus lead pr ojectiles based on
+the gr eater density o f uranium.
+Test Prep for AP ® Courses
+8.1Linear Momentum and F orce
+1.A bo y standing on a frictionles s ice rink is initial ly at
+rest. He thr ows a sno wbal l in the + x-direction, and
+it travels on a bal listic tr aject ory, hitting the gr ound
+some dis tanc e away. Which o f the f ollowing is true
+about the bo y while he is in the act o f thr owing the
+snowbal l?
+a.He f eels an up ward force to compensat e for the
+downward traject ory of the sno wbal l.
+b.He f eels a backw ard force exerted b y the
+snowbal l he is thr owing .
+c.He f eels no net f orce.
+d.He f eels a f orward force, the same f orce that
+propels the sno wbal l.
+2.A 150-g basebal l is initial ly mo ving 80 mi/h in the
+–x-direction. Aft er colliding with a basebal l bat f or
+20 ms , the basebal l mo ves 80 mi/h in the
++x-direction. What is the magnitude and dir ection
+of the a verage force exerted b y the bat on the
+basebal l?
+8.2Impulse
+3.A 1.0-k g bal l of put ty is r eleased fr om r est and fal ls
+vertical ly 1.5 m until it s trikes a har d floor , wher e it
+comes t o rest in a 0.045-s time int erval. What is the
+magnitude and dir ection o f the a verage force
+exerted on the bal l by the floor during the c ollision?
+a.33 N, up
+b.120 N, up
+c.120 N, do wn
+d.240 N, do wn
+4.A 75-g bal l is dr opped fr om r est from a height o f 2.2
+m. It bounc es o ff the floor and r ebounds t o a
+maximum height o f 1.7 m. If the bal l is in c ontact
+with the floor f or 0.024 s , what is the magnitude
+and dir ection o f the a verage force exerted on the
+ball by the floor during the c ollision?
+5.A 2.4-k g ceramic bo wl fal ls to the floor . During the
+0.018-s impact, the bo wl e xperienc es an a verage
+force of 750 N fr om the floor . The bo wl is at r estafter the impact. F rom what initial height did the
+bowl fal l?
+a.1.6 m
+b.2.8 m
+c.3.2 m
+d.5.6 m
+6.Whether or not an object (such as a plat e, glas s, or
+bone) br eaks upon impact depends on the a verage
+force exerted on that object b y the sur face. When a
+1.2-k g glas s fig ure hits the floor , it wil l break if it
+experienc es an a verage force of 330 N. When it hits
+a tile floor , the glas s comes t o a s top in 0.015 s .
+From what minimum height mus t the glas s fal l to
+experienc e sufficient f orce to break? Ho w would
+your ans wer chang e if the fig ure were fal ling t o a
+padded or carpet ed sur face? Explain.
+7.A 2.5-k g block slides acr oss a frictionles s table t oward
+a horiz ontal spring .As the block bounc es o ff the spring ,
+a probe measur es the v elocity o f the block (initial ly
+negative, mo ving a way from the pr obe) o ver time as
+follows:
+Velocit y (m/s) Time (s)
+−12.0 0
+−10.0 0.10
+−6.0 0.20
+0 0.30
+6.0 0.40
+10.0 0.50
+12.0 0.60
+TABLE 8.1
+What is the a verage force exerted on the block b y the8 • T est Prep for AP ® Courses 373
+
+spring o ver the entir e 0.60-s time int erval of the
+collision?
+a.50 N
+b.60 N
+c.100 N
+d.120 N
+8.During an aut omobile cr ash t est, the a verage force
+exerted b y a solid w all on a 2500-k g car that hits
+the w all is measur ed to be 740,000 N o ver a 0.22-s
+time int erval. What w as the initial speed o f the car
+prior t o the c ollision, as suming the car is at r est at
+the end o f the time int erval?
+9.A test car is driving t oward a solid cr ash-t est barrier
+with a speed o f 45 mi/h. T wo sec onds prior t o
+impact, the car begins t o brake, but it is s till mo ving
+when it hits the w all. Aft er the c ollision with the
+wall, the car crumples some what and c omes t o a
+complet e stop. In or der t o es timat e the a verage
+force exerted b y the w all on the car , what
+information w ould y ou need t o collect?
+a.The (neg ative) ac celeration o f the car bef ore it
+hits the w all and the dis tanc e the car tr avels
+while br aking .
+b.The (neg ative) ac celeration o f the car bef ore it
+hits the w all and the v elocity o f the car jus t
+before impact.
+c.The v elocity o f the car jus t bef ore impact and
+the dur ation o f the c ollision with the w all.
+d.The dur ation o f the c ollision with the w all and
+the dis tanc e the car tr avels while br aking .
+10.Design an e xperiment t o verify the r elationship
+betw een the a verage force exerted on an object
+and the chang e in momentum o f that object. As
+part of your e xplanation, lis t the equipment y ou
+would use and describe y our e xperimental setup .
+What w ould y ou measur e and ho w? Ho w exactl y
+would y ou v erify the r elationship? Explain.
+11.A 22-g puck hits the w all of an air hock ey table
+perpendicular t o the w all with an initial speed o f
+14 m/s .The puck is in c ontact with the w all for
+0.0055 s , and it r ebounds fr om the w all with a
+speed o f 14 m/s in the opposit e dir ection. What is
+the magnitude o f the a verage force exerted b y the
+wall on the puck?
+a.0.308 N
+b.0.616 N
+c.56 N
+d.112 N
+12.A 22-g puck hits the w all of an air hock ey tableperpendicular t o the w all with an initial speed o f 7
+m/s. The puck is in c ontact with the w all for 0.011
+s, and the w all exerts an a verage force of 28 N on
+the puck during that time . Calculat e the
+magnitude and dir ection o f the chang e in
+momentum o f the puck.
+13.
+FIGURE 8.15 This is a gr aph sho wing the f orce exerted b y a
+rigid w all versus time .
+The gr aph in Figure 8.15 represents the f orce
+exerted on a par ticle during a c ollision. What is the
+magnitude o f the chang e in momentum o f the
+particle as a r esul t of the c ollision?
+a.1.2 k g • m/s
+b.2.4 k g • m/s
+c.3.6 k g • m/s
+d.4.8 k g • m/s
+14.
+FIGURE 8.16 This is a gr aph sho wing the f orce exerted b y a
+rigid w all versus time .
+The gr aph in Figure 8.16 represents the f orce
+exerted on a par ticle during a c ollision. What is the
+magnitude o f the chang e in momentum o f the
+particle as a r esul t of the c ollision?
+8.3Conser vation o f Momentum
+15.Which o f the f ollowing is an e xample o f an open
+system?
+a.Two air cars c olliding on a tr ack elas tical ly.
+b.Two air cars c olliding on a tr ack and s ticking
+together .
+c.A bul let being fir ed int o a hanging w ooden
+block and bec oming embedded in the block,
+with the s ystem then acting as a bal listic
+pendulum.
+d.A bul let being fir ed int o a hil lside and374 8 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+becoming buried in the ear th.
+16.A 40-k g girl runs acr oss a mat with a speed o f 5.0
+m/s and jumps ont o a 120-k g hanging plat form
+initial ly at r est, causing the girl and plat form t o
+swing back and f orth lik e a pendulum t ogether
+after her jump . What is the c ombined v elocity o f
+the girl and plat form aft er the jump? What is the
+combined momentum o f the girl and plat form
+both bef ore and aft er the c ollision?
+A 50-k g bo y runs acr oss a mat with a speed o f 6.0
+m/s and c ollides with a so ft barrier on the w all,
+rebounding o ff the w all and fal ling t o the gr ound.
+The bo y is at r est aft er the c ollision. What is the
+momentum o f the bo y bef ore and aft er the
+collision? Is momentum c onser ved in this
+collision? Explain. Which o f these is an e xample o f
+an open s ystem and which is an e xample o f a
+closed s ystem? Explain y our ans wer.
+17.A student sets up an e xperiment t o measur e the
+momentum o f a s ystem o f two air cars , A and B , of
+equal mas s, mo ving on a linear , frictionles s track.
+Before the c ollision, car A has a c ertain speed, and
+car B is at r est. Which o f the f ollowing wil l be true
+about the t otal momentum o f the tw o cars?
+a.It wil l be gr eater bef ore the c ollision.
+b.It wil l be equal bef ore and aft er the c ollision.
+c.It wil l be gr eater aft er the c ollision.
+d.The ans wer depends on whether the c ollision
+is elas tic or inelas tic.
+18.A group o f students has tw o car ts,Aand B, with
+wheels that turn with negligible friction. The car ts can
+travel along a s traight horiz ontal tr ack. Car tAhas
+known mas smA. The s tudents ar e ask ed to use a one -
+dimensional c ollision betw een the car ts to det ermine
+the mas s of car tB. Bef ore the c ollision, car tAtravels t o
+the right and car tBis initial ly at r est. Aft er the c ollision,
+the car ts stick t ogether .
+a.Describe an e xperimental pr ocedur e to det ermine
+the v elocities o f the car ts bef ore and aft er a
+collision, including al l the additional equipment
+you w ould need. Y ou ma y include a labeled
+diagr am o f your setup t o help in y our descrip tion.
+Indicat e what measur ements y ou w ould tak e and
+how you w ould tak e them. Include enough detail
+so that another s tudent c ould carr y out y our
+procedur e.
+b.Ther e wil l be sour ces o f err or in the
+measur ements tak en in the e xperiment, both
+before and aft er the c ollision. F or your
+experimental pr ocedur e, wil l the unc ertainty in thecalculat ed v alue o f the mas s of car tBbe aff ected
+mor e by the err or in the measur ements tak en
+before the c ollision or b y those tak en aft er the
+collision, or wil l it be equal ly aff ected b y both sets
+of measur ements? Jus tify your ans wer.
+A group o f students t ook measur ements f or one
+collision. A gr aph o f the s tudents’ data is sho wn belo w.
+FIGURE 8.17 The imag e sho ws a gr aph with position in met ers on
+the v ertical axis and time in sec onds on the horiz ontal axis .
+c.GivenmA= 0.50 k g, use the gr aph t o calculat e the
+mas s of car tB. Explicitl y indicat e the principles
+used in y our calculations .
+d.The s tudents ar e no w ask ed to Consider the
+kinetic ener gy chang es in an inelas tic c ollision,
+specifical ly whether the initial v alues o f one o f the
+physical quantities aff ect the fr action o f
+mechanical ener gy dis sipat ed in the c ollision. Ho w
+could y ou modif y the e xperiment t o investigate
+this ques tion? Be sur e to explicitl y describe the
+calculations y ou w ould mak e, specif ying al l
+equations y ou w ould use (but do not actual ly do
+any alg ebra or arithmetic).
+19.Cart A is mo ving with an initial v elocity + v(in the
+positiv e dir ection) t oward car t B, initial ly at r est.
+Both car ts ha ve equal mas s and ar e on a
+frictionles s sur face. Which o f the f ollowing
+statements c orrectly char acterizes the v elocity o f
+the c enter of mas s of the s ystem bef ore and aft er
+the c ollision?
+a. before, after
+b. before, 0 aft er
+c. before, after
+d.0 bef ore, 0 aft er
+20.Cart A is mo ving with a v elocity o f +10 m/s t oward
+cart B, which is mo ving with a v elocity o f +4 m/s .
+Both car ts ha ve equal mas s and ar e mo ving on a8 • T est Prep for AP ® Courses 375
+
+frictionles s sur face. The tw o car ts ha ve an
+inelas tic c ollision and s tick t ogether aft er the
+collision. Calculat e the v elocity o f the c enter of
+mas s of the s ystem bef ore and aft er the c ollision.
+If ther e were friction pr esent in this pr oblem, ho w
+would this e xternal f orce aff ect the c enter-of-
+mas s velocity both bef ore and aft er the c ollision?
+8.4Elastic C ollisions in One Dimension
+21.Two cars (A and B) o f mas s 1.5 k g collide. Car A is
+initial ly mo ving at 12 m/s , and car B is initial ly
+moving in the same dir ection with a speed o f 6 m/
+s. The tw o cars ar e mo ving along a s traight line
+before and aft er the c ollision. What wil l be the
+chang e in momentum o f this s ystem aft er the
+collision?
+a.−27 k g • m/s
+b.zero
+c.+27 k g • m/s
+d.It depends on whether the c ollision is elas tic
+or inelas tic.
+22.Two cars (A and B) o f mas s 1.5 k g collide. Car A is
+initial ly mo ving at 24 m/s , and car B is initial ly
+moving in the opposit e dir ection with a speed o f
+12 m/s . The tw o cars ar e mo ving along a s traight
+line bef ore and aft er the c ollision. (a) If the tw o
+cars ha ve an elas tic c ollision, calculat e the chang e
+in momentum o f the tw o-car s ystem. (b) If the tw o
+cars ha ve a c omplet ely inelas tic c ollision,
+calculat e the chang e in momentum o f the tw o-car
+system.
+23.Puck A (200 g ) slides acr oss a frictionles s sur face to
+collide with puck B (800 g ), initial ly at r est. The v elocity
+of each puck is measur ed during the e xperiment as
+follows:
+Time Velocit y A Velocit y B
+0 +8.0 m/s 0
+1.0 s +8.0 m/s 0
+2.0 s −2.0 m/s +2.5 m/s
+3.0 s −2.0 m/s +2.5 m/s
+TABLE 8.2
+What is the chang e in momentum o f the c enter of mas s
+of the s ystem as a r esul t of the c ollision?
+a.+1.6 k g•m/sb.+0.8 k g•m/s
+c.0
+d.−1.6 k g•m/s
+24.For the table abo ve, calculat e the c enter-of-mas s
+velocity o f the s ystem both bef ore and aft er the
+collision, then calculat e the c enter-of-mas s
+momentum o f the s ystem both bef ore and aft er
+the c ollision. F rom this , det ermine the chang e in
+the momentum o f the s ystem as a r esul t of the
+collision.
+25.Two cars (A and B) o f equal mas s ha ve an elas tic
+collision. P rior t o the c ollision, car A is mo ving at
+15 m/s in the + x-direction, and car B is mo ving at
+10 m/s in the – x-direction. As suming that both
+cars c ontinue mo ving along the x-axis aft er the
+collision, what wil l be the v elocity o f car A aft er
+the c ollision?
+a.same as the original 15 m/s speed, opposit e
+direction
+b.equal t o car B’ s velocity prior t o the c ollision
+c.equal t o the a verage of the tw o velocities , in
+its original dir ection
+d.equal t o the a verage of the tw o velocities , in
+the opposit e dir ection
+26.Two cars (A and B) o f equal mas s ha ve an elas tic
+collision. P rior t o the c ollision, car A is mo ving at
+20 m/s in the + x-direction, and car B is mo ving at
+10 m/s in the – x-direction. As suming that both
+cars c ontinue mo ving along the x-axis aft er the
+collision, what wil l be the v elocities o f each car
+after the c ollision?
+27.A rubber bal l is dr opped fr om r est at a fix ed
+height. It bounc es o ff a har d floor and r ebounds
+upward, but it onl y reaches 90% o f its original
+fixed height. What is the bes t way to explain the
+loss of kinetic ener gy of the bal l during the
+collision?
+a.Ener gy was requir ed to def orm the bal l’s
+shape during the c ollision with the floor .
+b.Ener gy was los t due t o work done b y the bal l
+pushing on the floor during the c ollision.
+c.Ener gy was los t due t o friction betw een the
+ball and the floor .
+d.Ener gy was los t due t o the w ork done b y
+gravity during the motion.
+28.A tennis bal l strikes a w all with an initial speed o f
+15 m/s . The bal l bounc es o ff the w all but
+rebounds with slightl y les s speed (14 m/s) aft er
+the c ollision. Explain (a) what else chang ed its376 8 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+momentum in r esponse t o the bal l’s chang e in
+momentum so that o verall momentum is
+conser ved, and (b) ho w some o f the bal l’s kinetic
+ener gy was los t.
+29.Two objects , A and B , have equal mas s. Prior t o
+the c ollision, mas s A is mo ving 10 m/s in the
++x-direction, and mas s B is mo ving 4 m/s in the
++x-direction. Which o f the f ollowing r esul ts
+represents an inelas tic c ollision betw een A and B?
+a.After the c ollision, mas s A is at r est, and mas s
+B mo ves 14 m/s in the + x-direction.
+b.After the c ollision, mas s A mo ves 4 m/s in the
+–x-direction, and mas s B mo ves 18 m/s in the
++x-direction.
+c.After the c ollision, the tw o mas ses s tick
+together and mo ve 7 m/s in the + x-direction.
+d.After the c ollision, mas s A mo ves 4 m/s in the
++x-direction, and mas s B mo ves 10 m/s in the
++x-direction.
+30.Mas s A is thr ee times mor e mas sive than mas s B.
+Mas s A is initial ly mo ving 12 m/s in the
++x-direction. Mas s B is initial ly mo ving 12 m/s in
+the – x-direction. As suming that the c ollision is
+elas tic, calculat e the final v elocity o f both mas ses
+after the c ollision. Sho w that y our r esul ts ar e
+consis tent with c onser vation o f momentum and
+conser vation o f kinetic ener gy.
+31.Two objects (A and B) o f equal mas s collide
+elas tical ly. Mas s A is initial ly mo ving 5.0 m/s in the
++x-direction prior t o the c ollision. Mas s B is
+initial ly mo ving 3.0 m/s in the – x-direction prior t o
+the c ollision. Aft er the c ollision, mas s A wil l be
+moving with a v elocity o f 3.0 m/s in the
+–x-direction. What wil l be the v elocity o f mas s B
+after the c ollision?
+a.3.0 m/s in the + x-direction
+b.5.0 m/s in the + x-direction
+c.3.0 m/s in the – x-direction
+d.5.0 m/s in the – x-direction
+32.Two objects (A and B) o f equal mas s collide
+elas tical ly. Mas s A is initial ly mo ving 4.0 m/s in the
++x-direction prior t o the c ollision. Mas s B is
+initial ly mo ving 8.0 m/s in the – x-direction prior t o
+the c ollision. Aft er the c ollision, mas s A wil l be
+moving with a v elocity o f 8.0 m/s in the
+–x-direction. (a) Use the principle o f conser vation
+of momentum t o predict the v elocity o f mas s B
+after the c ollision. (b) Use the fact that kinetic
+ener gy is c onser ved in elas tic c ollisions t o predict
+the v elocity o f mas s B aft er the c ollision.33.Two objects o f equal mas s collide. Object A is
+initial ly mo ving in the + x-direction with a speed o f
+12 m/s , and object B is initial ly at r est. Aft er the
+collision, object A is at r est, and object B is mo ving
+away with some unkno wn v elocity . Ther e are no
+external f orces acting on the s ystem o f two
+mas ses. What s tatement can w e mak e about this
+collision?
+a.Both momentum and kinetic ener gy are
+conser ved.
+b.Momentum is c onser ved, but kinetic ener gy is
+not c onser ved.
+c.Neither momentum nor kinetic ener gy is
+conser ved.
+d.More inf ormation is needed in or der t o
+determine which is c onser ved.
+34.Two objects o f equal mas s collide. Object A is
+initial ly mo ving with a v elocity o f 15 m/s in the
++x-direction, and object B is initial ly at r est. Aft er
+the c ollision, object A is at r est. Ther e are no
+external f orces acting on the s ystem o f two
+mas ses. (a) Use momentum c onser vation t o
+deduc e the v elocity o f object B aft er the c ollision.
+(b) Is this c ollision elas tic? Jus tify your ans wer.
+35.Which o f the f ollowing s tatements is true about an
+inelas tic c ollision?
+a.Momentum is c onser ved, and kinetic ener gy
+is conser ved.
+b.Momentum is c onser ved, and kinetic ener gy
+is not c onser ved.
+c.Momentum is not c onser ved, and kinetic
+ener gy is c onser ved.
+d.Momentum is not c onser ved, and kinetic
+ener gy is not c onser ved.
+36.Explain ho w the momentum and kinetic ener gy of
+a system o f two colliding objects chang es as a
+resul t of (a) an elas tic c ollision and (b) an inelas tic
+collision.
+37.
+8 • T est Prep for AP ® Courses 377
+
+This fig ure sho ws the positions o f two colliding
+objects measur ed bef ore, during , and aft er a
+collision. Mas s A is 1.0 k g. Mas s B is 3.0 k g. Which
+of the f ollowing s tatements is true?
+a.This is an elas tic c ollision, with a t otal
+momentum o f 0 k g • m/s .
+b.This is an elas tic c ollision, with a t otal
+momentum o f 1.67 k g • m/s .
+c.This is an inelas tic c ollision, with a t otal
+momentum o f 0 k g • m/s .
+d.This is an inelas tic c ollision, with a t otal
+momentum o f 1.67 k g • m/s .
+38.For the abo ve graph, det ermine the initial and final
+momentum f or both objects , assuming mas s A is
+1.0 k g and mas s B is 3.0 k g. Also , det ermine the
+initial and final kinetic ener gies f or both objects .
+Based on y our r esul ts, explain whether
+momentum is c onser ved in this c ollision, and s tate
+whether the c ollision is elas tic or inelas tic.
+39.Mas s A (1.0 k g) slides acr oss a frictionles s sur face
+with a v elocity o f 8 m/s in the positiv e dir ection.
+Mas s B (3.0 k g) is initial ly at r est. The tw o objects
+collide and s tick t ogether . What wil l be the chang e
+in the c enter-of-mas s velocity o f the s ystem as a
+resul t of the c ollision?
+a.Ther e wil l be no chang e in the c enter-of-mas s
+velocity .
+b.The c enter-of-mas s velocity wil l decr ease b y
+2 m/s .
+c.The c enter-of-mas s velocity wil l decr ease b y
+6 m/s .
+d.The c enter-of-mas s velocity wil l decr ease b y
+8 m/s .
+40.Mas s A (1.0 k g) slides acr oss a frictionles s sur face
+with a v elocity o f 4 m/s in the positiv e dir ection.
+Mas s B (1.0 k g) slides acr oss the same sur face in
+the opposit e dir ection with a v elocity o f −8 m/s .
+The tw o objects c ollide and s tick t ogether aft er
+the c ollision. P redict ho w the c enter-of-mas s
+velocity wil l chang e as a r esul t of the c ollision, and
+explain y our pr ediction. Calculat e the c enter-of-
+mas s velocity o f the s ystem both bef ore and aft er
+the c ollision and e xplain wh y it r emains the same
+or wh y it has chang ed.
+8.5Inelas tic C ollisions in One Dimension
+41.Mas s A (2.0 k g) has an initial v elocity o f 4 m/s in
+the + x-direction. Mas s B (2.0 k g) has an initial
+velocity o f 5 m/s in the – x-direction. If the tw o
+mas ses ha ve an elas tic c ollision, what wil l be thefinal v elocities o f the mas ses aft er the c ollision?
+a.Both wil l mo ve 0.5 m/s in the – x-direction.
+b.Mas s A wil l stop; mas s B wil l mo ve 9 m/s in
+the + x-direction.
+c.Mas s B wil l stop; mas s A wil l mo ve 9 m/s in
+the – x-direction.
+d.Mas s A wil l mo ve 5 m/s in the – x-direction;
+mas s B wil l mo ve 4 m/s in the + x-direction.
+42.Mas s A has an initial v elocity o f 22 m/s in the
++x-direction. Mas s B is thr ee times mor e mas sive
+than mas s A and has an initial v elocity o f 22 m/s in
+the – x-direction. If the tw o mas ses ha ve an elas tic
+collision, what wil l be the final v elocities o f the
+mas ses aft er the c ollision?
+43.Mas s A (2.0 k g) is mo ving with an initial v elocity o f
+15 m/s in the + x-direction, and it c ollides with
+mas s B (5.0 k g), initial ly at r est. Aft er the c ollision,
+the tw o objects s tick t ogether and mo ve as one .
+What is the chang e in kinetic ener gy of the s ystem
+as a r esul t of the c ollision?
+a.no chang e
+b.decr ease b y 225 J
+c.decr ease b y 161 J
+d.decr ease b y 64 J
+44.Mas s A (2.0 k g) is mo ving with an initial v elocity o f
+15 m/s in the + x-direction, and it c ollides with
+mas s B (4.0 k g), initial ly mo ving 7.0 m/s in the
++x-direction. Aft er the c ollision, the tw o objects
+stick t ogether and mo ve as one . What is the
+chang e in kinetic ener gy of the s ystem as a r esul t
+of the c ollision?
+45.Mas s A slides acr oss a r ough table with an initial
+velocity o f 12 m/s in the + x-direction. B y the time
+mas s A c ollides with mas s B (a s tationar y object
+with equal mas s), mas s A has slo wed to 10 m/s .
+After the c ollision, the tw o objects s tick t ogether
+and mo ve as one . Immediat ely aft er the c ollision,
+the v elocity o f the s ystem is measur ed to be 5 m/s
+in the + x-direction, and the s ystem e ventual ly
+slides t o a s top. Which o f the f ollowing s tatements
+is true about this motion?
+a.Momentum is c onser ved during the c ollision,
+but it is not c onser ved during the motion
+before and aft er the c ollision.
+b.Momentum is not c onser ved at an y time
+during this anal ysis.
+c.Momentum is c onser ved at al l times during
+this anal ysis.
+d.Momentum is not c onser ved during the
+collision, but it is c onser ved during the motion378 8 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+before and aft er the c ollision.
+46.Mas s A is initial ly mo ving with a v elocity o f 12 m/s
+in the + x-direction. Mas s B is twic e as mas sive as
+mas s A and is initial ly at r est. Aft er the tw o objects
+collide, the tw o mas ses mo ve together as one with
+a velocity o f 4 m/s in the + x-direction. Is
+momentum c onser ved in this c ollision?
+47.Mas s A is initial ly mo ving with a v elocity o f 24 m/s
+in the + x-direction. Mas s B is twic e as mas sive as
+mas s A and is initial ly at r est. The tw o objects
+experienc e a t otally inelas tic c ollision. What is the
+final speed o f both objects aft er the c ollision?
+a.A is not mo ving; B is mo ving 24 m/s in the
++x-direction.
+b.Neither A nor B is mo ving .
+c.A is mo ving 24 m/s in the – x-direction. B is
+not mo ving .
+d.Both A and B ar e mo ving t ogether 8 m/s in the
++x-direction.
+48.Mas s A is initial ly mo ving with some unkno wn
+velocity in the + x-direction. Mas s B is twic e as
+mas sive as mas s A and initial ly at r est. The tw o
+objects c ollide, and aft er the c ollision, the y mo ve
+together with a speed o f 6 m/s in the + x-direction.
+(a) Is this c ollision elas tic or inelas tic? Explain. (b)
+Determine the initial v elocity o f mas s A.
+49.Mas s A is initial ly mo ving with a v elocity o f 2 m/s
+in the + x-direction. Mas s B is initial ly mo ving with
+a velocity o f 6 m/s in the – x-direction. The tw o
+objects ha ve equal mas ses. Aft er the y collide,
+mas s A mo ves with a speed o f 4 m/s in the
+–x-direction. What is the final v elocity o f mas s B
+after the c ollision?
+a.6 m/s in the + x-direction
+b.4 m/s in the + x-direction
+c.zero
+d.4 m/s in the – x-direction
+50.Mas s A is initial ly mo ving with a v elocity o f 15 m/sin the + x-direction. Mas s B is twic e as mas sive and
+is initial ly mo ving with a v elocity o f 10 m/s in the
+–x-direction. The tw o objects c ollide, and aft er the
+collision, mas s A mo ves with a speed o f 15 m/s in
+the – x-direction. (a) What is the final v elocity o f
+mas s B aft er the c ollision? (b) Calculat e the
+chang e in kinetic ener gy as a r esul t of the
+collision, as suming mas s A is 5.0 k g.
+8.6Collisions o f Point Masses in T wo
+Dimensions
+51.Two cars o f equal mas s appr oach an int ersection.
+Car A is mo ving eas t at a speed o f 45 m/s . Car B is
+moving south at a speed o f 35 m/s . The y collide
+inelas tical ly and s tick t ogether aft er the c ollision,
+moving as one object. Which o f the f ollowing
+statements is true about the c enter-of-mas s
+velocity o f this s ystem?
+a.The c enter-of-mas s velocity wil l decr ease
+after the c ollision as a r esul t of los t ener gy
+(but not dr op to zero).
+b.The c enter-of-mas s velocity wil l remain the
+same aft er the c ollision sinc e momentum is
+conser ved.
+c.The c enter-of-mas s velocity wil l drop to zero
+sinc e the tw o objects s tick t ogether .
+d.The magnitude o f the c enter-of-mas s velocity
+will remain the same , but the dir ection o f the
+velocity wil l chang e.
+52.Car A has a mas s of 2000 k g and appr oaches an
+intersection with a v elocity o f 38 m/s dir ected to
+the eas t. Car B has a mas s of 3500 k g and
+appr oaches the int ersection with a v elocity o f 53
+m/s dir ected 63° nor th of eas t. The tw o cars
+collide and s tick t ogether aft er the c ollision. Wil l
+the c enter-of-mas s velocity chang e as a r esul t of
+the c ollision? Explain wh y or wh y not. Calculat e
+the c enter-of-mas s velocity bef ore and aft er the
+collision.8 • T est Prep for AP ® Courses 379
+
+380 8 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+CONNECT ION F OR AP® C OURSESCHAP TER 9
+Statics and T orque
+9.1The Firs t Condition f or E quilibrium
+9.2The Sec ond Condition f or E quilibrium
+9.3Stability
+9.4Applica tions o f Statics, Including P roblem-Sol ving S trategies
+9.5Simple Machines
+9.6Forces and T orques in Muscles and Joints
+What might desk s, bridg es, buildings , trees, and mountains ha ve in c ommon?
+What do these objects ha ve in c ommon with a car mo ving at a c onstant v elocity? While it ma y be appar ent that the
+objects in the firs t group ar e all motionles s relativ e to Ear th, the y also shar e something with the mo ving car and al l
+objects mo ving at a c onstant v elocity . All of these objects , stationar y and mo ving , shar e an ac celeration o f zero. How
+can this be? Consider Ne wton's sec ond la w,F=ma. When ac celeration is z ero, as is the case f or both s tationar y
+objects and objects mo ving at a c onstant v elocity , the net e xternal f orce mus t also be z ero (Big I dea 3). F orces ar e
+acting on both s tationar y objects and on objects mo ving at a c onstant v elocity , but the f orces ar e balanc ed. That is ,
+they are in equilibrium . In equilibrium, the net f orce is z ero.
+The firs t two sections o f this chap ter wil l focus on the tw o conditions nec essary for equilibrium. The y wil l not onl y
+help y ou to dis tinguish betw een s tationar y bridg es and cars mo ving at c onstant v elocity , but wil l intr oduc e a sec ond
+equilibrium c ondition, this time in volving r otation. As y ou e xplor e the sec ond equilibrium c ondition, y ou wil l learn
+about t orque, in suppor t of both Enduring Unders tanding 3.F and Es sential K nowledg e 3.F .1. Much lik e a f orce,
+torque pr ovides the capability f or ac celeration; ho wever, with car eful at tention, t orques ma y also be balanc ed and
+equilibrium can be r eached.FIGURE 9.1On a shor t time scale , rocks like these in Aus tralia’ s Kalbarri National P ark ar e static, or motionles s relativ e to the Ear th. (cr edit:
+Richar d Liblanc /Flickr)
+CHAP TER OUTLINE
+
+•State the first condition of equilibrium.
+•Explain static equilibrium.
+•Explain dynamic equilibrium.
+The first condition necessary to achieve equilibrium is the one already mentioned: the net external force on the
+system must be zero. Expressed as an equation, this is simply
+Note that if net is zero, then the net external force in any direction is zero. For example, the net external forces
+along the typical x- and y-axes are zero. This is written as
+Figure 9.2 and Figure 9.3 illustrate situations where for both static equilibrium (motionless), and
+dynamic equilibrium (constant velocity).
+FIGURE 9.2 This motionless person is in static equilibrium. The forces acting on him add up to zero. Both forces are vertical in this case.9.1
+9.2382 9 • Statics and Torque
+The remainder of this chapter will discuss a variety of interesting equilibrium applications. From the art of balancing,  
+to simple machines, to the muscles in your body, the world around you relies upon the principles of equilibrium to 
+remain stable. This chapter will help you to see just how closely related these events truly are.
+The content in this chapter supports:
+Big Idea 3 The interactions of an object with other objects can be described by forces.
+Enduring Understanding 3.F A force exerted on an object can cause a torque on that object.
+Essential Knowledge 3. F.1 Only the force component perpendicular to the line connecting the axis of rotation and 
+the point of application of the force results in a torque about that axis.
+Click to view content (https:/ /openstax.org/books/college-physics-ap-courses-2e/pages/9-connection-for-ap-r-
+courses)
+9.1 The First Condition for Equilibrium
+LEARNING OBJECTIVES
+By the end of this section, you will be able to:
+Access for free at openstax.org
+
+FIGURE 9.3This car is in dynamic equilibrium because it is mo ving at c onstant v elocity . Ther e are horiz ontal and v ertical f orces, but the net
+external f orce in an y dir ection is z ero. The applied f orce betw een the tir es and the r oad is balanc ed b y air friction, and the w eight o f
+the car is suppor ted b y the normal f orces, her e sho wn t o be equal f or al l four tir es.
+However, it is not sufficient f or the net e xternal f orce of a s ystem t o be z ero for a s ystem t o be in equilibrium.
+Consider the tw o situations il lustrated in Figure 9.4 and Figure 9.5 wher e forces ar e applied t o an ic e hock ey stick
+lying flat on ic e. The net e xternal f orce is z ero in both situations sho wn in the fig ure; but in one case , equilibrium is
+achie ved, wher eas in the other , it is not. In Figure 9.4 , the ic e hock ey stick r emains motionles s. But in Figure 9.5 ,
+with the same f orces applied in diff erent plac es, the s tick e xperienc es ac celerated rotation. Ther efore, we kno w that
+the point at which a f orce is applied is another fact or in det ermining whether or not equilibrium is achie ved. This wil l
+be e xplor ed fur ther in the ne xt section.
+FIGURE 9.4An ic e hock ey stick l ying flat on ic e with tw o equal and opposit e horiz ontal f orces applied t o it. F riction is negligible , and the
+gravitational f orce is balanc ed b y the suppor t of the ic e (a normal f orce). Thus , . Equilibrium is achie ved, which is s tatic
+equilibrium in this case .
+FIGURE 9.5The same f orces ar e applied at other points and the s tick r otat es—in fact, it e xperienc es an ac celerated rotation. Her e
+but the s ystem is notat equilibrium. Henc e, the is a nec essary—but not sufficient —condition f or achie ving equilibrium.
+PHE T EXPLORATIONS
+Torque
+Investigate ho w torque causes an object t o rotat e. Disc over the r elationships betw een ang ular ac celeration,
+moment o f iner tia, ang ular momentum and t orque.
+9.1 • The Fir st Condition f or Equilibrium 383
+
+Click t o vie w content(https:/ /opens tax.org/l/21angmomintsim) .
+9.2The Sec ond C ondition f or Equilibrium
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Stat e the sec ond c ondition that is nec essary to achie ve equilibrium.
+•Explain t orque and the fact ors on which it depends .
+•Describe the r ole o f torque in r otational mechanics .
+Several familiar fact ors det ermine ho w eff ectiv e you ar e in opening the door . See Figure 9.6 . Firs t of all, the lar ger
+the f orce, the mor e eff ectiv e it is in opening the door —obviousl y, the har der y ou push, the mor e rapidl y the door
+opens . Also , the point at which y ou push is crucial . If y ou appl y your f orce too close t o the hing es, the door wil l open
+slowly, if at al l. Mos t people ha ve been embarr assed b y making this mis take and bumping up ag ains t a door when it
+did not open as quickl y as e xpect ed. Final ly, the dir ection in which y ou push is also impor tant. The mos t eff ectiv e
+direction is perpendicular t o the door —we push in this dir ection almos t ins tinctiv ely.
+FIGURE 9.6Torque is the turning or twis ting eff ectiv enes s of a force, illustrated her e for door r otation on its hing es (as vie wed fr om
+overhead). T orque has both magnitude and dir ection. (a) Count erclockwise t orque is pr oduc ed b y this f orce, which means that the door wil l
+rotat e in a c ount erclockwise due t o. Not e that is the perpendicular dis tanc e of the piv ot fr om the line o f action o f the f orce. (b) A
+smal ler c ount erclockwise t orque is pr oduc ed b y a smal ler force acting at the same dis tanc e from the hing es (the piv ot point). (c) The
+same f orce as in (a) pr oduc es a smal ler c ount erclockwise t orque when applied at a smal ler dis tanc e from the hing es. (d) The same f orce as
+in (a), but acting in the opposit e dir ection, pr oduc es a clockwise t orque. (e) A smal ler c ount erclockwise t orque is pr oduc ed b y the same
+magnitude f orce acting at the same point but in a diff erent dir ection. Her e,is les s than . (f) Torque is z ero her e sinc e the f orce jus t pul ls
+on the hing es, producing no r otation. In this case , .
+The magnitude , direction, and point o f application o f the f orce are inc orpor ated int o the definition o f the ph ysical
+quantity cal led t orque.Torque is the r otational equiv alent o f a force. It is a measur e of the eff ectiv enes s of a force in
+changing or ac celerating a r otation (changing the ang ular v elocity o ver a period o f time). In equation f orm, theTORQUE
+The sec ond c ondition nec essary to achie ve equilibrium in volves a voiding ac celerated rotation (maintaining a
+constant ang ular v elocity). A r otating body or s ystem can be in equilibrium if its r ate of rotation is c onstant and
+remains unchang ed b y the f orces acting on it. T o unders tand what fact ors aff ect r otation, let us think about what
+happens when y ou open an or dinar y door b y rotating it on its hing es.384 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+magnitude o f torque is defined t o be
+wher e(the Gr eek let ter tau) is the s ymbol f or torque,is the dis tanc e from the piv ot point t o the point wher e the
+force is applied, is the magnitude o f the f orce, and is the angle betw een the f orce and the v ector dir ected fr om
+the point o f application t o the piv ot point, as seen in Figure 9.6 and Figure 9.7 . An al ternativ e expression f or torque
+is giv en in t erms o f the perpendicular le ver arm as sho wn in Figure 9.6 and Figure 9.7 , which is defined as
+so that
+FIGURE 9.7A force applied t o an object can pr oduc e a t orque, which depends on the location o f the piv ot point. (a) The thr ee fact ors ,,
+and for piv ot point A on a body ar e sho wn her e—is the dis tanc e from the chosen piv ot point t o the point wher e the f orceis applied,
+and is the angle betw een and the v ector dir ected fr om the point o f application t o the piv ot point. If the object can r otat e around point A ,
+it wil l rotat e count erclockwise . This means that t orque is c ount erclockwise r elativ e to piv ot A . (b) In this case , point B is the piv ot point. The
+torque fr om the applied f orce wil l cause a clockwise r otation ar ound point B , and so it is a clockwise t orque r elativ e to B.
+The perpendicular le ver arm is the shor test dis tanc e from the piv ot point t o the line along which acts; it is
+shown as a dashed line in Figure 9.6 and Figure 9.7 . Not e that the line segment that defines the dis tanc e is
+perpendicular t o, as its name implies . It is sometimes easier t o find or visualiz e than t o find both and . In
+such cases , it ma y be mor e convenient t o use rather than for torque, but both ar e equal ly
+valid.
+The SI unit o f torque is ne wtons times met ers, usual ly writ ten as . For example , if y ou push perpendicular t o
+the door with a f orce of 40 N at a dis tanc e of 0.800 m fr om the hing es, you e xert a torque o f 32 N·m(0.800 m × 40 N
+× sin 90º) r elativ e to the hing es. If y ou reduc e the f orce to 20 N, the t orque is r educ ed to , and so on.
+The t orque is al ways calculat ed with r eference to some chosen piv ot point. F or the same applied f orce, a diff erent
+choic e for the location o f the piv ot wil l giv e you a diff erent v alue f or the t orque, sinc e both and depend on the
+location o f the piv ot. An y point in an y object can be chosen t o calculat e the t orque about that point. The object ma y
+not actual ly piv ot about the chosen “ pivot point. ”
+Note that f or rotation in a plane , torque has tw o pos sible dir ections . Torque is either clockwise or c ount erclockwise
+relativ e to the chosen piv ot point, as il lustrated for points B and A , respectiv ely, inFigure 9.7 . If the object can r otat e
+about point A , it wil l rotat e count erclockwise , which means that the t orque f or the f orce is sho wn as
+count erclockwise r elativ e to A. But if the object can r otat e about point B , it wil l rotat e clockwise , which means the
+torque f or the f orce sho wn is clockwise r elativ e to B. Also , the magnitude o f the t orque is gr eater when the le ver arm
+is long er.
+Now,the sec ond c ondition nec essary to achie ve equilibrium is that the net e xternal t orque on a s ystem mus t be
+zero. An e xternal t orque is one that is cr eated b y an e xternal f orce. You can choose the point ar ound which the
+torque is calculat ed. The point can be the ph ysical piv ot point o f a s ystem or an y other point in spac e—but it mus t be
+the same point f or al l torques . If the sec ond c ondition (net e xternal t orque on a s ystem is z ero) is satis fied f or one9.3
+9.4
+9.59.2 • The Sec ond C ondition f or Equilibrium 385
+
+choic e of piv ot point, it wil l also hold true f or an y other choic e of piv ot point in or out o f the s ystem o f interest. (This
+is true onl y in an iner tial fr ame o f reference.) The sec ond c ondition nec essary to achie ve equilibrium is s tated in
+equation f orm as
+wher e net means t otal. Torques , which ar e in opposit e dir ections ar e as signed opposit e signs . A c ommon
+convention is t o cal l count erclockwise (c cw) t orques positiv e and clockwise (cw) t orques neg ative.
+When tw o childr en balanc e a seesa w as sho wn in Figure 9.8 , the y satis fy the tw o conditions f or equilibrium. Mos t
+people ha ve per fect intuition about seesa ws, kno wing that the light er child mus t sit far ther fr om the piv ot and that a
+heavier child can k eep a light er one o ff the gr ound indefinit ely.
+FIGURE 9.8Two childr en balancing a seesa w satis fy both c onditions f or equilibrium. The light er child sits far ther fr om the piv ot to create a
+torque equal in magnitude t o that o f the hea vier child.
+EXAMPLE 9.1
+She Sa w Torques On A Seesa w
+The tw o childr en sho wn in Figure 9.8 are balanc ed on a seesa w of negligible mas s. (This as sump tion is made t o
+keep the e xample simple —mor e involved e xamples wil l follow.) The firs t child has a mas s of 26.0 k g and sits 1.60 m
+from the piv ot.(a) If the sec ond child has a mas s of 32.0 k g, how far is she fr om the piv ot? (b) What is , the
+suppor ting f orce exerted b y the piv ot?
+Strategy
+Both c onditions f or equilibrium mus t be satis fied. In par t (a), w e are ask ed for a dis tanc e; thus , the sec ond c ondition
+(regarding t orques) mus t be used, sinc e the firs t (regarding onl y forces) has no dis tanc es in it. T o appl y the sec ond
+condition f or equilibrium, w e firs t identif y the s ystem o f interest to be the seesa w plus the tw o childr en. W e tak e the
+suppor ting piv ot to be the point about which the t orques ar e calculat ed. W e then identif y all external f orces acting
+on the s ystem.
+Solution (a)
+The thr ee e xternal f orces acting on the s ystem ar e the w eights o f the tw o childr en and the suppor ting f orce of the
+pivot. L et us e xamine the t orque pr oduc ed b y each. T orque is defined t o be
+Here , so that for al l thr ee forces. That means for al l thr ee. The t orques e xerted b y the
+three forces ar e firs t,
+second,9.6
+9.7
+9.8386 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+and thir d,
+Note that a minus sign has been inser ted int o the sec ond equation because this t orque is clockwise and is ther efore
+negative by convention. Sinc e acts dir ectly on the piv ot point, the dis tanc e is zero. A force acting on the piv ot
+cannot cause a r otation, jus t as pushing dir ectly on the hing es o f a door wil l not cause it t o rotat e. No w, the sec ond
+condition f or equilibrium is that the sum o f the t orques on both childr en is z ero. Ther efore
+or
+Weight is mas s times the ac celeration due t o gravity. Ent ering for , we get
+Solve this f or the unkno wn :
+The quantities on the right side o f the equation ar e kno wn; thus , is
+As e xpect ed, the hea vier child mus t sit closer t o the piv ot (1.30 m v ersus 1.60 m) t o balanc e the seesa w.
+Solution (b)
+This par t ask s for a f orce . The easies t way to find it is t o use the firs t condition f or equilibrium, which is
+The f orces ar e all vertical , so that w e are dealing with a one -dimensional pr oblem along the v ertical axis; henc e, the
+condition can be writ ten as
+wher e we ag ain cal l the v ertical axis the y-axis . Choosing up ward to be the positiv e dir ection, and using plus and
+minus signs t o indicat e the dir ections o f the f orces, we see that
+This equation yields what might ha ve been g uessed at the beginning:
+So, the piv ot supplies a suppor ting f orce equal t o the t otal w eight o f the s ystem:
+Entering kno wn v alues giv es
+Discus sion
+The tw o resul ts mak e intuitiv e sense . The hea vier child sits closer t o the piv ot. The piv ot suppor ts the w eight o f the
+two childr en. P art (b) can also be sol ved using the sec ond c ondition f or equilibrium, sinc e both dis tanc es ar e kno wn,9.9
+9.10
+9.11
+9.12
+9.13
+9.14
+9.15
+9.16
+9.17
+9.18
+9.19
+9.20
+9.219.2 • The Sec ond C ondition f or Equilibrium 387
+
+but onl y if the piv ot point is chosen t o be some wher e other than the location o f the seesa w’s actual piv ot!
+Several aspects o f the pr eceding e xample ha ve broad implications . Firs t, the choic e of the piv ot as the point ar ound
+which t orques ar e calculat ed simplified the pr oblem. Sinc e is exerted on the piv ot point, its le ver arm is z ero.
+Henc e, the t orque e xerted b y the suppor ting f orce is zero relativ e to that piv ot point. The sec ond c ondition f or
+equilibrium holds f or an y choic e of piv ot point, and so w e choose the piv ot point t o simplif y the solution o f the
+problem.
+Second, the ac celeration due t o gravity canc eled in this pr oblem, and w e were left with a r atio o f mas ses.This wil l
+not al ways be the case . Always ent er the c orrect f orces—do not jump ahead t o ent er some r atio o f mas ses.
+Third, the w eight o f each child is dis tribut ed o ver an ar ea o f the seesa w, yet w e treated the w eights as if each f orce
+were exerted at a single point. This is not an appr oximation—the dis tanc es and are the dis tanc es to points
+directly belo w the center of gravity of each child. As w e shal l see in the ne xt section, the mas s and w eight o f a
+system can act as if the y are locat ed at a single point.
+Final ly, not e that the c oncept of torque has an impor tanc e be yond s tatic equilibrium. Torque pla ys the same r ole in
+rotational motion that f orce pla ys in linear motion. We wil l examine this in the ne xt chap ter.
+9.3Stabilit y
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Stat e the types o f equilibrium.
+•Describe s table and uns table equilibriums .
+•Describe neutr al equilibrium.
+It is one thing t o ha ve a s ystem in equilibrium; it is quit e another f or it t o be s table . The t oy dol l per ched on the
+man ’s hand in Figure 9.9 , for example , is not in s table equilibrium. Ther e arethree types o f equilibrium :stable ,
+unstable , and neutr al. Fig ures thr oughout this module il lustrate various e xamples .
+Figure 9.9 presents a balanc ed s ystem, such as the t oy dol l on the man ’s hand, which has its c enter of gravity (c g)
+directly over the piv ot, so that the t orque o f the t otal w eight is z ero. This is equiv alent t o ha ving the t orques o f the
+individual par ts balanc ed about the piv ot point, in this case the hand. The c gs o f the arms , legs , head, and t orso ar e
+labeled with smal ler type .TAKE-HOME E XPERIMENT
+Take a piec e of modeling cla y and put it on a table , then mash a cylinder do wn int o it so that a ruler can balanc e
+on the r ound side o f the cylinder while e verything r emains s till. Put a penn y 8 cm a way from the piv ot. Wher e
+would y ou need t o put tw o pennies t o balanc e? Thr ee pennies?388 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+FIGURE 9.9A man balanc es a t oy dol l on one hand.
+A system is said t o be in stable equilibrium if, when displac ed fr om equilibrium, it e xperienc es a net f orce or t orque
+in a dir ection opposit e to the dir ection o f the displac ement. F or example , a marble at the bot tom o f a bo wl wil l
+experienc e arestoring force when displac ed fr om its equilibrium position. This f orce mo ves it back t oward the
+equilibrium position. Mos t systems ar e in s table equilibrium, especial ly for smal l displac ements . For another
+example o f stable equilibrium, see the pencil in Figure 9.10 .
+FIGURE 9.10 This pencil is in the c ondition o f equilibrium. The net f orce on the pencil is z ero and the t otal t orque about an y piv ot is z ero.
+A system is in unstable equilibrium if, when displac ed, it e xperienc es a net f orce or t orque in the same direction as
+the displac ement fr om equilibrium. A s ystem in uns table equilibrium ac celerates a way from its equilibrium position
+if displac ed e ven slightl y. An ob vious e xample is a bal l resting on t op o f a hil l. Onc e displac ed, it ac celerates a way
+from the cr est. See the ne xt se veral fig ures for examples o f uns table equilibrium.9.3 • S tabilit y 389
+
+FIGURE 9.11 If the pencil is displac ed slightl y to the side (c ount erclockwise), it is no long er in equilibrium. Its w eight pr oduc es a clockwise
+torque that r eturns the pencil t o its equilibrium position.
+FIGURE 9.12 If the pencil is displac ed too far , the t orque caused b y its w eight chang es dir ection t o count erclockwise and causes the
+displac ement t o incr ease .
+FIGURE 9.13 This fig ure sho ws uns table equilibrium, al though both c onditions f or equilibrium ar e satis fied.390 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+FIGURE 9.14 If the pencil is displac ed e ven slightl y, a torque is cr eated b y its w eight that is in the same dir ection as the displac ement,
+causing the displac ement t o incr ease .
+A system is in neutr al equilibrium if its equilibrium is independent o f displac ements fr om its original position. A
+marble on a flat horiz ontal sur face is an e xample . Combinations o f these situations ar e pos sible . For example , a
+marble on a saddle is s table f or displac ements t oward the fr ont or back o f the saddle and uns table f or
+displac ements t o the side .Figure 9.15 shows another e xample o f neutr al equilibrium.
+FIGURE 9.15 (a) Her e we see neutr al equilibrium. The c g of a spher e on a flat sur face lies dir ectly abo ve the point o f suppor t, independent
+of the position on the sur face. The spher e is ther efore in equilibrium in an y location, and if displac ed, it wil l remain put. (b) Because it has a
+circular cr oss section, the pencil is in neutr al equilibrium f or displac ements perpendicular t o its length.
+When w e consider ho w far a s ystem in s table equilibrium can be displac ed bef ore it bec omes uns table , we find that
+some s ystems in s table equilibrium ar e mor e stable than others . The pencil in Figure 9.10 and the person in Figure
+9.16 (a) ar e in s table equilibrium, but bec ome uns table f or relativ ely smal l displac ements t o the side . The critical
+point is r eached when the c g is no long erabovethe base o f suppor t. Additional ly, sinc e the c g of a person ’s body is
+above the piv ots in the hips , displac ements mus t be quickl y contr olled. This c ontr ol is a c entr al ner vous s ystem9.3 • S tabilit y 391
+
+function that is de veloped when w e learn t o hold our bodies er ect as infants . For incr eased s tability while s tanding ,
+the f eet should be spr ead apar t, giving a lar ger base o f suppor t. Stability is also incr eased b y lowering one ’s center
+of gravity b y bending the knees , as when a f ootbal l pla yer pr epar es to receive a bal l or br aces themsel ves for a
+tackle . A cane , a crut ch, or a w alker incr eases the s tability o f the user , even mor e as the base o f suppor t widens .
+Usual ly, the c g of a female is lo wer (closer t o the gr ound) than a male . Young childr en ha ve their c enter of gravity
+betw een their shoulders , which incr eases the chal leng e of learning t o walk.
+FIGURE 9.16 (a) The c enter of gravity o f an adul t is abo ve the hip joints (one o f the main piv ots in the body) and lies betw een tw o narr owly-
+separ ated feet. Lik e a pencil s tanding on its er aser , this person is in s table equilibrium in r elation t o side ways displac ements , but r elativ ely
+smal l displac ements tak e his c g outside the base o f suppor t and mak e him uns table . Humans ar e les s stable r elativ e to forward and
+backw ard displac ements because the f eet ar e not v ery long . Muscles ar e used e xtensiv ely to balanc e the body in the fr ont-to-back
+direction. (b) While bending in the manner sho wn, s tability is incr eased b y lowering the c enter of gravity. Stability is also incr eased if the
+base is e xpanded b y placing the f eet far ther apar t.
+Animals such as chick ens ha ve easier s ystems t o contr ol.Figure 9.17 shows that the c g of a chick en lies belo w its
+hip joints and betw een its widel y separ ated and br oad f eet. Ev en relativ ely lar ge displac ements o f the chick en’s cg
+are stable and r esul t in r estoring f orces and t orques that r eturn the c g to its equilibrium position with lit tle eff ort on
+the chick en’s par t. Not al l birds ar e lik e chick ens, of course . Some bir ds, such as the flaming o, have balanc e systems
+that ar e almos t as sophis ticat ed as that o f humans .
+Figure 9.17 shows that the c g of a chick en is belo w the hip joints and lies abo ve a br oad base o f suppor t formed b y
+widel y-separ ated and lar ge feet. Henc e, the chick en is in v ery stable equilibrium, sinc e a r elativ ely lar ge
+displac ement is needed t o render it uns table . The body o f the chick en is suppor ted fr om abo ve by the hips and acts
+as a pendulum betw een the hips . Ther efore, the chick en is s table f or fr ont-to-back displac ements as w ell as f or
+side -to-side displac ements .
+FIGURE 9.17 The c enter of gravity o f a chick en is belo w the hip joints . The chick en is in s table equilibrium. The body o f the chick en is
+suppor ted fr om abo ve by the hips and acts as a pendulum betw een them.
+Engineers and ar chitects s trive to achie ve extremel y stable equilibriums f or buildings and other s ystems that mus t
+withs tand wind, ear thquak es, and other f orces that displac e them fr om equilibrium. Al though the e xamples in this
+section emphasiz e gravitational f orces, the basic c onditions f or equilibrium ar e the same f or al l types o f forces. The
+net e xternal f orce mus t be z ero, and the net t orque mus t also be z ero.392 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+9.4Applic ations o f Statics , Including P roblem-Solving S trategies
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Discus s the applications o f Statics in r eal lif e.
+•Stat e and discus s various pr oblem-sol ving s trategies in Statics .
+Statics can be applied t o a v ariety o f situations , ranging fr om r aising a dr awbridg e to bad pos ture and back s train.
+We begin with a discus sion o f problem-sol ving s trategies specifical ly used f or statics . Sinc e statics is a special case
+of Ne wton’s laws, both the g ener al pr oblem-sol ving s trategies and the special s trategies f or Ne wton’s laws,
+discus sed in Problem-Sol ving Str ategies , still appl y.
+Now let us appl y this pr oblem-sol ving s trategy for the pole v aulter sho wn in the thr ee fig ures belo w. The pole is
+uniform and has a mas s of 5.00 k g. InFigure 9.18 , the pole ’s cg lies halfw ay betw een the v aulter’s hands . It seems
+reasonable that the f orce exerted b y each hand is equal t o half the w eight o f the pole , or 24.5 N. This ob viousl y
+satis fies the firs t condition f or equilibrium . The sec ond c ondition is also satis fied, as w e can
+see b y choosing the c g to be the piv ot point. The w eight e xerts no t orque about a piv ot point locat ed at the c g, sinc e
+it is applied at that point and its le ver arm is z ero. The equal f orces e xerted b y the hands ar e equidis tant fr om the
+chosen piv ot, and so the y exert equal and opposit e torques . Similar ar guments hold f or other s ystems wher e
+suppor ting f orces ar e exerted s ymmetrical ly about the c g. For example , the f our legs o f a unif orm table each suppor t
+one-fourth of its w eight.
+InFigure 9.18 , a pole v aulter holding a pole with its c g halfw ay betw een his hands is sho wn. Each hand e xerts a
+force equal t o half the w eight o f the pole , . (b) The pole v aulter mo ves the pole t o his left, and the
+forces that the hands e xert are no long er equal . See Figure 9.18 . If the pole is held with its c g to the left o f the
+person, then he mus t push do wn with his right hand and up with his left. The f orces he e xerts ar e lar ger her e
+because the y are in opposit e dir ections and the c g is at a long dis tanc e from either hand.
+Similar obser vations can be made using a met er stick held at diff erent locations along its length.TAKE-HOME E XPERIMENT
+Stand s traight with y our heels , back, and head ag ains t a w all. Bend f orward from y our w aist, keeping y our heels
+and bot tom ag ains t the w all, to touch y our t oes. Can y ou do this without t oppling o ver? Explain wh y and what
+you need t o do t o be able t o touch y our t oes without losing y our balanc e. Is it easier f or a w oman t o do this?
+PROBLEM-SOL VING S TRATEGY: STATIC E QUILIBRIUM SITU ATIONS
+1.The firs t step is t o det ermine whether or not the s ystem is in static equilibrium . This c ondition is al ways the
+case when the acceleration o f the s ystem is z ero and ac celerated rotation does not oc cur.
+2.It is par ticularl y impor tant t odraw a fr ee body diagr am f or the s ystem o f interest. Car efully label al l forces,
+and not e their r elativ e magnitudes , directions , and points o f application whene ver these ar e kno wn.
+3.Solve the pr oblem b y appl ying either or both o f the c onditions f or equilibrium (r epresent ed b y the equations
+and , depending on the lis t of kno wn and unkno wn fact ors. If the sec ond c ondition is
+involved,choose the piv ot point t o simplif y the solution . Any piv ot point can be chosen, but the mos t useful
+ones cause t orques b y unkno wn f orces to be z ero. (Torque is z ero if the f orce is applied at the piv ot (then
+), or along a line thr ough the piv ot point (then )). Al ways choose a c onvenient c oordinat e system
+for pr ojecting f orces.
+4.Check the solution t o see if it is r easonable by examining the magnitude , direction, and units o f the ans wer.
+The impor tanc e of this las t step ne ver diminishes , although in unfamiliar applications , it is usual ly mor e
+difficul t to judg e reasonablenes s. These judgments bec ome pr ogressively easier with e xperienc e.9.4 • Applic ations o f Statics , Including P roblem-Solving S trategies 393
+
+FIGURE 9.18 A pole v aulter holds a pole horiz ontal ly with both hands .
+FIGURE 9.19 A pole v aulter is holding a pole horiz ontal ly with both hands . The c enter of gravity is near his right hand.
+FIGURE 9.20 A pole v aulter is holding a pole horiz ontal ly with both hands . The c enter of gravity is t o the left side o f the v aulter.
+If the pole v aulter holds the pole as sho wn in Figure 9.19 , the situation is not as simple . The t otal f orce he e xerts is
+still equal t o the w eight o f the pole , but it is not e venly divided betw een his hands . (If , then the t orques
+about the c g would not be equal sinc e the le ver arms ar e diff erent.) L ogical ly, the right hand should suppor t mor e
+weight, sinc e it is closer t o the c g. In fact, if the right hand is mo ved dir ectly under the c g, it wil l suppor t all the
+weight. This situation is e xactl y analog ous t o tw o people carr ying a load; the one closer t o the c g carries mor e of its
+weight. Finding the f orces and is straight forward, as the ne xt example sho ws.
+If the pole v aulter holds the pole fr om near the end o f the pole ( Figure 9.20 ), the dir ection o f the f orce applied b y the
+right hand o f the v aulter reverses its dir ection.394 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+EXAMPLE 9.2
+Wha t Force Is Needed t o Suppor t a W eight Held Near Its C G?
+For the situation sho wn in Figure 9.19 , calculat e: (a) , the f orce exerted b y the right hand, and (b) , the f orce
+exerted b y the left hand. The hands ar e 0.900 m apar t, and the c g of the pole is 0.600 m fr om the left hand.
+Strategy
+Figure 9.19 includes a fr ee body diagr am f or the pole , the s ystem o f interest. Ther e is not enough inf ormation t o use
+the firs t condition f or equilibrium ), sinc e tw o of the thr ee forces ar e unkno wn and the hand f orces cannot
+be as sumed t o be equal in this case . Ther e is enough inf ormation t o use the sec ond c ondition f or equilibrium
+if the piv ot point is chosen t o be at either hand, ther eby making the t orque fr om that hand z ero. We
+choose t o locat e the piv ot at the left hand in this par t of the pr oblem, t o eliminat e the t orque fr om the left hand.
+Solution f or (a)
+Ther e are no w onl y tw o nonz ero torques , those fr om the gr avitational f orce ( ) and fr om the push or pul l of the
+right hand ( ). Stating the sec ond c ondition in t erms o f clockwise and c ount erclockwise t orques ,
+or the alg ebraic sum o f the t orques is z ero.
+Here this is
+sinc e the w eight o f the pole cr eates a c ount erclockwise t orque and the right hand c ount ers with a clockwise t orque.
+Using the definition o f torque, , noting that , and subs tituting kno wn v alues , we ob tain
+Thus ,
+Solution f or (b)
+The firs t condition f or equilibrium is based on the fr ee body diagr am in the fig ure. This implies that b y Ne wton’s
+second la w:
+From this w e can c onclude:
+Solving f or , we ob tain
+Discus sion
+is seen t o be e xactl y half o f , as w e might ha ve guessed, sinc e is applied twic e as far fr om the c g as .
+If the pole v aulter holds the pole as he might at the s tart of a run, sho wn in Figure 9.20 , the f orces chang e ag ain.
+Both ar e consider ably greater, and one f orce reverses dir ection.
+9.22
+9.23
+9.24
+9.25
+9.26
+9.27
+9.289.4 • Applic ations o f Statics , Including P roblem-Solving S trategies 395
+
+PHE T EXPLORATIONS
+Balancing Act
+Play with objects on a t eeter totter to learn about balanc e. Test what y ou've learned b y trying the Balanc e Chal leng e
+game .
+Click t o vie w content(https:/ /opens tax.org/book s/college-physics-ap-courses -2e/pag es/9-4-applications -of-
+statics -including-pr oblemsol ving-s trategies)
+9.5Simple Machines
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Describe diff erent simple machines .
+•Calculat e the mechanical adv antag e.
+Simple machines ar e de vices that can be used t o mul tiply or augment a f orce that w e appl y – o ften at the e xpense o f
+a dis tanc e thr ough which w e appl y the f orce. The w ord for “machine ” comes fr om the Gr eek w ord meaning “ to help
+mak e things easier .” Levers, gears , pul leys, wedges, and scr ews are some e xamples o f machines . Ener gy is s till
+conser ved for these de vices because a machine cannot do mor e work than the ener gy put int o it. Ho wever,
+machines can r educ e the input f orce that is needed t o per form the job . The r atio o f output t o input f orce magnitudes
+for an y simple machine is cal led its mechanical adv antag e(MA).
+One o f the simples t machines is the le ver, which is a rigid bar piv oted at a fix ed plac e cal led the fulcrum. T orques ar e
+involved in le vers, sinc e ther e is r otation about a piv ot point. Dis tanc es fr om the ph ysical piv ot of the le ver ar e
+crucial , and w e can ob tain a useful e xpression f or the MA in t erms o f these dis tanc es.TAKE-HOME E XPERIMENT
+This is an e xperiment t o per form while s tanding in a bus or a tr ain. Stand facing side ways. Ho w do y ou mo ve
+your body t o readjus t the dis tribution o f your mas s as the bus ac celerates and dec elerates? No w stand facing
+forward. Ho w do y ou mo ve your body t o readjus t the dis tribution o f your mas s as the bus ac celerates and
+decelerates? Wh y is it easier and saf er to stand facing side ways rather than f orward? Not e: For your saf ety (and
+those ar ound y ou), mak e sur e you ar e holding ont o something while y ou carr y out this activity!
+9.29396 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+FIGURE 9.21 A nail pul ler is a le ver with a lar ge mechanical adv antag e. The e xternal f orces on the nail pul ler ar e represent ed b y solid
+arrows. The f orce that the nail pul ler applies t o the nail ( ) is not a f orce on the nail pul ler. The r eaction f orce the nail e xerts back on the
+puller ( ) is an e xternal f orce and is equal and opposit e to . The perpendicular le ver arms o f the input and output f orces ar eand .
+Figure 9.21 shows a le ver type that is used as a nail pul ler. Crowbars , seesa ws, and other such le vers ar e all
+analog ous t o this one . is the input f orce and is the output f orce. Ther e are thr ee v ertical f orces acting on the
+nail pul ler (the s ystem o f interest) – these ar e and . is the r eaction f orce back on the s ystem, equal and
+opposit e to . (Not e that is not a f orce on the s ystem.) is the normal f orce upon the le ver, and its t orque is
+zero sinc e it is e xerted at the piv ot. The t orques due t o and mus t be equal t o each other if the nail is not
+moving , to satis fy the sec ond c ondition f or equilibrium . (In or der f or the nail t o actual ly mo ve, the t orque
+due t o mus t be e ver-so-slightl y greater than t orque due t o .) Henc e,
+Notic e that is the dis tanc e from the piv ot point t o the point wher e the input f orce is applied, and (not
+labeled on the diagr am) is the dis tanc e from the piv ot point t o the point wher e the output f orce is applied. The
+distanc es and are the perpendicular c omponents o f the dis tanc es fr om wher e the input and output f orces ar e
+applied t o the piv ot, as sho wn in the fig ure. Rearr anging the las t equation giv es
+What int erests us mos t her e is that the magnitude o f the f orce exerted b y the nail pul ler, , is much gr eater than
+the magnitude o f the input f orce applied t o the pul ler at the other end, . For the nail pul ler,
+This equation is true f or le vers in g ener al. For the nail pul ler, the MA is c ertainl y greater than one . The long er the
+handle on the nail pul ler, the gr eater the f orce you can e xert with it.
+Two other types o f levers that diff er slightl y from the nail pul ler ar e a wheelbarr ow and a sho vel, sho wn in Figure
+9.22 . All these le ver types ar e similar in that onl y thr ee forces ar e involved – the input f orce, the output f orce, and
+the f orce on the piv ot – and thus their MAs ar e giv en b y and , with dis tanc es being measur ed
+relativ e to the ph ysical piv ot. The wheelbarr ow and sho vel diff er fr om the nail pul ler because both the input and
+output f orces ar e on the same side o f the piv ot.
+In the case o f the wheelbarr ow, the output f orce or load is betw een the piv ot (the wheel ’s axle) and the input or
+applied f orce. In the case o f the sho vel, the input f orce is betw een the piv ot (at the end o f the handle) and the load,
+but the input le ver arm is shor ter than the output le ver arm. In this case , the MA is les s than one .9.30
+9.31
+9.329.5 • Simple Machines 397
+
+FIGURE 9.22 (a) In the case o f the wheelbarr ow, the output f orce or load is betw een the piv ot and the input f orce. The piv ot is the wheel ’s
+axle . Her e, the output f orce is gr eater than the input f orce. Thus , a wheelbarr ow enables y ou to lift much hea vier loads than y ou c ould with
+your body alone . (b) In the case o f the sho vel, the input f orce is betw een the piv ot and the load, but the input le ver arm is shor ter than the
+output le ver arm. The piv ot is at the handle held b y the right hand. Her e, the output f orce (suppor ting the sho vel’s load) is les s than the
+input f orce (fr om the hand near est the load), because the input is e xerted closer t o the piv ot than is the output.
+EXAMPLE 9.3
+Wha t is the Adv antag e for the Wheelbarr ow?
+In the wheelbarr ow ofFigure 9.22 , the load has a perpendicular le ver arm o f 7.50 cm, while the hands ha ve a
+perpendicular le ver arm o f 1.02 m. (a) What up ward force mus t you e xert to suppor t the wheelbarr ow and its load if
+their c ombined mas s is 45.0 k g? (b) What f orce does the wheelbarr ow exert on the gr ound?
+Strategy
+Here, we use the c oncept of mechanical adv antag e.
+Solution
+(a) In this case , becomes
+Adding v alues int o this equation yields
+The fr ee-body diagr am (see Figure 9.22 ) giv es the f ollowing normal f orce: . Ther efore,
+. is the normal f orce acting on the wheel; b y Ne wton’s thir d law, the
+force the wheel e xerts on the gr ound is .
+Discus sion
+An e ven long er handle w ould r educ e the f orce needed t o lift the load. The MA her e is .
+9.33
+9.34398 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+Another v ery simple machine is the inclined plane . Pushing a car t up a plane is easier than lifting the same car t
+straight up t o the t op using a ladder , because the applied f orce is les s. Ho wever, the w ork done in both cases
+(assuming the w ork done b y friction is negligible) is the same . Inclined lanes or r amps w ere probabl y used during
+the c onstruction o f the E gyptian p yramids t o mo ve lar ge block s of stone t o the t op.
+A crank is a le ver that can be r otat ed about its piv ot, as sho wn in Figure 9.23 . Such a machine ma y not look lik e
+a lever, but the ph ysics o f its actions r emain the same . The MA f or a cr ank is simpl y the r atio o f the r adii .
+Wheels and g ears ha ve this simple e xpression f or their MAs t oo. The MA can be gr eater than 1, as it is f or the cr ank,
+or les s than 1, as it is f or the simplified car axle driving the wheels , as sho wn. If the axle ’s radius is and the
+wheel ’s radius is , then and the axle w ould ha ve to exert a force of on
+the wheel t o enable it t o exert a force of on the gr ound.
+FIGURE 9.23 (a) A cr ank is a type o f lever that can be r otat ed about its piv ot. Cr anks are usual ly designed t o ha ve a lar ge MA . (b) A
+simplified aut omobile axle driv es a wheel , which has a much lar ger diamet er than the axle . The MA is les s than 1. (c) An or dinar y pul ley is
+used t o lift a hea vy load. The pul ley chang es the dir ection o f the f orce exerted b y the c ord without changing its magnitude . Henc e, this
+machine has an MA o f 1.
+An or dinar y pul ley has an MA o f 1; it onl y chang es the dir ection o f the f orce and not its magnitude . Combinations o f
+pulleys, such as those il lustrated in Figure 9.24 , are used t o mul tiply force. If the pul leys are friction-fr ee, then the
+force output is appr oximat ely an int egral mul tiple o f the t ension in the cable . The number o f cables pul ling dir ectly
+upward on the s ystem o f interest, as il lustrated in the fig ures giv en belo w, is appr oximat ely the MA o f the pul ley
+system. Sinc e each at tachment applies an e xternal f orce in appr oximat ely the same dir ection as the others , the y
+add, pr oducing a t otal f orce that is nearl y an int egral mul tiple o f the input f orce.9.5 • Simple Machines 399
+
+FIGURE 9.24 (a) The c ombination o f pul leys is used t o mul tiply force. The f orce is an int egral mul tiple o f tension if the pul leys are
+frictionles s. This pul ley system has tw o cables at tached t o its load, thus appl ying a f orce of appr oximat ely . This machine has .
+(b) Thr ee pul leys are used t o lift a load in such a w ay that the mechanical adv antag e is about 3. Eff ectiv ely, ther e are thr ee cables at tached
+to the load. (c) This pul ley system applies a f orce of , so that it has . Effectiv ely, four cables ar e pul ling on the s ystem o f interest.
+9.6Forces and T orques in Muscles and Joints
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Explain the f orces e xerted b y muscles .
+•Stat e ho w a bad pos ture causes back s train.
+•Discus s the benefits o f skeletal muscles at tached close t o joints .
+•Discus s various c omple xities in the r eal s ystem o f muscles , bones , and joints .
+Muscles , bones , and joints ar e some o f the mos t interesting applications o f statics . Ther e are some surprises .
+Muscles , for example , exert far gr eater forces than w e might think. Figure 9.25 shows a f orearm holding a book and
+a schematic diagr am o f an analog ous le ver system. The schematic is a g ood appr oximation f or the f orearm, which
+look s mor e complicat ed than it is , and w e can g et some insight int o the w ay typical muscle s ystems function b y
+anal yzing it.
+Muscles can onl y contr act, so the y oc cur in pairs . In the arm, the bic eps muscle is a fle xor—that is , it closes the limb .
+The tric eps muscle is an e xtensor that opens the limb . This c onfig uration is typical o f skeletal muscles , bones , and
+joints in humans and other v ertebrates. Mos t skeletal muscles e xert much lar ger forces within the body than the
+limbs appl y to the outside w orld. The r eason is clear onc e we realiz e that mos t muscles ar e attached t o bones via
+tendons close t o joints , causing these s ystems t o ha ve mechanical adv antag es much les s than one . Vie wing them as
+simple machines , the input f orce is much gr eater than the output f orce, as seen in Figure 9.25 .400 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+FIGURE 9.25 (a) The fig ure sho ws the f orearm o f a person holding a book. The bic eps e xert a force to suppor t the w eight o f the f orearm
+and the book. The tric eps ar e as sumed t o be r elax ed. (b) Her e, you can vie w an appr oximat ely equiv alent mechanical s ystem with the piv ot
+at the elbo w joint as seen in Example 9.4 .
+EXAMPLE 9.4
+Muscles Ex ert Big ger Forces Than Y ou Might Think
+Calculat e the f orce the bic eps muscle mus t exert to hold the f orearm and its load as sho wn in Figure 9.25 , and
+compar e this f orce with the w eight o f the f orearm plus its load. Y ou ma y tak e the data in the fig ure to be ac curate to
+three significant fig ures.
+Strategy
+Ther e are four f orces acting on the f orearm and its load (the s ystem o f interest). The magnitude o f the f orce of the
+biceps is ; that o f the elbo w joint is ; that o f the w eights o f the f orearm is , and its load is . Two of these
+are unkno wn ( and ), so that the firs t condition f or equilibrium cannot b y itself yield . But if w e use the
+second c ondition and choose the piv ot to be at the elbo w, then the t orque due t o is zero, and the onl y unkno wn
+becomes .
+Solution
+The t orques cr eated b y the w eights ar e clockwise r elativ e to the piv ot, while the t orque cr eated b y the bic eps is
+count erclockwise; thus , the sec ond c ondition f or equilibrium becomes
+9.359.6 • F orces and T orques in Muscles and Joints 401
+
+Note that for al l forces, sinc e for al l forces. This equation can easil y be sol ved for in terms o f
+known quantities , yielding
+Entering the kno wn v alues giv es
+which yields
+Now, the c ombined w eight o f the arm and its load is , so that the r atio o f the f orce
+exerted b y the bic eps t o the t otal w eight is
+Discus sion
+This means that the bic eps muscle is e xerting a f orce 7.38 times the w eight suppor ted.
+In the abo ve example o f the bic eps muscle , the angle betw een the f orearm and upper arm is 90°. If this angle
+chang es, the f orce exerted b y the bic eps muscle also chang es. In addition, the length o f the bic eps muscle chang es.
+The f orce the bic eps muscle can e xert depends upon its length; it is smal ler when it is shor ter than when it is
+stretched.
+Very lar ge forces ar e also cr eated in the joints . In the pr evious e xample , the do wnward force exerted b y the
+humerus at the elbo w joint equals 407 N, or 6.38 times the t otal w eight suppor ted. ( The calculation o f is
+straight forward and is left as an end-o f-chap ter pr oblem.) Because muscles can c ontr act, but not e xpand be yond
+their r esting length, joints and muscles o ften e xert forces that act in opposit e dir ections and thus sub tract. (In the
+above example , the up ward force of the muscle minus the do wnward force of the joint equals the w eight
+suppor ted—that is , , appr oximat ely equal t o the w eight suppor ted.) F orces in muscles and
+joints ar e lar gest when their load is a long dis tanc e from the joint, as the book is in the pr evious e xample .
+In racquet spor ts such as t ennis the c onstant e xtension o f the arm during g ame pla y creates lar ge forces in this w ay.
+The mas s times the le ver arm o f a tennis r acquet is an impor tant fact or, and man y pla yers use the hea vies t racquet
+they can handle . It is no w onder that joint det erior ation and damag e to the t endons in the elbo w, such as “ tennis
+elbo w,” can r esul t from r epetitiv e motion, undue t orques , and pos sibly poor r acquet selection in such spor ts.
+Various tried t echniques f or holding and using a r acquet or bat or s tick not onl y incr eases spor ting pr owess but can
+minimiz e fatig ue and long-t erm damag e to the body . For example , tennis bal ls correctly hit at the “ sweet spot ” on
+the r acquet wil l resul t in lit tle vibr ation or impact f orce being f elt in the r acquet and the body —les s torque as
+explained in Collisions o f Ext ended Bodies in T wo Dimensions . Twisting the hand t o provide t op spin on the bal l or
+using an e xtended rigid elbo w in a backhand s troke can also ag gravate the t endons in the elbo w.
+Training c oaches and ph ysical ther apis ts use the kno wledg e of relationships betw een f orces and t orques in the
+treatment o f muscles and joints . In ph ysical ther apy, an e xercise r outine can appl y a par ticular f orce and t orque
+which can, o ver a period o f time , revive muscles and joints . Some e xercises ar e designed t o be carried out under
+water, because this r equir es gr eater forces to be e xerted, fur ther s trengthening muscles . Ho wever, connecting
+tissues in the limbs , such as t endons and car tilag e as w ell as joints ar e sometimes damag ed b y the lar ge forces the y
+carr y. Oft en, this is due t o ac cidents , but hea vily muscled athlet es, such as w eightlift ers, can t ear muscles and
+connecting tis sue thr ough eff ort alone .
+The back is c onsider ably mor e complicat ed than the arm or leg , with v arious muscles and joints betw een v ertebrae,
+all having mechanical adv antag es les s than 1. Back muscles mus t, ther efore, exert very lar ge forces, which ar e
+borne b y the spinal c olumn. Discs crushed b y mer e exertion ar e very common. The ja w is some what9.36
+9.37
+9.38
+9.39402 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+exceptional —the mas seter muscles that close the ja w ha ve a mechanical adv antag e greater than 1 f or the back
+teeth, al lowing us t o exert very lar ge forces with them. A cause o f stress headaches is persis tent clenching o f teeth
+wher e the sus tained lar ge force translat es int o fatig ue in muscles ar ound the sk ull.
+Figure 9.26 shows ho w bad pos ture causes back s train. In par t (a), w e see a person with g ood pos ture. Not e that her
+upper body ’s cg is dir ectly abo ve the piv ot point in the hips , which in turn is dir ectly abo ve the base o f suppor t at her
+feet. Because o f this , her upper body ’s weight e xerts no t orque about the hips . The onl y force needed is a v ertical
+force at the hips equal t o the w eight suppor ted. No muscle action is r equir ed, sinc e the bones ar e rigid and tr ansmit
+this f orce from the floor . This is a position o f uns table equilibrium, but onl y smal l forces ar e needed t o bring the
+upper body back t o vertical if it is slightl y displac ed. Bad pos ture is sho wn in par t (b); w e see that the upper body ’s
+cg is in fr ont o f the piv ot in the hips . This cr eates a clockwise t orque ar ound the hips that is c ount eracted b y muscles
+in the lo wer back. These muscles mus t exert large forces, sinc e the y ha ve typical ly smal l mechanical adv antag es.
+(In other w ords, the perpendicular le ver arm f or the muscles is much smal ler than f or the c g.) Poor pos ture can also
+cause muscle s train f or people sit ting at their desk s using c omput ers. Special chairs ar e available that al low the
+body ’s CG to be mor e easil y situat ed abo ve the seat, t o reduc e back pain. P rolong ed muscle action pr oduc es muscle
+strain. Not e that the c g of the entir e body is s till directly abo ve the base o f suppor t in par t (b) o fFigure 9.26 . This is
+compulsor y; other wise the person w ould not be in equilibrium. W e lean f orward for the same r eason when carr ying
+a load on our back s, to the side when carr ying a load in one arm, and backw ard when carr ying a load in fr ont o f us,
+as seen in Figure 9.27 .
+FIGURE 9.26 (a) Good pos ture plac es the upper body ’s cg over the piv ots in the hips , eliminating the need f or muscle action t o balanc e the
+body . (b) P oor pos ture requir es e xertion b y the back muscles t o count eract the clockwise t orque pr oduc ed ar ound the piv ot by the upper
+body ’s weight. The back muscles ha ve a smal l effectiv e perpendicular le ver arm, , and mus t ther efore exert a lar ge force . Not e that
+the legs lean backw ard to keep the c g of the entir e body abo ve the base o f suppor t in the f eet.
+You ha ve probabl y been w arned ag ains t lifting objects with y our back. This action, e ven mor e than bad pos ture, can
+cause muscle s train and damag e discs and v ertebrae, sinc e abnormal ly lar ge forces ar e created in the back muscles
+and spine .9.6 • F orces and T orques in Muscles and Joints 403
+
+FIGURE 9.27 People adjus t their s tanc e to maintain balanc e. (a) A father carr ying his son pig gyback leans f orward to position their o verall
+cg abo ve the base o f suppor t at his f eet. (b) A s tudent carr ying a shoulder bag leans t o the side t o keep the o verall cg over their f eet. (c)
+Another s tudent carr ying a load o f book s in her arms leans backw ard for the same r eason.
+EXAMPLE 9.5
+Do No t Lift with Y our Back
+Consider the person lifting a hea vy bo x with his back, sho wn in Figure 9.28 . (a) Calculat e the magnitude o f the f orce
+in the back muscles that is needed t o suppor t the upper body plus the bo x and c ompar e this with his w eight.
+The mas s of the upper body is 55.0 k g and the mas s of the bo x is 30.0 k g. (b) Calculat e the magnitude and dir ection
+of the f orce exerted b y the v ertebrae on the spine at the indicat ed piv ot point. Ag ain, data in the fig ure ma y be
+taken to be ac curate to thr ee significant fig ures.
+Strategy
+By no w, we sense that the sec ond c ondition f or equilibrium is a g ood plac e to start, and inspection o f the kno wn
+values c onfirms that it can be used t o sol ve for if the piv ot is chosen t o be at the hips . The t orques cr eated b y
+and are clockwise , while that cr eated b y is count erclockwise .
+Solution f or (a)
+Using the perpendicular le ver arms giv en in the fig ure, the sec ond c ondition f or equilibrium becomes
+Solving f or yields
+The r atio o f the f orce the back muscles e xert to the w eight o f the upper body plus its load is
+This f orce is c onsider ably lar ger than it w ould be if the load w ere not pr esent.
+Solution f or (b)
+More impor tant in t erms o f its damag e pot ential is the f orce on the v ertebrae . The firs t condition f or equilibrium
+( ) can be used t o find its magnitude and dir ection. Using for vertical and for horiz ontal , the c ondition
+for the net e xternal f orces along those ax es to be z ero
+Star ting with the v ertical ( ) components , this yields
+9.40
+9.41
+9.42
+9.43
+9.44404 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+Thus ,
+yielding
+Similarl y, for the horiz ontal ( ) components ,
+yielding
+The magnitude o f is giv en b y the Pythag orean theor em:
+The dir ection o f is
+Note that the r atio o f to the w eight suppor ted is
+Discus sion
+This f orce is about 5.6 times gr eater than it w ould be if the person w ere standing er ect. The tr ouble with the back is
+not so much that the f orces ar e lar ge—because similar f orces ar e created in our hips , knees , and ankles —but that
+our spines ar e relativ ely weak. P roper lifting , per formed with the back er ect and using the legs t o raise the body and
+load, cr eates much smal ler forces in the back —in this case , about 5.6 times smal ler.
+FIGURE 9.28 This fig ure sho ws that lar ge forces ar e exerted b y the back muscles and e xperienc ed in the v ertebrae when a person lifts with
+their back, sinc e these muscles ha ve smal l effectiv e perpendicular le ver arms . The data sho wn her e are anal yzed in the pr eceding e xample ,
+Example 9.5 .9.45
+9.46
+9.47
+9.48
+9.49
+9.50
+9.519.6 • F orces and T orques in Muscles and Joints 405
+
+What ar e the benefits o f having mos t skeletal muscles at tached so close t o joints? One adv antag e is speed because
+smal l muscle c ontr actions can pr oduc e lar ge mo vements o f limbs in a shor t period o f time . Other adv antag es ar e
+flexibility and agility , made pos sible b y the lar ge numbers o f joints and the r anges o ver which the y function. F or
+example , it is difficul t to imagine a s ystem with bic eps muscles at tached at the wris t that w ould be capable o f the
+broad r ange of mo vement w e vertebrates pos sess.
+Ther e are some int eresting c omple xities in r eal s ystems o f muscles , bones , and joints . For ins tanc e, the piv ot point
+in man y joints chang es location as the joint is fle xed, so that the perpendicular le ver arms and the mechanical
+advantag e of the s ystem chang e, too. Thus the f orce the bic eps muscle mus t exert to hold up a book v aries as the
+forearm is fle xed. Similar mechanisms oper ate in the legs , which e xplain, f or example , wh y ther e is les s leg s train
+when a bicy cle seat is set at the pr oper height. The methods emplo yed in this section giv e a r easonable descrip tion
+of real s ystems pr ovided enough is kno wn about the dimensions o f the s ystem. Ther e are man y other int eresting
+examples o f force and t orque in the body —a f ew of these ar e the subject o f end-o f-chap ter pr oblems .406 9 • S tatics and T orque
+Access f or free at opens tax.org
+
+Glossar y
+center of gravity the point wher e the t otal w eight o f
+the body is as sumed t o be c oncentr ated
+dynamic equilibrium a state of equilibrium in which
+the net e xternal f orce and t orque on a s ystem
+moving with c onstant v elocity ar e zero
+mechanical adv antag ethe r atio o f output t o input
+forces for an y simple machine
+neutr al equilibrium a state of equilibrium that is
+independent o f a s ystem’s displac ements fr om its
+original position
+perpendicular le ver arm the shor test dis tanc e from
+the piv ot point t o the line along which lies
+SI units o f torque newton times met ers, usual ly
+written as N·mstable equilibrium a system, when displac ed,
+experienc es a net f orce or t orque in a dir ection
+opposit e to the dir ection o f the displac ement
+static equilibrium a state of equilibrium in which the
+net e xternal f orce and t orque acting on a s ystem is
+zero
+static equilibrium equilibrium in which the
+acceleration o f the s ystem is z ero and ac celerated
+rotation does not oc cur
+torque turning or twis ting eff ectiv enes s of a force
+unstable equilibrium a system, when displac ed,
+experienc es a net f orce or t orque in the same
+direction as the displac ement fr om equilibrium
+Section Summar y
+9.1The Fir st Condition f or Equilibrium
+•Statics is the s tudy o f forces in equilibrium.
+•Two conditions mus t be met t o achie ve
+equilibrium, which is defined t o be motion without
+linear or r otational ac celeration.
+•The firs t condition nec essary to achie ve
+equilibrium is that the net e xternal f orce on the
+system mus t be z ero, so that .
+9.2The Sec ond C ondition f or Equilibrium
+•The sec ond c ondition as sures those t orques ar e
+also balanc ed. T orque is the r otational equiv alent
+of a force in pr oducing a r otation and is defined t o
+be
+wher eis torque,is the dis tanc e from the piv ot
+point t o the point wher e the f orce is applied, is
+the magnitude o f the f orce, and is the angle
+betw een and the v ector dir ected fr om the point
+wher e the f orce acts t o the piv ot point. The
+perpendicular le ver arm is defined t o be
+so that
+•The perpendicular le ver arm is the shor test
+distanc e from the piv ot point t o the line along
+which acts . The SI unit f or torque is ne wton-
+meter . The sec ond c ondition nec essary to
+achie ve equilibrium is that the net e xternal t orque
+on a s ystem mus t be z ero:
+By convention, c ount erclockwise t orques ar e
+positiv e, and clockwise t orques ar e neg ative.9.3Stabilit y
+•A system is said t o be in s table equilibrium if , when
+displac ed fr om equilibrium, it e xperienc es a net
+force or t orque in a dir ection opposit e the dir ection
+of the displac ement.
+•A system is in uns table equilibrium if , when
+displac ed fr om equilibrium, it e xperienc es a net
+force or t orque in the same dir ection as the
+displac ement fr om equilibrium.
+•A system is in neutr al equilibrium if its equilibrium
+is independent o f displac ements fr om its original
+position.
+9.4Applic ations o f Statics , Including
+Problem-Solving S trategies
+•Statics can be applied t o a v ariety o f situations ,
+ranging fr om r aising a dr awbridg e to bad pos ture
+and back s train. W e ha ve discus sed the pr oblem-
+solving s trategies specifical ly useful f or statics .
+Statics is a special case o f Ne wton’s laws, both the
+gener al pr oblem-sol ving s trategies and the special
+strategies f or Ne wton’s laws, discus sed in
+Problem-Sol ving Str ategies , still appl y.
+9.5Simple Machines
+•Simple machines ar e de vices that can be used t o
+multiply or augment a f orce that w e appl y – o ften
+at the e xpense o f a dis tanc e thr ough which w e
+have to appl y the f orce.
+•The r atio o f output t o input f orces for an y simple
+machine is cal led its mechanical adv antag e
+•A few simple machines ar e the le ver, nail pul ler,
+wheelbarr ow, crank, et c.9 • Glossar y407
+
+9.6Forces and T orques in Muscles and
+Joints
+•Statics pla ys an impor tant par t in unders tanding
+everyday strains in our muscles and bones .
+•Man y lever systems in the body ha ve a mechanical
+advantag e of significantl y les s than one , as man yof our muscles ar e attached close t o joints .
+•Someone with g ood pos ture stands or sits in such
+a way that the person 's center of gravity lies
+directly abo ve the piv ot point in the hips , ther eby
+avoiding back s train and damag e to disk s.
+Conceptual Ques tions
+9.1The Fir st Condition f or Equilibrium
+1.What can y ou sa y about the v elocity o f a mo ving
+body that is in dynamic equilibrium? Dr aw a sk etch
+of such a body using clearl y labeled arr ows to
+represent al l external f orces on the body .
+2.Under what c onditions can a r otating body be in
+equilibrium? Giv e an e xample .
+9.2The Sec ond C ondition f or Equilibrium
+3.What thr ee fact ors aff ect the t orque cr eated b y a
+force relativ e to a specific piv ot point?
+4.A wr ecking bal l is being used t o knock do wn a
+building . One tal l unsuppor ted c oncr ete wall
+remains s tanding . If the wr ecking bal l hits the w all
+near the t op, is the w all mor e lik ely to fal l over by
+rotating at its base or b y fal ling s traight do wn?
+Explain y our ans wer. Ho w is it mos t likely to fal l if it
+is struck with the same f orce at its base? Not e that
+this depends on ho w firml y the w all is at tached at
+its base .
+5.Mechanics sometimes put a length o f pipe o ver the
+handle o f a wr ench when tr ying t o remo ve a v ery
+tight bol t. Ho w does this help? (It is also hazar dous
+sinc e it can br eak the bol t.)
+9.3Stabilit y
+6.A round pencil l ying on its side as in Figure 9.12 is
+in neutr al equilibrium r elativ e to displac ements
+perpendicular t o its length. What is its s tability
+relativ e to displac ements par allel to its length?
+7.Explain the need f or tal l towers on a suspension
+bridg e to ensur e stable equilibrium.
+9.4Applic ations o f Statics , Including
+Problem-Solving S trategies
+8.When visiting some c ountries , you ma y see a
+person balancing a load on the head. Explain wh y
+the c enter of mas s of the load needs t o be dir ectly
+above the person ’s neck v ertebrae.
+9.5Simple Machines
+9.Scis sors ar e lik e a double -lever system. Which o fthe simple machines in Figure 9.21 and Figure 9.22
+is mos t analog ous t o scis sors?
+10.Suppose y ou pul l a nail at a c onstant r ate using a
+nail pul ler as sho wn in Figure 9.21 . Is the nail
+puller in equilibrium? What if y ou pul l the nail with
+some ac celeration – is the nail pul ler in
+equilibrium then? In which case is the f orce
+applied t o the nail pul ler lar ger and wh y?
+11.Explain the mechanical adv antag e of a
+wheelbarr ow and ho w it e xplains wh y mo ving a
+heavy load is easier with a wheelbarr ow.
+12.How does a pul ley enable a person t o lift a load as
+heavy as a piano with lit tle eff ort?
+9.6Forces and T orques in Muscles and
+Joints
+13.Why are the f orces e xerted on the outside w orld
+by the limbs o f our bodies usual ly much smal ler
+than the f orces e xerted b y muscles inside the
+body?
+14.Explain wh y the f orces in our joints ar e se veral
+times lar ger than the f orces w e exert on the
+outside w orld with our limbs . Can these f orces be
+even gr eater than muscle f orces?
+15.Certain types o f dinosaurs w ere bipedal (w alked
+on tw o legs). What is a g ood r eason that these
+creatur es in variabl y had long tails if the y had long
+neck s?
+16.Swimmers and athlet es during c ompetition need
+to go thr ough c ertain pos tures at the beginning o f
+the r ace. Consider the balanc e of the person and
+why start-offs ar e so impor tant f or races.
+17.If the maximum f orce the bic eps muscle can e xert
+is 1000 N, can w e pick up an object that w eighs
+1000 N? Explain y our ans wer.
+18.Suppose the bic eps muscle w as at tached thr ough
+tendons t o the upper arm close t o the elbo w and
+the f orearm near the wris t. What w ould be the
+advantag es and disadv antag es o f this type o f
+construction f or the motion o f the arm?408 9 • C onceptual Ques tions
+Access f or free at opens tax.org
+
+19.Explain one o f the r easons wh y pregnant w omen
+often suff er fr om back s train lat e in theirpregnancy .
+Problems & Ex ercises
+9.2The Sec ond C ondition f or Equilibrium
+1.(a) When opening a door , you push on it
+perpendicularl y with a f orce of 55.0 N at a dis tanc e
+of 0.850m fr om the hing es. What t orque ar e you
+exerting r elativ e to the hing es? (b) Does it mat ter if
+you push at the same height as the hing es?
+2.When tight ening a bol t, you push perpendicularl y
+on a wr ench with a f orce of 165 N at a dis tanc e of
+0.140 m fr om the c enter of the bol t. (a) Ho w much
+torque ar e you e xerting in ne wton × met ers (r elativ e
+to the c enter of the bol t)? (b) Con vert this t orque t o
+footpounds .
+3.Two childr en push on opposit e sides o f a door
+during pla y. Both push horiz ontal ly and
+perpendicular t o the door . One child pushes with a
+force of 17.5 N at a dis tanc e of 0.600 m fr om the
+hing es, and the sec ond child pushes at a dis tanc e of
+0.450 m. What f orce mus t the sec ond child e xert to
+keep the door fr om mo ving? As sume friction is
+negligible .
+4.Use the sec ond c ondition f or equilibrium
+to calculat e inExample 9.1 ,
+emplo ying an y data giv en or sol ved for in par t (a) o f
+the e xample .
+5.Repeat the seesa w pr oblem in Example 9.1 with
+the c enter of mas s of the seesa w 0.160 m t o the
+left o f the piv ot (on the side o f the light er child) and
+assuming a mas s of 12.0 k g for the seesa w. The
+other data giv en in the e xample r emain unchang ed.
+Explicitl y sho w ho w you follow the s teps in the
+Problem-Sol ving Str ategy for static equilibrium.
+9.3Stabilit y
+6.Suppose a horse leans ag ains t a w all as in Figure
+9.29 , emulating a sc ene in the c omedy mo vieCat
+Ballou. Calculat e the f orce exerted on the w all
+assuming that f orce is horiz ontal while using the
+data in the schematic r epresentation o f the
+situation. Not e that the f orce exerted on the w all is
+equal in magnitude and opposit e in dir ection t o the
+force exerted on the horse , keeping it in
+equilibrium. The t otal mas s of the horse and rider is
+500 k g. Take the data t o be ac curate to thr ee digits .
+FIGURE 9.29
+7.Two childr en o f mas s 20.0 k g and 30.0 k g sit
+balanc ed on a seesa w with the piv ot point locat ed
+at the c enter of the seesa w. If the childr en ar e
+separ ated b y a dis tanc e of 3.00 m, at what dis tanc e
+from the piv ot point is the smal l child sit ting in
+order t o maintain the balanc e?
+8.(a) Calculat e the magnitude and dir ection o f the
+force on each f oot o f the horse in Figure 9.29 (two
+are on the gr ound), as suming the c enter of mas s of
+the horse is midw ay betw een the f eet. The t otal
+mas s of the horse and rider is 500k g. (b) What is
+the minimum c oefficient o f friction betw een the
+hooves and gr ound? Not e that the f orce exerted b y
+the w all is horiz ontal .
+9.A person carries a plank o f wood 2.00 m long with
+one hand pushing do wn on it at one end with a
+force and the other hand holding it up at .500 m
+from the end o f the plank with f orce . If the plank
+has a mas s of 20.0 k g and its c enter of gravity is at
+the middle o f the plank, what ar e the magnitudes o f
+the f orces and ?
+10.A 17.0-m-high and 11.0-m-long w all under
+construction and its br acing ar e sho wn in Figure
+9.30 . The w all is in s table equilibrium without the
+bracing but can piv ot at its base . Calculat e the
+force exerted b y each o f the 10 br aces if a s trong
+wind e xerts a horiz ontal f orce of 650 N on each
+squar e met er of the w all. Assume that the net
+force from the wind acts at a height halfw ay up the
+wall and that al l braces e xert equal f orces par allel
+to their lengths . Neglect the thicknes s of the w all.9 • P roblems & Ex ercises 409
+
+FIGURE 9.30
+11.(a) What f orce mus t be e xerted b y the wind t o
+suppor t a 2.50-k g chick en in the position sho wn in
+Figure 9.31 ? (b) What is the r atio o f this f orce to
+the chick en’s weight? (c) Does this suppor t the
+contention that the chick en has a r elativ ely stable
+construction?
+FIGURE 9.31
+12.Suppose the w eight o f the dr awbridg e in Figure
+9.32 is suppor ted entir ely by its hing es and the
+opposit e shor e, so that its cables ar e slack. The
+mas s of the bridg e is 2500 k g. (a) What fr action o f
+the w eight is suppor ted b y the opposit e shor e if
+the point o f suppor t is dir ectly beneath the cable
+attachments? (b) What is the dir ection and
+magnitude o f the f orce the hing es e xert on the
+bridg e under these cir cums tanc es?
+FIGURE 9.32 A smal l drawbridg e, sho wing the f orces on thehing es ( ), its w eight ( ), and the t ension in its wir es ( ).
+13.Suppose a 900-k g car is on the bridg e in Figure
+9.32 with its c enter of mas s halfw ay betw een the
+hing es and the cable at tachments . (The bridg e is
+suppor ted b y the cables and hing es onl y.) (a) Find
+the f orce in the cables . (b) Find the dir ection and
+magnitude o f the f orce exerted b y the hing es on
+the bridg e.
+14.A sandwich boar d adv ertising sign is c onstruct ed
+as sho wn in Figure 9.33 . The sign ’s mas s is 8.00
+kg. (a) Calculat e the t ension in the chain as suming
+no friction betw een the legs and the side walk. (b)
+What f orce is e xerted b y each side on the hing e?
+FIGURE 9.33 A sandwich boar d adv ertising sign
+demons trates tension.
+15.(a) What minimum c oefficient o f friction is needed
+betw een the legs and the gr ound t o keep the sign
+inFigure 9.33 in the position sho wn if the chain
+breaks? (b) What f orce is e xerted b y each side on
+the hing e?
+16.An athlet e is at temp ting t o per form splits . From
+the inf ormation giv en in Figure 9.34 , calculat e the
+magnitude and dir ection o f the f orce exerted on
+each f oot b y the floor .410 9 • P roblems & Ex ercises
+Access f or free at opens tax.org
+
+FIGURE 9.34 An athlet e per forms ful l split. The c enter of
+gravity and the v arious dis tanc es fr om it ar e sho wn.
+9.4Applic ations o f Statics , Including
+Problem-Solving S trategies
+17.To get up on the r oof, a person (mas s 70.0 k g)
+plac es a 6.00-m aluminum ladder (mas s 10.0 k g)
+agains t the house on a c oncr ete pad with the base
+of the ladder 2.00 m fr om the house . The ladder
+rests ag ains t a plas tic rain g utter, which w e can
+assume t o be frictionles s. The c enter of mas s of
+the ladder is 2 m fr om the bot tom. The person is
+standing 3 m fr om the bot tom. What ar e the
+magnitudes o f the f orces on the ladder at the t op
+and bot tom?
+18.InFigure 9.20 , the c g of the pole held b y the pole
+vaulter is 2.00 m fr om the left hand, and the hands
+are 0.700 m apar t. Calculat e the f orce exerted b y
+(a) his right hand and (b) his left hand. (c) If each
+hand suppor ts half the w eight o f the pole in Figure
+9.18 , sho w that the sec ond c ondition f or
+equilibrium is satis fied f or a piv ot
+other than the one locat ed at the c enter of gravity
+of the pole . Explicitl y sho w ho w you follow the
+steps in the P roblem-Sol ving Str ategy for static
+equilibrium described abo ve.
+9.5Simple Machines
+19.What is the mechanical adv antag e of a nail
+puller—similar t o the one sho wn in Figure 9.21
+—wher e you e xert a force from the piv ot
+and the nail is on the other side? What
+minimum f orce mus t you e xert to appl y a f orce of
+to the nail?
+20.Suppose y ou needed t o raise a 250-k g mo wer a
+distanc e of 6.0 cm abo ve the gr ound t o chang e a
+tire. If y ou had a 2.0-m long le ver, wher e would
+you plac e the fulcrum if y our f orce was limit ed to
+300 N?
+21.a) What is the mechanical adv antag e of awheelbarr ow, such as the one in Figure 9.22 , if the
+center of gravity o f the wheelbarr ow and its load
+has a perpendicular le ver arm o f 5.50 cm, while
+the hands ha ve a perpendicular le ver arm o f 1.02
+m? (b) What up ward force should y ou e xert to
+suppor t the wheelbarr ow and its load if their
+combined mas s is 55.0 k g? (c) What f orce does
+the wheel e xert on the gr ound?
+22.A typical car has an axle with radius
+driving a tir e with a r adius o f . What is its
+mechanical adv antag e as suming the v ery
+simplified model in Figure 9.23 (b)?
+23.What f orce does the nail pul ler in Exercise 9.19
+exert on the suppor ting sur face? The nail pul ler
+has a mas s of 2.10 k g.
+24.If you used an ideal pul ley of the type sho wn in
+Figure 9.24 (a) t o suppor t a car engine o f mas s
+, (a) What w ould be the t ension in the r ope?
+(b) What f orce mus t the c eiling suppl y, assuming
+you pul l straight do wn on the r ope? Neglect the
+pulley system’s mas s.
+25.Repeat Exercise 9.24 for the pul ley sho wn in
+Figure 9.24 (c), as suming y ou pul l straight up on
+the r ope. The pul ley system’s mas s is .
+9.6Forces and T orques in Muscles and
+Joints
+26.Verify that the f orce in the elbo w joint in Example
+9.4is 407 N, as s tated in the t ext.
+27.Two muscles in the back o f the leg pul l on the
+Achil les t endon as sho wn in Figure 9.35 . What
+total f orce do the y exert?
+FIGURE 9.35 The Achil les t endon o f the pos terior leg ser ves
+to attach plantaris , gastrocnemius , and soleus muscles t o
+calcaneus bone .
+28.The upper leg muscle (quadric eps) e xerts a f orce
+of 1250 N, which is carried b y a t endon o ver the
+kneecap (the pat ella) at the angles sho wn in
+Figure 9.36 . Find the dir ection and magnitude o f
+the f orce exerted b y the kneecap on the upper leg9 • P roblems & Ex ercises 411
+
+bone (the f emur).
+FIGURE 9.36 The knee joint w orks like a hing e to bend and
+straight en the lo wer leg . It permits a person t o sit, s tand,
+and piv ot.
+29.A de vice for exercising the upper leg muscle is
+shown in Figure 9.37 , together with a schematic
+representation o f an equiv alent le ver system.
+Calculat e the f orce exerted b y the upper leg
+muscle t o lift the mas s at a c onstant speed.
+Explicitl y sho w ho w you follow the s teps in the
+Problem-Sol ving Str ategy for static equilibrium in
+Applications o f Statis tics, Including P roblem-
+Solving Str ategies .
+FIGURE 9.37 A mas s is c onnect ed b y pul leys and wir es to
+the ankle in this e xercise de vice.
+30.A person w orking at a dr afting boar d ma y hold her
+head as sho wn in Figure 9.38 , requiring muscle
+action t o suppor t the head. The thr ee major acting
+forces ar e sho wn. Calculat e the dir ection and
+magnitude o f the f orce supplied b y the upper
+vertebrae to hold the head s tationar y,
+assuming that this f orce acts along a line thr oughthe c enter of mas s as do the w eight and muscle
+force.
+FIGURE 9.38
+31.We anal yzed the bic eps muscle e xample with the
+angle betw een f orearm and upper arm set at .
+Using the same numbers as in Example 9.4 , find
+the f orce exerted b y the bic eps muscle when the
+angle is and the f orearm is in a do wnward
+position.
+32.Even when the head is held er ect, as in Figure
+9.39 , its c enter of mas s is not dir ectly over the
+principal point o f suppor t (the atlant o-occipital
+joint). The muscles at the back o f the neck should
+ther efore exert a force to keep the head er ect.
+That is wh y your head fal ls forward when y ou fal l
+asleep in the clas s. (a) Calculat e the f orce exerted
+by these muscles using the inf ormation in the
+figure. (b) What is the f orce exerted b y the piv ot on
+the head?412 9 • P roblems & Ex ercises
+Access f or free at opens tax.org
+
+FIGURE 9.39 The c enter of mas s of the head lies in fr ont o f
+its major point o f suppor t, requiring muscle action t o hold
+the head er ect. A simplified le ver system is sho wn.
+33.A 75-k g man s tands on his t oes b y exerting an
+upward force thr ough the Achil les t endon, as in
+Figure 9.40 . (a) What is the f orce in the Achil les
+tendon if he s tands on one f oot? (b) Calculat e the
+force at the piv ot of the simplified le ver system
+shown—that f orce is r epresentativ e of forces in
+the ankle joint.
+FIGURE 9.40 The muscles in the back o f the leg pul l the
+Achil les t endon when one s tands on one ’s toes. A simplified
+lever system is sho wn.
+34.A father lifts his child as sho wn in Figure 9.41 .
+What f orce should the upper leg muscle e xert to
+lift the child at a c onstant speed?
+FIGURE 9.41 A child being lift ed b y a father ’s lower leg .
+35.Unlik e mos t of the other muscles in our bodies ,
+the mas seter muscle in the ja w, as il lustrated in
+Figure 9.42 , is at tached r elativ ely far fr om the
+joint, enabling lar ge forces to be e xerted b y the
+back t eeth. (a) Using the inf ormation in the fig ure,
+calculat e the f orce exerted b y the lo wer teeth on
+the bul let. (b) Calculat e the f orce on the joint.
+FIGURE 9.42 A person clenching a bul let betw een his t eeth.
+36.Integrated Conc epts
+Suppose w e replac e the 4.0-k g book in Exercise
+9.31 of the bic eps muscle with an elas tic e xercise
+rope that obe ys Hook e’s Law. Assume its f orce
+constant . (a) Ho w much is the r ope
+stretched (pas t equilibrium) t o provide the same
+force as in this e xample? As sume the r ope is
+held in the hand at the same location as the book.
+(b) What f orce is on the bic eps muscle if the
+exercise r ope is pul led s traight up so that the
+forearm mak es an angle o f with the
+horiz ontal? As sume the bic eps muscle is s till
+perpendicular t o the f orearm.9 • P roblems & Ex ercises 413
+
+37.(a) What f orce should the w oman in Figure 9.43
+exert on the floor with each hand t o do a push-up?
+Assume that she mo ves up at a c onstant speed.
+(b) The tric eps muscle at the back o f her upper
+arm has an eff ectiv e lever arm o f 1.75 cm, and she
+exerts force on the floor at a horiz ontal dis tanc e of
+20.0 cm fr om the elbo w joint. Calculat e the
+magnitude o f the f orce in each tric eps muscle , and
+compar e it t o her w eight. (c) Ho w much w ork does
+she do if her c enter of mas s rises 0.240 m? (d)
+What is her useful po wer output if she does 25
+pushups in one minut e?
+FIGURE 9.43 A woman doing pushups .
+38.You ha ve jus t plant ed a s turdy 2-m-tal l palm tr ee
+in your fr ont la wn f or your mother ’s bir thda y. Your
+brother kick s a 500 g bal l, which hits the t op o f the
+tree at a speed o f 5 m/s and s tays in c ontact with
+it for 10 ms . The bal l falls to the gr ound near the
+base o f the tr ee and the r ecoil o f the tr ee is
+minimal . (a) What is the f orce on the tr ee? (b) The
+length o f the s turdy section o f the r oot is onl y 20
+cm. F urthermor e, the soil ar ound the r oots is loose
+and w e can as sume that an eff ectiv e force isapplied at the tip o f the 20 cm length. What is the
+effectiv e force exerted b y the end o f the tip o f the
+root t o keep the tr ee fr om t oppling? As sume the
+tree wil l be upr ooted rather than bend. (c) What
+could y ou ha ve done t o ensur e that the tr ee does
+not upr oot easil y?
+39.Unreasonable R esul ts
+Suppose tw o childr en ar e using a unif orm seesa w
+that is 3.00 m long and has its c enter of mas s over
+the piv ot. The firs t child has a mas s of 30.0 k g and
+sits 1.40 m fr om the piv ot. (a) Calculat e wher e the
+second 18.0 k g child mus t sit t o balanc e the
+seesa w. (b) What is unr easonable about the
+resul t? (c) Which pr emise is unr easonable , or
+which pr emises ar e inc onsis tent?
+40.Cons truct Y our Own P roblem
+Consider a method f or measuring the mas s of a
+person ’s arm in anat omical s tudies . The subject
+lies on her back, e xtends her r elax ed arm t o the
+side and tw o scales ar e plac ed belo w the arm.
+One is plac ed under the elbo w and the other
+under the back o f her hand. Cons truct a pr oblem
+in which y ou calculat e the mas s of the arm and
+find its c enter of mas s based on the scale r eadings
+and the dis tanc es o f the scales fr om the shoulder
+joint. Y ou mus t include a fr ee body diagr am o f the
+arm t o dir ect the anal ysis. Consider changing the
+position o f the scale under the hand t o provide
+mor e inf ormation, if needed. Y ou ma y wish t o
+consul t references to ob tain r easonable mas s
+values .
+Test Prep for AP ® Courses
+9.2The Sec ond C ondition f or Equilibrium
+1.Which o f the f ollowing is not an e xample o f an
+object under going a t orque?
+a.A car is r ounding a bend at a c onstant speed.
+b.A merr y-go-round incr eases fr om r est to a
+constant r otational speed.
+c.A pendulum s wings back and f orth.
+d.A bo wling bal l rolls do wn a bo wling al ley.
+2.Five forces o f equal magnitude , labeled A–E, are
+applied t o the object sho wn belo w. If the object is
+anchor ed at point P, which f orce wil l provide the
+greatest torque?
+FIGURE 9.44 Five forces acting on an object.
+a.ForceA
+b.ForceB
+c.ForceC
+d.ForceD
+e.ForceE414 9 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+9.3Stabilit y
+3.Using the c oncept of torque, explain wh y a tr affic
+cone plac ed on its base is in s table equilibrium,
+while a tr affic c one plac ed on its tip is in uns table
+equilibrium.
+9.4Applic ations o f Statics , Including
+Problem-Solving S trategies
+4.A child sits on the end o f a pla yground see -saw.
+Which o f the f ollowing v alues is the mos t
+appr opriat e es timat e of the t orque cr eated b y the
+child?
+a.6 N•m
+b.60 N•m
+c.600 N•m
+d.6000 N•m
+5.A group o f students is s tacking a set o f identical
+book s, each one o verhanging the one belo w it b y 1
+inch. The y would lik e to es timat e ho w man y book s
+they could plac e on t op o f each other bef ore the
+stack tipped. What inf ormation belo w would the y
+need t o kno w to mak e this calculation?
+FIGURE 9.45 3 overlapping s tack ed book s.
+I.The mas s of each book
+II. The width o f each book
+III. The dep th of each book
+a.I onl y
+b.I and II onl y
+c.I and III onl y
+d.II onl y
+e.I, II, and III
+6.A 10 N boar d of unif orm density is 5 met ers long . It
+is suppor ted on the left b y a s tring bearing a 3 N
+upward force. In or der t o prevent the s tring fr om
+breaking , a person mus t plac e an up ward force of 7
+N at a position along the bot tom sur face of the
+boar d. At what dis tanc e from its left edg e would
+they need t o plac e this f orce in or der f or the boar d
+to be in s tatic equilibrium?
+a. m
+b. mc. m
+d. m
+e.5 m
+7.A bridg e is suppor ted b y tw o piers locat ed 20
+meters apar t. Both the left and right piers pr ovide
+an up ward force on the bridg e, labeled FLand FR
+respectiv ely.
+a.If a 1000 k g car c omes t o rest at a point 5
+meters fr om the left pier , how much f orce wil l
+the bridg e provide t o the left and right piers?
+b.How wil lFLand FRchang e as the car driv es to
+the right side o f the bridg e?
+8.An object o f unkno wn mas s is pr ovided t o a
+student. Without using a scale , design an
+experimental pr ocedur e detailing ho w the
+magnitude o f this mas s could be e xperimental ly
+found. Y our e xplanation mus t include the c oncept
+of torque and al l steps should be pr ovided in an
+orderly sequenc e. You ma y include a labeled
+diagr am o f your setup t o help in y our descrip tion.
+Include enough detail so that another s tudent c ould
+carr y out y our pr ocedur e.
+9.5Simple Machines
+9.As a y oung s tudent, y ou lik ely learned that simple
+machines ar e capable o f incr easing the ability t o lift
+and mo ve objects . No w, as an educat ed AP Ph ysics
+student, y ou ar e aware that this capability is
+governed b y the r elationship betw een f orce and
+torque.
+In the spac e belo w, explain wh y torque is int egral
+to the incr ease in f orce created b y a simple
+machine . You ma y use an e xample or diagr am t o
+assist in y our e xplanation. Be sur e to cit e the
+mechanical adv antag e in y our e xplanation as w ell.
+10.Figure 9.24(a) shows a wheelbarr ow being lift ed
+by an applied f orceFi. If the wheelbarr ow is fil led
+with tw enty brick s mas sing 3 k g each, es timat e
+the v alue o f the applied f orceFi. Provide an
+explanation behind the t otal w eight wand an y
+reasoning t oward your final ans wer. Additional ly,
+provide a r ange of values o ver which y ou feel the
+force could e xist.
+9.6Forces and T orques in Muscles and
+Joints
+11.When y ou use y our hand t o raise a 20 lb dumbbel l
+in a curling motion, the f orce on y our bic ep muscle
+is not equal t o 20 lb .
+a.Compar e the siz e of the f orce plac ed on y our9 • T est Prep for AP ® Courses 415
+
+bicep muscle t o the f orce of the 20 lb
+dumbbel l lifted b y your hand. Using the
+concept of torque, which f orce is gr eater and
+explain wh y the tw o forces ar e not identical .
+b.Does the f orce plac ed on y our bic ep muscle
+chang e as y ou curl the w eight closer t owardyour body? (In other w ords, is the f orce on
+your muscle diff erent when y our f orearm is
+90° t o your upper arm than when it is 45° t o
+your upper arm?) Explain y our ans wer using
+torque.416 9 • T est Prep for AP ® Courses
+Access f or free at opens tax.org
+
+CONNECT ION F OR AP® C OURSESCHAP TER 10
+Rotational Motion and Ang ular Momentum
+10.1 Ang ular Ac celer ation
+10.2 Kinema tics o f Rotational Mo tion
+10.3 Dynamics o f Rotational Mo tion: R otational Iner tia
+10.4 Rotational Kinetic Ener gy: W ork and Ener gy Revisit ed
+10.5 Ang ular Momentum and Its Conser vation
+10.6 Collisions o f Ext ended Bodies in T wo Dimensions
+10.7 Gyroscopic Ef fects: V ector Aspects o f Ang ular Momentum
+Why do t ornados spin? And wh y do t ornados spin so r apidl y? The ans wer is that
+the air mas ses that pr oduc e tornados ar e themsel ves rotating , and when the r adii o f the air mas ses decr ease , their
+rate of rotation incr eases . An ic e sk ater incr eases her spin in an e xactl y analog ous manner , as seen in Figure 10.2 .
+The sk ater starts her r otation with outs tretched limbs and incr eases her r ate of spin b y pul ling them in t oward her
+body . The same ph ysics describes the e xhilar ating spin o f a sk ater and the wr enching f orce of a tornado . We wil l find
+that this is another e xample o f the impor tanc e of conser vation la ws and their r ole in det ermining ho w chang es
+happen in a s ystem, suppor ting Big I dea 5. The idea that a chang e of a c onser ved quantity is al ways equal t o the
+transfer of that quantity betw een int eracting s ystems (Enduring Unders tanding 5. A) is pr esent ed for both ener gy
+and ang ular momentum (Enduring Unders tanding 5.E). The c onser vation o fangular momentum in relation t o the
+external net torque (Essential K nowledg e 5.E.1) par allels that o f linear momentum c onser vation in r elation t o the
+external net f orce. The c oncept ofrotational iner tiais intr oduc ed, a c oncept that tak es int o ac count not onl y the
+mas s of an object or a s ystem, but also the dis tribution o f mas s within the object or s ystem. Ther efore, chang es in
+the r otational iner tia o f a s ystem c ould lead t o chang es in the motion (Es sential K nowledg e 5.E.2) o f the s ystem. W eFIGURE 10.1 The mention o f a tornado c onjur es up imag es o f raw des tructiv e po wer. Tornadoes blo w houses a way as if the y were made o f
+paper and ha ve been kno wn t o pier ce tree trunk s with piec es o f straw. The y desc end fr om clouds in funnel -like shapes that spin violentl y,
+particularl y at the bot tom wher e the y are mos t narr ow, producing winds as high as 500 km/h. (cr edit: Daphne Zar as, U.S. National Oc eanic
+and A tmospheric Adminis tration)
+CHAP TER OUTLINE
+
+shal l see that al l impor tant aspects o f rotational motion either ha ve alr eady been defined f or linear motion or ha ve
+exact analog ues in linear motion.
+Clearl y, ther efore, force, ener gy, and po wer ar e as sociat ed with r otational motion. This suppor ts Big I dea 3, that
+interactions ar e described b y forces. The ability o f forces to cause t orques (Enduring Unders tanding 3.F ) is e xtended
+to the int eractions betw een objects that r esul t in nonz ero net t orque. This nonz ero net t orque in turn causes
+chang es in the r otational motion o f an object (Es sential K nowledg e 3.F .2) and r esul ts in chang es o f the ang ular
+momentum o f an object (Es sential K nowledg e 3.F .3).
+Similarl y, Big I dea 4, that int eractions betw een s ystems cause chang es in those s ystems , is suppor ted b y the
+empirical obser vation that when t orques ar e exerted on rigid bodies these t orques cause chang es in the ang ular
+momentum o f the s ystem (Enduring Unders tanding 4.D).
+Again, ther e is a clear analog y betw een linear and r otational motion in this int eraction. Both the ang ular kinematics
+variables (ang ular displac ement, ang ular v elocity , and angular ac celer ation ) and the dynamics v ariables (t orque
+and ang ular momentum) ar e vectors with dir ection depending on whether the r otation is clockwise or
+count erclockwise with r espect t o an axis o f rotation (Es sential K nowledg e 4.D .1). The ang ular momentum o f the
+system can chang e due t o int eractions (Es sential K nowledg e 4.D .2). This chang e is defined as the pr oduct o f the
+average torque and the time int erval during which t orque is e xerted (Es sential K nowledg e 4.D .3), analog ous t o the
+impulse -momentum theor em f or linear motion.
+The c oncepts in this chap ter suppor t:
+Big I dea 3. The int eractions o f an object with other objects can be described b y forces.
+Enduring Unders tanding 3.F . A force exerted on an object can cause a t orque on that object.
+Extended K nowledg e 3.F .2. The pr esenc e of a net t orque along an y axis wil l cause a rigid s ystem t o chang e its
+rotational motion or an object t o chang e its r otational motion about that axis .
+Extended K nowledg e 3.F .3. A t orque e xerted on an object can chang e the ang ular momentum o f an object.
+Big I dea 4. Interactions betw een s ystems can r esul t in chang es in those s ystems .
+Enduring Unders tanding 4.D . A net t orque e xerted on a s ystem b y other objects or s ystems wil l chang e the ang ular
+momentum o f the s ystem.
+Extended K nowledg e 4.D .1. T orque, ang ular v elocity , ang ular ac celeration, and ang ular momentum ar e vectors and
+can be char acterized as positiv e or neg ative depending upon whether the y giv e rise t o or c orrespond t o
+count erclockwise or clockwise r otation with r espect t o an axis .
+Extended K nowledg e 4.D .2. The ang ular momentum o f a s ystem ma y chang e due t o int eractions with other objects
+or systems .
+Extended K nowledg e 4.D .3. The chang e in ang ular momentum is giv en b y the pr oduct o f the a verage torque and the
+time int erval during which the t orque is e xerted.
+Big I dea 5. Chang es that oc cur as a r esul t of interactions ar e constrained b y conser vation la ws.
+Enduring Unders tanding 5. A. Cer tain quantities ar e conser ved, in the sense that the chang es o f those quantities in a
+given s ystem ar e always equal t o the tr ansfer of that quantity t o or fr om the s ystem b y all pos sible int eractions with
+other s ystems .
+Extended K nowledg e 5.A.2. F or al l systems under al l circums tanc es, ener gy, char ge, linear momentum, and ang ular
+momentum ar e conser ved.
+Enduring Unders tanding 5.E. The ang ular momentum o f a s ystem is c onser ved.
+Extended K nowledg e 5.E.1. If the net e xternal t orque e xerted on the s ystem is z ero, the ang ular momentum o f the
+system does not chang e.
+Extended K nowledg e 5.E.2. The ang ular momentum o f a s ystem is det ermined b y the locations and v elocities o f the
+objects that mak e up the s ystem. The r otational iner tia o f an object or s ystem depends upon the dis tribution o f mas s418 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+within the object or system. Changes in the radius of a system or in the distribution of mass within the system result
+in changes in the system's rotational inertia, and hence in its angular velocity and linear speed for a given angular
+momentum. Examples should include elliptical orbits in an Earth-satellite system. Mathematical expressions for the
+moments of inertia will be provided where needed. Students will not be expected to know the parallel axis theorem.
+FIGURE 10.2 This figure skater increases her rate of spin by pulling her arms and her extended leg closer to her axis of rotation. (credit:  
+Luu, Wikimedia Commons)
+Click to view content (https:/ /openstax.org/books/college-physics-ap-courses-2e/pages/10-connection-for-ap-
+r-courses)
+10.1 Angular Acceleration
+LEARNING OBJECTIVES
+By the end of this section, you will be able to:
+•Describe uniform circular motion.
+•Explain non-uniform circular motion.
+•Calculate angular acceleration of an object.
+•Observe the link between linear and angular acceleration.
+Uniform Circular Motion and Gravitation discussed only uniform circular motion, which is motion in a circle at
+constant speed and, hence, constant angular velocity. Recall that angular velocity was defined as the time rate of
+change of angle :
+where is the angle of rotation as seen in Figure 10.3. The relationship between angular velocity and linear
+velocity was also defined in Rotation Angle and Angular Velocity as
+or
+where is the radius of curvature, also seen in Figure 10.3. According to the sign convention, the counter clockwise
+direction is considered as positive direction and clockwise direction as negative10.1
+10.2
+10.310.1 • Angular Acceleration 419
+
+FIGURE 10.3 This fig ure sho ws unif orm cir cular motion and some o f its defined quantities .
+Angular v elocity is not c onstant when a sk ater pul ls in her arms , when a child s tarts up a merr y-go-round fr om r est,
+or when a c omput er’s har d disk slo ws to a hal t when s witched o ff. In al l these cases , ther e is an angular
+acceler ation , in which chang es. The fas ter the chang e oc curs , the gr eater the ang ular ac celeration. Ang ular
+acceleration is defined as the r ate of chang e of ang ular v elocity . In equation f orm, ang ular ac celeration is
+expressed as f ollows:
+wher e is the chang e in ang ular v elocity and is the chang e in time . The units o f ang ular ac celeration ar e
+, or . If increases , then is positiv e. If decr eases , then is neg ative.
+EXAMPLE 10.1
+Calcula ting the Ang ular Ac celer ation and Dec eler ation o f a Bik e Wheel
+Suppose a t eenag er puts her bicy cle on its back and s tarts the r ear wheel spinning fr om r est to a final ang ular
+velocity o f 250 rpm in 5.00 s . (a) Calculat e the ang ular ac celeration in . (b) If she no w slams on the br akes,
+causing an ang ular ac celeration o f , how long does it tak e the wheel t o stop?
+Strategy for (a)
+The ang ular ac celeration can be f ound dir ectly from its definition in because the final ang ular v elocity and
+time ar e giv en. W e see that is 250 rpm and is 5.00 s .
+Solution f or (a)
+Entering kno wn inf ormation int o the definition o f ang ular ac celeration, w e get
+Because is in r evolutions per minut e (rpm) and w e want the s tandar d units o f for ang ular ac celeration, w e
+need t o convert from rpm t o rad/s:
+Entering this quantity int o the e xpression f or , we get10.4
+10.5
+10.6
+10.7420 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+Strategy for (b)
+In this par t, we kno w the ang ular ac celeration and the initial ang ular v elocity . We can find the s toppag e time b y
+using the definition o f ang ular ac celeration and sol ving f or , yielding
+Solution f or (b)
+Here the ang ular v elocity decr eases fr om (250 rpm) t o zero, so that is , and is giv en to
+be . Thus ,
+Discus sion
+Note that the ang ular ac celeration as the girl spins the wheel is smal l and positiv e; it tak es 5 s t o produc e an
+appr eciable ang ular v elocity . When she hits the br ake, the ang ular ac celeration is lar ge and neg ative. The ang ular
+velocity quickl y goes t o zero. In both cases , the r elationships ar e analog ous t o what happens with linear motion. F or
+example , ther e is a lar ge dec eleration when y ou cr ash int o a brick w all—the v elocity chang e is lar ge in a shor t time
+interval.
+If the bicy cle in the pr eceding e xample had been on its wheels ins tead o f upside -down, it w ould firs t have
+accelerated along the gr ound and then c ome t o a s top. This c onnection betw een cir cular motion and linear motion
+needs t o be e xplor ed. F or example , it w ould be useful t o kno w ho w linear and ang ular ac celeration ar e related. In
+circular motion, linear ac celeration is tang entto the cir cle at the point o f interest, as seen in Figure 10.4 . Thus , linear
+acceleration is cal ledtang ential ac celer ation .
+FIGURE 10.4 In cir cular motion, linear ac celeration , occurs as the magnitude o f the v elocity chang es: is tang ent t o the motion. In the
+context of circular motion, linear ac celeration is also cal led tang ential ac celeration .
+Linear or tang ential ac celeration r efers t o chang es in the magnitude o f velocity but not its dir ection. W e kno w from
+Unif orm Cir cular Motion and Gr avitation that in cir cular motion c entripetal ac celeration, , refers t o chang es in the
+direction o f the v elocity but not its magnitude . An object under going cir cular motion e xperienc es centripetal
+acceleration, as seen in Figure 10.5 . Thus ,and are perpendicular and independent o f one another . Tangential
+acceleration is dir ectly related to the ang ular ac celeration and is link ed to an incr ease or decr ease in the
+velocity , but not its dir ection.10.8
+10.910.1 • Angular A cceleration 421
+
+FIGURE 10.5 Centripetal ac celeration occurs as the dir ection o f velocity chang es; it is perpendicular t o the cir cular motion. Centripetal
+and tang ential ac celeration ar e thus perpendicular t o each other .
+Now we can find the e xact r elationship betw een linear ac celeration and ang ular ac celeration . Because linear
+acceleration is pr opor tional t o a chang e in the magnitude o f the v elocity , it is defined (as it w as in One -Dimensional
+Kinematics ) to be
+For cir cular motion, not e that , so that
+The r adius is constant f or cir cular motion, and so . Thus ,
+By definition, . Thus ,
+or
+These equations mean that linear ac celeration and ang ular ac celeration ar e dir ectly propor tional . The gr eater the
+angular ac celeration is , the lar ger the linear (tang ential) ac celeration is , and vic e versa . For example , the gr eater the
+angular ac celeration o f a car ’s driv e wheels , the gr eater the ac celeration o f the car . The r adius also mat ters. For
+example , the smal ler a wheel , the smal ler its linear ac celeration f or a giv en ang ular ac celeration .
+EXAMPLE 10.2
+Calcula ting the Ang ular Ac celer ation o f a Mo torcycle Wheel
+A po werful mot orcycle can ac celerate from 0 t o 30.0 m/s (about 108 km/h) in 4.20 s . What is the ang ular
+acceleration o f its 0.320-m-r adius wheels? (See Figure 10.6 .)10.10
+10.11
+10.12
+10.13
+10.14
+422 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+FIGURE 10.6 The linear ac celeration o f a mot orcycle is ac companied b y an ang ular ac celeration o f its wheels .
+Strategy
+We are giv en inf ormation about the linear v elocities o f the mot orcycle. Thus , we can find its linear ac celeration .
+Then, the e xpression can be used t o find the ang ular ac celeration.
+Solution
+The linear ac celeration is
+We also kno w the r adius o f the wheels . Ent ering the v alues f or and into , we get
+Discus sion
+Units o f radians ar e dimensionles s and appear in an y relationship betw een ang ular and linear quantities .
+So far , we ha ve defined thr ee rotational quantities — , and . These quantities ar e analog ous t o the tr anslational
+quantities , and .Table 10.1 displa ys rotational quantities , the analog ous tr anslational quantities , and the
+relationships betw een them.
+Rotational Translational Relationship
+TABLE 10.1 Rotational and T ranslational
+Quantities10.15
+10.16
+MAKING C ONNE CTIONS: T AKE-HOME E XPERIMENT
+Sit do wn with y our f eet on the gr ound on a chair that r otat es. Lift one o f your legs such that it is unbent
+(straight ened out). Using the other leg , begin t o rotat e yourself b y pushing on the gr ound. St op using y our leg t o10.1 • Angular A cceleration 423
+
+CHE CK Y OUR UNDER STANDING
+Angular ac celeration is a v ector, having both magnitude and dir ection. Ho w do w e denot e its magnitude and
+direction? Il lustrate with an e xample .
+Solution
+The magnitude o f ang ular ac celeration is and its mos t common units ar e . The dir ection o f ang ular
+acceleration along a fix ed axis is denot ed b y a + or a – sign, jus t as the dir ection o f linear ac celeration in one
+dimension is denot ed b y a + or a – sign. F or example , consider a g ymnas t doing a f orward flip . Her ang ular
+momentum w ould be par allel to the mat and t o her left. The magnitude o f her ang ular ac celeration w ould be
+propor tional t o her ang ular v elocity (spin r ate) and her moment o f iner tia about her spin axis .
+10.2 Kinematics o f Rotational Mo tion
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Obser ve the kinematics o f rotational motion.
+•Deriv e rotational kinematic equations .
+•Evaluat e problem sol ving s trategies f or rotational kinematics .
+Just by using our intuition, w e can begin t o see ho w rotational quantities lik e,, and are related to one another .
+For example , if a mot orcycle wheel has a lar ge ang ular ac celeration f or a fairl y long time , it ends up spinning r apidl y
+and r otat es thr ough man y revolutions . In mor e technical t erms , if the wheel ’s ang ular ac celeration is lar ge for a
+long period o f time , then the final ang ular v elocity and angle o f rotation are lar ge. The wheel ’s rotational
+motion is e xactl y analog ous t o the fact that the mot orcycle’s lar ge translational ac celeration pr oduc es a lar ge final
+velocity , and the dis tanc e traveled wil l also be lar ge.
+Kinematics is the descrip tion o f motion. The kinema tics o f rotational mo tion describes the r elationships among
+rotation angle , ang ular v elocity , ang ular ac celeration, and time . Let us s tart by finding an equation r elating ,, and
+. To det ermine this equation, w e recal l a familiar kinematic equation f or tr anslational , or s traight -line , motion:
+Note that in r otational motion , and w e shal l use the s ymbol for tang ential or linear ac celeration fr om no w
+on. As in linear kinematics , we as sume is constant, which means that ang ular ac celeration is also a c onstant,
+because . No w, let us subs titut e and into the linear equation abo ve:
+The r adius canc els in the equation, yielding
+wher e is the initial ang ular v elocity . This las t equation is a kinematic r elationship among ,, and —that is , it
+describes their r elationship without r eference to forces or mas ses that ma y aff ect r otation. It is also pr ecisel y
+analog ous in f orm t o its tr anslational c ount erpar t.push the gr ound but al low the chair t o rotat e. From the origin wher e you beg an, sk etch the angle , ang ular
+velocity , and ang ular ac celeration o f your leg as a function o f time in the f orm o f thr ee separ ate graphs . Estimat e
+the magnitudes o f these quantities .
+LADYBUG RE VOLUTION
+Join the ladybug in an e xplor ation o f rotational motion. R otat e the merr y-go-round t o chang e its angle , or
+choose a c onstant ang ular v elocity or ang ular ac celeration. Explor e ho w cir cular motion r elates to the bug 's x,y
+position, v elocity , and ac celeration using v ectors or gr aphs .
+Click t o vie w content(https:/ /opens tax.org/l/28ladybugr evolutionr otation) .
+10.17
+10.18
+10.19424 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+Star ting with the f our kinematic equations w e de veloped in One -Dimensional Kinematics , we can deriv e the
+following f our r otational kinematic equations (pr esent ed together with their tr anslational c ount erpar ts):
+Rotational Translational
+(constant ,)
+(constant ,)
+(constant ,)
+TABLE 10.2 Rotational Kinematic E quations
+In these equations , the subscrip t 0 denot es initial v alues ( ,, and are initial v alues), and the a verage ang ular
+velocity and a verage velocity are defined as f ollows:
+The equations giv en abo ve in Table 10.2 can be used t o sol ve an y rotational or tr anslational kinematics pr oblem in
+which and are constant.
+EXAMPLE 10.3
+Calcula ting the Ac celer ation o f a Fishing R eel
+A deep -sea fisherman hook s a big fish that s wims a way from the boat pul ling the fishing line fr om his fishing r eel.
+The whole s ystem is initial ly at r est and the fishing line un winds fr om the r eel at a r adius o f 4.50 cm fr om its axis o f
+rotation. The r eel is giv en an ang ular ac celeration o f for 2.00 s as seen in Figure 10.7 .
+(a) What is the final ang ular v elocity o f the r eel?MAKING C ONNE CTIONS
+Kinematics f or rotational motion is c omplet ely analog ous t o translational kinematics , firs t present ed in One -
+Dimensional Kinematics . Kinematics is c oncerned with the descrip tion o f motion without r egard to force or
+mas s. We wil l find that tr anslational kinematic quantities , such as displac ement, v elocity , and ac celeration ha ve
+direct analogs in r otational motion.
+10.20
+PROBLEM-SOL VING S TRATEGY FOR R OTATIONAL KINEMA TICS
+1.Examine the situation t o det ermine that r otational kinematics (r otational motion) is in volved. Rotation mus t
+be in volved, but without the need t o consider f orces or mas ses that aff ect the motion.
+2.Identif y exactl y what needs t o be det ermined in the pr oblem (identif y the unkno wns) . A sk etch o f the
+situation is useful .
+3.Mak e a lis t of what is giv en or can be inf erred fr om the pr oblem as s tated (identif y the kno wns) .
+4.Solve the appr opriat e equation or equations f or the quantity t o be det ermined (the unkno wn). It can be
+useful t o think in t erms o f a tr anslational analog because b y no w you ar e familiar with such motion.
+5.Subs titut e the kno wn v alues along with their units int o the appr opriat e equation, and ob tain numerical
+solutions c omplet e with units . Be sur e to use units o f radians f or angles .
+6.Check y our ans wer to see if it is r easonable: Does y our ans wer mak e sense ?
+10.2 • Kinematics o f Rotational Mo tion 425
+
+(b) A t what speed is fishing line lea ving the r eel aft er 2.00 s elapses?
+(c) Ho w man y revolutions does the r eel mak e?
+(d) Ho w man y met ers o f fishing line c ome o ff the r eel in this time?
+Strategy
+In each par t of this e xample , the s trategy is the same as it w as for sol ving pr oblems in linear kinematics . In
+particular , kno wn v alues ar e identified and a r elationship is then sought that can be used t o sol ve for the unkno wn.
+Solution f or (a)
+Hereand are giv en and needs t o be det ermined. The mos t straight forward equation t o use is
+because the unkno wn is alr eady on one side and al l other t erms ar e kno wn. That equation s tates that
+We are also giv en that (it starts from r est), so that
+Solution f or (b)
+Now that is kno wn, the speed can mos t easil y be f ound using the r elationship
+wher e the r adius of the r eel is giv en to be 4.50 cm; thus ,
+Note ag ain that r adians mus t always be used in an y calculation r elating linear and ang ular quantities . Also , because
+radians ar e dimensionles s, we ha ve .
+Solution f or (c)
+Here, we are ask ed to find the number o f revolutions . Because , we can find the number o f
+revolutions b y finding in radians . We are giv en and , and w e kno w is zero, so that can be ob tained using
+.
+Converting r adians t o revolutions giv es
+Solution f or (d)
+The number o f met ers o f fishing line is , which can be ob tained thr ough its r elationship with :
+Discus sion
+This e xample il lustrates that r elationships among r otational quantities ar e highl y analog ous t o those among linear
+quantities . We also see in this e xample ho w linear and r otational quantities ar e connect ed. The ans wers t o the
+ques tions ar e realis tic. Aft er un winding f or tw o sec onds , the r eel is f ound t o spin at 220 r ad/s , which is 2100 rpm.
+(No w onder r eels sometimes mak e high-pit ched sounds .) The amount o f fishing line pla yed out is 9.90 m, about
+right f or when the big fish bit es.10.21
+10.22
+10.23
+10.24
+10.25
+10.26
+10.27426 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+FIGURE 10.7 Fishing line c oming o ff a r otating r eel mo ves linearl y.Example 10.3 and Example 10.4 consider r elationships betw een
+rotational and linear quantities as sociat ed with a fishing r eel.
+EXAMPLE 10.4
+Calcula ting the Dur ation When the Fishing R eel Slo ws Do wn and S tops
+Now let us c onsider what happens if the fisherman applies a br ake to the spinning r eel, achie ving an ang ular
+acceleration o f . Ho w long does it tak e the r eel t o come t o a s top?
+Strategy
+We are ask ed to find the time for the r eel t o come t o a s top. The initial and final c onditions ar e diff erent fr om those
+in the pr evious pr oblem, which in volved the same fishing r eel. No w we see that the initial ang ular v elocity is
+and the final ang ular v elocity is zero. The ang ular ac celeration is giv en to be .
+Examining the a vailable equations , we see al l quantities but tare kno wn in making it easies t to use
+this equation.
+Solution
+The equation s tates
+We sol ve the equation alg ebraical ly fort, and then subs titut e the kno wn v alues as usual , yielding
+Discus sion
+Note that car e mus t be tak en with the signs that indicat e the dir ections o f various quantities . Also , not e that the time
+to stop the r eel is fairl y smal l because the ac celeration is r ather lar ge. Fishing lines sometimes snap because o f the
+accelerations in volved, and fishermen o ften let the fish s wim f or a while bef ore appl ying br akes on the r eel. A tir ed
+fish wil l be slo wer, requiring a smal ler ac celeration.
+EXAMPLE 10.5
+Calcula ting the Slo w Ac celer ation o f Trains and Their Wheels
+Large freight tr ains ac celerate very slo wly. Suppose one such tr ain ac celerates fr om r est, giving its 0.350-m-r adius
+wheels an ang ular ac celeration o f . Aft er the wheels ha ve made 200 r evolutions (as sume no slippag e):
+(a) Ho w far has the tr ain mo ved do wn the tr ack? (b) What ar e the final ang ular v elocity o f the wheels and the linear
+velocity o f the tr ain?
+Strategy
+In par t (a), w e are ask ed to find , and in (b) w e are ask ed to find and . We are giv en the number o f revolutions ,
+10.28
+10.29
+10.2 • Kinematics o f Rotational Mo tion 427
+
+the r adius o f the wheels , and the ang ular ac celeration .
+Solution f or (a)
+The dis tanc eis very easil y found fr om the r elationship betw een dis tanc e and r otation angle:
+Solving this equation f or yields
+Before using this equation, w e mus t convert the number o f revolutions int o radians , because w e are dealing with a
+relationship betw een linear and r otational quantities:
+Now we can subs titut e the kno wn v alues int o to find the dis tanc e the tr ain mo ved do wn the tr ack:
+Solution f or (b)
+We cannot use an y equation that inc orpor ates to find , because the equation w ould ha ve at leas t two unkno wn
+values . The equation will work, because w e kno w the v alues f or al l variables e xcept:
+Taking the squar e root o f this equation and ent ering the kno wn v alues giv es
+We can find the linear v elocity o f the tr ain, , thr ough its r elationship t o:
+Discus sion
+The dis tanc e traveled is fairl y lar ge and the final v elocity is fairl y slo w (just under 32 km/h).
+Ther e is tr anslational motion e ven for something spinning in plac e, as the f ollowing e xample il lustrates.Figure 10.8
+shows a fl y on the edg e of a rotating micr owave oven plat e. The e xample belo w calculat es the t otal dis tanc e it
+travels.
+FIGURE 10.8 The imag e sho ws a micr owave plat e. The fl y mak es revolutions while the f ood is heat ed (along with the fl y).10.30
+10.31
+10.32
+10.33
+10.34
+10.35
+10.36428 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+EXAMPLE 10.6
+Calcula ting the Dis tanc e Traveled b y a Fl y on the E dge of a Micr owave Ov en Pla te
+A person decides t o use a micr owave oven to reheat some lunch. In the pr ocess, a fl y accidental ly flies int o the
+micr owave and lands on the out er edg e of the r otating plat e and r emains ther e. If the plat e has a r adius o f 0.15 m
+and r otat es at 6.0 rpm, calculat e the t otal dis tanc e traveled b y the fl y during a 2.0-min c ooking period. (Ignor e the
+start-up and slo w-down times .)
+Strategy
+First, find the t otal number o f revolutions , and then the linear dis tanc etraveled. can be used t o find
+because is giv en to be 6.0 rpm.
+Solution
+Entering kno wn v alues int o gives
+As al ways, it is nec essary to convert revolutions t o radians bef ore calculating a linear quantity lik efrom an ang ular
+quantity lik e:
+Now, using the r elationship betw een and , we can det ermine the dis tanc e traveled:
+Discus sion
+Quit e a trip (if it sur vives)! Not e that this dis tanc e is the t otal dis tanc e traveled b y the fl y. Displac ement is actual ly
+zero for complet e revolutions because the y bring the fl y back t o its original position. The dis tinction betw een t otal
+distanc e traveled and displac ement w as firs t not ed in One -Dimensional Kinematics .
+CHE CK Y OUR UNDER STANDING
+Rotational kinematics has man y useful r elationships , often e xpressed in equation f orm. Ar e these r elationships la ws
+of physics or ar e the y simpl y descrip tive? (Hint: the same ques tion applies t o linear kinematics .)
+Solution
+Rotational kinematics ( just like linear kinematics) is descrip tive and does not r epresent la ws of natur e. With
+kinematics , we can describe man y things t o great pr ecision but kinematics does not c onsider causes . For example , a
+large ang ular ac celeration describes a v ery rapid chang e in ang ular v elocity without an y consider ation o f its cause .
+10.3 Dynamics o f Rotational Mo tion: R otational Iner tia
+LEARNING OB JECTIVE S
+By the end o f this section, y ou wil l be able t o:
+•Unders tand the r elationship betw een f orce, mas s and ac celeration.
+•Study the turning eff ect o f force.
+•Study the analog y betw een f orce and t orque, mas s and moment o f iner tia, and linear ac celeration and
+angular ac celeration.
+If you ha ve ever spun a bik e wheel or pushed a merr y-go-round, y ou kno w that f orce is needed t o chang e ang ular
+velocity as seen in Figure 10.9 . In fact, y our intuition is r eliable in pr edicting man y of the fact ors that ar e involved.
+For example , we kno w that a door opens slo wly if w e push t oo close t o its hing es. Furthermor e, we kno w that the
+mor e mas sive the door , the mor e slo wly it opens . The firs t example implies that the far ther the f orce is applied fr om
+the piv ot, the gr eater the ang ular ac celeration; another implication is that ang ular ac celeration is in versel y
+10.37
+10.38
+10.39
+10.3 • Dynamics o f Rotational Mo tion: R otational Iner tia 429
+
+propor tional t o mas s. These r elationships should seem v ery similar t o the familiar r elationships among f orce, mas s,
+and ac celeration embodied in Ne wton’s sec ond la w of motion. Ther e are, in fact, pr ecise r otational analogs t o both
+force and mas s.
+FIGURE 10.9 Force is r equir ed to spin the bik e wheel . The gr eater the f orce, the gr eater the ang ular ac celeration pr oduc ed. The mor e
+mas sive the wheel , the smal ler the ang ular ac celeration. If y ou push on a spok e closer t o the axle , the ang ular ac celeration wil l be smal ler.
+To de velop the pr ecise r elationship among f orce, mas s, radius , and ang ular ac celeration, c onsider what happens if
+we exert a force on a point mas s that is at a dis tanc efrom a piv ot point, as sho wn in Figure 10.10 . Because
+the f orce is perpendicular t o, an ac celeration is ob tained in the dir ection o f. We can r earr ange this
+equation such that and then look f or w ays to relate this e xpression t o expressions f or rotational quantities .
+We not e that , and w e subs titut e this e xpression int o , yielding
+Recal l that torque is the turning eff ectiv enes s of a force. In this case , because is perpendicular t o, torque is
+simpl y . So, if w e mul tiply both sides o f the equation abo ve by, we get torque on the left -hand side . That is ,
+or
+This las t equation is the r otational analog o f Ne wton’s sec ond la w ( ), wher e torque is analog ous t o force,
+angular ac celeration is analog ous t o translational ac celeration, and is analog ous t o mas s (or iner tia). The
+quantity is cal led the rotational iner tiaormoment o f iner tiaof a point mas s a dis tanc efrom the c enter of
+rotation.
+FIGURE 10.10 An object is suppor ted b y a horiz ontal frictionles s table and is at tached t o a piv ot point b y a c ord that supplies c entripetal
+force. A force is applied t o the object perpendicular t o the r adius , causing it t o ac celerate about the piv ot point. The f orce is k ept
+perpendicular t o.10.40
+10.41
+10.42
+MAKING C ONNE CTIONS: R OTATIONAL MO TION D YNAMIC S
+Dynamics f or rotational motion is c omplet ely analog ous t o linear or tr anslational dynamics . Dynamics is
+concerned with f orce and mas s and their eff ects on motion. F or rotational motion, w e wil l find dir ect analogs t o
+force and mas s that beha ve jus t as w e would e xpect fr om our earlier e xperienc es.430 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+
+Rotational Iner tia and Moment o f Iner tia
+Before we can c onsider the r otation o f anything other than a point mas s like the one in Figure 10.10 , we mus t
+extend the idea o f rotational iner tia to all types o f objects . To expand our c oncept of rotational iner tia, we define the
+moment o f iner tia of an object t o be the sum o f for al l the point mas ses o f which it is c omposed. That is ,
+. Her eis analog ous t o in translational motion. Because o f the dis tanc e, the moment o f iner tia for
+any object depends on the chosen axis . Actual ly, calculating is be yond the sc ope o f this t ext except for one simple
+case —that o f a hoop , which has al l its mas s at the same dis tanc e from its axis . A hoop ’s moment o f iner tia ar ound its
+axis is ther efore , wher e is its t otal mas s and its radius . (We use and for an entir e object t o
+distinguish them fr om and for point mas ses.) In al l other cases , we mus t consul tFigure 10.11 (not e that the
+table is piec e of artwork that has shapes as w ell as f ormulae) f or formulas f or that ha ve been deriv ed fr om
+integration o ver the c ontinuous body . Not e that has units o f mas s mul tiplied b y dis tanc e squar ed ( ), as w e
+might e xpect fr om its definition.
+The g ener al relationship among t orque, moment o f iner tia, and ang ular ac celeration is
+or
+wher e net is the t otal t orque fr om al l forces relativ e to a chosen axis . For simplicity , we wil l onl y consider t orques
+exerted b y forces in the plane o f the r otation. Such t orques ar e either positiv e or neg ative and add lik e ordinar y
+numbers . The r elationship in is the r otational analog t o Ne wton’s sec ond la w and is v ery gener ally
+applicable . This equation is actual ly valid f oranytorque, applied t oanyobject, r elativ e toanyaxis .
+As w e might e xpect, the lar ger the t orque is , the lar ger the ang ular ac celeration is . For example , the har der a child
+pushes on a merr y-go-round, the fas ter it ac celerates. Furthermor e, the mor e mas sive a merr y-go-round, the slo wer
+it ac celerates for the same t orque. The basic r elationship betw een moment o f iner tia and ang ular ac celeration is
+that the lar ger the moment o f iner tia, the smal ler is the ang ular ac celeration. But ther e is an additional twis t. The
+moment o f iner tia depends not onl y on the mas s of an object, but also on its distribution of mas s relativ e to the axis
+around which it r otat es. For example , it wil l be much easier t o ac celerate a merr y-go-round ful l of childr en if the y
+stand close t o its axis than if the y all stand at the out er edg e. The mas s is the same in both cases , but the moment o f
+inertia is much lar ger when the childr en ar e at the edg e.10.43
+10.44
+TAKE-HOME E XPERIMENT
+Cut out a cir cle that has about a 10 cm r adius fr om s tiff car dboar d. Near the edg e of the cir cle, writ e numbers 1
+to 12 lik e hours on a clock fac e. Position the cir cle so that it can r otat e freely about a horiz ontal axis thr ough its
+center, like a wheel . (You c ould loosel y nail the cir cle t o a w all.) Hold the cir cle s tationar y and with the number
+12 positioned at the t op, attach a lump o f blue put ty (s ticky mat erial used f or fixing pos ters t o walls) at the
+number 3. Ho w lar ge does the lump need t o be t o jus t rotat e the cir cle? Describe ho w you can chang e the
+moment o f iner tia o f the cir cle. Ho w does this chang e aff ect the amount o f blue put ty needed at the number 3 t o
+just rotat e the cir cle? Chang e the cir cle’s moment o f iner tia and then tr y rotating the cir cle b y using diff erent
+amounts o f blue put ty. Repeat this pr ocess several times .
+PROBLEM-SOL VING S TRATEGY FOR R OTATIONAL D YNAMIC S
+1.Examine the situation t o det ermine that t orque and mas s are involved in the r otation . Draw a car eful sk etch
+of the situation.
+2.Determine the s ystem o f interest.
+3.Draw a fr ee body diagr am. That is , draw and label al l external f orces acting on the s ystem o f interest.
+4.Appl y , the r otational equiv alent o f Ne wton’s sec ond la w, to sol ve the pr oblem . Car e10.3 • Dynamics o f Rotational Mo tion: R otational Iner tia 431
+
+EXAMPLE 10.7
+Calcula ting the Ef fect o f Mas s Dis tribution on a Merr y-Go-Round
+Consider the father pushing a pla yground merr y-go-round in Figure 10.12 . He e xerts a f orce of 250 N at the edg e of
+the 50.0-k g merr y-go-round, which has a 1.50 m r adius . Calculat e the ang ular ac celeration pr oduc ed (a) when no
+one is on the merr y-go-round and (b) when an 18.0-k g child sits 1.25 m a way from the c enter. Consider the merr y-
+go-round itself t o be a unif orm disk with negligible r etar ding friction.mus t be tak en to use the c orrect moment o f iner tia and t o consider the t orque about the point o f rotation.
+5.As al ways, check the solution t o see if it is r easonable .
+MAKING C ONNE CTIONS
+In statics , the net t orque is z ero, and ther e is no ang ular ac celeration. In r otational motion, net t orque is the
+cause o f ang ular ac celeration, e xactl y as in Ne wton’s sec ond la w of motion f or rotation.
+FIGURE 10.11 Some r otational iner tias.
+432 10 • R otational Mo tion and Angular Momentum
+Access f or free at opens tax.org
+

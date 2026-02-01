@@ -1,0 +1,574 @@
+[
+  {
+    "id": "openstax-ch3-p112",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 3, Problem 112",
+    "concepts": [
+      "velocity",
+      "displacement"
+    ],
+    "difficulty": 2,
+    "type": "calculation",
+    "estimatedMinutes": 8,
+    "title": "100-meter Race Time Analysis",
+    "statement": "In a 100-m race, the winner is timed at 11.2 s. The second-place finisher's time is 11.6 s. How far is the second-place finisher behind the winner when she crosses the finish line? Assume the velocity of each runner is constant throughout the race.",
+    "givenValues": [
+      {
+        "symbol": "d",
+        "value": 100,
+        "unit": "m",
+        "description": "Race distance"
+      },
+      {
+        "symbol": "t_1",
+        "value": 11.2,
+        "unit": "s",
+        "description": "Winner's time"
+      },
+      {
+        "symbol": "t_2",
+        "value": 11.6,
+        "unit": "s",
+        "description": "Second-place finisher's time"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "\\Delta x",
+        "description": "Distance second-place finisher is behind",
+        "unit": "m"
+      }
+    ],
+    "solution": {
+      "approach": "Find each runner's constant velocity, then calculate how far the second-place finisher has traveled when the winner finishes.",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Calculate the winner's velocity",
+          "equation": "v_1 = \\frac{d}{t_1}",
+          "substitution": "v_1 = \\frac{100\\text{ m}}{11.2\\text{ s}}",
+          "result": "v_1 = 8.93\\text{ m/s}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Calculate the second-place finisher's velocity",
+          "equation": "v_2 = \\frac{d}{t_2}",
+          "substitution": "v_2 = \\frac{100\\text{ m}}{11.6\\text{ s}}",
+          "result": "v_2 = 8.62\\text{ m/s}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Find how far the second-place finisher has traveled when the winner finishes",
+          "explanation": "When t = 11.2 s (winner's finish time)",
+          "equation": "x_2 = v_2 \\times t_1",
+          "substitution": "x_2 = 8.62\\text{ m/s} \\times 11.2\\text{ s}",
+          "result": "x_2 = 96.5\\text{ m}"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Calculate how far behind the second-place finisher is",
+          "equation": "\\Delta x = d - x_2",
+          "substitution": "\\Delta x = 100\\text{ m} - 96.5\\text{ m}",
+          "result": "\\Delta x = 3.5\\text{ m}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 3.5,
+        "unit": "m"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Think about what constant velocity means and how to calculate it from distance and time."
+      },
+      {
+        "level": 2,
+        "hint": "Calculate each runner's velocity first, then find how far the second runner has gone when the first runner finishes."
+      },
+      {
+        "level": 3,
+        "hint": "Use v = d/t for each runner, then multiply the second runner's velocity by the winner's time to find their position."
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Using the second runner's time instead of the winner's time",
+        "howToDetect": "Student calculates distance based on 11.6 s instead of 11.2 s",
+        "feedback": "Remember, we want to know where the second runner is when the winner finishes, so use the winner's time (11.2 s)."
+      },
+      {
+        "error": "Subtracting times instead of distances",
+        "howToDetect": "Student calculates 11.6 - 11.2 = 0.4 s",
+        "feedback": "The question asks for distance, not time. You need to find positions at the same moment in time."
+      }
+    ],
+    "tags": [
+      "constant-velocity",
+      "relative-motion",
+      "racing"
+    ]
+  },
+  {
+    "id": "openstax-ch3-p113",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 3, Problem 113",
+    "concepts": [
+      "position",
+      "velocity",
+      "acceleration"
+    ],
+    "difficulty": 4,
+    "type": "multi-step",
+    "estimatedMinutes": 15,
+    "title": "Position Function Analysis",
+    "statement": "The position of a particle moving along the x-axis varies with time according to x(t) = 5.0t² - 4.0t³ m. Find (a) the velocity and acceleration of the particle as functions of time, (b) the velocity and acceleration at t = 2.0 s, (c) the time at which the position is a maximum, (d) the time at which the velocity is zero, and (e) the maximum position.",
+    "givenValues": [
+      {
+        "symbol": "x(t)",
+        "value": "5.0t² - 4.0t³",
+        "unit": "m",
+        "description": "Position function"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "v(t)",
+        "description": "Velocity function",
+        "unit": "m/s"
+      },
+      {
+        "symbol": "a(t)",
+        "description": "Acceleration function",
+        "unit": "m/s²"
+      },
+      {
+        "symbol": "v(2.0)",
+        "description": "Velocity at t = 2.0 s",
+        "unit": "m/s"
+      },
+      {
+        "symbol": "a(2.0)",
+        "description": "Acceleration at t = 2.0 s",
+        "unit": "m/s²"
+      },
+      {
+        "symbol": "t_{max}",
+        "description": "Time of maximum position",
+        "unit": "s"
+      },
+      {
+        "symbol": "x_{max}",
+        "description": "Maximum position",
+        "unit": "m"
+      }
+    ],
+    "solution": {
+      "approach": "Use calculus: velocity is the first derivative of position, acceleration is the second derivative. Set velocity to zero to find extrema.",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Find velocity by taking the first derivative of position",
+          "equation": "v(t) = \\frac{dx}{dt}",
+          "substitution": "v(t) = \\frac{d}{dt}(5.0t^2 - 4.0t^3)",
+          "result": "v(t) = 10.0t - 12.0t^2\\text{ m/s}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Find acceleration by taking the derivative of velocity",
+          "equation": "a(t) = \\frac{dv}{dt}",
+          "substitution": "a(t) = \\frac{d}{dt}(10.0t - 12.0t^2)",
+          "result": "a(t) = 10.0 - 24.0t\\text{ m/s}^2"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Calculate velocity at t = 2.0 s",
+          "substitution": "v(2.0) = 10.0(2.0) - 12.0(2.0)^2",
+          "result": "v(2.0) = 20.0 - 48.0 = -28.0\\text{ m/s}"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Calculate acceleration at t = 2.0 s",
+          "substitution": "a(2.0) = 10.0 - 24.0(2.0)",
+          "result": "a(2.0) = 10.0 - 48.0 = -38.0\\text{ m/s}^2"
+        },
+        {
+          "stepNumber": 5,
+          "description": "Find when velocity is zero",
+          "equation": "v(t) = 10.0t - 12.0t^2 = 0",
+          "substitution": "t(10.0 - 12.0t) = 0",
+          "result": "t = 0\\text{ s or }t = \\frac{10.0}{12.0} = 0.833\\text{ s}"
+        },
+        {
+          "stepNumber": 6,
+          "description": "Find maximum position",
+          "explanation": "Maximum occurs at t = 0.833 s (where v = 0 and this represents a maximum)",
+          "substitution": "x(0.833) = 5.0(0.833)^2 - 4.0(0.833)^3",
+          "result": "x_{max} = 3.47 - 2.31 = 1.16\\text{ m}"
+        }
+      ],
+      "finalAnswer": {
+        "text": "(a) v(t) = 10.0t - 12.0t² m/s, a(t) = 10.0 - 24.0t m/s²; (b) v(2.0) = -28.0 m/s, a(2.0) = -38.0 m/s²; (c) t = 0.833 s; (d) t = 0 s and t = 0.833 s; (e) x_max = 1.16 m"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Remember that velocity is the derivative of position with respect to time, and acceleration is the derivative of velocity."
+      },
+      {
+        "level": 2,
+        "hint": "Use the power rule for derivatives: d/dt(t^n) = nt^(n-1). Set v(t) = 0 to find when the particle momentarily stops."
+      },
+      {
+        "level": 3,
+        "hint": "For part (a): v(t) = d/dt(5.0t² - 4.0t³) = 10.0t - 12.0t². For the maximum, solve 10.0t - 12.0t² = 0."
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Incorrect derivative calculation",
+        "howToDetect": "Student gets wrong coefficients in v(t) or a(t)",
+        "feedback": "Remember the power rule: d/dt(at^n) = nat^(n-1). Double-check your derivative calculations."
+      },
+      {
+        "error": "Not recognizing that t = 0 is also a solution",
+        "howToDetect": "Student only finds t = 0.833 s when velocity is zero",
+        "feedback": "When you factor out t from t(10.0 - 12.0t) = 0, remember that t = 0 is also a solution."
+      },
+      {
+        "error": "Using wrong time for maximum position",
+        "howToDetect": "Student uses t = 0 instead of t = 0.833 s",
+        "feedback": "The maximum position occurs where the particle momentarily stops moving (v = 0) at t = 0.833 s, not at t = 0."
+      }
+    ],
+    "tags": [
+      "derivatives",
+      "kinematics",
+      "calculus",
+      "extrema"
+    ]
+  },
+  {
+    "id": "openstax-ch3-p114",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 3, Problem 114",
+    "concepts": [
+      "acceleration",
+      "velocity",
+      "displacement"
+    ],
+    "difficulty": 4,
+    "type": "multi-step",
+    "estimatedMinutes": 20,
+    "title": "Cyclist Sprint Analysis",
+    "statement": "A cyclist sprints at the end of a race to clinch a victory. She has an initial velocity of 11.5 m/s and accelerates at a rate of 0.500 m/s² for 7.00 s. (a) What is her final velocity? (b) The cyclist continues at this velocity to the finish line. If she is 300 m from the finish line when she starts to accelerate, how much time did she save? (c) The second-place winner was 5.00 m ahead when the winner started to accelerate, but he was unable to accelerate, and traveled at 11.8 m/s until the finish line. What was the difference in finish time in seconds between the winner and runner-up? How far back was the runner-up when the winner crossed the finish line?",
+    "givenValues": [
+      {
+        "symbol": "v_0",
+        "value": 11.5,
+        "unit": "m/s",
+        "description": "Initial velocity of cyclist"
+      },
+      {
+        "symbol": "a",
+        "value": 0.5,
+        "unit": "m/s²",
+        "description": "Acceleration during sprint"
+      },
+      {
+        "symbol": "t_a",
+        "value": 7,
+        "unit": "s",
+        "description": "Time of acceleration"
+      },
+      {
+        "symbol": "d_{total}",
+        "value": 300,
+        "unit": "m",
+        "description": "Distance from finish when acceleration starts"
+      },
+      {
+        "symbol": "d_{ahead}",
+        "value": 5,
+        "unit": "m",
+        "description": "Second-place runner's initial lead"
+      },
+      {
+        "symbol": "v_{second}",
+        "value": 11.8,
+        "unit": "m/s",
+        "description": "Second-place runner's constant velocity"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "v_f",
+        "description": "Final velocity after acceleration",
+        "unit": "m/s"
+      },
+      {
+        "symbol": "\\Delta t",
+        "description": "Time saved",
+        "unit": "s"
+      },
+      {
+        "symbol": "\\Delta t_{finish}",
+        "description": "Difference in finish times",
+        "unit": "s"
+      },
+      {
+        "symbol": "d_{behind}",
+        "description": "Distance runner-up is behind",
+        "unit": "m"
+      }
+    ],
+    "solution": {
+      "approach": "Use kinematic equations for accelerated motion, then analyze constant velocity motion. Compare times for both scenarios.",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Find final velocity after acceleration",
+          "equation": "v_f = v_0 + at",
+          "substitution": "v_f = 11.5 + 0.500 \\times 7.00",
+          "result": "v_f = 15.0\\text{ m/s}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Find distance covered during acceleration",
+          "equation": "x_1 = v_0 t + \\frac{1}{2}at^2",
+          "substitution": "x_1 = 11.5 \\times 7.00 + \\frac{1}{2} \\times 0.500 \\times 7.00^2",
+          "result": "x_1 = 80.5 + 12.3 = 92.8\\text{ m}"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Find remaining distance to finish",
+          "substitution": "x_2 = 300 - 92.8 = 207.2\\text{ m}"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Find time for remaining distance at constant velocity",
+          "equation": "t_2 = \\frac{x_2}{v_f}",
+          "substitution": "t_2 = \\frac{207.2}{15.0}",
+          "result": "t_2 = 13.8\\text{ s}"
+        },
+        {
+          "stepNumber": 5,
+          "description": "Calculate total time with acceleration",
+          "substitution": "t_{total} = 7.00 + 13.8 = 20.8\\text{ s}"
+        },
+        {
+          "stepNumber": 6,
+          "description": "Calculate time without acceleration",
+          "equation": "t_{no\\_accel} = \\frac{300}{11.5}",
+          "result": "t_{no\\_accel} = 26.1\\text{ s}"
+        },
+        {
+          "stepNumber": 7,
+          "description": "Calculate time saved",
+          "substitution": "\\Delta t = 26.1 - 20.8 = 5.3\\text{ s}"
+        },
+        {
+          "stepNumber": 8,
+          "description": "Analyze second-place runner's motion",
+          "explanation": "Runner starts 5.00 m ahead, so travels 305 m total",
+          "equation": "t_{second} = \\frac{305}{11.8}",
+          "result": "t_{second} = 25.8\\text{ s}"
+        },
+        {
+          "stepNumber": 9,
+          "description": "Calculate finish time difference",
+          "substitution": "\\Delta t_{finish} = 25.8 - 20.8 = 5.0\\text{ s}"
+        },
+        {
+          "stepNumber": 10,
+          "description": "Find how far back runner-up is when winner finishes",
+          "explanation": "In 20.8 s, second-place runner travels",
+          "substitution": "d_{second} = 11.8 \\times 20.8 = 245.4\\text{ m}",
+          "result": "d_{behind} = 305 - 245.4 = 59.6\\text{ m}"
+        }
+      ],
+      "finalAnswer": {
+        "text": "(a) 15.0 m/s; (b) 5.3 s; (c) 5.0 s difference, 59.6 m behind"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "Break this into phases: acceleration phase and constant velocity phase. Use kinematic equations for each."
+      },
+      {
+        "level": 2,
+        "hint": "For part (a), use v = v₀ + at. For part (b), compare total time with and without acceleration. For part (c), track both runners' positions."
+      },
+      {
+        "level": 3,
+        "hint": "During acceleration: x = v₀t + ½at². Then find remaining distance and time at constant velocity. The second runner starts 5 m ahead, so travels 305 m total."
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Forgetting the initial 5 m lead for the second runner",
+        "howToDetect": "Student calculates second runner traveling 300 m instead of 305 m",
+        "feedback": "Remember that the second-place runner was 5.00 m ahead when the winner started accelerating, so they need to travel 305 m total."
+      },
+      {
+        "error": "Not accounting for both phases of the winner's motion",
+        "howToDetect": "Student only considers either acceleration or constant velocity phase",
+        "feedback": "The winner's motion has two phases: 7 seconds of acceleration, then constant velocity for the remaining distance."
+      },
+      {
+        "error": "Incorrect calculation of distance during acceleration",
+        "howToDetect": "Student uses x = vt instead of x = v₀t + ½at²",
+        "feedback": "During acceleration, use the full kinematic equation x = v₀t + ½at², not just x = vt."
+      }
+    ],
+    "tags": [
+      "kinematics",
+      "acceleration",
+      "constant-velocity",
+      "racing",
+      "optimization"
+    ]
+  },
+  {
+    "id": "openstax-ch3-p115",
+    "source": "curated",
+    "sourceReference": "OpenStax University Physics Vol. 1, Chapter 3, Problem 115",
+    "concepts": [
+      "acceleration",
+      "velocity",
+      "displacement"
+    ],
+    "difficulty": 4,
+    "type": "multi-step",
+    "estimatedMinutes": 18,
+    "title": "Motorcycle World Record Analysis",
+    "statement": "In 1967, New Zealander Burt Munro set the world record for an Indian motorcycle, on the Bonneville Salt Flats in Utah, of 295.38 km/h. The one-way course was 8.00 km long. Acceleration rates are often described by the time it takes to reach 96.0 km/h from rest. If this time was 4.00 s and Burt accelerated at this rate until he reached his maximum speed, how long did it take Burt to complete the course?",
+    "givenValues": [
+      {
+        "symbol": "v_{max}",
+        "value": 295.38,
+        "unit": "km/h",
+        "description": "Maximum speed (82.05 m/s)"
+      },
+      {
+        "symbol": "d_{course}",
+        "value": 8,
+        "unit": "km",
+        "description": "Course length (8000 m)"
+      },
+      {
+        "symbol": "v_{96}",
+        "value": 96,
+        "unit": "km/h",
+        "description": "Speed reached in 4.00 s (26.67 m/s)"
+      },
+      {
+        "symbol": "t_{96}",
+        "value": 4,
+        "unit": "s",
+        "description": "Time to reach 96.0 km/h"
+      }
+    ],
+    "unknowns": [
+      {
+        "symbol": "t_{total}",
+        "description": "Total time to complete course",
+        "unit": "s"
+      }
+    ],
+    "solution": {
+      "approach": "Find the acceleration rate, calculate time and distance to reach maximum speed, then add time for constant velocity phase.",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Convert units to m/s",
+          "substitution": "v_{max} = 295.38 \\times \\frac{1000}{3600} = 82.05\\text{ m/s}",
+          "result": "v_{96} = 96.0 \\times \\frac{1000}{3600} = 26.67\\text{ m/s}"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Calculate acceleration rate",
+          "equation": "a = \\frac{v_{96} - 0}{t_{96}}",
+          "substitution": "a = \\frac{26.67}{4.00}",
+          "result": "a = 6.67\\text{ m/s}^2"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Find time to reach maximum speed",
+          "equation": "t_{accel} = \\frac{v_{max}}{a}",
+          "substitution": "t_{accel} = \\frac{82.05}{6.67}",
+          "result": "t_{accel} = 12.3\\text{ s}"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Find distance covered during acceleration",
+          "equation": "x_{accel} = \\frac{1}{2}at_{accel}^2",
+          "substitution": "x_{accel} = \\frac{1}{2} \\times 6.67 \\times 12.3^2",
+          "result": "x_{accel} = 504\\text{ m}"
+        },
+        {
+          "stepNumber": 5,
+          "description": "Find remaining distance at constant speed",
+          "substitution": "x_{const} = 8000 - 504 = 7496\\text{ m}"
+        },
+        {
+          "stepNumber": 6,
+          "description": "Find time for constant speed phase",
+          "equation": "t_{const} = \\frac{x_{const}}{v_{max}}",
+          "substitution": "t_{const} = \\frac{7496}{82.05}",
+          "result": "t_{const} = 91.4\\text{ s}"
+        },
+        {
+          "stepNumber": 7,
+          "description": "Calculate total time",
+          "substitution": "t_{total} = t_{accel} + t_{const} = 12.3 + 91.4",
+          "result": "t_{total} = 104\\text{ s}"
+        }
+      ],
+      "finalAnswer": {
+        "value": 104,
+        "unit": "s"
+      }
+    },
+    "hints": [
+      {
+        "level": 1,
+        "hint": "First find the acceleration rate from the given information about reaching 96.0 km/h in 4.00 s."
+      },
+      {
+        "level": 2,
+        "hint": "Use this acceleration to find how long it takes to reach maximum speed, then calculate the distance covered during acceleration."
+      },
+      {
+        "level": 3,
+        "hint": "The motion has two phases: acceleration to max speed, then constant speed. Find the time for each phase and add them together."
+      }
+    ],
+    "problemSpecificErrors": [
+      {
+        "error": "Unit conversion errors",
+        "howToDetect": "Student doesn't convert km/h to m/s or uses wrong conversion factor",
+        "feedback": "Remember to convert km/h to m/s by multiplying by (1000 m/km)/(3600 s/h) = 5/18."
+      },
+      {
+        "error": "Using wrong kinematic equation for acceleration distance",
+        "howToDetect": "Student uses x = vt instead of x = ½at² or x = v₀t + ½at²",
+        "feedback": "For motion from rest with constant acceleration, use x = ½at² to find the distance."
+      },
+      {
+        "error": "Assuming constant speed throughout",
+        "howToDetect": "Student calculates total time as 8000 m / 82.05 m/s",
+        "feedback": "Burt doesn't travel at maximum speed for the entire course - he must accelerate first, which takes time and distance."
+      }
+    ],
+    "tags": [
+      "kinematics",
+      "acceleration",
+      "unit-conversion",
+      "two-phase-motion",
+      "world-record"
+    ]
+  }
+]

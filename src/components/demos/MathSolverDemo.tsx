@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 interface Step {
   step: number;
@@ -68,8 +69,9 @@ Format your response as JSON:
   "concept": "the mathematical concept (e.g., 'Linear Equations', 'Quadratic Formula')"
 }`;
 
-    try {
-      const response = await fetch('/api/ai/claude', {
+    const { data, error: apiError } = await safeAPICall<{ text?: string }>(
+      '/api/ai/claude',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -77,29 +79,30 @@ Format your response as JSON:
           system: systemPrompt,
           max_tokens: 1500,
         }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        return;
       }
+    );
 
-      if (data.text) {
-        const jsonMatch = data.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+    if (apiError) {
+      setError(apiError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data?.text) {
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
           const parsed = JSON.parse(jsonMatch[0]) as SolutionData;
           setSolution(parsed);
-        } else {
+        } catch {
           setError('Could not parse solution. Please try again.');
         }
+      } else {
+        setError('Could not parse solution. Please try again.');
       }
-    } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const loadSample = (type: keyof typeof SAMPLE_PROBLEMS) => {
