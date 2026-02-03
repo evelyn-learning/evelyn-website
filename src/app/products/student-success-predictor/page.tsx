@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 const StudentSuccessPredictorDemo = dynamic(
   () => import('@/components/demos/StudentSuccessPredictorDemo'),
@@ -106,7 +107,9 @@ function DemoSection() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <StudentSuccessPredictorDemo />
+          <DemoTracker productId="student-success-predictor" productTitle="Student Success Predictor">
+            <StudentSuccessPredictorDemo />
+          </DemoTracker>
         </div>
 
         <div className="text-center mt-8">

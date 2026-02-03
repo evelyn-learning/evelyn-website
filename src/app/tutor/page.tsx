@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ArrowLeft, BookOpen, Play, Send, Loader2, Mic, MessageSquare, DollarSign } from 'lucide-react';
+import { useDemoTracker } from '@/components/demos/DemoTracker';
 import { getAllModuleMetadata, initializeRegistry, type ModuleMetadata } from '@/lib/knowledge/registry';
 import Link from 'next/link';
 import { TranscriptView } from './components/TranscriptView';
@@ -60,6 +61,14 @@ interface ConversationMessage {
 }
 
 export default function TutorPage() {
+  // Demo tracking
+  const { onView, onTry, onComplete } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
+
+  // Track view on mount
+  useEffect(() => {
+    onView();
+  }, [onView]);
+
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [availableTopics, setAvailableTopics] = useState<ModuleMetadata[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<ModuleMetadata | null>(null);
@@ -197,6 +206,9 @@ export default function TutorPage() {
   const handleStartSession = useCallback(async () => {
     if (!selectedTopic) return;
 
+    // Track demo try
+    onTry();
+
     setStage('session');
     setTranscript([]);
     setConversationHistory([]);
@@ -261,7 +273,7 @@ export default function TutorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedTopic, studentName, sessionGoal, inputMode]);
+  }, [selectedTopic, studentName, sessionGoal, inputMode, onTry]);
 
   // Handle transcript updates from VoiceTutor
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
@@ -280,8 +292,14 @@ export default function TutorPage() {
 
   // End session
   const handleEndSession = useCallback(() => {
+    // Track demo complete
+    onComplete({
+      topic: selectedTopic?.topic,
+      messagesExchanged: transcript.length,
+      sessionGoal
+    });
     setStage('summary');
-  }, []);
+  }, [onComplete, selectedTopic, transcript.length, sessionGoal]);
 
   // Upload homework and extract problems
   const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 const AccessibilityAIDemo = dynamic(
   () => import('@/components/demos/AccessibilityAIDemo'),
@@ -106,7 +107,9 @@ function DemoSection() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <AccessibilityAIDemo />
+          <DemoTracker productId="accessibility-ai" productTitle="Content Accessibility AI">
+            <AccessibilityAIDemo />
+          </DemoTracker>
         </div>
 
         <div className="text-center mt-8">

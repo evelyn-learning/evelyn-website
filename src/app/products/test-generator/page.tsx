@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 const PracticeTestGenerator = dynamic(
   () => import('@/components/demos/PracticeTestGenerator'),
@@ -96,7 +97,9 @@ function DemoSection() {
           </p>
         </div>
         <div className="max-w-5xl mx-auto">
-          <PracticeTestGenerator />
+          <DemoTracker productId="test-generator" productTitle="AI Practice Test Generator">
+            <PracticeTestGenerator />
+          </DemoTracker>
         </div>
       </div>
     </section>

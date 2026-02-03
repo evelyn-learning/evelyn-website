@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 const PlagiarismDetectionDemo = dynamic(
   () => import('@/components/demos/PlagiarismDetectionDemo'),
@@ -106,7 +107,9 @@ function DemoSection() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <PlagiarismDetectionDemo />
+          <DemoTracker productId="plagiarism-detection" productTitle="Plagiarism & AI Detection">
+            <PlagiarismDetectionDemo />
+          </DemoTracker>
         </div>
 
         <div className="text-center mt-8">

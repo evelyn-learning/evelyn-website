@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 const AnalyticsDashboardDemo = dynamic(
   () => import('@/components/demos/AnalyticsDashboardDemo'),
@@ -106,7 +107,9 @@ function DemoSection() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <AnalyticsDashboardDemo />
+          <DemoTracker productId="analytics-dashboard" productTitle="Student Analytics Dashboard">
+            <AnalyticsDashboardDemo />
+          </DemoTracker>
         </div>
 
         <div className="text-center mt-8">

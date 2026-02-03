@@ -17,3 +17,4 @@ export {
   getSiteSettings,
   type ISiteSettings,
 } from "./SiteSettings";
+export { DemoInteraction, type IDemoInteraction } from "./DemoInteraction";

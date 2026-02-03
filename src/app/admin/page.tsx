@@ -15,6 +15,7 @@ import {
   Plus,
   ArrowRight,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 
@@ -157,6 +158,13 @@ export default async function AdminDashboard() {
             >
               <Settings className="mr-2 h-4 w-4" />
               Site Settings
+            </Link>
+            <Link
+              href="/admin/demos"
+              className="inline-flex items-center rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600"
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Demo Analytics
             </Link>
           </div>
         </div>

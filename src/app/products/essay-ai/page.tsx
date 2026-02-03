@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 
 // Dynamically import the demo component (client-side only)
 const EssayScoringDemo = dynamic(
@@ -112,7 +113,9 @@ function DemoSection() {
 
         {/* Demo Component */}
         <div className="max-w-6xl mx-auto">
-          <EssayScoringDemo />
+          <DemoTracker productId="essay-ai" productTitle="AI Essay Scoring">
+            <EssayScoringDemo />
+          </DemoTracker>
         </div>
 
         <div className="text-center mt-8">
