@@ -8,6 +8,7 @@ import {
   GoogleTagManagerNoscript,
 } from "@/components/analytics/GoogleTagManager";
 import { EducationalOrganizationJsonLd } from "@/components/seo/JsonLd";
+import { ChatWidgetWrapper } from "@/components/chat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -128,6 +129,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
+        <ChatWidgetWrapper />
       </body>
     </html>
   );

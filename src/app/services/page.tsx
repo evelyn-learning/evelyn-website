@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Compass, Cpu, Settings, Shield, GraduationCap, Server, FileText } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { services, type Service } from '@/data/services';
 
 export const metadata: Metadata = {
   title: 'AI Implementation Services | EdTech Consulting & Training',
@@ -17,65 +18,6 @@ export const metadata: Metadata = {
     'Educational Technology Services',
   ],
 };
-
-const services = [
-  {
-    icon: Compass,
-    title: 'AI Readiness Assessment',
-    description: 'Evaluate your data, infrastructure, and processes to create a strategic AI implementation roadmap.',
-    href: '/services/ai-readiness',
-    color: 'from-blue-500 to-indigo-600',
-    highlights: ['Gap analysis', 'Roadmap development', 'ROI projection'],
-  },
-  {
-    icon: Cpu,
-    title: 'Custom AI Development',
-    description: 'Bespoke AI solutions built for your specific business needs, content, and pedagogical approach.',
-    href: '/services/custom-ai',
-    color: 'from-purple-500 to-primary-600',
-    highlights: ['Model fine-tuning', 'White-label products', 'API development'],
-  },
-  {
-    icon: Settings,
-    title: 'Implementation & Integration',
-    description: 'Full deployment services including API integration, data migration, SSO setup, and LMS connectors.',
-    href: '/services/implementation',
-    color: 'from-orange-500 to-red-600',
-    highlights: ['LMS integration', 'Data migration', 'SSO configuration'],
-  },
-  {
-    icon: Shield,
-    title: 'AI Ethics & Governance',
-    description: 'Develop responsible AI policies, bias auditing frameworks, and transparency practices.',
-    href: '/services/ethics-governance',
-    color: 'from-emerald-500 to-teal-600',
-    highlights: ['Policy development', 'Bias auditing', 'Compliance frameworks'],
-  },
-  {
-    icon: GraduationCap,
-    title: 'Faculty & Staff Training',
-    description: 'Train educators on AI tools, prompt engineering, AI-enhanced pedagogy, and academic integrity.',
-    href: '/services/training',
-    color: 'from-pink-500 to-rose-600',
-    highlights: ['Workshops', 'Certification programs', 'Train-the-trainer'],
-  },
-  {
-    icon: Server,
-    title: 'Managed AI Services',
-    description: 'Ongoing hosting, monitoring, model updates, and support for long-term AI success.',
-    href: '/services/managed-services',
-    color: 'from-slate-600 to-slate-800',
-    highlights: ['24/7 monitoring', 'Model updates', 'Dedicated support'],
-  },
-  {
-    icon: FileText,
-    title: 'Content Transformation',
-    description: 'Convert legacy content from PDFs, print, and old LMS formats to modern, AI-enhanced experiences.',
-    href: '/services/content',
-    color: 'from-teal-500 to-cyan-600',
-    highlights: ['Format conversion', 'Content modernization', 'Accessibility compliance'],
-  },
-];
 
 const stats = [
   { value: '500+', label: 'Enterprise clients' },
@@ -152,8 +94,8 @@ export default function ServicesPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service) => (
               <Link
-                key={service.title}
-                href={service.href}
+                key={service.id}
+                href={`/services/${service.id}`}
                 className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all"
               >
                 {/* Header */}

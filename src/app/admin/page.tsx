@@ -10,6 +10,8 @@ import {
   Mic,
   Users,
   MessageSquare,
+  MessageCircle,
+  Settings,
   Plus,
   ArrowRight,
   Sparkles,
@@ -141,6 +143,20 @@ export default async function AdminDashboard() {
             >
               <MessageSquare className="mr-2 h-4 w-4" />
               View Messages
+            </Link>
+            <Link
+              href="/admin/chat"
+              className="inline-flex items-center rounded-lg bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Chat Widget
+            </Link>
+            <Link
+              href="/admin/settings"
+              className="inline-flex items-center rounded-lg bg-slate-500 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Site Settings
             </Link>
           </div>
         </div>

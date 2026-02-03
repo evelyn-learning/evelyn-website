@@ -1,10 +1,17 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import {
+  productCategories,
+  getAllProducts,
+  type ProductCategory,
+  type Product,
+  type DemoStatus,
+} from '@/data/products';
 
 export const metadata: Metadata = {
   title: 'AI Products for Education | Adaptive Learning & Intelligent Tutoring',
-  description: 'Explore 24 AI-powered learning products: adaptive learning platforms, intelligent tutoring systems, automated grading, learning analytics, and personalized learning solutions for K-12, higher education, and corporate training.',
+  description: `Explore ${getAllProducts().length} AI-powered learning products: adaptive learning platforms, intelligent tutoring systems, automated grading, learning analytics, and personalized learning solutions for K-12, higher education, and corporate training.`,
   keywords: [
     'AI-Powered Learning',
     'Adaptive Learning Platform',
@@ -17,253 +24,6 @@ export const metadata: Metadata = {
     'Student Success Platform',
   ],
 };
-
-// Demo status types
-type DemoStatus = 'live' | 'interactive' | 'request';
-
-// Product categories with all 23 products
-const productCategories = [
-  {
-    name: 'Assessment AI',
-    description: 'Evaluate student work with accuracy and consistency',
-    products: [
-      {
-        id: 'essay-ai',
-        title: 'AI Essay Scoring & Feedback',
-        tagline: 'Professional essay feedback in 10 seconds',
-        icon: '📝',
-        gradient: 'from-purple-500 to-primary-600',
-        demoStatus: 'live' as DemoStatus
-      },
-      {
-        id: 'test-generator',
-        title: 'AI Practice Test Generator',
-        tagline: 'Unlimited unique practice tests, every time',
-        icon: '📊',
-        gradient: 'from-emerald-500 to-teal-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'plagiarism-detection',
-        title: 'Plagiarism & AI Detection',
-        tagline: 'Multi-source originality and AI content analysis',
-        icon: '🔍',
-        gradient: 'from-orange-500 to-red-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'proctoring-suite',
-        title: 'AI Proctoring Suite',
-        tagline: 'Real-time exam monitoring with AI face detection',
-        icon: '🎥',
-        gradient: 'from-rose-500 to-red-600',
-        demoStatus: 'live' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Tutoring AI',
-    description: 'Scale personalized learning support',
-    products: [
-      {
-        id: 'voice-tutor',
-        title: 'AI Voice Tutor',
-        tagline: 'Real-time voice tutoring with visual whiteboard',
-        icon: '🎙️',
-        gradient: 'from-blue-500 to-indigo-600',
-        demoStatus: 'live' as DemoStatus
-      },
-      {
-        id: 'homework-bot',
-        title: '24/7 AI Homework Helper',
-        tagline: 'Instant help, any hour—without adding staff',
-        icon: '🤖',
-        gradient: 'from-purple-500 to-pink-600',
-        demoStatus: 'live' as DemoStatus
-      },
-      {
-        id: 'tutor-copilot',
-        title: 'AI Tutoring Co-Pilot',
-        tagline: 'Make every tutor your best tutor',
-        icon: '👨‍🏫',
-        gradient: 'from-orange-500 to-red-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'math-solver',
-        title: 'AI Math Solver',
-        tagline: 'Step-by-step solutions for any math problem',
-        icon: '🔢',
-        gradient: 'from-blue-500 to-cyan-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'language-learning',
-        title: 'Language Learning AI',
-        tagline: 'Conversational practice in real-world scenarios',
-        icon: '🌍',
-        gradient: 'from-indigo-500 to-purple-600',
-        demoStatus: 'interactive' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Content AI',
-    description: 'Create and enhance educational content at scale',
-    products: [
-      {
-        id: 'content-authoring',
-        title: 'Content Authoring AI',
-        tagline: 'Transform any text into interactive learning',
-        icon: '✍️',
-        gradient: 'from-emerald-500 to-teal-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'reading-comprehension',
-        title: 'Reading Comprehension AI',
-        tagline: 'Deep passage analysis with auto-generated questions',
-        icon: '📖',
-        gradient: 'from-purple-500 to-pink-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'curriculum-designer',
-        title: 'AI Curriculum Designer',
-        tagline: 'Standards-aligned curriculum maps in minutes',
-        icon: '📋',
-        gradient: 'from-violet-500 to-purple-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'accessibility-ai',
-        title: 'Content Accessibility AI',
-        tagline: 'WCAG 2.1 AA compliance scanning and fixes',
-        icon: '♿',
-        gradient: 'from-green-500 to-teal-600',
-        demoStatus: 'request' as DemoStatus
-      },
-      {
-        id: 'course-creator-studio',
-        title: 'AI Course Creator Studio',
-        tagline: 'Transform any content into structured courses',
-        icon: '🎓',
-        gradient: 'from-cyan-500 to-blue-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'textbook-digitizer',
-        title: 'Textbook Digitizer',
-        tagline: 'Convert print to interactive digital textbooks',
-        icon: '📚',
-        gradient: 'from-amber-500 to-orange-600',
-        demoStatus: 'live' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Analytics & Adaptive',
-    description: 'Data-driven insights for personalized learning',
-    products: [
-      {
-        id: 'adaptive-learning',
-        title: 'Adaptive Learning Engine',
-        tagline: 'AI-powered personalized learning paths',
-        icon: '🎯',
-        gradient: 'from-cyan-500 to-blue-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'analytics-dashboard',
-        title: 'Student Analytics Dashboard',
-        tagline: 'Real-time insights into student progress',
-        icon: '📈',
-        gradient: 'from-slate-700 to-blue-800',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'student-success-predictor',
-        title: 'Student Success Predictor',
-        tagline: 'AI early warning system for at-risk students',
-        icon: '🔮',
-        gradient: 'from-amber-500 to-orange-600',
-        demoStatus: 'interactive' as DemoStatus
-      },
-      {
-        id: 'career-pathways',
-        title: 'Career Pathways AI',
-        tagline: 'Skill gap analysis and career recommendations',
-        icon: '🛤️',
-        gradient: 'from-violet-500 to-purple-600',
-        demoStatus: 'live' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Institutional AI',
-    description: 'Administrative automation for schools and universities',
-    products: [
-      {
-        id: 'admissions-assistant',
-        title: 'AI Admissions Assistant',
-        tagline: '24/7 student support and application review',
-        icon: '🎓',
-        gradient: 'from-blue-500 to-indigo-600',
-        demoStatus: 'live' as DemoStatus
-      },
-      {
-        id: 'parent-engagement',
-        title: 'Parent Engagement Portal',
-        tagline: 'Multilingual progress reports and communications',
-        icon: '👨‍👩‍👧',
-        gradient: 'from-teal-500 to-cyan-600',
-        demoStatus: 'live' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Enterprise L&D',
-    description: 'Corporate training and professional development',
-    products: [
-      {
-        id: 'corporate-training',
-        title: 'Corporate Training AI',
-        tagline: 'Microlearning, compliance, and skill gap analysis',
-        icon: '🏢',
-        gradient: 'from-indigo-500 to-purple-600',
-        demoStatus: 'live' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Research & Higher Ed',
-    description: 'Tools for academic research and scholarship',
-    products: [
-      {
-        id: 'research-assistant',
-        title: 'Research Assistant AI',
-        tagline: 'Literature search, citations, and methodology help',
-        icon: '🔬',
-        gradient: 'from-emerald-500 to-teal-600',
-        demoStatus: 'interactive' as DemoStatus
-      }
-    ]
-  },
-  {
-    name: 'Simulations',
-    description: 'Interactive hands-on learning experiences',
-    products: [
-      {
-        id: 'virtual-labs',
-        title: 'Virtual Lab Simulations',
-        tagline: 'Interactive science experiments—safe and scalable',
-        icon: '🧪',
-        gradient: 'from-teal-500 to-green-600',
-        demoStatus: 'request' as DemoStatus
-      }
-    ]
-  }
-];
 
 // Hero Section
 function HeroSection() {
@@ -351,7 +111,7 @@ function DemoBadge({ status }: { status: DemoStatus }) {
 }
 
 // Product Card Component
-function ProductCard({ product }: { product: typeof productCategories[0]['products'][0] }) {
+function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.id}`}
@@ -377,7 +137,7 @@ function ProductCard({ product }: { product: typeof productCategories[0]['produc
 }
 
 // Category Section Component
-function CategorySection({ category }: { category: typeof productCategories[0] }) {
+function CategorySection({ category }: { category: ProductCategory }) {
   return (
     <div id={category.name.toLowerCase().replace(/\s+/g, '-')} className="scroll-mt-32">
       <div className="mb-8">
