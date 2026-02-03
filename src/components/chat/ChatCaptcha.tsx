@@ -152,7 +152,7 @@ export function ChatCaptcha({ onVerified }: ChatCaptchaProps) {
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
             placeholder="Your answer"
-            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-base focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             autoFocus
           />
           <button

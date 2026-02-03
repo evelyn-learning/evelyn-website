@@ -114,7 +114,7 @@ export function OfflineMessageForm({
             type="text"
             placeholder="Your name"
             className={cn(
-              "w-full rounded-lg border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
+              "w-full rounded-lg border px-3 py-2 text-base focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
               errors.name ? "border-red-300" : "border-gray-200"
             )}
           />
@@ -129,7 +129,7 @@ export function OfflineMessageForm({
             type="email"
             placeholder="Your email"
             className={cn(
-              "w-full rounded-lg border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
+              "w-full rounded-lg border px-3 py-2 text-base focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
               errors.email ? "border-red-300" : "border-gray-200"
             )}
           />
@@ -144,7 +144,7 @@ export function OfflineMessageForm({
             rows={3}
             placeholder="How can we help?"
             className={cn(
-              "w-full resize-none rounded-lg border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
+              "w-full resize-none rounded-lg border px-3 py-2 text-base focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500",
               errors.message ? "border-red-300" : "border-gray-200"
             )}
           />

@@ -119,9 +119,17 @@ function parseTBSBookDetails(content: string): BookEntry[] {
     // Find Dropbox link column (it's around index 16)
     let dropboxLink = '';
     for (let j = 15; j < Math.min(values.length, 20); j++) {
-      if (values[j]?.includes('dropbox.com')) {
-        dropboxLink = values[j].trim();
-        break;
+      const potentialUrl = values[j]?.trim();
+      if (potentialUrl) {
+        try {
+          const url = new URL(potentialUrl);
+          if (url.hostname === 'dropbox.com' || url.hostname.endsWith('.dropbox.com')) {
+            dropboxLink = potentialUrl;
+            break;
+          }
+        } catch {
+          // Not a valid URL, skip
+        }
       }
     }
 

@@ -225,14 +225,22 @@ async function fetchOpenStaxPage(url: string): Promise<string> {
 function extractProblemsFromHTML(html: string): string {
   // OpenStax pages have problems in specific HTML structure
   // We'll extract text content and clean it up
+  // Note: This processes trusted educational content from openstax.org only
 
-  // Remove script and style tags
-  let text = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
-    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
+  let text = html;
+
+  // Remove script and style tags (use non-greedy matching with explicit end tags)
+  // Apply each removal in a loop until no more matches to handle nested cases
+  let prevLength: number;
+  do {
+    prevLength = text.length;
+    text = text
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, '')
+      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, '')
+      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, '');
+  } while (text.length !== prevLength);
 
   // Find the problems section - look for problem markers
   const problemsMatch = text.match(/(?:Problems|Exercises|Problem Set)[\s\S]+/i);
@@ -250,15 +258,18 @@ function extractProblemsFromHTML(html: string): string {
     // Handle problem numbers
     .replace(/<[^>]*class="[^"]*problem[^"]*"[^>]*>/gi, '\n\nPROBLEM: ')
     // Handle MathML/LaTeX - try to preserve
-    .replace(/<math[^>]*>([\s\S]*?)<\/math>/gi, ' $1 ')
-    .replace(/<annotation[^>]*>([\s\S]*?)<\/annotation>/gi, ' $1 ')
+    .replace(/<math\b[^>]*>([\s\S]*?)<\/math>/gi, ' $1 ')
+    .replace(/<annotation\b[^>]*>([\s\S]*?)<\/annotation>/gi, ' $1 ')
     // Remove remaining HTML tags
     .replace(/<[^>]+>/g, ' ')
-    // Clean up whitespace
+    // Decode HTML entities (decode once, not recursively to avoid double-decode issues)
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Clean up whitespace
     .replace(/\s+/g, ' ')
     .replace(/\n\s+/g, '\n')
     .replace(/\n{3,}/g, '\n\n')

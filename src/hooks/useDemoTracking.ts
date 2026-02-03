@@ -33,7 +33,7 @@ export function useDemoTracking({ productId, productTitle }: TrackingOptions) {
   useEffect(() => {
     let stored = sessionStorage.getItem("demo_session_id");
     if (!stored) {
-      stored = `demo_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      stored = `demo_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
       sessionStorage.setItem("demo_session_id", stored);
     }
     sessionId.current = stored;

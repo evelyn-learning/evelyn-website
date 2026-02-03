@@ -170,7 +170,7 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="lg:hidden">
+        <div className="lg:hidden max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="space-y-1 px-4 pb-4 pt-2">
             {navigation.map((item) => (
               <div key={item.name}>

@@ -34,7 +34,7 @@ export function ChatWidget() {
     // Generate or retrieve session ID
     let storedSessionId = sessionStorage.getItem("chat_session_id");
     if (!storedSessionId) {
-      storedSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      storedSessionId = `session_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
       sessionStorage.setItem("chat_session_id", storedSessionId);
     }
     setSessionId(storedSessionId);
@@ -319,7 +319,7 @@ export function ChatWidget() {
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
                     disabled={isLoading}
-                    className="flex-1 rounded-full border border-gray-200 px-4 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50"
+                    className="flex-1 rounded-full border border-gray-200 px-4 py-2 text-base focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50"
                   />
                   <button
                     onClick={sendMessage}
