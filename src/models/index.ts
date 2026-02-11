@@ -18,3 +18,48 @@ export {
   type ISiteSettings,
 } from "./SiteSettings";
 export { DemoInteraction, type IDemoInteraction } from "./DemoInteraction";
+export {
+  ShowcaseSite,
+  generateAccessCode,
+  verifySiteAccess,
+  trackShowcaseView,
+  trackToolUsage,
+  type IShowcaseSite,
+  type IShowcaseAnalytics,
+  type IShowcaseBranding,
+  type IShowcaseContact,
+  type IShowcaseTestimonial,
+  type IShowcaseStat,
+  type IShowcaseNavItem,
+  type IShowcaseSection,
+  type IShowcasePage,
+  type BusinessType,
+  type ShowcaseStatus,
+} from "./ShowcaseSite";
+export {
+  ProspectingConfig,
+  type IProspectingConfig,
+  type IProspectCandidate,
+} from "./ProspectingConfig";
+export {
+  AITool,
+  DEFAULT_AI_TOOLS,
+  type IAITool,
+  type AIToolCategory,
+  type AIToolStatus,
+} from "./AITool";
+export {
+  Prospect,
+  generateProspectSlug,
+  inferBusinessType,
+  type IProspect,
+  type IScrapedData,
+  type IScrapedImage,
+  type IScrapedNavItem,
+  type IScrapedPage,
+  type IScrapedSection,
+  type IOutreachLog,
+  type ProspectStatus,
+} from "./Prospect";
+export { SavedLesson, type ISavedLesson } from "./SavedLesson";
+export { LessonImage, type ILessonImage } from "./LessonImage";

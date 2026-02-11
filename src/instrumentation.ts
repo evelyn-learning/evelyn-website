@@ -9,6 +9,12 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     console.log('[Instrumentation] Server starting...');
 
+    // Only start schedulers in production (set ENABLE_BLOG_SCHEDULER=true in production env)
+    if (process.env.ENABLE_BLOG_SCHEDULER !== 'true') {
+      console.log('[Instrumentation] Blog scheduler disabled (set ENABLE_BLOG_SCHEDULER=true to enable)');
+      return;
+    }
+
     // Delay scheduler start to ensure DB is ready
     setTimeout(async () => {
       try {

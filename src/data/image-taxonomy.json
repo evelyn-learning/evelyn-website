@@ -1,0 +1,310 @@
+{
+  "version": "1.0",
+  "description": "K-5 educational image taxonomy for the Lesson Engine. Each cluster maps to a set of tags Claude can select from, with grade ranges and CCSS alignment.",
+  "categories": {
+    "math": {
+      "counting-cardinality": {
+        "tags": ["counting", "numbers", "number-line", "ten-frame", "tally-marks", "counting-objects"],
+        "grades": ["K", "1"],
+        "standards": ["K.CC", "1.NBT"],
+        "keywords": ["count", "how many", "number", "sequence", "one-to-one", "tally"]
+      },
+      "addition-subtraction": {
+        "tags": ["addition", "subtraction", "number-bonds", "fact-families", "base-ten-blocks", "math-manipulatives"],
+        "grades": ["K", "1", "2", "3"],
+        "standards": ["K.OA", "1.OA", "2.OA", "3.OA"],
+        "keywords": ["add", "subtract", "plus", "minus", "sum", "difference", "take away", "combine"]
+      },
+      "multiplication-division": {
+        "tags": ["multiplication", "division", "arrays", "equal-groups", "times-table", "repeated-addition"],
+        "grades": ["3", "4", "5"],
+        "standards": ["3.OA", "4.OA", "5.OA"],
+        "keywords": ["multiply", "divide", "times", "groups of", "array", "factor", "product", "quotient"]
+      },
+      "place-value": {
+        "tags": ["place-value", "ones-tens-hundreds", "base-ten-blocks", "expanded-form", "number-chart"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["1.NBT", "2.NBT", "3.NBT", "4.NBT", "5.NBT"],
+        "keywords": ["place value", "ones", "tens", "hundreds", "thousands", "digit", "expanded form"]
+      },
+      "fractions": {
+        "tags": ["fractions", "fraction-circles", "fraction-bars", "pizza-fractions", "equal-parts", "number-line-fractions", "pie-chart"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["1.G", "2.G", "3.NF", "4.NF", "5.NF"],
+        "keywords": ["fraction", "half", "third", "fourth", "quarter", "numerator", "denominator", "equal parts", "whole", "part"]
+      },
+      "decimals-percents": {
+        "tags": ["decimals", "decimal-grid", "money-coins", "money-bills", "hundredths-grid"],
+        "grades": ["4", "5"],
+        "standards": ["4.NF", "5.NBT"],
+        "keywords": ["decimal", "tenth", "hundredth", "money", "cents", "dollars", "percent"]
+      },
+      "geometry-shapes": {
+        "tags": ["shapes-2d", "shapes-3d", "triangle", "rectangle", "circle", "square", "cube", "sphere", "cylinder", "pattern-blocks", "tangram"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K.G", "1.G", "2.G", "3.G", "4.G", "5.G"],
+        "keywords": ["shape", "triangle", "rectangle", "square", "circle", "cube", "sphere", "cone", "cylinder", "side", "corner", "vertex", "angle", "polygon"]
+      },
+      "measurement": {
+        "tags": ["ruler", "measuring-tape", "scale-balance", "thermometer", "clock", "calendar", "measuring-cup"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K.MD", "1.MD", "2.MD", "3.MD", "4.MD", "5.MD"],
+        "keywords": ["measure", "length", "weight", "capacity", "temperature", "time", "inch", "centimeter", "pound", "gram", "liter", "hour", "minute"]
+      },
+      "data-graphing": {
+        "tags": ["bar-graph", "pictograph", "line-plot", "tally-chart", "pie-chart", "data-table"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["1.MD", "2.MD", "3.MD", "4.MD", "5.MD"],
+        "keywords": ["graph", "chart", "data", "survey", "tally", "pictograph", "bar graph", "line plot"]
+      },
+      "patterns-algebra": {
+        "tags": ["pattern-blocks", "number-pattern", "input-output-table", "function-machine", "growing-pattern"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K.OA", "4.OA", "5.OA"],
+        "keywords": ["pattern", "rule", "sequence", "input", "output", "function", "algebra", "variable", "expression"]
+      },
+      "money": {
+        "tags": ["coins-penny", "coins-nickel", "coins-dime", "coins-quarter", "dollar-bill", "money-counting", "piggy-bank", "cash-register"],
+        "grades": ["1", "2", "3"],
+        "standards": ["2.MD"],
+        "keywords": ["money", "coin", "penny", "nickel", "dime", "quarter", "dollar", "cents", "change", "price"]
+      },
+      "time": {
+        "tags": ["analog-clock", "digital-clock", "clock-hands", "elapsed-time", "calendar-months", "schedule"],
+        "grades": ["1", "2", "3"],
+        "standards": ["1.MD", "2.MD", "3.MD"],
+        "keywords": ["time", "clock", "hour", "minute", "half past", "quarter", "o'clock", "elapsed time", "a.m.", "p.m."]
+      }
+    },
+    "science": {
+      "water-cycle": {
+        "tags": ["water-cycle", "evaporation", "condensation", "precipitation", "rain-clouds", "ocean-sun", "water-vapor"],
+        "grades": ["2", "3", "4", "5"],
+        "standards": ["2-ESS2", "5-ESS2"],
+        "keywords": ["water cycle", "evaporation", "condensation", "precipitation", "rain", "cloud", "water vapor", "collection"]
+      },
+      "weather-climate": {
+        "tags": ["weather-sunny", "weather-rainy", "weather-snowy", "weather-cloudy", "weather-windy", "thermometer-weather", "weather-map", "tornado", "hurricane"],
+        "grades": ["K", "1", "2", "3"],
+        "standards": ["K-ESS2", "3-ESS2"],
+        "keywords": ["weather", "sunny", "rainy", "cloudy", "snowy", "windy", "temperature", "forecast", "storm", "tornado"]
+      },
+      "plant-life": {
+        "tags": ["plant-parts", "seed-germination", "photosynthesis", "roots-stem-leaves", "flower-diagram", "tree-growth", "garden-plants", "sunflower"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K-LS1", "1-LS1", "2-LS2", "4-LS1", "5-LS1"],
+        "keywords": ["plant", "seed", "germination", "root", "stem", "leaf", "flower", "photosynthesis", "sunlight", "soil", "grow"]
+      },
+      "animal-life": {
+        "tags": ["animal-habitats", "food-chain", "animal-groups", "mammals", "reptiles", "amphibians", "insects", "birds", "fish", "animal-babies"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K-LS1", "1-LS1", "1-LS3", "2-LS4", "3-LS1", "3-LS4"],
+        "keywords": ["animal", "habitat", "food chain", "predator", "prey", "mammal", "reptile", "bird", "insect", "fish", "amphibian", "life cycle"]
+      },
+      "life-cycles": {
+        "tags": ["butterfly-life-cycle", "frog-life-cycle", "chicken-life-cycle", "plant-life-cycle", "caterpillar", "tadpole", "metamorphosis"],
+        "grades": ["1", "2", "3"],
+        "standards": ["1-LS1", "3-LS1"],
+        "keywords": ["life cycle", "egg", "larva", "pupa", "adult", "metamorphosis", "caterpillar", "butterfly", "tadpole", "frog"]
+      },
+      "human-body": {
+        "tags": ["skeleton", "muscles", "heart", "lungs", "brain", "digestive-system", "five-senses", "teeth-dental"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["1-LS1", "4-LS1"],
+        "keywords": ["body", "bones", "muscles", "heart", "lungs", "brain", "senses", "see", "hear", "touch", "taste", "smell", "digest"]
+      },
+      "ecosystems": {
+        "tags": ["forest-ecosystem", "ocean-ecosystem", "desert-ecosystem", "pond-ecosystem", "food-web", "habitat-diorama", "biodiversity"],
+        "grades": ["2", "3", "4", "5"],
+        "standards": ["2-LS2", "3-LS2", "5-LS2"],
+        "keywords": ["ecosystem", "habitat", "food web", "producer", "consumer", "decomposer", "biome", "forest", "ocean", "desert", "pond"]
+      },
+      "earth-rocks-soil": {
+        "tags": ["rock-types", "soil-layers", "fossils", "volcano", "earthquake", "mountain", "erosion", "weathering"],
+        "grades": ["2", "3", "4", "5"],
+        "standards": ["2-ESS1", "4-ESS1", "4-ESS2"],
+        "keywords": ["rock", "mineral", "soil", "fossil", "volcano", "earthquake", "erosion", "weathering", "sediment", "igneous", "metamorphic"]
+      },
+      "solar-system-space": {
+        "tags": ["solar-system", "planets", "sun", "moon-phases", "stars", "earth-rotation", "day-night", "seasons"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["1-ESS1", "5-ESS1"],
+        "keywords": ["planet", "sun", "moon", "star", "solar system", "orbit", "rotation", "day", "night", "season", "earth", "space"]
+      },
+      "matter-materials": {
+        "tags": ["solid-liquid-gas", "states-of-matter", "ice-water-steam", "mixing-materials", "magnet", "properties-of-matter"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["2-PS1", "5-PS1"],
+        "keywords": ["matter", "solid", "liquid", "gas", "material", "property", "dissolve", "mix", "melt", "freeze", "evaporate", "magnet"]
+      },
+      "forces-motion": {
+        "tags": ["push-pull", "gravity", "ramp-incline", "simple-machines", "lever", "wheel-axle", "pulley", "ball-motion"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K-PS2", "3-PS2", "5-PS2"],
+        "keywords": ["force", "motion", "push", "pull", "gravity", "friction", "speed", "simple machine", "lever", "pulley", "inclined plane"]
+      },
+      "energy": {
+        "tags": ["light-energy", "heat-energy", "sound-waves", "electrical-circuit", "solar-panel", "battery", "light-bulb"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["1-PS4", "4-PS3", "4-PS4", "5-PS3"],
+        "keywords": ["energy", "light", "heat", "sound", "electricity", "circuit", "solar", "battery", "vibration", "wave"]
+      },
+      "engineering-design": {
+        "tags": ["building-blocks", "bridge-design", "invention", "blueprint", "engineering-process", "prototype"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["K-ETS1", "1-ETS1", "2-ETS1", "3-ETS1", "4-ETS1", "5-ETS1"],
+        "keywords": ["design", "build", "engineer", "create", "test", "improve", "prototype", "model", "solution", "problem"]
+      }
+    },
+    "ela": {
+      "alphabet-phonics": {
+        "tags": ["alphabet-letters", "letter-sounds", "phonics-chart", "abc-blocks", "letter-tracing", "vowels-consonants"],
+        "grades": ["K", "1"],
+        "standards": ["RF.K", "RF.1"],
+        "keywords": ["letter", "alphabet", "sound", "phonics", "vowel", "consonant", "rhyme", "blend", "digraph"]
+      },
+      "sight-words": {
+        "tags": ["sight-words", "word-wall", "flash-cards", "high-frequency-words"],
+        "grades": ["K", "1", "2"],
+        "standards": ["RF.K", "RF.1", "RF.2"],
+        "keywords": ["sight word", "word wall", "flash card", "read", "recognize", "the", "and", "is"]
+      },
+      "reading-comprehension": {
+        "tags": ["book-reading", "story-map", "main-idea", "character-map", "sequencing", "cause-effect", "compare-contrast"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["RL.1", "RL.2", "RL.3", "RL.4", "RL.5", "RI.1", "RI.2", "RI.3", "RI.4", "RI.5"],
+        "keywords": ["read", "story", "main idea", "detail", "character", "setting", "plot", "sequence", "cause", "effect", "compare", "contrast", "comprehension"]
+      },
+      "writing": {
+        "tags": ["writing-paper", "pencil-writing", "paragraph", "essay-outline", "journal", "story-writing", "opinion-writing"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["W.K", "W.1", "W.2", "W.3", "W.4", "W.5"],
+        "keywords": ["write", "sentence", "paragraph", "essay", "opinion", "narrative", "informative", "draft", "edit", "publish"]
+      },
+      "vocabulary": {
+        "tags": ["dictionary", "vocabulary-cards", "word-meanings", "context-clues", "prefix-suffix", "root-words"],
+        "grades": ["2", "3", "4", "5"],
+        "standards": ["L.2", "L.3", "L.4", "L.5"],
+        "keywords": ["vocabulary", "word", "meaning", "definition", "synonym", "antonym", "prefix", "suffix", "root", "context clue"]
+      },
+      "grammar-punctuation": {
+        "tags": ["punctuation-marks", "sentence-types", "parts-of-speech", "nouns-verbs", "capital-letters"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": ["L.1", "L.2", "L.3", "L.4", "L.5"],
+        "keywords": ["grammar", "punctuation", "period", "question mark", "exclamation", "comma", "noun", "verb", "adjective", "adverb", "sentence"]
+      },
+      "speaking-listening": {
+        "tags": ["classroom-discussion", "presentation", "listening-ears", "group-work", "show-and-tell"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["SL.K", "SL.1", "SL.2", "SL.3", "SL.4", "SL.5"],
+        "keywords": ["speak", "listen", "discuss", "present", "share", "question", "answer", "audience", "conversation"]
+      },
+      "poetry": {
+        "tags": ["poetry-book", "rhyming-words", "haiku", "poem-writing", "stanzas"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": ["RL.K", "RL.1", "RL.2", "RL.3", "RL.4", "RL.5"],
+        "keywords": ["poem", "poetry", "rhyme", "rhythm", "stanza", "verse", "haiku", "limerick", "alliteration"]
+      }
+    },
+    "general": {
+      "classroom": {
+        "tags": ["classroom-desks", "whiteboard", "teacher-students", "school-supplies", "backpack", "library", "playground"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["school", "classroom", "teacher", "student", "desk", "book", "pencil", "crayon", "playground"]
+      },
+      "community-helpers": {
+        "tags": ["firefighter", "police-officer", "doctor-nurse", "mail-carrier", "farmer", "chef-cook"],
+        "grades": ["K", "1", "2"],
+        "standards": [],
+        "keywords": ["community", "helper", "job", "firefighter", "police", "doctor", "nurse", "farmer", "mail"]
+      },
+      "maps-geography": {
+        "tags": ["world-map", "us-map", "globe", "compass-rose", "map-key", "continent", "ocean-map"],
+        "grades": ["1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["map", "globe", "continent", "ocean", "country", "state", "compass", "north", "south", "east", "west", "geography"]
+      },
+      "seasons-holidays": {
+        "tags": ["spring-flowers", "summer-beach", "fall-leaves", "winter-snow", "seasonal-tree"],
+        "grades": ["K", "1", "2", "3"],
+        "standards": [],
+        "keywords": ["season", "spring", "summer", "fall", "autumn", "winter", "holiday", "weather"]
+      },
+      "food-nutrition": {
+        "tags": ["food-groups", "fruits-vegetables", "food-pyramid", "healthy-plate", "cooking", "pizza", "snacks"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["food", "nutrition", "fruit", "vegetable", "healthy", "protein", "grain", "dairy", "pizza", "snack", "meal"]
+      },
+      "art-music": {
+        "tags": ["paint-palette", "crayons-drawing", "musical-instruments", "piano-keys", "drums", "singing"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["art", "paint", "draw", "color", "music", "instrument", "sing", "dance", "create"]
+      },
+      "sports-exercise": {
+        "tags": ["running-track", "basketball", "soccer-ball", "swimming", "yoga-stretching", "jump-rope"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["sport", "exercise", "run", "jump", "swim", "play", "team", "game", "fitness", "health"]
+      },
+      "transportation": {
+        "tags": ["car-vehicle", "bus-school", "airplane", "train", "bicycle", "boat-ship"],
+        "grades": ["K", "1", "2"],
+        "standards": [],
+        "keywords": ["car", "bus", "airplane", "train", "bicycle", "boat", "ship", "truck", "transportation", "travel"]
+      },
+      "diversity-inclusion": {
+        "tags": ["diverse-children", "world-cultures", "family-types", "friendship", "helping-others", "teamwork"],
+        "grades": ["K", "1", "2", "3", "4", "5"],
+        "standards": [],
+        "keywords": ["diverse", "culture", "family", "friend", "help", "share", "kind", "respect", "together", "team"]
+      }
+    }
+  },
+  "allTags": [
+    "counting", "numbers", "number-line", "ten-frame", "tally-marks", "counting-objects",
+    "addition", "subtraction", "number-bonds", "fact-families", "base-ten-blocks", "math-manipulatives",
+    "multiplication", "division", "arrays", "equal-groups", "times-table", "repeated-addition",
+    "place-value", "ones-tens-hundreds", "expanded-form", "number-chart",
+    "fractions", "fraction-circles", "fraction-bars", "pizza-fractions", "equal-parts", "number-line-fractions", "pie-chart",
+    "decimals", "decimal-grid", "money-coins", "money-bills", "hundredths-grid",
+    "shapes-2d", "shapes-3d", "triangle", "rectangle", "circle", "square", "cube", "sphere", "cylinder", "pattern-blocks", "tangram",
+    "ruler", "measuring-tape", "scale-balance", "thermometer", "clock", "calendar", "measuring-cup",
+    "bar-graph", "pictograph", "line-plot", "tally-chart", "data-table",
+    "pattern-blocks", "number-pattern", "input-output-table", "function-machine", "growing-pattern",
+    "coins-penny", "coins-nickel", "coins-dime", "coins-quarter", "dollar-bill", "money-counting", "piggy-bank", "cash-register",
+    "analog-clock", "digital-clock", "clock-hands", "elapsed-time", "calendar-months", "schedule",
+    "water-cycle", "evaporation", "condensation", "precipitation", "rain-clouds", "ocean-sun", "water-vapor",
+    "weather-sunny", "weather-rainy", "weather-snowy", "weather-cloudy", "weather-windy", "thermometer-weather", "weather-map", "tornado", "hurricane",
+    "plant-parts", "seed-germination", "photosynthesis", "roots-stem-leaves", "flower-diagram", "tree-growth", "garden-plants", "sunflower",
+    "animal-habitats", "food-chain", "animal-groups", "mammals", "reptiles", "amphibians", "insects", "birds", "fish", "animal-babies",
+    "butterfly-life-cycle", "frog-life-cycle", "chicken-life-cycle", "plant-life-cycle", "caterpillar", "tadpole", "metamorphosis",
+    "skeleton", "muscles", "heart", "lungs", "brain", "digestive-system", "five-senses", "teeth-dental",
+    "forest-ecosystem", "ocean-ecosystem", "desert-ecosystem", "pond-ecosystem", "food-web", "habitat-diorama", "biodiversity",
+    "rock-types", "soil-layers", "fossils", "volcano", "earthquake", "mountain", "erosion", "weathering",
+    "solar-system", "planets", "sun", "moon-phases", "stars", "earth-rotation", "day-night", "seasons",
+    "solid-liquid-gas", "states-of-matter", "ice-water-steam", "mixing-materials", "magnet", "properties-of-matter",
+    "push-pull", "gravity", "ramp-incline", "simple-machines", "lever", "wheel-axle", "pulley", "ball-motion",
+    "light-energy", "heat-energy", "sound-waves", "electrical-circuit", "solar-panel", "battery", "light-bulb",
+    "building-blocks", "bridge-design", "invention", "blueprint", "engineering-process", "prototype",
+    "alphabet-letters", "letter-sounds", "phonics-chart", "abc-blocks", "letter-tracing", "vowels-consonants",
+    "sight-words", "word-wall", "flash-cards", "high-frequency-words",
+    "book-reading", "story-map", "main-idea", "character-map", "sequencing", "cause-effect", "compare-contrast",
+    "writing-paper", "pencil-writing", "paragraph", "essay-outline", "journal", "story-writing", "opinion-writing",
+    "dictionary", "vocabulary-cards", "word-meanings", "context-clues", "prefix-suffix", "root-words",
+    "punctuation-marks", "sentence-types", "parts-of-speech", "nouns-verbs", "capital-letters",
+    "classroom-discussion", "presentation", "listening-ears", "group-work", "show-and-tell",
+    "poetry-book", "rhyming-words", "haiku", "poem-writing", "stanzas",
+    "classroom-desks", "whiteboard", "teacher-students", "school-supplies", "backpack", "library", "playground",
+    "firefighter", "police-officer", "doctor-nurse", "mail-carrier", "farmer", "chef-cook",
+    "world-map", "us-map", "globe", "compass-rose", "map-key", "continent", "ocean-map",
+    "spring-flowers", "summer-beach", "fall-leaves", "winter-snow", "seasonal-tree",
+    "food-groups", "fruits-vegetables", "food-pyramid", "healthy-plate", "cooking", "pizza", "snacks",
+    "paint-palette", "crayons-drawing", "musical-instruments", "piano-keys", "drums", "singing",
+    "running-track", "basketball", "soccer-ball", "swimming", "yoga-stretching", "jump-rope",
+    "car-vehicle", "bus-school", "airplane", "train", "bicycle", "boat-ship",
+    "diverse-children", "world-cultures", "family-types", "friendship", "helping-others", "teamwork"
+  ]
+}

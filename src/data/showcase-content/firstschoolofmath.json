@@ -1,0 +1,293 @@
+{
+  "slug": "firstschoolofmath",
+  "businessName": "First School of Mathematics",
+  "tagline": "Tutoring and SAT Prep in Boston & Brookline since 2001",
+  "businessType": "test-prep",
+  "originalWebsiteUrl": "https://www.firstschoolofmath.com/",
+
+  "branding": {
+    "primaryColor": "#5DADE2",
+    "secondaryColor": "#3498DB",
+    "accentColor": "#E74C3C",
+    "logoText": "FSM"
+  },
+
+  "contact": {
+    "phone": "(617) 566-8744",
+    "email": "info@firstschoolofmath.com",
+    "address": "1622-A Beacon Street, #304, Brookline, MA 02446",
+    "businessHours": "Monday - Saturday: Classes available"
+  },
+
+  "pages": {
+    "home": {
+      "hero": {
+        "title": "Tutoring & SAT Prep for Boston & Brookline Students",
+        "subtitle": "Celebrating our school's 20th anniversary! Over the last ten years more than 30 of our students were accepted at Ivy League universities as well as MIT and Stanford."
+      },
+      "mission": "Our mission is to provide top quality math education and SAT test prep to the Boston area community. Our main objective is to fill the gaps between different levels of requirements in middle school, high school, and college.",
+      "highlights": [
+        "FSM students' average SAT-I math score is 774 / 800",
+        "25% of students score 800 on SAT-I Math",
+        "75% of students score 750 or higher",
+        "30+ students accepted to Ivy League, MIT, Stanford",
+        "20+ years of excellence",
+        "Maximum 8 students per class"
+      ],
+      "announcement": {
+        "title": "2025-2026 classes in-person or online",
+        "subtitle": "Classes start September 4"
+      },
+      "youtubeVideoId": "CAkMUdeB06o",
+      "youtubeVideoTitle": "Pythagorean Theorem: Proof without words"
+    },
+
+    "about": {
+      "title": "Welcome to First School of Mathematics",
+      "subtitle": "Top quality math tutoring & SAT prep",
+      "content": [
+        "At First School of Mathematics we take a well established and successful approach to education in mathematics and science. Designed as an after school and weekend enrichment program, FSM offers comprehensive tutoring to students of 1 through 12th grades.",
+        "Our students take advanced level math classes in public and private schools, successfully pass SAT tests, and enroll in the top Colleges and Universities in the USA and abroad.",
+        "We believe that every child can and will succeed given the right opportunity. Our doors are open to all students who want to receive comprehensive mathematical education and SAT prep - the foundation for a future success in life.",
+        "We believe that besides direct mathematical knowledge, the experience of participation in the program will be beneficial to all students regardless of what career he or she may choose later."
+      ],
+      "mission": {
+        "title": "Our Mission",
+        "content": "Our mission is to provide top quality mathematical tutoring and SAT preparation to the Boston area community. Our main objective is to fill in the gaps between different levels of requirements in Middle School, High School, and College. We strive to develop higher-order thinking, reasoning capabilities, and problem solving skills. We teach how to learn and understand the material instead of memorizing it, how to see the logic behind a problem, how to feel comfortable with the solution."
+      },
+      "approach": {
+        "title": "Classes and Curriculum",
+        "subtitle": "Small class size, individual approach",
+        "content": "Regular math classes, SAT tests preparation courses, and tutoring services are offered throughout the school year and during our Summer School. Unlike many commercial programs we utilize individual methods in a structured learning environment with systematic approach to education. We maintain small class size at the maximum of 8 students per class. Our curriculum was developed specifically for the First School of Mathematics to enable students to meet the top requirements of American public and private schools and Colleges. It is fully structured starting from 1st through 12th grade and is enhanced with challenging problems."
+      },
+      "gifted": {
+        "title": "Challenging Environment for Gifted Students",
+        "content": "Another branch of our services is aimed at providing challenging environment to fast learners and gifted students. Our materials incorporate problems and topics not covered in regular schools, problems requiring insight and ability to develop an idea. Even average students enjoy analyzing and discussing such problems. This, in our opinion, is the core of productive and successful learning."
+      }
+    },
+
+    "team": {
+      "title": "FSM Teachers",
+      "intro": "First School of Mathematics employs professional teachers of the highest qualifications. Our teachers hold math and education degrees from top US and European universities and have wide experience teaching math and science courses in schools and universities of USA, Ukraine, Germany, and Israel.",
+      "founder": {
+        "name": "Victor Lisyanoy, PhD",
+        "role": "Founder and Principal Teacher",
+        "bio": "Victor Lisyanoy holds a PhD in Mathematics from the Kharkov State University, Ukraine. Dr. Lisyanoy has published more than 30 research papers. He has more than 25 years of teaching experience at various schools and Universities in Ukraine and in the US, and has extensive experience in developing math curricula for schools and Universities."
+      }
+    },
+
+    "programs": {
+      "title": "School Year Courses",
+      "subtitle": "Mathematics, SAT prep, Physics, Chemistry",
+      "categories": [
+        {
+          "name": "Mathematics Courses",
+          "courses": [
+            {
+              "name": "Elementary Mathematics",
+              "grades": "Grades 1 & 2",
+              "description": "This course is designed to help the youngest students to develop the basic arithmetic and analytical skills. The main emphasis is on word problems, logical reasoning, and measurements.",
+              "schedule": "Once a week, 1.5-2 hour sessions"
+            },
+            {
+              "name": "Mathematics",
+              "grades": "Grades 3 & 4",
+              "description": "The main objective of this course is to lay mathematical background for the future success in studying mathematics. Students are provided with the necessary learning experience to develop computational and problem solving skills. Elements of algebra and geometry are first introduced.",
+              "schedule": "Once a week, 2-hour sessions"
+            },
+            {
+              "name": "Pre-Algebra",
+              "grades": "Grades 5 & 6",
+              "description": "This course provides a concrete approach to algebraic concepts while reinforcing numeric skills. After an intensive review of decimals, fractions and percents, students focus on linear equations, polynomials and inequalities.",
+              "schedule": "Once a week, 2-hour sessions"
+            },
+            {
+              "name": "Algebra I",
+              "grades": "Grades 6, 7, 8, 9",
+              "description": "A three-year comprehensive algebra course covering basic operations with polynomials, algebraic fractions, irrational numbers, systems of equations and inequalities, and theory of functions. Topics include permutations, arithmetic and geometric sequences, probability.",
+              "schedule": "Once a week, 2-hour sessions"
+            },
+            {
+              "name": "Geometry",
+              "grades": "Grades 6, 7, 8, 9",
+              "description": "A three-year complete course covering angles, polygons, parallel lines, congruence, similarity, circles, areas, volumes, constructions, trigonometry of right triangle, and coordinate geometry. Students learn deductive reasoning and formal proofs.",
+              "schedule": "Two hours a week"
+            },
+            {
+              "name": "Trigonometry",
+              "grades": "Grades 9 & 10",
+              "description": "A 16-week Trigonometry course covering unit circle, radian measure, trigonometric equations and inequalities, trigonometric functions, their properties and graphs, formulas and trigonometric identities.",
+              "schedule": "Once a week, 2-hour sessions"
+            },
+            {
+              "name": "Algebra II with Pre-Calculus",
+              "grades": "Grades 9, 10, 11",
+              "description": "Topics include comprehensive study of trigonometry, rational, exponential and logarithmic expressions and functions. Vector algebra, polar coordinates, sequences and series.",
+              "schedule": "Twice a week, 2-hour sessions"
+            },
+            {
+              "name": "Calculus",
+              "grades": "Grades 10, 11, 12",
+              "description": "Functions, limits, continuity, derivatives, integration and their applications. Calculus of polynomial, rational, exponential, trigonometric functions. Calculus of vectors, infinite series and introduction to differential equations. In the past 10 years every FSM student that took Calculus received a perfect 5 on the AP Calculus BC Exam which is a credit at most colleges.",
+              "schedule": "Once a week, 2-hour sessions"
+            }
+          ]
+        },
+        {
+          "name": "Test Preparation",
+          "courses": [
+            {
+              "name": "SAT I and SAT II Preparation",
+              "grades": "High School",
+              "description": "Students can take SAT I and SAT II prep courses concurrently with their regular math classes. SAT topics are thoroughly studied during the sessions, homework assignments are given after each class. Students are tested on the covered material each week, real SAT tests are given periodically to develop test taking skills.",
+              "schedule": "Once a week, 2-hour sessions"
+            }
+          ]
+        },
+        {
+          "name": "Science Courses",
+          "courses": [
+            {
+              "name": "Physics",
+              "grades": "High School",
+              "description": "A concept-oriented course where the development of basic laws are discussed and the concepts involved are used to explain common phenomena. Topics covered are motion, Newtonian dynamics, waves, heat, electricity and magnetism. This course is designed to prepare students for Subject SAT II Physics test.",
+              "schedule": "Weekly sessions"
+            },
+            {
+              "name": "Chemistry",
+              "grades": "High School",
+              "description": "This course is designed to help student to do well in their study of chemistry and prepare them for Subject SAT II Chemistry test. Topics covered include: The Periodic Table, chemical reactions, chemical bonding, organic compounds, acids and bases, oxidation-reduction reactions, equilibrium.",
+              "schedule": "Weekly sessions"
+            }
+          ]
+        }
+      ]
+    },
+
+    "schedule": {
+      "title": "School Schedule, 2025-2026 Academic Year",
+      "subtitle": "Classes start September 4",
+      "note": "Schedule is subject to minor adjustments, please call for details",
+      "classes": [
+        { "grade": "Grade 1", "day": "Sat", "time": "1:00 - 2:00pm", "monthly": "$140" },
+        { "grade": "Grade 2", "day": "Sat", "time": "2:00 - 4:00pm", "monthly": "$280" },
+        { "grade": "Grade 3", "day": "Thu", "time": "4:00 - 6:00pm", "monthly": "$280" },
+        { "grade": "Grade 4", "day": "Wed", "time": "4:00 - 6:00pm", "monthly": "$280" },
+        { "grade": "Grade 5", "day": "Tue", "time": "4:00 - 6:00pm", "monthly": "$280" },
+        { "grade": "Grade 6", "day": "Wed", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Grade 7", "day": "Tue", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Grade 8", "day": "Thu", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Grade 9", "day": "Tue", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Grade 10", "day": "Mon", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Grade 10-11", "day": "Wed", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "Calculus", "day": "Thu", "time": "6:00 - 8:00pm", "monthly": "$280" },
+        { "grade": "SAT Prep", "day": "Mon", "time": "6:00 - 8:00pm", "monthly": "$280" }
+      ]
+    },
+
+    "pricing": {
+      "title": "Fees and Enrollment",
+      "enrollmentInfo": {
+        "applicationFee": "$100 (non-refundable)",
+        "process": "Enrollment of all new and returning students is done by mail or in person. All applications will be processed on a first-come, first-served basis. Application will be processed when the application form and the application fee are received. Once application process is complete, confirmation of registration notice will be mailed within 2 weeks.",
+        "siblingDiscount": "10% discount on the lesser tuition for every sibling. Application form should be completed for each sibling."
+      },
+      "tuition": [
+        {
+          "course": "Grade K-1",
+          "duration": "1.5 hours per week",
+          "singlePayment": "$1,860",
+          "semiannual": "$930",
+          "monthly": "$210"
+        },
+        {
+          "course": "Grades 2-12",
+          "duration": "2.0 hours per week",
+          "singlePayment": "$2,480",
+          "semiannual": "$1,240",
+          "monthly": "$280"
+        },
+        {
+          "course": "SAT, Calculus",
+          "duration": "2.0 hours per week",
+          "singlePayment": "$2,480",
+          "semiannual": "$1,240",
+          "monthly": "$280"
+        }
+      ],
+      "tutoring": {
+        "oneStudent": "$100 per hour",
+        "twoStudents": "$70 per hour each",
+        "threeStudents": "$50 per hour each"
+      },
+      "paymentPlans": [
+        "Monthly plan: Yearly tuition divided into 9 equal monthly payments",
+        "Single payment plan: Yearly tuition at a discount",
+        "Semiannual plan: Two equal payments (September 1st and January 15th) at a discount"
+      ],
+      "refundPolicy": "Application fee is not refundable. Tuition fee is fully refundable within two weeks after FSM receives a cancellation notice."
+    },
+
+    "resources": {
+      "title": "Useful Resources",
+      "subtitle": "Fun and Educational Links useful in Math study, SAT prep, and Math Olympiad preparation",
+      "categories": [
+        {
+          "name": "Sites for Kids",
+          "links": [
+            { "name": "A+Math", "description": "Fun games, homework helper and more" },
+            { "name": "Education Place", "description": "Be a better test taker!" },
+            { "name": "Math Flash", "description": "Practice math skills" },
+            { "name": "Word Problems for Kids", "description": "For grades 5 through 12" }
+          ]
+        },
+        {
+          "name": "Sites for Older Students",
+          "links": [
+            { "name": "Graph Theory, Knots, Math Play and More", "description": "Advanced math topics" },
+            { "name": "Famous Problems", "description": "Historical math challenges" },
+            { "name": "History of Mathematics", "description": "Learn about math history" },
+            { "name": "American Mathematical Society", "description": "Professional resources" },
+            { "name": "International Mathematical Olympiad", "description": "Competition preparation" },
+            { "name": "American Mathematics Competition", "description": "AMC resources" }
+          ]
+        }
+      ]
+    },
+
+    "contact": {
+      "title": "Contact Us",
+      "intro": "We want to hear from you. We always strive to improve our services, and your feedback about FSM tutoring, math classes, SAT prep courses or our Summer math school is most welcome. Please contact us by email, by telephone or by mail, or stop by at our office in Brookline. The door is always open."
+    }
+  },
+
+  "testimonials": [
+    {
+      "quote": "Great experience for my 2nd grader and K! Classes are very small and individualized with great mix of materials! Our teacher Olga is excellent! Very highly recommend!",
+      "author": "Natalya S.",
+      "role": "Parent"
+    },
+    {
+      "quote": "The First School of Mathematics definitely installs the importance of hard work and teaches its students (our daughter included) that it is possible to get A's in math and an 800 on the SATs. Victor is the reason that our daughter not only gained confidence in her mathematical abilities, but also excelled in school.",
+      "author": "Kelly S.",
+      "role": "Parent"
+    },
+    {
+      "quote": "The skills I learned from the First School of Mathematics helped me score an 800 on the Math SAT II exam and 780 on the Math SAT I exam, both of which greatly improved my college admission rate. Victor is an excellent teacher and I would highly recommend the First School of Mathematics to anyone who wants to accelerate through public school curriculum and AP calculus exams.",
+      "author": "Andrey Z.",
+      "role": "Former Student"
+    }
+  ],
+
+  "stats": [
+    { "value": "774", "label": "Average SAT Math Score" },
+    { "value": "25%", "label": "Score Perfect 800" },
+    { "value": "20+", "label": "Years of Excellence" },
+    { "value": "30+", "label": "Ivy League Admits" }
+  ],
+
+  "socialLinks": {
+    "facebook": "https://facebook.com/firstschoolofmath",
+    "twitter": "https://twitter.com/firstschoolmath"
+  }
+}

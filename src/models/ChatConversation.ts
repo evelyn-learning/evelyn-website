@@ -47,7 +47,6 @@ const ChatConversationSchema = new Schema<IChatConversation>(
 );
 
 ChatConversationSchema.index({ status: 1, createdAt: -1 });
-ChatConversationSchema.index({ sessionId: 1 });
 
 export const ChatConversation =
   mongoose.models.ChatConversation ||
