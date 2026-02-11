@@ -18,7 +18,7 @@
     "@next/swc-wasm-nodejs": "^16.1.6",
     "@tensorflow-models/blazeface": "^0.1.0",
     "@tensorflow/tfjs": "^4.22.0",
-    "axios": "^1.7.0",
+    "axios": "^1.13.5",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.2.0",
     "cloudinary": "^2.9.0",
