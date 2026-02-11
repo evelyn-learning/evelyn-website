@@ -15,6 +15,7 @@ import {
   Globe,
   MapPin,
 } from "lucide-react";
+import { timeAgo } from "@/lib/utils/timeAgo";
 
 interface DemoStats {
   productId: string;
@@ -423,7 +424,7 @@ export function DemoAnalyticsDashboard() {
                         {activity.location?.city && ` • ${activity.location.city}`}
                         {activity.location?.countryCode && ` ${getCountryFlag(activity.location.countryCode)}`}
                         {" • "}
-                        {new Date(activity.timestamp).toLocaleString()}
+                        {timeAgo(activity.timestamp)}
                       </p>
                     </div>
                   </div>
@@ -440,7 +441,7 @@ export function DemoAnalyticsDashboard() {
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             Daily Activity (Last {days} days)
           </h2>
-          <div className="flex items-end gap-1 h-40">
+          <div className="flex gap-1 h-40">
             {data.dailyChart.slice(-30).map((day) => {
               const maxValue = Math.max(
                 ...data.dailyChart.map((d) => d.views + d.tries)
@@ -449,7 +450,7 @@ export function DemoAnalyticsDashboard() {
               return (
                 <div
                   key={day.date}
-                  className="flex-1 min-w-[8px] group relative"
+                  className="flex-1 min-w-[8px] group relative flex flex-col justify-end"
                   title={`${day.date}: ${day.views} views, ${day.tries} tries`}
                 >
                   <div

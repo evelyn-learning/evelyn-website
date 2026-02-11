@@ -1,3 +1,5 @@
+import { AdminSessionProvider } from './AdminSessionProvider';
+
 export const metadata = {
   title: "Admin Dashboard | Evelyn Learning",
   robots: {
@@ -11,5 +13,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AdminSessionProvider>{children}</AdminSessionProvider>;
 }

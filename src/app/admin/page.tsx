@@ -16,8 +16,11 @@ import {
   ArrowRight,
   Sparkles,
   BarChart3,
+  Globe,
+  Building2,
 } from "lucide-react";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { HealthStatus } from "@/components/admin/HealthStatus";
 
 async function getStats() {
   if (!isDBConfigured()) {
@@ -166,6 +169,27 @@ export default async function AdminDashboard() {
               <BarChart3 className="mr-2 h-4 w-4" />
               Demo Analytics
             </Link>
+            <Link
+              href="/admin/showcase"
+              className="inline-flex items-center rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-medium text-white hover:from-emerald-600 hover:to-teal-600"
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Showcase Manager
+            </Link>
+            <Link
+              href="/admin/ai-tools"
+              className="inline-flex items-center rounded-lg bg-gradient-to-r from-violet-500 to-purple-500 px-4 py-2 text-sm font-medium text-white hover:from-violet-600 hover:to-purple-600"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Tools
+            </Link>
+            <Link
+              href="/admin/prospecting"
+              className="inline-flex items-center rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-medium text-white hover:from-amber-600 hover:to-orange-600"
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Prospect Pipeline
+            </Link>
           </div>
         </div>
 
@@ -194,7 +218,7 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8 grid gap-8 lg:grid-cols-3">
+        <div className="mt-8 grid gap-8 lg:grid-cols-4">
           {/* Recent Blog Posts */}
           <div className="rounded-xl bg-white p-6 shadow">
             <div className="mb-4 flex items-center justify-between">
@@ -237,6 +261,9 @@ export default async function AdminDashboard() {
 
           {/* Settings */}
           <AdminSettings />
+
+          {/* System Health */}
+          <HealthStatus />
         </div>
       </main>
     </div>
