@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import {
   Search,
   Settings,
@@ -252,10 +252,19 @@ export default function ProspectingPage() {
 
     try {
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(data);
+      const sheet = workbook.worksheets[0];
+      const headers = (sheet.getRow(1).values as string[]).slice(1);
+      const jsonData: Record<string, unknown>[] = [];
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
+        const obj: Record<string, unknown> = {};
+        (row.values as unknown[]).slice(1).forEach((val, i) => {
+          obj[headers[i]] = val;
+        });
+        jsonData.push(obj);
+      });
 
       const res = await fetch('/api/admin/prospects', {
         method: 'POST',
