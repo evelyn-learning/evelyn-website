@@ -1,10 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 interface TrackingOptions {
   productId: string;
   productTitle: string;
+}
+
+// useSession throws when no SessionProvider exists. Internally it calls useContext
+// (the real hook) before throwing, so hook ordering is preserved and try/catch is safe.
+function useOptionalSession() {
+  try {
+    return useSession();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -25,6 +36,8 @@ interface TrackingOptions {
  * ```
  */
 export function useDemoTracking({ productId, productTitle }: TrackingOptions) {
+  const sessionResult = useOptionalSession();
+  const session = sessionResult?.data;
   const sessionId = useRef<string>("");
   const startTime = useRef<number>(Date.now());
   const hasTrackedView = useRef(false);
@@ -42,6 +55,11 @@ export function useDemoTracking({ productId, productTitle }: TrackingOptions) {
 
   const track = useCallback(
     async (eventType: "view" | "try" | "complete", metadata?: Record<string, unknown>) => {
+      // Skip tracking for logged-in admin users
+      if (session?.user) {
+        return;
+      }
+
       try {
         const duration = Math.round((Date.now() - startTime.current) / 1000);
 
@@ -78,7 +96,7 @@ export function useDemoTracking({ productId, productTitle }: TrackingOptions) {
         console.error("[Demo Tracking] Failed:", error);
       }
     },
-    [productId, productTitle]
+    [productId, productTitle, session]
   );
 
   const trackView = useCallback(() => {

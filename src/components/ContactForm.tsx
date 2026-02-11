@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FormCaptcha } from "./FormCaptcha";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -76,6 +77,11 @@ export function ContactForm() {
     "idle"
   );
   const [errorMessage, setErrorMessage] = useState("");
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+
+  const handleCaptchaVerified = useCallback((verified: boolean) => {
+    setIsCaptchaVerified(verified);
+  }, []);
 
   const {
     register,
@@ -304,10 +310,16 @@ export function ContactForm() {
         )}
       </div>
 
+      {/* Captcha */}
+      <FormCaptcha
+        onVerified={handleCaptchaVerified}
+        storageKey="contact_form_captcha"
+      />
+
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || !isCaptchaVerified}
         className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
       >
         {status === "loading" ? (
@@ -319,6 +331,12 @@ export function ContactForm() {
           "Send Message"
         )}
       </button>
+
+      {!isCaptchaVerified && (
+        <p className="text-center text-sm text-gray-500">
+          Please complete the security check above to send your message.
+        </p>
+      )}
     </form>
   );
 }

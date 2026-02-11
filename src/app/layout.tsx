@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import {
   GoogleTagManager,
   GoogleTagManagerNoscript,
 } from "@/components/analytics/GoogleTagManager";
 import { EducationalOrganizationJsonLd } from "@/components/seo/JsonLd";
-import { ChatWidgetWrapper } from "@/components/chat";
+import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -126,10 +124,7 @@ export default function RootLayout({
       <GoogleTagManager />
       <body className="flex min-h-screen flex-col font-sans">
         <GoogleTagManagerNoscript />
-        <Header />
-        <main className="flex-grow">{children}</main>
-        <Footer />
-        <ChatWidgetWrapper />
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

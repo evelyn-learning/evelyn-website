@@ -216,6 +216,7 @@ export function ChatWidget() {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(true)}
+        data-tour="chat-widget"
         className={cn(
           "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
           isOpen && "scale-0 opacity-0"

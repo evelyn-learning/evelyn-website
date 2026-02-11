@@ -1,29 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import type { GeneratedCourse, CourseModule } from '@/lib/utils/export/pdf-course-export';
 
-interface CourseModule {
-  id: string;
-  title: string;
-  duration: string;
-  type: 'video' | 'reading' | 'quiz' | 'activity';
-  content?: string;
-  questions?: {
-    question: string;
-    options: string[];
-    correct: number;
-  }[];
-}
-
-interface GeneratedCourse {
-  title: string;
-  description: string;
-  learningObjectives: string[];
-  estimatedDuration: string;
-  modules: CourseModule[];
-  assessmentStrategy: string;
-}
+export type { GeneratedCourse, CourseModule };
 
 const SAMPLE_INPUTS = {
   document: {
@@ -56,6 +37,43 @@ export default function CourseCreatorStudioDemo() {
   const [generatedCourse, setGeneratedCourse] = useState<GeneratedCourse | null>(null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exportingFormat, setExportingFormat] = useState<string | null>(null);
+  const [exportedFormats, setExportedFormats] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  const handleExport = useCallback(async (label: string) => {
+    if (exportingFormat || exportedFormats.has(label) || !generatedCourse) return;
+    setExportingFormat(label);
+
+    try {
+      if (label === 'PDF Outline') {
+        const { exportCourseToPDF } = await import('@/lib/utils/export/pdf-course-export');
+        await exportCourseToPDF(generatedCourse);
+      } else if (label === 'SCORM Package') {
+        const { exportCourseToSCORM } = await import('@/lib/utils/export/scorm-course-export');
+        await exportCourseToSCORM(generatedCourse);
+      } else {
+        // Canvas Import & xAPI Module not yet implemented
+        setExportingFormat(null);
+        showToast(`${label} export coming soon`);
+        return;
+      }
+      setExportingFormat(null);
+      setExportedFormats(prev => new Set(prev).add(label));
+      showToast(`${label} exported successfully`);
+    } catch (err) {
+      console.error(`Export failed (${label}):`, err);
+      setExportingFormat(null);
+      showToast(`Export failed — please try again`);
+    }
+  }, [exportingFormat, exportedFormats, showToast, generatedCourse]);
 
   const generateCourse = async () => {
     if (!documentText.trim() || !courseTitle.trim()) {
@@ -66,6 +84,7 @@ export default function CourseCreatorStudioDemo() {
     setIsGenerating(true);
     setError(null);
     setGeneratedCourse(null);
+    setExportedFormats(new Set());
 
     const systemPrompt = `You are an expert instructional designer who creates engaging, pedagogically-sound online courses.
 Design courses using established learning principles like Bloom's taxonomy, chunked content, and varied assessment types.
@@ -432,7 +451,15 @@ Each quiz should have 2-3 questions.`;
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-gray-600">{module.content}</p>
+                              <div>
+                                {module.type === 'video' && (
+                                  <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-sm text-blue-700">
+                                    <span className="mt-0.5">ℹ️</span>
+                                    <span>Video production is handled separately. This outline defines the script and structure for the video segment.</span>
+                                  </div>
+                                )}
+                                <p className="text-gray-600">{module.content}</p>
+                              </div>
                             )}
                           </div>
                         )}
@@ -456,15 +483,36 @@ Each quiz should have 2-3 questions.`;
                       { label: 'Canvas Import', icon: '🎨' },
                       { label: 'PDF Outline', icon: '📄' },
                       { label: 'xAPI Module', icon: '🔌' }
-                    ].map((option, idx) => (
-                      <button
-                        key={idx}
-                        className="py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <span>{option.icon}</span>
-                        {option.label}
-                      </button>
-                    ))}
+                    ].map((option, idx) => {
+                      const isExporting = exportingFormat === option.label;
+                      const isExported = exportedFormats.has(option.label);
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => handleExport(option.label)}
+                          disabled={isExporting || !!exportingFormat}
+                          className={`py-2 px-3 rounded-lg transition text-sm font-medium flex items-center justify-center gap-2 ${
+                            isExported
+                              ? 'bg-white/40 cursor-default'
+                              : isExporting
+                                ? 'bg-white/30 cursor-wait'
+                                : 'bg-white/20 hover:bg-white/30'
+                          } disabled:cursor-not-allowed`}
+                        >
+                          {isExporting ? (
+                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          ) : isExported ? (
+                            <span>✓</span>
+                          ) : (
+                            <span>{option.icon}</span>
+                          )}
+                          {isExporting ? 'Exporting...' : isExported ? 'Exported' : option.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </>
@@ -491,6 +539,13 @@ Each quiz should have 2-3 questions.`;
           </div>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium animate-fade-in">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

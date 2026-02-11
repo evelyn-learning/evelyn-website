@@ -1,9 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
-import { Mic, MessageSquare, Upload, Pencil, Play, ArrowRight } from 'lucide-react';
+import { Mic, MessageSquare, Upload, Pencil } from 'lucide-react';
+
+const VoiceTutorPreview = dynamic(
+  () => import('@/components/demos/VoiceTutorPreview'),
+  { ssr: false, loading: () => <div className="h-[420px] bg-gray-100 rounded-2xl animate-pulse" /> }
+);
 
 function ProductHero() {
   return (
@@ -77,76 +83,53 @@ function DemoSection() {
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mb-2">Try the AI Voice Tutor</h2>
           <p className="text-slate-600 max-w-xl mx-auto mb-6">
-            Experience real-time voice tutoring with visual whiteboard support. Choose text or voice mode to start a tutoring session.
+            Watch a live preview of a tutoring session, then launch the full experience.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Demo launcher card */}
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-8 text-white text-center">
-              <span className="text-6xl mb-4 block">🎙️</span>
-              <h3 className="text-2xl font-bold mb-2">AI Voice Tutor Demo</h3>
-              <p className="text-blue-100 max-w-md mx-auto">
-                Practice physics problems with an AI tutor that speaks, listens, and draws explanations on a whiteboard.
-              </p>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Interactive preview */}
+          <VoiceTutorPreview />
+
+          {/* Feature cards */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Mic className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-900">Voice Mode</h4>
+                <p className="text-sm text-slate-600">Speak naturally and hear responses. Just like talking to a real tutor.</p>
+              </div>
             </div>
 
-            <div className="p-8">
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mic className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Voice Mode</h4>
-                    <p className="text-sm text-slate-600">Speak naturally and hear responses. Just like talking to a real tutor.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Text Mode</h4>
-                    <p className="text-sm text-slate-600">Type your questions if you prefer text-based interaction.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Pencil className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Visual Whiteboard</h4>
-                    <p className="text-sm text-slate-600">See equations, graphs, and diagrams as the tutor explains.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Upload className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Homework Upload</h4>
-                    <p className="text-sm text-slate-600">Take a photo of your homework for guided help.</p>
-                  </div>
-                </div>
+            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-5 h-5 text-indigo-600" />
               </div>
+              <div>
+                <h4 className="font-semibold text-slate-900">Text Mode</h4>
+                <p className="text-sm text-slate-600">Type your questions if you prefer text-based interaction.</p>
+              </div>
+            </div>
 
-              <div className="text-center">
-                <Link
-                  href="/tutor"
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  <Play className="w-5 h-5" />
-                  Launch Voice Tutor Demo
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <p className="text-sm text-slate-500 mt-4">
-                  Opens in a new full-screen experience. Microphone access required for voice mode.
-                </p>
+            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Pencil className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-900">Visual Whiteboard</h4>
+                <p className="text-sm text-slate-600">See equations, graphs, and diagrams as the tutor explains.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Upload className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-900">Homework Upload</h4>
+                <p className="text-sm text-slate-600">Take a photo of your homework for guided help.</p>
               </div>
             </div>
           </div>

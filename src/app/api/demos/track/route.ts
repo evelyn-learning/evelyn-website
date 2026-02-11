@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { DemoInteraction } from "@/models";
 import type { IGeoLocation } from "@/models/DemoInteraction";
@@ -86,6 +88,12 @@ function hashIP(ip: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Skip tracking for logged-in admin users
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+      return NextResponse.json({ success: true, skipped: "admin" });
+    }
+
     // Get IP for rate limiting
     const forwarded = request.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
@@ -138,6 +146,15 @@ export async function POST(request: NextRequest) {
 
     // Get geolocation from IP (async, won't block if it fails)
     const location = await getGeoLocation(ip);
+
+    // Filter out internal traffic by city or known IP hash
+    const FILTERED_IP_HASHES = new Set(["87c6f6c5cfef2d0b"]);
+    if (
+      (location?.city === "Brentwood" && location?.region === "CA") ||
+      FILTERED_IP_HASHES.has(hashIP(ip))
+    ) {
+      return NextResponse.json({ success: true, skipped: "filtered-location" });
+    }
 
     // Create interaction record
     const interaction = await DemoInteraction.create({
