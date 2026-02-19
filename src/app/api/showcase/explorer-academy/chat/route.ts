@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { messages } = await request.json();
+    const { messages, grade, studentName } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -68,10 +68,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build dynamic system prompt with grade/name context if provided
+    let systemPrompt = SYSTEM_PROMPT;
+    if (grade || studentName) {
+      const name = studentName || 'student';
+      const gradeStr = grade ? `Grade ${grade}` : 'their grade level';
+      systemPrompt = `You are the Explorer Academy Tutor for ${name}, a ${gradeStr} student at Explorer Academy in Delta, BC, Canada. Use age-appropriate language for ${gradeStr} students.\n\n${SYSTEM_PROMPT}`;
+    }
+
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 500,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,

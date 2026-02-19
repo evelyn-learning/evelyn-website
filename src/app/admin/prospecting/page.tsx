@@ -17,7 +17,6 @@ import {
   Clock,
   Loader2,
   ExternalLink,
-  Trash2,
   Eye,
   AlertCircle,
   Sparkles,
@@ -530,7 +529,7 @@ export default function ProspectingPage() {
         throw new Error(result.error || 'Showcase generation failed');
       }
 
-      const showcaseResult = await showcaseRes.json();
+      await showcaseRes.json();
       setMessage({
         type: 'success',
         text: `Re-scraped and regenerated showcase! Quality: ${scrapeResult.scrapedData?.scrapeQuality}, Images: ${scrapeResult.stats?.imagesFound || 0}, Team: ${scrapeResult.stats?.teamMembersFound || 0}`,

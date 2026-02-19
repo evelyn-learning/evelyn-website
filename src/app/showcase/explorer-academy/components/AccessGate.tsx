@@ -39,7 +39,7 @@ export default function AccessGate({ onAccessGranted }: AccessGateProps) {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            Explorer Academy <span className="text-yellow-400">&times;</span> Evelyn Learning
+            Explorer Academy
           </h1>
           <p className="text-purple-200 text-sm">
             Welcome to your personalized platform preview.
@@ -91,7 +91,7 @@ export default function AccessGate({ onAccessGranted }: AccessGateProps) {
         </form>
 
         <p className="text-center text-purple-400 text-xs mt-6">
-          Powered by Evelyn Learning
+          Explorer Academy Learning Platform
         </p>
       </div>
     </div>
