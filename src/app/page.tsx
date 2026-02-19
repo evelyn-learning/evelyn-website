@@ -510,28 +510,28 @@ function SolutionsSection() {
       title: 'Test Prep Companies',
       description: 'Scale your test prep business with AI-generated practice tests, automated scoring, and 24/7 student support.',
       icon: '📚',
-      href: '/solutions/test-prep',
+      href: '/contact?solution=test-prep',
       features: ['Unlimited practice tests', 'Essay scoring', 'Score prediction']
     },
     {
       title: 'Tutoring Businesses',
       description: "Extend your tutors' capacity with AI co-pilots and keep students engaged between sessions.",
       icon: '👩‍🏫',
-      href: '/solutions/tutoring',
+      href: '/contact?solution=tutoring',
       features: ['Tutor co-pilot', 'Homework bot', 'Session summaries']
     },
     {
       title: 'Publishers',
       description: 'Transform static content into interactive AI-powered learning experiences at scale.',
       icon: '📖',
-      href: '/solutions/publishers',
+      href: '/contact?solution=publishers',
       features: ['Content AI', 'Assessment generation', 'Adaptive learning']
     },
     {
       title: 'EdTech Platforms',
       description: 'Add AI capabilities to your platform with our white-label products and APIs.',
       icon: '💻',
-      href: '/solutions/edtech',
+      href: '/contact?solution=edtech',
       features: ['API access', 'White-label', 'Custom integration']
     }
   ];
