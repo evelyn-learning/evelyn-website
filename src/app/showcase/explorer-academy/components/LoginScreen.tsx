@@ -28,11 +28,21 @@ function AccountCard({ account }: { account: DemoAccount }) {
         <p className="font-semibold text-white group-hover:text-yellow-300 transition-colors truncate">
           {account.name}
         </p>
-        <span
-          className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-1 ${badge.classes}`}
-        >
-          {badge.label}
-        </span>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span
+            className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${badge.classes}`}
+          >
+            {badge.label}
+          </span>
+          {account.isAdaptive && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              Adaptive AI
+            </span>
+          )}
+        </div>
       </div>
       <svg
         className="w-5 h-5 text-purple-300 group-hover:text-yellow-400 transition-colors flex-shrink-0"

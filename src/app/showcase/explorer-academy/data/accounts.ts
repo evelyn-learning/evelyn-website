@@ -11,6 +11,15 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     color: 'bg-purple-500',
   },
   {
+    id: 'student-adaptive-3',
+    name: 'Alex Rivera',
+    role: 'student',
+    grade: 3,
+    avatar: 'AR',
+    color: 'bg-amber-500',
+    isAdaptive: true,
+  },
+  {
     id: 'parent-aanya-3',
     name: 'Priya Sharma',
     role: 'parent',

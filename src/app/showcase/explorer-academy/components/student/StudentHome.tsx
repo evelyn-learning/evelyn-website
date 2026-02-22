@@ -3,10 +3,11 @@
 import React from 'react';
 import { useExplorerStore } from '../../store';
 import { getDefaultLessonsForGrade, getLessonById } from '../../data/lessons';
+import { getAdaptiveLessonsForGrade } from '../../data/adaptive-lessons';
 import { getProgressForStudent } from '../../data/mock-progress';
 
 export default function StudentHome() {
-  const { currentUser, startLesson, navigate, completedLessons, assignedLessons, assignedTests, setPreSelectedTestTopic } = useExplorerStore();
+  const { currentUser, startLesson, startAdaptiveLesson, navigate, completedLessons, assignedLessons, assignedTests, setPreSelectedTestTopic } = useExplorerStore();
   if (!currentUser) return null;
 
   const defaultLessons = getDefaultLessonsForGrade(currentUser.grade);
@@ -223,6 +224,61 @@ export default function StudentHome() {
           </div>
         </div>
       )}
+
+      {/* Adaptive AI Lessons (only for adaptive accounts) */}
+      {currentUser.isAdaptive && (() => {
+        const adaptiveLessons = getAdaptiveLessonsForGrade(currentUser.grade);
+        if (adaptiveLessons.length === 0) return null;
+        return (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">AI Adaptive Lessons</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {adaptiveLessons.map((lesson) => {
+                const done = completedLessons.includes(lesson.id);
+                return (
+                  <button
+                    key={lesson.id}
+                    onClick={() => startAdaptiveLesson(lesson.id)}
+                    className={`text-left p-5 rounded-xl border-2 transition-all group ${
+                      done
+                        ? 'border-green-200 bg-green-50/50 hover:border-green-300'
+                        : 'border-amber-200 bg-amber-50/30 hover:border-amber-300 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{lesson.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-gray-800 group-hover:text-purple-700 transition-colors">
+                            {lesson.title}
+                          </p>
+                          {done && (
+                            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">{lesson.description}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
+                            {lesson.subject}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                            </svg>
+                            AI Adaptive
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Quick Tools */}
       <div>

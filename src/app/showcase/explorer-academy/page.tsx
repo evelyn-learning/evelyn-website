@@ -10,6 +10,7 @@ import { useExplorerStore } from './store';
 // Lazy-loaded role screens
 const StudentHome = lazy(() => import('./components/student/StudentHome'));
 const LessonPlayer = lazy(() => import('./components/student/LessonPlayer'));
+const AdaptiveLessonPlayer = lazy(() => import('./components/student/AdaptiveLessonPlayer'));
 const MathHelper = lazy(() => import('./components/student/MathHelper'));
 const PracticeTest = lazy(() => import('./components/student/PracticeTest'));
 const HomeworkChat = lazy(() => import('./components/student/HomeworkChat'));
@@ -31,6 +32,7 @@ function ScreenRouter() {
     <Suspense fallback={<ScreenLoader />}>
       {screen === 'student-home' && <StudentHome />}
       {screen === 'lesson' && <LessonPlayer />}
+      {screen === 'adaptive-lesson' && <AdaptiveLessonPlayer />}
       {screen === 'math-helper' && <MathHelper />}
       {screen === 'practice-test' && <PracticeTest />}
       {screen === 'homework-chat' && <HomeworkChat />}

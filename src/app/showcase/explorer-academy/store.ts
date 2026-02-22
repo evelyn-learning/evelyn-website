@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { LessonSegment } from './data/lessons';
 
 export type Role = 'student' | 'parent' | 'instructor';
 export type Grade = 3 | 6;
@@ -6,6 +7,7 @@ export type Screen =
   | 'login'
   | 'student-home'
   | 'lesson'
+  | 'adaptive-lesson'
   | 'math-helper'
   | 'practice-test'
   | 'homework-chat'
@@ -21,6 +23,20 @@ export interface DemoAccount {
   color: string; // tailwind bg color
   /** For parents: which student account they're linked to */
   childId?: string;
+  /** Whether this account uses AI-adaptive lessons */
+  isAdaptive?: boolean;
+}
+
+export type AdaptivePhase = 'INTRO' | 'DIAGNOSTIC' | 'TEACH' | 'ASSESS' | 'SUMMARY';
+
+export interface AdaptiveHistoryEntry {
+  phase: AdaptivePhase;
+  segmentType: string;
+  objectiveId?: string;
+  question?: string;
+  studentAnswer?: string;
+  correctAnswer?: string;
+  isCorrect?: boolean;
 }
 
 interface ExplorerStore {
@@ -34,6 +50,14 @@ interface ExplorerStore {
   assignedTests: Record<string, string[]>;     // studentName → testTopic[]
   preSelectedTestTopic: string | null;
 
+  // Adaptive lesson state
+  adaptivePhase: AdaptivePhase;
+  adaptiveSegments: LessonSegment[];
+  adaptiveSegmentIndex: number;
+  adaptiveHistory: AdaptiveHistoryEntry[];
+  adaptiveVideosUsed: string[];
+  adaptiveLessonId: string | null;
+
   login: (account: DemoAccount) => void;
   logout: () => void;
   navigate: (screen: Screen) => void;
@@ -45,6 +69,16 @@ interface ExplorerStore {
   assignLesson: (studentName: string, lessonId: string) => void;
   assignTest: (studentName: string, topic: string) => void;
   setPreSelectedTestTopic: (topic: string | null) => void;
+
+  // Adaptive actions
+  startAdaptiveLesson: (lessonId: string) => void;
+  setAdaptivePhase: (phase: AdaptivePhase) => void;
+  appendAdaptiveSegments: (segments: LessonSegment[]) => void;
+  advanceAdaptiveSegment: () => void;
+  setAdaptiveSegmentIndex: (index: number) => void;
+  addAdaptiveHistory: (entry: AdaptiveHistoryEntry) => void;
+  addAdaptiveVideoUsed: (youtubeId: string) => void;
+  completeAdaptiveLesson: () => void;
 }
 
 export const useExplorerStore = create<ExplorerStore>((set) => ({
@@ -57,6 +91,14 @@ export const useExplorerStore = create<ExplorerStore>((set) => ({
   assignedLessons: {},
   assignedTests: {},
   preSelectedTestTopic: null,
+
+  // Adaptive defaults
+  adaptivePhase: 'INTRO',
+  adaptiveSegments: [],
+  adaptiveSegmentIndex: 0,
+  adaptiveHistory: [],
+  adaptiveVideosUsed: [],
+  adaptiveLessonId: null,
 
   login: (account) =>
     set({
@@ -75,6 +117,12 @@ export const useExplorerStore = create<ExplorerStore>((set) => ({
       screen: 'login',
       activeLessonId: null,
       lessonSegmentIndex: 0,
+      adaptivePhase: 'INTRO',
+      adaptiveSegments: [],
+      adaptiveSegmentIndex: 0,
+      adaptiveHistory: [],
+      adaptiveVideosUsed: [],
+      adaptiveLessonId: null,
     }),
 
   navigate: (screen) => set({ screen }),
@@ -127,4 +175,54 @@ export const useExplorerStore = create<ExplorerStore>((set) => ({
     }),
 
   setPreSelectedTestTopic: (topic) => set({ preSelectedTestTopic: topic }),
+
+  // Adaptive actions
+  startAdaptiveLesson: (lessonId) =>
+    set({
+      adaptiveLessonId: lessonId,
+      adaptivePhase: 'INTRO',
+      adaptiveSegments: [],
+      adaptiveSegmentIndex: 0,
+      adaptiveHistory: [],
+      adaptiveVideosUsed: [],
+      screen: 'adaptive-lesson',
+    }),
+
+  setAdaptivePhase: (phase) => set({ adaptivePhase: phase }),
+
+  appendAdaptiveSegments: (segments) =>
+    set((state) => ({
+      adaptiveSegments: [...state.adaptiveSegments, ...segments],
+    })),
+
+  advanceAdaptiveSegment: () =>
+    set((state) => ({ adaptiveSegmentIndex: state.adaptiveSegmentIndex + 1 })),
+
+  setAdaptiveSegmentIndex: (index) => set({ adaptiveSegmentIndex: index }),
+
+  addAdaptiveHistory: (entry) =>
+    set((state) => ({
+      adaptiveHistory: [...state.adaptiveHistory, entry],
+    })),
+
+  addAdaptiveVideoUsed: (youtubeId) =>
+    set((state) => ({
+      adaptiveVideosUsed: state.adaptiveVideosUsed.includes(youtubeId)
+        ? state.adaptiveVideosUsed
+        : [...state.adaptiveVideosUsed, youtubeId],
+    })),
+
+  completeAdaptiveLesson: () =>
+    set((state) => ({
+      completedLessons: state.adaptiveLessonId && !state.completedLessons.includes(state.adaptiveLessonId)
+        ? [...state.completedLessons, state.adaptiveLessonId]
+        : state.completedLessons,
+      screen: 'student-home',
+      adaptiveLessonId: null,
+      adaptivePhase: 'INTRO',
+      adaptiveSegments: [],
+      adaptiveSegmentIndex: 0,
+      adaptiveHistory: [],
+      adaptiveVideosUsed: [],
+    })),
 }));

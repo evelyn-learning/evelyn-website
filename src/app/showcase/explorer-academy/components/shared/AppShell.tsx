@@ -6,6 +6,7 @@ import { useExplorerStore } from '../../store';
 const SCREEN_LABELS: Record<string, string> = {
   'student-home': 'Home',
   lesson: 'Lesson',
+  'adaptive-lesson': 'Adaptive Lesson',
   'math-helper': 'Math Helper',
   'practice-test': 'Practice Test',
   'homework-chat': 'Homework Chat',

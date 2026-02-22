@@ -21,6 +21,7 @@ export interface ComprehensionSegment {
   options: string[];
   correctIndex: number;
   explanation: string;
+  objectiveId?: string;
 }
 
 export interface PracticeSegment {
@@ -29,6 +30,7 @@ export interface PracticeSegment {
   options: string[];
   correctIndex: number;
   explanation: string;
+  objectiveId?: string;
 }
 
 export interface SummarySegment {
