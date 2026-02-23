@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { checkDailyLimit } from '@/lib/utils/rate-limit';
 
 // ============================================================================
 // CONFIGURATION
@@ -77,6 +78,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Too many questions. Please wait a moment.' },
         { status: 429, headers: { 'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString() } }
+      );
+    }
+
+    const daily = checkDailyLimit(ip, 'showcase-light', 100);
+    if (!daily.allowed) {
+      return NextResponse.json(
+        { error: 'Daily usage limit reached. Please try again tomorrow.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((daily.resetsAt - Date.now()) / 1000)) } }
       );
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { checkDailyLimit } from '@/lib/utils/rate-limit';
 
 // ============================================================================
 // CONFIGURATION
@@ -67,6 +68,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Too many image requests. Please wait.' },
         { status: 429 }
+      );
+    }
+
+    const daily = checkDailyLimit(ip, 'showcase-media', 20);
+    if (!daily.allowed) {
+      return NextResponse.json(
+        { error: 'Daily usage limit reached. Please try again tomorrow.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((daily.resetsAt - Date.now()) / 1000)) } }
       );
     }
 

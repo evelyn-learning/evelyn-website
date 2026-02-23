@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { checkDailyLimit } from '@/lib/utils/rate-limit';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -49,6 +50,17 @@ export async function POST(request: NextRequest) {
   if (!checkRateLimit(ip)) {
     return new Response(
       `data: ${JSON.stringify({ type: 'error', content: 'Too many requests. Please wait a moment.' })}\n\n`,
+      {
+        status: 429,
+        headers: { 'Content-Type': 'text/event-stream' },
+      }
+    );
+  }
+
+  const daily = checkDailyLimit(ip, 'showcase-light', 100);
+  if (!daily.allowed) {
+    return new Response(
+      `data: ${JSON.stringify({ type: 'error', content: 'Daily usage limit reached. Please try again tomorrow.' })}\n\n`,
       {
         status: 429,
         headers: { 'Content-Type': 'text/event-stream' },

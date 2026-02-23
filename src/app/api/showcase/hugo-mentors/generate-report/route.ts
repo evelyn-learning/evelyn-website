@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { checkBurstLimit, checkDailyLimit, getIPFromRequest } from '@/lib/utils/rate-limit';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_SHOWCASE_API_KEY || process.env.OPENAI_API_KEY,
@@ -38,6 +39,23 @@ The "sections" key must contain an array of 7 objects, each with "title" and "co
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getIPFromRequest(request);
+    const burst = checkBurstLimit(`hugo_mentors_report:${ip}`, 5, 60_000);
+    if (!burst.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': Math.ceil(burst.resetIn / 1000).toString() } }
+      );
+    }
+    const daily = checkDailyLimit(ip, 'showcase-heavy', 30);
+    if (!daily.allowed) {
+      return NextResponse.json(
+        { error: 'Daily usage limit reached. Please try again tomorrow.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((daily.resetsAt - Date.now()) / 1000)) } }
+      );
+    }
+
     const body = await request.json();
     const { studentName, school, grade, surveyData, systemPrompt } = body;
 
