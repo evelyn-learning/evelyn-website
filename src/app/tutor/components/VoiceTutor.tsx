@@ -15,6 +15,7 @@ import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import type { VoiceId } from '@/lib/tutor/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { InteractionType } from '@/hooks/useDemoTracking';
 
 export type VoiceTutorState =
   | 'idle'
@@ -44,6 +45,7 @@ interface VoiceTutorProps {
   onStateChange?: (state: VoiceTutorState) => void;
   onError?: (error: Error) => void;
   onEndSession?: () => void;
+  onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
 }
 
 export function VoiceTutor({
@@ -61,6 +63,7 @@ export function VoiceTutor({
   onStateChange,
   onError,
   onEndSession,
+  onTrackInteraction,
 }: VoiceTutorProps) {
   const [state, setState] = useState<VoiceTutorState>('idle');
   const [isMuted, setIsMuted] = useState(false);
@@ -154,6 +157,7 @@ export function VoiceTutor({
     };
     transcriptEntriesRef.current = [...transcriptEntriesRef.current, studentEntry];
     onTranscriptUpdate(transcriptEntriesRef.current);
+    onTrackInteraction?.('message', message, undefined, 'student');
 
     try {
       // Send to tutor API
@@ -203,10 +207,14 @@ export function VoiceTutor({
       };
       transcriptEntriesRef.current = [...transcriptEntriesRef.current, tutorEntry];
       onTranscriptUpdate(transcriptEntriesRef.current);
+      onTrackInteraction?.('message', data.text, data.pedagogicalIntent ? { pedagogicalIntent: data.pedagogicalIntent } : undefined, 'tutor');
 
       // Send whiteboard commands
       if (data.whiteboardCommands?.length > 0) {
         onWhiteboardCommand(data.whiteboardCommands);
+        data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
+          onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
+        });
       }
 
       // Speak the response
@@ -233,6 +241,7 @@ export function VoiceTutor({
     onWhiteboardCommand,
     onConversationHistoryUpdate,
     onError,
+    onTrackInteraction,
     updateState,
   ]);
 

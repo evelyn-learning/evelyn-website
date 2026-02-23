@@ -62,7 +62,7 @@ interface ConversationMessage {
 
 export default function TutorPage() {
   // Demo tracking
-  const { onView, onTry, onComplete } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
+  const { onView, onTry, onComplete, trackInteraction } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
 
   // Track view on mount
   useEffect(() => {
@@ -125,6 +125,7 @@ export default function TutorPage() {
         text: message,
       };
       setTranscript((prev) => [...prev, userEntry]);
+      trackInteraction('message', message, undefined, 'student');
 
       try {
         const response = await fetch('/api/tutor/chat', {
@@ -168,6 +169,7 @@ export default function TutorPage() {
           pedagogicalIntent: data.pedagogicalIntent,
         };
         setTranscript((prev) => [...prev, tutorEntry]);
+        trackInteraction('message', data.text, data.pedagogicalIntent ? { pedagogicalIntent: data.pedagogicalIntent } : undefined, 'tutor');
 
         // Update conversation history for context
         setConversationHistory((prev) => [
@@ -179,6 +181,9 @@ export default function TutorPage() {
         // Add whiteboard commands
         if (data.whiteboardCommands?.length > 0) {
           setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
+          data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
+            trackInteraction('tool_use', 'whiteboard', { command: cmd.action });
+          });
         }
       } catch (err) {
         console.error('Error sending message:', err);
@@ -187,7 +192,7 @@ export default function TutorPage() {
         setIsProcessing(false);
       }
     },
-    [conversationHistory, selectedTopic, studentName, sessionGoal, isProcessing]
+    [conversationHistory, selectedTopic, studentName, sessionGoal, isProcessing, trackInteraction]
   );
 
   // Handle form submit
@@ -208,6 +213,7 @@ export default function TutorPage() {
 
     // Track demo try
     onTry();
+    trackInteraction('navigation', 'session_start', { topic: selectedTopic.topic, goal: sessionGoal, inputMode });
 
     setStage('session');
     setTranscript([]);
@@ -273,7 +279,7 @@ export default function TutorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedTopic, studentName, sessionGoal, inputMode, onTry]);
+  }, [selectedTopic, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
 
   // Handle transcript updates from VoiceTutor
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
@@ -690,6 +696,7 @@ export default function TutorPage() {
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
                   onError={(err) => setError(err.message)}
                   onEndSession={handleEndSession}
+                  onTrackInteraction={trackInteraction}
                 />
               ) : (
                 <VoiceTutor
@@ -706,6 +713,7 @@ export default function TutorPage() {
                   onConversationHistoryUpdate={handleVoiceConversationHistoryUpdate}
                   onError={(err) => setError(err.message)}
                   onEndSession={handleEndSession}
+                  onTrackInteraction={trackInteraction}
                 />
               )
             ) : inputMode === 'text' ? (

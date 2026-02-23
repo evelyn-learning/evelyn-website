@@ -74,7 +74,7 @@ export function DemoTracker({ productId, productTitle, children }: DemoTrackerPr
  * Hook version for more control over tracking in custom demo components
  */
 export function useDemoTracker(productId: string, productTitle: string) {
-  const { trackView, trackTry, trackComplete } = useDemoTracking({ productId, productTitle });
+  const { trackView, trackTry, trackComplete, trackInteraction } = useDemoTracking({ productId, productTitle });
   const hasTrackedView = useRef(false);
   const hasTrackedTry = useRef(false);
   const hasTrackedComplete = useRef(false);
@@ -100,5 +100,5 @@ export function useDemoTracker(productId: string, productTitle: string) {
     }
   }, [trackComplete]);
 
-  return { onView, onTry, onComplete };
+  return { onView, onTry, onComplete, trackInteraction };
 }

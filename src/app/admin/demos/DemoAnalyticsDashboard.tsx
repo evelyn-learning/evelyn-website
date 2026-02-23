@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Eye,
   MousePointerClick,
@@ -14,6 +14,11 @@ import {
   RefreshCw,
   Globe,
   MapPin,
+  MessageSquare,
+  ChevronDown,
+  ChevronRight,
+  Wrench,
+  Navigation,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils/timeAgo";
 
@@ -472,6 +477,374 @@ export function DemoAnalyticsDashboard() {
           </div>
         </div>
       )}
+
+      {/* Session Explorer */}
+      <SessionExplorer />
+    </div>
+  );
+}
+
+// --- Session Explorer ---
+
+interface SessionProduct {
+  productId: string;
+  productTitle: string;
+  sessionCount: number;
+}
+
+interface SessionSummary {
+  _id: string;
+  sessionId: string;
+  productId: string;
+  productTitle: string;
+  startedAt: string;
+  endedAt?: string;
+  duration?: number;
+  summary: {
+    totalInteractions: number;
+    messageCount: number;
+    toolsUsed: string[];
+    lastActivity: string;
+  };
+  deviceType: string;
+  location?: {
+    country?: string;
+    countryCode?: string;
+    city?: string;
+  };
+}
+
+interface SessionInteraction {
+  type: "message" | "click" | "tool_use" | "navigation" | "homework_upload";
+  role?: "student" | "tutor";
+  content?: string;
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+}
+
+interface SessionDetail {
+  session: SessionSummary & { interactions: SessionInteraction[] };
+  events: Array<{
+    _id: string;
+    eventType: string;
+    timestamp: string;
+  }>;
+}
+
+function formatDuration(seconds?: number): string {
+  if (!seconds) return "-";
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+}
+
+function SessionExplorer() {
+  const [products, setProducts] = useState<SessionProduct[]>([]);
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [expandedSession, setExpandedSession] = useState<string | null>(null);
+  const [sessionDetail, setSessionDetail] = useState<SessionDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const fetchSessions = useCallback(async (pageNum = 1) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ days: "30", page: String(pageNum), limit: "20" });
+      if (selectedProduct) params.set("productId", selectedProduct);
+
+      const response = await fetch(`/api/admin/demos/sessions?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch sessions");
+      const result = await response.json();
+
+      setSessions(result.sessions);
+      setTotal(result.total);
+      setPage(result.page);
+      setTotalPages(result.totalPages);
+      setProducts(result.products);
+      setLoaded(true);
+    } catch {
+      // Silently handle
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedProduct]);
+
+  const fetchSessionDetail = useCallback(async (sessionId: string) => {
+    if (expandedSession === sessionId) {
+      setExpandedSession(null);
+      setSessionDetail(null);
+      return;
+    }
+
+    setExpandedSession(sessionId);
+    setDetailLoading(true);
+    try {
+      const response = await fetch(`/api/admin/demos/sessions?sessionId=${sessionId}`);
+      if (!response.ok) throw new Error("Failed to fetch session detail");
+      const result = await response.json();
+      setSessionDetail(result);
+    } catch {
+      setSessionDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, [expandedSession]);
+
+  return (
+    <div className="rounded-xl bg-white p-6 shadow">
+      <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <MessageSquare className="h-5 w-5 text-primary-600" />
+        Session Explorer
+      </h2>
+
+      {/* Controls */}
+      <div className="flex items-center gap-3 mb-4">
+        <select
+          value={selectedProduct}
+          onChange={(e) => setSelectedProduct(e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
+        >
+          <option value="">All Products</option>
+          {products.map((p) => (
+            <option key={p.productId} value={p.productId}>
+              {p.productTitle} ({p.sessionCount})
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => fetchSessions(1)}
+          disabled={loading}
+          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-1.5 text-sm text-white hover:bg-primary-700 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {loaded ? "Refresh" : "Load Sessions"}
+        </button>
+        {loaded && (
+          <span className="text-sm text-gray-500">{total} sessions found</span>
+        )}
+      </div>
+
+      {/* Session table */}
+      {loaded && sessions.length > 0 && (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="py-3 text-left font-medium text-gray-500 w-8"></th>
+                  <th className="py-3 text-left font-medium text-gray-500">Time</th>
+                  <th className="py-3 text-left font-medium text-gray-500">Product</th>
+                  <th className="py-3 text-right font-medium text-gray-500">Duration</th>
+                  <th className="py-3 text-right font-medium text-gray-500">Messages</th>
+                  <th className="py-3 text-right font-medium text-gray-500">Interactions</th>
+                  <th className="py-3 text-left font-medium text-gray-500">Location</th>
+                  <th className="py-3 text-left font-medium text-gray-500">Device</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sessions.map((s) => (
+                  <SessionRow
+                    key={s._id}
+                    session={s}
+                    isExpanded={expandedSession === s.sessionId}
+                    detail={expandedSession === s.sessionId ? sessionDetail : null}
+                    detailLoading={expandedSession === s.sessionId && detailLoading}
+                    onToggle={() => fetchSessionDetail(s.sessionId)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => fetchSessions(page - 1)}
+                disabled={page <= 1 || loading}
+                className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-500">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => fetchSessions(page + 1)}
+                disabled={page >= totalPages || loading}
+                className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {loaded && sessions.length === 0 && (
+        <p className="py-8 text-center text-gray-500">No sessions found</p>
+      )}
+    </div>
+  );
+}
+
+function SessionRow({
+  session,
+  isExpanded,
+  detail,
+  detailLoading,
+  onToggle,
+}: {
+  session: SessionSummary;
+  isExpanded: boolean;
+  detail: SessionDetail | null;
+  detailLoading: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <tr
+        className="hover:bg-gray-50 cursor-pointer"
+        onClick={onToggle}
+      >
+        <td className="py-3">
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+          )}
+        </td>
+        <td className="py-3 text-gray-700 whitespace-nowrap">
+          {timeAgo(session.startedAt)}
+        </td>
+        <td className="py-3">
+          <p className="font-medium text-gray-900">{session.productTitle}</p>
+        </td>
+        <td className="py-3 text-right text-gray-700">
+          {formatDuration(session.duration)}
+        </td>
+        <td className="py-3 text-right text-gray-700">
+          {session.summary.messageCount}
+        </td>
+        <td className="py-3 text-right text-gray-700">
+          {session.summary.totalInteractions}
+        </td>
+        <td className="py-3 text-gray-700">
+          {session.location?.city && (
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {session.location.city}
+              {session.location.countryCode && ` ${getCountryFlag(session.location.countryCode)}`}
+            </span>
+          )}
+        </td>
+        <td className="py-3 text-gray-700 capitalize">{session.deviceType}</td>
+      </tr>
+
+      {/* Expanded detail row */}
+      {isExpanded && (
+        <tr>
+          <td colSpan={8} className="bg-gray-50 px-6 py-4">
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
+              </div>
+            ) : detail?.session?.interactions ? (
+              <InteractionTimeline interactions={detail.session.interactions} />
+            ) : (
+              <p className="text-center text-gray-500 py-4">No interaction data</p>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function InteractionTimeline({ interactions }: { interactions: SessionInteraction[] }) {
+  if (interactions.length === 0) {
+    return <p className="text-center text-gray-500 py-4">No interactions recorded</p>;
+  }
+
+  return (
+    <div className="max-h-96 overflow-y-auto space-y-2">
+      {interactions.map((interaction, i) => {
+        if (interaction.type === "message") {
+          const isStudent = interaction.role === "student";
+          return (
+            <div
+              key={i}
+              className={`flex ${isStudent ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${
+                  isStudent
+                    ? "bg-blue-500 text-white"
+                    : "bg-white border border-gray-200 text-gray-800"
+                }`}
+              >
+                <p className="whitespace-pre-wrap break-words">{interaction.content}</p>
+                <p className={`text-xs mt-1 ${isStudent ? "text-blue-100" : "text-gray-400"}`}>
+                  {new Date(interaction.timestamp).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        if (interaction.type === "tool_use") {
+          return (
+            <div key={i} className="flex justify-center">
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+                <Wrench className="h-3 w-3" />
+                {interaction.content}
+                {interaction.metadata && (
+                  <span className="text-purple-500">
+                    ({Object.values(interaction.metadata).join(", ")})
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        }
+
+        if (interaction.type === "navigation") {
+          return (
+            <div key={i} className="flex justify-center">
+              <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                <Navigation className="h-3 w-3" />
+                {interaction.content}
+                {interaction.metadata && (
+                  <span>
+                    {" "}
+                    - {Object.entries(interaction.metadata)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join(", ")}
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        }
+
+        // homework_upload, click, etc
+        return (
+          <div key={i} className="flex justify-center">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+              {interaction.type}: {interaction.content || ""}
+              <span className="text-gray-400">
+                {new Date(interaction.timestamp).toLocaleTimeString()}
+              </span>
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

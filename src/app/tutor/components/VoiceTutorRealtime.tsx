@@ -9,12 +9,13 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState } from '../hooks/useOpenAIRealtime';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { InteractionType } from '@/hooks/useDemoTracking';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -28,6 +29,7 @@ interface VoiceTutorRealtimeProps {
   onStateChange?: (state: RealtimeState) => void;
   onError?: (error: Error) => void;
   onEndSession?: () => void;
+  onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -50,11 +52,13 @@ export function VoiceTutorRealtime({
   onStateChange,
   onError,
   onEndSession,
+  onTrackInteraction,
 }: VoiceTutorRealtimeProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
@@ -74,6 +78,7 @@ export function VoiceTutorRealtime({
         };
         transcriptRef.current = [...transcriptRef.current, entry];
         onTranscriptUpdate(transcriptRef.current);
+        onTrackInteraction?.('message', text.trim(), undefined, 'student');
         currentUserTextRef.current = '';
       }
     } else {
@@ -91,15 +96,19 @@ export function VoiceTutorRealtime({
         };
         transcriptRef.current = [...transcriptRef.current, entry];
         onTranscriptUpdate(transcriptRef.current);
+        onTrackInteraction?.('message', cleanText, undefined, 'tutor');
         currentAssistantTextRef.current = '';
       }
     }
-  }, [onTranscriptUpdate]);
+  }, [onTranscriptUpdate, onTrackInteraction]);
 
   // Handle whiteboard commands
   const handleWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
     onWhiteboardCommand(commands);
-  }, [onWhiteboardCommand]);
+    commands.forEach((cmd) => {
+      onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
+    });
+  }, [onWhiteboardCommand, onTrackInteraction]);
 
   // Handle errors
   const handleError = useCallback((error: Error) => {
@@ -149,25 +158,32 @@ export function VoiceTutorRealtime({
 - React naturally to student responses - you'll hear them in real-time.
 - If the student interrupts, acknowledge it and adjust your response.
 
-## Visual Tools
-You have access to whiteboard tools. USE THEM whenever helpful:
-- show_equation: Display equations/formulas (use LaTeX format like "v = v_0 + at")
-- show_graph: Display graphs (position-time, velocity-time, etc.)
-- show_diagram: Display diagrams with SPECIFIC parameters:
-  - For geometry/trigonometry problems: use type "triangle" with height, base, and/or angle parameters
-  - For vectors: use type "vectors" with an array of vectors (each with magnitude, direction in degrees, label)
-  - For projectile motion: use type "projectile" with initial_velocity and launch_angle
-  - For forces: use type "free-body" with forces array
+## Visual Tools — MANDATORY USAGE
 
-IMPORTANT: When drawing diagrams, provide ACTUAL VALUES from the problem:
-- If problem mentions "3400 meters altitude", set height: 3400
-- If problem mentions "30 degrees angle", set angle: 30
-- Always include a descriptive title matching the problem
+CRITICAL: You MUST use whiteboard tools proactively. Students learn visually.
 
-Example for aircraft altitude problem:
-show_diagram(diagram_type="triangle", title="Aircraft Position", height=3400, angle=30, description="Ground observation point viewing aircraft")
+### show_equation — USE EVERY TIME you mention a formula
+Call show_equation EVERY TIME you mention ANY equation, formula, or mathematical relationship.
+- Say "pressure equals rho g h" → MUST also call show_equation with latex "P = \\\\rho g h"
+- Say "buoyant force equals weight of displaced fluid" → call show_equation with "F_b = \\\\rho_{fluid} \\\\cdot V_{disp} \\\\cdot g"
+- Say "fraction submerged is density ratio" → call show_equation with "\\\\frac{V_{sub}}{V_{total}} = \\\\frac{\\\\rho_{object}}{\\\\rho_{fluid}}"
+- ANY time you reference a formula in speech, you MUST also display it. No exceptions.
 
-When explaining physics concepts, ALWAYS use these tools to show visuals. Don't just talk about it - show it!
+### show_diagram — USE for physical situations
+Choose the RIGHT diagram type for the topic:
+- **Buoyancy, floating, sinking, any force analysis** → type "free-body" with upward buoyant force (green) and downward weight (red)
+- **Comparing velocities, relative motion, vector addition** → type "vectors"
+- **Thrown objects, trajectories** → type "projectile" with initial_velocity and launch_angle
+- **Circular motion** → type "circular-path"
+- **Position changing over time** → type "motion"
+- **Geometry/trig problems** → type "triangle" with height, base, angle
+
+When drawing diagrams, use ACTUAL VALUES from the problem and include a descriptive title.
+
+### show_graph
+Use for position-time, velocity-time, pressure-depth, or other quantitative relationships.
+
+RULE: If you say "let me show you" or describe any equation/diagram, you MUST call the tool. Never describe visuals without showing them.
 
 Start by warmly greeting the student and asking how you can help them today.`;
 
@@ -218,6 +234,18 @@ Start by warmly greeting the student and asking how you can help them today.`;
       realtime.startListening();
     }
   }, [realtime, sessionGoal, topic]);
+
+  // Pause conversation (stop mic + audio, keep connection)
+  const handlePause = useCallback(() => {
+    setIsPaused(true);
+    realtime.pause();
+  }, [realtime]);
+
+  // Resume conversation
+  const handleResume = useCallback(() => {
+    setIsPaused(false);
+    realtime.startListening();
+  }, [realtime]);
 
   // Toggle mute (just controls whether we play audio)
   const toggleMute = useCallback(() => {
@@ -301,7 +329,7 @@ Start by warmly greeting the student and asking how you can help them today.`;
         {realtime.isConnected ? (
           <>
             <Wifi className="w-3 h-3" />
-            OpenAI Realtime
+            Realtime
           </>
         ) : (
           <>
@@ -311,28 +339,61 @@ Start by warmly greeting the student and asking how you can help them today.`;
         )}
       </div>
 
-      {/* Main microphone button */}
-      <button
-        onClick={handleMicClick}
-        disabled={isDisabled}
-        className={`
-          relative w-20 h-20 rounded-full text-white
-          transition-all duration-200 flex items-center justify-center
-          ${stateUI.color}
-          ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
-          ${stateUI.pulse ? 'animate-pulse' : ''}
-        `}
-      >
-        {stateUI.icon}
-      </button>
+      {isPaused ? (
+        <>
+          {/* Paused state */}
+          <button
+            onClick={handleResume}
+            className="w-20 h-20 rounded-full bg-green-500 text-white hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+          >
+            <Play className="w-8 h-8 ml-1" />
+          </button>
 
-      {/* State text */}
-      <div className="text-center">
-        <p className="text-sm font-medium text-gray-700">{stateUI.text}</p>
-        {stateUI.subtext && (
-          <p className="text-xs text-gray-500">{stateUI.subtext}</p>
-        )}
-      </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-amber-600">Session Paused</p>
+            <p className="text-xs text-gray-500">Click play to resume</p>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Main buttons row */}
+          <div className="flex items-center gap-4">
+            {/* Pause button - visible when session is active */}
+            {realtime.isConnected && hasStartedRef.current && (
+              <button
+                onClick={handlePause}
+                className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all duration-200 flex items-center justify-center"
+                title="Pause conversation"
+              >
+                <Pause className="w-6 h-6" />
+              </button>
+            )}
+
+            {/* Main microphone button */}
+            <button
+              onClick={handleMicClick}
+              disabled={isDisabled}
+              className={`
+                relative w-20 h-20 rounded-full text-white
+                transition-all duration-200 flex items-center justify-center
+                ${stateUI.color}
+                ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
+                ${stateUI.pulse ? 'animate-pulse' : ''}
+              `}
+            >
+              {stateUI.icon}
+            </button>
+          </div>
+
+          {/* State text */}
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-700">{stateUI.text}</p>
+            {stateUI.subtext && (
+              <p className="text-xs text-gray-500">{stateUI.subtext}</p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Error message */}
       {errorMessage && (
@@ -344,25 +405,27 @@ Start by warmly greeting the student and asking how you can help them today.`;
       {/* Control buttons */}
       <div className="flex items-center gap-3">
         {/* Mute button */}
-        <button
-          onClick={toggleMute}
-          className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-            ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
-          `}
-        >
-          {isMuted ? (
-            <>
-              <VolumeX className="w-4 h-4" />
-              Unmute tutor
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-4 h-4" />
-              Mute tutor
-            </>
-          )}
-        </button>
+        {!isPaused && (
+          <button
+            onClick={toggleMute}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg text-sm
+              ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+            `}
+          >
+            {isMuted ? (
+              <>
+                <VolumeX className="w-4 h-4" />
+                Unmute tutor
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4" />
+                Mute tutor
+              </>
+            )}
+          </button>
+        )}
 
         {/* End Session button */}
         {onEndSession && (

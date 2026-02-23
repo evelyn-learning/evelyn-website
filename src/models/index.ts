@@ -19,6 +19,12 @@ export {
 } from "./SiteSettings";
 export { DemoInteraction, type IDemoInteraction } from "./DemoInteraction";
 export {
+  DemoSession,
+  type IDemoSession,
+  type IDemoSessionInteraction,
+  type IDemoSessionSummary,
+} from "./DemoSession";
+export {
   ShowcaseSite,
   generateAccessCode,
   verifySiteAccess,
