@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // Types
 interface Category {
@@ -60,6 +61,7 @@ In conclusion social media has good and bad parts but mostly bad. We should limi
 type EssayType = 'sat' | 'act' | 'college';
 
 export default function EssayScoringDemo() {
+  const trackInteraction = useTrackInteraction();
   const [essay, setEssay] = useState('');
   const [essayType, setEssayType] = useState<EssayType>('sat');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -96,6 +98,7 @@ export default function EssayScoringDemo() {
     setIsAnalyzing(true);
     setError(null);
     setFeedback(null);
+    trackInteraction('tool_use', 'analyze_essay', { rubric: essayType, wordCount: essay.split(/\s+/).filter(w => w).length });
 
     const rubric = rubrics[essayType];
 
@@ -165,6 +168,7 @@ ${essay}
         try {
           const parsed = JSON.parse(jsonMatch[0]) as FeedbackData;
           setFeedback(parsed);
+          trackInteraction('tool_use', 'essay_scored', { rubric: essayType, overallScore: parsed.overallScore });
         } catch {
           setError('Could not parse feedback. Please try again.');
         }
@@ -181,6 +185,7 @@ ${essay}
   const loadSample = (quality: 'good' | 'needsWork') => {
     setEssay(SAMPLE_ESSAYS[quality]);
     setFeedback(null);
+    trackInteraction('click', 'load_sample', { quality });
   };
 
   const ScoreBar = ({ score, maxScore, label }: ScoreBarProps) => {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
+import type { InteractionType } from '@/hooks/useDemoTracking';
 import {
   Lock, ArrowRight, AlertCircle, Loader2,
   Sparkles, BookOpen, GraduationCap, Play, Pause,
@@ -763,10 +764,12 @@ function QuestionOverlay({
   lesson,
   currentSlideIndex,
   onClose,
+  onTrackInteraction,
 }: {
   lesson: GeneratedLesson;
   currentSlideIndex: number;
   onClose: () => void;
+  onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
 }) {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -845,6 +848,7 @@ function QuestionOverlay({
     if (!question.trim() || isStreaming) return;
     setIsStreaming(true);
     setAnswer('');
+    onTrackInteraction?.('message', question.trim(), { slideIndex: currentSlideIndex }, 'student');
 
     try {
       const response = await fetch('/api/showcase/lesson-engine/chat', {
@@ -892,12 +896,15 @@ function QuestionOverlay({
 
       setIsStreaming(false);
       // Narrate the answer
-      if (fullAnswer) narrateAnswer(fullAnswer);
+      if (fullAnswer) {
+        onTrackInteraction?.('message', fullAnswer, undefined, 'tutor');
+        narrateAnswer(fullAnswer);
+      }
     } catch {
       setAnswer('Sorry, something went wrong. Please try again.');
       setIsStreaming(false);
     }
-  }, [question, isStreaming, lesson, currentSlideIndex, narrateAnswer]);
+  }, [question, isStreaming, lesson, currentSlideIndex, narrateAnswer, onTrackInteraction]);
 
   const handleClose = useCallback(() => {
     audioRef.current?.pause();
@@ -1080,6 +1087,7 @@ function SlideshowView({
   onQuizAnswer,
   slideImages,
   startSlide = 0,
+  onTrackInteraction,
 }: {
   lesson: GeneratedLesson;
   onEnd: () => void;
@@ -1088,6 +1096,7 @@ function SlideshowView({
   onQuizAnswer: (slideId: number, correct: boolean) => void;
   slideImages: Record<number, string>;
   startSlide?: number;
+  onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(startSlide);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -1448,7 +1457,7 @@ function SlideshowView({
 
       {/* Question overlay */}
       {showQuestion && (
-        <QuestionOverlay lesson={lesson} currentSlideIndex={currentIndex} onClose={() => {
+        <QuestionOverlay lesson={lesson} currentSlideIndex={currentIndex} onTrackInteraction={onTrackInteraction} onClose={() => {
           setShowQuestion(false);
           setIsPlaying(true);
           // Resume narration from the current slide
@@ -1752,6 +1761,15 @@ function MainApp() {
     }
   }, [tracker]);
 
+  // Track view transitions
+  const prevViewRef = useRef<ViewState>(view);
+  useEffect(() => {
+    if (view !== prevViewRef.current) {
+      tracker.trackInteraction('navigation', view, { from: prevViewRef.current });
+      prevViewRef.current = view;
+    }
+  }, [view, tracker]);
+
   // Find images for slides — tries curated library first, falls back to DALL-E if enabled
   // Processes sequentially so each request can exclude already-matched filenames
   const generateSlideImages = useCallback(async (slides: LessonSlide[], gradeLevel: string, subject: string) => {
@@ -1813,6 +1831,7 @@ function MainApp() {
     setImagesLoading(new Set());
 
     tracker.onTry();
+    tracker.trackInteraction('tool_use', 'generate_lesson', { grade: data.grade, duration: data.duration, language: data.language });
 
     try {
       const response = await fetch('/api/showcase/lesson-engine/generate', {
@@ -1858,6 +1877,7 @@ function MainApp() {
       const result = await response.json();
       if (result.success) {
         if (!savedLessonId && result.id) setSavedLessonId(result.id);
+        tracker.trackInteraction('tool_use', savedLessonId ? 'update_lesson' : 'save_lesson');
         alert(savedLessonId ? 'Lesson updated!' : 'Lesson saved!');
       } else {
         alert('Failed to save lesson.');
@@ -1878,6 +1898,7 @@ function MainApp() {
         setStartSlide(0);
         setSavedLessonId(id);
         setView('review');
+        tracker.trackInteraction('tool_use', 'load_lesson');
       } else {
         setError('Failed to load lesson.');
       }
@@ -1917,7 +1938,8 @@ function MainApp() {
 
   const handleQuizAnswer = useCallback((slideId: number, correct: boolean) => {
     setQuizResults((prev) => ({ ...prev, [slideId]: correct }));
-  }, []);
+    tracker.trackInteraction('click', 'quiz_answer', { slideId, correct });
+  }, [tracker]);
 
   const handleNewLesson = useCallback(() => {
     setLesson(null);
@@ -1976,6 +1998,7 @@ function MainApp() {
         onQuizAnswer={handleQuizAnswer}
         slideImages={slideImages}
         startSlide={startSlide}
+        onTrackInteraction={tracker.trackInteraction}
       />
     );
   }

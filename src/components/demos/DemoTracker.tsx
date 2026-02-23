@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useDemoTracking } from "@/hooks/useDemoTracking";
+import { DemoTrackingProvider } from "./DemoTrackingContext";
 
 interface DemoTrackerProps {
   productId: string;
@@ -24,7 +25,7 @@ interface DemoTrackerProps {
  * ```
  */
 export function DemoTracker({ productId, productTitle, children }: DemoTrackerProps) {
-  const { trackView, trackTry } = useDemoTracking({ productId, productTitle });
+  const { trackView, trackTry, trackInteraction } = useDemoTracking({ productId, productTitle });
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
   const hasTrackedTry = useRef(false);
@@ -59,14 +60,16 @@ export function DemoTracker({ productId, productTitle, children }: DemoTrackerPr
   }, [trackTry]);
 
   return (
-    <div
-      ref={containerRef}
-      onClick={handleInteraction}
-      onKeyDown={handleInteraction}
-      onFocus={handleInteraction}
-    >
-      {children}
-    </div>
+    <DemoTrackingProvider trackInteraction={trackInteraction}>
+      <div
+        ref={containerRef}
+        onClick={handleInteraction}
+        onKeyDown={handleInteraction}
+        onFocus={handleInteraction}
+      >
+        {children}
+      </div>
+    </DemoTrackingProvider>
   );
 }
 

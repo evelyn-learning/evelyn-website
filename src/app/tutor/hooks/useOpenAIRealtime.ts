@@ -42,6 +42,7 @@ export interface RealtimeResult {
   startListening: () => void;
   stopListening: () => void;
   interrupt: () => void;
+  pause: () => void;
   sendTextMessage: (text: string) => void;
 }
 
@@ -463,7 +464,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_equation',
-                description: 'Display an equation on the whiteboard. Use this when you want to show a mathematical formula.',
+                description: 'Display an equation on the whiteboard. You MUST call this whenever you mention ANY equation, formula, or mathematical relationship in your speech. Always show equations visually — never just say them without also displaying them.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -491,7 +492,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_diagram',
-                description: 'Display a physics diagram on the whiteboard. Choose the appropriate type and provide specific parameters for the problem.',
+                description: 'Display a physics diagram on the whiteboard. Choose the RIGHT type: "free-body" for ANY force analysis including buoyancy/floating/sinking (buoyant force up, weight down), "vectors" for comparing velocities or vector addition, "projectile" for trajectories, "circular-path" for circular motion, "motion" for position dots over time. For buoyancy/fluid problems, ALWAYS use "free-body" with upward buoyant force and downward weight force.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -544,7 +545,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             tool_choice: 'auto',
             audio: {
               input: {
-                transcription: { model: 'whisper-1' },
+                transcription: { model: 'whisper-1', language: 'en' },
                 turn_detection: {
                   type: 'server_vad',
                   threshold: 0.6,              // Higher threshold = less sensitive to quiet sounds
@@ -712,6 +713,35 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('connected');
   }, [updateState]);
 
+  // Pause - stop mic and audio without disconnecting WebSocket
+  const pause = useCallback(() => {
+    // Stop audio capture without committing buffer
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // Stop playback
+    if (playbackSourceRef.current) {
+      try { playbackSourceRef.current.stop(); } catch {}
+      playbackSourceRef.current = null;
+    }
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+
+    // Cancel any in-progress response and clear uncommitted audio
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+      wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
+    }
+
+    updateState('connected');
+  }, [updateState]);
+
   // Send text message (for testing or fallback)
   const sendTextMessage = useCallback((text: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -754,6 +784,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     startListening,
     stopListening,
     interrupt,
+    pause,
     sendTextMessage,
   };
 }

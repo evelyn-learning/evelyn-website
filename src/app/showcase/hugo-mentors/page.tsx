@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
+import { DemoTrackingProvider, useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 import {
   Lock, Eye, FileText, Presentation, ChevronRight, ChevronLeft, ArrowRight,
   Users, Clock, CheckCircle, AlertCircle, Edit3, Download,
@@ -855,6 +856,7 @@ function exportReportToPDF(student: StudentData, sections: ReportSection[]) {
    LIVE DEMO COMPONENT
    ═══════════════════════════════════════════════ */
 function LiveDemo() {
+  const trackInteraction = useTrackInteraction();
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [students, setStudents] = useState<StudentData[]>(STUDENTS);
   const [viewMode, setViewMode] = useState<'list' | 'survey_form' | 'survey' | 'generating' | 'report'>('list');
@@ -867,6 +869,15 @@ function LiveDemo() {
   const [promptLoaded, setPromptLoaded] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const generationRef = useRef<NodeJS.Timeout | null>(null);
+  const prevViewRef = useRef(viewMode);
+
+  // Track view mode changes
+  useEffect(() => {
+    if (viewMode !== prevViewRef.current) {
+      trackInteraction('navigation', viewMode, { from: prevViewRef.current });
+      prevViewRef.current = viewMode;
+    }
+  }, [viewMode, trackInteraction]);
 
   // Load default prompt
   useEffect(() => {
@@ -932,6 +943,7 @@ function LiveDemo() {
         s.id === student.id ? { ...s, status: 'generated' as const, report: sections } : s
       ));
       setSelectedStudent(prev => prev ? { ...prev, status: 'generated', report: sections } : null);
+      trackInteraction('tool_use', 'generate_report', { studentName: student.name, sectionCount: sections.length });
     } catch (err) {
       clearInterval(progressInterval);
       generationRef.current = null;
@@ -948,6 +960,7 @@ function LiveDemo() {
     if (selectedStudent) {
       setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, status: 'approved' as const } : s));
       setSelectedStudent(prev => prev ? { ...prev, status: 'approved' } : null);
+      trackInteraction('tool_use', 'approve_report', { studentName: selectedStudent.name });
     }
   };
 
@@ -959,6 +972,7 @@ function LiveDemo() {
     });
     setSelectedStudent(newStudent);
     setViewMode('survey');
+    trackInteraction('tool_use', 'submit_survey', { studentName: newStudent.name, grade: newStudent.grade });
   };
 
   const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -1249,7 +1263,7 @@ function LiveDemo() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => exportReportToPDF(selectedStudent, reportSections)}
+              <button onClick={() => { exportReportToPDF(selectedStudent, reportSections); trackInteraction('tool_use', 'export_pdf', { studentName: selectedStudent.name }); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
                 style={{ borderColor: HUGO.border, color: HUGO.textSecondary }}>
                 <FileDown className="w-4 h-4" /> Export PDF
@@ -1500,11 +1514,12 @@ function CaseStudiesPresentation() {
    ═══════════════════════════════════════════════ */
 function MainApp() {
   const [activeTab, setActiveTab] = useState<'demo' | 'casestudies'>('demo');
-  const { onView, onTry } = useDemoTracker('hugo-mentors', 'Hugo Mentors');
+  const { onView, onTry, trackInteraction } = useDemoTracker('hugo-mentors', 'Hugo Mentors');
 
   useEffect(() => { onView(); }, [onView]);
 
   return (
+    <DemoTrackingProvider trackInteraction={trackInteraction}>
     <div className="min-h-screen flex flex-col" style={{ background: HUGO.bg }} onClick={onTry}>
       <header className="bg-white border-b sticky top-0 z-50" style={{ borderColor: HUGO.border }}>
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
@@ -1519,12 +1534,12 @@ function MainApp() {
               </div>
             </div>
             <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: HUGO.bg }}>
-              <button onClick={() => setActiveTab('demo')}
+              <button onClick={() => { setActiveTab('demo'); trackInteraction('navigation', 'tab_switch', { tab: 'demo' }); }}
                 className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
                 style={{ background: activeTab === 'demo' ? 'white' : 'transparent', color: activeTab === 'demo' ? HUGO.primary : HUGO.textMuted, boxShadow: activeTab === 'demo' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 <Play className="w-4 h-4" /> Live Demo
               </button>
-              <button onClick={() => setActiveTab('casestudies')}
+              <button onClick={() => { setActiveTab('casestudies'); trackInteraction('navigation', 'tab_switch', { tab: 'casestudies' }); }}
                 className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
                 style={{ background: activeTab === 'casestudies' ? 'white' : 'transparent', color: activeTab === 'casestudies' ? HUGO.primary : HUGO.textMuted, boxShadow: activeTab === 'casestudies' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 <Presentation className="w-4 h-4" /> Case Studies & Questions
@@ -1548,6 +1563,7 @@ function MainApp() {
         )}
       </main>
     </div>
+    </DemoTrackingProvider>
   );
 }
 

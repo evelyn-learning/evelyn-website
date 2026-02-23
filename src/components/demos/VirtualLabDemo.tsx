@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface Ball {
   x: number;
@@ -80,6 +81,7 @@ const PRESETS = {
 };
 
 export default function VirtualLabDemo() {
+  const trackInteraction = useTrackInteraction();
   const [simulation, setSimulation] = useState<SimulationState>({
     balls: [],
     gravity: 0.3,
@@ -118,6 +120,7 @@ export default function VirtualLabDemo() {
     });
     setTrails([]);
     setSelectedPreset(presetKey);
+    trackInteraction('click', 'load_preset', { preset: presetKey, name: preset.name });
 
     // Calculate projectile metrics
     if (presetKey === 'projectile') {
@@ -279,10 +282,14 @@ export default function VirtualLabDemo() {
   }, [simulation.isRunning, showTrails, selectedPreset]);
 
   const toggleSimulation = () => {
-    setSimulation((prev) => ({ ...prev, isRunning: !prev.isRunning }));
+    setSimulation((prev) => {
+      trackInteraction('click', prev.isRunning ? 'pause_simulation' : 'play_simulation', { preset: selectedPreset });
+      return { ...prev, isRunning: !prev.isRunning };
+    });
   };
 
   const resetSimulation = () => {
+    trackInteraction('click', 'reset_simulation', { preset: selectedPreset });
     loadPreset(selectedPreset);
   };
 

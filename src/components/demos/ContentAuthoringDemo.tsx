@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface QuizQuestion {
   question: string;
@@ -29,6 +30,7 @@ const SAMPLE_TEXTS = {
 };
 
 export default function ContentAuthoringDemo() {
+  const trackInteraction = useTrackInteraction();
   const [sourceText, setSourceText] = useState('');
   const [contentType, setContentType] = useState<'quiz' | 'flashcards'>('quiz');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -49,6 +51,7 @@ export default function ContentAuthoringDemo() {
     setIsGenerating(true);
     setError(null);
     setContent(null);
+    trackInteraction('tool_use', 'generate_content', { contentType, wordCount: sourceText.trim().split(/\s+/).length });
     setSelectedAnswers({});
     setShowAnswers({});
     setCurrentQuestion(0);
@@ -129,6 +132,7 @@ Format as JSON:
         try {
           const parsed = JSON.parse(jsonMatch[0]) as GeneratedContent;
           setContent(parsed);
+          trackInteraction('tool_use', 'content_generated', { contentType, itemCount: parsed.quiz?.length || parsed.flashcards?.length || 0, topic: parsed.topic });
         } catch {
           setError('Could not parse content. Please try again.');
         }
@@ -143,6 +147,7 @@ Format as JSON:
   const loadSample = (type: keyof typeof SAMPLE_TEXTS) => {
     setSourceText(SAMPLE_TEXTS[type]);
     setContent(null);
+    trackInteraction('click', 'load_sample', { sampleType: type });
   };
 
   return (
@@ -310,6 +315,7 @@ Format as JSON:
                             onClick={() => {
                               setSelectedAnswers(prev => ({ ...prev, [qIdx]: optIdx }));
                               setShowAnswers(prev => ({ ...prev, [qIdx]: true }));
+                              trackInteraction('click', 'quiz_answer', { questionIndex: qIdx, correct: optIdx === q.correctAnswer });
                             }}
                             disabled={showAnswers[qIdx]}
                             className={`w-full text-left p-4 rounded-lg border-2 transition ${

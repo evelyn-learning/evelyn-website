@@ -6,6 +6,7 @@ import { getAdaptiveLessonById } from '../../data/adaptive-lessons';
 import { getVideosForTopic } from '../../data/curated-videos';
 import { LessonSegment } from '../../data/lessons';
 import { NarrationCard, VideoCard, QuestionCard, SummaryCard } from '../shared/SegmentRenderers';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ─── Fun facts for ThinkingCard ──────────────────────────────
 
@@ -168,6 +169,7 @@ export default function AdaptiveLessonPlayer() {
     navigate,
   } = useExplorerStore();
 
+  const trackInteraction = useTrackInteraction();
   const [isLoading, setIsLoading] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [answeredCurrent, setAnsweredCurrent] = useState(false);
@@ -251,6 +253,7 @@ export default function AdaptiveLessonPlayer() {
         }
 
         appendAdaptiveSegments(data.segments);
+        trackInteraction('tool_use', 'adaptive_content', { phase, segmentCount: data.segments.length, topic: lesson.title });
 
         if (phase === 'TEACH') {
           teachSegmentCountRef.current += data.segments.length;
@@ -272,6 +275,7 @@ export default function AdaptiveLessonPlayer() {
       setAdaptivePhase('DIAGNOSTIC');
       advanceAdaptiveSegment();
       fetchAdaptiveContent('DIAGNOSTIC', { diagnosticDifficulty: 'easy' });
+      trackInteraction('navigation', 'phase_transition', { from: 'INTRO', to: 'DIAGNOSTIC' });
       return;
     }
 
@@ -285,6 +289,7 @@ export default function AdaptiveLessonPlayer() {
         setAdaptivePhase('TEACH');
         advanceAdaptiveSegment();
         fetchAdaptiveContent('TEACH');
+        trackInteraction('navigation', 'phase_transition', { from: 'DIAGNOSTIC', to: 'TEACH' });
       } else {
         // Next diagnostic question
         const difficulties = ['easy', 'medium', 'hard'];
@@ -316,6 +321,7 @@ export default function AdaptiveLessonPlayer() {
         setAdaptivePhase('ASSESS');
         advanceAdaptiveSegment();
         fetchAdaptiveContent('ASSESS');
+        trackInteraction('navigation', 'phase_transition', { from: 'TEACH', to: 'ASSESS' });
         return;
       }
 
@@ -335,6 +341,7 @@ export default function AdaptiveLessonPlayer() {
         setAdaptivePhase('SUMMARY');
         advanceAdaptiveSegment();
         fetchAdaptiveContent('SUMMARY');
+        trackInteraction('navigation', 'phase_transition', { from: 'ASSESS', to: 'SUMMARY' });
       } else {
         advanceAdaptiveSegment();
       }
@@ -378,8 +385,9 @@ export default function AdaptiveLessonPlayer() {
         correctAnswer: currentSegment.options[currentSegment.correctIndex],
         isCorrect: true,
       });
+      trackInteraction('tool_use', 'adaptive_answer', { phase: adaptivePhase, segmentType: currentSegment.type, isCorrect: true });
     }
-  }, [currentSegment, adaptivePhase, addAdaptiveHistory]);
+  }, [currentSegment, adaptivePhase, addAdaptiveHistory, trackInteraction]);
 
   const handleAnswered = useCallback(() => {
     setAnsweredCurrent(true);
@@ -403,9 +411,10 @@ export default function AdaptiveLessonPlayer() {
           correctAnswer: seg.options[seg.correctIndex],
           isCorrect: false,
         });
+        trackInteraction('tool_use', 'adaptive_answer', { phase, segmentType: seg.type, isCorrect: false });
       });
     }
-  }, [currentSegment, adaptivePhase, addAdaptiveHistory]);
+  }, [currentSegment, adaptivePhase, addAdaptiveHistory, trackInteraction]);
 
   // ─── Render ─────────────────────────────────────────────
 

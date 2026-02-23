@@ -17,6 +17,14 @@
   }
 }
 
+/* Override Mafs dark theme for whiteboard diagrams */
+.MafsView {
+  --mafs-bg: #f8fafc !important;
+  --mafs-fg: #1e293b !important;
+  --mafs-line-color: #cbd5e1 !important;
+  border-radius: 0.5rem;
+}
+
 @layer components {
   .container-wide {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;

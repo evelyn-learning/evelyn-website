@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface ProctorEvent {
   id: string;
@@ -32,6 +33,7 @@ const SAMPLE_EXAM = {
 };
 
 export default function ProctoringSuiteDemo() {
+  const trackInteraction = useTrackInteraction();
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [events, setEvents] = useState<ProctorEvent[]>([]);
   const [faceDetected, setFaceDetected] = useState(false);
@@ -382,6 +384,7 @@ export default function ProctoringSuiteDemo() {
 
     setIsSessionActive(true);
     addEvent('session_start', 'info', 'Proctoring session started');
+    trackInteraction('tool_use', 'proctoring_start');
 
     // Load face detection model
     if (!modelRef.current) {
@@ -418,6 +421,7 @@ export default function ProctoringSuiteDemo() {
   const endSession = async () => {
     setIsSessionActive(false);
     addEvent('session_end', 'info', 'Proctoring session ended');
+    trackInteraction('tool_use', 'proctoring_end', { duration: sessionTime, tabSwitches: stats.tabSwitches, warnings: stats.warnings, criticalEvents: stats.criticalEvents });
 
     // Exit fullscreen
     await exitFullscreen();

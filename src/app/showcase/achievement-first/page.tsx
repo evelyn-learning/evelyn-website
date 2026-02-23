@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
+import { DemoTrackingProvider } from '@/components/demos/DemoTrackingContext';
 import AccessGate from './components/AccessGate';
 import LoginScreen from './components/LoginScreen';
 import AppShell from './components/shared/AppShell';
@@ -45,7 +46,16 @@ export default function AchievementFirstPage() {
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const screen = useAFStore((s) => s.screen);
-  const { onView, onTry } = useDemoTracker('achievement-first', 'Achievement First');
+  const { onView, onTry, trackInteraction } = useDemoTracker('achievement-first', 'Achievement First');
+
+  // Track screen navigation
+  const prevScreenRef = useRef(screen);
+  useEffect(() => {
+    if (screen !== prevScreenRef.current) {
+      trackInteraction('navigation', screen, { from: prevScreenRef.current });
+      prevScreenRef.current = screen;
+    }
+  }, [screen, trackInteraction]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('achievement_first_access');
@@ -83,17 +93,21 @@ export default function AchievementFirstPage() {
   // Presentation mode renders full-screen, no AppShell
   if (screen === 'presentation') {
     return (
-      <Suspense fallback={<ScreenLoader />}>
-        <PresentationMode />
-      </Suspense>
+      <DemoTrackingProvider trackInteraction={trackInteraction}>
+        <Suspense fallback={<ScreenLoader />}>
+          <PresentationMode />
+        </Suspense>
+      </DemoTrackingProvider>
     );
   }
 
   return (
-    <div onClick={onTry}>
-      <AppShell>
-        <ScreenRouter />
-      </AppShell>
-    </div>
+    <DemoTrackingProvider trackInteraction={trackInteraction}>
+      <div onClick={onTry}>
+        <AppShell>
+          <ScreenRouter />
+        </AppShell>
+      </div>
+    </DemoTrackingProvider>
   );
 }

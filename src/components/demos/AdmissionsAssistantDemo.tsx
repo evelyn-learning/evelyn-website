@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -108,6 +109,7 @@ const INITIAL_DOCS: DocItem[] = [
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function AdmissionsAssistantDemo() {
+  const trackInteraction = useTrackInteraction();
   const [activeTab, setActiveTab] = useState<'chatbot' | 'review' | 'documents' | 'analytics'>('chatbot');
 
   const [messages, setMessages] = useState<Message[]>([
@@ -152,6 +154,7 @@ export default function AdmissionsAssistantDemo() {
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: text, timestamp: new Date() }]);
     setInputValue('');
     setIsTyping(true);
+    trackInteraction('message', text.trim(), undefined, 'student');
 
     setTimeout(() => {
       const lower = text.toLowerCase();
@@ -173,7 +176,8 @@ export default function AdmissionsAssistantDemo() {
     setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
     const labels: Record<string, string> = { interview: 'Interview scheduled', accepted: 'Application accepted', waitlisted: 'Added to waitlist' };
     showToast(labels[newStatus] || 'Status updated');
-  }, [showToast]);
+    trackInteraction('tool_use', 'update_app_status', { appId, newStatus });
+  }, [showToast, trackInteraction]);
 
   const requestDocs = useCallback((app: Application) => {
     const missing = app.documents.filter(d => d.status !== 'verified');
@@ -195,17 +199,20 @@ export default function AdmissionsAssistantDemo() {
   const verifyDoc = useCallback((docId: string) => {
     setDocuments(prev => prev.map(d => d.id === docId ? { ...d, status: 'verified' as const } : d));
     showToast('Document verified');
-  }, [showToast]);
+    trackInteraction('tool_use', 'verify_doc', { docId });
+  }, [showToast, trackInteraction]);
 
   const flagDoc = useCallback((docId: string) => {
     setDocuments(prev => prev.map(d => d.id === docId ? { ...d, status: 'flagged' as const } : d));
     showToast('Document flagged for review');
-  }, [showToast]);
+    trackInteraction('tool_use', 'flag_doc', { docId });
+  }, [showToast, trackInteraction]);
 
   const processAllDocs = useCallback(() => {
     const pending = documents.filter(d => d.status === 'pending');
     if (pending.length === 0) { showToast('No pending documents'); return; }
     setProcessingDocs(true);
+    trackInteraction('tool_use', 'process_all_docs', { count: pending.length });
     pending.forEach((doc, idx) => {
       setTimeout(() => {
         setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'verified' as const } : d));
@@ -215,7 +222,7 @@ export default function AdmissionsAssistantDemo() {
         }
       }, (idx + 1) * 800);
     });
-  }, [documents, showToast]);
+  }, [documents, showToast, trackInteraction]);
 
   const docCounts = {
     verified: documents.filter(d => d.status === 'verified').length,
@@ -232,7 +239,8 @@ export default function AdmissionsAssistantDemo() {
   const executeRec = useCallback((idx: number) => {
     setRecommendations(prev => prev.map((r, i) => i === idx ? { ...r, executed: true } : r));
     showToast('Recommendation executed');
-  }, [showToast]);
+    trackInteraction('tool_use', 'execute_recommendation', { index: idx });
+  }, [showToast, trackInteraction]);
 
   const executeAllRecs = useCallback(() => {
     const remaining = recommendations.filter(r => !r.executed);
@@ -289,7 +297,7 @@ export default function AdmissionsAssistantDemo() {
           ]).map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { setActiveTab(tab.id); trackInteraction('navigation', 'tab_switch', { tab: tab.id }); }}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}

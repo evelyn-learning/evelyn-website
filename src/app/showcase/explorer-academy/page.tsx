@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
+import { DemoTrackingProvider } from '@/components/demos/DemoTrackingContext';
 import AccessGate from './components/AccessGate';
 import LoginScreen from './components/LoginScreen';
 import AppShell from './components/shared/AppShell';
@@ -46,7 +47,16 @@ export default function ExplorerAcademyPage() {
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const screen = useExplorerStore((s) => s.screen);
-  const { onView, onTry } = useDemoTracker('explorer-academy', 'Explorer Academy');
+  const { onView, onTry, trackInteraction } = useDemoTracker('explorer-academy', 'Explorer Academy');
+
+  // Track screen navigation
+  const prevScreenRef = useRef(screen);
+  useEffect(() => {
+    if (screen !== prevScreenRef.current) {
+      trackInteraction('navigation', screen, { from: prevScreenRef.current });
+      prevScreenRef.current = screen;
+    }
+  }, [screen, trackInteraction]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('explorer_academy_access');
@@ -87,10 +97,12 @@ export default function ExplorerAcademyPage() {
 
   // Authenticated platform
   return (
-    <div onClick={onTry}>
-      <AppShell>
-        <ScreenRouter />
-      </AppShell>
-    </div>
+    <DemoTrackingProvider trackInteraction={trackInteraction}>
+      <div onClick={onTry}>
+        <AppShell>
+          <ScreenRouter />
+        </AppShell>
+      </div>
+    </DemoTrackingProvider>
   );
 }

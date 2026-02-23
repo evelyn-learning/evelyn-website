@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useExplorerStore } from '../../store';
 import { MathDisplay, MathText } from '../shared/FormattedText';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface MathStep {
@@ -99,6 +100,7 @@ const SAMPLE_PROBLEMS_6: SampleProblem[] = [
 // ─── Component ────────────────────────────────────────────────────────
 export default function MathHelper() {
   const { currentUser, navigate } = useExplorerStore();
+  const trackInteraction = useTrackInteraction();
   const grade = currentUser?.grade ?? 3;
 
   const samples = grade === 3 ? SAMPLE_PROBLEMS_3 : SAMPLE_PROBLEMS_6;
@@ -130,6 +132,8 @@ export default function MathHelper() {
     setLoading(true);
     setError('');
 
+    trackInteraction('message', customProblem.trim(), undefined, 'student');
+
     try {
       const res = await fetch('/api/showcase/explorer-academy/math-solver', {
         method: 'POST',
@@ -144,6 +148,7 @@ export default function MathHelper() {
 
       const data: Solution = await res.json();
       setSolution(data);
+      trackInteraction('tool_use', 'math_solver', { steps: data.steps.length });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setMode('select');

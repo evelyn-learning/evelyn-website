@@ -264,21 +264,25 @@ export function FreeBodyDiagram({
   forces,
   objectLabel = 'Object',
   showNet = false,
-  scale = 1,
+  scale: scaleProp = 1,
 }: FreeBodyDiagramProps) {
+  // Normalize scale so vectors are always a readable size (target ~3 units length)
+  const maxMag = Math.max(...forces.map((f) => f.magnitude), 1);
+  const normalizedScale = maxMag > 0 ? 3 / maxMag : 1;
+  const scale = scaleProp !== 1 ? scaleProp : normalizedScale;
+
   // Calculate vector components with better label positioning
   const vectors = useMemo(() => {
-    return forces.map((force, index) => {
+    return forces.map((force) => {
       const rad = (force.direction * Math.PI) / 180;
       const dx = Math.cos(rad) * force.magnitude * scale;
       const dy = Math.sin(rad) * force.magnitude * scale;
 
-      // Calculate label position - offset perpendicular to vector
       const length = Math.sqrt(dx * dx + dy * dy);
-      const labelDistance = length + 0.8; // Fixed offset past the arrow tip
-      const perpOffset = 0.4; // Perpendicular offset to avoid arrow
+      // Place label past arrow tip with perpendicular offset for readability
+      const labelDistance = length + 1.2;
+      const perpOffset = 0.6;
 
-      // Perpendicular direction (rotate 90 degrees)
       const perpX = -dy / (length || 1) * perpOffset;
       const perpY = dx / (length || 1) * perpOffset;
 
@@ -299,8 +303,7 @@ export function FreeBodyDiagram({
     return { dx: netX, dy: netY };
   }, [vectors]);
 
-  const maxMag = Math.max(...forces.map((f) => f.magnitude), 1) * scale;
-  const viewRange = maxMag * 2; // More padding for labels
+  const viewRange = 6; // Fixed view range since we normalize vector lengths
 
   return (
     <div className="diagram-container">
@@ -309,8 +312,9 @@ export function FreeBodyDiagram({
         height={300}
         viewBox={{ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }}
       >
-        {/* Central object (represented as a dot) */}
+        {/* Central object */}
         <Point x={0} y={0} color="#64748b" />
+        <Text x={0.6} y={0} size={11}>{objectLabel}</Text>
 
         {/* Force vectors */}
         {vectors.map((v, index) => (
@@ -324,7 +328,7 @@ export function FreeBodyDiagram({
             <Text
               x={v.labelX}
               y={v.labelY}
-              size={12}
+              size={13}
             >
               {v.label}
             </Text>
@@ -342,9 +346,9 @@ export function FreeBodyDiagram({
               style="dashed"
             />
             <Text
-              x={netForce.dx * 1.3 + 0.3}
-              y={netForce.dy * 1.3 + 0.3}
-              size={12}
+              x={netForce.dx * 1.3 + 0.5}
+              y={netForce.dy * 1.3 + 0.5}
+              size={13}
             >
               F_net
             </Text>
@@ -353,14 +357,14 @@ export function FreeBodyDiagram({
       </Mafs>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 justify-center mt-2 text-sm">
+      <div className="flex flex-wrap gap-4 justify-center mt-2 text-sm text-gray-700">
         {forces.map((force, index) => (
-          <div key={index} className="flex items-center gap-1">
+          <div key={index} className="flex items-center gap-1.5">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: force.color || '#2563eb' }}
             />
-            <span>{force.label}: {force.magnitude}N</span>
+            <span className="font-medium">{force.label}: {force.magnitude} N</span>
           </div>
         ))}
       </div>

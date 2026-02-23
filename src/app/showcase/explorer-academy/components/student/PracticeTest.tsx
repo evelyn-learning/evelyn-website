@@ -5,6 +5,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { useExplorerStore } from '../../store';
 import { PRACTICE_TEST_TOPICS } from '../../data/curriculum';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface Question {
@@ -48,6 +49,7 @@ const SUBJECTS = ['Math', 'Science'];
 
 export default function PracticeTest() {
   const { currentUser, navigate, recordTestScore, preSelectedTestTopic, setPreSelectedTestTopic } = useExplorerStore();
+  const trackInteraction = useTrackInteraction();
   const grade = currentUser?.grade ?? 3;
   const gradeLabel = `Grade ${grade}`;
 
@@ -108,6 +110,7 @@ export default function PracticeTest() {
       const data = await res.json();
       setQuestions(data.questions);
       setTestsGenerated((c) => c + 1);
+      trackInteraction('tool_use', 'generate_test', { subject, topic, questionCount: data.questions?.length });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -124,6 +127,7 @@ export default function PracticeTest() {
     setSubmitted(true);
     const score = questions.filter((q) => answers[q.id] === q.correctIndex).length;
     recordTestScore(topic, score);
+    trackInteraction('tool_use', 'submit_test', { topic, score, total: questions.length });
   };
 
   const score = submitted ? questions.filter((q) => answers[q.id] === q.correctIndex).length : 0;

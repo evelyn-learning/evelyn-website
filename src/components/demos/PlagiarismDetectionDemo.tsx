@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface AnalysisResult {
   overallScore: number;
@@ -30,6 +31,7 @@ const SAMPLE_TEXTS = {
 };
 
 export default function PlagiarismDetectionDemo() {
+  const trackInteraction = useTrackInteraction();
   const [text, setText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -49,6 +51,7 @@ export default function PlagiarismDetectionDemo() {
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
+    trackInteraction('tool_use', 'analyze_text', { wordCount: text.trim().split(/\s+/).length });
 
     const systemPrompt = `You are an expert academic integrity analyst specializing in detecting plagiarism and AI-generated content.
 Analyze writing for:
@@ -116,6 +119,7 @@ Provide analysis in this JSON format:
         try {
           const parsed = JSON.parse(jsonMatch[0]) as AnalysisResult;
           setResult(parsed);
+          trackInteraction('tool_use', 'scan_complete', { verdict: parsed.verdict, score: parsed.overallScore, aiDetected: parsed.aiWritingIndicators.present });
         } catch {
           setError('Could not parse analysis. Please try again.');
         }
@@ -130,6 +134,7 @@ Provide analysis in this JSON format:
   const loadSample = (type: 'original' | 'suspicious') => {
     setText(SAMPLE_TEXTS[type]);
     setResult(null);
+    trackInteraction('click', 'load_sample', { sampleType: type });
   };
 
   const getScoreColor = (score: number) => {

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useExplorerStore } from '../../store';
 import FormattedText from '../shared/FormattedText';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,6 +19,7 @@ const STARTERS = [
 
 export default function HomeworkChat() {
   const { currentUser, navigate } = useExplorerStore();
+  const trackInteraction = useTrackInteraction();
   const grade = currentUser?.grade ?? 3;
   const studentName = currentUser?.name?.split(' ')[0] ?? 'Explorer';
 
@@ -46,6 +48,7 @@ export default function HomeworkChat() {
     setInput('');
     setStreaming(true);
     setError('');
+    trackInteraction('message', text.trim(), undefined, 'student');
 
     setMessages([...updatedMessages, { role: 'assistant', content: '' }]);
 
@@ -92,6 +95,9 @@ export default function HomeworkChat() {
             // Skip non-JSON lines
           }
         }
+      }
+      if (assistantContent) {
+        trackInteraction('message', assistantContent, undefined, 'tutor');
       }
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
