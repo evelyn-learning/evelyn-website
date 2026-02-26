@@ -28,6 +28,7 @@ const footerLinks = {
     { name: "About Us", href: "/about" },
     { name: "Careers", href: "/careers" },
     { name: "Contact", href: "/contact" },
+    { name: "Terms of Service", href: "/terms" },
     { name: "Privacy Policy", href: "/privacy" },
   ],
 };
@@ -184,7 +185,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col items-center justify-between border-t border-gray-800 pt-8 md:flex-row">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Evelyn Learning. All rights
+            &copy; {new Date().getFullYear()} ELS Corp dba Evelyn Learning. All rights
             reserved.
           </p>
           <div className="mt-4 flex space-x-4 md:mt-0">
