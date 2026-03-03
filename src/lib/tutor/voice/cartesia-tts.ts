@@ -29,8 +29,8 @@ export interface TTSStreamCallbacks {
 const CARTESIA_API_URL = 'https://api.cartesia.ai/tts/bytes';
 const CARTESIA_STREAMING_URL = 'wss://api.cartesia.ai/tts/websocket';
 
-// Default model - Sonic is their fastest model
-const DEFAULT_MODEL = 'sonic-english';
+// Default model - sonic-3 replaces sonic/sonic-english (deprecated June 1, 2026)
+const DEFAULT_MODEL = 'sonic-3';
 
 // Voice ID mapping to Cartesia voice IDs
 // These are placeholder IDs - replace with actual Cartesia voice IDs
