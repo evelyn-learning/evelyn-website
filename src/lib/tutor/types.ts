@@ -12,7 +12,7 @@ import type { WhiteboardCommand, Problem, StudentModuleProgress } from '../knowl
 
 export type SessionStatus = 'initializing' | 'active' | 'paused' | 'completed' | 'abandoned' | 'error';
 
-export type SessionGoal = 'homework-help' | 'practice' | 'concept-review' | 'test-prep' | 'general';
+export type SessionGoal = 'homework-help' | 'practice' | 'concept-review' | 'test-prep' | 'catch-up' | 'challenge' | 'general';
 
 export interface TutoringSessionConfig {
   studentId?: string;

@@ -7,8 +7,8 @@
  * from the AI tutor including equations, graphs, and diagrams.
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
@@ -20,6 +20,8 @@ import {
   ProjectileMotionDiagram,
   CoordinateSystemDiagram,
   CircularPathDiagram,
+  PipeFlowDiagram,
+  SvgDiagram,
   ProblemDiagram,
 } from './DiagramRenderer';
 
@@ -36,6 +38,50 @@ export function WhiteboardCanvas({
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Resizable expanded panel state
+  const expandedRef = useRef<HTMLDivElement>(null);
+  const [expandedSize, setExpandedSize] = useState({ width: 0, height: 0 });
+  const isResizing = useRef(false);
+  const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
+
+  // Initialize expanded size based on viewport
+  useEffect(() => {
+    if (isExpanded && expandedSize.width === 0) {
+      setExpandedSize({
+        width: Math.min(window.innerWidth - 64, 900),
+        height: Math.min(window.innerHeight - 64, 700),
+      });
+    }
+  }, [isExpanded, expandedSize.width]);
+
+  const onResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    resizeStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      w: expandedSize.width || 800,
+      h: expandedSize.height || 600,
+    };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isResizing.current) return;
+      setExpandedSize({
+        width: Math.max(400, resizeStart.current.w + (ev.clientX - resizeStart.current.x)),
+        height: Math.max(300, resizeStart.current.h + (ev.clientY - resizeStart.current.y)),
+      });
+    };
+
+    const onUp = () => {
+      isResizing.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [expandedSize]);
 
   // Filter out 'clear' commands for display purposes
   const displayCommands = useMemo(() => {
@@ -77,70 +123,115 @@ export function WhiteboardCanvas({
 
   const currentCommand = displayCommands[currentIndex];
 
-  return (
-    <div className={`whiteboard-canvas flex flex-col h-full ${className} ${isExpanded ? 'fixed inset-4 z-50 bg-white shadow-2xl rounded-xl' : ''}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 rounded-t-lg">
-        <span className="text-sm font-medium text-gray-600">Whiteboard</span>
-        <div className="flex items-center gap-2">
-          {/* Navigation */}
-          {displayCommands.length > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={goPrev}
-                disabled={currentIndex === 0}
-                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-                title="Previous"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-xs text-gray-500 min-w-[40px] text-center">
-                {currentIndex + 1} / {displayCommands.length}
-              </span>
-              <button
-                onClick={goNext}
-                disabled={currentIndex === displayCommands.length - 1}
-                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-                title="Next"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+  const headerContent = (
+    <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
+      <span className="text-sm font-medium text-gray-600">Whiteboard</span>
+      <div className="flex items-center gap-2">
+        {/* Navigation */}
+        {displayCommands.length > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={goPrev}
+              disabled={currentIndex === 0}
+              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
+              title="Previous"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-gray-500 min-w-[40px] text-center">
+              {currentIndex + 1} / {displayCommands.length}
+            </span>
+            <button
+              onClick={goNext}
+              disabled={currentIndex === displayCommands.length - 1}
+              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
+              title="Next"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Expand/Minimize */}
+        <button
+          onClick={() => {
+            setIsExpanded(!isExpanded);
+            if (!isExpanded) setExpandedSize({ width: 0, height: 0 }); // reset for re-init
+          }}
+          className="p-1 rounded hover:bg-gray-200"
+          title={isExpanded ? 'Minimize' : 'Expand'}
+        >
+          {isExpanded ? (
+            <Minimize2 className="w-4 h-4" />
+          ) : (
+            <Maximize2 className="w-4 h-4" />
           )}
+        </button>
 
-          {/* Expand/Minimize */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 rounded hover:bg-gray-200"
-            title={isExpanded ? 'Minimize' : 'Expand'}
-          >
-            {isExpanded ? (
-              <Minimize2 className="w-4 h-4" />
-            ) : (
-              <Maximize2 className="w-4 h-4" />
-            )}
-          </button>
-
-          {/* Clear */}
-          <button
-            onClick={handleClear}
-            className="p-1 rounded hover:bg-gray-200 text-gray-500"
-            title="Clear whiteboard"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Clear */}
+        <button
+          onClick={handleClear}
+          className="p-1 rounded hover:bg-gray-200 text-gray-500"
+          title="Clear whiteboard"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
+    </div>
+  );
 
-      {/* Content */}
+  const bodyContent = (
+    <>
       <div className="flex-1 overflow-auto p-4">
         <CommandRenderer command={currentCommand} />
       </div>
-
-      {/* Command type indicator */}
-      <div className="px-3 py-1 bg-gray-50 border-t text-xs text-gray-400 text-center rounded-b-lg">
+      <div className="px-3 py-1 bg-gray-50 border-t text-xs text-gray-400 text-center rounded-b-lg flex-shrink-0">
         {getCommandTypeLabel(currentCommand.action)}
       </div>
+    </>
+  );
+
+  // Expanded: resizable floating panel
+  if (isExpanded) {
+    return (
+      <>
+        {/* Inline placeholder */}
+        <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
+          {headerContent}
+          {bodyContent}
+        </div>
+        {/* Floating overlay */}
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setIsExpanded(false); }}>
+          <div
+            ref={expandedRef}
+            className="bg-white shadow-2xl rounded-xl flex flex-col relative"
+            style={{
+              width: expandedSize.width || undefined,
+              height: expandedSize.height || undefined,
+              maxWidth: '95vw',
+              maxHeight: '95vh',
+            }}
+          >
+            {headerContent}
+            {bodyContent}
+            {/* Resize handle */}
+            <div
+              onMouseDown={onResizeStart}
+              className="absolute bottom-1 right-1 w-6 h-6 cursor-nwse-resize flex items-center justify-center text-gray-300 hover:text-gray-500 transition"
+              title="Drag to resize"
+            >
+              <GripVertical className="w-3 h-3 rotate-[-45deg]" />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
+      {headerContent}
+      {bodyContent}
     </div>
   );
 }
@@ -288,6 +379,15 @@ function CommandRenderer({ command }: CommandRendererProps) {
             </tbody>
           </table>
         </div>
+      );
+
+    case 'showSvgDiagram':
+      return (
+        <SvgDiagram
+          svg={command.svg}
+          title={command.title}
+          description={command.description}
+        />
       );
 
     case 'showImage':
@@ -448,6 +548,23 @@ function DiagramDispatcher({ type, params }: DiagramDispatcherProps) {
         />
       );
 
+    case 'pipe-flow':
+    case 'fluid-flow':
+    case 'continuity':
+      return (
+        <PipeFlowDiagram
+          title={(params.title as string) || 'Flow Through a Pipe'}
+          wideArea={(params.wideArea as number) || (params.area1 as number) || 4}
+          narrowArea={(params.narrowArea as number) || (params.area2 as number) || 2}
+          wideVelocity={(params.wideVelocity as number) || (params.velocity1 as number) || 2}
+          narrowVelocity={(params.narrowVelocity as number) || (params.velocity2 as number) || undefined}
+          showPressure={(params.showPressure as boolean) || false}
+          widePressure={params.widePressure as string}
+          narrowPressure={params.narrowPressure as string}
+          description={params.description as string}
+        />
+      );
+
     case 'circular-path':
       return (
         <CircularPathDiagram
@@ -526,6 +643,8 @@ function getCommandTypeLabel(action: string): string {
       return 'Table';
     case 'showImage':
       return 'Image';
+    case 'showSvgDiagram':
+      return 'Diagram';
     case 'showWorkedExample':
       return 'Worked Example';
     default:

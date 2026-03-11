@@ -17,6 +17,71 @@ import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
+export interface RealtimeHandle {
+  sendTextMessage: (text: string) => void;
+}
+
+// Words that Whisper commonly misrecognizes as inappropriate
+const PROFANITY_REPLACEMENTS: Record<string, string> = {
+  'condom': 'continuity',
+  'condoms': 'continuity',
+  'penis': 'Venus',
+  'vagina': 'Regina',
+  'cock': 'caulk',
+  'cum': 'come',
+  'shit': 'shift',
+  'ass': 'gas',
+  'damn': 'dam',
+  'hell': 'held',
+  'dick': 'thick',
+  'bitch': 'pitch',
+  'fuck': 'flux',
+  'fucking': 'fluxing',
+  'bastard': 'bustard',
+  'crap': 'clap',
+  'piss': 'psi',
+  'whore': 'war',
+  'slut': 'slot',
+  'porn': 'born',
+};
+
+function filterTranscriptText(text: string): string {
+  let filtered = text;
+  for (const [bad, replacement] of Object.entries(PROFANITY_REPLACEMENTS)) {
+    const regex = new RegExp(`\\b${bad}\\b`, 'gi');
+    filtered = filtered.replace(regex, replacement);
+  }
+  return filtered;
+}
+
+// Whisper hallucinations / background noise artifacts to ignore entirely.
+// These are commonly produced when there's silence, background chatter, or ambient noise.
+const NOISE_PATTERNS = new Set([
+  'bye', 'bye bye', 'bye-bye', 'bye guys', 'bye.', 'bye bye.', 'bye-bye.',
+  'goodbye', 'good bye',
+  'thank you', 'thanks', 'thank you.', 'thanks.',
+  'you', 'the', 'a', 'i', 'um', 'uh', 'hmm', 'huh', 'oh',
+  'okay', 'ok', 'yes', 'no', 'yeah', 'yep', 'nah', 'nope',
+  'so', 'and', 'but', 'like', 'well', 'right',
+  'hello', 'hi', 'hey',
+  // Common Whisper hallucinations on silence
+  'you', 'thank you for watching', 'thanks for watching',
+  'subscribe', 'like and subscribe',
+  'music', 'applause', 'laughter',
+]);
+
+function isNoiseTranscript(text: string): boolean {
+  const normalized = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim();
+  // Exact match with known noise
+  if (NOISE_PATTERNS.has(normalized)) return true;
+  // Very short (1-2 words) and repeated words like "bye bye" or "hello hello"
+  const words = normalized.split(/\s+/);
+  if (words.length <= 3 && new Set(words).size === 1) return true;
+  // Single word under 4 characters
+  if (words.length === 1 && normalized.length < 4) return true;
+  return false;
+}
+
 interface VoiceTutorRealtimeProps {
   subject: string;
   topic: string;
@@ -30,6 +95,7 @@ interface VoiceTutorRealtimeProps {
   onError?: (error: Error) => void;
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
+  handleRef?: React.MutableRefObject<RealtimeHandle | null>;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -53,6 +119,7 @@ export function VoiceTutorRealtime({
   onError,
   onEndSession,
   onTrackInteraction,
+  handleRef,
 }: VoiceTutorRealtimeProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -69,16 +136,24 @@ export function VoiceTutorRealtime({
     if (role === 'user') {
       currentUserTextRef.current = text;
       if (isFinal && text.trim()) {
+        // Skip noise / background chatter that Whisper hallucinates
+        if (isNoiseTranscript(text.trim())) {
+          console.log('[VoiceTutorRealtime] Filtered noise transcript:', text.trim());
+          currentUserTextRef.current = '';
+          return;
+        }
+        // Filter inappropriate words from Whisper transcription
+        const filteredText = filterTranscriptText(text.trim());
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
           id: `user-${Date.now()}`,
           timestamp: new Date(),
           role: 'student',
-          text: text.trim(),
+          text: filteredText,
         };
         transcriptRef.current = [...transcriptRef.current, entry];
         onTranscriptUpdate(transcriptRef.current);
-        onTrackInteraction?.('message', text.trim(), undefined, 'student');
+        onTrackInteraction?.('message', filteredText, undefined, 'student');
         currentUserTextRef.current = '';
       }
     } else {
@@ -117,15 +192,35 @@ export function VoiceTutorRealtime({
     onError?.(error);
   }, [onError]);
 
+  // Read VAD tuning from env vars (NEXT_PUBLIC_ so they're available client-side)
+  const vadThreshold = parseFloat(process.env.NEXT_PUBLIC_TUTOR_VAD_THRESHOLD || '0.8');
+  const vadSilenceDurationMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_SILENCE_MS || '1500', 10);
+  const vadPrefixPaddingMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_PREFIX_MS || '500', 10);
+
   // Initialize the realtime connection
   const realtime = useOpenAIRealtime({
     instructions,
     voice,
+    vadThreshold,
+    vadSilenceDurationMs,
+    vadPrefixPaddingMs,
     onTranscriptUpdate: handleTranscriptUpdate,
     onWhiteboardCommand: handleWhiteboardCommand,
     onError: handleError,
     onStateChange,
   });
+
+  // Expose sendTextMessage to parent via handleRef
+  useEffect(() => {
+    if (handleRef) {
+      handleRef.current = {
+        sendTextMessage: (text: string) => realtime.sendTextMessage(text),
+      };
+    }
+    return () => {
+      if (handleRef) handleRef.current = null;
+    };
+  }, [handleRef, realtime]);
 
   // Build system prompt / instructions on mount
   useEffect(() => {
@@ -148,8 +243,15 @@ export function VoiceTutorRealtime({
           currentState: 'greeting',
         });
 
+        // Read optional voice personality from env
+        const voicePersonality = process.env.NEXT_PUBLIC_TUTOR_VOICE_PERSONALITY
+          || 'Be upbeat, enthusiastic, and warm. Use an encouraging and energetic tone — like a favorite teacher who genuinely loves the subject. Celebrate small wins ("Nice!", "Exactly!", "You\'re getting it!"). Vary your energy to keep the student engaged.';
+
         // Add OpenAI-specific voice instructions
         const openAIInstructions = `${systemPrompt}
+
+## Voice Personality & Tone
+${voicePersonality}
 
 ## Voice Interaction Guidelines
 - You are in a real-time voice conversation. Responses are spoken aloud.
@@ -166,24 +268,45 @@ CRITICAL: You MUST use whiteboard tools proactively. Students learn visually.
 Call show_equation EVERY TIME you mention ANY equation, formula, or mathematical relationship.
 - Say "pressure equals rho g h" → MUST also call show_equation with latex "P = \\\\rho g h"
 - Say "buoyant force equals weight of displaced fluid" → call show_equation with "F_b = \\\\rho_{fluid} \\\\cdot V_{disp} \\\\cdot g"
-- Say "fraction submerged is density ratio" → call show_equation with "\\\\frac{V_{sub}}{V_{total}} = \\\\frac{\\\\rho_{object}}{\\\\rho_{fluid}}"
 - ANY time you reference a formula in speech, you MUST also display it. No exceptions.
 
-### show_diagram — USE for physical situations
-Choose the RIGHT diagram type for the topic:
-- **Buoyancy, floating, sinking, any force analysis** → type "free-body" with upward buoyant force (green) and downward weight (red)
-- **Comparing velocities, relative motion, vector addition** → type "vectors"
-- **Thrown objects, trajectories** → type "projectile" with initial_velocity and launch_angle
-- **Circular motion** → type "circular-path"
-- **Position changing over time** → type "motion"
-- **Geometry/trig problems** → type "triangle" with height, base, angle
+### show_function_graph — USE for ALL mathematical function graphs
+This is your tool for plotting mathematical functions, curves, and shaded regions. The rendering engine computes exact coordinates automatically — you just provide function expressions.
+- Use this INSTEAD of show_svg_diagram whenever you need to plot y=f(x) or x=f(y) curves.
+- "functions" array: y=f(x) plots. Expression uses "x" variable with JS math: "4 - 0.5*x", "x**2", "Math.sin(x)".
+- "functionsOfY" array: x=f(y) plots (e.g. x=y³). Expression uses "y" variable: "y**3", "3*y - 2".
+- "points" array: labeled intersection points or key points to mark.
+- "shadedRegion": shade area between two curves. Set axis="y" for horizontal slices (provide x=f(y) expressions), axis="x" for vertical slices (provide y=f(x) expressions), with from/to bounds.
+- Set xRange and yRange to show the relevant portion of the coordinate plane.
+- ALWAYS choose ranges that show the full region of interest including all intersection points and labeled features.
 
-When drawing diagrams, use ACTUAL VALUES from the problem and include a descriptive title.
+### show_svg_diagram — USE for physics diagrams and illustrations
+Use this for physical setups (pipes, cars, ramps, pulleys, springs, circuits, etc.) — NOT for mathematical function graphs.
+- Draw SVG with viewBox="0 0 400 300". Use actual shapes, arrows, labels.
+- For diagrams: draw realistic shapes (e.g. actual car shapes for motion, actual pipes for fluid flow, actual objects for free body diagrams). Use fill colors, stroke, and clear labels.
+- Use ACTUAL VALUES from the problem being discussed. Include title and description.
+- Make diagrams educational, detailed, and visually appealing. Think like a textbook illustrator.
+- CRITICAL — PROPORTIONAL SIZING: When drawing objects with different dimensions (e.g. a hose and nozzle), the SVG element sizes MUST be proportional to the actual values.
+- SVG markup must be on a single line — do NOT include literal newlines in the SVG string.
 
-### show_graph
-Use for position-time, velocity-time, pressure-depth, or other quantitative relationships.
+RULE: If you say "let me show you" or describe any visual, you MUST call the tool. Never describe visuals without showing them.
 
-RULE: If you say "let me show you" or describe any equation/diagram, you MUST call the tool. Never describe visuals without showing them.
+### Homework uploads
+When a student uploads a homework problem:
+1. IMMEDIATELY draw the problem setup on the whiteboard:
+   - For problems involving graphing functions/curves: use show_function_graph with the function expressions
+   - For physics setups (diagrams, circuits, physical objects): use show_svg_diagram
+2. Verbally acknowledge the upload and summarize what the problem asks.
+3. As you work through each solution step, call show_equation for every formula and substitution.
+4. Guide the student step by step, asking questions to check understanding.
+
+### Solution steps on the whiteboard
+As you solve problems, show EACH step on the whiteboard:
+- The starting equation (show_equation)
+- Each substitution with actual values (show_equation)
+- Intermediate results (show_equation)
+- The final answer (show_equation with a label like "Answer")
+The student should be able to follow the entire solution by looking at the whiteboard.
 
 Start by warmly greeting the student and asking how you can help them today.`;
 
@@ -260,15 +383,15 @@ Start by warmly greeting the student and asking how you can help them today.`;
     switch (realtime.state) {
       case 'connecting':
         return {
-          icon: <Loader2 className="w-8 h-8 animate-spin" />,
+          icon: <Loader2 className="w-5 h-5 animate-spin" />,
           text: 'Connecting...',
-          subtext: 'Establishing real-time connection',
+          subtext: '',
           color: 'bg-yellow-500',
           pulse: false,
         };
       case 'listening':
         return {
-          icon: <Square className="w-6 h-6" />,
+          icon: <Square className="w-4 h-4" />,
           text: 'Listening...',
           subtext: 'Click to stop',
           color: 'bg-red-500',
@@ -276,7 +399,7 @@ Start by warmly greeting the student and asking how you can help them today.`;
         };
       case 'processing':
         return {
-          icon: <Loader2 className="w-8 h-8 animate-spin" />,
+          icon: <Loader2 className="w-5 h-5 animate-spin" />,
           text: 'Thinking...',
           subtext: '',
           color: 'bg-yellow-500',
@@ -284,7 +407,7 @@ Start by warmly greeting the student and asking how you can help them today.`;
         };
       case 'speaking':
         return {
-          icon: <Volume2 className="w-8 h-8" />,
+          icon: <Volume2 className="w-5 h-5" />,
           text: 'Tutor speaking',
           subtext: 'Click to interrupt',
           color: 'bg-green-500',
@@ -292,25 +415,25 @@ Start by warmly greeting the student and asking how you can help them today.`;
         };
       case 'error':
         return {
-          icon: <AlertCircle className="w-8 h-8" />,
+          icon: <AlertCircle className="w-5 h-5" />,
           text: 'Error',
-          subtext: 'Click to reconnect',
+          subtext: '',
           color: 'bg-red-600',
           pulse: false,
         };
       case 'disconnected':
         return {
-          icon: <WifiOff className="w-8 h-8" />,
+          icon: <WifiOff className="w-5 h-5" />,
           text: 'Disconnected',
-          subtext: 'Click to connect',
+          subtext: '',
           color: 'bg-gray-500',
           pulse: false,
         };
       default:
         return {
-          icon: <Mic className="w-8 h-8" />,
+          icon: <Mic className="w-5 h-5" />,
           text: transcriptRef.current.length === 0 ? 'Click to start' : 'Click to speak',
-          subtext: 'Real-time voice mode',
+          subtext: 'Voice mode',
           color: 'bg-blue-500',
           pulse: false,
         };
@@ -321,136 +444,104 @@ Start by warmly greeting the student and asking how you can help them today.`;
   const isDisabled = realtime.state === 'connecting' || realtime.state === 'processing';
 
   return (
-    <div className="voice-tutor-realtime flex flex-col items-center gap-4 py-4">
-      {/* Connection status badge */}
-      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+    <div className="voice-tutor-realtime flex items-center gap-3 py-2 px-2">
+      {/* Connection indicator */}
+      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
         realtime.isConnected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
       }`}>
-        {realtime.isConnected ? (
-          <>
-            <Wifi className="w-3 h-3" />
-            Realtime
-          </>
-        ) : (
-          <>
-            <WifiOff className="w-3 h-3" />
-            Not connected
-          </>
-        )}
+        {realtime.isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+        {realtime.isConnected ? 'Live' : 'Off'}
       </div>
 
       {isPaused ? (
         <>
-          {/* Paused state */}
           <button
             onClick={handleResume}
-            className="w-20 h-20 rounded-full bg-green-500 text-white hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-green-500 text-white hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center flex-shrink-0"
           >
-            <Play className="w-8 h-8 ml-1" />
+            <Play className="w-5 h-5 ml-0.5" />
           </button>
-
-          <div className="text-center">
-            <p className="text-sm font-medium text-amber-600">Session Paused</p>
-            <p className="text-xs text-gray-500">Click play to resume</p>
-          </div>
+          <span className="text-sm font-medium text-amber-600">Paused</span>
         </>
       ) : (
         <>
-          {/* Main buttons row */}
-          <div className="flex items-center gap-4">
-            {/* Pause button - visible when session is active */}
-            {realtime.isConnected && hasStartedRef.current && (
-              <button
-                onClick={handlePause}
-                className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all duration-200 flex items-center justify-center"
-                title="Pause conversation"
-              >
-                <Pause className="w-6 h-6" />
-              </button>
-            )}
-
-            {/* Main microphone button */}
+          {/* Pause button */}
+          {realtime.isConnected && hasStartedRef.current && (
             <button
-              onClick={handleMicClick}
-              disabled={isDisabled}
-              className={`
-                relative w-20 h-20 rounded-full text-white
-                transition-all duration-200 flex items-center justify-center
-                ${stateUI.color}
-                ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
-                ${stateUI.pulse ? 'animate-pulse' : ''}
-              `}
+              onClick={handlePause}
+              className="w-9 h-9 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all duration-200 flex items-center justify-center flex-shrink-0"
+              title="Pause conversation"
             >
-              {stateUI.icon}
+              <Pause className="w-4 h-4" />
             </button>
-          </div>
+          )}
+
+          {/* Main mic button */}
+          <button
+            onClick={handleMicClick}
+            disabled={isDisabled}
+            className={`
+              relative w-12 h-12 rounded-full text-white flex-shrink-0
+              transition-all duration-200 flex items-center justify-center
+              ${stateUI.color}
+              ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
+              ${stateUI.pulse ? 'animate-pulse' : ''}
+            `}
+          >
+            {stateUI.icon}
+          </button>
 
           {/* State text */}
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700">{stateUI.text}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
             {stateUI.subtext && (
-              <p className="text-xs text-gray-500">{stateUI.subtext}</p>
+              <p className="text-xs text-gray-500 truncate">{stateUI.subtext}</p>
             )}
           </div>
         </>
       )}
 
-      {/* Error message */}
+      {/* Error inline */}
       {errorMessage && (
-        <div className="text-sm text-red-600 max-w-xs text-center bg-red-50 px-3 py-2 rounded-lg">
+        <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded truncate max-w-[200px]">
           {errorMessage}
-        </div>
+        </span>
       )}
 
-      {/* Control buttons */}
-      <div className="flex items-center gap-3">
-        {/* Mute button */}
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Controls on the right */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         {!isPaused && (
           <button
             onClick={toggleMute}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-              ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
-            `}
+            className={`p-2 rounded-lg text-sm ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            title={isMuted ? 'Unmute tutor' : 'Mute tutor'}
           >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-4 h-4" />
-                Unmute tutor
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-4 h-4" />
-                Mute tutor
-              </>
-            )}
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
         )}
 
-        {/* End Session button */}
+        {(realtime.state === 'error' || realtime.state === 'disconnected') && (
+          <button
+            onClick={() => { setErrorMessage(null); realtime.connect(); }}
+            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600"
+          >
+            Reconnect
+          </button>
+        )}
+
         {onEndSession && (
           <button
             onClick={onEndSession}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
-            End Session
+            <LogOut className="w-3.5 h-3.5" />
+            End
           </button>
         )}
       </div>
-
-      {/* Reconnect button for error/disconnected states */}
-      {(realtime.state === 'error' || realtime.state === 'disconnected') && (
-        <button
-          onClick={() => {
-            setErrorMessage(null);
-            realtime.connect();
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
-        >
-          Reconnect
-        </button>
-      )}
     </div>
   );
 }

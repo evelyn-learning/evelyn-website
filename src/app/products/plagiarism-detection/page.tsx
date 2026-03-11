@@ -6,8 +6,8 @@ import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
 import { DemoTracker } from '@/components/demos/DemoTracker';
 
-const PlagiarismDetectionDemo = dynamic(
-  () => import('@/components/demos/PlagiarismDetectionDemo'),
+const PlagiarismDetector = dynamic(
+  () => import('@/components/plagiarism-detection/PlagiarismDetector'),
   {
     ssr: false,
     loading: () => (
@@ -108,7 +108,7 @@ function DemoSection() {
 
         <div className="max-w-6xl mx-auto">
           <DemoTracker productId="plagiarism-detection" productTitle="Plagiarism & AI Detection">
-            <PlagiarismDetectionDemo />
+            <PlagiarismDetector />
           </DemoTracker>
         </div>
 

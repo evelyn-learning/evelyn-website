@@ -58,7 +58,7 @@ Also cyberbullying is a big problem. Kids get bullied online and its really sad.
 In conclusion social media has good and bad parts but mostly bad. We should limit how much we use it.`
 };
 
-type EssayType = 'sat' | 'act' | 'college';
+type EssayType = 'sat' | 'act' | 'college' | 'ap-synthesis' | 'ap-rhetorical' | 'ap-argument' | 'custom';
 
 export default function EssayScoringDemo() {
   const trackInteraction = useTrackInteraction();
@@ -67,8 +67,13 @@ export default function EssayScoringDemo() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  const rubrics: Record<EssayType, Rubric> = {
+  // Custom rubric state
+  const [customRubricText, setCustomRubricText] = useState('');
+  const [customMaxScore, setCustomMaxScore] = useState(10);
+
+  const rubrics: Record<Exclude<EssayType, 'custom'>, Rubric> = {
     sat: {
       name: 'SAT Essay',
       categories: ['Reading', 'Analysis', 'Writing'],
@@ -86,21 +91,65 @@ export default function EssayScoringDemo() {
       categories: ['Authenticity', 'Insight & Reflection', 'Writing Quality', 'Engagement'],
       maxScore: 10,
       description: 'Focuses on personal voice, self-awareness, and compelling narrative'
+    },
+    'ap-synthesis': {
+      name: 'AP Lang: Synthesis',
+      categories: ['Thesis', 'Evidence & Commentary', 'Sophistication'],
+      maxScore: 6,
+      description: 'Synthesizes at least 3 sources into a coherent, evidence-driven argument (AP scoring 0-6)'
+    },
+    'ap-rhetorical': {
+      name: 'AP Lang: Rhetorical Analysis',
+      categories: ['Thesis', 'Evidence & Commentary', 'Sophistication'],
+      maxScore: 6,
+      description: 'Analyzes the writer\'s rhetorical choices and their effects on the audience (AP scoring 0-6)'
+    },
+    'ap-argument': {
+      name: 'AP Lang: Argument',
+      categories: ['Thesis', 'Evidence & Commentary', 'Sophistication'],
+      maxScore: 6,
+      description: 'Develops an evidence-based argument that responds to the prompt (AP scoring 0-6)'
     }
   };
+
+  const getActiveRubric = (): Rubric => {
+    if (essayType === 'custom') {
+      const categories = customRubricText
+        .split(/[,\n]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      return {
+        name: 'Custom Rubric',
+        categories: categories.length > 0 ? categories : ['Overall Quality'],
+        maxScore: customMaxScore,
+        description: 'Teacher-defined evaluation criteria'
+      };
+    }
+    return rubrics[essayType];
+  };
+
+  const wordCount = essay.split(/\s+/).filter(w => w).length;
 
   const analyzeEssay = async () => {
     if (!essay.trim()) {
       setError('Please enter an essay to analyze.');
       return;
     }
+    if (wordCount < 50) {
+      setError('Please enter at least 50 words for a meaningful analysis.');
+      return;
+    }
+    if (essayType === 'custom' && customRubricText.trim().split(/[,\n]/).filter(s => s.trim()).length === 0) {
+      setError('Please enter at least one rubric category.');
+      return;
+    }
 
     setIsAnalyzing(true);
     setError(null);
     setFeedback(null);
-    trackInteraction('tool_use', 'analyze_essay', { rubric: essayType, wordCount: essay.split(/\s+/).filter(w => w).length });
+    trackInteraction('tool_use', 'analyze_essay', { rubric: essayType, wordCount });
 
-    const rubric = rubrics[essayType];
+    const rubric = getActiveRubric();
 
     const systemPrompt = `You are an expert essay evaluator for standardized tests and college admissions.
 You provide detailed, constructive feedback that helps students improve their writing.
@@ -188,6 +237,19 @@ ${essay}
     trackInteraction('click', 'load_sample', { quality });
   };
 
+  const handleExportPDF = async () => {
+    if (!feedback) return;
+    setIsExportingPDF(true);
+    try {
+      const { exportEssayFeedbackPDF } = await import('@/lib/utils/export/pdf-essay-feedback');
+      const rubric = getActiveRubric();
+      await exportEssayFeedbackPDF(essay, feedback, rubric.name, rubric.maxScore);
+    } catch (err) {
+      console.error('PDF export error:', err);
+    }
+    setIsExportingPDF(false);
+  };
+
   const ScoreBar = ({ score, maxScore, label }: ScoreBarProps) => {
     const percentage = (score / maxScore) * 100;
     const getColor = () => {
@@ -212,6 +274,8 @@ ${essay}
       </div>
     );
   };
+
+  const activeRubric = getActiveRubric();
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-purple-50 p-6 rounded-2xl">
@@ -244,20 +308,66 @@ ${essay}
                 <option value="sat">SAT Essay Rubric</option>
                 <option value="act">ACT Writing Rubric</option>
                 <option value="college">College Application</option>
+                <option value="ap-synthesis">AP Lang: Synthesis</option>
+                <option value="ap-rhetorical">AP Lang: Rhetorical Analysis</option>
+                <option value="ap-argument">AP Lang: Argument</option>
+                <option value="custom">Custom Rubric</option>
               </select>
             </div>
 
-            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 mb-4">
-              <p className="text-sm text-purple-800">
-                <strong>{rubrics[essayType].name}:</strong> {rubrics[essayType].description}
-              </p>
-            </div>
+            {essayType === 'custom' ? (
+              <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 mb-4 space-y-3">
+                <p className="text-sm text-purple-800">
+                  <strong>Custom Rubric:</strong> Define your own evaluation criteria below.
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-purple-700 mb-1">
+                    Categories (comma or line-separated)
+                  </label>
+                  <textarea
+                    value={customRubricText}
+                    onChange={(e) => setCustomRubricText(e.target.value)}
+                    placeholder="e.g., Thesis Clarity, Evidence Quality, Argument Structure, Grammar & Mechanics"
+                    className="w-full min-h-[60px] p-3 border border-purple-200 rounded-lg resize-y text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  {customRubricText.trim() && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {customRubricText.split(/[,\n]/).map(s => s.trim()).filter(Boolean).map((cat, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full text-xs">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-purple-700 mb-1">
+                    Max Score per Category
+                  </label>
+                  <select
+                    value={customMaxScore}
+                    onChange={(e) => setCustomMaxScore(Number(e.target.value))}
+                    className="px-3 py-1.5 border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    {[4, 5, 6, 8, 10].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 mb-4">
+                <p className="text-sm text-purple-800">
+                  <strong>{rubrics[essayType].name}:</strong> {rubrics[essayType].description}
+                </p>
+              </div>
+            )}
 
             <textarea
               value={essay}
               onChange={(e) => setEssay(e.target.value)}
               placeholder="Paste or type your essay here..."
-              className="w-full h-64 p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+              className="w-full min-h-[16rem] p-4 border border-gray-200 rounded-xl resize-y focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
             />
 
             <div className="flex items-center justify-between mt-4">
@@ -275,14 +385,14 @@ ${essay}
                   Load Weak Sample
                 </button>
               </div>
-              <span className="text-sm text-gray-400">
-                {essay.split(/\s+/).filter(w => w).length} words
+              <span className={`text-sm ${wordCount < 50 && wordCount > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                {wordCount} words{wordCount > 0 && wordCount < 50 ? ' (min 50)' : ''}
               </span>
             </div>
 
             <button
               onClick={analyzeEssay}
-              disabled={isAnalyzing || !essay.trim()}
+              disabled={isAnalyzing || !essay.trim() || wordCount < 50}
               className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600 to-primary-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isAnalyzing ? (
@@ -312,7 +422,21 @@ ${essay}
 
           {/* Results Panel */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Analysis Results</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Analysis Results</h2>
+              {feedback && (
+                <button
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF}
+                  className="px-4 py-2 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition text-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {isExportingPDF ? 'Exporting...' : 'Export PDF'}
+                </button>
+              )}
+            </div>
 
             {!feedback && !isAnalyzing && (
               <div className="h-full flex items-center justify-center text-gray-400">
@@ -342,10 +466,10 @@ ${essay}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-purple-100 text-sm font-medium">Overall Score</p>
-                      <p className="text-4xl font-bold">{feedback.overallScore.toFixed(1)}<span className="text-xl opacity-75">/{rubrics[essayType].maxScore}</span></p>
+                      <p className="text-4xl font-bold">{feedback.overallScore.toFixed(1)}<span className="text-xl opacity-75">/{activeRubric.maxScore}</span></p>
                     </div>
                     <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                      <span className="text-3xl font-bold">{Math.round((feedback.overallScore / rubrics[essayType].maxScore) * 100)}%</span>
+                      <span className="text-3xl font-bold">{Math.round((feedback.overallScore / activeRubric.maxScore) * 100)}%</span>
                     </div>
                   </div>
                   <p className="mt-4 text-purple-100 text-sm">{feedback.overallAssessment}</p>
@@ -359,7 +483,7 @@ ${essay}
                       <ScoreBar
                         key={idx}
                         score={cat.score}
-                        maxScore={rubrics[essayType].maxScore}
+                        maxScore={activeRubric.maxScore}
                         label={cat.name}
                       />
                     ))}
@@ -408,7 +532,7 @@ ${essay}
                     {feedback.categories.map((cat, idx) => (
                       <details key={idx} className="border border-gray-200 rounded-lg">
                         <summary className="p-3 cursor-pointer hover:bg-gray-50 font-medium text-gray-700">
-                          {cat.name} — {cat.score}/{rubrics[essayType].maxScore}
+                          {cat.name} — {cat.score}/{activeRubric.maxScore}
                         </summary>
                         <div className="p-4 pt-0 space-y-3">
                           <div>
@@ -447,7 +571,7 @@ ${essay}
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { icon: '⚡', title: 'Instant Feedback', desc: 'Results in under 10 seconds' },
-              { icon: '📊', title: 'Rubric-Aligned', desc: 'SAT, ACT, and college essay scoring' },
+              { icon: '📊', title: 'Rubric-Aligned', desc: 'SAT, ACT, AP Lang, college, and custom rubrics' },
               { icon: '🎯', title: 'Actionable Insights', desc: 'Specific improvement suggestions' },
               { icon: '📈', title: 'Progress Tracking', desc: 'Monitor improvement over time' }
             ].map((feature, idx) => (

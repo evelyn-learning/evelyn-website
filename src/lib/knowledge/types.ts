@@ -413,8 +413,10 @@ export interface GraphData {
   xRange: [number, number];
   yRange: [number, number];
   functions?: GraphFunction[];
+  functionsOfY?: GraphFunctionOfY[];
   points?: GraphPoint[];
   annotations?: GraphAnnotation[];
+  shadedRegion?: ShadedRegion;
 }
 
 export interface GraphFunction {
@@ -422,6 +424,22 @@ export interface GraphFunction {
   color?: string;
   label?: string;
   domain?: [number, number];
+}
+
+export interface GraphFunctionOfY {
+  fn: string; // x as function of y, e.g., "y**3" or "3*y - 2"
+  color?: string;
+  label?: string;
+  domain?: [number, number]; // y-domain
+}
+
+export interface ShadedRegion {
+  axis: 'x' | 'y'; // which variable to integrate over
+  between: [string, string]; // two function expressions (e.g. ["3*y - 2", "y**3"])
+  from: number; // lower bound
+  to: number; // upper bound
+  color?: string;
+  opacity?: number;
 }
 
 export interface GraphPoint {
@@ -452,7 +470,8 @@ export type WhiteboardCommand =
   | { action: 'showSolution'; steps: SolutionStep[] }
   | { action: 'showWorkedExample'; example: Partial<WorkedExample> }
   | { action: 'showTable'; headers: string[]; rows: string[][] }
-  | { action: 'showImage'; url: string; alt: string };
+  | { action: 'showImage'; url: string; alt: string }
+  | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string };
 
 // =============================================================================
 // STUDENT PROGRESS

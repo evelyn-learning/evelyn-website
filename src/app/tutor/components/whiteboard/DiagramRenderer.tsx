@@ -840,6 +840,162 @@ export function CircularPathDiagram({
 }
 
 /**
+ * Pipe Flow / Fluid Continuity Diagram
+ *
+ * Shows a pipe that narrows (or widens) with flow arrows indicating
+ * velocity changes. Used for continuity equation and Bernoulli's principle.
+ */
+interface PipeFlowDiagramProps {
+  title?: string;
+  wideArea?: number;    // A1 value
+  narrowArea?: number;  // A2 value
+  wideVelocity?: number;  // v1
+  narrowVelocity?: number; // v2
+  showPressure?: boolean;  // show pressure labels
+  widePressure?: string;   // P1 label
+  narrowPressure?: string; // P2 label
+  description?: string;
+}
+
+export function PipeFlowDiagram({
+  title = 'Flow Through a Pipe',
+  wideArea = 4,
+  narrowArea = 2,
+  wideVelocity = 2,
+  narrowVelocity,
+  showPressure = false,
+  widePressure = 'P₁ (high)',
+  narrowPressure = 'P₂ (low)',
+  description,
+}: PipeFlowDiagramProps) {
+  // Calculate narrow velocity from continuity if not provided
+  const v2 = narrowVelocity ?? (wideArea / narrowArea) * wideVelocity;
+
+  // Pipe geometry — draw from left to right
+  // Wide section: x = -8 to -2, half-height proportional to sqrt(wideArea)
+  // Narrow section: x = 2 to 8
+  // Taper: x = -2 to 2
+  const wideHalf = Math.sqrt(wideArea) * 0.8;
+  const narrowHalf = Math.sqrt(narrowArea) * 0.8;
+
+  // Scale arrow lengths relative to each other
+  const maxV = Math.max(wideVelocity, v2, 1);
+  const arrowScale = 2.5 / maxV;
+
+  return (
+    <div className="diagram-container">
+      <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      <Mafs height={300} viewBox={{ x: [-10, 10], y: [-5, 5] }}>
+        {/* Wide section — top wall */}
+        <Line.Segment point1={[-8, wideHalf]} point2={[-2, wideHalf]} color="#475569" weight={3} />
+        {/* Wide section — bottom wall */}
+        <Line.Segment point1={[-8, -wideHalf]} point2={[-2, -wideHalf]} color="#475569" weight={3} />
+
+        {/* Taper — top */}
+        <Line.Segment point1={[-2, wideHalf]} point2={[2, narrowHalf]} color="#475569" weight={3} />
+        {/* Taper — bottom */}
+        <Line.Segment point1={[-2, -wideHalf]} point2={[2, -narrowHalf]} color="#475569" weight={3} />
+
+        {/* Narrow section — top wall */}
+        <Line.Segment point1={[2, narrowHalf]} point2={[8, narrowHalf]} color="#475569" weight={3} />
+        {/* Narrow section — bottom wall */}
+        <Line.Segment point1={[2, -narrowHalf]} point2={[8, -narrowHalf]} color="#475569" weight={3} />
+
+        {/* End caps */}
+        <Line.Segment point1={[-8, -wideHalf]} point2={[-8, wideHalf]} color="#94a3b8" weight={1} />
+        <Line.Segment point1={[8, -narrowHalf]} point2={[8, narrowHalf]} color="#94a3b8" weight={1} />
+
+        {/* Flow arrows — wide section (short, blue) */}
+        <Vector tail={[-6.5, 0]} tip={[-6.5 + wideVelocity * arrowScale, 0]} color="#2563eb" weight={3} />
+        <Vector tail={[-6.5, wideHalf * 0.4]} tip={[-6.5 + wideVelocity * arrowScale, wideHalf * 0.4]} color="#93c5fd" weight={2} />
+        <Vector tail={[-6.5, -wideHalf * 0.4]} tip={[-6.5 + wideVelocity * arrowScale, -wideHalf * 0.4]} color="#93c5fd" weight={2} />
+
+        {/* Flow arrows — narrow section (long, red/orange) */}
+        <Vector tail={[4, 0]} tip={[4 + v2 * arrowScale, 0]} color="#dc2626" weight={3} />
+        <Vector tail={[4, narrowHalf * 0.35]} tip={[4 + v2 * arrowScale, narrowHalf * 0.35]} color="#fca5a5" weight={2} />
+        <Vector tail={[4, -narrowHalf * 0.35]} tip={[4 + v2 * arrowScale, -narrowHalf * 0.35]} color="#fca5a5" weight={2} />
+
+        {/* Area labels */}
+        <Text x={-5} y={wideHalf + 0.7} size={13}>A₁ = {wideArea}</Text>
+        <Text x={5} y={narrowHalf + 0.7} size={13}>A₂ = {narrowArea}</Text>
+
+        {/* Velocity labels */}
+        <Text x={-5} y={-wideHalf - 0.7} size={13}>v₁ = {wideVelocity} m/s</Text>
+        <Text x={5} y={-narrowHalf - 0.7} size={13}>v₂ = {Math.round(v2 * 10) / 10} m/s</Text>
+
+        {/* Area dimension arrows */}
+        <Line.Segment point1={[-8.5, -wideHalf]} point2={[-8.5, wideHalf]} color="#94a3b8" weight={1} style="dashed" />
+        <Line.Segment point1={[8.5, -narrowHalf]} point2={[8.5, narrowHalf]} color="#94a3b8" weight={1} style="dashed" />
+
+        {/* Pressure labels if enabled */}
+        {showPressure && (
+          <>
+            <Text x={-5} y={0} size={11}>{widePressure}</Text>
+            <Text x={5} y={0} size={11}>{narrowPressure}</Text>
+          </>
+        )}
+      </Mafs>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 justify-center mt-3 text-sm text-gray-600">
+        <span className="flex items-center gap-1.5">
+          <div className="w-4 h-1 bg-blue-600 rounded" />
+          Slow flow (wide section)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <div className="w-4 h-1 bg-red-600 rounded" />
+          Fast flow (narrow section)
+        </span>
+      </div>
+      {description && (
+        <p className="text-center text-xs text-gray-500 mt-2 italic">{description}</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * SVG Diagram (Generic / AI-generated)
+ *
+ * Renders arbitrary SVG markup produced by the AI tutor.
+ * Sanitizes to prevent script injection while preserving drawing elements.
+ */
+interface SvgDiagramProps {
+  title?: string;
+  description?: string;
+  svg: string;
+}
+
+function sanitizeSvg(raw: string): string {
+  // Remove script tags and event handlers
+  let s = raw.replace(/<script[\s\S]*?<\/script>/gi, '');
+  s = s.replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '');
+  s = s.replace(/javascript\s*:/gi, '');
+  s = s.replace(/\bxlink:href\s*=\s*["']javascript:[^"']*["']/gi, '');
+  return s;
+}
+
+export function SvgDiagram({ title, description, svg }: SvgDiagramProps) {
+  const sanitized = useMemo(() => sanitizeSvg(svg), [svg]);
+
+  return (
+    <div className="diagram-container">
+      {title && (
+        <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      )}
+      <div
+        className="flex justify-center items-center bg-white rounded-lg border border-gray-200 p-2 overflow-hidden"
+        style={{ minHeight: 200 }}
+        dangerouslySetInnerHTML={{ __html: sanitized }}
+      />
+      {description && (
+        <p className="text-center text-xs text-gray-500 mt-2 italic">{description}</p>
+      )}
+    </div>
+  );
+}
+
+/**
  * Generic Problem Diagram
  * Displays extracted problem text and any diagram description
  */

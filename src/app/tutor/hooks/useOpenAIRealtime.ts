@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
 
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
@@ -17,6 +17,9 @@ export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage'
 export interface RealtimeConfig {
   instructions: string;
   voice?: OpenAIVoice;
+  vadThreshold?: number;
+  vadSilenceDurationMs?: number;
+  vadPrefixPaddingMs?: number;
   onTranscriptUpdate?: (role: 'user' | 'assistant', text: string, isFinal: boolean) => void;
   onWhiteboardCommand?: (commands: WhiteboardCommand[]) => void;
   onError?: (error: Error) => void;
@@ -103,7 +106,11 @@ function parseWhiteboardCommands(text: string): { cleanText: string; commands: W
 }
 
 export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
-  const { instructions, voice = 'alloy', onTranscriptUpdate, onWhiteboardCommand, onError, onStateChange } = config;
+  const {
+    instructions, voice = 'alloy',
+    vadThreshold = 0.6, vadSilenceDurationMs = 1500, vadPrefixPaddingMs = 500,
+    onTranscriptUpdate, onWhiteboardCommand, onError, onStateChange,
+  } = config;
 
   const [state, setState] = useState<RealtimeState>('disconnected');
   const [error, setError] = useState<Error | null>(null);
@@ -115,6 +122,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isPlayingRef = useRef(false);
   const currentResponseTextRef = useRef('');
   const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // Track whether the session should be in listening mode (survives audio playback)
+  const shouldListenRef = useRef(false);
+  // Ref to hold startListening so playNextAudio can call it without circular deps
+  const startListeningRef = useRef<() => void>(() => {});
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
@@ -126,7 +137,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
-      updateState('connected');
+      // If mic is running, go straight back to listening
+      if (audioProcessorRef.current && mediaStreamRef.current) {
+        updateState('listening');
+      } else if (shouldListenRef.current) {
+        // Mic should be on but isn't (e.g. homework upload before mic click) — start it
+        updateState('listening');
+        startListeningRef.current();
+      } else {
+        updateState('connected');
+      }
       return;
     }
 
@@ -238,9 +258,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'response.done':
           console.log('[Realtime] Response complete');
           currentResponseTextRef.current = '';
-          // If no audio was played, go back to connected state
+          // If no audio is playing/queued, resume listening
           if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
-            updateState('connected');
+            if (audioProcessorRef.current && mediaStreamRef.current) {
+              updateState('listening');
+            } else if (shouldListenRef.current) {
+              updateState('listening');
+              startListeningRef.current();
+            } else {
+              updateState('connected');
+            }
           }
           break;
 
@@ -257,7 +284,85 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'response.output_item.done':
           if (data.item?.type === 'function_call') {
             const funcName = data.item.name;
-            const funcArgs = JSON.parse(data.item.arguments || '{}');
+            const rawArgsStr: string = data.item.arguments || '{}';
+
+            // Try to parse function arguments, with multiple fallback strategies
+            let funcArgs: Record<string, string> = {};
+            let parsed = false;
+
+            // Strategy 1: Direct JSON.parse
+            try {
+              funcArgs = JSON.parse(rawArgsStr);
+              parsed = true;
+            } catch {
+              // Strategy 2: Replace literal control characters then parse
+              try {
+                const sanitized = rawArgsStr
+                  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // strip non-standard control chars
+                  .replace(/\r\n?/g, '\\n')  // CR/CRLF → escaped newline
+                  .replace(/\n/g, '\\n')      // LF → escaped newline
+                  .replace(/\t/g, '\\t');     // tab → escaped tab
+                funcArgs = JSON.parse(sanitized);
+                parsed = true;
+              } catch {
+                // Strategy 3: Extract fields via regex (for SVG that breaks JSON structure)
+                console.warn('[Realtime] JSON parse failed, extracting fields via regex');
+
+                // Helper: unescape JSON string escape sequences from regex-extracted content
+                const unescapeJsonString = (s: string): string =>
+                  s.replace(/\\"/g, '"')
+                   .replace(/\\\\/g, '\\')
+                   .replace(/\\n/g, '\n')
+                   .replace(/\\r/g, '\r')
+                   .replace(/\\t/g, '\t')
+                   .replace(/\\'/g, "'")
+                   .replace(/\\\//g, '/');
+
+                if (funcName === 'show_svg_diagram') {
+                  // Match SVG tag — it may contain escaped quotes from JSON context
+                  const svgMatch = rawArgsStr.match(/<svg[\s\S]*?<\/svg>/);
+                  const titleMatch = rawArgsStr.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+                  const descMatch = rawArgsStr.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+                  if (svgMatch) {
+                    // Unescape JSON escapes so SVG attributes have real quotes
+                    funcArgs = {
+                      svg: unescapeJsonString(svgMatch[0]),
+                      title: titleMatch ? unescapeJsonString(titleMatch[1]) : 'Diagram',
+                      description: descMatch ? unescapeJsonString(descMatch[1]) : '',
+                    };
+                    parsed = true;
+                  }
+                } else if (funcName === 'show_equation') {
+                  const latexMatch = rawArgsStr.match(/"latex"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+                  const labelMatch = rawArgsStr.match(/"label"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+                  if (latexMatch) {
+                    funcArgs = {
+                      latex: latexMatch[1],
+                      label: labelMatch ? unescapeJsonString(labelMatch[1]) : '',
+                    };
+                    parsed = true;
+                  }
+                }
+              }
+            }
+
+            if (!parsed) {
+              console.error('[Realtime] Could not parse function arguments at all:', rawArgsStr.substring(0, 200));
+              // Still send function result to avoid hanging the conversation
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
+                  type: 'conversation.item.create',
+                  item: {
+                    type: 'function_call_output',
+                    call_id: data.item.call_id,
+                    output: JSON.stringify({ success: false, message: 'Failed to parse arguments' }),
+                  },
+                }));
+                wsRef.current.send(JSON.stringify({ type: 'response.create' }));
+              }
+              break;
+            }
+
             console.log('[Realtime] Function call:', funcName, funcArgs);
 
             // Convert function call to whiteboard command
@@ -269,89 +374,49 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 latex: funcArgs.latex,
                 label: funcArgs.label,
               };
-            } else if (funcName === 'show_graph') {
+            } else if (funcName === 'show_svg_diagram') {
+              command = {
+                action: 'showSvgDiagram',
+                svg: funcArgs.svg,
+                title: funcArgs.title,
+                description: funcArgs.description,
+              };
+            } else if (funcName === 'show_function_graph') {
+              // Build GraphData from structured AI parameters
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const fns = Array.isArray(funcArgs.functions) ? funcArgs.functions : [];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const fnsOfY = Array.isArray(funcArgs.functionsOfY) ? funcArgs.functionsOfY : [];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const graphFunctions = fns.map((f: any) => ({
+                fn: String(f.expr || ''),
+                color: f.color,
+                label: f.label,
+                domain: f.domain,
+              }));
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const graphFunctionsOfY = fnsOfY.map((f: any) => ({
+                fn: String(f.expr || ''),
+                color: f.color,
+                label: f.label,
+                domain: f.domain,
+              }));
+              const xRange = (Array.isArray(funcArgs.xRange) ? funcArgs.xRange : [-5, 5]) as [number, number];
+              const yRange = (Array.isArray(funcArgs.yRange) ? funcArgs.yRange : [-5, 5]) as [number, number];
               command = {
                 action: 'showGraph',
-                type: funcArgs.graph_type || 'generic-xy',
+                type: 'generic-xy' as const,
                 data: {
                   title: funcArgs.title || '',
-                  xLabel: funcArgs.x_label || 'x',
-                  yLabel: funcArgs.y_label || 'y',
-                  xRange: [0, 10] as [number, number],
-                  yRange: [0, 10] as [number, number],
+                  xLabel: funcArgs.xLabel || 'x',
+                  yLabel: funcArgs.yLabel || 'y',
+                  xRange,
+                  yRange,
+                  functions: graphFunctions,
+                  functionsOfY: graphFunctionsOfY,
+                  points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
+                  shadedRegion: funcArgs.shadedRegion ? funcArgs.shadedRegion as unknown as ShadedRegion : undefined,
                 },
-              };
-            } else if (funcName === 'show_diagram') {
-              const diagramType = funcArgs.diagram_type || 'vectors';
-              // Build params based on what the AI provided
-              const diagramParams: Record<string, unknown> = {
-                description: funcArgs.description,
-                title: funcArgs.title,
-              };
-
-              // Handle different diagram types with AI-provided parameters
-              if (diagramType === 'projectile') {
-                diagramParams.v0 = funcArgs.initial_velocity || funcArgs.v0 || 20;
-                diagramParams.angle = funcArgs.launch_angle || funcArgs.angle || 45;
-              } else if (diagramType === 'free-body') {
-                diagramParams.forces = funcArgs.forces || [
-                  { magnitude: 10, direction: 270, label: 'W', color: '#dc2626' },
-                ];
-                diagramParams.showNet = funcArgs.show_resultant;
-              } else if (diagramType === 'vectors' || diagramType === 'velocity' || diagramType === 'triangle') {
-                // Use vectors provided by AI, or construct from triangle parameters
-                if (funcArgs.vectors && funcArgs.vectors.length > 0) {
-                  diagramParams.vectors = funcArgs.vectors;
-                } else if (funcArgs.height || funcArgs.base || funcArgs.angle) {
-                  // Construct vectors for a triangle/geometry problem
-                  const vectors = [];
-                  if (funcArgs.height) {
-                    vectors.push({
-                      magnitude: funcArgs.height,
-                      direction: 90, // vertical (up)
-                      label: `h = ${funcArgs.height}m`,
-                    });
-                  }
-                  if (funcArgs.base) {
-                    vectors.push({
-                      magnitude: funcArgs.base,
-                      direction: 0, // horizontal (right)
-                      label: `d = ${funcArgs.base}m`,
-                    });
-                  }
-                  // If we have height and angle, we can show the hypotenuse/line of sight
-                  if (funcArgs.height && funcArgs.angle) {
-                    const angleRad = (funcArgs.angle * Math.PI) / 180;
-                    const hypotenuse = funcArgs.height / Math.sin(angleRad);
-                    vectors.push({
-                      magnitude: hypotenuse,
-                      direction: funcArgs.angle, // angle from horizontal
-                      label: `θ = ${funcArgs.angle}°`,
-                      color: '#9333ea',
-                    });
-                  }
-                  diagramParams.vectors = vectors.length > 0 ? vectors : [
-                    { magnitude: 5, direction: 90, label: 'height' },
-                    { magnitude: 5, direction: 0, label: 'distance' },
-                  ];
-                } else {
-                  diagramParams.vectors = [
-                    { magnitude: 5, direction: 0, label: 'v₁' },
-                    { magnitude: 3, direction: 90, label: 'v₂' },
-                  ];
-                }
-                diagramParams.showResultant = funcArgs.show_resultant;
-                diagramParams.showAxes = true;
-              } else if (diagramType === 'circular-path') {
-                diagramParams.radius = funcArgs.radius || 3;
-              } else if (diagramType === 'motion') {
-                diagramParams.positions = funcArgs.positions;
-              }
-
-              command = {
-                action: 'showDiagram',
-                type: diagramType === 'triangle' ? 'vectors' : diagramType,
-                params: diagramParams,
               };
             }
 
@@ -476,69 +541,87 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               },
               {
                 type: 'function',
-                name: 'show_graph',
-                description: 'Display a graph on the whiteboard. Use this for position-time, velocity-time, or other graphs.',
+                name: 'show_function_graph',
+                description: 'Plot mathematical functions accurately on the whiteboard. Use this tool INSTEAD of show_svg_diagram whenever you need to graph mathematical functions (y=f(x) or x=f(y)), show curves, or shade regions between curves. The rendering engine computes exact coordinates — you just provide the function expressions as strings. Supports: y=f(x) functions, x=f(y) functions, labeled points, and shaded regions between two curves. Function expressions use JavaScript math syntax: use ** for exponents (not ^), Math.sin, Math.cos, Math.sqrt, Math.abs, Math.PI, Math.E. Variable names: use "x" for f(x) functions, "y" for f(y) functions.',
                 parameters: {
                   type: 'object',
                   properties: {
-                    graph_type: { type: 'string', enum: ['position-time', 'velocity-time', 'acceleration-time', 'generic-xy'], description: 'Type of graph' },
-                    title: { type: 'string', description: 'Title of the graph' },
-                    x_label: { type: 'string', description: 'X-axis label' },
-                    y_label: { type: 'string', description: 'Y-axis label' },
+                    title: { type: 'string', description: 'Title for the graph' },
+                    xLabel: { type: 'string', description: 'X-axis label (default: "x")' },
+                    yLabel: { type: 'string', description: 'Y-axis label (default: "y")' },
+                    xRange: { type: 'array', items: { type: 'number' }, description: 'Visible x-axis range as [min, max], e.g. [-5, 10]' },
+                    yRange: { type: 'array', items: { type: 'number' }, description: 'Visible y-axis range as [min, max], e.g. [-5, 5]' },
+                    functions: {
+                      type: 'array',
+                      description: 'y=f(x) functions to plot. Each has expr (JS math string using "x"), color, label, domain.',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          expr: { type: 'string', description: 'Function expression using x, e.g. "4 - 0.5*x", "x**2", "Math.sin(x)"' },
+                          color: { type: 'string', description: 'Color hex, e.g. "#dc2626"' },
+                          label: { type: 'string', description: 'Legend label, e.g. "y = 4 - x/2"' },
+                          domain: { type: 'array', items: { type: 'number' }, description: 'Optional x-domain restriction [min, max]' },
+                        },
+                        required: ['expr'],
+                      },
+                    },
+                    functionsOfY: {
+                      type: 'array',
+                      description: 'x=f(y) functions to plot (curves where x depends on y). Each has expr (JS math string using "y"), color, label, domain.',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          expr: { type: 'string', description: 'Function expression using y, e.g. "y**3", "3*y - 2"' },
+                          color: { type: 'string', description: 'Color hex' },
+                          label: { type: 'string', description: 'Legend label, e.g. "x = y³"' },
+                          domain: { type: 'array', items: { type: 'number' }, description: 'Optional y-domain restriction [min, max]' },
+                        },
+                        required: ['expr'],
+                      },
+                    },
+                    points: {
+                      type: 'array',
+                      description: 'Labeled points to mark on the graph',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          x: { type: 'number' },
+                          y: { type: 'number' },
+                          label: { type: 'string', description: 'e.g. "(1, 1)"' },
+                          color: { type: 'string' },
+                        },
+                        required: ['x', 'y'],
+                      },
+                    },
+                    shadedRegion: {
+                      type: 'object',
+                      description: 'Shade the area between two curves. For integrating over y (horizontal slices), set axis="y" and provide two x=f(y) expressions. For integrating over x (vertical slices), set axis="x" and provide two y=f(x) expressions.',
+                      properties: {
+                        axis: { type: 'string', enum: ['x', 'y'], description: '"x" for vertical slices (between y=f(x) curves), "y" for horizontal slices (between x=f(y) curves)' },
+                        between: { type: 'array', items: { type: 'string' }, description: 'Two function expressions. For axis="y": two x=f(y) expressions. For axis="x": two y=f(x) expressions.' },
+                        from: { type: 'number', description: 'Lower integration bound' },
+                        to: { type: 'number', description: 'Upper integration bound' },
+                        color: { type: 'string', description: 'Shade color (default: green)' },
+                        opacity: { type: 'number', description: 'Fill opacity 0-1 (default: 0.3)' },
+                      },
+                      required: ['axis', 'between', 'from', 'to'],
+                    },
                   },
-                  required: ['graph_type'],
+                  required: ['title'],
                 },
               },
               {
                 type: 'function',
-                name: 'show_diagram',
-                description: 'Display a physics diagram on the whiteboard. Choose the RIGHT type: "free-body" for ANY force analysis including buoyancy/floating/sinking (buoyant force up, weight down), "vectors" for comparing velocities or vector addition, "projectile" for trajectories, "circular-path" for circular motion, "motion" for position dots over time. For buoyancy/fluid problems, ALWAYS use "free-body" with upward buoyant force and downward weight force.',
+                name: 'show_svg_diagram',
+                description: 'Display a physics diagram, illustration, or non-mathematical visual on the whiteboard using raw SVG markup. Use this for physical setups (pipes, cars, ramps, pulleys, circuits, etc.), NOT for mathematical function graphs — use show_function_graph for those instead. Rules: (1) For physics diagrams, draw REALISTIC shapes — actual car silhouettes for motion problems, actual pipe shapes for fluid flow, block shapes for free body diagrams. (2) Use filled shapes, gradients, and colors for professional quality. (3) Always include labeled arrows, dimensions, values, and titles.',
                 parameters: {
                   type: 'object',
                   properties: {
-                    diagram_type: {
-                      type: 'string',
-                      enum: ['vectors', 'free-body', 'projectile', 'circular-path', 'motion', 'triangle'],
-                      description: 'Type of diagram: vectors (for showing multiple vectors with magnitudes and angles), free-body (forces on object), projectile (trajectory), circular-path, motion (position vs time), triangle (for geometry/trig problems)'
-                    },
-                    title: { type: 'string', description: 'Title for the diagram' },
-                    // For vectors diagram
-                    vectors: {
-                      type: 'array',
-                      description: 'Array of vectors to show (for vectors type). Each vector has magnitude, direction (degrees from east, counterclockwise), and label.',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          magnitude: { type: 'number', description: 'Length/magnitude of vector' },
-                          direction: { type: 'number', description: 'Angle in degrees (0=east/right, 90=north/up, 180=west, 270=south)' },
-                          label: { type: 'string', description: 'Label for this vector (e.g., "v", "F", "height=3400m")' }
-                        }
-                      }
-                    },
-                    show_resultant: { type: 'boolean', description: 'Whether to show the resultant/sum vector' },
-                    // For projectile diagram
-                    initial_velocity: { type: 'number', description: 'Initial velocity in m/s (for projectile)' },
-                    launch_angle: { type: 'number', description: 'Launch angle in degrees (for projectile)' },
-                    // For free-body diagram
-                    forces: {
-                      type: 'array',
-                      description: 'Array of forces (for free-body type)',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          magnitude: { type: 'number' },
-                          direction: { type: 'number', description: 'Angle in degrees' },
-                          label: { type: 'string', description: 'Force label (e.g., "W", "N", "F")' }
-                        }
-                      }
-                    },
-                    // For triangle/geometry problems
-                    height: { type: 'number', description: 'Vertical height (for triangle problems)' },
-                    base: { type: 'number', description: 'Horizontal base (for triangle problems)' },
-                    angle: { type: 'number', description: 'Angle in degrees (for triangle problems)' },
-                    description: { type: 'string', description: 'Additional description of what the diagram represents' },
+                    title: { type: 'string', description: 'Title for the visual' },
+                    description: { type: 'string', description: 'Brief description of what the visual shows' },
+                    svg: { type: 'string', description: 'Complete SVG markup. MUST start with <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">. Rules: (1) For containers (tubes, tanks, pipes), draw WALLS as separate <rect> elements, then fill fluid as colored <rect> inside. (2) For arrows, use <line> + <polygon> arrowhead. (3) Use colors: #2563eb (blue), #dc2626 (red), #16a34a (green), #9333ea (purple), #f59e0b (amber), #64748b (gray). (4) Labels: <text font-family="Arial, sans-serif" font-size="14">. (5) End with </svg>. (6) PROPORTIONAL SIZING: SVG element sizes MUST be proportional to actual values. (7) Do NOT include literal newlines inside SVG — keep SVG on one line or use spaces.' },
                   },
-                  required: ['diagram_type'],
+                  required: ['svg', 'title'],
                 },
               },
             ],
@@ -548,9 +631,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 transcription: { model: 'whisper-1', language: 'en' },
                 turn_detection: {
                   type: 'server_vad',
-                  threshold: 0.6,              // Higher threshold = less sensitive to quiet sounds
-                  prefix_padding_ms: 500,      // More padding before speech
-                  silence_duration_ms: 1500,   // Wait 1.5 seconds of silence before responding
+                  threshold: vadThreshold,              // Higher threshold = less sensitive to quiet sounds (0-1)
+                  prefix_padding_ms: vadPrefixPaddingMs, // Audio included before detected speech
+                  silence_duration_ms: vadSilenceDurationMs, // Wait this long before responding
                 },
               },
               output: {
@@ -585,10 +668,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       onError?.(error);
       updateState('error');
     }
-  }, [instructions, voice, handleMessage, onError, updateState]);
+  }, [instructions, voice, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
 
   // Disconnect
   const disconnect = useCallback(() => {
+    shouldListenRef.current = false;
+
     // Stop audio capture
     if (audioProcessorRef.current) {
       audioProcessorRef.current.disconnect();
@@ -618,6 +703,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       console.error('[Realtime] Not connected');
       return;
     }
+
+    // If mic is already active, just update state
+    if (audioProcessorRef.current && mediaStreamRef.current) {
+      shouldListenRef.current = true;
+      updateState('listening');
+      return;
+    }
+
+    shouldListenRef.current = true;
 
     try {
       // Get microphone access
@@ -669,6 +763,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, [onError, updateState]);
 
+  // Keep ref in sync for playNextAudio to call
+  startListeningRef.current = startListening;
+
   // Stop listening
   const stopListening = useCallback(() => {
     // Stop audio capture
@@ -715,6 +812,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   // Pause - stop mic and audio without disconnecting WebSocket
   const pause = useCallback(() => {
+    shouldListenRef.current = false;
     // Stop audio capture without committing buffer
     if (audioProcessorRef.current) {
       audioProcessorRef.current.disconnect();
@@ -748,6 +846,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       console.error('[Realtime] Not connected');
       return;
     }
+
+    // Mark session as active — mic should auto-start after AI responds
+    shouldListenRef.current = true;
 
     // Add user message to conversation
     wsRef.current.send(JSON.stringify({

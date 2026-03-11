@@ -7,16 +7,23 @@
  * Supports both text and voice modes.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { ArrowLeft, BookOpen, Play, Send, Loader2, Mic, MessageSquare, DollarSign } from 'lucide-react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
-import { getAllModuleMetadata, initializeRegistry, type ModuleMetadata } from '@/lib/knowledge/registry';
+import {
+  SUBJECTS,
+  SESSION_GOALS,
+  getLevelsForSubject,
+  getTopicsForSubjectLevel,
+  buildDisplayName,
+  getTopicLabel,
+} from '@/lib/tutor/topic-taxonomy';
 import Link from 'next/link';
 import { TranscriptView } from './components/TranscriptView';
 import { SessionControls } from './components/SessionControls';
 import { WhiteboardCanvas } from './components/whiteboard';
 import { VoiceTutor } from './components/VoiceTutor';
-import { VoiceTutorRealtime } from './components/VoiceTutorRealtime';
+import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
@@ -44,16 +51,6 @@ const PRICING = {
   output: 15.0, // $15 per 1M output tokens
 };
 
-function calculateCost(usage: TokenUsage[]): number {
-  const totals = usage.reduce(
-    (acc, u) => ({
-      input: acc.input + u.inputTokens,
-      output: acc.output + u.outputTokens,
-    }),
-    { input: 0, output: 0 }
-  );
-  return (totals.input / 1_000_000) * PRICING.input + (totals.output / 1_000_000) * PRICING.output;
-}
 
 interface ConversationMessage {
   role: 'user' | 'assistant';
@@ -70,8 +67,9 @@ export default function TutorPage() {
   }, [onView]);
 
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
-  const [availableTopics, setAvailableTopics] = useState<ModuleMetadata[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<ModuleMetadata | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedTopicId, setSelectedTopicId] = useState('');
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('text');
@@ -90,29 +88,157 @@ export default function TutorPage() {
 
   // Token usage tracking
   const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
-  const [showUsageDetails, setShowUsageDetails] = useState(false);
+  const sessionStartTimeRef = useRef<Date | null>(null);
+  const lastSavedTokenCountRef = useRef(0); // track what we've already pushed to avoid duplicates
 
-  // Load available topics from registry
-  useEffect(() => {
-    const loadTopics = async () => {
-      await initializeRegistry();
-      const modules = getAllModuleMetadata();
-      setAvailableTopics(modules);
-      if (modules.length > 0 && !selectedTopic) {
-        setSelectedTopic(modules[0]);
-      }
+  // Save session usage to DB (fire-and-forget, tolerates failures)
+  const saveSessionUsage = useCallback((status: 'active' | 'completed' | 'abandoned' = 'active') => {
+    if (!selectedTopicId || stage === 'setup') return;
+
+    const now = new Date();
+    const startTime = sessionStartTimeRef.current || now;
+    const duration = Math.round((now.getTime() - startTime.getTime()) / 1000);
+    const totalIn = tokenUsage.reduce((s, u) => s + u.inputTokens, 0);
+    const totalOut = tokenUsage.reduce((s, u) => s + u.outputTokens, 0);
+    const cost = (totalIn / 1_000_000) * PRICING.input + (totalOut / 1_000_000) * PRICING.output;
+
+    // Only push new token entries since last save
+    const newEntries = tokenUsage.slice(lastSavedTokenCountRef.current);
+    lastSavedTokenCountRef.current = tokenUsage.length;
+
+    const payload: Record<string, unknown> = {
+      sessionId,
+      subject: selectedSubject,
+      topic: selectedTopicId,
+      level: selectedLevel,
+      sessionGoal,
+      inputMode,
+      voiceEngine: inputMode === 'voice' ? voiceEngine : undefined,
+      studentName: studentName || undefined,
+      startedAt: startTime.toISOString(),
+      endedAt: status !== 'active' ? now.toISOString() : undefined,
+      duration,
+      messageCount: transcript.length,
+      whiteboardItemCount: whiteboardCommands.length,
+      totalInputTokens: totalIn,
+      totalOutputTokens: totalOut,
+      estimatedCost: Math.round(cost * 10000) / 10000,
+      status,
+      ...(newEntries.length > 0 ? { tokenUsage: newEntries.map(u => ({
+        operation: u.operation,
+        inputTokens: u.inputTokens,
+        outputTokens: u.outputTokens,
+        timestamp: u.timestamp.toISOString(),
+      })) } : {}),
     };
-    loadTopics();
+
+    // Use sendBeacon for unload, fetch otherwise
+    if (status === 'abandoned') {
+      navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(payload));
+    } else {
+      fetch('/api/tutor/session-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  }, [sessionId, selectedSubject, selectedLevel, selectedTopicId, stage, sessionGoal, inputMode, voiceEngine, studentName, transcript.length, whiteboardCommands.length, tokenUsage]);
+
+  // Save on page unload (abandoned)
+  useEffect(() => {
+    if (stage !== 'session') return;
+
+    const handleBeforeUnload = () => {
+      saveSessionUsage('abandoned');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [stage, saveSessionUsage]);
+
+  // Derived taxonomy state
+  const availableLevels = useMemo(() => getLevelsForSubject(selectedSubject), [selectedSubject]);
+  const availableTopics = useMemo(() => getTopicsForSubjectLevel(selectedSubject, selectedLevel), [selectedSubject, selectedLevel]);
+  const topicDisplayName = useMemo(
+    () => selectedTopicId ? buildDisplayName(selectedSubject, selectedLevel, selectedTopicId) : '',
+    [selectedSubject, selectedLevel, selectedTopicId]
+  );
+  const canStartSession = !!(selectedSubject && selectedLevel && selectedTopicId);
+
+  // Reset downstream selections when parent changes
+  const handleSubjectChange = useCallback((subjectId: string) => {
+    setSelectedSubject(subjectId);
+    setSelectedLevel('');
+    setSelectedTopicId('');
   }, []);
+
+  const handleLevelChange = useCallback((levelId: string) => {
+    setSelectedLevel(levelId);
+    setSelectedTopicId('');
+  }, []);
+
+  // Resizable split between transcript and whiteboard (percentage for transcript)
+  const [splitPercent, setSplitPercent] = useState(50);
+  const isDraggingSplit = useRef(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingSplit.current = true;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDraggingSplit.current || !splitContainerRef.current) return;
+      const rect = splitContainerRef.current.getBoundingClientRect();
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitPercent(Math.max(25, Math.min(75, pct)));
+    };
+
+    const onUp = () => {
+      isDraggingSplit.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
+
+  // Vertical resizable split between main content and input area (pixels from bottom)
+  const [inputHeight, setInputHeight] = useState(64); // default compact height for voice bar
+  const isDraggingVertical = useRef(false);
+  const pageContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingVertical.current = true;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDraggingVertical.current || !pageContainerRef.current) return;
+      const rect = pageContainerRef.current.getBoundingClientRect();
+      const fromBottom = rect.bottom - ev.clientY;
+      setInputHeight(Math.max(48, Math.min(300, fromBottom)));
+    };
+
+    const onUp = () => {
+      isDraggingVertical.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
+
 
   // Input state
   const [inputText, setInputText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const realtimeHandleRef = useRef<RealtimeHandle | null>(null);
 
   // Send message to tutor API
   const sendMessage = useCallback(
     async (message: string) => {
-      if (!message.trim() || isProcessing || !selectedTopic) return;
+      if (!message.trim() || isProcessing || !selectedTopicId) return;
 
       setIsProcessing(true);
       setError(null);
@@ -134,9 +260,9 @@ export default function TutorPage() {
           body: JSON.stringify({
             message,
             conversationHistory,
-            subject: selectedTopic.subject,
-            topic: selectedTopic.topic,
-            level: selectedTopic.level,
+            subject: selectedSubject,
+            topic: selectedTopicId,
+            level: selectedLevel,
             studentName: studentName || undefined,
             sessionGoal,
           }),
@@ -192,7 +318,7 @@ export default function TutorPage() {
         setIsProcessing(false);
       }
     },
-    [conversationHistory, selectedTopic, studentName, sessionGoal, isProcessing, trackInteraction]
+    [conversationHistory, selectedSubject, selectedLevel, selectedTopicId, studentName, sessionGoal, isProcessing, trackInteraction]
   );
 
   // Handle form submit
@@ -209,17 +335,19 @@ export default function TutorPage() {
 
   // Start session with greeting
   const handleStartSession = useCallback(async () => {
-    if (!selectedTopic) return;
+    if (!canStartSession) return;
 
     // Track demo try
     onTry();
-    trackInteraction('navigation', 'session_start', { topic: selectedTopic.topic, goal: sessionGoal, inputMode });
+    trackInteraction('navigation', 'session_start', { topic: selectedTopicId, goal: sessionGoal, inputMode });
 
     setStage('session');
     setTranscript([]);
     setConversationHistory([]);
     setWhiteboardCommands([]);
     setTokenUsage([]); // Reset token usage for new session
+    sessionStartTimeRef.current = new Date();
+    lastSavedTokenCountRef.current = 0;
 
     // For voice mode, VoiceTutor handles initialization
     if (inputMode === 'voice') {
@@ -227,7 +355,8 @@ export default function TutorPage() {
     }
 
     // For text mode, get initial greeting (context-aware)
-    const greetingMessage = getInitialGreetingPrompt(sessionGoal, selectedTopic.topic);
+    const topicLabel = getTopicLabel(selectedSubject, selectedLevel, selectedTopicId);
+    const greetingMessage = getInitialGreetingPrompt(sessionGoal, topicLabel);
 
     setIsProcessing(true);
     try {
@@ -237,9 +366,9 @@ export default function TutorPage() {
         body: JSON.stringify({
           message: greetingMessage,
           conversationHistory: [],
-          subject: selectedTopic.subject,
-          topic: selectedTopic.topic,
-          level: selectedTopic.level,
+          subject: selectedSubject,
+          topic: selectedTopicId,
+          level: selectedLevel,
           studentName: studentName || undefined,
           sessionGoal,
         }),
@@ -279,7 +408,7 @@ export default function TutorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedTopic, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
+  }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
 
   // Handle transcript updates from VoiceTutor
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
@@ -300,16 +429,18 @@ export default function TutorPage() {
   const handleEndSession = useCallback(() => {
     // Track demo complete
     onComplete({
-      topic: selectedTopic?.topic,
+      topic: selectedTopicId,
       messagesExchanged: transcript.length,
       sessionGoal
     });
+    // Save session as completed to DB
+    saveSessionUsage('completed');
     setStage('summary');
-  }, [onComplete, selectedTopic, transcript.length, sessionGoal]);
+  }, [onComplete, selectedTopicId, transcript.length, sessionGoal, saveSessionUsage]);
 
   // Upload homework and extract problems
   const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
-    if (!selectedTopic) return;
+    if (!selectedTopicId) return;
     console.log('[Tutor] Processing homework upload:', mimeType);
     setIsProcessing(true);
     setError(null);
@@ -322,9 +453,9 @@ export default function TutorPage() {
         body: JSON.stringify({
           imageData,
           mimeType,
-          subject: selectedTopic.subject,
-          topic: selectedTopic.topic,
-          level: selectedTopic.level,
+          subject: selectedSubject,
+          topic: selectedTopicId,
+          level: selectedLevel,
           conversationHistory,
         }),
       });
@@ -350,44 +481,63 @@ export default function TutorPage() {
         ? `I uploaded a homework problem. Here's what it says:\n\n${data.extractedProblem}\n\nCan you help me understand it and work through it?`
         : 'Here is my homework problem. Can you help me understand it and work through it?';
 
-      // Add user upload message to transcript (shows short text to user)
-      const userEntry: TranscriptEntry = {
-        id: `user-${Date.now()}`,
-        timestamp: new Date(),
-        role: 'student',
-        text: '[Uploaded homework image]',
-      };
+      // If in realtime voice mode, send extracted problem through the WebSocket
+      // so the AI acknowledges it verbally and speaks its response
+      if (inputMode === 'voice' && voiceEngine === 'realtime' && realtimeHandleRef.current && data.extractedProblem) {
+        console.log('[Tutor] Sending extracted homework to realtime API for voice response');
 
-      // Add tutor response to transcript
-      const tutorEntry: TranscriptEntry = {
-        id: `tutor-${Date.now()}`,
-        timestamp: new Date(),
-        role: 'tutor',
-        text: data.text,
-      };
+        // Add user upload message to transcript for display only
+        const userEntry: TranscriptEntry = {
+          id: `user-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'student',
+          text: '[Uploaded homework image]',
+        };
+        setTranscript((prev) => [...prev, userEntry]);
 
-      setTranscript((prev) => [...prev, userEntry, tutorEntry]);
+        // Send extracted problem to realtime WebSocket — the AI will speak its response
+        realtimeHandleRef.current.sendTextMessage(
+          `The student just uploaded a homework problem image. Here is the extracted text:\n\n${data.extractedProblem}\n\nYou MUST do ALL of the following:\n1. Draw the problem setup on the whiteboard — if it involves graphing functions or curves, use show_function_graph with the function expressions. For physics diagrams (objects, forces, circuits), use show_svg_diagram.\n2. Verbally acknowledge the upload and briefly summarize what the problem asks.\n3. As you work through each solution step, call show_equation to display each equation and substitution on the whiteboard.\n4. Guide the student through the solution step by step, asking them questions along the way.`
+        );
+      } else {
+        // Text mode: add both entries to transcript
+        const userEntry: TranscriptEntry = {
+          id: `user-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'student',
+          text: '[Uploaded homework image]',
+        };
 
-      // Store the FULL extracted problem in conversation history for context
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: 'user', content: userMessageForHistory },
-        { role: 'assistant', content: data.text },
-      ]);
+        const tutorEntry: TranscriptEntry = {
+          id: `tutor-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'tutor',
+          text: data.text,
+        };
 
-      // Add whiteboard commands from homework extraction
-      if (data.whiteboardCommands?.length > 0) {
-        setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
+        setTranscript((prev) => [...prev, userEntry, tutorEntry]);
+
+        // Store the FULL extracted problem in conversation history for context
+        setConversationHistory((prev) => [
+          ...prev,
+          { role: 'user', content: userMessageForHistory },
+          { role: 'assistant', content: data.text },
+        ]);
+
+        // Add whiteboard commands from homework extraction
+        if (data.whiteboardCommands?.length > 0) {
+          setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
+        }
       }
 
-      console.log('[Tutor] Homework context stored in conversation history');
+      console.log('[Tutor] Homework processed successfully');
     } catch (err) {
       console.error('[Tutor] Homework upload error:', err);
       setError(err instanceof Error ? err.message : 'Failed to process homework');
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedTopic, conversationHistory]);
+  }, [selectedSubject, selectedLevel, selectedTopicId, conversationHistory, inputMode, voiceEngine]);
 
   // Focus input when session starts
   useEffect(() => {
@@ -412,7 +562,7 @@ export default function TutorPage() {
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">AI Tutor</h1>
             <p className="text-gray-600 mt-2">
-              Practice with an AI tutor that helps you learn physics.
+              Practice with an AI tutor across any subject and level.
             </p>
           </div>
 
@@ -436,46 +586,69 @@ export default function TutorPage() {
               />
             </div>
 
-            {/* Topic selection */}
+            {/* Subject selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Topic
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                Subject
               </label>
-              <div className="grid gap-3">
-                {availableTopics.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 border border-dashed rounded-lg">
-                    Loading topics...
-                  </div>
-                ) : (
-                  availableTopics.map((topic) => (
-                    <button
-                      key={topic.id}
-                      onClick={() => setSelectedTopic(topic)}
-                      className={`p-4 text-left border rounded-lg transition-all ${
-                        selectedTopic?.id === topic.id
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <BookOpen className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <h3 className="font-medium text-gray-900">
-                            {topic.displayName}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {topic.description}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            ~{topic.estimatedHours} hours to master
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
+              <select
+                id="subject"
+                value={selectedSubject}
+                onChange={(e) => handleSubjectChange(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">Select a subject...</option>
+                {SUBJECTS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.icon} {s.label}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Level selection */}
+            {selectedSubject && (
+              <div>
+                <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
+                  Level
+                </label>
+                <select
+                  id="level"
+                  value={selectedLevel}
+                  onChange={(e) => handleLevelChange(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select a level...</option>
+                  {availableLevels.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Topic selection */}
+            {selectedLevel && availableTopics.length > 0 && (
+              <div>
+                <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-2">
+                  Topic
+                </label>
+                <select
+                  id="topic"
+                  value={selectedTopicId}
+                  onChange={(e) => setSelectedTopicId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select a topic...</option>
+                  {availableTopics.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Goal selection */}
             <div>
@@ -483,12 +656,7 @@ export default function TutorPage() {
                 What do you want to do?
               </label>
               <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: 'practice', label: 'Practice Problems', icon: '📝' },
-                  { id: 'homework-help', label: 'Homework Help', icon: '📚' },
-                  { id: 'concept-review', label: 'Review Concepts', icon: '💡' },
-                  { id: 'test-prep', label: 'Test Prep', icon: '🎯' },
-                ].map((goal) => (
+                {SESSION_GOALS.map((goal) => (
                   <button
                     key={goal.id}
                     onClick={() => setSessionGoal(goal.id as SessionGoal)}
@@ -501,6 +669,9 @@ export default function TutorPage() {
                     <span className="text-xl">{goal.icon}</span>
                     <span className="block mt-1 text-sm font-medium">
                       {goal.label}
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      {goal.description}
                     </span>
                   </button>
                 ))}
@@ -548,7 +719,7 @@ export default function TutorPage() {
             {/* Start button */}
             <button
               onClick={handleStartSession}
-              disabled={!selectedTopic}
+              disabled={!canStartSession}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white text-lg font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {inputMode === 'voice' ? <Mic className="w-5 h-5" /> : <Play className="w-5 h-5" />}
@@ -568,26 +739,16 @@ export default function TutorPage() {
     );
   }
 
-  // Calculate totals for display
-  const totalTokens = tokenUsage.reduce(
-    (acc, u) => ({
-      input: acc.input + u.inputTokens,
-      output: acc.output + u.outputTokens,
-    }),
-    { input: 0, output: 0 }
-  );
-  const totalCost = calculateCost(tokenUsage);
-
   // Render session stage
   if (stage === 'session') {
     return (
-      <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+      <div ref={pageContainerRef} className="h-screen bg-gray-100 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="flex-shrink-0 bg-white border-b px-4 py-2">
           <div className="container mx-auto flex items-center justify-between">
             <div>
               <h1 className="font-semibold text-gray-900">
-                {selectedTopic?.displayName || 'AI Tutor'}
+                {topicDisplayName || 'AI Tutor'}
               </h1>
               <p className="text-sm text-gray-500">
                 {sessionGoal === 'practice'
@@ -600,70 +761,35 @@ export default function TutorPage() {
               </p>
             </div>
 
-            {/* Token usage badge */}
-            {tokenUsage.length > 0 && (
-              <button
-                onClick={() => setShowUsageDetails(!showUsageDetails)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors"
-                title="Click to see usage details"
-              >
-                <DollarSign className="w-4 h-4 text-green-600" />
-                <span className="font-mono text-gray-700">${totalCost.toFixed(4)}</span>
-                <span className="text-gray-400">|</span>
-                <span className="text-gray-500 text-xs">
-                  {totalTokens.input + totalTokens.output} tokens
-                </span>
-              </button>
-            )}
           </div>
         </header>
 
-        {/* Token usage details dropdown */}
-        {showUsageDetails && tokenUsage.length > 0 && (
-          <div className="flex-shrink-0 bg-white border-b px-4 py-3">
-            <div className="container mx-auto">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Session Token Usage</h3>
-              <div className="grid grid-cols-3 gap-4 text-sm mb-3">
-                <div className="bg-blue-50 p-2 rounded">
-                  <p className="text-gray-500">Input Tokens</p>
-                  <p className="font-mono font-medium">{totalTokens.input.toLocaleString()}</p>
-                </div>
-                <div className="bg-green-50 p-2 rounded">
-                  <p className="text-gray-500">Output Tokens</p>
-                  <p className="font-mono font-medium">{totalTokens.output.toLocaleString()}</p>
-                </div>
-                <div className="bg-yellow-50 p-2 rounded">
-                  <p className="text-gray-500">Est. Cost</p>
-                  <p className="font-mono font-medium">${totalCost.toFixed(4)}</p>
-                </div>
-              </div>
-              <div className="max-h-32 overflow-y-auto text-xs">
-                {tokenUsage.map((u, i) => (
-                  <div key={i} className="flex justify-between py-1 border-b border-gray-100">
-                    <span className="text-gray-500">{u.operation}</span>
-                    <span className="font-mono">{u.inputTokens} in / {u.outputTokens} out</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Session controls */}
-        <div className="flex-shrink-0 container mx-auto px-4 py-2">
+        <div className="flex-shrink-0 container mx-auto px-4 py-1">
           <SessionControls
             sessionId={sessionId}
             maxDuration={30}
             onEndSession={handleEndSession}
             onUploadHomework={handleUploadHomework}
+            transcript={transcript}
+            whiteboardCommands={whiteboardCommands}
+            topicName={topicDisplayName || 'AI Tutor'}
+            sessionGoal={sessionGoal}
+            studentName={studentName || undefined}
           />
         </div>
 
-        {/* Main content - increased height by using more vertical space */}
-        <div className="flex-1 min-h-0 container mx-auto px-4 py-2 flex gap-4" style={{ minHeight: '60vh' }}>
-          {/* Transcript - increased flex grow */}
-          <div className="flex-1 min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-            <div className="flex-1 min-h-0 overflow-y-auto" style={{ minHeight: '400px' }}>
+        {/* Main content - resizable split */}
+        <div
+          ref={splitContainerRef}
+          className="flex-1 min-h-0 px-4 py-1 flex"
+        >
+          {/* Transcript */}
+          <div
+            className="min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col"
+            style={{ width: `${splitPercent}%` }}
+          >
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <TranscriptView
                 transcript={transcript}
                 isProcessing={isProcessing}
@@ -671,8 +797,27 @@ export default function TutorPage() {
             </div>
           </div>
 
+          {/* Draggable split handle */}
+          <div
+            onMouseDown={handleSplitMouseDown}
+            className="hidden lg:flex w-4 cursor-col-resize items-center justify-center group hover:bg-blue-100 active:bg-blue-200 transition-colors flex-shrink-0 rounded"
+            title="Drag to resize panels"
+          >
+            <div className="flex flex-col gap-1 items-center">
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            </div>
+          </div>
+
           {/* Whiteboard */}
-          <div className="hidden lg:flex w-1/2 min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col">
+          <div
+            className="hidden lg:flex min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col"
+            style={{ width: `${100 - splitPercent}%` }}
+          >
             <WhiteboardCanvas
               commands={whiteboardCommands}
               onClear={() => setWhiteboardCommands([])}
@@ -680,15 +825,34 @@ export default function TutorPage() {
           </div>
         </div>
 
+        {/* Vertical resize handle */}
+        <div
+          onMouseDown={handleVerticalMouseDown}
+          className="flex-shrink-0 h-2 cursor-row-resize flex items-center justify-center group hover:bg-blue-100 active:bg-blue-200 transition-colors bg-white border-t"
+          title="Drag to resize"
+        >
+          <div className="flex gap-1 items-center">
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+            <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
+          </div>
+        </div>
+
         {/* Input area */}
-        <div className="bg-white border-t px-4 py-4">
-          <div className="container mx-auto">
-            {inputMode === 'voice' && selectedTopic ? (
+        <div
+          className={`bg-white flex-shrink-0 overflow-hidden ${inputMode === 'voice' ? 'px-2 py-0' : 'px-4 py-4'}`}
+          style={{ height: `${inputHeight}px` }}
+        >
+          <div className={inputMode === 'voice' ? '' : 'container mx-auto'}>
+            {inputMode === 'voice' && selectedTopicId ? (
               voiceEngine === 'realtime' ? (
                 <VoiceTutorRealtime
-                  subject={selectedTopic.subject}
-                  topic={selectedTopic.topic}
-                  level={selectedTopic.level}
+                  subject={selectedSubject}
+                  topic={selectedTopicId}
+                  level={selectedLevel}
                   studentName={studentName || undefined}
                   sessionGoal={sessionGoal}
                   voice={selectedOpenAIVoice}
@@ -697,12 +861,13 @@ export default function TutorPage() {
                   onError={(err) => setError(err.message)}
                   onEndSession={handleEndSession}
                   onTrackInteraction={trackInteraction}
+                  handleRef={realtimeHandleRef}
                 />
               ) : (
                 <VoiceTutor
-                  subject={selectedTopic.subject}
-                  topic={selectedTopic.topic}
-                  level={selectedTopic.level}
+                  subject={selectedSubject}
+                  topic={selectedTopicId}
+                  level={selectedLevel}
                   studentName={studentName || undefined}
                   sessionGoal={sessionGoal}
                   voiceId={selectedVoice}
@@ -765,16 +930,6 @@ export default function TutorPage() {
   }
 
   // Render summary stage
-  const usageByOperation = tokenUsage.reduce((acc, u) => {
-    if (!acc[u.operation]) {
-      acc[u.operation] = { input: 0, output: 0, count: 0 };
-    }
-    acc[u.operation].input += u.inputTokens;
-    acc[u.operation].output += u.outputTokens;
-    acc[u.operation].count += 1;
-    return acc;
-  }, {} as Record<string, { input: number; output: number; count: number }>);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
@@ -783,7 +938,7 @@ export default function TutorPage() {
           Great Session!
         </h1>
         <p className="text-gray-600 mb-8">
-          You completed a tutoring session on {selectedTopic?.displayName || 'AI Tutor'}.
+          You completed a tutoring session on {topicDisplayName || 'AI Tutor'}.
         </p>
 
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -798,64 +953,39 @@ export default function TutorPage() {
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-500">Topic</p>
               <p className="text-lg font-medium text-gray-900">
-                {selectedTopic?.topic || 'N/A'}
+                {topicDisplayName || 'N/A'}
               </p>
             </div>
           </div>
 
-          {/* Token usage summary */}
-          {tokenUsage.length > 0 && (
-            <>
-              <h3 className="text-md font-semibold mb-3 text-left flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-600" />
-                Token Usage & Cost
-              </h3>
-              <div className="grid grid-cols-3 gap-3 text-left mb-4">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Input Tokens</p>
-                  <p className="text-lg font-mono font-medium text-blue-700">
-                    {totalTokens.input.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-400">${((totalTokens.input / 1_000_000) * PRICING.input).toFixed(4)}</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Output Tokens</p>
-                  <p className="text-lg font-mono font-medium text-green-700">
-                    {totalTokens.output.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-400">${((totalTokens.output / 1_000_000) * PRICING.output).toFixed(4)}</p>
-                </div>
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Total Cost</p>
-                  <p className="text-lg font-mono font-medium text-yellow-700">
-                    ${totalCost.toFixed(4)}
-                  </p>
-                  <p className="text-xs text-gray-400">{tokenUsage.length} API calls</p>
-                </div>
-              </div>
-
-              {/* Breakdown by operation */}
-              <div className="text-left text-sm bg-gray-50 rounded-lg p-3">
-                <p className="text-xs font-medium text-gray-500 mb-2">By Operation</p>
-                {Object.entries(usageByOperation).map(([op, data]) => (
-                  <div key={op} className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                    <span className="text-gray-600">{op} ({data.count}x)</span>
-                    <span className="font-mono text-gray-800">
-                      {data.input.toLocaleString()} in / {data.output.toLocaleString()} out
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <p className="text-xs text-gray-400 mt-3 text-left">
-                Note: OpenAI Realtime API usage is tracked separately and not included here.
-                Pricing: Claude Sonnet 4 - $3/M input, $15/M output tokens.
-              </p>
-            </>
-          )}
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
+          {transcript.length > 0 && (
+            <button
+              onClick={async () => {
+                try {
+                  const { exportTutorSessionPDF } = await import('@/lib/utils/export/pdf-tutor-session');
+                  await exportTutorSessionPDF(
+                    transcript,
+                    whiteboardCommands,
+                    topicDisplayName || 'AI Tutor',
+                    sessionGoal,
+                    studentName || undefined,
+                    { includeDebugData: true }
+                  );
+                } catch (err) {
+                  console.error('PDF export error:', err);
+                }
+              }}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export Session PDF
+            </button>
+          )}
           <button
             onClick={() => {
               setTranscript([]);

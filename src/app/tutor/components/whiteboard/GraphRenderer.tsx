@@ -17,7 +17,7 @@ import {
   Line,
 } from 'mafs';
 import 'mafs/core.css';
-import type { GraphData, GraphType, GraphAnnotation } from '@/lib/knowledge/types';
+import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@/lib/knowledge/types';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -26,10 +26,10 @@ interface GraphRendererProps {
   className?: string;
 }
 
-// Parse a function string like "2*t + 5" into an evaluable function
+// Parse a function string like "2*t + 5" into an evaluable function of x
 function parseFunctionString(fnStr: string): (x: number) => number {
   // Replace common physics notation
-  let processed = fnStr
+  const processed = fnStr
     .replace(/\bt\b/g, 'x') // t -> x for time
     .replace(/\^/g, '**')   // ^ -> ** for exponent
     .replace(/sin/g, 'Math.sin')
@@ -45,6 +45,27 @@ function parseFunctionString(fnStr: string): (x: number) => number {
       // Using Function constructor for dynamic evaluation
       // This is safe here as we control the input from the AI
       return new Function('x', `return ${processed}`)(x);
+    } catch {
+      return 0;
+    }
+  };
+}
+
+// Parse a function string like "y**3" into an evaluable function of y
+function parseFunctionOfYString(fnStr: string): (y: number) => number {
+  const processed = fnStr
+    .replace(/\^/g, '**')
+    .replace(/sin/g, 'Math.sin')
+    .replace(/cos/g, 'Math.cos')
+    .replace(/tan/g, 'Math.tan')
+    .replace(/sqrt/g, 'Math.sqrt')
+    .replace(/abs/g, 'Math.abs')
+    .replace(/pi/gi, 'Math.PI')
+    .replace(/e\b/g, 'Math.E');
+
+  return (y: number) => {
+    try {
+      return new Function('y', `return ${processed}`)(y);
     } catch {
       return 0;
     }
@@ -73,11 +94,13 @@ export function GraphRenderer({
     xRange,
     yRange,
     functions = [],
+    functionsOfY = [],
     points = [],
     annotations = [],
+    shadedRegion,
   } = data;
 
-  // Parse functions
+  // Parse y=f(x) functions
   const parsedFunctions = useMemo(() => {
     return functions.map((fn, index) => ({
       ...fn,
@@ -85,6 +108,30 @@ export function GraphRenderer({
       color: fn.color || COLORS[index % COLORS.length],
     }));
   }, [functions]);
+
+  // Parse x=f(y) functions
+  const parsedFunctionsOfY = useMemo(() => {
+    return functionsOfY.map((fn, index) => ({
+      ...fn,
+      evaluator: parseFunctionOfYString(fn.fn),
+      color: fn.color || COLORS[(functions.length + index) % COLORS.length],
+    }));
+  }, [functionsOfY, functions.length]);
+
+  // Parse shaded region
+  const shadedRegionEvaluators = useMemo(() => {
+    if (!shadedRegion) return null;
+    if (shadedRegion.axis === 'y') {
+      return {
+        fn1: parseFunctionOfYString(shadedRegion.between[0]),
+        fn2: parseFunctionOfYString(shadedRegion.between[1]),
+      };
+    }
+    return {
+      fn1: parseFunctionString(shadedRegion.between[0]),
+      fn2: parseFunctionString(shadedRegion.between[1]),
+    };
+  }, [shadedRegion]);
 
   // Calculate viewBox
   const viewBox = useMemo(() => ({
@@ -115,13 +162,65 @@ export function GraphRenderer({
               yAxis={{ labels: (n) => n.toString() }}
             />
 
-            {/* Plot functions */}
+            {/* Shaded region between curves */}
+            {shadedRegion && shadedRegionEvaluators && (
+              shadedRegion.axis === 'y' ? (
+                <Plot.Inequality
+                  x={{
+                    ">": (y: number) => {
+                      if (y < shadedRegion.from || y > shadedRegion.to) return Infinity;
+                      return Math.min(shadedRegionEvaluators.fn1(y), shadedRegionEvaluators.fn2(y));
+                    },
+                    "<": (y: number) => {
+                      if (y < shadedRegion.from || y > shadedRegion.to) return -Infinity;
+                      return Math.max(shadedRegionEvaluators.fn1(y), shadedRegionEvaluators.fn2(y));
+                    },
+                  }}
+                  color={shadedRegion.color || '#16a34a'}
+                  fillOpacity={shadedRegion.opacity ?? 0.3}
+                />
+              ) : (
+                <Plot.Inequality
+                  y={{
+                    ">": (x: number) => {
+                      if (x < shadedRegion.from || x > shadedRegion.to) return Infinity;
+                      return Math.min(
+                        (shadedRegionEvaluators.fn1 as (x: number) => number)(x),
+                        (shadedRegionEvaluators.fn2 as (x: number) => number)(x)
+                      );
+                    },
+                    "<": (x: number) => {
+                      if (x < shadedRegion.from || x > shadedRegion.to) return -Infinity;
+                      return Math.max(
+                        (shadedRegionEvaluators.fn1 as (x: number) => number)(x),
+                        (shadedRegionEvaluators.fn2 as (x: number) => number)(x)
+                      );
+                    },
+                  }}
+                  color={shadedRegion.color || '#16a34a'}
+                  fillOpacity={shadedRegion.opacity ?? 0.3}
+                />
+              )
+            )}
+
+            {/* Plot y=f(x) functions */}
             {parsedFunctions.map((fn, index) => (
               <Plot.OfX
-                key={index}
+                key={`ofx-${index}`}
                 y={fn.evaluator}
                 color={fn.color}
                 weight={2}
+              />
+            ))}
+
+            {/* Plot x=f(y) functions */}
+            {parsedFunctionsOfY.map((fn, index) => (
+              <Plot.OfY
+                key={`ofy-${index}`}
+                x={fn.evaluator}
+                color={fn.color}
+                weight={2}
+                domain={fn.domain}
               />
             ))}
 
@@ -168,10 +267,19 @@ export function GraphRenderer({
       </div>
 
       {/* Function legend */}
-      {functions.length > 1 && (
-        <div className="flex gap-4 justify-center mt-3">
+      {(functions.length + functionsOfY.length) > 1 && (
+        <div className="flex gap-4 justify-center mt-3 flex-wrap">
           {parsedFunctions.map((fn, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
+            <div key={`ofx-${index}`} className="flex items-center gap-2 text-sm">
+              <div
+                className="w-4 h-1 rounded"
+                style={{ backgroundColor: fn.color }}
+              />
+              <span>{fn.label || fn.fn}</span>
+            </div>
+          ))}
+          {parsedFunctionsOfY.map((fn, index) => (
+            <div key={`ofy-${index}`} className="flex items-center gap-2 text-sm">
               <div
                 className="w-4 h-1 rounded"
                 style={{ backgroundColor: fn.color }}

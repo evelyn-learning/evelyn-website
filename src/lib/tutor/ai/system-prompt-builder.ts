@@ -25,6 +25,8 @@ export function getInitialGreetingPrompt(
     'homework-help': `Hi! I need help with my ${topic} homework.`,
     'concept-review': `Hi! I'd like to review ${topic} concepts.`,
     'test-prep': `Hi! I'm preparing for a test on ${topic}.`,
+    'catch-up': `Hi! I missed some classes and need to catch up on ${topic}.`,
+    'challenge': `Hi! I'd like to be challenged with harder ${topic} problems.`,
     'general': `Hi! I'm ready to learn about ${topic}.`,
   };
 
@@ -41,6 +43,8 @@ export function getGreetingInstruction(sessionGoal: SessionGoal): string {
     'homework-help': 'Respond with a short, warm greeting (1-2 sentences) and ask them to share or describe the homework problem they need help with. Keep it brief.',
     'concept-review': 'Respond with a short, warm greeting (1-2 sentences) and ask which specific concepts they want to review. Keep it brief.',
     'test-prep': 'Respond with a short, warm greeting (1-2 sentences) and ask what topics they want to focus on for the test. Keep it brief.',
+    'catch-up': 'Respond with a short, warm greeting (1-2 sentences) and ask what they missed or where they got lost. Keep it brief.',
+    'challenge': 'Respond with a short, warm greeting (1-2 sentences) and express enthusiasm about pushing them with harder problems. Keep it brief.',
     'general': 'Respond with a short, warm greeting (1-2 sentences) and ask what they would like to learn about. Keep it brief.',
   };
 
@@ -402,6 +406,8 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
       'practice': 'Practice problems to build skills',
       'concept-review': 'Review and understand concepts',
       'test-prep': 'Prepare for an upcoming test',
+      'catch-up': 'Catch up on missed material and fill gaps',
+      'challenge': 'Challenge with advanced problems beyond standard level',
       'general': 'General learning and exploration',
     };
     prompt += `Session Goal: ${goalDescriptions[context.sessionGoal]}\n`;
