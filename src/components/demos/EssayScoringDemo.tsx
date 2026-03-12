@@ -68,10 +68,59 @@ export default function EssayScoringDemo() {
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Custom rubric state
   const [customRubricText, setCustomRubricText] = useState('');
   const [customMaxScore, setCustomMaxScore] = useState(10);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+    if (!['.txt', '.docx', '.pdf'].includes(ext)) {
+      setError('Unsupported file type. Please upload a .txt, .docx, or .pdf file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File exceeds 10MB limit.');
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+    trackInteraction('tool_use', 'upload_file', { fileType: ext });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/showcase/plagiarism-detection/parse-file', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to parse file.');
+      } else {
+        setEssay(data.text);
+        setUploadedFileName(data.fileName);
+        setFeedback(null);
+      }
+    } catch {
+      setError('Failed to upload file. Please try again.');
+    }
+
+    setIsUploading(false);
+    // Reset file input so re-uploading the same file triggers onChange
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const rubrics: Record<Exclude<EssayType, 'custom'>, Rubric> = {
     sat: {
@@ -234,6 +283,7 @@ ${essay}
   const loadSample = (quality: 'good' | 'needsWork') => {
     setEssay(SAMPLE_ESSAYS[quality]);
     setFeedback(null);
+    setUploadedFileName(null);
     trackInteraction('click', 'load_sample', { quality });
   };
 
@@ -365,12 +415,56 @@ ${essay}
 
             <textarea
               value={essay}
-              onChange={(e) => setEssay(e.target.value)}
-              placeholder="Paste or type your essay here..."
+              onChange={(e) => { setEssay(e.target.value); setUploadedFileName(null); }}
+              placeholder="Paste or type your essay here, or upload a file below..."
               className="w-full min-h-[16rem] p-4 border border-gray-200 rounded-xl resize-y focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
             />
 
-            <div className="flex items-center justify-between mt-4">
+            {/* File Upload */}
+            <div className="mt-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.docx,.pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="essay-file-upload"
+              />
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="essay-file-upload"
+                  className={`inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-50 transition ${isUploading ? 'opacity-50 pointer-events-none' : 'text-gray-600'}`}
+                >
+                  {isUploading ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Parsing file...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload File
+                    </>
+                  )}
+                </label>
+                <span className="text-xs text-gray-400">.txt, .docx, .pdf (max 10MB)</span>
+                {uploadedFileName && (
+                  <span className="text-xs text-purple-600 font-medium flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {uploadedFileName}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-3">
               <div className="flex gap-2">
                 <button
                   onClick={() => loadSample('good')}

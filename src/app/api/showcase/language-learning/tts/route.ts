@@ -28,10 +28,12 @@ export async function POST(request: NextRequest) {
 
     const openai = new OpenAI({ apiKey });
 
-    const mp3Response = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: 'nova',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mp3Response = await (openai.audio.speech as any).create({
+      model: 'gpt-4o-mini-tts',
+      voice: 'alloy',
       input: text,
+      instructions: 'Speak as a patient, encouraging language teacher. Pronounce each word clearly and naturally. For single words or short phrases, say them warmly and distinctly.',
       speed: Math.max(0.5, Math.min(2.0, speed)),
       response_format: 'mp3',
     });

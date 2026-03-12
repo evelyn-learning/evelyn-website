@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
 
 // ── Types ──
@@ -134,8 +134,10 @@ export default function LanguageLearningDemo() {
 
   // ── Speech Functions (OpenAI TTS + Whisper STT) ──
 
+  const isSpeakingRef = useRef(false);
   const speakText = useCallback(async (text: string) => {
-    if (isSpeaking) return;
+    if (isSpeakingRef.current) return;
+    isSpeakingRef.current = true;
     setIsSpeaking(true);
 
     try {
@@ -145,7 +147,7 @@ export default function LanguageLearningDemo() {
         audioRef.current = null;
       }
 
-      const speed = difficulty === 'beginner' ? 0.9 : difficulty === 'intermediate' ? 1.0 : 1.1;
+      const speed = difficulty === 'beginner' ? 0.7 : difficulty === 'intermediate' ? 0.75 : 0.85;
 
       const response = await fetch('/api/showcase/language-learning/tts', {
         method: 'POST',
@@ -161,11 +163,13 @@ export default function LanguageLearningDemo() {
       audioRef.current = audio;
 
       audio.onended = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
       };
       audio.onerror = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
@@ -174,9 +178,10 @@ export default function LanguageLearningDemo() {
       await audio.play();
     } catch (err) {
       console.error('TTS error:', err);
+      isSpeakingRef.current = false;
       setIsSpeaking(false);
     }
-  }, [isSpeaking, difficulty]);
+  }, [difficulty]);
 
   const toggleListening = useCallback(async () => {
     // Stop recording
