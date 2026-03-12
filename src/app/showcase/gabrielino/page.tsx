@@ -769,6 +769,269 @@ function PresentationMode() {
 }
 
 // ═══════════════════════════════════════════
+// COMPARISON VIEW — Plagiarism & AI Detection
+// ═══════════════════════════════════════════
+
+const COMPETITORS = ['Evelyn Learning', 'Turnitin', 'GPTZero', 'Copyleaks', 'Originality.ai'] as const;
+
+interface ComparisonFeature {
+  feature: string;
+  description: string;
+  values: Record<string, 'yes' | 'no' | 'partial' | 'coming-soon' | string>;
+}
+
+const COMPARISON_FEATURES: ComparisonFeature[] = [
+  {
+    feature: 'Separate AI + Plagiarism Scores',
+    description: 'Independent scoring engines so AI-written original text isn\'t confused with copied content',
+    values: {
+      'Evelyn Learning': 'yes',
+      'Turnitin': 'partial',
+      'GPTZero': 'no',
+      'Copyleaks': 'partial',
+      'Originality.ai': 'partial',
+    },
+  },
+  {
+    feature: 'Grade-Level Calibration',
+    description: 'Adjusts thresholds for grade (9-12), subject, and assignment type to reduce false positives',
+    values: {
+      'Evelyn Learning': 'yes',
+      'Turnitin': 'no',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+  {
+    feature: 'Resubmission Comparison',
+    description: 'Compare original vs. revised drafts — detects if the rewrite itself was AI-generated',
+    values: {
+      'Evelyn Learning': 'yes',
+      'Turnitin': 'no',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+  {
+    feature: 'No Model Name Accusations',
+    description: 'Flags AI patterns without naming specific tools (ChatGPT, etc.) — legally defensible reports',
+    values: {
+      'Evelyn Learning': 'yes',
+      'Turnitin': 'no',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+  {
+    feature: 'Shareable Reports with Auto-Expiry',
+    description: 'HTML permalink reports that auto-delete after 30 days — FERPA-friendly sharing',
+    values: {
+      'Evelyn Learning': 'yes',
+      'Turnitin': 'no',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+  {
+    feature: 'Citation Verification',
+    description: 'Verifies cited sources actually exist — catches AI-hallucinated citations',
+    values: {
+      'Evelyn Learning': 'coming-soon',
+      'Turnitin': 'no',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+  {
+    feature: 'Student Style Fingerprinting',
+    description: 'Builds a writing baseline per student over time — flags deviations from their natural voice',
+    values: {
+      'Evelyn Learning': 'coming-soon',
+      'Turnitin': 'Paid add-on',
+      'GPTZero': 'no',
+      'Copyleaks': 'no',
+      'Originality.ai': 'no',
+    },
+  },
+];
+
+function ComparisonView() {
+  const renderCell = (value: string) => {
+    switch (value) {
+      case 'yes':
+        return (
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: '#F0FFF4' }}>
+            <Check className="w-5 h-5" style={{ color: BRAND.success }} />
+          </span>
+        );
+      case 'no':
+        return (
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: '#FFF5F5' }}>
+            <X className="w-5 h-5" style={{ color: '#E53E3E' }} />
+          </span>
+        );
+      case 'partial':
+        return (
+          <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: '#FFFBEB', color: '#D69E2E' }}>
+            Partial
+          </span>
+        );
+      case 'coming-soon':
+        return (
+          <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: BRAND.accent + '15', color: BRAND.accent }}>
+            Coming Soon
+          </span>
+        );
+      default:
+        return (
+          <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: '#FFFBEB', color: '#D69E2E' }}>
+            {value}
+          </span>
+        );
+    }
+  };
+
+  return (
+    <div>
+      {/* Hero */}
+      <section
+        className="py-16 md:py-20 px-6"
+        style={{ background: `linear-gradient(135deg, ${BRAND.primaryDark} 0%, ${BRAND.primary} 50%, ${BRAND.accent} 100%)` }}
+      >
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <Shield className="w-4 h-4 text-white/80" />
+            <span className="text-white/90 text-sm font-medium">Plagiarism & AI Detection</span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            How We Compare
+          </h1>
+          <p className="text-lg text-white/70 max-w-2xl mx-auto">
+            Feature-by-feature comparison of Evelyn Learning&apos;s integrity tools against the leading vendors
+          </p>
+        </div>
+      </section>
+
+      {/* Comparison Table */}
+      <section className="py-12 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: BRAND.border, background: BRAND.cardBg }}>
+            {/* Table Header */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ background: BRAND.primary }}>
+                    <th className="text-left py-4 px-5 text-white font-semibold min-w-[240px]">Feature</th>
+                    {COMPETITORS.map(name => (
+                      <th
+                        key={name}
+                        className="py-4 px-4 text-center font-semibold min-w-[120px]"
+                        style={{
+                          color: name === 'Evelyn Learning' ? BRAND.gold : 'rgba(255,255,255,0.8)',
+                          background: name === 'Evelyn Learning' ? BRAND.primaryDark : undefined,
+                        }}
+                      >
+                        {name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON_FEATURES.map((row, i) => (
+                    <tr
+                      key={row.feature}
+                      style={{ background: i % 2 === 0 ? '#FAFBFC' : BRAND.cardBg, borderTop: `1px solid ${BRAND.border}` }}
+                    >
+                      <td className="py-4 px-5">
+                        <div className="font-medium" style={{ color: BRAND.textPrimary }}>{row.feature}</div>
+                        <div className="text-xs mt-0.5" style={{ color: BRAND.textMuted }}>{row.description}</div>
+                      </td>
+                      {COMPETITORS.map(name => (
+                        <td
+                          key={name}
+                          className="py-4 px-4 text-center"
+                          style={{
+                            background: name === 'Evelyn Learning'
+                              ? (i % 2 === 0 ? '#F0F5FF' : '#F7FAFF')
+                              : undefined,
+                          }}
+                        >
+                          {renderCell(row.values[name])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Bottom Legend */}
+          <div className="mt-6 flex flex-wrap items-center gap-6 text-xs" style={{ color: BRAND.textMuted }}>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: '#F0FFF4' }}>
+                <Check className="w-3.5 h-3.5" style={{ color: BRAND.success }} />
+              </span>
+              Available
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: '#FFF5F5' }}>
+                <X className="w-3.5 h-3.5" style={{ color: '#E53E3E' }} />
+              </span>
+              Not available
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#FFFBEB', color: '#D69E2E' }}>Partial</span>
+              Limited or combined
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: BRAND.accent + '15', color: BRAND.accent }}>Coming Soon</span>
+              On our roadmap
+            </span>
+          </div>
+
+          {/* Key Differentiators Callout */}
+          <div className="mt-12 grid md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-xl border" style={{ borderColor: BRAND.border, background: BRAND.cardBg }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#F0FFF4' }}>
+                <Shield className="w-5 h-5" style={{ color: BRAND.success }} />
+              </div>
+              <h3 className="font-semibold mb-1" style={{ color: BRAND.textPrimary }}>Dual-Engine Scoring</h3>
+              <p className="text-sm" style={{ color: BRAND.textSecondary }}>
+                AI detection and plagiarism are scored independently. A student who uses AI but doesn&apos;t copy won&apos;t be falsely accused of plagiarism — and vice versa.
+              </p>
+            </div>
+            <div className="p-6 rounded-xl border" style={{ borderColor: BRAND.border, background: BRAND.cardBg }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#FFF5EB' }}>
+                <GraduationCap className="w-5 h-5" style={{ color: BRAND.warning }} />
+              </div>
+              <h3 className="font-semibold mb-1" style={{ color: BRAND.textPrimary }}>Built for K-12</h3>
+              <p className="text-sm" style={{ color: BRAND.textSecondary }}>
+                Grade-level calibration means a polished 12th-grade AP essay isn&apos;t flagged just for being well-written. Thresholds adjust by subject and assignment type.
+              </p>
+            </div>
+            <div className="p-6 rounded-xl border" style={{ borderColor: BRAND.border, background: BRAND.cardBg }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#F3EEFA' }}>
+                <TrendingUp className="w-5 h-5" style={{ color: BRAND.accent }} />
+              </div>
+              <h3 className="font-semibold mb-1" style={{ color: BRAND.textPrimary }}>Revision-Focused</h3>
+              <p className="text-sm" style={{ color: BRAND.textSecondary }}>
+                Resubmission comparison supports a learning-first approach. Teachers can track whether students genuinely improved — or just ran it through AI again.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
 // PRODUCTS VIEW
 // ═══════════════════════════════════════════
 
@@ -1220,7 +1483,7 @@ function ProductsView() {
 // ═══════════════════════════════════════════
 
 function MainApp() {
-  const [activeTab, setActiveTab] = useState<'products' | 'presentation'>('presentation');
+  const [activeTab, setActiveTab] = useState<'products' | 'presentation' | 'compare'>('presentation');
 
   return (
     <div className="min-h-screen" style={{ background: BRAND.bg }}>
@@ -1260,6 +1523,16 @@ function MainApp() {
           >
             Products
           </button>
+          <button
+            onClick={() => setActiveTab('compare')}
+            className="px-4 py-1.5 rounded-md text-sm font-medium transition"
+            style={{
+              background: activeTab === 'compare' ? 'rgba(255,255,255,0.2)' : 'transparent',
+              color: activeTab === 'compare' ? '#fff' : 'rgba(255,255,255,0.6)',
+            }}
+          >
+            Compare
+          </button>
         </div>
 
         <div className="hidden md:flex items-center gap-2 text-xs text-white/50">
@@ -1273,7 +1546,7 @@ function MainApp() {
       </div>
 
       {/* Content */}
-      {activeTab === 'products' ? <ProductsView /> : <PresentationMode />}
+      {activeTab === 'compare' ? <ComparisonView /> : activeTab === 'products' ? <ProductsView /> : <PresentationMode />}
     </div>
   );
 }
