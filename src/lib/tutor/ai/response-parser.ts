@@ -84,6 +84,8 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
 
   const validActions = [
     'clear',
+    'newPage',
+    'goToPage',
     'showEquation',
     'showGraph',
     'showDiagram',
@@ -95,6 +97,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showWorkedExample',
     'showTable',
     'showImage',
+    'showSvgDiagram',
   ];
 
   return validActions.includes(command.action);

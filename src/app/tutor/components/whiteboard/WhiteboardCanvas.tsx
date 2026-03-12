@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
@@ -83,22 +83,102 @@ export function WhiteboardCanvas({
     document.addEventListener('mouseup', onUp);
   }, [expandedSize]);
 
-  // Filter out 'clear' commands for display purposes
-  const displayCommands = useMemo(() => {
-    return commands.filter((cmd) => cmd.action !== 'clear');
+  // Group commands into pages, split by 'newPage' markers
+  // Commands before the first newPage go on page 0.
+  // 'clear', 'newPage', and 'goToPage' are filtered from rendering.
+  const pages = useMemo(() => {
+    const result: { title?: string; commands: WhiteboardCommand[] }[] = [];
+    let current: { title?: string; commands: WhiteboardCommand[] } = { commands: [] };
+
+    for (const cmd of commands) {
+      if (cmd.action === 'clear' || cmd.action === 'goToPage') continue;
+      if (cmd.action === 'newPage') {
+        // Start a new page — only push the previous page if it has content
+        if (current.commands.length > 0) {
+          result.push(current);
+        }
+        current = { title: cmd.title, commands: [] };
+      } else {
+        current.commands.push(cmd);
+      }
+    }
+    // Push the last page if it has content
+    if (current.commands.length > 0) {
+      result.push(current);
+    }
+    return result;
   }, [commands]);
 
-  // Auto-navigate to the newest item when new commands are added
+  // Handle goToPage navigation: find the target page by title
   useEffect(() => {
-    if (displayCommands.length > 0) {
-      setCurrentIndex(displayCommands.length - 1);
+    const lastGoTo = [...commands].reverse().find((cmd) => cmd.action === 'goToPage');
+    if (lastGoTo && lastGoTo.action === 'goToPage') {
+      const targetTitle = lastGoTo.title.toLowerCase();
+      const targetIndex = pages.findIndex(
+        (p) => p.title?.toLowerCase() === targetTitle
+      );
+      if (targetIndex >= 0) {
+        setCurrentIndex(targetIndex);
+      }
     }
-  }, [displayCommands.length]);
+  // Only re-run when commands array length changes (new command added)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands.length, pages]);
+
+  // Auto-navigate to the newest page when new pages are added
+  // (but not when goToPage just navigated us)
+  const prevPageCountRef = useRef(0);
+  useEffect(() => {
+    if (pages.length > 0 && pages.length !== prevPageCountRef.current) {
+      // Check if the latest command is a goToPage — if so, skip auto-advance
+      const lastCmd = commands[commands.length - 1];
+      if (lastCmd?.action !== 'goToPage') {
+        setCurrentIndex(pages.length - 1);
+      }
+      prevPageCountRef.current = pages.length;
+    }
+  }, [pages.length, commands]);
+
+  // Auto-scroll to the latest item when a new command is added to the current page
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevCommandCountRef = useRef(commands.length);
+  useEffect(() => {
+    if (commands.length > prevCommandCountRef.current) {
+      // Scroll the whiteboard pane (not the page) to show the latest item
+      const container = scrollContainerRef.current;
+      if (container) {
+        requestAnimationFrame(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+          });
+        });
+      }
+    }
+    prevCommandCountRef.current = commands.length;
+  }, [commands.length]);
+
+  // Detect if scroll container has overflow (content taller than viewport)
+  const [hasOverflow, setHasOverflow] = useState(false);
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) { setHasOverflow(false); return; }
+    const check = () => {
+      const isOverflowing = el.scrollHeight > el.clientHeight + 8;
+      const isScrolledToBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+      setHasOverflow(isOverflowing && !isScrolledToBottom);
+    };
+    check();
+    el.addEventListener('scroll', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => { el.removeEventListener('scroll', check); observer.disconnect(); };
+  }, [currentIndex, commands.length]);
 
   // Navigation
   const goNext = useCallback(() => {
-    setCurrentIndex((prev) => Math.min(prev + 1, displayCommands.length - 1));
-  }, [displayCommands.length]);
+    setCurrentIndex((prev) => Math.min(prev + 1, pages.length - 1));
+  }, [pages.length]);
 
   const goPrev = useCallback(() => {
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
@@ -110,7 +190,7 @@ export function WhiteboardCanvas({
     onClear?.();
   }, [onClear]);
 
-  if (displayCommands.length === 0) {
+  if (pages.length === 0) {
     return (
       <div className={`whiteboard-canvas flex items-center justify-center h-full ${className}`}>
         <div className="text-center text-gray-400 p-8">
@@ -121,31 +201,38 @@ export function WhiteboardCanvas({
     );
   }
 
-  const currentCommand = displayCommands[currentIndex];
+  const currentPage = pages[Math.min(currentIndex, pages.length - 1)];
 
   const headerContent = (
     <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
-      <span className="text-sm font-medium text-gray-600">Whiteboard</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-medium text-gray-600">Whiteboard</span>
+        {currentPage.commands.length > 1 && (
+          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
+            {currentPage.commands.length} items
+          </span>
+        )}
+      </div>
       <div className="flex items-center gap-2">
         {/* Navigation */}
-        {displayCommands.length > 1 && (
+        {pages.length > 1 && (
           <div className="flex items-center gap-1">
             <button
               onClick={goPrev}
               disabled={currentIndex === 0}
               className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-              title="Previous"
+              title="Previous page"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-xs text-gray-500 min-w-[40px] text-center">
-              {currentIndex + 1} / {displayCommands.length}
+              {currentIndex + 1} / {pages.length}
             </span>
             <button
               onClick={goNext}
-              disabled={currentIndex === displayCommands.length - 1}
+              disabled={currentIndex === pages.length - 1}
               className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-              title="Next"
+              title="Next page"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -180,13 +267,45 @@ export function WhiteboardCanvas({
     </div>
   );
 
+  const pageLabel = currentPage.title
+    || (currentPage.commands.length === 1
+      ? getCommandTypeLabel(currentPage.commands[0].action)
+      : currentPage.commands.map((c) => getCommandTypeLabel(c.action)).join(' + '));
+
   const bodyContent = (
     <>
-      <div className="flex-1 overflow-auto p-4">
-        <CommandRenderer command={currentCommand} />
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4">
+        {currentPage.commands.length === 1 ? (
+          <CommandRenderer command={currentPage.commands[0]} />
+        ) : (
+          <div className="space-y-1">
+            {currentPage.commands.map((cmd, i) => {
+              return (
+                <div key={i}>
+                  {i > 0 && (
+                    <div className="flex items-center gap-2 py-1">
+                      <div className="flex-1 border-t border-dashed border-gray-200" />
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wide flex-shrink-0">
+                        {getCommandTypeLabel(cmd.action)}
+                      </span>
+                      <div className="flex-1 border-t border-dashed border-gray-200" />
+                    </div>
+                  )}
+                  <CommandRenderer command={cmd} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+      {/* Scroll-down hint: visible when multi-item page has overflow */}
+      {currentPage.commands.length > 1 && hasOverflow && (
+        <div className="flex justify-center py-0.5 bg-gradient-to-t from-gray-50 to-transparent border-t border-gray-100 flex-shrink-0">
+          <ChevronDown className="w-4 h-4 text-blue-400 animate-bounce" />
+        </div>
+      )}
       <div className="px-3 py-1 bg-gray-50 border-t text-xs text-gray-400 text-center rounded-b-lg flex-shrink-0">
-        {getCommandTypeLabel(currentCommand.action)}
+        {pageLabel}
       </div>
     </>
   );
@@ -445,6 +564,8 @@ function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'highlight':
     case 'clear':
+    case 'newPage':
+    case 'goToPage':
       return null;
 
     default:

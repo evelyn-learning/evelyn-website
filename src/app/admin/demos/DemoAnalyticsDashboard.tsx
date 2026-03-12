@@ -19,6 +19,8 @@ import {
   ChevronRight,
   Wrench,
   Navigation,
+  Coins,
+  FileText,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils/timeAgo";
 
@@ -767,13 +769,38 @@ function SessionRow({
   );
 }
 
+// Cost calculation for Claude models (per 1M tokens)
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  'claude-sonnet-4-20250514': { input: 3, output: 15 },
+  'claude-sonnet-4-5-20250514': { input: 3, output: 15 },
+  'claude-haiku-3-5-20241022': { input: 0.80, output: 4 },
+};
+
+function estimateCost(inputTokens: number, outputTokens: number, model?: string): string {
+  const pricing = MODEL_PRICING[model || ''] || { input: 3, output: 15 };
+  const cost = (inputTokens * pricing.input + outputTokens * pricing.output) / 1_000_000;
+  return cost < 0.01 ? `$${cost.toFixed(4)}` : `$${cost.toFixed(3)}`;
+}
+
+function formatMetadataValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+  }
+  return String(value);
+}
+
 function InteractionTimeline({ interactions }: { interactions: SessionInteraction[] }) {
+  const [expandedText, setExpandedText] = useState<number | null>(null);
+
   if (interactions.length === 0) {
     return <p className="text-center text-gray-500 py-4">No interactions recorded</p>;
   }
 
   return (
-    <div className="max-h-96 overflow-y-auto space-y-2">
+    <div className="max-h-[600px] overflow-y-auto space-y-2">
       {interactions.map((interaction, i) => {
         if (interaction.type === "message") {
           const isStudent = interaction.role === "student";
@@ -799,17 +826,68 @@ function InteractionTimeline({ interactions }: { interactions: SessionInteractio
         }
 
         if (interaction.type === "tool_use") {
+          const meta = interaction.metadata || {};
+          const inputTokens = meta.inputTokens as number | undefined;
+          const outputTokens = meta.outputTokens as number | undefined;
+          const model = meta.model as string | undefined;
+          const submittedText = meta.submittedText as string | undefined;
+          const hasTokens = inputTokens !== undefined && outputTokens !== undefined;
+
+          // Filter out special keys for generic display
+          const displayMeta = Object.entries(meta).filter(
+            ([k]) => !['inputTokens', 'outputTokens', 'model', 'submittedText'].includes(k)
+          );
+
           return (
-            <div key={i} className="flex justify-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
-                <Wrench className="h-3 w-3" />
-                {interaction.content}
-                {interaction.metadata && (
-                  <span className="text-purple-500">
-                    ({Object.values(interaction.metadata).join(", ")})
+            <div key={i} className="space-y-1">
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+                  <Wrench className="h-3 w-3" />
+                  {interaction.content}
+                  {displayMeta.length > 0 && (
+                    <span className="text-purple-500">
+                      ({displayMeta.map(([k, v]) => `${k}: ${formatMetadataValue(k, v)}`).join(', ')})
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              {/* Token usage & cost */}
+              {hasTokens && (
+                <div className="flex justify-center">
+                  <span className="inline-flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-1 text-xs text-amber-800">
+                    <Coins className="h-3 w-3" />
+                    <span>{inputTokens.toLocaleString()} in / {outputTokens.toLocaleString()} out</span>
+                    <span className="font-medium">{estimateCost(inputTokens, outputTokens, model)}</span>
+                    {model && <span className="text-amber-500">({model.replace('claude-', '').split('-202')[0]})</span>}
                   </span>
-                )}
-              </span>
+                </div>
+              )}
+
+              {/* Submitted text (expandable) */}
+              {submittedText && (
+                <div className="flex justify-center">
+                  <div className="max-w-[80%]">
+                    <button
+                      onClick={() => setExpandedText(expandedText === i ? null : i)}
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      <FileText className="h-3 w-3" />
+                      {expandedText === i ? "Hide submitted text" : "View submitted text"}
+                      {expandedText === i ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                    </button>
+                    {expandedText === i && (
+                      <div className="mt-1 rounded-lg bg-gray-100 border border-gray-200 p-3 text-xs text-gray-700 max-h-60 overflow-y-auto whitespace-pre-wrap">
+                        {submittedText}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -838,7 +916,14 @@ function InteractionTimeline({ interactions }: { interactions: SessionInteractio
           <div key={i} className="flex justify-center">
             <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
               {interaction.type}: {interaction.content || ""}
-              <span className="text-gray-400">
+              {interaction.metadata && (
+                <span className="text-gray-500 ml-1">
+                  ({Object.entries(interaction.metadata)
+                    .map(([k, v]) => `${k}: ${formatMetadataValue(k, v)}`)
+                    .join(', ')})
+                </span>
+              )}
+              <span className="text-gray-400 ml-1">
                 {new Date(interaction.timestamp).toLocaleTimeString()}
               </span>
             </span>

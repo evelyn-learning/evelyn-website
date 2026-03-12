@@ -361,6 +361,12 @@ IMPORTANT:
     const mergedAnnotations = [...filteredClaudeAnnotations, ...copyscapeAnnotations]
       .sort((a: { startIndex: number }, b: { startIndex: number }) => a.startIndex - b.startIndex);
 
+    const usage = {
+      inputTokens: claudeResponse.usage.input_tokens,
+      outputTokens: claudeResponse.usage.output_tokens,
+      model: 'claude-sonnet-4-20250514',
+    };
+
     const result = {
       aiDetection: {
         ...parsed.aiDetection,
@@ -377,6 +383,7 @@ IMPORTANT:
       annotations: mergedAnnotations,
       concerns: parsed.concerns || [],
       recommendations: parsed.recommendations || [],
+      usage,
     };
 
     return NextResponse.json({ result });

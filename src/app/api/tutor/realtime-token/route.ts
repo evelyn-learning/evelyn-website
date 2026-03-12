@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // Minimal request - voice and other settings are configured in session.update
+        session: {
+          type: 'realtime',
+          model: 'gpt-realtime',
+        },
       }),
     });
 

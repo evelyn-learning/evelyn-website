@@ -126,6 +126,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const shouldListenRef = useRef(false);
   // Ref to hold startListening so playNextAudio can call it without circular deps
   const startListeningRef = useRef<() => void>(() => {});
+  // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
+  const hasAudioInBufferRef = useRef(false);
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
@@ -210,6 +212,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
         case 'input_audio_buffer.committed':
           console.log('[Realtime] Audio committed');
+          hasAudioInBufferRef.current = false;
           break;
 
         case 'conversation.item.input_audio_transcription.completed':
@@ -368,7 +371,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             // Convert function call to whiteboard command
             let command: WhiteboardCommand | null = null;
 
-            if (funcName === 'show_equation') {
+            if (funcName === 'new_page') {
+              command = {
+                action: 'newPage',
+                title: funcArgs.title,
+              };
+            } else if (funcName === 'go_to_page') {
+              command = {
+                action: 'goToPage',
+                title: funcArgs.title,
+              };
+            } else if (funcName === 'show_equation') {
               command = {
                 action: 'showEquation',
                 latex: funcArgs.latex,
@@ -465,7 +478,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           const errorMessage = data.error?.message || 'Realtime API error';
           // Ignore non-critical errors
           if (errorMessage.includes('no active response found') ||
-              errorMessage.includes('already has an active response')) {
+              errorMessage.includes('already has an active response') ||
+              errorMessage.includes('buffer too small')) {
             console.log('[Realtime] Non-critical error (ignoring):', errorMessage);
             break;
           }
@@ -504,10 +518,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to get realtime token');
+        const errorBody = await tokenResponse.text();
+        console.error('[Realtime] Token request failed:', tokenResponse.status, errorBody);
+        throw new Error(`Failed to get realtime token: ${tokenResponse.status}`);
       }
 
-      const { client_secret } = await tokenResponse.json();
+      const tokenData = await tokenResponse.json();
+      const client_secret = tokenData.client_secret;
+      if (!client_secret) {
+        console.error('[Realtime] No client_secret in token response:', tokenData);
+        throw new Error('Invalid token response: missing client_secret');
+      }
       console.log('[Realtime] Got client secret, connecting...');
 
       // Connect to OpenAI Realtime API (GA version)
@@ -612,14 +633,38 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               },
               {
                 type: 'function',
+                name: 'new_page',
+                description: 'Start a new whiteboard page. Use this BEFORE showing content for a new concept or topic. Related items (e.g., an equation and its graph, a problem and its solution) should stay on the same page — only call new_page when transitioning to a genuinely different topic.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string', description: 'Short title for this page (e.g., "Velocity Equation", "Free Body Diagram"). Used for navigation.' },
+                  },
+                  required: ['title'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'go_to_page',
+                description: 'Navigate the whiteboard back (or forward) to a previously created page by its title. Use this when referring back to an earlier concept, equation, or diagram you already showed.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string', description: 'The title of the page to navigate to (must match a previously used new_page title)' },
+                  },
+                  required: ['title'],
+                },
+              },
+              {
+                type: 'function',
                 name: 'show_svg_diagram',
-                description: 'Display a physics diagram, illustration, or non-mathematical visual on the whiteboard using raw SVG markup. Use this for physical setups (pipes, cars, ramps, pulleys, circuits, etc.), NOT for mathematical function graphs — use show_function_graph for those instead. Rules: (1) For physics diagrams, draw REALISTIC shapes — actual car silhouettes for motion problems, actual pipe shapes for fluid flow, block shapes for free body diagrams. (2) Use filled shapes, gradients, and colors for professional quality. (3) Always include labeled arrows, dimensions, values, and titles.',
+                description: 'Display a physics diagram on the whiteboard using SVG. Use for physical setups (pipes, ramps, pulleys, circuits, etc.), NOT for math function graphs. LAYOUT ZONES (viewBox 0 0 400 300): Title zone y=10-30, Shape zone y=60-200, Label zone y=210-290. ALL shapes must fit within x=30-370 and y=60-200. ALL text labels go OUTSIDE shapes — in the label zone below (y>210) or the title zone above (y<30). NEVER place text on top of colored shapes. Use leader lines to connect labels to shapes.',
                 parameters: {
                   type: 'object',
                   properties: {
                     title: { type: 'string', description: 'Title for the visual' },
                     description: { type: 'string', description: 'Brief description of what the visual shows' },
-                    svg: { type: 'string', description: 'Complete SVG markup. MUST start with <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">. Rules: (1) For containers (tubes, tanks, pipes), draw WALLS as separate <rect> elements, then fill fluid as colored <rect> inside. (2) For arrows, use <line> + <polygon> arrowhead. (3) Use colors: #2563eb (blue), #dc2626 (red), #16a34a (green), #9333ea (purple), #f59e0b (amber), #64748b (gray). (4) Labels: <text font-family="Arial, sans-serif" font-size="14">. (5) End with </svg>. (6) PROPORTIONAL SIZING: SVG element sizes MUST be proportional to actual values. (7) Do NOT include literal newlines inside SVG — keep SVG on one line or use spaces.' },
+                    svg: { type: 'string', description: 'SVG markup. Start with <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">. STRICT LAYOUT (nothing outside 0-400 x 0-300): ZONE 1 Title y=20-30. ZONE 2 Shapes y=50-160. ZONE 3 Arrow y=175 (flow direction arrow ONLY, no text on this line). ZONE 4 Labels y=200-290 (text-anchor=middle, font-size 13). Shapes must stay within x=40-330. For PIPE/HOSE: wide rect x=40 y=55 width=160 height=95, narrow rect x=200 y=80 width=130 height=45. Flow arrow: <line x1="40" y1="175" x2="330" y2="175" stroke="#dc2626" stroke-width="3"/> + arrowhead polygon. Labels in ZONE 4 ONLY — row 1 at y=205 (e.g. left radius x=120, right radius x=265), row 2 at y=230 (flow rate x=200), row 3 at y=255 if needed. NEVER place text on or near arrows or shapes. Colors: #2563eb blue shapes, #dc2626 red arrows, #16a34a green. No newlines in SVG.' },
                   },
                   required: ['svg', 'title'],
                 },
@@ -693,6 +738,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Clear audio queue
     audioQueueRef.current = [];
     isPlayingRef.current = false;
+    hasAudioInBufferRef.current = false;
 
     updateState('disconnected');
   }, [updateState]);
@@ -743,6 +789,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
         const base64Audio = float32ToBase64PCM16(resampledData);
 
+        hasAudioInBufferRef.current = true;
         wsRef.current.send(JSON.stringify({
           type: 'input_audio_buffer.append',
           audio: base64Audio,
@@ -778,14 +825,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       mediaStreamRef.current = null;
     }
 
-    // Commit audio buffer
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+    // Commit audio buffer and request a response
+    if (wsRef.current?.readyState === WebSocket.OPEN && hasAudioInBufferRef.current) {
       wsRef.current.send(JSON.stringify({
         type: 'input_audio_buffer.commit',
       }));
+      // Explicitly request a response — server VAD auto-responds only after
+      // its own speech_stopped detection, but manual stop bypasses that.
+      wsRef.current.send(JSON.stringify({
+        type: 'response.create',
+      }));
+      hasAudioInBufferRef.current = false;
+      updateState('processing');
+    } else {
+      hasAudioInBufferRef.current = false;
+      updateState('connected');
     }
-
-    updateState('processing');
   }, [updateState]);
 
   // Interrupt playback
@@ -836,6 +891,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
       wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
     }
+    hasAudioInBufferRef.current = false;
 
     updateState('connected');
   }, [updateState]);

@@ -460,6 +460,8 @@ export interface GraphAnnotation {
 
 export type WhiteboardCommand =
   | { action: 'clear' }
+  | { action: 'newPage'; title?: string }
+  | { action: 'goToPage'; title: string }
   | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }
   | { action: 'showGraph'; type: GraphType; data: GraphData }
   | { action: 'showDiagram'; type: string; params: Record<string, unknown> }

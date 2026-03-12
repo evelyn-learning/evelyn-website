@@ -98,7 +98,7 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
-    trackInteraction('tool_use', 'analyze_text', { wordCount, context });
+    trackInteraction('tool_use', 'analyze_text', { wordCount, context, submittedText: text.slice(0, 2000) });
 
     const { data, error: apiError } = await safeAPICall<{ result: EnhancedAnalysisResult }>(
       '/api/showcase/plagiarism-detection/analyze',
@@ -120,6 +120,11 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
         overallScore: data.result.overallScore,
         aiScore: data.result.aiDetection.score,
         plagiarismScore: data.result.plagiarism.score,
+        ...(data.result.usage && {
+          inputTokens: data.result.usage.inputTokens,
+          outputTokens: data.result.usage.outputTokens,
+          model: data.result.usage.model,
+        }),
       });
     }
 

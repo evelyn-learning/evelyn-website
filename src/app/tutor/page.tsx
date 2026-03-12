@@ -742,7 +742,7 @@ export default function TutorPage() {
   // Render session stage
   if (stage === 'session') {
     return (
-      <div ref={pageContainerRef} className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+      <div ref={pageContainerRef} className="fixed inset-0 bg-gray-100 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="flex-shrink-0 bg-white border-b px-4 py-2">
           <div className="container mx-auto flex items-center justify-between">

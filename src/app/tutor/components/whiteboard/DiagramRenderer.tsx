@@ -972,6 +972,12 @@ function sanitizeSvg(raw: string): string {
   s = s.replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '');
   s = s.replace(/javascript\s*:/gi, '');
   s = s.replace(/\bxlink:href\s*=\s*["']javascript:[^"']*["']/gi, '');
+  // Add padding to viewBox so text near edges doesn't get clipped.
+  // Shifts the origin by -20,-10 and adds 40/20 to width/height.
+  s = s.replace(
+    /viewBox\s*=\s*"(\d+)\s+(\d+)\s+(\d+)\s+(\d+)"/i,
+    (_, x, y, w, h) => `viewBox="${Number(x) - 20} ${Number(y) - 10} ${Number(w) + 40} ${Number(h) + 20}"`
+  );
   return s;
 }
 

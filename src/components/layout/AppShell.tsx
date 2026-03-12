@@ -19,8 +19,10 @@ export function AppShell({ children }: AppShellProps) {
 
   // Showcase pages have their own header/footer/chat widget
   const isShowcasePage = pathname?.startsWith('/showcase/');
+  // Tutor page manages its own full-screen layout per stage
+  const isTutorPage = pathname === '/tutor';
 
-  if (isShowcasePage) {
+  if (isShowcasePage || isTutorPage) {
     // Return children without Evelyn wrapper
     return <>{children}</>;
   }

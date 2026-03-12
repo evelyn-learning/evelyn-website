@@ -53,6 +53,11 @@ export interface EnhancedAnalysisResult {
   annotations: TextAnnotation[];
   concerns: Concern[];
   recommendations: string[];
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    model: string;
+  };
 }
 
 // ============================================================================

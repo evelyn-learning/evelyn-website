@@ -336,8 +336,8 @@ Start by warmly greeting the student and asking how you can help them today.`;
     }
   }, [realtime.isConnected, realtime.state]);
 
-  // Track if we've started the session
-  const hasStartedRef = useRef(false);
+  // Track if we've started the session (state, not ref, so pause button renders)
+  const [hasStarted, setHasStarted] = useState(false);
 
   // Toggle listening
   const handleMicClick = useCallback(() => {
@@ -348,15 +348,15 @@ Start by warmly greeting the student and asking how you can help them today.`;
       realtime.startListening();
     } else if (realtime.isConnected) {
       // On first click, send context-aware greeting to get tutor's introduction
-      if (!hasStartedRef.current) {
-        hasStartedRef.current = true;
+      if (!hasStarted) {
+        setHasStarted(true);
         const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
         realtime.sendTextMessage(greetingMessage);
       }
       // Start listening for user's voice
       realtime.startListening();
     }
-  }, [realtime, sessionGoal, topic]);
+  }, [realtime, sessionGoal, topic, hasStarted]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {
@@ -466,7 +466,7 @@ Start by warmly greeting the student and asking how you can help them today.`;
       ) : (
         <>
           {/* Pause button */}
-          {realtime.isConnected && hasStartedRef.current && (
+          {realtime.isConnected && (
             <button
               onClick={handlePause}
               className="w-9 h-9 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all duration-200 flex items-center justify-center flex-shrink-0"

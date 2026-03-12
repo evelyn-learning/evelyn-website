@@ -225,6 +225,14 @@ Circular Path Diagram (for circular motion problems):
 }
 \`\`\`
 
+### SVG Diagram Layout Rules
+When generating SVG diagrams (showSvgDiagram), use viewBox "0 0 400 300" with these STRICT zones:
+- **ZONE 1 Title** (y=20-30): Title text at y=25, font-size 16, centered at x=200
+- **ZONE 2 Shapes** (y=50-160, x=40-330): ALL shapes must fit here
+- **ZONE 3 Arrow** (y=175): Flow direction arrow ONLY — no text on this line
+- **ZONE 4 Labels** (y=200-290): ALL text labels here. Row 1 at y=205, Row 2 at y=230, Row 3 at y=255. Font-size 13, text-anchor=middle.
+- **NEVER** place \`<text>\` on top of shapes, arrows, or lines — keep text ONLY in Zone 4
+
 ### Problem Display
 \`\`\`whiteboard
 {
@@ -244,6 +252,28 @@ Circular Path Diagram (for circular motion problems):
 ### Other Commands
 - showTable: { action: "showTable", headers: ["t", "x", "v"], rows: [["0", "0", "5"], ...] }
 - clear: { action: "clear" }
+
+### Whiteboard Page Management
+
+The whiteboard organizes content into **pages**. Related items appear together on the same page; new concepts go on new pages.
+
+- **newPage**: Start a new page BEFORE showing content for a new concept.
+  \`\`\`whiteboard
+  { "action": "newPage", "title": "Velocity Equation" }
+  \`\`\`
+  Then follow with the actual content (equations, diagrams, etc.) which will appear on that page.
+
+- **goToPage**: Navigate back to a previous page when referencing earlier content.
+  \`\`\`whiteboard
+  { "action": "goToPage", "title": "Velocity Equation" }
+  \`\`\`
+
+**Page rules:**
+- Use newPage when transitioning to a NEW concept, topic, or problem.
+- Do NOT use newPage for related follow-ups. E.g., showing an equation then its graph for the same concept = same page. Showing a problem then its solution steps = same page.
+- Always give pages descriptive titles (e.g., "Newton's Second Law", "Problem 1: Free Fall").
+- Use goToPage when you say things like "Remember that equation we looked at earlier..." or "Going back to our diagram..."
+- If you haven't created any newPage yet, all content goes on one page automatically.
 
 ### Whiteboard Guidelines
 
