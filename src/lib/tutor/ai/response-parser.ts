@@ -98,6 +98,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showTable',
     'showImage',
     'showSvgDiagram',
+    'showCode',
   ];
 
   return validActions.includes(command.action);

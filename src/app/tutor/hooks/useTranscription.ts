@@ -136,6 +136,13 @@ export function useTranscription(options: TranscriptionOptions = {}): Transcript
 
       const result = await response.json();
       console.log('[Transcription] STT result:', result);
+
+      // Filter out very low confidence transcriptions (likely noise or garbled speech)
+      if (result.confidence !== undefined && result.confidence < 0.4 && result.text) {
+        console.log(`[Transcription] Low confidence (${result.confidence}), discarding: "${result.text}"`);
+        return '';
+      }
+
       return result.text?.trim() || '';
     } catch (err) {
       console.error('[Transcription] Error:', err);

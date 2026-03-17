@@ -509,6 +509,21 @@ function CommandRenderer({ command }: CommandRendererProps) {
         />
       );
 
+    case 'showCode':
+      return (
+        <div className="p-4">
+          {command.label && (
+            <div className="text-sm font-medium text-gray-600 mb-2">{command.label}</div>
+          )}
+          <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-sm leading-relaxed font-mono">
+            {command.language && (
+              <div className="text-xs text-gray-500 mb-2 uppercase tracking-wide">{command.language}</div>
+            )}
+            <code>{command.code}</code>
+          </pre>
+        </div>
+      );
+
     case 'showImage':
       return (
         <div className="flex flex-col items-center">
@@ -768,6 +783,8 @@ function getCommandTypeLabel(action: string): string {
       return 'Diagram';
     case 'showWorkedExample':
       return 'Worked Example';
+    case 'showCode':
+      return 'Code';
     default:
       return action;
   }

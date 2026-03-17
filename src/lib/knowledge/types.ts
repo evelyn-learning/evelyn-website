@@ -473,7 +473,8 @@ export type WhiteboardCommand =
   | { action: 'showWorkedExample'; example: Partial<WorkedExample> }
   | { action: 'showTable'; headers: string[]; rows: string[][] }
   | { action: 'showImage'; url: string; alt: string }
-  | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string };
+  | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string }
+  | { action: 'showCode'; code: string; language?: string; label?: string };
 
 // =============================================================================
 // STUDENT PROGRESS

@@ -52,11 +52,16 @@ export async function POST(request: NextRequest) {
     const deepgram = createClient(apiKey);
     console.log('[STT API] Sending to Deepgram...');
 
+    // Support optional language parameter from query string (default: multi for code-switching)
+    const url = new URL(request.url);
+    const language = url.searchParams.get('language') || 'multi';
+
     const response = await deepgram.listen.prerecorded.transcribeFile(audioData, {
       model: 'nova-2',
-      language: 'en-US',
+      language,
       punctuate: true,
       smart_format: true,
+      numerals: true,
       encoding: 'linear16',
       sample_rate: 16000,
     });
