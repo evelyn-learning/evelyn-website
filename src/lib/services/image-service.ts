@@ -114,19 +114,35 @@ interface UnsplashSearchResponse {
   results: UnsplashPhoto[];
 }
 
+// Common filler words to exclude from title-based search
+const STOP_WORDS = new Set([
+  "the", "how", "why", "what", "when", "where", "which", "that", "this",
+  "with", "from", "into", "through", "about", "between", "after", "before",
+  "than", "more", "most", "also", "just", "even", "much", "many", "very",
+  "here", "there", "their", "they", "them", "your", "have", "been", "being",
+  "will", "would", "could", "should", "does", "doing", "done", "making",
+  "every", "each", "both", "while", "during", "beyond", "over", "under",
+  "creating", "transforming", "revolutionizing", "reshaping", "breaking",
+  "improving", "driving", "building", "failing", "rising", "changing",
+]);
+
 // Build search query from title and keywords
 function buildSearchQuery(title: string, keywords: string[], style: ImageStyle): string {
-  // Extract key terms from title
+  // Extract meaningful terms from title (skip generic/filler words)
   const titleWords = title
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
-    .split(" ")
-    .filter(word => word.length > 3)
-    .slice(0, 3);
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !STOP_WORDS.has(word));
 
-  // Combine with keywords and style modifier
+  // Deduplicate and take the most distinctive words (skip ultra-common ones)
+  const commonEdTerms = new Set(["education", "learning", "student", "students", "school", "schools", "technology"]);
+  const distinctive = titleWords.filter(w => !commonEdTerms.has(w)).slice(0, 4);
+  const common = titleWords.filter(w => commonEdTerms.has(w)).slice(0, 1);
+
+  // Combine: distinctive title words first, then 1 common term, then style
   const styleModifier = STYLE_MODIFIERS[style];
-  const allTerms = [...titleWords, ...keywords.slice(0, 2), styleModifier];
+  const allTerms = [...distinctive, ...common, ...keywords.slice(0, 1), styleModifier];
 
   // Create focused search query
   return allTerms.join(" ");
@@ -189,7 +205,7 @@ export async function generateBlogImage(
     }
 
     // Pick a random image from top results for variety
-    const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 5));
+    const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 10));
     const photo = data.results[randomIndex];
 
     // Trigger download event (required by Unsplash API guidelines)

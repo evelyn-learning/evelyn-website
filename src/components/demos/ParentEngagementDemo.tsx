@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -167,6 +168,7 @@ const TRANSLATIONS: Record<string, string> = {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function ParentEngagementDemo() {
+  const trackInteraction = useTrackInteraction();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'messages' | 'translate' | 'recommendations'>('dashboard');
   const [studentIdx, setStudentIdx] = useState(0);
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null);
@@ -191,12 +193,13 @@ export default function ParentEngagementDemo() {
   }, []);
 
   const selectStudent = useCallback((idx: number) => {
+    trackInteraction('click', 'select_student', { student: STUDENTS[idx].name });
     setStudentIdx(idx);
     setExpandedMsg(null);
     setDismissedRecs(new Set());
     setShowPlan(false);
     setExpandedResource(null);
-  }, []);
+  }, [trackInteraction]);
 
   const toggleMessage = useCallback((id: string) => {
     if (expandedMsg === id) {
@@ -272,7 +275,7 @@ export default function ParentEngagementDemo() {
           ]).map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { trackInteraction('navigation', 'tab_switch', { tab: tab.id }); setActiveTab(tab.id); }}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id ? 'bg-teal-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}

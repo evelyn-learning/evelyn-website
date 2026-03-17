@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface Module {
   id: string;
@@ -60,6 +61,7 @@ const COMPLIANCE_ITEMS: ComplianceTraining[] = [
 ];
 
 export default function CorporateTrainingDemo() {
+  const trackInteraction = useTrackInteraction();
   const [activeTab, setActiveTab] = useState<'generator' | 'compliance' | 'skills' | 'export'>('generator');
   const [inputContent, setInputContent] = useState(SAMPLE_CONTENT);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -67,6 +69,7 @@ export default function CorporateTrainingDemo() {
   const [selectedFormat, setSelectedFormat] = useState<'scorm' | 'xapi' | 'aicc'>('scorm');
 
   const generateMicrolearning = () => {
+    trackInteraction('click', 'start_module');
     setIsGenerating(true);
     setTimeout(() => {
       setGeneratedCourse(SAMPLE_MODULES);
@@ -119,7 +122,7 @@ export default function CorporateTrainingDemo() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              onClick={() => { trackInteraction('click', 'select_course', { course: tab.label }); setActiveTab(tab.id as typeof activeTab); }}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-indigo-600 text-white shadow-lg'

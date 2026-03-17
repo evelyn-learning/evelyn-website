@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface StudentData {
   id: string;
@@ -487,6 +488,7 @@ const MOCK_CLASS_DATA = computeClassData(ALL_STUDENTS);
 type PerformanceFilter = 'all' | 'high' | 'mid' | 'low';
 
 export default function AnalyticsDashboardDemo() {
+  const trackInteraction = useTrackInteraction();
   const [view, setView] = useState<'class' | 'student'>('class');
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -694,7 +696,7 @@ export default function AnalyticsDashboardDemo() {
                         return (
                           <button
                             key={s.id}
-                            onClick={() => { setSelectedStudent(s); setView('student'); }}
+                            onClick={() => { trackInteraction('click', 'select_student', { studentName: s.name }); setSelectedStudent(s); setView('student'); }}
                             className="w-full flex items-center gap-2 text-xs p-1.5 rounded hover:bg-gray-50 transition"
                           >
                             <span className="w-20 truncate text-left font-medium text-gray-700">{s.name.split(' ')[0]}</span>
@@ -802,7 +804,7 @@ export default function AnalyticsDashboardDemo() {
                     {([['all', 'All'], ['high', 'High'], ['mid', 'Mid'], ['low', 'Low']] as const).map(([key, label]) => (
                       <button
                         key={key}
-                        onClick={() => setPerformanceFilter(key)}
+                        onClick={() => { trackInteraction('click', 'apply_filter', { filter: key }); setPerformanceFilter(key); }}
                         className={`px-3 py-1 rounded-md font-medium transition ${
                           performanceFilter === key ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'
                         }`}

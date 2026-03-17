@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -217,6 +218,7 @@ function parseGrowth(g: string) {
 // ── Component ───────────────────────────────────────────────────────────────
 
 export default function CareerPathwaysDemo() {
+  const trackInteraction = useTrackInteraction();
   const [activeTab, setActiveTab] = useState<'assessment' | 'careers' | 'courses' | 'pathway'>('assessment');
   const [skills, setSkills] = useState<Skill[]>(DEFAULT_SKILLS);
   const [selectedIndustry, setSelectedIndustry] = useState('All Industries');
@@ -238,11 +240,13 @@ export default function CareerPathwaysDemo() {
   }, []);
 
   const updateSkill = useCallback((name: string, level: number) => {
+    trackInteraction('click', 'adjust_skill', { skill: name });
     setSkills(prev => prev.map(s => s.name === name ? { ...s, level } : s));
     setAnalysisRun(false);
-  }, []);
+  }, [trackInteraction]);
 
   const runAnalysis = () => {
+    trackInteraction('click', 'run_analysis');
     setIsAnalyzing(true);
     setTimeout(() => {
       setIsAnalyzing(false);
@@ -262,6 +266,8 @@ export default function CareerPathwaysDemo() {
   };
 
   const viewLearningPath = (careerId: string) => {
+    const career = CAREERS.find(c => c.id === careerId);
+    trackInteraction('click', 'select_pathway', { pathway: career?.title ?? careerId });
     setTargetCareerId(careerId);
     setActiveTab('pathway');
   };

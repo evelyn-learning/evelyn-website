@@ -14,17 +14,20 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get("sessionId");
+    const id = searchParams.get("id");
 
-    // Session detail mode
-    if (sessionId) {
-      const demoSession = await DemoSession.findOne({ sessionId });
+    // Session detail mode — look up by _id for uniqueness
+    if (id) {
+      const demoSession = await DemoSession.findById(id);
       if (!demoSession) {
         return NextResponse.json({ error: "Session not found" }, { status: 404 });
       }
 
-      // Also fetch corresponding DemoInteraction events
-      const events = await DemoInteraction.find({ sessionId })
+      // Fetch DemoInteraction events for same session AND product
+      const events = await DemoInteraction.find({
+        sessionId: demoSession.sessionId,
+        productId: demoSession.productId,
+      })
         .sort({ timestamp: 1 })
         .lean();
 

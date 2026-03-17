@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface AccessibilityIssue {
   type: string;
@@ -55,6 +56,7 @@ const SAMPLE_CONTENT = {
 };
 
 export default function AccessibilityAIDemo() {
+  const trackInteraction = useTrackInteraction();
   const [content, setContent] = useState('');
   const [contentType, setContentType] = useState<'html' | 'text'>('html');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -68,6 +70,7 @@ export default function AccessibilityAIDemo() {
       return;
     }
 
+    trackInteraction('tool_use', 'analyze_content', { contentLength: content.length });
     setIsAnalyzing(true);
     setError(null);
     setReport(null);
@@ -136,6 +139,7 @@ Provide analysis in this JSON format:
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]) as AccessibilityReport;
+          trackInteraction('tool_use', 'report_generated', { issueCount: parsed.issues?.length || 0, score: parsed.overallScore });
           setReport(parsed);
         } catch {
           setError('Could not parse report. Please try again.');
@@ -149,6 +153,7 @@ Provide analysis in this JSON format:
   };
 
   const loadSample = (quality: keyof typeof SAMPLE_CONTENT) => {
+    trackInteraction('click', 'load_sample');
     setContent(SAMPLE_CONTENT[quality]);
     setContentType('html');
     setReport(null);

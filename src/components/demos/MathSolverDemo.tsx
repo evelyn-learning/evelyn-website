@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface Step {
   step: number;
@@ -25,6 +26,7 @@ const SAMPLE_PROBLEMS = {
 };
 
 export default function MathSolverDemo() {
+  const trackInteraction = useTrackInteraction();
   const [problem, setProblem] = useState('');
   const [mathType, setMathType] = useState<'algebra' | 'quadratic' | 'calculus' | 'fractions'>('algebra');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +39,7 @@ export default function MathSolverDemo() {
       return;
     }
 
+    trackInteraction('tool_use', 'solve_problem', { problem: problem.slice(0, 200) });
     setIsLoading(true);
     setError(null);
     setSolution(null);
@@ -93,6 +96,7 @@ Format your response as JSON:
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]) as SolutionData;
+          trackInteraction('tool_use', 'solution_generated', { stepsCount: parsed.steps?.length || 0 });
           setSolution(parsed);
         } catch {
           setError('Could not parse solution. Please try again.');
@@ -106,6 +110,7 @@ Format your response as JSON:
   };
 
   const loadSample = (type: keyof typeof SAMPLE_PROBLEMS) => {
+    trackInteraction('click', 'load_sample');
     setMathType(type);
     setProblem(SAMPLE_PROBLEMS[type]);
     setSolution(null);

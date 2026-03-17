@@ -308,7 +308,7 @@ export default function TutorPage() {
         if (data.whiteboardCommands?.length > 0) {
           setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
           data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
-            trackInteraction('tool_use', 'whiteboard', { command: cmd.action });
+            trackInteraction('tool_use', 'whiteboard', { ...cmd });
           });
         }
       } catch (err) {

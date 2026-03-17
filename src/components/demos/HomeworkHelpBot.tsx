@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // Types
 interface Message {
@@ -112,6 +113,7 @@ const parseFollowUps = (text: string): { cleanText: string; followUps: string[] 
 };
 
 export default function HomeworkHelpBot() {
+  const trackInteraction = useTrackInteraction();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -160,6 +162,7 @@ export default function HomeworkHelpBot() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    trackInteraction('message', messageText, undefined, 'student');
     setInput('');
     setIsLoading(true);
 
@@ -198,6 +201,7 @@ export default function HomeworkHelpBot() {
 
     if (data?.text) {
       const { cleanText, followUps } = parseFollowUps(data.text);
+      trackInteraction('message', cleanText, undefined, 'tutor');
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: cleanText,
@@ -243,6 +247,8 @@ export default function HomeworkHelpBot() {
 
     setIsUploading(true);
     setIsLoading(true);
+
+    trackInteraction('tool_use', 'homework_upload', { subject: selectedSubject });
 
     // Show user message with image indicator
     setMessages(prev => [...prev, {
@@ -335,6 +341,7 @@ export default function HomeworkHelpBot() {
   };
 
   const handleSampleQuestion = (question: string) => {
+    trackInteraction('click', 'sample_question');
     sendMessage(question);
   };
 

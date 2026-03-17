@@ -213,7 +213,7 @@ export function VoiceTutor({
       if (data.whiteboardCommands?.length > 0) {
         onWhiteboardCommand(data.whiteboardCommands);
         data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
-          onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
+          onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
         });
       }
 

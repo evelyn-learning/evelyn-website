@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // Types
 interface TestType {
@@ -46,6 +47,7 @@ const DIFFICULTY_LEVELS: DifficultyLevel[] = [
 ];
 
 export default function PracticeTestGenerator() {
+  const trackInteraction = useTrackInteraction();
   const [selectedTest, setSelectedTest] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState('medium');
@@ -67,6 +69,8 @@ export default function PracticeTestGenerator() {
     setQuestions(null);
     setUserAnswers({});
     setShowResults(false);
+
+    trackInteraction('tool_use', 'generate_test', { testType: selectedTest, subject: selectedSubject, difficulty, questionCount });
 
     const testInfo = TEST_TYPES.find(t => t.id === selectedTest);
 
@@ -129,6 +133,7 @@ Make the questions authentic to ${testInfo?.name} style and ${difficulty} diffic
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]);
+          trackInteraction('tool_use', 'test_generated', { questionCount: parsed.questions.length });
           setQuestions(parsed.questions);
         } catch {
           setError('Could not parse questions. Please try again.');
@@ -149,6 +154,11 @@ Make the questions authentic to ${testInfo?.name} style and ${difficulty} diffic
   };
 
   const checkAnswers = () => {
+    if (questions) {
+      const correct = questions.filter(q => userAnswers[q.id] === q.correctAnswer).length;
+      const score = { correct, total: questions.length, percentage: Math.round((correct / questions.length) * 100) };
+      trackInteraction('click', 'check_answers', { score });
+    }
     setShowResults(true);
   };
 

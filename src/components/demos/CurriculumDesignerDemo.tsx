@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface LearningObjective {
   code: string;
@@ -65,6 +66,7 @@ const SAMPLE_INPUTS = {
 };
 
 export default function CurriculumDesignerDemo() {
+  const trackInteraction = useTrackInteraction();
   const [subject, setSubject] = useState('');
   const [gradeLevel, setGradeLevel] = useState('9-12');
   const [duration, setDuration] = useState('4 weeks');
@@ -84,6 +86,8 @@ export default function CurriculumDesignerDemo() {
     setIsGenerating(true);
     setError(null);
     setCurriculum(null);
+
+    trackInteraction('tool_use', 'generate_curriculum', { subject, topic, gradeLevel, duration, standards });
 
     const systemPrompt = `You are an expert curriculum designer with deep knowledge of educational standards and pedagogy.
 Create detailed, standards-aligned curriculum maps that are practical and implementable.
@@ -151,6 +155,7 @@ Include ${parseInt(duration) || 4} weeks of lessons. Make it practical and detai
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]) as CurriculumMap;
+          trackInteraction('tool_use', 'curriculum_generated', { weekCount: parsed.lessons?.length || 0 });
           setCurriculum(parsed);
           setExpandedWeek(1);
         } catch {

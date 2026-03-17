@@ -132,7 +132,7 @@ Format as JSON:
         try {
           const parsed = JSON.parse(jsonMatch[0]) as GeneratedContent;
           setContent(parsed);
-          trackInteraction('tool_use', 'content_generated', { contentType, itemCount: parsed.quiz?.length || parsed.flashcards?.length || 0, topic: parsed.topic });
+          trackInteraction('tool_use', 'content_generated', { contentType, itemCount: parsed.quiz?.length || parsed.flashcards?.length || 0, topic: parsed.topic, generatedContent: parsed });
         } catch {
           setError('Could not parse content. Please try again.');
         }

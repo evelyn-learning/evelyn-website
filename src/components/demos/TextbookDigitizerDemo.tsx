@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -167,6 +168,7 @@ const SUMMARIES: Record<SubjectId, string[]> = {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function TextbookDigitizerDemo() {
+  const trackInteraction = useTrackInteraction();
   const [activeTab, setActiveTab] = useState<TabId>('upload');
   const [subject, setSubject] = useState<SubjectId | null>(null);
   const [bookTitle, setBookTitle] = useState('');
@@ -233,6 +235,7 @@ export default function TextbookDigitizerDemo() {
 
   const processTextbook = useCallback(() => {
     if (!subject) return;
+    trackInteraction('click', 'start_processing');
     const chapData = CHAPTERS[subject];
 
     setChapters(
@@ -416,7 +419,7 @@ export default function TextbookDigitizerDemo() {
                       {SUBJECTS.map(s => (
                         <button
                           key={s.id}
-                          onClick={() => { setSubject(s.id); setBookTitle(''); }}
+                          onClick={() => { trackInteraction('click', 'select_subject', { subject: s.label }); setSubject(s.id); setBookTitle(''); }}
                           className={`p-4 rounded-xl border-2 text-center transition ${
                             subject === s.id ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-amber-300'
                           }`}
@@ -567,7 +570,7 @@ export default function TextbookDigitizerDemo() {
                           expandedChapter === idx ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div onClick={() => setExpandedChapter(expandedChapter === idx ? null : idx)} className="p-4 cursor-pointer">
+                        <div onClick={() => { trackInteraction('click', 'select_chapter', { chapter: chapter.title }); setExpandedChapter(expandedChapter === idx ? null : idx); }} className="p-4 cursor-pointer">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-100 text-green-600 text-sm font-medium">

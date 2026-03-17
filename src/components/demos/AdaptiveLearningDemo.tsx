@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface SkillNode {
   id: string;
@@ -99,6 +100,7 @@ const PRACTICE_QUESTIONS: Record<string, PracticeQuestion[]> = {
 };
 
 export default function AdaptiveLearningDemo() {
+  const trackInteraction = useTrackInteraction();
   const [selectedSubject, setSelectedSubject] = useState<keyof typeof SUBJECTS>('algebra');
   const [selectedSkill, setSelectedSkill] = useState<SkillNode | null>(null);
   const [isPracticing, setIsPracticing] = useState(false);
@@ -145,6 +147,7 @@ export default function AdaptiveLearningDemo() {
   };
 
   const startPractice = (skillId: string) => {
+    trackInteraction('click', 'start_practice');
     setIsPracticing(true);
     setCurrentPracticeQuestion(0);
     setSelectedAnswer(null);
@@ -189,6 +192,7 @@ export default function AdaptiveLearningDemo() {
             <button
               key={key}
               onClick={() => {
+                trackInteraction('click', 'select_subject', { subject: subject.name });
                 setSelectedSubject(key as keyof typeof SUBJECTS);
                 setSelectedSkill(null);
               }}
@@ -268,7 +272,7 @@ export default function AdaptiveLearningDemo() {
                 {getRecommended().map((skill, idx) => (
                   <button
                     key={skill.id}
-                    onClick={() => setSelectedSkill(skill)}
+                    onClick={() => { trackInteraction('click', 'select_skill', { skill: skill.name }); setSelectedSkill(skill); }}
                     className={`w-full p-4 rounded-xl border-2 text-left transition ${getStatusBorder(skill.status)} hover:shadow-md`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -298,7 +302,7 @@ export default function AdaptiveLearningDemo() {
                 {skills.map((skill) => (
                   <button
                     key={skill.id}
-                    onClick={() => setSelectedSkill(skill)}
+                    onClick={() => { trackInteraction('click', 'select_skill', { skill: skill.name }); setSelectedSkill(skill); }}
                     disabled={skill.status === 'locked'}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedSkill?.id === skill.id ? 'ring-2 ring-cyan-500 ring-offset-2' : ''

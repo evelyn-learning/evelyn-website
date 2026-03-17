@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ──
 
@@ -87,6 +88,7 @@ ALWAYS respond in this exact JSON format:
 // ── Component ──
 
 export default function LanguageLearningDemo() {
+  const trackInteraction = useTrackInteraction();
   // Settings
   const [language, setLanguage] = useState<LanguageKey>('spanish');
   const [scenario, setScenario] = useState<ScenarioKey>('cafe');
@@ -261,6 +263,7 @@ export default function LanguageLearningDemo() {
   };
 
   const startConversation = async () => {
+    trackInteraction('navigation', 'start_conversation', { language, scenario, difficulty });
     setMessages([]);
     setVocabulary([]);
     setError(null);
@@ -312,6 +315,7 @@ export default function LanguageLearningDemo() {
     if (!messageText.trim() || isLoading || messages.length === 0) return;
 
     const userMessage: Message = { role: 'user', content: messageText };
+    trackInteraction('message', messageText, undefined, 'student');
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setError(null);
@@ -346,6 +350,7 @@ export default function LanguageLearningDemo() {
     if (data?.text) {
       const parsed = parseAIResponse(data.text);
       if (parsed) {
+        trackInteraction('message', parsed.message, { language }, 'tutor');
         setMessages(prev => [...prev, {
           role: 'assistant',
           content: parsed.message,
@@ -372,6 +377,7 @@ export default function LanguageLearningDemo() {
 
   const suggestResponse = async () => {
     if (isLoading || messages.length === 0) return;
+    trackInteraction('tool_use', 'suggest_response');
     setIsLoading(true);
     setError(null);
 

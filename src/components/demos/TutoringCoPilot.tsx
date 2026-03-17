@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // Types
 interface SessionMessage {
@@ -54,6 +55,7 @@ const SCENARIO_DATA = {
 };
 
 export default function TutoringCoPilot() {
+  const trackInteraction = useTrackInteraction();
   const [sessionHistory, setSessionHistory] = useState<SessionMessage[]>(SCENARIO_DATA.sessionHistory);
   const [studentMessage, setStudentMessage] = useState('');
   const [tutorMessage, setTutorMessage] = useState('');
@@ -146,6 +148,7 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]) as AISuggestions;
+          trackInteraction('tool_use', 'suggestions_generated', { count: parsed.suggestions?.length });
           setAiSuggestions(parsed);
         } catch {
           console.error('Error parsing suggestions');
@@ -166,6 +169,7 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
     };
 
     setSessionHistory(prev => [...prev, newMessage]);
+    trackInteraction('message', studentMessage, undefined, 'student');
     generateSuggestions(studentMessage);
     setStudentMessage('');
   };
@@ -180,11 +184,13 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
     };
 
     setSessionHistory(prev => [...prev, newMessage]);
+    trackInteraction('message', tutorMessage, undefined, 'tutor');
     setTutorMessage('');
     setAiSuggestions(null);
   };
 
-  const useSuggestion = (suggestion: Suggestion) => {
+  const useSuggestion = (suggestion: Suggestion, index: number) => {
+    trackInteraction('click', 'use_suggestion', { index });
     setTutorMessage(suggestion.example || suggestion.suggestion);
   };
 
@@ -406,7 +412,7 @@ Provide 3-4 specific suggestions for how the tutor should respond. Format as JSO
                             ? 'bg-purple-600/20 border-purple-500/50 hover:bg-purple-600/30'
                             : 'bg-slate-700/50 border-slate-600 hover:bg-slate-700'
                         }`}
-                        onClick={() => useSuggestion(sug)}
+                        onClick={() => useSuggestion(sug, idx)}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-white font-medium text-sm">{sug.title}</span>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 import type { GeneratedCourse, CourseModule } from '@/lib/utils/export/pdf-course-export';
 
 export type { GeneratedCourse, CourseModule };
@@ -28,6 +29,7 @@ Applications range from recommendation systems to medical diagnosis, autonomous 
 };
 
 export default function CourseCreatorStudioDemo() {
+  const trackInteraction = useTrackInteraction();
   const [inputType, setInputType] = useState<'document' | 'video'>('document');
   const [documentText, setDocumentText] = useState('');
   const [courseTitle, setCourseTitle] = useState('');
@@ -50,6 +52,7 @@ export default function CourseCreatorStudioDemo() {
 
   const handleExport = useCallback(async (label: string) => {
     if (exportingFormat || exportedFormats.has(label) || !generatedCourse) return;
+    trackInteraction('click', 'export_course', { format: label });
     setExportingFormat(label);
 
     try {
@@ -73,7 +76,7 @@ export default function CourseCreatorStudioDemo() {
       setExportingFormat(null);
       showToast(`Export failed — please try again`);
     }
-  }, [exportingFormat, exportedFormats, showToast, generatedCourse]);
+  }, [exportingFormat, exportedFormats, showToast, generatedCourse, trackInteraction]);
 
   const generateCourse = async () => {
     if (!documentText.trim() || !courseTitle.trim()) {
@@ -81,6 +84,7 @@ export default function CourseCreatorStudioDemo() {
       return;
     }
 
+    trackInteraction('tool_use', 'generate_course', { title: courseTitle, audience: targetAudience, duration: courseDuration });
     setIsGenerating(true);
     setError(null);
     setGeneratedCourse(null);
@@ -155,6 +159,7 @@ Each quiz should have 2-3 questions.`;
       if (jsonMatch) {
         try {
           const parsed = JSON.parse(jsonMatch[0]) as GeneratedCourse;
+          trackInteraction('tool_use', 'course_generated', { moduleCount: parsed.modules?.length || 0, title: parsed.title });
           setGeneratedCourse(parsed);
           if (parsed.modules.length > 0) {
             setExpandedModule(parsed.modules[0].id);
@@ -171,6 +176,7 @@ Each quiz should have 2-3 questions.`;
   };
 
   const loadSample = () => {
+    trackInteraction('click', 'load_sample');
     if (inputType === 'document') {
       const sample = SAMPLE_INPUTS.document;
       setCourseTitle(sample.title);

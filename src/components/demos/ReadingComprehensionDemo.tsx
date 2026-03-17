@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 interface ComprehensionQuestion {
   question: string;
@@ -37,6 +38,7 @@ const SAMPLE_PASSAGES = {
 };
 
 export default function ReadingComprehensionDemo() {
+  const trackInteraction = useTrackInteraction();
   const [passage, setPassage] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ReadingAnalysis | null>(null);
@@ -44,6 +46,7 @@ export default function ReadingComprehensionDemo() {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
 
   const analyzePassage = async () => {
+    trackInteraction('click', 'submit_answer');
     if (!passage.trim()) {
       setError('Please enter a reading passage to analyze.');
       return;
@@ -140,6 +143,7 @@ Generate at least 5 questions: 2 literal, 2 inferential, 1 evaluative.`;
   };
 
   const loadSample = (type: keyof typeof SAMPLE_PASSAGES) => {
+    trackInteraction('click', 'select_passage', { passage: type });
     setPassage(SAMPLE_PASSAGES[type]);
     setAnalysis(null);
   };

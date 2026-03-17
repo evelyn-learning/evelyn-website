@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -174,6 +175,7 @@ function trendLabel(t: 'up' | 'down' | 'stable') {
 // ── Component ───────────────────────────────────────────────────────────────
 
 export default function StudentSuccessPredictorDemo() {
+  const trackInteraction = useTrackInteraction();
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterRisk, setFilterRisk] = useState('all');
@@ -222,10 +224,11 @@ export default function StudentSuccessPredictorDemo() {
   // ── Actions ─────────────────────────────────────────────────────────────
 
   const updateMetric = useCallback((studentId: string, key: keyof StudentMetrics, value: number) => {
+    trackInteraction('click', 'adjust_metric', { metric: METRIC_LABELS[key] });
     setStudents(prev => prev.map(s =>
       s.id === studentId ? { ...s, metrics: { ...s.metrics, [key]: value } } : s
     ));
-  }, []);
+  }, [trackInteraction]);
 
   const markAction = useCallback((studentId: string, recText: string) => {
     setStudents(prev => prev.map(s => {
@@ -251,6 +254,7 @@ export default function StudentSuccessPredictorDemo() {
   };
 
   const simulateWeek = () => {
+    trackInteraction('click', 'simulate_week');
     setIsSimulating(true);
     setTimeout(() => {
       setStudents(prev => prev.map(s => {
