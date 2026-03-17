@@ -394,6 +394,19 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 title: funcArgs.title,
                 description: funcArgs.description,
               };
+            } else if (funcName === 'show_code') {
+              command = {
+                action: 'showCode',
+                code: funcArgs.code,
+                language: funcArgs.language,
+                label: funcArgs.label,
+              };
+            } else if (funcName === 'show_table') {
+              command = {
+                action: 'showTable',
+                headers: (Array.isArray(funcArgs.headers) ? funcArgs.headers : []) as string[],
+                rows: (Array.isArray(funcArgs.rows) ? funcArgs.rows : []) as string[][],
+              };
             } else if (funcName === 'show_function_graph') {
               // Build GraphData from structured AI parameters
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -653,6 +666,33 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                     title: { type: 'string', description: 'The title of the page to navigate to (must match a previously used new_page title)' },
                   },
                   required: ['title'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_code',
+                description: 'Display a code snippet on the whiteboard. You MUST call this whenever you discuss, explain, or reference any programming code. Always show code visually — never just describe code verbally without also displaying it.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string', description: 'The code to display. Use \\n for newlines and spaces for indentation.' },
+                    language: { type: 'string', description: 'Programming language (e.g., java, python, ruby, javascript, c, cpp)' },
+                    label: { type: 'string', description: 'A short label/title for the code snippet' },
+                  },
+                  required: ['code', 'language'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_table',
+                description: 'Display a table on the whiteboard. Use for showing data, comparison tables, truth tables, or any tabular information.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    headers: { type: 'array', items: { type: 'string' }, description: 'Column headers' },
+                    rows: { type: 'array', items: { type: 'array', items: { type: 'string' } }, description: 'Table rows, each row is an array of cell values' },
+                  },
+                  required: ['headers', 'rows'],
                 },
               },
               {

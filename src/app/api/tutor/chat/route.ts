@@ -148,6 +148,10 @@ export async function POST(request: NextRequest) {
 
     // Parse whiteboard commands
     let { cleanText, commands, pedagogicalIntent } = parseWhiteboardCommands(content.text);
+    console.log('[Tutor API] Parsed commands:', commands.length, commands.map(c => c.action));
+    if (commands.length === 0) {
+      console.log('[Tutor API] Raw AI text (first 300 chars):', content.text.substring(0, 300));
+    }
 
     // --- Whiteboard content validation pass ---
     // Detect when the AI claims to show something on the whiteboard but didn't

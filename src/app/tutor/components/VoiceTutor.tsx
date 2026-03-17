@@ -221,11 +221,15 @@ export function VoiceTutor({
       onTrackInteraction?.('message', data.text, data.pedagogicalIntent ? { pedagogicalIntent: data.pedagogicalIntent } : undefined, 'tutor');
 
       // Send whiteboard commands
+      console.log('[VoiceTutor] API response whiteboardCommands:', JSON.stringify(data.whiteboardCommands));
       if (data.whiteboardCommands?.length > 0) {
+        console.log('[VoiceTutor] Sending', data.whiteboardCommands.length, 'whiteboard commands to parent');
         onWhiteboardCommand(data.whiteboardCommands);
         data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
           onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
         });
+      } else {
+        console.warn('[VoiceTutor] No whiteboard commands in API response. Raw text snippet:', data.rawText?.substring(0, 200));
       }
 
       // Speak the response

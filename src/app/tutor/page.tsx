@@ -417,7 +417,12 @@ export default function TutorPage() {
 
   // Handle whiteboard commands from VoiceTutor
   const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
-    setWhiteboardCommands((prev) => [...prev, ...commands]);
+    console.log('[TutorPage] Received whiteboard commands:', commands.length, commands.map(c => c.action));
+    setWhiteboardCommands((prev) => {
+      const next = [...prev, ...commands];
+      console.log('[TutorPage] Total whiteboard commands now:', next.length);
+      return next;
+    });
   }, []);
 
   // Handle conversation history updates from VoiceTutor
