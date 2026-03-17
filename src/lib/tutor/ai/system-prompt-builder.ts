@@ -111,6 +111,7 @@ IMPORTANT: This is a voice conversation. Follow these rules:
 - Pause naturally: "So... what do you think happens next?"
 - Don't list things verbally; show lists on whiteboard instead
 - Never use markdown formatting (no **, ##, etc.) - this is speech
+- Never use markdown code fences (e.g., \`\`\`java ... \`\`\`) for code — use the whiteboard showCode command instead
 - Avoid long technical explanations - break them into back-and-forth exchanges
 
 ## Whiteboard Usage
@@ -250,16 +251,24 @@ When generating SVG diagrams (showSvgDiagram), use viewBox "0 0 400 300" with th
 \`\`\`
 
 ### Code Display (for programming topics)
-When teaching programming concepts, ALWAYS use showCode instead of showEquation:
+
+**CRITICAL: When showing code, you MUST use a \`\`\`whiteboard block with showCode action. Do NOT use regular markdown code fences like \`\`\`java — those will not display on the whiteboard.**
+
+Example — showing Java code:
 \`\`\`whiteboard
-{
-  "action": "showCode",
-  "language": "ruby",
-  "label": "Car class with initialize",
-  "code": "class Car\\n  attr_accessor :model, :year, :color\\n\\n  def initialize(model, year, color)\\n    @model = model\\n    @year = year\\n    @color = color\\n  end\\nend"
-}
+{"action": "showCode", "language": "java", "label": "Enhanced For Loop", "code": "int[] numbers = {1, 2, 3, 4, 5};\\nfor (int num : numbers) {\\n    System.out.println(num);\\n}"}
 \`\`\`
-NEVER use \\text{} LaTeX for code. NEVER put programming code inside showEquation. Code belongs in showCode.
+
+Example — showing Python code:
+\`\`\`whiteboard
+{"action": "showCode", "language": "python", "label": "List comprehension", "code": "squares = [x**2 for x in range(10)]\\nprint(squares)"}
+\`\`\`
+
+RULES:
+- NEVER use \\text{} LaTeX for code. NEVER put programming code inside showEquation.
+- NEVER use \`\`\`java, \`\`\`python, etc. Use \`\`\`whiteboard with showCode instead.
+- When a student asks to "show code" or "write on the whiteboard", you MUST include a showCode command.
+- Use \\n for newlines inside the code string. Use \\t or spaces for indentation.
 
 ### Other Commands
 - showTable: { action: "showTable", headers: ["t", "x", "v"], rows: [["0", "0", "5"], ...] }

@@ -57,6 +57,32 @@ export function parseWhiteboardCommands(response: string): ParsedResponse {
   // Remove whiteboard blocks from text
   cleanText = cleanText.replace(/```whiteboard\s*[\s\S]*?```/g, '').trim();
 
+  // Auto-extract programming code blocks (```java, ```python, ```ruby, etc.)
+  // and convert them to showCode whiteboard commands.
+  // The AI often writes code in standard markdown fences instead of whiteboard blocks.
+  const codeBlockRegex = /```(\w+)\s*\n([\s\S]*?)```/g;
+  let codeMatch;
+  while ((codeMatch = codeBlockRegex.exec(cleanText)) !== null) {
+    const language = codeMatch[1].toLowerCase();
+    const code = codeMatch[2].trim();
+    // Only convert recognized programming languages, not generic text blocks
+    const programmingLanguages = [
+      'java', 'python', 'javascript', 'typescript', 'ruby', 'c', 'cpp', 'csharp',
+      'go', 'rust', 'swift', 'kotlin', 'scala', 'php', 'html', 'css', 'sql',
+      'bash', 'shell', 'r', 'matlab', 'perl', 'lua', 'haskell', 'elixir',
+      'dart', 'jsx', 'tsx', 'vue', 'svelte', 'json', 'xml', 'yaml', 'toml',
+    ];
+    if (code && programmingLanguages.includes(language)) {
+      commands.push({
+        action: 'showCode',
+        code,
+        language,
+      });
+    }
+  }
+  // Remove extracted code blocks from the spoken text
+  cleanText = cleanText.replace(/```\w+\s*\n[\s\S]*?```/g, '').trim();
+
   // Also remove any JSON-like objects that might be inline commands
   cleanText = cleanText.replace(/\{[\s\S]*?"action"[\s\S]*?\}/g, '').trim();
 
