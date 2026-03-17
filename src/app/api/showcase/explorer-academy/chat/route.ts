@@ -106,11 +106,6 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
         });
 
-        stream.on('end', () => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
-          controller.close();
-        });
-
         stream.on('error', (error) => {
           console.error('Stream error:', error);
           controller.enqueue(
@@ -120,6 +115,19 @@ export async function POST(request: NextRequest) {
           );
           controller.close();
         });
+
+        try {
+          const finalMessage = await stream.finalMessage();
+          const usage = {
+            inputTokens: finalMessage.usage.input_tokens,
+            outputTokens: finalMessage.usage.output_tokens,
+            model: 'claude-sonnet-4-5-20250929',
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`));
+        } catch {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+        }
+        controller.close();
       },
     });
 

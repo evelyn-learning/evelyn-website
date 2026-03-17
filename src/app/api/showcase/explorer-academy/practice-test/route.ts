@@ -100,7 +100,14 @@ Generate exactly 5 questions with a mix of difficulty levels (2 easy, 2 medium, 
 
     try {
       const parsed = JSON.parse(text);
-      return NextResponse.json(parsed);
+      return NextResponse.json({
+        ...parsed,
+        usage: {
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          model: 'claude-sonnet-4-5-20250929',
+        },
+      });
     } catch {
       console.error('Failed to parse practice test response:', raw.slice(0, 500));
       return NextResponse.json(

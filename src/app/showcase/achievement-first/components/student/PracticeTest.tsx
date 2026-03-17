@@ -106,7 +106,10 @@ export default function PracticeTest() {
       const data = await res.json();
       setQuestions(data.questions);
       setTestsGenerated((c) => c + 1);
-      trackInteraction('tool_use', 'generate_test', { subject, topic, questionCount: data.questions?.length });
+      trackInteraction('tool_use', 'generate_test', {
+        subject, topic, questionCount: data.questions?.length,
+        ...(data.usage && { inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, model: data.usage.model }),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {

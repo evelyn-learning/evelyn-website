@@ -436,7 +436,12 @@ ${curriculumContext.slice(0, 3000)}`;
     return NextResponse.json({
       success: true,
       lesson,
-      tokens: response.usage?.input_tokens + response.usage?.output_tokens || 0,
+      tokens: (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0),
+      usage: {
+        inputTokens: response.usage?.input_tokens || 0,
+        outputTokens: response.usage?.output_tokens || 0,
+        model: 'claude-sonnet-4-20250514',
+      },
     });
   } catch (error: unknown) {
     const duration_ms = Date.now() - startTime;

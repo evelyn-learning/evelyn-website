@@ -778,7 +778,10 @@ function SessionRow({
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-20250514': { input: 3, output: 15 },
   'claude-sonnet-4-5-20250514': { input: 3, output: 15 },
+  'claude-sonnet-4-5-20250929': { input: 3, output: 15 },
   'claude-haiku-3-5-20241022': { input: 0.80, output: 4 },
+  'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },
+  'gpt-4o-mini': { input: 0.15, output: 0.60 },
 };
 
 function estimateCost(inputTokens: number, outputTokens: number, model?: string): string {

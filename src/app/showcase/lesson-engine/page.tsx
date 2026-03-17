@@ -871,6 +871,7 @@ function QuestionOverlay({
 
       const decoder = new TextDecoder();
       let fullAnswer = '';
+      let chatUsage: { inputTokens: number; outputTokens: number; model: string } | undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -884,6 +885,8 @@ function QuestionOverlay({
               if (data.type === 'chunk') {
                 fullAnswer += data.content;
                 setAnswer(fullAnswer);
+              } else if (data.type === 'done' && data.usage) {
+                chatUsage = data.usage;
               } else if (data.type === 'error') {
                 setAnswer('Sorry, something went wrong. Please try again.');
               }
@@ -897,7 +900,7 @@ function QuestionOverlay({
       setIsStreaming(false);
       // Narrate the answer
       if (fullAnswer) {
-        onTrackInteraction?.('message', fullAnswer, undefined, 'tutor');
+        onTrackInteraction?.('message', fullAnswer, chatUsage ? { inputTokens: chatUsage.inputTokens, outputTokens: chatUsage.outputTokens, model: chatUsage.model } : undefined, 'tutor');
         narrateAnswer(fullAnswer);
       }
     } catch {
@@ -1849,6 +1852,14 @@ function MainApp() {
       setLesson(result.lesson);
       setView('review');
       tracker.onComplete({ slides: result.lesson.slides.length });
+      if (result.usage) {
+        tracker.trackInteraction('tool_use', 'generate_lesson_complete', {
+          slides: result.lesson.slides.length,
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens,
+          model: result.usage.model,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setView('input');

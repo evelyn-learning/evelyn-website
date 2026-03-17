@@ -306,7 +306,14 @@ export async function POST(request: NextRequest) {
         parsed.segments = parsed.segments.slice(0, 4);
       }
 
-      return NextResponse.json(parsed);
+      return NextResponse.json({
+        ...parsed,
+        usage: {
+          inputTokens: message.usage.input_tokens,
+          outputTokens: message.usage.output_tokens,
+          model: 'claude-sonnet-4-20250514',
+        },
+      });
     } catch (err) {
       if (attempt === 0) continue; // retry once
       console.error('Adaptive lesson API error:', err);

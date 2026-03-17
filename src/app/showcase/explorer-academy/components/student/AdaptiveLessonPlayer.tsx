@@ -253,7 +253,10 @@ export default function AdaptiveLessonPlayer() {
         }
 
         appendAdaptiveSegments(data.segments);
-        trackInteraction('tool_use', 'adaptive_content', { phase, segmentCount: data.segments.length, topic: lesson.title });
+        trackInteraction('tool_use', 'adaptive_content', {
+          phase, segmentCount: data.segments.length, topic: lesson.title,
+          ...(data.usage && { inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, model: data.usage.model }),
+        });
 
         if (phase === 'TEACH') {
           teachSegmentCountRef.current += data.segments.length;

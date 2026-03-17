@@ -98,7 +98,14 @@ Use LaTeX math notation in expressions (e.g., \\\\frac{a}{b} for fractions, x^2 
 
     try {
       const parsed = JSON.parse(text);
-      return NextResponse.json(parsed);
+      return NextResponse.json({
+        ...parsed,
+        usage: {
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          model: 'claude-sonnet-4-5-20250929',
+        },
+      });
     } catch {
       console.error('Failed to parse math solver response:', raw.slice(0, 500));
       return NextResponse.json(

@@ -16,6 +16,7 @@ interface Solution {
   steps: MathStep[];
   finalAnswer: string;
   encouragement: string;
+  usage?: { inputTokens: number; outputTokens: number; model: string };
 }
 
 interface SampleProblem {
@@ -143,7 +144,10 @@ export default function MathHelper() {
 
       const data: Solution = await res.json();
       setSolution(data);
-      trackInteraction('tool_use', 'math_solver', { steps: data.steps.length });
+      trackInteraction('tool_use', 'math_solver', {
+        steps: data.steps.length,
+        ...(data.usage && { inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, model: data.usage.model }),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setMode('select');

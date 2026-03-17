@@ -140,6 +140,11 @@ Return a JSON object with a "sections" key containing an array of 7 section obje
       sections,
       model: 'gpt-4o-mini',
       tokens: completion.usage?.total_tokens || 0,
+      usage: {
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        model: 'gpt-4o-mini',
+      },
     });
   } catch (error: unknown) {
     console.error('Report generation error:', error);

@@ -943,7 +943,10 @@ function LiveDemo() {
         s.id === student.id ? { ...s, status: 'generated' as const, report: sections } : s
       ));
       setSelectedStudent(prev => prev ? { ...prev, status: 'generated', report: sections } : null);
-      trackInteraction('tool_use', 'generate_report', { studentName: student.name, sectionCount: sections.length });
+      trackInteraction('tool_use', 'generate_report', {
+        studentName: student.name, sectionCount: sections.length,
+        ...(data.usage && { inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, model: data.usage.model }),
+      });
     } catch (err) {
       clearInterval(progressInterval);
       generationRef.current = null;

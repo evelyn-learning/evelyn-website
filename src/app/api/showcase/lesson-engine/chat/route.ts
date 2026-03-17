@@ -154,9 +154,14 @@ INSTRUCTIONS:
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           });
 
-          await streamResponse.finalMessage();
+          const finalMsg = await streamResponse.finalMessage();
+          const usage = {
+            inputTokens: finalMsg.usage.input_tokens,
+            outputTokens: finalMsg.usage.output_tokens,
+            model: CONFIG.MODEL,
+          };
 
-          const doneData = JSON.stringify({ type: 'done', content: fullResponse });
+          const doneData = JSON.stringify({ type: 'done', content: fullResponse, usage });
           controller.enqueue(encoder.encode(`data: ${doneData}\n\n`));
 
           const duration = Date.now() - startTime;

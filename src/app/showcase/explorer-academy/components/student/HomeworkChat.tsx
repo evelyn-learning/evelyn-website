@@ -73,6 +73,7 @@ export default function HomeworkChat() {
 
       const decoder = new TextDecoder();
       let assistantContent = '';
+      let usage: { inputTokens: number; outputTokens: number; model: string } | undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -88,6 +89,8 @@ export default function HomeworkChat() {
             if (data.type === 'chunk') {
               assistantContent += data.content;
               setMessages([...updatedMessages, { role: 'assistant', content: assistantContent }]);
+            } else if (data.type === 'done' && data.usage) {
+              usage = data.usage;
             } else if (data.type === 'error') {
               setError(data.content);
             }
@@ -97,7 +100,7 @@ export default function HomeworkChat() {
         }
       }
       if (assistantContent) {
-        trackInteraction('message', assistantContent, undefined, 'tutor');
+        trackInteraction('message', assistantContent, usage ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model: usage.model } : undefined, 'tutor');
       }
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
