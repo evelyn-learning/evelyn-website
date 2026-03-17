@@ -147,7 +147,52 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse whiteboard commands
-    const { cleanText, commands, pedagogicalIntent } = parseWhiteboardCommands(content.text);
+    let { cleanText, commands, pedagogicalIntent } = parseWhiteboardCommands(content.text);
+
+    // --- Whiteboard content validation pass ---
+    // Detect when the AI claims to show something on the whiteboard but didn't
+    // include actual content commands (only meta commands like newPage/goToPage).
+    const hasContentCommand = commands.some(cmd =>
+      cmd.action !== 'newPage' && cmd.action !== 'goToPage' && cmd.action !== 'clear'
+    );
+    const claimsToShow = /\b(show|display|put|write|post|here'?s|look at|on the (?:white)?board)\b/i.test(cleanText);
+
+    if (!hasContentCommand && claimsToShow && conversationHistory.length > 0) {
+      console.log('[Tutor API] AI claims to show content but has no whiteboard commands — generating follow-up');
+
+      try {
+        const followUp = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          system: `You are a whiteboard command generator. Given a tutor's spoken response, generate ONLY the whiteboard commands as \`\`\`whiteboard JSON blocks. No spoken text.
+
+Rules:
+- For code: {"action": "showCode", "language": "java", "label": "description", "code": "the code with \\n for newlines"}
+- For equations: {"action": "showEquation", "latex": "LaTeX here", "label": "description"}
+- For tables: {"action": "showTable", "headers": [...], "rows": [[...]]}
+- Use \\n for newlines in code strings. Use \\t or spaces for indentation.
+- Generate ONLY \`\`\`whiteboard blocks. No other text.`,
+          messages: [
+            {
+              role: 'user',
+              content: `The tutor just said this to a student:\n\n"${cleanText}"\n\nThe student's question was: "${message}"\n\nGenerate the whiteboard command(s) that should accompany this response. If the tutor mentioned code, generate a showCode command with the actual code. If they mentioned an equation, generate showEquation.`,
+            },
+          ],
+        });
+
+        const followUpContent = followUp.content[0];
+        if (followUpContent.type === 'text') {
+          const followUpParsed = parseWhiteboardCommands(followUpContent.text);
+          if (followUpParsed.commands.length > 0) {
+            commands = [...commands, ...followUpParsed.commands];
+            console.log(`[Tutor API] Follow-up generated ${followUpParsed.commands.length} whiteboard command(s)`);
+          }
+        }
+      } catch (followUpErr) {
+        console.error('[Tutor API] Follow-up whiteboard generation failed:', followUpErr);
+        // Non-fatal — continue with original response
+      }
+    }
 
     return NextResponse.json({
       text: cleanText,
