@@ -204,66 +204,77 @@ export function WhiteboardCanvas({
   const currentPage = pages[Math.min(currentIndex, pages.length - 1)];
 
   const headerContent = (
-    <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
-      <div className="flex items-center gap-1.5">
-        <span className="text-sm font-medium text-gray-600">Whiteboard</span>
-        {currentPage.commands.length > 1 && (
-          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
-            {currentPage.commands.length} items
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {/* Navigation */}
-        {pages.length > 1 && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={goPrev}
-              disabled={currentIndex === 0}
-              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-              title="Previous page"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-xs text-gray-500 min-w-[40px] text-center">
-              {currentIndex + 1} / {pages.length}
+    <div className="border-b bg-gray-50 rounded-t-lg flex-shrink-0">
+      {/* Top row: title + actions */}
+      <div className="flex items-center justify-between px-3 py-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-gray-600">Whiteboard</span>
+          {currentPage.commands.length > 1 && (
+            <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
+              {currentPage.commands.length} items
             </span>
-            <button
-              onClick={goNext}
-              disabled={currentIndex === pages.length - 1}
-              className="p-1 rounded hover:bg-gray-200 disabled:opacity-30"
-              title="Next page"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Expand/Minimize */}
-        <button
-          onClick={() => {
-            setIsExpanded(!isExpanded);
-            if (!isExpanded) setExpandedSize({ width: 0, height: 0 }); // reset for re-init
-          }}
-          className="p-1 rounded hover:bg-gray-200"
-          title={isExpanded ? 'Minimize' : 'Expand'}
-        >
-          {isExpanded ? (
-            <Minimize2 className="w-4 h-4" />
-          ) : (
-            <Maximize2 className="w-4 h-4" />
           )}
-        </button>
-
-        {/* Clear */}
-        <button
-          onClick={handleClear}
-          className="p-1 rounded hover:bg-gray-200 text-gray-500"
-          title="Clear whiteboard"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {/* Expand/Minimize */}
+          <button
+            onClick={() => {
+              setIsExpanded(!isExpanded);
+              if (!isExpanded) setExpandedSize({ width: 0, height: 0 });
+            }}
+            className="p-1 rounded hover:bg-gray-200"
+            title={isExpanded ? 'Minimize' : 'Expand'}
+          >
+            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+          {/* Clear */}
+          <button
+            onClick={handleClear}
+            className="p-1 rounded hover:bg-gray-200 text-gray-500"
+            title="Clear whiteboard"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+      {/* Page navigation bar — always visible when multiple pages */}
+      {pages.length > 1 && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border-t border-blue-100">
+          <button
+            onClick={goPrev}
+            disabled={currentIndex === 0}
+            className="p-1 rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:shadow-none"
+            title="Previous page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div className="flex-1 flex items-center justify-center gap-1.5">
+            {pages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIndex(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  i === currentIndex
+                    ? 'bg-blue-600 scale-125'
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+                title={pages[i].title || `Page ${i + 1}`}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-blue-700 min-w-[44px] text-center tabular-nums">
+            {currentIndex + 1} / {pages.length}
+          </span>
+          <button
+            onClick={goNext}
+            disabled={currentIndex === pages.length - 1}
+            className="p-1 rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:shadow-none"
+            title="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 
