@@ -409,20 +409,30 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               };
             } else if (funcName === 'show_function_graph') {
               // Build GraphData from structured AI parameters
+
+              // Sanitize function expressions: fix common AI mistakes
+              // e.g., "x2" → "x**2", "x3" → "x**3" (AI writes math notation instead of JS)
+              const sanitizeExpr = (expr: string): string => {
+                return expr
+                  .replace(/\bx(\d)/g, 'x**$1')   // x2 → x**2, x3 → x**3
+                  .replace(/\by(\d)/g, 'y**$1')   // y2 → y**2
+                  .replace(/\^/g, '**');           // x^2 → x**2
+              };
+
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const fns = Array.isArray(funcArgs.functions) ? funcArgs.functions : [];
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const fnsOfY = Array.isArray(funcArgs.functionsOfY) ? funcArgs.functionsOfY : [];
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const graphFunctions = fns.map((f: any) => ({
-                fn: String(f.expr || ''),
+                fn: sanitizeExpr(String(f.expr || '')),
                 color: f.color,
                 label: f.label,
                 domain: f.domain,
               }));
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const graphFunctionsOfY = fnsOfY.map((f: any) => ({
-                fn: String(f.expr || ''),
+                fn: sanitizeExpr(String(f.expr || '')),
                 color: f.color,
                 label: f.label,
                 domain: f.domain,
@@ -576,7 +586,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_function_graph',
-                description: 'Plot mathematical functions accurately on the whiteboard. Use this tool INSTEAD of show_svg_diagram whenever you need to graph mathematical functions (y=f(x) or x=f(y)), show curves, or shade regions between curves. The rendering engine computes exact coordinates — you just provide the function expressions as strings. Supports: y=f(x) functions, x=f(y) functions, labeled points, and shaded regions between two curves. Function expressions use JavaScript math syntax: use ** for exponents (not ^), Math.sin, Math.cos, Math.sqrt, Math.abs, Math.PI, Math.E. Variable names: use "x" for f(x) functions, "y" for f(y) functions.',
+                description: 'Plot mathematical functions accurately on the whiteboard. Use this tool INSTEAD of show_svg_diagram whenever you need to graph mathematical functions (y=f(x) or x=f(y)), show curves, or shade regions between curves. The rendering engine computes exact coordinates — you just provide the function expressions as strings. Supports: y=f(x) functions, x=f(y) functions, labeled points, and shaded regions between two curves. Function expressions use JavaScript math syntax: use ** for exponents (NOT ^ and NOT x2 — always write x**2), Math.sin, Math.cos, Math.sqrt, Math.abs, Math.PI, Math.E. Variable names: use "x" for f(x) functions, "y" for f(y) functions. IMPORTANT: For vertical lines like x = c, you MUST use functionsOfY (NOT functions). "functions" plots y=f(x) curves — putting a constant there draws a HORIZONTAL line. "functionsOfY" plots x=f(y) curves — putting a constant there draws a VERTICAL line.',
                 parameters: {
                   type: 'object',
                   properties: {
