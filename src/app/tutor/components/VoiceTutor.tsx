@@ -72,7 +72,9 @@ export function VoiceTutor({
   const conversationHistoryRef = useRef<ConversationMessage[]>([]);
   const transcriptEntriesRef = useRef<TranscriptEntry[]>([]);
   const isInitializedRef = useRef(false);
+  const initAbortControllerRef = useRef<AbortController | null>(null);
   const lastExternalHistoryLengthRef = useRef(0);
+  const isProcessingRef = useRef(false);
 
   // Sync external conversation history when it changes (e.g., from homework upload)
   useEffect(() => {
@@ -137,7 +139,8 @@ export function VoiceTutor({
         playback.speak(latestTutorEntry.text);
       }
     }
-  }, [externalTranscript, isMuted, state, playback]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalTranscript]);
 
   // Handle student message
   const handleStudentMessage = useCallback(async (message: string) => {
@@ -145,6 +148,14 @@ export function VoiceTutor({
       updateState('idle');
       return;
     }
+
+    // Prevent concurrent API calls — if already processing, drop this message
+    if (isProcessingRef.current) {
+      console.log('[VoiceTutor] Dropping message, already processing');
+      updateState('idle');
+      return;
+    }
+    isProcessingRef.current = true;
 
     updateState('processing');
 
@@ -218,12 +229,14 @@ export function VoiceTutor({
       }
 
       // Speak the response
+      isProcessingRef.current = false;
       if (!isMuted) {
         await playback.speak(data.text);
       } else {
         updateState('idle');
       }
     } catch (err) {
+      isProcessingRef.current = false;
       console.error('[VoiceTutor] Error:', err);
       setError('Failed to get response. Please try again.');
       updateState('error');
@@ -292,6 +305,10 @@ export function VoiceTutor({
     if (isInitializedRef.current) return;
     isInitializedRef.current = true;
 
+    // AbortController prevents duplicate API calls on React StrictMode remount
+    const abortController = new AbortController();
+    initAbortControllerRef.current = abortController;
+
     const initialize = async () => {
       updateState('processing');
 
@@ -312,9 +329,16 @@ export function VoiceTutor({
             studentName,
             sessionGoal,
           }),
+          signal: abortController.signal,
         });
 
+        // If aborted during fetch, stop here
+        if (abortController.signal.aborted) return;
+
         const data = await response.json();
+
+        // If aborted while parsing, stop here
+        if (abortController.signal.aborted) return;
 
         // Handle API errors gracefully - show friendly message, don't throw
         if (!response.ok || data.error) {
@@ -346,12 +370,14 @@ export function VoiceTutor({
         onTranscriptUpdate(transcriptEntriesRef.current);
 
         // Speak greeting (or just show it if muted)
-        if (!isMuted) {
+        if (!abortController.signal.aborted && !isMuted) {
           await playback.speak(data.text);
-        } else {
+        } else if (!abortController.signal.aborted) {
           updateState('idle');
         }
       } catch (err) {
+        // Ignore AbortError — expected on StrictMode cleanup
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[VoiceTutor] Initialization error:', err);
         setError('Unable to connect to the tutor. Please check your connection and try again.');
         updateState('error');
@@ -359,7 +385,13 @@ export function VoiceTutor({
     };
 
     initialize();
-  }, [subject, topic, level, studentName, sessionGoal, isMuted, playback, onTranscriptUpdate, onConversationHistoryUpdate, updateState]);
+
+    // Cleanup: abort pending init fetch on unmount (React StrictMode remount safety)
+    return () => {
+      abortController.abort();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject, topic, level, studentName, sessionGoal]);
 
   // Get state-specific UI
   const getStateUI = () => {
