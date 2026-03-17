@@ -14,6 +14,16 @@ import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
 
+export interface RealtimeUsage {
+  totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+  inputTextTokens: number;
+  inputAudioTokens: number;
+  outputTextTokens: number;
+  outputAudioTokens: number;
+}
+
 export interface RealtimeConfig {
   instructions: string;
   voice?: OpenAIVoice;
@@ -22,6 +32,7 @@ export interface RealtimeConfig {
   vadPrefixPaddingMs?: number;
   onTranscriptUpdate?: (role: 'user' | 'assistant', text: string, isFinal: boolean) => void;
   onWhiteboardCommand?: (commands: WhiteboardCommand[]) => void;
+  onResponseDone?: (usage?: RealtimeUsage) => void;
   onError?: (error: Error) => void;
   onStateChange?: (state: RealtimeState) => void;
 }
@@ -47,6 +58,7 @@ export interface RealtimeResult {
   interrupt: () => void;
   pause: () => void;
   sendTextMessage: (text: string) => void;
+  injectContext: (contextText: string) => void;
 }
 
 // Audio context for playback
@@ -109,7 +121,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const {
     instructions, voice = 'alloy',
     vadThreshold = 0.6, vadSilenceDurationMs = 1500, vadPrefixPaddingMs = 500,
-    onTranscriptUpdate, onWhiteboardCommand, onError, onStateChange,
+    onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, onStateChange,
   } = config;
 
   const [state, setState] = useState<RealtimeState>('disconnected');
@@ -258,9 +270,26 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           }
           break;
 
-        case 'response.done':
+        case 'response.done': {
           console.log('[Realtime] Response complete');
           currentResponseTextRef.current = '';
+
+          // Extract usage data from response.done event
+          const responseUsage = data.response?.usage;
+          let usage: RealtimeUsage | undefined;
+          if (responseUsage) {
+            usage = {
+              totalTokens: responseUsage.total_tokens || 0,
+              inputTokens: responseUsage.input_tokens || 0,
+              outputTokens: responseUsage.output_tokens || 0,
+              inputTextTokens: responseUsage.input_token_details?.text_tokens || 0,
+              inputAudioTokens: responseUsage.input_token_details?.audio_tokens || 0,
+              outputTextTokens: responseUsage.output_token_details?.text_tokens || 0,
+              outputAudioTokens: responseUsage.output_token_details?.audio_tokens || 0,
+            };
+            console.log('[Realtime] Usage:', JSON.stringify(usage));
+          }
+          onResponseDone?.(usage);
           // If no audio is playing/queued, resume listening
           if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
             if (audioProcessorRef.current && mediaStreamRef.current) {
@@ -273,6 +302,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             }
           }
           break;
+        }
 
         // Handle output item events for text content
         case 'response.output_item.added':
@@ -456,6 +486,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               };
             }
 
+            // ── New structured math diagram tools ──
+            if (!command && funcName === 'show_number_line') {
+              command = { action: 'showNumberLine', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_geometry') {
+              command = { action: 'showGeometry', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_unit_circle') {
+              command = { action: 'showUnitCircle', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_fraction_bar') {
+              command = { action: 'showFractionBar', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_tree') {
+              command = { action: 'showTree', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_venn_diagram') {
+              command = { action: 'showVennDiagram', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_matrix') {
+              command = { action: 'showMatrix', ...funcArgs } as unknown as WhiteboardCommand;
+            } else if (!command && funcName === 'show_stats') {
+              command = { action: 'showStats', ...funcArgs } as unknown as WhiteboardCommand;
+            }
+
             if (command) {
               onWhiteboardCommand?.([command]);
             }
@@ -520,7 +569,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } catch (err) {
       console.error('[Realtime] Failed to parse message:', err);
     }
-  }, [updateState, onTranscriptUpdate, onWhiteboardCommand, onError, queueAudio]);
+  }, [updateState, onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, queueAudio]);
 
   // Connect to OpenAI Realtime API
   const connect = useCallback(async () => {
@@ -717,6 +766,148 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                     svg: { type: 'string', description: 'SVG markup. Start with <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">. STRICT LAYOUT (nothing outside 0-400 x 0-300): ZONE 1 Title y=20-30. ZONE 2 Shapes y=50-160. ZONE 3 Arrow y=175 (flow direction arrow ONLY, no text on this line). ZONE 4 Labels y=200-290 (text-anchor=middle, font-size 13). Shapes must stay within x=40-330. For PIPE/HOSE: wide rect x=40 y=55 width=160 height=95, narrow rect x=200 y=80 width=130 height=45. Flow arrow: <line x1="40" y1="175" x2="330" y2="175" stroke="#dc2626" stroke-width="3"/> + arrowhead polygon. Labels in ZONE 4 ONLY — row 1 at y=205 (e.g. left radius x=120, right radius x=265), row 2 at y=230 (flow rate x=200), row 3 at y=255 if needed. NEVER place text on or near arrows or shapes. Colors: #2563eb blue shapes, #dc2626 red arrows, #16a34a green. No newlines in SVG.' },
                   },
                   required: ['svg', 'title'],
+                },
+              },
+              // ── New structured math diagram tools ──
+              {
+                type: 'function',
+                name: 'show_number_line',
+                description: 'Display a number line with points, intervals, and hops. Use for: inequalities, fractions on a line, integer operations, domain/range, solution sets. ALWAYS use this instead of show_svg_diagram when you need a number line.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    min: { type: 'number', description: 'Left bound of the number line' },
+                    max: { type: 'number', description: 'Right bound of the number line' },
+                    step: { type: 'number', description: 'Tick mark interval (auto if omitted)' },
+                    points: { type: 'array', items: { type: 'object', properties: { value: { type: 'number' }, label: { type: 'string' }, color: { type: 'string' }, style: { type: 'string', enum: ['filled', 'open'] } }, required: ['value'] } },
+                    intervals: { type: 'array', items: { type: 'object', properties: { from: { type: 'number' }, to: { type: 'number' }, fromInclusive: { type: 'boolean' }, toInclusive: { type: 'boolean' }, color: { type: 'string' }, label: { type: 'string' } }, required: ['from', 'to'] } },
+                    segments: { type: 'array', items: { type: 'object', properties: { from: { type: 'number' }, to: { type: 'number' }, label: { type: 'string' }, color: { type: 'string' }, arc: { type: 'boolean' } }, required: ['from', 'to'] } },
+                    fractionTicks: { type: 'object', properties: { denominator: { type: 'number' }, showLabels: { type: 'boolean' } } },
+                  },
+                  required: ['min', 'max'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_geometry',
+                description: 'Display geometric figures with labeled vertices, segments, polygons, circles, and angle markers. The AI provides named points with (x,y) coordinates and the renderer draws everything precisely. Use for: triangles, quadrilaterals, circle theorems, transformations, proofs, constructions. ALWAYS use this instead of show_svg_diagram for geometric figures.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    points: { type: 'array', description: 'Named points with coordinates', items: { type: 'object', properties: { id: { type: 'string' }, x: { type: 'number' }, y: { type: 'number' }, label: { type: 'string' }, color: { type: 'string' } }, required: ['id', 'x', 'y'] } },
+                    segments: { type: 'array', items: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, style: { type: 'string', enum: ['solid', 'dashed', 'dotted'] }, color: { type: 'string' }, label: { type: 'string' }, tickMarks: { type: 'number' } }, required: ['from', 'to'] } },
+                    polygons: { type: 'array', items: { type: 'object', properties: { vertices: { type: 'array', items: { type: 'string' } }, fill: { type: 'string' }, stroke: { type: 'string' }, label: { type: 'string' } }, required: ['vertices'] } },
+                    circles: { type: 'array', items: { type: 'object', properties: { center: { type: 'string' }, radius: { type: 'number' }, style: { type: 'string', enum: ['solid', 'dashed'] }, color: { type: 'string' } }, required: ['center', 'radius'] } },
+                    angles: { type: 'array', items: { type: 'object', properties: { vertex: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' }, label: { type: 'string' }, style: { type: 'string', enum: ['arc', 'square'] }, color: { type: 'string' } }, required: ['vertex', 'from', 'to'] } },
+                    showGrid: { type: 'boolean' },
+                    showAxes: { type: 'boolean' },
+                  },
+                  required: ['points'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_unit_circle',
+                description: 'Display the unit circle with angle markers, reference triangles, and trig coordinates. The renderer computes all positions using exact trigonometry. Use for: trig functions, radian/degree conversion, reference angles, trig identities. ALWAYS use this instead of show_svg_diagram for unit circle diagrams.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    highlightAngles: { type: 'array', description: 'Angles to highlight on the circle', items: { type: 'object', properties: { angle: { type: 'number', description: 'Angle in degrees' }, color: { type: 'string' }, showTriangle: { type: 'boolean', description: 'Draw reference triangle to x-axis' }, showCoords: { type: 'boolean', description: 'Show (cos,sin) coordinates' }, label: { type: 'string', description: 'Custom label like pi/6' } }, required: ['angle'] } },
+                    showAllStandard: { type: 'boolean', description: 'Show all 16 standard angles (0,30,45,60,...,330) with exact coordinates' },
+                    showRadians: { type: 'boolean' },
+                    showDegrees: { type: 'boolean' },
+                    showArc: { type: 'object', properties: { from: { type: 'number' }, to: { type: 'number' }, color: { type: 'string' }, label: { type: 'string' } } },
+                  },
+                  required: [],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_fraction_bar',
+                description: 'Display fraction visualizations as bars, pie charts, or area grids. Use for: teaching fractions, equivalent fractions, comparing fractions, ratios, percentages.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    items: { type: 'array', items: { type: 'object', properties: { numerator: { type: 'number' }, denominator: { type: 'number' }, label: { type: 'string' }, highlightColor: { type: 'string' }, style: { type: 'string', enum: ['bar', 'circle', 'grid'] } }, required: ['numerator', 'denominator'] } },
+                    layout: { type: 'string', enum: ['vertical', 'horizontal'] },
+                    showComparison: { type: 'boolean' },
+                  },
+                  required: ['items'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_tree',
+                description: 'Display a tree diagram with auto-layout. Use for: probability trees, factor trees, decision trees, counting principles.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    type: { type: 'string', enum: ['probability', 'factor', 'decision', 'generic'] },
+                    root: { type: 'object', description: 'Recursive tree node: { label, value?, color?, children?: [{ label, probability?, node: TreeNode }] }' },
+                    showLeafProbabilities: { type: 'boolean' },
+                    direction: { type: 'string', enum: ['top-down', 'left-right'] },
+                  },
+                  required: ['root'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_venn_diagram',
+                description: 'Display a 2 or 3 set Venn diagram. Use for: set operations, probability, logic, GCF/LCM.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    sets: { type: 'array', description: '2 or 3 sets', items: { type: 'object', properties: { label: { type: 'string' }, color: { type: 'string' } }, required: ['label'] } },
+                    regions: { type: 'object', description: 'Region keys: onlyA, onlyB, intersection, neither (2 sets) or onlyA, onlyB, onlyC, AB, AC, BC, ABC, neither (3 sets). Each value: { value?, highlight?, items? }' },
+                    universalLabel: { type: 'string' },
+                  },
+                  required: ['sets', 'regions'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_matrix',
+                description: 'Display a matrix with brackets, augmented lines, and row operations. Use for: systems of equations, matrix operations, row reduction, determinants.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    rows: { type: 'array', description: 'Matrix rows, each an array of string cell values', items: { type: 'array', items: { type: 'string' } } },
+                    brackets: { type: 'string', enum: ['square', 'round', 'pipes', 'double-pipes'] },
+                    augmented: { type: 'number', description: 'Column index for augmented line' },
+                    rowLabels: { type: 'array', items: { type: 'string' } },
+                    colLabels: { type: 'array', items: { type: 'string' } },
+                    rowOperations: { type: 'array', items: { type: 'object', properties: { description: { type: 'string' }, targetRow: { type: 'number' } } } },
+                    resultMatrix: { type: 'object', properties: { rows: { type: 'array', items: { type: 'array', items: { type: 'string' } } }, brackets: { type: 'string' } } },
+                    operatorSymbol: { type: 'string' },
+                  },
+                  required: ['rows'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_stats',
+                description: 'Display statistical charts: histogram, box plot, dot plot, bar chart, or pie chart. Use for: data analysis, distributions, comparing datasets.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    type: { type: 'string', enum: ['histogram', 'boxplot', 'dotplot', 'bar', 'pie'] },
+                    data: { type: 'array', description: 'Raw data values (for histogram/dotplot)', items: { type: 'number' } },
+                    binWidth: { type: 'number' },
+                    xLabel: { type: 'string' },
+                    yLabel: { type: 'string' },
+                    boxplot: { type: 'object', properties: { datasets: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, min: { type: 'number' }, q1: { type: 'number' }, median: { type: 'number' }, q3: { type: 'number' }, max: { type: 'number' }, outliers: { type: 'array', items: { type: 'number' } }, color: { type: 'string' } }, required: ['label', 'min', 'q1', 'median', 'q3', 'max'] } }, showValues: { type: 'boolean' } } },
+                    bar: { type: 'object', properties: { categories: { type: 'array', items: { type: 'string' } }, values: { type: 'array', items: { type: 'number' } }, colors: { type: 'array', items: { type: 'string' } } } },
+                    pie: { type: 'object', properties: { slices: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, value: { type: 'number' }, color: { type: 'string' } }, required: ['label', 'value'] } }, showPercentages: { type: 'boolean' } } },
+                  },
+                  required: ['type'],
                 },
               },
             ],
@@ -974,6 +1165,29 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('processing');
   }, [updateState]);
 
+  // Inject a context reminder into the conversation without triggering a response.
+  // This is used to prevent context loss in long sessions by periodically
+  // reinforcing the conversation state via a system-type message.
+  const injectContext = useCallback((contextText: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+    // Insert as a user message marked as context (the Realtime API doesn't support
+    // adding system messages mid-conversation, so we use a clearly-marked user message)
+    wsRef.current.send(JSON.stringify({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [{
+          type: 'input_text',
+          text: `[SYSTEM CONTEXT REMINDER — DO NOT READ ALOUD OR ACKNOWLEDGE THIS MESSAGE]\n${contextText}`,
+        }],
+      },
+    }));
+
+    console.log('[Realtime] Context injected:', contextText.substring(0, 100));
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -993,5 +1207,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     interrupt,
     pause,
     sendTextMessage,
+    injectContext,
   };
 }

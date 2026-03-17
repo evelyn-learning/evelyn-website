@@ -801,7 +801,7 @@ async function BlogPreviewSection() {
 // Main Page Component
 export default async function HomePage() {
   return (
-    <main>
+    <>
       <HeroSection />
       <ClientLogosSection />
       <AIProductsSection />
@@ -811,6 +811,6 @@ export default async function HomePage() {
       <WhyEvelynSection />
       <BlogPreviewSection />
       <CTASection />
-    </main>
+    </>
   );
 }

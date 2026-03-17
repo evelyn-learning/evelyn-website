@@ -24,6 +24,14 @@ import {
   SvgDiagram,
   ProblemDiagram,
 } from './DiagramRenderer';
+import NumberLineRenderer from './NumberLineRenderer';
+import GeometryRenderer from './GeometryRenderer';
+import UnitCircleRenderer from './UnitCircleRenderer';
+import FractionBarRenderer from './FractionBarRenderer';
+import TreeRenderer from './TreeRenderer';
+import VennDiagramRenderer from './VennDiagramRenderer';
+import MatrixRenderer from './MatrixRenderer';
+import StatsRenderer from './StatsRenderer';
 
 interface WhiteboardCanvasProps {
   commands: WhiteboardCommand[];
@@ -588,6 +596,32 @@ function CommandRenderer({ command }: CommandRendererProps) {
         </div>
       );
 
+    // ── New structured math diagram tools ──
+
+    case 'showNumberLine':
+      return <NumberLineRenderer title={command.title} min={command.min} max={command.max} step={command.step} points={command.points} intervals={command.intervals} segments={command.segments} fractionTicks={command.fractionTicks} />;
+
+    case 'showGeometry':
+      return <GeometryRenderer title={command.title} points={command.points} segments={command.segments} polygons={command.polygons} circles={command.circles} arcs={command.arcs} angles={command.angles} showGrid={command.showGrid} showAxes={command.showAxes} viewRange={command.viewRange} />;
+
+    case 'showUnitCircle':
+      return <UnitCircleRenderer title={command.title} highlightAngles={command.highlightAngles} showAllStandard={command.showAllStandard} showRadians={command.showRadians} showDegrees={command.showDegrees} showArc={command.showArc} />;
+
+    case 'showFractionBar':
+      return <FractionBarRenderer title={command.title} items={command.items} layout={command.layout} showComparison={command.showComparison} />;
+
+    case 'showTree':
+      return <TreeRenderer title={command.title} type={command.type} root={command.root} showLeafProbabilities={command.showLeafProbabilities} direction={command.direction} />;
+
+    case 'showVennDiagram':
+      return <VennDiagramRenderer title={command.title} sets={command.sets} regions={command.regions} universalLabel={command.universalLabel} />;
+
+    case 'showMatrix':
+      return <MatrixRenderer title={command.title} rows={command.rows} brackets={command.brackets} augmented={command.augmented} rowLabels={command.rowLabels} colLabels={command.colLabels} rowOperations={command.rowOperations} resultMatrix={command.resultMatrix} operatorSymbol={command.operatorSymbol} />;
+
+    case 'showStats':
+      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} />;
+
     case 'highlight':
     case 'clear':
     case 'newPage':
@@ -796,6 +830,22 @@ function getCommandTypeLabel(action: string): string {
       return 'Worked Example';
     case 'showCode':
       return 'Code';
+    case 'showNumberLine':
+      return 'Number Line';
+    case 'showGeometry':
+      return 'Geometry';
+    case 'showUnitCircle':
+      return 'Unit Circle';
+    case 'showFractionBar':
+      return 'Fractions';
+    case 'showTree':
+      return 'Tree Diagram';
+    case 'showVennDiagram':
+      return 'Venn Diagram';
+    case 'showMatrix':
+      return 'Matrix';
+    case 'showStats':
+      return 'Statistics';
     default:
       return action;
   }

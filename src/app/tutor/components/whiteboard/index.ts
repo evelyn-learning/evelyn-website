@@ -27,3 +27,11 @@ export {
   CircularPathDiagram,
   ProblemDiagram,
 } from './DiagramRenderer';
+export { default as NumberLineRenderer } from './NumberLineRenderer';
+export { default as GeometryRenderer } from './GeometryRenderer';
+export { default as UnitCircleRenderer } from './UnitCircleRenderer';
+export { default as FractionBarRenderer } from './FractionBarRenderer';
+export { default as TreeRenderer } from './TreeRenderer';
+export { default as VennDiagramRenderer } from './VennDiagramRenderer';
+export { default as MatrixRenderer } from './MatrixRenderer';
+export { default as StatsRenderer } from './StatsRenderer';

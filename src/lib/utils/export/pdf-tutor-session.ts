@@ -27,10 +27,69 @@ function sanitizeForPDF(text: string): string {
   return s;
 }
 
+// ── WinAnsi text sanitizer ──
+// jsPDF default fonts (Helvetica/Courier) only support WinAnsi (Latin-1).
+// Non-Latin scripts (Devanagari, Arabic, CJK, Cyrillic) render as "?".
+// This function replaces non-Latin runs with a bracketed note.
+function toWinAnsiSafe(text: string): string {
+  // Match runs of characters outside Latin-1 printable range (U+0020–U+00FF)
+  // but preserve common math/symbol characters
+  return text.replace(
+    /[^\u0000-\u00FF]+/g,
+    (match) => {
+      // Try to detect the script for a useful label
+      if (/[\u0900-\u097F]/.test(match)) return '[Hindi speech]';
+      if (/[\u0600-\u06FF]/.test(match)) return '[Arabic speech]';
+      if (/[\u4E00-\u9FFF]/.test(match)) return '[Chinese text]';
+      if (/[\u3040-\u30FF]/.test(match)) return '[Japanese text]';
+      if (/[\uAC00-\uD7AF]/.test(match)) return '[Korean text]';
+      if (/[\u0400-\u04FF]/.test(match)) return '[Russian text]';
+      return '[non-Latin text]';
+    }
+  );
+}
+
 // ── LaTeX → readable text (WinAnsi safe) ──
 
 function latexToReadable(latex: string): string {
   let s = latex;
+
+  // Math functions — convert to readable names BEFORE the catch-all strip
+  s = s.replace(/\\sin/g, 'sin');
+  s = s.replace(/\\cos/g, 'cos');
+  s = s.replace(/\\tan/g, 'tan');
+  s = s.replace(/\\cot/g, 'cot');
+  s = s.replace(/\\sec/g, 'sec');
+  s = s.replace(/\\csc/g, 'csc');
+  s = s.replace(/\\arcsin/g, 'arcsin');
+  s = s.replace(/\\arccos/g, 'arccos');
+  s = s.replace(/\\arctan/g, 'arctan');
+  s = s.replace(/\\sinh/g, 'sinh');
+  s = s.replace(/\\cosh/g, 'cosh');
+  s = s.replace(/\\tanh/g, 'tanh');
+  s = s.replace(/\\log/g, 'log');
+  s = s.replace(/\\ln/g, 'ln');
+  s = s.replace(/\\exp/g, 'exp');
+  s = s.replace(/\\lim/g, 'lim');
+  s = s.replace(/\\max/g, 'max');
+  s = s.replace(/\\min/g, 'min');
+  s = s.replace(/\\det/g, 'det');
+  s = s.replace(/\\gcd/g, 'gcd');
+  s = s.replace(/\\mod/g, 'mod');
+  s = s.replace(/\\deg/g, 'deg');
+
+  // Summation and product
+  s = s.replace(/\\sum/g, 'Sum');
+  s = s.replace(/\\prod/g, 'Prod');
+  s = s.replace(/\\int/g, 'Integral');
+  s = s.replace(/\\infty/g, 'inf');
+
+  // Binomial coefficient: \binom{n}{k} → C(n,k)
+  s = s.replace(/\\binom\{([^}]+)\}\{([^}]+)\}/g, 'C($1,$2)');
+
+  // Square root: \sqrt{x} → sqrt(x)
+  s = s.replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)');
+
   // Greek letters
   s = s.replace(/\\rho/g, 'rho');
   s = s.replace(/\\alpha/g, 'alpha');
@@ -38,20 +97,38 @@ function latexToReadable(latex: string): string {
   s = s.replace(/\\gamma/g, 'gamma');
   s = s.replace(/\\theta/g, 'theta');
   s = s.replace(/\\Delta/g, 'Delta ');
+  s = s.replace(/\\delta/g, 'delta');
+  s = s.replace(/\\epsilon/g, 'epsilon');
+  s = s.replace(/\\lambda/g, 'lambda');
   s = s.replace(/\\mu/g, 'mu');
   s = s.replace(/\\pi/g, 'pi');
   s = s.replace(/\\sigma/g, 'sigma');
+  s = s.replace(/\\tau/g, 'tau');
+  s = s.replace(/\\phi/g, 'phi');
   s = s.replace(/\\omega/g, 'omega');
+
   // Common operators
   s = s.replace(/\\cdot/g, ' * ');
   s = s.replace(/\\times/g, ' x ');
   s = s.replace(/\\div/g, ' / ');
   s = s.replace(/\\pm/g, '+/-');
+  s = s.replace(/\\mp/g, '-/+');
   s = s.replace(/\\leq/g, '<=');
   s = s.replace(/\\geq/g, '>=');
   s = s.replace(/\\neq/g, '!=');
   s = s.replace(/\\approx/g, '~=');
+  s = s.replace(/\\equiv/g, '===');
   s = s.replace(/\\rightarrow/g, '->');
+  s = s.replace(/\\leftarrow/g, '<-');
+  s = s.replace(/\\Rightarrow/g, '=>');
+  s = s.replace(/\\quad/g, '  ');
+  s = s.replace(/\\qquad/g, '    ');
+  s = s.replace(/\\,/g, ' ');
+  s = s.replace(/\\;/g, ' ');
+  s = s.replace(/\\!/g, '');
+  s = s.replace(/\\left/g, '');
+  s = s.replace(/\\right/g, '');
+
   // Fractions: \frac{a}{b} → (a)/(b)
   s = s.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)');
   // Subscripts/superscripts: keep inline
@@ -59,7 +136,7 @@ function latexToReadable(latex: string): string {
   s = s.replace(/_{([^}]+)}/g, '_$1');
   // Remove \text{...} wrapper
   s = s.replace(/\\text\{([^}]+)\}/g, '$1');
-  // Remove remaining backslash commands
+  // Remove remaining backslash commands (spacing, formatting, etc.)
   s = s.replace(/\\[a-zA-Z]+/g, '');
   // Clean up extra braces and spaces
   s = s.replace(/[{}]/g, '');
@@ -631,7 +708,7 @@ export async function exportTutorSessionPDF(
     pdf.text(timeStr, margin + badgeW + 4, y);
     y += 5;
 
-    drawWrappedText(msg.text, margin + 4, textAreaWidth, { size: 9, color: [55, 65, 81] });
+    drawWrappedText(toWinAnsiSafe(msg.text), margin + 4, textAreaWidth, { size: 9, color: [55, 65, 81] });
 
     if (msg.pedagogicalIntent) {
       drawWrappedText(`[${msg.pedagogicalIntent}]`, margin + 4, textAreaWidth, { size: 7, style: 'italic', color: [156, 163, 175] });

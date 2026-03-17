@@ -43,12 +43,26 @@ interface TokenUsage {
   outputTokens: number;
   operation: string;
   timestamp: Date;
+  // Realtime-specific: audio vs text token breakdown
+  inputAudioTokens?: number;
+  outputAudioTokens?: number;
+  inputTextTokens?: number;
+  outputTextTokens?: number;
 }
 
-// Pricing per 1M tokens (Claude Sonnet 4)
+// Pricing per 1M tokens
 const PRICING = {
+  // Claude Sonnet 4 (text chat mode)
   input: 3.0,   // $3 per 1M input tokens
   output: 15.0, // $15 per 1M output tokens
+};
+
+const REALTIME_PRICING = {
+  // OpenAI Realtime API (voice mode)
+  audioInput: 100.0,   // $100 per 1M audio input tokens
+  audioOutput: 200.0,  // $200 per 1M audio output tokens
+  textInput: 5.0,      // $5 per 1M text input tokens
+  textOutput: 20.0,    // $20 per 1M text output tokens
 };
 
 
@@ -79,7 +93,7 @@ export default function TutorPage() {
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
 
   // Session state
-  const [sessionId] = useState(() => `session-${Date.now()}`);
+  const [sessionId, setSessionId] = useState(() => `session-${Date.now()}`);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
@@ -100,11 +114,32 @@ export default function TutorPage() {
     const duration = Math.round((now.getTime() - startTime.getTime()) / 1000);
     const totalIn = tokenUsage.reduce((s, u) => s + u.inputTokens, 0);
     const totalOut = tokenUsage.reduce((s, u) => s + u.outputTokens, 0);
-    const cost = (totalIn / 1_000_000) * PRICING.input + (totalOut / 1_000_000) * PRICING.output;
+
+    // Calculate cost with correct pricing per operation type
+    let cost = 0;
+    for (const u of tokenUsage) {
+      if (u.operation === 'realtime-response') {
+        // OpenAI Realtime: separate audio and text token pricing
+        const audioIn = u.inputAudioTokens || 0;
+        const audioOut = u.outputAudioTokens || 0;
+        const textIn = u.inputTextTokens || 0;
+        const textOut = u.outputTextTokens || 0;
+        cost += (audioIn / 1_000_000) * REALTIME_PRICING.audioInput
+              + (audioOut / 1_000_000) * REALTIME_PRICING.audioOutput
+              + (textIn / 1_000_000) * REALTIME_PRICING.textInput
+              + (textOut / 1_000_000) * REALTIME_PRICING.textOutput;
+      } else {
+        // Claude API: standard text token pricing
+        cost += (u.inputTokens / 1_000_000) * PRICING.input
+              + (u.outputTokens / 1_000_000) * PRICING.output;
+      }
+    }
 
     // Only push new token entries since last save
     const newEntries = tokenUsage.slice(lastSavedTokenCountRef.current);
     lastSavedTokenCountRef.current = tokenUsage.length;
+
+    const isFinal = status === 'completed' || status === 'abandoned';
 
     const payload: Record<string, unknown> = {
       sessionId,
@@ -129,7 +164,27 @@ export default function TutorPage() {
         inputTokens: u.inputTokens,
         outputTokens: u.outputTokens,
         timestamp: u.timestamp.toISOString(),
+        ...(u.inputAudioTokens ? { inputAudioTokens: u.inputAudioTokens } : {}),
+        ...(u.outputAudioTokens ? { outputAudioTokens: u.outputAudioTokens } : {}),
+        ...(u.inputTextTokens ? { inputTextTokens: u.inputTextTokens } : {}),
+        ...(u.outputTextTokens ? { outputTextTokens: u.outputTextTokens } : {}),
       })) } : {}),
+      // Include full transcript + whiteboard data on final save
+      ...(isFinal ? {
+        transcript: transcript.map(t => ({
+          role: t.role,
+          text: t.text,
+          timestamp: t.timestamp.toISOString(),
+          ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
+          ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
+        })),
+        whiteboardCommands: whiteboardCommands.map((cmd, i) => ({
+          action: cmd.action,
+          data: { ...cmd, action: undefined },
+          timestamp: now.toISOString(),
+          sourceMessageIndex: i,
+        })),
+      } : {}),
     };
 
     // Use sendBeacon for unload, fetch otherwise
@@ -423,6 +478,21 @@ export default function TutorPage() {
       console.log('[TutorPage] Total whiteboard commands now:', next.length);
       return next;
     });
+  }, []);
+
+  // Handle token usage from OpenAI Realtime responses
+  const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number }) => {
+    if (usage.totalTokens === 0) return;
+    setTokenUsage((prev) => [...prev, {
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      inputAudioTokens: usage.inputAudioTokens,
+      outputAudioTokens: usage.outputAudioTokens,
+      inputTextTokens: usage.inputTextTokens,
+      outputTextTokens: usage.outputTextTokens,
+      operation: 'realtime-response',
+      timestamp: new Date(),
+    }]);
   }, []);
 
   // Handle conversation history updates from VoiceTutor
@@ -863,6 +933,7 @@ export default function TutorPage() {
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
+                  onUsageUpdate={handleRealtimeUsage}
                   onError={(err) => setError(err.message)}
                   onEndSession={handleEndSession}
                   onTrackInteraction={trackInteraction}
@@ -993,6 +1064,7 @@ export default function TutorPage() {
           )}
           <button
             onClick={() => {
+              setSessionId(`session-${Date.now()}`);
               setTranscript([]);
               setConversationHistory([]);
               setWhiteboardCommands([]);

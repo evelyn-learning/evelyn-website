@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play } from 'lucide-react';
-import { useOpenAIRealtime, OpenAIVoice, RealtimeState } from '../hooks/useOpenAIRealtime';
+import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage } from '../hooks/useOpenAIRealtime';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
@@ -20,6 +20,43 @@ import type { InteractionType } from '@/hooks/useDemoTracking';
 export interface RealtimeHandle {
   sendTextMessage: (text: string) => void;
 }
+
+// --- Multi-language whiteboard intent detection ---
+// Detects when the tutor claims to show, write, or display something visually.
+// Covers: English, German, Spanish, French, Italian, Portuguese, Dutch, Polish,
+// Turkish, Arabic, Hindi, Japanese, Korean, Chinese, Russian, and more.
+const WHITEBOARD_INTENT_PATTERNS = [
+  // English
+  /\b(show|display|put|write|post|look at|on the (?:white)?board|here(?:'| i)s|let me (?:draw|write|show|put)|i(?:'ll| will) (?:draw|write|show|put)|see (?:the|this)|check (?:the|this) out|take a look|written (?:it |everything )?(?:down|out))\b/i,
+  // German
+  /\b(zeig|schau|hier (?:siehst|sieht|ist|sind)|aufschreiben|aufgeschrieben|mitschreiben|hinschreiben|anschreiben|visuell|an die Tafel|auf (?:die|dem) (?:Tafel|Whiteboard|Board)|lass (?:uns|mich) (?:das )?(?:aufschreiben|anschauen|ansehen))\b/i,
+  // Spanish
+  /\b(mira|muestra|escrib|pon(?:go|er|gamos)|en la pizarra|aqu[ií] (?:est[áa]|tienes|ves)|te (?:muestro|enseño)|voy a (?:escribir|mostrar|dibujar)|fíjate)\b/i,
+  // French
+  /\b(montr|regarde|[ée]cri[st]|affich|sur le tableau|voici|voilà|je (?:te |vous )?montre|(?:je vais|laisse[z-]moi) (?:[ée]crire|montrer|dessiner))\b/i,
+  // Italian
+  /\b(guard[ai]|mostr[oi]|scriv[oi]|sulla lavagna|ecco|qui (?:c'è|vedi)|ti (?:mostro|faccio vedere))\b/i,
+  // Portuguese
+  /\b(olh[ae]|mostr[oa]|escrev[oa]|no quadro|aqui (?:está|tens|vês)|vou (?:escrever|mostrar|desenhar))\b/i,
+  // Dutch
+  /\b(kijk|laat (?:me |ik )?(?:zien|schrijven)|schrijf|op het (?:bord|whiteboard)|hier (?:is|staat|zie je))\b/i,
+  // Russian
+  /\b(смотри|показ|запиш|напиш|на доск[еу]|вот (?:так|это|формула)|покажу|давай (?:запишем|напишем))\b/i,
+  // Turkish
+  /\b(bak|göster|yaz|tahtaya|burada|şimdi (?:yazıyorum|gösteriyorum))\b/i,
+  // Polish
+  /\b(patrz|poka[żz]|pisz|na tablicy|tutaj (?:jest|masz|widzisz)|napiszę|pokażę)\b/i,
+  // Arabic (transliterated patterns that Whisper produces)
+  /\b(شوف|أكتب|على السبورة|هنا|انظر|أريك|سأكتب)\b/,
+  // Japanese (katakana/hiragana patterns)
+  /(?:見て|書く|ここに|ホワイトボード|表示|見せ)/,
+  // Korean
+  /(?:보세요|써|칠판|여기|보여줄게)/,
+  // Chinese
+  /(?:看|写|黑板|白板|这里|显示)/,
+  // Hindi (transliterated)
+  /\b(dekh|likht?|board par|yahan|dikha)\b/i,
+];
 
 // Words that Whisper commonly misrecognizes as inappropriate
 const PROFANITY_REPLACEMENTS: Record<string, string> = {
@@ -95,6 +132,7 @@ interface VoiceTutorRealtimeProps {
   onError?: (error: Error) => void;
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
+  onUsageUpdate?: (usage: RealtimeUsage) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
 }
 
@@ -119,6 +157,7 @@ export function VoiceTutorRealtime({
   onError,
   onEndSession,
   onTrackInteraction,
+  onUsageUpdate,
   handleRef,
 }: VoiceTutorRealtimeProps) {
   const [isMuted, setIsMuted] = useState(false);
@@ -130,6 +169,78 @@ export function VoiceTutorRealtime({
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
   const currentAssistantTextRef = useRef('');
+
+  // Track whiteboard tool calls per response turn for validation pass
+  const turnHadToolCallRef = useRef(false);
+  const pendingTutorTextRef = useRef<string | null>(null);
+  const validationInFlightRef = useRef(false);
+  const sessionIdRef = useRef(`session-${Date.now()}`);
+
+  // Context keeper — prevents context loss in long Realtime sessions
+  const tutorTurnCountRef = useRef(0);
+  const CONTEXT_INJECT_INTERVAL = 6; // Inject context summary every N tutor turns
+  const injectContextRef = useRef<((text: string) => void) | null>(null);
+
+  // Check if text claims to show/display something visually (multi-language)
+  const claimsToShowVisual = useCallback((text: string): boolean => {
+    return WHITEBOARD_INTENT_PATTERNS.some(pattern => pattern.test(text));
+  }, []);
+
+  // Request missing whiteboard commands from Claude
+  const generateMissingWhiteboardCommands = useCallback(async (tutorText: string) => {
+    if (validationInFlightRef.current) return;
+    validationInFlightRef.current = true;
+
+    try {
+      // Get the last student message for context
+      const lastStudentMsg = transcriptRef.current
+        .filter(e => e.role === 'student')
+        .slice(-1)[0]?.text;
+
+      // Build recent context (last 4 messages)
+      const recentContext = transcriptRef.current
+        .slice(-4)
+        .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`)
+        .join('\n');
+
+      const response = await fetch('/api/tutor/generate-whiteboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tutorText,
+          studentText: lastStudentMsg || '',
+          sessionId: sessionIdRef.current,
+          recentContext,
+        }),
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (data.commands?.length > 0) {
+        console.log('[VoiceTutorRealtime] Validation pass generated', data.commands.length, 'whiteboard command(s)');
+        onWhiteboardCommand(data.commands as WhiteboardCommand[]);
+
+        // Also attach to the most recent tutor transcript entry
+        const lastIdx = transcriptRef.current.length - 1;
+        if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
+          transcriptRef.current[lastIdx] = {
+            ...transcriptRef.current[lastIdx],
+            whiteboardCommands: data.commands,
+          };
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
+
+        data.commands.forEach((cmd: WhiteboardCommand) => {
+          onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action, source: 'validation-pass' });
+        });
+      }
+    } catch (err) {
+      console.error('[VoiceTutorRealtime] Whiteboard validation pass failed:', err);
+    } finally {
+      validationInFlightRef.current = false;
+    }
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
 
   // Handle transcript updates from the realtime API
   const handleTranscriptUpdate = useCallback((role: 'user' | 'assistant', text: string, isFinal: boolean) => {
@@ -155,12 +266,19 @@ export function VoiceTutorRealtime({
         onTranscriptUpdate(transcriptRef.current);
         onTrackInteraction?.('message', filteredText, undefined, 'student');
         currentUserTextRef.current = '';
+
+        // Reset tool call tracking for next response turn
+        turnHadToolCallRef.current = false;
       }
     } else {
       currentAssistantTextRef.current = text;
       if (isFinal && text.trim()) {
         // Remove whiteboard command blocks from displayed text
-        const cleanText = text.replace(/```whiteboard[\s\S]*?```/g, '').trim();
+        const cleanText = text
+          .replace(/```whiteboard[\s\S]*?```/g, '')
+          .replace(/\[Whiteboard\][^\n]*/gi, '')
+          .replace(/\[whiteboard command[^\]]*\][^\n]*/gi, '')
+          .trim();
 
         // Add finalized assistant message to transcript
         const entry: TranscriptEntry = {
@@ -173,17 +291,100 @@ export function VoiceTutorRealtime({
         onTranscriptUpdate(transcriptRef.current);
         onTrackInteraction?.('message', cleanText, undefined, 'tutor');
         currentAssistantTextRef.current = '';
+
+        // Store pending text for validation after response.done
+        pendingTutorTextRef.current = cleanText;
       }
     }
   }, [onTranscriptUpdate, onTrackInteraction]);
 
-  // Handle whiteboard commands
+  // Handle whiteboard commands from tool calls
   const handleWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
+    turnHadToolCallRef.current = true;
     onWhiteboardCommand(commands);
+
+    // Attach commands to the most recent tutor transcript entry
+    const lastIdx = transcriptRef.current.length - 1;
+    if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
+      const existing = transcriptRef.current[lastIdx].whiteboardCommands || [];
+      transcriptRef.current[lastIdx] = {
+        ...transcriptRef.current[lastIdx],
+        whiteboardCommands: [...existing, ...commands],
+      };
+      onTranscriptUpdate([...transcriptRef.current]);
+    }
+
     commands.forEach((cmd) => {
       onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
     });
-  }, [onWhiteboardCommand, onTrackInteraction]);
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
+
+  // Build a context summary from the current transcript
+  const buildContextSummary = useCallback(() => {
+    const entries = transcriptRef.current;
+    if (entries.length === 0) return '';
+
+    // Include the last 6 messages as verbatim context
+    const recent = entries.slice(-6)
+      .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text.slice(0, 200)}`)
+      .join('\n');
+
+    // Build a high-level summary of what's been covered
+    const topicsCovered = entries
+      .filter(e => e.role === 'tutor' && e.text.length > 50)
+      .slice(-3)
+      .map(e => e.text.slice(0, 100))
+      .join('; ');
+
+    return `Session context: Subject=${subject}, Topic=${topic}, Level=${level}, Student=${studentName || 'unknown'}, Goal=${sessionGoal}. The session has ${entries.length} messages so far. We are in the MIDDLE of a tutoring session — do NOT re-introduce yourself or greet the student again.\n\nTopics covered so far: ${topicsCovered}\n\nRecent conversation:\n${recent}`;
+  }, [subject, topic, level, studentName, sessionGoal]);
+
+  // Detect if the tutor response looks like a context-loss greeting
+  const isContextLossGreeting = useCallback((text: string): boolean => {
+    if (tutorTurnCountRef.current < 3) return false; // Too early to tell
+    const lower = text.toLowerCase();
+    // Multi-language greeting patterns that shouldn't appear mid-session
+    return /\b(welcome|nice to meet|how can i help you today|what (?:would you like|can i help|brings you)|what are we (?:working|looking) at|schön,? dass du da bist|was möchtest du|¿en qué puedo ayudarte|comment puis-je|cosa posso aiutarti|como posso ajudar|что.*(?:изучать|помочь)|はじめまして|만나서 반갑)\b/i.test(lower);
+  }, []);
+
+  // Handle response.done — run whiteboard validation + context keeper + usage tracking
+  const handleResponseDone = useCallback((usage?: RealtimeUsage) => {
+    // Forward usage to parent for cost tracking
+    if (usage && onUsageUpdate) {
+      onUsageUpdate(usage);
+    }
+
+    const tutorText = pendingTutorTextRef.current;
+    pendingTutorTextRef.current = null;
+
+    if (!tutorText) return;
+
+    tutorTurnCountRef.current++;
+
+    // --- Context loss detection ---
+    if (isContextLossGreeting(tutorText)) {
+      console.warn('[VoiceTutorRealtime] Context loss detected — tutor re-greeted mid-session. Injecting context.');
+      const summary = buildContextSummary();
+      if (summary && injectContextRef.current) {
+        injectContextRef.current(summary + '\n\nIMPORTANT: You just lost context and re-greeted the student. Continue where we left off. Do NOT greet or introduce yourself again.');
+      }
+    }
+
+    // --- Periodic context injection ---
+    if (tutorTurnCountRef.current > 0 && tutorTurnCountRef.current % CONTEXT_INJECT_INTERVAL === 0) {
+      console.log('[VoiceTutorRealtime] Periodic context injection at turn', tutorTurnCountRef.current);
+      const summary = buildContextSummary();
+      if (summary && injectContextRef.current) {
+        injectContextRef.current(summary);
+      }
+    }
+
+    // --- Whiteboard validation pass ---
+    if (!turnHadToolCallRef.current && claimsToShowVisual(tutorText)) {
+      console.log('[VoiceTutorRealtime] Tutor claimed to show visual but no tool call — running validation pass');
+      generateMissingWhiteboardCommands(tutorText);
+    }
+  }, [claimsToShowVisual, generateMissingWhiteboardCommands, isContextLossGreeting, buildContextSummary, onUsageUpdate]);
 
   // Handle errors
   const handleError = useCallback((error: Error) => {
@@ -206,9 +407,13 @@ export function VoiceTutorRealtime({
     vadPrefixPaddingMs,
     onTranscriptUpdate: handleTranscriptUpdate,
     onWhiteboardCommand: handleWhiteboardCommand,
+    onResponseDone: handleResponseDone,
     onError: handleError,
     onStateChange,
   });
+
+  // Wire up the injectContext ref so callbacks can access it
+  injectContextRef.current = realtime.injectContext;
 
   // Expose sendTextMessage to parent via handleRef
   useEffect(() => {

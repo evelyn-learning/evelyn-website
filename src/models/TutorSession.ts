@@ -5,6 +5,26 @@ export interface ITokenUsage {
   inputTokens: number;
   outputTokens: number;
   timestamp: Date;
+  // Realtime API audio/text token breakdown
+  inputAudioTokens?: number;
+  outputAudioTokens?: number;
+  inputTextTokens?: number;
+  outputTextTokens?: number;
+}
+
+export interface ITranscriptEntry {
+  role: "student" | "tutor" | "system";
+  text: string;
+  timestamp: Date;
+  whiteboardCommands?: Record<string, unknown>[];
+  pedagogicalIntent?: string;
+}
+
+export interface IWhiteboardEntry {
+  action: string;
+  data: Record<string, unknown>;
+  timestamp: Date;
+  sourceMessageIndex?: number;
 }
 
 export interface ITutorSession extends Document {
@@ -21,6 +41,8 @@ export interface ITutorSession extends Document {
   duration?: number;
   messageCount: number;
   whiteboardItemCount: number;
+  transcript: ITranscriptEntry[];
+  whiteboardCommands: IWhiteboardEntry[];
   tokenUsage: ITokenUsage[];
   totalInputTokens: number;
   totalOutputTokens: number;
@@ -45,6 +67,57 @@ const TokenUsageSchema = new Schema<ITokenUsage>(
     timestamp: {
       type: Date,
       default: Date.now,
+    },
+    inputAudioTokens: { type: Number },
+    outputAudioTokens: { type: Number },
+    inputTextTokens: { type: Number },
+    outputTextTokens: { type: Number },
+  },
+  { _id: false }
+);
+
+const TranscriptEntrySchema = new Schema<ITranscriptEntry>(
+  {
+    role: {
+      type: String,
+      enum: ["student", "tutor", "system"],
+      required: true,
+    },
+    text: {
+      type: String,
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      required: true,
+    },
+    whiteboardCommands: {
+      type: [Schema.Types.Mixed],
+      default: undefined,
+    },
+    pedagogicalIntent: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
+
+const WhiteboardEntrySchema = new Schema<IWhiteboardEntry>(
+  {
+    action: {
+      type: String,
+      required: true,
+    },
+    data: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    sourceMessageIndex: {
+      type: Number,
     },
   },
   { _id: false }
@@ -103,6 +176,14 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     whiteboardItemCount: {
       type: Number,
       default: 0,
+    },
+    transcript: {
+      type: [TranscriptEntrySchema],
+      default: [],
+    },
+    whiteboardCommands: {
+      type: [WhiteboardEntrySchema],
+      default: [],
     },
     tokenUsage: {
       type: [TokenUsageSchema],

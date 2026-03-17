@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { DemoInteraction } from "@/models";
+import { DemoInteraction, DemoSession } from "@/models";
 import type { IGeoLocation } from "@/models/DemoInteraction";
 import crypto from "crypto";
 
@@ -156,13 +156,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, skipped: "filtered-location" });
     }
 
+    const now = new Date();
+
     // Create interaction record
     const interaction = await DemoInteraction.create({
       productId,
       productTitle: productTitle || productId,
       eventType,
       sessionId,
-      timestamp: new Date(),
+      timestamp: now,
       duration: duration || undefined,
       deviceType,
       referrer: referrer || request.headers.get("referer") || undefined,
@@ -176,6 +178,33 @@ export async function POST(request: NextRequest) {
       browserTimezone: browserTimezone || undefined,
       metadata,
     });
+
+    // On "view" events, ensure a DemoSession record exists so the session
+    // appears in the admin Session Explorer even if the user never interacts.
+    if (eventType === "view") {
+      await DemoSession.findOneAndUpdate(
+        { sessionId, productId },
+        {
+          $setOnInsert: {
+            sessionId,
+            productId,
+            productTitle: productTitle || productId,
+            startedAt: now,
+            deviceType,
+            ipHash: hashIP(ip),
+            location: location || undefined,
+            interactions: [],
+            summary: {
+              totalInteractions: 0,
+              messageCount: 0,
+              toolsUsed: [],
+              lastActivity: now,
+            },
+          },
+        },
+        { upsert: true }
+      );
+    }
 
     return NextResponse.json({
       success: true,

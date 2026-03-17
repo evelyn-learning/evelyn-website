@@ -458,6 +458,124 @@ export interface GraphAnnotation {
   color?: string;
 }
 
+// ── Structured Math Diagram Types ──
+
+export interface NumberLinePoint {
+  value: number;
+  label?: string;
+  color?: string;
+  style?: 'filled' | 'open';
+}
+
+export interface NumberLineInterval {
+  from: number;
+  to: number;
+  fromInclusive?: boolean;
+  toInclusive?: boolean;
+  color?: string;
+  label?: string;
+}
+
+export interface NumberLineSegment {
+  from: number;
+  to: number;
+  label?: string;
+  color?: string;
+  arc?: boolean;
+}
+
+export interface GeometryPoint {
+  id: string;
+  x: number;
+  y: number;
+  label?: string;
+  color?: string;
+}
+
+export interface GeometrySegment {
+  from: string;
+  to: string;
+  style?: 'solid' | 'dashed' | 'dotted';
+  color?: string;
+  label?: string;
+  tickMarks?: number;
+}
+
+export interface GeometryPolygon {
+  vertices: string[];
+  fill?: string;
+  stroke?: string;
+  label?: string;
+}
+
+export interface GeometryCircle {
+  center: string;
+  radius: number;
+  style?: 'solid' | 'dashed';
+  color?: string;
+  label?: string;
+}
+
+export interface GeometryAngle {
+  vertex: string;
+  from: string;
+  to: string;
+  label?: string;
+  style?: 'arc' | 'square';
+  color?: string;
+}
+
+export interface GeometryArc {
+  center: string;
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+  color?: string;
+  label?: string;
+}
+
+export interface UnitCircleHighlight {
+  angle: number;
+  color?: string;
+  showTriangle?: boolean;
+  showCoords?: boolean;
+  label?: string;
+}
+
+export interface TreeNode {
+  label: string;
+  value?: string;
+  color?: string;
+  children?: Array<{
+    label: string;
+    probability?: string;
+    node: TreeNode;
+  }>;
+}
+
+export interface VennRegion {
+  value?: string;
+  highlight?: boolean;
+  items?: string[];
+}
+
+export interface BoxPlotData {
+  label: string;
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+  outliers?: number[];
+  color?: string;
+}
+
+export interface PieSlice {
+  label: string;
+  value: number;
+  color?: string;
+}
+
 export type WhiteboardCommand =
   | { action: 'clear' }
   | { action: 'newPage'; title?: string }
@@ -474,7 +592,16 @@ export type WhiteboardCommand =
   | { action: 'showTable'; headers: string[]; rows: string[][] }
   | { action: 'showImage'; url: string; alt: string }
   | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string }
-  | { action: 'showCode'; code: string; language?: string; label?: string };
+  | { action: 'showCode'; code: string; language?: string; label?: string }
+  // ── New structured math diagram tools ──
+  | { action: 'showNumberLine'; title?: string; min: number; max: number; step?: number; points?: NumberLinePoint[]; intervals?: NumberLineInterval[]; segments?: NumberLineSegment[]; fractionTicks?: { denominator: number; showLabels?: boolean } }
+  | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
+  | { action: 'showUnitCircle'; title?: string; highlightAngles?: UnitCircleHighlight[]; showAllStandard?: boolean; showRadians?: boolean; showDegrees?: boolean; showArc?: { from: number; to: number; color?: string; label?: string } }
+  | { action: 'showFractionBar'; title?: string; items: Array<{ numerator: number; denominator: number; label?: string; highlightColor?: string; style?: 'bar' | 'circle' | 'grid' }>; layout?: 'vertical' | 'horizontal'; showComparison?: boolean }
+  | { action: 'showTree'; title?: string; type?: 'probability' | 'factor' | 'decision' | 'generic'; root: TreeNode; showLeafProbabilities?: boolean; direction?: 'top-down' | 'left-right' }
+  | { action: 'showVennDiagram'; title?: string; sets: Array<{ label: string; color?: string }>; regions: Record<string, VennRegion>; universalLabel?: string }
+  | { action: 'showMatrix'; title?: string; rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes'; augmented?: number; rowLabels?: string[]; colLabels?: string[]; rowOperations?: Array<{ description: string; targetRow: number }>; resultMatrix?: { rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes' }; operatorSymbol?: string }
+  | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean } };
 
 // =============================================================================
 // STUDENT PROGRESS

@@ -87,10 +87,44 @@ export async function POST(req: NextRequest) {
     }
 
     // Append new token usage entries if provided
+    const pushOps: Record<string, unknown> = {};
     if (body.tokenUsage && Array.isArray(body.tokenUsage)) {
-      updateOp.$push = {
-        tokenUsage: { $each: body.tokenUsage },
-      };
+      pushOps.tokenUsage = { $each: body.tokenUsage };
+    }
+
+    // On final save (completed/abandoned), store transcript + whiteboard data
+    if (
+      (body.status === "completed" || body.status === "abandoned") &&
+      Array.isArray(body.transcript)
+    ) {
+      // Replace transcript entirely (not append) — use $set
+      updateFields.transcript = body.transcript.map(
+        (t: { role: string; text: string; timestamp: string; whiteboardCommands?: unknown[]; pedagogicalIntent?: string }) => ({
+          role: t.role,
+          text: typeof t.text === "string" ? t.text.slice(0, 5000) : "",
+          timestamp: t.timestamp ? new Date(t.timestamp) : new Date(),
+          ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
+          ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
+        })
+      );
+    }
+
+    if (
+      (body.status === "completed" || body.status === "abandoned") &&
+      Array.isArray(body.whiteboardCommands)
+    ) {
+      updateFields.whiteboardCommands = body.whiteboardCommands.map(
+        (cmd: { action: string; data?: Record<string, unknown>; timestamp?: string; sourceMessageIndex?: number }) => ({
+          action: cmd.action,
+          data: cmd.data || {},
+          timestamp: cmd.timestamp ? new Date(cmd.timestamp) : new Date(),
+          sourceMessageIndex: cmd.sourceMessageIndex,
+        })
+      );
+    }
+
+    if (Object.keys(pushOps).length > 0) {
+      updateOp.$push = pushOps;
     }
 
     const session = await TutorSession.findOneAndUpdate(
