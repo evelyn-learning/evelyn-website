@@ -5,14 +5,14 @@ import { getKeywordsForProduct } from '@/lib/seo/keywords';
 
 const productId = 'virtual-labs';
 const productName = 'Virtual Lab Simulations';
-const productDescription = 'Interactive physics, chemistry, and biology simulations for hands-on learning without physical equipment. Safe, scalable, and infinitely repeatable experiments for science education.';
+const productDescription = 'Virtual lab simulations are interactive online science experiments that let students perform physics, chemistry, and biology labs safely without physical equipment. Evelyn Learning\'s AI-powered virtual labs provide hands-on STEM learning with realistic simulations, real-time data collection, and guided lab activities that are scalable and infinitely repeatable.';
 
 export const metadata: Metadata = {
-  title: `${productName} | AI-Powered Learning`,
+  title: `Virtual Lab Simulations | AI-Powered Online Science Experiments`,
   description: productDescription,
   keywords: getKeywordsForProduct(productId),
   openGraph: {
-    title: `${productName} | Evelyn Learning`,
+    title: `${productName} | Interactive Science Lab Simulations for Education`,
     description: productDescription,
   },
 };
@@ -28,12 +28,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         applicationCategory="Educational Software"
         url={`/products/${productId}`}
         featureList={[
-          'Physics simulations',
-          'Chemistry virtual labs',
-          'Biology explorations',
-          'Real-time parameter controls',
-          'Data collection and analysis',
-          'Guided lab activities',
+          'Interactive physics, chemistry, and biology simulations',
+          'Safe online science experiments without physical equipment',
+          'Real-time parameter controls and data collection',
+          'Guided lab activities aligned to NGSS and state standards',
+          'Built-in assessment with lab notebooks and grade reports',
+          'Infinitely repeatable experiments for student mastery',
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />

@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   description:
-    "Evelyn Learning provides comprehensive educational content solutions, AI-powered learning services, and expert content development for organizations, publishers, and educational institutions.",
+    "Evelyn Learning provides AI-powered learning solutions including AI voice tutors, AI essay feedback, virtual lab simulations, career exploration software, and 24/7 student support AI. Adaptive learning platform for K-12, higher education, and workforce development.",
   keywords: [
     // Core GEO Keywords
     "AI-Powered Learning",
@@ -49,10 +49,20 @@ export const metadata: Metadata = {
     "Predictive Analytics in Education",
     "Automated Grading",
     "AI Feedback Systems",
+    // High-value search keywords
+    "AI Voice Tutor",
+    "AI Essay Feedback",
+    "AI Essay Feedback Generator",
+    "Virtual Lab Simulations",
+    "Career Exploration Software",
+    "24/7 Student Support AI",
+    "Automated Essay Scoring Software",
+    "AI Skill Gap Analysis",
     // Skills & Workforce
     "Skills-Based Learning",
     "Workforce-Aligned Learning",
     "Student Success Platform",
+    "Career Guidance Platform",
     // Technology & Integration
     "EdTech Platform",
     "LMS Integration",

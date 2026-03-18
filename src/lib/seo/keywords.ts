@@ -61,6 +61,13 @@ export const CATEGORY_KEYWORDS = {
     'Plagiarism Detection AI',
     'AI Proctoring',
     'Remote Exam Monitoring',
+    'AI Essay Feedback',
+    'AI Essay Feedback Generator',
+    'Essay Grading Software',
+    'Analytic Rubric Essay Grading',
+    'AP Lang Essay Grader AI',
+    'Automated Essay Scoring Software',
+    'Custom Rubric Essay Grader',
   ],
 
   tutoring: [
@@ -71,6 +78,9 @@ export const CATEGORY_KEYWORDS = {
     'AI Math Solver',
     'Language Learning AI',
     'Personalized Tutoring',
+    'AI Voice Tutor',
+    'Voice Tutor AI',
+    '24/7 Student Support AI',
   ],
 
   content: [
@@ -109,6 +119,11 @@ export const CATEGORY_KEYWORDS = {
     'Compliance Training AI',
     'Skill Gap Analysis',
     'Professional Development AI',
+    'Career Exploration Software',
+    'Career Guidance Platform',
+    'AI Career Exploration Platform',
+    'AI Skill Gap Analysis',
+    'Career Path Platform',
   ],
 
   research: [
@@ -202,7 +217,7 @@ export function getKeywordsForProduct(productId: string): string[] {
     'adaptive-learning': 'analytics',
     'analytics-dashboard': 'analytics',
     'student-success-predictor': 'analytics',
-    'career-pathways': 'analytics',
+    'career-pathways': 'enterprise',
     'admissions-assistant': 'institutional',
     'parent-engagement': 'institutional',
     'corporate-training': 'enterprise',

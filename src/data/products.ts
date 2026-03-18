@@ -44,7 +44,7 @@ export const productCategories: ProductCategory[] = [
           {
             question: "What is AI Essay Scoring and how does it work?",
             answer:
-              "AI Essay Scoring uses advanced natural language processing to evaluate student essays against established rubrics like SAT, ACT, and AP standards. The system analyzes writing structure, argumentation, grammar, and style to provide instant, detailed feedback in under 10 seconds.",
+              "AI Essay Scoring is automated essay scoring software that uses advanced natural language processing to evaluate student essays against analytic rubrics like SAT, ACT, AP Lang, and AP Lit standards. The AI essay feedback generator analyzes writing structure, argumentation, grammar, and style to provide instant, detailed feedback in under 10 seconds.",
           },
           {
             question: "How accurate is the AI compared to human graders?",
@@ -52,9 +52,9 @@ export const productCategories: ProductCategory[] = [
               "Our AI Essay Scoring system achieves 95% correlation with expert human graders. The system is trained on millions of scored essays and continuously refined by our team of 300+ educators to ensure pedagogically sound feedback.",
           },
           {
-            question: "Can I customize the scoring rubric for my organization?",
+            question: "Can I create a custom rubric for essay grading?",
             answer:
-              "Yes, we support custom rubrics in addition to pre-configured SAT, ACT, AP, and college application rubrics. Our team can work with you to configure scoring criteria that match your specific curriculum and assessment goals.",
+              "Yes, our custom rubric essay grader supports any analytic rubric in addition to pre-configured SAT, ACT, AP Lang, AP Lit, and college application rubrics. Our team can work with you to configure scoring criteria that match your specific curriculum and assessment goals, making it ideal for schools, districts, and test prep companies.",
           },
           {
             question: "Does the AI provide actionable feedback or just scores?",
@@ -69,7 +69,17 @@ export const productCategories: ProductCategory[] = [
           {
             question: "What types of essays can the AI score?",
             answer:
-              "Our system handles argumentative essays, persuasive writing, literary analysis, research papers, personal statements, and college application essays. It adapts to different grade levels from middle school through graduate programs.",
+              "Our automated essay scoring software handles argumentative essays, persuasive writing, literary analysis, research papers, personal statements, and college application essays. It adapts to different grade levels from middle school through graduate programs.",
+          },
+          {
+            question: "Can AI grade AP Lang and AP Lit essays?",
+            answer:
+              "Yes, our AI essay grader includes pre-configured AP Lang and AP Lit rubrics calibrated to College Board scoring standards. It provides category-level feedback on rhetorical analysis, argumentation, synthesis, and literary analysis—giving students detailed AI essay feedback they can use to improve before the exam.",
+          },
+          {
+            question: "How does AI essay feedback compare to teacher grading?",
+            answer:
+              "Our AI essay feedback generator achieves 95% correlation with expert human graders while providing results in 10 seconds instead of days. Teachers save 80% of grading time and can focus on high-impact instruction. The AI provides consistent, rubric-aligned feedback across every essay—eliminating grader fatigue and scoring drift.",
           },
         ],
       },
@@ -210,9 +220,9 @@ export const productCategories: ProductCategory[] = [
         demoStatus: "live",
         faqs: [
           {
-            question: "What is the AI Voice Tutor?",
+            question: "What is an AI voice tutor?",
             answer:
-              "The AI Voice Tutor is an intelligent tutoring system that provides real-time voice-based instruction with a visual whiteboard. Students can speak naturally and receive spoken explanations while seeing equations, diagrams, and step-by-step solutions appear on screen.",
+              "An AI voice tutor is an intelligent tutoring system that provides real-time voice-based instruction with a visual whiteboard. Unlike text-only chatbots, a voice tutor AI lets students speak naturally and receive spoken explanations while seeing equations, diagrams, and step-by-step solutions appear on screen—mimicking the experience of a one-on-one tutoring session.",
           },
           {
             question: "How does voice interaction work?",
@@ -243,6 +253,16 @@ export const productCategories: ProductCategory[] = [
             question: "Is the AI Voice Tutor available as a white-label solution?",
             answer:
               "Absolutely. We offer full white-label deployment with your branding, custom voice settings, and curriculum integration. The AI can be embedded in your existing learning platform via API or as a standalone application.",
+          },
+          {
+            question: "How does AI voice tutoring compare to traditional tutoring?",
+            answer:
+              "AI voice tutoring provides 24/7 student support at a fraction of the cost of human tutors. Students get instant help whenever they need it, with the same natural voice conversation experience. The AI tutor never gets tired, maintains consistent quality, and can serve unlimited students simultaneously. Traditional tutoring excels for complex emotional support and mentorship, which is why our voice tutor AI is designed to complement—not replace—human educators.",
+          },
+          {
+            question: "Does the voice tutor AI provide 24/7 student support?",
+            answer:
+              "Yes, the AI Voice Tutor is available 24/7 with no scheduling required. Students can access real-time voice tutoring anytime—during homework, late-night study sessions, or exam prep. This makes it ideal for organizations that want to offer round-the-clock student support without adding staff.",
           },
         ],
       },
@@ -733,12 +753,12 @@ export const productCategories: ProductCategory[] = [
           {
             question: "What is Career Pathways AI?",
             answer:
-              "An AI-powered career guidance system that matches student skills and interests to careers, identifies skill gaps, and recommends learning pathways to reach career goals.",
+              "Career Pathways AI is an AI-powered career exploration software and career guidance platform that matches student skills and interests to careers, identifies skill gaps through AI skill gap analysis, and recommends personalized learning pathways to reach career goals based on real job market data.",
           },
           {
-            question: "How does it assess skills?",
+            question: "How does AI skill gap analysis work?",
             answer:
-              "Through self-assessments, transcript analysis, work samples, and behavioral data. The AI builds a comprehensive skills profile mapped to industry competency frameworks.",
+              "Our AI skill gap analysis evaluates current competencies through self-assessments, transcript analysis, work samples, and behavioral data. The AI builds a comprehensive skills profile mapped to industry competency frameworks and identifies exactly which skills to develop for each target career.",
           },
           {
             question: "Where does the career data come from?",
@@ -754,6 +774,16 @@ export const productCategories: ProductCategory[] = [
             question: "Is it suitable for workforce development programs?",
             answer:
               "Absolutely. We work with workforce boards, community colleges, and corporate L&D teams to guide career transitions and upskilling initiatives.",
+          },
+          {
+            question: "What makes this different from other career exploration platforms?",
+            answer:
+              "Unlike static career exploration software, Career Pathways AI uses real-time job market data to provide dynamic career guidance. The platform continuously updates salary information, growth projections, and skill requirements from millions of job postings. It also creates personalized learning paths that map directly to your institution's course catalog, making it a true career development platform rather than just a career quiz.",
+          },
+          {
+            question: "How does the career guidance platform connect education to employment?",
+            answer:
+              "Our career path platform bridges the education-employment gap by mapping academic programs to real-world career outcomes. It shows students which courses, credentials, and experiences align with their target careers, tracks their progress toward career readiness, and provides employer insights so they understand exactly what hiring managers are looking for.",
           },
         ],
       },
@@ -935,9 +965,9 @@ export const productCategories: ProductCategory[] = [
         demoStatus: "request",
         faqs: [
           {
-            question: "What are Virtual Lab Simulations?",
+            question: "What are virtual lab simulations?",
             answer:
-              "Interactive science experiments students can perform safely online. Our simulations cover biology, chemistry, and physics labs with realistic equipment, procedures, and data collection.",
+              "Virtual lab simulations are interactive online science experiments that students can perform safely without physical equipment. They replicate real-world biology, chemistry, and physics labs with realistic equipment, procedures, and data collection—providing hands-on STEM learning that is safe, scalable, and infinitely repeatable.",
           },
           {
             question: "How realistic are the simulations?",

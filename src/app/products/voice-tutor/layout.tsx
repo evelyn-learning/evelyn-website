@@ -5,14 +5,14 @@ import { getKeywordsForProduct } from '@/lib/seo/keywords';
 
 const productId = 'voice-tutor';
 const productName = 'AI Voice Tutor';
-const productDescription = 'Real-time AI voice tutoring with visual whiteboard support. Natural voice conversations, step-by-step problem solving, homework upload, and interactive visual explanations for physics, math, and STEM subjects.';
+const productDescription = 'An AI voice tutor is an intelligent tutoring system that lets students speak naturally and receive real-time spoken explanations with a visual whiteboard. Evelyn Learning\'s Voice Tutor AI provides 24/7 student support with step-by-step problem solving, homework photo upload, and interactive visual explanations for physics, math, and STEM subjects.';
 
 export const metadata: Metadata = {
-  title: `${productName} | AI-Powered Learning`,
+  title: `${productName} | Voice Tutor AI for 24/7 Student Support`,
   description: productDescription,
   keywords: getKeywordsForProduct(productId),
   openGraph: {
-    title: `${productName} | Evelyn Learning`,
+    title: `${productName} | Real-Time AI Voice Tutoring with Visual Whiteboard`,
     description: productDescription,
   },
 };
@@ -28,12 +28,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         applicationCategory="Educational Software"
         url={`/products/${productId}`}
         featureList={[
-          'Real-time voice tutoring',
-          'Visual whiteboard with equations and diagrams',
-          'Text and voice input modes',
-          'Homework photo upload',
-          'Step-by-step problem guidance',
-          'White-label deployment ready',
+          'Real-time AI voice tutoring conversations',
+          'Visual whiteboard with equations, graphs, and diagrams',
+          'Text and voice input modes for flexible learning',
+          'Homework photo upload with guided step-by-step help',
+          'Adaptive learning for physics, math, and STEM subjects',
+          '24/7 student support without adding staff',
+          'White-label deployment for your platform',
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />

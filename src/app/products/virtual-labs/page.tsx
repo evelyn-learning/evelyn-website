@@ -36,11 +36,11 @@ function ProductHero() {
             <span className="text-6xl">🔬</span>
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Virtual Lab Simulations
+                Virtual Lab Simulations for Science Education
               </h1>
               <p className="text-xl text-teal-100 mb-6">
-                Interactive physics, chemistry, and biology simulations for hands-on learning
-                without physical equipment. Safe, scalable, and infinitely repeatable experiments.
+                Interactive online science experiments for physics, chemistry, and biology. AI-powered virtual labs that provide hands-on STEM learning
+                without physical equipment—safe, scalable, and infinitely repeatable.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
@@ -166,8 +166,8 @@ function FeaturesSection() {
     <section className="py-16 bg-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Features</h2>
-          <p className="text-xl text-slate-600">Hands-on science without the constraints</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">What Can Students Do in Virtual Lab Simulations?</h2>
+          <p className="text-xl text-slate-600">Hands-on online science experiments without physical equipment constraints</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -240,8 +240,8 @@ function FAQSection() {
   return (
     <FAQ
       items={faqs}
-      title="Frequently Asked Questions"
-      description="Common questions about Virtual Lab Simulations"
+      title="Virtual Lab Simulations FAQ"
+      description="Common questions about virtual labs, online science experiments, and how simulations compare to physical labs"
     />
   );
 }

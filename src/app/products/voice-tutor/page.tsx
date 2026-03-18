@@ -29,7 +29,7 @@ function ProductHero() {
                 AI Voice Tutor
               </h1>
               <p className="text-xl text-blue-100 mb-6">
-                Real-time voice tutoring with a visual whiteboard. Students speak naturally and receive spoken explanations while equations and diagrams appear on screen.
+                Voice tutor AI that provides 24/7 student support with real-time spoken explanations and a visual whiteboard. Students speak naturally and receive step-by-step guidance while equations and diagrams appear on screen.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a href="#demo" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition">
@@ -153,7 +153,7 @@ function FeaturesSection() {
     <section className="py-16 bg-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Features</h2>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">How Does an AI Voice Tutor Help Students Learn?</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {features.map((feature, idx) => (
@@ -181,7 +181,7 @@ function HowItWorksSection() {
     <section className="py-16 bg-slate-50">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">How It Works</h2>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">How Does AI Voice Tutoring Work?</h2>
         </div>
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-6">
@@ -208,8 +208,8 @@ function FAQSection() {
   return (
     <FAQ
       items={faqs}
-      title="Frequently Asked Questions"
-      description="Common questions about the AI Voice Tutor"
+      title="AI Voice Tutor FAQ"
+      description="Common questions about voice tutor AI, how it compares to traditional tutoring, and what subjects it supports"
     />
   );
 }

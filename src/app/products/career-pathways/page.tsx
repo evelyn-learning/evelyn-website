@@ -36,11 +36,11 @@ function ProductHero() {
             <span className="text-6xl">🛤️</span>
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Career Pathways AI
+                AI Career Exploration & Guidance Platform
               </h1>
               <p className="text-xl text-violet-100 mb-6">
-                Skill gap analysis, career exploration, and personalized course recommendations
-                based on real job market data. Connect education to employment.
+                Career exploration software powered by AI that provides skill gap analysis, career matching, and personalized course recommendations
+                based on real job market data. A career guidance platform that connects education to employment.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
@@ -131,8 +131,8 @@ function DemoSection() {
 function FeaturesSection() {
   const features = [
     {
-      title: 'Skill Assessment',
-      description: 'AI-powered evaluation of current skills against career requirements.',
+      title: 'AI Skill Gap Analysis',
+      description: 'AI-powered skill gap analysis that evaluates current competencies against career requirements and identifies development priorities.',
       icon: '📊'
     },
     {
@@ -166,8 +166,8 @@ function FeaturesSection() {
     <section className="py-16 bg-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Features</h2>
-          <p className="text-xl text-slate-600">Connect education to employment</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">How Does AI Career Exploration Software Work?</h2>
+          <p className="text-xl text-slate-600">A career guidance platform that connects education to employment with AI-driven insights</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -207,8 +207,8 @@ function UseCasesSection() {
     <section className="py-16 bg-slate-900 text-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Who Uses This</h2>
-          <p className="text-xl text-slate-300">Powering career success at scale</p>
+          <h2 className="text-3xl font-bold mb-4">Who Uses Career Exploration Software?</h2>
+          <p className="text-xl text-slate-300">Powering career guidance and workforce development at scale</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -239,8 +239,8 @@ function FAQSection() {
   return (
     <FAQ
       items={faqs}
-      title="Frequently Asked Questions"
-      description="Common questions about Career Pathways AI"
+      title="AI Career Exploration & Guidance FAQ"
+      description="Common questions about career exploration software, AI skill gap analysis, and career guidance platforms"
     />
   );
 }

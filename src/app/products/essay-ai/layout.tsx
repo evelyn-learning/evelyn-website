@@ -5,14 +5,14 @@ import { getKeywordsForProduct } from '@/lib/seo/keywords';
 
 const productId = 'essay-ai';
 const productName = 'AI Essay Scoring & Feedback';
-const productDescription = 'Professional AI-powered essay scoring and feedback in 10 seconds. Rubric-aligned scoring for SAT, ACT, AP, and college applications with detailed, actionable improvement suggestions. An intelligent tutoring system for writing assessment.';
+const productDescription = 'AI essay feedback generator that scores and grades essays in 10 seconds using analytic rubrics. Automated essay scoring software with rubric-aligned feedback for SAT, ACT, AP Lang, AP Lit, and college applications. Custom rubric essay grader with detailed category breakdowns and actionable improvement suggestions for teachers and students.';
 
 export const metadata: Metadata = {
-  title: `${productName} | AI-Powered Learning`,
+  title: `AI Essay Feedback & Grading Software | Analytic Rubric Essay Scoring`,
   description: productDescription,
   keywords: getKeywordsForProduct(productId),
   openGraph: {
-    title: `${productName} | Evelyn Learning`,
+    title: `${productName} | AI Essay Feedback Generator for Teachers & Students`,
     description: productDescription,
   },
 };
@@ -28,12 +28,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         applicationCategory="Educational Software"
         url={`/products/${productId}`}
         featureList={[
-          'Multiple rubric support (SAT, ACT, AP)',
-          'Category breakdown scoring',
-          'Actionable suggestions',
-          'Rewrite examples',
-          'Progress tracking',
-          'White-label ready',
+          'AI essay feedback in under 10 seconds',
+          'Analytic rubric scoring for SAT, ACT, AP Lang, and AP Lit essays',
+          'Custom rubric essay grader for any curriculum',
+          'Detailed category breakdown with specific improvement suggestions',
+          'Before/after rewrite examples for student learning',
+          'Automated essay scoring for schools and districts at scale',
+          'College application essay feedback and scoring',
+          'Progress tracking across multiple submissions',
+          'White-label essay grading software for EdTech platforms',
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />

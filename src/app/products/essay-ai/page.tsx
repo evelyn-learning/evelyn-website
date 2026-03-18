@@ -39,10 +39,10 @@ function ProductHero() {
             <span className="text-6xl">📝</span>
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                AI Essay Scoring & Feedback
+                AI Essay Feedback & Grading Software
               </h1>
               <p className="text-xl text-purple-100 mb-6">
-                Professional essay feedback in 10 seconds. Rubric-aligned scoring for SAT, ACT, AP,
+                AI essay feedback generator that scores essays in 10 seconds. Analytic rubric essay grading for SAT, ACT, AP Lang, AP Lit,
                 and college applications with detailed, actionable improvement suggestions.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -141,8 +141,8 @@ function DemoSection() {
 function FeaturesSection() {
   const features = [
     {
-      title: 'Multiple Rubric Support',
-      description: 'Pre-configured for SAT, ACT, AP, and college application essays. Custom rubrics available.',
+      title: 'SAT, ACT, AP Lang & AP Lit Rubrics',
+      description: 'Pre-configured analytic rubrics for SAT, ACT, AP Lang, AP Lit, and college application essays. Custom rubrics available for any curriculum.',
       icon: '📋'
     },
     {
@@ -176,8 +176,8 @@ function FeaturesSection() {
     <section className="py-16 bg-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Features</h2>
-          <p className="text-xl text-slate-600">Everything you need for comprehensive essay feedback</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">What Makes AI Essay Feedback Better Than Manual Grading?</h2>
+          <p className="text-xl text-slate-600">Automated essay scoring software with everything teachers need for consistent, rubric-aligned feedback</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -218,8 +218,8 @@ function UseCasesSection() {
     <section className="py-16 bg-slate-900 text-white">
       <div className="container-wide">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Who Uses Essay Scoring?</h2>
-          <p className="text-xl text-slate-300">Built for education businesses that need scale</p>
+          <h2 className="text-3xl font-bold mb-4">Who Uses AI Essay Grading Software?</h2>
+          <p className="text-xl text-slate-300">Built for education businesses that need consistent essay feedback at scale</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -314,8 +314,8 @@ function FAQSection() {
   return (
     <FAQ
       items={faqs}
-      title="Frequently Asked Questions"
-      description="Common questions about AI Essay Scoring"
+      title="AI Essay Feedback & Grading FAQ"
+      description="Common questions about AI essay grading software, rubric-aligned scoring, and automated essay feedback"
     />
   );
 }
