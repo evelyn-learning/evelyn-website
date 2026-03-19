@@ -99,10 +99,10 @@ function DemoSection() {
             Interactive Demo
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mb-2">
-            Physics Simulation Lab
+            Interactive Science Labs
           </h2>
           <p className="text-slate-600 max-w-xl mx-auto">
-            Experiment with gravity, collisions, and motion. Adjust parameters and observe the results.
+            Switch between physics and chemistry labs. Drag to launch objects, adjust parameters, and ask the AI assistant questions.
           </p>
         </div>
 
