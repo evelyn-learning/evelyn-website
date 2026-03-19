@@ -52,7 +52,11 @@ Rules:
 - When the tutor walks through multiplication or expansion, show each step in a table AND the final equation.
 - If the tutor mentions multiple equations or formulas, generate a separate showEquation for EACH one.
 - Preserve the mathematical content exactly as described by the tutor.
-- If the content is in a non-English language, extract the MATH/CODE content (which is universal) — labels can be in the tutor's language.`;
+- If the content is in a non-English language, extract the MATH/CODE content (which is universal) — labels can be in the tutor's language.
+- For simple arithmetic (ratios, fractions, proportions), ALWAYS generate a showEquation. E.g. "15 over 20" → showEquation with latex "\\frac{15}{20}".
+- For word problems, use showTable to lay out the given info and solution steps.
+- For data structure diagrams (trees, linked lists, graphs), use showSvgDiagram with an educational SVG.
+- NEVER return empty. If the tutor mentioned ANY math or visual content, generate at least one command.`;
 
 export async function POST(request: NextRequest) {
   try {

@@ -223,86 +223,49 @@ function TestimonialsSection() {
   );
 }
 
-// AI Products Section - Expanded
+// AI Products Section - Flagship heroes + popular grid
 function AIProductsSection() {
-  const featuredProducts = [
+  const popularProducts = [
+    {
+      id: 'virtual-labs',
+      title: 'Virtual Lab Simulations',
+      description: 'Interactive 3D science experiments students can run from any device.',
+      icon: '\uD83E\uDDEA',
+      color: 'from-cyan-500 to-blue-600',
+      stats: 'Interactive 3D experiments',
+      href: '/products/virtual-labs',
+      market: 'K-12 & Higher Ed',
+    },
+    {
+      id: 'plagiarism-detection',
+      title: 'Plagiarism & AI Detection',
+      description: 'Detect copied content and AI-generated text with dual-engine scanning.',
+      icon: '\uD83D\uDD0D',
+      color: 'from-amber-500 to-orange-600',
+      stats: 'AI + Copyscape powered',
+      href: '/products/plagiarism-detection',
+      market: 'K-12 & Higher Ed',
+    },
     {
       id: 'essay-scorer',
       title: 'AI Essay Scoring',
       description: 'Instant, rubric-aligned feedback on student essays. SAT, ACT, AP, and college application scoring.',
-      icon: '📝',
+      icon: '\uD83D\uDCDD',
       color: 'from-purple-500 to-primary-600',
       stats: '80% grading time saved',
       href: '/products/essay-ai',
       market: 'K-12 & Higher Ed',
-      demoType: 'live'
-    },
-    {
-      id: 'proctoring',
-      title: 'AI Proctoring Suite',
-      description: 'Real-time exam monitoring with AI face detection, browser lockdown, and anomaly detection.',
-      icon: '🎥',
-      color: 'from-rose-500 to-red-600',
-      stats: 'Real AI face detection',
-      href: '/products/proctoring-suite',
-      market: 'Higher Ed & Certification',
-      demoType: 'live'
-    },
-    {
-      id: 'corporate-training',
-      title: 'Corporate Training AI',
-      description: 'Microlearning generator, compliance tracking, and skill gap analysis for enterprise L&D.',
-      icon: '🏢',
-      color: 'from-indigo-500 to-purple-600',
-      stats: 'SCORM/xAPI ready',
-      href: '/products/corporate-training',
-      market: 'Enterprise',
-      demoType: 'live'
-    },
-    {
-      id: 'admissions',
-      title: 'AI Admissions Assistant',
-      description: '24/7 prospective student chatbot, application review, and enrollment prediction.',
-      icon: '🎓',
-      color: 'from-blue-500 to-indigo-600',
-      stats: '80% inquiry automation',
-      href: '/products/admissions-assistant',
-      market: 'Higher Ed',
-      demoType: 'live'
-    },
-    {
-      id: 'textbook-digitizer',
-      title: 'Textbook Digitizer',
-      description: 'Convert print textbooks to interactive digital formats with auto-generated quizzes and study tools.',
-      icon: '📚',
-      color: 'from-amber-500 to-orange-600',
-      stats: '10x faster digitization',
-      href: '/products/textbook-digitizer',
-      market: 'Publishers',
-      demoType: 'live'
     },
     {
       id: 'career-pathways',
       title: 'Career Pathways AI',
       description: 'Skill gap analysis, career matching, and personalized learning recommendations.',
-      icon: '🛤️',
+      icon: '\uD83D\uDEE4\uFE0F',
       color: 'from-violet-500 to-purple-600',
       stats: 'Real job market data',
       href: '/products/career-pathways',
       market: 'Workforce Dev',
-      demoType: 'live'
-    }
-  ];
-
-  const additionalProducts = [
-    { title: '24/7 Homework Helper', description: 'AI tutoring available around the clock', icon: '🤖', market: 'K-12' },
-    { title: 'Practice Test Generator', description: 'Unlimited unique practice questions', icon: '📊', market: 'Test Prep' },
-    { title: 'Student Success Predictor', description: 'Early warning system for at-risk students', icon: '🔮', market: 'K-12 & Higher Ed' },
-    { title: 'Parent Engagement Portal', description: 'Multilingual progress reports for families', icon: '👨‍👩‍👧', market: 'K-12' },
-    { title: 'Research Assistant AI', description: 'Literature search and citation management', icon: '🔬', market: 'Higher Ed' },
-    { title: 'Content Authoring AI', description: 'Transform text into interactive learning', icon: '✍️', market: 'Publishers' },
-    { title: 'Adaptive Learning Engine', description: 'Personalized learning paths', icon: '🎯', market: 'All Markets' },
-    { title: 'AI Curriculum Designer', description: 'Standards-aligned curriculum in minutes', icon: '📋', market: 'K-12' },
+    },
   ];
 
   return (
@@ -312,7 +275,7 @@ function AIProductsSection() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-primary-500 font-semibold text-sm uppercase tracking-wider">AI Products</span>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mt-4 mb-6">
-            Adaptive Learning & Intelligent Tutoring Systems
+            Our Flagship AI Products
           </h2>
           <p className="text-xl text-slate-600">
             Production-ready AI-powered learning solutions you can deploy today. Personalized learning, automated grading, and learning analytics—white-label ready and enterprise-grade.
@@ -320,89 +283,145 @@ function AIProductsSection() {
           </p>
         </div>
 
-        {/* Featured Products Grid - With Live Demos */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-16">
-          {featuredProducts.map((product) => (
-            <Link
-              key={product.id}
-              href={product.href}
-              className="group relative bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-primary-100"
-            >
-              {/* Badges Row */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                  {product.market}
+        {/* Flagship Hero Cards */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto mb-16">
+          {/* AI Voice Tutor - Hero Card */}
+          <Link
+            href="/products/voice-tutor"
+            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 p-8 md:p-10 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+
+            <div className="relative z-10">
+              {/* Badge */}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  Live Demo
                 </span>
-                {product.demoType === 'live' && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-medium px-2 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    Live Demo
-                  </span>
-                )}
               </div>
 
               {/* Icon */}
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${product.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                {product.icon}
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                {'\uD83C\uDF99\uFE0F'}
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-500 transition-colors">
-                {product.title}
+              <h3 className="text-2xl md:text-3xl font-bold mb-3">
+                AI Voice Tutor
               </h3>
-              <p className="text-slate-600 text-sm mb-4 leading-relaxed">
-                {product.description}
+              <p className="text-blue-100 text-base md:text-lg leading-relaxed mb-6 max-w-md">
+                Real-time voice tutoring with visual whiteboard. Our most popular product — used by educators worldwide for personalized, interactive learning sessions.
               </p>
 
-              {/* Stats Badge */}
-              <div className="inline-flex items-center gap-2 bg-slate-100 group-hover:bg-primary-50 px-3 py-1 rounded-full">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                <span className="text-sm font-medium text-slate-700">{product.stats}</span>
+              {/* CTA */}
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full font-medium group-hover:bg-white/30 transition-colors">
+                Try it live
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
+            </div>
+          </Link>
 
-              {/* Arrow */}
-              <div className="absolute bottom-6 right-6 w-8 h-8 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all group-hover:translate-x-1">
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600" />
-              </div>
-            </Link>
-          ))}
-        </div>
+          {/* PageVault - Hero Card */}
+          <a
+            href="https://pagevault.us"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 p-8 md:p-10 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
 
-        {/* Additional Products */}
-        <div className="bg-slate-50 rounded-3xl p-8 md:p-12 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Complete AI Product Suite</h3>
-            <p className="text-slate-600">23 products across all education market segments</p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {additionalProducts.map((product, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl p-4 text-center hover:shadow-md transition-shadow"
-              >
-                <span className="text-2xl mb-2 block">{product.icon}</span>
-                <h4 className="font-semibold text-slate-800 text-sm mb-1">{product.title}</h4>
-                <p className="text-xs text-slate-500 mb-2">{product.description}</p>
-                <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
-                  {product.market}
+            <div className="relative z-10">
+              {/* Badge */}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  External Product
                 </span>
               </div>
-            ))}
-          </div>
 
-          <p className="text-center text-slate-500 text-sm mt-6">
-            All products available as white-label solutions with API access
-          </p>
+              {/* Icon */}
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                {'\uD83D\uDCDA'}
+              </div>
+
+              {/* Content */}
+              <h3 className="text-2xl md:text-3xl font-bold mb-3">
+                PageVault
+              </h3>
+              <p className="text-emerald-100 text-base md:text-lg leading-relaxed mb-6 max-w-md">
+                A secure digital library platform built for publishers. Deliver your eBooks with enterprise-grade protection while giving readers a premium experience.
+              </p>
+
+              {/* CTA */}
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full font-medium group-hover:bg-white/30 transition-colors">
+                Visit Site
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </a>
         </div>
 
+        {/* Popular Products Grid */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <h3 className="text-2xl font-bold text-slate-900 mb-6 text-center">Popular Products</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {popularProducts.map((product) => (
+              <Link
+                key={product.id}
+                href={product.href}
+                className="group relative bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:border-primary-100"
+              >
+                {/* Market Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                    {product.market}
+                  </span>
+                </div>
+
+                {/* Icon */}
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${product.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                  {product.icon}
+                </div>
+
+                {/* Content */}
+                <h4 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-primary-500 transition-colors">
+                  {product.title}
+                </h4>
+                <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                  {product.description}
+                </p>
+
+                {/* Stats Badge */}
+                <div className="inline-flex items-center gap-2 bg-slate-100 group-hover:bg-primary-50 px-3 py-1 rounded-full">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+                  <span className="text-sm font-medium text-slate-700">{product.stats}</span>
+                </div>
+
+                {/* Arrow */}
+                <div className="absolute bottom-6 right-6 w-8 h-8 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-all group-hover:translate-x-1">
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* White-label note */}
+        <p className="text-center text-slate-500 text-sm mb-8 max-w-6xl mx-auto">
+          All products available as white-label solutions with API access
+        </p>
+
         {/* CTA */}
-        <div className="text-center mt-12">
+        <div className="text-center">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-600"
+            className="inline-flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-600 text-lg"
           >
-            View all products and try live demos
+            View all 20+ products
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>

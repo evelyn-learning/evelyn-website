@@ -1,13 +1,27 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ExternalLink } from 'lucide-react';
 import {
-  productCategories,
   getAllProducts,
-  type ProductCategory,
   type Product,
   type DemoStatus,
 } from '@/data/products';
+
+const TIER1_IDS = ['voice-tutor', 'virtual-labs', 'plagiarism-detection', 'essay-ai'];
+const TIER2_IDS = [
+  'career-pathways', 'admissions-assistant', 'proctoring-suite', 'content-authoring',
+  'test-generator', 'textbook-digitizer', 'curriculum-designer', 'student-success-predictor',
+  'analytics-dashboard', 'adaptive-learning', 'tutor-copilot', 'homework-bot', 'language-learning',
+];
+const TIER3_IDS = [
+  'math-solver', 'course-creator-studio', 'corporate-training', 'parent-engagement',
+  'accessibility-ai', 'reading-comprehension', 'research-assistant',
+];
+
+function getProductsByIds(ids: string[]): Product[] {
+  const all = getAllProducts();
+  return ids.map((id) => all.find((p) => p.id === id)).filter(Boolean) as Product[];
+}
 
 export const metadata: Metadata = {
   title: 'AI Products for Education | Adaptive Learning & Intelligent Tutoring',
@@ -33,7 +47,7 @@ function HeroSection() {
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="text-emerald-300 text-sm font-medium">24 AI products with live demos</span>
+            <span className="text-emerald-300 text-sm font-medium">5 flagship products with live demos</span>
           </span>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -52,7 +66,7 @@ function HeroSection() {
               Book a Demo
             </Link>
             <a
-              href="#products"
+              href="#flagship"
               className="px-8 py-4 bg-transparent border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all"
             >
               Explore Products
@@ -64,21 +78,30 @@ function HeroSection() {
   );
 }
 
-// Quick Navigation
-function QuickNav() {
+// Tier Navigation
+function TierNav() {
   return (
     <section className="py-6 bg-white border-b border-slate-100 sticky top-16 z-40">
       <div className="container-wide">
         <div className="flex flex-wrap justify-center gap-4">
-          {productCategories.map((category) => (
-            <a
-              key={category.name}
-              href={`#${category.name.toLowerCase().replace(/\s+/g, '-')}`}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-            >
-              {category.name}
-            </a>
-          ))}
+          <a
+            href="#flagship"
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          >
+            Flagship Products
+          </a>
+          <a
+            href="#suite"
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          >
+            Complete Suite
+          </a>
+          <a
+            href="#all-products"
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          >
+            All Products
+          </a>
         </div>
       </div>
     </section>
@@ -110,7 +133,7 @@ function DemoBadge({ status }: { status: DemoStatus }) {
   );
 }
 
-// Product Card Component
+// Product Card Component (Tier 1 - large cards with gradient headers)
 function ProductCard({ product }: { product: Product }) {
   return (
     <Link
@@ -136,25 +159,64 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// Category Section Component
-function CategorySection({ category }: { category: ProductCategory }) {
+// PageVault Card (Tier 1 - external link)
+function PageVaultCard() {
   return (
-    <div id={category.name.toLowerCase().replace(/\s+/g, '-')} className="scroll-mt-32">
-      <div className="mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{category.name}</h2>
-        <p className="text-slate-600">{category.description}</p>
+    <a
+      href="https://pagevault.us"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-xl overflow-hidden"
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white">
+        <span className="text-4xl mb-3 block">📚</span>
+        <h3 className="text-xl font-bold mb-1 group-hover:underline">PageVault</h3>
+        <p className="text-white/80 text-sm">Secure digital library platform for publishers</p>
       </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {category.products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+
+      {/* Footer */}
+      <div className="p-4 flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full">
+          <ExternalLink className="w-3 h-3" />
+          Visit Site
+        </span>
+        <span className="text-sm text-slate-500 group-hover:text-primary-600 flex items-center gap-1">
+          pagevault.us
+          <ExternalLink className="w-3 h-3" />
+        </span>
       </div>
-    </div>
+    </a>
   );
 }
 
-// Products Grid Section
+// Compact Product Card (Tier 2 - smaller, denser layout)
+function CompactProductCard({ product }: { product: Product }) {
+  return (
+    <Link
+      href={`/products/${product.id}`}
+      className="group flex items-center gap-4 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-md p-4"
+    >
+      <span className="text-2xl flex-shrink-0">{product.icon}</span>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-primary-600 truncate">
+          {product.title}
+        </h3>
+        <p className="text-xs text-slate-500 truncate">{product.tagline}</p>
+      </div>
+      <div className="flex-shrink-0">
+        <DemoBadge status={product.demoStatus} />
+      </div>
+    </Link>
+  );
+}
+
+// Products Section with Tiers
 function ProductsSection() {
+  const tier1 = getProductsByIds(TIER1_IDS);
+  const tier2 = getProductsByIds(TIER2_IDS);
+  const tier3 = getProductsByIds(TIER3_IDS);
+
   return (
     <section id="products" className="py-16 bg-slate-50">
       <div className="container-wide">
@@ -183,10 +245,50 @@ function ProductsSection() {
           </div>
         </div>
 
-        <div className="space-y-16">
-          {productCategories.map((category) => (
-            <CategorySection key={category.name} category={category} />
-          ))}
+        {/* Tier 1 - Flagship Products */}
+        <div id="flagship" className="scroll-mt-32 mb-20">
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Flagship Products</h2>
+            <p className="text-slate-600">Our most popular AI-powered education solutions</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tier1.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+            <PageVaultCard />
+          </div>
+        </div>
+
+        {/* Tier 2 - Complete Product Suite */}
+        <div id="suite" className="scroll-mt-32 mb-16">
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Complete Product Suite</h2>
+            <p className="text-slate-600">Specialized tools for every aspect of the learning journey</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {tier2.map((product) => (
+              <CompactProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+
+        {/* Tier 3 - Collapsible See All */}
+        <div id="all-products" className="scroll-mt-32 mb-16">
+          <details className="group">
+            <summary className="cursor-pointer list-none flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors">
+              <span className="text-slate-400 group-open:rotate-90 transition-transform">
+                <ArrowRight className="w-4 h-4" />
+              </span>
+              <span className="text-sm font-semibold text-slate-700">
+                See {tier3.length} more products
+              </span>
+            </summary>
+            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {tier3.map((product) => (
+                <CompactProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </details>
         </div>
 
         {/* Custom Solutions CTA */}
@@ -330,7 +432,7 @@ export default function ProductsPage() {
   return (
     <main>
       <HeroSection />
-      <QuickNav />
+      <TierNav />
       <ProductsSection />
       <StatsSection />
       <IntegrationSection />

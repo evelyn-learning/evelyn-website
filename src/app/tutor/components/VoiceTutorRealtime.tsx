@@ -175,6 +175,8 @@ export function VoiceTutorRealtime({
   const pendingTutorTextRef = useRef<string | null>(null);
   const validationInFlightRef = useRef(false);
   const sessionIdRef = useRef(`session-${Date.now()}`);
+  // Track if student requested visual in their last message
+  const studentRequestedVisualRef = useRef(false);
 
   // Context keeper — prevents context loss in long Realtime sessions
   const tutorTurnCountRef = useRef(0);
@@ -266,6 +268,10 @@ export function VoiceTutorRealtime({
         onTranscriptUpdate(transcriptRef.current);
         onTrackInteraction?.('message', filteredText, undefined, 'student');
         currentUserTextRef.current = '';
+
+        // Detect if student is requesting a visual (e.g., "show it on the board")
+        const studentRequestsVisual = /\b(show|board|whiteboard|draw|write it|display|diagram|see it|visual)\b/i.test(filteredText);
+        studentRequestedVisualRef.current = studentRequestsVisual;
 
         // Reset tool call tracking for next response turn
         turnHadToolCallRef.current = false;
@@ -380,10 +386,14 @@ export function VoiceTutorRealtime({
     }
 
     // --- Whiteboard validation pass ---
-    if (!turnHadToolCallRef.current && claimsToShowVisual(tutorText)) {
-      console.log('[VoiceTutorRealtime] Tutor claimed to show visual but no tool call — running validation pass');
+    // Trigger if: (a) tutor claims to show something visually, OR (b) student asked for visual in their last message
+    const shouldValidate = !turnHadToolCallRef.current && (claimsToShowVisual(tutorText) || studentRequestedVisualRef.current);
+    if (shouldValidate) {
+      console.log('[VoiceTutorRealtime] No tool call but visual expected — running validation pass',
+        { tutorClaims: claimsToShowVisual(tutorText), studentRequested: studentRequestedVisualRef.current });
       generateMissingWhiteboardCommands(tutorText);
     }
+    studentRequestedVisualRef.current = false;
   }, [claimsToShowVisual, generateMissingWhiteboardCommands, isContextLossGreeting, buildContextSummary, onUsageUpdate]);
 
   // Handle errors

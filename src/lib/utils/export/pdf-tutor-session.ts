@@ -17,6 +17,11 @@ interface WhiteboardCommandData {
 
 function sanitizeForPDF(text: string): string {
   let s = baseSanitize(text);
+  // Normalize Unicode punctuation to ASCII before the Latin-1 strip
+  s = s.replace(/[\u2018\u2019\u201A]/g, "'");  // curly single quotes
+  s = s.replace(/[\u201C\u201D\u201E]/g, '"');  // curly double quotes
+  s = s.replace(/\u2013/g, '-');                 // en-dash
+  s = s.replace(/\u2014/g, '--');                // em-dash
   s = s.replace(/\u2026/g, '...');
   s = s.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
   s = s.replace(/\uFEFF/g, '');
@@ -32,9 +37,18 @@ function sanitizeForPDF(text: string): string {
 // Non-Latin scripts (Devanagari, Arabic, CJK, Cyrillic) render as "?".
 // This function replaces non-Latin runs with a bracketed note.
 function toWinAnsiSafe(text: string): string {
+  // First, normalize common Unicode punctuation to ASCII equivalents
+  let normalized = text;
+  normalized = normalized.replace(/[\u2018\u2019\u201A]/g, "'");  // curly single quotes → '
+  normalized = normalized.replace(/[\u201C\u201D\u201E]/g, '"');  // curly double quotes → "
+  normalized = normalized.replace(/\u2013/g, '-');                 // en-dash → -
+  normalized = normalized.replace(/\u2014/g, '--');                // em-dash → --
+  normalized = normalized.replace(/\u2026/g, '...');               // ellipsis → ...
+  normalized = normalized.replace(/\u00A0/g, ' ');                 // non-breaking space → space
+
   // Match runs of characters outside Latin-1 printable range (U+0020–U+00FF)
   // but preserve common math/symbol characters
-  return text.replace(
+  return normalized.replace(
     /[^\u0000-\u00FF]+/g,
     (match) => {
       // Try to detect the script for a useful label
@@ -556,6 +570,21 @@ export async function exportTutorSessionPDF(
   let y = 0;
   const LINE_HEIGHT = 4.5;
 
+  // Merge whiteboard commands: combine the top-level array with any commands
+  // embedded in transcript entries (validation-pass commands may only exist there)
+  const transcriptCommands = transcript.flatMap(m => m.whiteboardCommands || []);
+  const allWhiteboardCommands = whiteboardCommands.length > 0
+    ? whiteboardCommands
+    : transcriptCommands;
+  // Deduplicate by action+JSON content
+  const seen = new Set<string>();
+  const dedupedCommands = allWhiteboardCommands.filter(cmd => {
+    const key = JSON.stringify(cmd);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   const addPageIfNeeded = (space: number) => {
     if (y + space > 272) { pdf.addPage(); y = 20; }
   };
@@ -600,16 +629,16 @@ export async function exportTutorSessionPDF(
   drawWrappedText(`Goal: ${goalLabel}${studentName ? ` | Student: ${studentName}` : ''}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
   const studentMessages = transcript.filter(m => m.role === 'student').length;
   const tutorMessages = transcript.filter(m => m.role === 'tutor').length;
-  drawWrappedText(`Messages: ${studentMessages} student, ${tutorMessages} tutor | Whiteboard items: ${whiteboardCommands.length}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
+  drawWrappedText(`Messages: ${studentMessages} student, ${tutorMessages} tutor | Whiteboard items: ${dedupedCommands.length}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
   y += 4;
 
   // ── Whiteboard Content (visual) ──
-  if (whiteboardCommands.length > 0) {
+  if (dedupedCommands.length > 0) {
     addPageIfNeeded(14);
     drawWrappedText('Whiteboard Content', margin, contentWidth, { size: 12, style: 'bold', color: [26, 32, 44], lineHeight: 8 });
 
-    for (let i = 0; i < whiteboardCommands.length; i++) {
-      const cmd = whiteboardCommands[i];
+    for (let i = 0; i < dedupedCommands.length; i++) {
+      const cmd = dedupedCommands[i];
 
       // Check if this command has a visual renderer
       const visualHeight = (cmd.action === 'showEquation') ? 18 :
