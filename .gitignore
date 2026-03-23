@@ -36,3 +36,6 @@ AI Offerings/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ketcher bundle (built from: node scripts/build-ketcher.mjs)
+public/ketcher/bundle.*

@@ -420,14 +420,16 @@ export interface GraphData {
 }
 
 export interface GraphFunction {
-  fn: string; // e.g., "2*t + 5" or "-4.9*t^2 + 20*t"
+  fn?: string; // Legacy JS expression: "2*t + 5" or "-4.9*t^2 + 20*t"
+  latex?: string; // LaTeX expression: "2t + 5" (preferred, used by Desmos)
   color?: string;
   label?: string;
   domain?: [number, number];
 }
 
 export interface GraphFunctionOfY {
-  fn: string; // x as function of y, e.g., "y**3" or "3*y - 2"
+  fn?: string; // Legacy JS expression: "y**3" or "3*y - 2"
+  latex?: string; // LaTeX expression (preferred, used by Desmos)
   color?: string;
   label?: string;
   domain?: [number, number]; // y-domain
@@ -601,7 +603,8 @@ export type WhiteboardCommand =
   | { action: 'showTree'; title?: string; type?: 'probability' | 'factor' | 'decision' | 'generic'; root: TreeNode; showLeafProbabilities?: boolean; direction?: 'top-down' | 'left-right' }
   | { action: 'showVennDiagram'; title?: string; sets: Array<{ label: string; color?: string }>; regions: Record<string, VennRegion>; universalLabel?: string }
   | { action: 'showMatrix'; title?: string; rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes'; augmented?: number; rowLabels?: string[]; colLabels?: string[]; rowOperations?: Array<{ description: string; targetRow: number }>; resultMatrix?: { rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes' }; operatorSymbol?: string }
-  | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean } };
+  | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean } }
+  | { action: 'showMolecule'; smiles: string; title?: string; description?: string; interactive?: boolean };
 
 // =============================================================================
 // STUDENT PROGRESS
