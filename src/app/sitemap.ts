@@ -5,7 +5,7 @@ import { BlogPost } from "@/models";
 // Force dynamic rendering so sitemap fetches fresh data from DB
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://evelynlearning.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.evelynlearning.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages

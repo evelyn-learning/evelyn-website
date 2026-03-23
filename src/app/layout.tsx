@@ -24,7 +24,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://evelynlearning.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.evelynlearning.com"
   ),
   title: {
     default: "Evelyn Learning - AI-Powered Learning Solutions",
@@ -87,7 +87,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://evelynlearning.com",
+    url: "https://www.evelynlearning.com",
     siteName: "Evelyn Learning",
     title: "Evelyn Learning - AI-Powered Learning Solutions",
     description:
