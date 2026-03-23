@@ -490,6 +490,552 @@ async function drawSvgDiagram(
   return y;
 }
 
+// ── Graph renderer ──
+// Normalize math expression strings into evaluable JavaScript
+// Must match the logic in GraphRenderer.tsx's normalizeMathExpression
+function parseFnString(fnStr: string, variable: string = 'x'): (v: number) => number {
+  let s = fnStr;
+  if (variable === 'x') s = s.replace(/\bt\b/g, 'x');
+  s = s.replace(/\^/g, '**');
+  s = s.replace(/(?<!Math\.)(?<!\w)(sin|cos|tan|sqrt|abs|log)\b/g, 'Math.$1');
+  s = s.replace(/\bpi\b/gi, 'Math.PI');
+  s = s.replace(/(?<![a-zA-Z.])e\b/g, 'Math.E');
+  // Fix "x2" → "x**2" (digit after variable = exponent)
+  s = s.replace(new RegExp(`\\b${variable}(\\d)\\b`, 'g'), `${variable}**$1`);
+  // Implicit multiplication: 4x → 4*x, 2Math → 2*Math, )( → )*(
+  s = s.replace(/(\d)([a-zA-Z(])/g, '$1*$2');
+  s = s.replace(/([)])(\d)/g, '$1*$2');
+  s = s.replace(/([)])\s*\(/g, '$1*(');
+  return (v: number) => {
+    try {
+      const result = new Function(variable, `"use strict"; return ${s}`)(v) as number;
+      return typeof result === 'number' && isFinite(result) ? result : NaN;
+    } catch {
+      return NaN;
+    }
+  };
+}
+
+// Convert a JS expression to LaTeX for Desmos (same as DesmosGraphRenderer)
+function jsToLatexForDesmos(expr: string, variable: string = 'x'): string {
+  let s = expr.trim();
+  if (/\\(?:frac|sqrt|sin|cos|tan|log|ln)/.test(s)) return s; // Already LaTeX
+  s = s.replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
+  s = s.replace(/Math\.sin\(([^)]+)\)/g, '\\sin\\left($1\\right)');
+  s = s.replace(/Math\.cos\(([^)]+)\)/g, '\\cos\\left($1\\right)');
+  s = s.replace(/Math\.tan\(([^)]+)\)/g, '\\tan\\left($1\\right)');
+  s = s.replace(/Math\.log\(([^)]+)\)/g, '\\ln\\left($1\\right)');
+  s = s.replace(/Math\.abs\(([^)]+)\)/g, '\\left|$1\\right|');
+  s = s.replace(/Math\.PI/g, '\\pi');
+  s = s.replace(/Math\.E/g, 'e');
+  s = s.replace(/\*\*/g, '^');
+  const v = variable;
+  s = s.replace(new RegExp(`\\b${v}(\\d)\\b`, 'g'), `${v}^$1`);
+  s = s.replace(/(\d)\s*\*\s*([a-zA-Z\\])/g, '$1$2');
+  s = s.replace(/\s*\*\s*/g, '');
+  return s;
+}
+
+// Try to render graph via Desmos screenshot (much higher quality)
+async function renderGraphWithDesmos(
+  graphData: Record<string, unknown>,
+): Promise<string | null> {
+  if (typeof window === 'undefined' || !window.Desmos) return null;
+
+  try {
+    const container = document.createElement('div');
+    container.style.width = '500px';
+    container.style.height = '400px';
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    document.body.appendChild(container);
+
+    const calculator = window.Desmos.GraphingCalculator(container, {
+      expressions: false, settingsMenu: false, zoomButtons: false,
+      keypad: false, expressionsTopbar: false, border: false,
+      lockViewport: true, links: false, images: false,
+      plotImplicits: true, plotInequalities: true,
+    });
+
+    const xRange = (graphData.xRange || [-5, 5]) as [number, number];
+    const yRange = (graphData.yRange || [-5, 5]) as [number, number];
+    calculator.setMathBounds({ left: xRange[0], right: xRange[1], bottom: yRange[0], top: yRange[1] });
+
+    const COLORS = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c'];
+    let id = 0;
+
+    const fns = (graphData.functions || []) as { fn?: string; latex?: string; color?: string; label?: string; domain?: [number, number] }[];
+    for (const fn of fns) {
+      const latex = fn.latex || jsToLatexForDesmos(fn.fn || '', 'x');
+      let exprLatex = /[=<>]/.test(latex) ? latex : `y = ${latex}`;
+      if (fn.domain) exprLatex += ` \\left\\{${fn.domain[0]} \\le x \\le ${fn.domain[1]}\\right\\}`;
+      calculator.setExpression({ id: `f${id++}`, latex: exprLatex, color: fn.color || COLORS[id % COLORS.length] });
+    }
+
+    const fnsOfY = (graphData.functionsOfY || []) as { fn?: string; latex?: string; color?: string; label?: string; domain?: [number, number] }[];
+    for (const fn of fnsOfY) {
+      const latex = fn.latex || jsToLatexForDesmos(fn.fn || '', 'y');
+      let exprLatex = /[=<>]/.test(latex) ? latex : `x = ${latex}`;
+      if (fn.domain) exprLatex += ` \\left\\{${fn.domain[0]} \\le y \\le ${fn.domain[1]}\\right\\}`;
+      calculator.setExpression({ id: `f${id++}`, latex: exprLatex, color: fn.color || COLORS[id % COLORS.length] });
+    }
+
+    const points = (graphData.points || []) as { x: number; y: number; label?: string; color?: string }[];
+    for (const pt of points) {
+      calculator.setExpression({
+        id: `p${id++}`, latex: `(${pt.x}, ${pt.y})`,
+        color: pt.color || '#2563eb', label: pt.label || '', showLabel: !!pt.label, pointSize: 9,
+      });
+    }
+
+    // Wait for Desmos to finish rendering — use change event with timeout fallback
+    await new Promise<void>(resolve => {
+      let settled = false;
+      const done = () => { if (!settled) { settled = true; resolve(); } };
+      // Desmos fires 'change' when expressions are evaluated
+      calculator.observeEvent('change', () => {
+        // Wait a bit after the last change for rendering to complete
+        setTimeout(done, 200);
+      });
+      // Fallback timeout in case change never fires
+      setTimeout(done, 2000);
+    });
+
+    const imgData = calculator.screenshot({ width: 500, height: 400, targetPixelRatio: 2 });
+    calculator.destroy();
+    document.body.removeChild(container);
+    return imgData;
+  } catch (err) {
+    console.error('[PDF] Desmos screenshot failed:', err);
+    return null;
+  }
+}
+
+async function drawGraphVisual(
+  pdf: jsPDF, graphData: Record<string, unknown>,
+  x: number, yStart: number, width: number
+): Promise<number> {
+  let y = yStart;
+  const title = graphData.title as string | undefined;
+
+  // Try Desmos first for higher quality rendering
+  const desmosImage = await renderGraphWithDesmos(graphData);
+  if (desmosImage) {
+    if (title) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(55, 65, 81);
+      pdf.text(sanitizeForPDF(title), x + 4, y + 5);
+      y += 7;
+    }
+    const imgHeight = (width * 400) / 500;
+    pdf.addImage(desmosImage, 'PNG', x, y, width, imgHeight);
+    return y + imgHeight + 2;
+  }
+
+  // Fallback: manual canvas rendering (for when Desmos isn't available)
+  const xRange = (graphData.xRange || [-5, 5]) as [number, number];
+  const yRange = (graphData.yRange || [-5, 5]) as [number, number];
+  const functions = (graphData.functions || []) as { fn?: string; latex?: string; color?: string; label?: string; domain?: [number, number] }[];
+  const functionsOfY = (graphData.functionsOfY || []) as { fn?: string; latex?: string; color?: string; label?: string; domain?: [number, number] }[];
+  const points = (graphData.points || []) as { x: number; y: number; label?: string; color?: string }[];
+
+  // Rasterize the graph to canvas
+  try {
+    const canvasW = 500;
+    const canvasH = 400;
+    const pad = 40; // padding for axis labels
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d')!;
+
+    // Background
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const plotL = pad;
+    const plotR = canvasW - 15;
+    const plotT = title ? 30 : 10;
+    const plotB = canvasH - pad;
+    const plotW = plotR - plotL;
+    const plotH = plotB - plotT;
+
+    // Map math → pixel
+    const toPixelX = (mx: number) => plotL + ((mx - xRange[0]) / (xRange[1] - xRange[0])) * plotW;
+    const toPixelY = (my: number) => plotB - ((my - yRange[0]) / (yRange[1] - yRange[0])) * plotH;
+
+    // Title
+    if (title) {
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, canvasW / 2, 18);
+    }
+
+    // Grid
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 0.5;
+    for (let gx = Math.ceil(xRange[0]); gx <= xRange[1]; gx++) {
+      const px = toPixelX(gx);
+      ctx.beginPath(); ctx.moveTo(px, plotT); ctx.lineTo(px, plotB); ctx.stroke();
+    }
+    for (let gy = Math.ceil(yRange[0]); gy <= yRange[1]; gy++) {
+      const py = toPixelY(gy);
+      ctx.beginPath(); ctx.moveTo(plotL, py); ctx.lineTo(plotR, py); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1.5;
+    // X-axis
+    if (yRange[0] <= 0 && yRange[1] >= 0) {
+      const axisY = toPixelY(0);
+      ctx.beginPath(); ctx.moveTo(plotL, axisY); ctx.lineTo(plotR, axisY); ctx.stroke();
+    }
+    // Y-axis
+    if (xRange[0] <= 0 && xRange[1] >= 0) {
+      const axisX = toPixelX(0);
+      ctx.beginPath(); ctx.moveTo(axisX, plotT); ctx.lineTo(axisX, plotB); ctx.stroke();
+    }
+
+    // Axis tick labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xRange[0]); gx <= xRange[1]; gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(String(gx), toPixelX(gx), plotB + 14);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(yRange[0]); gy <= yRange[1]; gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(String(gy), plotL - 4, toPixelY(gy) + 4);
+    }
+
+    // Plot y=f(x) functions
+    const step = (xRange[1] - xRange[0]) / 500;
+    for (const fnDef of functions) {
+      const evalFn = parseFnString(fnDef.fn || fnDef.latex || 'x', 'x');
+      const color = fnDef.color || '#2563eb';
+      const domainStart = fnDef.domain?.[0] ?? xRange[0];
+      const domainEnd = fnDef.domain?.[1] ?? xRange[1];
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let started = false;
+      for (let mx = domainStart; mx <= domainEnd; mx += step) {
+        const my = evalFn(mx);
+        if (!isFinite(my) || my < yRange[0] - 1 || my > yRange[1] + 1) {
+          started = false;
+          continue;
+        }
+        const px = toPixelX(mx);
+        const py = toPixelY(my);
+        if (!started) { ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke();
+    }
+
+    // Plot x=f(y) functions (e.g., vertical lines, sideways parabolas)
+    const stepY = (yRange[1] - yRange[0]) / 500;
+    for (const fnDef of functionsOfY) {
+      const evalFn = parseFnString(fnDef.fn || fnDef.latex || 'y', 'y');
+      const color = fnDef.color || '#16a34a';
+      const domainStart = fnDef.domain?.[0] ?? yRange[0];
+      const domainEnd = fnDef.domain?.[1] ?? yRange[1];
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let started = false;
+      for (let my = domainStart; my <= domainEnd; my += stepY) {
+        const mx = evalFn(my);
+        if (!isFinite(mx) || mx < xRange[0] - 1 || mx > xRange[1] + 1) {
+          started = false;
+          continue;
+        }
+        const px = toPixelX(mx);
+        const py = toPixelY(my);
+        if (!started) { ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke();
+    }
+
+    // Plot points
+    for (const pt of points) {
+      const px = toPixelX(pt.x);
+      const py = toPixelY(pt.y);
+      const color = pt.color || '#2563eb';
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fill();
+      if (pt.label) {
+        ctx.fillStyle = '#1e293b';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(pt.label, px + 8, py - 4);
+      }
+    }
+
+    // Legend (bottom)
+    const legendItems = [...functions, ...functionsOfY].filter(f => f.label);
+    if (legendItems.length > 0) {
+      ctx.font = '10px sans-serif';
+      let lx = plotL;
+      const ly = canvasH - 6;
+      for (const item of legendItems) {
+        ctx.fillStyle = item.color || '#2563eb';
+        ctx.fillRect(lx, ly - 6, 14, 3);
+        lx += 18;
+        ctx.fillStyle = '#374151';
+        ctx.textAlign = 'left';
+        const labelText = item.label || item.fn || item.latex || '';
+        ctx.fillText(labelText, lx, ly);
+        lx += ctx.measureText(labelText).width + 16;
+        if (lx > canvasW - 40) { lx = plotL; } // wrap
+      }
+    }
+
+    // Convert to image and embed in PDF
+    const imgData = canvas.toDataURL('image/png');
+    const imgHeight = (width * canvasH) / canvasW;
+    pdf.addImage(imgData, 'PNG', x, y, width, imgHeight);
+    y += imgHeight + 2;
+  } catch (err) {
+    // Fallback: describe the graph textually
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(8);
+    pdf.setTextColor(156, 163, 175);
+    pdf.text(`[Graph: ${title || 'could not render'}]`, x + 4, y + 5);
+    y += 8;
+  }
+
+  return y;
+}
+
+// ── Table renderer ──
+function drawTableVisual(
+  pdf: jsPDF, headers: string[], rows: string[][],
+  x: number, yStart: number, width: number
+): number {
+  if (!headers?.length) return yStart;
+  let y = yStart;
+  const colCount = headers.length;
+  const colWidth = Math.min(width / colCount, 55);
+  const totalTableWidth = colWidth * colCount;
+  const cellPad = 2;
+  const rowHeight = 7;
+
+  // Header row
+  pdf.setFillColor(239, 246, 255);
+  pdf.setDrawColor(191, 219, 254);
+  pdf.rect(x, y, totalTableWidth, rowHeight, 'FD');
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(7);
+  pdf.setTextColor(30, 64, 175);
+  for (let c = 0; c < colCount; c++) {
+    const cellX = x + c * colWidth;
+    pdf.setDrawColor(191, 219, 254);
+    if (c > 0) pdf.line(cellX, y, cellX, y + rowHeight);
+    const headerText = sanitizeForPDF(String(headers[c]));
+    pdf.text(headerText, cellX + cellPad, y + 5, { maxWidth: colWidth - cellPad * 2 });
+  }
+  y += rowHeight;
+
+  // Data rows
+  pdf.setFont('courier', 'normal');
+  pdf.setFontSize(7);
+  pdf.setTextColor(55, 65, 81);
+  for (const row of (rows || [])) {
+    pdf.setDrawColor(226, 232, 240);
+    pdf.rect(x, y, totalTableWidth, rowHeight, 'D');
+    for (let c = 0; c < colCount; c++) {
+      const cellX = x + c * colWidth;
+      if (c > 0) pdf.line(cellX, y, cellX, y + rowHeight);
+      const cellVal = c < row.length ? row[c] : '';
+      // Convert LaTeX in cell values to readable text
+      const readable = latexToReadable(String(cellVal));
+      pdf.text(sanitizeForPDF(readable), cellX + cellPad, y + 5, { maxWidth: colWidth - cellPad * 2 });
+    }
+    y += rowHeight;
+  }
+
+  return y + 2;
+}
+
+// ── Code renderer ──
+function drawCodeVisual(
+  pdf: jsPDF, code: string, language: string | undefined, label: string | undefined,
+  x: number, yStart: number, width: number
+): number {
+  let y = yStart;
+
+  // Label
+  if (label) {
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text(sanitizeForPDF(label + (language ? ` (${language})` : '')), x + 3, y + 4);
+    y += 5;
+  }
+
+  // Code block background
+  const codeLines = String(code).split('\n');
+  const lineH = 3.5;
+  const blockH = Math.max(codeLines.length * lineH + 6, 10);
+
+  pdf.setFillColor(30, 41, 59); // dark slate
+  pdf.roundedRect(x, y, width, blockH, 2, 2, 'F');
+
+  // Code text
+  pdf.setFont('courier', 'normal');
+  pdf.setFontSize(7);
+  pdf.setTextColor(226, 232, 240); // light gray on dark
+  let codeY = y + 5;
+  for (const line of codeLines) {
+    pdf.text(sanitizeForPDF(line), x + 4, codeY, { maxWidth: width - 8 });
+    codeY += lineH;
+  }
+
+  return y + blockH + 2;
+}
+
+// ── Geometry renderer ──
+function drawGeometryVisual(
+  pdf: jsPDF, cmd: WhiteboardCommandData,
+  x: number, yStart: number, width: number
+): number {
+  const title = cmd.title as string | undefined;
+  const points = (cmd.points || []) as { id: string; x: number; y: number; label?: string }[];
+  const segments = (cmd.segments || []) as { from: string; to: string; label?: string }[];
+  const angles = (cmd.angles || []) as { vertex: string; label?: string }[];
+
+  if (!points.length) return yStart;
+
+  let y = yStart;
+  const height = 60;
+  const labelPad = 8; // mm padding for labels inside the drawing area
+
+  // Title
+  if (title) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.setTextColor(55, 65, 81);
+    pdf.text(sanitizeForPDF(title), x + 4, y + 5);
+    y += 7;
+  }
+
+  // Map point IDs to positions — scale to fit the box
+  // Use math coordinates (y-up): flip y to match the live whiteboard
+  const pxValues = points.map(p => p.x);
+  const pyValues = points.map(p => p.y);
+  const minPx = Math.min(...pxValues);
+  const maxPx = Math.max(...pxValues);
+  const minPy = Math.min(...pyValues);
+  const maxPy = Math.max(...pyValues);
+  const rangeX = maxPx - minPx || 1;
+  const rangeY = maxPy - minPy || 1;
+
+  const drawWidth = width - labelPad * 2;
+  const drawHeight = height - labelPad;
+  const offsetX = x + labelPad;
+  const offsetY = y + 4;
+
+  const scalePoint = (p: { x: number; y: number }) => ({
+    sx: offsetX + ((p.x - minPx) / rangeX) * drawWidth,
+    // Flip y: math y-up → PDF y-down (same as live whiteboard)
+    sy: offsetY + ((maxPy - p.y) / rangeY) * drawHeight,
+  });
+
+  const pointMap = new Map<string, { sx: number; sy: number }>();
+  for (const p of points) {
+    pointMap.set(p.id, scalePoint(p));
+  }
+
+  // Clamp label position within drawing bounds
+  const clampX = (lx: number) => Math.max(x + 2, Math.min(lx, x + width - 10));
+  const clampY = (ly: number) => Math.max(y + 2, Math.min(ly, y + height - 2));
+
+  // Draw segments
+  pdf.setDrawColor(30, 41, 59);
+  pdf.setLineWidth(0.4);
+  for (const seg of segments) {
+    const from = pointMap.get(seg.from);
+    const to = pointMap.get(seg.to);
+    if (from && to) {
+      pdf.line(from.sx, from.sy, to.sx, to.sy);
+
+      // Draw segment label at midpoint, offset perpendicular to segment
+      if (seg.label) {
+        const midSx = (from.sx + to.sx) / 2;
+        const midSy = (from.sy + to.sy) / 2;
+        const dx = to.sx - from.sx;
+        const dy = to.sy - from.sy;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        // Offset perpendicular (to the left of the segment direction)
+        const offX = -(dy / len) * 3;
+        const offY = (dx / len) * 3;
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(6);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(sanitizeForPDF(seg.label), clampX(midSx + offX), clampY(midSy + offY));
+      }
+    }
+  }
+
+  // Draw points and labels
+  pdf.setFillColor(37, 99, 235);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(7);
+  for (const p of points) {
+    const sp = pointMap.get(p.id);
+    if (!sp) continue;
+    pdf.circle(sp.sx, sp.sy, 0.8, 'F');
+    if (p.label) {
+      // Smart label placement: offset based on position relative to centroid
+      const centroidX = offsetX + drawWidth / 2;
+      const centroidY = offsetY + drawHeight / 2;
+      const dirX = sp.sx - centroidX;
+      const dirY = sp.sy - centroidY;
+      const dirLen = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+      // Push label away from centroid
+      const labelX = sp.sx + (dirX / dirLen) * 3;
+      const labelY = sp.sy + (dirY / dirLen) * 3;
+      pdf.setTextColor(37, 99, 235);
+      pdf.text(sanitizeForPDF(p.label), clampX(labelX), clampY(labelY));
+    }
+  }
+
+  // Draw angle labels — offset from vertex in a different direction than vertex label
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(6);
+  pdf.setTextColor(220, 38, 38);
+  for (const angle of angles) {
+    const vp = pointMap.get(angle.vertex);
+    if (!vp || !angle.label) continue;
+
+    // Skip if vertex label already contains the angle info (e.g., "A (90°)")
+    const vertexPt = points.find(p => p.id === angle.vertex);
+    if (vertexPt?.label && vertexPt.label.includes(angle.label)) continue;
+
+    // Offset angle label inward (toward centroid) to avoid overlapping vertex label
+    const centroidX = offsetX + drawWidth / 2;
+    const centroidY = offsetY + drawHeight / 2;
+    const dirX = centroidX - vp.sx;
+    const dirY = centroidY - vp.sy;
+    const dirLen = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+    const labelX = vp.sx + (dirX / dirLen) * 4;
+    const labelY = vp.sy + (dirY / dirLen) * 4;
+    pdf.text(sanitizeForPDF(angle.label), clampX(labelX), clampY(labelY));
+  }
+
+  return y + height + 2;
+}
+
 // Draw a visual representation of a whiteboard command. Returns new y position.
 async function drawWhiteboardVisual(
   pdf: jsPDF, cmd: WhiteboardCommandData,
@@ -501,6 +1047,29 @@ async function drawWhiteboardVisual(
 
   if (cmd.action === 'showSvgDiagram' && cmd.svg) {
     return drawSvgDiagram(pdf, String(cmd.svg), cmd.title as string | undefined, x, y, width);
+  }
+
+  if (cmd.action === 'showGraph' && cmd.data) {
+    const graphData = cmd.data as Record<string, unknown>;
+    return drawGraphVisual(pdf, graphData, x, y, width);
+  }
+
+  if (cmd.action === 'showTable' && cmd.headers) {
+    return drawTableVisual(
+      pdf, cmd.headers as string[], (cmd.rows || []) as string[][],
+      x, y, width
+    );
+  }
+
+  if (cmd.action === 'showCode' && cmd.code) {
+    return drawCodeVisual(
+      pdf, String(cmd.code), cmd.language as string | undefined,
+      cmd.label as string | undefined, x, y, width
+    );
+  }
+
+  if (cmd.action === 'showGeometry' && cmd.points) {
+    return drawGeometryVisual(pdf, cmd, x, y, width);
   }
 
   if (cmd.action === 'showDiagram') {
@@ -545,6 +1114,10 @@ function describeWhiteboardCommand(cmd: WhiteboardCommandData): string {
       return `Table: ${Array.isArray(cmd.headers) ? cmd.headers.join(', ') : 'data'}`;
     case 'showSvgDiagram':
       return `Diagram: ${cmd.title || 'custom diagram'}`;
+    case 'showCode':
+      return `Code${cmd.label ? `: ${cmd.label}` : ''}${cmd.language ? ` (${cmd.language})` : ''}`;
+    case 'showGeometry':
+      return `Geometry: ${cmd.title || 'figure'}`;
     case 'showWorkedExample':
       return `Worked Example`;
     default:
@@ -640,9 +1213,13 @@ export async function exportTutorSessionPDF(
     for (let i = 0; i < dedupedCommands.length; i++) {
       const cmd = dedupedCommands[i];
 
-      // Check if this command has a visual renderer
+      // Check if this command has a visual renderer and estimate height
       const visualHeight = (cmd.action === 'showEquation') ? 18 :
         (cmd.action === 'showSvgDiagram') ? 100 :
+        (cmd.action === 'showGraph') ? 110 :
+        (cmd.action === 'showTable') ? Math.min(10 + ((cmd.rows as unknown[])?.length || 0) * 7, 80) :
+        (cmd.action === 'showCode') ? Math.min(10 + (String(cmd.code || '').split('\n').length) * 3.5 + 6, 60) :
+        (cmd.action === 'showGeometry') ? 70 :
         (cmd.action === 'showDiagram' && ['pipe-flow', 'fluid-flow', 'continuity', 'free-body', 'vectors', 'velocity', 'vector-addition'].includes(cmd.type as string)) ? 50 : 0;
 
       addPageIfNeeded(visualHeight + 14);
