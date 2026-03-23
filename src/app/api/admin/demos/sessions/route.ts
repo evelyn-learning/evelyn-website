@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     const [sessions, total] = await Promise.all([
       DemoSession.find(filter)
         .select("-interactions") // Exclude interactions array for performance
-        .sort({ startedAt: -1 })
+        .sort({ "summary.lastActivity": -1, startedAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),

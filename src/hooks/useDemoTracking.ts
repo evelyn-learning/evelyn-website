@@ -63,14 +63,12 @@ export function useDemoTracking({ productId, productTitle }: TrackingOptions) {
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAdmin = !!session?.user;
 
-  // Get or create session ID
+  // Generate a fresh session ID per page load so each visit creates its own
+  // DemoSession record. Events within one page load (view→try→complete) share
+  // the same ref. Previously this was cached in sessionStorage, which caused
+  // stale IDs to prevent new DemoSession records from being created.
   useEffect(() => {
-    let stored = sessionStorage.getItem("demo_session_id");
-    if (!stored) {
-      stored = `demo_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
-      sessionStorage.setItem("demo_session_id", stored);
-    }
-    sessionId.current = stored;
+    sessionId.current = `demo_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
     startTime.current = Date.now();
   }, []);
 

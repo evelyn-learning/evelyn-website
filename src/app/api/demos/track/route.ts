@@ -181,29 +181,34 @@ export async function POST(request: NextRequest) {
 
     // On "view" events, ensure a DemoSession record exists so the session
     // appears in the admin Session Explorer even if the user never interacts.
+    // Also update lastActivity so stale sessions surface recent visits.
     if (eventType === "view") {
-      await DemoSession.findOneAndUpdate(
-        { sessionId, productId },
-        {
-          $setOnInsert: {
-            sessionId,
-            productId,
-            productTitle: productTitle || productId,
-            startedAt: now,
-            deviceType,
-            ipHash: hashIP(ip),
-            location: location || undefined,
-            interactions: [],
-            summary: {
-              totalInteractions: 0,
-              messageCount: 0,
-              toolsUsed: [],
-              lastActivity: now,
+      try {
+        await DemoSession.findOneAndUpdate(
+          { sessionId, productId },
+          {
+            $setOnInsert: {
+              sessionId,
+              productId,
+              productTitle: productTitle || productId,
+              startedAt: now,
+              deviceType,
+              ipHash: hashIP(ip),
+              location: location || undefined,
+              interactions: [],
+              "summary.totalInteractions": 0,
+              "summary.messageCount": 0,
+              "summary.toolsUsed": [],
+            },
+            $set: {
+              "summary.lastActivity": now,
             },
           },
-        },
-        { upsert: true }
-      );
+          { upsert: true }
+        );
+      } catch (sessionErr) {
+        console.error("[DEMO_TRACK] DemoSession upsert failed:", sessionErr);
+      }
     }
 
     return NextResponse.json({

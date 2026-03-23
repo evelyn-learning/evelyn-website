@@ -641,7 +641,7 @@ function SessionExplorer() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="py-3 text-left font-medium text-gray-500 w-8"></th>
-                  <th className="py-3 text-left font-medium text-gray-500">Time</th>
+                  <th className="py-3 text-left font-medium text-gray-500">Last Activity</th>
                   <th className="py-3 text-left font-medium text-gray-500">Product</th>
                   <th className="py-3 text-right font-medium text-gray-500">Duration</th>
                   <th className="py-3 text-right font-medium text-gray-500">Messages</th>
@@ -724,7 +724,7 @@ function SessionRow({
           )}
         </td>
         <td className="py-3 text-gray-700 whitespace-nowrap">
-          {timeAgo(session.startedAt)}
+          {timeAgo(session.summary?.lastActivity || session.startedAt)}
         </td>
         <td className="py-3">
           <p className="font-medium text-gray-900">{session.productTitle}</p>
