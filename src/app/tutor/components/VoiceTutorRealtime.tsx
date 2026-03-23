@@ -8,11 +8,13 @@
  * a single real-time WebSocket connection to OpenAI.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage } from '../hooks/useOpenAIRealtime';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
+import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
+import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
@@ -134,6 +136,7 @@ interface VoiceTutorRealtimeProps {
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
+  validateToolCalls?: boolean;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -159,6 +162,7 @@ export function VoiceTutorRealtime({
   onTrackInteraction,
   onUsageUpdate,
   handleRef,
+  validateToolCalls = false,
 }: VoiceTutorRealtimeProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -174,6 +178,7 @@ export function VoiceTutorRealtime({
   const turnHadToolCallRef = useRef(false);
   const pendingTutorTextRef = useRef<string | null>(null);
   const validationInFlightRef = useRef(false);
+  const validationQueueRef = useRef<string[]>([]);
   const sessionIdRef = useRef(`session-${Date.now()}`);
   // Track if student requested visual in their last message
   const studentRequestedVisualRef = useRef(false);
@@ -188,11 +193,8 @@ export function VoiceTutorRealtime({
     return WHITEBOARD_INTENT_PATTERNS.some(pattern => pattern.test(text));
   }, []);
 
-  // Request missing whiteboard commands from Claude
-  const generateMissingWhiteboardCommands = useCallback(async (tutorText: string) => {
-    if (validationInFlightRef.current) return;
-    validationInFlightRef.current = true;
-
+  // Process a single whiteboard validation request
+  const processValidationRequest = useCallback(async (tutorText: string) => {
     try {
       // Get the last student message for context
       const lastStudentMsg = transcriptRef.current
@@ -223,11 +225,13 @@ export function VoiceTutorRealtime({
         console.log('[VoiceTutorRealtime] Validation pass generated', data.commands.length, 'whiteboard command(s)');
         onWhiteboardCommand(data.commands as WhiteboardCommand[]);
 
-        // Also attach to the most recent tutor transcript entry
-        const lastIdx = transcriptRef.current.length - 1;
-        if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
-          transcriptRef.current[lastIdx] = {
-            ...transcriptRef.current[lastIdx],
+        // Find the transcript entry that matches this tutor text and attach commands
+        const matchIdx = transcriptRef.current.findIndex(
+          (e) => e.role === 'tutor' && e.text === tutorText && !e.whiteboardCommands?.length
+        );
+        if (matchIdx >= 0) {
+          transcriptRef.current[matchIdx] = {
+            ...transcriptRef.current[matchIdx],
             whiteboardCommands: data.commands,
           };
           onTranscriptUpdate([...transcriptRef.current]);
@@ -239,10 +243,31 @@ export function VoiceTutorRealtime({
       }
     } catch (err) {
       console.error('[VoiceTutorRealtime] Whiteboard validation pass failed:', err);
+    }
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
+
+  // Request missing whiteboard commands from Claude — queues if one is already in flight
+  const generateMissingWhiteboardCommands = useCallback(async (tutorText: string) => {
+    if (validationInFlightRef.current) {
+      // Queue instead of dropping
+      validationQueueRef.current.push(tutorText);
+      console.log('[VoiceTutorRealtime] Validation in flight, queued request. Queue size:', validationQueueRef.current.length);
+      return;
+    }
+    validationInFlightRef.current = true;
+
+    try {
+      await processValidationRequest(tutorText);
+
+      // Process queued requests
+      while (validationQueueRef.current.length > 0) {
+        const nextText = validationQueueRef.current.shift()!;
+        await processValidationRequest(nextText);
+      }
     } finally {
       validationInFlightRef.current = false;
     }
-  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
+  }, [processValidationRequest]);
 
   // Handle transcript updates from the realtime API
   const handleTranscriptUpdate = useCallback((role: 'user' | 'assistant', text: string, isFinal: boolean) => {
@@ -304,26 +329,132 @@ export function VoiceTutorRealtime({
     }
   }, [onTranscriptUpdate, onTrackInteraction]);
 
-  // Handle whiteboard commands from tool calls
-  const handleWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
-    turnHadToolCallRef.current = true;
-    onWhiteboardCommand(commands);
+  // Validate a tool call via Claude (async, for openai-realtime-validated engine)
+  const validateToolCallViaClaude = useCallback(async (
+    functionName: string,
+    command: WhiteboardCommand,
+  ): Promise<WhiteboardCommand> => {
+    try {
+      const recentContext = transcriptRef.current
+        .slice(-4)
+        .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`)
+        .join('\n');
 
-    // Attach commands to the most recent tutor transcript entry
+      // For showGraph, send the inner data for validation (not the wrapper)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = command as any;
+      const argsToValidate = cmdAny.action === 'showGraph' ? cmdAny.data : command;
+
+      const response = await fetch('/api/tutor/validate-tool-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          functionName,
+          arguments: argsToValidate,
+          conversationContext: recentContext,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('[VoiceTutorRealtime] Validation API returned', response.status);
+        return command;
+      }
+      const result = await response.json();
+
+      if (result.corrected && result.data) {
+        console.log('[VoiceTutorRealtime] Claude corrected tool call:', result.issues);
+        // For showGraph, re-wrap the corrected data
+        if (cmdAny.action === 'showGraph') {
+          return { ...command, data: result.data } as WhiteboardCommand;
+        }
+        return { ...command, ...result.data } as WhiteboardCommand;
+      }
+      return command;
+    } catch (err) {
+      console.error('[VoiceTutorRealtime] Validation request failed:', err);
+      return command; // Fallback to original on error
+    }
+  }, []);
+
+  // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]) => {
+    turnHadToolCallRef.current = true;
+
+    console.log('[VoiceTutorRealtime] handleWhiteboardCommand called, validateToolCalls:', validateToolCalls, 'commands:', commands.map(c => c.action));
+
+    // Step 1: Validate geometry + conic section commands (local, synchronous, zero-cost)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let processed = commands.map(cmd => {
+      if (cmd.action === 'showGeometry') {
+        return validateGeometryCommand(cmd as unknown as GeometryCommand) as unknown as WhiteboardCommand;
+      }
+      if (cmd.action === 'showGraph' && (cmd as any).data) {
+        // Fix conic section math (focus, directrix, etc.) using exact formulas
+        const fixed = validateConicGraph((cmd as any).data);
+        if (fixed !== (cmd as any).data) {
+          console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
+          return { ...cmd, data: fixed } as WhiteboardCommand;
+        }
+      }
+      return cmd;
+    });
+
+    // Step 2: If validation is enabled, validate using Wolfram Alpha (graphs) + Claude (other)
+    if (validateToolCalls) {
+      processed = await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        processed.map(async (cmd) => {
+          // For graphs: use Wolfram Alpha (exact math, no hallucination)
+          if (cmd.action === 'showGraph') {
+            try {
+              console.log('[VoiceTutorRealtime] Sending graph to Wolfram for validation');
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const resp = await fetch('/api/tutor/validate-graph-wolfram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ graphData: (cmd as any).data }),
+              });
+              if (resp.ok) {
+                const result = await resp.json();
+                if (result.corrected && result.data) {
+                  console.log('[VoiceTutorRealtime] Wolfram corrected graph:', result.issues);
+                  return { ...cmd, data: result.data } as WhiteboardCommand;
+                }
+              }
+            } catch (err) {
+              console.error('[VoiceTutorRealtime] Wolfram validation failed:', err);
+            }
+            return cmd;
+          }
+          // For other math tools: use Claude as fallback
+          if (['showEquation', 'showGeometry', 'showNumberLine'].includes(cmd.action)) {
+            console.log('[VoiceTutorRealtime] Sending to Claude for validation:', cmd.action);
+            const validated = await validateToolCallViaClaude(cmd.action, cmd);
+            console.log('[VoiceTutorRealtime] Claude validation result:', validated === cmd ? 'unchanged' : 'corrected');
+            return validated;
+          }
+          return cmd;
+        })
+      );
+    }
+
+    onWhiteboardCommand(processed);
+
+    // Attach validated commands to the most recent tutor transcript entry
     const lastIdx = transcriptRef.current.length - 1;
     if (lastIdx >= 0 && transcriptRef.current[lastIdx].role === 'tutor') {
       const existing = transcriptRef.current[lastIdx].whiteboardCommands || [];
       transcriptRef.current[lastIdx] = {
         ...transcriptRef.current[lastIdx],
-        whiteboardCommands: [...existing, ...commands],
+        whiteboardCommands: [...existing, ...processed],
       };
       onTranscriptUpdate([...transcriptRef.current]);
     }
 
-    commands.forEach((cmd) => {
+    processed.forEach((cmd) => {
       onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
     });
-  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude]);
 
   // Build a context summary from the current transcript
   const buildContextSummary = useCallback(() => {
@@ -403,6 +534,61 @@ export function VoiceTutorRealtime({
     onError?.(error);
   }, [onError]);
 
+  // Listen for molecule changes from the Ketcher editor
+  // Use a ref to access sendTextMessage without re-creating the listener
+  const sendTextMessageRef = useRef<((text: string) => void) | null>(null);
+
+  useEffect(() => {
+    // Debounce to avoid false triggers from SMILES normalization on load
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let changeCount = 0;
+
+    const handleMoleculeChanged = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.smiles) return;
+
+      // Skip the first change (SMILES normalization on load)
+      changeCount++;
+      if (changeCount <= 1) {
+        console.log('[VoiceTutorRealtime] Skipping initial SMILES normalization');
+        return;
+      }
+
+      // Debounce — wait 3s after last change before notifying AI
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        console.log('[VoiceTutorRealtime] Student modified molecule:', detail.smiles);
+
+        // Send as a text message so the AI responds (unlike injectContext which is silent)
+        if (sendTextMessageRef.current) {
+          sendTextMessageRef.current(
+            `[The student just modified the molecule on the whiteboard. ` +
+            `Original: ${detail.title || 'unknown'} (${detail.originalSmiles}). ` +
+            `New SMILES: ${detail.smiles}. ` +
+            `Identify what changed and discuss it with the student.]`
+          );
+        }
+
+        // Add to transcript
+        const entry: TranscriptEntry = {
+          id: `student-action-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'student',
+          text: `[Modified molecule: ${detail.smiles}]`,
+        };
+        transcriptRef.current = [...transcriptRef.current, entry];
+        onTranscriptUpdate(transcriptRef.current);
+        onTrackInteraction?.('click', 'molecule-edit', { newSmiles: detail.smiles, originalSmiles: detail.originalSmiles });
+      }, 3000);
+    };
+
+    window.addEventListener('molecule-changed', handleMoleculeChanged);
+    return () => {
+      window.removeEventListener('molecule-changed', handleMoleculeChanged);
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [onTranscriptUpdate, onTrackInteraction]);
+
   // Read VAD tuning from env vars (NEXT_PUBLIC_ so they're available client-side)
   const vadThreshold = parseFloat(process.env.NEXT_PUBLIC_TUTOR_VAD_THRESHOLD || '0.8');
   const vadSilenceDurationMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_SILENCE_MS || '1500', 10);
@@ -422,8 +608,9 @@ export function VoiceTutorRealtime({
     onStateChange,
   });
 
-  // Wire up the injectContext ref so callbacks can access it
+  // Wire up refs so callbacks can access hook functions
   injectContextRef.current = realtime.injectContext;
+  sendTextMessageRef.current = realtime.sendTextMessage;
 
   // Expose sendTextMessage to parent via handleRef
   useEffect(() => {
@@ -456,6 +643,9 @@ export function VoiceTutorRealtime({
           sessionGoal,
           timeRemainingMinutes: 30,
           currentState: 'greeting',
+          subject,
+          topic,
+          level,
         });
 
         // Read optional voice personality from env
@@ -723,8 +913,59 @@ Start by warmly greeting the student and asking how you can help them today.`;
         </span>
       )}
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Text input — for when the student can't speak */}
+      <form
+        className="flex-1 flex items-center gap-2 min-w-0"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
+          const text = input?.value?.trim();
+          if (text && realtime.isConnected) {
+            // Add to transcript
+            const entry: TranscriptEntry = {
+              id: `user-${Date.now()}`,
+              timestamp: new Date(),
+              role: 'student',
+              text,
+            };
+            transcriptRef.current = [...transcriptRef.current, entry];
+            onTranscriptUpdate(transcriptRef.current);
+            onTrackInteraction?.('message', text, undefined, 'student');
+            // Send to AI
+            realtime.sendTextMessage(text);
+            input.value = '';
+          }
+        }}
+      >
+        <input
+          name="studentText"
+          type="text"
+          placeholder="Type here if you can't speak..."
+          className="flex-1 min-w-0 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+          disabled={!realtime.isConnected}
+          onFocus={() => {
+            // Mute mic while typing to prevent it picking up speech
+            if (!isMuted && realtime.isConnected) {
+              realtime.stopListening();
+              setIsMuted(true);
+            }
+          }}
+          onBlur={() => {
+            // Resume mic when done typing
+            if (isMuted && realtime.isConnected) {
+              realtime.startListening();
+              setIsMuted(false);
+            }
+          }}
+        />
+        <button
+          type="submit"
+          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30"
+          disabled={!realtime.isConnected}
+        >
+          <Send className="w-4 h-4" />
+        </button>
+      </form>
 
       {/* Controls on the right */}
       <div className="flex items-center gap-2 flex-shrink-0">

@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
 import {
@@ -24,13 +25,14 @@ import { SessionControls } from './components/SessionControls';
 import { WhiteboardCanvas } from './components/whiteboard';
 import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
+import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 
 type InputMode = 'text' | 'voice';
-type VoiceEngine = 'classic' | 'realtime';
+type VoiceEngine = 'classic' | 'realtime' | 'realtime-validated' | 'gemini-live';
 
 // Voice settings from environment variables (hides UI options)
 const ENV_VOICE_ENGINE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_ENGINE as VoiceEngine) || 'classic';
@@ -99,6 +101,7 @@ export default function TutorPage() {
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   // Token usage tracking
   const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
@@ -519,6 +522,7 @@ export default function TutorPage() {
     console.log('[Tutor] Processing homework upload:', mimeType);
     setIsProcessing(true);
     setError(null);
+    setStatusMessage('📷 Analyzing your problem...');
 
     try {
       // Call the homework extraction API
@@ -570,6 +574,15 @@ export default function TutorPage() {
         };
         setTranscript((prev) => [...prev, userEntry]);
 
+        // Show the uploaded image on the whiteboard
+        setWhiteboardCommands(prev => [...prev, {
+          action: 'showSvgDiagram',
+          title: 'Uploaded Homework',
+          svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <image href="${imageData}" x="10" y="10" width="380" height="280" preserveAspectRatio="xMidYMid meet"/>
+          </svg>`,
+        } as WhiteboardCommand]);
+
         // Send extracted problem to realtime WebSocket — the AI will speak its response
         realtimeHandleRef.current.sendTextMessage(
           `The student just uploaded a homework problem image. Here is the extracted text:\n\n${data.extractedProblem}\n\nYou MUST do ALL of the following:\n1. Draw the problem setup on the whiteboard — if it involves graphing functions or curves, use show_function_graph with the function expressions. For physics diagrams (objects, forces, circuits), use show_svg_diagram.\n2. Verbally acknowledge the upload and briefly summarize what the problem asks.\n3. As you work through each solution step, call show_equation to display each equation and substitution on the whiteboard.\n4. Guide the student through the solution step by step, asking them questions along the way.`
@@ -611,6 +624,7 @@ export default function TutorPage() {
       setError(err instanceof Error ? err.message : 'Failed to process homework');
     } finally {
       setIsProcessing(false);
+      setStatusMessage(null);
     }
   }, [selectedSubject, selectedLevel, selectedTopicId, conversationHistory, inputMode, voiceEngine]);
 
@@ -818,6 +832,11 @@ export default function TutorPage() {
   if (stage === 'session') {
     return (
       <div ref={pageContainerRef} className="fixed inset-0 bg-gray-100 flex flex-col overflow-hidden">
+        {/* Desmos Graphing Calculator API */}
+        <Script
+          src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a"
+          strategy="lazyOnload"
+        />
         {/* Header */}
         <header className="flex-shrink-0 bg-white border-b px-4 py-2">
           <div className="container mx-auto flex items-center justify-between">
@@ -857,8 +876,16 @@ export default function TutorPage() {
         {/* Main content - resizable split */}
         <div
           ref={splitContainerRef}
-          className="flex-1 min-h-0 px-4 py-1 flex"
+          className="flex-1 min-h-0 px-4 py-1 flex flex-col"
         >
+          {/* Status message banner */}
+          {statusMessage && (
+            <div className="flex items-center justify-center gap-2 py-1.5 px-4 mb-1 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 animate-pulse flex-shrink-0">
+              <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              {statusMessage}
+            </div>
+          )}
+          <div className="flex-1 min-h-0 flex">
           {/* Transcript */}
           <div
             className="min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col"
@@ -896,8 +923,76 @@ export default function TutorPage() {
             <WhiteboardCanvas
               commands={whiteboardCommands}
               onClear={() => setWhiteboardCommands([])}
+              onStudentInput={(type, content) => {
+                // Add student input to whiteboard as a command
+                const cmd: WhiteboardCommand = type === 'image'
+                  ? { action: 'showSvgDiagram', title: 'Student Upload', svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="290" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
+                  : type === 'drawing'
+                  ? { action: 'showSvgDiagram', title: 'Student Drawing', svg: `<svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="140" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
+                  // Plain text — render as SVG text, NOT LaTeX (avoids mangling x, =, etc.)
+                  : { action: 'showSvgDiagram', title: 'Student Answer', svg: `<svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="390" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/><text x="200" y="22" text-anchor="middle" font-size="11" fill="#6b7280">Student wrote:</text><text x="200" y="42" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>` } as WhiteboardCommand;
+
+                setWhiteboardCommands(prev => [...prev, cmd]);
+
+                // Show status message while processing
+                if (type === 'drawing') setStatusMessage('✏️ Reading your drawing...');
+                else if (type === 'image') setStatusMessage('📷 Analyzing your image...');
+                else if (type === 'text') setStatusMessage('💬 Processing...');
+
+                // Notify the AI about the student's input
+                if (realtimeHandleRef.current) {
+                  if (type === 'text') {
+                    realtimeHandleRef.current.sendTextMessage(
+                      `[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`
+                    );
+                    setTimeout(() => setStatusMessage(null), 1000);
+                  } else if (type === 'drawing') {
+                    // Send drawing to Claude to extract what's written, then tell the AI
+                    (async () => {
+                      try {
+                        // Strip data URL prefix to get raw base64
+                        const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
+                        const resp = await fetch('/api/tutor/extract-homework', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            imageData: base64Data,
+                            mimeType: 'image/png',
+                            subject: selectedSubject,
+                            topic: selectedTopicId,
+                            level: selectedLevel,
+                          }),
+                        });
+                        const data = await resp.json();
+                        setStatusMessage(null);
+                        if (data.extractedProblem && realtimeHandleRef.current) {
+                          realtimeHandleRef.current.sendTextMessage(
+                            `[The student drew on the whiteboard. Their drawing contains: "${data.extractedProblem}". Respond to what they drew and wrote.]`
+                          );
+                        } else if (realtimeHandleRef.current) {
+                          realtimeHandleRef.current.sendTextMessage(
+                            `[The student drew something on the whiteboard. Ask them to explain what they drew.]`
+                          );
+                        }
+                      } catch {
+                        setStatusMessage(null);
+                        realtimeHandleRef.current?.sendTextMessage(
+                          `[The student drew something on the whiteboard. Ask them to explain what they drew.]`
+                        );
+                      }
+                    })();
+                  } else if (type === 'image') {
+                    realtimeHandleRef.current.sendTextMessage(
+                      `[The student uploaded an image to the whiteboard. Acknowledge the upload.]`
+                    );
+                  }
+                }
+
+                trackInteraction('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
+              }}
             />
           </div>
+          </div>{/* close inner flex */}
         </div>
 
         {/* Vertical resize handle */}
@@ -923,7 +1018,7 @@ export default function TutorPage() {
         >
           <div className={inputMode === 'voice' ? '' : 'container mx-auto'}>
             {inputMode === 'voice' && selectedTopicId ? (
-              voiceEngine === 'realtime' ? (
+              (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated') ? (
                 <VoiceTutorRealtime
                   subject={selectedSubject}
                   topic={selectedTopicId}
@@ -938,6 +1033,22 @@ export default function TutorPage() {
                   onEndSession={handleEndSession}
                   onTrackInteraction={trackInteraction}
                   handleRef={realtimeHandleRef}
+                  validateToolCalls={voiceEngine === 'realtime-validated'}
+                />
+              ) : voiceEngine === 'gemini-live' ? (
+                <VoiceTutorGemini
+                  subject={selectedSubject}
+                  topic={selectedTopicId}
+                  level={selectedLevel}
+                  studentName={studentName || undefined}
+                  sessionGoal={sessionGoal}
+                  voice={selectedOpenAIVoice}
+                  onTranscriptUpdate={handleVoiceTranscriptUpdate}
+                  onWhiteboardCommand={handleVoiceWhiteboardCommand}
+                  onUsageUpdate={handleRealtimeUsage}
+                  onError={(err) => setError(err.message)}
+                  onEndSession={handleEndSession}
+                  onTrackInteraction={trackInteraction}
                 />
               ) : (
                 <VoiceTutor

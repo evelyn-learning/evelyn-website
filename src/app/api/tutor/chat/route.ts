@@ -125,6 +125,8 @@ export async function POST(request: NextRequest) {
       sessionGoal,
       timeRemainingMinutes: 30,
       currentState: conversationHistory.length === 0 ? 'greeting' : 'teaching',
+      subject,
+      topic,
     });
 
     // Build messages array
@@ -259,6 +261,8 @@ export async function PUT(request: NextRequest) {
       sessionGoal,
       timeRemainingMinutes: 30,
       currentState: conversationHistory.length === 0 ? 'greeting' : 'teaching',
+      subject,
+      topic,
     });
 
     // Build messages array

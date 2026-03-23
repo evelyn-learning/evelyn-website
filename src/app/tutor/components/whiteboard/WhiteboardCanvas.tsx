@@ -24,6 +24,7 @@ import {
   SvgDiagram,
   ProblemDiagram,
 } from './DiagramRenderer';
+import DesmosGraphRenderer from './DesmosGraphRenderer';
 import NumberLineRenderer from './NumberLineRenderer';
 import GeometryRenderer from './GeometryRenderer';
 import UnitCircleRenderer from './UnitCircleRenderer';
@@ -32,16 +33,24 @@ import TreeRenderer from './TreeRenderer';
 import VennDiagramRenderer from './VennDiagramRenderer';
 import MatrixRenderer from './MatrixRenderer';
 import StatsRenderer from './StatsRenderer';
+import dynamic from 'next/dynamic';
+
+const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-[250px] text-gray-400">Loading chemistry editor...</div>,
+});
 
 interface WhiteboardCanvasProps {
   commands: WhiteboardCommand[];
   onClear?: () => void;
+  onStudentInput?: (type: 'text' | 'drawing' | 'image', content: string) => void;
   className?: string;
 }
 
 export function WhiteboardCanvas({
   commands,
   onClear,
+  onStudentInput,
   className = '',
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -200,11 +209,15 @@ export function WhiteboardCanvas({
 
   if (pages.length === 0) {
     return (
-      <div className={`whiteboard-canvas flex items-center justify-center h-full ${className}`}>
-        <div className="text-center text-gray-400 p-8">
-          <div className="text-4xl mb-3">📝</div>
-          <p className="text-sm">Equations and diagrams will appear here</p>
+      <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-gray-400 p-8">
+            <div className="text-4xl mb-3">📝</div>
+            <p className="text-sm">Your conversation will appear here.</p>
+            <p className="text-sm">Start speaking to begin!</p>
+          </div>
         </div>
+        {onStudentInput && <StudentInputBar onStudentInput={onStudentInput} />}
       </div>
     );
   }
@@ -366,10 +379,193 @@ export function WhiteboardCanvas({
     );
   }
 
+  const studentInputBar = onStudentInput ? (
+    <StudentInputBar onStudentInput={onStudentInput} />
+  ) : null;
+
   return (
     <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
       {headerContent}
       {bodyContent}
+      {studentInputBar}
+    </div>
+  );
+}
+
+/**
+ * Student input toolbar for the whiteboard
+ * Allows students to: type text, draw/scribble, upload images
+ */
+function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | 'drawing' | 'image', content: string) => void }) {
+  const [mode, setMode] = useState<'none' | 'text' | 'draw'>('none');
+  const [textInput, setTextInput] = useState('');
+  const [drawTool, setDrawTool] = useState<'pen' | 'eraser'>('pen');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef({ x: 0, y: 0 });
+
+  // Scale mouse position to canvas coordinates (CSS size may differ from canvas pixel size)
+  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  // Drawing handlers
+  const startDraw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    isDrawingRef.current = true;
+    lastPosRef.current = getCanvasPos(e);
+  }, [getCanvasPos]);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d')!;
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    if (drawTool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 16;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 2;
+    }
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    lastPosRef.current = pos;
+  }, [getCanvasPos, drawTool]);
+
+  const endDraw = useCallback(() => {
+    isDrawingRef.current = false;
+  }, []);
+
+  const submitDrawing = useCallback(() => {
+    if (!canvasRef.current) return;
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    onStudentInput('drawing', dataUrl);
+    // Clear canvas
+    const ctx = canvasRef.current.getContext('2d')!;
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    setMode('none');
+  }, [onStudentInput]);
+
+  const clearDrawing = useCallback(() => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d')!;
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+  }, []);
+
+  // Image upload
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        onStudentInput('image', reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // Reset
+  }, [onStudentInput]);
+
+  return (
+    <div className="border-t border-gray-200 bg-gray-50 flex-shrink-0">
+      {/* Toolbar buttons */}
+      <div className="flex items-center gap-1 px-2 py-1">
+        <button
+          onClick={() => setMode(mode === 'text' ? 'none' : 'text')}
+          className={`text-xs px-2 py-1 rounded ${mode === 'text' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-200'}`}
+          title="Type on whiteboard"
+        >
+          Aa
+        </button>
+        <button
+          onClick={() => setMode(mode === 'draw' ? 'none' : 'draw')}
+          className={`text-xs px-2 py-1 rounded ${mode === 'draw' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-200'}`}
+          title="Draw on whiteboard"
+        >
+          ✏️
+        </button>
+        <label className="text-xs px-2 py-1 rounded text-gray-500 hover:bg-gray-200 cursor-pointer" title="Upload image">
+          📷
+          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        </label>
+        <span className="text-[10px] text-gray-400 ml-1">Student input</span>
+      </div>
+
+      {/* Text input area */}
+      {mode === 'text' && (
+        <form
+          className="flex items-center gap-2 px-2 pb-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (textInput.trim()) {
+              onStudentInput('text', textInput.trim());
+              setTextInput('');
+              setMode('none');
+            }
+          }}
+        >
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Type your answer or notes..."
+            className="flex-1 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-400"
+            autoFocus
+          />
+          <button type="submit" className="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Add
+          </button>
+        </form>
+      )}
+
+      {/* Drawing canvas */}
+      {mode === 'draw' && (
+        <div className="px-2 pb-2">
+          <canvas
+            ref={canvasRef}
+            width={400}
+            height={150}
+            className="w-full border border-gray-300 rounded bg-white cursor-crosshair"
+            style={{ height: 150, touchAction: 'none' }}
+            onMouseDown={startDraw}
+            onMouseMove={draw}
+            onMouseUp={endDraw}
+            onMouseLeave={endDraw}
+          />
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={() => setDrawTool('pen')}
+              className={`text-xs px-2 py-1 rounded ${drawTool === 'pen' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              ✏️ Pen
+            </button>
+            <button
+              onClick={() => setDrawTool('eraser')}
+              className={`text-xs px-2 py-1 rounded ${drawTool === 'eraser' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              🧹 Eraser
+            </button>
+            <div className="flex-1" />
+            <button onClick={clearDrawing} className="text-xs px-2 py-1 text-gray-500 hover:bg-gray-200 rounded">
+              Clear
+            </button>
+            <button onClick={submitDrawing} className="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+              Submit
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -395,7 +591,18 @@ function CommandRenderer({ command }: CommandRendererProps) {
         </div>
       );
 
-    case 'showGraph':
+    case 'showGraph': {
+      // Use Desmos if available (better rendering, handles LaTeX/implicit equations)
+      // Fall back to legacy Mafs-based renderer if Desmos hasn't loaded
+      const useDemos = typeof window !== 'undefined' && !!window.Desmos;
+      if (useDemos) {
+        return (
+          <DesmosGraphRenderer
+            type={command.type}
+            data={command.data}
+          />
+        );
+      }
       const GraphComponent = getGraphComponent(command.type);
       return (
         <GraphComponent
@@ -403,6 +610,7 @@ function CommandRenderer({ command }: CommandRendererProps) {
           data={command.data}
         />
       );
+    }
 
     case 'showDiagram':
       return <DiagramDispatcher type={command.type} params={command.params} />;
@@ -609,6 +817,20 @@ function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showFractionBar':
       return <FractionBarRenderer title={command.title} items={command.items} layout={command.layout} showComparison={command.showComparison} />;
+
+    case 'showMolecule':
+      return <MoleculeRenderer
+        smiles={command.smiles}
+        title={command.title}
+        description={command.description}
+        interactive={command.interactive}
+        onMoleculeChanged={(newSmiles) => {
+          // Dispatch custom event so VoiceTutorRealtime can inject it into the AI conversation
+          window.dispatchEvent(new CustomEvent('molecule-changed', {
+            detail: { smiles: newSmiles, originalSmiles: command.smiles, title: command.title },
+          }));
+        }}
+      />;
 
     case 'showTree':
       return <TreeRenderer title={command.title} type={command.type} root={command.root} showLeafProbabilities={command.showLeafProbabilities} direction={command.direction} />;
@@ -840,6 +1062,8 @@ function getCommandTypeLabel(action: string): string {
       return 'Fractions';
     case 'showTree':
       return 'Tree Diagram';
+    case 'showMolecule':
+      return 'Molecule';
     case 'showVennDiagram':
       return 'Venn Diagram';
     case 'showMatrix':
