@@ -24,7 +24,8 @@ const navigation: NavItem[] = [
     name: "Products",
     href: "/products",
     children: [
-      { name: "All AI Products", href: "/products", description: "23 ready-to-deploy AI tools with live demos" },
+      { name: "All AI Products", href: "/products", description: "24 ready-to-deploy AI tools with live demos" },
+      { name: "Flagship Products", href: "/products#flagship", description: "Voice Tutor, Virtual Labs, Essay AI, and more" },
       { name: "Assessment AI", href: "/products#assessment-ai", description: "Essay scoring, proctoring, test generation" },
       { name: "Tutoring AI", href: "/products#tutoring-ai", description: "Homework help, tutoring co-pilot, math solver" },
       { name: "Content AI", href: "/products#content-ai", description: "Authoring, curriculum, accessibility" },

@@ -3,24 +3,20 @@ import Link from 'next/link';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import {
   getAllProducts,
+  productCategories,
   type Product,
   type DemoStatus,
 } from '@/data/products';
 
-const TIER1_IDS = ['voice-tutor', 'virtual-labs', 'plagiarism-detection', 'essay-ai'];
-const TIER2_IDS = [
-  'career-pathways', 'admissions-assistant', 'proctoring-suite', 'content-authoring',
-  'test-generator', 'textbook-digitizer', 'curriculum-designer', 'student-success-predictor',
-  'analytics-dashboard', 'adaptive-learning', 'tutor-copilot', 'homework-bot', 'language-learning',
-];
-const TIER3_IDS = [
-  'math-solver', 'course-creator-studio', 'corporate-training', 'parent-engagement',
-  'accessibility-ai', 'reading-comprehension', 'research-assistant',
-];
+const FLAGSHIP_IDS = ['voice-tutor', 'virtual-labs', 'plagiarism-detection', 'essay-ai'];
 
 function getProductsByIds(ids: string[]): Product[] {
   const all = getAllProducts();
   return ids.map((id) => all.find((p) => p.id === id)).filter(Boolean) as Product[];
+}
+
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-');
 }
 
 export const metadata: Metadata = {
@@ -78,30 +74,27 @@ function HeroSection() {
   );
 }
 
-// Tier Navigation
-function TierNav() {
+// Category Navigation
+function CategoryNav() {
   return (
     <section className="py-6 bg-white border-b border-slate-100 sticky top-16 z-40">
       <div className="container-wide">
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-3">
           <a
             href="#flagship"
             className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
           >
-            Flagship Products
+            Flagship
           </a>
-          <a
-            href="#suite"
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-          >
-            Complete Suite
-          </a>
-          <a
-            href="#all-products"
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-          >
-            All Products
-          </a>
+          {productCategories.map((cat) => (
+            <a
+              key={cat.name}
+              href={`#${slugify(cat.name)}`}
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            >
+              {cat.name}
+            </a>
+          ))}
         </div>
       </div>
     </section>
@@ -190,32 +183,33 @@ function PageVaultCard() {
   );
 }
 
-// Compact Product Card (Tier 2 - smaller, denser layout)
-function CompactProductCard({ product }: { product: Product }) {
+// Medium Product Card (category sections - card grid)
+function MediumProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group flex items-center gap-4 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-md p-4"
+      className="group bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-lg overflow-hidden"
     >
-      <span className="text-2xl flex-shrink-0">{product.icon}</span>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-primary-600 truncate">
+      <div className="p-5">
+        <span className="text-3xl mb-3 block">{product.icon}</span>
+        <h3 className="text-base font-bold text-slate-900 group-hover:text-primary-600 mb-1">
           {product.title}
         </h3>
-        <p className="text-xs text-slate-500 truncate">{product.tagline}</p>
+        <p className="text-sm text-slate-500 line-clamp-2">{product.tagline}</p>
       </div>
-      <div className="flex-shrink-0">
+      <div className="px-5 pb-4 flex items-center justify-between">
         <DemoBadge status={product.demoStatus} />
+        <span className="text-sm text-slate-400 group-hover:text-primary-600 flex items-center gap-1">
+          <ArrowRight className="w-3 h-3" />
+        </span>
       </div>
     </Link>
   );
 }
 
-// Products Section with Tiers
+// Products Section with Flagship + Categories
 function ProductsSection() {
-  const tier1 = getProductsByIds(TIER1_IDS);
-  const tier2 = getProductsByIds(TIER2_IDS);
-  const tier3 = getProductsByIds(TIER3_IDS);
+  const flagship = getProductsByIds(FLAGSHIP_IDS);
 
   return (
     <section id="products" className="py-16 bg-slate-50">
@@ -245,51 +239,40 @@ function ProductsSection() {
           </div>
         </div>
 
-        {/* Tier 1 - Flagship Products */}
+        {/* Flagship Products */}
         <div id="flagship" className="scroll-mt-32 mb-20">
           <div className="mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Flagship Products</h2>
             <p className="text-slate-600">Our most popular AI-powered education solutions</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tier1.map((product) => (
+            {flagship.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
             <PageVaultCard />
           </div>
         </div>
 
-        {/* Tier 2 - Complete Product Suite */}
-        <div id="suite" className="scroll-mt-32 mb-16">
-          <div className="mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Complete Product Suite</h2>
-            <p className="text-slate-600">Specialized tools for every aspect of the learning journey</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {tier2.map((product) => (
-              <CompactProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-
-        {/* Tier 3 - Collapsible See All */}
-        <div id="all-products" className="scroll-mt-32 mb-16">
-          <details className="group">
-            <summary className="cursor-pointer list-none flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors">
-              <span className="text-slate-400 group-open:rotate-90 transition-transform">
-                <ArrowRight className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-semibold text-slate-700">
-                See {tier3.length} more products
-              </span>
-            </summary>
-            <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {tier3.map((product) => (
-                <CompactProductCard key={product.id} product={product} />
+        {/* Category Sections */}
+        {productCategories.map((category) => (
+          <div
+            key={category.name}
+            id={slugify(category.name)}
+            className="scroll-mt-32 mb-16"
+          >
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                {category.name}
+              </h2>
+              <p className="text-slate-600">{category.description}</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {category.products.map((product) => (
+                <MediumProductCard key={product.id} product={product} />
               ))}
             </div>
-          </details>
-        </div>
+          </div>
+        ))}
 
         {/* Custom Solutions CTA */}
         <div className="mt-20 max-w-4xl mx-auto">
@@ -432,7 +415,7 @@ export default function ProductsPage() {
   return (
     <main>
       <HeroSection />
-      <TierNav />
+      <CategoryNav />
       <ProductsSection />
       <StatsSection />
       <IntegrationSection />
