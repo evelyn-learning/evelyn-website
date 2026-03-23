@@ -9,7 +9,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import { mapFunctionCallToCommand } from './toolDefinitions';
 
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
@@ -134,6 +135,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isPlayingRef = useRef(false);
   const currentResponseTextRef = useRef('');
   const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // Anti-double-response: track when last response finished and when user last spoke
+  const lastResponseDoneRef = useRef<number>(0);
+  const lastUserInputRef = useRef<number>(0);
+  const lastResponseHadToolCallRef = useRef(false);
   // Track whether the session should be in listening mode (survives audio playback)
   const shouldListenRef = useRef(false);
   // Ref to hold startListening so playNextAudio can call it without circular deps
@@ -230,6 +235,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'conversation.item.input_audio_transcription.completed':
           // User's speech transcription
           if (data.transcript) {
+            lastUserInputRef.current = Date.now();
             onTranscriptUpdate?.('user', data.transcript, true);
           }
           break;
@@ -270,8 +276,31 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           }
           break;
 
+        // Cancel unwanted follow-up responses (model sends multiple without user input)
+        case 'response.created': {
+          const timeSinceLastResponse = Date.now() - lastResponseDoneRef.current;
+          const timeSinceUserInput = Date.now() - lastUserInputRef.current;
+          // If a new response starts within 3s of the last one, and no user input since,
+          // cancel it — UNLESS the last response was a tool call (the model needs to
+          // speak about what it just drew on the whiteboard)
+          if (
+            lastResponseDoneRef.current > 0 &&
+            timeSinceLastResponse < 3000 &&
+            timeSinceUserInput > timeSinceLastResponse &&
+            !lastResponseHadToolCallRef.current // Allow post-tool-call speech
+          ) {
+            console.log('[Realtime] Cancelling unwanted follow-up response (no user input since last response)');
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+            }
+          }
+          lastResponseHadToolCallRef.current = false; // Reset for this new response
+          break;
+        }
+
         case 'response.done': {
           console.log('[Realtime] Response complete');
+          lastResponseDoneRef.current = Date.now();
           currentResponseTextRef.current = '';
 
           // Extract usage data from response.done event
@@ -397,113 +426,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             }
 
             console.log('[Realtime] Function call:', funcName, funcArgs);
+            lastResponseHadToolCallRef.current = true;
 
-            // Convert function call to whiteboard command
-            let command: WhiteboardCommand | null = null;
-
-            if (funcName === 'new_page') {
-              command = {
-                action: 'newPage',
-                title: funcArgs.title,
-              };
-            } else if (funcName === 'go_to_page') {
-              command = {
-                action: 'goToPage',
-                title: funcArgs.title,
-              };
-            } else if (funcName === 'show_equation') {
-              command = {
-                action: 'showEquation',
-                latex: funcArgs.latex,
-                label: funcArgs.label,
-              };
-            } else if (funcName === 'show_svg_diagram') {
-              command = {
-                action: 'showSvgDiagram',
-                svg: funcArgs.svg,
-                title: funcArgs.title,
-                description: funcArgs.description,
-              };
-            } else if (funcName === 'show_code') {
-              command = {
-                action: 'showCode',
-                code: funcArgs.code,
-                language: funcArgs.language,
-                label: funcArgs.label,
-              };
-            } else if (funcName === 'show_table') {
-              command = {
-                action: 'showTable',
-                headers: (Array.isArray(funcArgs.headers) ? funcArgs.headers : []) as string[],
-                rows: (Array.isArray(funcArgs.rows) ? funcArgs.rows : []) as string[][],
-              };
-            } else if (funcName === 'show_function_graph') {
-              // Build GraphData from structured AI parameters
-
-              // Sanitize function expressions: fix common AI mistakes
-              // e.g., "x2" → "x**2", "x3" → "x**3" (AI writes math notation instead of JS)
-              const sanitizeExpr = (expr: string): string => {
-                return expr
-                  .replace(/\bx(\d)/g, 'x**$1')   // x2 → x**2, x3 → x**3
-                  .replace(/\by(\d)/g, 'y**$1')   // y2 → y**2
-                  .replace(/\^/g, '**');           // x^2 → x**2
-              };
-
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const fns = Array.isArray(funcArgs.functions) ? funcArgs.functions : [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const fnsOfY = Array.isArray(funcArgs.functionsOfY) ? funcArgs.functionsOfY : [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const graphFunctions = fns.map((f: any) => ({
-                fn: sanitizeExpr(String(f.expr || '')),
-                color: f.color,
-                label: f.label,
-                domain: f.domain,
-              }));
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const graphFunctionsOfY = fnsOfY.map((f: any) => ({
-                fn: sanitizeExpr(String(f.expr || '')),
-                color: f.color,
-                label: f.label,
-                domain: f.domain,
-              }));
-              const xRange = (Array.isArray(funcArgs.xRange) ? funcArgs.xRange : [-5, 5]) as [number, number];
-              const yRange = (Array.isArray(funcArgs.yRange) ? funcArgs.yRange : [-5, 5]) as [number, number];
-              command = {
-                action: 'showGraph',
-                type: 'generic-xy' as const,
-                data: {
-                  title: funcArgs.title || '',
-                  xLabel: funcArgs.xLabel || 'x',
-                  yLabel: funcArgs.yLabel || 'y',
-                  xRange,
-                  yRange,
-                  functions: graphFunctions,
-                  functionsOfY: graphFunctionsOfY,
-                  points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
-                  shadedRegion: funcArgs.shadedRegion ? funcArgs.shadedRegion as unknown as ShadedRegion : undefined,
-                },
-              };
-            }
-
-            // ── New structured math diagram tools ──
-            if (!command && funcName === 'show_number_line') {
-              command = { action: 'showNumberLine', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_geometry') {
-              command = { action: 'showGeometry', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_unit_circle') {
-              command = { action: 'showUnitCircle', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_fraction_bar') {
-              command = { action: 'showFractionBar', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_tree') {
-              command = { action: 'showTree', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_venn_diagram') {
-              command = { action: 'showVennDiagram', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_matrix') {
-              command = { action: 'showMatrix', ...funcArgs } as unknown as WhiteboardCommand;
-            } else if (!command && funcName === 'show_stats') {
-              command = { action: 'showStats', ...funcArgs } as unknown as WhiteboardCommand;
-            }
+            // Convert function call to whiteboard command (shared logic)
+            const command = mapFunctionCallToCommand(funcName, funcArgs);
 
             if (command) {
               onWhiteboardCommand?.([command]);
@@ -635,7 +561,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_function_graph',
-                description: 'Plot mathematical functions accurately on the whiteboard. Use this tool INSTEAD of show_svg_diagram whenever you need to graph mathematical functions (y=f(x) or x=f(y)), show curves, or shade regions between curves. The rendering engine computes exact coordinates — you just provide the function expressions as strings. Supports: y=f(x) functions, x=f(y) functions, labeled points, and shaded regions between two curves. Function expressions use JavaScript math syntax: use ** for exponents (NOT ^ and NOT x2 — always write x**2), Math.sin, Math.cos, Math.sqrt, Math.abs, Math.PI, Math.E. Variable names: use "x" for f(x) functions, "y" for f(y) functions. IMPORTANT: For vertical lines like x = c, you MUST use functionsOfY (NOT functions). "functions" plots y=f(x) curves — putting a constant there draws a HORIZONTAL line. "functionsOfY" plots x=f(y) curves — putting a constant there draws a VERTICAL line.',
+                description: 'Plot mathematical functions on the whiteboard using Desmos. Use this INSTEAD of show_svg_diagram for graphs. Supports: equations (y=f(x), x=f(y)), implicit equations (x²+y²=1), inequalities, labeled points, and shaded regions. Function expressions use LaTeX math notation: use ^ for exponents, \\frac{a}{b} for fractions, \\sqrt{x} for square root, \\sin, \\cos, \\tan, \\pi, e. You can also provide implicit equations like "x^2/4 + y^2 = 1" directly. For y=f(x) curves, use "functions". For x=f(y) curves, use "functionsOfY". For vertical lines x=c, use functionsOfY with expr "c". For horizontal lines y=c, use functions with expr "c". ALWAYS provide a label for each function.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -646,30 +572,30 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                     yRange: { type: 'array', items: { type: 'number' }, description: 'Visible y-axis range as [min, max], e.g. [-5, 5]' },
                     functions: {
                       type: 'array',
-                      description: 'y=f(x) functions to plot. Each has expr (JS math string using "x"), color, label, domain.',
+                      description: 'y=f(x) functions or implicit equations to plot.',
                       items: {
                         type: 'object',
                         properties: {
-                          expr: { type: 'string', description: 'Function expression using x, e.g. "4 - 0.5*x", "x**2", "Math.sin(x)"' },
+                          expr: { type: 'string', description: 'LaTeX expression, e.g. "x^2", "\\sin(x)", "\\frac{x^2}{4} + y^2 = 1". Can be an equation or just a function of x.' },
                           color: { type: 'string', description: 'Color hex, e.g. "#dc2626"' },
-                          label: { type: 'string', description: 'Legend label, e.g. "y = 4 - x/2"' },
+                          label: { type: 'string', description: 'Legend label, e.g. "y = x²". ALWAYS provide a readable label.' },
                           domain: { type: 'array', items: { type: 'number' }, description: 'Optional x-domain restriction [min, max]' },
                         },
-                        required: ['expr'],
+                        required: ['expr', 'label'],
                       },
                     },
                     functionsOfY: {
                       type: 'array',
-                      description: 'x=f(y) functions to plot (curves where x depends on y). Each has expr (JS math string using "y"), color, label, domain.',
+                      description: 'x=f(y) functions to plot (curves where x depends on y, or vertical lines).',
                       items: {
                         type: 'object',
                         properties: {
-                          expr: { type: 'string', description: 'Function expression using y, e.g. "y**3", "3*y - 2"' },
+                          expr: { type: 'string', description: 'LaTeX expression using y, e.g. "y^3", "3y - 2", or a constant like "-1" for vertical line x=-1' },
                           color: { type: 'string', description: 'Color hex' },
-                          label: { type: 'string', description: 'Legend label, e.g. "x = y³"' },
+                          label: { type: 'string', description: 'Legend label. ALWAYS provide a readable label.' },
                           domain: { type: 'array', items: { type: 'number' }, description: 'Optional y-domain restriction [min, max]' },
                         },
-                        required: ['expr'],
+                        required: ['expr', 'label'],
                       },
                     },
                     points: {
@@ -910,6 +836,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   required: ['type'],
                 },
               },
+              {
+                type: 'function',
+                name: 'show_molecule',
+                description: 'Display a molecular structure on the whiteboard using an interactive chemistry editor. The editor renders a proper 2D structural formula from the SMILES notation with correct bond angles and atom positions. Students can modify the structure. Use for: organic molecules, functional groups, chemical structures, reactions.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    smiles: { type: 'string', description: 'SMILES notation (e.g., "CCO" for ethanol, "c1ccccc1" for benzene, "CC(=O)O" for acetic acid)' },
+                    title: { type: 'string', description: 'Title/name of the molecule' },
+                    description: { type: 'string', description: 'What to notice about this structure' },
+                    interactive: { type: 'boolean', description: 'Allow student to edit the structure' },
+                  },
+                  required: ['smiles', 'title'],
+                },
+              },
             ],
             tool_choice: 'auto',
             audio: {
@@ -1146,6 +1087,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     // Mark session as active — mic should auto-start after AI responds
     shouldListenRef.current = true;
+    lastUserInputRef.current = Date.now();
 
     // Add user message to conversation
     wsRef.current.send(JSON.stringify({
