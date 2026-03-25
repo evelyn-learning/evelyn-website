@@ -25,8 +25,8 @@ export interface RealtimeHandle {
 
 // --- Multi-language whiteboard intent detection ---
 // Detects when the tutor claims to show, write, or display something visually.
-// Covers: English, German, Spanish, French, Italian, Portuguese, Dutch, Polish,
-// Turkish, Arabic, Hindi, Japanese, Korean, Chinese, Russian, and more.
+// Two layers: (1) explicit keyword patterns for major languages, (2) a universal
+// math/visual content heuristic that catches any language the patterns miss.
 const WHITEBOARD_INTENT_PATTERNS = [
   // English
   /\b(show|display|put|write|post|look at|on the (?:white)?board|here(?:'| i)s|let me (?:draw|write|show|put)|i(?:'ll| will) (?:draw|write|show|put)|see (?:the|this)|check (?:the|this) out|take a look|written (?:it |everything )?(?:down|out))\b/i,
@@ -42,12 +42,20 @@ const WHITEBOARD_INTENT_PATTERNS = [
   /\b(olh[ae]|mostr[oa]|escrev[oa]|no quadro|aqui (?:está|tens|vês)|vou (?:escrever|mostrar|desenhar))\b/i,
   // Dutch
   /\b(kijk|laat (?:me |ik )?(?:zien|schrijven)|schrijf|op het (?:bord|whiteboard)|hier (?:is|staat|zie je))\b/i,
-  // Russian
+  // Russian / Cyrillic
   /\b(смотри|показ|запиш|напиш|на доск[еу]|вот (?:так|это|формула)|покажу|давай (?:запишем|напишем))\b/i,
+  // Serbian / Croatian / Bosnian (Latin script)
+  /\b(tabli|tabla|napisat|zapisa|prikazat|prika[zž]|pogledaj|evo|ovde|napisali|napisao)\b/i,
   // Turkish
   /\b(bak|göster|yaz|tahtaya|burada|şimdi (?:yazıyorum|gösteriyorum))\b/i,
   // Polish
   /\b(patrz|poka[żz]|pisz|na tablicy|tutaj (?:jest|masz|widzisz)|napiszę|pokażę)\b/i,
+  // Czech / Slovak
+  /\b(podívej|ukaž|napiš|na tabul[ie]|tady|ukážu|napíšu)\b/i,
+  // Romanian
+  /\b(uite|arăt|scriu|pe tablă|aici|hai să)\b/i,
+  // Hungarian
+  /\b(nézd|mutato|íro[mk]|táblára|itt (?:van|látod))\b/i,
   // Arabic (transliterated patterns that Whisper produces)
   /\b(شوف|أكتب|على السبورة|هنا|انظر|أريك|سأكتب)\b/,
   // Japanese (katakana/hiragana patterns)
@@ -58,7 +66,14 @@ const WHITEBOARD_INTENT_PATTERNS = [
   /(?:看|写|黑板|白板|这里|显示)/,
   // Hindi (transliterated)
   /\b(dekh|likht?|board par|yahan|dikha)\b/i,
+  // Swahili
+  /\b(angalia|andika|ubao|hapa|nionyeshe)\b/i,
 ];
+
+// Universal heuristic: if the tutor text contains mathematical notation
+// (equations, variables, operators) without a tool call, it likely needs a whiteboard.
+// This catches ANY language the patterns above might miss.
+const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\s*\d+|\b(?:equation|formula|graph|diagram|table)\b)/i;
 
 // Words that Whisper commonly misrecognizes as inappropriate
 const PROFANITY_REPLACEMENTS: Record<string, string> = {
@@ -189,8 +204,9 @@ export function VoiceTutorRealtime({
   const injectContextRef = useRef<((text: string) => void) | null>(null);
 
   // Check if text claims to show/display something visually (multi-language)
+  // Uses explicit language patterns + a universal math content heuristic
   const claimsToShowVisual = useCallback((text: string): boolean => {
-    return WHITEBOARD_INTENT_PATTERNS.some(pattern => pattern.test(text));
+    return WHITEBOARD_INTENT_PATTERNS.some(pattern => pattern.test(text)) || MATH_CONTENT_PATTERN.test(text);
   }, []);
 
   // Process a single whiteboard validation request

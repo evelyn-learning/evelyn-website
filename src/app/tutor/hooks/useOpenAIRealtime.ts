@@ -219,6 +219,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
         case 'input_audio_buffer.speech_started':
           console.log('[Realtime] Speech detected');
+          lastUserInputRef.current = Date.now(); // Mark user input at speech start, not transcription (which is delayed)
           updateState('listening');
           break;
 
@@ -855,7 +856,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             tool_choice: 'auto',
             audio: {
               input: {
-                transcription: { model: 'whisper-1', language: 'en' },
+                transcription: { model: 'whisper-1' },
                 turn_detection: {
                   type: 'server_vad',
                   threshold: vadThreshold,              // Higher threshold = less sensitive to quiet sounds (0-1)

@@ -32,10 +32,74 @@ function sanitizeForPDF(text: string): string {
   return s;
 }
 
+// ── Latin Extended diacritics → ASCII transliteration ──
+// Maps characters from Latin Extended-A/B, Latin Extended Additional, etc.
+// to their closest ASCII equivalents. This prevents mid-word "[non-Latin text]"
+// for languages like Serbian, Czech, Polish, Turkish, Vietnamese, Romanian, etc.
+const LATIN_DIACRITIC_MAP: Record<string, string> = {
+  // Latin Extended-A (U+0100–U+017F)
+  'Ā': 'A', 'ā': 'a', 'Ă': 'A', 'ă': 'a', 'Ą': 'A', 'ą': 'a',
+  'Ć': 'C', 'ć': 'c', 'Ĉ': 'C', 'ĉ': 'c', 'Ċ': 'C', 'ċ': 'c', 'Č': 'C', 'č': 'c',
+  'Ď': 'D', 'ď': 'd', 'Đ': 'Dj', 'đ': 'dj',
+  'Ē': 'E', 'ē': 'e', 'Ĕ': 'E', 'ĕ': 'e', 'Ė': 'E', 'ė': 'e', 'Ę': 'E', 'ę': 'e', 'Ě': 'E', 'ě': 'e',
+  'Ĝ': 'G', 'ĝ': 'g', 'Ğ': 'G', 'ğ': 'g', 'Ġ': 'G', 'ġ': 'g', 'Ģ': 'G', 'ģ': 'g',
+  'Ĥ': 'H', 'ĥ': 'h', 'Ħ': 'H', 'ħ': 'h',
+  'Ĩ': 'I', 'ĩ': 'i', 'Ī': 'I', 'ī': 'i', 'Ĭ': 'I', 'ĭ': 'i', 'Į': 'I', 'į': 'i', 'İ': 'I', 'ı': 'i',
+  'Ĳ': 'IJ', 'ĳ': 'ij',
+  'Ĵ': 'J', 'ĵ': 'j',
+  'Ķ': 'K', 'ķ': 'k',
+  'Ĺ': 'L', 'ĺ': 'l', 'Ļ': 'L', 'ļ': 'l', 'Ľ': 'L', 'ľ': 'l', 'Ŀ': 'L', 'ŀ': 'l', 'Ł': 'L', 'ł': 'l',
+  'Ń': 'N', 'ń': 'n', 'Ņ': 'N', 'ņ': 'n', 'Ň': 'N', 'ň': 'n', 'ŉ': 'n', 'Ŋ': 'N', 'ŋ': 'n',
+  'Ō': 'O', 'ō': 'o', 'Ŏ': 'O', 'ŏ': 'o', 'Ő': 'O', 'ő': 'o', 'Œ': 'OE', 'œ': 'oe',
+  'Ŕ': 'R', 'ŕ': 'r', 'Ŗ': 'R', 'ŗ': 'r', 'Ř': 'R', 'ř': 'r',
+  'Ś': 'S', 'ś': 's', 'Ŝ': 'S', 'ŝ': 's', 'Ş': 'S', 'ş': 's', 'Š': 'S', 'š': 's',
+  'Ţ': 'T', 'ţ': 't', 'Ť': 'T', 'ť': 't', 'Ŧ': 'T', 'ŧ': 't',
+  'Ũ': 'U', 'ũ': 'u', 'Ū': 'U', 'ū': 'u', 'Ŭ': 'U', 'ŭ': 'u', 'Ů': 'U', 'ů': 'u', 'Ű': 'U', 'ű': 'u', 'Ų': 'U', 'ų': 'u',
+  'Ŵ': 'W', 'ŵ': 'w',
+  'Ŷ': 'Y', 'ŷ': 'y', 'Ÿ': 'Y',
+  'Ź': 'Z', 'ź': 'z', 'Ż': 'Z', 'ż': 'z', 'Ž': 'Z', 'ž': 'z',
+  // Latin Extended-B common (U+0180–U+024F)
+  'Ơ': 'O', 'ơ': 'o', 'Ư': 'U', 'ư': 'u',  // Vietnamese
+  'Ș': 'S', 'ș': 's', 'Ț': 'T', 'ț': 't',  // Romanian
+  // Latin Extended Additional — Vietnamese (U+1E00–U+1EFF)
+  'Ạ': 'A', 'ạ': 'a', 'Ả': 'A', 'ả': 'a', 'Ấ': 'A', 'ấ': 'a', 'Ầ': 'A', 'ầ': 'a',
+  'Ẩ': 'A', 'ẩ': 'a', 'Ẫ': 'A', 'ẫ': 'a', 'Ậ': 'A', 'ậ': 'a', 'Ắ': 'A', 'ắ': 'a',
+  'Ằ': 'A', 'ằ': 'a', 'Ẳ': 'A', 'ẳ': 'a', 'Ẵ': 'A', 'ẵ': 'a', 'Ặ': 'A', 'ặ': 'a',
+  'Ẹ': 'E', 'ẹ': 'e', 'Ẻ': 'E', 'ẻ': 'e', 'Ẽ': 'E', 'ẽ': 'e', 'Ế': 'E', 'ế': 'e',
+  'Ề': 'E', 'ề': 'e', 'Ể': 'E', 'ể': 'e', 'Ễ': 'E', 'ễ': 'e', 'Ệ': 'E', 'ệ': 'e',
+  'Ỉ': 'I', 'ỉ': 'i', 'Ị': 'I', 'ị': 'i',
+  'Ọ': 'O', 'ọ': 'o', 'Ỏ': 'O', 'ỏ': 'o', 'Ố': 'O', 'ố': 'o', 'Ồ': 'O', 'ồ': 'o',
+  'Ổ': 'O', 'ổ': 'o', 'Ỗ': 'O', 'ỗ': 'o', 'Ộ': 'O', 'ộ': 'o', 'Ớ': 'O', 'ớ': 'o',
+  'Ờ': 'O', 'ờ': 'o', 'Ở': 'O', 'ở': 'o', 'Ỡ': 'O', 'ỡ': 'o', 'Ợ': 'O', 'ợ': 'o',
+  'Ụ': 'U', 'ụ': 'u', 'Ủ': 'U', 'ủ': 'u', 'Ứ': 'U', 'ứ': 'u', 'Ừ': 'U', 'ừ': 'u',
+  'Ử': 'U', 'ử': 'u', 'Ữ': 'U', 'ữ': 'u', 'Ự': 'U', 'ự': 'u',
+  'Ỳ': 'Y', 'ỳ': 'y', 'Ỵ': 'Y', 'ỵ': 'y', 'Ỷ': 'Y', 'ỷ': 'y', 'Ỹ': 'Y', 'ỹ': 'y',
+  // Cyrillic → Latin transliteration (U+0400–U+04FF)
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh',
+  'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O',
+  'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts',
+  'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
+  'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+  'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts',
+  'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+  // Serbian Cyrillic extras
+  'Ђ': 'Dj', 'ђ': 'dj', 'Ј': 'J', 'ј': 'j', 'Љ': 'Lj', 'љ': 'lj',
+  'Њ': 'Nj', 'њ': 'nj', 'Ћ': 'C', 'ћ': 'c', 'Џ': 'Dz', 'џ': 'dz',
+  // Ukrainian extras
+  'Ґ': 'G', 'ґ': 'g', 'Є': 'Ye', 'є': 'ye', 'І': 'I', 'і': 'i', 'Ї': 'Yi', 'ї': 'yi',
+};
+
+// Build a regex that matches any character in the map (compiled once)
+const LATIN_DIACRITIC_REGEX = new RegExp(
+  '[' + Object.keys(LATIN_DIACRITIC_MAP).join('') + ']', 'g'
+);
+
 // ── WinAnsi text sanitizer ──
 // jsPDF default fonts (Helvetica/Courier) only support WinAnsi (Latin-1).
-// Non-Latin scripts (Devanagari, Arabic, CJK, Cyrillic) render as "?".
-// This function replaces non-Latin runs with a bracketed note.
+// Non-Latin scripts (Devanagari, Arabic, CJK) render as "?".
+// This function first transliterates Latin Extended and Cyrillic characters
+// to ASCII, then replaces remaining non-Latin runs with a bracketed note.
 function toWinAnsiSafe(text: string): string {
   // First, normalize common Unicode punctuation to ASCII equivalents
   let normalized = text;
@@ -46,8 +110,11 @@ function toWinAnsiSafe(text: string): string {
   normalized = normalized.replace(/\u2026/g, '...');               // ellipsis → ...
   normalized = normalized.replace(/\u00A0/g, ' ');                 // non-breaking space → space
 
-  // Match runs of characters outside Latin-1 printable range (U+0020–U+00FF)
-  // but preserve common math/symbol characters
+  // Transliterate Latin Extended diacritics and Cyrillic to ASCII
+  // This preserves readability for Serbian, Czech, Polish, Turkish, Vietnamese, Russian, etc.
+  normalized = normalized.replace(LATIN_DIACRITIC_REGEX, (ch) => LATIN_DIACRITIC_MAP[ch] || ch);
+
+  // Match remaining runs of characters outside Latin-1 printable range (U+0020–U+00FF)
   return normalized.replace(
     /[^\u0000-\u00FF]+/g,
     (match) => {
@@ -57,7 +124,6 @@ function toWinAnsiSafe(text: string): string {
       if (/[\u4E00-\u9FFF]/.test(match)) return '[Chinese text]';
       if (/[\u3040-\u30FF]/.test(match)) return '[Japanese text]';
       if (/[\uAC00-\uD7AF]/.test(match)) return '[Korean text]';
-      if (/[\u0400-\u04FF]/.test(match)) return '[Russian text]';
       return '[non-Latin text]';
     }
   );
