@@ -6,6 +6,7 @@ export interface IBlogPost extends Document {
   excerpt: string;
   content: string;
   featuredImage?: string;
+  quickAnswer?: string;
   category: string;
   tags: string[];
   author: string;
@@ -25,6 +26,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
     excerpt: { type: String, required: true },
     content: { type: String, required: true },
     featuredImage: { type: String },
+    quickAnswer: { type: String },
     category: { type: String, required: true },
     tags: [{ type: String }],
     author: { type: String, default: "Evelyn Learning" },

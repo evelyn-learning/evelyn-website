@@ -33,6 +33,7 @@ interface AIBlogResponse {
   title: string;
   excerpt: string;
   content: string;
+  quickAnswer: string;
   metaTitle: string;
   metaDescription: string;
   tags: string[];
@@ -184,6 +185,7 @@ export async function generateBlogPost(
     slug,
     excerpt: aiResponse.excerpt,
     content: aiResponse.content,
+    quickAnswer: aiResponse.quickAnswer,
     category,
     tags: aiResponse.tags,
     author: "Evelyn Learning",

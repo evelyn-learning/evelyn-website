@@ -93,6 +93,7 @@ interface BlogPostingJsonLdProps {
   author: string;
   featuredImage?: string;
   category?: string;
+  quickAnswer?: string;
 }
 
 export function BlogPostingJsonLd({
@@ -104,6 +105,7 @@ export function BlogPostingJsonLd({
   author,
   featuredImage,
   category,
+  quickAnswer,
 }: BlogPostingJsonLdProps) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -137,6 +139,9 @@ export function BlogPostingJsonLd({
     }),
     ...(category && {
       articleSection: category,
+    }),
+    ...(quickAnswer && {
+      abstract: quickAnswer,
     }),
   };
 

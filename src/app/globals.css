@@ -57,6 +57,12 @@
   .prose-custom {
     @apply prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline;
   }
+
+  /* WordPress-migrated posts use <pre> for styled text (not code).
+     Reset these to look like normal content instead of dark code blocks. */
+  .prose-custom pre:not(:has(code)) {
+    @apply bg-transparent text-gray-700 p-0 font-sans text-base whitespace-normal;
+  }
 }
 
 /* Client logos scroll animation */

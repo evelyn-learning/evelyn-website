@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { title, content, excerpt, category, tags, featuredImage, status } = body;
+  const { title, content, excerpt, category, tags, featuredImage, quickAnswer, status } = body;
 
   if (!title || !content) {
     return NextResponse.json(
@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
     category: category || "Education",
     tags: tags || [],
     featuredImage,
+    quickAnswer,
     status: status || "draft",
     publishedAt: status === "published" ? new Date() : undefined,
     readingTime: getReadingTime(content),

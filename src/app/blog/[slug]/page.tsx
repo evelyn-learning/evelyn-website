@@ -5,7 +5,8 @@ import { connectDB, isDBConfigured } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { formatDate } from "@/lib/utils";
 import { marked } from "marked";
-import { ArrowLeft, Clock, Calendar, Tag } from "lucide-react";
+import { Clock, Calendar, Tag } from "lucide-react";
+import BackToBlog from "./BackToBlog";
 import { BlogPostingJsonLd } from "@/components/seo/JsonLd";
 
 interface Props {
@@ -88,7 +89,12 @@ export default async function BlogPostPage({ params }: Props) {
   // Check if content is already HTML (from WordPress migration) or Markdown
   // If it starts with HTML tags, use it directly; otherwise parse as Markdown
   const isHtml = post.content.trim().startsWith('<');
-  const contentHtml = isHtml ? post.content : marked(post.content);
+  // Strip leading H1 from content to avoid duplicate title (page header already renders it)
+  let processedContent = post.content;
+  if (!isHtml) {
+    processedContent = processedContent.replace(/^#\s+.+\n+/, '');
+  }
+  const contentHtml = isHtml ? processedContent : marked(processedContent);
 
   return (
     <>
@@ -101,18 +107,13 @@ export default async function BlogPostPage({ params }: Props) {
         author={post.author}
         featuredImage={post.featuredImage}
         category={post.category}
+        quickAnswer={post.quickAnswer}
       />
 
       {/* Article Header */}
       <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12 md:py-16">
         <div className="container-wide">
-          <Link
-            href="/blog"
-            className="inline-flex items-center text-sm font-medium text-primary-500 hover:underline"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Blog
-          </Link>
+          <BackToBlog />
 
           <div className="mx-auto mt-6 max-w-3xl">
             <span className="text-sm font-medium uppercase tracking-wider text-primary-500">
@@ -149,6 +150,21 @@ export default async function BlogPostPage({ params }: Props) {
                   alt={post.title}
                   className="w-full"
                 />
+              </div>
+            )}
+
+            {/* Quick Answer Box */}
+            {post.quickAnswer && (
+              <div className="mb-8 rounded-xl border border-primary-200 bg-primary-50/50 p-6">
+                <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary-600">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Quick Answer
+                </h2>
+                <p className="text-base leading-relaxed text-gray-700">
+                  {post.quickAnswer}
+                </p>
               </div>
             )}
 

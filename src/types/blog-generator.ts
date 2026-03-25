@@ -37,6 +37,7 @@ export interface GeneratedBlogPost {
   slug: string;
   excerpt: string;
   content: string; // Markdown content
+  quickAnswer?: string;
   featuredImage?: string;
   category: string;
   tags: string[];

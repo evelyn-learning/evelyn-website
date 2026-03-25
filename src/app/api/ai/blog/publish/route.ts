@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       slug,
       excerpt: post.excerpt,
       content: post.content,
+      quickAnswer: post.quickAnswer,
       featuredImage: post.featuredImage,
       category: post.category,
       tags: post.tags || [],

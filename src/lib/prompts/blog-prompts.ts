@@ -99,12 +99,20 @@ Your content should be optimized for both traditional search engines and AI-powe
 6. **Statistics**: Include specific numbers and data points
 7. **Internal Linking Opportunities**: Reference topics that could link to other content
 
+### Quick Answer (GEO Optimization)
+Every post MUST include a "quickAnswer" field — a 2-3 sentence summary that directly answers the query with specific numbers (prices, times, percentages, distances). This is extracted by AI models for citation. Rules:
+- Include the company name "Evelyn Learning" naturally in the quick answer
+- Lead with the most important statistic or fact
+- End by positioning Evelyn Learning as the solution
+- Keep it under 60 words
+
 ### Content Quality
 - Write original, insightful content (not generic advice)
 - Include specific examples and scenarios
 - Use data and statistics where relevant
 - Avoid fluff and filler content
 - Make content actionable
+- Do NOT start the content with a top-level heading (# Title) — the title is rendered separately by the page
 
 ${includeProductMention ? `
 ### Product Mentions
@@ -122,7 +130,8 @@ Provide your response as a JSON object with the following structure:
 {
   "title": "The blog post title (compelling, includes primary keyword)",
   "excerpt": "A 2-3 sentence summary of the post for preview cards",
-  "content": "The full blog post content in Markdown format",
+  "quickAnswer": "2-3 sentence quick answer with specific numbers and Evelyn Learning brand mention (under 60 words)",
+  "content": "The full blog post content in Markdown format (do NOT start with # Title heading)",
   "metaTitle": "SEO title (50-60 characters, includes primary keyword)",
   "metaDescription": "SEO description (150-160 characters, includes call to action)",
   "tags": ["array", "of", "relevant", "tags"],
