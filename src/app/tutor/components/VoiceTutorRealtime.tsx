@@ -449,8 +449,9 @@ export function VoiceTutorRealtime({
       processed = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processed.map(async (cmd) => {
-          // For graphs: use Wolfram Alpha (exact math, no hallucination)
+          // For graphs: use Wolfram Alpha (exact math, no hallucination), fall back to Claude
           if (cmd.action === 'showGraph') {
+            let wolframFailed = false;
             try {
               console.log('[VoiceTutorRealtime] Sending graph to Wolfram for validation');
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -463,16 +464,57 @@ export function VoiceTutorRealtime({
                 const result = await resp.json();
                 if (result.corrected && result.data) {
                   console.log('[VoiceTutorRealtime] Wolfram corrected graph:', result.issues);
+                  onDebugEvent?.('tool_call', `Graph validated via wolfram: ${result.issues?.join(', ')}`);
                   return { ...cmd, data: result.data } as WhiteboardCommand;
                 }
+                // Wolfram returned but didn't correct — skip Claude
+                return cmd;
               }
+              wolframFailed = true;
             } catch (err) {
               console.error('[VoiceTutorRealtime] Wolfram validation failed:', err);
+              wolframFailed = true;
+            }
+            // Fall back to Claude for graph validation if Wolfram failed
+            if (wolframFailed) {
+              console.log('[VoiceTutorRealtime] Wolfram failed, falling back to Claude for graph validation');
+              onDebugEvent?.('tool_call', 'Graph Wolfram failed, falling back to Claude');
+              const validated = await validateToolCallViaClaude('show_function_graph', cmd);
+              return validated;
             }
             return cmd;
           }
-          // For other math tools: use Claude as fallback
-          if (['showEquation', 'showGeometry', 'showNumberLine'].includes(cmd.action)) {
+          // For equations: use Wolfram Alpha first, fall back to Claude
+          if (cmd.action === 'showEquation') {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const cmdAny = cmd as any;
+              console.log('[VoiceTutorRealtime] Sending equation to Wolfram for validation:', cmdAny.latex?.substring(0, 80));
+              const resp = await fetch('/api/tutor/validate-math-wolfram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  latex: cmdAny.latex || '',
+                  label: cmdAny.label || '',
+                  conversationContext: transcriptRef.current.slice(-4)
+                    .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n'),
+                }),
+              });
+              if (resp.ok) {
+                const result = await resp.json();
+                console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
+                onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
+                if (!result.correct && result.correctedLatex) {
+                  return { ...cmd, latex: result.correctedLatex } as WhiteboardCommand;
+                }
+              }
+            } catch (err) {
+              console.error('[VoiceTutorRealtime] Equation validation failed:', err);
+            }
+            return cmd;
+          }
+          // For geometry, number lines: use Claude
+          if (['showGeometry', 'showNumberLine'].includes(cmd.action)) {
             console.log('[VoiceTutorRealtime] Sending to Claude for validation:', cmd.action);
             const validated = await validateToolCallViaClaude(cmd.action, cmd);
             console.log('[VoiceTutorRealtime] Claude validation result:', validated === cmd ? 'unchanged' : 'corrected');
