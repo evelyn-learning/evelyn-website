@@ -870,6 +870,8 @@ export default function TutorPage() {
             topicName={topicDisplayName || 'AI Tutor'}
             sessionGoal={sessionGoal}
             studentName={studentName || undefined}
+            subject={selectedSubject}
+            level={selectedLevel}
           />
         </div>
 
@@ -982,9 +984,39 @@ export default function TutorPage() {
                       }
                     })();
                   } else if (type === 'image') {
-                    realtimeHandleRef.current.sendTextMessage(
-                      `[The student uploaded an image to the whiteboard. Acknowledge the upload.]`
-                    );
+                    // Process image through vision to extract content before telling the AI
+                    (async () => {
+                      try {
+                        const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
+                        const resp = await fetch('/api/tutor/extract-homework', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            imageData: base64Data,
+                            mimeType: 'image/png',
+                            subject: selectedSubject,
+                            topic: selectedTopicId,
+                            level: selectedLevel,
+                          }),
+                        });
+                        const data = await resp.json();
+                        setStatusMessage(null);
+                        if (data.extractedProblem && realtimeHandleRef.current) {
+                          realtimeHandleRef.current.sendTextMessage(
+                            `[The student uploaded an image to the whiteboard. The image contains: "${data.extractedProblem}". Respond to what they shared.]`
+                          );
+                        } else if (realtimeHandleRef.current) {
+                          realtimeHandleRef.current.sendTextMessage(
+                            `[The student uploaded an image to the whiteboard but the content could not be extracted. Ask them to describe what the image shows.]`
+                          );
+                        }
+                      } catch {
+                        setStatusMessage(null);
+                        realtimeHandleRef.current?.sendTextMessage(
+                          `[The student uploaded an image to the whiteboard but it could not be analyzed. Ask them to describe what the image shows.]`
+                        );
+                      }
+                    })();
                   }
                 }
 
@@ -1159,7 +1191,7 @@ export default function TutorPage() {
                     topicDisplayName || 'AI Tutor',
                     sessionGoal,
                     studentName || undefined,
-                    { includeDebugData: true }
+                    { includeDebugData: true, subject: selectedSubject, level: selectedLevel }
                   );
                 } catch (err) {
                   console.error('PDF export error:', err);

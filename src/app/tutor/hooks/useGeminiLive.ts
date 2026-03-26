@@ -711,6 +711,7 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     disconnect,
     startListening,
     stopListening,
+    muteInput: stopListening, // Gemini handles VAD server-side; stop listening is equivalent
     interrupt,
     pause,
     sendTextMessage,

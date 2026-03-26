@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage } from '../hooks/useOpenAIRealtime';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
@@ -179,7 +179,7 @@ export function VoiceTutorRealtime({
   handleRef,
   validateToolCalls = false,
 }: VoiceTutorRealtimeProps) {
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -197,6 +197,8 @@ export function VoiceTutorRealtime({
   const sessionIdRef = useRef(`session-${Date.now()}`);
   // Track if student requested visual in their last message
   const studentRequestedVisualRef = useRef(false);
+  // Track total whiteboard commands added — used to verify claims
+  const whiteboardCommandCountRef = useRef(0);
 
   // Context keeper — prevents context loss in long Realtime sessions
   const tutorTurnCountRef = useRef(0);
@@ -238,8 +240,9 @@ export function VoiceTutorRealtime({
 
       const data = await response.json();
       if (data.commands?.length > 0) {
-        console.log('[VoiceTutorRealtime] Validation pass generated', data.commands.length, 'whiteboard command(s)');
+        console.log('[VoiceTutorRealtime] Validation pass generated', data.commands.length, 'whiteboard command(s):', data.commands.map((c: WhiteboardCommand) => c.action));
         onWhiteboardCommand(data.commands as WhiteboardCommand[]);
+        whiteboardCommandCountRef.current += data.commands.length;
 
         // Find the transcript entry that matches this tutor text and attach commands
         const matchIdx = transcriptRef.current.findIndex(
@@ -256,6 +259,8 @@ export function VoiceTutorRealtime({
         data.commands.forEach((cmd: WhiteboardCommand) => {
           onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action, source: 'validation-pass' });
         });
+      } else {
+        console.warn('[VoiceTutorRealtime] Validation pass returned 0 commands for tutor text:', tutorText.substring(0, 100));
       }
     } catch (err) {
       console.error('[VoiceTutorRealtime] Whiteboard validation pass failed:', err);
@@ -326,6 +331,24 @@ export function VoiceTutorRealtime({
           .replace(/\[Whiteboard\][^\n]*/gi, '')
           .replace(/\[whiteboard command[^\]]*\][^\n]*/gi, '')
           .trim();
+
+        // Duplicate response detection — check if this is identical to a recent tutor message
+        const recentTutorMessages = transcriptRef.current
+          .filter(e => e.role === 'tutor')
+          .slice(-3);
+        const isDuplicate = recentTutorMessages.some(
+          m => m.text === cleanText || (cleanText.length > 20 && m.text.includes(cleanText.substring(0, Math.floor(cleanText.length * 0.8))))
+        );
+        if (isDuplicate) {
+          console.warn('[VoiceTutorRealtime] Duplicate tutor response detected, injecting correction:', cleanText.substring(0, 80));
+          if (injectContextRef.current) {
+            injectContextRef.current(
+              'You just repeated yourself verbatim. The student already heard this exact response. ' +
+              'Acknowledge that the previous answer may not have been clear, and try a DIFFERENT approach — ' +
+              'rephrase, use an analogy, or ask the student a clarifying question.'
+            );
+          }
+        }
 
         // Add finalized assistant message to transcript
         const entry: TranscriptEntry = {
@@ -455,6 +478,8 @@ export function VoiceTutorRealtime({
     }
 
     onWhiteboardCommand(processed);
+    whiteboardCommandCountRef.current += processed.length;
+    console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);
 
     // Attach validated commands to the most recent tutor transcript entry
     const lastIdx = transcriptRef.current.length - 1;
@@ -529,6 +554,21 @@ export function VoiceTutorRealtime({
       const summary = buildContextSummary();
       if (summary && injectContextRef.current) {
         injectContextRef.current(summary);
+      }
+    }
+
+    // --- Whiteboard verification ---
+    // If the tutor claims content is "on the whiteboard" but no commands exist,
+    // inject a correction so the tutor doesn't gaslight the student
+    const claimsOnBoard = /\b(on the (?:white)?board now|right (?:on |there on )?the (?:white)?board|you should see|check (?:the|your) (?:display|whiteboard|board))\b/i.test(tutorText);
+    if (claimsOnBoard && whiteboardCommandCountRef.current === 0) {
+      console.warn('[VoiceTutorRealtime] Tutor falsely claims whiteboard content exists (0 commands). Injecting correction.');
+      if (injectContextRef.current) {
+        injectContextRef.current(
+          'CORRECTION: You just told the student something is on the whiteboard, but NOTHING was actually drawn or displayed. ' +
+          'The whiteboard is empty. Apologize briefly, then describe the concept verbally or try to draw it using your tools. ' +
+          'Do NOT claim the whiteboard shows something if you did not successfully use a whiteboard tool.'
+        );
       }
     }
 
@@ -791,12 +831,19 @@ Start by warmly greeting the student and asking how you can help them today.`;
     realtime.startListening();
   }, [realtime]);
 
-  // Toggle mute (just controls whether we play audio)
-  const toggleMute = useCallback(() => {
-    setIsMuted((prev) => !prev);
-    if (realtime.state === 'speaking') {
-      realtime.interrupt();
-    }
+  // Toggle mute student mic — uses muteInput to clear buffer without triggering a response
+  const toggleMicMute = useCallback(() => {
+    setIsMicMuted((prev) => {
+      const newMuted = !prev;
+      if (newMuted) {
+        realtime.muteInput();
+        console.log('[VoiceTutorRealtime] Student mic muted (buffer cleared)');
+      } else {
+        realtime.startListening();
+        console.log('[VoiceTutorRealtime] Student mic unmuted');
+      }
+      return newMuted;
+    });
   }, [realtime]);
 
   // Get state-specific UI
@@ -961,16 +1008,14 @@ Start by warmly greeting the student and asking how you can help them today.`;
           disabled={!realtime.isConnected}
           onFocus={() => {
             // Mute mic while typing to prevent it picking up speech
-            if (!isMuted && realtime.isConnected) {
-              realtime.stopListening();
-              setIsMuted(true);
+            if (!isMicMuted && realtime.isConnected) {
+              realtime.muteInput();
             }
           }}
           onBlur={() => {
-            // Resume mic when done typing
-            if (isMuted && realtime.isConnected) {
+            // Resume mic when done typing (only if student hasn't manually muted)
+            if (!isMicMuted && realtime.isConnected) {
               realtime.startListening();
-              setIsMuted(false);
             }
           }}
         />
@@ -987,11 +1032,11 @@ Start by warmly greeting the student and asking how you can help them today.`;
       <div className="flex items-center gap-2 flex-shrink-0">
         {!isPaused && (
           <button
-            onClick={toggleMute}
-            className={`p-2 rounded-lg text-sm ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            title={isMuted ? 'Unmute tutor' : 'Mute tutor'}
+            onClick={toggleMicMute}
+            className={`p-2 rounded-lg text-sm ${isMicMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            title={isMicMuted ? 'Unmute your mic' : 'Mute your mic'}
           >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
         )}
 

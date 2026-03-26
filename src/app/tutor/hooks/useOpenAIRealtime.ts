@@ -56,6 +56,7 @@ export interface RealtimeResult {
   disconnect: () => void;
   startListening: () => void;
   stopListening: () => void;
+  muteInput: () => void;
   interrupt: () => void;
   pause: () => void;
   sendTextMessage: (text: string) => void;
@@ -236,6 +237,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'conversation.item.input_audio_transcription.completed':
           // User's speech transcription
           if (data.transcript) {
+            console.log('[Realtime] User transcript:', JSON.stringify(data.transcript));
             lastUserInputRef.current = Date.now();
             onTranscriptUpdate?.('user', data.transcript, true);
           }
@@ -426,7 +428,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               break;
             }
 
-            console.log('[Realtime] Function call:', funcName, funcArgs);
+            console.log('[Realtime] Function call:', funcName, JSON.stringify(funcArgs).substring(0, 300));
+            console.log('[Realtime] Function call args (full):', JSON.stringify(funcArgs));
             lastResponseHadToolCallRef.current = true;
 
             // Convert function call to whiteboard command (shared logic)
@@ -1026,6 +1029,27 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, [updateState]);
 
+  // Mute input — stops mic capture and clears buffer WITHOUT committing or triggering a response.
+  // Used when the student mutes their mic to prevent noise from being sent.
+  const muteInput = useCallback(() => {
+    // Stop audio capture
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // Clear any accumulated audio in the buffer (do NOT commit it)
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
+    }
+    hasAudioInBufferRef.current = false;
+    updateState('connected');
+  }, [updateState]);
+
   // Interrupt playback
   const interrupt = useCallback(() => {
     // Stop playback
@@ -1147,6 +1171,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     disconnect,
     startListening,
     stopListening,
+    muteInput,
     interrupt,
     pause,
     sendTextMessage,

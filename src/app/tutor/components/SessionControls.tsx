@@ -37,6 +37,8 @@ interface SessionControlsProps {
   topicName?: string;
   sessionGoal?: string;
   studentName?: string;
+  subject?: string;
+  level?: string;
 }
 
 // ── Resizable Modal wrapper ──
@@ -128,6 +130,8 @@ export function SessionControls({
   topicName = 'AI Tutor',
   sessionGoal = 'practice',
   studentName,
+  subject,
+  level,
 }: SessionControlsProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -233,14 +237,14 @@ export function SessionControls({
         topicName,
         sessionGoal,
         studentName,
-        { includeDebugData: true }
+        { includeDebugData: true, subject, level }
       );
     } catch (err) {
       console.error('PDF export error:', err);
     } finally {
       setIsExporting(false);
     }
-  }, [transcript, whiteboardCommands, topicName, sessionGoal, studentName]);
+  }, [transcript, whiteboardCommands, topicName, sessionGoal, studentName, subject, level]);
 
   return (
     <>

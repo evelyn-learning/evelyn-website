@@ -1197,7 +1197,7 @@ export async function exportTutorSessionPDF(
   topicName: string,
   sessionGoal: string,
   studentName?: string,
-  options?: { includeDebugData?: boolean }
+  options?: { includeDebugData?: boolean; subject?: string; level?: string }
 ): Promise<void> {
   const includeDebug = options?.includeDebugData ?? true;
   const { default: jsPDF } = await import('jspdf');
@@ -1263,8 +1263,13 @@ export async function exportTutorSessionPDF(
   y = 48;
 
   // ── Session Info ──
-  drawWrappedText(`Topic: ${topicName}`, margin, contentWidth, { size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6 });
-  const goalLabel = sessionGoal === 'homework-help' ? 'Homework Help' : sessionGoal === 'concept-review' ? 'Concept Review' : sessionGoal === 'test-prep' ? 'Test Prep' : 'Practice';
+  const subjectLabel = options?.subject ? options.subject.charAt(0).toUpperCase() + options.subject.slice(1) : '';
+  const levelLabel = options?.level || '';
+  if (subjectLabel) {
+    drawWrappedText(`Subject: ${subjectLabel}${levelLabel ? ` | Level: ${levelLabel}` : ''}`, margin, contentWidth, { size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6 });
+  }
+  drawWrappedText(`Topic: ${topicName}`, margin, contentWidth, { size: subjectLabel ? 10 : 11, style: subjectLabel ? 'normal' : 'bold', color: subjectLabel ? [55, 65, 81] : [26, 32, 44], lineHeight: 6 });
+  const goalLabel = sessionGoal === 'homework-help' ? 'Homework Help' : sessionGoal === 'concept-review' ? 'Concept Review' : sessionGoal === 'test-prep' ? 'Test Prep' : sessionGoal === 'explain' ? 'Explain' : sessionGoal === 'test' ? 'Test' : 'Practice';
   drawWrappedText(`Goal: ${goalLabel}${studentName ? ` | Student: ${studentName}` : ''}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
   const studentMessages = transcript.filter(m => m.role === 'student').length;
   const tutorMessages = transcript.filter(m => m.role === 'tutor').length;

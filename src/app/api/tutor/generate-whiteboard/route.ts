@@ -63,7 +63,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tutorText, studentText, sessionId, recentContext } = body;
 
+    console.log(`[GENERATE_WHITEBOARD] Session=${sessionId} | tutorText="${tutorText?.substring(0, 100)}..." | studentText="${studentText?.substring(0, 80)}"`);
+
     if (!tutorText || !sessionId) {
+      console.warn('[GENERATE_WHITEBOARD] Missing required fields');
       return NextResponse.json(
         { error: "Missing required fields: tutorText, sessionId" },
         { status: 400 }
@@ -71,6 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!checkRateLimit(sessionId)) {
+      console.warn(`[GENERATE_WHITEBOARD] Rate limited: session=${sessionId}`);
       return NextResponse.json(
         { error: "Too many requests" },
         { status: 429 }
@@ -126,6 +130,12 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+    }
+
+    console.log(`[GENERATE_WHITEBOARD] Session=${sessionId} | Generated ${commands.length} command(s): ${commands.map(c => c.action).join(', ') || '(none)'}`);
+    if (commands.length === 0) {
+      console.warn(`[GENERATE_WHITEBOARD] Session=${sessionId} | No commands generated for tutor text: "${tutorText.substring(0, 150)}"`);
+      console.log(`[GENERATE_WHITEBOARD] Claude raw response: "${content.text.substring(0, 300)}"`);
     }
 
     return NextResponse.json({
