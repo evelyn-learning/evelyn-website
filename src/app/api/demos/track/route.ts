@@ -148,13 +148,14 @@ export async function POST(request: NextRequest) {
     const location = await getGeoLocation(ip);
 
     // Filter out internal traffic by city or known IP hash
-    const FILTERED_IP_HASHES = new Set(["87c6f6c5cfef2d0b"]);
-    if (
-      (location?.city === "Brentwood" && location?.region === "CA") ||
-      FILTERED_IP_HASHES.has(hashIP(ip))
-    ) {
-      return NextResponse.json({ success: true, skipped: "filtered-location" });
-    }
+    // TEMPORARILY DISABLED for testing — re-enable after verifying tracking works from Brentwood
+    // const FILTERED_IP_HASHES = new Set(["87c6f6c5cfef2d0b"]);
+    // if (
+    //   (location?.city === "Brentwood" && location?.region === "CA") ||
+    //   FILTERED_IP_HASHES.has(hashIP(ip))
+    // ) {
+    //   return NextResponse.json({ success: true, skipped: "filtered-location" });
+    // }
 
     const now = new Date();
 

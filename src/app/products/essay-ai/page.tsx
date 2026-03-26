@@ -141,8 +141,8 @@ function DemoSection() {
 function FeaturesSection() {
   const features = [
     {
-      title: 'SAT, ACT, AP Lang & AP Lit Rubrics',
-      description: 'Pre-configured analytic rubrics for SAT, ACT, AP Lang, AP Lit, and college application essays. Custom rubrics available for any curriculum.',
+      title: '13 Built-In Rubrics + Custom',
+      description: 'Pre-configured rubrics for SAT, ACT, AP Lang, AP Lit, IB, GRE, TOEFL, IELTS, 6+1 Traits, and college application essays. Custom rubrics for any curriculum.',
       icon: '📋'
     },
     {

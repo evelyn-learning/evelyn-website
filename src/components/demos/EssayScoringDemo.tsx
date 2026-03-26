@@ -58,7 +58,7 @@ Also cyberbullying is a big problem. Kids get bullied online and its really sad.
 In conclusion social media has good and bad parts but mostly bad. We should limit how much we use it.`
 };
 
-type EssayType = 'sat' | 'act' | 'college' | 'ap-synthesis' | 'ap-rhetorical' | 'ap-argument' | 'custom';
+type EssayType = 'sat' | 'act' | 'college' | 'ap-synthesis' | 'ap-rhetorical' | 'ap-argument' | 'ap-lit' | 'ib-extended' | 'gre' | 'toefl' | 'ielts' | 'six-traits' | 'custom';
 
 export default function EssayScoringDemo() {
   const trackInteraction = useTrackInteraction();
@@ -71,10 +71,17 @@ export default function EssayScoringDemo() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [studentName, setStudentName] = useState('');
+  const [analysesUsed, setAnalysesUsed] = useState<number | null>(null);
 
   // Custom rubric state
   const [customRubricText, setCustomRubricText] = useState('');
   const [customMaxScore, setCustomMaxScore] = useState(10);
+
+  // Calibration anchor essay
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [anchorEssay, setAnchorEssay] = useState('');
+  const [anchorScore, setAnchorScore] = useState('');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -158,13 +165,49 @@ export default function EssayScoringDemo() {
       categories: ['Thesis', 'Evidence & Commentary', 'Sophistication'],
       maxScore: 6,
       description: 'Develops an evidence-based argument that responds to the prompt (AP scoring 0-6)'
+    },
+    'ap-lit': {
+      name: 'AP Literature',
+      categories: ['Thesis', 'Evidence & Commentary', 'Sophistication'],
+      maxScore: 6,
+      description: 'Analyzes literary works with attention to thesis, textual evidence, and literary interpretation (AP scoring 0-6)'
+    },
+    'ib-extended': {
+      name: 'IB Extended Essay',
+      categories: ['Focus & Method', 'Knowledge & Understanding', 'Critical Thinking', 'Presentation', 'Engagement'],
+      maxScore: 7,
+      description: 'Evaluates research quality, analysis depth, and academic presentation per IB criteria (banded A-E, scored 0-34 total)'
+    },
+    gre: {
+      name: 'GRE Analytical Writing',
+      categories: ['Argument Analysis', 'Critical Thinking', 'Organization & Development', 'Language Facility'],
+      maxScore: 6,
+      description: 'Assesses analytical writing ability for graduate admissions (ETS scoring 0-6 in half-point increments)'
+    },
+    toefl: {
+      name: 'TOEFL iBT Writing',
+      categories: ['Development', 'Organization', 'Language Use', 'Mechanics'],
+      maxScore: 5,
+      description: 'Evaluates English writing proficiency for non-native speakers (ETS scoring 0-5)'
+    },
+    ielts: {
+      name: 'IELTS Academic Writing',
+      categories: ['Task Achievement', 'Coherence & Cohesion', 'Lexical Resource', 'Grammatical Range & Accuracy'],
+      maxScore: 9,
+      description: 'Assesses English academic writing with band scores (0-9) per British Council/IDP criteria'
+    },
+    'six-traits': {
+      name: '6+1 Traits of Writing',
+      categories: ['Ideas', 'Organization', 'Voice', 'Word Choice', 'Sentence Fluency', 'Conventions', 'Presentation'],
+      maxScore: 5,
+      description: 'K-12 formative writing assessment across seven trait dimensions (Education Northwest model, scored 1-5)'
     }
   };
 
   const getActiveRubric = (): Rubric => {
     if (essayType === 'custom') {
       const categories = customRubricText
-        .split(/[,\n]/)
+        .split(/\n/)
         .map(s => s.trim())
         .filter(Boolean);
       return {
@@ -188,7 +231,7 @@ export default function EssayScoringDemo() {
       setError('Please enter at least 50 words for a meaningful analysis.');
       return;
     }
-    if (essayType === 'custom' && customRubricText.trim().split(/[,\n]/).filter(s => s.trim()).length === 0) {
+    if (essayType === 'custom' && customRubricText.trim().split(/\n/).filter(s => s.trim()).length === 0) {
       setError('Please enter at least one rubric category.');
       return;
     }
@@ -196,7 +239,7 @@ export default function EssayScoringDemo() {
     setIsAnalyzing(true);
     setError(null);
     setFeedback(null);
-    trackInteraction('tool_use', 'analyze_essay', { rubric: essayType, wordCount });
+    trackInteraction('tool_use', 'analyze_essay', { rubric: essayType, wordCount, studentName: studentName.trim() || undefined, essayText: essay });
 
     const rubric = getActiveRubric();
 
@@ -205,8 +248,18 @@ You provide detailed, constructive feedback that helps students improve their wr
 Always be encouraging while being honest about areas for improvement.
 Your feedback should be specific and actionable.`;
 
-    const userPrompt = `Please evaluate this ${rubric.name} essay using the following criteria: ${rubric.categories.join(', ')}.
+    const calibrationBlock = anchorEssay.trim() && anchorScore.trim()
+      ? `\n\nCALIBRATION REFERENCE:
+The teacher has provided a pre-scored anchor essay to calibrate your scoring. Use this as your reference point for what a score of ${anchorScore} looks like on this rubric. Adjust your scoring of the student essay relative to this anchor.
 
+ANCHOR ESSAY (scored ${anchorScore} by the teacher):
+"""
+${anchorEssay.trim()}
+"""\n`
+      : '';
+
+    const userPrompt = `Please evaluate this ${rubric.name} essay using the following criteria: ${rubric.categories.join(', ')}.
+${calibrationBlock}
 For each category, provide:
 1. A score from 1-${rubric.maxScore}
 2. 2-3 specific observations (what works well)
@@ -266,7 +319,8 @@ ${essay}
         try {
           const parsed = JSON.parse(jsonMatch[0]) as FeedbackData;
           setFeedback(parsed);
-          trackInteraction('tool_use', 'essay_scored', { rubric: essayType, overallScore: parsed.overallScore });
+          setAnalysesUsed(prev => (prev ?? 0) + 1);
+          trackInteraction('tool_use', 'essay_scored', { rubric: essayType, overallScore: parsed.overallScore, studentName: studentName.trim() || undefined });
         } catch {
           setError('Could not parse feedback. Please try again.');
         }
@@ -293,7 +347,7 @@ ${essay}
     try {
       const { exportEssayFeedbackPDF } = await import('@/lib/utils/export/pdf-essay-feedback');
       const rubric = getActiveRubric();
-      await exportEssayFeedbackPDF(essay, feedback, rubric.name, rubric.maxScore);
+      await exportEssayFeedbackPDF(essay, feedback, rubric.name, rubric.maxScore, studentName.trim() || undefined);
     } catch (err) {
       console.error('PDF export error:', err);
     }
@@ -361,6 +415,12 @@ ${essay}
                 <option value="ap-synthesis">AP Lang: Synthesis</option>
                 <option value="ap-rhetorical">AP Lang: Rhetorical Analysis</option>
                 <option value="ap-argument">AP Lang: Argument</option>
+                <option value="ap-lit">AP Literature</option>
+                <option value="ib-extended">IB Extended Essay</option>
+                <option value="gre">GRE Analytical Writing</option>
+                <option value="toefl">TOEFL iBT Writing</option>
+                <option value="ielts">IELTS Academic Writing</option>
+                <option value="six-traits">6+1 Traits of Writing</option>
                 <option value="custom">Custom Rubric</option>
               </select>
             </div>
@@ -372,17 +432,17 @@ ${essay}
                 </p>
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
-                    Categories (comma or line-separated)
+                    Categories (one per line)
                   </label>
                   <textarea
                     value={customRubricText}
                     onChange={(e) => setCustomRubricText(e.target.value)}
-                    placeholder="e.g., Thesis Clarity, Evidence Quality, Argument Structure, Grammar & Mechanics"
+                    placeholder={"e.g.,\nThesis Clarity\nEvidence Quality\nArgument Structure\nGrammar, Mechanics & Usage"}
                     className="w-full min-h-[60px] p-3 border border-purple-200 rounded-lg resize-y text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   {customRubricText.trim() && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {customRubricText.split(/[,\n]/).map(s => s.trim()).filter(Boolean).map((cat, i) => (
+                      {customRubricText.split(/\n/).map(s => s.trim()).filter(Boolean).map((cat, i) => (
                         <span key={i} className="px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full text-xs">
                           {cat}
                         </span>
@@ -412,6 +472,53 @@ ${essay}
                 </p>
               </div>
             )}
+
+            {/* Rubric Calibration */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowCalibration(!showCalibration)}
+                className="flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-800 transition font-medium"
+              >
+                <svg className={`w-3.5 h-3.5 transition-transform ${showCalibration ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                Calibrate with an anchor essay
+              </button>
+              {showCalibration && (
+                <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-blue-700">
+                    Paste a pre-scored essay to calibrate AI scoring to your standards. The AI will use this as a reference point.
+                  </p>
+                  <textarea
+                    value={anchorEssay}
+                    onChange={(e) => setAnchorEssay(e.target.value)}
+                    placeholder="Paste your anchor essay here..."
+                    className="w-full min-h-[80px] p-3 border border-blue-200 rounded-lg resize-y text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  />
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-blue-700">Score you assigned:</label>
+                    <input
+                      type="text"
+                      value={anchorScore}
+                      onChange={(e) => setAnchorScore(e.target.value)}
+                      placeholder={`e.g., ${activeRubric.maxScore - 1}/${activeRubric.maxScore}`}
+                      className="w-32 px-3 py-1.5 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Student Name */}
+            <div className="mb-4">
+              <input
+                type="text"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                placeholder="Student name (optional — included in PDF report)"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+              />
+            </div>
 
             <textarea
               value={essay}
@@ -507,6 +614,13 @@ ${essay}
               )}
             </button>
 
+            {/* Free limit indicator */}
+            <p className="mt-2 text-center text-xs text-gray-400">
+              {analysesUsed !== null
+                ? `${Math.max(0, 50 - analysesUsed)} of 50 free analyses remaining today`
+                : '50 free analyses per day'}
+            </p>
+
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
@@ -545,16 +659,19 @@ ${essay}
 
             {isAnalyzing && (
               <div className="h-full flex items-center justify-center">
-                <div className="text-center">
+                <div className="text-center w-full max-w-xs">
                   <div className="w-16 h-16 mx-auto mb-4 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                  <p className="text-gray-600">Analyzing your essay...</p>
-                  <p className="text-sm text-gray-400 mt-1">This takes about 5-10 seconds</p>
+                  <p className="text-gray-600 mb-3">Analyzing your essay...</p>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-purple-500 to-primary-500 rounded-full animate-progress-bar" />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Usually takes 5-10 seconds</p>
                 </div>
               </div>
             )}
 
             {feedback && (
-              <div className="space-y-6 overflow-y-auto max-h-[600px] pr-2">
+              <div className="space-y-6">
                 {/* Overall Score */}
                 <div className="bg-gradient-to-r from-purple-500 to-primary-600 rounded-xl p-6 text-white">
                   <div className="flex items-center justify-between">
@@ -665,7 +782,7 @@ ${essay}
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { icon: '⚡', title: 'Instant Feedback', desc: 'Results in under 10 seconds' },
-              { icon: '📊', title: 'Rubric-Aligned', desc: 'SAT, ACT, AP Lang, college, and custom rubrics' },
+              { icon: '📊', title: 'Rubric-Aligned', desc: 'SAT, ACT, AP, IB, GRE, TOEFL, IELTS, 6+1 Traits & custom' },
               { icon: '🎯', title: 'Actionable Insights', desc: 'Specific improvement suggestions' },
               { icon: '📈', title: 'Progress Tracking', desc: 'Monitor improvement over time' }
             ].map((feature, idx) => (

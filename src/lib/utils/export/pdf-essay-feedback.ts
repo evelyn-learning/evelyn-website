@@ -41,7 +41,8 @@ export async function exportEssayFeedbackPDF(
   essayText: string,
   feedback: EssayFeedbackPDFData,
   rubricName: string,
-  maxScore: number
+  maxScore: number,
+  studentName?: string
 ): Promise<void> {
   const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF('p', 'mm', 'a4');
@@ -90,7 +91,12 @@ export async function exportEssayFeedbackPDF(
   pdf.text(sanitizeForPDF(dateStr), margin, 30);
   y = 48;
 
-  // ── Rubric & Word Count ──
+  // ── Student Name, Rubric & Word Count ──
+  if (studentName) {
+    drawWrappedText(`Student: ${studentName}`, margin, contentWidth, {
+      size: 12, style: 'bold', color: [26, 32, 44], lineHeight: 7,
+    });
+  }
   const wordCount = essayText.trim().split(/\s+/).filter(w => w).length;
   drawWrappedText(`Rubric: ${rubricName}`, margin, contentWidth, {
     size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6,
@@ -243,6 +249,7 @@ export async function exportEssayFeedbackPDF(
     pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 22, 287);
   }
 
-  const filename = `Essay_Feedback_${rubricName.replace(/[^a-zA-Z0-9]+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const namePart = studentName ? `_${studentName.replace(/[^a-zA-Z0-9]+/g, '_')}` : '';
+  const filename = `Essay_Feedback_${rubricName.replace(/[^a-zA-Z0-9]+/g, '_')}${namePart}_${new Date().toISOString().split('T')[0]}.pdf`;
   pdf.save(filename);
 }
