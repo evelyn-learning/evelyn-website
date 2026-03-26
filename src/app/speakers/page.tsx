@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { connectDB, isDBConfigured } from "@/lib/db";
 import { Speaker } from "@/models";
-import { Linkedin, ExternalLink, Award, Mic, Video } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Award, Mic, Video } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Speakers Hall of Fame",
@@ -22,7 +23,10 @@ async function getSpeakers() {
 
 function SpeakerCard({ speaker }: { speaker: any }) {
   return (
-    <div className="group rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+    <Link
+      href={`/speakers/${speaker.slug}`}
+      className="group block rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+    >
       {/* Avatar */}
       <div className="mb-4 flex justify-center">
         {speaker.image ? (
@@ -58,35 +62,21 @@ function SpeakerCard({ speaker }: { speaker: any }) {
       {/* Bio */}
       <p className="mt-4 text-sm text-gray-600 line-clamp-3">{speaker.bio}</p>
 
-      {/* Links */}
-      <div className="mt-4 flex items-center justify-center gap-3">
-        {speaker.linkedIn && (
-          <a
-            href={speaker.linkedIn}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full bg-gray-100 p-2 text-gray-600 transition-colors hover:bg-primary-100 hover:text-primary-500"
-          >
-            <Linkedin className="h-4 w-4" />
-          </a>
-        )}
-        {speaker.contentUrl && (
-          <a
-            href={speaker.contentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-600 transition-colors hover:bg-primary-100"
-          >
-            {speaker.contentType === "webinar"
-              ? "Watch Webinar"
-              : speaker.contentType === "interview"
-              ? "Watch Interview"
-              : "View Content"}
-            <ExternalLink className="ml-1 h-3 w-3" />
-          </a>
-        )}
+      {/* Content type & View Profile */}
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+          {speaker.contentType === "webinar"
+            ? "Webinar Speaker"
+            : speaker.contentType === "interview"
+            ? "Interview Guest"
+            : "Speaker & Guest"}
+        </span>
+        <span className="inline-flex items-center text-xs font-medium text-primary-500 group-hover:text-primary-600">
+          View Profile
+          <ExternalLink className="ml-1 h-3 w-3" />
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }
 

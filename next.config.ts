@@ -89,27 +89,7 @@ const nextConfig: NextConfig = {
         destination: "/industries/higher-ed",
         permanent: true,
       },
-      // WordPress tag/category/pagination patterns → blog
-      {
-        source: "/tag/:slug",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/tag/:slug/",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/category/:slug",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/category/:slug/",
-        destination: "/blog",
-        permanent: true,
-      },
+      // Tag and category hub pages now handled by /tag/[slug] and /category/[slug] routes
       {
         source: "/blog/:page(\\d+)",
         destination: "/blog",
@@ -127,6 +107,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/staging-1/:path*",
+        destination: "/blog",
+        permanent: true,
+      },
+      {
+        source: "/staging-2/:path*",
         destination: "/blog",
         permanent: true,
       },
@@ -206,6 +191,86 @@ const nextConfig: NextConfig = {
       {
         source: "/author/:slug/",
         destination: "/about",
+        permanent: true,
+      },
+      // Speaker slug redirects (old WP slugs → correct DB slugs)
+      {
+        source: "/speakers/brad-waid-2",
+        destination: "/speakers/brad-waid",
+        permanent: true,
+      },
+      {
+        source: "/speakers/erin-dowd-2",
+        destination: "/speakers/erin-dowd",
+        permanent: true,
+      },
+      {
+        source: "/speakers/corey-seemiller",
+        destination: "/speakers/corey-seemiller-ph-d",
+        permanent: true,
+      },
+      {
+        source: "/speakers/ellen-prescott",
+        destination: "/speakers/ellen-prescott-ph-d-pmp",
+        permanent: true,
+      },
+      {
+        source: "/speakers/kevin-j-fleming",
+        destination: "/speakers/kevin-j-fleming-ph-d",
+        permanent: true,
+      },
+      // Speakers not in DB → speakers listing
+      {
+        source: "/speakers/dr-audrey-peek",
+        destination: "/speakers",
+        permanent: false,
+      },
+      {
+        source: "/speakers/dr-danny-barnes",
+        destination: "/speakers",
+        permanent: false,
+      },
+      {
+        source: "/speakers/erin-lenihan",
+        destination: "/speakers",
+        permanent: false,
+      },
+      {
+        source: "/speakers/lucas-b-kavlie",
+        destination: "/speakers",
+        permanent: false,
+      },
+      // Short interview sub-pages → interviews
+      {
+        source: "/short-interviews/:slug",
+        destination: "/interviews",
+        permanent: true,
+      },
+      {
+        source: "/short-interviews/:slug/",
+        destination: "/interviews",
+        permanent: true,
+      },
+      // Tag/category feed URLs → blog
+      {
+        source: "/tag/:slug/feed",
+        destination: "/blog",
+        permanent: true,
+      },
+      {
+        source: "/tag/:slug/feed/",
+        destination: "/blog",
+        permanent: true,
+      },
+      // Tag pagination → blog
+      {
+        source: "/tag/:slug/page/:page",
+        destination: "/blog",
+        permanent: true,
+      },
+      {
+        source: "/tag/:slug/page/:page/",
+        destination: "/blog",
         permanent: true,
       },
       // WordPress date archives → blog
@@ -290,19 +355,18 @@ const nextConfig: NextConfig = {
         destination: "/products",
         permanent: true,
       },
-      // Old root-level blog post slugs → blog
-      // 238+ WordPress blog posts lived at root level (e.g., /adaptive-learning/)
-      // Catch-all: any root path with a hyphen → /blog
-      // Next.js pages take priority over redirects, so /case-studies (the only
-      // root-level hyphenated page) will still serve its page correctly.
+      // Old root-level blog post slugs → /blog/:slug
+      // 141 WordPress blog posts lived at root level (e.g., /adaptive-learning/)
+      // Now migrated to /blog/:slug — redirect to the actual post.
+      // Next.js pages take priority over redirects, so /case-studies etc. still work.
       {
         source: "/:slug([a-z0-9]+-[a-z0-9-]+)",
-        destination: "/blog",
+        destination: "/blog/:slug",
         permanent: true,
       },
       {
         source: "/:slug([a-z0-9]+-[a-z0-9-]+)/",
-        destination: "/blog",
+        destination: "/blog/:slug",
         permanent: true,
       },
       // Truncated URLs with trailing hyphens
