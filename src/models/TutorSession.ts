@@ -27,6 +27,13 @@ export interface IWhiteboardEntry {
   sourceMessageIndex?: number;
 }
 
+export interface IDebugEvent {
+  type: 'noise_filtered' | 'duplicate_response' | 'whiteboard_false_claim' | 'whiteboard_validation_pass' | 'context_loss' | 'mic_mute' | 'mic_unmute' | 'image_upload' | 'tool_call' | 'tool_call_error' | 'vad_speech_started' | 'vad_speech_stopped' | 'error' | 'info';
+  message: string;
+  timestamp: Date;
+  data?: Record<string, unknown>;
+}
+
 export interface ITutorSession extends Document {
   sessionId: string;
   studentName?: string;
@@ -44,6 +51,7 @@ export interface ITutorSession extends Document {
   transcript: ITranscriptEntry[];
   whiteboardCommands: IWhiteboardEntry[];
   tokenUsage: ITokenUsage[];
+  debugEvents: IDebugEvent[];
   totalInputTokens: number;
   totalOutputTokens: number;
   estimatedCost: number;
@@ -123,6 +131,28 @@ const WhiteboardEntrySchema = new Schema<IWhiteboardEntry>(
   { _id: false }
 );
 
+const DebugEventSchema = new Schema<IDebugEvent>(
+  {
+    type: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+      maxlength: 500,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    data: {
+      type: Schema.Types.Mixed,
+    },
+  },
+  { _id: false }
+);
+
 const TutorSessionSchema = new Schema<ITutorSession>(
   {
     sessionId: {
@@ -187,6 +217,10 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     tokenUsage: {
       type: [TokenUsageSchema],
+      default: [],
+    },
+    debugEvents: {
+      type: [DebugEventSchema],
       default: [],
     },
     totalInputTokens: {

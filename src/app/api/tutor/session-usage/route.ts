@@ -92,6 +92,20 @@ export async function POST(req: NextRequest) {
       pushOps.tokenUsage = { $each: body.tokenUsage };
     }
 
+    // Append debug events if provided
+    if (body.debugEvents && Array.isArray(body.debugEvents)) {
+      pushOps.debugEvents = {
+        $each: body.debugEvents.map(
+          (e: { type: string; message: string; timestamp?: string; data?: Record<string, unknown> }) => ({
+            type: e.type,
+            message: typeof e.message === 'string' ? e.message.slice(0, 500) : '',
+            timestamp: e.timestamp ? new Date(e.timestamp) : new Date(),
+            ...(e.data ? { data: e.data } : {}),
+          })
+        ),
+      };
+    }
+
     // On final save (completed/abandoned), store transcript + whiteboard data
     if (
       (body.status === "completed" || body.status === "abandoned") &&

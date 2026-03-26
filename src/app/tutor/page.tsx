@@ -108,6 +108,25 @@ export default function TutorPage() {
   const sessionStartTimeRef = useRef<Date | null>(null);
   const lastSavedTokenCountRef = useRef(0); // track what we've already pushed to avoid duplicates
 
+  // Debug events — persisted to DB for post-session analysis
+  interface DebugEvent {
+    type: string;
+    message: string;
+    timestamp: string;
+    data?: Record<string, unknown>;
+  }
+  const debugEventsRef = useRef<DebugEvent[]>([]);
+  const lastSavedDebugCountRef = useRef(0);
+
+  const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
+    debugEventsRef.current.push({
+      type,
+      message: message.slice(0, 500),
+      timestamp: new Date().toISOString(),
+      ...(data ? { data } : {}),
+    });
+  }, []);
+
   // Save session usage to DB (fire-and-forget, tolerates failures)
   const saveSessionUsage = useCallback((status: 'active' | 'completed' | 'abandoned' = 'active') => {
     if (!selectedTopicId || stage === 'setup') return;
@@ -142,6 +161,10 @@ export default function TutorPage() {
     const newEntries = tokenUsage.slice(lastSavedTokenCountRef.current);
     lastSavedTokenCountRef.current = tokenUsage.length;
 
+    // Only push new debug events since last save
+    const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
+    lastSavedDebugCountRef.current = debugEventsRef.current.length;
+
     const isFinal = status === 'completed' || status === 'abandoned';
 
     const payload: Record<string, unknown> = {
@@ -172,6 +195,7 @@ export default function TutorPage() {
         ...(u.inputTextTokens ? { inputTextTokens: u.inputTextTokens } : {}),
         ...(u.outputTextTokens ? { outputTextTokens: u.outputTextTokens } : {}),
       })) } : {}),
+      ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
       // Include full transcript + whiteboard data on final save
       ...(isFinal ? {
         transcript: transcript.map(t => ({
@@ -520,6 +544,7 @@ export default function TutorPage() {
   const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
     if (!selectedTopicId) return;
     console.log('[Tutor] Processing homework upload:', mimeType);
+    addDebugEvent('image_upload', `Homework upload: ${mimeType}`);
     setIsProcessing(true);
     setError(null);
     setStatusMessage('📷 Analyzing your problem...');
@@ -1061,6 +1086,7 @@ export default function TutorPage() {
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
                   onUsageUpdate={handleRealtimeUsage}
+                  onDebugEvent={addDebugEvent}
                   onError={(err) => setError(err.message)}
                   onEndSession={handleEndSession}
                   onTrackInteraction={trackInteraction}

@@ -150,6 +150,7 @@ interface VoiceTutorRealtimeProps {
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
+  onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
   validateToolCalls?: boolean;
 }
@@ -176,6 +177,7 @@ export function VoiceTutorRealtime({
   onEndSession,
   onTrackInteraction,
   onUsageUpdate,
+  onDebugEvent,
   handleRef,
   validateToolCalls = false,
 }: VoiceTutorRealtimeProps) {
@@ -241,6 +243,7 @@ export function VoiceTutorRealtime({
       const data = await response.json();
       if (data.commands?.length > 0) {
         console.log('[VoiceTutorRealtime] Validation pass generated', data.commands.length, 'whiteboard command(s):', data.commands.map((c: WhiteboardCommand) => c.action));
+        onDebugEvent?.('whiteboard_validation_pass', `Generated ${data.commands.length} command(s)`, { actions: data.commands.map((c: WhiteboardCommand) => c.action) });
         onWhiteboardCommand(data.commands as WhiteboardCommand[]);
         whiteboardCommandCountRef.current += data.commands.length;
 
@@ -298,6 +301,7 @@ export function VoiceTutorRealtime({
         // Skip noise / background chatter that Whisper hallucinates
         if (isNoiseTranscript(text.trim())) {
           console.log('[VoiceTutorRealtime] Filtered noise transcript:', text.trim());
+          onDebugEvent?.('noise_filtered', `Filtered: "${text.trim()}"`)
           currentUserTextRef.current = '';
           return;
         }
@@ -341,6 +345,7 @@ export function VoiceTutorRealtime({
         );
         if (isDuplicate) {
           console.warn('[VoiceTutorRealtime] Duplicate tutor response detected, injecting correction:', cleanText.substring(0, 80));
+          onDebugEvent?.('duplicate_response', `Duplicate: "${cleanText.substring(0, 100)}"`);
           if (injectContextRef.current) {
             injectContextRef.current(
               'You just repeated yourself verbatim. The student already heard this exact response. ' +
@@ -420,6 +425,7 @@ export function VoiceTutorRealtime({
     turnHadToolCallRef.current = true;
 
     console.log('[VoiceTutorRealtime] handleWhiteboardCommand called, validateToolCalls:', validateToolCalls, 'commands:', commands.map(c => c.action));
+    onDebugEvent?.('tool_call', `Whiteboard tool: ${commands.map(c => c.action).join(', ')}`);
 
     // Step 1: Validate geometry + conic section commands (local, synchronous, zero-cost)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -542,6 +548,7 @@ export function VoiceTutorRealtime({
     // --- Context loss detection ---
     if (isContextLossGreeting(tutorText)) {
       console.warn('[VoiceTutorRealtime] Context loss detected — tutor re-greeted mid-session. Injecting context.');
+      onDebugEvent?.('context_loss', `Tutor re-greeted at turn ${tutorTurnCountRef.current}: "${tutorText.substring(0, 100)}"`);
       const summary = buildContextSummary();
       if (summary && injectContextRef.current) {
         injectContextRef.current(summary + '\n\nIMPORTANT: You just lost context and re-greeted the student. Continue where we left off. Do NOT greet or introduce yourself again.');
@@ -563,6 +570,7 @@ export function VoiceTutorRealtime({
     const claimsOnBoard = /\b(on the (?:white)?board now|right (?:on |there on )?the (?:white)?board|you should see|check (?:the|your) (?:display|whiteboard|board))\b/i.test(tutorText);
     if (claimsOnBoard && whiteboardCommandCountRef.current === 0) {
       console.warn('[VoiceTutorRealtime] Tutor falsely claims whiteboard content exists (0 commands). Injecting correction.');
+      onDebugEvent?.('whiteboard_false_claim', `Tutor claimed "${tutorText.substring(0, 100)}" but 0 whiteboard commands exist`);
       if (injectContextRef.current) {
         injectContextRef.current(
           'CORRECTION: You just told the student something is on the whiteboard, but NOTHING was actually drawn or displayed. ' +
@@ -587,8 +595,9 @@ export function VoiceTutorRealtime({
   const handleError = useCallback((error: Error) => {
     console.error('[VoiceTutorRealtime] Error:', error);
     setErrorMessage(error.message);
+    onDebugEvent?.('error', error.message);
     onError?.(error);
-  }, [onError]);
+  }, [onError, onDebugEvent]);
 
   // Listen for molecule changes from the Ketcher editor
   // Use a ref to access sendTextMessage without re-creating the listener
@@ -838,9 +847,11 @@ Start by warmly greeting the student and asking how you can help them today.`;
       if (newMuted) {
         realtime.muteInput();
         console.log('[VoiceTutorRealtime] Student mic muted (buffer cleared)');
+        onDebugEvent?.('mic_mute', 'Student muted mic');
       } else {
         realtime.startListening();
         console.log('[VoiceTutorRealtime] Student mic unmuted');
+        onDebugEvent?.('mic_unmute', 'Student unmuted mic');
       }
       return newMuted;
     });
