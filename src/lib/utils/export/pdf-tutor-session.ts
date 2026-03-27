@@ -1104,9 +1104,20 @@ function drawGeometryVisual(
 
 // Draw a visual representation of a whiteboard command. Returns new y position.
 async function drawWhiteboardVisual(
-  pdf: jsPDF, cmd: WhiteboardCommandData,
+  pdf: jsPDF, rawCmd: WhiteboardCommandData,
   x: number, y: number, width: number
 ): Promise<number> {
+  // Normalize: DB format nests command properties under 'data' (e.g., { action: 'showEquation', data: { latex: '...' } }),
+  // while live format has them flat (e.g., { action: 'showEquation', latex: '...' }). Flatten for consistent access.
+  // Only flatten when the command has ONLY action+data+timestamp+sourceMessageIndex keys (DB format),
+  // not when it already has content keys at the top level (live format).
+  const cmdData = rawCmd.data as Record<string, unknown> | undefined;
+  const dbOnlyKeys = new Set(['action', 'data', 'timestamp', 'sourceMessageIndex']);
+  const hasOnlyDbKeys = Object.keys(rawCmd).every(k => dbOnlyKeys.has(k));
+  const cmd: WhiteboardCommandData = (hasOnlyDbKeys && cmdData && typeof cmdData === 'object' && !Array.isArray(cmdData))
+    ? { ...cmdData, action: rawCmd.action }
+    : rawCmd;
+
   if (cmd.action === 'showEquation' && cmd.latex) {
     return drawEquationVisual(pdf, String(cmd.latex), cmd.label as string | undefined, x, y, width);
   }
@@ -1156,7 +1167,15 @@ async function drawWhiteboardVisual(
   return y; // No visual drawn
 }
 
-function describeWhiteboardCommand(cmd: WhiteboardCommandData): string {
+function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
+  // Normalize DB format (nested data) to flat format
+  const cmdData = rawCmd.data as Record<string, unknown> | undefined;
+  const dbOnlyKeys = new Set(['action', 'data', 'timestamp', 'sourceMessageIndex']);
+  const hasOnlyDbKeys = Object.keys(rawCmd).every(k => dbOnlyKeys.has(k));
+  const cmd: WhiteboardCommandData = (hasOnlyDbKeys && cmdData && typeof cmdData === 'object' && !Array.isArray(cmdData))
+    ? { ...cmdData, action: rawCmd.action }
+    : rawCmd;
+
   switch (cmd.action) {
     case 'showEquation':
       return `Equation${cmd.label ? `: ${cmd.label}` : ''}`;

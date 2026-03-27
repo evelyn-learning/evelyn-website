@@ -111,15 +111,14 @@ function filterTranscriptText(text: string): string {
 // Whisper hallucinations / background noise artifacts to ignore entirely.
 // These are commonly produced when there's silence, background chatter, or ambient noise.
 const NOISE_PATTERNS = new Set([
-  'bye', 'bye bye', 'bye-bye', 'bye guys', 'bye.', 'bye bye.', 'bye-bye.',
+  'bye', 'bye bye', 'bye-bye', 'bye guys', 'bye bye', 'bye-bye',
   'goodbye', 'good bye',
-  'thank you', 'thanks', 'thank you.', 'thanks.',
+  'thank you', 'thanks',
   'you', 'the', 'a', 'i', 'um', 'uh', 'hmm', 'huh', 'oh',
-  'okay', 'ok', 'yes', 'no', 'yeah', 'yep', 'nah', 'nope',
   'so', 'and', 'but', 'like', 'well', 'right',
   'hello', 'hi', 'hey',
   // Common Whisper hallucinations on silence
-  'you', 'thank you for watching', 'thanks for watching',
+  'thank you for watching', 'thanks for watching',
   'subscribe', 'like and subscribe',
   'music', 'applause', 'laughter',
 ]);
@@ -128,9 +127,9 @@ function isNoiseTranscript(text: string): boolean {
   const normalized = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim();
   // Exact match with known noise
   if (NOISE_PATTERNS.has(normalized)) return true;
-  // Very short (1-2 words) and repeated words like "bye bye" or "hello hello"
+  // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
   const words = normalized.split(/\s+/);
-  if (words.length <= 3 && new Set(words).size === 1) return true;
+  if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
   // Single word under 4 characters
   if (words.length === 1 && normalized.length < 4) return true;
   return false;
@@ -260,7 +259,7 @@ export function VoiceTutorRealtime({
         }
 
         data.commands.forEach((cmd: WhiteboardCommand) => {
-          onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action, source: 'validation-pass' });
+          onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd, source: 'validation-pass' });
         });
       } else {
         console.warn('[VoiceTutorRealtime] Validation pass returned 0 commands for tutor text:', tutorText.substring(0, 100));
@@ -541,7 +540,7 @@ export function VoiceTutorRealtime({
     }
 
     processed.forEach((cmd) => {
-      onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
+      onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
     });
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude]);
 

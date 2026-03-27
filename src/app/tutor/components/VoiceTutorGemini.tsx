@@ -128,7 +128,7 @@ export function VoiceTutorGemini({
     }
 
     validated.forEach((cmd) => {
-      onTrackInteraction?.('tool_use', 'whiteboard', { command: cmd.action });
+      onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
     });
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction]);
 

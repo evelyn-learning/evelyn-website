@@ -140,6 +140,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const lastResponseDoneRef = useRef<number>(0);
   const lastUserInputRef = useRef<number>(0);
   const lastResponseHadToolCallRef = useRef(false);
+  // Track post-tool-call response: allow exactly ONE follow-up after a tool call,
+  // then cancel any further VAD-triggered responses until the student speaks
+  const postToolCallResponseCountRef = useRef(0);
   // Track whether the session should be in listening mode (survives audio playback)
   const shouldListenRef = useRef(false);
   // Ref to hold startListening so playNextAudio can call it without circular deps
@@ -221,6 +224,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'input_audio_buffer.speech_started':
           console.log('[Realtime] Speech detected');
           lastUserInputRef.current = Date.now(); // Mark user input at speech start, not transcription (which is delayed)
+          postToolCallResponseCountRef.current = 0; // Reset post-tool-call counter on new student speech
           updateState('listening');
           break;
 
@@ -283,21 +287,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'response.created': {
           const timeSinceLastResponse = Date.now() - lastResponseDoneRef.current;
           const timeSinceUserInput = Date.now() - lastUserInputRef.current;
-          // If a new response starts within 3s of the last one, and no user input since,
-          // cancel it — UNLESS the last response was a tool call (the model needs to
-          // speak about what it just drew on the whiteboard)
-          if (
+          const noUserInputSinceLastResponse =
             lastResponseDoneRef.current > 0 &&
-            timeSinceLastResponse < 3000 &&
-            timeSinceUserInput > timeSinceLastResponse &&
-            !lastResponseHadToolCallRef.current // Allow post-tool-call speech
-          ) {
-            console.log('[Realtime] Cancelling unwanted follow-up response (no user input since last response)');
-            if (wsRef.current?.readyState === WebSocket.OPEN) {
-              wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+            timeSinceLastResponse < 5000 &&
+            timeSinceUserInput > timeSinceLastResponse;
+
+          if (noUserInputSinceLastResponse) {
+            if (lastResponseHadToolCallRef.current && postToolCallResponseCountRef.current === 0) {
+              // Allow exactly ONE follow-up after a tool call (model speaks about what it drew)
+              postToolCallResponseCountRef.current = 1;
+              console.log('[Realtime] Allowing post-tool-call response (1 of 1)');
+            } else {
+              // Cancel any other follow-up — either non-tool-call or already used the one allowed
+              console.log('[Realtime] Cancelling unwanted follow-up response (no user input since last response)');
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+              }
             }
           }
-          lastResponseHadToolCallRef.current = false; // Reset for this new response
+          lastResponseHadToolCallRef.current = false;
           break;
         }
 

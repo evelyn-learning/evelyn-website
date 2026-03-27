@@ -1022,9 +1022,17 @@ function InteractionTimeline({ interactions, productId, productTitle }: {
         }));
 
       // Build whiteboard commands from tool_use interactions with whiteboard content
+      // Note: interactions store the command type as either 'action' or 'command' in metadata
       const whiteboardCommands = interactions
-        .filter(i => i.type === 'tool_use' && i.content === 'whiteboard' && i.metadata?.action)
-        .map(i => i.metadata as { action: string; [key: string]: unknown });
+        .filter(i => i.type === 'tool_use' && i.content === 'whiteboard' && (i.metadata?.action || i.metadata?.command))
+        .map(i => {
+          const meta = i.metadata as Record<string, unknown>;
+          // Normalize: ensure 'action' key exists (some sources use 'command' instead)
+          if (!meta.action && meta.command) {
+            return { ...meta, action: meta.command as string };
+          }
+          return meta as { action: string; [key: string]: unknown };
+        });
 
       // Get topic from navigation metadata
       const navInteraction = interactions.find(i => i.type === 'navigation' && i.content === 'session_start');
