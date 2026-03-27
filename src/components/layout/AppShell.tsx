@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -17,12 +18,25 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
+  // Detect tutor portal subdomain (tutor.evelynlearning.com or tutor.localhost)
+  // Middleware rewrites subdomain requests to /tutor-portal/*, but usePathname()
+  // returns the original URL path, so we check the hostname instead.
+  const [isTutorPortal, setIsTutorPortal] = useState(false);
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    if (hostname.startsWith('tutor.') || hostname === 'tutor.localhost') {
+      setIsTutorPortal(true);
+    }
+  }, []);
+
   // Showcase pages have their own header/footer/chat widget
   const isShowcasePage = pathname?.startsWith('/showcase/');
   // Tutor page manages its own full-screen layout per stage
   const isTutorPage = pathname === '/tutor';
+  // Also check pathname for direct /tutor-portal access (non-subdomain)
+  const isTutorPortalPath = pathname?.startsWith('/tutor-portal');
 
-  if (isShowcasePage || isTutorPage) {
+  if (isShowcasePage || isTutorPage || isTutorPortal || isTutorPortalPath) {
     // Return children without Evelyn wrapper
     return <>{children}</>;
   }

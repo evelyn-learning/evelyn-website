@@ -1,0 +1,172 @@
+export interface WhiteboardType {
+  id: string;
+  name: string;
+  command: string;
+  category: 'math' | 'graphs' | 'diagrams' | 'science' | 'programming' | 'navigation';
+  description: string;
+  exampleUse: string;
+}
+
+export const whiteboardTypes: WhiteboardType[] = [
+  {
+    id: 'equation',
+    name: 'LaTeX Equations',
+    command: 'showEquation',
+    category: 'math',
+    description: 'Renders mathematical equations and expressions with full LaTeX support, including labels.',
+    exampleUse: 'Quadratic formula, integral notation, matrix equations',
+  },
+  {
+    id: 'graph',
+    name: 'Interactive Graphs',
+    command: 'showGraph',
+    category: 'graphs',
+    description: 'Interactive function graphs with pan/zoom. Supports position-time, velocity-time, acceleration-time, and generic function plots.',
+    exampleUse: 'Plotting y = x², showing velocity vs time for projectile motion',
+  },
+  {
+    id: 'diagram',
+    name: 'Physics Diagrams',
+    command: 'showDiagram',
+    category: 'diagrams',
+    description: 'Vector diagrams, free-body diagrams, projectile trajectories, motion diagrams, circular paths, and pipe flow diagrams.',
+    exampleUse: 'Free-body diagram of a block on an incline, vector addition',
+  },
+  {
+    id: 'table',
+    name: 'Data Tables',
+    command: 'showTable',
+    category: 'graphs',
+    description: 'Structured data tables with headers and rows for organizing information.',
+    exampleUse: 'Experimental data, comparison charts, truth tables',
+  },
+  {
+    id: 'svg',
+    name: 'Custom SVG Diagrams',
+    command: 'showSvgDiagram',
+    category: 'diagrams',
+    description: 'Custom SVG layouts with strict zone positioning for flexible visual content.',
+    exampleUse: 'Circuit diagrams, flow charts, custom illustrations',
+  },
+  {
+    id: 'code',
+    name: 'Code Blocks',
+    command: 'showCode',
+    category: 'programming',
+    description: 'Syntax-highlighted programming code extracted from markdown fences.',
+    exampleUse: 'Python functions, JavaScript algorithms, SQL queries',
+  },
+  {
+    id: 'numberline',
+    name: 'Number Lines',
+    command: 'showNumberLine',
+    category: 'math',
+    description: 'Number lines with customizable intervals and highlighted segments.',
+    exampleUse: 'Integer placement, fraction comparison, inequality visualization',
+  },
+  {
+    id: 'geometry',
+    name: 'Geometry',
+    command: 'showGeometry',
+    category: 'math',
+    description: 'Points, segments, polygons, circles, angles, and arcs with labels and measurements.',
+    exampleUse: 'Triangle proofs, circle theorems, coordinate geometry',
+  },
+  {
+    id: 'unitcircle',
+    name: 'Unit Circle',
+    command: 'showUnitCircle',
+    category: 'math',
+    description: 'Trigonometry unit circle with angle highlights, sine/cosine projections.',
+    exampleUse: 'Trigonometric identities, radian measure, sin/cos values',
+  },
+  {
+    id: 'fractionbar',
+    name: 'Fraction Bars',
+    command: 'showFractionBar',
+    category: 'math',
+    description: 'Visual fraction representations with shaded portions for comparison.',
+    exampleUse: 'Equivalent fractions, adding fractions, mixed numbers',
+  },
+  {
+    id: 'tree',
+    name: 'Tree Diagrams',
+    command: 'showTree',
+    category: 'diagrams',
+    description: 'Hierarchical tree structures for probability, data structures, and genealogy.',
+    exampleUse: 'Probability trees, binary search trees, factor trees',
+  },
+  {
+    id: 'venn',
+    name: 'Venn Diagrams',
+    command: 'showVennDiagram',
+    category: 'diagrams',
+    description: 'Overlapping set diagrams for comparing and contrasting concepts.',
+    exampleUse: 'Set operations, classification, comparing properties',
+  },
+  {
+    id: 'matrix',
+    name: 'Matrices',
+    command: 'showMatrix',
+    category: 'math',
+    description: 'Mathematical matrices with proper bracket notation.',
+    exampleUse: 'Matrix multiplication, determinants, systems of equations',
+  },
+  {
+    id: 'stats',
+    name: 'Statistical Displays',
+    command: 'showStats',
+    category: 'graphs',
+    description: 'Statistical visualizations including distributions and summary statistics.',
+    exampleUse: 'Normal distributions, box plots, mean/median/mode',
+  },
+  {
+    id: 'molecule',
+    name: '3D Molecular Structures',
+    command: 'showMolecule',
+    category: 'science',
+    description: 'Interactive 3D molecular viewer for chemistry with rotation and zoom.',
+    exampleUse: 'Water molecule, organic compounds, protein structures',
+  },
+  {
+    id: 'problem',
+    name: 'Problem Display',
+    command: 'showProblem',
+    category: 'math',
+    description: 'Formatted problem statements with proper mathematical notation.',
+    exampleUse: 'Word problems, exam questions, practice sets',
+  },
+  {
+    id: 'newpage',
+    name: 'New Page',
+    command: 'newPage',
+    category: 'navigation',
+    description: 'Creates a new whiteboard page for the next concept or problem.',
+    exampleUse: 'Moving to a new topic, separating worked examples',
+  },
+  {
+    id: 'gotopage',
+    name: 'Page Navigation',
+    command: 'goToPage',
+    category: 'navigation',
+    description: 'Navigates back to a previous whiteboard page for review.',
+    exampleUse: 'Referring back to an equation, reviewing a previous diagram',
+  },
+  {
+    id: 'clear',
+    name: 'Clear',
+    command: 'clear',
+    category: 'navigation',
+    description: 'Clears the current whiteboard page.',
+    exampleUse: 'Starting fresh on a new problem',
+  },
+];
+
+export const whiteboardCategories = [
+  { id: 'math', name: 'Mathematics', count: whiteboardTypes.filter((t) => t.category === 'math').length },
+  { id: 'graphs', name: 'Graphs & Data', count: whiteboardTypes.filter((t) => t.category === 'graphs').length },
+  { id: 'diagrams', name: 'Diagrams', count: whiteboardTypes.filter((t) => t.category === 'diagrams').length },
+  { id: 'science', name: 'Science', count: whiteboardTypes.filter((t) => t.category === 'science').length },
+  { id: 'programming', name: 'Programming', count: whiteboardTypes.filter((t) => t.category === 'programming').length },
+  { id: 'navigation', name: 'Navigation', count: whiteboardTypes.filter((t) => t.category === 'navigation').length },
+] as const;
