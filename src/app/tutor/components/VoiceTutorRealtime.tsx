@@ -76,64 +76,7 @@ const WHITEBOARD_INTENT_PATTERNS = [
 const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\s*\d+|\b(?:equation|formula|graph|diagram|table)\b)/i;
 
 // Words that Whisper commonly misrecognizes as inappropriate
-const PROFANITY_REPLACEMENTS: Record<string, string> = {
-  'condom': 'continuity',
-  'condoms': 'continuity',
-  'penis': 'Venus',
-  'vagina': 'Regina',
-  'cock': 'caulk',
-  'cum': 'come',
-  'shit': 'shift',
-  'ass': 'gas',
-  'damn': 'dam',
-  'hell': 'held',
-  'dick': 'thick',
-  'bitch': 'pitch',
-  'fuck': 'flux',
-  'fucking': 'fluxing',
-  'bastard': 'bustard',
-  'crap': 'clap',
-  'piss': 'psi',
-  'whore': 'war',
-  'slut': 'slot',
-  'porn': 'born',
-};
-
-function filterTranscriptText(text: string): string {
-  let filtered = text;
-  for (const [bad, replacement] of Object.entries(PROFANITY_REPLACEMENTS)) {
-    const regex = new RegExp(`\\b${bad}\\b`, 'gi');
-    filtered = filtered.replace(regex, replacement);
-  }
-  return filtered;
-}
-
-// Whisper hallucinations / background noise artifacts to ignore entirely.
-// These are commonly produced when there's silence, background chatter, or ambient noise.
-const NOISE_PATTERNS = new Set([
-  'bye', 'bye bye', 'bye-bye', 'bye guys', 'bye bye', 'bye-bye',
-  'goodbye', 'good bye',
-  'thank you', 'thanks',
-  'you', 'the', 'a', 'i', 'um', 'uh', 'hmm', 'huh', 'oh',
-  'so', 'and', 'but', 'like', 'well', 'right',
-  'hello', 'hi', 'hey',
-  // Common Whisper hallucinations on silence
-  'thank you for watching', 'thanks for watching',
-  'subscribe', 'like and subscribe',
-  'music', 'applause', 'laughter',
-]);
-
-function isNoiseTranscript(text: string): boolean {
-  const normalized = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim();
-  // Exact match with known noise
-  if (NOISE_PATTERNS.has(normalized)) return true;
-  // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
-  const words = normalized.split(/\s+/);
-  if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
-  // Single word under 4 characters
-  if (words.length === 1 && normalized.length < 4) return true;
-  return false;
-}
+import { filterTranscriptText, isNoiseTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -565,11 +508,9 @@ export function VoiceTutorRealtime({
   }, [subject, topic, level, studentName, sessionGoal]);
 
   // Detect if the tutor response looks like a context-loss greeting
-  const isContextLossGreeting = useCallback((text: string): boolean => {
+  const detectContextLoss = useCallback((text: string): boolean => {
     if (tutorTurnCountRef.current < 3) return false; // Too early to tell
-    const lower = text.toLowerCase();
-    // Multi-language greeting patterns that shouldn't appear mid-session
-    return /\b(welcome|nice to meet|how can i help you today|what (?:would you like|can i help|brings you)|what are we (?:working|looking) at|schön,? dass du da bist|was möchtest du|¿en qué puedo ayudarte|comment puis-je|cosa posso aiutarti|como posso ajudar|что.*(?:изучать|помочь)|はじめまして|만나서 반갑)\b/i.test(lower);
+    return isContextLossGreeting(text);
   }, []);
 
   // Handle response.done — run whiteboard validation + context keeper + usage tracking
@@ -587,7 +528,7 @@ export function VoiceTutorRealtime({
     tutorTurnCountRef.current++;
 
     // --- Context loss detection ---
-    if (isContextLossGreeting(tutorText)) {
+    if (detectContextLoss(tutorText)) {
       console.warn('[VoiceTutorRealtime] Context loss detected — tutor re-greeted mid-session. Injecting context.');
       onDebugEvent?.('context_loss', `Tutor re-greeted at turn ${tutorTurnCountRef.current}: "${tutorText.substring(0, 100)}"`);
       const summary = buildContextSummary();
@@ -630,7 +571,7 @@ export function VoiceTutorRealtime({
       generateMissingWhiteboardCommands(tutorText);
     }
     studentRequestedVisualRef.current = false;
-  }, [claimsToShowVisual, generateMissingWhiteboardCommands, isContextLossGreeting, buildContextSummary, onUsageUpdate]);
+  }, [claimsToShowVisual, generateMissingWhiteboardCommands, detectContextLoss, buildContextSummary, onUsageUpdate]);
 
   // Handle errors
   const handleError = useCallback((error: Error) => {

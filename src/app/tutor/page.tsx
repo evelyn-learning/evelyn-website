@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
@@ -82,6 +83,11 @@ export default function TutorPage() {
     onView();
   }, [onView]);
 
+  // Allow query param override for engine: /tutor?engine=classic
+  const searchParams = useSearchParams();
+  const engineParam = searchParams.get('engine') as VoiceEngine | null;
+  const VALID_ENGINES: VoiceEngine[] = ['classic', 'realtime', 'realtime-validated', 'gemini-live'];
+
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
@@ -89,9 +95,9 @@ export default function TutorPage() {
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('text');
-  // Voice settings from env - no UI selection needed
+  // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
-  const voiceEngine: VoiceEngine = ENV_VOICE_ENGINE;
+  const voiceEngine: VoiceEngine = (engineParam && VALID_ENGINES.includes(engineParam)) ? engineParam : ENV_VOICE_ENGINE;
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
 
   // Session state
@@ -942,9 +948,9 @@ export default function TutorPage() {
             </div>
           </div>
 
-          {/* Whiteboard */}
+          {/* Whiteboard — use flex always; hidden lg:flex breaks in iframes narrower than 1024px */}
           <div
-            className="hidden lg:flex min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col"
+            className="flex min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col"
             style={{ width: `${100 - splitPercent}%` }}
           >
             <WhiteboardCanvas

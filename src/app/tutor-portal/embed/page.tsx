@@ -360,8 +360,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
           </div>
         </div>
 
-        {/* Whiteboard */}
-        <div className="hidden min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg lg:flex" style={{ width: `${100 - splitPercent}%` }}>
+        {/* Whiteboard — always visible in embed (iframe may be narrower than lg breakpoint) */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg" style={{ width: `${100 - splitPercent}%` }}>
           <WhiteboardCanvas
             commands={whiteboardCommands}
             onClear={() => setWhiteboardCommands([])}

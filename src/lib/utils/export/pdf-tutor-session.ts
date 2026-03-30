@@ -1364,13 +1364,6 @@ export async function exportTutorSessionPDF(
         }
       }
 
-      // Debug JSON
-      if (includeDebug) {
-        const rawJson = JSON.stringify(cmd, null, 0);
-        const truncated = rawJson.length <= 400 ? rawJson : rawJson.substring(0, 400) + '...';
-        drawWrappedText(`[debug] ${truncated}`, margin + 8, textAreaWidth - 4, { size: 5.5, color: [180, 180, 190] });
-      }
-
       y += 3;
     }
     y += 4;

@@ -16,6 +16,7 @@ import type { VoiceId } from '@/lib/tutor/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
+import { isNoiseTranscript, filterTranscriptText, isContextLossGreeting, isDuplicateResponse } from '@/lib/tutor/voice/transcript-filters';
 
 export type VoiceTutorState =
   | 'idle'
@@ -75,6 +76,8 @@ export function VoiceTutor({
   const initAbortControllerRef = useRef<AbortController | null>(null);
   const lastExternalHistoryLengthRef = useRef(0);
   const isProcessingRef = useRef(false);
+  const whiteboardCommandCountRef = useRef(0);
+  const tutorTurnCountRef = useRef(0);
 
   // Sync external conversation history when it changes (e.g., from homework upload)
   useEffect(() => {
@@ -225,11 +228,46 @@ export function VoiceTutor({
       if (data.whiteboardCommands?.length > 0) {
         console.log('[VoiceTutor] Sending', data.whiteboardCommands.length, 'whiteboard commands to parent');
         onWhiteboardCommand(data.whiteboardCommands);
+        whiteboardCommandCountRef.current += data.whiteboardCommands.length;
         data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
           onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
         });
       } else {
         console.warn('[VoiceTutor] No whiteboard commands in API response. Raw text snippet:', data.rawText?.substring(0, 200));
+      }
+
+      tutorTurnCountRef.current++;
+
+      // --- Duplicate response detection ---
+      const recentTutorTexts = transcriptEntriesRef.current
+        .filter(e => e.role === 'tutor')
+        .slice(-4, -1) // last 3 tutor messages before this one
+        .map(e => e.text);
+      if (isDuplicateResponse(data.text, recentTutorTexts)) {
+        console.warn('[VoiceTutor] Duplicate response detected:', data.text.substring(0, 80));
+        conversationHistoryRef.current.push({
+          role: 'user',
+          content: '[System: You just repeated yourself. Use a different explanation next time.]',
+        });
+      }
+
+      // --- Whiteboard false claim detection ---
+      const claimsOnBoard = /\b(on the (?:white)?board|right (?:on |there on )?the (?:white)?board|you should see|check (?:the|your) (?:display|whiteboard|board)|let me show you|I['']ll show you)\b/i.test(data.text);
+      if (claimsOnBoard && whiteboardCommandCountRef.current === 0) {
+        console.warn('[VoiceTutor] False whiteboard claim detected — 0 commands sent');
+        conversationHistoryRef.current.push({
+          role: 'user',
+          content: '[System: The whiteboard is empty. Do not claim content is there. Apologize and actually show something next time.]',
+        });
+      }
+
+      // --- Context loss detection ---
+      if (tutorTurnCountRef.current >= 3 && isContextLossGreeting(data.text)) {
+        console.warn('[VoiceTutor] Context loss detected — tutor re-greeted mid-session');
+        conversationHistoryRef.current.push({
+          role: 'user',
+          content: '[System: You lost context and re-greeted the student. Continue where we left off. Do NOT greet again.]',
+        });
       }
 
       // Speak the response
@@ -274,7 +312,15 @@ export function VoiceTutor({
     updateState('transcribing');
     const transcript = await transcription.stopListening();
     if (transcript) {
-      handleStudentMessage(transcript);
+      // Filter noise/hallucinations
+      if (isNoiseTranscript(transcript)) {
+        console.log('[VoiceTutor] Filtered noise transcript:', transcript);
+        updateState('idle');
+        return;
+      }
+      // Filter profanity misrecognitions
+      const filtered = filterTranscriptText(transcript);
+      handleStudentMessage(filtered);
     } else {
       setError('No speech detected. Try again.');
       updateState('idle');
@@ -372,6 +418,14 @@ export function VoiceTutor({
         };
         transcriptEntriesRef.current = [tutorEntry];
         onTranscriptUpdate(transcriptEntriesRef.current);
+
+        // Send whiteboard commands from greeting to parent
+        if (data.whiteboardCommands?.length > 0) {
+          onWhiteboardCommand(data.whiteboardCommands);
+          data.whiteboardCommands.forEach((cmd: WhiteboardCommand) => {
+            onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
+          });
+        }
 
         // Speak greeting (or just show it if muted)
         if (!abortController.signal.aborted && !isMuted) {

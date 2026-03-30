@@ -1,11 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { voiceEngines } from '../../data/engines';
+
+function buildDemoToken(engineId: string) {
+  const config = {
+    subject: 'cs',
+    level: 'ap',
+    topic: 'ap-cs-principles',
+    student_name: 'Demo Student',
+    session_goal: 'practice',
+    input_mode: 'voice',
+    engine: engineId === 'premium' ? 'premium' : 'standard',
+  };
+  return btoa(JSON.stringify(config));
+}
 
 export function EngineSelector() {
   const [selectedEngine, setSelectedEngine] = useState('standard');
   const engine = voiceEngines.find((e) => e.id === selectedEngine)!;
+  const demoToken = useMemo(() => buildDemoToken(selectedEngine), [selectedEngine]);
 
   return (
     <div>
@@ -69,7 +83,7 @@ export function EngineSelector() {
         </div>
         <iframe
           key={selectedEngine}
-          src={`https://www.evelynlearning.com/tutor?engine=${selectedEngine}&embed=true`}
+          src={`/embed?token=${demoToken}`}
           width="100%"
           height="650"
           allow="microphone; camera"
