@@ -7,7 +7,7 @@
  * Supports both text and voice modes.
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
@@ -74,7 +74,15 @@ interface ConversationMessage {
   content: string;
 }
 
-export default function TutorPage() {
+export default function TutorPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" /></div>}>
+      <TutorPage />
+    </Suspense>
+  );
+}
+
+function TutorPage() {
   // Demo tracking
   const { onView, onTry, onComplete, trackInteraction } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
 
