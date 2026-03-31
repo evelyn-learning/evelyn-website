@@ -430,6 +430,13 @@ export function VoiceTutor({
         // Speak greeting (or just show it if muted)
         if (!abortController.signal.aborted && !isMuted) {
           await playback.speak(data.text);
+          // Safety: if speak() resolved without triggering onPlaybackStart
+          // (e.g., AudioContext suspended due to no user gesture in iframe),
+          // ensure we leave the processing state. Uses functional setState
+          // to read current state, avoiding stale closure.
+          if (!abortController.signal.aborted) {
+            setState(prev => prev === 'processing' ? 'idle' : prev);
+          }
         } else if (!abortController.signal.aborted) {
           updateState('idle');
         }
@@ -444,9 +451,11 @@ export function VoiceTutor({
 
     initialize();
 
-    // Cleanup: abort pending init fetch on unmount (React StrictMode remount safety)
+    // Cleanup: abort pending init fetch on unmount
+    // Reset ref so StrictMode's second mount can re-initialize
     return () => {
       abortController.abort();
+      isInitializedRef.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subject, topic, level, studentName, sessionGoal]);

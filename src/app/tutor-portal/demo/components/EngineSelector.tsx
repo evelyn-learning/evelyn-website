@@ -8,7 +8,7 @@ function buildDemoToken(engineId: string) {
     subject: 'cs',
     level: 'ap',
     topic: 'ap-cs-principles',
-    student_name: 'Demo Student',
+    student_name: 'Alex',
     session_goal: 'practice',
     input_mode: 'voice',
     engine: engineId === 'premium' ? 'premium' : 'standard',
@@ -86,7 +86,7 @@ export function EngineSelector() {
           src={`/embed?token=${demoToken}`}
           width="100%"
           height="650"
-          allow="microphone; camera"
+          allow="microphone; camera; autoplay"
           className="border-0"
           title={`AI Voice Tutor — ${engine.name} Engine`}
         />

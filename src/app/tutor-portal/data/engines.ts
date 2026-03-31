@@ -21,7 +21,7 @@ export const voiceEngines: VoiceEngine[] = [
     ourCostPerMinute: 0.015,
     features: [
       'High-accuracy speech recognition',
-      'Advanced AI reasoning (Claude Sonnet 4)',
+      'Advanced AI reasoning',
       'Natural speech synthesis with 4 voice options',
       'Full whiteboard support (all 19 visual types)',
       '50+ languages supported',

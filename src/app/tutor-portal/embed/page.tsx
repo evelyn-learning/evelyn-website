@@ -266,6 +266,65 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   }, []);
   const handleVoiceConversationHistoryUpdate = useCallback((history: ConversationMessage[]) => setConversationHistory(history), []);
 
+  // Upload homework and extract problems
+  const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
+    if (!topic) return;
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/tutor/extract-homework', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData,
+          mimeType,
+          subject,
+          topic,
+          level,
+          conversationHistory,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to process homework image');
+      const data = await response.json();
+
+      if (data.usage) {
+        setTokenUsage((prev) => [...prev, {
+          inputTokens: data.usage.inputTokens,
+          outputTokens: data.usage.outputTokens,
+          operation: 'homework-extraction',
+          timestamp: new Date(),
+        }]);
+      }
+
+      const userMessageForHistory = data.extractedProblem
+        ? `I uploaded a homework problem. Here's what it says:\n\n${data.extractedProblem}\n\nCan you help me understand it and work through it?`
+        : 'Here is my homework problem. Can you help me understand it and work through it?';
+
+      // For realtime-validated voice mode, send through WebSocket
+      if (inputMode === 'voice' && voiceEngine === 'realtime-validated' && realtimeHandleRef.current && data.extractedProblem) {
+        const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: '[Uploaded homework image]' };
+        setTranscript((prev) => [...prev, userEntry]);
+
+        realtimeHandleRef.current.sendTextMessage(
+          `The student just uploaded a homework problem image. Here is the extracted text:\n\n${data.extractedProblem}\n\nYou MUST do ALL of the following:\n1. Draw the problem setup on the whiteboard.\n2. Verbally acknowledge the upload and briefly summarize what the problem asks.\n3. As you work through each solution step, call show_equation to display each equation on the whiteboard.\n4. Guide the student through the solution step by step, asking them questions along the way.`
+        );
+      } else {
+        // Text mode or classic voice: add entries to transcript and conversation history
+        const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: '[Uploaded homework image]' };
+        const tutorEntry: TranscriptEntry = { id: `tutor-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: data.text, whiteboardCommands: data.whiteboardCommands };
+        setTranscript((prev) => [...prev, userEntry, tutorEntry]);
+        setConversationHistory((prev) => [...prev, { role: 'user', content: userMessageForHistory }, { role: 'assistant', content: data.text }]);
+        if (data.whiteboardCommands?.length > 0) setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process homework');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [subject, level, topic, conversationHistory, inputMode, voiceEngine]);
+
   // End session — notify parent window
   const handleEndSession = useCallback(() => {
     setSessionEnded(true);
@@ -328,7 +387,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
           sessionId={sessionId}
           maxDuration={maxDuration}
           onEndSession={handleEndSession}
-          onUploadHomework={() => {}}
+          onUploadHomework={handleUploadHomework}
           transcript={transcript}
           whiteboardCommands={whiteboardCommands}
           topicName={topicDisplayName || 'AI Tutor'}

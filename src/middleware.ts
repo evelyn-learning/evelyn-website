@@ -6,19 +6,26 @@ export function middleware(request: NextRequest) {
   const hostname = host.split(':')[0]; // Strip port for local dev
 
   // tutor.evelynlearning.com or tutor.localhost → rewrite to /tutor-portal/*
+  // Skip API routes — they live at /api/* and don't need rewriting
   if (hostname === 'tutor.evelynlearning.com' || hostname === 'tutor.localhost') {
-    const url = request.nextUrl.clone();
-    url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
-    return NextResponse.rewrite(url);
+    if (!request.nextUrl.pathname.startsWith('/api/')) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    return NextResponse.next();
   }
 
   // tutor-sandbox.evelynlearning.com → same rewrite (sandbox flag added via header)
   if (hostname === 'tutor-sandbox.evelynlearning.com') {
-    const url = request.nextUrl.clone();
-    url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
-    const response = NextResponse.rewrite(url);
-    response.headers.set('x-evelyn-sandbox', 'true');
-    return response;
+    if (!request.nextUrl.pathname.startsWith('/api/')) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
+      const response = NextResponse.rewrite(url);
+      response.headers.set('x-evelyn-sandbox', 'true');
+      return response;
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
