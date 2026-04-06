@@ -237,7 +237,7 @@ export function SessionControls({
         topicName,
         sessionGoal,
         studentName,
-        { includeDebugData: true, subject, level }
+        { subject, level }
       );
     } catch (err) {
       console.error('PDF export error:', err);

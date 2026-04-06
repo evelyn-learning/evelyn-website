@@ -40,6 +40,15 @@ const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   loading: () => <div className="flex items-center justify-center h-[250px] text-gray-400">Loading chemistry editor...</div>,
 });
 
+// Detect if a string contains LaTeX commands and render accordingly
+function CellContent({ value }: { value: string }) {
+  const hasLatex = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)|[_^{}]/.test(value);
+  if (hasLatex) {
+    return <EquationRenderer latex={value} displayMode={false} className="inline-block" />;
+  }
+  return <>{value}</>;
+}
+
 interface WhiteboardCanvasProps {
   commands: WhiteboardCommand[];
   onClear?: () => void;
@@ -707,7 +716,7 @@ function CommandRenderer({ command }: CommandRendererProps) {
               <tr className="bg-gray-100">
                 {command.headers.map((header, i) => (
                   <th key={i} className="border border-gray-300 px-4 py-2 text-left font-medium">
-                    {header}
+                    <CellContent value={String(header)} />
                   </th>
                 ))}
               </tr>
@@ -717,7 +726,7 @@ function CommandRenderer({ command }: CommandRendererProps) {
                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   {row.map((cell, j) => (
                     <td key={j} className="border border-gray-300 px-4 py-2">
-                      {cell}
+                      <CellContent value={String(cell)} />
                     </td>
                   ))}
                 </tr>

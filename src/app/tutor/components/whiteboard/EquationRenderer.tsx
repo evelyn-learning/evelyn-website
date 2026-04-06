@@ -32,8 +32,10 @@ export function EquationRenderer({
     if (!containerRef.current) return;
 
     try {
-      // Process highlighting if specified
-      let processedLatex = latex;
+      // Fix double-escaped LaTeX (e.g. \\frac → \frac) that can come from AI model output
+      let processedLatex = latex
+        .replace(/\\\\(?=[a-zA-Z{])/g, '\\')  // \\frac → \frac, \\{ → \{
+        .replace(/\\n/g, '\n');                 // literal \n → newline
       if (highlight && highlight.length > 0) {
         // Wrap highlighted terms in a colored box
         highlight.forEach((term) => {

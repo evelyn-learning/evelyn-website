@@ -325,8 +325,53 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     }
   }, [subject, level, topic, conversationHistory, inputMode, voiceEngine]);
 
-  // End session — notify parent window
+  // Save session to DB
+  const saveSession = useCallback((status: 'completed' | 'abandoned') => {
+    const now = new Date();
+    const duration = Math.round((now.getTime() - sessionStartRef.current.getTime()) / 1000);
+    const payload = {
+      sessionId,
+      subject,
+      topic,
+      level,
+      sessionGoal,
+      inputMode,
+      voiceEngine,
+      source: 'embed',
+      studentName: studentName || undefined,
+      startedAt: sessionStartRef.current.toISOString(),
+      endedAt: now.toISOString(),
+      duration,
+      messageCount: transcript.length,
+      whiteboardItemCount: whiteboardCommands.length,
+      status,
+      transcript: transcript.map(t => ({
+        role: t.role,
+        text: t.text,
+        timestamp: t.timestamp.toISOString(),
+        ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
+        ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
+      })),
+      whiteboardCommands: whiteboardCommands.map(cmd => ({
+        action: cmd.action,
+        data: { ...cmd, action: undefined },
+        timestamp: now.toISOString(),
+      })),
+    };
+    if (status === 'abandoned') {
+      navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(payload));
+    } else {
+      fetch('/api/tutor/session-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands]);
+
+  // End session — save to DB + notify parent window
   const handleEndSession = useCallback(() => {
+    saveSession('completed');
     setSessionEnded(true);
     const duration = Math.round((Date.now() - sessionStartRef.current.getTime()) / 1000);
     // Post message to parent window for partner integration
@@ -339,7 +384,15 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         whiteboard_items: whiteboardCommands.length,
       },
     }, '*');
-  }, [sessionId, transcript.length, whiteboardCommands.length]);
+  }, [saveSession, sessionId, transcript.length, whiteboardCommands.length]);
+
+  // Save as abandoned on page unload
+  useEffect(() => {
+    if (sessionEnded) return;
+    const handleBeforeUnload = () => saveSession('abandoned');
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [sessionEnded, saveSession]);
 
   // Session ended view
   if (sessionEnded) {
@@ -437,6 +490,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
               topic={topic}
               level={level}
               studentName={studentName || undefined}
+              sessionId={sessionId}
               sessionGoal={sessionGoal}
               voice={openAIVoice}
               onTranscriptUpdate={handleVoiceTranscriptUpdate}

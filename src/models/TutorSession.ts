@@ -56,6 +56,8 @@ export interface ITutorSession extends Document {
   totalOutputTokens: number;
   estimatedCost: number;
   status: "active" | "completed" | "abandoned";
+  hasAudio?: boolean;
+  source?: "tutor" | "embed" | "showcase";
 }
 
 const TokenUsageSchema = new Schema<ITokenUsage>(
@@ -239,6 +241,15 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       type: String,
       enum: ["active", "completed", "abandoned"],
       default: "active",
+    },
+    hasAudio: {
+      type: Boolean,
+      default: false,
+    },
+    source: {
+      type: String,
+      enum: ["tutor", "embed", "showcase"],
+      default: "tutor",
     },
   },
   {

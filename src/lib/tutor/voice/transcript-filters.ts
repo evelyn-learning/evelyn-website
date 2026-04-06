@@ -67,6 +67,11 @@ export function isNoiseTranscript(text: string): boolean {
   if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
   // Single word under 4 characters
   if (words.length === 1 && normalized.length < 4) return true;
+  // Whisper hallucination: text is predominantly non-Latin script (Arabic, CJK, Devanagari, etc.)
+  // This happens when Whisper processes background noise and outputs random foreign text.
+  // Only filter if the session language is expected to be English/Latin.
+  const nonLatinChars = normalized.replace(/[\u0000-\u024F\u1E00-\u1EFF\s\d.,!?;:'"()\-+*/=]/g, '');
+  if (nonLatinChars.length > normalized.length * 0.5 && normalized.length > 3) return true;
   return false;
 }
 

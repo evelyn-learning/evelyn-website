@@ -189,6 +189,7 @@ function TutorPage() {
       sessionGoal,
       inputMode,
       voiceEngine: inputMode === 'voice' ? voiceEngine : undefined,
+      source: 'tutor',
       studentName: studentName || undefined,
       startedAt: startTime.toISOString(),
       endedAt: status !== 'active' ? now.toISOString() : undefined,
@@ -219,12 +220,39 @@ function TutorPage() {
           ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
           ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
         })),
-        whiteboardCommands: whiteboardCommands.map((cmd, i) => ({
-          action: cmd.action,
-          data: { ...cmd, action: undefined },
-          timestamp: now.toISOString(),
-          sourceMessageIndex: i,
-        })),
+        whiteboardCommands: (() => {
+          // Derive timestamps from the transcript entries that contain each whiteboard command
+          // Build a map: for each transcript entry with whiteboardCommands, assign its timestamp
+          const wbEntries: { action: string; data: Record<string, unknown>; timestamp: string; sourceMessageIndex: number }[] = [];
+          let wbIdx = 0;
+          for (let ti = 0; ti < transcript.length; ti++) {
+            const t = transcript[ti];
+            if (t.whiteboardCommands?.length) {
+              for (const wbCmd of t.whiteboardCommands) {
+                wbEntries.push({
+                  action: (wbCmd as Record<string, unknown>).action as string || 'unknown',
+                  data: { ...(wbCmd as Record<string, unknown>), action: undefined },
+                  timestamp: t.timestamp.toISOString(),
+                  sourceMessageIndex: ti,
+                });
+              }
+            }
+          }
+          // Include any remaining commands that weren't attached to transcript entries
+          // (e.g., student drawings added directly to whiteboardCommands)
+          if (wbEntries.length < whiteboardCommands.length) {
+            for (let i = wbEntries.length; i < whiteboardCommands.length; i++) {
+              const cmd = whiteboardCommands[i];
+              wbEntries.push({
+                action: cmd.action,
+                data: { ...cmd, action: undefined },
+                timestamp: now.toISOString(),
+                sourceMessageIndex: -1,
+              });
+            }
+          }
+          return wbEntries;
+        })(),
       } : {}),
     };
 
@@ -1095,6 +1123,7 @@ function TutorPage() {
                   topic={selectedTopicId}
                   level={selectedLevel}
                   studentName={studentName || undefined}
+                  sessionId={sessionId}
                   sessionGoal={sessionGoal}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
@@ -1231,7 +1260,7 @@ function TutorPage() {
                     topicDisplayName || 'AI Tutor',
                     sessionGoal,
                     studentName || undefined,
-                    { includeDebugData: true, subject: selectedSubject, level: selectedLevel }
+                    { subject: selectedSubject, level: selectedLevel }
                   );
                 } catch (err) {
                   console.error('PDF export error:', err);

@@ -28,6 +28,8 @@ function sanitizeForPDF(text: string): string {
   s = s.replace(/\*\*(.*?)\*\*/g, '$1');
   s = s.replace(/\*(.*?)\*/g, '$1');
   s = s.replace(/`(.*?)`/g, '$1');
+  // Transliterate Greek, math symbols, etc. before stripping non-Latin-1
+  s = s.replace(LATIN_DIACRITIC_REGEX, (ch) => LATIN_DIACRITIC_MAP[ch] || ch);
   s = s.replace(/[^\x00-\xFF]/g, '?');
   return s;
 }
@@ -88,6 +90,21 @@ const LATIN_DIACRITIC_MAP: Record<string, string> = {
   'Њ': 'Nj', 'њ': 'nj', 'Ћ': 'C', 'ћ': 'c', 'Џ': 'Dz', 'џ': 'dz',
   // Ukrainian extras
   'Ґ': 'G', 'ґ': 'g', 'Є': 'Ye', 'є': 'ye', 'І': 'I', 'і': 'i', 'Ї': 'Yi', 'ї': 'yi',
+  // Greek letters (U+0370–U+03FF) — common in math/physics
+  'Α': 'A', 'Β': 'B', 'Γ': 'Gamma', 'Δ': 'Delta', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'H', 'Θ': 'Theta',
+  'Ι': 'I', 'Κ': 'K', 'Λ': 'Lambda', 'Μ': 'M', 'Ν': 'N', 'Ξ': 'Xi', 'Ο': 'O', 'Π': 'Pi',
+  'Ρ': 'Rho', 'Σ': 'Sigma', 'Τ': 'T', 'Υ': 'Y', 'Φ': 'Phi', 'Χ': 'Chi', 'Ψ': 'Psi', 'Ω': 'Omega',
+  'α': 'alpha', 'β': 'beta', 'γ': 'gamma', 'δ': 'delta', 'ε': 'epsilon', 'ζ': 'zeta', 'η': 'eta', 'θ': 'theta',
+  'ι': 'iota', 'κ': 'kappa', 'λ': 'lambda', 'μ': 'mu', 'ν': 'nu', 'ξ': 'xi', 'ο': 'o', 'π': 'pi',
+  'ρ': 'rho', 'σ': 'sigma', 'ς': 'sigma', 'τ': 'tau', 'υ': 'upsilon', 'φ': 'phi', 'χ': 'chi', 'ψ': 'psi', 'ω': 'omega',
+  // Subscript/superscript digits
+  '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
+  '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+  '⁻': '-',
+  // Common math symbols
+  '×': 'x', '÷': '/', '±': '+/-', '∞': 'inf', '≈': '~=', '≠': '!=', '≤': '<=', '≥': '>=',
+  '→': '->', '←': '<-', '⇒': '=>', '∑': 'Sum', '∏': 'Product', '∫': 'Integral',
+  '∂': 'd', '∇': 'del', '√': 'sqrt', '∝': ' proportional to ',
 };
 
 // Build a regex that matches any character in the map (compiled once)
@@ -187,20 +204,20 @@ function latexToReadable(latex: string): string {
   s = s.replace(/\\phi/g, 'phi');
   s = s.replace(/\\omega/g, 'omega');
 
-  // Common operators
-  s = s.replace(/\\cdot/g, ' * ');
-  s = s.replace(/\\times/g, ' x ');
-  s = s.replace(/\\div/g, ' / ');
-  s = s.replace(/\\pm/g, '+/-');
+  // Common operators — use Latin-1 compatible symbols where possible
+  s = s.replace(/\\cdot/g, ' \u00B7 ');   // middle dot ·
+  s = s.replace(/\\times/g, ' \u00D7 ');  // multiplication sign ×
+  s = s.replace(/\\div/g, ' \u00F7 ');    // division sign ÷
+  s = s.replace(/\\pm/g, '\u00B1');        // plus-minus ±
   s = s.replace(/\\mp/g, '-/+');
   s = s.replace(/\\leq/g, '<=');
   s = s.replace(/\\geq/g, '>=');
   s = s.replace(/\\neq/g, '!=');
   s = s.replace(/\\approx/g, '~=');
   s = s.replace(/\\equiv/g, '===');
-  s = s.replace(/\\rightarrow/g, '->');
-  s = s.replace(/\\leftarrow/g, '<-');
-  s = s.replace(/\\Rightarrow/g, '=>');
+  s = s.replace(/\\rightarrow/g, ' -> ');
+  s = s.replace(/\\leftarrow/g, ' <- ');
+  s = s.replace(/\\Rightarrow/g, ' => ');
   s = s.replace(/\\quad/g, '  ');
   s = s.replace(/\\qquad/g, '    ');
   s = s.replace(/\\,/g, ' ');
@@ -257,8 +274,17 @@ function drawEquationVisual(
   x: number, yStart: number, width: number
 ): number {
   let y = yStart;
-  const boxH = 14;
   const boxPad = 3;
+
+  const readable = latexToReadable(latex);
+  const sanitized = sanitizeForPDF(readable);
+
+  // Measure equation text to determine box height
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  const eqLines = pdf.splitTextToSize(sanitized, width - boxPad * 2 - 4);
+  const eqLineCount = Array.isArray(eqLines) ? eqLines.length : 1;
+  const boxH = (label ? 8 : 4) + eqLineCount * 5 + 3;
 
   // Light blue background box
   pdf.setFillColor(239, 246, 255);
@@ -273,13 +299,12 @@ function drawEquationVisual(
     pdf.text(sanitizeForPDF(label), x + boxPad, y + 4);
   }
 
-  // Equation text (larger, bold, centered-ish)
-  const readable = latexToReadable(latex);
-  pdf.setFont('courier', 'bold');
+  // Equation text
+  pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
   pdf.setTextColor(30, 64, 175);
-  const eqY = label ? y + 10.5 : y + 8.5;
-  pdf.text(sanitizeForPDF(readable), x + boxPad + 2, eqY);
+  const eqY = label ? y + 10.5 : y + 7;
+  pdf.text(eqLines, x + boxPad + 2, eqY);
 
   return y + boxH + 2;
 }
@@ -519,14 +544,25 @@ async function drawSvgDiagram(
 
   // Rasterize SVG to canvas, then to image for PDF
   try {
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+    // Sanitize SVG: ensure valid XML, fix common AI-generated issues
+    let cleanSvg = svg.trim();
+    // Ensure SVG has xmlns
+    if (!cleanSvg.includes('xmlns')) {
+      cleanSvg = cleanSvg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    // Fix unescaped ampersands in SVG attributes
+    cleanSvg = cleanSvg.replace(/&(?!amp;|lt;|gt;|quot;|apos;|#)/g, '&amp;');
+
+    // Use data URL approach (more reliable than Blob URL for SVG rendering)
+    const svgBase64 = btoa(unescape(encodeURIComponent(cleanSvg)));
+    const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
     const img = new Image();
 
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error('SVG load failed'));
-      img.src = url;
+      const timeout = setTimeout(() => reject(new Error('SVG load timeout')), 5000);
+      img.onload = () => { clearTimeout(timeout); resolve(); };
+      img.onerror = () => { clearTimeout(timeout); reject(new Error('SVG load failed')); };
+      img.src = dataUrl;
     });
 
     const canvas = document.createElement('canvas');
@@ -538,13 +574,13 @@ async function drawSvgDiagram(
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 400, 300);
     ctx.drawImage(img, 0, 0, 400, 300);
-    URL.revokeObjectURL(url);
 
     const imgData = canvas.toDataURL('image/png');
     const imgHeight = (width * 300) / 400; // maintain aspect ratio
     pdf.addImage(imgData, 'PNG', x, y, width, imgHeight);
     y += imgHeight + 2;
-  } catch {
+  } catch (err) {
+    console.error('SVG PDF render error:', err);
     // Fallback: just note that SVG couldn't be rendered
     pdf.setFont('helvetica', 'italic');
     pdf.setFontSize(8);
@@ -1218,7 +1254,7 @@ export async function exportTutorSessionPDF(
   studentName?: string,
   options?: { includeDebugData?: boolean; subject?: string; level?: string }
 ): Promise<void> {
-  const includeDebug = options?.includeDebugData ?? true;
+  const includeDebug = options?.includeDebugData ?? false;
   const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1284,10 +1320,13 @@ export async function exportTutorSessionPDF(
   // ── Session Info ──
   const subjectLabel = options?.subject ? options.subject.charAt(0).toUpperCase() + options.subject.slice(1) : '';
   const levelLabel = options?.level || '';
-  if (subjectLabel) {
-    drawWrappedText(`Subject: ${subjectLabel}${levelLabel ? ` | Level: ${levelLabel}` : ''}`, margin, contentWidth, { size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6 });
+  const subjectLine = subjectLabel
+    ? `Subject: ${subjectLabel}${levelLabel ? ` | Level: ${levelLabel}` : ''}`
+    : levelLabel ? `Level: ${levelLabel}` : '';
+  if (subjectLine) {
+    drawWrappedText(subjectLine, margin, contentWidth, { size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6 });
   }
-  drawWrappedText(`Topic: ${topicName}`, margin, contentWidth, { size: subjectLabel ? 10 : 11, style: subjectLabel ? 'normal' : 'bold', color: subjectLabel ? [55, 65, 81] : [26, 32, 44], lineHeight: 6 });
+  drawWrappedText(`Topic: ${topicName}`, margin, contentWidth, { size: subjectLine ? 10 : 11, style: subjectLine ? 'normal' : 'bold', color: subjectLine ? [55, 65, 81] : [26, 32, 44], lineHeight: 6 });
   const goalLabel = sessionGoal === 'homework-help' ? 'Homework Help' : sessionGoal === 'concept-review' ? 'Concept Review' : sessionGoal === 'test-prep' ? 'Test Prep' : sessionGoal === 'explain' ? 'Explain' : sessionGoal === 'test' ? 'Test' : 'Practice';
   drawWrappedText(`Goal: ${goalLabel}${studentName ? ` | Student: ${studentName}` : ''}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
   const studentMessages = transcript.filter(m => m.role === 'student').length;
@@ -1399,7 +1438,7 @@ export async function exportTutorSessionPDF(
 
     drawWrappedText(toWinAnsiSafe(msg.text), margin + 4, textAreaWidth, { size: 9, color: [55, 65, 81] });
 
-    if (msg.pedagogicalIntent) {
+    if (msg.pedagogicalIntent && includeDebug) {
       drawWrappedText(`[${msg.pedagogicalIntent}]`, margin + 4, textAreaWidth, { size: 7, style: 'italic', color: [156, 163, 175] });
     }
 

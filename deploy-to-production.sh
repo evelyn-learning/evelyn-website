@@ -36,6 +36,10 @@ log_message() {
 # Error handling function
 handle_error() {
   log_message "ERROR" "An error occurred on line $1"
+  if [ -f ".env.local.dev.bak" ]; then
+    mv .env.local.dev.bak .env.local
+    log_message "INFO" "Restored local dev .env.local"
+  fi
   if [ -f "$ZIP_FILE" ]; then
     rm -f "$ZIP_FILE"
     log_message "INFO" "Cleaned up local zip file"
@@ -55,17 +59,36 @@ run_remote_command() {
 # Starting deployment
 log_message "INFO" "Starting Evelyn Learning deployment to production..."
 
-# Step 1: Build locally
+# Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
+
+# Temporarily swap in production env so NEXT_PUBLIC_ vars are baked in correctly
+RESTORE_ENV=false
+if [ -f ".env.local.production" ]; then
+  cp .env.local .env.local.dev.bak
+  cp .env.local.production .env.local
+  RESTORE_ENV=true
+  log_message "INFO" "Temporarily using .env.local.production for build"
+fi
 
 # Clean up previous builds
 log_message "INFO" "Cleaning up previous build artifacts..."
-rm -rf .next/
+rm -rf .next/ 2>/dev/null || true
 
 npm run build || {
+  # Restore dev env before exiting on error
+  if [ "$RESTORE_ENV" = true ]; then
+    mv .env.local.dev.bak .env.local
+  fi
   log_message "ERROR" "Failed to build application locally"
   exit 1
 }
+
+# Restore dev env immediately after build
+if [ "$RESTORE_ENV" = true ]; then
+  mv .env.local.dev.bak .env.local
+  log_message "INFO" "Restored local dev .env.local"
+fi
 log_message "INFO" "Application built successfully"
 
 # Step 2: Create deployment package

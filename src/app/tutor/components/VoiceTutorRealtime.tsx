@@ -11,6 +11,7 @@
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage } from '../hooks/useOpenAIRealtime';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
@@ -83,6 +84,7 @@ interface VoiceTutorRealtimeProps {
   topic: string;
   level: string;
   studentName?: string;
+  sessionId?: string;
   sessionGoal: SessionGoal;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
@@ -110,6 +112,7 @@ export function VoiceTutorRealtime({
   topic,
   level,
   studentName,
+  sessionId,
   sessionGoal,
   voice = 'shimmer',
   onTranscriptUpdate,
@@ -128,6 +131,13 @@ export function VoiceTutorRealtime({
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Audio recording for session replay
+  const audioRecordEnabled = sessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false';
+  const audioRecorder = useAudioRecorder({
+    sessionId: sessionId || '',
+    enabled: !!audioRecordEnabled,
+  });
 
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
@@ -653,6 +663,8 @@ export function VoiceTutorRealtime({
     onResponseDone: handleResponseDone,
     onError: handleError,
     onStateChange,
+    onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
+    onTutorAudioChunk: audioRecordEnabled ? audioRecorder.pushTutorChunk : undefined,
   });
 
   // Wire up refs so callbacks can access hook functions
@@ -1044,7 +1056,13 @@ Start by warmly greeting the student and asking how you can help them today.`;
 
         {onEndSession && (
           <button
-            onClick={onEndSession}
+            onClick={async () => {
+              // Finalize audio recording before ending session
+              if (audioRecordEnabled) {
+                try { await audioRecorder.finalize(); } catch {}
+              }
+              onEndSession();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />

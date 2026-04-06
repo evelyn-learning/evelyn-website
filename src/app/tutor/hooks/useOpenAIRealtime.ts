@@ -36,6 +36,8 @@ export interface RealtimeConfig {
   onResponseDone?: (usage?: RealtimeUsage) => void;
   onError?: (error: Error) => void;
   onStateChange?: (state: RealtimeState) => void;
+  onStudentAudioChunk?: (float32: Float32Array) => void;
+  onTutorAudioChunk?: (float32: Float32Array) => void;
 }
 
 export type RealtimeState =
@@ -122,12 +124,17 @@ function parseWhiteboardCommands(text: string): { cleanText: string; commands: W
 export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const {
     instructions, voice = 'alloy',
-    vadThreshold = 0.6, vadSilenceDurationMs = 1500, vadPrefixPaddingMs = 500,
+    vadThreshold = 0.8, vadSilenceDurationMs = 2000, vadPrefixPaddingMs = 500,
     onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, onStateChange,
+    onStudentAudioChunk, onTutorAudioChunk,
   } = config;
 
   const [state, setState] = useState<RealtimeState>('disconnected');
   const [error, setError] = useState<Error | null>(null);
+
+  // Keep audio chunk callbacks in refs to avoid stale closures in onaudioprocess
+  const onStudentAudioChunkRef = useRef(onStudentAudioChunk);
+  onStudentAudioChunkRef.current = onStudentAudioChunk;
 
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -194,12 +201,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Queue audio for playback
   const queueAudio = useCallback((base64Audio: string) => {
     const float32 = base64ToFloat32(base64Audio);
+
+    // Tap tutor audio for recording
+    onTutorAudioChunk?.(float32);
+
     audioQueueRef.current.push(float32);
 
     if (!isPlayingRef.current) {
       playNextAudio();
     }
-  }, [playNextAudio]);
+  }, [playNextAudio, onTutorAudioChunk]);
 
   // Handle WebSocket messages
   const handleMessage = useCallback((event: MessageEvent) => {
@@ -289,7 +300,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           const timeSinceUserInput = Date.now() - lastUserInputRef.current;
           const noUserInputSinceLastResponse =
             lastResponseDoneRef.current > 0 &&
-            timeSinceLastResponse < 5000 &&
+            timeSinceLastResponse < 3000 &&
             timeSinceUserInput > timeSinceLastResponse;
 
           if (noUserInputSinceLastResponse) {
@@ -410,7 +421,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   const labelMatch = rawArgsStr.match(/"label"\s*:\s*"((?:[^"\\]|\\.)*)"/);
                   if (latexMatch) {
                     funcArgs = {
-                      latex: latexMatch[1],
+                      latex: unescapeJsonString(latexMatch[1]),
                       label: labelMatch ? unescapeJsonString(labelMatch[1]) : '',
                     };
                     parsed = true;
@@ -944,8 +955,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
-    // If mic is already active, just update state
+    // If mic is already active, re-enable tracks (may have been muted) and update state
     if (audioProcessorRef.current && mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => { track.enabled = true; });
       shouldListenRef.current = true;
       updateState('listening');
       return;
@@ -980,6 +992,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         const inputData = e.inputBuffer.getChannelData(0);
         // Resample from audioContext rate to 24000 if needed
         const resampledData = inputData; // Assuming 24kHz context
+
+        // Tap student audio for recording (use ref to avoid stale closure)
+        onStudentAudioChunkRef.current?.(resampledData);
 
         const base64Audio = float32ToBase64PCM16(resampledData);
 
@@ -1040,19 +1055,19 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Mute input — stops mic capture and clears buffer WITHOUT committing or triggering a response.
   // Used when the student mutes their mic to prevent noise from being sent.
   const muteInput = useCallback(() => {
-    // Stop audio capture
-    if (audioProcessorRef.current) {
-      audioProcessorRef.current.disconnect();
-      audioProcessorRef.current = null;
-    }
+    // Disable mic tracks without destroying them so unmute can re-enable instantly
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      mediaStreamRef.current = null;
+      mediaStreamRef.current.getTracks().forEach(track => { track.enabled = false; });
     }
 
-    // Clear any accumulated audio in the buffer (do NOT commit it)
+    // If the student was speaking (audio in buffer), commit it so the AI processes it;
+    // otherwise clear the buffer to discard any background noise
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
+      if (hasAudioInBufferRef.current) {
+        wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
+      } else {
+        wsRef.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
+      }
     }
     hasAudioInBufferRef.current = false;
     updateState('connected');

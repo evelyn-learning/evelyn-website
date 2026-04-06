@@ -32,7 +32,7 @@ export default function Section1ELLCoPilot() {
     { word: 'describe', definition: 'To tell about something using words', example: 'Can you describe your favorite place?' },
     { word: 'community', definition: 'A group of people who live near each other', example: 'Our community has many families.' },
   ]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { speak, stop, isSpeaking, speakingId } = useTTS();
   const presenterMode = usePresenterMode();
 
@@ -65,7 +65,10 @@ export default function Section1ELLCoPilot() {
   });
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = chatContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   const handleSend = () => {
@@ -79,6 +82,7 @@ export default function Section1ELLCoPilot() {
     return content
       .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, '')
       .replace(/\{"vocabSpotlight":\s*\[[\s\S]*?\]\}/, '')
+      .replace(/\{"vocabSpotlight"[\s\S]*$/, '')
       .trim();
   };
 
@@ -125,7 +129,7 @@ export default function Section1ELLCoPilot() {
         </div>
 
         {/* Chat messages */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-12">
               <div className="text-4xl mb-3">📝</div>
@@ -169,7 +173,6 @@ export default function Section1ELLCoPilot() {
           {error && (
             <div className="text-center text-xs text-red-500 py-2">{error}</div>
           )}
-          <div ref={chatEndRef} />
         </div>
 
         {/* Input */}
