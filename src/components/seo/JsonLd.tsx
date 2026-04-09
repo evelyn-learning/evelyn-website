@@ -57,6 +57,41 @@ export function EducationalOrganizationJsonLd() {
   );
 }
 
+// WebSite schema with SearchAction — enables Google sitelinks search box
+// and gives LLMs a canonical WebSite entity for the domain.
+export function WebSiteJsonLd() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Evelyn Learning",
+    alternateName: "Evelyn Learning Systems",
+    url: `${SITE_URL}/`,
+    description:
+      "AI-powered learning solutions, adaptive learning platforms, intelligent tutoring systems, and educational content services.",
+    publisher: {
+      "@type": "EducationalOrganization",
+      name: "Evelyn Learning",
+      url: SITE_URL,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/blog?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+    inLanguage: "en-US",
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
 export function OrganizationJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",

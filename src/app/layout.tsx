@@ -5,7 +5,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoscript,
 } from "@/components/analytics/GoogleTagManager";
-import { EducationalOrganizationJsonLd } from "@/components/seo/JsonLd";
+import { EducationalOrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({
@@ -130,6 +130,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
         <EducationalOrganizationJsonLd />
+        <WebSiteJsonLd />
       </head>
       <GoogleTagManager />
       <body className="flex min-h-screen flex-col font-sans">
