@@ -91,6 +91,14 @@ if [ "$RESTORE_ENV" = true ]; then
 fi
 log_message "INFO" "Application built successfully"
 
+# Step 1.5: Generate public/ manifest for safe pruning on the server.
+# The server uses this to detect files that have been deleted from the
+# repo since the last deploy and remove them from production. See the
+# detailed comment near the unzip step below for the full mechanism.
+log_message "STEP" "Generating public/ manifest..."
+find public -type f | LC_ALL=C sort > .deploy-public-manifest
+log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries"
+
 # Step 2: Create deployment package
 log_message "STEP" "Creating deployment package..."
 
@@ -110,6 +118,7 @@ zip -qr "$ZIP_FILE" \
   tsconfig.json \
   tailwind.config.ts \
   postcss.config.mjs \
+  .deploy-public-manifest \
   -x "*.log" "*/.DS_Store" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
@@ -143,22 +152,41 @@ fi
 
 # Step 4: Deploy on remote server
 #
-# IMPORTANT: `unzip -o` overwrites existing files but does NOT delete files
-# that are absent from the archive. This means any file removed from the
-# repo (e.g. public/robots.txt after it was replaced by app/robots.ts) will
-# silently survive on production and shadow the Next.js route.
+# Why the manifest-diff dance:
 #
-# Maintain an explicit prune list below for files that have been deleted
-# from the repo and must ALSO be removed from production. Add new entries
-# here whenever you delete a file under public/ that is now handled by a
-# Next.js route handler. Do NOT rm -rf public/ — it contains 200+ MB of
-# user-uploaded images and the GSC verification HTML that aren't in the repo.
+# `unzip -o` overwrites existing files but does NOT delete files that are
+# absent from the archive. This means any file removed from the repo (e.g.
+# public/robots.txt after it was replaced by app/robots.ts) silently survives
+# on production and shadows the Next.js route.
+#
+# Naive fixes don't work for this codebase:
+#   - `rm -rf public/` before unzip would wipe 200+ MB of user-uploaded
+#     images and the GSC verification HTML that aren't in the repo.
+#   - `rsync --delete` has the same problem.
+#   - A hardcoded prune list rots — easy to forget when deleting a file.
+#
+# Manifest-diff approach:
+#   1. Local build emits .deploy-public-manifest listing every file
+#      currently in local public/ (sorted)
+#   2. Manifest is included in the zip
+#   3. On the server, before extracting, save the existing manifest (left
+#      from the previous deploy) to /tmp
+#   4. Extract the new zip (overwrites the manifest with the new state)
+#   5. Diff: lines in the previous manifest but NOT in the current manifest
+#      are files that the dev intentionally removed since the last deploy
+#   6. Delete those files from production
+#
+# Files that were never in the dev's repo (user uploads, google verification
+# HTML) are never in any manifest, so they are never flagged for deletion.
+# First-ever deploy: previous manifest doesn't exist, diff is empty, no-op.
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
+  if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.prev; else : > /tmp/.deploy-public-manifest.prev; fi && \
   unzip -qo $ZIP_FILE && \
   rm -f $ZIP_FILE && \
-  rm -f public/robots.txt && \
-  rm -f public/sitemap.xml && \
+  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.prev .deploy-public-manifest) && \
+  if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
+  rm -f /tmp/.deploy-public-manifest.prev && \
   npm ci --omit=dev && \
   (pm2 delete evelyn-website 2>/dev/null || true) && \
   pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \

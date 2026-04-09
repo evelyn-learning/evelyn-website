@@ -39,3 +39,6 @@ next-env.d.ts
 
 # Ketcher bundle (built from: node scripts/build-ketcher.mjs)
 public/ketcher/bundle.*
+
+# Deploy manifest (regenerated on every deploy by deploy-to-production.sh)
+.deploy-public-manifest
