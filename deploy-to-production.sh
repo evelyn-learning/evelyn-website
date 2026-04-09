@@ -142,10 +142,23 @@ else
 fi
 
 # Step 4: Deploy on remote server
+#
+# IMPORTANT: `unzip -o` overwrites existing files but does NOT delete files
+# that are absent from the archive. This means any file removed from the
+# repo (e.g. public/robots.txt after it was replaced by app/robots.ts) will
+# silently survive on production and shadow the Next.js route.
+#
+# Maintain an explicit prune list below for files that have been deleted
+# from the repo and must ALSO be removed from production. Add new entries
+# here whenever you delete a file under public/ that is now handled by a
+# Next.js route handler. Do NOT rm -rf public/ — it contains 200+ MB of
+# user-uploaded images and the GSC verification HTML that aren't in the repo.
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
   unzip -qo $ZIP_FILE && \
   rm -f $ZIP_FILE && \
+  rm -f public/robots.txt && \
+  rm -f public/sitemap.xml && \
   npm ci --omit=dev && \
   (pm2 delete evelyn-website 2>/dev/null || true) && \
   pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \
