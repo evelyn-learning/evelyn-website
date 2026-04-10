@@ -5,6 +5,13 @@ import { useRef, useCallback, useEffect } from 'react';
 interface UseAudioRecorderConfig {
   sessionId: string;
   enabled: boolean;
+  // Wallclock ms at which the session officially started (the same value the
+  // server stores in TutorSession.startedAt). The recorder uses this as the
+  // canonical T0 for both tracks so that sample 0 of each .pcm16 file lines
+  // up with the session timeline used by the replay UI. If omitted, the
+  // recorder falls back to "first audio chunk wins" — this only happens for
+  // legacy callers and produces tracks that drift from the chat timeline.
+  sessionStartedAtMs?: number;
   flushIntervalMs?: number; // default 30000
 }
 
@@ -48,6 +55,7 @@ function float32ToPCM16Base64(chunks: Float32Array[]): string {
 export function useAudioRecorder({
   sessionId,
   enabled,
+  sessionStartedAtMs,
   flushIntervalMs = 30000,
 }: UseAudioRecorderConfig): UseAudioRecorderResult {
   const studentBufferRef = useRef<Float32Array[]>([]);
@@ -59,9 +67,14 @@ export function useAudioRecorder({
   enabledRef.current = enabled;
   const sessionIdRef = useRef(sessionId);
   sessionIdRef.current = sessionId;
-  // Session start is set when the first student audio chunk arrives (= mic starts recording)
-  // This ensures tutor offsets are aligned with the student track
-  const sessionStartRef = useRef(0);
+  // Canonical T0 for the session. Both student and tutor tracks are aligned
+  // such that sample 0 corresponds to this moment. If the caller did not
+  // supply sessionStartedAtMs, we degrade to "first audio chunk wins" — same
+  // (buggy) behavior as the original implementation, kept for safety.
+  const sessionStartRef = useRef(sessionStartedAtMs ?? 0);
+  // Has the first student chunk been observed yet? (Used to inject leading
+  // silence the very first time, so the file aligns with sessionStartedAtMs.)
+  const studentPrimedRef = useRef(false);
   // Track how many tutor samples have been written so far (to calculate silence gaps)
   const tutorSamplesWrittenRef = useRef(0);
 
@@ -156,16 +169,29 @@ export function useAudioRecorder({
 
   const pushStudentChunk = useCallback((float32: Float32Array) => {
     if (!enabledRef.current) return;
-    // Set session start on first student chunk (= mic recording started)
+    // Fallback for legacy callers that don't supply sessionStartedAtMs:
+    // anchor T0 to the first audio chunk we see (matches old behavior).
     if (sessionStartRef.current === 0) {
       sessionStartRef.current = Date.now();
+    }
+    // First student chunk: pad with leading silence so sample 0 of
+    // student.pcm16 corresponds to sessionStartRef rather than to "the
+    // moment the mic happened to activate" (which can be many seconds late
+    // if the tutor greeted the student first or mic permission took time).
+    if (!studentPrimedRef.current) {
+      studentPrimedRef.current = true;
+      const leadingMs = Math.max(0, Date.now() - sessionStartRef.current);
+      const leadingSamples = Math.floor((leadingMs / 1000) * 24000);
+      if (leadingSamples > 0) {
+        studentBufferRef.current.push(new Float32Array(leadingSamples)); // zeros = silence
+      }
     }
     studentBufferRef.current.push(new Float32Array(float32)); // copy to avoid mutation
   }, []);
 
   const pushTutorChunk = useCallback((float32: Float32Array) => {
     if (!enabledRef.current) return;
-    // If session hasn't started yet (no student audio), start it now
+    // Same fallback as student. With sessionStartedAtMs set, this is a no-op.
     if (sessionStartRef.current === 0) {
       sessionStartRef.current = Date.now();
     }

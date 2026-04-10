@@ -91,6 +91,47 @@ function base64ToFloat32(base64: string): Float32Array {
   return float32;
 }
 
+// Linearly resample a Float32Array from `fromRate` to `toRate`. Stateful via
+// `state.phase`, which carries the fractional source index across calls so we
+// don't introduce per-chunk discontinuities (clicks) at non-2:1 ratios.
+interface ResamplerState { phase: number; carry: number | null }
+function resampleLinear(
+  input: Float32Array,
+  fromRate: number,
+  toRate: number,
+  state: ResamplerState,
+): Float32Array {
+  if (fromRate === toRate) return input;
+  const ratio = fromRate / toRate; // > 1 when downsampling (the common case)
+  // Worst-case output length
+  const out = new Float32Array(Math.ceil(input.length / ratio) + 1);
+  let outIdx = 0;
+  let srcIdx = state.phase;
+  // `carry` is the last sample of the previous chunk, used when interpolation
+  // straddles the chunk boundary (srcIdx in [-1, 0)).
+  while (srcIdx < input.length) {
+    const i0 = Math.floor(srcIdx);
+    const frac = srcIdx - i0;
+    let s0: number;
+    let s1: number;
+    if (i0 < 0) {
+      s0 = state.carry ?? input[0];
+      s1 = input[0];
+    } else if (i0 + 1 >= input.length) {
+      // Need next chunk for the right neighbor — stop here and carry phase
+      break;
+    } else {
+      s0 = input[i0];
+      s1 = input[i0 + 1];
+    }
+    out[outIdx++] = s0 * (1 - frac) + s1 * frac;
+    srcIdx += ratio;
+  }
+  state.phase = srcIdx - input.length;
+  state.carry = input[input.length - 1];
+  return out.subarray(0, outIdx);
+}
+
 // Convert Float32Array to base64 PCM16
 function float32ToBase64PCM16(float32: Float32Array): string {
   const int16 = new Int16Array(float32.length);
@@ -986,12 +1027,61 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       const source = ctx.createMediaStreamSource(stream);
       const processor = ctx.createScriptProcessor(4096, 1, 1);
 
+      // Browsers honor `new AudioContext({ sampleRate: 24000 })` inconsistently
+      // (Safari and some Chromium states fall back to device native, usually
+      // 48 kHz). We MUST convert mic audio to 24 kHz before sending it to the
+      // OpenAI Realtime API (which expects pcm16@24kHz) AND before tapping it
+      // for session recording (which assumes 24 kHz in storage + replay).
+      const captureRate = ctx.sampleRate;
+      const resamplerState: ResamplerState = { phase: 0, carry: null };
+      if (captureRate !== 24000) {
+        console.warn(
+          `[Realtime] AudioContext running at ${captureRate} Hz; resampling mic to 24000 Hz`,
+        );
+      }
+
+      // Silent-mic detector: accumulate the first ~1s of mic samples and
+      // verify the track actually carries audio. We've seen sessions where
+      // getUserMedia returned a stream but every sample was zero (e.g. OS-level
+      // mic mute, or another consumer holding the device). Surface as a
+      // non-fatal Error via onError so the tutor page logs it as a debug event.
+      const SILENCE_PROBE_SAMPLES = 24000; // 1s at 24kHz
+      const silenceProbe = { samples: 0, sumSq: 0, peak: 0, fired: false };
+
       processor.onaudioprocess = (e) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
         const inputData = e.inputBuffer.getChannelData(0);
-        // Resample from audioContext rate to 24000 if needed
-        const resampledData = inputData; // Assuming 24kHz context
+        const resampledData =
+          captureRate === 24000
+            ? inputData
+            : resampleLinear(inputData, captureRate, 24000, resamplerState);
+
+        // Silence probe — only inspect until we've gathered the probe window
+        if (!silenceProbe.fired) {
+          for (let i = 0; i < resampledData.length; i++) {
+            const v = resampledData[i];
+            const a = v < 0 ? -v : v;
+            if (a > silenceProbe.peak) silenceProbe.peak = a;
+            silenceProbe.sumSq += v * v;
+          }
+          silenceProbe.samples += resampledData.length;
+          if (silenceProbe.samples >= SILENCE_PROBE_SAMPLES) {
+            silenceProbe.fired = true;
+            const rms = Math.sqrt(silenceProbe.sumSq / silenceProbe.samples);
+            const peakDb = silenceProbe.peak > 0 ? 20 * Math.log10(silenceProbe.peak) : -Infinity;
+            const rmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+            // Threshold: peak below -60 dBFS over a full second = effectively
+            // dead silence (typical room noise sits around -50 to -45 dBFS).
+            if (peakDb < -60) {
+              const msg = `Mic appears silent (peak=${peakDb.toFixed(1)}dBFS rms=${rmsDb.toFixed(1)}dBFS). Check OS-level mic permissions or device.`;
+              console.warn('[Realtime]', msg);
+              const err = new Error(msg);
+              err.name = 'MicSilentWarning';
+              onError?.(err);
+            }
+          }
+        }
 
         // Tap student audio for recording (use ref to avoid stale closure)
         onStudentAudioChunkRef.current?.(resampledData);

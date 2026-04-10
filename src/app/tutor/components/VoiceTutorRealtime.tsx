@@ -85,6 +85,9 @@ interface VoiceTutorRealtimeProps {
   level: string;
   studentName?: string;
   sessionId?: string;
+  // Wallclock ms for session.startedAt — passed through to the audio recorder
+  // so both .pcm16 tracks align with the chat timeline in the replay UI.
+  sessionStartedAtMs?: number;
   sessionGoal: SessionGoal;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
@@ -113,6 +116,7 @@ export function VoiceTutorRealtime({
   level,
   studentName,
   sessionId,
+  sessionStartedAtMs,
   sessionGoal,
   voice = 'shimmer',
   onTranscriptUpdate,
@@ -137,6 +141,7 @@ export function VoiceTutorRealtime({
   const audioRecorder = useAudioRecorder({
     sessionId: sessionId || '',
     enabled: !!audioRecordEnabled,
+    sessionStartedAtMs,
   });
 
   const transcriptRef = useRef<TranscriptEntry[]>([]);
@@ -585,6 +590,14 @@ export function VoiceTutorRealtime({
 
   // Handle errors
   const handleError = useCallback((error: Error) => {
+    // Non-fatal warnings (e.g. MicSilentWarning) — record as a debug event
+    // for the replay timeline but don't show the red error banner or bubble
+    // up to the parent's onError (which may end the session).
+    if (error.name && error.name.endsWith('Warning')) {
+      console.warn('[VoiceTutorRealtime] Warning:', error);
+      onDebugEvent?.(error.name, error.message);
+      return;
+    }
     console.error('[VoiceTutorRealtime] Error:', error);
     setErrorMessage(error.message);
     onDebugEvent?.('error', error.message);

@@ -113,6 +113,18 @@ function TutorPage() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
+  // Source-of-truth event log for whiteboard commands. Each entry is captured
+  // at the moment a command is emitted so we keep accurate timestamps and a
+  // best-effort link to the surrounding transcript message. This avoids the
+  // bug where the save path tried to reverse-engineer order/timing from a
+  // walk over `transcript[].whiteboardCommands`, which silently dropped or
+  // duplicated commands when the realtime tool calls fired before the tutor
+  // transcript entry existed.
+  const whiteboardEventsRef = useRef<Array<{
+    command: WhiteboardCommand;
+    timestamp: Date;
+    sourceMessageIndex: number;
+  }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -131,6 +143,7 @@ function TutorPage() {
   }
   const debugEventsRef = useRef<DebugEvent[]>([]);
   const lastSavedDebugCountRef = useRef(0);
+  const sessionEndedRef = useRef(false);
 
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
     debugEventsRef.current.push({
@@ -221,37 +234,28 @@ function TutorPage() {
           ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
         })),
         whiteboardCommands: (() => {
-          // Derive timestamps from the transcript entries that contain each whiteboard command
-          // Build a map: for each transcript entry with whiteboardCommands, assign its timestamp
-          const wbEntries: { action: string; data: Record<string, unknown>; timestamp: string; sourceMessageIndex: number }[] = [];
-          let wbIdx = 0;
-          for (let ti = 0; ti < transcript.length; ti++) {
-            const t = transcript[ti];
-            if (t.whiteboardCommands?.length) {
-              for (const wbCmd of t.whiteboardCommands) {
-                wbEntries.push({
-                  action: (wbCmd as Record<string, unknown>).action as string || 'unknown',
-                  data: { ...(wbCmd as Record<string, unknown>), action: undefined },
-                  timestamp: t.timestamp.toISOString(),
-                  sourceMessageIndex: ti,
-                });
-              }
-            }
+          // Primary source of truth: the event log captured at emission time.
+          // Each entry carries its own timestamp + transcript anchor, so the
+          // replay UI gets a clean monotonic timeline with no dropped or
+          // duplicated commands.
+          if (whiteboardEventsRef.current.length > 0) {
+            return whiteboardEventsRef.current.map((evt) => ({
+              action: evt.command.action,
+              data: { ...(evt.command as unknown as Record<string, unknown>), action: undefined },
+              timestamp: evt.timestamp.toISOString(),
+              sourceMessageIndex: evt.sourceMessageIndex,
+            }));
           }
-          // Include any remaining commands that weren't attached to transcript entries
-          // (e.g., student drawings added directly to whiteboardCommands)
-          if (wbEntries.length < whiteboardCommands.length) {
-            for (let i = wbEntries.length; i < whiteboardCommands.length; i++) {
-              const cmd = whiteboardCommands[i];
-              wbEntries.push({
-                action: cmd.action,
-                data: { ...cmd, action: undefined },
-                timestamp: now.toISOString(),
-                sourceMessageIndex: -1,
-              });
-            }
-          }
-          return wbEntries;
+          // Fallback for non-voice flows that don't push through
+          // handleVoiceWhiteboardCommand (text mode, homework upload). Just
+          // dump the top-level state with a session-end timestamp — replay
+          // timing won't be precise, but we don't lose commands.
+          return whiteboardCommands.map((cmd) => ({
+            action: cmd.action,
+            data: { ...cmd, action: undefined },
+            timestamp: now.toISOString(),
+            sourceMessageIndex: -1,
+          }));
         })(),
       } : {}),
     };
@@ -268,7 +272,7 @@ function TutorPage() {
     }
   }, [sessionId, selectedSubject, selectedLevel, selectedTopicId, stage, sessionGoal, inputMode, voiceEngine, studentName, transcript.length, whiteboardCommands.length, tokenUsage]);
 
-  // Save on page unload (abandoned)
+  // Save on page unload (tab close) or component unmount (in-app navigation/back button)
   useEffect(() => {
     if (stage !== 'session') return;
 
@@ -277,7 +281,14 @@ function TutorPage() {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Save abandoned session on component unmount (e.g. browser back button in SPA)
+      // Skip if session was already explicitly ended
+      if (!sessionEndedRef.current) {
+        saveSessionUsage('abandoned');
+      }
+    };
   }, [stage, saveSessionUsage]);
 
   // Derived taxonomy state
@@ -469,9 +480,11 @@ function TutorPage() {
     setTranscript([]);
     setConversationHistory([]);
     setWhiteboardCommands([]);
+    whiteboardEventsRef.current = [];
     setTokenUsage([]); // Reset token usage for new session
     sessionStartTimeRef.current = new Date();
     lastSavedTokenCountRef.current = 0;
+    sessionEndedRef.current = false;
 
     // For voice mode, VoiceTutor handles initialization
     if (inputMode === 'voice') {
@@ -542,12 +555,26 @@ function TutorPage() {
   // Handle whiteboard commands from VoiceTutor
   const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
     console.log('[TutorPage] Received whiteboard commands:', commands.length, commands.map(c => c.action));
+    // Capture the emission moment + nearest tutor transcript index right now,
+    // before the next tutor turn lands. We don't try to be clever about which
+    // message a command "belongs to" — for replay we only care that the
+    // timeline is monotonic and the timestamps are real.
+    const now = new Date();
+    const lastTutorIdx = (() => {
+      for (let i = transcript.length - 1; i >= 0; i--) {
+        if (transcript[i].role === 'tutor') return i;
+      }
+      return -1;
+    })();
+    for (const command of commands) {
+      whiteboardEventsRef.current.push({ command, timestamp: now, sourceMessageIndex: lastTutorIdx });
+    }
     setWhiteboardCommands((prev) => {
       const next = [...prev, ...commands];
       console.log('[TutorPage] Total whiteboard commands now:', next.length);
       return next;
     });
-  }, []);
+  }, [transcript]);
 
   // Handle token usage from OpenAI Realtime responses
   const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number }) => {
@@ -578,6 +605,7 @@ function TutorPage() {
       sessionGoal
     });
     // Save session as completed to DB
+    sessionEndedRef.current = true;
     saveSessionUsage('completed');
     setStage('summary');
   }, [onComplete, selectedTopicId, transcript.length, sessionGoal, saveSessionUsage]);
@@ -1124,6 +1152,7 @@ function TutorPage() {
                   level={selectedLevel}
                   studentName={studentName || undefined}
                   sessionId={sessionId}
+                  sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
                   sessionGoal={sessionGoal}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}

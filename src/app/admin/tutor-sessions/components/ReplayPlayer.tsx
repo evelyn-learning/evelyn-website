@@ -49,18 +49,18 @@ function formatTime(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-// Decode raw PCM16 ArrayBuffer to AudioBuffer
-async function decodePCM16(arrayBuffer: ArrayBuffer, sampleRate: number): Promise<AudioBuffer> {
+// Decode raw PCM16 ArrayBuffer into a Float32Array (sample-rate independent).
+// We deliberately do NOT create an AudioContext here — the AudioBuffer is
+// allocated later inside the shared playback context so that the buffer is
+// owned by the same context that plays it (some browsers, notably Safari,
+// behave erratically when an AudioBuffer's origin context has been closed).
+function pcm16ToFloat32(arrayBuffer: ArrayBuffer): Float32Array {
   const int16 = new Int16Array(arrayBuffer);
   const float32 = new Float32Array(int16.length);
   for (let i = 0; i < int16.length; i++) {
     float32[i] = int16[i] / 32768.0;
   }
-  const audioCtx = new AudioContext({ sampleRate });
-  const audioBuffer = audioCtx.createBuffer(1, float32.length, sampleRate);
-  audioBuffer.getChannelData(0).set(float32);
-  await audioCtx.close();
-  return audioBuffer;
+  return float32;
 }
 
 export default function ReplayPlayer({
@@ -89,6 +89,11 @@ export default function ReplayPlayer({
   const [studentMuted, setStudentMuted] = useState(false);
   const [tutorMuted, setTutorMuted] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  // Raw decoded samples + capture sample rate, set during loadAudio. The
+  // playable AudioBuffer is materialized lazily in the shared playback
+  // context the first time we actually start a source.
+  const studentRawRef = useRef<{ float32: Float32Array; sampleRate: number; originOffsetMs: number } | null>(null);
+  const tutorRawRef = useRef<{ float32: Float32Array; sampleRate: number; originOffsetMs: number } | null>(null);
   const studentBufferRef = useRef<AudioBuffer | null>(null);
   const tutorBufferRef = useRef<AudioBuffer | null>(null);
   const studentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -252,13 +257,33 @@ export default function ReplayPlayer({
         fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=tutor`),
       ]);
 
+      // Trust the per-track sample rate and origin offset reported by the API
+      // (from meta.json) rather than hardcoding. Origin offset is the wallclock
+      // delta between session.startedAt and the first sample of the file —
+      // necessary because student.pcm16 starts when the mic was activated,
+      // not when the session began.
+      const intHeader = (resp: Response, name: string, fallback: number) =>
+        parseInt(resp.headers.get(name) || String(fallback), 10) || fallback;
+
       if (studentResp.ok) {
         const buf = await studentResp.arrayBuffer();
-        if (buf.byteLength > 0) studentBufferRef.current = await decodePCM16(buf, 24000);
+        if (buf.byteLength > 0) {
+          studentRawRef.current = {
+            float32: pcm16ToFloat32(buf),
+            sampleRate: intHeader(studentResp, 'X-Sample-Rate', 24000),
+            originOffsetMs: intHeader(studentResp, 'X-Origin-Offset-Ms', 0),
+          };
+        }
       }
       if (tutorResp.ok) {
         const buf = await tutorResp.arrayBuffer();
-        if (buf.byteLength > 0) tutorBufferRef.current = await decodePCM16(buf, 24000);
+        if (buf.byteLength > 0) {
+          tutorRawRef.current = {
+            float32: pcm16ToFloat32(buf),
+            sampleRate: intHeader(tutorResp, 'X-Sample-Rate', 24000),
+            originOffsetMs: intHeader(tutorResp, 'X-Origin-Offset-Ms', 0),
+          };
+        }
       }
 
       setAudioLoaded(true);
@@ -269,16 +294,38 @@ export default function ReplayPlayer({
     }
   }, [sessionId, audioLoaded, audioLoading]);
 
-  // Audio: start playback from offset
-  const startAudioPlayback = useCallback((offsetMs: number, playbackRate: number) => {
+  // Audio: start playback from offset.
+  // Async because the AudioContext may be born `suspended` (autoplay policy)
+  // and we MUST await `resume()` before calling `source.start()`, otherwise
+  // the first play silently drops audio until the next user interaction.
+  const startAudioPlayback = useCallback(async (offsetMs: number, playbackRate: number) => {
     if (!audioLoaded) return;
 
-    // Create or resume AudioContext
+    // Create or resume the shared playback AudioContext
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
       audioCtxRef.current = new AudioContext({ sampleRate: 24000 });
     }
     const ctx = audioCtxRef.current;
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch (err) { console.warn('[ReplayPlayer] AudioContext resume failed', err); }
+    }
+
+    // Lazily materialize AudioBuffers in this context the first time we play.
+    // Doing it here (rather than in loadAudio) keeps the buffer's owner context
+    // alive for the entire playback lifecycle and avoids the closed-context
+    // quirks we hit when buffers were decoded in a throwaway temporary context.
+    if (!studentBufferRef.current && studentRawRef.current) {
+      const { float32, sampleRate } = studentRawRef.current;
+      const buf = ctx.createBuffer(1, float32.length, sampleRate);
+      buf.getChannelData(0).set(float32);
+      studentBufferRef.current = buf;
+    }
+    if (!tutorBufferRef.current && tutorRawRef.current) {
+      const { float32, sampleRate } = tutorRawRef.current;
+      const buf = ctx.createBuffer(1, float32.length, sampleRate);
+      buf.getChannelData(0).set(float32);
+      tutorBufferRef.current = buf;
+    }
 
     // Create gain nodes if needed
     if (!studentGainRef.current) {
@@ -294,31 +341,49 @@ export default function ReplayPlayer({
     studentGainRef.current.gain.value = studentMuted ? 0 : 1;
     tutorGainRef.current.gain.value = tutorMuted ? 0 : 1;
 
-    const offsetSec = offsetMs / 1000;
-
     // Stop existing sources
     try { studentSourceRef.current?.stop(); } catch {}
     try { tutorSourceRef.current?.stop(); } catch {}
 
-    // Start student audio
-    if (studentBufferRef.current && offsetSec < studentBufferRef.current.duration) {
+    // Schedule a track. The audio file's sample 0 corresponds to wallclock
+    // (sessionStart + originOffsetMs). At timeline position `offsetMs`:
+    //  - if offsetMs >= originOffsetMs: start immediately at buffer offset
+    //    (offsetMs - originOffsetMs).
+    //  - else: schedule the source to start (originOffsetMs - offsetMs)/rate
+    //    seconds in the future at buffer offset 0 (i.e. wait for the track
+    //    to "kick in" relative to the session timeline).
+    const scheduleTrack = (
+      buffer: AudioBuffer | null,
+      gain: GainNode | null,
+      originOffsetMs: number,
+    ): AudioBufferSourceNode | null => {
+      if (!buffer || !gain) return null;
+      const trackDeltaMs = offsetMs - originOffsetMs;
       const source = ctx.createBufferSource();
-      source.buffer = studentBufferRef.current;
+      source.buffer = buffer;
       source.playbackRate.value = playbackRate;
-      source.connect(studentGainRef.current);
-      source.start(0, offsetSec);
-      studentSourceRef.current = source;
-    }
+      source.connect(gain);
+      if (trackDeltaMs >= 0) {
+        const bufferOffsetSec = trackDeltaMs / 1000;
+        if (bufferOffsetSec >= buffer.duration) return null; // past end of track
+        source.start(0, bufferOffsetSec);
+      } else {
+        const delaySec = (-trackDeltaMs / 1000) / playbackRate;
+        source.start(ctx.currentTime + delaySec, 0);
+      }
+      return source;
+    };
 
-    // Start tutor audio
-    if (tutorBufferRef.current && offsetSec < tutorBufferRef.current.duration) {
-      const source = ctx.createBufferSource();
-      source.buffer = tutorBufferRef.current;
-      source.playbackRate.value = playbackRate;
-      source.connect(tutorGainRef.current);
-      source.start(0, offsetSec);
-      tutorSourceRef.current = source;
-    }
+    studentSourceRef.current = scheduleTrack(
+      studentBufferRef.current,
+      studentGainRef.current,
+      studentRawRef.current?.originOffsetMs ?? 0,
+    );
+    tutorSourceRef.current = scheduleTrack(
+      tutorBufferRef.current,
+      tutorGainRef.current,
+      tutorRawRef.current?.originOffsetMs ?? 0,
+    );
   }, [audioLoaded, studentMuted, tutorMuted]);
 
   // Audio: stop playback

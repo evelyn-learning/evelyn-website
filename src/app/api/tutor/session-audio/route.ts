@@ -94,16 +94,30 @@ export async function GET(request: NextRequest) {
 
   const safeId = sanitizeSessionId(sessionId);
   const filePath = path.join(AUDIO_BASE_DIR, safeId, `${role}.pcm16`);
+  const metaPath = path.join(AUDIO_BASE_DIR, safeId, `${role}.meta.json`);
 
   try {
     const stat = await fs.stat(filePath);
     const fileBuffer = await fs.readFile(filePath);
 
+    // Pull the actual sample rate from the sidecar meta file if present.
+    // Capture always stores at 24 kHz today, but the client must trust metadata
+    // rather than hardcode — if capture rate ever changes, replay will follow.
+    let sampleRate = '24000';
+    try {
+      const meta = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
+      if (typeof meta.sampleRate === 'number' && meta.sampleRate > 0) {
+        sampleRate = String(meta.sampleRate);
+      }
+    } catch {
+      // No meta file (session abandoned before finalize) — fall back to 24000
+    }
+
     return new Response(fileBuffer, {
       headers: {
         'Content-Type': 'application/octet-stream',
         'Content-Length': String(stat.size),
-        'X-Sample-Rate': '24000',
+        'X-Sample-Rate': sampleRate,
         'X-Channels': '1',
         'X-Bit-Depth': '16',
         'Cache-Control': 'private, max-age=3600',
