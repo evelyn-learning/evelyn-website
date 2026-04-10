@@ -46,7 +46,7 @@
     "next-auth": "^4.24.12",
     "next-sitemap": "^4.2.3",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^8.0.5",
     "openai": "^4.85.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
@@ -80,6 +80,8 @@
     "typescript": "^5.7.0"
   },
   "overrides": {
-    "fast-xml-parser": "^5.3.6"
+    "fast-xml-parser": "^5.3.6",
+    "immutable": "^3.8.3",
+    "minimatch": "^3.1.4"
   }
 }
