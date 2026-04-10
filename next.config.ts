@@ -357,15 +357,23 @@ const nextConfig: NextConfig = {
       },
       // Old root-level blog post slugs → /blog/:slug
       // 141 WordPress blog posts lived at root level (e.g., /adaptive-learning/)
-      // Now migrated to /blog/:slug — redirect to the actual post.
-      // Next.js pages take priority over redirects, so /case-studies etc. still work.
+      // and were migrated to /blog/:slug — these catch them.
+      //
+      // ⚠️  In Next.js, redirects run BEFORE filesystem routing. The previous
+      // version of this comment claimed pages take priority — that was wrong
+      // and caused the April 2026 case-studies / tutor-portal 308 outage where
+      // both real root pages were silently being redirected into /blog/<slug>
+      // → 404. The negative lookahead below excludes the root-level Next.js
+      // pages whose slug happens to contain a hyphen. WHEN YOU ADD A NEW ROOT
+      // PAGE WITH A HYPHEN IN ITS NAME, add it to the lookahead or it will
+      // be silently 308'd into /blog/<slug> → 404 on the next deploy.
       {
-        source: "/:slug([a-z0-9]+-[a-z0-9-]+)",
+        source: "/:slug((?!case-studies|tutor-portal)[a-z0-9]+-[a-z0-9-]+)",
         destination: "/blog/:slug",
         permanent: true,
       },
       {
-        source: "/:slug([a-z0-9]+-[a-z0-9-]+)/",
+        source: "/:slug((?!case-studies|tutor-portal)[a-z0-9]+-[a-z0-9-]+)/",
         destination: "/blog/:slug",
         permanent: true,
       },
