@@ -107,13 +107,18 @@ if [ -f "$ZIP_FILE" ]; then
   log_message "INFO" "Removed existing zip file"
 fi
 
-# Zip everything except node_modules, .git, and local env files
+# Zip everything except node_modules, .git, and local env files.
+# .npmrc is required so `npm ci` on the server picks up legacy-peer-deps=true
+# (next-auth declares an optional peer on nodemailer ^7 that conflicts with
+# our direct nodemailer ^8.0.5 — we don't use the email provider, so accepting
+# the optional-peer mismatch is safe).
 zip -qr "$ZIP_FILE" \
   .next \
   public \
   src \
   package.json \
   package-lock.json \
+  .npmrc \
   next.config.ts \
   tsconfig.json \
   tailwind.config.ts \
