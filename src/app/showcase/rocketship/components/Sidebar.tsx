@@ -81,18 +81,6 @@ export default function Sidebar({ activeSection, onSectionChange, presenterMode,
         </button>
       </div>
 
-      {/* Meeting Context — hidden in presenter mode */}
-      {!presenterMode && (
-        <div className="p-4 mx-3 mb-3 rounded-xl text-xs" style={{ backgroundColor: '#f0ebe7', color: '#6B6B6B' }}>
-          <div className="font-semibold mb-1" style={{ color: '#1A1A1A' }}>Meeting Context</div>
-          <div>Preston Smith</div>
-          <div>Co-Founder & CEO</div>
-          <div>Rocketship Public Schools</div>
-          <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: '#E5E0DB' }}>
-            April 2, 2026 · 11:00 AM
-          </div>
-        </div>
-      )}
     </div>
   );
 }

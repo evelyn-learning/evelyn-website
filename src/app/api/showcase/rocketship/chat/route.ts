@@ -40,8 +40,14 @@ ${bilingualMode ? `- Emerging (WIDA 1): Maximum 4-5 words per sentence. Use only
 The writing prompt Sofia is working on: "Describe your neighborhood."
 
 After each response, output a JSON block on a new line with exactly this format (do not include in your spoken response):
-{"vocabSpotlight": [{"word": "word1", "definition": "child-friendly definition", "example": "example sentence"}, {"word": "word2", "definition": "definition", "example": "example"}]}
-Include 2-3 vocabulary words relevant to the conversation. Pick words that are at or slightly above the student's WIDA level.`;
+{"vocabSpotlight": [{"word": "word1", "definition": "child-friendly definition", "example": "example sentence"}, {"word": "word2", "definition": "definition", "example": "example"}], "visualCues": ["word1", "word2", "word3"]}
+Include 2-3 vocabulary words relevant to the conversation. Pick words that are at or slightly above the student's WIDA level.
+
+The "visualCues" field must be an array of 2-4 concrete, picturable single-word nouns drawn from YOUR response text — words a Grade 3 child could see in a photograph (e.g. "house", "park", "tree", "family", "dog", "street"). These will be displayed as photo thumbnails above your response so the student sees pictures, not just words. NEVER put abstract words, verbs, or adjectives in visualCues. If your response mentions "houses on the street with trees", visualCues should be ["houses", "street", "trees"].
+
+CRITICAL vocab selection rule: Vocab words MUST be concrete, picturable nouns that a Grade 3 child could point at in a photograph — things like houses, trees, park, family, store, street, dog, flower, school, sidewalk. NEVER pick verbs (describe, tell, explain), abstract concepts (community, area, neighborhood as a concept, experience, feeling), or function words. If the most relevant word to the conversation is abstract, substitute a concrete example of it — e.g. use "houses" instead of "community", "park" instead of "area". Every vocab word must map to a clear, unambiguous image.
+
+When generating vocabulary definitions, use only the 500 most common English words in the definition itself. If you must use a word that might be unfamiliar, define that word too. Definitions must be one short sentence maximum. Example of BAD definition: "The area around where you live." Example of GOOD definition: "The streets and houses close to your home."`;
 
 const COPILOT_SYSTEM_PROMPT = (projectPhase: string) =>
   `You are the Rocketship Elementary AI Co-Pilot, a thought partner for Grade 3 student Marco. He is working on a project called "Our Neighborhood" in ${projectPhase} mode. Your job is to coach his thinking using Socratic questioning — never write his work for him.

@@ -23,14 +23,63 @@ interface VocabWord {
   example: string;
 }
 
+// Toggle: flip to false to fall back to plain text bubbles with no visual strip.
+const VISUAL_CUES_ENABLED = true;
+
+interface ParsedAssistantMessage {
+  text: string;
+  vocabSpotlight: VocabWord[] | null;
+  visualCues: string[];
+}
+
+function parseAssistantMessage(raw: string): ParsedAssistantMessage {
+  const fenced = raw.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+  const bare = raw.match(/\{\s*"vocabSpotlight"[\s\S]*?\]\s*(?:,\s*"visualCues"\s*:\s*\[[^\]]*\])?\s*\}/);
+  const jsonStr = fenced ? fenced[1] : bare ? bare[0] : null;
+
+  let vocabSpotlight: VocabWord[] | null = null;
+  let visualCues: string[] = [];
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (Array.isArray(parsed.vocabSpotlight)) vocabSpotlight = parsed.vocabSpotlight;
+      if (Array.isArray(parsed.visualCues)) {
+        visualCues = parsed.visualCues
+          .filter((c: unknown): c is string => typeof c === 'string' && c.trim().length > 0)
+          .map((c: string) => c.trim().toLowerCase())
+          .slice(0, 4);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const text = raw
+    .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, '')
+    .replace(/\{\s*"vocabSpotlight"[\s\S]*?\]\s*(?:,\s*"visualCues"\s*:\s*\[[^\]]*\])?\s*\}/, '')
+    .replace(/\{\s*"vocabSpotlight"[\s\S]*$/, '')
+    .trim();
+
+  return { text, vocabSpotlight, visualCues };
+}
+
+const PICTURE_PROMPTS: { emoji: string; word: string }[] = [
+  { emoji: '🏠', word: 'Home' },
+  { emoji: '🌳', word: 'Trees' },
+  { emoji: '🛝', word: 'Park' },
+  { emoji: '👨‍👩‍👧', word: 'Family' },
+];
+
 export default function Section1ELLCoPilot() {
   const [widaLevel, setWidaLevel] = useState<WidaLevel>('Developing');
   const [bilingualMode, setBilingualMode] = useState(true);
   const [input, setInput] = useState('');
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
+  const inputRef = useRef<HTMLInputElement>(null);
   const [vocabWords, setVocabWords] = useState<VocabWord[]>([
-    { word: 'neighborhood', definition: 'The area around where you live', example: 'My neighborhood has a park and a school.' },
-    { word: 'describe', definition: 'To tell about something using words', example: 'Can you describe your favorite place?' },
-    { word: 'community', definition: 'A group of people who live near each other', example: 'Our community has many families.' },
+    { word: 'houses', definition: 'The buildings where people live with their families.', example: 'The houses on my street are red and blue.' },
+    { word: 'park', definition: 'A place with grass and trees where kids play.', example: 'We play at the park after school.' },
+    { word: 'trees', definition: 'Tall plants with leaves that grow from the ground.', example: 'Big trees grow next to my house.' },
   ]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { speak, stop, isSpeaking, speakingId } = useTTS();
@@ -42,19 +91,9 @@ export default function Section1ELLCoPilot() {
   );
 
   const handleComplete = useCallback((fullText: string) => {
-    // Extract JSON whether bare or wrapped in code fences
-    const fencedMatch = fullText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-    const bareMatch = fullText.match(/\{"vocabSpotlight":\s*\[[\s\S]*?\]\}/);
-    const jsonStr = fencedMatch ? fencedMatch[1] : bareMatch ? bareMatch[0] : null;
-    if (jsonStr) {
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.vocabSpotlight?.length) {
-          setVocabWords(parsed.vocabSpotlight);
-        }
-      } catch {
-        // keep existing vocab
-      }
+    const parsed = parseAssistantMessage(fullText);
+    if (parsed.vocabSpotlight?.length) {
+      setVocabWords(parsed.vocabSpotlight);
     }
   }, []);
 
@@ -71,6 +110,24 @@ export default function Section1ELLCoPilot() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    let cancelled = false;
+    vocabWords.forEach((v) => {
+      const key = v.word.toLowerCase();
+      if (imageCache[key]) return;
+      fetch(`/api/showcase/rocketship/unsplash?q=${encodeURIComponent(v.word)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (cancelled || !data?.url) return;
+          setImageCache((prev) => ({ ...prev, [key]: data.url }));
+        })
+        .catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [vocabWords, imageCache]);
+
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -78,13 +135,34 @@ export default function Section1ELLCoPilot() {
     sendMessage(trimmed);
   };
 
-  const cleanContent = (content: string) => {
-    return content
-      .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, '')
-      .replace(/\{"vocabSpotlight":\s*\[[\s\S]*?\]\}/, '')
-      .replace(/\{"vocabSpotlight"[\s\S]*$/, '')
-      .trim();
-  };
+  const parsedAssistantMessages = useMemo(() => {
+    const map: Record<number, ParsedAssistantMessage> = {};
+    messages.forEach((m, i) => {
+      if (m.role === 'assistant') map[i] = parseAssistantMessage(m.content);
+    });
+    return map;
+  }, [messages]);
+
+  // Prefetch Unsplash thumbnails for every visual cue across every assistant bubble.
+  useEffect(() => {
+    if (!VISUAL_CUES_ENABLED) return;
+    let cancelled = false;
+    const allCues = new Set<string>();
+    Object.values(parsedAssistantMessages).forEach((p) => p.visualCues.forEach((c) => allCues.add(c)));
+    allCues.forEach((cue) => {
+      if (imageCache[cue]) return;
+      fetch(`/api/showcase/rocketship/unsplash?q=${encodeURIComponent(cue)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (cancelled || !data?.url) return;
+          setImageCache((prev) => ({ ...prev, [cue]: data.url }));
+        })
+        .catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parsedAssistantMessages, imageCache]);
 
   const widaIndex = WIDA_LEVELS.indexOf(widaLevel);
 
@@ -141,24 +219,97 @@ export default function Section1ELLCoPilot() {
               </p>
             </div>
           )}
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'text-white rounded-br-md'
-                    : 'rounded-bl-md'
-                }`}
-                style={
-                  msg.role === 'user'
-                    ? { backgroundColor: '#C8402A' }
-                    : { backgroundColor: '#f5f0ed', color: '#1A1A1A' }
-                }
-              >
-                {msg.role === 'user' ? msg.content : renderChatContent(cleanContent(msg.content))}
+          {messages.map((msg, i) => {
+            if (msg.role === 'user') {
+              return (
+                <div key={i} className="flex justify-end">
+                  <div
+                    className="max-w-[80%] px-4 rounded-2xl rounded-br-md text-white"
+                    style={{
+                      backgroundColor: '#C8402A',
+                      fontSize: '16px',
+                      lineHeight: 1.8,
+                      paddingTop: '16px',
+                      paddingBottom: '16px',
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              );
+            }
+            const parsed = parsedAssistantMessages[i] ?? { text: msg.content, vocabSpotlight: null, visualCues: [] };
+            const cleaned = parsed.text;
+            const cues = VISUAL_CUES_ENABLED ? parsed.visualCues : [];
+            const bubbleTTSId = `bubble-${i}`;
+            const isThisBubbleSpeaking = speakingId === bubbleTTSId && isSpeaking;
+            return (
+              <div key={i} className="flex justify-start">
+                <div
+                  className="max-w-[80%] px-4 rounded-2xl rounded-bl-md relative"
+                  style={{
+                    backgroundColor: '#f5f0ed',
+                    color: '#1A1A1A',
+                    fontSize: '16px',
+                    lineHeight: 1.8,
+                    paddingTop: '16px',
+                    paddingBottom: '16px',
+                    paddingRight: '36px',
+                  }}
+                >
+                  {cues.length > 0 && (
+                    <div className="flex gap-2 mb-2 -mt-1 flex-wrap">
+                      {cues.map((cue) => {
+                        const url = imageCache[cue];
+                        return (
+                          <div key={cue} className="flex flex-col items-center" style={{ width: '56px' }}>
+                            {url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={url}
+                                alt={cue}
+                                className="rounded-lg"
+                                style={{ width: '56px', height: '56px', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div
+                                className="rounded-lg animate-pulse"
+                                style={{ width: '56px', height: '56px', backgroundColor: '#E5E0DB' }}
+                              />
+                            )}
+                            <div
+                              className="mt-1 text-center font-medium"
+                              style={{ fontSize: '11px', color: '#6B6B6B', lineHeight: 1.2 }}
+                            >
+                              {cue}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {renderChatContent(cleaned)}
+                  <button
+                    onClick={() => {
+                      if (isThisBubbleSpeaking) {
+                        stop();
+                      } else {
+                        speak(cleaned, bubbleTTSId);
+                      }
+                    }}
+                    className={`absolute bottom-1.5 right-1.5 p-1 rounded-full transition-all ${isThisBubbleSpeaking ? 'animate-pulse' : 'hover:bg-white'}`}
+                    title={isThisBubbleSpeaking ? 'Stop' : 'Read aloud'}
+                  >
+                    {isThisBubbleSpeaking ? (
+                      <VolumeX className="w-3.5 h-3.5" style={{ color: '#C8402A' }} />
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" style={{ color: '#2A7B6F' }} />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {isStreaming && (
             <div className="flex justify-start">
               <div className="px-4 py-2">
@@ -185,23 +336,42 @@ export default function Section1ELLCoPilot() {
             className="flex gap-2"
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type as Sofia..."
               disabled={isStreaming}
-              className="flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 disabled:opacity-50"
-              style={{ borderColor: '#E5E0DB', color: '#1A1A1A' }}
+              className="flex-1 px-4 rounded-xl border focus:outline-none focus:ring-2 disabled:opacity-50"
+              style={{ borderColor: '#E5E0DB', color: '#1A1A1A', minHeight: '56px', fontSize: '16px' }}
             />
             <button
               type="submit"
               disabled={isStreaming || !input.trim()}
-              className="px-4 py-2.5 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
-              style={{ backgroundColor: '#C8402A' }}
+              className="px-4 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
+              style={{ backgroundColor: '#C8402A', minHeight: '56px' }}
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
+          {/* Picture prompt tiles */}
+          <div className="flex gap-2 mt-2">
+            {PICTURE_PROMPTS.map((p) => (
+              <button
+                key={p.word}
+                type="button"
+                onClick={() => {
+                  setInput(`My neighborhood has ${p.word.toLowerCase()}...`);
+                  inputRef.current?.focus();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all hover:bg-white"
+                style={{ borderColor: '#E5E0DB', backgroundColor: '#FFF8F5', color: '#1A1A1A' }}
+              >
+                <span className="text-base leading-none">{p.emoji}</span>
+                <span>{p.word}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -268,8 +438,24 @@ export default function Section1ELLCoPilot() {
               const isPlaying = speakingId === vocabId && isSpeaking;
               return (
                 <div key={i} className="p-3 rounded-xl" style={{ backgroundColor: '#FFF8F5' }}>
+                  {imageCache[vocab.word.toLowerCase()] ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={imageCache[vocab.word.toLowerCase()]}
+                      alt={vocab.word}
+                      width={80}
+                      height={80}
+                      className="rounded-lg mb-2"
+                      style={{ objectFit: 'cover', width: '80px', height: '80px' }}
+                    />
+                  ) : (
+                    <div
+                      className="rounded-lg mb-2"
+                      style={{ width: '80px', height: '80px', backgroundColor: '#E5E0DB' }}
+                    />
+                  )}
                   <div className="flex items-center justify-between">
-                    <div className="font-semibold text-sm" style={{ color: '#C8402A' }}>
+                    <div className="font-semibold" style={{ color: '#C8402A', fontSize: '14px' }}>
                       {vocab.word}
                     </div>
                     <button
@@ -290,10 +476,10 @@ export default function Section1ELLCoPilot() {
                       )}
                     </button>
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: '#1A1A1A' }}>
+                  <div className="mt-0.5" style={{ color: '#6B6B6B', fontSize: '12px' }}>
                     {vocab.definition}
                   </div>
-                  <div className="text-[11px] mt-1 italic" style={{ color: '#6B6B6B' }}>
+                  <div className="mt-1 italic" style={{ color: '#6B6B6B', fontSize: '12px' }}>
                     &quot;{vocab.example}&quot;
                   </div>
                 </div>

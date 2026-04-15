@@ -16,7 +16,7 @@ import { PresenterProvider } from './components/PresenterContext';
 const SECTION_TITLES: Record<SectionId, { title: string; subtitle: string }> = {
   'ell-copilot': {
     title: 'Built for your Rocketeers first',
-    subtitle: 'A language learning AI co-pilot tuned for ELL students — Socratic, bilingual, and WIDA-aligned.',
+    subtitle: 'Every child can participate — readers and emerging readers alike.',
   },
   'teacher-brief': {
     title: 'Your 60-second morning brief — before the bell rings',
