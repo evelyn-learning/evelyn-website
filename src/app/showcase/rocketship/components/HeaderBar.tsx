@@ -20,10 +20,10 @@ export default function HeaderBar({ activeSection }: HeaderBarProps) {
           Rocketship Innovation School — Evelyn Learning Showcase
         </h1>
         <span
-          className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-          style={{ backgroundColor: '#C8402A' }}
+          className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+          style={{ backgroundColor: '#f0ebe7', color: '#6B6B6B' }}
         >
-          For Preston
+          Innovation School Preview
         </span>
       </div>
 

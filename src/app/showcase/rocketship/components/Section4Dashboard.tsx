@@ -1,467 +1,457 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
-import {
-  User,
-  Users,
-  GripVertical,
-  Sparkles,
-  Send,
-  TrendingUp,
-  AlertTriangle,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
-import { STUDENTS, MASTERY_COLORS, EXIT_TICKET_DATA, ACTION_CARDS, PARENT_MESSAGES } from './data';
-import { usePresenterMode } from './PresenterContext';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Sparkles, RotateCcw, Users, Bell, Check, X as XIcon } from 'lucide-react';
 
-// =============================================================================
-// Panel A — Class Mastery Overview
-// =============================================================================
-function PanelA() {
-  const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
-  const onTrack = STUDENTS.filter((s) => s.mastery === 'Proficient' || s.exitTicket >= 70).length;
+type GroupKey = 'extension' | 'core' | 'developing' | 'recovery';
 
-  return (
-    <div className="rounded-2xl border p-4 h-full flex flex-col" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
-          Class Mastery Overview
-        </h3>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: '#FFF8F5', color: '#1A1A1A' }}>
-          <TrendingUp className="w-3 h-3" style={{ color: '#2A7B6F' }} />
-          {onTrack} of {STUDENTS.length} on track
-        </div>
-      </div>
-
-      {/* Mastery bar */}
-      <div className="flex h-2 rounded-full overflow-hidden mb-4" style={{ backgroundColor: '#E5E0DB' }}>
-        <div className="h-full" style={{ width: `${(STUDENTS.filter((s) => s.mastery === 'Proficient').length / STUDENTS.length) * 100}%`, backgroundColor: '#10B981' }} />
-        <div className="h-full" style={{ width: `${(STUDENTS.filter((s) => s.mastery === 'Approaching').length / STUDENTS.length) * 100}%`, backgroundColor: '#F59E0B' }} />
-        <div className="h-full" style={{ width: `${(STUDENTS.filter((s) => s.mastery === 'Developing').length / STUDENTS.length) * 100}%`, backgroundColor: '#EF4444' }} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 flex-1">
-        {STUDENTS.map((student) => {
-          const colors = MASTERY_COLORS[student.mastery];
-          const isExpanded = expandedStudent === student.name;
-          return (
-            <div key={student.name}>
-              <button
-                onClick={() => setExpandedStudent(isExpanded ? null : student.name)}
-                className={`w-full p-2.5 rounded-xl border text-left transition-all hover:shadow-sm ${colors.border}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
-                    <span className="text-xs font-semibold" style={{ color: '#1A1A1A' }}>
-                      {student.name.split(' ')[0]}
-                    </span>
-                  </div>
-                  {student.ell !== 'No' && (
-                    <span className="text-[8px] px-1 py-0.5 rounded font-medium" style={{ backgroundColor: '#2A7B6F', color: 'white' }}>
-                      ELL
-                    </span>
-                  )}
-                </div>
-                <div className="mt-1 text-[10px]" style={{ color: '#6B6B6B' }}>
-                  {student.exitTicket}% · {student.mastery}
-                </div>
-                {isExpanded ? <ChevronUp className="w-3 h-3 mt-1" style={{ color: '#6B6B6B' }} /> : <ChevronDown className="w-3 h-3 mt-1" style={{ color: '#E5E0DB' }} />}
-              </button>
-              {isExpanded && (
-                <div className="mt-1 p-2 rounded-lg text-[10px] space-y-1" style={{ backgroundColor: '#FFF8F5' }}>
-                  <div style={{ color: '#6B6B6B' }}>Exit tickets: {student.exitTicketHistory?.join('%, ') || 'N/A'}%</div>
-                  <div style={{ color: '#6B6B6B' }}>Project: {student.projectPhase || 'N/A'}</div>
-                  <div className="flex gap-1 mt-1">
-                    {student.exitTicketHistory?.map((score, i) => (
-                      <div key={i} className="flex-1 rounded-sm" style={{ height: `${score / 3}px`, backgroundColor: score >= 70 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444' }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+interface GroupDef {
+  key: GroupKey;
+  label: string;
+  sublabel: string;
+  color: string;
+  bg: string;
 }
 
-// =============================================================================
-// Panel B — Today's Groupings
-// =============================================================================
-interface GroupData {
-  smallGroup: string[];
-  independent: string[];
-  extension: string[];
+const GROUP_DEFS: Record<GroupKey, GroupDef> = {
+  extension: {
+    key: 'extension',
+    label: 'Extension',
+    sublabel: 'Equivalent fractions mastery',
+    color: '#2A7B6F',
+    bg: '#E8F5F2',
+  },
+  core: {
+    key: 'core',
+    label: 'Core Practice',
+    sublabel: 'Bridges Workplace 4B',
+    color: '#C8402A',
+    bg: '#FDECE7',
+  },
+  developing: {
+    key: 'developing',
+    label: 'Developing',
+    sublabel: 'Same-denominator review',
+    color: '#D97706',
+    bg: '#FEF3C7',
+  },
+  recovery: {
+    key: 'recovery',
+    label: 'Unlike Denominators Recovery',
+    sublabel: 'Pull for 10-min intervention',
+    color: '#7C3AED',
+    bg: '#EDE9FE',
+  },
+};
+
+interface QuizItem {
+  item: number;
+  prompt: string;
+  options: string[];
+  correct: number;
+  skill: string;
 }
 
-function PanelB() {
-  const [groups, setGroups] = useState<GroupData>({
-    smallGroup: ['Marcus T.', 'Sofia R.', 'Destiny M.', 'James L.'],
-    independent: ['Priya S.', 'Aiden K.'],
-    extension: ['Aiden K.'],
-  });
-  const [isRegrouping, setIsRegrouping] = useState(false);
-  const [draggedStudent, setDraggedStudent] = useState<{ name: string; from: keyof GroupData } | null>(null);
+const SOFIA_QUIZ: QuizItem[] = [
+  {
+    item: 1,
+    prompt: 'Which fraction is greater? 2/4 or 1/4',
+    options: ['2/4', '1/4', 'They are equal'],
+    correct: 0,
+    skill: 'like denominators',
+  },
+  {
+    item: 2,
+    prompt: 'Which fraction is greater? 2/3 or 3/4',
+    options: ['2/3', '3/4', 'They are equal'],
+    correct: 1,
+    skill: 'unlike denominators',
+  },
+  {
+    item: 3,
+    prompt: 'Which fraction is greater? 5/8 or 3/8',
+    options: ['5/8', '3/8', 'They are equal'],
+    correct: 0,
+    skill: 'like denominators',
+  },
+  {
+    item: 4,
+    prompt: 'Which is greater? 1/2 or 3/5',
+    options: ['1/2', '3/5', 'They are equal'],
+    correct: 1,
+    skill: 'unlike denominators',
+  },
+];
 
-  const handleRegroup = async () => {
-    setIsRegrouping(true);
+// Sofia's simulated answers: items 1 & 3 correct (like denominators),
+// items 2 & 4 incorrect (unlike denominators)
+const SOFIA_ANSWERS = [0, 0, 0, 0];
+
+const INITIAL_GROUPS: Record<GroupKey, string[]> = {
+  extension: ['Aiden K.', 'Priya S.'],
+  core: ['Marcus T.', 'Destiny M.', 'James L.'],
+  developing: ['Sofia R.'],
+  recovery: [],
+};
+
+const FINAL_GROUPS: Record<GroupKey, string[]> = {
+  extension: ['Aiden K.', 'Priya S.'],
+  core: ['James L.'],
+  developing: [],
+  recovery: ['Sofia R.', 'Destiny M.', 'Marcus T.'],
+};
+
+interface Decision {
+  student: string;
+  previous_group: string;
+  new_group: string;
+  rationale: string;
+  teacher_action: string;
+}
+
+export default function Section4Dashboard() {
+  const [phase, setPhase] = useState<'quiz' | 'submitting' | 'shifted'>('quiz');
+  const [selectedAnswers, setSelectedAnswers] = useState<Array<number | null>>([null, null, null, null]);
+  const [groups, setGroups] = useState<Record<GroupKey, string[]>>(INITIAL_GROUPS);
+  const [decision, setDecision] = useState<Decision | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const canSubmit = selectedAnswers.every((a) => a !== null) && phase === 'quiz';
+
+  const score = useMemo(() => {
+    return selectedAnswers.reduce<number>((acc, a, i) => (a === SOFIA_QUIZ[i].correct ? acc + 1 : acc), 0);
+  }, [selectedAnswers]);
+
+  const autofillSofiaAnswers = () => {
+    setSelectedAnswers([...SOFIA_ANSWERS]);
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    setPhase('submitting');
+
+    const items = SOFIA_QUIZ.map((q, i) => ({
+      item: q.item,
+      skill: q.skill,
+      correct: selectedAnswers[i] === q.correct,
+    }));
+    const correct = items.filter((r) => r.correct).length;
+
     try {
       const response = await fetch('/api/showcase/rocketship/regroup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students: STUDENTS }),
+        body: JSON.stringify({
+          student: { name: 'Sofia R.', currentGroup: GROUP_DEFS.developing.label },
+          quizResults: { correct, total: SOFIA_QUIZ.length, items },
+          currentGroups: {
+            [GROUP_DEFS.extension.label]: INITIAL_GROUPS.extension,
+            [GROUP_DEFS.core.label]: INITIAL_GROUPS.core,
+            [GROUP_DEFS.developing.label]: INITIAL_GROUPS.developing,
+          },
+          learningObjective: 'Comparing fractions with unlike denominators',
+        }),
       });
       const data = await response.json();
-      if (data.groupings) {
-        setGroups({
-          smallGroup: data.groupings.smallGroup?.students || groups.smallGroup,
-          independent: data.groupings.independent?.students || groups.independent,
-          extension: data.groupings.extension?.students || groups.extension,
+      if (data.decision) {
+        setDecision(data.decision as Decision);
+      } else {
+        // Fallback decision if API fails but request succeeded
+        setDecision({
+          student: 'Sofia R.',
+          previous_group: 'Developing',
+          new_group: 'Unlike Denominators Recovery',
+          rationale:
+            'Sofia answered like-denominator items correctly but missed both unlike-denominator items, indicating the specific misconception is cross-denominator comparison.',
+          teacher_action:
+            'Pull Sofia, Destiny, and Marcus for a 10-minute fraction-strip intervention during Learning Lab.',
         });
       }
+      // Animate shift
+      setGroups(FINAL_GROUPS);
+      setPhase('shifted');
     } catch {
-      // keep existing groups
-    } finally {
-      setIsRegrouping(false);
+      setError('Failed to evaluate grouping. Please try again.');
+      setPhase('quiz');
     }
   };
 
-  const handleDragStart = (name: string, from: keyof GroupData) => {
-    setDraggedStudent({ name, from });
+  const handleReset = () => {
+    setGroups(INITIAL_GROUPS);
+    setSelectedAnswers([null, null, null, null]);
+    setDecision(null);
+    setError(null);
+    setPhase('quiz');
   };
-
-  const handleDrop = (to: keyof GroupData) => {
-    if (!draggedStudent || draggedStudent.from === to) {
-      setDraggedStudent(null);
-      return;
-    }
-    setGroups((prev) => {
-      const next = { ...prev };
-      next[draggedStudent.from] = prev[draggedStudent.from].filter((n) => n !== draggedStudent.name);
-      if (!next[to].includes(draggedStudent.name)) {
-        next[to] = [...prev[to], draggedStudent.name];
-      }
-      return next;
-    });
-    setDraggedStudent(null);
-  };
-
-  const GROUP_CONFIG = [
-    { key: 'smallGroup' as const, label: 'Small Group Instruction', color: '#C8402A', icon: Users },
-    { key: 'independent' as const, label: 'Independent Practice', color: '#2A7B6F', icon: User },
-    { key: 'extension' as const, label: 'Extension Challenge', color: '#7C3AED', icon: Sparkles },
-  ];
 
   return (
-    <div className="rounded-2xl border p-4 h-full flex flex-col" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
-          Today&apos;s Groupings
-        </h3>
-        <button
-          onClick={handleRegroup}
-          disabled={isRegrouping}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-white transition-all disabled:opacity-50 hover:brightness-110"
-          style={{ backgroundColor: '#2A7B6F' }}
-        >
-          {isRegrouping ? (
-            <div className="animate-spin w-3 h-3 border border-white/30 border-t-white rounded-full" />
-          ) : (
-            <Sparkles className="w-3 h-3" />
-          )}
-          Regroup with AI
-        </button>
-      </div>
-
-      <div className="space-y-3 flex-1">
-        {GROUP_CONFIG.map(({ key, label, color, icon: Icon }) => (
-          <div
-            key={key}
-            className="p-3 rounded-xl border-2 border-dashed transition-colors"
-            style={{ borderColor: draggedStudent ? color + '40' : '#E5E0DB' }}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => handleDrop(key)}
+    <div className="h-[calc(100vh-10rem)] flex flex-col">
+      {/* Teacher notification banner */}
+      <AnimatePresence>
+        {phase === 'shifted' && decision && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl border"
+            style={{ backgroundColor: '#FFF3E8', borderColor: '#C8402A' }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Icon className="w-3.5 h-3.5" style={{ color }} />
-              <span className="text-[11px] font-semibold" style={{ color }}>{label}</span>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#C8402A' }}
+            >
+              <Bell className="w-4 h-4 text-white" />
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {groups[key].map((name) => (
-                <div
-                  key={name}
-                  draggable
-                  onDragStart={() => handleDragStart(name, key)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow"
-                  style={{ backgroundColor: color + '15', color }}
-                >
-                  <GripVertical className="w-3 h-3 opacity-40" />
-                  {name}
-                </div>
-              ))}
-              {groups[key].length === 0 && (
-                <span className="text-[10px] italic" style={{ color: '#E5E0DB' }}>Drop students here</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Panel C — Exit Ticket Analysis
-// =============================================================================
-function PanelC() {
-  return (
-    <div className="rounded-2xl border p-4 h-full flex flex-col" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#6B6B6B' }}>
-        Exit Ticket Analysis — Yesterday
-      </h3>
-
-      <div className="h-36 mb-3">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={EXIT_TICKET_DATA} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E0DB" />
-            <XAxis dataKey="question" tick={{ fontSize: 9, fill: '#6B6B6B' }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 9, fill: '#6B6B6B' }} tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{ fontSize: 11, borderRadius: 8, borderColor: '#E5E0DB' }}
-            />
-            <Bar dataKey="correct" stackId="a" radius={[0, 0, 0, 0]}>
-              {EXIT_TICKET_DATA.map((_, i) => (
-                <Cell key={i} fill="#10B981" />
-              ))}
-            </Bar>
-            <Bar dataKey="incorrect" stackId="a" radius={[4, 4, 0, 0]}>
-              {EXIT_TICKET_DATA.map((_, i) => (
-                <Cell key={i} fill="#EF4444" opacity={0.6} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="space-y-2 flex-1">
-        {ACTION_CARDS.map((card, i) => (
-          <div
-            key={i}
-            className="flex items-start gap-2 p-2.5 rounded-xl"
-            style={{ backgroundColor: card.severity === 'high' ? '#FEF2F2' : card.severity === 'medium' ? '#FFFBEB' : '#F0FDF4' }}
-          >
-            <AlertTriangle
-              className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
-              style={{
-                color: card.severity === 'high' ? '#EF4444' : card.severity === 'medium' ? '#F59E0B' : '#10B981',
-              }}
-            />
-            <div>
-              <div className="text-[11px] font-medium" style={{ color: '#1A1A1A' }}>{card.misconception}</div>
-              <div className="text-[10px] mt-0.5" style={{ color: '#6B6B6B' }}>→ {card.action}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Panel D — Family Pulse
-// =============================================================================
-function PanelD() {
-  const [familyUpdate, setFamilyUpdate] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'es'>('en');
-  const [selectedStudent, setSelectedStudent] = useState(STUDENTS[0]);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const generateUpdate = useCallback(async () => {
-    setIsGenerating(true);
-    setFamilyUpdate('');
-    abortRef.current = new AbortController();
-    let fullText = '';
-
-    try {
-      const response = await fetch('/api/showcase/rocketship/family-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentName: selectedStudent.name,
-          language,
-          masteryLevel: selectedStudent.mastery,
-          recentActivity: `Exit ticket score: ${selectedStudent.exitTicket}%. ${selectedStudent.flag}.`,
-        }),
-        signal: abortRef.current.signal,
-      });
-
-      const reader = response.body?.getReader();
-      if (!reader) return;
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const payload = JSON.parse(line.slice(6));
-            if (payload.type === 'chunk') {
-              fullText += payload.content;
-              setFamilyUpdate(fullText);
-            }
-          } catch {
-            // skip
-          }
-        }
-      }
-    } catch {
-      // ignore abort
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [selectedStudent, language]);
-
-  return (
-    <div className="rounded-2xl border p-4 h-full flex flex-col" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
-          Family Pulse — Last 24hrs
-        </h3>
-        <Clock className="w-3.5 h-3.5" style={{ color: '#6B6B6B' }} />
-      </div>
-
-      {/* Home practice summary */}
-      <div className="grid grid-cols-3 gap-1.5 mb-3">
-        {STUDENTS.filter((s) => s.homePractice && s.homePractice.minutes > 0).map((s) => (
-          <div key={s.name} className="p-1.5 rounded-lg text-center" style={{ backgroundColor: '#FFF8F5' }}>
-            <div className="text-[10px] font-medium" style={{ color: '#1A1A1A' }}>{s.name.split(' ')[0]}</div>
-            <div className="text-[10px]" style={{ color: '#2A7B6F' }}>{s.homePractice!.minutes}m</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Parent messages */}
-      <div className="space-y-2 mb-3">
-        {PARENT_MESSAGES.slice(0, 2).map((msg, i) => (
-          <div key={i} className="flex items-start gap-2 p-2 rounded-lg" style={{ backgroundColor: '#FFF8F5' }}>
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0" style={{ backgroundColor: '#C8402A' }}>
-              {msg.avatar}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold" style={{ color: '#1A1A1A' }}>{msg.parent}</span>
-                <span className="text-[9px]" style={{ color: '#6B6B6B' }}>{msg.time}</span>
+            <div className="flex-1">
+              <div className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C8402A' }}>
+                Group shift detected
               </div>
-              <div className="text-[10px] mt-0.5 truncate" style={{ color: '#6B6B6B' }}>{msg.message}</div>
+              <div className="text-sm mt-0.5 font-medium" style={{ color: '#1A1A1A' }}>
+                {decision.teacher_action}
+              </div>
+              <div className="text-xs mt-1" style={{ color: '#6B6B6B' }}>
+                {decision.rationale}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Send update */}
-      <div className="mt-auto pt-3 border-t" style={{ borderColor: '#E5E0DB' }}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedStudent.name}
-              onChange={(e) => setSelectedStudent(STUDENTS.find((s) => s.name === e.target.value) || STUDENTS[0])}
-              className="text-[10px] px-2 py-1 rounded-lg border"
-              style={{ borderColor: '#E5E0DB', color: '#1A1A1A' }}
-            >
-              {STUDENTS.map((s) => (
-                <option key={s.name} value={s.name}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-1">
             <button
-              onClick={() => setLanguage('en')}
-              className={`px-2 py-0.5 rounded text-[9px] font-medium ${language === 'en' ? 'text-white' : ''}`}
-              style={language === 'en' ? { backgroundColor: '#2A7B6F' } : { color: '#6B6B6B' }}
+              onClick={handleReset}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border flex-shrink-0"
+              style={{ borderColor: '#C8402A', color: '#C8402A', backgroundColor: '#FFFFFF' }}
             >
-              EN
+              <RotateCcw className="w-3 h-3" />
+              Reset Demo
             </button>
-            <button
-              onClick={() => setLanguage('es')}
-              className={`px-2 py-0.5 rounded text-[9px] font-medium ${language === 'es' ? 'text-white' : ''}`}
-              style={language === 'es' ? { backgroundColor: '#2A7B6F' } : { color: '#6B6B6B' }}
-            >
-              ES
-            </button>
-          </div>
-        </div>
-        <button
-          onClick={generateUpdate}
-          disabled={isGenerating}
-          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-white text-[11px] font-medium disabled:opacity-50 hover:brightness-110 transition-all"
-          style={{ backgroundColor: '#C8402A' }}
-        >
-          {isGenerating ? (
-            <div className="animate-spin w-3 h-3 border border-white/30 border-t-white rounded-full" />
-          ) : (
-            <Send className="w-3 h-3" />
-          )}
-          Send Family Update
-        </button>
-        {familyUpdate && (
-          <div className="mt-2 p-2.5 rounded-lg text-[11px] leading-relaxed" style={{ backgroundColor: '#FFF8F5', color: '#1A1A1A' }}>
-            {familyUpdate}
-          </div>
+          </motion.div>
         )}
-      </div>
-    </div>
-  );
-}
+      </AnimatePresence>
 
-// =============================================================================
-// Main Dashboard
-// =============================================================================
-export default function Section4Dashboard() {
-  const presenterMode = usePresenterMode();
-  return (
-    <div className="h-[calc(100vh-10rem)]">
-      {/* Teacher header */}
-      <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E0DB' }}>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: '#2A7B6F' }}>
-          AC
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>
+      )}
+
+      {/* Two-panel layout */}
+      <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
+        {/* LEFT — Quiz interface */}
+        <div
+          className="rounded-2xl border p-5 flex flex-col overflow-y-auto"
+          style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
+                Student Quiz — Sofia R.
+              </div>
+              <div className="text-sm font-semibold mt-0.5" style={{ color: '#1A1A1A' }}>
+                Comparing Fractions · 4 items
+              </div>
+            </div>
+            {phase === 'quiz' && (
+              <button
+                onClick={autofillSofiaAnswers}
+                className="text-[10px] px-2 py-1 rounded-lg border"
+                style={{ borderColor: '#E5E0DB', color: '#6B6B6B' }}
+              >
+                Fill Sofia&apos;s answers
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-4 flex-1">
+            {SOFIA_QUIZ.map((q, i) => {
+              const selected = selectedAnswers[i];
+              const isSubmitted = phase !== 'quiz';
+              const isCorrect = selected === q.correct;
+              return (
+                <div
+                  key={q.item}
+                  className="p-3 rounded-xl border"
+                  style={{ borderColor: '#E5E0DB', backgroundColor: '#FFF8F5' }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="text-sm font-medium" style={{ color: '#1A1A1A' }}>
+                      {q.item}. {q.prompt}
+                    </div>
+                    {isSubmitted && selected !== null && (
+                      <div className="flex-shrink-0 ml-2">
+                        {isCorrect ? (
+                          <Check className="w-4 h-4" style={{ color: '#10B981' }} />
+                        ) : (
+                          <XIcon className="w-4 h-4" style={{ color: '#EF4444' }} />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wide mb-2" style={{ color: '#6B6B6B' }}>
+                    Skill: {q.skill}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {q.options.map((opt, oi) => {
+                      const isSelected = selected === oi;
+                      const showCorrectness = isSubmitted && isSelected;
+                      return (
+                        <button
+                          key={oi}
+                          disabled={isSubmitted}
+                          onClick={() =>
+                            setSelectedAnswers((prev) => {
+                              const next = [...prev];
+                              next[i] = oi;
+                              return next;
+                            })
+                          }
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:cursor-not-allowed"
+                          style={{
+                            borderColor: showCorrectness
+                              ? isCorrect
+                                ? '#10B981'
+                                : '#EF4444'
+                              : isSelected
+                                ? '#C8402A'
+                                : '#E5E0DB',
+                            backgroundColor: showCorrectness
+                              ? isCorrect
+                                ? '#ECFDF5'
+                                : '#FEF2F2'
+                              : isSelected
+                                ? '#FDECE7'
+                                : '#FFFFFF',
+                            color: isSelected ? '#C8402A' : '#1A1A1A',
+                          }}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: '#E5E0DB' }}>
+            <div className="text-xs" style={{ color: '#6B6B6B' }}>
+              {phase === 'quiz' && `${selectedAnswers.filter((a) => a !== null).length}/4 answered`}
+              {phase === 'submitting' && 'Scoring quiz…'}
+              {phase === 'shifted' && `Score: ${score}/4`}
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+              style={{ backgroundColor: '#C8402A' }}
+            >
+              {phase === 'submitting' ? (
+                <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              Submit Quiz
+            </button>
+          </div>
         </div>
-        <div>
-          <div className="text-sm font-semibold" style={{ color: '#1A1A1A' }}>Ms. Amara Chen</div>
-          <div className="text-[11px]" style={{ color: '#6B6B6B' }}>Grade 4 Lead Teacher — Rocketship Mateo Sheedy</div>
-        </div>
-        {!presenterMode && (
-          <div className="ml-auto text-[10px]" style={{ color: '#E5E0DB' }}>
+
+        {/* RIGHT — Classroom groupings */}
+        <div
+          className="rounded-2xl border p-5 flex flex-col overflow-y-auto"
+          style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E0DB' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
+                Ms. Chen&apos;s Grade 4
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <Users className="w-4 h-4" style={{ color: '#1A1A1A' }} />
+                <span className="text-sm font-semibold" style={{ color: '#1A1A1A' }}>
+                  Today&apos;s Groupings
+                </span>
+              </div>
+            </div>
+            {phase === 'submitting' && (
+              <div className="flex items-center gap-1.5 text-[10px]" style={{ color: '#C8402A' }}>
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                AI evaluating
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3 flex-1">
+            {(['extension', 'core', 'developing', 'recovery'] as GroupKey[])
+              .filter((key) => groups[key].length > 0 || key === 'recovery' || key === 'developing')
+              .map((key) => {
+                const def = GROUP_DEFS[key];
+                const isHighlighted = phase === 'shifted' && key === 'recovery';
+                const students = groups[key];
+                return (
+                  <motion.div
+                    key={key}
+                    layout
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    className="p-3 rounded-xl border-2"
+                    style={{
+                      borderColor: isHighlighted ? def.color : '#E5E0DB',
+                      backgroundColor: isHighlighted ? def.bg : '#FFFFFF',
+                      boxShadow: isHighlighted ? `0 0 0 3px ${def.color}20` : undefined,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="text-xs font-bold" style={{ color: def.color }}>
+                          {def.label}
+                        </div>
+                        <div className="text-[10px]" style={{ color: '#6B6B6B' }}>
+                          {def.sublabel}
+                        </div>
+                      </div>
+                      <div
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: def.bg, color: def.color }}
+                      >
+                        {students.length} {students.length === 1 ? 'student' : 'students'}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
+                      <AnimatePresence mode="popLayout">
+                        {students.map((name) => {
+                          const isSofia = name === 'Sofia R.';
+                          const highlightSofia = phase === 'shifted' && isSofia && key === 'recovery';
+                          return (
+                            <motion.div
+                              key={name}
+                              layoutId={`student-${name}`}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.45, ease: 'easeInOut' }}
+                              className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                              style={{
+                                backgroundColor: highlightSofia ? def.color : def.bg,
+                                color: highlightSofia ? '#FFFFFF' : def.color,
+                                border: `1px solid ${def.color}40`,
+                              }}
+                            >
+                              {name}
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                      {students.length === 0 && (
+                        <span className="text-[10px] italic self-center" style={{ color: '#E5E0DB' }}>
+                          No students
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+          </div>
+
+          <div className="mt-3 text-[10px] text-center" style={{ color: '#E5E0DB' }}>
             Demo data — for illustration only
           </div>
-        )}
-      </div>
-
-      {/* 4-panel grid */}
-      <div className="grid grid-cols-2 gap-4 h-[calc(100%-4rem)]">
-        <PanelA />
-        <PanelB />
-        <PanelC />
-        <PanelD />
+        </div>
       </div>
     </div>
   );

@@ -44,7 +44,9 @@ export default function Sidebar({ activeSection, onSectionChange, presenterMode,
             <button
               key={section.id}
               onClick={() => onSectionChange(section.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${
+              title={section.label}
+              aria-label={section.label}
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left text-[13px] leading-tight transition-all ${
                 isActive
                   ? 'font-semibold shadow-sm'
                   : 'hover:bg-white/60'
@@ -55,7 +57,7 @@ export default function Sidebar({ activeSection, onSectionChange, presenterMode,
                   : { color: '#1A1A1A' }
               }
             >
-              <span className={`flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${
+              <span className={`flex-shrink-0 flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${
                 isActive ? 'bg-white/20 text-white' : ''
               }`}
                 style={!isActive ? { backgroundColor: '#E5E0DB', color: '#6B6B6B' } : undefined}
@@ -63,7 +65,7 @@ export default function Sidebar({ activeSection, onSectionChange, presenterMode,
                 {index + 1}
               </span>
               <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{section.label}</span>
+              <span className="flex-1 min-w-0">{section.label}</span>
             </button>
           );
         })}

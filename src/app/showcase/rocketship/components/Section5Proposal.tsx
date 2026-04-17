@@ -1,20 +1,21 @@
 'use client';
 
 import React from 'react';
-import { Rocket, Check, ArrowRight, BarChart3, Clock, TrendingUp, Mail } from 'lucide-react';
+import { Rocket, Check, ArrowRight, Target, ClipboardCheck, TrendingUp, Mail } from 'lucide-react';
 
 const EVELYN_DELIVERS = [
-  'Teacher Brief Generator (AI-powered daily instructional briefs)',
-  'ELL Co-Pilot (WIDA-aligned, bilingual scaffolding)',
-  'Single Pane of Glass v1 (unified dashboard with exit ticket analysis)',
-  'Educator training & onboarding support (300+ educator expert network)',
+  'Adaptive Regrouping Engine (real-time mastery-based group updates)',
+  'Teacher Brief Generator (curriculum-specific daily instructional briefs)',
+  'ELL Co-Pilot (WIDA-aligned, bilingual scaffolding with multimodal support)',
+  'Classroom data ingestion & pedagogical ontology layer (the foundation for all of the above)',
+  'Educator onboarding and iteration support',
 ];
 
 const ROCKETSHIP_PROVIDES = [
-  'Student mastery & assessment data (API access)',
-  'Educator feedback cycles (bi-weekly reviews)',
-  'Student outcomes data for measurement',
-  'On-site pilot coordination (Mateo Sheedy campus)',
+  'Access to student data through existing systems (coordination with Jetpacked team)',
+  'Sample classroom session recordings (audio, across math and literacy)',
+  'Bi-weekly working sessions with Innovation School educators',
+  'Identification of pilot campus and cohort',
 ];
 
 const TIMELINE = [
@@ -24,9 +25,9 @@ const TIMELINE = [
     dates: 'May – Jul 2026',
     color: '#2A7B6F',
     items: [
-      'Data integration with Rocketship systems',
-      'Teacher Brief pilot (5 teachers)',
-      'ELL Co-Pilot setup & WIDA calibration',
+      'Data access & integration scoping',
+      'Classroom recordings & ontology design',
+      'Adaptive Regrouping engine v1',
     ],
   },
   {
@@ -35,9 +36,9 @@ const TIMELINE = [
     dates: 'Aug – Sep 2026',
     color: '#C8402A',
     items: [
-      'Grades 3–4 cohort go-live',
-      'Teacher onboarding (2 PD sessions)',
-      'First week live monitoring & support',
+      'Innovation School go-live (1 grade level, ~100 students)',
+      'Teacher onboarding (3 PD sessions)',
+      'First month live instructional support',
     ],
   },
   {
@@ -46,31 +47,33 @@ const TIMELINE = [
     dates: 'Oct – Dec 2026',
     color: '#7C3AED',
     items: [
-      'Mastery benchmark analysis vs. control',
-      'Educator experience feedback synthesis',
-      'Prepare Grade 2 expansion plan',
+      'Measure grouping accuracy & instructional fidelity',
+      'Iterate on ontology based on real classroom data',
+      'Scope Phase 2 expansion (additional grade level or capability)',
     ],
   },
 ];
 
 const METRICS = [
   {
+    icon: Target,
+    title: 'Grouping accuracy',
+    description: '% of AI-suggested regroupings that teachers agree with',
+    color: '#7C3AED',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Instructional specificity',
+    description:
+      "Teacher brief recommendations rated as 'ready to execute' vs. needing interpretation",
+    color: '#2A7B6F',
+  },
+  {
     icon: TrendingUp,
-    title: '% at/above mastery benchmark',
-    description: 'vs. control classrooms without AI tools',
-    color: '#10B981',
-  },
-  {
-    icon: Clock,
-    title: 'Teacher time saved',
-    description: 'Target: 5+ hours/week on planning and grading',
-    color: '#3B82F6',
-  },
-  {
-    icon: BarChart3,
-    title: 'ELL reading/writing growth',
-    description: 'vs. prior year cohort at same grade level',
-    color: '#8B5CF6',
+    title: 'Student mastery gains',
+    description:
+      'Innovation School cohort vs. comparison classrooms on Rocketship benchmarks',
+    color: '#C8402A',
   },
 ];
 
@@ -81,10 +84,10 @@ export default function Section5Proposal() {
       <div className="rounded-2xl border overflow-hidden" style={{ borderColor: '#E5E0DB' }}>
         <div className="px-6 py-4 border-b" style={{ backgroundColor: '#FFF8F5', borderColor: '#E5E0DB' }}>
           <h3 className="text-base font-bold" style={{ color: '#1A1A1A' }}>
-            Proposed Pilot Scope — Fall 2026, Grades 3–4
+            Proposed Pilot Scope — Fall 2026
           </h3>
           <p className="text-xs mt-1" style={{ color: '#6B6B6B' }}>
-            Rocketship Mateo Sheedy Elementary
+            Rocketship Innovation School
           </p>
         </div>
         <div className="grid grid-cols-2 divide-x" style={{ borderColor: '#E5E0DB' }}>

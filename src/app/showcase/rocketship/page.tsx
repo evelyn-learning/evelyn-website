@@ -27,12 +27,14 @@ const SECTION_TITLES: Record<SectionId, { title: string; subtitle: string }> = {
     subtitle: 'An elementary AI co-pilot for project-based learning — coaches thinking, never writes the answer.',
   },
   dashboard: {
-    title: 'One view. Every insight. No switching tabs.',
-    subtitle: 'The single pane of glass — mastery tracking, groupings, exit ticket analysis, and family engagement in one place.',
+    title: 'Watch the room regroup in real time',
+    subtitle:
+      'A student submits a quiz. The AI evaluates mastery against today\u2019s learning objective. Groups update instantly — teachers are notified of the shift.',
   },
   proposal: {
-    title: 'Where we start: Fall 2026, Grades 3–4',
-    subtitle: 'A focused pilot at Rocketship Mateo Sheedy Elementary.',
+    title: 'Where we start: Fall 2026',
+    subtitle:
+      'A focused pilot at the Rocketship Innovation School, designed to complement Jetpacked with a classroom-grounded adaptive learning layer.',
   },
 };
 
@@ -82,7 +84,26 @@ export default function RocketshipShowcase() {
         />
         <HeaderBar activeSection={activeSection} />
 
-        <main className="ml-[220px] pt-14 p-6">
+        {/* Jetpacked framing banner — complements, not competes */}
+        <div
+          className="fixed left-[220px] right-0 flex items-center justify-center border-b z-20"
+          style={{
+            top: 56,
+            height: 32,
+            backgroundColor: '#FFF3E8',
+            borderColor: '#E5E0DB',
+          }}
+        >
+          <span
+            className="text-center px-4"
+            style={{ color: '#C8402A', fontSize: 12 }}
+          >
+            Built as an instructional intelligence layer for the Rocketship Innovation School — designed to
+            complement your existing Jetpacked data platform with classroom-grounded adaptive learning capabilities.
+          </span>
+        </div>
+
+        <main className="ml-[220px] pt-[88px] p-6">
           <SectionWrapper
             title={currentSection.title}
             subtitle={presenterMode ? undefined : currentSection.subtitle}

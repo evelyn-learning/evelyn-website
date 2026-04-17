@@ -76,7 +76,7 @@ export const SECTIONS = [
   { id: 'ell-copilot', label: 'ELL Co-Pilot', icon: 'Languages' },
   { id: 'teacher-brief', label: 'Teacher Brief', icon: 'FileText' },
   { id: 'ai-copilot', label: 'AI Co-Pilot', icon: 'Bot' },
-  { id: 'dashboard', label: 'Single Pane', icon: 'LayoutDashboard' },
+  { id: 'dashboard', label: 'Adaptive Regrouping', icon: 'LayoutDashboard' },
   { id: 'proposal', label: 'Pilot Proposal', icon: 'Rocket' },
 ] as const;
 

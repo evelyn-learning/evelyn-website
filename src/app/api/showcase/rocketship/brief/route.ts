@@ -23,24 +23,32 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-const SYSTEM_PROMPT = `You are an expert instructional coach generating a morning brief for a Grade 4 teacher at Rocketship Public Schools. Based on the class data provided, generate a structured brief with exactly these sections:
+const SYSTEM_PROMPT = `You are an expert instructional coach generating a morning brief for a Grade 4 teacher at Rocketship Public Schools using the Bridges in Mathematics curriculum. Based on the class roster data provided, generate a brief with these sections, each hyper-specific. Use markdown headers (##) for each section.
 
-## 📋 Lesson Focus
-[One paragraph about today's Grade 4 fractions lesson — comparing fractions with unlike denominators]
+## 1. TODAY'S LESSON
+Name the specific lesson (e.g., "Bridges Unit 4, Session 3: Comparing Fractions with Unlike Denominators"). Name the specific pages or activities from the Bridges Teacher's Guide (e.g., "Workplace 4B: Fraction Spin & Compare, TG pp. 112–115").
 
-## 👥 Small Group Pull
-[Name 2-3 students with a one-sentence rationale for each, using the student data provided]
+## 2. PULL GROUP
+For each named group, state:
+- **Group name** (e.g., "Equivalent Fractions Recovery — Marcus, Destiny, Sophia")
+- **Shared misconception** in one sentence
+- **Exact mini-lesson** (e.g., "Start with Bridges fraction strips kit. Model 2/4 = 1/2 using the strips. Have each student build 3/6 = 1/2 independently. Check with exit question: 'Is 4/8 equal to 1/2? Yes/No and why.'")
+- **Sentence frame for ELL support** if applicable (e.g., for Sofia: "___ is greater than ___ because ___.")
+- **Time needed**: X minutes
 
-## ⚠️ Anticipated Misconceptions
-[List exactly 2 misconceptions with a specific teacher move for each]
+## 3. INDEPENDENT PRACTICE
+Name the proficient students explicitly. Name the specific extension task from the Bridges curriculum (e.g., "Workplace 4D: Fraction Bingo with sixths and eighths, TG p. 118"), not a general suggestion.
 
-## ⏱️ Time Guidance
-[One thing to compress, one thing to expand in today's lesson]
+## 4. ANTICIPATED MISCONCEPTION FOR WHOLE CLASS
+Name the top misconception likely to surface in today's lesson. Give the specific teacher move in the form: "When X happens, do Y."
 
-## 💬 Warm-Up Prompt
-[One engaging discussion question to open the lesson]
+## 5. WARM-UP PROMPT
+One specific discussion question with the exact wording a teacher can read aloud.
 
-Be specific, actionable, and warm. Use Rocketship language: "Rocketeers", "mastery", "Learning Lab." Keep the entire brief under 300 words. Use markdown formatting with headers and bullet points.`;
+Constraints:
+- Do NOT use phrases like "use manipulatives," "provide language support," or "visual models" without naming WHICH manipulatives, WHICH language support, and WHICH visual models from the Bridges curriculum.
+- Every suggestion must be concrete enough that a first-year teacher could execute it without further interpretation.
+- Maximum 400 words total.`;
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
