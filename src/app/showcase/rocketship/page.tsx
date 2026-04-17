@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useDemoTracker } from '@/components/demos/DemoTracker';
+import { DemoTrackingProvider } from '@/components/demos/DemoTrackingContext';
 import AccessGate from './components/AccessGate';
 import Sidebar from './components/Sidebar';
 import HeaderBar from './components/HeaderBar';
@@ -43,6 +45,10 @@ export default function RocketshipShowcase() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [activeSection, setActiveSection] = useState<SectionId>('ell-copilot');
   const [presenterMode, setPresenterMode] = useState(false);
+  const { onView, onTry, onComplete, trackInteraction } = useDemoTracker(
+    'rocketship',
+    'Rocketship Innovation School'
+  );
 
   useEffect(() => {
     const stored = sessionStorage.getItem('rocketship_access');
@@ -51,6 +57,16 @@ export default function RocketshipShowcase() {
     }
     setCheckingAccess(false);
   }, []);
+
+  useEffect(() => {
+    if (hasAccess) onView();
+  }, [hasAccess, onView]);
+
+  useEffect(() => {
+    if (hasAccess && activeSection === 'proposal') {
+      onComplete({ reached: 'pilot-proposal' });
+    }
+  }, [hasAccess, activeSection, onComplete]);
 
   if (checkingAccess) {
     return (
@@ -75,7 +91,8 @@ export default function RocketshipShowcase() {
 
   return (
     <PresenterProvider value={presenterMode}>
-      <div className="min-h-screen" style={{ backgroundColor: '#FFF8F5' }}>
+      <DemoTrackingProvider trackInteraction={trackInteraction}>
+      <div className="min-h-screen" style={{ backgroundColor: '#FFF8F5' }} onClick={onTry}>
         <Sidebar
           activeSection={activeSection}
           onSectionChange={setActiveSection}
@@ -118,6 +135,7 @@ export default function RocketshipShowcase() {
           </SectionWrapper>
         </main>
       </div>
+      </DemoTrackingProvider>
     </PresenterProvider>
   );
 }
