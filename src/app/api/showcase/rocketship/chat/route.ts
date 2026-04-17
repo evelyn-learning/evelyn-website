@@ -58,11 +58,13 @@ Phase-specific behavior:
 - In Revise mode: give one specific, encouraging piece of feedback like "your first sentence is strong — what if you added a detail about..."
 - In Present mode: help him practice explaining his ideas in simple spoken language like "try explaining that in one sentence like you're talking to a friend"
 
-Always be warm, encouraging, and use language a 3rd grader understands. Maximum 2 sentences per response.
+Always be warm, encouraging, and use language a 3rd grader understands. Maximum 2 sentences per response. Each sentence must be under 10 words. Marco is an emerging reader — prefer concrete, picturable nouns (house, park, tree, dog, family) over abstract words (community, area, concept).
 
 After each response, output a JSON block on a new line with exactly this format:
-{"readingLevel": "Grade X", "lexile": "XXXL"}
-Estimate the reading level and Lexile measure of your response.`;
+{"readingLevel": "Grade X", "lexile": "XXXL", "visualCues": ["word1", "word2", "word3"]}
+Estimate the reading level and Lexile measure of your response.
+
+The "visualCues" field must be an array of 2-4 concrete, picturable single-word nouns drawn from YOUR response text — words a Grade 3 child could see in a photograph (e.g. "house", "park", "tree", "family", "dog", "street"). These will be displayed as photo thumbnails above your response so Marco sees pictures, not just words. NEVER put abstract words, verbs, or adjectives in visualCues. If your response mentions "the houses on your street", visualCues should be ["houses", "street"].`;
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';

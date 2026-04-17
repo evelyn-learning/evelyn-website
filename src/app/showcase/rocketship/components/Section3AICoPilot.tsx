@@ -16,40 +16,114 @@ const PHASES = [
 
 type Phase = (typeof PHASES)[number]['id'];
 
-const CHECKLIST: Record<Phase, { task: string; subtasks: string[] }> = {
+interface Subtask {
+  emoji: string;
+  text: string;
+}
+
+const CHECKLIST: Record<Phase, { task: string; subtasks: Subtask[] }> = {
   Brainstorm: {
     task: 'Generate ideas about your neighborhood',
     subtasks: [
-      'List 3 places in your neighborhood',
-      'Think about what makes your neighborhood special',
-      'Talk about who lives there',
+      { emoji: '📍', text: 'List 3 places in your neighborhood' },
+      { emoji: '✨', text: 'Think about what makes your neighborhood special' },
+      { emoji: '👨‍👩‍👧', text: 'Talk about who lives there' },
     ],
   },
   Draft: {
     task: 'Write your first draft',
     subtasks: [
-      'Write a topic sentence',
-      'Add 2-3 detail sentences',
-      'Write a closing sentence',
+      { emoji: '📝', text: 'Write a topic sentence' },
+      { emoji: '➕', text: 'Add 2-3 detail sentences' },
+      { emoji: '🏁', text: 'Write a closing sentence' },
     ],
   },
   Revise: {
     task: 'Make your writing stronger',
     subtasks: [
-      'Check: Does each sentence connect to my main idea?',
-      'Add one descriptive detail',
-      'Fix any spelling or grammar',
+      { emoji: '🔗', text: 'Check: Does each sentence connect to my main idea?' },
+      { emoji: '🎨', text: 'Add one descriptive detail' },
+      { emoji: '✏️', text: 'Fix any spelling or grammar' },
     ],
   },
   Present: {
     task: 'Practice sharing your writing',
     subtasks: [
-      'Read your writing out loud once',
-      'Practice explaining your main idea in one sentence',
-      'Think of one question your audience might ask',
+      { emoji: '🗣️', text: 'Read your writing out loud once' },
+      { emoji: '💡', text: 'Practice explaining your main idea in one sentence' },
+      { emoji: '❓', text: 'Think of one question your audience might ask' },
     ],
   },
 };
+
+const PICTURE_PROMPTS: Record<Phase, { emoji: string; label: string; starter: string }[]> = {
+  Brainstorm: [
+    { emoji: '🏠', label: 'Home', starter: 'My neighborhood has a house that...' },
+    { emoji: '🌳', label: 'Trees', starter: 'There are trees near...' },
+    { emoji: '🛝', label: 'Park', starter: 'The park in my neighborhood has...' },
+    { emoji: '👨‍👩‍👧', label: 'Family', starter: 'My family likes to...' },
+  ],
+  Draft: [
+    { emoji: '📝', label: 'Start', starter: 'My neighborhood is...' },
+    { emoji: '➕', label: 'Add', starter: 'One more thing is that...' },
+    { emoji: '✨', label: 'Detail', starter: 'A special thing is...' },
+    { emoji: '🎯', label: 'Main idea', starter: 'The main idea of my writing is...' },
+  ],
+  Revise: [
+    { emoji: '✂️', label: 'Shorter', starter: 'Can I make this shorter: ' },
+    { emoji: '🔍', label: 'Check', starter: 'Does this sentence make sense: ' },
+    { emoji: '💪', label: 'Stronger', starter: 'How do I make this stronger: ' },
+    { emoji: '❓', label: 'Unclear', starter: 'I am not sure about: ' },
+  ],
+  Present: [
+    { emoji: '🗣️', label: 'Say it', starter: 'I want to say my main idea like this: ' },
+    { emoji: '🐢', label: 'Slow', starter: 'How do I slow down when I read...' },
+    { emoji: '📢', label: 'Loud', starter: 'How do I speak more clearly about...' },
+    { emoji: '👀', label: 'Look up', starter: 'How do I remember to look up when...' },
+  ],
+};
+
+interface ParsedAssistantMessage {
+  text: string;
+  visualCues: string[];
+  readingLevel: string | null;
+  lexile: string | null;
+}
+
+function parseCopilotMessage(raw: string): ParsedAssistantMessage {
+  const fenced = raw.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+  const bare = raw.match(/\{\s*"readingLevel"[\s\S]*?\}/);
+  const jsonStr = fenced ? fenced[1] : bare ? bare[0] : null;
+
+  let visualCues: string[] = [];
+  let readingLevel: string | null = null;
+  let lexile: string | null = null;
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (typeof parsed.readingLevel === 'string') readingLevel = parsed.readingLevel;
+      if (typeof parsed.lexile === 'string') lexile = parsed.lexile;
+      if (Array.isArray(parsed.visualCues)) {
+        visualCues = parsed.visualCues
+          .filter((c: unknown): c is string => typeof c === 'string' && c.trim().length > 0)
+          .map((c: string) => c.trim().toLowerCase())
+          .slice(0, 4);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const text = raw
+    .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, '')
+    .replace(/\{\s*"readingLevel"[\s\S]*?\}/, '')
+    .replace(/\{\s*"readingLevel"[\s\S]*$/, '')
+    .trim();
+
+  return { text, visualCues, readingLevel, lexile };
+}
+
+const VISUAL_CUES_ENABLED = true;
 
 export default function Section3AICoPilot() {
   const [phase, setPhase] = useState<Phase>('Brainstorm');
@@ -57,45 +131,23 @@ export default function Section3AICoPilot() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [readingLevel, setReadingLevel] = useState({ grade: 'Grade 3', lexile: '520L' });
   const [speakResponses, setSpeakResponses] = useState(false);
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { speak, stop, isSpeaking, speakingId } = useTTS();
   const presenterMode = usePresenterMode();
 
   const extraBody = useMemo(() => ({ mode: 'copilot', projectPhase: phase }), [phase]);
 
-  const cleanContent = useCallback((content: string) => {
-    return content
-      // Remove JSON block with or without markdown code fences
-      .replace(/```json\s*\{[\s\S]*?\}\s*```/g, '')
-      .replace(/```\s*\{[\s\S]*?\}\s*```/g, '')
-      .replace(/\{"readingLevel":\s*"[^"]*",\s*"lexile":\s*"[^"]*"\}/, '')
-      .trim();
-  }, []);
-
   const handleComplete = useCallback((fullText: string) => {
-    // Extract JSON whether bare or wrapped in code fences
-    const fencedMatch = fullText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-    const bareMatch = fullText.match(/\{"readingLevel":\s*"[^"]*",\s*"lexile":\s*"[^"]*"\}/);
-    const jsonMatch = fencedMatch ? [fencedMatch[1]] : bareMatch;
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.readingLevel && parsed.lexile) {
-          setReadingLevel({ grade: parsed.readingLevel, lexile: parsed.lexile });
-        }
-      } catch {
-        // keep existing
-      }
+    const parsed = parseCopilotMessage(fullText);
+    if (parsed.readingLevel && parsed.lexile) {
+      setReadingLevel({ grade: parsed.readingLevel, lexile: parsed.lexile });
     }
-
-    // Auto-speak if enabled
-    if (speakResponses) {
-      const cleaned = cleanContent(fullText);
-      if (cleaned) {
-        speak(cleaned, 'auto-speak');
-      }
+    if (speakResponses && parsed.text) {
+      speak(parsed.text, 'auto-speak');
     }
-  }, [speakResponses, speak, cleanContent]);
+  }, [speakResponses, speak]);
 
   const { messages, isStreaming, error, sendMessage, resetChat } = useStreamChat({
     endpoint: '/api/showcase/rocketship/chat',
@@ -106,6 +158,34 @@ export default function Section3AICoPilot() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const parsedAssistantMessages = useMemo(() => {
+    const map: Record<number, ParsedAssistantMessage> = {};
+    messages.forEach((m, i) => {
+      if (m.role === 'assistant') map[i] = parseCopilotMessage(m.content);
+    });
+    return map;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!VISUAL_CUES_ENABLED) return;
+    let cancelled = false;
+    const allCues = new Set<string>();
+    Object.values(parsedAssistantMessages).forEach((p) => p.visualCues.forEach((c) => allCues.add(c)));
+    allCues.forEach((cue) => {
+      if (imageCache[cue]) return;
+      fetch(`/api/showcase/rocketship/unsplash?q=${encodeURIComponent(cue)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (cancelled || !data?.url) return;
+          setImageCache((prev) => ({ ...prev, [cue]: data.url }));
+        })
+        .catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parsedAssistantMessages, imageCache]);
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -166,7 +246,7 @@ export default function Section3AICoPilot() {
                     resetChat();
                     stop();
                   }}
-                  className={`flex flex-col items-center gap-1 p-2.5 rounded-xl text-xs font-medium transition-all ${
+                  className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium transition-all ${
                     isActive ? 'text-white shadow-sm' : 'border hover:bg-gray-50'
                   }`}
                   style={
@@ -175,7 +255,7 @@ export default function Section3AICoPilot() {
                       : { borderColor: '#E5E0DB', color: '#6B6B6B' }
                   }
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-8 h-8" strokeWidth={2} />
                   {p.label}
                 </button>
               );
@@ -193,11 +273,11 @@ export default function Section3AICoPilot() {
           </div>
           <div className="space-y-2">
             {checklist.subtasks.map((subtask) => {
-              const isChecked = checkedItems.has(subtask);
+              const isChecked = checkedItems.has(subtask.text);
               return (
                 <button
-                  key={subtask}
-                  onClick={() => toggleCheck(subtask)}
+                  key={subtask.text}
+                  onClick={() => toggleCheck(subtask.text)}
                   className="flex items-start gap-2 w-full text-left"
                 >
                   {isChecked ? (
@@ -205,11 +285,14 @@ export default function Section3AICoPilot() {
                   ) : (
                     <Square className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#E5E0DB' }} />
                   )}
+                  <span className="text-base flex-shrink-0 leading-none mt-0.5" aria-hidden>
+                    {subtask.emoji}
+                  </span>
                   <span
                     className={`text-xs leading-relaxed ${isChecked ? 'line-through' : ''}`}
                     style={{ color: isChecked ? '#6B6B6B' : '#1A1A1A' }}
                   >
-                    {subtask}
+                    {subtask.text}
                   </span>
                 </button>
               );
@@ -219,7 +302,7 @@ export default function Section3AICoPilot() {
             <div className="flex items-center justify-between">
               <span className="text-[10px]" style={{ color: '#6B6B6B' }}>Progress</span>
               <span className="text-[10px] font-medium" style={{ color: '#2A7B6F' }}>
-                {checklist.subtasks.filter((s) => checkedItems.has(s)).length}/{checklist.subtasks.length}
+                {checklist.subtasks.filter((s) => checkedItems.has(s.text)).length}/{checklist.subtasks.length}
               </span>
             </div>
             <div className="w-full h-1.5 rounded-full mt-1" style={{ backgroundColor: '#E5E0DB' }}>
@@ -227,7 +310,7 @@ export default function Section3AICoPilot() {
                 className="h-full rounded-full transition-all"
                 style={{
                   backgroundColor: '#2A7B6F',
-                  width: `${(checklist.subtasks.filter((s) => checkedItems.has(s)).length / checklist.subtasks.length) * 100}%`,
+                  width: `${(checklist.subtasks.filter((s) => checkedItems.has(s.text)).length / checklist.subtasks.length) * 100}%`,
                 }}
               />
             </div>
@@ -274,43 +357,97 @@ export default function Section3AICoPilot() {
               </p>
             </div>
           )}
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-1.5`}>
-              <div
-                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === 'user' ? 'text-white rounded-br-md' : 'rounded-bl-md'
-                }`}
-                style={
-                  msg.role === 'user'
-                    ? { backgroundColor: currentPhase.color }
-                    : { backgroundColor: '#f5f0ed', color: '#1A1A1A' }
-                }
-              >
-                {msg.role === 'user' ? msg.content : renderChatContent(cleanContent(msg.content))}
-              </div>
-              {/* Per-message speak button for assistant */}
-              {msg.role === 'assistant' && cleanContent(msg.content) && !isStreaming && (
-                <button
-                  onClick={() => {
-                    const cleaned = cleanContent(msg.content);
-                    if (speakingId === `msg-${i}` && isSpeaking) {
-                      stop();
-                    } else {
-                      speak(cleaned, `msg-${i}`);
-                    }
+          {messages.map((msg, i) => {
+            if (msg.role === 'user') {
+              return (
+                <div key={i} className="flex justify-end">
+                  <div
+                    className="max-w-[80%] px-4 rounded-2xl rounded-br-md text-white"
+                    style={{
+                      backgroundColor: currentPhase.color,
+                      fontSize: '16px',
+                      lineHeight: 1.8,
+                      paddingTop: '16px',
+                      paddingBottom: '16px',
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              );
+            }
+            const parsed = parsedAssistantMessages[i] ?? { text: msg.content, visualCues: [], readingLevel: null, lexile: null };
+            const cleaned = parsed.text;
+            const cues = VISUAL_CUES_ENABLED ? parsed.visualCues : [];
+            const bubbleTTSId = `msg-${i}`;
+            const isThisBubbleSpeaking = speakingId === bubbleTTSId && isSpeaking;
+            return (
+              <div key={i} className="flex justify-start">
+                <div
+                  className="max-w-[80%] px-4 rounded-2xl rounded-bl-md relative"
+                  style={{
+                    backgroundColor: '#f5f0ed',
+                    color: '#1A1A1A',
+                    fontSize: '16px',
+                    lineHeight: 1.8,
+                    paddingTop: '16px',
+                    paddingBottom: '16px',
+                    paddingRight: '36px',
                   }}
-                  className="p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 mb-1"
-                  title="Listen"
                 >
-                  {speakingId === `msg-${i}` && isSpeaking ? (
-                    <VolumeX className="w-3.5 h-3.5" style={{ color: currentPhase.color }} />
-                  ) : (
-                    <Volume2 className="w-3.5 h-3.5" style={{ color: '#6B6B6B' }} />
+                  {cues.length > 0 && (
+                    <div className="flex gap-2 mb-2 -mt-1 flex-wrap">
+                      {cues.map((cue) => {
+                        const url = imageCache[cue];
+                        return (
+                          <div key={cue} className="flex flex-col items-center" style={{ width: '56px' }}>
+                            {url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={url}
+                                alt={cue}
+                                className="rounded-lg"
+                                style={{ width: '56px', height: '56px', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div
+                                className="rounded-lg animate-pulse"
+                                style={{ width: '56px', height: '56px', backgroundColor: '#E5E0DB' }}
+                              />
+                            )}
+                            <div
+                              className="mt-1 text-center font-medium"
+                              style={{ fontSize: '11px', color: '#6B6B6B', lineHeight: 1.2 }}
+                            >
+                              {cue}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
-              )}
-            </div>
-          ))}
+                  {renderChatContent(cleaned)}
+                  <button
+                    onClick={() => {
+                      if (isThisBubbleSpeaking) {
+                        stop();
+                      } else {
+                        speak(cleaned, bubbleTTSId);
+                      }
+                    }}
+                    className={`absolute bottom-1.5 right-1.5 p-1 rounded-full transition-all ${isThisBubbleSpeaking ? 'animate-pulse' : 'hover:bg-white'}`}
+                    title={isThisBubbleSpeaking ? 'Stop' : 'Read aloud'}
+                  >
+                    {isThisBubbleSpeaking ? (
+                      <VolumeX className="w-3.5 h-3.5" style={{ color: currentPhase.color }} />
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" style={{ color: '#2A7B6F' }} />
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           {error && <div className="text-center text-xs text-red-500 py-2">{error}</div>}
           <div ref={chatEndRef} />
         </div>
@@ -349,23 +486,41 @@ export default function Section3AICoPilot() {
               {speakResponses ? 'Speaking' : 'Speak'}
             </button>
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={`Type as Marco (${phase} mode)...`}
               disabled={isStreaming}
-              className="flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 disabled:opacity-50"
-              style={{ borderColor: '#E5E0DB', color: '#1A1A1A' }}
+              className="flex-1 px-4 rounded-xl border focus:outline-none focus:ring-2 disabled:opacity-50"
+              style={{ borderColor: '#E5E0DB', color: '#1A1A1A', minHeight: '56px', fontSize: '16px' }}
             />
             <button
               type="submit"
               disabled={isStreaming || !input.trim()}
-              className="px-4 py-2.5 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
-              style={{ backgroundColor: currentPhase.color }}
+              className="px-4 rounded-xl text-white transition-all disabled:opacity-50 hover:brightness-110"
+              style={{ backgroundColor: currentPhase.color, minHeight: '56px' }}
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            {PICTURE_PROMPTS[phase].map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => {
+                  setInput(p.starter);
+                  inputRef.current?.focus();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all hover:bg-white"
+                style={{ borderColor: '#E5E0DB', backgroundColor: '#FFF8F5', color: '#1A1A1A' }}
+              >
+                <span className="text-base leading-none">{p.emoji}</span>
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
