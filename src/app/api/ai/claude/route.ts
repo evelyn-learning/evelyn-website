@@ -255,9 +255,16 @@ export async function POST(request: NextRequest) {
     const {
       messages,
       system,
+      systemPrompt,
       max_tokens = 2000,
       model = CONFIG.DEFAULT_MODEL
     } = body;
+
+    // `systemPrompt` is an alias for `system` — accepted from callers that
+    // pass a per-demo system prompt override.
+    const effectiveSystem = typeof systemPrompt === 'string' && systemPrompt.trim().length > 0
+      ? systemPrompt
+      : system;
 
     logEntry.requestedTokens = max_tokens;
 
@@ -304,7 +311,7 @@ export async function POST(request: NextRequest) {
     const response = await anthropic.messages.create({
       model: sanitizedModel,
       max_tokens: sanitizedMaxTokens,
-      system: system || undefined,
+      system: effectiveSystem || undefined,
       messages: messages.map((msg: { role: string; content: string }) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
