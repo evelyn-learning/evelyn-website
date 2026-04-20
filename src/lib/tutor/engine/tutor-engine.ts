@@ -228,7 +228,7 @@ export class TutorEngine {
   async extractProblemsFromImage(imageData: string, mimeType: string): Promise<Problem[]> {
     try {
       const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2000,
         messages: [
           {
@@ -351,7 +351,7 @@ Only return valid JSON, no other text.`,
 
     try {
       const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         system: systemPrompt,
         messages,

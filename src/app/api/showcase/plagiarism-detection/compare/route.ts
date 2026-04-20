@@ -112,7 +112,7 @@ Analyze both versions independently for AI generation and plagiarism, then compa
     // Run Claude analysis and Copyscape checks in parallel
     const [response, originalCopyscape, revisedCopyscape] = await Promise.all([
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],

@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     // Call Claude
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: systemPrompt,
       messages,
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const followUp = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 500,
           system: `You are a whiteboard command generator. Given a tutor's spoken response, generate ONLY the whiteboard commands as \`\`\`whiteboard JSON blocks. No spoken text.
 
@@ -273,7 +273,7 @@ export async function PUT(request: NextRequest) {
 
     // Create streaming response
     const stream = await anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: systemPrompt,
       messages,

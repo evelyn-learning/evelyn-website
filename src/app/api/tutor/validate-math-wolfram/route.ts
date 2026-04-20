@@ -109,7 +109,7 @@ async function validateViaClaude(
 ): Promise<ValidationResult> {
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       system: `You are a math accuracy checker. Given a LaTeX equation from an AI tutor, verify the numerical calculations are correct.
 Respond with JSON only: {"correct": true/false, "issues": ["list of errors"], "correctedLatex": "fixed latex if needed"}

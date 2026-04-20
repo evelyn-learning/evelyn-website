@@ -293,7 +293,7 @@ IMPORTANT:
     // Run Claude AI analysis and Copyscape plagiarism check in parallel
     const [claudeResponse, copyscapeResult] = await Promise.all([
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
@@ -364,7 +364,7 @@ IMPORTANT:
     const usage = {
       inputTokens: claudeResponse.usage.input_tokens,
       outputTokens: claudeResponse.usage.output_tokens,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
     };
 
     const result = {

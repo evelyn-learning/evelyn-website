@@ -46,7 +46,7 @@ async function generateWithClaude(
   userPrompt: string
 ): Promise<AIBlogResponse> {
   const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 8192,
     messages: [
       {
@@ -230,7 +230,7 @@ export async function generateTopicSuggestions(
     responseText = completion.choices[0]?.message?.content || "[]";
   } else {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 2048,
       messages: [
         {
@@ -302,7 +302,7 @@ Return ONLY the new section content in Markdown format, nothing else.`;
     return completion.choices[0]?.message?.content || "";
   } else {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       messages: [{ role: "user", content: prompt }],
     });

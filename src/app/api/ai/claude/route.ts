@@ -15,13 +15,14 @@ const CONFIG = {
 
   // Allowed models (whitelist to prevent using expensive models)
   ALLOWED_MODELS: [
+    'claude-sonnet-4-6',
     'claude-sonnet-4-20250514',
     'claude-3-5-sonnet-20241022',
     'claude-3-haiku-20240307',
   ],
 
   // Default model if not specified or not allowed
-  DEFAULT_MODEL: 'claude-sonnet-4-20250514',
+  DEFAULT_MODEL: 'claude-sonnet-4-6',
 };
 
 // ============================================================================

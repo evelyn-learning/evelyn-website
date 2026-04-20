@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2048,
         messages: [
           {
@@ -311,7 +311,7 @@ export async function POST(request: NextRequest) {
         usage: {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
         },
       });
     } catch (err) {

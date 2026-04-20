@@ -43,7 +43,7 @@ Return a JSON object with these fields:
 Be precise and complete. Return ONLY valid JSON, no other text.`;
 
     const extractionResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       system: extractionPrompt,
       messages: [
@@ -137,7 +137,7 @@ Keep your response SHORT (2-3 sentences max). This is a voice conversation.
 Remember: Guide them to discover the solution, don't just give it away.`;
 
     const tutorResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       system: tutorPrompt,
       messages: [

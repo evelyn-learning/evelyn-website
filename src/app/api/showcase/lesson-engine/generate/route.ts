@@ -7,7 +7,7 @@ import { checkDailyLimit } from '@/lib/utils/rate-limit';
 // CONFIGURATION
 // ============================================================================
 const CONFIG = {
-  MODEL: 'claude-sonnet-4-20250514',
+  MODEL: 'claude-sonnet-4-6',
   MAX_TOKENS: 8000,
   RATE_LIMIT_REQUESTS: 10,
   RATE_LIMIT_WINDOW_MS: 60 * 1000,
@@ -440,7 +440,7 @@ ${curriculumContext.slice(0, 3000)}`;
       usage: {
         inputTokens: response.usage?.input_tokens || 0,
         outputTokens: response.usage?.output_tokens || 0,
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
       },
     });
   } catch (error: unknown) {
