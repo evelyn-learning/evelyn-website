@@ -260,6 +260,19 @@ function TutorPage() {
       } : {}),
     };
 
+    // On final save, include the session-level topics-covered + weak-topics
+    // map from the voice tutor handle so future sessions can surface targeted
+    // review at the start.
+    if (isFinal && realtimeHandleRef.current?.getSessionSummary) {
+      try {
+        const summary = realtimeHandleRef.current.getSessionSummary();
+        if (summary.topicsCovered?.length) payload.topicsCovered = summary.topicsCovered;
+        if (summary.weakTopics?.length) payload.weakTopics = summary.weakTopics;
+      } catch (err) {
+        console.warn('[saveSessionUsage] getSessionSummary threw:', err);
+      }
+    }
+
     // Use sendBeacon for unload, fetch otherwise
     if (status === 'abandoned') {
       navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(payload));

@@ -631,7 +631,8 @@ export type WhiteboardCommand =
   | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
   | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }
   | { action: 'showFlowchart'; title?: string; nodes: Array<{ id: string; type: 'start' | 'end' | 'process' | 'decision' | 'io'; label: string; x?: number; y?: number }>; edges?: Array<{ from: string; to: string; label?: string }>; layout?: 'top-down' | 'left-right' }
-  | { action: 'showManipulative'; title?: string; type: 'base-10' | 'ten-frame' | 'area-model'; base10?: { ones?: number; tens?: number; hundreds?: number; thousands?: number; showTotal?: boolean }; tenFrame?: { count: number; color?: string; label?: string }; areaModel?: { rows: number[]; cols: number[]; showProducts?: boolean; showSum?: boolean; rowLabel?: string; colLabel?: string } };
+  | { action: 'showManipulative'; title?: string; type: 'base-10' | 'ten-frame' | 'area-model'; base10?: { ones?: number; tens?: number; hundreds?: number; thousands?: number; showTotal?: boolean }; tenFrame?: { count: number; color?: string; label?: string }; areaModel?: { rows: number[]; cols: number[]; showProducts?: boolean; showSum?: boolean; rowLabel?: string; colLabel?: string } }
+  | { action: 'showPunnett'; title?: string; trait?: string; parent1: string; parent2: string; showPhenotypeRatio?: boolean };
 
 // =============================================================================
 // STUDENT PROGRESS

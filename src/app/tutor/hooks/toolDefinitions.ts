@@ -900,7 +900,10 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       code: funcArgs.code,
       language: funcArgs.language,
       label: funcArgs.label,
-    };
+      // Optional sandbox execution fields — consumed by the auto-run hook.
+      entryName: funcArgs.entryName,
+      testCases: Array.isArray(funcArgs.testCases) ? funcArgs.testCases : undefined,
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_table') {
     return {
@@ -1134,6 +1137,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'clear') {
     return { action: 'clear' } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_punnett') {
+    return {
+      action: 'showPunnett',
+      parent1: funcArgs.parent1,
+      parent2: funcArgs.parent2,
+      title: funcArgs.title,
+      trait: funcArgs.trait,
+      showPhenotypeRatio: funcArgs.showPhenotypeRatio !== false,
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_problem') {
     // Map the flat tool args into the whiteboard's nested `problem` shape.

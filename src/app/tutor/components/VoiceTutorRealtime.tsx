@@ -30,12 +30,23 @@ import {
   spokenToRoughLatex,
   type DeclaredFunction,
 } from '@/lib/tutor/validation/continuity';
+import {
+  validateGenotypeAssertion,
+  extractReceiveClaim,
+  validateReceiveClaim,
+  repairPunnettHeaders,
+  looksLikePunnett,
+} from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 export interface RealtimeHandle {
   sendTextMessage: (text: string) => void;
+  getSessionSummary: () => {
+    topicsCovered: string[];
+    weakTopics: Array<{ topic: string; count: number }>;
+  };
 }
 
 // --- Multi-language whiteboard intent detection ---
@@ -146,6 +157,12 @@ export function VoiceTutorRealtime({
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Transient whiteboard status — e.g. "rendering problem…" when a tool
+  // call gets dropped so the student sees the system is responding without
+  // having to ask "I don't see anything". Cleared on next successful
+  // whiteboard command or after a short timeout.
+  const [whiteboardStatus, setWhiteboardStatus] = useState<string | null>(null);
+  const whiteboardStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -187,6 +204,12 @@ export function VoiceTutorRealtime({
   // Used for voice↔whiteboard math-consistency check at response.done.
   const turnEquationsRef = useRef<string[]>([]);
 
+  // Last latex rendered on the whiteboard. Used to dedup consecutive identical
+  // showEquation emissions (the model sometimes re-emits the same formula —
+  // e.g. after a student says "I don't see it" — leaving two copies on the
+  // board). A trailing whitespace / casing difference is treated as identical.
+  const lastEquationLatexRef = useRef<string>('');
+
   // The current problem being worked (from show_problem or a top-level
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
@@ -198,6 +221,44 @@ export function VoiceTutorRealtime({
   // insists a second time ("no, just walk me through it", "I said show me,
   // don't ask"). Reset on new problem requests.
   const walkThroughInsistenceRef = useRef(0);
+
+  // Engagement / fatigue tracking. We track the last N student reply lengths
+  // and fire a diagnostic prompt when replies collapse to short monosyllables
+  // ("ok", "k", "yea") — a reliable signal the student has disengaged or is
+  // coasting. Also triggers a session-duration-based check-in at 45 min.
+  const recentReplyLengthsRef = useRef<number[]>([]);
+  const lastFatigueInjectionAtRef = useRef(0);
+  const sessionStartMsRef = useRef<number>(Date.now());
+  const longSessionCheckFiredRef = useRef(false);
+
+  // Most-recent geometry command — kept around so geometry-numeric can
+  // verify spoken distance/angle/area claims against the rendered figure.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lastGeometryRef = useRef<{ points: any[]; title?: string } | null>(null);
+
+  // Topics covered + weaknesses tracker. Each time the tutor emits a
+  // show_problem / show_equation / newPage, we record the label as the
+  // current topic. When the tutor rejects a student answer or the student
+  // says "i don't know", we increment the weakness count for the current
+  // topic. On session end, we generate a recap + 3 targeted practice
+  // problems for the top-weakness topics.
+  const currentTopicRef = useRef<string | null>(null);
+  const topicsCoveredRef = useRef<string[]>([]);
+  const weaknessesRef = useRef<Map<string, number>>(new Map());
+  const [isWrappingUp, setIsWrappingUp] = useState(false);
+
+  // 60-minute session-cap proactive rotation. OpenAI Realtime sessions hard
+  // cap around 60 minutes; when they drop, the next connection is a fresh
+  // session that re-greets the student. We pre-empt this at 55 minutes by
+  // surfacing a choice to the student. If they choose to continue, we
+  // rotate into a new session with a context summary pre-injected so the
+  // tutor resumes from where we left off.
+  const [sessionRotationPrompt, setSessionRotationPrompt] = useState(false);
+  const sessionRotationFiredRef = useRef(false);
+  const autoRotationFiredRef = useRef(false);
+  // Ref populated later so handleResponseDone (defined above handleContinueRotation)
+  // can trigger a silent rotation when the banner is ignored.
+  const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
 
   // Check if text claims to show/display something visually (multi-language)
   // Uses explicit language patterns + a universal math content heuristic
@@ -324,6 +385,34 @@ export function VoiceTutorRealtime({
         if (isWalkThroughRequest(filteredText)) {
           walkThroughInsistenceRef.current += 1;
           console.log('[VoiceTutorRealtime] Walk-through insistence count:', walkThroughInsistenceRef.current);
+        }
+
+        // Engagement tracker — keep a rolling window of the last 6 reply
+        // word-counts. Fire a diagnostic if 5+ consecutive replies are ≤2
+        // words (typical disengagement pattern: "ok", "k", "yea", "sure").
+        const wordCount = filteredText.split(/\s+/).filter(Boolean).length;
+        recentReplyLengthsRef.current.push(wordCount);
+        if (recentReplyLengthsRef.current.length > 6) recentReplyLengthsRef.current.shift();
+        const recent = recentReplyLengthsRef.current;
+        const shortCount = recent.filter(n => n <= 2).length;
+        const SHORT_THRESHOLD = 5;
+        const FATIGUE_COOLDOWN_MS = 5 * 60 * 1000; // at most once per 5 min
+        if (recent.length >= SHORT_THRESHOLD
+            && shortCount >= SHORT_THRESHOLD
+            && Date.now() - lastFatigueInjectionAtRef.current > FATIGUE_COOLDOWN_MS
+            && injectContextRef.current) {
+          lastFatigueInjectionAtRef.current = Date.now();
+          console.warn('[VoiceTutorRealtime] Student fatigue detected — injecting diagnostic prompt');
+          onDebugEvent?.('fatigue_detected',
+            `${shortCount} of last ${recent.length} replies were ≤2 words`);
+          injectContextRef.current(
+            'ENGAGEMENT CHECK: The student has given several very short replies in a row ("ok", "yea", "k"). ' +
+            'On your next turn, pause the march through new material and ask a diagnostic question instead. ' +
+            'Pick the last concept you covered and say something like: ' +
+            '"Let me pause for a sec — in your own words, can you explain [the last concept] back to me?" ' +
+            'Do NOT move forward to a new topic until you get a substantive answer. ' +
+            'If the student still gives a short answer, offer a 30-second break or a recap.'
+          );
         }
 
         // Reset tool call tracking for next response turn
@@ -516,9 +605,45 @@ export function VoiceTutorRealtime({
             return [];
           }
         }
+        // Dedup consecutive identical emissions. The model sometimes re-emits
+        // the same formula after the student says "I don't see it" (usually
+        // caused by a validation-induced render delay), leaving two copies on
+        // the whiteboard. Normalize whitespace + case before comparing.
+        const normalized = latex.replace(/\s+/g, '').toLowerCase();
+        if (normalized && normalized === lastEquationLatexRef.current) {
+          console.warn('[VoiceTutorRealtime] Dropping duplicate equation:', latex);
+          onDebugEvent?.('tool_call', `Dropped duplicate equation: ${latex.slice(0, 80)}`);
+          return [];
+        }
+        lastEquationLatexRef.current = normalized;
+      }
+
+      // Punnett-square repair: when show_table has collapsed gamete headers
+      // (both axes labeled "P" instead of "P"/"p"), infer the correct pair
+      // from the cell contents and fix the axis labels before render.
+      if (cmd.action === 'showTable') {
+        const headers: string[] = cmdAny.headers || [];
+        const rows: string[][] = cmdAny.rows || [];
+        if (looksLikePunnett(headers, rows)) {
+          const repaired = repairPunnettHeaders(headers, rows);
+          if (repaired) {
+            console.warn('[VoiceTutorRealtime] Repaired Punnett-square headers',
+              { before: headers, after: repaired.headers });
+            onDebugEvent?.('punnett_repaired',
+              `Headers fixed: [${headers.join(',')}] → [${repaired.headers.join(',')}]`);
+            return [{ ...cmd, headers: repaired.headers, rows: repaired.rows } as WhiteboardCommand];
+          }
+        }
       }
 
       if (cmd.action === 'showGeometry') {
+        // Remember the latest geometry so geometry-numeric can validate
+        // any spoken claims about sides/angles/area over the next few turns.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const geomAny = cmd as any;
+        if (Array.isArray(geomAny.points)) {
+          lastGeometryRef.current = { points: geomAny.points, title: geomAny.title };
+        }
         const validated = validateGeometryCommand(cmd as unknown as GeometryCommand);
         if (validated._incomplete) {
           const reason = `The geometry command was incomplete (${validated._incompleteReason || 'missing required primitives'}). Retry with a full shape definition.`;
@@ -566,6 +691,247 @@ export function VoiceTutorRealtime({
       return cmd;
     });
 
+    // --- Code sandbox auto-run on show_code with testCases ---
+    for (const cmd of processed) {
+      if (cmd.action !== 'showCode') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      const code: string = cmdAny.code || '';
+      const language: string = (cmdAny.language || '').toLowerCase();
+      const rawTestCases = Array.isArray(cmdAny.testCases) ? cmdAny.testCases : null;
+      if (!code || !rawTestCases || rawTestCases.length === 0) continue;
+      if (!['javascript', 'js', 'typescript', 'ts'].includes(language)) continue;
+      // Decode JSON-encoded input/expected strings. The tool schema declares
+      // them as strings so OpenAI's strict validator accepts the definition;
+      // we parse them back into real values here before running the sandbox.
+      const decodedTests: Array<{ name?: string; input?: unknown[]; expected?: unknown }> = [];
+      for (const tc of rawTestCases) {
+        const t = tc as { name?: string; input?: unknown; expected?: unknown };
+        let input: unknown[] | undefined;
+        let expected: unknown;
+        try {
+          if (typeof t.input === 'string') {
+            const parsed = JSON.parse(t.input);
+            input = Array.isArray(parsed) ? parsed : [parsed];
+          } else if (Array.isArray(t.input)) {
+            input = t.input as unknown[];
+          }
+        } catch {
+          continue;
+        }
+        try {
+          expected = typeof t.expected === 'string' ? JSON.parse(t.expected) : t.expected;
+        } catch {
+          expected = t.expected;
+        }
+        decodedTests.push({ name: t.name, input, expected });
+      }
+      if (decodedTests.length === 0) continue;
+      fetch('/api/tutor/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: 'code-run',
+          claim: { code, language, tests: decodedTests, entryName: cmdAny.entryName },
+        }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(result => {
+          if (!result) return;
+          const data = result.data || {};
+          const tests = Array.isArray(data.tests) ? data.tests : [];
+          const passed = tests.filter((t: { passed: boolean }) => t.passed).length;
+          const total = tests.length;
+          console.log(`[VoiceTutorRealtime] code-run: ${passed}/${total} tests passed`);
+          onDebugEvent?.('code_run', `${passed}/${total} tests — ${result.correct ? 'all passed' : 'failures present'}`);
+          if (injectContextRef.current) {
+            if (result.correct) {
+              injectContextRef.current(
+                `CODE VERIFICATION: The code on the board passed ${passed}/${total} test cases. ` +
+                `You can confidently tell the student their solution works across all cases.`
+              );
+            } else {
+              const failures = (result.issues || []).slice(0, 3).join(' | ');
+              injectContextRef.current(
+                `CODE CORRECTION: The code on the board failed the sandbox: ${passed}/${total} tests passing. ` +
+                `Failing cases: ${failures}. ` +
+                `On your next turn, walk the student through WHY one of these inputs breaks their code.`
+              );
+            }
+          }
+        })
+        .catch(err => console.error('[VoiceTutorRealtime] code-run threw:', err));
+    }
+
+    // --- SMILES verification on show_molecule ---
+    for (const cmd of processed) {
+      if (cmd.action !== 'showMolecule') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      const smiles: string = cmdAny.smiles || '';
+      const title: string = cmdAny.title || '';
+      if (!smiles || !title) continue;
+      fetch('/api/tutor/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: 'chemistry-smiles', claim: { smiles, name: title } }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(result => {
+          if (!result || result.correct !== false) return;
+          onDebugEvent?.('smiles_mismatch',
+            `"${title}" SMILES ${smiles} doesn't match canonical for that name (expected ${result.expected})`);
+          if (injectContextRef.current && result.expected) {
+            injectContextRef.current(
+              `CHEMISTRY CORRECTION: You just labeled a molecule "${title}" with SMILES "${smiles}" — but the canonical SMILES for "${title}" is "${result.expected}". ` +
+              `Either the structure or the name is wrong. On your next turn, verify which you meant and correct the student.`
+            );
+          }
+        })
+        .catch(err => console.error('[VoiceTutorRealtime] smiles check threw:', err));
+    }
+
+    // --- Domain detection: chemistry equations + physics formulas ---
+    // For each showEquation we send to the validator dispatcher in parallel
+    // if the content looks chemistry-ish or physics-ish. Results arrive
+    // after the turn and inject corrections into the NEXT tutor response
+    // rather than blocking render.
+    for (const cmd of processed) {
+      if (cmd.action !== 'showEquation') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      const latex: string = cmdAny.latex || '';
+      const label: string = cmdAny.label || '';
+      if (!latex) continue;
+
+      const looksChemistry = /[→⟶]|->/.test(latex)
+        || /\b\d?[A-Z][a-z]?(?:_?\d+)?(?:\s*\+\s*\d?[A-Z])/.test(latex);
+      if (looksChemistry) {
+        fetch('/api/tutor/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain: 'chemistry-balance', claim: { equation: latex } }),
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(result => {
+            if (!result) return;
+            const isBalanced = result.correct !== false;
+            // Narrator-sanity: label declares the equation unbalanced but atoms
+            // already match on both sides. The model does this when it opens
+            // a "balancing walkthrough" on an equation that needs no balancing
+            // (e.g. Fe + Cl_2 -> FeCl_2). Flag so the tutor doesn't waste the
+            // student's time walking through a fake balancing exercise.
+            const labelSaysUnbalanced = /\bunbalanced\b/i.test(label);
+            if (isBalanced && labelSaysUnbalanced) {
+              onDebugEvent?.('narrator_mismatch',
+                `label "${label}" claims unbalanced but validator: balanced — ${latex.slice(0, 80)}`);
+              if (injectContextRef.current) {
+                injectContextRef.current(
+                  `NARRATOR MISMATCH: You just labeled "${latex}" as "${label}", but atom counts already ` +
+                  `match on both sides — this equation IS balanced. Do NOT walk the student through ` +
+                  `balancing it. On your next turn, acknowledge it's already balanced and either move ` +
+                  `on to a genuinely unbalanced example or pick a different direction.`
+                );
+              }
+              return;
+            }
+            if (!isBalanced) {
+              console.warn('[VoiceTutorRealtime] Chemistry balance off:', result.issues);
+              onDebugEvent?.('chem_unbalanced',
+                `${latex.slice(0, 80)} — ${(result.issues || []).join('; ')}`);
+              if (injectContextRef.current && result.expected) {
+                // Narrator-sanity (inverse): label declares the equation balanced
+                // but it's not. Stronger wording so the tutor doesn't claim a
+                // false victory on the board.
+                const labelSaysBalanced = /\bbalanced\b/i.test(label) && !labelSaysUnbalanced;
+                const prefix = labelSaysBalanced
+                  ? `NARRATOR MISMATCH + CHEMISTRY CORRECTION: You just labeled "${latex}" as "${label}" — but it is NOT balanced. `
+                  : `CHEMISTRY CORRECTION: The equation you just wrote "${latex}" is NOT balanced. `;
+                injectContextRef.current(
+                  prefix +
+                  `${(result.issues || []).join(' ')} ` +
+                  `The balanced form is: ${result.expected}. ` +
+                  `On your next turn, acknowledge the imbalance briefly and show the corrected equation.`
+                );
+              }
+            }
+          })
+          .catch(err => console.error('[VoiceTutorRealtime] chemistry-balance threw:', err));
+      }
+
+      // Acid-base pH check: extract pH / pOH / [H+] / [OH-] claims from the
+      // equation and fire the acid-base-ph dispatcher when at least 2 of
+      // these four are present (so consistency can be checked).
+      {
+        const phM = latex.match(/\bpH\s*=\s*(-?\d+(?:\.\d+)?)/i);
+        const pohM = latex.match(/\bpOH\s*=\s*(-?\d+(?:\.\d+)?)/i);
+        const hM = latex.match(/\[\s*H\s*\+?\s*\]\s*=\s*(-?\d+(?:\.\d+)?(?:\s*[\\×x]\s*10\s*\^?-?\d+)?)/i);
+        const ohM = latex.match(/\[\s*OH\s*-?\s*\]\s*=\s*(-?\d+(?:\.\d+)?(?:\s*[\\×x]\s*10\s*\^?-?\d+)?)/i);
+        const parseSciOrPlain = (s: string): number | null => {
+          const clean = s.replace(/\s+/g, '').replace(/×|\\times/g, '*').replace(/\^/, '**');
+          try {
+            // eslint-disable-next-line no-new-func
+            const val = Function(`return (${clean})`)();
+            return typeof val === 'number' && isFinite(val) ? val : null;
+          } catch { return null; }
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const phClaim: any = {};
+        if (phM) phClaim.pH = parseFloat(phM[1]);
+        if (pohM) phClaim.pOH = parseFloat(pohM[1]);
+        if (hM) phClaim.hConc = parseSciOrPlain(hM[1]);
+        if (ohM) phClaim.ohConc = parseSciOrPlain(ohM[1]);
+        const phKeysPresent = Object.keys(phClaim).length;
+        if (phKeysPresent >= 2) {
+          fetch('/api/tutor/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: 'acid-base-ph', claim: phClaim }),
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(result => {
+              if (!result || result.correct !== false) return;
+              onDebugEvent?.('acid_base_inconsistent',
+                `${latex.slice(0, 80)} — ${(result.issues || []).join('; ')}`);
+              if (injectContextRef.current) {
+                injectContextRef.current(
+                  `ACID-BASE CORRECTION: The values in "${latex}" are not internally consistent. ` +
+                  `${(result.issues || []).join(' ')} ` +
+                  `Remember at 25°C: pH + pOH = 14, and [H+][OH-] = 1e-14. On your next turn, recheck the arithmetic.`
+                );
+              }
+            })
+            .catch(err => console.error('[VoiceTutorRealtime] acid-base-ph threw:', err));
+        }
+      }
+
+      // Physics dimensional check: fire when label matches a known quantity
+      // name and the formula has an "=" sign so both sides can be parsed.
+      const physicsUnitClaim = /\b(force|energy|momentum|power|pressure|work|kinetic|potential)\b/i.test(label);
+      if (physicsUnitClaim && latex.includes('=')) {
+        fetch('/api/tutor/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain: 'dimensional-analysis', claim: { formula: latex } }),
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(result => {
+            if (!result || result.correct !== false) return;
+            console.warn('[VoiceTutorRealtime] Dimensional mismatch:', result.issues);
+            onDebugEvent?.('dim_mismatch',
+              `${latex.slice(0, 80)} (${label}) — ${(result.issues || []).join('; ')}`);
+            if (injectContextRef.current) {
+              injectContextRef.current(
+                `PHYSICS CORRECTION: The formula "${latex}" labeled "${label}" does not check out dimensionally. ` +
+                `${(result.issues || []).join(' ')} ` +
+                `Re-derive the formula on your next turn — one of the sides has the wrong units.`
+              );
+            }
+          })
+          .catch(err => console.error('[VoiceTutorRealtime] dimensional-analysis threw:', err));
+      }
+    }
+
     // --- Always-on Wolfram math validation ---
     // User directive: "I want wolfram to check every math — the latency is
     // acceptable but the inaccuracy isn't." We validate every math-bearing
@@ -611,46 +977,49 @@ export function VoiceTutorRealtime({
           return cmd;
         }
 
-        // Equations: always Wolfram, pass declared functions for contextual checks
+        // Equations: fire-and-forget Wolfram/Claude validation. Rendering is
+        // NOT gated on the validator — a 10s Claude round-trip on a symbolic
+        // formula used to leave the whiteboard blank and prompted students to
+        // complain "I don't see it on the board." Instead, we render now and
+        // inject a correction into the NEXT tutor turn if the validator finds
+        // an error. This mirrors the pattern used by chemistry-balance,
+        // chemistry-smiles, code-run, etc.
         if (cmd.action === 'showEquation') {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const cmdAny = cmd as any;
-            console.log('[VoiceTutorRealtime] Sending equation to Wolfram for validation:', cmdAny.latex?.substring(0, 80));
-            const resp = await fetch('/api/tutor/validate-math-wolfram', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                latex: cmdAny.latex || '',
-                label: cmdAny.label || '',
-                conversationContext: recentContext(),
-                declaredFunctions: declaredFunctionsRef.current.map(d => ({
-                  name: d.name, argVar: d.argVar, body: d.body,
-                })),
-              }),
-            });
-            if (resp.ok) {
-              const result = await resp.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cmdAny = cmd as any;
+          const latex: string = cmdAny.latex || '';
+          const label: string = cmdAny.label || '';
+          console.log('[VoiceTutorRealtime] Queuing equation validation (non-blocking):', latex.substring(0, 80));
+          fetch('/api/tutor/validate-math-wolfram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              latex,
+              label,
+              conversationContext: recentContext(),
+              declaredFunctions: declaredFunctionsRef.current.map(d => ({
+                name: d.name, argVar: d.argVar, body: d.body,
+              })),
+            }),
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(result => {
+              if (!result) return;
               console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
               onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
-              if (!result.correct && result.correctedLatex) {
-                // If Wolfram corrected a derivative/integral, alert the tutor
-                // so its spoken narration can reconcile with the board.
-                if (result.source === 'wolfram-derivative' || result.source === 'wolfram-integral') {
-                  if (injectContextRef.current) {
-                    injectContextRef.current(
-                      `CORRECTION: The ${result.source.includes('derivative') ? 'derivative' : 'integral'} you just said was wrong. ` +
-                      `The whiteboard has been updated with the correct expression: ${result.expected}. ` +
-                      `Briefly tell the student you misspoke and confirm the correct result shown on the board.`
-                    );
-                  }
-                }
-                return { ...cmd, latex: result.correctedLatex } as WhiteboardCommand;
+              if (!result.correct && result.correctedLatex && injectContextRef.current) {
+                const kind = result.source === 'wolfram-derivative' ? 'derivative'
+                  : result.source === 'wolfram-integral' ? 'integral'
+                  : 'equation';
+                injectContextRef.current(
+                  `MATH CORRECTION: The ${kind} you just wrote "${latex}" is wrong. ` +
+                  `The correct form is "${result.expected || result.correctedLatex}". ` +
+                  `${(result.issues || []).join(' ')} ` +
+                  `On your next turn, briefly tell the student you misspoke and re-emit the corrected equation on the whiteboard.`
+                );
               }
-            }
-          } catch (err) {
-            console.error('[VoiceTutorRealtime] Equation validation failed:', err);
-          }
+            })
+            .catch(err => console.error('[VoiceTutorRealtime] Equation validation threw:', err));
           return cmd;
         }
 
@@ -691,6 +1060,64 @@ export function VoiceTutorRealtime({
           // needs to re-enter Socratic mode; any walk-through request will
           // need to be re-asserted for this new problem.
           walkThroughInsistenceRef.current = 0;
+          // Set the current topic from the problem title or source tag.
+          const topic = (p.title || p.sourceTag || p.statement.slice(0, 40)).trim();
+          if (topic) {
+            currentTopicRef.current = topic;
+            if (!topicsCoveredRef.current.includes(topic)) topicsCoveredRef.current.push(topic);
+          }
+        }
+      }
+      if (cmd.action === 'newPage') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const title = ((cmd as any).title || '').trim();
+        if (title) {
+          currentTopicRef.current = title;
+          if (!topicsCoveredRef.current.includes(title)) topicsCoveredRef.current.push(title);
+        }
+      }
+      // Problem ↔ original-equation drift check. When the tutor emits a
+      // showEquation labeled like "Original Equation" or "Problem" right
+      // after a showProblem, the equation latex must match what the problem
+      // statement describes — otherwise the tutor has silently mutated the
+      // problem mid-setup (witnessed: statement said 2^(x+1) - 3·2^(x+2) = 0
+      // but board drew 2^(2x-1) - 3·2^(x+2) = 0).
+      if (cmd.action === 'showEquation' && currentProblemRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cmdAny = cmd as any;
+        const label: string = (cmdAny.label || '').toLowerCase();
+        const latex: string = cmdAny.latex || '';
+        if (/original|problem|given|restated/.test(label) && latex.length > 4) {
+          const stmt = currentProblemRef.current.statement;
+          // Extract any latex in the statement (between $...$) or plain math
+          const stmtMath = stmt.match(/\$([^$]+)\$/)?.[1] || stmt;
+          // Coarse comparison via rough normalization — fraction-safe.
+          const norm = (s: string) => s.toLowerCase()
+            .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, '$1/$2')
+            .replace(/\s+/g, '')
+            .replace(/\\(cdot|times)/g, '*')
+            .replace(/\\[a-z]+/g, '')
+            .replace(/[{}]/g, '')
+            .replace(/[()]/g, '');
+          const a = norm(stmtMath);
+          const b = norm(latex);
+          // Heuristic: if the equation shares < 40% of its tokens with the
+          // statement's math, flag drift. We use a simple char-overlap ratio.
+          const overlap = a.length > 0 ? [...a].filter(ch => b.includes(ch)).length / a.length : 1;
+          if (overlap < 0.4) {
+            console.warn('[VoiceTutorRealtime] Problem↔equation drift detected',
+              { statement: stmtMath, boardEquation: latex });
+            onDebugEvent?.('problem_equation_drift',
+              `Problem says "${stmtMath.slice(0, 80)}" but board shows "${latex.slice(0, 80)}"`);
+            if (injectContextRef.current) {
+              injectContextRef.current(
+                `CORRECTION: The problem you just showed has a DIFFERENT equation than the "Original Equation" you drew on the board. ` +
+                `The problem statement has: ${stmtMath}. ` +
+                `But the whiteboard is showing: ${latex}. ` +
+                `On your next turn, redraw the "Original Equation" exactly as it appears in the problem statement, then continue. Do not work with a different equation than the one the student is looking at.`
+              );
+            }
+          }
         }
       }
       if (cmd.action === 'showEquation') {
@@ -752,6 +1179,25 @@ export function VoiceTutorRealtime({
 
     // Hand the Realtime hook the rejection list so it can honestly report
     // success:false to the LLM for any drops and stop the cascade of retries.
+    // Surface a transient status to the student UI so they know the system
+    // is recovering, without having to prompt "I don't see anything".
+    if (rejected.length > 0) {
+      const firstAction = rejected[0].action;
+      const friendly = firstAction === 'show_problem' ? 'Re-rendering problem…'
+        : firstAction === 'show_equation' ? 'Re-rendering equation…'
+        : firstAction === 'show_geometry' ? 'Re-rendering diagram…'
+        : 'Re-rendering whiteboard…';
+      setWhiteboardStatus(friendly);
+      if (whiteboardStatusTimerRef.current) clearTimeout(whiteboardStatusTimerRef.current);
+      whiteboardStatusTimerRef.current = setTimeout(() => setWhiteboardStatus(null), 4500);
+    } else if (processed.length > 0) {
+      // Successful render — clear any lingering "retrying" status.
+      if (whiteboardStatus) setWhiteboardStatus(null);
+      if (whiteboardStatusTimerRef.current) {
+        clearTimeout(whiteboardStatusTimerRef.current);
+        whiteboardStatusTimerRef.current = null;
+      }
+    }
     return { rejected };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent]);
 
@@ -1028,8 +1474,197 @@ export function VoiceTutorRealtime({
       console.error('[VoiceTutorRealtime] verifySpokenFinalAnswer threw:', err)
     );
 
+    // --- Geometry numeric claims — verify tutor's spoken distance/angle/area
+    // against the most recent rendered figure. Only fires if geometry has
+    // been drawn in this session.
+    if (lastGeometryRef.current?.points?.length) {
+      fetch('/api/tutor/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: 'geometry-numeric',
+          claim: { text: tutorText, points: lastGeometryRef.current.points },
+        }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(result => {
+          if (!result || result.correct !== false) return;
+          onDebugEvent?.('geometry_mismatch', (result.issues || []).join('; '));
+          if (injectContextRef.current) {
+            injectContextRef.current(
+              `GEOMETRY CORRECTION: A numeric claim you just made doesn't match the figure on the board. ` +
+              `${(result.issues || []).join(' ')} ` +
+              `Double-check your measurement and correct it on your next turn.`
+            );
+          }
+        })
+        .catch(err => console.error('[VoiceTutorRealtime] geometry-numeric threw:', err));
+    }
+
+    // --- Biology: genotype notation check ---
+    // Catches the Xx-vs-xx affirmation bug — if the tutor says "Xx is
+    // homozygous recessive", we classify Xx as heterozygous and inject
+    // a correction so the next turn anchors the student back to the
+    // right notation.
+    const genotypeCheck = validateGenotypeAssertion(tutorText);
+    if (!genotypeCheck.correct && genotypeCheck.actual && genotypeCheck.claimed) {
+      console.warn('[VoiceTutorRealtime] Genotype notation mismatch',
+        { genotype: genotypeCheck.genotype, actual: genotypeCheck.actual, claimed: genotypeCheck.claimed });
+      onDebugEvent?.('genotype_mismatch',
+        `${genotypeCheck.genotype} is ${genotypeCheck.actual}, not ${genotypeCheck.claimed}`);
+      if (injectContextRef.current) {
+        injectContextRef.current(
+          `GENETICS CORRECTION: You just said "${genotypeCheck.genotype} is ${genotypeCheck.claimed.replace('-', ' ')}", ` +
+          `but ${genotypeCheck.genotype} is actually ${genotypeCheck.actual.replace('-', ' ')}. ` +
+          `Remember: uppercase letter = dominant allele, lowercase = recessive. ` +
+          `Xx / Pp / Rr = heterozygous (one of each). xx / pp / rr = homozygous recessive. XX / PP / RR = homozygous dominant. ` +
+          `Correct this on your next turn and re-anchor the student.`
+        );
+      }
+    }
+
+    // --- Biology: blood-type compatibility check ---
+    // Catches claims like "AB- can receive A-, B-, AB-, O-" that miss or
+    // add incorrect donor types. Uses a deterministic rule table.
+    const receiveClaim = extractReceiveClaim(tutorText);
+    if (receiveClaim) {
+      const check = validateReceiveClaim(receiveClaim.recipient, receiveClaim.types);
+      if (!check.correct) {
+        console.warn('[VoiceTutorRealtime] Blood-type receive claim mismatch',
+          { recipient: receiveClaim.recipient, claimed: receiveClaim.types, expected: check.expected });
+        onDebugEvent?.('blood_type_mismatch',
+          `${receiveClaim.recipient} can actually receive ${check.expected.join(', ')} (tutor said ${receiveClaim.types.join(', ')})`);
+        if (injectContextRef.current) {
+          const missing = check.missing.length ? ` missed: ${check.missing.join(', ')}.` : '';
+          const extra = check.extra.length ? ` incorrectly included: ${check.extra.join(', ')}.` : '';
+          injectContextRef.current(
+            `BLOOD-TYPE CORRECTION: A ${receiveClaim.recipient} recipient can receive from: ${check.expected.join(', ')}. ` +
+            `You said they can receive ${receiveClaim.types.join(', ')}.${missing}${extra} ` +
+            `Re-state the correct list to the student on your next turn.`
+          );
+        }
+      }
+    }
+
     // --- Voice ↔ whiteboard math consistency check ---
     checkVoiceWhiteboardConsistency(tutorText);
+
+    // --- Subject-conditional: grammar (ELA) + fact (history) ---
+    // Kept behind subject gates so the validators don't fire noisily on
+    // math/physics sessions where the tutor routinely writes equations
+    // that grammar tools can't parse, or history claims that Wikidata
+    // doesn't know. Gating by `subject` keeps cost + noise bounded.
+    const subj = (subject || '').toLowerCase();
+
+    if (/\b(ela|english|writing|literature|esl|tesol)\b/.test(subj) && tutorText.length > 40) {
+      fetch('/api/tutor/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: 'grammar', claim: { text: tutorText, language: 'en-US' } }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(result => {
+          if (!result || result.correct !== false) return;
+          const issues = (result.issues || []).slice(0, 2);
+          // Grammar issues in the tutor's spoken text are usually transcription
+          // artifacts — we log but don't inject unless there are clear typos.
+          onDebugEvent?.('grammar_issues', issues.join(' | '));
+        })
+        .catch(err => console.error('[VoiceTutorRealtime] grammar threw:', err));
+    }
+
+    if (/\b(history|social[-\s]?studies|geography|civics|world[-\s]?history|us[-\s]?history)\b/.test(subj)) {
+      // Fact-check the tutor's claim. Three patterns we try to extract:
+      //   "capital of X is Y"
+      //   "X was born in YYYY"
+      //   "<event> happened in YYYY"
+      const capMatch = tutorText.match(/\bcapital of ([A-Z][a-zA-Z ]+?)\s+is\s+([A-Z][a-zA-Z ]+)/);
+      const bornMatch = tutorText.match(/\b([A-Z][a-zA-Z ]+?)\s+was born in\s+(\d{3,4})/);
+      const eventMatch = tutorText.match(/\b(?:the\s+)?([A-Z][a-zA-Z' ]+?)\s+(?:happened in|occurred in|took place in|was in)\s+(\d{3,4})/);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const factClaim: { kind: 'capital' | 'birth-year' | 'event-year'; subject: string; claimedValue: string | number } | null =
+        capMatch ? { kind: 'capital', subject: capMatch[1].trim(), claimedValue: capMatch[2].trim() }
+        : bornMatch ? { kind: 'birth-year', subject: bornMatch[1].trim(), claimedValue: parseInt(bornMatch[2], 10) }
+        : eventMatch ? { kind: 'event-year', subject: eventMatch[1].trim(), claimedValue: parseInt(eventMatch[2], 10) }
+        : null;
+      if (factClaim) {
+        fetch('/api/tutor/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain: 'fact', claim: factClaim }),
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(result => {
+            if (!result || result.correct !== false) return;
+            onDebugEvent?.('fact_wrong',
+              `${factClaim.kind} ${factClaim.subject}=${factClaim.claimedValue}, expected ${result.expected}`);
+            if (injectContextRef.current && result.expected) {
+              injectContextRef.current(
+                `FACT CORRECTION: You said ${factClaim.kind} of ${factClaim.subject} is ${factClaim.claimedValue}, ` +
+                `but according to Wikidata it's ${result.expected}. ` +
+                `On your next turn, correct this quickly so the student doesn't walk away with the wrong fact.`
+              );
+            }
+          })
+          .catch(err => console.error('[VoiceTutorRealtime] fact threw:', err));
+      }
+    }
+
+    // --- Weakness tracking ---
+    // Increment the current topic's weakness count when:
+    //  • The tutor's response contains a rejection pattern (they corrected
+    //    the student's previous answer).
+    //  • The last student reply was an explicit "i don't know" / "not sure".
+    const lastStudentMsg = transcriptRef.current
+      .filter(e => e.role === 'student')
+      .slice(-1)[0]?.text || '';
+    const studentGaveUp = /\b(i\s*don'?t\s*know|idk|no\s+idea|not\s+sure)\b/i.test(lastStudentMsg);
+    const topic = currentTopicRef.current;
+    if (topic && (isRejection(tutorText) || studentGaveUp)) {
+      const prev = weaknessesRef.current.get(topic) || 0;
+      weaknessesRef.current.set(topic, prev + 1);
+      console.log('[VoiceTutorRealtime] Weakness +1 on topic:', topic, '→', prev + 1);
+    }
+
+    // --- Long-session check-in (fires once around 45 min mark) ---
+    const sessionMinutes = (Date.now() - sessionStartMsRef.current) / 60000;
+    if (sessionMinutes >= 45 && !longSessionCheckFiredRef.current && injectContextRef.current) {
+      longSessionCheckFiredRef.current = true;
+      console.log('[VoiceTutorRealtime] 45-min check-in triggered');
+      onDebugEvent?.('long_session_checkin', `Session hit ${sessionMinutes.toFixed(1)} min`);
+      injectContextRef.current(
+        'SESSION LENGTH CHECK: The student has been studying for 45+ minutes. ' +
+        'Proactively offer a brief recap and a choice: "We\'ve been at this for a while — want me to recap what we covered, ' +
+        'take a quick 2-minute break, or keep going?" Respect whatever they choose. Long uninterrupted sessions lead to fatigue ' +
+        'and low retention, so a natural pause here is valuable.'
+      );
+    }
+
+    // --- 55-min pre-emptive session rotation ---
+    // OpenAI Realtime caps sessions around 60 min. At 55, surface a UI
+    // prompt so the user can choose to continue or wrap up; if they choose
+    // continue, we rotate into a fresh session with context pre-injected.
+    if (sessionMinutes >= 55 && !sessionRotationFiredRef.current) {
+      sessionRotationFiredRef.current = true;
+      console.log('[VoiceTutorRealtime] 55-min rotation prompt shown');
+      onDebugEvent?.('session_rotation_prompt', `Session at ${sessionMinutes.toFixed(1)} min`);
+      setSessionRotationPrompt(true);
+    }
+
+    // --- 58-min silent auto-rotation fallback ---
+    // If the student ignored the banner, rotate silently before OpenAI's
+    // hard cap at ~60 min. Keeps the tutor from cold-restarting with a
+    // re-greeting. Fires once, only if the banner is still up (i.e. the
+    // student didn't click either button).
+    if (sessionMinutes >= 58 && sessionRotationPrompt && !autoRotationFiredRef.current) {
+      autoRotationFiredRef.current = true;
+      console.warn('[VoiceTutorRealtime] 58-min silent auto-rotation — user ignored banner');
+      onDebugEvent?.('session_auto_rotation', `Silent rotation at ${sessionMinutes.toFixed(1)} min`);
+      // Reuse the "Continue" handler path via ref (defined after this callback).
+      continueRotationRef.current?.().catch(err =>
+        console.error('[VoiceTutorRealtime] Auto-rotation failed:', err)
+      );
+    }
 
     // --- Socratic bulldozing check ---
     // If the student has NOT insisted 2+ times on walk-through, the tutor
@@ -1105,15 +1740,43 @@ export function VoiceTutorRealtime({
 
       // Debounce — wait 3s after last change before notifying AI
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      debounceTimer = setTimeout(async () => {
         console.log('[VoiceTutorRealtime] Student modified molecule:', detail.smiles);
+
+        // Validate SMILES parseability BEFORE forwarding to the tutor. If the
+        // student drew something chemically impossible (e.g. an H carrying
+        // three bonds, or an O with three bonds), RDKit fails to canonicalize
+        // — in that case we tell the tutor explicitly that the structure is
+        // invalid instead of letting it narrate nonsense.
+        let validationNote = '';
+        try {
+          const resp = await fetch('/api/tutor/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: 'chemistry-smiles', claim: { smiles: detail.smiles } }),
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            if (result && result.correct === false) {
+              const issue = (result.issues && result.issues[0]) || 'SMILES failed to parse.';
+              validationNote = ` The new SMILES is NOT a valid molecular structure — ${issue} ` +
+                `Do NOT describe it as if it were a real compound. Point out the structural problem ` +
+                `(likely a valence violation — e.g. hydrogen with more than one bond, or oxygen with ` +
+                `more than two) and ask the student to revise the drawing.`;
+              onDebugEvent?.('smiles_invalid',
+                `Student drew invalid SMILES: ${detail.smiles} — ${issue}`);
+            }
+          }
+        } catch (err) {
+          console.error('[VoiceTutorRealtime] student SMILES validation threw:', err);
+        }
 
         // Send as a text message so the AI responds (unlike injectContext which is silent)
         if (sendTextMessageRef.current) {
           sendTextMessageRef.current(
             `[The student just modified the molecule on the whiteboard. ` +
             `Original: ${detail.title || 'unknown'} (${detail.originalSmiles}). ` +
-            `New SMILES: ${detail.smiles}. ` +
+            `New SMILES: ${detail.smiles}.${validationNote} ` +
             `Identify what changed and discuss it with the student.]`
           );
         }
@@ -1136,7 +1799,7 @@ export function VoiceTutorRealtime({
       window.removeEventListener('molecule-changed', handleMoleculeChanged);
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, [onTranscriptUpdate, onTrackInteraction]);
+  }, [onTranscriptUpdate, onTrackInteraction, onDebugEvent]);
 
   // Read VAD tuning from env vars (NEXT_PUBLIC_ so they're available client-side)
   const vadThreshold = parseFloat(process.env.NEXT_PUBLIC_TUTOR_VAD_THRESHOLD || '0.8');
@@ -1163,11 +1826,17 @@ export function VoiceTutorRealtime({
   injectContextRef.current = realtime.injectContext;
   sendTextMessageRef.current = realtime.sendTextMessage;
 
-  // Expose sendTextMessage to parent via handleRef
+  // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {
     if (handleRef) {
       handleRef.current = {
         sendTextMessage: (text: string) => realtime.sendTextMessage(text),
+        getSessionSummary: () => ({
+          topicsCovered: [...topicsCoveredRef.current],
+          weakTopics: Array.from(weaknessesRef.current.entries())
+            .map(([topic, count]) => ({ topic, count }))
+            .sort((a, b) => b.count - a.count),
+        }),
       };
     }
     return () => {
@@ -1187,6 +1856,23 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] Module not loaded, using base prompts');
         }
 
+        // Fetch prior-session weak topics for this student+subject+topic
+        // so the opening greeting can surface targeted review. Non-blocking
+        // — if the lookup fails, we just skip the personalization.
+        let priorProgress: { sessionCount: number; weakTopics: Array<{ topic: string; count: number }>; topicsCovered: string[] } | null = null;
+        if (studentName) {
+          try {
+            const resp = await fetch('/api/tutor/student-progress', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ studentName, subject, topic, level }),
+            });
+            if (resp.ok) priorProgress = await resp.json();
+          } catch (err) {
+            console.warn('[VoiceTutorRealtime] student-progress lookup failed:', err);
+          }
+        }
+
         // Build system prompt using existing builder
         const systemPrompt = buildSystemPrompt({
           module: knowledgeModule,
@@ -1198,6 +1884,18 @@ export function VoiceTutorRealtime({
           topic,
           level,
         });
+
+        // Personalized prior-session block — appended to instructions so the
+        // tutor can open with targeted review instead of a cold greeting.
+        let priorBlock = '';
+        if (priorProgress && priorProgress.sessionCount > 0) {
+          const weak = priorProgress.weakTopics.slice(0, 3).map(w => w.topic).filter(Boolean);
+          const covered = priorProgress.topicsCovered.slice(0, 6);
+          priorBlock = `\n\n## Prior Session Context\nThis student has had ${priorProgress.sessionCount} prior session(s) with you on this subject.\n` +
+            (covered.length > 0 ? `Previously covered: ${covered.join(', ')}.\n` : '') +
+            (weak.length > 0 ? `Areas they struggled with most: ${weak.join(', ')}.\n` : '') +
+            `\nAFTER your greeting, briefly check in: mention you remember where you left off, and offer to either (a) revisit the weak spots above with a quick review problem, or (b) move on to new material. Keep this check-in to one sentence — do NOT lecture about what they got wrong last time. Respect whatever they pick.`;
+        }
 
         // Read optional voice personality from env
         const voicePersonality = process.env.NEXT_PUBLIC_TUTOR_VOICE_PERSONALITY
@@ -1266,7 +1964,7 @@ The student should be able to follow the entire solution by looking at the white
 
 Start by warmly greeting the student and asking how you can help them today.`;
 
-        setInstructions(openAIInstructions);
+        setInstructions(openAIInstructions + priorBlock);
         setIsInitialized(true);
       } catch (err) {
         console.error('[VoiceTutorRealtime] Failed to build instructions:', err);
@@ -1342,6 +2040,69 @@ Start by warmly greeting the student and asking how you can help them today.`;
       return newMuted;
     });
   }, [realtime]);
+
+  // Handle user's "continue" choice on the 55-min rotation prompt. We
+  // disconnect the current session and immediately reconnect; on fresh
+  // connection, injectContext fires with a summary of what we covered.
+  const handleContinueRotation = useCallback(async () => {
+    setSessionRotationPrompt(false);
+    const summary = buildContextSummary();
+    realtime.disconnect();
+    // Reset session-start timestamp so the new session gets its own 45/55 gates.
+    sessionStartMsRef.current = Date.now();
+    longSessionCheckFiredRef.current = false;
+    sessionRotationFiredRef.current = false;
+    // Small delay so the disconnect completes before reconnecting.
+    await new Promise(r => setTimeout(r, 500));
+    await realtime.connect();
+    // Wait for connection to finish then inject the summary. We rely on the
+    // existing injectContext pipeline — it queues until the socket is open.
+    setTimeout(() => {
+      if (injectContextRef.current && summary) {
+        injectContextRef.current(
+          summary + '\n\nIMPORTANT: This is a session rotation — we have been studying together already. ' +
+          'Do NOT greet the student as if meeting for the first time. Pick up from where we left off.'
+        );
+      }
+    }, 1500);
+  }, [realtime, buildContextSummary]);
+
+  const handleWrapUpRotation = useCallback(() => {
+    setSessionRotationPrompt(false);
+    if (injectContextRef.current) {
+      injectContextRef.current(
+        'SESSION CLOSE: Deliver a 3-sentence recap of what we covered together in this session, ' +
+        'name the 1-2 areas the student should review most, and end with encouragement. ' +
+        'Keep it warm and brief.'
+      );
+    }
+  }, []);
+
+  // Build a personalized recap prompt for the tutor to deliver at session
+  // close. Surfaces the topics covered and the 2 weakest topics so the
+  // tutor can target practice problems at what the student struggled with.
+  const buildRecapPrompt = useCallback(() => {
+    const topics = topicsCoveredRef.current;
+    const weaknessList = Array.from(weaknessesRef.current.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([topic]) => topic);
+    const topicsBlock = topics.length > 0 ? `Topics covered this session: ${topics.join(', ')}.` : '';
+    const weakBlock = weaknessList.length > 0
+      ? `The student struggled most with: ${weaknessList.join(' and ')}.`
+      : 'No clear weak spots emerged.';
+    const practiceBlock = weaknessList.length > 0
+      ? `After your spoken recap, call show_problem TWO to THREE times to give the student practice problems targeting exactly those weak spots (${weaknessList.join(', ')}). Each problem should be short, focused, and solvable without re-teaching.`
+      : 'After your spoken recap, call show_problem ONCE with a summary problem that covers the core concept of this session.';
+    return `SESSION CLOSE TIME. ${topicsBlock} ${weakBlock} ` +
+      `Deliver a 3-4 sentence spoken recap: what we covered, what the student did well, and what to review. ` +
+      `${practiceBlock} ` +
+      `After the practice cards are on the board, say a warm one-sentence send-off. Keep it brief — the student is about to leave the session.`;
+  }, []);
+
+  // Expose the rotation handler to the response-done callback via ref so
+  // auto-rotation at 58 min can fire without a forward-reference problem.
+  continueRotationRef.current = handleContinueRotation;
 
   // Get state-specific UI
   const getStateUI = () => {
@@ -1466,6 +2227,33 @@ Start by warmly greeting the student and asking how you can help them today.`;
         </>
       )}
 
+      {/* Session rotation prompt — fires once at 55 min to avoid hard cap */}
+      {sessionRotationPrompt && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800 flex-shrink-0">
+          <span>You&apos;ve been studying for almost an hour. Keep going?</span>
+          <button
+            onClick={handleContinueRotation}
+            className="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Continue
+          </button>
+          <button
+            onClick={handleWrapUpRotation}
+            className="px-2 py-1 rounded bg-white text-blue-700 border border-blue-300 hover:bg-blue-50"
+          >
+            Wrap up
+          </button>
+        </div>
+      )}
+
+      {/* Whiteboard status toast (transient — e.g. "Re-rendering problem…") */}
+      {whiteboardStatus && (
+        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex items-center gap-1.5 flex-shrink-0">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          {whiteboardStatus}
+        </span>
+      )}
+
       {/* Error inline */}
       {errorMessage && (
         <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded truncate max-w-[200px]">
@@ -1549,7 +2337,26 @@ Start by warmly greeting the student and asking how you can help them today.`;
         {onEndSession && (
           <button
             onClick={async () => {
-              // Finalize audio recording before ending session
+              // First click: trigger the recap + practice-problem flow and
+              // give the tutor up to 20 seconds to deliver. During that
+              // window the button flips to "Finish" for an immediate exit.
+              // If the user had already clicked once (isWrappingUp), a
+              // second click skips the wait and exits immediately.
+              if (!isWrappingUp && injectContextRef.current) {
+                setIsWrappingUp(true);
+                injectContextRef.current(buildRecapPrompt());
+                onDebugEvent?.('session_recap_triggered',
+                  `Topics=${topicsCoveredRef.current.length}, weak=${weaknessesRef.current.size}`);
+                // Auto-finish after 20 seconds max
+                setTimeout(async () => {
+                  if (audioRecordEnabled) {
+                    try { await audioRecorder.finalize(); } catch {}
+                  }
+                  onEndSession();
+                }, 20000);
+                return;
+              }
+              // Immediate finish (either no inject available, or 2nd click)
               if (audioRecordEnabled) {
                 try { await audioRecorder.finalize(); } catch {}
               }
@@ -1557,8 +2364,17 @@ Start by warmly greeting the student and asking how you can help them today.`;
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            End
+            {isWrappingUp ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Wrapping up… (click to finish)
+              </>
+            ) : (
+              <>
+                <LogOut className="w-3.5 h-3.5" />
+                End
+              </>
+            )}
           </button>
         )}
       </div>

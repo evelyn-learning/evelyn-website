@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     if (body.estimatedCost !== undefined)
       updateFields.estimatedCost = body.estimatedCost;
     if (body.status !== undefined) updateFields.status = body.status;
+    if (Array.isArray(body.topicsCovered)) updateFields.topicsCovered = body.topicsCovered;
+    if (Array.isArray(body.weakTopics)) updateFields.weakTopics = body.weakTopics;
 
     // Build the update operation
     const updateOp: Record<string, unknown> = {};

@@ -42,6 +42,8 @@ import AnnotatedPassageRenderer from './AnnotatedPassageRenderer';
 import CallStackRenderer from './CallStackRenderer';
 import FlowchartRenderer from './FlowchartRenderer';
 import ManipulativeRenderer from './ManipulativeRenderer';
+import PunnettRenderer from './PunnettRenderer';
+import { InlineMathText } from './InlineMathText';
 import dynamic from 'next/dynamic';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
@@ -49,13 +51,45 @@ const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   loading: () => <div className="flex items-center justify-center h-[250px] text-gray-400">Loading chemistry editor...</div>,
 });
 
-// Detect if a string contains LaTeX commands and render accordingly
+// Detect if a string contains LaTeX commands and render accordingly.
+// When a cell mixes English prose with math (e.g. "Expression with 2^x"),
+// KaTeX in math mode concatenates consecutive letters — it would render
+// "Expressionwith2^x". Auto-wrap prose word-runs in \text{} before KaTeX
+// so spaces are preserved and letters stay upright.
 function CellContent({ value }: { value: string }) {
-  const hasLatex = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)|[_^{}]/.test(value);
-  if (hasLatex) {
-    return <EquationRenderer latex={value} displayMode={false} className="inline-block" />;
+  if (!value) return null;
+
+  // Explicit $...$ delimiters → use the inline text+math renderer.
+  if (/\$.+?\$/.test(value)) {
+    return <InlineMathText text={value} />;
   }
-  return <>{value}</>;
+
+  const hasLatexCmd = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)/.test(value);
+  const hasSubSup = /[_^{}]/.test(value);
+
+  if (!hasLatexCmd && !hasSubSup) {
+    return <>{value}</>;
+  }
+
+  // Heuristic: does the cell also contain English prose? If so, auto-wrap
+  // alphabetic word-runs of length ≥ 2 in \text{} so KaTeX renders them as
+  // upright prose. Common filler words (with/and/the/of/...) signal prose.
+  // Single-letter variables (x, y, etc.) are untouched.
+  const proseSignal = /\b(with|and|the|of|in|to|from|then|for|using|given|or|as|it|is|are|each|both|let|apply|rewrite|simplify|substitution|substitute|multiply|divide|expression|original|result|answer|step|formula|final|combined|limit|upper|lower)\b/i.test(value);
+  let latex = value;
+  if (proseSignal) {
+    // Wrap each 2+ letter alphabetic run in \text{...}. Skip runs that are
+    // already inside a \text{} block (simple check: previous char was "{")
+    // and skip common math-mode function names (sin, cos, tan, log, ln, exp).
+    const mathFns = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp', 'lim', 'max', 'min', 'arg', 'det', 'dim', 'gcd', 'lcm']);
+    latex = value.replace(/(\\?)([a-zA-Z]{2,})/g, (match, slash, word) => {
+      if (slash) return match;
+      if (mathFns.has(word.toLowerCase())) return match;
+      return `\\text{${word}}`;
+    });
+  }
+
+  return <EquationRenderer latex={latex} displayMode={false} className="inline-block" />;
 }
 
 /**
@@ -758,7 +792,9 @@ function CommandRenderer({ command }: CommandRendererProps) {
           <h4 className="font-semibold text-blue-900 mb-2">
             {problem.title || 'Problem'}
           </h4>
-          <p className="text-gray-800 whitespace-pre-wrap">{problem.statement}</p>
+          <p className="text-gray-800 whitespace-pre-wrap">
+            <InlineMathText text={problem.statement || ''} />
+          </p>
           {validGivenValues.length > 0 && (
             <div className="mt-3">
               <p className="text-sm font-medium text-gray-600">Given:</p>
@@ -782,7 +818,7 @@ function CommandRenderer({ command }: CommandRendererProps) {
                   <span className="font-semibold text-blue-900 flex-shrink-0 min-w-[1.25rem]">
                     {ac.letter})
                   </span>
-                  <span className="text-gray-800">{ac.text}</span>
+                  <span className="text-gray-800"><InlineMathText text={ac.text} /></span>
                 </li>
               ))}
             </ul>
@@ -996,6 +1032,15 @@ function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showManipulative':
       return <ManipulativeRenderer title={command.title} type={command.type} base10={command.base10} tenFrame={command.tenFrame} areaModel={command.areaModel} />;
+
+    case 'showPunnett':
+      return <PunnettRenderer
+        parent1={command.parent1}
+        parent2={command.parent2}
+        title={command.title}
+        trait={command.trait}
+        showPhenotypeRatio={command.showPhenotypeRatio}
+      />;
 
     case 'highlight':
     case 'clear':
@@ -1241,6 +1286,8 @@ function getCommandTypeLabel(action: string): string {
       return 'Flowchart';
     case 'showManipulative':
       return 'Manipulative';
+    case 'showPunnett':
+      return 'Punnett Square';
     default:
       return action;
   }

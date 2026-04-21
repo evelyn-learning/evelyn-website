@@ -302,6 +302,56 @@ export function extractMathClaims(tutorText: string): string[] {
 }
 
 /**
+ * Normalize a student utterance for loose equality comparison. Strips
+ * punctuation, lowercases, collapses whitespace, and uses phonetic-esque
+ * simplification so "yepp!" / "Yes" / "yeah" all compare equal.
+ *
+ * This is intentionally aggressive — use only for affirmation / short-answer
+ * checks, not for preserving meaning.
+ */
+export function normalizeAnswer(text: string): string {
+  if (!text) return '';
+  let s = text.toLowerCase().trim();
+  // Strip punctuation and most emoji
+  s = s.replace(/[.!?,;:"'`()[\]{}]/g, '');
+  // Collapse doubled final letters ("yepp" → "yep", "okkk" → "ok")
+  s = s.replace(/([a-z])\1{2,}/g, '$1');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+/**
+ * Map of canonical equivalence classes for common student reply types.
+ * Any utterance that normalizes into a class member counts as that class.
+ */
+const ANSWER_CLASSES: Record<string, string[]> = {
+  affirm: ['yes', 'yeah', 'yep', 'yup', 'ya', 'yea', 'sure', 'ok', 'okay', 'okey', 'k', 'mhm', 'mmhm', 'uhhuh', 'aye', 'correct', 'right', 'true'],
+  deny: ['no', 'nope', 'nah', 'nay', 'false', 'incorrect', 'wrong'],
+  unsure: ['idk', 'i dont know', 'i do not know', 'not sure', 'no idea', 'unsure', 'dunno', 'maybe', 'perhaps'],
+  ready: ['ready', 'ready to go', 'lets go', 'lets do it', 'bring it', 'im ready', 'go', 'continue', 'next'],
+};
+
+/**
+ * Classify a student utterance into one of the canonical answer classes,
+ * or return null if it doesn't match. Used so downstream logic can treat
+ * "yepp", "yeah!", "yes" as the same thing without maintaining regexes
+ * everywhere.
+ */
+export function classifyAnswer(text: string): 'affirm' | 'deny' | 'unsure' | 'ready' | null {
+  const norm = normalizeAnswer(text);
+  if (!norm) return null;
+  // Also try a trailing-double-letter trim: "yepp" → "yep", "okk" → "ok".
+  // Applied only at end-of-word to avoid mangling valid words like "apple".
+  const trimmed = norm.replace(/([a-z])\1+\b/g, '$1');
+  for (const [cls, tokens] of Object.entries(ANSWER_CLASSES)) {
+    if (tokens.includes(norm) || tokens.includes(trimmed)) {
+      return cls as 'affirm' | 'deny' | 'unsure' | 'ready';
+    }
+  }
+  return null;
+}
+
+/**
  * Normalize a spoken math phrase ("four x cubed minus twelve x squared")
  * into a rough latex-ish string for coarse comparison.
  * This is intentionally lossy — it's only used for "same-or-different"

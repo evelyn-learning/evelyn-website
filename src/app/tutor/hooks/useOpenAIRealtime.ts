@@ -683,7 +683,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_equation',
-                description: 'Display an equation on the whiteboard. You MUST call this whenever you mention ANY equation, formula, or mathematical relationship in your speech. Always show equations visually — never just say them without also displaying them.',
+                description: 'Display an equation on the whiteboard using LaTeX (rendered with KaTeX). You MUST call this whenever you mention ANY equation, formula, or mathematical relationship in your speech. Always show equations visually — never just say them without also displaying them.\n\nLATEX FORMATTING:\n• Plain math renders fine: "x^2 + 2x - 3 = 0", "\\frac{a}{b}", "\\int_0^\\pi x \\sin(x)\\, dx".\n• For ENGLISH WORDS mixed with math, you MUST wrap the words in \\text{...}. Math mode treats consecutive letters as multiplied variables, so "Expression with 2^x" renders as the concatenated letters "Expressionwith2^x".\n  Correct: "\\text{Expression with } 2^x" or "\\text{Area} = \\pi r^2"\n  Wrong: "Expression with 2^x" or "Area = pi r^2"\n• Table cells passed to show_table are rendered as MATH too — use \\text{} for prose cells there as well.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -791,13 +791,26 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_code',
-                description: 'Display a code snippet on the whiteboard. You MUST call this whenever you discuss, explain, or reference any programming code. Always show code visually — never just describe code verbally without also displaying it.',
+                description: 'Display a code snippet on the whiteboard. You MUST call this whenever you discuss, explain, or reference any programming code. Always show code visually — never just describe code verbally without also displaying it.\n\nWhen the snippet is a JavaScript/TypeScript solution the student should verify, include optional `testCases` and `entryName`: the system will auto-run the code in a sandbox and post pass/fail results back to you so you can tell the student which tests their solution passes. The entry function must return the computed result.',
                 parameters: {
                   type: 'object',
                   properties: {
                     code: { type: 'string', description: 'The code to display. Use \\n for newlines and spaces for indentation.' },
                     language: { type: 'string', description: 'Programming language (e.g., java, python, ruby, javascript, c, cpp)' },
                     label: { type: 'string', description: 'A short label/title for the code snippet' },
+                    entryName: { type: 'string', description: 'Name of the function to run the test cases against (default: "solve"). Only used when language is javascript/typescript.' },
+                    testCases: {
+                      type: 'array',
+                      description: 'Optional list of input/expected pairs to verify the solution. Only runs for JavaScript/TypeScript code.',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string', description: 'Short test name, e.g. "empty list" or "negative input".' },
+                          input: { type: 'string', description: 'JSON-encoded array of positional args, e.g. "[1, 2]" or "[[3,4,5]]".' },
+                          expected: { type: 'string', description: 'JSON-encoded expected return value, e.g. "3", "true", "[1,2]".' },
+                        },
+                      },
+                    },
                   },
                   required: ['code', 'language'],
                 },
@@ -818,7 +831,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_svg_diagram',
-                description: 'Display a physics diagram on the whiteboard using SVG. Use for physical setups (pipes, ramps, pulleys, circuits, etc.), NOT for math function graphs. LAYOUT ZONES (viewBox 0 0 400 300): Title zone y=10-30, Shape zone y=60-200, Label zone y=210-290. ALL shapes must fit within x=30-370 and y=60-200. ALL text labels go OUTSIDE shapes — in the label zone below (y>210) or the title zone above (y<30). NEVER place text on top of colored shapes. Use leader lines to connect labels to shapes.',
+                description: 'Display a physics or biology diagram on the whiteboard using SVG. Use for physical setups (pipes, ramps, pulleys, circuits) OR biology diagrams (pedigrees, cells, organs). NOT for math function graphs.\n\nLAYOUT ZONES (viewBox 0 0 400 300): Title zone y=10-30, Shape zone y=60-200, Label zone y=210-290. ALL shapes must fit within x=30-370 and y=60-200.\n\nLABEL RULES:\n• NEVER place text on top of colored shapes.\n• For SINGLE-FOCUS diagrams (one pipe, one ramp), all labels can go in the label zone below.\n• For MULTI-SHAPE DIAGRAMS where each shape has its OWN label (pedigrees, where each person needs "Unaffected" / "Carrier" / "Affected"), put each label DIRECTLY UNDERNEATH its shape, centered on the shape\'s x-coordinate, at shape_y + shape_height + 18. Never put 3+ disparate labels in a single row below a diagram — the student cannot tell which label belongs to which shape.\n\nPEDIGREE CONVENTIONS: squares = male, circles = female, filled = affected, unfilled = unaffected, half-filled = carrier. Mother-father are connected by a horizontal line; children hang below via a vertical line.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -974,7 +987,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_problem',
-                description: 'Display a complete problem as a formatted card on the whiteboard. Use whenever the student asks for a practice problem, quiz question, or says "give me a problem", "quiz me", "I want to practice", or similar.\n\nREQUIRED FIELDS — THE CALL WILL BE REJECTED IF YOU OMIT EITHER:\n• statement: the full problem text, written out as ONE complete string. Never empty. Never a placeholder.\n• format: one of "multiple-choice" | "grid-in" | "free-response" | "short-answer" | "true-false".\n\nCORRECT EXAMPLE (copy this shape):\n{"statement":"Find the area of the region enclosed by the curves y=x^2 and y=4x-x^2.","format":"free-response","title":"AP Calculus AB – Area Between Curves","source":"AP Calculus AB FRQ","difficulty":"medium"}\n\nMatch the format to the test the student is prepping for (SAT/ACT/AP: A–D choices; JEE: 4 choices; GRE Quant: 5 choices). After the call, narrate briefly: "Here is a problem for you — take a look and tell me when you are ready." Do not start teaching until the student has read it.',
+                description: 'Display a complete problem as a formatted card on the whiteboard. Use whenever the student asks for a practice problem, quiz question, or says "give me a problem", "quiz me", "I want to practice", or similar.\n\nREQUIRED FIELDS — THE CALL WILL BE REJECTED IF YOU OMIT EITHER:\n• statement: the full problem text, written out as ONE complete string. Never empty. Never a placeholder.\n• format: one of "multiple-choice" | "grid-in" | "free-response" | "short-answer" | "true-false".\n\nFORMATTING — THE STATEMENT SUPPORTS INLINE LATEX:\nWrite math in LaTeX using single-dollar delimiters `$...$`. Do NOT spell math out in English prose on the statement card — the student needs to SEE the equation, not read the words "2 raised to the power of x plus 1".\n• Correct: "Solve for $x$: $2^{x+1} - 3 \\cdot 2^{x+2} = 0$"\n• Wrong: "Solve for x: 2 raised to the power of x plus 1 minus 3 times 2 raised to the x plus 2 equals 0"\n• Correct: "Find the area enclosed by $y = x^2$ and $y = 4x - x^2$"\n• Wrong: "Find the area enclosed by y equals x squared and y equals 4x minus x squared"\n\nCORRECT EXAMPLE (copy this shape):\n{"statement":"Find the area of the region enclosed by the curves $y = x^2$ and $y = 4x - x^2$.","format":"free-response","title":"AP Calculus AB – Area Between Curves","source":"AP Calculus AB FRQ","difficulty":"medium"}\n\nMatch the format to the test the student is prepping for (SAT/ACT/AP: A–D choices; JEE: 4 choices; GRE Quant: 5 choices). After the call, narrate briefly: "Here is a problem for you — take a look and tell me when you are ready." Do not start teaching until the student has read it.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -994,6 +1007,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                     },
                   },
                   required: ['statement', 'format'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_punnett',
+                description: 'Display a Punnett-square cross on the whiteboard. Pass both parent genotypes as allele-pair strings (monohybrid "Pp", dihybrid "RrYy"). The renderer derives the correct gamete headers and offspring cells — do NOT use show_table for genetics crosses or the axis labels can collapse. Use for any monohybrid, dihybrid, test cross, incomplete-dominance, or codominance example.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    parent1: { type: 'string', description: 'Parent 1 genotype, e.g. "Pp", "RrYy", "I-A I-O".' },
+                    parent2: { type: 'string', description: 'Parent 2 genotype, e.g. "pp", "rrYy".' },
+                    title: { type: 'string', description: 'Optional title, e.g. "Monohybrid Cross — Pea Height".' },
+                    trait: { type: 'string', description: 'Optional trait name for context (e.g. "Pea height", "Flower color").' },
+                    showPhenotypeRatio: { type: 'boolean', description: 'Default true — render the phenotype ratio summary below the grid.' },
+                  },
+                  required: ['parent1', 'parent2'],
                 },
               },
               {

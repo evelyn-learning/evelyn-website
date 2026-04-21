@@ -143,6 +143,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showCallStack',
     'showFlowchart',
     'showManipulative',
+    'showPunnett',
   ];
 
   return validActions.includes(command.action);

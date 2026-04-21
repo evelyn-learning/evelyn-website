@@ -58,6 +58,12 @@ export interface ITutorSession extends Document {
   status: "active" | "completed" | "abandoned";
   hasAudio?: boolean;
   source?: "tutor" | "embed" | "showcase";
+  // Topics the student struggled with this session, ordered by frequency.
+  // Populated on session end from the weakness tracker. Future sessions
+  // can use this to surface targeted review at the start.
+  weakTopics?: Array<{ topic: string; count: number }>;
+  // Topics covered in this session, in order of first appearance.
+  topicsCovered?: string[];
 }
 
 const TokenUsageSchema = new Schema<ITokenUsage>(
@@ -250,6 +256,14 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       type: String,
       enum: ["tutor", "embed", "showcase"],
       default: "tutor",
+    },
+    weakTopics: {
+      type: [{ topic: String, count: Number }],
+      default: [],
+    },
+    topicsCovered: {
+      type: [String],
+      default: [],
     },
   },
   {

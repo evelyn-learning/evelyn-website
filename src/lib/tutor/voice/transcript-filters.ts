@@ -28,14 +28,76 @@ const PROFANITY_REPLACEMENTS: Record<string, string> = {
   'porn': 'born',
 };
 
+// Common Whisper spelling errors that leak into tutoring transcripts.
+// Stick to HIGH-CONFIDENCE corrections — never map a real word to a different
+// real word. Prefer tokens that aren't English words at all (misspellings
+// like "knoe", "whaty", "defiantly", "youre") so we never clobber valid
+// utterances. Each entry maps a lowercase misspelling → correct form.
+const WHISPER_SPELLCHECK: Record<string, string> = {
+  knoe: 'know',
+  konw: 'know',
+  wht: 'what',
+  whaty: 'what',
+  yess: 'yes',
+  yepp: 'yep',
+  okk: 'ok',
+  okkk: 'ok',
+  okey: 'okay',
+  alot: 'a lot',
+  thier: 'their',
+  recieve: 'receive',
+  seperately: 'separately',
+  seperate: 'separate',
+  definately: 'definitely',
+  defiantly: 'definitely',
+  exsample: 'example',
+  excample: 'example',
+  wont: "won't",
+  dont: "don't",
+  cant: "can't",
+  isnt: "isn't",
+  arent: "aren't",
+  wasnt: "wasn't",
+  werent: "weren't",
+  doesnt: "doesn't",
+  didnt: "didn't",
+  wouldnt: "wouldn't",
+  shouldnt: "shouldn't",
+  couldnt: "couldn't",
+  youre: "you're",
+  theyre: "they're",
+  whats: "what's",
+  thats: "that's",
+  lets: "let's",
+  // Transcription artifacts where Whisper drops/replaces letters
+  hte: 'the',
+  teh: 'the',
+  nad: 'and',
+  ot: 'to',
+  adn: 'and',
+};
+
 /**
  * Replace Whisper profanity misrecognitions with context-appropriate alternatives.
+ * Also applies a small spellcheck pass for high-frequency Whisper misspellings
+ * so downstream validators (genetics/blood-type/math) see clean tokens.
  */
 export function filterTranscriptText(text: string): string {
   let filtered = text;
   for (const [bad, replacement] of Object.entries(PROFANITY_REPLACEMENTS)) {
     const regex = new RegExp(`\\b${bad}\\b`, 'gi');
     filtered = filtered.replace(regex, replacement);
+  }
+  // Spellcheck pass (case-preserving for first letter).
+  for (const [bad, good] of Object.entries(WHISPER_SPELLCHECK)) {
+    const regex = new RegExp(`\\b${bad}\\b`, 'gi');
+    filtered = filtered.replace(regex, (match) => {
+      // Preserve the case of the first character when the match is title-cased.
+      if (match[0] === match[0].toUpperCase() && match.slice(1) === match.slice(1).toLowerCase()) {
+        return good[0].toUpperCase() + good.slice(1);
+      }
+      return good;
+    });
   }
   return filtered;
 }

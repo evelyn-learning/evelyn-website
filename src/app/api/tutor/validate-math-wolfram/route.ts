@@ -57,39 +57,105 @@ function inferIntegrationVar(contextLatex: string): string | undefined {
   return m?.[1];
 }
 
-// Expand definite-integral bracket notation `expr |_a^b` into `(expr @ b) - (expr @ a)`.
-// Handles both `|_{lower}^{upper}` and `|_lower^upper` forms.
-// Example: "e^{t-1}|_1^2" → "((e^{2-1})) - ((e^{1-1}))"
-function expandEvaluationBrackets(expr: string, contextVar?: string): string {
-  // Normalize the bar character — LaTeX may produce \left| / \right| / \bigg|
-  // as well as the invisible delimiter forms \left. / \right. that still
-  // appear in the source around the bracket.
-  const s = expr
-    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\|/g, '|')
-    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\./g, '');
-
-  // Pattern: <body> | _ { lower } ^ { upper }  OR  <body> | _ lower ^ upper
-  const re = /([^\s|]+)\s*\|\s*_\{?([^}^]+?)\}?\s*\^\s*\{?([^}\s|]+)\}?/;
-  const m = s.match(re);
-  if (!m) return expr;
-  const [full, body, lower, upper] = m;
-
-  // Determine the integration variable. Preference order:
-  //   1. contextVar passed in (from the surrounding integral)
-  //   2. any single letter in body that isn't `e` (Euler) or `i` (imaginary)
-  //   3. fallback to `t`
-  let v: string;
-  if (contextVar && new RegExp(`\\b${contextVar}\\b`).test(body)) {
-    v = contextVar;
-  } else {
-    const letters = Array.from(body.matchAll(/\b([a-zA-Z])\b/g)).map(x => x[1]);
-    v = letters.find(l => !['e', 'i', 'd'].includes(l)) || letters[0] || 't';
+// Match a balanced bracket-wrapped body immediately before a pipe: `[...]|`
+// or `(...)|`. Returns the body (without outer brackets) and the full match.
+// Handles nested brackets by depth-counting.
+// Only `[]` and `()` are treated as evaluation-body delimiters; a curly brace
+// right before `|` typically closes an exponent or subscript (`e^{t-1}|`),
+// so we leave those to the one-token fallback which keeps the full expression.
+function matchBalancedBody(text: string, barIdx: number): { body: string; fullStart: number } | null {
+  if (barIdx <= 0) return null;
+  let i = barIdx - 1;
+  while (i >= 0 && /\s/.test(text[i])) i--;
+  if (i < 0) return null;
+  const close = text[i];
+  const open = close === ']' ? '[' : close === ')' ? '(' : null;
+  if (!open) return null;
+  let depth = 1;
+  let j = i - 1;
+  while (j >= 0 && depth > 0) {
+    if (text[j] === close) depth++;
+    else if (text[j] === open) depth--;
+    if (depth === 0) break;
+    j--;
   }
+  if (depth !== 0) return null;
+  return { body: text.slice(j + 1, i), fullStart: j };
+}
 
-  // Substitute v with the bound — use a word-boundary-aware replacer.
-  const sub = (b: string) => body.replace(new RegExp(`\\b${v}\\b`, 'g'), `(${b})`);
-  const evaluated = `(${sub(upper)}) - (${sub(lower)})`;
-  return s.replace(full, evaluated);
+// Strip "x=" prefix from a bound like "x=2" → "2".
+function unwrapBound(b: string): string {
+  const m = b.trim().match(/^[a-zA-Z]\s*=\s*(.+)$/);
+  return m ? m[1].trim() : b.trim();
+}
+
+// Expand definite-integral bracket notation `expr |_a^b` into `(expr @ b) - (expr @ a)`.
+// Handles:
+//   • `e^{t-1}|_1^2`
+//   • `e^{t-1}|_{x=1}^{x=2}` (bound expressions with "x=")
+//   • `[F(x) + G(x)]|_a^b` (balanced bracket-wrapped body)
+//   • `(F(x))|_a^b`
+// Example: "[F(x) + G(x)]|_1^2" → "((F(2) + G(2))) - ((F(1) + G(1)))"
+function expandEvaluationBrackets(expr: string, contextVar?: string): string {
+  // Normalize delimiter decorators.
+  let s = expr
+    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\|/g, '|')
+    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\./g, '')
+    .replace(/\\(?:left|right|big|Big|bigg|Bigg)(?=[\[\](){}])/g, '');
+
+  // Iterate — a single string may have multiple evaluation brackets.
+  // Each iteration finds one `|_..^..` with a balanced body and rewrites it.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    // Pattern for the bound pair after `|`: supports {...} or bare tokens.
+    const boundRe = /\|\s*_\{?([^}^]+?)\}?\s*\^\s*\{?([^}\s|]+)\}?/;
+    const bm = s.match(boundRe);
+    if (!bm) break;
+    const barIdx = s.indexOf(bm[0]);
+    const lowerRaw = bm[1];
+    const upperRaw = bm[2];
+
+    // Try balanced-bracket body first.
+    let body: string | null = null;
+    let fullStart: number | null = null;
+    const balanced = matchBalancedBody(s, barIdx);
+    if (balanced) {
+      body = balanced.body;
+      fullStart = balanced.fullStart;
+    } else {
+      // Fall back to "one token before |"
+      const re = /([^\s|]+)\s*\|/;
+      const m = s.slice(0, barIdx + 1).match(re);
+      if (m) {
+        body = m[1];
+        fullStart = s.lastIndexOf(m[1], barIdx - 1);
+      }
+    }
+    if (body === null || fullStart === null) break;
+
+    const lower = unwrapBound(lowerRaw);
+    const upper = unwrapBound(upperRaw);
+
+    // Determine integration variable.
+    let v: string;
+    if (contextVar && new RegExp(`\\b${contextVar}\\b`).test(body)) {
+      v = contextVar;
+    } else {
+      const letters = Array.from(body.matchAll(/\b([a-zA-Z])\b/g)).map(x => x[1]);
+      v = letters.find(l => !['e', 'i', 'd'].includes(l)) || letters[0] || 't';
+    }
+    // Substitute the integration variable — treat `v` as an identifier token
+    // only. `\b` alone misses `3x` (digit→letter has no word boundary), so
+    // we use explicit letter/underscore negative lookarounds.
+    const sub = (bound: string) => body!.replace(
+      new RegExp(`(?<![a-zA-Z_])${v}(?![a-zA-Z_])`, 'g'),
+      `(${bound})`,
+    );
+    const evaluated = `(${sub(upper)}) - (${sub(lower)})`;
+    // Replace the body + evaluation bracket with the expanded form.
+    const barEnd = barIdx + bm[0].length;
+    s = s.slice(0, fullStart) + evaluated + s.slice(barEnd);
+  }
+  return s;
 }
 
 // Extract numerical expressions from LaTeX for Wolfram evaluation
@@ -397,12 +463,29 @@ export async function POST(request: NextRequest) {
     // Try Wolfram first — verify the last expression equals the second-to-last
     const issues: string[] = [];
     let wolframSucceeded = false;
+    let anyPairAttempted = false;
 
     // Check pairs: does expression[i] equal expression[i+1]?
     for (let i = 0; i < expressions.length - 1; i++) {
       const left = expressions[i];
       const right = expressions[i + 1];
 
+      // Symbolic short-circuit: if neither side contains a digit (or they
+      // are the identical symbolic expression), Wolfram can't evaluate —
+      // skip instead of reporting a spurious mismatch. Catches false
+      // positives like "P_1 V_1 ≈ P_1 V_1 but P_2 V_2 ≈ P_2 V_2 (mismatch)".
+      const leftHasDigit = /\d/.test(left);
+      const rightHasDigit = /\d/.test(right);
+      if (!leftHasDigit && !rightHasDigit) {
+        console.log(`[WolframMath] Skipping symbolic pair (no digits): "${left}" vs "${right}"`);
+        continue;
+      }
+      if (left.replace(/\s+/g, '') === right.replace(/\s+/g, '')) {
+        console.log(`[WolframMath] Skipping identical pair: "${left}"`);
+        continue;
+      }
+
+      anyPairAttempted = true;
       // Evaluate each side
       const leftResult = await queryWolframShort(`evaluate ${left}`);
       const rightResult = await queryWolframShort(`evaluate ${right}`);
@@ -431,6 +514,16 @@ export async function POST(request: NextRequest) {
         issues: issues.length > 0 ? issues : undefined,
         source: 'wolfram',
       } satisfies ValidationResult);
+    }
+
+    // No numeric pair was worth sending to Wolfram — the latex is purely
+    // symbolic (e.g. a formula template like A^-1 = (1/det(A)) adj(A)).
+    // Claude can't verify such formulas against ground truth anyway, and a
+    // 10s round-trip here used to block the whiteboard on symbolic emissions.
+    // Return skipped instead.
+    if (!anyPairAttempted) {
+      console.log('[WolframMath] All pairs symbolic — skipping Claude fallback (nothing to verify)');
+      return NextResponse.json({ correct: true, source: 'skipped' } satisfies ValidationResult);
     }
 
     // Wolfram failed — fall back to Claude

@@ -16,6 +16,7 @@
     "@deepgram/sdk": "^4.11.3",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "^16.1.6",
+    "@rdkit/rdkit": "^2025.3.4-1.0.0",
     "@tensorflow-models/blazeface": "^0.1.0",
     "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.13.5",
