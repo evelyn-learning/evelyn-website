@@ -25,6 +25,15 @@ export interface RealtimeUsage {
   outputAudioTokens: number;
 }
 
+/**
+ * Result returned from the onWhiteboardCommand callback when it processes
+ * tool calls. If `rejected` is non-empty, the Realtime hook will send a
+ * success:false function_call_output so the LLM knows the tool failed.
+ */
+export interface WhiteboardCommandResult {
+  rejected?: Array<{ action: string; reason: string }>;
+}
+
 export interface RealtimeConfig {
   instructions: string;
   voice?: OpenAIVoice;
@@ -32,7 +41,13 @@ export interface RealtimeConfig {
   vadSilenceDurationMs?: number;
   vadPrefixPaddingMs?: number;
   onTranscriptUpdate?: (role: 'user' | 'assistant', text: string, isFinal: boolean) => void;
-  onWhiteboardCommand?: (commands: WhiteboardCommand[]) => void;
+  // The callback may be async and may return rejection info. When it does,
+  // the Realtime hook reports those drops back to the LLM as tool-call
+  // failures so the model can apologize / retry instead of narrating as if
+  // the whiteboard content is live.
+  onWhiteboardCommand?: (
+    commands: WhiteboardCommand[],
+  ) => void | Promise<void | WhiteboardCommandResult>;
   onResponseDone?: (usage?: RealtimeUsage) => void;
   onError?: (error: Error) => void;
   onStateChange?: (state: RealtimeState) => void;
@@ -191,6 +206,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Track post-tool-call response: allow exactly ONE follow-up after a tool call,
   // then cancel any further VAD-triggered responses until the student speaks
   const postToolCallResponseCountRef = useRef(0);
+  // Track consecutive tool-call rejections. If the handler rejects too many
+  // tool calls in a row without student input (e.g. LLM retries empty problem
+  // cards endlessly), stop triggering response.create to break the cascade.
+  const consecutiveRejectionsRef = useRef(0);
+  const MAX_CONSECUTIVE_REJECTIONS = 2;
   // Track whether the session should be in listening mode (survives audio playback)
   const shouldListenRef = useRef(false);
   // Ref to hold startListening so playNextAudio can call it without circular deps
@@ -254,7 +274,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   }, [playNextAudio, onTutorAudioChunk]);
 
   // Handle WebSocket messages
-  const handleMessage = useCallback((event: MessageEvent) => {
+  const handleMessage = useCallback(async (event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
 
@@ -277,6 +297,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           console.log('[Realtime] Speech detected');
           lastUserInputRef.current = Date.now(); // Mark user input at speech start, not transcription (which is delayed)
           postToolCallResponseCountRef.current = 0; // Reset post-tool-call counter on new student speech
+          consecutiveRejectionsRef.current = 0;    // Reset rejection cascade on new student speech
           updateState('listening');
           break;
 
@@ -490,13 +511,46 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
             console.log('[Realtime] Function call:', funcName, JSON.stringify(funcArgs).substring(0, 300));
             console.log('[Realtime] Function call args (full):', JSON.stringify(funcArgs));
+            console.log('[Realtime] Function call raw args string:', rawArgsStr.slice(0, 500));
             lastResponseHadToolCallRef.current = true;
+            // Reset the post-tool-call follow-up budget on every new tool call.
+            // When the model chains multiple drawings (e.g. draw circle, then add
+            // chord) we want it to narrate each one — not go silent after the
+            // second. Without this reset, the "allow exactly ONE follow-up"
+            // guard in the response.created handler cancels the second
+            // narration because the budget was already spent on the first.
+            postToolCallResponseCountRef.current = 0;
 
             // Convert function call to whiteboard command (shared logic)
             const command = mapFunctionCallToCommand(funcName, funcArgs);
 
+            // Await the handler so we can learn whether it rejected the
+            // command (empty problem, placeholder equation, etc.). When it
+            // does, we must tell the LLM the tool call FAILED — otherwise
+            // it narrates as if the whiteboard has content and rapidly
+            // cascades more tool calls retrying the same broken content.
+            let rejectionReason: string | null = null;
             if (command) {
-              onWhiteboardCommand?.([command]);
+              try {
+                const result = await onWhiteboardCommand?.([command]);
+                if (result && typeof result === 'object' && Array.isArray(result.rejected) && result.rejected.length > 0) {
+                  rejectionReason = result.rejected.map(r => `${r.action}: ${r.reason}`).join('; ');
+                  console.warn('[Realtime] Tool call was rejected by handler:', rejectionReason);
+                }
+              } catch (err) {
+                console.error('[Realtime] Handler threw for tool call:', err);
+                rejectionReason = 'Handler threw an error while processing the command.';
+              }
+            } else {
+              rejectionReason = `Unknown or unsupported function: ${funcName}`;
+            }
+
+            // Track consecutive rejections so we can break runaway retry
+            // cascades. Reset on a successful tool call.
+            if (rejectionReason) {
+              consecutiveRejectionsRef.current += 1;
+            } else {
+              consecutiveRejectionsRef.current = 0;
             }
 
             // Send function call result back to continue the conversation
@@ -506,13 +560,30 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 item: {
                   type: 'function_call_output',
                   call_id: data.item.call_id,
-                  output: JSON.stringify({ success: true, message: `Displayed ${funcName.replace('show_', '')} on whiteboard` }),
+                  output: JSON.stringify(rejectionReason
+                    ? {
+                        success: false,
+                        message: `The ${funcName} call did not render. Reason: ${rejectionReason}. Do NOT tell the student the item is on the whiteboard. Apologize briefly and address the underlying issue (ask the student what they need, or retry with a full statement).`,
+                      }
+                    : { success: true, message: `Displayed ${funcName.replace('show_', '')} on whiteboard` }
+                  ),
                 },
               }));
-              // Trigger continuation
-              wsRef.current.send(JSON.stringify({
-                type: 'response.create',
-              }));
+              // Only trigger continuation if we haven't hit the consecutive
+              // rejection cap. Beyond the cap, stay silent and wait for the
+              // student to speak — otherwise the LLM keeps cycling tool
+              // retries with no new information.
+              if (consecutiveRejectionsRef.current <= MAX_CONSECUTIVE_REJECTIONS) {
+                wsRef.current.send(JSON.stringify({
+                  type: 'response.create',
+                }));
+              } else {
+                console.warn(
+                  '[Realtime] Consecutive tool-call rejections hit cap',
+                  consecutiveRejectionsRef.current,
+                  '— not triggering continuation. Waiting for student input.'
+                );
+              }
             }
           }
           break;
@@ -902,6 +973,31 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               },
               {
                 type: 'function',
+                name: 'show_problem',
+                description: 'Display a complete problem as a formatted card on the whiteboard. Use whenever the student asks for a practice problem, quiz question, or says "give me a problem", "quiz me", "I want to practice", or similar.\n\nREQUIRED FIELDS — THE CALL WILL BE REJECTED IF YOU OMIT EITHER:\n• statement: the full problem text, written out as ONE complete string. Never empty. Never a placeholder.\n• format: one of "multiple-choice" | "grid-in" | "free-response" | "short-answer" | "true-false".\n\nCORRECT EXAMPLE (copy this shape):\n{"statement":"Find the area of the region enclosed by the curves y=x^2 and y=4x-x^2.","format":"free-response","title":"AP Calculus AB – Area Between Curves","source":"AP Calculus AB FRQ","difficulty":"medium"}\n\nMatch the format to the test the student is prepping for (SAT/ACT/AP: A–D choices; JEE: 4 choices; GRE Quant: 5 choices). After the call, narrate briefly: "Here is a problem for you — take a look and tell me when you are ready." Do not start teaching until the student has read it.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    statement: { type: 'string', description: 'REQUIRED. Full problem text as one complete string. Never empty.' },
+                    format: { type: 'string', enum: ['multiple-choice', 'grid-in', 'free-response', 'short-answer', 'true-false'], description: 'Presentation format. Required.' },
+                    answerChoices: {
+                      type: 'array',
+                      description: 'REQUIRED when format is "multiple-choice". Use the letter convention of the actual test.',
+                      items: { type: 'object', properties: { letter: { type: 'string' }, text: { type: 'string' } }, required: ['letter', 'text'] },
+                    },
+                    title: { type: 'string', description: 'Short header, e.g. "SAT No-Calc Problem"' },
+                    source: { type: 'string', description: 'Test/exam + section tag, e.g. "AP Calculus AB FRQ"' },
+                    difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+                    givens: {
+                      type: 'array',
+                      items: { type: 'object', properties: { symbol: { type: 'string' }, value: { type: 'string' }, unit: { type: 'string' } }, required: ['symbol', 'value'] },
+                    },
+                  },
+                  required: ['statement', 'format'],
+                },
+              },
+              {
+                type: 'function',
                 name: 'show_molecule',
                 description: 'Display a molecular structure on the whiteboard using an interactive chemistry editor. The editor renders a proper 2D structural formula from the SMILES notation with correct bond angles and atom positions. Students can modify the structure. Use for: organic molecules, functional groups, chemical structures, reactions.',
                 parameters: {
@@ -1226,6 +1322,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Mark session as active — mic should auto-start after AI responds
     shouldListenRef.current = true;
     lastUserInputRef.current = Date.now();
+    consecutiveRejectionsRef.current = 0; // Fresh student input breaks the rejection cascade
 
     // Add user message to conversation
     wsRef.current.send(JSON.stringify({

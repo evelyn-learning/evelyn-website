@@ -76,10 +76,13 @@ export default function GarfieldMathSolver() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
 
+  // Scroll the messages list itself — not the page — when content changes.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, isLoading]);
 
   const selectedExample = EXAMPLES.find((e) => e.id === selectedExampleId);
@@ -213,7 +216,7 @@ export default function GarfieldMathSolver() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col" style={{ minHeight: 480 }}>
+        <div className="flex flex-col" style={{ height: 520 }}>
           {/* Problem banner */}
           <div
             className="px-6 py-3 border-b border-gray-200"
@@ -233,7 +236,10 @@ export default function GarfieldMathSolver() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50">
+          <div
+            ref={messagesScrollRef}
+            className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 bg-gray-50"
+          >
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -284,7 +290,6 @@ export default function GarfieldMathSolver() {
                 {error}
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Composer */}

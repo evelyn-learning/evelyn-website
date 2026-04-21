@@ -19,10 +19,25 @@ import Anthropic from '@anthropic-ai/sdk';
 const WOLFRAM_APP_ID = process.env.WOLFRAM_APP_ID;
 const anthropic = new Anthropic();
 
+interface DeclaredFunctionCtx {
+  name: string;   // e.g. "f"
+  argVar: string; // e.g. "x"
+  body: string;   // latex RHS of the declaration
+}
+
 interface ValidationRequest {
   latex: string;
   label?: string;
   conversationContext?: string;
+  // Declared functions in the session, used when label announces an operation
+  // on a specific named function ("Derivative of f(x)").
+  declaredFunctions?: DeclaredFunctionCtx[];
+  // Hint for the operation the tutor is performing on the declared function.
+  // When set together with declaredFunctions, we ask Wolfram to compute it
+  // and compare against the tutor's claim.
+  expectedOperation?: 'derivative' | 'integral' | 'simplify' | 'evaluate';
+  // The name of the declared function the operation applies to (e.g. "f").
+  expectedOperationTarget?: string;
 }
 
 interface ValidationResult {
@@ -30,17 +45,66 @@ interface ValidationResult {
   correctedLatex?: string;
   correctedLabel?: string;
   issues?: string[];
-  source: 'wolfram' | 'claude' | 'skipped';
+  source: 'wolfram' | 'claude' | 'skipped' | 'wolfram-derivative' | 'wolfram-integral';
+  // When set, the tutor's latex was wrong for the announced operation.
+  expected?: string;
+}
+
+// Infer the integration variable from context — look for `d<letter>` in the
+// surrounding latex (e.g. `Integral e^t dt` → `t`). Falls back to undefined.
+function inferIntegrationVar(contextLatex: string): string | undefined {
+  const m = contextLatex.match(/\bd([a-zA-Z])\b/);
+  return m?.[1];
+}
+
+// Expand definite-integral bracket notation `expr |_a^b` into `(expr @ b) - (expr @ a)`.
+// Handles both `|_{lower}^{upper}` and `|_lower^upper` forms.
+// Example: "e^{t-1}|_1^2" → "((e^{2-1})) - ((e^{1-1}))"
+function expandEvaluationBrackets(expr: string, contextVar?: string): string {
+  // Normalize the bar character — LaTeX may produce \left| / \right| / \bigg|
+  // as well as the invisible delimiter forms \left. / \right. that still
+  // appear in the source around the bracket.
+  const s = expr
+    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\|/g, '|')
+    .replace(/\\(?:left|right|big|Big|bigg|Bigg)\./g, '');
+
+  // Pattern: <body> | _ { lower } ^ { upper }  OR  <body> | _ lower ^ upper
+  const re = /([^\s|]+)\s*\|\s*_\{?([^}^]+?)\}?\s*\^\s*\{?([^}\s|]+)\}?/;
+  const m = s.match(re);
+  if (!m) return expr;
+  const [full, body, lower, upper] = m;
+
+  // Determine the integration variable. Preference order:
+  //   1. contextVar passed in (from the surrounding integral)
+  //   2. any single letter in body that isn't `e` (Euler) or `i` (imaginary)
+  //   3. fallback to `t`
+  let v: string;
+  if (contextVar && new RegExp(`\\b${contextVar}\\b`).test(body)) {
+    v = contextVar;
+  } else {
+    const letters = Array.from(body.matchAll(/\b([a-zA-Z])\b/g)).map(x => x[1]);
+    v = letters.find(l => !['e', 'i', 'd'].includes(l)) || letters[0] || 't';
+  }
+
+  // Substitute v with the bound — use a word-boundary-aware replacer.
+  const sub = (b: string) => body.replace(new RegExp(`\\b${v}\\b`, 'g'), `(${b})`);
+  const evaluated = `(${sub(upper)}) - (${sub(lower)})`;
+  return s.replace(full, evaluated);
 }
 
 // Extract numerical expressions from LaTeX for Wolfram evaluation
 function extractExpressionsFromLatex(latex: string): string[] {
   const expressions: string[] = [];
 
+  // Pre-expand |_a^b evaluation brackets so "F(t)|_1^2" becomes "(F(2)) - (F(1))".
+  // This lets Wolfram check whether the tutor's claimed RHS matches the evaluated bracket.
+  const contextVar = inferIntegrationVar(latex);
+  const preprocessed = expandEvaluationBrackets(latex, contextVar);
+
   // Look for "= <numerical expression>" patterns
   // e.g., "X_L = \\omega L = 120 \\pi \\times 0.025"
   // We want to verify that the final numerical result matches
-  const parts = latex.split('=').map(p => p.trim());
+  const parts = preprocessed.split('=').map(p => p.trim());
 
   for (const part of parts) {
     // Convert LaTeX to Wolfram-compatible expression
@@ -73,6 +137,110 @@ function extractExpressionsFromLatex(latex: string): string[] {
   }
 
   return expressions;
+}
+
+// Convert LaTeX RHS into a plain Wolfram-readable expression.
+function latexToWolfram(latex: string): string {
+  return latex
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+    .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+    .replace(/\\left|\\right/g, '')
+    .replace(/\\cdot/g, '*')
+    .replace(/\\times/g, '*')
+    .replace(/\\pi/g, 'pi')
+    .replace(/\\omega/g, 'omega')
+    .replace(/\\tan\^?\{?-1\}?/g, 'arctan')
+    .replace(/\\sin\^?\{?-1\}?/g, 'arcsin')
+    .replace(/\\cos\^?\{?-1\}?/g, 'arccos')
+    .replace(/\\sin/g, 'sin')
+    .replace(/\\cos/g, 'cos')
+    .replace(/\\tan/g, 'tan')
+    .replace(/\\ln/g, 'ln')
+    .replace(/\\log/g, 'log')
+    .replace(/\^{([^}]+)}/g, '^($1)')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/\{|\}/g, '')
+    .trim();
+}
+
+// Extract RHS of an equation (after the last "=")
+function rhsOf(latex: string): string {
+  const parts = latex.split('=');
+  if (parts.length < 2) return latex.trim();
+  return parts[parts.length - 1].trim();
+}
+
+// Query Wolfram v2 to get a structured plaintext result (more flexible than /result)
+async function queryWolframV2(input: string): Promise<string | null> {
+  if (!WOLFRAM_APP_ID) return null;
+  try {
+    const url = `https://api.wolframalpha.com/v2/query?input=${encodeURIComponent(input)}&appid=${WOLFRAM_APP_ID}&output=json&format=plaintext&podstate=Result__Step-by-step+solution`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const qr = data.queryresult;
+    if (!qr?.success) return null;
+    // Prefer a Result pod if present, otherwise concatenate.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pods = qr.pods as any[] | undefined;
+    if (!pods) return null;
+    const pickFirst = (titles: RegExp) => pods.find(p => titles.test(p.title));
+    const result = pickFirst(/^result/i) || pickFirst(/^derivative/i) || pickFirst(/^indefinite integral/i) || pods[0];
+    if (!result?.subpods?.length) return null;
+    return result.subpods.map((s: { plaintext?: string }) => s.plaintext || '').join('\n').trim();
+  } catch (err) {
+    console.error('[WolframMath] v2 query failed:', err);
+    return null;
+  }
+}
+
+// Normalize a Wolfram / plain math expression for coarse equivalence check.
+// Does NOT evaluate symbolic equivalence — only syntactic normalization.
+function normalizeExpr(expr: string): string {
+  return expr
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/\*/g, '')
+    .replace(/\\cdot/g, '')
+    .replace(/\\/g, '')
+    .replace(/\{|\}/g, '')
+    .replace(/\(|\)/g, '')
+    .replace(/\+\-/g, '-')
+    .replace(/\-\+/g, '-')
+    .replace(/\+0(?!\d)|0(?!\d)\+/g, '')
+    .replace(/[cC]$/, ''); // drop trailing integration constant
+}
+
+// Symbolically equivalent? Ask Wolfram: "simplify (a) - (b)" and expect 0.
+async function areEquivalent(a: string, b: string): Promise<boolean | null> {
+  // Quick syntactic check first
+  if (normalizeExpr(a) === normalizeExpr(b)) return true;
+  const result = await queryWolframV2(`simplify (${a}) - (${b})`);
+  if (!result) return null;
+  // Look for a result that is 0 (possibly "0", "0.0", "0 ")
+  const firstLine = result.split('\n')[0].trim();
+  return /^[-+]?0(\.0+)?$/.test(firstLine);
+}
+
+// Parse a Wolfram result string into a number. Handles decimals ("5.33"),
+// fractions ("16/3"), and mixed forms ("≈ 5.33"). Returns NaN if unparseable.
+function parseWolframNumeric(s: string): number {
+  if (!s) return NaN;
+  // Strip whitespace, unicode decorators, and leading "≈"/"=" tokens.
+  const cleaned = s.replace(/^[≈=\s]+/, '').trim();
+  // Fraction: "a/b" or "-a/b" (with optional decimals)
+  const frac = cleaned.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+  if (frac) {
+    const num = parseFloat(frac[1]);
+    const den = parseFloat(frac[2]);
+    if (den !== 0) return num / den;
+  }
+  // Plain number: "-3.14", "42", "1e-5"
+  const plain = cleaned.match(/^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/);
+  if (plain) return parseFloat(cleaned);
+  // Fallback: first numeric token (may be a decimal inside noise)
+  const first = cleaned.match(/-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/);
+  return first ? parseFloat(first[0]) : NaN;
 }
 
 // Query Wolfram Alpha Short Answers API (simpler, faster, better for calculations)
@@ -139,16 +307,84 @@ Only flag actual mathematical errors (wrong arithmetic, wrong formula applicatio
   }
 }
 
+// Detect an operation hint from the label if the caller didn't provide one.
+function inferOperation(label: string | undefined): { op: 'derivative' | 'integral' | null; target?: string } {
+  if (!label) return { op: null };
+  const l = label.toLowerCase();
+  const derivMatch = l.match(/derivative\s+of\s+([a-zA-Z])/);
+  if (derivMatch) return { op: 'derivative', target: derivMatch[1] };
+  if (/\bderivative\b/.test(l)) return { op: 'derivative' };
+  const intMatch = l.match(/integral\s+of\s+([a-zA-Z])/);
+  if (intMatch) return { op: 'integral', target: intMatch[1] };
+  if (/\bintegral\b|\bantiderivative\b/.test(l)) return { op: 'integral' };
+  return { op: null };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: ValidationRequest = await request.json();
-    const { latex, label, conversationContext } = body;
+    const {
+      latex, label, conversationContext,
+      declaredFunctions, expectedOperation, expectedOperationTarget,
+    } = body;
 
     if (!latex) {
       return NextResponse.json({ error: 'latex is required' }, { status: 400 });
     }
 
     console.log(`[WolframMath] Validating: "${latex}" (label: "${label || ''}")`);
+
+    // Context-aware derivative/integral check. When we know the tutor is
+    // computing d/dx of a declared function, ask Wolfram for the exact result
+    // and compare against the tutor's claimed RHS.
+    const inferred = inferOperation(label);
+    const op = expectedOperation || inferred.op;
+    const targetName = expectedOperationTarget || inferred.target;
+    if (op && declaredFunctions && declaredFunctions.length > 0) {
+      const decl = targetName
+        ? declaredFunctions.find(d => d.name === targetName)
+        : declaredFunctions[declaredFunctions.length - 1];
+      if (decl) {
+        const srcExpr = latexToWolfram(decl.body);
+        const tutorRhs = latexToWolfram(rhsOf(latex));
+        const variable = decl.argVar || 'x';
+        const query = op === 'derivative'
+          ? `d/d${variable} [${srcExpr}]`
+          : `integrate ${srcExpr} d${variable}`;
+        console.log('[WolframMath] Context check:', op, 'of', decl.name, '→ Wolfram query:', query);
+        const expected = await queryWolframV2(query);
+        if (expected) {
+          // expected may be like "4 x^3 - 12 x^2 + 12 x - 4" or prose.
+          // Take the first line, which for Wolfram Result pods is the expression.
+          const expectedExpr = expected.split('\n')[0].trim();
+          const equivalent = await areEquivalent(tutorRhs, expectedExpr);
+          if (equivalent === false) {
+            // Build a corrected LaTeX. We keep the LHS intact if possible.
+            const lhs = latex.includes('=') ? latex.split('=').slice(0, -1).join('=').trim() : '';
+            const correctedLatex = lhs
+              ? `${lhs} = ${expectedExpr.replace(/\s+/g, ' ')}`
+              : expectedExpr;
+            const sourceKind = op === 'derivative' ? 'wolfram-derivative' : 'wolfram-integral';
+            console.warn(`[WolframMath] Context mismatch. Tutor: "${tutorRhs}", Expected: "${expectedExpr}"`);
+            return NextResponse.json({
+              correct: false,
+              correctedLatex,
+              issues: [`${op} of ${decl.name}(${variable}) should be ${expectedExpr}, not ${tutorRhs}`],
+              source: sourceKind,
+              expected: expectedExpr,
+            } satisfies ValidationResult);
+          }
+          if (equivalent === true) {
+            console.log(`[WolframMath] Context check PASSED: ${op} of ${decl.name}(${variable}) = ${tutorRhs}`);
+            return NextResponse.json({
+              correct: true,
+              source: op === 'derivative' ? 'wolfram-derivative' : 'wolfram-integral',
+            } satisfies ValidationResult);
+          }
+          // equivalent === null → inconclusive, fall through to normal path
+        }
+      }
+    }
 
     // Extract numerical expressions to verify
     const expressions = extractExpressionsFromLatex(latex);
@@ -173,8 +409,8 @@ export async function POST(request: NextRequest) {
 
       if (leftResult !== null && rightResult !== null) {
         wolframSucceeded = true;
-        const leftNum = parseFloat(leftResult.replace(/[^0-9.\-]/g, ''));
-        const rightNum = parseFloat(rightResult.replace(/[^0-9.\-]/g, ''));
+        const leftNum = parseWolframNumeric(leftResult);
+        const rightNum = parseWolframNumeric(rightResult);
 
         if (!isNaN(leftNum) && !isNaN(rightNum)) {
           // Allow 1% tolerance for rounding

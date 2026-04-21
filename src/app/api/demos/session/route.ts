@@ -135,15 +135,14 @@ export async function POST(request: NextRequest) {
     // Get geolocation
     const location = await getGeoLocation(ip);
 
-    // Filter internal traffic
-    // TEMPORARILY DISABLED for testing — re-enable after verifying tracking works from Brentwood
-    // const FILTERED_IP_HASHES = new Set(["87c6f6c5cfef2d0b"]);
-    // if (
-    //   (location?.city === "Brentwood" && location?.region === "CA") ||
-    //   FILTERED_IP_HASHES.has(hashIP(ip))
-    // ) {
-    //   return NextResponse.json({ success: true, skipped: "filtered-location" });
-    // }
+    // Filter internal traffic — owner's own sessions should not land in analytics.
+    const FILTERED_IP_HASHES = new Set(["87c6f6c5cfef2d0b"]);
+    if (
+      (location?.city === "Brentwood" && location?.region === "CA") ||
+      FILTERED_IP_HASHES.has(hashIP(ip))
+    ) {
+      return NextResponse.json({ success: true, skipped: "filtered-location" });
+    }
 
     // Cap content length server-side
     const sanitizedInteractions = interactions.map((i: { type: string; role?: string; content?: string; metadata?: Record<string, unknown>; timestamp?: string }) => ({

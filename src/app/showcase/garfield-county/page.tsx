@@ -125,9 +125,13 @@ function SectionTitle({
   );
 }
 
+// Access gate temporarily disabled — the URL opens directly into the showcase.
+// Flip this to `true` to re-enable the PANGUITCH code screen.
+const REQUIRE_ACCESS_CODE = false;
+
 export default function GarfieldCountyShowcase() {
-  const [hasAccess, setHasAccess] = useState(false);
-  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(!REQUIRE_ACCESS_CODE);
+  const [checkingAccess, setCheckingAccess] = useState(REQUIRE_ACCESS_CODE);
   const [pulseCell, setPulseCell] = useState<CellCoord | null>(null);
   const [cellOverrides, setCellOverrides] = useState<Record<string, number>>(
     {}
@@ -140,6 +144,7 @@ export default function GarfieldCountyShowcase() {
   );
 
   useEffect(() => {
+    if (!REQUIRE_ACCESS_CODE) return;
     const stored = sessionStorage.getItem('garfield_county_access');
     if (stored === 'verified') setHasAccess(true);
     setCheckingAccess(false);

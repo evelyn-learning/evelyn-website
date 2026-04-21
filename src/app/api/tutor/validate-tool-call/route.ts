@@ -53,6 +53,10 @@ YOU MUST FIX OR ADD:
 8. **Foci calculations**: For ellipse x²/a²+y²/b²=1: c=sqrt(|a²-b²|), foci on the longer axis. For hyperbola x²/a²-y²/b²=1: c=sqrt(a²+b²), foci on x-axis.
 9. **Directrix calculations**: For ellipse: directrix at ±a²/c from center (on major axis). For parabola y²=4px: directrix at x=-p. For hyperbola x²/a²-y²/b²=1: c=sqrt(a²+b²), directrix at x=±a²/c (NOT ±a, NOT ±c).
 10. **Geometry references**: If a segment references a point ID (e.g., "D1") that doesn't exist in the points array, ADD the missing point with correct coordinates.
+11. **CRITICAL — show_geometry missing shape primitive**: If the title or context implies a shape (e.g., "Circle with Chord", "Triangle ABC", "Square") but the corresponding array is empty or missing, the renderer will only draw dots. You MUST add the shape:
+    - Title mentions "circle" → MUST have a non-empty \`circles\` array with {center: "<point-id>", radius: <number>}. Pick the center point (often "O" or a point labeled "Center"), and derive radius from the farthest labeled point or default to 3.
+    - Title mentions "triangle" / "square" / "rectangle" / "polygon" → MUST have a \`polygons\` array entry with the vertex ids.
+12. **Chord endpoints on the circle**: If there's a circle with center C radius r, and a chord is defined by two points P1-P2, both points MUST satisfy |P - C| ≈ r. If they don't, snap their coordinates to the circle (same angular direction from the center, distance = r).
 
 ALWAYS provide correctedArgs — even if the original is "mostly correct", improve it by adding missing elements.
 
@@ -72,7 +76,7 @@ Check mathematical correctness, add missing elements (directrix, focus, etc.), f
     console.log(`[VALIDATE] Validating ${functionName}, data:`, JSON.stringify(args).slice(0, 500));
 
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],

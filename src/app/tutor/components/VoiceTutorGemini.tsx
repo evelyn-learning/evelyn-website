@@ -106,13 +106,21 @@ export function VoiceTutorGemini({
     }
   }, [onTranscriptUpdate, onTrackInteraction]);
 
-  // Whiteboard command handler with geometry validation
+  // Whiteboard command handler with geometry validation. Drops geometry
+  // commands that the validator flags as incomplete (e.g. "Triangle" titled
+  // command with only 1 point) so we don't render partial shapes.
   const handleWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
-    const validated = commands.map(cmd =>
-      cmd.action === 'showGeometry'
-        ? (validateGeometryCommand(cmd as unknown as GeometryCommand) as unknown as WhiteboardCommand)
-        : cmd
-    );
+    const validated = commands.flatMap(cmd => {
+      if (cmd.action === 'showGeometry') {
+        const v = validateGeometryCommand(cmd as unknown as GeometryCommand);
+        if (v._incomplete) {
+          console.warn('[VoiceTutorGemini] Dropping incomplete geometry:', v._incompleteReason);
+          return [];
+        }
+        return [v as unknown as WhiteboardCommand];
+      }
+      return [cmd];
+    });
 
     onWhiteboardCommand(validated);
 

@@ -36,7 +36,7 @@ interface PieSlice {
 
 interface StatsRendererProps {
   title?: string;
-  type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie';
+  type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution';
   /** Raw numeric data for histogram / dot plot */
   data?: number[];
   /** Bin width for histogram (defaults to auto-computed) */
@@ -58,6 +58,20 @@ interface StatsRendererProps {
   pie?: {
     slices: PieSlice[];
     showPercentages?: boolean;
+  };
+  /** Continuous distribution curve with optional shaded region (AP Stats inference) */
+  distribution?: {
+    family: 'normal' | 't' | 'chi-square' | 'F';
+    /** Parameters per family: normal { mean, sd }, t { df }, chi-square { df }, F { df1, df2 } */
+    params?: { mean?: number; sd?: number; df?: number; df1?: number; df2?: number };
+    /** Shaded region: 'less' (x < a), 'greater' (x > a), 'between' (a < x < b), 'outside' (x < a or x > b) */
+    shade?: { type: 'less' | 'greater' | 'between' | 'outside'; a?: number; b?: number; color?: string };
+    /** Explicit x-range override */
+    xRange?: [number, number];
+    /** Show a vertical line at the mean / center */
+    showMean?: boolean;
+    /** Optional probability / p-value text shown in the shaded region */
+    probabilityLabel?: string;
   };
 }
 
@@ -467,6 +481,277 @@ function PieChart({ pie }: StatsRendererProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Distribution (continuous PDF with optional shaded region)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Standard normal PDF */
+function normalPdf(x: number, mean: number, sd: number): number {
+  const z = (x - mean) / sd;
+  return Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
+}
+
+/** Log-gamma (Lanczos) — used for t, chi-square, F PDFs */
+function lgamma(x: number): number {
+  const g = 7;
+  const c = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
+  ];
+  if (x < 0.5) {
+    return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+  }
+  x -= 1;
+  let a = c[0];
+  const t = x + g + 0.5;
+  for (let i = 1; i < g + 2; i++) a += c[i] / (x + i);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+
+function tPdf(x: number, df: number): number {
+  const num = lgamma((df + 1) / 2) - lgamma(df / 2);
+  const denom = 0.5 * Math.log(df * Math.PI) + ((df + 1) / 2) * Math.log(1 + (x * x) / df);
+  return Math.exp(num - denom);
+}
+
+function chiSquarePdf(x: number, df: number): number {
+  if (x <= 0) return 0;
+  const logNum = (df / 2 - 1) * Math.log(x) - x / 2;
+  const logDen = (df / 2) * Math.log(2) + lgamma(df / 2);
+  return Math.exp(logNum - logDen);
+}
+
+function fPdf(x: number, df1: number, df2: number): number {
+  if (x <= 0) return 0;
+  const logNum =
+    (df1 / 2) * Math.log(df1) +
+    (df2 / 2) * Math.log(df2) +
+    (df1 / 2 - 1) * Math.log(x) -
+    ((df1 + df2) / 2) * Math.log(df1 * x + df2);
+  const logDen = lgamma(df1 / 2) + lgamma(df2 / 2) - lgamma((df1 + df2) / 2);
+  return Math.exp(logNum - logDen);
+}
+
+function DistributionChart({
+  distribution,
+  xLabel,
+  yLabel,
+}: StatsRendererProps) {
+  if (!distribution) return null;
+  const { family, params = {}, shade, xRange: xRangeOverride, showMean = true, probabilityLabel } = distribution;
+
+  // Pick default x range by family
+  let xMin = xRangeOverride?.[0];
+  let xMax = xRangeOverride?.[1];
+  if (xMin === undefined || xMax === undefined) {
+    if (family === 'normal') {
+      const mean = params.mean ?? 0;
+      const sd = params.sd ?? 1;
+      xMin = xMin ?? mean - 4 * sd;
+      xMax = xMax ?? mean + 4 * sd;
+    } else if (family === 't') {
+      xMin = xMin ?? -5;
+      xMax = xMax ?? 5;
+    } else if (family === 'chi-square') {
+      const df = params.df ?? 1;
+      xMin = xMin ?? 0;
+      xMax = xMax ?? Math.max(10, 3 * df);
+    } else if (family === 'F') {
+      xMin = xMin ?? 0;
+      xMax = xMax ?? 6;
+    }
+  }
+
+  const xLo = xMin!;
+  const xHi = xMax!;
+
+  // Sample the PDF
+  const N = 200;
+  const samples: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i <= N; i++) {
+    const x = xLo + (i / N) * (xHi - xLo);
+    let y = 0;
+    if (family === 'normal') y = normalPdf(x, params.mean ?? 0, params.sd ?? 1);
+    else if (family === 't') y = tPdf(x, params.df ?? 10);
+    else if (family === 'chi-square') y = chiSquarePdf(x, params.df ?? 3);
+    else if (family === 'F') y = fPdf(x, params.df1 ?? 5, params.df2 ?? 10);
+    samples.push({ x, y });
+  }
+
+  const yMax = Math.max(...samples.map((s) => s.y)) * 1.1;
+  const toX = (v: number) => MARGIN.left + ((v - xLo) / (xHi - xLo)) * CHART_W;
+  const toY = (v: number) => MARGIN.top + CHART_H - (v / yMax) * CHART_H;
+
+  // Build the curve path
+  const curvePath =
+    samples
+      .map((s, i) => `${i === 0 ? 'M' : 'L'}${toX(s.x)},${toY(s.y)}`)
+      .join(' ');
+
+  // Build shaded region path (closes to the baseline)
+  function buildShadePath(cond: (x: number) => boolean): string {
+    const filtered = samples.filter((s) => cond(s.x));
+    if (filtered.length < 2) return '';
+    const baselineY = toY(0);
+    let path = `M ${toX(filtered[0].x)},${baselineY}`;
+    for (const s of filtered) path += ` L ${toX(s.x)},${toY(s.y)}`;
+    path += ` L ${toX(filtered[filtered.length - 1].x)},${baselineY} Z`;
+    return path;
+  }
+
+  const shadeColor = shade?.color ?? '#3b82f6';
+  let shadePath = '';
+  let shadeLabelX: number | null = null;
+  if (shade) {
+    if (shade.type === 'less' && shade.a !== undefined) {
+      shadePath = buildShadePath((x) => x <= shade.a!);
+      shadeLabelX = (xLo + shade.a) / 2;
+    } else if (shade.type === 'greater' && shade.a !== undefined) {
+      shadePath = buildShadePath((x) => x >= shade.a!);
+      shadeLabelX = (shade.a + xHi) / 2;
+    } else if (shade.type === 'between' && shade.a !== undefined && shade.b !== undefined) {
+      shadePath = buildShadePath((x) => x >= shade.a! && x <= shade.b!);
+      shadeLabelX = (shade.a + shade.b) / 2;
+    } else if (shade.type === 'outside' && shade.a !== undefined && shade.b !== undefined) {
+      shadePath = [
+        buildShadePath((x) => x <= shade.a!),
+        buildShadePath((x) => x >= shade.b!),
+      ].join(' ');
+      shadeLabelX = null;
+    }
+  }
+
+  // x-axis ticks
+  const xTicks = niceRange(xLo, xHi, 8).ticks;
+
+  const mean = family === 'normal' ? params.mean ?? 0 : family === 't' ? 0 : null;
+
+  return (
+    <g>
+      {/* Shaded region (under the curve) */}
+      {shadePath && (
+        <path d={shadePath} fill={shadeColor} fillOpacity={0.3} stroke="none" />
+      )}
+
+      {/* Axes */}
+      <line
+        x1={MARGIN.left}
+        y1={MARGIN.top + CHART_H}
+        x2={MARGIN.left + CHART_W}
+        y2={MARGIN.top + CHART_H}
+        stroke="#475569"
+        strokeWidth={1.5}
+      />
+
+      {/* X-axis ticks */}
+      {xTicks.map((t, i) => (
+        <g key={`xt-${i}`}>
+          <line
+            x1={toX(t)}
+            y1={MARGIN.top + CHART_H}
+            x2={toX(t)}
+            y2={MARGIN.top + CHART_H + 4}
+            stroke="#475569"
+            strokeWidth={1}
+          />
+          <text
+            x={toX(t)}
+            y={MARGIN.top + CHART_H + 18}
+            textAnchor="middle"
+            fontSize={10}
+            fill="#475569"
+          >
+            {fmt(t)}
+          </text>
+        </g>
+      ))}
+
+      {/* Vertical line at mean */}
+      {showMean && mean !== null && (
+        <line
+          x1={toX(mean)}
+          y1={MARGIN.top + CHART_H}
+          x2={toX(mean)}
+          y2={MARGIN.top}
+          stroke="#94a3b8"
+          strokeWidth={1}
+          strokeDasharray="4,4"
+        />
+      )}
+
+      {/* Vertical lines at shade boundaries */}
+      {shade?.a !== undefined && (
+        <line
+          x1={toX(shade.a)}
+          y1={toY(0)}
+          x2={toX(shade.a)}
+          y2={MARGIN.top}
+          stroke={shadeColor}
+          strokeWidth={1.2}
+        />
+      )}
+      {shade?.b !== undefined && (
+        <line
+          x1={toX(shade.b)}
+          y1={toY(0)}
+          x2={toX(shade.b)}
+          y2={MARGIN.top}
+          stroke={shadeColor}
+          strokeWidth={1.2}
+        />
+      )}
+
+      {/* Curve */}
+      <path
+        d={curvePath}
+        fill="none"
+        stroke="#1e293b"
+        strokeWidth={2}
+      />
+
+      {/* Probability label in the shaded region */}
+      {probabilityLabel && shadeLabelX !== null && (
+        <text
+          x={toX(shadeLabelX)}
+          y={MARGIN.top + CHART_H / 2}
+          textAnchor="middle"
+          fontSize={13}
+          fontWeight={600}
+          fill={shadeColor}
+        >
+          {probabilityLabel}
+        </text>
+      )}
+
+      {/* Axis labels */}
+      {xLabel && (
+        <text
+          x={MARGIN.left + CHART_W / 2}
+          y={HEIGHT - 10}
+          textAnchor="middle"
+          fontSize={12}
+          fill="#334155"
+        >
+          {xLabel}
+        </text>
+      )}
+      {yLabel && (
+        <text
+          x={15}
+          y={MARGIN.top + CHART_H / 2}
+          textAnchor="middle"
+          fontSize={12}
+          fill="#334155"
+          transform={`rotate(-90, 15, ${MARGIN.top + CHART_H / 2})`}
+        >
+          {yLabel}
+        </text>
+      )}
+    </g>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Main component
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -490,6 +775,9 @@ export function StatsRenderer(props: StatsRendererProps) {
       break;
     case 'pie':
       chart = <PieChart {...props} />;
+      break;
+    case 'distribution':
+      chart = <DistributionChart {...props} />;
       break;
     default:
       chart = (

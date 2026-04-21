@@ -172,6 +172,14 @@ function renderAxes(
         fill="#333"
       />,
     );
+    // "x" label — always drawn when the axis is. This is a rendering-layer
+    // responsibility: the LLM shouldn't have to ask for axis labels, and
+    // many LLM prompts that DO ask for them get ignored by the model.
+    elements.push(
+      <text key="x-label" x={x2 - 4} y={y0 - 10} textAnchor="end" fontSize={13} fontWeight={600} fontStyle="italic" fill="#333">
+        x
+      </text>,
+    );
   }
 
   if (showYAxis) {
@@ -188,6 +196,20 @@ function renderAxes(
         fill="#333"
       />,
     );
+    elements.push(
+      <text key="y-label" x={x0 + 10} y={y2 + 6} textAnchor="start" fontSize={13} fontWeight={600} fontStyle="italic" fill="#333">
+        y
+      </text>,
+    );
+    // If the x-axis is also drawn, mark the origin.
+    if (showXAxis) {
+      const [ox, oy] = toSvg(0, 0);
+      elements.push(
+        <text key="origin-label" x={ox - 6} y={oy + 14} textAnchor="end" fontSize={11} fill="#666">
+          O
+        </text>,
+      );
+    }
   }
 
   return <g className="axes">{elements}</g>;
@@ -274,20 +296,7 @@ function renderSegments(
         />
         {/* Tick marks for congruence notation */}
         {seg.tickMarks && seg.tickMarks > 0 && renderTickMarks(mx, my, nx, ny, dx / len, dy / len, seg.tickMarks)}
-        {/* Segment label */}
-        {seg.label && (
-          <text
-            x={mx + nx * LABEL_OFFSET}
-            y={my + ny * LABEL_OFFSET}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={12}
-            fill={seg.color || '#333'}
-            fontStyle="italic"
-          >
-            {seg.label}
-          </text>
-        )}
+        {/* Segment label rendered separately — see renderLabels. */}
       </g>
     );
   });
@@ -538,34 +547,197 @@ function renderAngles(
   });
 }
 
-/** Render points as colored dots with labels */
-function renderPoints(
+/** Render points as colored dots (labels rendered separately by renderLabels). */
+function renderPointDots(
   points: GeometryPoint[],
   toSvg: (x: number, y: number) => [number, number],
 ) {
   return points.map((pt) => {
     const [px, py] = toSvg(pt.x, pt.y);
     const color = pt.color || '#2563eb';
-
     return (
-      <g key={`pt-${pt.id}`}>
-        <circle cx={px} cy={py} r={POINT_RADIUS} fill={color} stroke="#fff" strokeWidth={1.5} />
-        {pt.label && (
-          <text
-            x={px + LABEL_OFFSET}
-            y={py - LABEL_OFFSET}
-            textAnchor="start"
-            dominantBaseline="auto"
-            fontSize={13}
-            fontWeight={600}
-            fill={color}
-          >
-            {pt.label}
-          </text>
-        )}
-      </g>
+      <circle
+        key={`pt-${pt.id}`}
+        cx={px}
+        cy={py}
+        r={POINT_RADIUS}
+        fill={color}
+        stroke="#fff"
+        strokeWidth={1.5}
+      />
     );
   });
+}
+
+// ─── Label layout + collision resolution ─────────────────────────────────────
+//
+// Labels are placed in a separate pass so point labels and segment labels can
+// avoid colliding with each other. Each label starts at a "preferred" position
+// (the same one the renderer used historically). If two labels' bounding
+// boxes overlap, we shift one of them along the perpendicular axis until the
+// collision is resolved. This is why "Chord AB" and "Center (2,1)" no longer
+// paint on top of each other even when the chord passes near the center.
+
+interface LabelBox {
+  key: string;
+  text: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  color: string;
+  fontSize: number;
+  fontWeight?: number;
+  fontStyle?: 'italic' | 'normal';
+  textAnchor: 'start' | 'middle' | 'end';
+  dominantBaseline: 'auto' | 'central' | 'middle';
+  /** Perpendicular direction used to push this label away from collisions. */
+  pushX: number;
+  pushY: number;
+}
+
+/** Rough width estimate for a text label in SVG (monospace-ish averaging). */
+function estimateTextWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.6;
+}
+
+/** AABB overlap test with a small buffer. */
+function boxesOverlap(a: LabelBox, b: LabelBox, buffer = 2): boolean {
+  const ax1 = textLeft(a);
+  const ay1 = textTop(a);
+  const ax2 = ax1 + a.w;
+  const ay2 = ay1 + a.h;
+  const bx1 = textLeft(b);
+  const by1 = textTop(b);
+  const bx2 = bx1 + b.w;
+  const by2 = by1 + b.h;
+  return !(ax2 + buffer < bx1 || bx2 + buffer < ax1 || ay2 + buffer < by1 || by2 + buffer < ay1);
+}
+
+function textLeft(a: LabelBox): number {
+  if (a.textAnchor === 'middle') return a.x - a.w / 2;
+  if (a.textAnchor === 'end') return a.x - a.w;
+  return a.x;
+}
+function textTop(a: LabelBox): number {
+  // Approximate: baseline text extends mostly below the anchor y for 'auto',
+  // and centered around y for 'central'/'middle'.
+  if (a.dominantBaseline === 'central' || a.dominantBaseline === 'middle') {
+    return a.y - a.h / 2;
+  }
+  return a.y - a.h * 0.9;
+}
+
+/**
+ * Shift colliding labels apart. Iterates a few times, pushing each label
+ * that overlaps another in the direction that most reduces the overlap.
+ * Earlier labels (lower index) are kept in place; later labels get pushed.
+ */
+function resolveLabelCollisions(labels: LabelBox[]): void {
+  const MAX_ITERS = 6;
+  const STEP = 10;
+  for (let iter = 0; iter < MAX_ITERS; iter++) {
+    let moved = false;
+    for (let i = 0; i < labels.length; i++) {
+      for (let j = i + 1; j < labels.length; j++) {
+        if (!boxesOverlap(labels[i], labels[j])) continue;
+        // Push the later label along its own push vector.
+        const b = labels[j];
+        b.x += b.pushX * STEP;
+        b.y += b.pushY * STEP;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+/** Compute all label boxes (point labels + segment labels) in one pass. */
+function computeLabels(
+  points: GeometryPoint[],
+  segments: GeometrySegment[],
+  ptMap: Map<string, GeometryPoint>,
+  toSvg: (x: number, y: number) => [number, number],
+): LabelBox[] {
+  const labels: LabelBox[] = [];
+
+  // Point labels — offset diagonally up-right by default.
+  for (const pt of points) {
+    if (!pt.label) continue;
+    const [px, py] = toSvg(pt.x, pt.y);
+    const fontSize = 13;
+    const text = pt.label;
+    labels.push({
+      key: `pt:${pt.id}`,
+      text,
+      x: px + LABEL_OFFSET,
+      y: py - LABEL_OFFSET,
+      w: estimateTextWidth(text, fontSize),
+      h: fontSize + 2,
+      color: pt.color || '#2563eb',
+      fontSize,
+      fontWeight: 600,
+      textAnchor: 'start',
+      dominantBaseline: 'auto',
+      // Push further up-right if crowded.
+      pushX: 1,
+      pushY: -0.6,
+    });
+  }
+
+  // Segment labels — offset perpendicular to the segment by default.
+  segments.forEach((seg, i) => {
+    if (!seg.label) return;
+    const from = ptMap.get(seg.from);
+    const to = ptMap.get(seg.to);
+    if (!from || !to) return;
+    const [x1, y1] = toSvg(from.x, from.y);
+    const [x2, y2] = toSvg(to.x, to.y);
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const fontSize = 12;
+    labels.push({
+      key: `seg:${i}`,
+      text: seg.label,
+      x: mx + nx * LABEL_OFFSET,
+      y: my + ny * LABEL_OFFSET,
+      w: estimateTextWidth(seg.label, fontSize),
+      h: fontSize + 2,
+      color: seg.color || '#333',
+      fontSize,
+      fontStyle: 'italic',
+      textAnchor: 'middle',
+      dominantBaseline: 'central',
+      pushX: nx,
+      pushY: ny,
+    });
+  });
+
+  resolveLabelCollisions(labels);
+  return labels;
+}
+
+function renderLabels(labels: LabelBox[]) {
+  return labels.map((l) => (
+    <text
+      key={l.key}
+      x={l.x}
+      y={l.y}
+      textAnchor={l.textAnchor}
+      dominantBaseline={l.dominantBaseline}
+      fontSize={l.fontSize}
+      fontWeight={l.fontWeight}
+      fontStyle={l.fontStyle}
+      fill={l.color}
+    >
+      {l.text}
+    </text>
+  ));
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -629,6 +801,13 @@ export function GeometryRenderer({
   // Coordinate transform function
   const toSvg = useMemo(() => makeTransform(range), [range]);
 
+  // Pre-compute label positions with collision resolution across points
+  // and segments. Labels are drawn in a single pass on top of the diagram.
+  const labelBoxes = useMemo(
+    () => computeLabels(points, segments, ptMap, toSvg),
+    [points, segments, ptMap, toSvg],
+  );
+
   return (
     <div className={`geometry-renderer ${className}`}>
       {title && (
@@ -657,14 +836,18 @@ export function GeometryRenderer({
         {/* Arcs */}
         {arcs.length > 0 && renderArcs(arcs, ptMap, toSvg, range)}
 
-        {/* Segments */}
+        {/* Segments (without labels — labels come later) */}
         {segments.length > 0 && renderSegments(segments, ptMap, toSvg)}
 
         {/* Angle markers */}
         {angles.length > 0 && renderAngles(angles, ptMap, toSvg)}
 
-        {/* Points (on top of everything) */}
-        {renderPoints(points, toSvg)}
+        {/* Point dots (without labels) */}
+        {renderPointDots(points, toSvg)}
+
+        {/* All labels (point + segment) — collision-resolved, rendered last
+            so they sit on top of everything. */}
+        {renderLabels(labelBoxes)}
       </svg>
     </div>
   );

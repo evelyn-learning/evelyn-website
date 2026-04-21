@@ -33,6 +33,15 @@ import TreeRenderer from './TreeRenderer';
 import VennDiagramRenderer from './VennDiagramRenderer';
 import MatrixRenderer from './MatrixRenderer';
 import StatsRenderer from './StatsRenderer';
+import TimelineRenderer from './TimelineRenderer';
+import MapRenderer from './MapRenderer';
+import CircuitRenderer from './CircuitRenderer';
+import LewisRenderer from './LewisRenderer';
+import PeriodicTableRenderer from './PeriodicTableRenderer';
+import AnnotatedPassageRenderer from './AnnotatedPassageRenderer';
+import CallStackRenderer from './CallStackRenderer';
+import FlowchartRenderer from './FlowchartRenderer';
+import ManipulativeRenderer from './ManipulativeRenderer';
 import dynamic from 'next/dynamic';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
@@ -47,6 +56,62 @@ function CellContent({ value }: { value: string }) {
     return <EquationRenderer latex={value} displayMode={false} className="inline-block" />;
   }
   return <>{value}</>;
+}
+
+/**
+ * Normalize a command title for supersede-matching. Lowercases, strips
+ * punctuation, takes the first 3 tokens so "Triangle with Altitude on
+ * Coordinate Plane" and "Triangle with Altitude" both collapse to
+ * "triangle with altitude".
+ */
+function titleSignature(title?: string): string {
+  if (!title) return '';
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 3)
+    .join(' ');
+}
+
+/** Actions where redraws should supersede earlier versions rather than stack. */
+const SUPERSEDABLE_ACTIONS = new Set(['showGeometry', 'showGraph', 'showDiagram', 'showSvgDiagram', 'showCircuit', 'showLewis', 'showFlowchart', 'showTimeline', 'showMap']);
+
+/**
+ * Within a single page, drop an earlier whiteboard command when a later
+ * command of the same action type has a title that signifies a revision of
+ * it (shared 3-word title prefix). Also drops earlier versions when the
+ * later one is strictly a super-titled revision ("Triangle with Altitude" →
+ * "Triangle with Altitude on Coordinate Plane"). This prevents partial or
+ * stale drawings from cluttering the board when the model redraws.
+ */
+function dedupeSupersededCommands(cmds: WhiteboardCommand[]): WhiteboardCommand[] {
+  // Walk from the end: for each supersedable command, check whether a
+  // LATER command on the same page supersedes it. If so, drop it.
+  const keep: boolean[] = cmds.map(() => true);
+  for (let i = 0; i < cmds.length; i++) {
+    const a = cmds[i];
+    if (!SUPERSEDABLE_ACTIONS.has(a.action)) continue;
+    const aTitle = (a as { title?: string }).title;
+    const aSig = titleSignature(aTitle);
+    if (!aSig) continue;
+    for (let j = i + 1; j < cmds.length; j++) {
+      const b = cmds[j];
+      if (b.action !== a.action) continue;
+      const bTitle = (b as { title?: string }).title;
+      const bSig = titleSignature(bTitle);
+      if (!bSig) continue;
+      // Signature match OR one title is a prefix of the other.
+      const bFullLower = (bTitle || '').toLowerCase();
+      const aFullLower = (aTitle || '').toLowerCase();
+      if (aSig === bSig || bFullLower.startsWith(aFullLower) || aFullLower.startsWith(bFullLower)) {
+        keep[i] = false;
+        break;
+      }
+    }
+  }
+  return cmds.filter((_, i) => keep[i]);
 }
 
 interface WhiteboardCanvasProps {
@@ -109,9 +174,16 @@ export function WhiteboardCanvas({
     document.addEventListener('mouseup', onUp);
   }, [expandedSize]);
 
-  // Group commands into pages, split by 'newPage' markers
+  // Group commands into pages, split by 'newPage' markers.
   // Commands before the first newPage go on page 0.
   // 'clear', 'newPage', and 'goToPage' are filtered from rendering.
+  //
+  // Within each page we also run a "supersede" pass: if a later command has
+  // the same action type AND its title clearly revises an earlier command's
+  // (prefix match on the first ~3 words of each), we keep only the later
+  // one. This prevents a broken partial drawing ("Triangle with Altitude"
+  // with only 1 point) from sitting next to its complete successor
+  // ("Triangle with Altitude on Coordinate Plane" with the full shape).
   const pages = useMemo(() => {
     const result: { title?: string; commands: WhiteboardCommand[] }[] = [];
     let current: { title?: string; commands: WhiteboardCommand[] } = { commands: [] };
@@ -119,18 +191,16 @@ export function WhiteboardCanvas({
     for (const cmd of commands) {
       if (cmd.action === 'clear' || cmd.action === 'goToPage') continue;
       if (cmd.action === 'newPage') {
-        // Start a new page — only push the previous page if it has content
         if (current.commands.length > 0) {
-          result.push(current);
+          result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
         }
         current = { title: cmd.title, commands: [] };
       } else {
         current.commands.push(cmd);
       }
     }
-    // Push the last page if it has content
     if (current.commands.length > 0) {
-      result.push(current);
+      result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
     }
     return result;
   }, [commands]);
@@ -649,17 +719,46 @@ function CommandRenderer({ command }: CommandRendererProps) {
         </div>
       );
 
-    case 'showProblem':
+    case 'showProblem': {
       // Filter out any givenValues that are missing required fields
       const validGivenValues = (command.problem.givenValues || []).filter(
         (gv) => gv && (gv.symbol || gv.value !== undefined)
       );
+      const problem = command.problem as typeof command.problem & {
+        answerChoices?: Array<{ letter: string; text: string }>;
+        sourceTag?: string;
+        difficultyLabel?: 'easy' | 'medium' | 'hard';
+        format?: string;
+      };
+      const answerChoices = Array.isArray(problem.answerChoices) ? problem.answerChoices : [];
+      const difficultyStyle = problem.difficultyLabel === 'hard'
+        ? 'bg-red-100 text-red-800'
+        : problem.difficultyLabel === 'medium'
+        ? 'bg-amber-100 text-amber-800'
+        : problem.difficultyLabel === 'easy'
+        ? 'bg-emerald-100 text-emerald-800'
+        : '';
       return (
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          {/* Provenance tags row: source + difficulty badges */}
+          {(problem.sourceTag || problem.difficultyLabel) && (
+            <div className="flex items-center gap-2 mb-2">
+              {problem.sourceTag && (
+                <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                  {problem.sourceTag}
+                </span>
+              )}
+              {problem.difficultyLabel && (
+                <span className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${difficultyStyle}`}>
+                  {problem.difficultyLabel}
+                </span>
+              )}
+            </div>
+          )}
           <h4 className="font-semibold text-blue-900 mb-2">
-            {command.problem.title || 'Problem'}
+            {problem.title || 'Problem'}
           </h4>
-          <p className="text-gray-800">{command.problem.statement}</p>
+          <p className="text-gray-800 whitespace-pre-wrap">{problem.statement}</p>
           {validGivenValues.length > 0 && (
             <div className="mt-3">
               <p className="text-sm font-medium text-gray-600">Given:</p>
@@ -676,8 +775,26 @@ function CommandRenderer({ command }: CommandRendererProps) {
               </ul>
             </div>
           )}
+          {answerChoices.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {answerChoices.map((ac, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="font-semibold text-blue-900 flex-shrink-0 min-w-[1.25rem]">
+                    {ac.letter})
+                  </span>
+                  <span className="text-gray-800">{ac.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {problem.format === 'grid-in' && answerChoices.length === 0 && (
+            <p className="mt-3 text-xs text-gray-500 italic">
+              Grid-in — enter a numeric answer.
+            </p>
+          )}
         </div>
       );
+    }
 
     case 'showSolution':
       return (
@@ -852,6 +969,33 @@ function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showStats':
       return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} />;
+
+    case 'showTimeline':
+      return <TimelineRenderer title={command.title} events={command.events} orientation={command.orientation} />;
+
+    case 'showMap':
+      return <MapRenderer title={command.title} background={command.background} pins={command.pins} regions={command.regions} caption={command.caption} />;
+
+    case 'showCircuit':
+      return <CircuitRenderer title={command.title} nodes={command.nodes} components={command.components} showNodes={command.showNodes} />;
+
+    case 'showLewis':
+      return <LewisRenderer title={command.title} atoms={command.atoms} bonds={command.bonds} formula={command.formula} geometry={command.geometry} />;
+
+    case 'showPeriodicTable':
+      return <PeriodicTableRenderer title={command.title} highlight={command.highlight} highlightGroup={command.highlightGroup} highlightPeriod={command.highlightPeriod} highlightCategory={command.highlightCategory} showMass={command.showMass} />;
+
+    case 'showAnnotatedPassage':
+      return <AnnotatedPassageRenderer title={command.title} source={command.source} passage={command.passage} lines={command.lines} startLineNumber={command.startLineNumber} highlights={command.highlights} marginNotes={command.marginNotes} />;
+
+    case 'showCallStack':
+      return <CallStackRenderer title={command.title} frames={command.frames} finalReturn={command.finalReturn} />;
+
+    case 'showFlowchart':
+      return <FlowchartRenderer title={command.title} nodes={command.nodes} edges={command.edges} layout={command.layout} />;
+
+    case 'showManipulative':
+      return <ManipulativeRenderer title={command.title} type={command.type} base10={command.base10} tenFrame={command.tenFrame} areaModel={command.areaModel} />;
 
     case 'highlight':
     case 'clear':
@@ -1079,6 +1223,24 @@ function getCommandTypeLabel(action: string): string {
       return 'Matrix';
     case 'showStats':
       return 'Statistics';
+    case 'showTimeline':
+      return 'Timeline';
+    case 'showMap':
+      return 'Map';
+    case 'showCircuit':
+      return 'Circuit';
+    case 'showLewis':
+      return 'Lewis Structure';
+    case 'showPeriodicTable':
+      return 'Periodic Table';
+    case 'showAnnotatedPassage':
+      return 'Passage';
+    case 'showCallStack':
+      return 'Call Stack';
+    case 'showFlowchart':
+      return 'Flowchart';
+    case 'showManipulative':
+      return 'Manipulative';
     default:
       return action;
   }

@@ -262,6 +262,18 @@ export type ProblemType =
 
 export type ProblemSource = 'curated' | 'ai-generated' | 'student-provided' | 'pdf-extracted';
 
+export type ProblemFormat =
+  | 'multiple-choice'
+  | 'grid-in'
+  | 'free-response'
+  | 'short-answer'
+  | 'true-false';
+
+export interface ProblemAnswerChoice {
+  letter: string; // "A", "B", "C", "D", "E", "1", "2", ...
+  text: string;
+}
+
 export interface Problem {
   id: string;
   source: ProblemSource;
@@ -278,6 +290,12 @@ export interface Problem {
   statement: string;
   context?: string;
   stimulus?: Stimulus; // For reading passages, images, etc.
+
+  // Presentation format (used when displayed on the whiteboard)
+  format?: ProblemFormat;
+  answerChoices?: ProblemAnswerChoice[]; // Required when format === 'multiple-choice'
+  sourceTag?: string; // Human-readable test/exam tag shown to the student, e.g. "SAT No-Calc", "JEE Main", "GCSE Higher"
+  difficultyLabel?: 'easy' | 'medium' | 'hard';
 
   // Given information (for quantitative problems)
   givenValues?: GivenValue[];
@@ -603,8 +621,17 @@ export type WhiteboardCommand =
   | { action: 'showTree'; title?: string; type?: 'probability' | 'factor' | 'decision' | 'generic'; root: TreeNode; showLeafProbabilities?: boolean; direction?: 'top-down' | 'left-right' }
   | { action: 'showVennDiagram'; title?: string; sets: Array<{ label: string; color?: string }>; regions: Record<string, VennRegion>; universalLabel?: string }
   | { action: 'showMatrix'; title?: string; rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes'; augmented?: number; rowLabels?: string[]; colLabels?: string[]; rowOperations?: Array<{ description: string; targetRow: number }>; resultMatrix?: { rows: string[][]; brackets?: 'square' | 'round' | 'pipes' | 'double-pipes' }; operatorSymbol?: string }
-  | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean } }
-  | { action: 'showMolecule'; smiles: string; title?: string; description?: string; interactive?: boolean };
+  | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean }; distribution?: { family: 'normal' | 't' | 'chi-square' | 'F'; params?: { mean?: number; sd?: number; df?: number; df1?: number; df2?: number }; shade?: { type: 'less' | 'greater' | 'between' | 'outside'; a?: number; b?: number; color?: string }; xRange?: [number, number]; showMean?: boolean; probabilityLabel?: string } }
+  | { action: 'showMolecule'; smiles: string; title?: string; description?: string; interactive?: boolean }
+  | { action: 'showTimeline'; title?: string; events: Array<{ date: string; title: string; description?: string; category?: string; color?: string }>; orientation?: 'horizontal' | 'vertical' }
+  | { action: 'showMap'; title?: string; background?: 'blank' | 'world' | 'north-america' | 'south-america' | 'europe' | 'asia' | 'africa' | 'australia' | 'usa' | 'india' | 'china' | 'middle-east' | 'mediterranean'; pins?: Array<{ x: number; y: number; label: string; color?: string }>; regions?: Array<{ points?: string; path?: string; label?: string; color?: string }>; caption?: string }
+  | { action: 'showCircuit'; title?: string; nodes: Array<{ id: string; x: number; y: number }>; components: Array<{ type: 'resistor' | 'capacitor' | 'inductor' | 'battery' | 'wire' | 'switch-open' | 'switch-closed' | 'bulb' | 'voltmeter' | 'ammeter' | 'ground'; from: string; to: string; value?: string; unit?: string; label?: string }>; showNodes?: boolean }
+  | { action: 'showLewis'; title?: string; atoms: Array<{ id: string; element: string; x: number; y: number; lonePairs?: number; formalCharge?: number }>; bonds?: Array<{ from: string; to: string; order: 1 | 2 | 3; style?: 'solid' | 'dashed' | 'wedge' | 'dash-wedge' }>; formula?: string; geometry?: string }
+  | { action: 'showPeriodicTable'; title?: string; highlight?: Array<{ symbol: string; color?: string; note?: string }>; highlightGroup?: number; highlightPeriod?: number; highlightCategory?: 'alkali' | 'alkaline-earth' | 'transition' | 'post-transition' | 'metalloid' | 'reactive-nonmetal' | 'halogen' | 'noble-gas' | 'lanthanide' | 'actinide'; showMass?: boolean }
+  | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
+  | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }
+  | { action: 'showFlowchart'; title?: string; nodes: Array<{ id: string; type: 'start' | 'end' | 'process' | 'decision' | 'io'; label: string; x?: number; y?: number }>; edges?: Array<{ from: string; to: string; label?: string }>; layout?: 'top-down' | 'left-right' }
+  | { action: 'showManipulative'; title?: string; type: 'base-10' | 'ten-frame' | 'area-model'; base10?: { ones?: number; tens?: number; hundreds?: number; thousands?: number; showTotal?: boolean }; tenFrame?: { count: number; color?: string; label?: string }; areaModel?: { rows: number[]; cols: number[]; showProducts?: boolean; showSum?: boolean; rowLabel?: string; colLabel?: string } };
 
 // =============================================================================
 // STUDENT PROGRESS

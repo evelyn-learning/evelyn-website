@@ -10,12 +10,26 @@
 
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
-import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage } from '../hooks/useOpenAIRealtime';
+import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
+import {
+  extractDeclarations,
+  extractIntegrand,
+  extractFinalAnswerClaim,
+  normalizeRenamedFunction,
+  isPureGreeting,
+  isRejection,
+  isWalkThroughRequest,
+  isNewProblemRequest,
+  looksLikeComputedAnswer,
+  extractMathClaims,
+  spokenToRoughLatex,
+  type DeclaredFunction,
+} from '@/lib/tutor/validation/continuity';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
@@ -164,6 +178,27 @@ export function VoiceTutorRealtime({
   const CONTEXT_INJECT_INTERVAL = 6; // Inject context summary every N tutor turns
   const injectContextRef = useRef<((text: string) => void) | null>(null);
 
+  // Variable-name continuity: track declared functions across the session.
+  // When the tutor silently renames f→g without redeclaring, we rewrite the
+  // incoming equation back to the declared name before rendering.
+  const declaredFunctionsRef = useRef<DeclaredFunction[]>([]);
+
+  // Equations emitted on the whiteboard during the current response turn.
+  // Used for voice↔whiteboard math-consistency check at response.done.
+  const turnEquationsRef = useRef<string[]>([]);
+
+  // The current problem being worked (from show_problem or a top-level
+  // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
+  // verification: when the tutor says "the answer is X", we ask Wolfram to
+  // compute the true answer and compare.
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic' } | null>(null);
+
+  // Walk-through insistence counter for the current problem. The tutor should
+  // default to Socratic; only switch to walk-through mode after the student
+  // insists a second time ("no, just walk me through it", "I said show me,
+  // don't ask"). Reset on new problem requests.
+  const walkThroughInsistenceRef = useRef(0);
+
   // Check if text claims to show/display something visually (multi-language)
   // Uses explicit language patterns + a universal math content heuristic
   const claimsToShowVisual = useCallback((text: string): boolean => {
@@ -280,6 +315,17 @@ export function VoiceTutorRealtime({
         const studentRequestsVisual = /\b(show|board|whiteboard|draw|write it|display|diagram|see it|visual)\b/i.test(filteredText);
         studentRequestedVisualRef.current = studentRequestsVisual;
 
+        // Walk-through insistence tracking. A "new problem" request resets the
+        // counter; a walk-through phrase increments it. The tutor should only
+        // enter walk-through mode when the count reaches 2+.
+        if (isNewProblemRequest(filteredText)) {
+          walkThroughInsistenceRef.current = 0;
+        }
+        if (isWalkThroughRequest(filteredText)) {
+          walkThroughInsistenceRef.current += 1;
+          console.log('[VoiceTutorRealtime] Walk-through insistence count:', walkThroughInsistenceRef.current);
+        }
+
         // Reset tool call tracking for next response turn
         turnHadToolCallRef.current = false;
       }
@@ -378,108 +424,311 @@ export function VoiceTutorRealtime({
   }, []);
 
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]) => {
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
+    // Accumulator: reasons we rejected a command so the Realtime hook can
+    // report truth to the LLM instead of lying with success:true.
+    const rejected: Array<{ action: string; reason: string }> = [];
 
     console.log('[VoiceTutorRealtime] handleWhiteboardCommand called, validateToolCalls:', validateToolCalls, 'commands:', commands.map(c => c.action));
     onDebugEvent?.('tool_call', `Whiteboard tool: ${commands.map(c => c.action).join(', ')}`);
 
-    // Step 1: Validate geometry + conic section commands (local, synchronous, zero-cost)
+    // --- Greeting guard: suppress spurious show_problem / show_equation ---
+    // If the student's last utterance is a pure greeting (e.g. "hi") and we
+    // have no content signals in the session yet, the tutor has no reason to
+    // emit a Problem card or an equation. Drop those commands so we don't
+    // hallucinate random math on the first exchange.
+    const lastStudentText = transcriptRef.current
+      .filter(e => e.role === 'student')
+      .slice(-1)[0]?.text || '';
+    const priorStudentTurns = transcriptRef.current.filter(e => e.role === 'student').length;
+    const greetingGuardActive = priorStudentTurns <= 1 && isPureGreeting(lastStudentText);
+
+    // Placeholder / unfinished-equation patterns. LLMs sometimes emit
+    // "[Using Integration by Parts]" or "[TODO]" as an RHS — we reject
+    // those outright since they render as a non-equation bracketed string.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let processed = commands.map(cmd => {
+    const isPlaceholderLatex = (latex: string): boolean => {
+      if (!latex) return true;
+      const rhs = latex.includes('=') ? latex.split('=').pop()!.trim() : latex.trim();
+      // Bracketed prose is the telltale sign. Accept `|_a^b` definite-integral
+      // brackets and standard matrix/case brackets, but reject prose in [...].
+      // Heuristic: if the RHS or any segment is [ <alpha-word-words> ] with
+      // more than one word and no math operators inside, it's a placeholder.
+      const placeholderRe = /\[[^\[\]]*[a-zA-Z][a-zA-Z\s,.;:]{5,}\][^\[\]]*$/;
+      if (placeholderRe.test(rhs)) {
+        // Allow if the bracket contents ALSO contain a digit/operator
+        const bracketed = rhs.match(/\[([^\[\]]*)\]/)?.[1] || '';
+        if (!/[\d+*/^=]/.test(bracketed)) return true;
+      }
+      // Also explicit phrases
+      if (/\[\s*(using|todo|coming soon|to be done|insert|placeholder|same as|[a-z]+ again|[a-z]+ formula)\b/i.test(rhs)) return true;
+      return false;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let processed = commands.flatMap(cmd => {
+      // --- Unconditional structural guards ---
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      if (cmd.action === 'showProblem') {
+        const statement = cmdAny.problem?.statement?.trim() || '';
+        // Empty/near-empty problem card is never useful. Drop regardless of
+        // whether the student was greeting or asking for a problem — if the
+        // tutor genuinely has a problem to show, it can retry with content.
+        if (statement.length < 10) {
+          const snapshot = JSON.stringify(cmdAny.problem);
+          const reason = 'show_problem was rejected because `statement` is missing or empty. ' +
+            'RETRY with this EXACT shape, replacing the example content with your actual problem:\n' +
+            '{"statement":"<WRITE THE FULL PROBLEM TEXT HERE AS ONE STRING — not empty>","format":"free-response","title":"<short header>","source":"<test name if applicable>","difficulty":"easy|medium|hard"}\n' +
+            'The `statement` field is REQUIRED and must contain the complete problem the student will read. ' +
+            'Do NOT call show_problem again until you have written the full problem text. ' +
+            'If you cannot produce the full problem text right now, speak the problem aloud instead and skip the tool call.';
+          console.warn('[VoiceTutorRealtime] Dropping empty show_problem card:', snapshot);
+          onDebugEvent?.('tool_call', `Dropped empty show_problem. Payload: ${snapshot}`);
+          rejected.push({ action: 'show_problem', reason });
+          return [];
+        }
+        if (greetingGuardActive) {
+          const reason = 'The student only said a greeting — they have not yet asked for a problem. Do not show a problem card until they ask.';
+          console.warn('[VoiceTutorRealtime] Dropping show_problem — student only greeted, did not ask for a problem');
+          onDebugEvent?.('tool_call', 'Dropped show_problem (student greeted, no problem request)');
+          rejected.push({ action: 'show_problem', reason });
+          return [];
+        }
+      }
+      if (cmd.action === 'showEquation') {
+        const latex = cmdAny.latex?.trim() || '';
+        if (isPlaceholderLatex(latex)) {
+          const reason = `The latex "${latex}" is a placeholder, not a real equation. Emit the actual math (e.g. "F = ma") rather than bracketed prose like "[Using Integration by Parts]".`;
+          console.warn('[VoiceTutorRealtime] Dropping placeholder equation:', latex);
+          onDebugEvent?.('tool_call', `Dropped placeholder equation: ${latex}`);
+          rejected.push({ action: 'show_equation', reason });
+          return [];
+        }
+        if (greetingGuardActive) {
+          const label = cmdAny.label?.trim() || '';
+          if (!label || label.length < 3) {
+            const reason = 'The student only greeted — do not write random equations. Ask what they want to work on first.';
+            console.warn('[VoiceTutorRealtime] Dropping unlabeled equation after greeting:', latex);
+            onDebugEvent?.('tool_call', 'Dropped show_equation (greeting context, no teaching label)');
+            rejected.push({ action: 'show_equation', reason });
+            return [];
+          }
+        }
+      }
+
       if (cmd.action === 'showGeometry') {
-        return validateGeometryCommand(cmd as unknown as GeometryCommand) as unknown as WhiteboardCommand;
+        const validated = validateGeometryCommand(cmd as unknown as GeometryCommand);
+        if (validated._incomplete) {
+          const reason = `The geometry command was incomplete (${validated._incompleteReason || 'missing required primitives'}). Retry with a full shape definition.`;
+          console.warn(
+            '[VoiceTutorRealtime] Dropping incomplete geometry command:',
+            validated._incompleteReason,
+            { title: validated.title, pointCount: validated.points?.length }
+          );
+          onDebugEvent?.('tool_call', `Dropped incomplete geometry: ${validated._incompleteReason}`);
+          rejected.push({ action: 'show_geometry', reason });
+          return [];
+        }
+        return [validated as unknown as WhiteboardCommand];
       }
       if (cmd.action === 'showGraph' && (cmd as any).data) {
         // Fix conic section math (focus, directrix, etc.) using exact formulas
         const fixed = validateConicGraph((cmd as any).data);
         if (fixed !== (cmd as any).data) {
           console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
-          return { ...cmd, data: fixed } as WhiteboardCommand;
+          return [{ ...cmd, data: fixed } as WhiteboardCommand];
         }
+      }
+      return [cmd];
+    });
+
+    // --- Variable-name continuity ---
+    // Pre-pass: for each showEquation, detect silent renames (f→g without
+    // redeclaring) and rewrite back to the declared name before validation.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    processed = processed.map(cmd => {
+      if (cmd.action !== 'showEquation') return cmd;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      const latex: string = cmdAny.latex || '';
+      if (!latex) return cmd;
+      const { latex: fixedLatex, changed, oldName, newName } = normalizeRenamedFunction(
+        latex,
+        declaredFunctionsRef.current,
+      );
+      if (changed) {
+        console.warn(`[VoiceTutorRealtime] Renamed ${oldName}→${newName} to match declared function`);
+        onDebugEvent?.('tool_call', `Normalized ${oldName}→${newName} for continuity`);
+        return { ...cmd, latex: fixedLatex } as WhiteboardCommand;
       }
       return cmd;
     });
 
-    // Step 2: If validation is enabled, validate using Wolfram Alpha (graphs) + Claude (other)
-    if (validateToolCalls) {
-      processed = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        processed.map(async (cmd) => {
-          // For graphs: use Wolfram Alpha (exact math, no hallucination), fall back to Claude
-          if (cmd.action === 'showGraph') {
-            let wolframFailed = false;
-            try {
-              console.log('[VoiceTutorRealtime] Sending graph to Wolfram for validation');
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const resp = await fetch('/api/tutor/validate-graph-wolfram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ graphData: (cmd as any).data }),
-              });
-              if (resp.ok) {
-                const result = await resp.json();
-                if (result.corrected && result.data) {
-                  console.log('[VoiceTutorRealtime] Wolfram corrected graph:', result.issues);
-                  onDebugEvent?.('tool_call', `Graph validated via wolfram: ${result.issues?.join(', ')}`);
-                  return { ...cmd, data: result.data } as WhiteboardCommand;
-                }
-                // Wolfram returned but didn't correct — skip Claude
-                return cmd;
+    // --- Always-on Wolfram math validation ---
+    // User directive: "I want wolfram to check every math — the latency is
+    // acceptable but the inaccuracy isn't." We validate every math-bearing
+    // command here regardless of the legacy `validateToolCalls` flag.
+    // Claude-based validation (geometry/number-line structural fixes)
+    // remains gated so non-validated engines don't pay that latency twice.
+    const recentContext = () => transcriptRef.current.slice(-4)
+      .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n');
+
+    processed = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      processed.map(async (cmd) => {
+        // Graphs: Wolfram first, Claude fallback (only if validateToolCalls)
+        if (cmd.action === 'showGraph') {
+          let wolframFailed = false;
+          try {
+            console.log('[VoiceTutorRealtime] Sending graph to Wolfram for validation');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const resp = await fetch('/api/tutor/validate-graph-wolfram', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ graphData: (cmd as any).data }),
+            });
+            if (resp.ok) {
+              const result = await resp.json();
+              if (result.corrected && result.data) {
+                console.log('[VoiceTutorRealtime] Wolfram corrected graph:', result.issues);
+                onDebugEvent?.('tool_call', `Graph validated via wolfram: ${result.issues?.join(', ')}`);
+                return { ...cmd, data: result.data } as WhiteboardCommand;
               }
-              wolframFailed = true;
-            } catch (err) {
-              console.error('[VoiceTutorRealtime] Wolfram validation failed:', err);
-              wolframFailed = true;
+              return cmd;
             }
-            // Fall back to Claude for graph validation if Wolfram failed
-            if (wolframFailed) {
-              console.log('[VoiceTutorRealtime] Wolfram failed, falling back to Claude for graph validation');
-              onDebugEvent?.('tool_call', 'Graph Wolfram failed, falling back to Claude');
-              const validated = await validateToolCallViaClaude('show_function_graph', cmd);
-              return validated;
-            }
-            return cmd;
+            wolframFailed = true;
+          } catch (err) {
+            console.error('[VoiceTutorRealtime] Wolfram validation failed:', err);
+            wolframFailed = true;
           }
-          // For equations: use Wolfram Alpha first, fall back to Claude
-          if (cmd.action === 'showEquation') {
-            try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const cmdAny = cmd as any;
-              console.log('[VoiceTutorRealtime] Sending equation to Wolfram for validation:', cmdAny.latex?.substring(0, 80));
-              const resp = await fetch('/api/tutor/validate-math-wolfram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  latex: cmdAny.latex || '',
-                  label: cmdAny.label || '',
-                  conversationContext: transcriptRef.current.slice(-4)
-                    .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n'),
-                }),
-              });
-              if (resp.ok) {
-                const result = await resp.json();
-                console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
-                onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
-                if (!result.correct && result.correctedLatex) {
-                  return { ...cmd, latex: result.correctedLatex } as WhiteboardCommand;
-                }
-              }
-            } catch (err) {
-              console.error('[VoiceTutorRealtime] Equation validation failed:', err);
-            }
-            return cmd;
-          }
-          // For geometry, number lines: use Claude
-          if (['showGeometry', 'showNumberLine'].includes(cmd.action)) {
-            console.log('[VoiceTutorRealtime] Sending to Claude for validation:', cmd.action);
-            const validated = await validateToolCallViaClaude(cmd.action, cmd);
-            console.log('[VoiceTutorRealtime] Claude validation result:', validated === cmd ? 'unchanged' : 'corrected');
-            return validated;
+          if (wolframFailed && validateToolCalls) {
+            console.log('[VoiceTutorRealtime] Wolfram failed, falling back to Claude for graph validation');
+            onDebugEvent?.('tool_call', 'Graph Wolfram failed, falling back to Claude');
+            return await validateToolCallViaClaude('show_function_graph', cmd);
           }
           return cmd;
-        })
-      );
+        }
+
+        // Equations: always Wolfram, pass declared functions for contextual checks
+        if (cmd.action === 'showEquation') {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const cmdAny = cmd as any;
+            console.log('[VoiceTutorRealtime] Sending equation to Wolfram for validation:', cmdAny.latex?.substring(0, 80));
+            const resp = await fetch('/api/tutor/validate-math-wolfram', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                latex: cmdAny.latex || '',
+                label: cmdAny.label || '',
+                conversationContext: recentContext(),
+                declaredFunctions: declaredFunctionsRef.current.map(d => ({
+                  name: d.name, argVar: d.argVar, body: d.body,
+                })),
+              }),
+            });
+            if (resp.ok) {
+              const result = await resp.json();
+              console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
+              onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
+              if (!result.correct && result.correctedLatex) {
+                // If Wolfram corrected a derivative/integral, alert the tutor
+                // so its spoken narration can reconcile with the board.
+                if (result.source === 'wolfram-derivative' || result.source === 'wolfram-integral') {
+                  if (injectContextRef.current) {
+                    injectContextRef.current(
+                      `CORRECTION: The ${result.source.includes('derivative') ? 'derivative' : 'integral'} you just said was wrong. ` +
+                      `The whiteboard has been updated with the correct expression: ${result.expected}. ` +
+                      `Briefly tell the student you misspoke and confirm the correct result shown on the board.`
+                    );
+                  }
+                }
+                return { ...cmd, latex: result.correctedLatex } as WhiteboardCommand;
+              }
+            }
+          } catch (err) {
+            console.error('[VoiceTutorRealtime] Equation validation failed:', err);
+          }
+          return cmd;
+        }
+
+        // Number lines: always Wolfram verify the extremes + labeled numbers
+        if (cmd.action === 'showNumberLine') {
+          // Claude validator is best-effort here (only when enabled). Wolfram
+          // couldn't add structured guarantees beyond the synchronous client
+          // side math, so we defer to Claude when allowed.
+          if (validateToolCalls) {
+            return await validateToolCallViaClaude(cmd.action, cmd);
+          }
+          return cmd;
+        }
+
+        // Geometry: Claude only when enabled (local geometry-validator already ran)
+        if (cmd.action === 'showGeometry') {
+          if (validateToolCalls) {
+            console.log('[VoiceTutorRealtime] Sending geometry to Claude for validation');
+            return await validateToolCallViaClaude(cmd.action, cmd);
+          }
+          return cmd;
+        }
+        return cmd;
+      })
+    );
+
+    // --- Track declarations + integrands + current problem for next turn ---
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const cmd of processed) {
+      if (cmd.action === 'showProblem') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const p = (cmd as any).problem;
+        if (p?.statement) {
+          const kind: 'integral' | 'generic' = /\\int|Integral_|\bintegral\b/i.test(p.statement) ? 'integral' : 'generic';
+          currentProblemRef.current = { statement: p.statement, kind };
+          console.log('[VoiceTutorRealtime] Tracked current problem:', p.statement.slice(0, 80));
+          // New problem → reset walk-through insistence counter. The tutor
+          // needs to re-enter Socratic mode; any walk-through request will
+          // need to be re-asserted for this new problem.
+          walkThroughInsistenceRef.current = 0;
+        }
+      }
+      if (cmd.action === 'showEquation') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cmdAny = cmd as any;
+        const latex: string = cmdAny.latex || '';
+        const label: string = cmdAny.label || '';
+
+        // Named-function declarations (f(x) = ...)
+        const decls = extractDeclarations(latex);
+        if (decls.length > 0) {
+          for (const d of decls) {
+            const idx = declaredFunctionsRef.current.findIndex(x => x.name === d.name);
+            if (idx >= 0) declaredFunctionsRef.current[idx] = d;
+            else declaredFunctionsRef.current.push(d);
+          }
+          console.log('[VoiceTutorRealtime] Tracked declarations:', decls.map(d => `${d.name}(${d.argVar})`).join(', '));
+        }
+
+        // Integrand tracking: "Integral to Evaluate: Integral_0^1 ... dx"
+        // stores the integrand under name "I" so later "Integral of First Term"
+        // style labels can look it up.
+        const integrand = extractIntegrand(latex, label);
+        if (integrand) {
+          const idx = declaredFunctionsRef.current.findIndex(x => x.name === 'I');
+          if (idx >= 0) declaredFunctionsRef.current[idx] = integrand;
+          else declaredFunctionsRef.current.push(integrand);
+          console.log('[VoiceTutorRealtime] Tracked integrand:', integrand.body, '(var:', integrand.argVar + ')');
+
+          // If we don't have a problem statement yet but the tutor is showing
+          // an integral to evaluate, promote it to the current problem.
+          if (!currentProblemRef.current && /evaluate|to evaluate|integral to/i.test(label)) {
+            currentProblemRef.current = { statement: latex, kind: 'integral' };
+          }
+        }
+
+        turnEquationsRef.current.push(latex);
+      }
     }
 
     onWhiteboardCommand(processed);
@@ -500,7 +749,11 @@ export function VoiceTutorRealtime({
     processed.forEach((cmd) => {
       onTrackInteraction?.('tool_use', 'whiteboard', { ...cmd });
     });
-  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude]);
+
+    // Hand the Realtime hook the rejection list so it can honestly report
+    // success:false to the LLM for any drops and stop the cascade of retries.
+    return { rejected };
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent]);
 
   // Build a context summary from the current transcript
   const buildContextSummary = useCallback(() => {
@@ -528,6 +781,176 @@ export function VoiceTutorRealtime({
     return isContextLossGreeting(text);
   }, []);
 
+  // --- Verify a student's prior answer when the tutor is about to reject it.
+  // If Wolfram says the student was right, inject a self-correction so the
+  // tutor reconciles instead of gaslighting the student. Runs asynchronously
+  // relative to response.done so voice playback is unaffected.
+  const verifyStudentAnswerIfRejected = useCallback(async (tutorText: string) => {
+    if (!isRejection(tutorText)) return;
+
+    // Get the student's most recent utterance before this tutor turn
+    const studentUtterances = transcriptRef.current.filter(e => e.role === 'student');
+    const lastStudent = studentUtterances[studentUtterances.length - 1]?.text?.trim();
+    if (!lastStudent) return;
+
+    // Only proceed if the student's utterance looks like a math answer
+    const hasMath = /[\d]|\^|\bx\b|\bsqrt|\bpi\b|\bplus\b|\bminus\b|\btimes\b|\bover\b/i.test(lastStudent);
+    if (!hasMath) return;
+
+    // Build a verification prompt: compare tutor-claimed correct answer vs student's
+    const studentLatex = spokenToRoughLatex(lastStudent);
+    // Try to pull the "correct" answer the tutor just asserted
+    const assertedMatch = tutorText.match(/(?:correct|right)\s+answer\s+is\s+([^.,;!?]+)/i)
+      || tutorText.match(/actually,?\s+(?:it'?s|the answer is)\s+([^.,;!?]+)/i);
+    const tutorClaimed = assertedMatch ? spokenToRoughLatex(assertedMatch[1]) : null;
+
+    // Ask Wolfram whether student's answer is equivalent to tutor's claim, or
+    // — if tutor only said "not quite" without stating their own answer — whether
+    // the student's answer is equivalent to the last declared-function operation
+    // (derivative / integral) the session is working on.
+    try {
+      const resp = await fetch('/api/tutor/validate-math-wolfram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latex: tutorClaimed
+            ? `${tutorClaimed} = ${studentLatex}`
+            : studentLatex,
+          label: 'student answer verification',
+          conversationContext: transcriptRef.current.slice(-6)
+            .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n'),
+          declaredFunctions: declaredFunctionsRef.current.map(d => ({
+            name: d.name, argVar: d.argVar, body: d.body,
+          })),
+          // Hint: if the session was working on a derivative, check the student's
+          // answer against the derivative of the most recently declared function.
+          expectedOperation: /derivat/i.test(tutorText) || /derivat/i.test(lastStudent)
+            ? 'derivative'
+            : /integral/i.test(tutorText) || /integral/i.test(lastStudent)
+              ? 'integral'
+              : undefined,
+        }),
+      });
+      if (!resp.ok) return;
+      const result = await resp.json();
+
+      // For a context-verified student answer that IS correct, Wolfram returns
+      // `correct: true` on a derivative/integral check. Meaning: the student
+      // really was right and the tutor was wrong to reject them.
+      if (result.correct === true && (result.source === 'wolfram-derivative' || result.source === 'wolfram-integral')) {
+        console.warn('[VoiceTutorRealtime] Tutor rejected a CORRECT student answer. Injecting self-correction.');
+        onDebugEvent?.('answer_miscorrection', `Tutor rejected correct student answer: "${lastStudent}"`);
+        if (injectContextRef.current) {
+          injectContextRef.current(
+            `IMPORTANT CORRECTION: You just told the student their answer was wrong (or "close but not right"), ` +
+            `but their answer "${lastStudent}" IS actually correct. ` +
+            `Apologize briefly for the mix-up, affirm their answer, and move on. Do not invent a new "correct answer" that contradicts the student's — they had it right.`
+          );
+        }
+      }
+    } catch (err) {
+      console.error('[VoiceTutorRealtime] Student-answer verification failed:', err);
+    }
+  }, [onDebugEvent]);
+
+  // --- Spoken final-answer verification.
+  // When the tutor announces a final answer verbally ("the final answer is X"),
+  // cross-check X against Wolfram's computation of the current problem.
+  // Catches cases where the tutor never wrote the answer on the board
+  // (so the voice↔whiteboard check can't fire) but still states it aloud.
+  const verifySpokenFinalAnswer = useCallback(async (tutorText: string) => {
+    const claim = extractFinalAnswerClaim(tutorText);
+    if (!claim) return;
+    const problem = currentProblemRef.current;
+    if (!problem) return;
+
+    // Only handle integrals for now — the highest-value case. Generic problems
+    // are harder because Wolfram needs a specific query shape.
+    if (problem.kind !== 'integral') return;
+
+    try {
+      // Ask Wolfram for the exact value of the problem.
+      // The problem.statement can be latex OR prose; send it as-is — Wolfram
+      // parses both "Integral_0^1 (x^2 e^x)/(x+1)^2 dx" and "integrate..." forms.
+      const query = problem.statement
+        .replace(/Integral_/g, 'integrate_')  // mild nudge; Wolfram handles both
+        .replace(/\\int/g, 'integrate');
+      const resp = await fetch('/api/tutor/validate-math-wolfram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // Treat the whole thing as a single claim "<problem> = <tutor claim>"
+          // and let Wolfram decide if the RHS matches the LHS value.
+          latex: `${query} = ${spokenToRoughLatex(claim)}`,
+          label: 'final answer verification',
+          conversationContext: transcriptRef.current.slice(-6)
+            .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n'),
+          declaredFunctions: declaredFunctionsRef.current.map(d => ({
+            name: d.name, argVar: d.argVar, body: d.body,
+          })),
+        }),
+      });
+      if (!resp.ok) return;
+      const result = await resp.json();
+      if (result.correct === false && result.issues?.length) {
+        console.warn('[VoiceTutorRealtime] Spoken final answer is WRONG:', claim, '→', result.issues);
+        onDebugEvent?.('wrong_final_answer', `Tutor spoke "${claim}" but Wolfram disagrees: ${result.issues.join('; ')}`);
+        if (injectContextRef.current) {
+          injectContextRef.current(
+            `IMPORTANT CORRECTION: You just verbally told the student the final answer is "${claim}", ` +
+            `but Wolfram Alpha verification shows that is incorrect (${result.issues.join('; ')}). ` +
+            `Tell the student you need to recheck that calculation. Do NOT re-assert the wrong value. ` +
+            `Start again from the last correct step and guide the student through the integral carefully.`
+          );
+        }
+      } else if (result.correct === true) {
+        console.log('[VoiceTutorRealtime] Spoken final answer verified correct:', claim);
+      }
+    } catch (err) {
+      console.error('[VoiceTutorRealtime] Final-answer verification failed:', err);
+    }
+  }, [onDebugEvent]);
+
+  // --- Voice ↔ whiteboard math consistency check.
+  // If the tutor's spoken claim ("the derivative is 4x³ - 12x² + 4") doesn't
+  // match any equation on the whiteboard this turn, inject a correction so
+  // the next tutor utterance reconciles spoken with written math.
+  const checkVoiceWhiteboardConsistency = useCallback((tutorText: string) => {
+    const spokenClaims = extractMathClaims(tutorText);
+    if (spokenClaims.length === 0) return;
+    const boardExprs = turnEquationsRef.current;
+    if (boardExprs.length === 0) return;
+
+    for (const claim of spokenClaims) {
+      const rough = spokenToRoughLatex(claim);
+      if (rough.length < 3) continue;
+      // Does any board equation contain this spoken claim (loosely)?
+      const matches = boardExprs.some(eq => {
+        // Convert \frac{a}{b} → a/b BEFORE stripping other latex commands,
+        // otherwise "\frac{16}{3}" becomes "163" and fails fraction match.
+        const eqNorm = eq.toLowerCase()
+          .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, '$1/$2')
+          .replace(/\\sqrt\s*\{([^{}]+)\}/g, 'sqrt($1)')
+          .replace(/\s+/g, '')
+          .replace(/\\[a-z]+/g, '')
+          .replace(/\{|\}/g, '');
+        return eqNorm.includes(rough) || rough.includes(eqNorm.replace(/^.*=/, ''));
+      });
+      if (!matches) {
+        console.warn(`[VoiceTutorRealtime] Voice claim "${claim}" doesn't match whiteboard. Injecting reconciliation.`);
+        onDebugEvent?.('voice_board_mismatch', `Spoken "${claim}" vs board ${boardExprs.join(' | ')}`);
+        if (injectContextRef.current) {
+          injectContextRef.current(
+            `CONSISTENCY CHECK: You just spoke "${claim}" but the whiteboard shows something different (${boardExprs.join('; ')}). ` +
+            `The whiteboard is the source of truth — it has been Wolfram-validated. ` +
+            `Read from the whiteboard on your next turn and correct what you said out loud.`
+          );
+        }
+        return; // One correction per turn is enough
+      }
+    }
+  }, [onDebugEvent]);
+
   // Handle response.done — run whiteboard validation + context keeper + usage tracking
   const handleResponseDone = useCallback((usage?: RealtimeUsage) => {
     // Forward usage to parent for cost tracking
@@ -538,7 +961,10 @@ export function VoiceTutorRealtime({
     const tutorText = pendingTutorTextRef.current;
     pendingTutorTextRef.current = null;
 
-    if (!tutorText) return;
+    if (!tutorText) {
+      turnEquationsRef.current = [];
+      return;
+    }
 
     tutorTurnCountRef.current++;
 
@@ -563,8 +989,13 @@ export function VoiceTutorRealtime({
 
     // --- Whiteboard verification ---
     // If the tutor claims content is "on the whiteboard" but no commands exist,
-    // inject a correction so the tutor doesn't gaslight the student
-    const claimsOnBoard = /\b(on the (?:white)?board now|right (?:on |there on )?the (?:white)?board|you should see|check (?:the|your) (?:display|whiteboard|board))\b/i.test(tutorText);
+    // inject a correction so the tutor doesn't gaslight the student.
+    // Triggers on: explicit board references ("on the whiteboard now"), OR
+    // introductory phrases that imply freshly-rendered content ("here's a ...",
+    // "take a look at the problem") — but only when no whiteboard commands
+    // have ever succeeded in the session.
+    const claimsOnBoard = /\b(on the (?:white)?board now|right (?:on |there on )?the (?:white)?board|you should see|check (?:the|your) (?:display|whiteboard|board))\b/i.test(tutorText)
+      || /\b(here'?s (?:a|the|an) (?:tricky |tough |interesting |simple )?(?:identity|problem|equation|question|integral|derivative|function|graph|diagram)|take a look at (?:the |this )?(?:problem|identity|equation|question|integral|graph|diagram)|it should be up (?:now)?|should be (?:up )?on the (?:white)?board)\b/i.test(tutorText);
     if (claimsOnBoard && whiteboardCommandCountRef.current === 0) {
       console.warn('[VoiceTutorRealtime] Tutor falsely claims whiteboard content exists (0 commands). Injecting correction.');
       onDebugEvent?.('whiteboard_false_claim', `Tutor claimed "${tutorText.substring(0, 100)}" but 0 whiteboard commands exist`);
@@ -586,7 +1017,55 @@ export function VoiceTutorRealtime({
       generateMissingWhiteboardCommands(tutorText);
     }
     studentRequestedVisualRef.current = false;
-  }, [claimsToShowVisual, generateMissingWhiteboardCommands, detectContextLoss, buildContextSummary, onUsageUpdate]);
+
+    // --- Student-answer verification (async, non-blocking) ---
+    verifyStudentAnswerIfRejected(tutorText).catch(err =>
+      console.error('[VoiceTutorRealtime] verifyStudentAnswerIfRejected threw:', err)
+    );
+
+    // --- Spoken final-answer verification (async, non-blocking) ---
+    verifySpokenFinalAnswer(tutorText).catch(err =>
+      console.error('[VoiceTutorRealtime] verifySpokenFinalAnswer threw:', err)
+    );
+
+    // --- Voice ↔ whiteboard math consistency check ---
+    checkVoiceWhiteboardConsistency(tutorText);
+
+    // --- Socratic bulldozing check ---
+    // If the student has NOT insisted 2+ times on walk-through, the tutor
+    // should not work the whole problem in one go. A bulldozing turn looks
+    // like: many equations, at least one of which has a computed answer.
+    // If detected, inject a correction telling the tutor to pull back to
+    // a single guiding question.
+    const turnEqs = turnEquationsRef.current;
+    const computedAnswers = turnEqs.filter(looksLikeComputedAnswer);
+    const insistence = walkThroughInsistenceRef.current;
+    const bulldozing = insistence < 2 && turnEqs.length >= 3 && computedAnswers.length >= 1;
+    if (bulldozing) {
+      console.warn(
+        '[VoiceTutorRealtime] Socratic bulldozing detected:',
+        { insistence, turnEqs: turnEqs.length, computed: computedAnswers.length }
+      );
+      onDebugEvent?.(
+        'socratic_bulldozing',
+        `Tutor dumped ${turnEqs.length} equations (${computedAnswers.length} computed) after only ${insistence} walk-through insistence(s)`
+      );
+      if (injectContextRef.current) {
+        injectContextRef.current(
+          'SOCRATIC CORRECTION: You just worked out a full solution (or multiple problems) without the student asking you to. ' +
+          "The student has not insisted on walk-through mode yet. On your next turn, pull back: " +
+          'acknowledge what you showed, then ask ONE simple guiding question like "What do you think the first step would be?" ' +
+          'Do NOT compute or reveal answers on the board until the student has tried or explicitly insisted again. ' +
+          'When they ask for "a problem" (singular), give ONE problem at a time — not a bundle.'
+        );
+      }
+    }
+
+    turnEquationsRef.current = [];
+  }, [
+    claimsToShowVisual, generateMissingWhiteboardCommands, detectContextLoss, buildContextSummary,
+    onUsageUpdate, verifyStudentAnswerIfRejected, verifySpokenFinalAnswer, checkVoiceWhiteboardConsistency,
+  ]);
 
   // Handle errors
   const handleError = useCallback((error: Error) => {
@@ -782,7 +1261,7 @@ As you solve problems, show EACH step on the whiteboard:
 - The starting equation (show_equation)
 - Each substitution with actual values (show_equation)
 - Intermediate results (show_equation)
-- The final answer (show_equation with a label like "Answer")
+- **The final answer** (show_equation with label "Final Answer") — THIS IS REQUIRED. When the problem is solved (whether you stated the result or the student did), you MUST close with a show_equation whose latex restates the original problem = the final result, and whose label is "Final Answer". Example: after solving ∫₀² (4x − x²) dx, call show_equation with latex "\\int_0^2 (4x - x^2)\\, dx = \\frac{16}{3}" and label "Final Answer". The student should be able to glance at the board and see the one-line summary of what was solved. Do NOT end a problem without this summary equation.
 The student should be able to follow the entire solution by looking at the whiteboard.
 
 Start by warmly greeting the student and asking how you can help them today.`;

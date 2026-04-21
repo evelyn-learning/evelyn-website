@@ -129,10 +129,20 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showGeometry',
     'showUnitCircle',
     'showFractionBar',
+    'showMolecule',
     'showTree',
     'showVennDiagram',
     'showMatrix',
     'showStats',
+    'showTimeline',
+    'showMap',
+    'showCircuit',
+    'showLewis',
+    'showPeriodicTable',
+    'showAnnotatedPassage',
+    'showCallStack',
+    'showFlowchart',
+    'showManipulative',
   ];
 
   return validActions.includes(command.action);
