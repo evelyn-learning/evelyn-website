@@ -3,22 +3,31 @@
 /**
  * Map Renderer
  *
- * A pragmatic map canvas for social studies / geography teaching. Not a real
- * GIS engine — it's an SVG canvas with a small library of hand-drawn region
- * outlines (world, continents, major countries) and pins / labeled areas
- * placed in a normalized [0, 100] coordinate system.
- *
- * For specific detailed maps (e.g. "a map showing the Silk Road"), the tutor
- * should prefer show_image with a Wikimedia URL. This renderer is for quick
- * schematic maps — "Athens vs Sparta", "the Mississippi river", "the Fertile
- * Crescent" — where the pin locations matter more than cartographic accuracy.
+ * A pragmatic map canvas for social studies / geography teaching. Uses real
+ * country outlines from Natural Earth 110m (see
+ * scripts/generate-map-backgrounds.ts) so shapes are recognizable as
+ * "actual USA / actual Middle East" rather than hand-drawn blobs. Pins and
+ * labeled regions are placed in a normalized [0, 100] coordinate system on
+ * top of the outline.
  */
 
 import React from 'react';
+import { MAP_BACKGROUND_PATHS, MAP_BACKGROUND_BBOXES } from './map-backgrounds.generated';
 
 export interface MapPin {
-  x: number; // 0–100 (left → right)
-  y: number; // 0–100 (top → bottom)
+  /**
+   * Geographic latitude of the pin. If `lat` and `lon` are both provided,
+   * they are projected using the active preset's bounding box and take
+   * precedence over `x`/`y`. Preferred for real cities (Cairo, Houston, …)
+   * since the model can just state the coordinates it knows.
+   */
+  lat?: number;
+  /** Geographic longitude of the pin. See `lat`. */
+  lon?: number;
+  /** Fallback: normalized 0..100 x coord (left → right). Ignored if lat/lon set. */
+  x?: number;
+  /** Fallback: normalized 0..100 y coord (top → bottom). Ignored if lat/lon set. */
+  y?: number;
   label: string;
   color?: string;
 }
@@ -56,6 +65,37 @@ export interface MapRendererProps {
 
 const SVG_WIDTH = 600;
 const SVG_HEIGHT = 400;
+// Must match the INSET used by scripts/generate-map-backgrounds.ts so pins
+// projected from lat/lon align exactly with the background outline.
+const BG_INSET = 20;
+
+/**
+ * Project a lat/lon onto the 0..100 normalized canvas using the preset's
+ * geographic bounding box. Equirectangular with cosine-latitude correction
+ * — same formula as the generation script — so pins align exactly with
+ * country borders in the rendered map.
+ */
+function projectLatLon(
+  lat: number,
+  lon: number,
+  bbox: [number, number, number, number],
+): [number, number] {
+  const [w, s, e, n] = bbox;
+  const midLat = (s + n) / 2;
+  const lonScale = Math.cos((midLat * Math.PI) / 180);
+  const effLonRange = (e - w) * lonScale;
+  const latRange = n - s;
+  const availW = 100 - (BG_INSET / SVG_WIDTH) * 200;
+  const availH = 100 - (BG_INSET / SVG_HEIGHT) * 200;
+  const scale = Math.min(availW / effLonRange, availH / latRange);
+  const outW = effLonRange * scale;
+  const outH = latRange * scale;
+  const offX = (100 - outW) / 2;
+  const offY = (100 - outH) / 2;
+  const x = offX + (lon - w) * lonScale * scale;
+  const y = offY + (n - lat) * scale;
+  return [x, y];
+}
 
 /**
  * Transform normalized (0–100) coords to SVG pixel coords.
@@ -70,42 +110,156 @@ function normToSvg(x: number, y: number): [number, number] {
 }
 
 /**
- * Hand-drawn region outlines. These are deliberately simple — their purpose
- * is to give the student a recognizable "this is Europe" / "this is the
- * Mediterranean" backdrop, not to be surveyor-accurate. Paths are in the
- * raw SVG coordinate system (0–600 x, 0–400 y).
+ * Real country outlines from Natural Earth 110m. The paths below are the
+ * generated fallback — if a preset is missing from the generated file, the
+ * hand-drawn version here is used. In practice all canonical presets are
+ * covered by the generated file.
  */
-const BACKGROUND_PATHS: Record<string, string> = {
-  // Very schematic world: North America, South America, Europe, Africa, Asia, Australia blobs.
+const LEGACY_BACKGROUND_PATHS: Record<string, string> = {
+  // Schematic world with recognizable continent hooks (FL, Africa horn, Italy boot)
   world:
-    'M 60,110 Q 110,80 170,100 T 240,150 Q 230,200 180,220 T 110,210 Q 70,190 60,150 Z ' +
-    'M 180,230 Q 210,250 220,300 T 200,360 Q 170,370 160,340 T 170,280 Z ' +
-    'M 280,100 Q 320,85 360,110 Q 380,140 360,170 Q 320,180 290,160 Z ' +
-    'M 290,180 Q 330,200 340,250 T 310,330 Q 280,340 270,300 T 280,220 Z ' +
-    'M 380,100 Q 470,80 540,110 Q 570,150 540,200 Q 470,220 400,200 Q 380,160 380,100 Z ' +
-    'M 490,250 Q 520,245 540,265 T 535,290 Q 510,295 495,280 Z',
+    // North America — Florida hook on SE corner
+    'M 70,105 Q 140,80 220,95 L 245,110 L 235,135 L 220,160 L 210,175 Q 220,190 230,185 L 225,195 L 215,205 L 200,200 L 180,200 L 160,205 L 140,200 Q 110,190 80,175 Q 60,150 70,105 Z ' +
+    // South America
+    'M 200,210 Q 240,215 255,245 L 250,280 L 240,320 Q 220,355 200,355 Q 185,330 185,290 Q 190,240 200,210 Z ' +
+    // Europe
+    'M 275,110 Q 320,95 365,110 L 370,125 L 355,140 L 355,155 L 340,160 L 315,160 L 300,155 L 290,150 L 280,140 Q 265,130 275,110 Z ' +
+    // Africa — includes Horn
+    'M 290,170 L 320,170 L 345,185 L 350,215 L 340,250 L 325,285 L 310,325 L 285,335 L 270,310 L 265,275 L 275,235 L 282,200 L 290,170 Z ' +
+    // Asia — Indian subcontinent dangles south
+    'M 375,100 Q 440,85 510,95 L 545,115 L 550,145 L 530,165 L 510,170 L 490,170 Q 475,175 465,190 Q 470,220 450,240 L 435,230 L 425,200 L 420,180 L 400,175 L 380,165 Q 370,140 375,100 Z ' +
+    // Australia
+    'M 490,260 Q 520,250 550,260 L 555,285 Q 530,300 500,295 L 490,280 Z',
   'north-america':
-    'M 100,80 Q 200,60 320,90 Q 410,100 470,150 Q 500,210 460,270 Q 410,320 340,340 Q 250,360 190,320 Q 130,280 100,220 Q 80,150 100,80 Z',
+    // Recognizable: wide top, tapers through Mexico to Central America, Florida hook, Baja peninsula
+    'M 80,80 Q 180,55 280,70 Q 360,75 430,90 L 465,105 L 490,130 L 495,155 L 480,170 L 470,175 Q 475,195 465,210 L 450,225 L 445,245 L 450,270 L 440,285 Q 425,280 420,260 L 410,245 L 395,240 L 385,225 L 370,230 L 355,245 L 340,260 L 330,275 L 325,295 L 315,310 L 305,315 L 295,305 L 300,285 L 310,265 L 295,260 L 275,255 L 260,270 Q 245,265 235,245 L 220,235 Q 200,245 180,240 Q 150,225 130,200 Q 105,170 95,135 Q 80,110 80,80 Z',
   'south-america':
-    'M 240,60 Q 330,50 400,100 Q 430,180 400,260 Q 340,340 280,360 Q 220,330 210,260 Q 200,160 240,60 Z',
+    // Tapered southern cone, wide Brazil bulge in NE
+    'M 240,60 Q 310,50 360,75 L 390,100 L 410,135 L 420,175 L 410,220 L 390,255 L 370,285 L 350,310 L 330,335 L 310,355 L 295,365 L 285,355 L 280,335 L 290,305 L 285,275 L 265,250 L 245,225 L 230,200 L 220,170 L 215,135 L 225,95 Q 230,70 240,60 Z',
   europe:
-    'M 120,80 Q 220,60 320,90 Q 380,110 460,110 Q 500,150 470,200 Q 400,240 340,250 Q 240,270 160,240 Q 90,210 100,150 Q 90,110 120,80 Z',
+    // Iberian SW, France/Benelux, Italian boot, Greece, Scandinavia N, Eastern Europe
+    'M 85,215                 ' +  // SW Portugal/Algarve
+    'L 90,255                 ' +  // S Spain
+    'Q 130,275 175,260        ' +  // SE Spain coast (Valencia)
+    'Q 210,245 245,235        ' +  // Balearics / S France
+    'Q 265,255 270,280        ' +  // Italy north shoulder
+    'L 285,305                ' +  // Italy boot shin
+    'L 295,320                ' +  // Italy toe
+    'L 305,310                ' +  // Italy heel
+    'L 295,290                ' +  // Italy E coast
+    'L 310,275                ' +  // Adriatic bridge
+    'Q 345,290 375,300        ' +  // Balkans / Greece W
+    'L 390,315                ' +  // Peloponnese
+    'L 405,295                ' +  // Greece E
+    'L 420,275                ' +  // Aegean
+    'Q 445,260 455,230        ' +  // W Turkey (Istanbul)
+    'L 465,195                ' +  // Black Sea south rim
+    'Q 475,165 455,135        ' +  // E Europe / Ukraine
+    'L 440,105                ' +  // Baltic south
+    'L 425,80                 ' +  // Gulf of Finland
+    'Q 400,55 355,45          ' +  // N Scandinavia (Finland/N Sweden)
+    'L 320,35                 ' +  // N Norway
+    'Q 290,55 275,95          ' +  // Norway W coast
+    'L 265,140                ' +  // S Norway / Denmark
+    'Q 240,160 205,155        ' +  // N Germany / Denmark
+    'Q 175,150 150,160        ' +  // Low Countries / N France
+    'Q 120,170 95,190         ' +  // Brittany / Bay of Biscay
+    'L 85,215 Z',
   asia:
-    'M 80,100 Q 200,70 360,90 Q 480,110 540,160 Q 560,220 510,270 Q 420,310 330,310 Q 230,320 140,280 Q 60,240 60,180 Q 50,130 80,100 Z',
+    // Broad with Indian subcontinent dangling, SE Asia hook, Korean peninsula, Arabian peninsula on left
+    'M 60,110 Q 180,75 340,95 Q 450,105 530,130 L 555,160 L 550,195 L 520,215 L 495,225 L 480,240 L 505,265 L 500,295 L 475,305 L 450,295 L 440,270 L 420,260 L 395,275 L 385,300 L 375,325 L 355,335 L 340,315 L 350,285 L 335,265 L 315,260 L 295,275 L 275,285 L 260,275 L 250,255 L 225,245 L 200,230 L 175,210 L 150,195 L 120,175 L 90,155 L 70,135 Q 55,120 60,110 Z',
   africa:
-    'M 160,70 Q 280,60 380,100 Q 410,170 380,250 Q 340,330 280,360 Q 220,370 180,320 Q 140,260 140,180 Q 140,110 160,70 Z',
+    // Bulging West Africa, narrowing through Congo to wide southern cone, Horn of Africa on NE
+    'M 170,75 Q 250,60 330,75 L 365,95 L 385,120 L 400,140 ' +  // Mediterranean coast
+    'L 410,150 L 425,145 L 435,160 L 430,175 L 415,185 ' +       // Horn of Africa (Somalia)
+    'L 400,200 L 390,220 L 385,245 L 375,270 L 360,300 ' +        // E Africa coast
+    'L 345,325 L 325,345 L 305,355 L 285,350 L 270,330 ' +        // S Africa
+    'L 265,305 L 260,275 L 255,245 L 250,215 L 240,195 ' +        // W coast (Angola/Namibia)
+    'L 225,180 L 205,170 L 185,155 L 170,130 L 165,100 Z',        // Gulf of Guinea / West Africa
   australia:
-    'M 120,140 Q 240,120 380,140 Q 470,170 480,230 Q 440,290 350,300 Q 230,310 140,280 Q 80,240 90,190 Q 100,150 120,140 Z',
+    // Distinctive rectangular-ish shape with cape york north, great bight south
+    'M 120,155 Q 220,140 330,145 L 390,155 L 440,160 L 480,175 ' +
+    'L 495,195 L 490,220 L 475,245 L 450,265 L 415,275 L 375,278 ' +
+    'L 330,275 Q 285,270 240,265 L 195,260 L 155,250 L 120,230 ' +
+    'L 100,200 L 105,175 Z',
   usa:
-    'M 80,120 Q 180,100 300,110 Q 420,110 520,130 Q 540,200 510,260 Q 430,290 330,290 Q 210,290 130,260 Q 70,220 80,170 Q 70,140 80,120 Z',
+    // Recognizable: flat Canadian border, Maine bump NE, Florida hook SE, Texas dip S, California coast W
+    'M 80,150 ' +
+    'Q 250,145 420,150 ' +        // Canadian border (slight bow)
+    'L 440,155 ' +                 // ME border entering
+    'L 485,175 ' +                 // Maine NE tip
+    'Q 478,195 465,210 ' +         // Maine to MA coast
+    'L 470,245 ' +                 // Mid-Atlantic (NY/NJ)
+    'Q 475,272 462,282 ' +         // Carolinas
+    'L 478,290 ' +                 // FL panhandle east entering
+    'L 490,300 ' +                 // FL east coast
+    'L 485,325 ' +                 // South FL / Keys
+    'L 468,325 ' +                 // FL SW tip
+    'L 452,305 ' +                 // FL W coast
+    'L 442,288 ' +                 // Tampa
+    'Q 425,282 395,285 ' +         // Panhandle / AL coast
+    'Q 365,295 345,288 ' +         // LA delta bulge
+    'Q 305,283 260,272 ' +         // TX Gulf coast
+    'L 250,260 ' +                 // Rio Grande
+    'Q 195,258 155,262 ' +         // SW border
+    'L 120,260 ' +                 // CA south (San Diego)
+    'Q 95,240 88,215 ' +           // central CA coast
+    'L 82,185 ' +                  // Oregon coast
+    'L 78,165 ' +                  // Washington
+    'L 80,150 Z',                  // close at Puget Sound
   india:
-    'M 220,80 Q 310,70 380,100 Q 410,150 400,220 Q 360,310 310,350 Q 260,330 240,260 Q 220,180 220,80 Z',
+    // Distinctive inverted triangle — wide Himalayan base, tapered southern tip (Kanyakumari)
+    'M 140,90 ' +
+    'Q 240,75 340,85 ' +           // Himalayan northern arc
+    'L 395,95 ' +                  // NE India / Bangladesh corner
+    'L 410,120 ' +                 // Bay of Bengal entry
+    'L 395,155 ' +                 // E coast (Andhra)
+    'L 380,195 ' +                 // Tamil Nadu coast
+    'L 360,240 ' +                 // SE coast narrowing
+    'L 340,285 ' +                 // Kanyakumari (southern tip area)
+    'L 325,320 ' +                 // Southern tip
+    'L 305,305 ' +                 // Kerala coast
+    'L 285,270 ' +                 // Karnataka coast
+    'L 270,235 ' +                 // Goa
+    'L 250,195 ' +                 // Maharashtra (Mumbai)
+    'L 235,160 ' +                 // Gujarat coast
+    'L 215,135 ' +                 // Kutch
+    'L 185,115 ' +                 // Rajasthan / Pakistan border
+    'L 155,100 ' +                 // Punjab
+    'L 140,90 Z',
   china:
-    'M 120,100 Q 240,80 380,100 Q 480,120 520,160 Q 530,220 470,260 Q 380,290 270,290 Q 170,280 110,250 Q 70,200 100,150 Q 110,120 120,100 Z',
+    // Recognizable rough shape — wide mid, rooster-tail NE, Yangtze valley bulge SE, Xinjiang tapering W
+    'M 80,110 Q 180,85 310,95 L 400,105 L 470,115 L 515,135 L 535,160 L 545,185 L 530,205 L 500,220 L 470,235 L 435,245 L 395,250 L 365,255 L 345,275 L 330,285 L 315,270 L 295,265 L 270,260 L 240,255 L 210,250 L 175,240 L 145,225 L 115,210 L 90,185 L 75,160 L 70,135 Z',
   'middle-east':
-    'M 120,100 Q 220,80 340,100 Q 440,120 480,170 Q 490,240 430,290 Q 330,320 240,310 Q 170,290 130,250 Q 90,200 110,150 Q 110,120 120,100 Z',
+    // One contiguous landmass: Turkey at top, Iran east, Arabian peninsula
+    // south-east, Egypt / Levant west. The Red Sea is NOT traced as a notch —
+    // filling it as land keeps the outline a single coherent blob (previous
+    // version created a visible vertical channel that read as two separate
+    // regions). Pins at Cairo / Jerusalem / Alexandria latitudes land inside.
+    'M 100,95 ' +
+    'Q 260,80 410,95 ' +           // Turkey northern arc
+    'L 450,120 ' +                 // Caucasus border
+    'Q 490,155 510,195 ' +         // Iran (Caspian to central)
+    'L 520,235 ' +                 // SE Iran
+    'Q 510,265 475,280 ' +         // Strait of Hormuz
+    'L 450,295 ' +                 // Oman NE
+    'L 430,310 ' +                 // Oman coast
+    'Q 395,325 350,335 ' +         // Yemen SE
+    'L 315,345 ' +                 // Yemen S (Aden)
+    'Q 250,350 195,290 ' +         // Fill across to Egypt-Sudan border (Red Sea not traced)
+    'L 140,305 ' +                 // N Sudan / Halayeb triangle
+    'L 95,285 ' +                  // Egypt-Sudan-Libya corner
+    'L 80,235 ' +                  // Egypt Western Desert / Libya border
+    'L 80,190 ' +                  // Egypt Mediterranean coast
+    'L 105,160 ' +                 // Alexandria
+    'L 125,145 ' +                 // Nile Delta
+    'L 130,130 ' +                 // Levant coast (Gaza)
+    'L 115,110 ' +                 // Lebanon / Syria coast
+    'L 100,95 Z',
   mediterranean:
-    'M 60,140 Q 160,110 260,130 Q 380,120 500,140 Q 540,170 520,200 Q 400,230 280,220 Q 170,220 90,200 Q 50,180 60,140 Z',
+    // Central sea with Italy boot dangling, Iberian W, North African coast S, Greece/Turkey E
+    'M 60,130 Q 130,110 220,120 L 250,125 L 265,145 L 280,175 L 290,200 L 280,215 L 260,210 L 250,195 L 240,175 L 220,165 L 180,170 L 130,180 L 80,175 L 50,155 L 60,130 Z ' +
+    'M 310,140 Q 400,130 500,140 Q 540,150 540,180 L 525,200 L 480,210 L 430,215 L 370,210 L 320,195 L 300,175 L 310,140 Z',
 };
 
 export default function MapRenderer({
@@ -115,7 +269,9 @@ export default function MapRenderer({
   regions = [],
   caption,
 }: MapRendererProps) {
-  const bgPath = BACKGROUND_PATHS[background];
+  // Prefer the real Natural-Earth-generated outline; fall back to the legacy
+  // hand-drawn one if a preset isn't in the generated file.
+  const bgPath = MAP_BACKGROUND_PATHS[background] ?? LEGACY_BACKGROUND_PATHS[background];
 
   return (
     <div className="map-renderer">
@@ -198,7 +354,19 @@ export default function MapRenderer({
 
         {/* Pins */}
         {pins.map((pin, i) => {
-          const [px, py] = normToSvg(pin.x, pin.y);
+          const bbox = MAP_BACKGROUND_BBOXES[background];
+          // Prefer lat/lon when provided — projected with the same formula
+          // the background was generated with, so pins sit on the right
+          // country regardless of preset. Fall back to normalized x/y.
+          let normX: number;
+          let normY: number;
+          if (pin.lat != null && pin.lon != null && bbox) {
+            [normX, normY] = projectLatLon(pin.lat, pin.lon, bbox);
+          } else {
+            normX = pin.x ?? 50;
+            normY = pin.y ?? 50;
+          }
+          const [px, py] = normToSvg(normX, normY);
           const color = pin.color || '#dc2626';
           return (
             <g key={`pin-${i}`}>

@@ -78,15 +78,16 @@ interface LayoutNode {
  * First pass — compute the width each subtree requires so we can allocate
  * horizontal space proportionally.
  */
-function measureSubtree(node: TreeNode): number {
-  if (!node.children || node.children.length === 0) {
+function measureSubtree(node: TreeNode | undefined): number {
+  // Defensive guard: the model sometimes omits `node` on a child entry or
+  // sends a tree where the root is missing. Treat as a leaf.
+  if (!node || !node.children || node.children.length === 0) {
     return NODE_W;
   }
   const childrenWidth = node.children.reduce(
-    (sum, c) => sum + measureSubtree(c.node),
+    (sum, c) => sum + measureSubtree(c?.node),
     0
   );
-  // Add gaps between children
   const gaps = (node.children.length - 1) * SIBLING_GAP;
   return Math.max(NODE_W, childrenWidth + gaps);
 }
@@ -96,13 +97,15 @@ function measureSubtree(node: TreeNode): number {
  * `xStart` is the left edge of the horizontal band allocated for this subtree.
  */
 function positionNode(
-  node: TreeNode,
+  node: TreeNode | undefined,
   depth: number,
   xStart: number,
   subtreeWidth: number,
   pathProbabilities: string[],
 ): LayoutNode {
-  const isLeaf = !node.children || node.children.length === 0;
+  // Defensive: treat missing node as an empty leaf so the tree still renders.
+  const safeNode: TreeNode = node ?? { label: '' };
+  const isLeaf = !safeNode.children || safeNode.children.length === 0;
   const x = xStart + subtreeWidth / 2;
   const y = PADDING + depth * (NODE_H + LEVEL_GAP);
 
@@ -116,7 +119,7 @@ function positionNode(
     return {
       x, y,
       w: NODE_W, h: NODE_H,
-      node,
+      node: safeNode,
       children: [],
       subtreeWidth,
       isLeaf,
@@ -124,17 +127,28 @@ function positionNode(
     };
   }
 
-  // Measure children to allocate proportional widths
-  const childMeasures = node.children!.map((c) => measureSubtree(c.node));
+  // Measure children to allocate proportional widths. Filter out entries
+  // that are missing (undefined) or have no node payload.
+  const children = safeNode.children!.filter((c) => c && c.node !== undefined);
+  if (children.length === 0) {
+    return {
+      x, y,
+      w: NODE_W, h: NODE_H,
+      node: safeNode,
+      children: [],
+      subtreeWidth,
+      isLeaf: true,
+      leafProbability,
+    };
+  }
+  const childMeasures = children.map((c) => measureSubtree(c.node));
   const totalChildWidth = childMeasures.reduce((a, b) => a + b, 0);
-  const totalGaps = (node.children!.length - 1) * SIBLING_GAP;
+  const totalGaps = (children.length - 1) * SIBLING_GAP;
   const availableForChildren = Math.max(subtreeWidth, totalChildWidth + totalGaps);
 
-  // Lay out children left-to-right within our band
   let cursor = xStart + (subtreeWidth - availableForChildren) / 2;
-  const positionedChildren = node.children!.map((child, i) => {
-    // Proportional allocation
-    const ratio = childMeasures[i] / totalChildWidth;
+  const positionedChildren = children.map((child, i) => {
+    const ratio = childMeasures[i] / (totalChildWidth || 1);
     const childBand = ratio * (availableForChildren - totalGaps);
     const ln = positionNode(
       child.node,
@@ -144,13 +158,13 @@ function positionNode(
       [...pathProbabilities, ...(child.probability ? [child.probability] : [])],
     );
     cursor += childBand + SIBLING_GAP;
-    return { label: child.label, probability: child.probability, layoutNode: ln };
+    return { label: child.label ?? '', probability: child.probability, layoutNode: ln };
   });
 
   return {
     x, y,
     w: NODE_W, h: NODE_H,
-    node,
+    node: safeNode,
     children: positionedChildren,
     subtreeWidth,
     isLeaf,
@@ -424,11 +438,17 @@ export function TreeRenderer({
   direction = 'top-down',
 }: TreeRendererProps) {
   const { svgContent, viewBox } = useMemo(() => {
+    // Defensive fallback if upstream validation missed a malformed tree —
+    // prevents a runtime crash. The VoiceTutorRealtime handler rejects
+    // invalid show_tree calls before they reach the renderer, so in the
+    // common path `root` is always a real tree.
+    const safeRoot: TreeNode = root ?? { label: '' };
+
     // 1. Measure the full subtree width
-    const totalWidth = measureSubtree(root);
+    const totalWidth = measureSubtree(safeRoot);
 
     // 2. Position every node
-    const layout = positionNode(root, 0, 0, totalWidth, []);
+    const layout = positionNode(safeRoot, 0, 0, totalWidth, []);
 
     // 3. Compute bounding box
     const bounds = getBounds(layout);

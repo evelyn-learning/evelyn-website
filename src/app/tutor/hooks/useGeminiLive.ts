@@ -708,6 +708,10 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     isSpeaking: state === 'speaking',
     error,
     connect,
+    // Gemini's connection flow doesn't have a separate token-mint step, so
+    // prefetchToken is a no-op here — provided only to satisfy the shared
+    // RealtimeResult shape so the UI layer can call it uniformly.
+    prefetchToken: async () => null,
     disconnect,
     startListening,
     stopListening,

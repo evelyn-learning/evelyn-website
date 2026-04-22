@@ -45,13 +45,41 @@ const SVG_WIDTH = 500;
 const SVG_HEIGHT = 350;
 const ATOM_RADIUS = 18; // White circle behind atom label
 const BOND_OFFSET = 3; // Separation between parallel lines for double/triple bonds
+// Reserve enough pixel margin inside the SVG for lone pair dots (~ATOM_RADIUS+12)
+// and the formal-charge superscript. Prevents content from clipping against the
+// viewBox border regardless of what coords the model picks for atoms.
+const CONTENT_PADDING = 36;
 
-function toSvg(x: number, y: number): [number, number] {
-  const inset = 40;
-  return [
-    inset + (x / 100) * (SVG_WIDTH - 2 * inset),
-    inset + (y / 100) * (SVG_HEIGHT - 2 * inset),
-  ];
+/**
+ * Build a content-to-SVG coordinate mapper that auto-fits all atoms inside
+ * the viewBox with safety padding. Preserves aspect ratio (so hexagons stay
+ * hexagonal). Handles degenerate cases: no atoms, one atom, or all atoms
+ * collinear in a single axis.
+ */
+function buildAtomMapper(atoms: LewisAtom[]): (x: number, y: number) => [number, number] {
+  if (atoms.length === 0) {
+    return (x, y) => [
+      CONTENT_PADDING + (x / 100) * (SVG_WIDTH - 2 * CONTENT_PADDING),
+      CONTENT_PADDING + (y / 100) * (SVG_HEIGHT - 2 * CONTENT_PADDING),
+    ];
+  }
+  const xs = atoms.map((a) => a.x);
+  const ys = atoms.map((a) => a.y);
+  let minX = Math.min(...xs);
+  let maxX = Math.max(...xs);
+  let minY = Math.min(...ys);
+  let maxY = Math.max(...ys);
+  // Degenerate: single atom or collinear → give it a unit box so we center it.
+  if (maxX - minX < 1) { minX -= 10; maxX += 10; }
+  if (maxY - minY < 1) { minY -= 10; maxY += 10; }
+  const rangeX = maxX - minX;
+  const rangeY = maxY - minY;
+  const innerW = SVG_WIDTH - 2 * CONTENT_PADDING;
+  const innerH = SVG_HEIGHT - 2 * CONTENT_PADDING;
+  const scale = Math.min(innerW / rangeX, innerH / rangeY);
+  const offsetX = (SVG_WIDTH - scale * rangeX) / 2;
+  const offsetY = (SVG_HEIGHT - scale * rangeY) / 2;
+  return (x, y) => [offsetX + (x - minX) * scale, offsetY + (y - minY) * scale];
 }
 
 /** Draw the dots for N lone pairs around an atom, avoiding bond directions. */
@@ -108,6 +136,7 @@ export default function LewisRenderer({
   geometry,
 }: LewisRendererProps) {
   const atomMap = new Map(atoms.map((a) => [a.id, a]));
+  const toSvg = buildAtomMapper(atoms);
 
   // Pre-compute each atom's bond angles for lone pair placement
   const bondAnglesByAtom = new Map<string, number[]>();

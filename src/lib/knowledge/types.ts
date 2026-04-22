@@ -624,15 +624,62 @@ export type WhiteboardCommand =
   | { action: 'showStats'; title?: string; type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution'; data?: number[]; binWidth?: number; xLabel?: string; yLabel?: string; boxplot?: { datasets: BoxPlotData[]; showValues?: boolean }; bar?: { categories: string[]; values: number[]; colors?: string[] }; pie?: { slices: PieSlice[]; showPercentages?: boolean }; distribution?: { family: 'normal' | 't' | 'chi-square' | 'F'; params?: { mean?: number; sd?: number; df?: number; df1?: number; df2?: number }; shade?: { type: 'less' | 'greater' | 'between' | 'outside'; a?: number; b?: number; color?: string }; xRange?: [number, number]; showMean?: boolean; probabilityLabel?: string } }
   | { action: 'showMolecule'; smiles: string; title?: string; description?: string; interactive?: boolean }
   | { action: 'showTimeline'; title?: string; events: Array<{ date: string; title: string; description?: string; category?: string; color?: string }>; orientation?: 'horizontal' | 'vertical' }
-  | { action: 'showMap'; title?: string; background?: 'blank' | 'world' | 'north-america' | 'south-america' | 'europe' | 'asia' | 'africa' | 'australia' | 'usa' | 'india' | 'china' | 'middle-east' | 'mediterranean'; pins?: Array<{ x: number; y: number; label: string; color?: string }>; regions?: Array<{ points?: string; path?: string; label?: string; color?: string }>; caption?: string }
-  | { action: 'showCircuit'; title?: string; nodes: Array<{ id: string; x: number; y: number }>; components: Array<{ type: 'resistor' | 'capacitor' | 'inductor' | 'battery' | 'wire' | 'switch-open' | 'switch-closed' | 'bulb' | 'voltmeter' | 'ammeter' | 'ground'; from: string; to: string; value?: string; unit?: string; label?: string }>; showNodes?: boolean }
+  | { action: 'showMap'; title?: string; background?: 'blank' | 'world' | 'north-america' | 'south-america' | 'europe' | 'asia' | 'africa' | 'australia' | 'usa' | 'india' | 'china' | 'middle-east' | 'mediterranean'; pins?: Array<{ lat?: number; lon?: number; x?: number; y?: number; label: string; color?: string }>; regions?: Array<{ points?: string; path?: string; label?: string; color?: string }>; caption?: string }
+  | { action: 'showCircuit'; title?: string; nodes?: Array<{ id: string; x: number; y: number }>; components: Array<{ type: 'resistor' | 'capacitor' | 'inductor' | 'battery' | 'wire' | 'switch-open' | 'switch-closed' | 'bulb' | 'voltmeter' | 'ammeter' | 'galvanometer' | 'ground'; from: string; to: string; value?: string; unit?: string; label?: string }>; showNodes?: boolean }
   | { action: 'showLewis'; title?: string; atoms: Array<{ id: string; element: string; x: number; y: number; lonePairs?: number; formalCharge?: number }>; bonds?: Array<{ from: string; to: string; order: 1 | 2 | 3; style?: 'solid' | 'dashed' | 'wedge' | 'dash-wedge' }>; formula?: string; geometry?: string }
   | { action: 'showPeriodicTable'; title?: string; highlight?: Array<{ symbol: string; color?: string; note?: string }>; highlightGroup?: number; highlightPeriod?: number; highlightCategory?: 'alkali' | 'alkaline-earth' | 'transition' | 'post-transition' | 'metalloid' | 'reactive-nonmetal' | 'halogen' | 'noble-gas' | 'lanthanide' | 'actinide'; showMass?: boolean }
   | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
   | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }
   | { action: 'showFlowchart'; title?: string; nodes: Array<{ id: string; type: 'start' | 'end' | 'process' | 'decision' | 'io'; label: string; x?: number; y?: number }>; edges?: Array<{ from: string; to: string; label?: string }>; layout?: 'top-down' | 'left-right' }
   | { action: 'showManipulative'; title?: string; type: 'base-10' | 'ten-frame' | 'area-model'; base10?: { ones?: number; tens?: number; hundreds?: number; thousands?: number; showTotal?: boolean }; tenFrame?: { count: number; color?: string; label?: string }; areaModel?: { rows: number[]; cols: number[]; showProducts?: boolean; showSum?: boolean; rowLabel?: string; colLabel?: string } }
-  | { action: 'showPunnett'; title?: string; trait?: string; parent1: string; parent2: string; showPhenotypeRatio?: boolean };
+  | { action: 'showPunnett'; title?: string; trait?: string; parent1: string; parent2: string; showPhenotypeRatio?: boolean }
+  | {
+      action: 'showCollision';
+      title?: string;
+      dimension?: '1D' | '2D';
+      type?: 'elastic' | 'inelastic' | 'perfectly-inelastic';
+      before: Array<{ label?: string; mass?: number; velocity?: number; vx?: number; vy?: number; color?: string }>;
+      after: Array<{ label?: string; mass?: number; velocity?: number; vx?: number; vy?: number; color?: string }>;
+      notes?: string;
+      momentumAnnotation?: string;
+    }
+  | {
+      action: 'showEnergyBars';
+      title?: string;
+      positions: Array<{ label: string; ke?: number; pe?: number; spring?: number; thermal?: number }>;
+      yAxisLabel?: string;
+      showTotalLine?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showFreeBodyDiagram';
+      title?: string;
+      object: { shape?: 'box' | 'circle' | 'person'; label?: string; mass?: string };
+      surface?: { type: 'horizontal' | 'inclined' | 'vertical' | 'none'; angle?: number; friction?: boolean };
+      forces: Array<{
+        name: string;
+        magnitude?: string;
+        direction:
+          | 'up' | 'down' | 'left' | 'right'
+          | 'up-left' | 'up-right' | 'down-left' | 'down-right'
+          | 'normal' | 'up-slope' | 'down-slope' | 'into-surface'
+          | number;
+        color?: string;
+        scale?: number;
+      }>;
+      notes?: string;
+    }
+  | {
+      action: 'showReactionCoordinate';
+      title?: string;
+      reactants_energy?: number;
+      products_energy: number;
+      activation_energies: number[];
+      curve_labels?: string[];
+      reactant_label?: string;
+      product_label?: string;
+      units?: string;
+    };
 
 // =============================================================================
 // STUDENT PROGRESS

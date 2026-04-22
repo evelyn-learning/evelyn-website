@@ -42,3 +42,6 @@ public/ketcher/bundle.*
 
 # Deploy manifest (regenerated on every deploy by deploy-to-production.sh)
 .deploy-public-manifest
+
+# Script build caches (e.g. Natural Earth GeoJSON for generate-map-backgrounds.ts)
+scripts/.cache/

@@ -433,7 +433,51 @@ function renderArcs(
   });
 }
 
-/** Render angle markers (arc or right-angle square) */
+/** Compute an interior angle in degrees from three math-space points. */
+function computeAngleDegrees(
+  vertex: GeometryPoint,
+  from: GeometryPoint,
+  to: GeometryPoint,
+): number {
+  const dx1 = from.x - vertex.x;
+  const dy1 = from.y - vertex.y;
+  const dx2 = to.x - vertex.x;
+  const dy2 = to.y - vertex.y;
+  const dot = dx1 * dx2 + dy1 * dy2;
+  const m1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+  const m2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+  if (m1 === 0 || m2 === 0) return 0;
+  const cos = Math.max(-1, Math.min(1, dot / (m1 * m2)));
+  return (Math.acos(cos) * 180) / Math.PI;
+}
+
+/** Pretty-print a degree value, dropping ".0" when the result is integer. */
+function formatDegrees(deg: number): string {
+  const rounded = Math.round(deg * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}°` : `${rounded.toFixed(1)}°`;
+}
+
+/** Compute the display text for an angle: the model's label if it's
+ *  meaningful, otherwise the auto-computed degree measure. */
+function angleDisplayLabel(
+  angle: GeometryAngle,
+  vertex: GeometryPoint,
+  from: GeometryPoint,
+  to: GeometryPoint,
+): string {
+  const rawLabel = (angle.label ?? '').trim();
+  const looksLikeBareSymbol =
+    rawLabel === '' ||
+    rawLabel === '∠' ||
+    (rawLabel.length <= 2 && !/\d/.test(rawLabel) && !/°/.test(rawLabel));
+  return looksLikeBareSymbol
+    ? formatDegrees(computeAngleDegrees(vertex, from, to))
+    : rawLabel;
+}
+
+/** Render angle markers (arc or right-angle square). Labels are emitted
+ *  separately through the LabelBox collision system so they don't get
+ *  painted underneath nearby vertex or segment labels. */
 function renderAngles(
   angles: GeometryAngle[],
   ptMap: Map<string, GeometryPoint>,
@@ -468,81 +512,47 @@ function renderAngles(
     const size = ANGLE_MARKER_SIZE;
 
     if (angle.style === 'square') {
-      // Right angle: draw a small square at the vertex
+      // Right angle: draw a small square at the vertex.
       const p1x = vx + ufx * size;
       const p1y = vy + ufy * size;
       const p2x = vx + ufx * size + utx * size;
       const p2y = vy + ufy * size + uty * size;
       const p3x = vx + utx * size;
       const p3y = vy + uty * size;
-
       return (
-        <g key={`angle-${i}`}>
-          <polyline
-            points={`${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`}
-            fill="none"
-            stroke={color}
-            strokeWidth={1.5}
-          />
-          {angle.label && (
-            <text
-              x={vx + (ufx + utx) * size * 1.4}
-              y={vy + (ufy + uty) * size * 1.4}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={11}
-              fill={color}
-            >
-              {angle.label}
-            </text>
-          )}
-        </g>
+        <polyline
+          key={`angle-${i}`}
+          points={`${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+        />
       );
     }
 
     // Default: arc marker
-    // Compute angles in SVG coordinate system (y-down)
     const angleFrom = Math.atan2(dyFrom, dxFrom);
     const angleTo = Math.atan2(dyTo, dxTo);
-
-    // Arc start and end points
     const arcStartX = vx + Math.cos(angleFrom) * size;
     const arcStartY = vy + Math.sin(angleFrom) * size;
     const arcEndX = vx + Math.cos(angleTo) * size;
     const arcEndY = vy + Math.sin(angleTo) * size;
-
-    // Determine sweep direction: use cross product to pick the shorter arc
     const cross = ufx * uty - ufy * utx;
     const sweepFlag = cross > 0 ? 1 : 0;
-
-    // Check if the angle is > 180 degrees
     let angleDiff = angleTo - angleFrom;
     if (sweepFlag === 1 && angleDiff < 0) angleDiff += 2 * Math.PI;
     if (sweepFlag === 0 && angleDiff > 0) angleDiff -= 2 * Math.PI;
     const largeArc = Math.abs(angleDiff) > Math.PI ? 1 : 0;
-
     const d = `M ${arcStartX},${arcStartY} A ${size},${size} 0 ${largeArc} ${sweepFlag} ${arcEndX},${arcEndY}`;
 
-    // Label position: midpoint of the arc
-    const midAngle = angleFrom + angleDiff / 2;
-    const labelDist = size * 1.6;
-
     return (
-      <g key={`angle-${i}`}>
-        <path d={d} fill="none" stroke={color} strokeWidth={1.5} />
-        {angle.label && (
-          <text
-            x={vx + Math.cos(midAngle) * labelDist}
-            y={vy + Math.sin(midAngle) * labelDist}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={11}
-            fill={color}
-          >
-            {angle.label}
-          </text>
-        )}
-      </g>
+      <path
+        key={`angle-${i}`}
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+      />
     );
   });
 }
@@ -652,10 +662,12 @@ function resolveLabelCollisions(labels: LabelBox[]): void {
   }
 }
 
-/** Compute all label boxes (point labels + segment labels) in one pass. */
+/** Compute all label boxes (point labels + segment labels + angle labels)
+ *  in one pass so they participate in collision resolution together. */
 function computeLabels(
   points: GeometryPoint[],
   segments: GeometrySegment[],
+  angles: GeometryAngle[],
   ptMap: Map<string, GeometryPoint>,
   toSvg: (x: number, y: number) => [number, number],
 ): LabelBox[] {
@@ -715,6 +727,76 @@ function computeLabels(
       dominantBaseline: 'central',
       pushX: nx,
       pushY: ny,
+    });
+  });
+
+  // Angle labels — placed along the arc bisector, far enough from the vertex
+  // to clear the vertex letter label, and then nudged further by collision
+  // resolution if they still overlap.
+  angles.forEach((angle, i) => {
+    const vertex = ptMap.get(angle.vertex);
+    const from = ptMap.get(angle.from);
+    const to = ptMap.get(angle.to);
+    if (!vertex || !from || !to) return;
+    const text = angleDisplayLabel(angle, vertex, from, to);
+    if (!text) return;
+
+    const [vx, vy] = toSvg(vertex.x, vertex.y);
+    const [fx, fy] = toSvg(from.x, from.y);
+    const [tx, ty] = toSvg(to.x, to.y);
+    const dxF = fx - vx;
+    const dyF = fy - vy;
+    const dxT = tx - vx;
+    const dyT = ty - vy;
+    const lenF = Math.sqrt(dxF * dxF + dyF * dyF) || 1;
+    const lenT = Math.sqrt(dxT * dxT + dyT * dyT) || 1;
+    const ufx = dxF / lenF;
+    const ufy = dyF / lenF;
+    const utx = dxT / lenT;
+    const uty = dyT / lenT;
+    const color = angle.color || '#e74c3c';
+    const size = ANGLE_MARKER_SIZE;
+    const fontSize = 11;
+
+    let bisectorX: number;
+    let bisectorY: number;
+    let labelDist: number;
+    if (angle.style === 'square') {
+      // Right-angle square: bisector is the average of the two ray directions.
+      bisectorX = ufx + utx;
+      bisectorY = ufy + uty;
+      const blen = Math.sqrt(bisectorX * bisectorX + bisectorY * bisectorY) || 1;
+      bisectorX /= blen;
+      bisectorY /= blen;
+      labelDist = size * 2.0;
+    } else {
+      const angleFrom = Math.atan2(dyF, dxF);
+      const angleTo = Math.atan2(dyT, dxT);
+      const cross = ufx * uty - ufy * utx;
+      const sweepFlag = cross > 0 ? 1 : 0;
+      let angleDiff = angleTo - angleFrom;
+      if (sweepFlag === 1 && angleDiff < 0) angleDiff += 2 * Math.PI;
+      if (sweepFlag === 0 && angleDiff > 0) angleDiff -= 2 * Math.PI;
+      const midAngle = angleFrom + angleDiff / 2;
+      bisectorX = Math.cos(midAngle);
+      bisectorY = Math.sin(midAngle);
+      labelDist = size * 2.4;
+    }
+
+    labels.push({
+      key: `ang:${i}`,
+      text,
+      x: vx + bisectorX * labelDist,
+      y: vy + bisectorY * labelDist,
+      w: estimateTextWidth(text, fontSize),
+      h: fontSize + 2,
+      color,
+      fontSize,
+      textAnchor: 'middle',
+      dominantBaseline: 'central',
+      // Push further along the bisector if a collision pushes us out.
+      pushX: bisectorX,
+      pushY: bisectorY,
     });
   });
 
@@ -801,11 +883,12 @@ export function GeometryRenderer({
   // Coordinate transform function
   const toSvg = useMemo(() => makeTransform(range), [range]);
 
-  // Pre-compute label positions with collision resolution across points
-  // and segments. Labels are drawn in a single pass on top of the diagram.
+  // Pre-compute label positions with collision resolution across points,
+  // segments, and angles. Labels are drawn in a single pass on top of the
+  // diagram so they sit above arcs and strokes.
   const labelBoxes = useMemo(
-    () => computeLabels(points, segments, ptMap, toSvg),
-    [points, segments, ptMap, toSvg],
+    () => computeLabels(points, segments, angles, ptMap, toSvg),
+    [points, segments, angles, ptMap, toSvg],
   );
 
   return (

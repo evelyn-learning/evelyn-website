@@ -1239,6 +1239,14 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Code${cmd.label ? `: ${cmd.label}` : ''}${cmd.language ? ` (${cmd.language})` : ''}`;
     case 'showGeometry':
       return `Geometry: ${cmd.title || 'figure'}`;
+    case 'showFreeBodyDiagram':
+      return `Free Body Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showEnergyBars':
+      return `Energy Bar Chart${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showCollision':
+      return `Collision Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showReactionCoordinate':
+      return `Reaction Coordinate${cmd.title ? `: ${cmd.title}` : ''}`;
     case 'showWorkedExample':
       return `Worked Example`;
     default:

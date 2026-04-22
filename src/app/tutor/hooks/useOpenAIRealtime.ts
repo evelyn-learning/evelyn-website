@@ -70,6 +70,7 @@ export interface RealtimeResult {
   isSpeaking: boolean;
   error: Error | null;
   connect: () => Promise<void>;
+  prefetchToken: () => Promise<string | null>;
   disconnect: () => void;
   startListening: () => void;
   stopListening: () => void;
@@ -162,6 +163,116 @@ function float32ToBase64PCM16(float32: Float32Array): string {
   return btoa(binary);
 }
 
+// Escape literal control characters (newlines, tabs, etc.) that appear INSIDE
+// JSON string literals, leaving structural whitespace (between object keys,
+// values, etc.) untouched. Used as strategy 2 in the function-call arguments
+// parser — the OpenAI Realtime function-call payload is sometimes emitted as
+// pretty-printed JSON with newlines between properties, and sometimes contains
+// unescaped newlines inside long string values. A naive global replace of \n
+// with \\n corrupts the first case; a string-aware pass fixes both.
+function escapeControlCharsInsideStrings(source: string): string {
+  // Strip non-printable control chars that are never valid in JSON source.
+  const cleaned = source.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  const out: string[] = [];
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (escaped) {
+      out.push(ch);
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      out.push(ch);
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      out.push(ch);
+      inString = !inString;
+      continue;
+    }
+    if (inString && ch === '\n') { out.push('\\n'); continue; }
+    if (inString && ch === '\r') { out.push('\\r'); continue; }
+    if (inString && ch === '\t') { out.push('\\t'); continue; }
+    out.push(ch);
+  }
+  return out.join('');
+}
+
+// Best-effort repair for truncated JSON — when the Realtime API cuts off a
+// function-call argument stream mid-generation (e.g. user barges in and the
+// response is cancelled), the arguments arrive incomplete. This closes any
+// unclosed strings, trims dangling trailing tokens like `"x` or `,`, and
+// appends the right sequence of `]` / `}` to rebalance structures so as much
+// of the payload as possible survives.
+function repairTruncatedJson(source: string): string {
+  const cleaned = source.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  const stack: string[] = []; // stack of open '{' or '[' characters
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\') { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' && stack[stack.length - 1] === '{') stack.pop();
+    else if (ch === ']' && stack[stack.length - 1] === '[') stack.pop();
+  }
+  let repaired = cleaned;
+  if (inString) repaired += '"';
+  // Trim dangling trailing keys/colons/commas that can't be completed.
+  // e.g. `..., "x` → close string, then strip the trailing `, "x"` so the
+  //      object doesn't have a key with no value.
+  // Repeat until we find a safe terminator.
+  // We only trim if the last non-whitespace token is in an unsafe position.
+  for (let guard = 0; guard < 200; guard++) {
+    const trimmed = repaired.replace(/\s+$/, '');
+    const last = trimmed[trimmed.length - 1];
+    // Unsafe trailing tokens (inside an object/array):
+    //  - ','  : trailing comma
+    //  - ':'  : key with no value
+    //  - '"'  : dangling string (could be an unclosed key or a complete string)
+    // Safe terminators: '}', ']', digit, 'e'/'l' (true/false/null end), or matched scalar.
+    if (last === ',' || last === ':') {
+      repaired = trimmed.slice(0, -1);
+      continue;
+    }
+    // If last is a quote, check if the preceding meaningful char is `:` or `,` without a pair.
+    // Pattern like `"key"` at the top is complete, but `..., "key` (now closed to `"key"`) is a dangling key.
+    // We detect: the last "..." was preceded by `,` or `[` or `{` — meaning it's a key/value start with no colon after.
+    if (last === '"') {
+      // Walk back to find the matching open quote
+      let j = trimmed.length - 2;
+      while (j >= 0) {
+        if (trimmed[j] === '"' && trimmed[j - 1] !== '\\') break;
+        j--;
+      }
+      // j is now at the opening quote. Find the char before it (skipping whitespace).
+      let k = j - 1;
+      while (k >= 0 && /\s/.test(trimmed[k])) k--;
+      const prev = trimmed[k];
+      // If preceded by `,` `{` `[` → it's a dangling key or array element; strip it.
+      // If preceded by `:` → it's a complete string value; safe.
+      if (prev === ',' || prev === '{' || prev === '[') {
+        repaired = trimmed.slice(0, j).replace(/[,\s]+$/, '');
+        continue;
+      }
+      break;
+    }
+    break;
+  }
+  // Append closers for any remaining open structures, innermost first.
+  while (stack.length > 0) {
+    const open = stack.pop();
+    repaired += open === '{' ? '}' : ']';
+  }
+  return repaired;
+}
+
 // Parse whiteboard commands from text
 function parseWhiteboardCommands(text: string): { cleanText: string; commands: WhiteboardCommand[] } {
   const commands: WhiteboardCommand[] = [];
@@ -217,6 +328,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const startListeningRef = useRef<() => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
   const hasAudioInBufferRef = useRef(false);
+
+  // --- Parallel-connect plumbing ---------------------------------------------
+  // Goal: shave ~1–2 s off session start-up. Previously we serialized
+  //   buildInstructions → POST /realtime-token → open WS → send session.update.
+  // Now POST /realtime-token and open WS happen in parallel with
+  // buildInstructions, and session.update is sent whenever (a) the WS is open
+  // AND (b) the instructions string has arrived — whichever completes last.
+  const tokenPromiseRef = useRef<Promise<string | null> | null>(null);
+  const sessionUpdateSentRef = useRef(false);
+  const currentInstructionsRef = useRef(instructions);
+  const trySendSessionUpdateRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    currentInstructionsRef.current = instructions;
+  }, [instructions]);
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
@@ -441,17 +566,31 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               funcArgs = JSON.parse(rawArgsStr);
               parsed = true;
             } catch {
-              // Strategy 2: Replace literal control characters then parse
+              // Strategy 2: Escape literal control characters that appear
+              // INSIDE string literals, leaving structural whitespace alone.
+              //
+              // Old version blanketly replaced every \n / \r / \t with \\n / \\r / \\t,
+              // which broke pretty-printed JSON (newlines between object properties
+              // became `\n` tokens outside strings — not valid JSON).
               try {
-                const sanitized = rawArgsStr
-                  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // strip non-standard control chars
-                  .replace(/\r\n?/g, '\\n')  // CR/CRLF → escaped newline
-                  .replace(/\n/g, '\\n')      // LF → escaped newline
-                  .replace(/\t/g, '\\t');     // tab → escaped tab
+                const sanitized = escapeControlCharsInsideStrings(rawArgsStr);
                 funcArgs = JSON.parse(sanitized);
                 parsed = true;
               } catch {
-                // Strategy 3: Extract fields via regex (for SVG that breaks JSON structure)
+                // Strategy 3: Best-effort repair for truncated JSON (response
+                // cancelled mid-generation, buffer cut off, etc.). Closes
+                // unclosed strings/braces/brackets and trims dangling keys.
+                try {
+                  const repaired = repairTruncatedJson(
+                    escapeControlCharsInsideStrings(rawArgsStr),
+                  );
+                  funcArgs = JSON.parse(repaired);
+                  parsed = true;
+                  console.warn(
+                    `[Realtime] JSON was truncated (len=${rawArgsStr.length}); recovered via repair`,
+                  );
+                } catch {
+                // Strategy 4: Extract fields via regex (for SVG that breaks JSON structure)
                 console.warn('[Realtime] JSON parse failed, extracting fields via regex');
 
                 // Helper: unescape JSON string escape sequences from regex-extracted content
@@ -489,11 +628,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                     parsed = true;
                   }
                 }
-              }
-            }
+                }  // end Strategy 3 catch body (= Strategy 4 regex-extract block)
+              }  // end Strategy 2 catch body
+            }  // end Strategy 1 catch body
 
             if (!parsed) {
-              console.error('[Realtime] Could not parse function arguments at all:', rawArgsStr.substring(0, 200));
+              console.error(
+                `[Realtime] Could not parse function arguments (funcName=${funcName}, len=${rawArgsStr.length}); head=${rawArgsStr.slice(0, 200)} | tail=${rawArgsStr.slice(-200)}`,
+              );
               // Still send function result to avoid hanging the conversation
               if (wsRef.current?.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify({
@@ -643,23 +785,32 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     setError(null);
 
     try {
-      // Get ephemeral token from our API
-      const tokenResponse = await fetch('/api/tutor/realtime-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voice }),
-      });
-
-      if (!tokenResponse.ok) {
-        const errorBody = await tokenResponse.text();
-        console.error('[Realtime] Token request failed:', tokenResponse.status, errorBody);
-        throw new Error(`Failed to get realtime token: ${tokenResponse.status}`);
+      // Reuse a pre-fetched token if one is already in flight (see
+      // prefetchToken below — fired on mount from the UI layer so the network
+      // round-trip overlaps with buildInstructions).
+      if (!tokenPromiseRef.current) {
+        tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voice }),
+        })
+          .then(async (r) => {
+            if (!r.ok) {
+              const body = await r.text();
+              console.error('[Realtime] Token request failed:', r.status, body);
+              throw new Error(`Failed to get realtime token: ${r.status}`);
+            }
+            const d = await r.json();
+            return (d.client_secret as string) || null;
+          })
+          .catch((err) => {
+            console.error('[Realtime] Token fetch threw:', err);
+            tokenPromiseRef.current = null; // allow retry
+            throw err;
+          });
       }
-
-      const tokenData = await tokenResponse.json();
-      const client_secret = tokenData.client_secret;
+      const client_secret = await tokenPromiseRef.current;
       if (!client_secret) {
-        console.error('[Realtime] No client_secret in token response:', tokenData);
         throw new Error('Invalid token response: missing client_secret');
       }
       console.log('[Realtime] Got client secret, connecting...');
@@ -673,12 +824,24 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       ws.onopen = () => {
         console.log('[Realtime] WebSocket connected');
 
-        // Configure session with instructions (GA format)
-        ws.send(JSON.stringify({
+        // Fire session.update when instructions are ready. If they haven't
+        // arrived yet, defer — the instructions-useEffect below will call us
+        // again once they appear.
+        const trySendSessionUpdate = () => {
+          if (sessionUpdateSentRef.current) return;
+          const inst = currentInstructionsRef.current;
+          if (!inst) {
+            console.log('[Realtime] WS open but instructions not ready — deferring session.update');
+            return;
+          }
+          if (ws.readyState !== WebSocket.OPEN) return;
+          console.log('[Realtime] Sending session.update (instructions length:', inst.length, ')');
+          sessionUpdateSentRef.current = true;
+          ws.send(JSON.stringify({
           type: 'session.update',
           session: {
             type: 'realtime',
-            instructions: instructions,
+            instructions: inst,
             tools: [
               {
                 type: 'function',
@@ -865,7 +1028,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_geometry',
-                description: 'Display geometric figures with labeled vertices, segments, polygons, circles, and angle markers. The AI provides named points with (x,y) coordinates and the renderer draws everything precisely. Use for: triangles, quadrilaterals, circle theorems, transformations, proofs, constructions. ALWAYS use this instead of show_svg_diagram for geometric figures.',
+                description: 'Display geometric figures with labeled vertices, segments, polygons, circles, and angle markers. Use for: triangles, quadrilaterals, circle theorems, transformations, proofs, constructions. ALWAYS use this instead of show_svg_diagram for geometric figures.\n\nLABELING:\n- Point `label`: if the prompt gives explicit coordinates (e.g. "A=(0,0)"), include them in the label: `label: "A(0, 0)"`. Otherwise just the letter: `label: "A"`.\n- Segment `label`: use "AB" or the length "6" if known. Never blank when labeling sides was requested.\n- Angle `label`: prefer the measure ("53°", "90°"). OMIT `label` to let the renderer auto-compute the measure from geometry — do NOT set it to just "∠".',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -916,13 +1079,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_tree',
-                description: 'Display a tree diagram with auto-layout. Use for: probability trees, factor trees, decision trees, counting principles.',
+                description: 'Display a tree diagram with auto-layout. Use for: probability trees, factor trees, decision trees, counting principles.\n\nSCHEMA — a child is an EDGE wrapper `{ label, probability?, node }`, NOT a bare node. The nested subtree goes under `node`. Example for a coin flip: children: [ { label: "H", probability: "1/2", node: { label: "H" } }, { label: "T", probability: "1/2", node: { label: "T" } } ]. NEVER send children: [{ label: "H" }] without the `node` wrapper.\n\nFOR PROBABILITY TREES: set type: "probability", showLeafProbabilities: true. Every edge has a `probability` string like "1/2" or "0.5"; leaf labels describe the outcome (e.g. "HHH").',
                 parameters: {
                   type: 'object',
                   properties: {
                     title: { type: 'string' },
                     type: { type: 'string', enum: ['probability', 'factor', 'decision', 'generic'] },
-                    root: { type: 'object', description: 'Recursive tree node: { label, value?, color?, children?: [{ label, probability?, node: TreeNode }] }' },
+                    root: { type: 'object', description: 'Recursive tree node: { label, value?, color?, children?: [{ label, probability?, node: TreeNode }] }. A child is an EDGE wrapper, not a bare node.' },
                     showLeafProbabilities: { type: 'boolean' },
                     direction: { type: 'string', enum: ['top-down', 'left-right'] },
                   },
@@ -932,7 +1095,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               {
                 type: 'function',
                 name: 'show_venn_diagram',
-                description: 'Display a 2 or 3 set Venn diagram. Use for: set operations, probability, logic, GCF/LCM.',
+                description: 'Display a 2- or 3-set Venn diagram. Each call REPLACES the diagram — when the student gives counts after an empty diagram, IMMEDIATELY call this again with `regions` populated; do not stall by asking "which region first?".\n\nREGION KEYS (use exactly): 2-set → onlyA|onlyB|intersection|neither. 3-set → onlyA|onlyB|onlyC|AB|AC|BC|ABC|neither. AB means "in A and B but NOT in C" (lens minus center). ABC is the all-three center.\n\nIf the student gives CUMULATIVE counts (|M|=100 includes overlaps), compute exclusive region counts: ABC=triple; AB=|A∩B|−ABC; onlyA=|A|−AB−AC−ABC; etc. If the student gives EXCLUSIVE counts already, assign directly.\n\nExample: regions = { onlyA: {value:"100"}, onlyB: {value:"200"}, onlyC: {value:"300"}, AB: {value:"75"}, AC: {value:"55"}, BC: {value:"65"}, ABC: {value:"10"} }.',
                 parameters: {
                   type: 'object',
                   properties: {
@@ -1040,6 +1203,472 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   required: ['smiles', 'title'],
                 },
               },
+              {
+                type: 'function',
+                name: 'show_collision',
+                description: 'Display a before/after collision diagram. ALWAYS use this instead of show_svg_diagram when teaching conservation of momentum, elastic / inelastic / perfectly-inelastic collisions. Bodies render as filled circles sized by mass with velocity arrows scaled by speed. For type "perfectly-inelastic", the after-panel auto-merges bodies into one blob.\n\nCONSERVATION — CRITICAL:\n• You MUST verify Σm·v (total momentum) is the same before and after BEFORE calling this tool. The renderer flags mismatches with a red warning, which embarrasses you.\n• For ELASTIC collisions (type="elastic") you additionally MUST verify Σ½m·v² (total KE) is equal before and after.\n• Use the 1D elastic formulas — v1\' = ((m1−m2)/(m1+m2))·v1 + (2·m2/(m1+m2))·v2; v2\' = (2·m1/(m1+m2))·v1 + ((m2−m1)/(m1+m2))·v2. Plug in and verify arithmetic.\n• Example check for 2 kg @ 5 m/s into 3 kg @ 1 m/s elastic: v1\' = (−1/5)·5 + (6/5)·1 = 0.2 m/s; v2\' = (4/5)·5 + (1/5)·1 = 4.2 m/s. Verify: 2·0.2 + 3·4.2 = 13 ✓ (initial: 2·5+3·1 = 13 ✓). DO NOT guess; compute.\n\nEXAMPLE (1D elastic, stationary target):\n{"title":"Elastic collision","type":"elastic","before":[{"label":"A","mass":2,"velocity":5},{"label":"B","mass":3,"velocity":0}],"after":[{"label":"A","mass":2,"velocity":-1},{"label":"B","mass":3,"velocity":4}],"momentumAnnotation":"p = Σmv = 10 kg·m/s (conserved)"}',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    dimension: { type: 'string', enum: ['1D', '2D'] },
+                    type: { type: 'string', enum: ['elastic', 'inelastic', 'perfectly-inelastic'] },
+                    before: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          label: { type: 'string' },
+                          mass: { type: 'number' },
+                          velocity: { type: 'number', description: '1D signed velocity (positive = right).' },
+                          vx: { type: 'number' },
+                          vy: { type: 'number', description: '2D y-velocity (positive = up).' },
+                          color: { type: 'string' },
+                        },
+                      },
+                    },
+                    after: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          label: { type: 'string' },
+                          mass: { type: 'number' },
+                          velocity: { type: 'number' },
+                          vx: { type: 'number' },
+                          vy: { type: 'number' },
+                          color: { type: 'string' },
+                        },
+                      },
+                    },
+                    momentumAnnotation: { type: 'string' },
+                    notes: { type: 'string' },
+                  },
+                  required: ['before', 'after'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_reaction_coordinate',
+                description: 'Display a chemistry reaction coordinate (energy profile) diagram: horizontal reactants baseline on the left, horizontal products baseline on the right, and one or more smooth bezier humps between them showing the activation-energy barrier. ALWAYS use this instead of show_function_graph for activation-energy / reaction-coordinate / energy-profile prompts — this renderer auto-handles the negative y-axis for exothermic reactions, auto-labels ΔH and Ea, and supports multi-curve catalyst comparisons in one diagram.\n\nEXAMPLE (exothermic reaction with catalyst comparison):\n{"title":"Reaction coordinate","reactants_energy":0,"products_energy":-120,"activation_energies":[50,30],"curve_labels":["Without catalyst","With catalyst"]}\n\nEXAMPLE (endothermic, single curve):\n{"title":"Endothermic reaction","reactants_energy":0,"products_energy":40,"activation_energies":[75]}\n\nKEY POINTS:\n• Reactants energy usually 0 (reference level). Products energy is NEGATIVE for exothermic, POSITIVE for endothermic.\n• `activation_energies` is a list — one per curve. Use [Ea] for single curve; use [Ea_no_cat, Ea_with_cat] to draw both barriers in one diagram, automatically colored.\n• Catalysts LOWER activation energy but do NOT change ΔH (products_energy stays the same).\n• Units default to "kJ/mol". Override with `units` field if needed.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    reactants_energy: { type: 'number', description: 'Energy of reactants (reference level). Usually 0.' },
+                    products_energy: { type: 'number', description: 'Energy of products. Negative for exothermic.' },
+                    activation_energies: {
+                      type: 'array',
+                      items: { type: 'number' },
+                      description: 'One activation energy per curve (e.g. [50] for single, [50, 30] for without/with catalyst).',
+                    },
+                    curve_labels: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      description: 'Optional label per curve for the legend.',
+                    },
+                    reactant_label: { type: 'string', description: 'Default "Reactants".' },
+                    product_label: { type: 'string', description: 'Default "Products".' },
+                    units: { type: 'string', description: 'Default "kJ/mol".' },
+                  },
+                  required: ['products_energy', 'activation_energies'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_energy_bars',
+                description: 'Display a conservation-of-energy bar chart showing KE, gravitational PE, spring PE, and thermal (friction-loss) at multiple labeled positions. ALWAYS use this instead of show_svg_diagram for conservation-of-energy visualization, spring-loaded problems, roller-coaster / pendulum energy transforms, or friction dissipation. Each position is a stacked column; when totals match, a dashed "total energy (conserved)" line is drawn automatically.\n\nEXAMPLE (ball dropped from rest):\n{"title":"Ball dropped","positions":[{"label":"Top","pe":100,"ke":0},{"label":"Middle","pe":50,"ke":50},{"label":"Bottom","pe":0,"ke":100}]}',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    positions: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          label: { type: 'string', description: 'Short label (e.g. "Top", "A", "Before collision").' },
+                          ke: { type: 'number', description: 'Kinetic energy.' },
+                          pe: { type: 'number', description: 'Gravitational PE.' },
+                          spring: { type: 'number', description: 'Spring / elastic PE.' },
+                          thermal: { type: 'number', description: 'Energy lost to friction/heat.' },
+                        },
+                        required: ['label'],
+                      },
+                    },
+                    yAxisLabel: { type: 'string' },
+                    showTotalLine: { type: 'boolean' },
+                    notes: { type: 'string' },
+                  },
+                  required: ['positions'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_free_body_diagram',
+                description: 'Display a physics free-body diagram with force vectors. ALWAYS use this instead of show_svg_diagram for any free-body / force / Newton\'s-laws visualization. Semantic parameters only — you provide the object shape, surface type (or none), and a list of forces; the renderer draws arrows, arrowheads, and labels. Force colors auto-assign by name convention (W/Mg → green gravity, N → amber normal, f/friction → purple, T → blue tension, default red applied).\n\nSURFACE — CHOOSE CAREFULLY:\n• "horizontal" — object rests on a flat floor (book on table, car on road)\n• "inclined" — ramp/slope (REQUIRES angle field in degrees)\n• "vertical" — object against a wall\n• "none" — HANGING, suspended by ropes, in free fall, in space, floating, elevator with no visible floor. Omitting surface or using "none" draws no floor. DO NOT use "horizontal" for hanging/suspended objects — the floor will look wrong.\n\nNAME + MAGNITUDE FIELDS — STRICT RULES:\n• `name`: a SHORT force symbol, 1–5 characters (e.g. "W", "N", "T_1", "F_app", "f_k"). Never a descriptive phrase like "Normal from wall" or "Friction from floor" — those collide with neighbors and overflow labels.\n• `magnitude`: optional, and when present must be PLAIN TEXT — NOT LaTeX. Use unicode math symbols directly (θ, π, ², μ, Δ) or ASCII (e.g. "mg", "mv²/r", "mg sin θ", "20 N", "μmg"). NEVER use LaTeX commands like "\\\\frac{mv^2}{r}" — that renders as literal backslashes on the whiteboard, not as a fraction.\n• Do NOT echo the name as the magnitude. {name:"N", magnitude:"N"} is forbidden — just omit magnitude if you don\'t have a specific expression.\n\nDIRECTION OPTIONS:\n• Cardinal: "up", "down", "left", "right", "up-left", "up-right", "down-left", "down-right"\n• Slope-relative (inclined surfaces only): "normal" (perpendicular-out), "up-slope", "down-slope", "into-surface"\n• Numeric: angle in degrees as a string (math convention, CCW from +x — so "90"=up, "180"=left, "45"=up-right)\n\nFRICTION DIRECTION — CRITICAL:\n• Friction from a contact surface acts PARALLEL to that surface, opposing the tendency to slide. It is NEVER at an oblique angle to the surface.\n• If the surface is horizontal (floor), friction is horizontal (left or right) — never diagonal.\n• If the surface is vertical (wall), friction is vertical (up or down) — never diagonal. A person leaning against a vertical wall has friction straight up from the wall, not at an angle.\n• If the surface is inclined, use "up-slope" or "down-slope" — never a cardinal direction.\n• "Person at 15° from vertical leaning on a wall" does NOT mean tilt the coordinate system. The wall is still vertical; friction on the person from the wall is still vertical.\n\nEXAMPLES:\n• Block on 30° frictionless incline:\n  {"title":"Block on incline","object":{"shape":"box","mass":"5 kg"},"surface":{"type":"inclined","angle":30},"forces":[{"name":"W","magnitude":"mg","direction":"down"},{"name":"N","direction":"normal"}]}\n• Box hanging from two ropes at 30° and 45° from vertical:\n  {"title":"Box on two ropes","object":{"shape":"box","mass":"m"},"surface":{"type":"none"},"forces":[{"name":"T_1","direction":"120"},{"name":"T_2","direction":"45"},{"name":"W","magnitude":"mg","direction":"down"}]}\n• Person in an upward-accelerating elevator:\n  {"title":"Person in elevator","object":{"shape":"person"},"surface":{"type":"horizontal"},"forces":[{"name":"N","direction":"up"},{"name":"W","magnitude":"mg","direction":"down"}],"notes":"Elevator accelerating upward, so N > W"}',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    object: {
+                      type: 'object',
+                      properties: {
+                        shape: { type: 'string', enum: ['box', 'circle', 'person'] },
+                        label: { type: 'string' },
+                        mass: { type: 'string' },
+                      },
+                    },
+                    surface: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string', enum: ['horizontal', 'inclined', 'vertical', 'none'] },
+                        angle: { type: 'number' },
+                        friction: { type: 'boolean' },
+                      },
+                      required: ['type'],
+                    },
+                    forces: {
+                      type: 'array',
+                      description: 'Force vectors radiating from the object\'s center.',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string' },
+                          magnitude: { type: 'string' },
+                          direction: { type: 'string', description: 'Named direction (e.g. "up", "normal", "up-slope") OR a numeric angle in degrees as a string (e.g. "45", "-135").' },
+                          color: { type: 'string' },
+                          scale: { type: 'number' },
+                        },
+                        required: ['name', 'direction'],
+                      },
+                    },
+                    notes: { type: 'string' },
+                  },
+                  required: ['object', 'forces'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_timeline',
+                description: 'Display a horizontal timeline of dated events — for history, biography, scientific discovery, literature periods, or any topic where sequence-in-time matters. Events auto-space by year when dates parse to numbers (supports BCE via negative years, "500 BCE", "1492 CE", "1776"); falls back to even spacing for string dates. Use `category` to color-group related events.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    events: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          date: { type: 'string', description: 'Freeform date string, e.g. "1776", "1492 CE", "500 BCE".' },
+                          title: { type: 'string', description: 'Short event name — keep under ~5 words.' },
+                          description: { type: 'string' },
+                          category: { type: 'string', description: 'Optional bucket label for color-grouping related events.' },
+                          color: { type: 'string' },
+                        },
+                        required: ['date', 'title'],
+                      },
+                    },
+                    orientation: { type: 'string', enum: ['horizontal', 'vertical'] },
+                  },
+                  required: ['events'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_map',
+                description: 'Display a map with real country outlines (from Natural Earth) and pins at specific cities / states. Use for geography, history, civics, economics.\n\nPIN COORDINATES — USE REAL LAT/LON:\nAlways pass `lat` and `lon` on each pin — the actual geographic latitude and longitude of the city. The renderer projects them onto the active `background` preset automatically, so pins land on the correct country/state. You do NOT need to compute 0–100 normalized coords; just state the real coordinates.\n\nEXAMPLES:\n• USA state capitals: {lat: 33.4, lon: -112.1, label: "Phoenix"}, {lat: 30.3, lon: -97.7, label: "Austin"}, {lat: 42.4, lon: -71.1, label: "Boston"}\n• Middle East cities: {lat: 30.0, lon: 31.2, label: "Cairo"}, {lat: 31.8, lon: 35.2, label: "Jerusalem"}, {lat: 41.0, lon: 29.0, label: "Istanbul"}, {lat: 33.3, lon: 44.4, label: "Baghdad"}\n• European cities: {lat: 51.5, lon: -0.1, label: "London"}, {lat: 48.9, lon: 2.3, label: "Paris"}, {lat: 41.9, lon: 12.5, label: "Rome"}\n\nFALLBACK: if you must place a pin without a real lat/lon (e.g. an abstract label like "Western Front"), pass `x` and `y` in a 0–100 coord system (0,0 = top-left). Always prefer lat/lon when the pin represents a real place.\n\nBACKGROUND PRESETS: blank, world, north-america, south-america, europe, asia, africa, australia, usa, india, china, middle-east, mediterranean. Choose the preset whose bounding box contains the cities you want to show.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    background: {
+                      type: 'string',
+                      enum: ['blank', 'world', 'north-america', 'south-america', 'europe', 'asia', 'africa', 'australia', 'usa', 'india', 'china', 'middle-east', 'mediterranean'],
+                    },
+                    pins: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          lat: { type: 'number', description: 'Geographic latitude (PREFERRED). Positive = north.' },
+                          lon: { type: 'number', description: 'Geographic longitude (PREFERRED). Positive = east.' },
+                          x: { type: 'number', description: 'Fallback: 0–100 normalized x. Only used if lat/lon omitted.' },
+                          y: { type: 'number', description: 'Fallback: 0–100 normalized y.' },
+                          label: { type: 'string' },
+                          color: { type: 'string' },
+                        },
+                        required: ['label'],
+                      },
+                    },
+                    regions: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          points: { type: 'string', description: 'Polygon points in the 0–100 system, e.g. "10,20 30,20 30,40".' },
+                          path: { type: 'string', description: 'Raw SVG path data in the underlying 600x400 coordinate system.' },
+                          label: { type: 'string' },
+                          color: { type: 'string' },
+                        },
+                      },
+                    },
+                    caption: { type: 'string' },
+                  },
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_circuit',
+                description: 'Display a schematic circuit diagram with standard IEEE symbols (zigzag resistors, parallel-plate capacitors, inductor coils, battery cells, switches, bulbs, voltmeters, ammeters, ground). Use for AP Physics 2, AP Physics C: E&M, and college intro physics.\n\nNETLIST-ONLY SCHEMA:\nDescribe the circuit as a pure NETLIST — a list of components, each with a `from` node id and a `to` node id. The renderer auto-lays out nodes and draws rail wires; you do NOT specify any coordinates. Use any string ids for nodes (e.g. "a", "b", "n1", "top", "junction_1"). Components sharing the same {from, to} pair are laid out as parallel branches automatically.\n\nCLOSED-LOOP RULE — MOST IMPORTANT:\nEvery circuit MUST form a closed loop. Starting from one terminal of the battery, you should be able to trace through components and return to the other terminal. If your components only form a chain (a→b→c→d with no return), the renderer will warn "⚠ open circuit" and the student sees a broken circuit. ALWAYS include a component whose `to` node is the battery\'s other terminal (or reaches it via other components).\n\nEXAMPLES:\n• Simple RC loop (12V battery + 1kΩ resistor + 100µF capacitor + switch in series):\n  components: [\n    {"type":"battery","from":"a","to":"b","value":"12","unit":"V"},\n    {"type":"resistor","from":"b","to":"c","value":"1000","unit":"Ω","label":"R"},\n    {"type":"capacitor","from":"c","to":"d","value":"100","unit":"µF","label":"C"},\n    {"type":"switch-open","from":"d","to":"a"}\n  ]\n  // Note the switch returns from d back to a — closes the loop.\n\n• Parallel resistors (9V battery || 150Ω || 100Ω, with ammeter on the 150Ω branch):\n  components: [\n    {"type":"battery","from":"a","to":"b","value":"9","unit":"V"},\n    {"type":"resistor","from":"a","to":"b","value":"100","unit":"Ω","label":"R_2"},\n    {"type":"ammeter","from":"a","to":"m"},\n    {"type":"resistor","from":"m","to":"b","value":"150","unit":"Ω","label":"R_1"}\n  ]\n  // The battery and R_2 go directly a→b (parallel). The ammeter+R_1 form a third parallel branch via intermediate node m.\n\n• Series batteries with parallel resistors (6V + 9V batteries, three 100Ω in parallel):\n  components: [\n    {"type":"battery","from":"a","to":"b","value":"6","unit":"V"},\n    {"type":"battery","from":"b","to":"c","value":"9","unit":"V"},\n    {"type":"resistor","from":"c","to":"a","value":"100","unit":"Ω","label":"R_1"},\n    {"type":"resistor","from":"c","to":"a","value":"100","unit":"Ω","label":"R_2"},\n    {"type":"resistor","from":"c","to":"a","value":"100","unit":"Ω","label":"R_3"}\n  ]\n  // Batteries chained a→b→c. Three parallel resistors return c→a.\n\n• Wheatstone bridge (4 arms + galvanometer + battery) — uses 4 nodes in a diamond:\n  components: [\n    {"type":"battery","from":"a","to":"d","value":"9","unit":"V"},\n    {"type":"resistor","from":"a","to":"b","value":"100","unit":"Ω","label":"R_1"},\n    {"type":"resistor","from":"b","to":"d","value":"100","unit":"Ω","label":"R_2"},\n    {"type":"resistor","from":"a","to":"c","value":"100","unit":"Ω","label":"R_3"},\n    {"type":"resistor","from":"c","to":"d","value":"100","unit":"Ω","label":"R_4"},\n    {"type":"galvanometer","from":"b","to":"c"}\n  ]\n  // Battery between a and d. Two arms (R_1, R_2) via b, two arms (R_3, R_4) via c. Galvanometer bridges b to c. A Wheatstone ALWAYS has 6 components: battery + 4 arms + bridge element.\n\nCOMPONENT FIELDS:\n• `from`, `to`: node ids (any strings). Direction matters for battery polarity (+ is on the `from` side).\n• `value`: the numeric magnitude only (e.g. "150", "9", "100"). Do NOT include units here.\n• `unit`: the unit symbol separately (e.g. "Ω", "V", "µF", "H", "A").\n• `label`: a variable name like "R_1" or "ε". OMIT `label` for ammeters/voltmeters/batteries — the symbol already tells the student which component it is.\n• `value` and `label` should NEVER be the same string. Don\'t send {label:"9V", value:"9"} — pick one or the other.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    components: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          type: {
+                            type: 'string',
+                            enum: ['resistor', 'capacitor', 'inductor', 'battery', 'wire', 'switch-open', 'switch-closed', 'bulb', 'voltmeter', 'ammeter', 'galvanometer', 'ground'],
+                          },
+                          from: { type: 'string', description: 'Node id — any string (e.g. "a", "n1", "junction").' },
+                          to: { type: 'string', description: 'Node id — any string.' },
+                          value: { type: 'string' },
+                          unit: { type: 'string', description: 'e.g. "Ω", "μF", "V", "H", "A".' },
+                          label: { type: 'string', description: 'Variable name, e.g. "R_1" or "ε".' },
+                        },
+                        required: ['type', 'from', 'to'],
+                      },
+                    },
+                    showNodes: { type: 'boolean' },
+                  },
+                  required: ['components'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_lewis',
+                description: 'Display a 2D Lewis dot structure — atoms connected by single/double/triple bonds, with lone pair electrons as dots and optional formal charges. Use for chemistry teaching of bonding, resonance, formal charge, electron accounting. Place atoms at x,y in a normalized 0–100 coordinate system (keep atoms ~30 units apart for clear bonds). DIFFERENT from show_molecule: use this for 2D Lewis structures and show_molecule for SMILES-based structural formulas.\n\nCANONICAL FORMS — CRITICAL:\n• For sugars and cyclic biomolecules, ALWAYS draw the RING (cyclic) form since it is the dominant form in biology, NOT the open-chain form. Glucose/galactose/mannose → pyranose (6-member ring with one O). Fructose/ribose/deoxyribose → furanose (5-member ring with one O). Drawing glucose as a linear chain is misleading to students.\n• For benzene / aromatic rings, draw the 6-carbon ring with alternating double bonds (or with the central circle as shorthand, if requested).\n• For amino acids, draw at physiological pH (zwitterion: NH3+ and COO-).\n• Prefer show_molecule (SMILES) for canonical biomolecule structures when the student wants the "real" structural formula.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    formula: { type: 'string', description: 'Molecular formula shown above the structure (e.g., "H2O", "CO2").' },
+                    atoms: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          element: { type: 'string', description: 'Element symbol with optional charge, e.g. "C", "O", "N", "Na+", "Cl-".' },
+                          x: { type: 'number' },
+                          y: { type: 'number' },
+                          lonePairs: { type: 'number' },
+                          formalCharge: { type: 'number' },
+                        },
+                        required: ['id', 'element', 'x', 'y'],
+                      },
+                    },
+                    bonds: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          from: { type: 'string' },
+                          to: { type: 'string' },
+                          order: { type: 'number', description: 'Bond order: 1 = single, 2 = double, 3 = triple.' },
+                          style: { type: 'string', enum: ['solid', 'dashed', 'wedge', 'dash-wedge'] },
+                        },
+                        required: ['from', 'to', 'order'],
+                      },
+                    },
+                    geometry: { type: 'string', description: 'Optional geometry label shown below, e.g. "bent", "trigonal planar", "tetrahedral".' },
+                  },
+                  required: ['atoms'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_periodic_table',
+                description: 'Display the full periodic table with all 118 elements arranged in the standard group/period layout. Elements are colored by category with a legend. Use to teach periodic trends, group chemistry, element properties, or to point out specific elements. Highlights focus attention: `highlight` for specific symbols, `highlightGroup` (1–18), `highlightPeriod` (1–7), `highlightCategory` for element classes.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    highlight: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          symbol: { type: 'string', description: 'Element symbol e.g. "Na", "Cl", "Fe".' },
+                          color: { type: 'string' },
+                          note: { type: 'string' },
+                        },
+                        required: ['symbol'],
+                      },
+                    },
+                    highlightGroup: { type: 'number', description: '1–18.' },
+                    highlightPeriod: { type: 'number', description: '1–7.' },
+                    highlightCategory: {
+                      type: 'string',
+                      enum: ['alkali', 'alkaline-earth', 'transition', 'post-transition', 'metalloid', 'reactive-nonmetal', 'halogen', 'noble-gas', 'lanthanide', 'actinide'],
+                    },
+                    showMass: { type: 'boolean' },
+                  },
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_annotated_passage',
+                description: 'Display a reading passage with line numbers, highlighted text spans, and margin notes — the core ELA teaching artifact for close reading, literary analysis, rhetoric, and SAT/ACT/AP reading comprehension. Provide the passage as a single `passage` string (split on newlines) OR as pre-split `lines`. Highlights reference text by line number + substring. Margin notes attach to a line number and appear in a right-hand gutter. Use colors thoughtfully — yellow for imagery, blue for evidence, green for thesis.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    source: { type: 'string', description: 'Author + work attribution, e.g. "Frankenstein, Mary Shelley, Chapter 5".' },
+                    passage: { type: 'string', description: 'Full passage text. Will be split on newlines.' },
+                    lines: { type: 'array', items: { type: 'string' } },
+                    startLineNumber: { type: 'number' },
+                    highlights: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          line: { type: 'number', description: '1-based line number.' },
+                          text: { type: 'string', description: 'Substring to highlight within that line.' },
+                          color: { type: 'string', description: 'CSS color — e.g. "#fef08a" (yellow), "#bae6fd" (blue), "#bbf7d0" (green).' },
+                          note: { type: 'string' },
+                        },
+                        required: ['line', 'text'],
+                      },
+                    },
+                    marginNotes: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          line: { type: 'number' },
+                          text: { type: 'string' },
+                        },
+                        required: ['line', 'text'],
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_call_stack',
+                description: 'Display a visual call stack for teaching recursion, scope, and function invocation. Provide `frames` with the OLDEST frame first (bottom of stack, usually `main`) and the newest call LAST (top). Each frame shows its function signature, arguments, locals, and optionally the currently-executing line. Use `returnValue` on a frame to indicate it is about to return.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    frames: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          function: { type: 'string', description: 'Frame label, e.g. "factorial(3)" or "main()".' },
+                          args: { type: 'string', description: 'JSON-encoded object mapping arg name → value, e.g. "{\\"n\\": 3}". (Encoded as string because OpenAI strict schemas forbid free-form objects.)' },
+                          locals: { type: 'string', description: 'JSON-encoded object of local variable bindings, e.g. "{\\"i\\": 0, \\"sum\\": 0}".' },
+                          currentLine: { type: 'number' },
+                          returnValue: { type: 'string' },
+                          highlight: { type: 'boolean', description: 'Mark this frame as the active one.' },
+                        },
+                        required: ['function'],
+                      },
+                    },
+                    finalReturn: { type: 'string' },
+                  },
+                  required: ['frames'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_flowchart',
+                description: 'Display a flowchart. Node types: "start" / "end" (pills), "process" (rectangle), "decision" (diamond), "io" (parallelogram). ALWAYS include `edges`. Label every decision-branch edge with "yes" / "no".\n\nLAYOUT RULES for branching / looping algorithms (always use explicit x,y):\n1. Main spine at x=50.\n2. Off-spine branches at x=15 / x=85. Decision "yes" and "no" should exit OPPOSITE sides so they don\'t collide with the loop-back.\n3. `end` at x=50 (bottom center) so return paths converge.\n4. Short labels (≤18 chars; auto-wraps if longer).\n\nTHE RENDERER AUTO-ROUTES: back-edges and forward edges that would pass through intermediate nodes route orthogonally around a side channel. Channel side is chosen opposite the target\'s occupied side.\n\n(a) Euclidean gcd — simple loop:\nnodes: start(50,10) input(50,25) cond-diamond(50,40) returnA(85,40) body(50,60) end(50,85).\nedges: start→input, input→cond, cond→returnA ("yes"), cond→body ("no"), body→cond (BACK-EDGE), returnA→end.\n\n(b) Binary search:\nnodes: start(50,5) input(50,15) init(50,25) loopCond-diamond(50,35) midCalc(50,45) eqCheck-diamond(50,55) returnMid(85,55) gtCheck-diamond(50,65) highUpdate(15,75) lowUpdate(85,75) returnNotFound(50,85) end(50,95).\nedges: start→input, input→init, init→loopCond, loopCond→midCalc ("yes"), loopCond→returnNotFound ("no"), midCalc→eqCheck, eqCheck→returnMid ("yes"), eqCheck→gtCheck ("no"), gtCheck→highUpdate ("yes"), gtCheck→lowUpdate ("no"), highUpdate→loopCond (BACK-EDGE, NOT midCalc), lowUpdate→loopCond (BACK-EDGE, NOT midCalc), returnMid→end, returnNotFound→end.\n\nCRITICAL: loop-backs MUST target the condition diamond, not the body. Without explicit coords, layout is a top-down chain — only for linear procedures.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    nodes: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          type: { type: 'string', enum: ['start', 'end', 'process', 'decision', 'io'] },
+                          label: { type: 'string' },
+                          x: { type: 'number' },
+                          y: { type: 'number' },
+                        },
+                        required: ['id', 'type', 'label'],
+                      },
+                    },
+                    edges: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          from: { type: 'string' },
+                          to: { type: 'string' },
+                          label: { type: 'string' },
+                        },
+                        required: ['from', 'to'],
+                      },
+                    },
+                    layout: { type: 'string', enum: ['top-down', 'left-right'] },
+                  },
+                  required: ['nodes'],
+                },
+              },
+              {
+                type: 'function',
+                name: 'show_manipulative',
+                description: 'Display an elementary-math visual manipulative for K-5. Types: "base-10" (ones/tens/hundreds/thousands blocks for place value), "ten-frame" (2×5 grid with counters for counting 0–20), "area-model" (partitioned rectangle for multi-digit multiplication). Base-10 for place value and regrouping; ten-frame for counting, addition, subitizing; area-model for multiplication strategies and later distributive property.\n\nFOR ADDITION-WITH-REGROUPING demos, issue TWO calls: (1) "before regrouping" with the raw sums, e.g. 47+28 → { tens: 6, ones: 15 } showing all 15 ones visible so the student sees the overflow, and (2) "after regrouping" with the carried result { tens: 8, ones: 5 }. Ones up to 18 are supported (wraps to 2 rows). DO NOT pre-carry the ones in the "before" step — the whole point is to SEE the regrouping happen.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    type: { type: 'string', enum: ['base-10', 'ten-frame', 'area-model'] },
+                    base10: {
+                      type: 'object',
+                      properties: {
+                        ones: { type: 'number' },
+                        tens: { type: 'number' },
+                        hundreds: { type: 'number' },
+                        thousands: { type: 'number' },
+                        showTotal: { type: 'boolean' },
+                      },
+                    },
+                    tenFrame: {
+                      type: 'object',
+                      properties: {
+                        count: { type: 'number', description: 'Number of filled dots, 0–20.' },
+                        color: { type: 'string' },
+                        label: { type: 'string' },
+                      },
+                    },
+                    areaModel: {
+                      type: 'object',
+                      properties: {
+                        rows: { type: 'array', items: { type: 'number' } },
+                        cols: { type: 'array', items: { type: 'number' } },
+                        showProducts: { type: 'boolean' },
+                        showSum: { type: 'boolean' },
+                        rowLabel: { type: 'string' },
+                        colLabel: { type: 'string' },
+                      },
+                    },
+                  },
+                  required: ['type'],
+                },
+              },
             ],
             tool_choice: 'auto',
             audio: {
@@ -1058,6 +1687,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             },
           },
         }));
+        };  // end trySendSessionUpdate
+        trySendSessionUpdateRef.current = trySendSessionUpdate;
+        trySendSessionUpdate();
       };
 
       ws.onmessage = handleMessage;
@@ -1084,7 +1716,42 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       onError?.(error);
       updateState('error');
     }
-  }, [instructions, voice, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
+  }, [voice, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
+
+  // Fire the ephemeral-token fetch early so it can overlap with
+  // buildInstructions (saves ~500–1500 ms on typical startup). Safe to call
+  // multiple times — the promise is cached in tokenPromiseRef.
+  const prefetchToken = useCallback(() => {
+    if (tokenPromiseRef.current) return tokenPromiseRef.current;
+    tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice }),
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          console.error('[Realtime] Token prefetch failed:', r.status, await r.text());
+          tokenPromiseRef.current = null;
+          return null;
+        }
+        const d = await r.json();
+        return (d.client_secret as string) || null;
+      })
+      .catch((err) => {
+        console.error('[Realtime] Token prefetch threw:', err);
+        tokenPromiseRef.current = null;
+        return null;
+      });
+    return tokenPromiseRef.current;
+  }, [voice]);
+
+  // When `instructions` arrives after the WebSocket is already open (parallel
+  // startup path), poke the deferred session.update send.
+  useEffect(() => {
+    if (instructions) {
+      trySendSessionUpdateRef.current?.();
+    }
+  }, [instructions]);
 
   // Disconnect
   const disconnect = useCallback(() => {
@@ -1110,6 +1777,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     hasAudioInBufferRef.current = false;
+
+    // Reset parallel-connect state so the next connect() does a fresh fetch.
+    tokenPromiseRef.current = null;
+    sessionUpdateSentRef.current = false;
+    trySendSessionUpdateRef.current = null;
 
     updateState('disconnected');
   }, [updateState]);
@@ -1407,6 +2079,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     isSpeaking: state === 'speaking',
     error,
     connect,
+    prefetchToken,
     disconnect,
     startListening,
     stopListening,

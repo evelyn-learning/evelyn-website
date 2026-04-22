@@ -209,7 +209,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_geometry',
-    description: 'Display geometric figures with labeled vertices, segments, polygons, circles, and angle markers. ALWAYS use this instead of show_svg_diagram for geometric figures. CRITICAL: If drawing a circle (or anything with "circle" in the title, e.g. "Circle with Chord"), you MUST include at least one entry in `circles` with a `center` point id and a `radius` number — points and segments alone do NOT draw a circle boundary. For a chord, put the two endpoints in `points` with coordinates that lie on the circle (|point - center| = radius), and add a `segment` between them. Same rule for `polygons` (triangle/square/etc. titles require a polygon entry).',
+    description: 'Display geometric figures with labeled vertices, segments, polygons, circles, and angle markers. ALWAYS use this instead of show_svg_diagram for geometric figures.\n\nCRITICAL: If drawing a circle (or anything with "circle" in the title, e.g. "Circle with Chord"), you MUST include at least one entry in `circles` with a `center` point id and a `radius` number — points and segments alone do NOT draw a circle boundary. For a chord, put the two endpoints in `points` with coordinates that lie on the circle (|point - center| = radius), and add a `segment` between them. Same rule for `polygons` (triangle/square/etc. titles require a polygon entry).\n\nLABELING CONVENTIONS:\n- Point `label`: when the student\'s prompt specifies explicit coordinates (e.g. "A=(0,0), B=(6,0)"), include them in the label: `label: "A(0, 0)"`. When coordinates are implicit or symbolic, just use the letter: `label: "A"`.\n- Segment `label`: use the two endpoint letters, e.g. "AB" or the length if known (e.g. "AB = 6" or "6"). Never leave it blank if the user asked to label sides.\n- Angle `label`: prefer the measure in degrees (e.g. "53°", "90°"). If the measure is unknown, use a name like "α" or "∠A = ?". AVOID labeling an angle with just the bare symbol "∠" — the renderer will auto-compute the degree measure from geometry if the label is missing or just "∠", so you can also omit `label` entirely and let the renderer fill it in.',
     parameters: {
       type: 'object',
       properties: {
@@ -257,13 +257,13 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_tree',
-    description: 'Display a tree diagram with auto-layout. Use for: probability trees, factor trees, decision trees.',
+    description: 'Display a tree diagram with auto-layout. Use for: probability trees, factor trees, decision trees.\n\nSCHEMA — a child is an EDGE wrapper `{ label, probability?, node }`, NOT a bare node. The nested node must go under `node`, not inline.\n\nFOR A PROBABILITY TREE (e.g. 3 coin flips), set `type: "probability"` and `showLeafProbabilities: true`. Example for coin × 3:\n{\n  "label": "Start",\n  "children": [\n    { "label": "H", "probability": "1/2", "node": {\n        "label": "H",\n        "children": [\n          { "label": "H", "probability": "1/2", "node": { "label": "HH", "children": [\n              { "label": "H", "probability": "1/2", "node": { "label": "HHH" } },\n              { "label": "T", "probability": "1/2", "node": { "label": "HHT" } }\n          ]}},\n          { "label": "T", "probability": "1/2", "node": { "label": "HT", "children": [\n              { "label": "H", "probability": "1/2", "node": { "label": "HTH" } },\n              { "label": "T", "probability": "1/2", "node": { "label": "HTT" } }\n          ]}}\n        ]\n    }},\n    { "label": "T", "probability": "1/2", "node": { /* mirror of H branch */ }}\n  ]\n}\n\nEvery child object MUST have a `node` field (the child subtree). Leaf nodes have `children: []` or omit children entirely. Never send `children: [{ label: "H" }]` without the `node` wrapper — the renderer needs the edge/node split to draw branch labels separately.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
         type: { type: 'string', enum: ['probability', 'factor', 'decision', 'generic'] },
-        root: { type: 'object', description: 'Recursive tree node: { label, value?, color?, children?: [{ label, probability?, node: TreeNode }] }' },
+        root: { type: 'object', description: 'Recursive tree node: { label, value?, color?, children?: [{ label, probability?, node: TreeNode }] }. A child is an EDGE ({label, probability?, node}), not a bare node.' },
         showLeafProbabilities: { type: 'boolean' },
         direction: { type: 'string', enum: ['top-down', 'left-right'] },
       },
@@ -272,13 +272,13 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_venn_diagram',
-    description: 'Display a 2 or 3 set Venn diagram.',
+    description: 'Display a 2- or 3-set Venn diagram. Each call REPLACES the previous diagram — if the student provides counts after an empty diagram, call this again with `regions` populated; do not stall with "which region first?" conversationally.\n\nREGION KEYS (use EXACTLY these strings):\n  2-set: "onlyA", "onlyB", "intersection", "neither"\n  3-set: "onlyA", "onlyB", "onlyC", "AB", "AC", "BC", "ABC", "neither"\nEach region maps to A/B/C in declaration order: sets[0]=A, sets[1]=B, sets[2]=C.\nFor 3-set, "AB" means "in A and B, NOT in C" (the lens between A and B minus the triple overlap). "ABC" is the center where all three overlap.\n\nREGION VALUE:\n  regions["AB"] = { "value": "65" }  ← the number shown in that region.\n  Optional: "highlight": true (faint yellow fill), "items": ["Alice", "Bob"] (listed contents instead of a single value).\n\nWHEN THE STUDENT GIVES DATA, COMPUTE THE EXCLUSIVE-REGION COUNTS AND FILL THE DIAGRAM:\nIf the student says "|M|=100, |S|=200, |E|=300, |M∩S|=75, |S∩E|=65, |M∩E|=55, |M∩S∩E|=10" (cumulative counts, meaning |M| = all students in Math including overlaps), compute:\n  ABC = 10\n  AB (M∩S only) = |M∩S| - |M∩S∩E| = 75 - 10 = 65\n  AC (M∩E only) = |M∩E| - |M∩S∩E| = 55 - 10 = 45\n  BC (S∩E only) = |S∩E| - |M∩S∩E| = 65 - 10 = 55\n  onlyA (M only) = |M| - (AB + AC + ABC) = 100 - (65 + 45 + 10) = -20 (flag inconsistency to the student)\n  onlyB (S only) = |S| - (AB + BC + ABC) = 200 - (65 + 55 + 10) = 70\n  onlyC (E only) = |E| - (AC + BC + ABC) = 300 - (45 + 55 + 10) = 190\n\nIf the student\'s numbers are ALREADY the exclusive region counts ("Math-only=100, Science-only=200, ..., all-three=10"), just assign them directly.\n\nEXAMPLE CALL:\n{\n  "sets": [{"label":"Math","color":"#2563eb"},{"label":"Science","color":"#16a34a"},{"label":"English","color":"#dc2626"}],\n  "regions": {\n    "onlyA": {"value":"100"}, "onlyB": {"value":"200"}, "onlyC": {"value":"300"},\n    "AB": {"value":"75"}, "AC": {"value":"55"}, "BC": {"value":"65"},\n    "ABC": {"value":"10"}\n  },\n  "universalLabel": "Students"\n}',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
         sets: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, color: { type: 'string' } }, required: ['label'] } },
-        regions: { type: 'object', description: 'Region keys: onlyA, onlyB, intersection, neither (2 sets)' },
+        regions: { type: 'object', description: 'Keys: 2-set → onlyA|onlyB|intersection|neither; 3-set → onlyA|onlyB|onlyC|AB|AC|BC|ABC|neither. Each value is {value?: string, highlight?: boolean, items?: string[]}.' },
         universalLabel: { type: 'string' },
       },
       required: ['sets', 'regions'],
@@ -513,7 +513,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_map',
-    description: 'Display a schematic map with pins and optional highlighted regions. Use for geography, history, civics, economics — any topic where spatial location matters. Choose a `background` preset for a rough regional outline (world, continent, or a few specific countries). Place pins at x,y in a normalized 0–100 coordinate system (0,0 = top-left; 100,100 = bottom-right). For a specific detailed cartographic map (e.g. "the exact route of the Silk Road"), prefer show_image with a Wikimedia URL — this renderer is for quick schematic teaching maps.',
+    description: 'Display a map with real country outlines (Natural Earth) and pins at specific cities / states. ALWAYS pass `lat` and `lon` (real latitude/longitude) on each pin — the renderer projects them onto the active preset automatically, so Cairo, Paris, Houston, etc. land on the correct country. Only fall back to `x`/`y` (0–100 normalized) for abstract labels that have no real lat/lon.',
     parameters: {
       type: 'object',
       properties: {
@@ -521,19 +521,21 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         background: {
           type: 'string',
           enum: ['blank', 'world', 'north-america', 'south-america', 'europe', 'asia', 'africa', 'australia', 'usa', 'india', 'china', 'middle-east', 'mediterranean'],
-          description: 'Preset regional outline. Use "blank" for a clean canvas when pin positions alone communicate the geography.',
+          description: 'Choose the preset whose bounding box contains the cities you want to show.',
         },
         pins: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              x: { type: 'number', description: '0–100, left to right.' },
-              y: { type: 'number', description: '0–100, top to bottom.' },
+              lat: { type: 'number', description: 'Real latitude (preferred). Positive = north.' },
+              lon: { type: 'number', description: 'Real longitude (preferred). Positive = east.' },
+              x: { type: 'number', description: 'Fallback: 0–100 normalized x. Ignored when lat/lon are set.' },
+              y: { type: 'number', description: 'Fallback: 0–100 normalized y.' },
               label: { type: 'string' },
               color: { type: 'string' },
             },
-            required: ['x', 'y', 'label'],
+            required: ['label'],
           },
         },
         regions: {
@@ -556,23 +558,11 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_circuit',
-    description: 'Display a schematic circuit diagram with standard IEEE symbols (zigzag resistors, parallel-plate capacitors, inductor coils, battery cells, switches, bulbs, voltmeters, ammeters, ground). Use for AP Physics 2, AP Physics C: E&M, and college intro physics. Define `nodes` as named connection points placed at x,y in a normalized 0–100 coordinate system, then list `components` as {type, from, to, value, unit, label}. A wire is a component with type "wire" and no value. Put component values in `value` (numeric) and units in `unit` ("Ω", "μF", "V", "H", "A") so they render as "R = 100 Ω" etc.',
+    description: 'Display a schematic circuit diagram with standard IEEE symbols (zigzag resistors, parallel-plate capacitors, battery cells, switches, bulbs, voltmeters, ammeters, ground). Describe the circuit as a NETLIST — a list of components, each with `from` and `to` node ids (any strings). The renderer handles all positioning and wire routing. Components sharing the same {from, to} pair are rendered as parallel branches. IMPORTANT: the circuit MUST form a closed loop — include a component returning to the battery\'s other terminal. Put component values in `value` (numeric) and units in `unit` ("Ω", "μF", "V", "H", "A").',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        nodes: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string', description: 'Node identifier used by components — e.g. "a", "b", "v+".' },
-              x: { type: 'number', description: '0–100.' },
-              y: { type: 'number', description: '0–100.' },
-            },
-            required: ['id', 'x', 'y'],
-          },
-        },
         components: {
           type: 'array',
           items: {
@@ -580,10 +570,10 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             properties: {
               type: {
                 type: 'string',
-                enum: ['resistor', 'capacitor', 'inductor', 'battery', 'wire', 'switch-open', 'switch-closed', 'bulb', 'voltmeter', 'ammeter', 'ground'],
+                enum: ['resistor', 'capacitor', 'inductor', 'battery', 'wire', 'switch-open', 'switch-closed', 'bulb', 'voltmeter', 'ammeter', 'galvanometer', 'ground'],
               },
-              from: { type: 'string', description: 'Node id.' },
-              to: { type: 'string', description: 'Node id.' },
+              from: { type: 'string', description: 'Node id — any string.' },
+              to: { type: 'string', description: 'Node id — any string.' },
               value: { type: 'string' },
               unit: { type: 'string' },
               label: { type: 'string', description: 'Variable name, e.g. "R_1" or "ε".' },
@@ -593,7 +583,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         showNodes: { type: 'boolean', description: 'Draw small dots at each node. Default true.' },
       },
-      required: ['nodes', 'components'],
+      required: ['components'],
     },
   },
   {
@@ -735,7 +725,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_flowchart',
-    description: 'Display a flowchart for algorithm teaching or any procedure with branching. Node types: "start" / "end" (rounded pills), "process" (rectangle), "decision" (diamond, for branches), "io" (parallelogram, for read/write). Connect nodes via `edges` with optional `label` — label decision-branch edges with "yes" / "no" / condition text. Provide `x` and `y` (0–100) on each node for explicit layout; omit for automatic top-down or left-right placement.',
+    description: 'Display a flowchart for algorithm teaching or any procedure with branching. Node types: "start" / "end" (rounded pills), "process" (rectangle), "decision" (diamond, for branches), "io" (parallelogram, for read/write). ALWAYS include `edges`. Label every decision-branch edge with "yes" / "no" / condition text.\n\nLAYOUT RULES for branching / looping algorithms (always use explicit x,y on every node):\n1. Main spine at x=50 (start → inputs → condition diamond → body → exit).\n2. Off-spine branches at x=15 (left) or x=85 (right). The decision diamond\'s "yes" and "no" should exit on OPPOSITE sides so they don\'t collide with the loop-back. (For a simple while-loop with one body branch, typically: yes=continue downward on spine, no=exit right to x=85.)\n3. `end` at x=50 (bottom center) so all return paths converge cleanly.\n4. Short labels (≤18 chars ideal; auto-wraps to 2 lines if longer). Prefer `low = mid + 1` over `Set low = mid + 1 and continue`.\n\nTHE RENDERER\'S AUTO-ROUTER handles (no manual work needed):\n- Back-edges (y2 < y1) route orthogonally around a side channel.\n- Forward edges that would pass through an intermediate node also detour.\n- Channel side is chosen opposite to the target\'s occupied side (so a loop-back doesn\'t enter the same side a yes/no branch exits).\n\nCANONICAL EXAMPLES:\n\n(a) Euclidean gcd — simple loop with early exit:\nnodes: start(50,10) input(50,25) cond-diamond(50,40) returnA(85,40) body(50,60) end(50,85).\nedges: start→input, input→cond, cond→returnA ("yes"), cond→body ("no"), body→cond (BACK-EDGE to condition, NOT input), returnA→end.\n\n(b) Binary search — multi-way branching with loop-back:\nnodes: start(50,5) input(50,15) init(50,25) loopCond-diamond(50,35) midCalc(50,45) eqCheck-diamond(50,55) returnMid(85,55) gtCheck-diamond(50,65) highUpdate(15,75) lowUpdate(85,75) returnNotFound(50,85) end(50,95).\nedges: start→input, input→init, init→loopCond, loopCond→midCalc ("yes"), loopCond→returnNotFound ("no"), midCalc→eqCheck, eqCheck→returnMid ("yes"), eqCheck→gtCheck ("no"), gtCheck→highUpdate ("yes"), gtCheck→lowUpdate ("no"), highUpdate→loopCond (BACK-EDGE, NOT midCalc), lowUpdate→loopCond (BACK-EDGE, NOT midCalc), returnMid→end, returnNotFound→end.\n\nCRITICAL: loop-back edges MUST target the condition-check node (not the body). Targeting the body directly creates an infinite loop.\n\nWithout explicit coords, layout is a straight top-down chain — use ONLY for purely linear procedures with no back-edges.',
     parameters: {
       type: 'object',
       properties: {
@@ -773,7 +763,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_manipulative',
-    description: 'Display an elementary-math visual manipulative — a concrete representation of abstract number concepts for K-5 students. Three types: "base-10" (ones/tens/hundreds/thousands blocks for place value), "ten-frame" (2×5 grid with counters for counting 0–20), "area-model" (partitioned rectangle for multi-digit multiplication). Choose based on the topic: base-10 for place value and addition/subtraction regrouping; ten-frame for counting, addition, subitizing; area-model for multiplication strategies and later distributive property / factoring.',
+    description: 'Display an elementary-math visual manipulative — a concrete representation of abstract number concepts for K-5 students. Three types: "base-10" (ones/tens/hundreds/thousands blocks for place value), "ten-frame" (2×5 grid with counters for counting 0–20), "area-model" (partitioned rectangle for multi-digit multiplication). Choose based on the topic: base-10 for place value and addition/subtraction regrouping; ten-frame for counting, addition, subitizing; area-model for multiplication strategies and later distributive property / factoring.\n\nFOR ADDITION-WITH-REGROUPING demos, issue TWO calls: (1) "before regrouping" with the raw sums, e.g. 47+28 → { tens: 6, ones: 15 } showing all 15 ones visible so the student sees the overflow, and (2) "after regrouping" with the carried result { tens: 8, ones: 5 }. Ones up to 18 are supported (wraps to 2 rows). DO NOT pre-carry the ones in the "before" step — the whole point is to SEE the regrouping happen.',
     parameters: {
       type: 'object',
       properties: {
@@ -865,6 +855,151 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
       },
       required: ['type'],
+    },
+  },
+  {
+    name: 'show_collision',
+    description: 'Display a before/after collision diagram with masses and velocity vectors. ALWAYS use this instead of show_svg_diagram when teaching conservation of momentum, elastic / inelastic / perfectly-inelastic collisions, or any two-object interaction. Each body is rendered as a filled circle sized by mass (visual hint, not to scale) with a velocity arrow whose length scales with speed. For `type: "perfectly-inelastic"`, the after-panel automatically renders the combined mass as a single merged blob.\n\nEXAMPLE (1D elastic collision):\n{"title":"Elastic collision","type":"elastic","before":[{"label":"A","mass":2,"velocity":5},{"label":"B","mass":3,"velocity":0}],"after":[{"label":"A","mass":2,"velocity":-1},{"label":"B","mass":3,"velocity":4}],"momentumAnnotation":"p = Σmv = 10 kg·m/s (conserved)"}',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        dimension: { type: 'string', enum: ['1D', '2D'], description: 'Default "1D" — velocities along x only. Use "2D" for glancing / angled collisions; then provide vx and vy on each body instead of velocity.' },
+        type: { type: 'string', enum: ['elastic', 'inelastic', 'perfectly-inelastic'] },
+        before: {
+          type: 'array',
+          description: 'Bodies in their pre-collision state.',
+          items: {
+            type: 'object',
+            properties: {
+              label: { type: 'string', description: 'Short label shown inside the circle (defaults to A, B, …).' },
+              mass: { type: 'number' },
+              velocity: { type: 'number', description: '1D signed velocity (positive = right).' },
+              vx: { type: 'number', description: '2D x-velocity.' },
+              vy: { type: 'number', description: '2D y-velocity (positive = up).' },
+              color: { type: 'string' },
+            },
+          },
+        },
+        after: {
+          type: 'array',
+          description: 'Bodies after the collision. For perfectly-inelastic, you can pass a single combined body OR the pre-collision list with the combined velocity on each — the renderer merges them.',
+          items: {
+            type: 'object',
+            properties: {
+              label: { type: 'string' },
+              mass: { type: 'number' },
+              velocity: { type: 'number' },
+              vx: { type: 'number' },
+              vy: { type: 'number' },
+              color: { type: 'string' },
+            },
+          },
+        },
+        momentumAnnotation: { type: 'string', description: 'Optional equation shown below panels, e.g. "p = Σmv = 10 kg·m/s (conserved)".' },
+        notes: { type: 'string' },
+      },
+      required: ['before', 'after'],
+    },
+  },
+  {
+    name: 'show_reaction_coordinate',
+    description: 'Display a chemistry reaction coordinate (energy profile) diagram: reactants baseline, activation-energy hump(s), products baseline. ALWAYS use this instead of show_function_graph for "reaction coordinate", "energy profile", "activation energy", or exothermic/endothermic reaction prompts. Auto-handles negative y-axis for exothermic reactions and supports multi-curve catalyst comparisons.\n\nEXAMPLE (exothermic with catalyst comparison):\n{"title":"Reaction coordinate","reactants_energy":0,"products_energy":-120,"activation_energies":[50,30],"curve_labels":["Without catalyst","With catalyst"]}',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        reactants_energy: { type: 'number', description: 'Energy of reactants (reference level). Usually 0.' },
+        products_energy: { type: 'number', description: 'Energy of products. Negative = exothermic, positive = endothermic.' },
+        activation_energies: {
+          type: 'array',
+          description: 'One activation energy per curve — use [Ea] for single curve, [Ea_no_cat, Ea_cat] for catalyst comparison.',
+          items: { type: 'number' },
+        },
+        curve_labels: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        reactant_label: { type: 'string' },
+        product_label: { type: 'string' },
+        units: { type: 'string', description: 'Default "kJ/mol".' },
+      },
+      required: ['products_energy', 'activation_energies'],
+    },
+  },
+  {
+    name: 'show_energy_bars',
+    description: 'Display a conservation-of-energy bar chart showing kinetic, gravitational PE, spring PE, and thermal (friction-loss) energy at multiple labeled positions in a scenario. ALWAYS use this instead of show_svg_diagram when teaching conservation of energy, spring-loaded problems, roller-coaster / pendulum energy transforms, or friction dissipation. Each position is a column of stacked bars; when totals match across all positions, a dashed "total energy (conserved)" line is drawn across the top automatically.\n\nEXAMPLE (ball dropped from height h):\n{"title":"Ball dropped from rest","positions":[{"label":"Top","pe":100,"ke":0},{"label":"Middle","pe":50,"ke":50},{"label":"Bottom","pe":0,"ke":100}]}',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        positions: {
+          type: 'array',
+          description: 'One column per position in the scenario. At least one of ke/pe/spring/thermal must be non-zero on each position.',
+          items: {
+            type: 'object',
+            properties: {
+              label: { type: 'string', description: 'Short label for this position/moment (e.g. "Top", "Middle", "Bottom", "A", "Before collision").' },
+              ke: { type: 'number', description: 'Kinetic energy (J or any consistent unit).' },
+              pe: { type: 'number', description: 'Gravitational potential energy.' },
+              spring: { type: 'number', description: 'Elastic/spring potential energy.' },
+              thermal: { type: 'number', description: 'Energy dissipated as heat/friction (stacked at the base of the bar).' },
+            },
+            required: ['label'],
+          },
+        },
+        yAxisLabel: { type: 'string', description: 'Vertical axis label. Default "Energy (J)".' },
+        showTotalLine: { type: 'boolean', description: 'Force a dashed total-energy line across the top. Default: auto-drawn when all column totals are equal (conservation scenario).' },
+        notes: { type: 'string', description: 'Short caption under the chart (e.g. "Neglecting air resistance").' },
+      },
+      required: ['positions'],
+    },
+  },
+  {
+    name: 'show_free_body_diagram',
+    description: 'Display a physics free-body diagram with force vectors. ALWAYS use this instead of show_svg_diagram for any free-body / force / Newton\'s-laws visualization.\n\nThe model supplies semantic parameters — object shape, surface type, and a list of forces with names and directions — and the renderer handles geometry, arrowheads, and label placement. Force colors are auto-assigned by name convention (W/Mg → green gravity, N → amber normal, f/friction → purple, T → blue tension, default red for applied forces).\n\nDirection options:\n• Cardinal: "up", "down", "left", "right", "up-left", "up-right", "down-left", "down-right"\n• Slope-relative (for inclined surfaces): "normal" (perpendicular-out), "up-slope", "down-slope", "into-surface"\n• Numeric: an angle in degrees (math convention, CCW from +x — so 90 = up, 180 = left)\n\nEXAMPLE (5 kg block on a 30° frictionless incline):\n{"title":"Block on frictionless incline","object":{"shape":"box","mass":"5 kg"},"surface":{"type":"inclined","angle":30},"forces":[{"name":"W","magnitude":"mg","direction":"down"},{"name":"N","direction":"normal"}]}',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Short diagram title shown above the figure.' },
+        object: {
+          type: 'object',
+          description: 'The body being analyzed.',
+          properties: {
+            shape: { type: 'string', enum: ['box', 'circle', 'person'], description: 'Default: "box".' },
+            label: { type: 'string', description: 'Short label drawn inside the object (e.g. "M", "m₁").' },
+            mass: { type: 'string', description: 'Mass string drawn inside the object if no label is given (e.g. "5 kg").' },
+          },
+        },
+        surface: {
+          type: 'object',
+          description: 'Support surface the object rests on.',
+          properties: {
+            type: { type: 'string', enum: ['horizontal', 'inclined', 'vertical', 'none'], description: 'Default: "horizontal". Use "none" for a free-floating or hanging object.' },
+            angle: { type: 'number', description: 'Degrees above horizontal. Required when type is "inclined".' },
+            friction: { type: 'boolean', description: 'When true, adds a "μ (friction)" annotation near the surface.' },
+          },
+          required: ['type'],
+        },
+        forces: {
+          type: 'array',
+          description: 'Force vectors radiating from the object\'s center.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Short force name (e.g. "W", "N", "F_app", "f_k", "T"). Drives auto-coloring.' },
+              magnitude: { type: 'string', description: 'Optional magnitude label (e.g. "mg", "20 N"). Rendered as "<name> = <magnitude>".' },
+              direction: { type: 'string', description: 'Named direction ("up"/"down"/"left"/"right"/"up-left"/"up-right"/"down-left"/"down-right"/"normal"/"up-slope"/"down-slope"/"into-surface") OR a numeric angle in degrees as a string (math convention, e.g. "45" or "-135").' },
+              color: { type: 'string', description: 'Optional color override — hex (e.g. "#dc2626"). Defaults by name convention.' },
+              scale: { type: 'number', description: 'Optional length multiplier (1.0 = default). Use larger for dominant forces, smaller for weak ones.' },
+            },
+            required: ['name', 'direction'],
+          },
+        },
+        notes: { type: 'string', description: 'Short caption shown below the diagram (e.g. "Frictionless", "Constant velocity").' },
+      },
+      required: ['object', 'forces'],
     },
   },
 ];
@@ -1021,7 +1156,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     return {
       action: 'showCircuit',
       title: funcArgs.title,
-      nodes: Array.isArray(funcArgs.nodes) ? funcArgs.nodes : [],
+      // nodes is no longer used — the renderer auto-computes positions.
+      // Kept for back-compat with any cached legacy args.
+      nodes: Array.isArray(funcArgs.nodes) ? funcArgs.nodes : undefined,
       components: Array.isArray(funcArgs.components) ? funcArgs.components : [],
       showNodes: funcArgs.showNodes,
     } as unknown as WhiteboardCommand;
@@ -1060,10 +1197,32 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_call_stack') {
+    // OpenAI Realtime's strict schema forbids free-form objects, so args/locals
+    // arrive as JSON-encoded strings. Decode them back into real objects here
+    // (and pass through if the Gemini engine already sent objects).
+    const decodeBindings = (v: unknown): Record<string, string | number> | undefined => {
+      if (v == null) return undefined;
+      if (typeof v === 'object' && !Array.isArray(v)) return v as Record<string, string | number>;
+      if (typeof v === 'string') {
+        try {
+          const parsed = JSON.parse(v);
+          return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+        } catch {
+          return undefined;
+        }
+      }
+      return undefined;
+    };
+    const rawFrames = Array.isArray(funcArgs.frames) ? funcArgs.frames : [];
+    const frames = rawFrames.map((f: Record<string, unknown>) => ({
+      ...f,
+      args: decodeBindings(f.args),
+      locals: decodeBindings(f.locals),
+    }));
     return {
       action: 'showCallStack',
       title: funcArgs.title,
-      frames: Array.isArray(funcArgs.frames) ? funcArgs.frames : [],
+      frames,
       finalReturn: funcArgs.finalReturn,
     } as unknown as WhiteboardCommand;
   }
@@ -1169,6 +1328,54 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         difficultyLabel: funcArgs.difficulty,
         givenValues,
       },
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_collision') {
+    return {
+      action: 'showCollision',
+      title: funcArgs.title,
+      dimension: funcArgs.dimension,
+      type: funcArgs.type,
+      before: Array.isArray(funcArgs.before) ? funcArgs.before : [],
+      after: Array.isArray(funcArgs.after) ? funcArgs.after : [],
+      notes: funcArgs.notes,
+      momentumAnnotation: funcArgs.momentumAnnotation,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_reaction_coordinate') {
+    return {
+      action: 'showReactionCoordinate',
+      title: funcArgs.title,
+      reactants_energy: typeof funcArgs.reactants_energy === 'number' ? funcArgs.reactants_energy : 0,
+      products_energy: funcArgs.products_energy,
+      activation_energies: Array.isArray(funcArgs.activation_energies) ? funcArgs.activation_energies : [],
+      curve_labels: Array.isArray(funcArgs.curve_labels) ? funcArgs.curve_labels : undefined,
+      reactant_label: funcArgs.reactant_label,
+      product_label: funcArgs.product_label,
+      units: funcArgs.units,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_energy_bars') {
+    return {
+      action: 'showEnergyBars',
+      title: funcArgs.title,
+      positions: Array.isArray(funcArgs.positions) ? funcArgs.positions : [],
+      yAxisLabel: funcArgs.yAxisLabel,
+      showTotalLine: funcArgs.showTotalLine,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_free_body_diagram') {
+    return {
+      action: 'showFreeBodyDiagram',
+      title: funcArgs.title,
+      object: funcArgs.object || { shape: 'box' },
+      // Default to NO surface when the model doesn't specify one — safer than
+      // defaulting to "horizontal", which previously drew a spurious floor
+      // under hanging/suspended/free-fall objects.
+      surface: funcArgs.surface || { type: 'none' },
+      forces: Array.isArray(funcArgs.forces) ? funcArgs.forces : [],
+      notes: funcArgs.notes,
     } as unknown as WhiteboardCommand;
   }
   return null;

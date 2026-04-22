@@ -65,11 +65,13 @@ function Base10Blocks({
   let x = 20;
   const baselineY = 30;
 
-  // Limit visible thousands to avoid overflow
+  // Limit visible thousands to avoid overflow.
+  // Ones go up to 18 (wraps to 2 rows) — required for regrouping demos where
+  // two single-digit additions produce up to 18 units before carrying.
   const thousandsClamped = Math.min(thousands, 3);
   const hundredsClamped = Math.min(hundreds, 6);
   const tensClamped = Math.min(tens, 9);
-  const onesClamped = Math.min(ones, 9);
+  const onesClamped = Math.min(ones, 18);
 
   const blocks: React.ReactElement[] = [];
 
@@ -150,17 +152,21 @@ function Base10Blocks({
     x += UNIT + 4;
   }
 
-  // Ones (single unit cubes, stacked horizontally)
+  // Ones (single unit cubes, wrapped into rows of up to 10 for regrouping demos)
   x += 8;
+  const onesRowStartX = x;
+  const onesPerRow = 10;
   for (let i = 0; i < onesClamped; i++) {
-    const bx = x;
-    const by = baselineY + 9 * UNIT;
+    const row = Math.floor(i / onesPerRow);
+    const col = i % onesPerRow;
+    const bx = onesRowStartX + col * (UNIT + 2);
+    // Stack rows upward from the bottom so the tens rods' bottom line is shared
+    const by = baselineY + 9 * UNIT - row * (UNIT + 2);
     blocks.push(
       <g key={`o-${i}`}>
         <rect x={bx} y={by} width={UNIT} height={UNIT} fill="#fecaca" stroke="#dc2626" strokeWidth={1.2} />
       </g>
     );
-    x += UNIT + 2;
   }
 
   return (

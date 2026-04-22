@@ -145,6 +145,10 @@ export function VennDiagramRenderer({
   regions,
   universalLabel,
 }: VennDiagramRendererProps) {
+  // Model sometimes omits `regions` entirely when it just wants to show
+  // the diagram structure. Guard against null/undefined so Object.entries
+  // doesn't throw — an empty regions map renders the bare circles.
+  const safeRegions: Record<string, VennRegion> = regions ?? {};
   const isThreeSet = sets.length >= 3;
 
   /** Resolved colors for each set */
@@ -229,7 +233,7 @@ export function VennDiagramRenderer({
       )}
 
       {/* Highlight fills — drawn before circle strokes so they sit underneath */}
-      {Object.entries(regions).map(([key, region]) => {
+      {Object.entries(safeRegions).map(([key, region]) => {
         if (!region.highlight) return null;
         const center = regionCenters[key as keyof typeof regionCenters];
         if (!center) return null;
@@ -279,7 +283,7 @@ export function VennDiagramRenderer({
       ))}
 
       {/* Region values and items */}
-      {Object.entries(regions).map(([key, region]) => {
+      {Object.entries(safeRegions).map(([key, region]) => {
         const center = regionCenters[key as keyof typeof regionCenters];
         if (!center) return null;
 

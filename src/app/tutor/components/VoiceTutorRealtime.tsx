@@ -636,6 +636,44 @@ export function VoiceTutorRealtime({
         }
       }
 
+      if (cmd.action === 'showTree') {
+        // Validate tree shape: root must exist AND have children (a bare
+        // single-node "tree" is never useful), and every child must be an
+        // EDGE wrapper ({label, probability?, node}), NOT a bare node.
+        const root = cmdAny.root;
+        const checkNode = (n: unknown, path: string): string | null => {
+          if (!n || typeof n !== 'object') return `${path} is missing or not an object`;
+          const asRec = n as Record<string, unknown>;
+          const children = asRec.children;
+          if (children === undefined || children === null) return null; // leaf, ok
+          if (!Array.isArray(children)) return `${path}.children must be an array`;
+          for (let i = 0; i < children.length; i++) {
+            const child = children[i] as Record<string, unknown> | undefined;
+            if (!child || typeof child !== 'object') {
+              return `${path}.children[${i}] is missing — each child must be { label, probability?, node }`;
+            }
+            if (child.node === undefined || child.node === null) {
+              return `${path}.children[${i}] is missing the 'node' field — a child is an EDGE wrapper { label, probability?, node }, not a bare node`;
+            }
+            const sub = checkNode(child.node, `${path}.children[${i}].node`);
+            if (sub) return sub;
+          }
+          return null;
+        };
+        const err = !root
+          ? 'show_tree was called without `root`. Provide the full tree as root: { label, children: [{ label, probability?, node: {...} }, ...] }.'
+          : !(root as Record<string, unknown>).children || !Array.isArray((root as Record<string, unknown>).children) || ((root as Record<string, unknown>).children as unknown[]).length === 0
+            ? 'show_tree root has no `children`. A single-node tree is never useful — send the full branching structure.'
+            : checkNode(root, 'root');
+        if (err) {
+          const reason = `show_tree rejected: ${err}. Retry with a full, valid tree. For a coin-flip × 3 probability tree: root: { label: "Start", children: [ { label: "H", probability: "1/2", node: { label: "H", children: [ { label: "H", probability: "1/2", node: { label: "HH", children: [ { label: "H", probability: "1/2", node: { label: "HHH" } }, { label: "T", probability: "1/2", node: { label: "HHT" } } ] } }, { label: "T", probability: "1/2", node: { label: "HT", children: [ { label: "H", probability: "1/2", node: { label: "HTH" } }, { label: "T", probability: "1/2", node: { label: "HTT" } } ] } } ] } }, { label: "T", probability: "1/2", node: { /* mirror */ } } ] }.`;
+          console.warn('[VoiceTutorRealtime] Dropping invalid show_tree:', err);
+          onDebugEvent?.('tool_call', `Dropped invalid show_tree: ${err}`);
+          rejected.push({ action: 'show_tree', reason });
+          return [];
+        }
+      }
+
       if (cmd.action === 'showGeometry') {
         // Remember the latest geometry so geometry-numeric can validate
         // any spoken claims about sides/angles/area over the next few turns.
@@ -1857,17 +1895,25 @@ export function VoiceTutorRealtime({
         }
 
         // Fetch prior-session weak topics for this student+subject+topic
-        // so the opening greeting can surface targeted review. Non-blocking
-        // — if the lookup fails, we just skip the personalization.
+        // so the opening greeting can surface targeted review. Time-boxed to
+        // 400 ms — if Mongo is slow we proceed without personalization rather
+        // than hold up the connection. Session-open latency matters more than
+        // a (often empty) prior-progress block.
         let priorProgress: { sessionCount: number; weakTopics: Array<{ topic: string; count: number }>; topicsCovered: string[] } | null = null;
         if (studentName) {
           try {
-            const resp = await fetch('/api/tutor/student-progress', {
+            const fetchPromise = fetch('/api/tutor/student-progress', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ studentName, subject, topic, level }),
-            });
-            if (resp.ok) priorProgress = await resp.json();
+            }).then(r => r.ok ? r.json() : null);
+            priorProgress = await Promise.race([
+              fetchPromise,
+              new Promise<null>((resolve) => setTimeout(() => {
+                console.warn('[VoiceTutorRealtime] student-progress lookup >600ms — skipping prior-session block');
+                resolve(null);
+              }, 600)),
+            ]);
           } catch (err) {
             console.warn('[VoiceTutorRealtime] student-progress lookup failed:', err);
           }
@@ -1887,14 +1933,24 @@ export function VoiceTutorRealtime({
 
         // Personalized prior-session block — appended to instructions so the
         // tutor can open with targeted review instead of a cold greeting.
+        //
+        // IMPORTANT: skip the block entirely when we have NO real content to
+        // share (no weak topics AND no covered topics). Previously we injected
+        // the block whenever sessionCount > 0, which forced the tutor to
+        // invent a memory ("I remember last time we tackled X") pulling X
+        // from the student's current question — a confabulation that
+        // students noticed and called out. A cold greeting is better than a
+        // fabricated one.
         let priorBlock = '';
         if (priorProgress && priorProgress.sessionCount > 0) {
           const weak = priorProgress.weakTopics.slice(0, 3).map(w => w.topic).filter(Boolean);
           const covered = priorProgress.topicsCovered.slice(0, 6);
-          priorBlock = `\n\n## Prior Session Context\nThis student has had ${priorProgress.sessionCount} prior session(s) with you on this subject.\n` +
-            (covered.length > 0 ? `Previously covered: ${covered.join(', ')}.\n` : '') +
-            (weak.length > 0 ? `Areas they struggled with most: ${weak.join(', ')}.\n` : '') +
-            `\nAFTER your greeting, briefly check in: mention you remember where you left off, and offer to either (a) revisit the weak spots above with a quick review problem, or (b) move on to new material. Keep this check-in to one sentence — do NOT lecture about what they got wrong last time. Respect whatever they pick.`;
+          if (weak.length > 0 || covered.length > 0) {
+            priorBlock = `\n\n## Prior Session Context\nThis student has had ${priorProgress.sessionCount} prior session(s) with you on this subject.\n` +
+              (covered.length > 0 ? `Previously covered: ${covered.join(', ')}.\n` : '') +
+              (weak.length > 0 ? `Areas they struggled with most: ${weak.join(', ')}.\n` : '') +
+              `\nAFTER your greeting, briefly check in: mention you remember where you left off (referencing ONLY the specific topics listed above — never invent other topics), and offer to either (a) revisit the weak spots above with a quick review problem, or (b) move on to new material. Keep this check-in to one sentence — do NOT lecture about what they got wrong last time. Respect whatever they pick.`;
+          }
         }
 
         // Read optional voice personality from env
@@ -1934,10 +1990,17 @@ This is your tool for plotting mathematical functions, curves, and shaded region
 - Set xRange and yRange to show the relevant portion of the coordinate plane.
 - ALWAYS choose ranges that show the full region of interest including all intersection points and labeled features.
 
-### show_svg_diagram — USE for physics diagrams and illustrations
-Use this for physical setups (pipes, cars, ramps, pulleys, springs, circuits, etc.) — NOT for mathematical function graphs.
+### Structured diagram tools (PREFER these over show_svg_diagram)
+When a structured tool covers the scenario, you MUST use it — free-form SVG produces colliding labels and inconsistent layout.
+
+• **show_free_body_diagram** — ALWAYS use for free-body diagrams, force analyses, Newton's-laws problems, inclined planes. You supply object shape, surface type, and a list of forces with names + directions; the renderer draws arrows and places labels automatically. Force colors auto-assign by name convention (W/Mg → green, N → amber, f → purple, T → blue).
+• **show_energy_bars** — ALWAYS use for conservation-of-energy visualization, roller-coaster / pendulum / spring energy transforms, and friction dissipation. Supply a \`positions\` array — each item has a label plus optional ke / pe / spring / thermal values. The renderer stacks bars and draws a dashed "total energy (conserved)" line automatically when totals match across positions.
+• **show_collision** — ALWAYS use for conservation of momentum, elastic/inelastic/perfectly-inelastic collisions, and any two-object interaction before/after. Supply \`before\` and \`after\` arrays of bodies with mass and velocity. The renderer scales circles by mass, scales arrows by speed, and merges bodies automatically for perfectly-inelastic collisions. Pass \`type: "perfectly-inelastic"\` for stick-together collisions, \`"elastic"\` for bounce-apart, \`"inelastic"\` for energy-loss-but-separate.
+
+### show_svg_diagram — FALLBACK for novel scenarios only
+Use this for physical setups that don't fit a structured tool above (pipes, custom machinery, uncommon illustrations). NOT for free-body diagrams, NOT for mathematical function graphs.
 - Draw SVG with viewBox="0 0 400 300". Use actual shapes, arrows, labels.
-- For diagrams: draw realistic shapes (e.g. actual car shapes for motion, actual pipes for fluid flow, actual objects for free body diagrams). Use fill colors, stroke, and clear labels.
+- For diagrams: draw realistic shapes (e.g. actual car shapes for motion, actual pipes for fluid flow). Use fill colors, stroke, and clear labels.
 - Use ACTUAL VALUES from the problem being discussed. Include title and description.
 - Make diagrams educational, detailed, and visually appealing. Think like a textbook illustrator.
 - CRITICAL — PROPORTIONAL SIZING: When drawing objects with different dimensions (e.g. a hose and nozzle), the SVG element sizes MUST be proportional to the actual values.
@@ -1945,11 +2008,14 @@ Use this for physical setups (pipes, cars, ramps, pulleys, springs, circuits, et
 
 RULE: If you say "let me show you" or describe any visual, you MUST call the tool. Never describe visuals without showing them.
 
+RULE — NO EXTRANEOUS DIAGRAMS: Only render diagrams that directly answer what the student asked. If the question is about reaction energetics (activation energy / ΔH / energy profile), use show_reaction_coordinate alone — do NOT also draw a Lewis structure of a reactant the student didn't ask about. If the question is about a map, do NOT also draw a timeline. One question, one visual artifact — unless the student explicitly asked for multiple. Extra diagrams are not helpful "bonus content"; they clutter the whiteboard and distract from the point.
+
 ### Homework uploads
 When a student uploads a homework problem:
 1. IMMEDIATELY draw the problem setup on the whiteboard:
    - For problems involving graphing functions/curves: use show_function_graph with the function expressions
-   - For physics setups (diagrams, circuits, physical objects): use show_svg_diagram
+   - For free-body / force / Newton's-laws problems: use show_free_body_diagram (structured, always preferred for this scenario)
+   - For other physics setups that don't fit a structured tool: use show_svg_diagram
 2. Verbally acknowledge the upload and summarize what the problem asks.
 3. As you work through each solution step, call show_equation for every formula and substitution.
 4. Guide the student step by step, asking questions to check understanding.
@@ -1975,9 +2041,20 @@ Start by warmly greeting the student and asking how you can help them today.`;
     buildInstructions();
   }, [subject, topic, level, studentName, sessionGoal]);
 
-  // Connect when instructions are ready
+  // Kick the ephemeral-token fetch immediately on mount so it runs in parallel
+  // with buildInstructions — that alone saves ~500–1500 ms, and it is safe to
+  // do before instructions are ready (the token is just a credential).
   useEffect(() => {
-    if (isInitialized && instructions && !realtime.isConnected && realtime.state === 'disconnected') {
+    realtime.prefetchToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Open the WebSocket only once instructions are ready, so session.update can
+  // ship immediately when ws.onopen fires. Previous aggressive-parallel attempt
+  // could leave the WS open with no session configured for several seconds,
+  // which OpenAI's server reacts to by closing the connection.
+  useEffect(() => {
+    if (isInitialized && instructions && realtime.state === 'disconnected') {
       realtime.connect();
     }
   }, [isInitialized, instructions, realtime]);

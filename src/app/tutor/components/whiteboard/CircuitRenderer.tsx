@@ -25,6 +25,7 @@ export type CircuitComponentType =
   | 'bulb'
   | 'voltmeter'
   | 'ammeter'
+  | 'galvanometer'
   | 'ground';
 
 export interface CircuitNode {
@@ -44,7 +45,8 @@ export interface CircuitComponent {
 
 export interface CircuitRendererProps {
   title?: string;
-  nodes: CircuitNode[];
+  /** Unused — retained for backward compatibility. Positions are always auto-computed. */
+  nodes?: CircuitNode[];
   components: CircuitComponent[];
   /** Optional current arrow label (e.g. "I") drawn on a circuit loop. */
   currentLabel?: string;
@@ -54,13 +56,39 @@ export interface CircuitRendererProps {
 
 const SVG_WIDTH = 600;
 const SVG_HEIGHT = 400;
+// Reserve pixel margin inside the SVG for component symbols + value/unit text
+// that extend perpendicular to wire segments. Prevents clipping when nodes
+// are placed near the edge.
+const CIRCUIT_PADDING = 50;
 
-function toSvg(x: number, y: number): [number, number] {
-  const inset = 30;
-  return [
-    inset + (x / 100) * (SVG_WIDTH - 2 * inset),
-    inset + (y / 100) * (SVG_HEIGHT - 2 * inset),
-  ];
+/**
+ * Build a content-to-SVG mapper that auto-fits the node bounding box inside
+ * the viewBox (with safety padding). If all nodes cluster in a small region,
+ * we zoom in so the circuit fills the canvas. Preserves aspect ratio.
+ */
+function buildCircuitMapper(nodes: CircuitNode[]): (x: number, y: number) => [number, number] {
+  if (nodes.length === 0) {
+    return (x, y) => [
+      CIRCUIT_PADDING + (x / 100) * (SVG_WIDTH - 2 * CIRCUIT_PADDING),
+      CIRCUIT_PADDING + (y / 100) * (SVG_HEIGHT - 2 * CIRCUIT_PADDING),
+    ];
+  }
+  const xs = nodes.map((n) => n.x);
+  const ys = nodes.map((n) => n.y);
+  let minX = Math.min(...xs);
+  let maxX = Math.max(...xs);
+  let minY = Math.min(...ys);
+  let maxY = Math.max(...ys);
+  if (maxX - minX < 1) { minX -= 5; maxX += 5; }
+  if (maxY - minY < 1) { minY -= 5; maxY += 5; }
+  const rangeX = maxX - minX;
+  const rangeY = maxY - minY;
+  const innerW = SVG_WIDTH - 2 * CIRCUIT_PADDING;
+  const innerH = SVG_HEIGHT - 2 * CIRCUIT_PADDING;
+  const scale = Math.min(innerW / rangeX, innerH / rangeY);
+  const offsetX = (SVG_WIDTH - scale * rangeX) / 2;
+  const offsetY = (SVG_HEIGHT - scale * rangeY) / 2;
+  return (x, y) => [offsetX + (x - minX) * scale, offsetY + (y - minY) * scale];
 }
 
 /**
@@ -105,6 +133,7 @@ function ComponentShape({
     bulb: 14,
     voltmeter: 14,
     ammeter: 14,
+    galvanometer: 14,
     ground: 0,
   };
   const half = SYMBOL_HALF_LEN[type] ?? 0;
@@ -210,21 +239,38 @@ function ComponentShape({
           </>
         );
       case 'voltmeter':
+        // Counter-rotate the text so "V" always reads upright regardless
+        // of wire direction (otherwise it flips when the wire runs right-to-left).
         return (
           <>
             <circle cx={0} cy={0} r={12} fill="#fff" stroke="#1f2937" strokeWidth={2} />
-            <text x={0} y={4} textAnchor="middle" fontSize={13} fill="#1f2937" fontWeight={700}>
-              V
-            </text>
+            <g transform={`rotate(${-angle})`}>
+              <text x={0} y={4} textAnchor="middle" fontSize={13} fill="#1f2937" fontWeight={700}>
+                V
+              </text>
+            </g>
           </>
         );
       case 'ammeter':
         return (
           <>
             <circle cx={0} cy={0} r={12} fill="#fff" stroke="#1f2937" strokeWidth={2} />
-            <text x={0} y={4} textAnchor="middle" fontSize={13} fill="#1f2937" fontWeight={700}>
-              A
-            </text>
+            <g transform={`rotate(${-angle})`}>
+              <text x={0} y={4} textAnchor="middle" fontSize={13} fill="#1f2937" fontWeight={700}>
+                A
+              </text>
+            </g>
+          </>
+        );
+      case 'galvanometer':
+        return (
+          <>
+            <circle cx={0} cy={0} r={12} fill="#fff" stroke="#1f2937" strokeWidth={2} />
+            <g transform={`rotate(${-angle})`}>
+              <text x={0} y={4} textAnchor="middle" fontSize={13} fill="#1f2937" fontWeight={700}>
+                G
+              </text>
+            </g>
           </>
         );
       case 'ground':
@@ -268,28 +314,383 @@ function ComponentShape({
         <g transform={`translate(${mx}, ${my}) rotate(${angle})`}>{symbol}</g>
       )}
       {hasLabel && (
-        <text
-          x={labelX}
-          y={labelY}
-          textAnchor="middle"
-          fontSize={12}
-          fill="#1f2937"
-          fontWeight={500}
-        >
-          {displayLabel}
-        </text>
+        <g>
+          {/* White mask behind label text so crossing wires don't cut through it */}
+          <rect
+            x={labelX - (displayLabel.length * 6.5) / 2 - 3}
+            y={labelY - 11}
+            width={displayLabel.length * 6.5 + 6}
+            height={16}
+            fill="#fafbfc"
+          />
+          <text
+            x={labelX}
+            y={labelY}
+            textAnchor="middle"
+            fontSize={12}
+            fill="#1f2937"
+            fontWeight={500}
+          >
+            {displayLabel}
+          </text>
+        </g>
       )}
     </g>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Auto-layout: netlist → coordinates                                  */
+/*                                                                     */
+/* The model supplies only a list of components with `from`/`to` node  */
+/* ids. This function decides where each node sits on the canvas,      */
+/* adding synthetic rail-wires so every component ends up in a valid   */
+/* closed loop (or, if the netlist doesn't close, produces warnings). */
+/*                                                                     */
+/* Layout strategy — "generalized ladder":                             */
+/*   1. Find the battery (or chain of series batteries). Treat its     */
+/*      two terminals as the two rails A (left) and B (right).         */
+/*   2. Decompose the remaining (non-battery) components into a set of */
+/*      simple paths from A to B. Each path becomes one horizontal     */
+/*      "rung". Shared intermediate nodes are unique per-rung (the     */
+/*      netlist is assumed to be 2-terminal between A and B).          */
+/*   3. Stack the rungs vertically, connect their ends with vertical   */
+/*      rail wires, and place components evenly along each rung.       */
+/*                                                                     */
+/* Handles: simple series loops, pure parallel (ladder), series-       */
+/* batteries + parallel loads, single-branch circuits with a series    */
+/* chain on the return path (e.g. RC charging loop).                   */
+/* ------------------------------------------------------------------ */
+
+interface LayoutResult {
+  nodes: CircuitNode[];
+  components: CircuitComponent[];
+  warnings: string[];
+}
+
+const LAYOUT_LEFT = 18;
+const LAYOUT_RIGHT = 82;
+const LAYOUT_TOP = 22;
+const LAYOUT_BOTTOM = 78;
+
+/** Chain batteries that connect head-to-tail into a single series path. */
+function chainBatteries(batteries: CircuitComponent[]): {
+  chain: CircuitComponent[];
+  start: string;
+  end: string;
+} | null {
+  if (batteries.length === 0) return null;
+  if (batteries.length === 1) {
+    return { chain: [batteries[0]], start: batteries[0].from, end: batteries[0].to };
+  }
+  // Degree = number of battery-ends touching a node; endpoints have degree 1.
+  const degree = new Map<string, number>();
+  for (const b of batteries) {
+    degree.set(b.from, (degree.get(b.from) ?? 0) + 1);
+    degree.set(b.to, (degree.get(b.to) ?? 0) + 1);
+  }
+  const endpoints = [...degree.entries()].filter(([, d]) => d === 1).map(([n]) => n);
+  // Not a simple chain (has branching or loop) — can't cleanly treat as series source
+  if (endpoints.length !== 2) return null;
+  const [start] = endpoints;
+  const chain: CircuitComponent[] = [];
+  const used = new Set<CircuitComponent>();
+  let current = start;
+  while (used.size < batteries.length) {
+    const next = batteries.find(
+      (b) => !used.has(b) && (b.from === current || b.to === current),
+    );
+    if (!next) break;
+    chain.push(next);
+    current = next.from === current ? next.to : next.from;
+    used.add(next);
+  }
+  if (chain.length !== batteries.length) return null;
+  return { chain, start, end: current };
+}
+
+/**
+ * Find a single simple path from `start` to `end` in the given component
+ * graph. Paths don't revisit intermediate nodes or re-use components.
+ * Returns null if no such path exists.
+ */
+function findSimplePath(
+  components: CircuitComponent[],
+  start: string,
+  end: string,
+): CircuitComponent[] | null {
+  if (start === end) return null;
+  const adj = new Map<string, Array<{ to: string; comp: CircuitComponent }>>();
+  for (const c of components) {
+    if (!adj.has(c.from)) adj.set(c.from, []);
+    if (!adj.has(c.to)) adj.set(c.to, []);
+    adj.get(c.from)!.push({ to: c.to, comp: c });
+    adj.get(c.to)!.push({ to: c.from, comp: c });
+  }
+  const visitedNodes = new Set<string>();
+  const visitedEdges = new Set<CircuitComponent>();
+
+  function dfs(node: string): CircuitComponent[] | null {
+    if (node === end) return [];
+    visitedNodes.add(node);
+    for (const { to, comp } of adj.get(node) || []) {
+      if (visitedEdges.has(comp)) continue;
+      if (visitedNodes.has(to) && to !== end) continue;
+      visitedEdges.add(comp);
+      const rest = dfs(to);
+      if (rest !== null) return [comp, ...rest];
+      visitedEdges.delete(comp);
+    }
+    visitedNodes.delete(node);
+    return null;
+  }
+
+  return dfs(start);
+}
+
+/**
+ * Given a rung's starting logical node A and its ordered components, walk
+ * the components and return the sequence of logical nodes visited.
+ * Returns [A, n1, n2, ..., B] with length = components.length + 1.
+ */
+function traceRungNodes(rung: CircuitComponent[], startNode: string): string[] {
+  const sequence = [startNode];
+  let current = startNode;
+  for (const c of rung) {
+    const next = c.from === current ? c.to : c.from;
+    sequence.push(next);
+    current = next;
+  }
+  return sequence;
+}
+
+function autoLayoutCircuit(components: CircuitComponent[]): LayoutResult {
+  const warnings: string[] = [];
+  if (components.length === 0) {
+    return { nodes: [], components: [], warnings };
+  }
+
+  const batteries = components.filter((c) => c.type === 'battery');
+  const nonBatteries = components.filter((c) => c.type !== 'battery');
+
+  let sourceRung: CircuitComponent[] = [];
+  let A = '';
+  let B = '';
+
+  if (batteries.length > 0) {
+    const chain = chainBatteries(batteries);
+    if (chain) {
+      sourceRung = chain.chain;
+      A = chain.start;
+      B = chain.end;
+    } else {
+      // Batteries don't form a clean chain — use the first one as source, rest
+      // will be laid out as normal components on their own rungs.
+      sourceRung = [batteries[0]];
+      A = batteries[0].from;
+      B = batteries[0].to;
+      warnings.push('Multiple batteries not in series — treating first as source');
+    }
+  } else {
+    // No battery found. Pick two high-degree nodes as the rails.
+    const degree = new Map<string, number>();
+    for (const c of components) {
+      degree.set(c.from, (degree.get(c.from) ?? 0) + 1);
+      degree.set(c.to, (degree.get(c.to) ?? 0) + 1);
+    }
+    const [byDeg] = [...degree.entries()].sort((a, b) => b[1] - a[1]);
+    A = byDeg?.[0] ?? components[0].from;
+    B = components[0].to === A ? components[0].from : components[0].to;
+    warnings.push('No battery/source — laying out around arbitrary rails');
+  }
+
+  // Decompose non-batteries into simple paths from A to B.
+  const returnPaths: CircuitComponent[][] = [];
+  const remaining = new Set(
+    sourceRung.length > 0
+      ? nonBatteries
+      : components.filter((c) => !sourceRung.includes(c)),
+  );
+  // Include any batteries that weren't used in the source chain
+  for (const b of batteries) {
+    if (!sourceRung.includes(b)) remaining.add(b);
+  }
+
+  while (remaining.size > 0) {
+    const path = findSimplePath([...remaining], A, B);
+    if (!path || path.length === 0) break;
+    for (const c of path) remaining.delete(c);
+    returnPaths.push(path);
+  }
+
+  if (returnPaths.length === 0 && sourceRung.length > 0) {
+    warnings.push('⚠ Circuit has no return path — not a closed loop (open circuit)');
+  }
+
+  // Build the main rungs (return paths + source, in that stacking order).
+  const mainRungs: CircuitComponent[][] = [...returnPaths];
+  if (sourceRung.length > 0) mainRungs.push(sourceRung);
+
+  // Compute each main rung's node sequence so we can spot cross-rung bridges.
+  // Every main rung is a path from A to B, so it starts at A.
+  const mainSequences = mainRungs.map((rung) => traceRungNodes(rung, A));
+  const logicalPositions = new Map<string, Array<{ rungIdx: number; posIdx: number }>>();
+  for (let i = 0; i < mainSequences.length; i++) {
+    for (let j = 0; j < mainSequences[i].length; j++) {
+      const n = mainSequences[i][j];
+      if (!logicalPositions.has(n)) logicalPositions.set(n, []);
+      logicalPositions.get(n)!.push({ rungIdx: i, posIdx: j });
+    }
+  }
+
+  // Classify each leftover component: either a cross-rung bridge (both endpoints
+  // live as intermediate nodes on existing rungs, on DIFFERENT rungs) or truly
+  // dangling (not reachable via the main circuit).
+  interface BridgeComp {
+    component: CircuitComponent;
+    fromRung: number;
+    fromPos: number;
+    toRung: number;
+    toPos: number;
+  }
+  const bridges: BridgeComp[] = [];
+  const trulyDangling: CircuitComponent[] = [];
+  for (const c of remaining) {
+    const fromPositions = logicalPositions.get(c.from);
+    const toPositions = logicalPositions.get(c.to);
+    let placed = false;
+    if (fromPositions && toPositions) {
+      for (const fp of fromPositions) {
+        for (const tp of toPositions) {
+          if (fp.rungIdx !== tp.rungIdx) {
+            bridges.push({
+              component: c,
+              fromRung: fp.rungIdx,
+              fromPos: fp.posIdx,
+              toRung: tp.rungIdx,
+              toPos: tp.posIdx,
+            });
+            placed = true;
+            break;
+          }
+        }
+        if (placed) break;
+      }
+    }
+    if (!placed) trulyDangling.push(c);
+  }
+
+  if (trulyDangling.length > 0) {
+    const labels = trulyDangling.map((c) => c.label || c.type).join(', ');
+    warnings.push(`⚠ Disconnected from main circuit: ${labels}`);
+  }
+
+  // Total rungs = main + dangling. Pre-count so y positions are correct.
+  const rungs: CircuitComponent[][] = [...mainRungs];
+  const danglingStart = rungs.length;
+  for (const c of trulyDangling) rungs.push([c]);
+
+  // Lay out rungs as horizontal bars stacked vertically.
+  const N = rungs.length;
+  const outNodes: CircuitNode[] = [];
+  const outComponents: CircuitComponent[] = [];
+  const leftRailIds: string[] = [];
+  const rightRailIds: string[] = [];
+  // Virtual ids per rung + position — used later to attach cross-rung bridges.
+  const virtualIdGrid: string[][] = [];
+
+  const yForRung = (i: number): number => {
+    if (N === 1) return (LAYOUT_TOP + LAYOUT_BOTTOM) / 2;
+    return LAYOUT_TOP + (i / (N - 1)) * (LAYOUT_BOTTOM - LAYOUT_TOP);
+  };
+
+  for (let i = 0; i < N; i++) {
+    const rung = rungs[i];
+    const y = yForRung(i);
+    const isDangling = i >= danglingStart;
+    const rungStart = isDangling ? rung[0].from : A;
+    const sequence = traceRungNodes(rung, rungStart);
+    const numNodes = sequence.length;
+    const xs: number[] = [];
+    for (let j = 0; j < numNodes; j++) {
+      xs.push(
+        numNodes === 1
+          ? LAYOUT_LEFT
+          : LAYOUT_LEFT + (j / (numNodes - 1)) * (LAYOUT_RIGHT - LAYOUT_LEFT),
+      );
+    }
+    const virtualIds = sequence.map(
+      (base, j) => `__layout__${base}__r${i}_${j}`,
+    );
+    virtualIdGrid.push(virtualIds);
+    for (let j = 0; j < numNodes; j++) {
+      outNodes.push({ id: virtualIds[j], x: xs[j], y });
+    }
+    if (!isDangling) {
+      leftRailIds.push(virtualIds[0]);
+      rightRailIds.push(virtualIds[numNodes - 1]);
+    }
+    // Add components, preserving each component's original from/to orientation.
+    for (let j = 0; j < rung.length; j++) {
+      const c = rung[j];
+      const origFrom = sequence[j];
+      const fromId = c.from === origFrom ? virtualIds[j] : virtualIds[j + 1];
+      const toId = c.from === origFrom ? virtualIds[j + 1] : virtualIds[j];
+      outComponents.push({ ...c, from: fromId, to: toId });
+    }
+  }
+
+  // Cross-rung bridges: attach each bridge component between the correct
+  // virtual ids on its two endpoint rungs. The renderer will draw it as a
+  // straight line (often vertical) from one intermediate node to another.
+  for (const b of bridges) {
+    const fromId = virtualIdGrid[b.fromRung][b.fromPos];
+    const toId = virtualIdGrid[b.toRung][b.toPos];
+    // Preserve original orientation.
+    const c = b.component;
+    const origFromIsBridgeFrom = c.from === mainSequences[b.fromRung][b.fromPos];
+    outComponents.push({
+      ...c,
+      from: origFromIsBridgeFrom ? fromId : toId,
+      to: origFromIsBridgeFrom ? toId : fromId,
+    });
+  }
+
+  // Rail wires: connect left rail ids in order, right rail ids in order.
+  for (let i = 0; i < leftRailIds.length - 1; i++) {
+    outComponents.push({
+      type: 'wire',
+      from: leftRailIds[i],
+      to: leftRailIds[i + 1],
+    });
+  }
+  for (let i = 0; i < rightRailIds.length - 1; i++) {
+    outComponents.push({
+      type: 'wire',
+      from: rightRailIds[i],
+      to: rightRailIds[i + 1],
+    });
+  }
+
+  return { nodes: outNodes, components: outComponents, warnings };
+}
+
 export default function CircuitRenderer({
   title,
-  nodes,
   components,
   showNodes = true,
 }: CircuitRendererProps) {
-  const nodeMap = new Map(nodes.map((n) => [n.id, toSvg(n.x, n.y)]));
+  // Node positions are always computed by the auto-layout algorithm from
+  // the netlist alone. Any `nodes` array passed in is ignored — the model
+  // has repeatedly shown that it can't reliably choose valid 2D coordinates,
+  // and a bad layout silently produces a nonsensical circuit.
+  const { nodes: laidOutNodes, components: laidOutComponents, warnings } =
+    autoLayoutCircuit(components);
+  const toSvg = buildCircuitMapper(laidOutNodes);
+  const nodeMap = new Map(laidOutNodes.map((n) => [n.id, toSvg(n.x, n.y)]));
+
+  const warningRowHeight = 18;
+  const extraHeight = warnings.length * warningRowHeight;
 
   return (
     <div className="circuit-renderer">
@@ -299,13 +700,13 @@ export default function CircuitRenderer({
         </div>
       )}
       <svg
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT + extraHeight}`}
         className="w-full h-auto"
-        style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
+        style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT + extraHeight }}
       >
-        <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#fafbfc" rx={4} />
+        <rect width={SVG_WIDTH} height={SVG_HEIGHT + extraHeight} fill="#fafbfc" rx={4} />
 
-        {components.map((c, i) => {
+        {laidOutComponents.map((c, i) => {
           const from = nodeMap.get(c.from);
           const to = nodeMap.get(c.to);
           if (!from || !to) return null;
@@ -323,18 +724,34 @@ export default function CircuitRenderer({
         })}
 
         {showNodes &&
-          nodes.map((n) => {
-            const [nx, ny] = nodeMap.get(n.id)!;
-            return (
-              <circle
-                key={`n-${n.id}`}
-                cx={nx}
-                cy={ny}
-                r={3}
-                fill="#1f2937"
-              />
-            );
-          })}
+          laidOutNodes
+            // Skip showing dots on the synthetic rail junctions — they're
+            // numerous and visually noisy. Only dot the endpoints of each
+            // rung (left- and right-most x positions).
+            .filter((n) => {
+              const [nx] = nodeMap.get(n.id)!;
+              return nx <= toSvg(LAYOUT_LEFT, 0)[0] + 1 || nx >= toSvg(LAYOUT_RIGHT, 0)[0] - 1;
+            })
+            .map((n) => {
+              const [nx, ny] = nodeMap.get(n.id)!;
+              return (
+                <circle key={`n-${n.id}`} cx={nx} cy={ny} r={3} fill="#1f2937" />
+              );
+            })}
+
+        {warnings.map((w, i) => (
+          <text
+            key={`warn-${i}`}
+            x={SVG_WIDTH / 2}
+            y={SVG_HEIGHT + 8 + i * warningRowHeight}
+            fontSize={12}
+            fill="#b91c1c"
+            fontWeight={600}
+            textAnchor="middle"
+          >
+            {w}
+          </text>
+        ))}
       </svg>
     </div>
   );

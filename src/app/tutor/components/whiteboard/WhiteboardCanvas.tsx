@@ -43,6 +43,10 @@ import CallStackRenderer from './CallStackRenderer';
 import FlowchartRenderer from './FlowchartRenderer';
 import ManipulativeRenderer from './ManipulativeRenderer';
 import PunnettRenderer from './PunnettRenderer';
+import FreeBodyDiagramRenderer from './FreeBodyDiagramRenderer';
+import EnergyBarsRenderer from './EnergyBarsRenderer';
+import CollisionRenderer from './CollisionRenderer';
+import ReactionCoordinateRenderer from './ReactionCoordinateRenderer';
 import { InlineMathText } from './InlineMathText';
 import dynamic from 'next/dynamic';
 
@@ -98,17 +102,6 @@ function CellContent({ value }: { value: string }) {
  * Coordinate Plane" and "Triangle with Altitude" both collapse to
  * "triangle with altitude".
  */
-function titleSignature(title?: string): string {
-  if (!title) return '';
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .slice(0, 3)
-    .join(' ');
-}
-
 /** Actions where redraws should supersede earlier versions rather than stack. */
 const SUPERSEDABLE_ACTIONS = new Set(['showGeometry', 'showGraph', 'showDiagram', 'showSvgDiagram', 'showCircuit', 'showLewis', 'showFlowchart', 'showTimeline', 'showMap']);
 
@@ -123,23 +116,33 @@ const SUPERSEDABLE_ACTIONS = new Set(['showGeometry', 'showGraph', 'showDiagram'
 function dedupeSupersededCommands(cmds: WhiteboardCommand[]): WhiteboardCommand[] {
   // Walk from the end: for each supersedable command, check whether a
   // LATER command on the same page supersedes it. If so, drop it.
+  //
+  // Supersession is LIMITED to two cases so we don't accidentally collapse
+  // legitimate side-by-side variants (resonance Form 1 / Form 2, before /
+  // after, step A / step B):
+  //   1. Titles are identical (normalized) — the later command is a true
+  //      redraw of the earlier one.
+  //   2. One title is a STRICT prefix of the other — the earlier version was
+  //      a stub and the later one elaborates ("Triangle" → "Triangle with
+  //      Altitude on Coordinate Plane").
+  // The old "shared 3-word signature" rule was too aggressive and caused
+  // students to see only one of two resonance structures they had asked for.
   const keep: boolean[] = cmds.map(() => true);
   for (let i = 0; i < cmds.length; i++) {
     const a = cmds[i];
     if (!SUPERSEDABLE_ACTIONS.has(a.action)) continue;
-    const aTitle = (a as { title?: string }).title;
-    const aSig = titleSignature(aTitle);
-    if (!aSig) continue;
+    const aTitle = ((a as { title?: string }).title || '').trim().toLowerCase();
+    if (!aTitle) continue;
     for (let j = i + 1; j < cmds.length; j++) {
       const b = cmds[j];
       if (b.action !== a.action) continue;
-      const bTitle = (b as { title?: string }).title;
-      const bSig = titleSignature(bTitle);
-      if (!bSig) continue;
-      // Signature match OR one title is a prefix of the other.
-      const bFullLower = (bTitle || '').toLowerCase();
-      const aFullLower = (aTitle || '').toLowerCase();
-      if (aSig === bSig || bFullLower.startsWith(aFullLower) || aFullLower.startsWith(bFullLower)) {
+      const bTitle = ((b as { title?: string }).title || '').trim().toLowerCase();
+      if (!bTitle) continue;
+      if (
+        aTitle === bTitle ||
+        bTitle.startsWith(aTitle) ||
+        aTitle.startsWith(bTitle)
+      ) {
         keep[i] = false;
         break;
       }
@@ -1033,6 +1036,47 @@ function CommandRenderer({ command }: CommandRendererProps) {
     case 'showManipulative':
       return <ManipulativeRenderer title={command.title} type={command.type} base10={command.base10} tenFrame={command.tenFrame} areaModel={command.areaModel} />;
 
+    case 'showFreeBodyDiagram':
+      return <FreeBodyDiagramRenderer
+        title={command.title}
+        object={command.object}
+        surface={command.surface}
+        forces={command.forces}
+        notes={command.notes}
+      />;
+
+    case 'showEnergyBars':
+      return <EnergyBarsRenderer
+        title={command.title}
+        positions={command.positions}
+        yAxisLabel={command.yAxisLabel}
+        showTotalLine={command.showTotalLine}
+        notes={command.notes}
+      />;
+
+    case 'showCollision':
+      return <CollisionRenderer
+        title={command.title}
+        dimension={command.dimension}
+        type={command.type}
+        before={command.before}
+        after={command.after}
+        momentumAnnotation={command.momentumAnnotation}
+        notes={command.notes}
+      />;
+
+    case 'showReactionCoordinate':
+      return <ReactionCoordinateRenderer
+        title={command.title}
+        reactants_energy={command.reactants_energy}
+        products_energy={command.products_energy}
+        activation_energies={command.activation_energies}
+        curve_labels={command.curve_labels}
+        reactant_label={command.reactant_label}
+        product_label={command.product_label}
+        units={command.units}
+      />;
+
     case 'showPunnett':
       return <PunnettRenderer
         parent1={command.parent1}
@@ -1286,6 +1330,14 @@ function getCommandTypeLabel(action: string): string {
       return 'Flowchart';
     case 'showManipulative':
       return 'Manipulative';
+    case 'showFreeBodyDiagram':
+      return 'Free Body Diagram';
+    case 'showEnergyBars':
+      return 'Energy Bar Chart';
+    case 'showCollision':
+      return 'Collision Diagram';
+    case 'showReactionCoordinate':
+      return 'Reaction Coordinate';
     case 'showPunnett':
       return 'Punnett Square';
     default:
