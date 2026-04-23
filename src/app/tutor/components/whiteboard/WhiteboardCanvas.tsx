@@ -277,6 +277,55 @@ export function WhiteboardCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands.length, pages]);
 
+  // Handle tutor_scroll_whiteboard — navigate to page/item when the tutor
+  // wants to draw the student's attention to existing content. Only fires
+  // for genuinely new scrollTo commands (guarded by commands.length).
+  const lastScrollIndexRef = useRef(-1);
+  useEffect(() => {
+    const scrollCmds = commands
+      .map((cmd, i) => ({ cmd, i }))
+      .filter((x) => x.cmd.action === 'scrollTo');
+    const latest = scrollCmds[scrollCmds.length - 1];
+    if (!latest) return;
+    if (latest.i <= lastScrollIndexRef.current) return;
+    lastScrollIndexRef.current = latest.i;
+
+    if (latest.cmd.action !== 'scrollTo') return; // narrow the union
+    const scroll = latest.cmd;
+
+    // Switch page first if requested.
+    if (scroll.target === 'page') {
+      let idx = -1;
+      if (typeof scroll.pageIndex === 'number' && scroll.pageIndex >= 0 && scroll.pageIndex < pages.length) {
+        idx = scroll.pageIndex;
+      } else if (scroll.pageTitle) {
+        const title = scroll.pageTitle.toLowerCase();
+        for (let i = pages.length - 1; i >= 0; i--) {
+          if (pages[i].title?.toLowerCase() === title) { idx = i; break; }
+        }
+      }
+      if (idx >= 0) setCurrentIndex(idx);
+      return;
+    }
+
+    // top / bottom / item scroll within the current page. Wait a tick so
+    // that if we JUST switched pages the new refs are mounted.
+    requestAnimationFrame(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+      if (scroll.target === 'top') {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (scroll.target === 'bottom') {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      } else if (scroll.target === 'item' && typeof scroll.itemIndex === 'number') {
+        const el = itemRefsRef.current[scroll.itemIndex - 1];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  // Only re-run when the commands array grows.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands.length, pages]);
+
   // Auto-navigate to the newest page when new pages are added
   // (but not when goToPage just navigated us)
   const prevPageCountRef = useRef(0);
@@ -439,14 +488,33 @@ export function WhiteboardCanvas({
       ? getCommandTypeLabel(currentPage.commands[0].action)
       : currentPage.commands.map((c) => getCommandTypeLabel(c.action)).join(' + '));
 
+  // Scribble and scrollTo commands don't render as their own board items —
+  // they overlay / navigate. Split them out so the main loop renders real
+  // content, and the overlays attach by targetItemIndex (1-indexed).
+  const renderableCommands = useMemo(
+    () => currentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo'),
+    [currentPage.commands],
+  );
+  const scribbles = useMemo(
+    () => currentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'scribble' }> => c.action === 'scribble'),
+    [currentPage.commands],
+  );
+
+  // Refs to each rendered item so scrollTo can scrollIntoView() them.
+  const itemRefsRef = useRef<(HTMLDivElement | null)[]>([]);
+
   const bodyContent = (
     <>
       <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4">
-        {currentPage.commands.length === 1 ? (
-          <CommandRenderer command={currentPage.commands[0]} />
+        {renderableCommands.length === 1 ? (
+          <div className="relative" ref={(el) => { itemRefsRef.current[0] = el; }}>
+            <CommandRenderer command={renderableCommands[0]} />
+            <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
+          </div>
         ) : (
           <div className="space-y-1">
-            {currentPage.commands.map((cmd, i) => {
+            {renderableCommands.map((cmd, i) => {
+              const overlays = scribbles.filter((s) => s.targetItemIndex === i + 1);
               return (
                 <div key={i}>
                   {i > 0 && (
@@ -458,7 +526,10 @@ export function WhiteboardCanvas({
                       <div className="flex-1 border-t border-dashed border-gray-200" />
                     </div>
                   )}
-                  <CommandRenderer command={cmd} />
+                  <div className="relative" ref={(el) => { itemRefsRef.current[i] = el; }}>
+                    <CommandRenderer command={cmd} />
+                    <ScribbleOverlays scribbles={overlays} />
+                  </div>
                 </div>
               );
             })}
@@ -708,6 +779,127 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
 /**
  * Renders a single whiteboard command
  */
+/**
+ * Overlay layer rendered on top of a whiteboard item to show the tutor's
+ * point / circle / underline / arrow / highlight annotations (from the
+ * tutor_scribble tool). Each scribble persists until the page is cleared
+ * or a newPage fires — a teacher would leave their marks on the board
+ * while explaining.
+ */
+type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
+
+function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
+  if (scribbles.length === 0) return null;
+  return (
+    <svg
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      {scribbles.map((s, i) => {
+        const color = s.color || '#f59e0b';
+        // Default region is the whole item when none was given.
+        const r = s.region ? {
+          x: clamp01(s.region.x) * 100,
+          y: clamp01(s.region.y) * 100,
+          w: clamp01(s.region.w ?? (1 - s.region.x)) * 100,
+          h: clamp01(s.region.h ?? (1 - s.region.y)) * 100,
+        } : { x: 5, y: 5, w: 90, h: 90 };
+        const cx = r.x + r.w / 2;
+        const cy = r.y + r.h / 2;
+
+        let mark: React.ReactNode;
+        switch (s.shape) {
+          case 'circle':
+            mark = (
+              <ellipse
+                cx={cx} cy={cy}
+                rx={Math.max(4, r.w / 2)} ry={Math.max(3, r.h / 2)}
+                fill="none" stroke={color} strokeWidth="0.6"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+            break;
+          case 'underline':
+            mark = (
+              <line
+                x1={r.x} y1={r.y + r.h}
+                x2={r.x + r.w} y2={r.y + r.h}
+                stroke={color} strokeWidth="0.8"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+            break;
+          case 'box':
+            mark = (
+              <rect
+                x={r.x} y={r.y} width={r.w} height={r.h}
+                fill="none" stroke={color} strokeWidth="0.6"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+            break;
+          case 'highlight':
+            mark = (
+              <rect
+                x={r.x} y={r.y} width={r.w} height={r.h}
+                fill={color} fillOpacity="0.25" stroke="none"
+              />
+            );
+            break;
+          case 'arrow': {
+            // Arrow coming in from top-left toward the region's centre.
+            const tailX = Math.max(0, r.x - 8);
+            const tailY = Math.max(0, r.y - 8);
+            const headX = cx;
+            const headY = cy;
+            const markerId = `scribble-arrow-${i}`;
+            mark = (
+              <g>
+                <defs>
+                  <marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 Z" fill={color} />
+                  </marker>
+                </defs>
+                <line
+                  x1={tailX} y1={tailY} x2={headX} y2={headY}
+                  stroke={color} strokeWidth="0.7"
+                  vectorEffect="non-scaling-stroke"
+                  markerEnd={`url(#${markerId})`}
+                />
+              </g>
+            );
+            break;
+          }
+        }
+
+        return (
+          <g key={i}>
+            {mark}
+            {s.label && (
+              <text
+                x={cx} y={Math.max(2, r.y - 1)}
+                fontSize="3" fill={color} textAnchor="middle"
+                fontWeight="600"
+              >
+                {s.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function clamp01(n: number | undefined): number {
+  if (!Number.isFinite(n as number)) return 0;
+  const v = n as number;
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
 interface CommandRendererProps {
   command: WhiteboardCommand;
 }

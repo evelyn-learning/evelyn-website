@@ -21,6 +21,7 @@ const TIER1_NEW_TOOL_NAMES = new Set([
   'show_simple_machine', 'show_pendulum', 'show_spring_mass',
   'show_ray_diagram', 'show_wave', 'show_vector', 'show_orbital_diagram',
   'show_pedigree', 'show_cell_diagram', 'show_dna', 'show_food_web',
+  'tutor_scribble', 'tutor_scroll_whiteboard',
 ]);
 
 // OpenAI Realtime voice options

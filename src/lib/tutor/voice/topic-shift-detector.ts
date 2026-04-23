@@ -19,19 +19,22 @@
  * trigger multiple synthetic newPages in rapid succession.
  */
 
-const SHIFT_THRESHOLD = 0.40;  // cosine DISTANCE — empirical starting point
+// Tuned down from 0.40 after 2026-04-23 session 5 where three clearly
+// distinct topics (inclined plane → pendulum → iron orbital) failed to
+// trigger a single shift. text-embedding-3-small clusters STEM topics
+// around similarity 0.6–0.7 (distance 0.3–0.4), so 0.30 is where a
+// genuine subject pivot actually lands.
+const SHIFT_THRESHOLD = 0.30;  // cosine DISTANCE
 const EMA_ALPHA = 0.4;         // weight of the latest turn in the signature
 const COOLDOWN_MS = 30_000;    // minimum gap between consecutive shift fires
-const MIN_TURNS_BEFORE_SHIFT = 2; // let the signature stabilise
 
 export interface TopicShiftDetectorState {
   signature: Float32Array | null;
   lastShiftAt: number;
-  turnsSinceShift: number;
 }
 
 export function createTopicShiftState(): TopicShiftDetectorState {
-  return { signature: null, lastShiftAt: 0, turnsSinceShift: 0 };
+  return { signature: null, lastShiftAt: 0 };
 }
 
 function cosineSimilarity(a: Float32Array, b: Float32Array): number {
@@ -49,7 +52,8 @@ function cosineSimilarity(a: Float32Array, b: Float32Array): number {
 /**
  * Call the server embed endpoint. Returns null on any failure so the
  * caller's topic-shift check degrades to a no-op (no false positives,
- * just no detection on that turn).
+ * just no detection on that turn). Logs failures loudly so silent
+ * 500s / network errors surface in session logs.
  */
 export async function fetchEmbedding(text: string): Promise<Float32Array | null> {
   try {
@@ -58,11 +62,18 @@ export async function fetchEmbedding(text: string): Promise<Float32Array | null>
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn('[topic-shift] embed API returned non-OK:', res.status);
+      return null;
+    }
     const json = (await res.json()) as { embedding?: number[] };
-    if (!json.embedding || !Array.isArray(json.embedding)) return null;
+    if (!json.embedding || !Array.isArray(json.embedding)) {
+      console.warn('[topic-shift] embed API returned malformed payload');
+      return null;
+    }
     return new Float32Array(json.embedding);
-  } catch {
+  } catch (err) {
+    console.warn('[topic-shift] embed API fetch failed:', err);
     return null;
   }
 }
@@ -93,18 +104,26 @@ export async function checkTopicShift(
 
   // First turn — seed the signature, no shift possible.
   if (!state.signature) {
+    console.log('[topic-shift] seeded signature on first turn');
     return {
       shifted: false,
       distance: null,
-      nextState: { signature: embedding, lastShiftAt: state.lastShiftAt, turnsSinceShift: 1 },
+      nextState: { signature: embedding, lastShiftAt: state.lastShiftAt },
     };
   }
 
   const similarity = cosineSimilarity(state.signature, embedding);
   const distance = 1 - similarity;
   const withinCooldown = now - state.lastShiftAt < COOLDOWN_MS;
-  const hasWarmup = state.turnsSinceShift >= MIN_TURNS_BEFORE_SHIFT;
-  const shifted = !withinCooldown && hasWarmup && distance > SHIFT_THRESHOLD;
+  const shifted = !withinCooldown && distance > SHIFT_THRESHOLD;
+
+  // Always log the distance so real sessions surface actionable data
+  // for future threshold tuning. Only fires on clean turns, so the log
+  // noise is bounded by how often the student is genuinely speaking.
+  console.log(
+    `[topic-shift] distance=${distance.toFixed(3)} threshold=${SHIFT_THRESHOLD}`,
+    shifted ? '→ SHIFT' : withinCooldown ? '(cooldown)' : '(below threshold)',
+  );
 
   // On a shift, re-seed the signature to the new embedding rather than
   // EMA-blending — the student has moved; the old topic shouldn't
@@ -120,7 +139,6 @@ export async function checkTopicShift(
     nextState: {
       signature: nextSignature,
       lastShiftAt: shifted ? now : state.lastShiftAt,
-      turnsSinceShift: shifted ? 1 : state.turnsSinceShift + 1,
     },
   };
 }

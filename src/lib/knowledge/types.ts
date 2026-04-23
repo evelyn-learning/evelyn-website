@@ -600,6 +600,30 @@ export type WhiteboardCommand =
   | { action: 'clear' }
   | { action: 'newPage'; title?: string }
   | { action: 'goToPage'; title: string }
+  | {
+      // Annotate an EXISTING whiteboard item — the tutor equivalent of a
+      // real teacher circling, underlining, or pointing at something
+      // already on the board. Renders as an SVG overlay on top of the
+      // target item; does NOT redraw it. targetItemIndex is 1-indexed to
+      // match the numbering the student sees on screen.
+      action: 'scribble';
+      targetItemIndex: number;
+      shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
+      /** Optional sub-region of the target item, in relative 0-1 coords. */
+      region?: { x: number; y: number; w: number; h: number };
+      color?: string;
+      /** Optional callout text drawn near the mark. */
+      label?: string;
+    }
+  | {
+      // Bring a specific item or page into the student's view so the
+      // tutor can reference "see this part" without redrawing.
+      action: 'scrollTo';
+      target: 'top' | 'bottom' | 'item' | 'page';
+      itemIndex?: number;
+      pageIndex?: number;
+      pageTitle?: string;
+    }
   | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }
   | { action: 'showGraph'; type: GraphType; data: GraphData }
   | { action: 'showDiagram'; type: string; params: Record<string, unknown> }
