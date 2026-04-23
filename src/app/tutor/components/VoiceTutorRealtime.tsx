@@ -104,6 +104,7 @@ const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\
 
 // Words that Whisper commonly misrecognizes as inappropriate
 import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
+import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -231,6 +232,26 @@ export function VoiceTutorRealtime({
   const lastFatigueInjectionAtRef = useRef(0);
   const sessionStartMsRef = useRef<number>(Date.now());
   const longSessionCheckFiredRef = useRef(false);
+
+  // Flag flipped true when the tutor just emitted a show_equation with
+  // label: "Final Answer". On the NEXT batch of whiteboard commands that
+  // contains anything teaching-like (any show_*), we prepend a synthetic
+  // newPage so the board is clear for the next example. Then we reset
+  // the flag. This saves us from depending on the tutor remembering to
+  // call newPage itself between examples.
+  const recentlyFinishedProblemRef = useRef<string | null>(null);
+
+  // Rolling embedding signature of recent student turns. When a new turn
+  // lands semantically far from the signature (e.g. ray diagrams →
+  // "draw a map of USA"), we inject a synthetic newPage so the
+  // whiteboard starts fresh on the new topic — the tutor model itself
+  // misses this about half the time. See topic-shift-detector.ts.
+  const topicShiftStateRef = useRef<TopicShiftDetectorState>(createTopicShiftState());
+  // When the detector fires, we set this flag so the next batch of
+  // whiteboard commands gets a synthetic newPage prepended. Same
+  // mechanism as the "just-solved" trigger above; they coexist safely
+  // (first one to fire wins; the other clears on the same batch).
+  const topicShiftPendingRef = useRef<{ fromDistance: number } | null>(null);
 
   // Most-recent geometry command — kept around so geometry-numeric can
   // verify spoken distance/angle/area claims against the rendered figure.
@@ -368,6 +389,22 @@ export function VoiceTutorRealtime({
             : filterTranscriptText(raw);
         if (classification === 'uncertain') {
           onDebugEvent?.('uncertain_transcript', `Wrapped: "${raw}"`);
+        }
+
+        // Fire-and-forget: update the topic-shift detector with THIS clean
+        // turn's embedding, and if it detects a large semantic jump, set
+        // a flag so the next batch of whiteboard commands starts a new
+        // page. Skip for 'uncertain' turns — we don't want a garbled
+        // transcript to look like a topic pivot.
+        if (classification === 'clean') {
+          void checkTopicShift(topicShiftStateRef.current, raw).then((result) => {
+            topicShiftStateRef.current = result.nextState;
+            if (result.shifted) {
+              topicShiftPendingRef.current = { fromDistance: result.distance ?? 0 };
+              console.log('[VoiceTutorRealtime] Topic shift detected (distance=', result.distance?.toFixed(3), ')');
+              onDebugEvent?.('topic_shift', `dist=${result.distance?.toFixed(3)} — next whiteboard batch will get newPage`);
+            }
+          });
         }
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
@@ -1212,6 +1249,56 @@ export function VoiceTutorRealtime({
         }
 
         turnEquationsRef.current.push(latex);
+      }
+    }
+
+    // Auto-newPage triggers. Two reasons we'd prepend one:
+    //   A) "Just-solved" — the previous batch ended with a Final Answer,
+    //      and this batch is starting new teaching content.
+    //   B) "Topic shift" — the student's last clean transcript was
+    //      semantically far from the running signature (see
+    //      topic-shift-detector.ts), so even within the same subject a
+    //      fresh board makes sense.
+    const justSolvedPending = recentlyFinishedProblemRef.current;
+    const topicShiftPending = topicShiftPendingRef.current;
+    if ((justSolvedPending || topicShiftPending) && processed.length > 0) {
+      const teachingActions = new Set([
+        'showEquation', 'showDiagram', 'showGraph', 'showTable',
+        'showProblem', 'showSolution', 'showSvgDiagram', 'showGeometry',
+        'showCode', 'showDerivation',
+      ]);
+      const firstTeachingCmd = processed.find((c) => teachingActions.has(String(c.action)));
+      const alreadyHasNewPage = processed[0]?.action === 'newPage';
+      if (firstTeachingCmd && !alreadyHasNewPage) {
+        const nextTitle =
+          ('label' in firstTeachingCmd && typeof (firstTeachingCmd as { label?: string }).label === 'string' && (firstTeachingCmd as { label?: string }).label)
+          || ('title' in firstTeachingCmd && typeof (firstTeachingCmd as { title?: string }).title === 'string' && (firstTeachingCmd as { title?: string }).title)
+          || 'Next';
+        const synthetic: WhiteboardCommand = { action: 'newPage', title: String(nextTitle) };
+        processed = [synthetic, ...processed];
+        const reason = justSolvedPending
+          ? `After Final Answer "${justSolvedPending}" → "${nextTitle}"`
+          : `After topic shift (dist=${topicShiftPending?.fromDistance.toFixed(3)}) → "${nextTitle}"`;
+        console.log('[VoiceTutorRealtime] Auto-newPage injected:', reason);
+        onDebugEvent?.('auto_new_page', reason);
+      }
+      // Either way, clear both flags so this fires at most once per event.
+      recentlyFinishedProblemRef.current = null;
+      topicShiftPendingRef.current = null;
+    }
+
+    // Detect Final Answer in this batch so the NEXT batch gets an auto-
+    // newPage prepended. Stored as the latex text so the debug log is
+    // useful; the actual trigger is a truthy check above.
+    for (const cmd of processed) {
+      if (
+        cmd.action === 'showEquation'
+        && 'label' in cmd
+        && typeof cmd.label === 'string'
+        && /\bfinal answer\b/i.test(cmd.label)
+      ) {
+        recentlyFinishedProblemRef.current = cmd.latex ? String(cmd.latex) : cmd.label;
+        console.log('[VoiceTutorRealtime] Final Answer detected; next batch will get an auto-newPage');
       }
     }
 
@@ -2095,7 +2182,8 @@ Start by warmly greeting the student and asking how you can help them today.`;
       realtime.stopListening();
     } else if (realtime.state === 'speaking') {
       realtime.interrupt();
-      realtime.startListening();
+      // Respect the student's muted state even when interrupting the tutor.
+      if (!isMicMuted) realtime.startListening();
     } else if (realtime.isConnected) {
       // On first click, send context-aware greeting to get tutor's introduction
       if (!hasStarted) {
@@ -2103,10 +2191,17 @@ Start by warmly greeting the student and asking how you can help them today.`;
         const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
         realtime.sendTextMessage(greetingMessage);
       }
-      // Start listening for user's voice
-      realtime.startListening();
+      // If the student hit the Mute button BEFORE clicking Start, honour that
+      // the whole way through — send the greeting but do not open the mic.
+      // They can unmute whenever they're ready; startListening fires from
+      // toggleMicMute's unmute branch.
+      if (!isMicMuted) {
+        realtime.startListening();
+      } else {
+        console.log('[VoiceTutorRealtime] Start clicked while muted — skipping startListening');
+      }
     }
-  }, [realtime, sessionGoal, topic, hasStarted]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {

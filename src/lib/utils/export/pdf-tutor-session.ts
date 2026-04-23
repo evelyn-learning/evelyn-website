@@ -1155,6 +1155,37 @@ async function drawWhiteboardVisual(
     : rawCmd;
 
   if (cmd.action === 'showEquation' && cmd.latex) {
+    // Try rendering the actual KaTeX output first (html2canvas → PNG).
+    // This preserves every LaTeX command — \cdot, \frac, \parallel,
+    // \circ, etc. — exactly as the student sees it. The legacy text path
+    // (drawEquationVisual) reduces LaTeX to ASCII via latexToReadable +
+    // sanitize, which produced output like "F_ = 200 x sin(30^) = 200 x
+    // (1)/(2)" in the 2026-04-23 session. Falls back to that legacy path
+    // when the browser isn't available or capture returns null.
+    try {
+      const { captureCommandRaster } = await import('./whiteboard-capture');
+      const raster = await captureCommandRaster(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
+      if (raster && raster.dataUrl) {
+        const heightMm = (raster.heightPx / raster.widthPx) * width;
+        // Light blue box behind the image to match drawEquationVisual's look.
+        const boxPad = 3;
+        const labelH = cmd.label ? 6 : 0;
+        const boxH = labelH + heightMm + boxPad * 2;
+        pdf.setFillColor(239, 246, 255);
+        pdf.setDrawColor(191, 219, 254);
+        pdf.roundedRect(x, y, width, boxH, 2, 2, 'FD');
+        if (cmd.label) {
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(7);
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(sanitizeForPDF(String(cmd.label)), x + boxPad, y + 4);
+        }
+        pdf.addImage(raster.dataUrl, 'PNG', x + boxPad, y + labelH + boxPad, width - boxPad * 2, heightMm);
+        return y + boxH + 2;
+      }
+    } catch (err) {
+      console.warn('[pdf-tutor-session] Equation raster capture failed, using legacy path:', err);
+    }
     return drawEquationVisual(pdf, String(cmd.latex), cmd.label as string | undefined, x, y, width);
   }
 
