@@ -16,6 +16,7 @@ import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/syst
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
+import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -102,7 +103,7 @@ const WHITEBOARD_INTENT_PATTERNS = [
 const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\s*\d+|\b(?:equation|formula|graph|diagram|table)\b)/i;
 
 // Words that Whisper commonly misrecognizes as inappropriate
-import { filterTranscriptText, isNoiseTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
+import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -351,15 +352,23 @@ export function VoiceTutorRealtime({
     if (role === 'user') {
       currentUserTextRef.current = text;
       if (isFinal && text.trim()) {
-        // Skip noise / background chatter that Whisper hallucinates
-        if (isNoiseTranscript(text.trim())) {
-          console.log('[VoiceTutorRealtime] Filtered noise transcript:', text.trim());
-          onDebugEvent?.('noise_filtered', `Filtered: "${text.trim()}"`)
+        const raw = text.trim();
+        const classification = classifyTranscript(raw);
+        if (classification === 'noise') {
+          console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
+          onDebugEvent?.('noise_filtered', `Filtered: "${raw}"`);
           currentUserTextRef.current = '';
           return;
         }
-        // Filter inappropriate words from Whisper transcription
-        const filteredText = filterTranscriptText(text.trim());
+        // 'uncertain' → forward wrapped so the tutor asks rather than guesses.
+        // 'clean'     → forward with the normal spellcheck pass applied.
+        const filteredText =
+          classification === 'uncertain'
+            ? wrapUncertainTranscript(raw)
+            : filterTranscriptText(raw);
+        if (classification === 'uncertain') {
+          onDebugEvent?.('uncertain_transcript', `Wrapped: "${raw}"`);
+        }
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
           id: `user-${Date.now()}`,
@@ -697,11 +706,21 @@ export function VoiceTutorRealtime({
         return [validated as unknown as WhiteboardCommand];
       }
       if (cmd.action === 'showGraph' && (cmd as any).data) {
-        // Fix conic section math (focus, directrix, etc.) using exact formulas
-        const fixed = validateConicGraph((cmd as any).data);
-        if (fixed !== (cmd as any).data) {
-          console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
-          return [{ ...cmd, data: fixed } as WhiteboardCommand];
+        const original = (cmd as any).data;
+        // Fix conic section math (focus, directrix, etc.) using exact formulas.
+        const afterConic = validateConicGraph(original);
+        // Drop mislabeled "intersection" points (e.g. a parabola's vertex
+        // mislabeled as an intersection of two curves), and backfill real
+        // intersections when we can compute them deterministically.
+        const afterIntersections = validateIntersectionPoints(afterConic);
+        if (afterIntersections !== original) {
+          if (afterConic !== original) {
+            console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
+          }
+          if (afterIntersections !== afterConic) {
+            console.log('[VoiceTutorRealtime] Intersection validator adjusted points');
+          }
+          return [{ ...cmd, data: afterIntersections } as WhiteboardCommand];
         }
       }
       return [cmd];

@@ -16,7 +16,7 @@ import type { VoiceId } from '@/lib/tutor/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
-import { isNoiseTranscript, filterTranscriptText, isContextLossGreeting, isDuplicateResponse } from '@/lib/tutor/voice/transcript-filters';
+import { classifyTranscript, filterTranscriptText, wrapUncertainTranscript, isContextLossGreeting, isDuplicateResponse } from '@/lib/tutor/voice/transcript-filters';
 
 export type VoiceTutorState =
   | 'idle'
@@ -312,15 +312,22 @@ export function VoiceTutor({
     updateState('transcribing');
     const transcript = await transcription.stopListening();
     if (transcript) {
-      // Filter noise/hallucinations
-      if (isNoiseTranscript(transcript)) {
-        console.log('[VoiceTutor] Filtered noise transcript:', transcript);
+      const classification = classifyTranscript(transcript);
+      if (classification === 'noise') {
+        console.log('[VoiceTutor] Dropped noise transcript:', transcript);
         updateState('idle');
         return;
       }
-      // Filter profanity misrecognitions
-      const filtered = filterTranscriptText(transcript);
-      handleStudentMessage(filtered);
+      if (classification === 'uncertain') {
+        // Forward to the tutor wrapped so the model knows to ask for
+        // clarification rather than guess. Skip the spellcheck pass — we
+        // don't want to normalise words we're already flagging as unclear.
+        console.log('[VoiceTutor] Uncertain transcript (forwarding wrapped):', transcript);
+        handleStudentMessage(wrapUncertainTranscript(transcript));
+      } else {
+        const filtered = filterTranscriptText(transcript);
+        handleStudentMessage(filtered);
+      }
     } else {
       setError('No speech detected. Try again.');
       updateState('idle');
