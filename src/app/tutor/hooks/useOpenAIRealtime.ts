@@ -44,6 +44,14 @@ export interface RealtimeUsage {
  */
 export interface WhiteboardCommandResult {
   rejected?: Array<{ action: string; reason: string }>;
+  /**
+   * IDs assigned to the accepted commands, in order. Surfaced back to the
+   * model in the function_call_output so it can reference earlier items by
+   * id (e.g. { targetId: "showSpringMass-1" }) in later scribble / scrollTo
+   * calls. Omit for commands that don't get an id (newPage, scribble,
+   * scrollTo, etc.).
+   */
+  assignedIds?: string[];
 }
 
 export interface RealtimeConfig {
@@ -726,12 +734,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             // it narrates as if the whiteboard has content and rapidly
             // cascades more tool calls retrying the same broken content.
             let rejectionReason: string | null = null;
+            let assignedId: string | null = null;
             if (command) {
               try {
                 const result = await onWhiteboardCommand?.([command]);
-                if (result && typeof result === 'object' && Array.isArray(result.rejected) && result.rejected.length > 0) {
-                  rejectionReason = result.rejected.map(r => `${r.action}: ${r.reason}`).join('; ');
-                  console.warn('[Realtime] Tool call was rejected by handler:', rejectionReason);
+                if (result && typeof result === 'object') {
+                  if (Array.isArray(result.rejected) && result.rejected.length > 0) {
+                    rejectionReason = result.rejected.map(r => `${r.action}: ${r.reason}`).join('; ');
+                    console.warn('[Realtime] Tool call was rejected by handler:', rejectionReason);
+                  }
+                  if (Array.isArray(result.assignedIds) && result.assignedIds.length > 0) {
+                    assignedId = result.assignedIds[0];
+                  }
                 }
               } catch (err) {
                 console.error('[Realtime] Handler threw for tool call:', err);
@@ -761,7 +775,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                         success: false,
                         message: `The ${funcName} call did not render. Reason: ${rejectionReason}. Do NOT tell the student the item is on the whiteboard. Apologize briefly and address the underlying issue (ask the student what they need, or retry with a full statement).`,
                       }
-                    : { success: true, message: `Displayed ${funcName.replace('show_', '')} on whiteboard` }
+                    : {
+                        success: true,
+                        message: `Displayed ${funcName.replace('show_', '')} on whiteboard`,
+                        ...(assignedId
+                          ? {
+                              id: assignedId,
+                              note: `Remember this id. If the student later asks you to point at this item, pass it as targetId in tutor_scribble or tutor_scroll_whiteboard (e.g. { targetId: "${assignedId}" }).`,
+                            }
+                          : {}),
+                      }
                   ),
                 },
               }));

@@ -811,7 +811,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           y: clamp01(s.region.y) * 100,
           w: clamp01(s.region.w ?? (1 - s.region.x)) * 100,
           h: clamp01(s.region.h ?? (1 - s.region.y)) * 100,
-        } : { x: 5, y: 5, w: 90, h: 90 };
+        } : { x: 35, y: 40, w: 30, h: 25 }; // small centered mark when tutor forgets the region
         const cx = r.x + r.w / 2;
         const cy = r.y + r.h / 2;
 
@@ -881,14 +881,27 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           }
         }
 
+        // Stagger label y so multiple labels on the same item don't pile
+        // up at the same horizontal line. Alternates above / below the
+        // region, cycling through a few offsets.
+        const staggerSign = i % 2 === 0 ? -1 : 1;
+        const staggerBand = Math.floor(i / 2) * 3;
+        const labelY = staggerSign < 0
+          ? Math.max(2, r.y - 1 - staggerBand)
+          : Math.min(98, r.y + r.h + 3 + staggerBand);
         return (
           <g key={i}>
             {mark}
             {s.label && (
               <text
-                x={cx} y={Math.max(2, r.y - 1)}
+                x={cx} y={labelY}
                 fontSize="3" fill={color} textAnchor="middle"
                 fontWeight="600"
+                // White halo for readability on busy backgrounds.
+                paintOrder="stroke"
+                stroke="white"
+                strokeWidth="0.7"
+                strokeLinejoin="round"
               >
                 {s.label}
               </text>

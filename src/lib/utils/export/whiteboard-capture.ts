@@ -201,10 +201,13 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
     for (let i = 0; i < scribbles.length; i++) {
       const s = scribbles[i];
       const color = s.color || '#f59e0b';
-      const rx = (s.region?.x ?? 0) * vw;
-      const ry = (s.region?.y ?? 0) * vh;
-      const rw = (s.region?.w ?? (s.region ? 1 - (s.region.x ?? 0) : 0.9)) * vw;
-      const rh = (s.region?.h ?? (s.region ? 1 - (s.region.y ?? 0) : 0.9)) * vh;
+      // When the tutor gave no region, use a small centered mark (30%×25%)
+      // instead of covering 90% of the item — matches the live renderer.
+      const hasRegion = !!s.region;
+      const rx = (hasRegion ? (s.region?.x ?? 0) : 0.35) * vw;
+      const ry = (hasRegion ? (s.region?.y ?? 0) : 0.40) * vh;
+      const rw = (hasRegion ? (s.region?.w ?? (1 - (s.region?.x ?? 0))) : 0.30) * vw;
+      const rh = (hasRegion ? (s.region?.h ?? (1 - (s.region?.y ?? 0))) : 0.25) * vh;
       const cx = rx + rw / 2;
       const cy = ry + rh / 2;
 
@@ -290,13 +293,25 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
       }
 
       if (s.label) {
+        // Stagger labels so multiple annotations on the same item don't
+        // collide at the same y. Alternating above/below with widening
+        // gaps matches the live overlay's behavior.
+        const staggerSign = i % 2 === 0 ? -1 : 1;
+        const staggerBand = Math.floor(i / 2) * vh * 0.03;
+        const labelY = staggerSign < 0
+          ? Math.max(vh * 0.05, ry - 4 - staggerBand)
+          : Math.min(vh * 0.97, ry + rh + (vw / 50) + staggerBand);
         const text = doc.createElementNS(SVG_NS, 'text');
         addAttrs(text, {
-          x: cx, y: Math.max(12, ry - 2),
+          x: cx, y: labelY,
           'font-size': Math.max(10, vw / 50),
           fill: color,
           'text-anchor': 'middle',
           'font-weight': '700',
+          'paint-order': 'stroke',
+          stroke: 'white',
+          'stroke-width': Math.max(1.5, vw / 250),
+          'stroke-linejoin': 'round',
         });
         text.textContent = s.label;
         group.appendChild(text);

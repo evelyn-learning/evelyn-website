@@ -241,6 +241,23 @@ export function VoiceTutorRealtime({
   // call newPage itself between examples.
   const recentlyFinishedProblemRef = useRef<string | null>(null);
 
+  // Monotonic ID counters per action type — stamped onto every rendered
+  // whiteboard command so the tutor can reference items it created earlier
+  // via targetId (e.g. "showSpringMass-1"). Surfaced in tool_call_output
+  // responses so the tutor sees the id and can remember it.
+  const idCountersRef = useRef<Map<string, number>>(new Map());
+  // Map from assigned id back to the command object itself + the batch
+  // order in which it arrived. Used by scribble/scrollTo to resolve
+  // targetId into "which page + which item" at render time.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const commandByIdRef = useRef<Map<string, { cmd: any; order: number }>>(new Map());
+  const nextCommandOrderRef = useRef(0);
+  // Running log of every whiteboard command this component has dispatched
+  // — used by targetId resolution to walk the history and figure out which
+  // page a referenced command sits on. Kept in the component (rather than
+  // borrowed from the parent) so lookup is synchronous.
+  const whiteboardCommandsRef = useRef<WhiteboardCommand[]>([]);
+
   // Rolling embedding signature of recent student turns. When a new turn
   // lands semantically far from the signature (e.g. ray diagrams →
   // "draw a map of USA"), we inject a synthetic newPage so the
@@ -1302,33 +1319,134 @@ export function VoiceTutorRealtime({
       }
     }
 
+    // Stamp a stable id onto every rendered whiteboard command BEFORE we
+    // resolve scribble/scrollTo targets. ID format is `<action>-<counter>`
+    // with a per-action counter so e.g. the second show_spring_mass becomes
+    // showSpringMass-2. The counter persists across batches so IDs remain
+    // stable for the entire session. Meta-commands (newPage / clear /
+    // goToPage / scribble / scrollTo) do NOT get IDs — they're addressers
+    // or structural markers, not addressable items themselves.
+    const META_ACTIONS = new Set(['newPage', 'clear', 'goToPage', 'scribble', 'scrollTo']);
+    for (const cmd of processed) {
+      const action = String(cmd.action);
+      if (META_ACTIONS.has(action)) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdWithId = cmd as any;
+      if (cmdWithId.id) continue; // caller already assigned
+      const next = (idCountersRef.current.get(action) ?? 0) + 1;
+      idCountersRef.current.set(action, next);
+      const id = `${action}-${next}`;
+      cmdWithId.id = id;
+      commandByIdRef.current.set(id, { cmd: cmdWithId, order: nextCommandOrderRef.current++ });
+    }
+
+    // Resolve scribble / scrollTo targetId → targetItemIndex + targetPageTitle
+    // so the existing per-page rendering path works. Also note which page
+    // the referenced item lives on (by walking backward to the last newPage
+    // preceding it in the session log) for auto page-switch injection.
+    const resolveTargetFromId = (targetId: string): { itemIndex: number; pageTitle?: string; order: number } | null => {
+      const entry = commandByIdRef.current.get(targetId);
+      if (!entry) return null;
+      // Walk the running commands list (including this batch) in order.
+      // Count real items within each page bucket; find which bucket holds
+      // the referenced order value.
+      const fullList = [...whiteboardCommandsRef.current, ...processed];
+      let pageTitle: string | undefined;
+      let itemIndexInPage = 0;
+      let foundIndex = -1;
+      for (let i = 0, o = 0; i < fullList.length; i++) {
+        const c = fullList[i];
+        const act = String(c.action);
+        if (act === 'newPage') {
+          pageTitle = (c as { title?: string }).title;
+          itemIndexInPage = 0;
+          continue;
+        }
+        if (META_ACTIONS.has(act) && act !== 'newPage') continue;
+        itemIndexInPage += 1;
+        if (o === entry.order) { foundIndex = itemIndexInPage; break; }
+        o += 1;
+      }
+      if (foundIndex < 0) return null;
+      return { itemIndex: foundIndex, pageTitle, order: entry.order };
+    };
+
     // Auto-inject scrollTo before any scribble that doesn't have one.
     // The tutor sometimes emits tutor_scribble without tutor_scroll_whiteboard
     // first, leaving the student unable to see the mark (2026-04-23 session 7).
     // Walk processed in order; for each scribble, check whether a scrollTo
-    // to the SAME targetItemIndex was emitted earlier in this batch. If not,
-    // synthesise one just before the scribble.
+    // to the SAME target was emitted earlier in this batch. If not,
+    // synthesise one just before the scribble. Also handle cross-page —
+    // if the referenced item lives on a different page, inject a page
+    // navigation scrollTo first.
     const withAutoScrolls: WhiteboardCommand[] = [];
     const itemsAlreadyScrolledThisBatch = new Set<number>();
+    const pagesAlreadyNavigatedThisBatch = new Set<string>();
     for (const cmd of processed) {
-      if (cmd.action === 'scrollTo' && cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
-        itemsAlreadyScrolledThisBatch.add(cmd.itemIndex);
+      if (cmd.action === 'scrollTo') {
+        if (cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
+          itemsAlreadyScrolledThisBatch.add(cmd.itemIndex);
+        }
+        if (cmd.target === 'page' && cmd.pageTitle) {
+          pagesAlreadyNavigatedThisBatch.add(cmd.pageTitle);
+        }
+        // Resolve scrollTo by targetId if present.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tid = (cmd as any).targetId;
+        if (typeof tid === 'string') {
+          const resolved = resolveTargetFromId(tid);
+          if (resolved) {
+            if (resolved.pageTitle && !pagesAlreadyNavigatedThisBatch.has(resolved.pageTitle)) {
+              withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle: resolved.pageTitle });
+              pagesAlreadyNavigatedThisBatch.add(resolved.pageTitle);
+            }
+            withAutoScrolls.push({ action: 'scrollTo', target: 'item', itemIndex: resolved.itemIndex });
+            itemsAlreadyScrolledThisBatch.add(resolved.itemIndex);
+            continue; // swallow the original id-only scrollTo
+          }
+        }
       }
-      if (cmd.action === 'scribble' && !itemsAlreadyScrolledThisBatch.has(cmd.targetItemIndex)) {
-        withAutoScrolls.push({
-          action: 'scrollTo',
-          target: 'item',
-          itemIndex: cmd.targetItemIndex,
-        });
-        itemsAlreadyScrolledThisBatch.add(cmd.targetItemIndex);
-        console.log('[VoiceTutorRealtime] Auto-scrollTo injected before scribble for item', cmd.targetItemIndex);
-        onDebugEvent?.('auto_scroll_before_scribble', `Item ${cmd.targetItemIndex}`);
+
+      if (cmd.action === 'scribble') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tid = (cmd as any).targetId;
+        let effectiveIndex = cmd.targetItemIndex;
+        let effectivePageTitle: string | undefined;
+        if (typeof tid === 'string') {
+          const resolved = resolveTargetFromId(tid);
+          if (resolved) {
+            effectiveIndex = resolved.itemIndex;
+            effectivePageTitle = resolved.pageTitle;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (cmd as any).targetItemIndex = effectiveIndex;
+          } else {
+            console.warn('[VoiceTutorRealtime] Scribble targetId not found:', tid);
+          }
+        }
+        // Page navigation first (if cross-page)
+        if (effectivePageTitle && !pagesAlreadyNavigatedThisBatch.has(effectivePageTitle)) {
+          withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle: effectivePageTitle });
+          pagesAlreadyNavigatedThisBatch.add(effectivePageTitle);
+          console.log('[VoiceTutorRealtime] Auto-page-switch injected before scribble →', effectivePageTitle);
+          onDebugEvent?.('auto_page_switch_before_scribble', effectivePageTitle);
+        }
+        // Item scroll next (if not already scrolled)
+        if (typeof effectiveIndex === 'number' && !itemsAlreadyScrolledThisBatch.has(effectiveIndex)) {
+          withAutoScrolls.push({ action: 'scrollTo', target: 'item', itemIndex: effectiveIndex });
+          itemsAlreadyScrolledThisBatch.add(effectiveIndex);
+          console.log('[VoiceTutorRealtime] Auto-scrollTo injected before scribble for item', effectiveIndex);
+          onDebugEvent?.('auto_scroll_before_scribble', `Item ${effectiveIndex}`);
+        }
       }
       withAutoScrolls.push(cmd);
     }
     processed = withAutoScrolls;
 
     onWhiteboardCommand(processed);
+    // Mirror into our local running log so targetId lookups across future
+    // batches can walk the full session history without round-tripping
+    // through the parent's state.
+    whiteboardCommandsRef.current = [...whiteboardCommandsRef.current, ...processed];
     whiteboardCommandCountRef.current += processed.length;
     console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);
 
@@ -1368,7 +1486,14 @@ export function VoiceTutorRealtime({
         whiteboardStatusTimerRef.current = null;
       }
     }
-    return { rejected };
+    // Surface the ids we stamped on this batch so the Realtime hook can
+    // include them in the tool_call_output — the tutor will see them and
+    // can reference them later via targetId.
+    const assignedIds = processed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((c) => (c as any).id)
+      .filter((id): id is string => typeof id === 'string');
+    return { rejected, assignedIds };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent]);
 
   // Build a context summary from the current transcript

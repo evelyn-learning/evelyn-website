@@ -1382,26 +1382,40 @@ export async function exportTutorSessionPDF(
     return true;
   });
 
-  // Scribble / scrollTo are meta-commands — they don't render as their own
-  // whiteboard items. Split them out so the numbered list in the PDF only
-  // contains real content (matching what the student sees on screen), and
+  // Meta-commands don't render as their own whiteboard items — split them
+  // out so the numbered list in the PDF only contains real content, and
   // bake scribble overlays onto their target item's captured SVG below.
-  // scrollTo has no PDF representation; discard.
-  const scribblesByTarget = new Map<number, Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string }>>();
+  // scrollTo / newPage / clear / goToPage have no PDF representation;
+  // discard.
+  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage']);
+  // Two lookup paths for matching scribbles to target items:
+  //   - byId keyed on the stamped id ("showSpringMass-1") — preferred
+  //   - byIndex keyed on the 1-indexed PDF item position — fallback for
+  //     older scribbles emitted before targetId was available, OR when
+  //     the tutor didn't use targetId
+  type ScribbleShape = { shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string };
+  const scribblesByTargetId = new Map<string, ScribbleShape[]>();
+  const scribblesByIndex = new Map<number, ScribbleShape[]>();
   const dedupedCommands = dedupedAll.filter((cmd) => {
     const action = cmd.action;
     if (action === 'scribble') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const s = cmd as any;
-      const idx = Number(s.targetItemIndex);
-      if (Number.isFinite(idx) && idx >= 1 && ['circle','underline','arrow','box','highlight'].includes(s.shape)) {
-        const existing = scribblesByTarget.get(idx) || [];
-        existing.push({ shape: s.shape, region: s.region, color: s.color, label: s.label });
-        scribblesByTarget.set(idx, existing);
+      if (!['circle','underline','arrow','box','highlight'].includes(s.shape)) return false;
+      const shape: ScribbleShape = { shape: s.shape, region: s.region, color: s.color, label: s.label };
+      if (typeof s.targetId === 'string' && s.targetId) {
+        const list = scribblesByTargetId.get(s.targetId) || [];
+        list.push(shape);
+        scribblesByTargetId.set(s.targetId, list);
+      } else if (Number.isFinite(Number(s.targetItemIndex)) && Number(s.targetItemIndex) >= 1) {
+        const idx = Number(s.targetItemIndex);
+        const list = scribblesByIndex.get(idx) || [];
+        list.push(shape);
+        scribblesByIndex.set(idx, list);
       }
       return false;
     }
-    if (action === 'scrollTo') return false;
+    if (META_PDF_ACTIONS.has(String(action))) return false;
     return true;
   });
 
@@ -1515,8 +1529,15 @@ export async function exportTutorSessionPDF(
 
       // Visual rendering — also bake in any scribble annotations targeting
       // this item so the PDF matches what the student saw on screen.
-      const itemScribbles = scribblesByTarget.get(i + 1);
-      const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, contentWidth - 8, itemScribbles);
+      // Try ID-based lookup first (preferred), fall back to 1-indexed
+      // position within the PDF list.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const thisId = (cmd as any).id as string | undefined;
+      const itemScribbles = [
+        ...(thisId ? (scribblesByTargetId.get(thisId) || []) : []),
+        ...(scribblesByIndex.get(i + 1) || []),
+      ];
+      const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, contentWidth - 8, itemScribbles.length > 0 ? itemScribbles : undefined);
       if (newY > y) {
         y = newY;
       } else {

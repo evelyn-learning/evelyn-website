@@ -1332,41 +1332,43 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'tutor_scribble',
-    description: 'Point at or annotate something ALREADY on the whiteboard — a real teacher circling, underlining, or drawing an arrow to an existing item. Renders as an overlay on top of the target item; does NOT redraw the item. USE THIS when the student asks you to reference, point out, highlight, or emphasize something already shown. Do NOT use this for new content — use the appropriate show_* tool instead.',
+    description: 'Point at or annotate something ALREADY on the whiteboard — a real teacher circling, underlining, or drawing an arrow to an existing item. Renders as an overlay on the target item; does NOT redraw it. USE THIS when the student asks you to reference, point out, highlight, or emphasize something already shown. Do NOT use this for new content. ADDRESSING: prefer `targetId` — when you drew the item you want to mark, the function_call_output gave you an id like { success: true, id: "showSpringMass-1" }. Pass that same id as targetId here and the client will handle scrolling, page-switching, and item-finding automatically. If you genuinely don\'t remember the id, fall back to targetItemIndex (1-indexed within the current page). REGION: always pass a tight region around the specific thing you\'re pointing at — typically x/y/w/h covering 15–30% of the item. Omit region ONLY if you truly mean the whole item. A default circle on the whole item looks sloppy.',
     parameters: {
       type: 'object',
       properties: {
-        targetItemIndex: { type: 'number', description: '1-indexed position of the whiteboard item to annotate (matches the #1, #2, #3 labels the student sees). Items are numbered in the order they were shown on the current page.' },
+        targetId: { type: 'string', description: 'PREFERRED. The id of the target item as reported in the function_call_output of the show_* call that drew it (e.g. "showSpringMass-1"). Survives page switches and command reordering.' },
+        targetItemIndex: { type: 'number', description: 'FALLBACK ONLY. 1-indexed position within the current page. Use when you don\'t remember the id.' },
         shape: { type: 'string', enum: ['circle', 'underline', 'arrow', 'box', 'highlight'], description: 'circle = draw a ring around the region; underline = draw a line beneath text; arrow = draw an arrow pointing at the region from outside; box = rectangle around the region; highlight = semi-transparent yellow fill.' },
         region: {
           type: 'object',
           properties: {
             x: { type: 'number', description: 'Left edge of the region inside the target item, as a fraction 0-1 of the item width.' },
             y: { type: 'number', description: 'Top edge of the region, as a fraction 0-1 of the item height.' },
-            w: { type: 'number', description: 'Region width as a fraction 0-1. Omit to annotate the whole item.' },
-            h: { type: 'number', description: 'Region height as a fraction 0-1.' },
+            w: { type: 'number', description: 'Region width as a fraction 0-1. Typically 0.15–0.30 for a targeted mark.' },
+            h: { type: 'number', description: 'Region height as a fraction 0-1. Typically 0.15–0.30 for a targeted mark.' },
           },
-          description: 'Optional sub-region within the target item. Leave off to annotate the whole item.',
+          description: 'Sub-region of the target item to mark. ALMOST ALWAYS pass this with a tight rectangle around the specific thing (word, number, element) you are pointing at. Only omit if you truly want to mark the entire item.',
         },
         color: { type: 'string', description: 'CSS color. Defaults to amber (#f59e0b) which reads well on most backgrounds.' },
-        label: { type: 'string', description: 'Optional short text drawn near the annotation — e.g. "here" or "this step".' },
+        label: { type: 'string', description: 'Optional short text (≤3 words) drawn near the annotation — e.g. "here" or "this step". Keep it brief; long labels overlap adjacent scribbles.' },
       },
-      required: ['targetItemIndex', 'shape'],
+      required: ['shape'],
     },
   },
 
   {
     name: 'tutor_scroll_whiteboard',
-    description: 'Bring a specific whiteboard item or page into view. USE THIS right before tutor_scribble when the item you want to annotate might be off-screen, OR when you just want to direct the student\'s attention to a previous step ("look back at step 2"). No re-draw; it is a pure view change.',
+    description: 'Bring a specific whiteboard item or page into view. USE THIS when the item you want to reference might be off-screen, OR when you want to direct the student\'s attention to a previous step ("look back at step 2"). No re-draw; pure view change. PREFER `targetId` — pass the id from an earlier show_*\'s function_call_output and the client handles page-switching + item-scrolling in one call. Fall back to target + itemIndex / pageTitle only if you genuinely don\'t have the id.',
     parameters: {
       type: 'object',
       properties: {
-        target: { type: 'string', enum: ['top', 'bottom', 'item', 'page'], description: 'top/bottom = scroll the current page. item = jump to a specific item number. page = switch to a different page.' },
+        targetId: { type: 'string', description: 'PREFERRED. The id of the item to scroll to. Client handles the page-switch and item-scroll for you.' },
+        target: { type: 'string', enum: ['top', 'bottom', 'item', 'page'], description: 'FALLBACK. top/bottom = scroll the current page. item = jump to a specific item number. page = switch to a different page.' },
         itemIndex: { type: 'number', description: '1-indexed item number when target="item".' },
         pageIndex: { type: 'number', description: '0-indexed page when target="page" and you know the page number.' },
         pageTitle: { type: 'string', description: 'Title of the page when target="page" and you\'d rather match by title. The most recent page with this title wins.' },
       },
-      required: ['target'],
+      required: [],
     },
   },
 ];
@@ -1956,14 +1958,19 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
 
   if (funcName === 'tutor_scribble') {
-    const idx = Number(funcArgs.targetItemIndex);
-    if (!Number.isFinite(idx) || idx < 1) return null;
+    const targetId = typeof funcArgs.targetId === 'string' && funcArgs.targetId.trim() ? funcArgs.targetId.trim() : undefined;
+    const rawIdx = Number(funcArgs.targetItemIndex);
+    const idx = Number.isFinite(rawIdx) && rawIdx >= 1 ? rawIdx : undefined;
+    // Need at least ONE addressing path. Reject the tool call otherwise —
+    // the client can't know what to mark.
+    if (!targetId && idx === undefined) return null;
     const shape = typeof funcArgs.shape === 'string' ? funcArgs.shape : 'circle';
     if (!['circle', 'underline', 'arrow', 'box', 'highlight'].includes(shape)) return null;
     const region = (funcArgs.region && typeof funcArgs.region === 'object') ? funcArgs.region as Record<string, unknown> : undefined;
     return {
       action: 'scribble',
-      targetItemIndex: idx,
+      ...(targetId ? { targetId } : {}),
+      ...(idx !== undefined ? { targetItemIndex: idx } : {}),
       shape: shape as 'circle' | 'underline' | 'arrow' | 'box' | 'highlight',
       region: region ? {
         x: Number(region.x) || 0,
@@ -1977,11 +1984,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
 
   if (funcName === 'tutor_scroll_whiteboard') {
+    const targetId = typeof funcArgs.targetId === 'string' && funcArgs.targetId.trim() ? funcArgs.targetId.trim() : undefined;
     const target = typeof funcArgs.target === 'string' ? funcArgs.target : undefined;
-    if (!target || !['top', 'bottom', 'item', 'page'].includes(target)) return null;
+    // With targetId alone we can still resolve; without EITHER path we can't.
+    if (!targetId && (!target || !['top', 'bottom', 'item', 'page'].includes(target))) return null;
     return {
       action: 'scrollTo',
-      target: target as 'top' | 'bottom' | 'item' | 'page',
+      ...(targetId ? { targetId } : {}),
+      // Default target to 'item' when only targetId is given — the resolver
+      // in handleWhiteboardCommand will expand into item + optional page switch.
+      target: (target as 'top' | 'bottom' | 'item' | 'page') ?? 'item',
       itemIndex: Number.isFinite(Number(funcArgs.itemIndex)) ? Number(funcArgs.itemIndex) : undefined,
       pageIndex: Number.isFinite(Number(funcArgs.pageIndex)) ? Number(funcArgs.pageIndex) : undefined,
       pageTitle: typeof funcArgs.pageTitle === 'string' ? funcArgs.pageTitle : undefined,

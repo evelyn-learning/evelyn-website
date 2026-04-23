@@ -604,10 +604,23 @@ export type WhiteboardCommand =
       // Annotate an EXISTING whiteboard item — the tutor equivalent of a
       // real teacher circling, underlining, or pointing at something
       // already on the board. Renders as an SVG overlay on top of the
-      // target item; does NOT redraw it. targetItemIndex is 1-indexed to
-      // match the numbering the student sees on screen.
+      // target item; does NOT redraw it.
       action: 'scribble';
-      targetItemIndex: number;
+      /**
+       * PRIMARY addressing path: the id assigned to the target item when
+       * it was originally drawn. The tutor learns this id from the
+       * function_call_output of the show_* call that created the item
+       * (e.g. { success: true, id: "showSpringMass-1" }). Robust across
+       * page switches and command reordering.
+       */
+      targetId?: string;
+      /**
+       * Fallback addressing path: 1-indexed position of the target item
+       * within its page, matching the numbering the student sees. Used
+       * only when targetId isn't available. The client also resolves
+       * targetId into this field before rendering.
+       */
+      targetItemIndex?: number;
       shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
       /** Optional sub-region of the target item, in relative 0-1 coords. */
       region?: { x: number; y: number; w: number; h: number };
@@ -619,6 +632,8 @@ export type WhiteboardCommand =
       // Bring a specific item or page into the student's view so the
       // tutor can reference "see this part" without redrawing.
       action: 'scrollTo';
+      /** Id of the item to scroll to. When set, target is inferred. */
+      targetId?: string;
       target: 'top' | 'bottom' | 'item' | 'page';
       itemIndex?: number;
       pageIndex?: number;
