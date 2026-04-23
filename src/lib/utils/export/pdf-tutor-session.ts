@@ -1200,7 +1200,28 @@ async function drawWhiteboardVisual(
     }
   }
 
-  return y; // No visual drawn
+  // Fallback for any whiteboard command that lacks a native jsPDF drawer
+  // (primarily the 17 Tier-1 structured renderers: show_free_body_diagram,
+  // show_motion_diagram, show_pedigree, show_ray_diagram, etc.): re-mount
+  // the React CommandRenderer off-screen, capture its SVG output, and
+  // embed as vector via svg2pdf. Works identically for current and past
+  // sessions because we re-render from the command data each time.
+  try {
+    const { captureCommandSvg, drawCapturedSvg } = await import('./whiteboard-capture');
+    // The capture helper consumes the live WhiteboardCommand shape; rawCmd
+    // here is either live (flat) or DB-normalised (has .data), and cmd is
+    // already the flattened form. Cast is safe since the helper only
+    // reads known properties through CommandRenderer's switch.
+    const svgString = await captureCommandSvg(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
+    if (svgString) {
+      const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
+      if (consumed > 0) return y + consumed + 2;
+    }
+  } catch (err) {
+    console.warn('[pdf-tutor-session] Whiteboard capture fallback failed:', err);
+  }
+
+  return y; // No visual drawn — caller falls back to its existing text label.
 }
 
 function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
@@ -1384,14 +1405,30 @@ export async function exportTutorSessionPDF(
     for (let i = 0; i < dedupedCommands.length; i++) {
       const cmd = dedupedCommands[i];
 
-      // Check if this command has a visual renderer and estimate height
+      // Check if this command has a visual renderer and estimate height.
+      // For actions with native drawers we know the shape; everything else
+      // falls through to the captured-SVG fallback which targets the
+      // shared 520×360 DIAGRAM_VIEWBOX (aspect ≈ 0.69) — at contentWidth
+      // ~170mm that's ~118mm tall, so we reserve 125mm to avoid a page
+      // break mid-SVG. If the captured SVG ends up smaller the remaining
+      // space is reclaimed by the next item.
+      const nativeDrawerActions = new Set([
+        'showEquation', 'showSvgDiagram', 'showGraph', 'showTable',
+        'showCode', 'showGeometry', 'showProblem',
+      ]);
+      const nativeDrawerDiagramTypes = new Set([
+        'pipe-flow', 'fluid-flow', 'continuity', 'free-body',
+        'vectors', 'velocity', 'vector-addition',
+      ]);
       const visualHeight = (cmd.action === 'showEquation') ? 18 :
         (cmd.action === 'showSvgDiagram') ? 100 :
         (cmd.action === 'showGraph') ? 110 :
         (cmd.action === 'showTable') ? Math.min(10 + ((cmd.rows as unknown[])?.length || 0) * 7, 80) :
         (cmd.action === 'showCode') ? Math.min(10 + (String(cmd.code || '').split('\n').length) * 3.5 + 6, 60) :
         (cmd.action === 'showGeometry') ? 70 :
-        (cmd.action === 'showDiagram' && ['pipe-flow', 'fluid-flow', 'continuity', 'free-body', 'vectors', 'velocity', 'vector-addition'].includes(cmd.type as string)) ? 50 : 0;
+        (cmd.action === 'showDiagram' && nativeDrawerDiagramTypes.has(cmd.type as string)) ? 50 :
+        nativeDrawerActions.has(String(cmd.action)) ? 0 :
+        125; // captured-SVG fallback reservation
 
       addPageIfNeeded(visualHeight + 14);
 

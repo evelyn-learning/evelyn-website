@@ -712,7 +712,7 @@ interface CommandRendererProps {
   command: WhiteboardCommand;
 }
 
-function CommandRenderer({ command }: CommandRendererProps) {
+export function CommandRenderer({ command }: CommandRendererProps) {
   switch (command.action) {
     case 'showEquation':
       return (
