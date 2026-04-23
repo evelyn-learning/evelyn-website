@@ -168,6 +168,150 @@ export async function drawCapturedSvg(pdf: any, svgString: string, x: number, y:
 }
 
 /**
+ * A scribble command as it appears in WhiteboardCommand — narrowed for
+ * this helper so callers don't need to import the full union.
+ */
+export interface ScribbleInput {
+  shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
+  region?: { x: number; y: number; w?: number; h?: number };
+  color?: string;
+  label?: string;
+}
+
+/**
+ * Bake scribble annotations directly into a captured SVG string by
+ * appending overlay shapes. The input coordinate space for scribble
+ * regions is 0–1 (fractions of the target item); we scale to the SVG's
+ * viewBox extent so the marks land in the right place after svg2pdf
+ * embeds it. Returns a new SVG string; the original is not mutated.
+ *
+ * Rendering rules mirror the on-screen ScribbleOverlays component in
+ * WhiteboardCanvas.tsx so the PDF visually matches the live session.
+ */
+export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]): string {
+  if (!scribbles || scribbles.length === 0) return svgString;
+  try {
+    const doc = new DOMParser().parseFromString(svgString, 'image/svg+xml');
+    const svg = doc.documentElement;
+    if (!svg || svg.nodeName.toLowerCase() !== 'svg') return svgString;
+
+    const { width: vw, height: vh } = parseSvgDimensions(svgString);
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    for (let i = 0; i < scribbles.length; i++) {
+      const s = scribbles[i];
+      const color = s.color || '#f59e0b';
+      const rx = (s.region?.x ?? 0) * vw;
+      const ry = (s.region?.y ?? 0) * vh;
+      const rw = (s.region?.w ?? (s.region ? 1 - (s.region.x ?? 0) : 0.9)) * vw;
+      const rh = (s.region?.h ?? (s.region ? 1 - (s.region.y ?? 0) : 0.9)) * vh;
+      const cx = rx + rw / 2;
+      const cy = ry + rh / 2;
+
+      const group = doc.createElementNS(SVG_NS, 'g');
+
+      const addAttrs = (el: Element, attrs: Record<string, string | number>) => {
+        for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      };
+
+      switch (s.shape) {
+        case 'circle': {
+          const ellipse = doc.createElementNS(SVG_NS, 'ellipse');
+          addAttrs(ellipse, {
+            cx, cy,
+            rx: Math.max(4, rw / 2),
+            ry: Math.max(3, rh / 2),
+            fill: 'none',
+            stroke: color,
+            'stroke-width': Math.max(2, vw / 200),
+          });
+          group.appendChild(ellipse);
+          break;
+        }
+        case 'underline': {
+          const line = doc.createElementNS(SVG_NS, 'line');
+          addAttrs(line, {
+            x1: rx, y1: ry + rh,
+            x2: rx + rw, y2: ry + rh,
+            stroke: color,
+            'stroke-width': Math.max(2.5, vw / 170),
+            'stroke-linecap': 'round',
+          });
+          group.appendChild(line);
+          break;
+        }
+        case 'box': {
+          const rect = doc.createElementNS(SVG_NS, 'rect');
+          addAttrs(rect, {
+            x: rx, y: ry, width: rw, height: rh,
+            fill: 'none', stroke: color,
+            'stroke-width': Math.max(2, vw / 200),
+          });
+          group.appendChild(rect);
+          break;
+        }
+        case 'highlight': {
+          const rect = doc.createElementNS(SVG_NS, 'rect');
+          addAttrs(rect, {
+            x: rx, y: ry, width: rw, height: rh,
+            fill: color, 'fill-opacity': '0.25', stroke: 'none',
+          });
+          group.appendChild(rect);
+          break;
+        }
+        case 'arrow': {
+          const tailX = Math.max(0, rx - vw * 0.08);
+          const tailY = Math.max(0, ry - vh * 0.08);
+          const markerId = `pdf-scribble-arrow-${i}`;
+          const defs = doc.createElementNS(SVG_NS, 'defs');
+          const marker = doc.createElementNS(SVG_NS, 'marker');
+          addAttrs(marker, {
+            id: markerId, viewBox: '0 0 10 10',
+            refX: '8', refY: '5',
+            markerWidth: '4', markerHeight: '4',
+            orient: 'auto-start-reverse',
+          });
+          const markerPath = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(markerPath, { d: 'M0,0 L10,5 L0,10 Z', fill: color });
+          marker.appendChild(markerPath);
+          defs.appendChild(marker);
+          group.appendChild(defs);
+          const line = doc.createElementNS(SVG_NS, 'line');
+          addAttrs(line, {
+            x1: tailX, y1: tailY,
+            x2: cx, y2: cy,
+            stroke: color,
+            'stroke-width': Math.max(2, vw / 200),
+            'marker-end': `url(#${markerId})`,
+          });
+          group.appendChild(line);
+          break;
+        }
+      }
+
+      if (s.label) {
+        const text = doc.createElementNS(SVG_NS, 'text');
+        addAttrs(text, {
+          x: cx, y: Math.max(12, ry - 2),
+          'font-size': Math.max(10, vw / 50),
+          fill: color,
+          'text-anchor': 'middle',
+          'font-weight': '700',
+        });
+        text.textContent = s.label;
+        group.appendChild(text);
+      }
+
+      svg.appendChild(group);
+    }
+    return new XMLSerializer().serializeToString(svg);
+  } catch (err) {
+    console.warn('[whiteboard-capture] overlayScribbles failed; returning original SVG:', err);
+    return svgString;
+  }
+}
+
+/**
  * Parse the natural width/height of a captured SVG for PDF-layout sizing.
  * Prefers the viewBox if present, falls back to width/height attributes,
  * final fallback to the DIAGRAM_VIEWBOX defaults (520×360).

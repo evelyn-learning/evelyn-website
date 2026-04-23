@@ -1158,19 +1158,37 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_spring_mass',
-    description: 'Horizontal or vertical spring attached to a mass at a displaced position, with natural-length reference, displacement annotation, and derived ω = √(k/m), T = 2π/ω. USE THIS for Hooke\'s law and SHM spring lessons.',
+    description: 'Horizontal (or vertical) spring-mass setup. Two modes. (A) Single-mass mode — pass k, mass, displacement; renders one spring on a wall with a mass and displacement annotation plus derived ω and T. USE for simple Hooke\'s law / SHM lessons. (B) Chain mode (PREFERRED for any multi-spring or multi-mass setup) — pass an elements[] array describing the left-to-right chain of wall / spring / mass pieces. Examples:\n\n  Single mass: {"k": 200, "mass": 0.5, "displacement": 0.1}\n\n  Two masses in series added to the right of the first:\n  {"elements": [{"type":"wall"},{"type":"spring","k":200},{"type":"mass","mass":0.5},{"type":"spring","k":200},{"type":"mass","mass":0.5}]}\n\n  Mass trapped between two walls (symmetric coupled oscillator):\n  {"elements": [{"type":"wall"},{"type":"spring","k":200},{"type":"mass","mass":0.5},{"type":"spring","k":200},{"type":"wall"}]}\n\nWhen a student extends the problem by adding springs / masses, use CHAIN MODE — do not fall back to show_svg_diagram.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        k: { type: 'number', description: 'Spring constant (N/m).' },
-        mass: { type: 'number', description: 'Mass (kg).' },
-        displacement: { type: 'number', description: 'Displacement from equilibrium (m). Negative = compressed.' },
+        // Chain mode:
+        elements: {
+          type: 'array',
+          description: 'Left-to-right chain of elements. When present, takes priority over the single-mass fields below. Each element is one of: {"type":"wall"}, {"type":"spring","k":<N/m>,"naturalLength":<m optional>,"label":<optional>}, {"type":"mass","mass":<kg>,"displacement":<m optional>,"label":<optional>}.',
+          items: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['wall', 'spring', 'mass'] },
+              k: { type: 'number', description: 'Spring constant in N/m. Required when type="spring".' },
+              mass: { type: 'number', description: 'Mass in kg. Required when type="mass".' },
+              displacement: { type: 'number', description: 'Mass displacement from equilibrium (m).' },
+              naturalLength: { type: 'number', description: 'Spring natural length (m). Default 1.' },
+              label: { type: 'string', description: 'Override the auto-generated label.' },
+            },
+            required: ['type'],
+          },
+        },
+        // Legacy single-mass fields (still supported):
+        k: { type: 'number', description: 'Spring constant (N/m). Single-mass mode.' },
+        mass: { type: 'number', description: 'Mass (kg). Single-mass mode.' },
+        displacement: { type: 'number', description: 'Displacement from equilibrium (m). Negative = compressed. Single-mass mode.' },
         naturalLength: { type: 'number' },
         orientation: { type: 'string', enum: ['horizontal', 'vertical'] },
         notes: { type: 'string' },
       },
-      required: ['k', 'mass', 'displacement'],
+      required: [],
     },
   },
 
@@ -1834,6 +1852,10 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     return {
       action: 'showSpringMass',
       title: funcArgs.title,
+      // Chain mode: pass elements[] through verbatim so the renderer can
+      // pick up wall/spring/mass entries in left-to-right order.
+      elements: Array.isArray(funcArgs.elements) ? funcArgs.elements : undefined,
+      // Legacy single-mass fields (ignored by the renderer when elements is set).
       k: funcArgs.k,
       mass: funcArgs.mass,
       displacement: funcArgs.displacement,

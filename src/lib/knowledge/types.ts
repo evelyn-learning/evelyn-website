@@ -792,9 +792,20 @@ export type WhiteboardCommand =
   | {
       action: 'showSpringMass';
       title?: string;
-      k: number;
-      mass: number;
-      displacement: number;
+      /** Chain mode: left-to-right list of wall / spring / mass elements.
+       *  When present, takes priority over k/mass/displacement below. */
+      elements?: Array<{
+        type: 'wall' | 'spring' | 'mass';
+        k?: number;
+        mass?: number;
+        displacement?: number;
+        naturalLength?: number;
+        label?: string;
+      }>;
+      // Legacy single-mass fields (still supported for backward compat).
+      k?: number;
+      mass?: number;
+      displacement?: number;
       naturalLength?: number;
       orientation?: 'horizontal' | 'vertical';
       notes?: string;

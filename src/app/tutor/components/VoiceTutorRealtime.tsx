@@ -1302,6 +1302,32 @@ export function VoiceTutorRealtime({
       }
     }
 
+    // Auto-inject scrollTo before any scribble that doesn't have one.
+    // The tutor sometimes emits tutor_scribble without tutor_scroll_whiteboard
+    // first, leaving the student unable to see the mark (2026-04-23 session 7).
+    // Walk processed in order; for each scribble, check whether a scrollTo
+    // to the SAME targetItemIndex was emitted earlier in this batch. If not,
+    // synthesise one just before the scribble.
+    const withAutoScrolls: WhiteboardCommand[] = [];
+    const itemsAlreadyScrolledThisBatch = new Set<number>();
+    for (const cmd of processed) {
+      if (cmd.action === 'scrollTo' && cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
+        itemsAlreadyScrolledThisBatch.add(cmd.itemIndex);
+      }
+      if (cmd.action === 'scribble' && !itemsAlreadyScrolledThisBatch.has(cmd.targetItemIndex)) {
+        withAutoScrolls.push({
+          action: 'scrollTo',
+          target: 'item',
+          itemIndex: cmd.targetItemIndex,
+        });
+        itemsAlreadyScrolledThisBatch.add(cmd.targetItemIndex);
+        console.log('[VoiceTutorRealtime] Auto-scrollTo injected before scribble for item', cmd.targetItemIndex);
+        onDebugEvent?.('auto_scroll_before_scribble', `Item ${cmd.targetItemIndex}`);
+      }
+      withAutoScrolls.push(cmd);
+    }
+    processed = withAutoScrolls;
+
     onWhiteboardCommand(processed);
     whiteboardCommandCountRef.current += processed.length;
     console.log('[VoiceTutorRealtime] Whiteboard command count now:', whiteboardCommandCountRef.current);

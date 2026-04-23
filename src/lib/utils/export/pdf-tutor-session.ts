@@ -1139,9 +1139,13 @@ function drawGeometryVisual(
 }
 
 // Draw a visual representation of a whiteboard command. Returns new y position.
+// scribbles is an optional list of annotation commands targeting THIS item
+// (their targetItemIndex matches the 1-indexed position on screen). When
+// the fallback captured-SVG path runs, overlays are baked into the SVG.
 async function drawWhiteboardVisual(
   pdf: jsPDF, rawCmd: WhiteboardCommandData,
-  x: number, y: number, width: number
+  x: number, y: number, width: number,
+  scribbles?: Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string }>,
 ): Promise<number> {
   // Normalize: DB format nests command properties under 'data' (e.g., { action: 'showEquation', data: { latex: '...' } }),
   // while live format has them flat (e.g., { action: 'showEquation', latex: '...' }). Flatten for consistent access.
@@ -1238,13 +1242,18 @@ async function drawWhiteboardVisual(
   // embed as vector via svg2pdf. Works identically for current and past
   // sessions because we re-render from the command data each time.
   try {
-    const { captureCommandSvg, drawCapturedSvg } = await import('./whiteboard-capture');
+    const { captureCommandSvg, drawCapturedSvg, overlayScribbles } = await import('./whiteboard-capture');
     // The capture helper consumes the live WhiteboardCommand shape; rawCmd
     // here is either live (flat) or DB-normalised (has .data), and cmd is
     // already the flattened form. Cast is safe since the helper only
     // reads known properties through CommandRenderer's switch.
-    const svgString = await captureCommandSvg(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
+    let svgString = await captureCommandSvg(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
     if (svgString) {
+      // Bake any scribble overlays targeted at this item into the SVG
+      // before embedding so the PDF matches what the student saw.
+      if (scribbles && scribbles.length > 0) {
+        svgString = overlayScribbles(svgString, scribbles);
+      }
       const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
       if (consumed > 0) return y + consumed + 2;
     }
@@ -1366,10 +1375,33 @@ export async function exportTutorSessionPDF(
     : transcriptCommands;
   // Deduplicate by action+JSON content
   const seen = new Set<string>();
-  const dedupedCommands = allWhiteboardCommands.filter(cmd => {
+  const dedupedAll = allWhiteboardCommands.filter(cmd => {
     const key = JSON.stringify(cmd);
     if (seen.has(key)) return false;
     seen.add(key);
+    return true;
+  });
+
+  // Scribble / scrollTo are meta-commands — they don't render as their own
+  // whiteboard items. Split them out so the numbered list in the PDF only
+  // contains real content (matching what the student sees on screen), and
+  // bake scribble overlays onto their target item's captured SVG below.
+  // scrollTo has no PDF representation; discard.
+  const scribblesByTarget = new Map<number, Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string }>>();
+  const dedupedCommands = dedupedAll.filter((cmd) => {
+    const action = cmd.action;
+    if (action === 'scribble') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const s = cmd as any;
+      const idx = Number(s.targetItemIndex);
+      if (Number.isFinite(idx) && idx >= 1 && ['circle','underline','arrow','box','highlight'].includes(s.shape)) {
+        const existing = scribblesByTarget.get(idx) || [];
+        existing.push({ shape: s.shape, region: s.region, color: s.color, label: s.label });
+        scribblesByTarget.set(idx, existing);
+      }
+      return false;
+    }
+    if (action === 'scrollTo') return false;
     return true;
   });
 
@@ -1481,8 +1513,10 @@ export async function exportTutorSessionPDF(
       pdf.text(sanitizeForPDF(desc), margin + badgeW + 3, y);
       y += 5;
 
-      // Visual rendering
-      const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, contentWidth - 8);
+      // Visual rendering — also bake in any scribble annotations targeting
+      // this item so the PDF matches what the student saw on screen.
+      const itemScribbles = scribblesByTarget.get(i + 1);
+      const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, contentWidth - 8, itemScribbles);
       if (newY > y) {
         y = newY;
       } else {

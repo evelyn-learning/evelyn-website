@@ -336,6 +336,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const MAX_CONSECUTIVE_REJECTIONS = 2;
   // Track whether the session should be in listening mode (survives audio playback)
   const shouldListenRef = useRef(false);
+  // True when the user has explicitly muted themselves. Distinct from
+  // shouldListenRef (which is the INTENT — "we want to listen after the
+  // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
+  // the mic without an explicit unmute, regardless of shouldListenRef."
+  // Fixes the mute-before-start path where sendTextMessage sets
+  // shouldListenRef=true for the greeting, and the mic then auto-opens
+  // when the greeting audio ends — bypassing any UI-level mute state.
+  const userMutedRef = useRef(false);
   // Ref to hold startListening so playNextAudio can call it without circular deps
   const startListeningRef = useRef<() => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
@@ -368,8 +376,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // If mic is running, go straight back to listening
       if (audioProcessorRef.current && mediaStreamRef.current) {
         updateState('listening');
-      } else if (shouldListenRef.current) {
-        // Mic should be on but isn't (e.g. homework upload before mic click) — start it
+      } else if (shouldListenRef.current && !userMutedRef.current) {
+        // Mic should be on but isn't (e.g. homework upload before mic click) — start it.
+        // Skip when the user has explicitly muted, otherwise mute-before-start would
+        // silently un-mute once the opening greeting finishes playing.
         updateState('listening');
         startListeningRef.current();
       } else {
@@ -574,7 +584,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
             if (audioProcessorRef.current && mediaStreamRef.current) {
               updateState('listening');
-            } else if (shouldListenRef.current) {
+            } else if (shouldListenRef.current && !userMutedRef.current) {
+              // Same mute-before-start guard as in playNextAudio — don't auto-open
+              // the mic after the greeting (or any response) if the user is muted.
               updateState('listening');
               startListeningRef.current();
             } else {
@@ -1847,6 +1859,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
+    // Explicitly calling startListening is intent to un-mute. Clear the
+    // user-muted override so future auto-start paths can proceed.
+    userMutedRef.current = false;
+
     // If mic is already active, re-enable tracks (may have been muted) and update state
     if (audioProcessorRef.current && mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => { track.enabled = true; });
@@ -1997,6 +2013,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Mute input — stops mic capture and clears buffer WITHOUT committing or triggering a response.
   // Used when the student mutes their mic to prevent noise from being sent.
   const muteInput = useCallback(() => {
+    // Record explicit mute intent so auto-start paths (playNextAudio,
+    // response.done) honour it even if the mic hasn't been opened yet.
+    userMutedRef.current = true;
+
     // Disable mic tracks without destroying them so unmute can re-enable instantly
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => { track.enabled = false; });
