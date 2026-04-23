@@ -6,6 +6,12 @@
  * Plots position / velocity / acceleration vs time. Accepts any combination
  * of x(t), v(t), a(t) series as explicit sample points; renders each in its
  * own stacked sub-panel with a shared time axis for visual alignment.
+ *
+ * Series labels (x(t), v(t), a(t)) live in the far-left margin (rotated)
+ * so they don't collide with the numeric min/max tick labels in the gutter
+ * just left of each panel. Curves are drawn with quadratic-Bezier midpoint
+ * smoothing so sparse sample sets (e.g. 4 points of x = ½gt²) still look
+ * like a curve rather than a broken polyline.
  */
 
 import React from 'react';
@@ -48,6 +54,22 @@ const KIND_DEFAULT_LABEL = {
   acceleration: 'a (m/s²)',
 };
 
+/** Quadratic-Bezier midpoint smoothing so sparse samples render as a smooth
+ * curve rather than connected line segments. */
+function smoothPath(pts: Array<{ x: number; y: number }>): string {
+  if (pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+  if (pts.length === 2) return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const midX = (pts[i].x + pts[i + 1].x) / 2;
+    const midY = (pts[i].y + pts[i + 1].y) / 2;
+    d += ` Q ${pts[i].x} ${pts[i].y} ${midX} ${midY}`;
+  }
+  d += ` T ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
+  return d;
+}
+
 export default function MotionDiagramRenderer({
   title, timeLabel = 't (s)', series, notes,
 }: MotionDiagramProps) {
@@ -56,7 +78,9 @@ export default function MotionDiagramRenderer({
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No motion data.</div>;
   }
 
-  const pad = { top: title ? 30 : 14, bottom: notes ? 32 : 24, left: 42, right: 18 };
+  // Left margin is wide enough for: rotated series label (~20 px), numeric
+  // tick gutter (~36 px for "-48.5"-style values), plus a small breathing gap.
+  const pad = { top: title ? 30 : 14, bottom: notes ? 34 : 28, left: 72, right: 18 };
   const plotW = VIEWBOX_W - pad.left - pad.right;
   const plotH = VIEWBOX_H - pad.top - pad.bottom;
 
@@ -64,7 +88,7 @@ export default function MotionDiagramRenderer({
   const allT = valid.flatMap((s) => s.points.map((p) => p.t));
   const tMin = Math.min(...allT); const tMax = Math.max(...allT);
   const panelH = plotH / valid.length;
-  const gap = 6;
+  const gap = 8;
 
   const sx = (t: number) => pad.left + ((t - tMin) / (tMax - tMin || 1)) * plotW;
 
@@ -87,10 +111,13 @@ export default function MotionDiagramRenderer({
           const sy = (v: number) => panelBottom - ((v - vLo) / (vHi - vLo)) * (panelH - gap);
 
           const sorted = [...s.points].sort((a, b) => a.t - b.t);
-          const path = sorted.map((p, i) => `${i === 0 ? 'M' : 'L'} ${sx(p.t)} ${sy(p.value)}`).join(' ');
+          const pxPts = sorted.map((p) => ({ x: sx(p.t), y: sy(p.value) }));
+          const path = smoothPath(pxPts);
 
           // Zero line (if value range crosses it)
           const zeroLineY = vLo <= 0 && vHi >= 0 ? sy(0) : null;
+
+          const midY = (panelTop + panelBottom) / 2;
 
           return (
             <g key={idx}>
@@ -101,11 +128,24 @@ export default function MotionDiagramRenderer({
               )}
               {/* Curve */}
               <path d={path} stroke={color} strokeWidth={2} fill="none" />
-              {/* Y-label */}
-              <text x={pad.left - 6} y={panelTop + 12} fontSize={10} fill={color} textAnchor="end" fontWeight={600}>{label}</text>
-              {/* Y range min/max */}
-              <text x={pad.left - 4} y={panelTop + 8} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor="end">{formatValue(vHi)}</text>
-              <text x={pad.left - 4} y={panelBottom} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor="end">{formatValue(vLo)}</text>
+
+              {/* Rotated series label in the far-left margin (well clear of
+                  the numeric min/max tick labels in the gutter). */}
+              <text
+                x={18}
+                y={midY}
+                fontSize={12}
+                fill={color}
+                textAnchor="middle"
+                fontWeight={700}
+                transform={`rotate(-90 18 ${midY})`}
+              >
+                {label}
+              </text>
+
+              {/* Numeric min/max ticks in the gutter immediately left of the panel. */}
+              <text x={pad.left - 6} y={panelTop + 10} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">{formatValue(vHi)}</text>
+              <text x={pad.left - 6} y={panelBottom - 2} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">{formatValue(vLo)}</text>
             </g>
           );
         })}

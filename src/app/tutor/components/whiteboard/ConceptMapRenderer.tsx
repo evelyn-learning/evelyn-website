@@ -135,20 +135,29 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
       <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         <ArrowMarkers idPrefix="cm-arrow" />
 
-        {/* Edges */}
+        {/* Edges. When several edges radiate from the same node their
+            midpoints cluster — stagger each label's position along the edge
+            so the background rects don't all stack on top of each other. */}
         {edges.map((e, i) => {
           const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
           if (!a || !b) return null;
           const pa = place(a); const pb = place(b);
           const color = e.color || DIAGRAM_COLORS.muted;
-          const mx = (pa.x + pb.x) / 2; const my = (pa.y + pb.y) / 2;
+          const t = 0.3 + ((i * 7) % 5) * 0.09; // spread over [0.30, 0.66]
+          const mx = pa.x + (pb.x - pa.x) * t;
+          const my = pa.y + (pb.y - pa.y) * t;
+          // Size the background rect to fit the actual label at fontSize 10
+          // (≈ 6.2 px per char + 10 px padding). The previous estimate was
+          // too narrow and clipped the text.
+          const labelW = e.label ? e.label.length * 6.4 + 14 : 0;
           return (
             <g key={`edge${i}`}>
               <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke={color} strokeWidth={1.25}
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
               {e.label && (
                 <g>
-                  <rect x={mx - (e.label.length * 3.2 + 6)} y={my - 8} width={e.label.length * 6.4 + 12} height={14} rx={3} fill="white" stroke={DIAGRAM_COLORS.border} strokeWidth={0.5} />
+                  <rect x={mx - labelW / 2} y={my - 8} width={labelW} height={14} rx={3}
+                    fill="white" stroke={DIAGRAM_COLORS.border} strokeWidth={0.5} />
                   <text x={mx} y={my + 2} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
                 </g>
               )}
