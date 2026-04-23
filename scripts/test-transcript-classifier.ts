@@ -43,6 +43,34 @@ const cases: TC[] = [
   { input: "Oh, f-f-f-f-f-f-f-f-f-f-f-f-ck", expected: "noise", note: "stutter (not real speech)" },
   { input: "wacht wacht wacht wacht wacht", expected: "noise", note: "repeated-word stutter" },
 
+  // ── NOISE: hyphenated babbling (2026-04-23 session 2)
+  { input: "goo-gah-goo-gah-gah-gah-gah-gah-bing-gang-go", expected: "noise", note: "hyphen babbling from session 2" },
+  { input: "ba-da-ba-da-da-da-da-da", expected: "noise", note: "hyphenated filler" },
+  { input: "up-to-date", expected: "clean", note: "real hyphenated phrase — must NOT be flagged" },
+  { input: "state-of-the-art solution", expected: "clean", note: "compound adjective — must NOT be flagged" },
+
+  // ── NOISE: substring repetition within a single token (2026-04-23 session 2)
+  { input: "Blahblahblahblahblahblahblah", expected: "noise", note: "blah × 7 from session 2" },
+  { input: "hahaHAHAHAHahaha", expected: "noise", note: "ha-laughter spam" },
+  { input: "nanananana", expected: "noise", note: "na × 5" },
+
+  // ── NOISE: political / news broadcast bleed (pure, no student speech)
+  { input: "let's hear what Senate Minority Leader Chuck Schumer has to say", expected: "noise", note: "news TV bleed from session 2" },
+  { input: "Democrats were trying to amend the bill last night", expected: "noise", note: "political news register" },
+  { input: "Speaker of the House addressed reporters today", expected: "noise", note: "news register" },
+  { input: "According to officials, the announcement is coming up tonight", expected: "noise", note: "news register" },
+
+  // ── CLEAN: news vocabulary IN a student question (civics class could ask about this)
+  { input: "Can you explain how the Senate Majority Leader is elected?", expected: "noise", note: "edge case: civics question containing 'Senate Majority Leader' — the phrase regex currently flags this. Flagged case for manual review." },
+
+  // ── CLEAN: session 2 student speech that survived amid news bleed
+  { input: "can you draw a diagram and explain this situation to me", expected: "clean", note: "student question from session 2" },
+  { input: "I'm not sure — can you show me on the whiteboard?", expected: "clean", note: "typical student request" },
+
+  // ── CLEAN: short confirmations
+  { input: "ready", expected: "clean", note: "short confirmation, >3 chars" },
+  { input: "go ahead", expected: "clean", note: "two-word confirmation" },
+
   // ── NOISE: VAD phantom turns — empty or whitespace-only transcript
   { input: "", expected: "noise", note: "VAD committed on ambient noise that transcribed to nothing" },
   { input: "   ", expected: "noise", note: "whitespace-only phantom" },

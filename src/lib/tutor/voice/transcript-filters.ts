@@ -173,6 +173,23 @@ const NOISE_REGEXES: RegExp[] = [
   /\bsubtitles? by\b.*\.(org|com|net)\b/i,
   /\bcaptioned? by\b.*\.(org|com|net)\b/i,
 
+  // ── Political / congressional news register ────────────────────────────
+  // Very TV-specific phrases that rarely surface in a tutor session unless
+  // the subject is civics. If false-positives show up in civics lessons we
+  // can gate these on subject.
+  /\b(senate|house) (minority|majority) (leader|whip)\b/i,
+  /\bspeaker of the house\b/i,
+  /\b(chief|associate) justice\b/i,
+  /\battorney general\b/i,
+  /\bsecretary of (state|defense|education|energy|the treasury)\b/i,
+  /\b(amend|pass|veto|vote on|sign) (the|this|a) bill\b/i,
+  /\bcapitol hill\b/i,
+  /\bwhite house (press|spokesperson|correspondent)\b/i,
+  /\baccording to (sources|officials|the (associated press|reuters|wall street journal))\b/i,
+  /\blet's hear (from|what) (senate|house|minority|majority|senator|representative)\b/i,
+  /\bcoming up (tonight|next)\b/i,
+  /\bbreaking tonight\b/i,
+
   // ── Broadcast register (TV, radio, ads) — when audio picks up the room ─
   // Advertising tells
   /\bbrought to you by\b/i,
@@ -234,6 +251,35 @@ function isStutter(text: string): boolean {
 }
 
 /**
+ * Hyphen-separated babbling like the 2026-04-23 session 2 transcript:
+ *   "goo-gah-goo-gah-gah-gah-gah-gah-bing-gang-go"
+ * Many short segments joined by hyphens, not recoverable speech. Requires
+ * 6+ hyphen-separated segments with ≥80% of them 4 characters or fewer, so
+ * a normal hyphenated phrase ("up-to-date", "well-known") doesn't trigger.
+ */
+function isHyphenatedBabbling(text: string): boolean {
+  const stripped = text.trim();
+  if (!stripped.includes('-')) return false;
+  const segments = stripped.split('-').filter(Boolean);
+  if (segments.length < 6) return false;
+  const shortSegments = segments.filter((s) => s.length <= 4 && /^[a-zA-Z]+$/.test(s)).length;
+  return shortSegments >= Math.ceil(segments.length * 0.8);
+}
+
+/**
+ * A short substring repeated many times inside a single token — Whisper's
+ * filler for "student was making sounds but no words". Catches things like
+ *   "Blahblahblahblahblahblahblah"  (blah × 7)
+ *   "haha...hahahahaha"             (ha × many)
+ * while leaving real English words alone because the captured group is 2–5
+ * chars and must repeat at least 3 extra times in a row.
+ */
+const REPEATED_SUBSTRING_REGEX = /(\w{2,5})\1{3,}/i;
+function hasRepeatedSubstring(text: string): boolean {
+  return REPEATED_SUBSTRING_REGEX.test(text);
+}
+
+/**
  * Check if a transcript is noise/hallucination that should be discarded.
  */
 export function isNoiseTranscript(text: string): boolean {
@@ -254,6 +300,10 @@ export function isNoiseTranscript(text: string): boolean {
   if (isPhoneticGarbage(normalized)) return true;
   // Stutter — "f-f-f-f-ck" or "wacht wacht wacht wacht"
   if (isStutter(text)) return true;
+  // Hyphen babbling — "goo-gah-goo-gah-gah-gah-bing-gang-go"
+  if (isHyphenatedBabbling(text)) return true;
+  // Substring-repetition filler — "Blahblahblahblahblah"
+  if (hasRepeatedSubstring(text)) return true;
   // Whisper hallucination: text is predominantly non-Latin script (Arabic, CJK, Devanagari, etc.)
   // This happens when Whisper processes background noise and outputs random foreign text.
   // Only filter if the session language is expected to be English/Latin.
