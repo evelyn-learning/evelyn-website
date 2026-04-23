@@ -10,6 +10,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface ScatterPoint {
   x: number;
@@ -166,11 +167,8 @@ export default function ScatterPlotRenderer({
             ))}
           </g>
         )}
-
-        {notes && (
-          <text x={VIEWBOX_W / 2} y={VIEWBOX_H - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface SimpleMachineProps {
   title?: string;
@@ -57,11 +58,8 @@ export default function SimpleMachineRenderer({
         {type === 'pulley' && renderPulley(variant, effort, load, ropes, unit)}
         {type === 'inclined-plane' && renderInclinedPlane(effort, load, angle, length, height, unit)}
         {type === 'wedge' && renderWedge(effort, load, angle, length, unit)}
-
-        {notes && (
-          <text x={W / 2} y={H - 6} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

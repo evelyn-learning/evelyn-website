@@ -19,6 +19,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface ProjectileMotionProps {
   title?: string;
@@ -251,11 +252,8 @@ export default function ProjectileMotionRenderer({
         {/* Axis captions */}
         <text x={xOffset - 6} y={yOffset + 8} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
         <text x={xOffset + usedW} y={sy(0) + 12} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
-
-        {notes && (
-          <text x={VIEWBOX_W / 2} y={VIEWBOX_H - 6} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

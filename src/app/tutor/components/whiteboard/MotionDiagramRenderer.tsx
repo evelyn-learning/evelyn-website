@@ -17,6 +17,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface MotionSample {
   t: number;
@@ -159,11 +160,8 @@ export default function MotionDiagramRenderer({
           );
         })}
         <text x={pad.left + plotW / 2} y={pad.top + plotH + 24} fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>{timeLabel}</text>
-
-        {notes && (
-          <text x={VIEWBOX_W / 2} y={VIEWBOX_H - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

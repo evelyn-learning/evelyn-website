@@ -12,8 +12,9 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue, degToVec } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface VectorSpec {
   /** Magnitude. */
@@ -52,13 +53,18 @@ export default function VectorRenderer({
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No vectors.</div>;
   }
 
-  // Compute endpoints.
+  // Compute endpoints in MATH coordinates (y+ = up). The sy() transform
+  // below converts math-y to SVG-y, so we must NOT pre-flip here — doing
+  // so (via degToVec, which returns SVG coords) double-flipped the result
+  // and put every positive-angle vector below the axis.
   const tails: Array<{ x: number; y: number }> = [];
   const tips: Array<{ x: number; y: number }> = [];
   let cur = { x: 0, y: 0 };
   let totalX = 0, totalY = 0;
   for (const v of vectors) {
-    const { dx, dy } = degToVec(v.direction);
+    const rad = (v.direction * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad); // math: 90° → +y (up); sy() flips to SVG
     const end = { x: cur.x + v.magnitude * dx, y: cur.y + v.magnitude * dy };
     tails.push({ ...cur });
     tips.push(end);
@@ -137,11 +143,8 @@ export default function VectorRenderer({
             </text>
           </g>
         )}
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

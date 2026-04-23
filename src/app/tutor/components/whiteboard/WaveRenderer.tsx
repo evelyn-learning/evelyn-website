@@ -11,6 +11,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface WaveSpec {
   amplitude: number;
@@ -144,11 +145,8 @@ export default function WaveRenderer({
             </g>
           )}
         </g>
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

@@ -12,6 +12,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS, withAlpha } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface CellDiagramProps {
   title?: string;
@@ -180,11 +181,8 @@ export default function CellDiagramRenderer({ title, type, highlight, notes }: C
             </g>
           );
         })}
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

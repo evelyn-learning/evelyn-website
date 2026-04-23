@@ -13,6 +13,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface SpringMassProps {
   title?: string;
@@ -142,11 +143,8 @@ export default function SpringMassRenderer({
         {/* Readouts */}
         <text x={W - 18} y={H - 40} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end">ω = √(k/m) = {formatValue(omega)} rad/s</text>
         <text x={W - 18} y={H - 26} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end">T = 2π/ω = {formatValue(period)} s</text>
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

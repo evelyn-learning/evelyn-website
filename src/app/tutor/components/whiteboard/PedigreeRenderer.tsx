@@ -14,6 +14,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface PedigreeIndividual {
   id: string;
@@ -183,11 +184,8 @@ export default function PedigreeRenderer({
             );
           })}
         </g>
-
-        {notes && (
-          <text x={W / 2} y={H - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

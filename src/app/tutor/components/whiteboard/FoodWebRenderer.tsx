@@ -13,6 +13,7 @@ import React from 'react';
 import { DIAGRAM_COLORS, withAlpha } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, truncate } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface FoodWebSpecies {
   id: string;
@@ -146,11 +147,8 @@ export default function FoodWebRenderer({
             </g>
           );
         })}
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

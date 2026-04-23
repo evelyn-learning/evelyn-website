@@ -16,6 +16,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface OrbitalDiagramProps {
   title?: string;
@@ -192,11 +193,8 @@ export default function OrbitalDiagramRenderer({
         <text x={W / 2} y={top + config.length * rowHeight + 20} fontSize={12} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>
           {prefix ? `${prefix} ` : ''}{config.map((c) => `${c.subshell}${c.electrons}`).join(' ')}
         </text>
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

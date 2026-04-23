@@ -11,6 +11,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface PendulumProps {
   title?: string;
@@ -72,9 +73,12 @@ export default function PendulumRenderer({
         <line x1={pivotX} y1={pivotY} x2={rightX} y2={rightY} stroke={DIAGRAM_COLORS.primary} strokeWidth={1.75} opacity={0.35} />
         <circle cx={rightX} cy={rightY} r={12} fill={DIAGRAM_COLORS.primary} opacity={0.35} />
 
-        {/* Amplitude arc */}
+        {/* Amplitude arc — sweep-flag=0 so the arc DIPS DOWN through the
+            equilibrium point (how a pendulum actually swings). With
+            sweep-flag=1 the arc lifts UP between the extremes, which
+            looked like the bob rose rather than fell through equilibrium. */}
         {showArc && (
-          <path d={`M ${leftX} ${leftY} A ${L} ${L} 0 0 1 ${rightX} ${rightY}`} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} strokeDasharray="4 3" fill="none" />
+          <path d={`M ${leftX} ${leftY} A ${L} ${L} 0 0 0 ${rightX} ${rightY}`} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} strokeDasharray="4 3" fill="none" />
         )}
 
         {/* Theta arc near pivot */}
@@ -93,11 +97,8 @@ export default function PendulumRenderer({
         {/* Period readout */}
         <text x={W - 18} y={H - 42} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end">T = 2π √(L/g) = {formatValue(period)} s</text>
         <text x={W - 18} y={H - 28} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">(small-angle approx)</text>
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }

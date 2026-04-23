@@ -13,6 +13,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface DnaProps {
   title?: string;
@@ -117,11 +118,8 @@ function renderHelix({ title, rungs = 12, notes }: { title?: string; rungs?: num
           ))}
         </g>
         <text x={20} y={H - 68} fontSize={10} fill={DIAGRAM_COLORS.muted}>sugar-phosphate backbones ↔ base-pair rungs</text>
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
+    <DiagramNotes notes={notes} />
     </div>
   );
 }
@@ -189,10 +187,6 @@ function renderBasePairs({ title, top, bot, mrna, notes }: { title?: string; top
             </g>
           );
         })()}
-
-        {notes && (
-          <text x={W / 2} y={H - 8} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
-        )}
       </svg>
     </div>
   );
