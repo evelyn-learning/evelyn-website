@@ -391,6 +391,27 @@ export function WhiteboardCanvas({
     onClear?.();
   }, [onClear]);
 
+  // Scribble and scrollTo commands don't render as their own board items —
+  // they overlay / navigate. Split them out so the main loop renders real
+  // content, and the overlays attach by targetItemIndex (1-indexed).
+  //
+  // These hooks MUST be called before any early return below; otherwise
+  // React's Rules of Hooks are violated (different hook counts across
+  // renders). currentPage is safe to reference here — useMemo reads are
+  // lazy, and we guard against pages.length === 0 below.
+  const safeCurrentPage = pages[Math.min(currentIndex, Math.max(0, pages.length - 1))] ?? { commands: [] };
+  const renderableCommands = useMemo(
+    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo'),
+    [safeCurrentPage.commands],
+  );
+  const scribbles = useMemo(
+    () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'scribble' }> => c.action === 'scribble'),
+    [safeCurrentPage.commands],
+  );
+
+  // Refs to each rendered item so scrollTo can scrollIntoView() them.
+  const itemRefsRef = useRef<(HTMLDivElement | null)[]>([]);
+
   if (pages.length === 0) {
     return (
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
@@ -487,21 +508,6 @@ export function WhiteboardCanvas({
     || (currentPage.commands.length === 1
       ? getCommandTypeLabel(currentPage.commands[0].action)
       : currentPage.commands.map((c) => getCommandTypeLabel(c.action)).join(' + '));
-
-  // Scribble and scrollTo commands don't render as their own board items —
-  // they overlay / navigate. Split them out so the main loop renders real
-  // content, and the overlays attach by targetItemIndex (1-indexed).
-  const renderableCommands = useMemo(
-    () => currentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo'),
-    [currentPage.commands],
-  );
-  const scribbles = useMemo(
-    () => currentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'scribble' }> => c.action === 'scribble'),
-    [currentPage.commands],
-  );
-
-  // Refs to each rendered item so scrollTo can scrollIntoView() them.
-  const itemRefsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const bodyContent = (
     <>
