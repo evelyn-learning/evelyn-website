@@ -42,8 +42,12 @@ export interface PedigreeProps {
   individuals: PedigreeIndividual[];
   marriages?: PedigreeMarriage[];
   children?: PedigreeChild[];
-  /** Legend keys to show. Default auto-detected from individuals. */
-  legend?: Array<'unaffected' | 'affected' | 'carrier' | 'deceased'>;
+  /**
+   * Optional legend keys. Strings outside the enum (e.g. arbitrary captions
+   * from the AI) are ignored — the legend is always rendered from the
+   * canonical set so icons cannot contradict their own labels.
+   */
+  legend?: Array<'unaffected' | 'affected' | 'carrier' | 'deceased' | string>;
   notes?: string;
 }
 
@@ -58,7 +62,7 @@ function symbolForStatus(status: PedigreeIndividual['status']): { fill: string; 
 }
 
 export default function PedigreeRenderer({
-  title, individuals, marriages = [], children = [], legend, notes,
+  title, individuals, marriages = [], children = [], notes,
 }: PedigreeProps) {
   if (!individuals || individuals.length === 0) {
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No pedigree data.</div>;
@@ -86,9 +90,25 @@ export default function PedigreeRenderer({
   // Roman-numeral generation labels on the left.
   const roman = (n: number) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] || String(n);
 
-  const autoLegend = new Set<'unaffected' | 'affected' | 'carrier' | 'deceased'>();
-  individuals.forEach((i) => autoLegend.add((i.status || 'unaffected') as 'unaffected' | 'affected' | 'carrier' | 'deceased'));
-  const shownLegend = legend || Array.from(autoLegend);
+  // Auto-build a legend from what's actually in the data. This always
+  // includes the sex shapes that appear (square/circle) and every status
+  // that appears. We intentionally ignore arbitrary strings passed in
+  // `legend` — prior versions accepted freeform captions like
+  // "Filled = Affected", which rendered as default unfilled squares and
+  // contradicted their own labels.
+  const hasMale = individuals.some((i) => i.sex === 'male' || i.sex === 'unknown');
+  const hasFemale = individuals.some((i) => i.sex === 'female');
+  const statusSet = new Set<'unaffected' | 'affected' | 'carrier' | 'deceased'>();
+  individuals.forEach((i) => statusSet.add((i.status || 'unaffected') as 'unaffected' | 'affected' | 'carrier' | 'deceased'));
+
+  interface LegendEntry { kind: 'shape' | 'status'; shape?: 'square' | 'circle'; status?: 'unaffected' | 'affected' | 'carrier' | 'deceased'; text: string }
+  const entries: LegendEntry[] = [];
+  if (hasMale) entries.push({ kind: 'shape', shape: 'square', text: '□ Male' });
+  if (hasFemale) entries.push({ kind: 'shape', shape: 'circle', text: '○ Female' });
+  if (statusSet.has('affected')) entries.push({ kind: 'status', status: 'affected', text: 'Affected' });
+  if (statusSet.has('carrier')) entries.push({ kind: 'status', status: 'carrier', text: 'Carrier' });
+  if (statusSet.has('unaffected')) entries.push({ kind: 'status', status: 'unaffected', text: 'Unaffected' });
+  if (statusSet.has('deceased')) entries.push({ kind: 'status', status: 'deceased', text: 'Deceased' });
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -170,20 +190,57 @@ export default function PedigreeRenderer({
           );
         })}
 
-        {/* Legend */}
-        <g transform={`translate(${pad.left}, ${H - 26})`}>
-          {shownLegend.map((key, i) => {
-            const x = i * 110;
-            const sym = symbolForStatus(key);
-            return (
-              <g key={key} transform={`translate(${x}, 0)`}>
-                <rect x={0} y={-8} width={14} height={14} fill={sym.fill} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
-                {sym.half && <rect x={0} y={-8} width={7} height={14} fill={DIAGRAM_COLORS.slate} />}
-                <text x={20} y={3} fontSize={10} fill={DIAGRAM_COLORS.text}>{key}</text>
-              </g>
-            );
-          })}
-        </g>
+        {/* Legend — auto-sized to fit inside the viewBox. Each entry's
+            width is estimated from its label length so long captions don't
+            push later items off the right edge. */}
+        {(() => {
+          const iconW = 14;
+          const iconGap = 6;
+          const entryGap = 14;
+          const charW = 5.6; // approx px for 10-px sans-serif digit/letter
+          const widths = entries.map((e) => iconW + iconGap + e.text.length * charW);
+          const total = widths.reduce((a, b) => a + b, 0) + Math.max(0, entries.length - 1) * entryGap;
+          const available = W - pad.left - pad.right;
+          const scale = total > available && total > 0 ? available / total : 1;
+          const scaledEntryGap = entryGap * scale;
+          const scaledCharW = charW * scale;
+          const scaledIconW = iconW * scale;
+          const iconH = 14 * scale;
+          const fontSize = Math.max(9, 10 * scale);
+          let cursor = 0;
+          return (
+            <g transform={`translate(${pad.left + (available - total * scale) / 2}, ${H - 20})`}>
+              {entries.map((e, i) => {
+                const eW = scaledIconW + iconGap + e.text.length * scaledCharW;
+                const gx = cursor;
+                cursor += eW + scaledEntryGap;
+                const iconCx = gx + scaledIconW / 2;
+                const iconCy = 0;
+                return (
+                  <g key={`${e.kind}-${e.text}-${i}`}>
+                    {e.kind === 'shape' && e.shape === 'square' && (
+                      <rect x={gx} y={iconCy - iconH / 2} width={scaledIconW} height={iconH} fill="white" stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+                    )}
+                    {e.kind === 'shape' && e.shape === 'circle' && (
+                      <circle cx={iconCx} cy={iconCy} r={iconH / 2} fill="white" stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+                    )}
+                    {e.kind === 'status' && (() => {
+                      const sym = symbolForStatus(e.status);
+                      return (
+                        <g>
+                          <rect x={gx} y={iconCy - iconH / 2} width={scaledIconW} height={iconH} fill={sym.fill} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+                          {sym.half && <rect x={gx} y={iconCy - iconH / 2} width={scaledIconW / 2} height={iconH} fill={DIAGRAM_COLORS.slate} />}
+                          {sym.strike && <line x1={gx - 2} y1={iconCy + iconH / 2 + 2} x2={gx + scaledIconW + 2} y2={iconCy - iconH / 2 - 2} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />}
+                        </g>
+                      );
+                    })()}
+                    <text x={gx + scaledIconW + iconGap} y={iconCy + fontSize / 3} fontSize={fontSize} fill={DIAGRAM_COLORS.text}>{e.text}</text>
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })()}
       </svg>
     <DiagramNotes notes={notes} />
     </div>

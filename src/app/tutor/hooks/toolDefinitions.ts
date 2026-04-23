@@ -1248,7 +1248,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_pedigree',
-    description: 'Standard pedigree notation: squares=male, circles=female, filled=affected, half-filled=carrier, strike=deceased. Horizontal lines between pairs = marriages; vertical drop lines = offspring. USE THIS for genetics inheritance lessons.',
+    description: 'Standard pedigree notation: squares=male, circles=female, filled=affected, half-filled=carrier, strike=deceased. Horizontal lines between pairs = marriages; vertical drop lines = offspring. USE THIS for genetics inheritance lessons. CARRIER vs AFFECTED rules: a carrier expresses no phenotype but carries one recessive allele — use status="carrier" (not "affected"). For X-linked recessive: an affected father\'s daughters are OBLIGATE CARRIERS (status="carrier"); an affected mother\'s sons are all affected. For autosomal recessive: unaffected parents of an affected child are both obligate carriers.',
     parameters: {
       type: 'object',
       properties: {
