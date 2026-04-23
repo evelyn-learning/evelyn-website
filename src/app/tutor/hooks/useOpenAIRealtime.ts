@@ -11,6 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools } from './toolDefinitions';
+import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 
 // Tier-1 structured tools added 2026-04-22 — sourced from WHITEBOARD_TOOLS
 // rather than duplicated inline to keep the two registries in sync.
@@ -301,7 +302,7 @@ function parseWhiteboardCommands(text: string): { cleanText: string; commands: W
 export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const {
     instructions, voice = 'alloy',
-    vadThreshold = 0.8, vadSilenceDurationMs = 2000, vadPrefixPaddingMs = 500,
+    vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk,
   } = config;
@@ -446,14 +447,44 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           hasAudioInBufferRef.current = false;
           break;
 
-        case 'conversation.item.input_audio_transcription.completed':
-          // User's speech transcription
-          if (data.transcript) {
-            console.log('[Realtime] User transcript:', JSON.stringify(data.transcript));
+        case 'conversation.item.input_audio_transcription.completed': {
+          // User's speech transcription.
+          //
+          // With turn_detection.create_response: false the server no longer
+          // auto-generates a reply on every VAD commit; we manually call
+          // response.create here ONLY for transcripts that look like real
+          // speech. Phantom turns (ambient noise, empty transcripts, YouTube
+          // hallucinations, phonetic garbage) get the user item deleted and
+          // do not trigger a reply, so the tutor stays quiet when the
+          // student isn't actually saying anything.
+          const transcript = (data.transcript ?? '').trim();
+          const classification = classifyTranscript(transcript);
+          if (classification === 'noise') {
+            console.log('[Realtime] Dropping phantom turn (noise):', JSON.stringify(transcript));
+            // Remove the phantom item from the server's conversation state
+            // so it doesn't bloat the context window. item_id may be absent
+            // for some pre-GA events — defensive check.
+            if (data.item_id && wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({
+                type: 'conversation.item.delete',
+                item_id: data.item_id,
+              }));
+            }
+            // Do NOT call onTranscriptUpdate (keeps the UI clean) and do NOT
+            // trigger response.create. The tutor stays silent.
+            break;
+          }
+          // 'clean' or 'uncertain' — surface to the UI and trigger a reply.
+          if (transcript) {
+            console.log('[Realtime] User transcript:', JSON.stringify(transcript), `(${classification})`);
             lastUserInputRef.current = Date.now();
-            onTranscriptUpdate?.('user', data.transcript, true);
+            onTranscriptUpdate?.('user', transcript, true);
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'response.create' }));
+            }
           }
           break;
+        }
 
         // GA API uses response.output_audio.delta
         case 'response.output_audio.delta':
@@ -1693,6 +1724,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   threshold: vadThreshold,              // Higher threshold = less sensitive to quiet sounds (0-1)
                   prefix_padding_ms: vadPrefixPaddingMs, // Audio included before detected speech
                   silence_duration_ms: vadSilenceDurationMs, // Wait this long before responding
+                  // Do NOT let the server auto-generate a reply on every VAD
+                  // commit. We call response.create manually from the
+                  // transcription-completed handler once we know the
+                  // student actually said something worth responding to.
+                  // Without this, the tutor fills silence with "let me
+                  // re-engage" filler on every phantom turn from ambient
+                  // noise (see 2026-04-23 Physics session screenshot).
+                  create_response: false,
                 },
               },
               output: {
@@ -1935,15 +1974,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       mediaStreamRef.current = null;
     }
 
-    // Commit audio buffer and request a response
+    // Commit the audio buffer. We used to send response.create here as
+    // well, because server VAD only auto-responds on its own speech_stopped
+    // detection and manual stop bypasses that. But with
+    // turn_detection.create_response: false we gate response.create on the
+    // classifyTranscript verdict in the transcription-completed handler, so
+    // this commit will route through that same path — phantom (silent)
+    // stops now produce no reply, just like phantom VAD turns.
     if (wsRef.current?.readyState === WebSocket.OPEN && hasAudioInBufferRef.current) {
       wsRef.current.send(JSON.stringify({
         type: 'input_audio_buffer.commit',
-      }));
-      // Explicitly request a response — server VAD auto-responds only after
-      // its own speech_stopped detection, but manual stop bypasses that.
-      wsRef.current.send(JSON.stringify({
-        type: 'response.create',
       }));
       hasAudioInBufferRef.current = false;
       updateState('processing');

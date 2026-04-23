@@ -43,6 +43,11 @@ const cases: TC[] = [
   { input: "Oh, f-f-f-f-f-f-f-f-f-f-f-f-ck", expected: "noise", note: "stutter (not real speech)" },
   { input: "wacht wacht wacht wacht wacht", expected: "noise", note: "repeated-word stutter" },
 
+  // ── NOISE: VAD phantom turns — empty or whitespace-only transcript
+  { input: "", expected: "noise", note: "VAD committed on ambient noise that transcribed to nothing" },
+  { input: "   ", expected: "noise", note: "whitespace-only phantom" },
+  { input: "\n\t ", expected: "noise", note: "mixed-whitespace phantom" },
+
   // ── NOISE: short filler / bye
   { input: "bye", expected: "noise" },
   { input: "um", expected: "noise" },

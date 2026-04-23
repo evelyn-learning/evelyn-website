@@ -238,6 +238,9 @@ function isStutter(text: string): boolean {
  */
 export function isNoiseTranscript(text: string): boolean {
   const normalized = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim();
+  // Empty or whitespace-only — this is what VAD phantom turns produce when
+  // the server committed on ambient noise that transcribed to nothing.
+  if (normalized.length === 0) return true;
   // Exact match with known noise
   if (NOISE_PATTERNS.has(normalized)) return true;
   // Longer subscribe/outro/subtitle hallucinations
