@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -56,6 +57,14 @@ export async function PUT(
   }
 
   const updatedPost = await BlogPost.findByIdAndUpdate(id, updateData, { new: true });
+
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
+  if (updatedPost && updatedPost.slug !== post.slug) {
+    revalidatePath(`/blog/${updatedPost.slug}`);
+  }
+
   return NextResponse.json(updatedPost);
 }
 
@@ -76,6 +85,10 @@ export async function DELETE(
   if (!post) {
     return NextResponse.json({ message: "Post not found" }, { status: 404 });
   }
+
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
 
   return NextResponse.json({ message: "Post deleted" });
 }

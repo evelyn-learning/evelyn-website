@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -79,6 +80,10 @@ export async function POST(request: NextRequest) {
     readingTime: getReadingTime(content),
     author: session.user?.name || "Evelyn Learning",
   });
+
+  revalidatePath("/");
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
 
   return NextResponse.json(post, { status: 201 });
 }

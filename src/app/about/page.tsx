@@ -62,6 +62,7 @@ const milestones = [
   { year: "2019", event: "Opened San Francisco office" },
   { year: "2022", event: "Introduced AI-powered content solutions" },
   { year: "2024", event: "Serving 500+ clients across 50+ countries" },
+  { year: "2026", event: "Named to TIME's Top EdTech Companies of 2026" },
 ];
 
 const teamStrengths = [
@@ -110,6 +111,18 @@ export default function AboutPage() {
 
         <div className="container-wide relative py-16 md:py-20">
           <div className="max-w-3xl">
+            <Link
+              href="/press/time-top-edtech-2026"
+              className="group inline-flex items-center gap-2 mb-6 rounded-full border border-primary-200 bg-primary-50 px-4 py-1.5 text-sm text-primary-700 hover:bg-primary-100 transition-colors"
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">
+                New
+              </span>
+              <span>
+                Recognized by TIME as a Top EdTech Company of 2026
+              </span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
             <h1 className="heading-1">About Evelyn Learning</h1>
             <p className="mt-4 text-lg text-gray-600">
               We&apos;re a team of 300+ educators and engineers building adaptive learning platforms

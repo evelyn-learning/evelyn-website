@@ -13,6 +13,8 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 60;
+
 // Generate static params for all published blog posts (enables sitemap discovery)
 // Returns empty array if DB unavailable (pages will render on-demand)
 export async function generateStaticParams() {

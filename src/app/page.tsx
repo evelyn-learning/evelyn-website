@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { ArrowRight } from "lucide-react";
 
+export const revalidate = 60;
+
 // Fetch latest posts for the blog section
 async function getLatestPosts() {
   try {
@@ -48,6 +50,28 @@ const CLIENTS = [
   'HomeShare',
   'InstaEDU',
 ];
+
+// Recognition Strip — slim, text-only, links to press page
+function RecognitionStrip() {
+  return (
+    <Link
+      href="/press/time-top-edtech-2026"
+      className="group block bg-slate-900 border-b border-white/10 hover:bg-slate-800 transition-colors"
+    >
+      <div className="container-wide py-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-center">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-300">
+            Recognition
+          </span>
+          <span className="text-sm text-slate-100">
+            Recognized by TIME as one of America&apos;s Top EdTech Companies of 2026
+          </span>
+          <ArrowRight className="hidden sm:inline-block w-4 h-4 text-primary-300 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 // Hero Section
 function HeroSection() {
@@ -821,6 +845,7 @@ async function BlogPreviewSection() {
 export default async function HomePage() {
   return (
     <>
+      <RecognitionStrip />
       <HeroSection />
       <ClientLogosSection />
       <AIProductsSection />

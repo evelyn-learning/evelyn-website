@@ -69,6 +69,7 @@ const navigation: NavItem[] = [
       { name: "Blog", href: "/blog", description: "Latest insights on AI in education" },
       { name: "Case Studies", href: "/case-studies", description: "Real results from real clients" },
       { name: "Research & White Papers", href: "/research", description: "Original research and reports" },
+      { name: "Press", href: "/press/time-top-edtech-2026", description: "Recognition and media coverage" },
       { name: "Interviews", href: "/interviews" },
       { name: "Speakers", href: "/speakers" },
     ],

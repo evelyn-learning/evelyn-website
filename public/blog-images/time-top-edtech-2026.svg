@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Evelyn Learning ranked #9 of 250 — TIME's America's Top EdTech Companies 2026">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#381340"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="num" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c2a5cf"/>
+      <stop offset="50%" stop-color="#d8b4fe"/>
+      <stop offset="100%" stop-color="#f9a8d4"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="22%" cy="28%" r="55%">
+      <stop offset="0%" stop-color="#7a2a8e" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7a2a8e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="78%" r="55%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rule" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c2a5cf" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#c2a5cf" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#c2a5cf" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background layers -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Eyebrow -->
+  <text x="600" y="118"
+        text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="22"
+        font-weight="700"
+        letter-spacing="6"
+        fill="#c2a5cf">RECOGNITION · APRIL 2026</text>
+
+  <!-- Hero number row -->
+  <g>
+    <text x="572" y="380"
+          text-anchor="end"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+          font-size="300"
+          font-weight="800"
+          fill="url(#num)">#9</text>
+    <text x="600" y="380"
+          text-anchor="start"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+          font-size="80"
+          font-weight="600"
+          fill="#cbd5e1">of 250</text>
+  </g>
+
+  <!-- Divider -->
+  <rect x="240" y="430" width="720" height="1" fill="url(#rule)"/>
+
+  <!-- Headline -->
+  <text x="600" y="490"
+        text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="34"
+        font-weight="700"
+        fill="#ffffff">TIME's America's Top EdTech Companies 2026</text>
+
+  <!-- Footer -->
+  <text x="600" y="582"
+        text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="18"
+        font-weight="500"
+        letter-spacing="3"
+        fill="#c2a5cf">evelynlearning.com</text>
+</svg>
