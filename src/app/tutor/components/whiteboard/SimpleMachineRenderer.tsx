@@ -212,51 +212,140 @@ function renderInclinedPlane(
   const rad = (theta * Math.PI) / 180;
   const h = height ?? length * Math.sin(rad);
   const base = length * Math.cos(rad);
-  const px = Math.min(360 / Math.max(base, 0.1), 180 / Math.max(h, 0.1));
-  const apexX = 80; const apexY = 280 - h * px;
-  const baseEndX = apexX + base * px;
-  const baseY = 280;
+  // Uniform px-per-meter so the triangle's angle VISUALLY matches θ.
+  const pxPerM = Math.min(320 / Math.max(base, 0.1), 180 / Math.max(h, 0.1));
+
+  // Triangle geometry:
+  //   originX = base-left (right-angle corner)
+  //   baseEndX = base-right (where the incline angle θ is measured)
+  //   apex = directly above origin at (originX, baseY - h*px)
+  //   hypotenuse = apex → baseEndX, descending to the right
+  const baseY = H - 70;
+  const originX = 100;
+  const baseEndX = originX + base * pxPerM;
+  const apexY = baseY - h * pxPerM;
 
   const ma = 1 / Math.sin(rad);
+
+  // Parameterize a point on the hypotenuse: t=0 → apex, t=1 → baseEnd.
+  const hypo = (t: number) => ({
+    x: originX + t * (baseEndX - originX),
+    y: apexY + t * (baseY - apexY),
+  });
+
+  // Box sits ON the hypotenuse at 50% and tilts with the ramp.
+  // Rotation: +θ (SVG CW) so the box's LEFT side is UP (uphill) and RIGHT
+  // side is DOWN (downhill), matching the physical orientation on a
+  // right-descending ramp. The rect local coords place its BOTTOM edge at
+  // y=0 so that after translate(bx,by) + rotate(+θ), the bottom edge lies
+  // exactly along the ramp.
+  const tBox = 0.50;
+  const bxy = hypo(tBox);
+  const boxSize = 40;
+
+  // Effort arrow: parallel to the ramp, offset slightly perpendicular on
+  // the air side (outside the triangle, above the ramp).
+  const rampDx = (baseEndX - originX) / (length * pxPerM); // unit along ramp (down-right)
+  const rampDy = (baseY - apexY) / (length * pxPerM);
+  const normX = rampDy;   // outward normal (up-right) for down-right ramp
+  const normY = -rampDx;
+  const effortT0 = 0.22;
+  const effortT1 = 0.08;
+  const e0 = hypo(effortT0);
+  const e1 = hypo(effortT1);
+  const offset = 26;
 
   return (
     <g>
       {/* Ground */}
       <line x1={40} y1={baseY} x2={W - 40} y2={baseY} stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
       {/* Triangle ramp */}
-      <polygon points={`${apexX},${baseY} ${baseEndX},${baseY} ${apexX},${apexY}`} fill="#e0e7ef" stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
-      {/* Box on ramp */}
+      <polygon points={`${originX},${baseY} ${baseEndX},${baseY} ${originX},${apexY}`} fill="#e0e7ef" stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
+
+      {/* Box on the hypotenuse */}
+      <g transform={`translate(${bxy.x}, ${bxy.y}) rotate(${theta})`}>
+        <rect x={-boxSize / 2} y={-boxSize} width={boxSize} height={boxSize} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
+        <text x={0} y={-boxSize / 2 + 4} fontSize={11} fill="white" textAnchor="middle" fontWeight={700}>Load</text>
+      </g>
+
+      {/* Effort arrow (uphill along the ramp, offset on the air side) */}
+      <line
+        x1={e0.x + normX * offset} y1={e0.y + normY * offset}
+        x2={e1.x + normX * offset} y2={e1.y + normY * offset}
+        stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5}
+        markerEnd="url(#sm-arrow-secondary)"
+      />
+      {effort != null && (
+        <text
+          x={(e0.x + e1.x) / 2 + normX * (offset + 14)}
+          y={(e0.y + e1.y) / 2 + normY * (offset + 14)}
+          fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}
+        >
+          Effort = {formatValue(effort)} {unit}
+        </text>
+      )}
+
+      {/* Angle arc at the base-right corner (where θ is measured: between
+          the ground going LEFT from baseEnd and the hypotenuse going UP-LEFT
+          toward the apex). */}
       {(() => {
-        const bx = apexX + base * px * 0.4;
-        const by = baseY - (length * px * 0.4) * Math.sin(rad);
-        const boxSize = 36;
-        const angle = -theta;
+        const arcR = 34;
+        const startX = baseEndX - arcR;
+        const startY = baseY;
+        const endX = baseEndX - arcR * Math.cos(rad);
+        const endY = baseY - arcR * Math.sin(rad);
         return (
-          <g transform={`translate(${bx}, ${by}) rotate(${angle})`}>
-            <rect x={-boxSize / 2} y={-boxSize - 4} width={boxSize} height={boxSize} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
-            <text x={0} y={-boxSize / 2} fontSize={10} fill="white" textAnchor="middle" fontWeight={700}>Load</text>
+          <g>
+            <path d={`M ${startX} ${startY} A ${arcR} ${arcR} 0 0 1 ${endX} ${endY}`}
+              stroke={DIAGRAM_COLORS.accent} strokeWidth={1.75} fill="none" />
+            <text
+              x={baseEndX - arcR * 1.15 * Math.cos(rad / 2)}
+              y={baseY - arcR * 1.15 * Math.sin(rad / 2) + 4}
+              fontSize={12} fill={DIAGRAM_COLORS.accent} fontWeight={700} textAnchor="end"
+            >
+              {formatValue(theta)}°
+            </text>
           </g>
         );
       })()}
-      {/* Effort up the incline */}
-      <line x1={apexX + base * px * 0.5} y1={baseY - h * px * 0.5} x2={apexX + base * px * 0.2} y2={baseY - h * px * 0.2} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
 
-      {/* Dimensions */}
-      <text x={(apexX + baseEndX) / 2} y={baseY + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">Base = {formatValue(base)}</text>
-      <text x={apexX - 6} y={(apexY + baseY) / 2} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">Height = {formatValue(h)}</text>
-      <text x={(apexX + baseEndX) / 2 - 30} y={(apexY + baseY) / 2 - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle" transform={`rotate(${-theta} ${(apexX + baseEndX) / 2 - 30} ${(apexY + baseY) / 2 - 4})`}>
-        Length = {formatValue(length)}
+      {/* Length label along the hypotenuse, OUTSIDE the triangle (offset
+          perpendicular on the air side, rotated to align with the ramp). */}
+      {(() => {
+        const mid = hypo(0.5);
+        const labelOffset = 16;
+        const lX = mid.x + normX * labelOffset;
+        const lY = mid.y + normY * labelOffset;
+        return (
+          <text
+            x={lX} y={lY}
+            fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}
+            transform={`rotate(${theta} ${lX} ${lY})`}
+          >
+            Length = {formatValue(length)} m
+          </text>
+        );
+      })()}
+
+      {/* Height label along the vertical left edge */}
+      <text x={originX - 8} y={(apexY + baseY) / 2} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end">
+        Height = {formatValue(h)} m
       </text>
 
-      {/* Effort & load labels */}
-      {effort != null && (
-        <text x={apexX + base * px * 0.2} y={baseY - h * px * 0.2 - 8} fontSize={11} fill={DIAGRAM_COLORS.secondary} fontWeight={700}>Effort = {formatValue(effort)} {unit}</text>
-      )}
+      {/* Base label below the ground edge */}
+      <text x={(originX + baseEndX) / 2} y={baseY + 18} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
+        Base = {formatValue(base)} m
+      </text>
+
+      {/* Load annotation — tucked near the ground at the right to avoid
+          the box label. */}
       {load != null && (
-        <text x={baseEndX + 6} y={baseY - 8} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>Load = {formatValue(load)} {unit}</text>
+        <text x={baseEndX + 10} y={baseY - 6} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>
+          Load = {formatValue(load)} {unit}
+        </text>
       )}
 
-      <text x={W / 2} y={36} fontSize={13} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>
+      <text x={W / 2} y={32} fontSize={13} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>
         Inclined Plane ({formatValue(theta)}°) · MA = {formatValue(ma)}
       </text>
     </g>

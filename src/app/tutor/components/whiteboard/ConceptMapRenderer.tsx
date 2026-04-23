@@ -94,10 +94,17 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   const rowCount = sortedLevels.length;
   sortedLevels.forEach((lv, rowIdx) => {
     const ids = levels.get(lv)!;
-    const y = 10 + (rowIdx + 0.5) * (80 / rowCount);
+    const baseY = 8 + (rowIdx + 0.5) * (84 / rowCount);
+    // Dense levels (> 4 siblings) zigzag alternate nodes into two sub-rows so
+    // their rectangles don't overlap horizontally. The offset is large enough
+    // (~12 normalized units ≈ 43 px) to fully separate adjacent boxes, since
+    // a typical two-word label like "Light Energy" is ~90 px wide.
+    const dense = ids.length > 4;
     ids.forEach((id, colIdx) => {
-      const x = 10 + (colIdx + 0.5) * (80 / ids.length);
-      pos.set(id, { x, y });
+      const staggerY = dense ? (colIdx % 2) * 12 : 0;
+      // Use 94% of the plot width (vs the old 80%) so each slot is wider.
+      const x = 3 + (colIdx + 0.5) * (94 / ids.length);
+      pos.set(id, { x, y: baseY + staggerY });
     });
   });
   return pos;

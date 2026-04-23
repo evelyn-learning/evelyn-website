@@ -72,8 +72,20 @@ export default function ProjectileMotionRenderer({
   // Include launch height in the viewport for cliff launches.
   const yMax = Math.max(maxH * 1.15, y0 * 1.1, 1);
 
-  const sx = (x: number) => pad.left + ((x - xMin) / (xMax - xMin)) * plotW;
-  const sy = (y: number) => pad.top + ((yMax - y) / (yMax - yMin)) * plotH;
+  // Equal-aspect (uniform px-per-meter) so the launch angle visually matches
+  // its stated value — e.g. a 45° shot looks like 45° on the page. Without
+  // this, a wide/shallow viewport (range=40m, height=10m) rendered 45° as
+  // ~63° on screen. Trade-off: the parabola looks shorter than the plot box,
+  // with dead space centered around the trajectory.
+  const rawXScale = plotW / (xMax - xMin);
+  const rawYScale = plotH / (yMax - yMin);
+  const scale = Math.min(rawXScale, rawYScale);
+  const usedW = scale * (xMax - xMin);
+  const usedH = scale * (yMax - yMin);
+  const xOffset = pad.left + (plotW - usedW) / 2;
+  const yOffset = pad.top + (plotH - usedH) / 2;
+  const sx = (x: number) => xOffset + (x - xMin) * scale;
+  const sy = (y: number) => yOffset + (yMax - y) * scale;
 
   // Trajectory path
   const steps = 80;
@@ -113,10 +125,10 @@ export default function ProjectileMotionRenderer({
       <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         <ArrowMarkers idPrefix="pm-arrow" />
 
-        {/* Ground */}
-        <line x1={pad.left} y1={sy(0)} x2={pad.left + plotW} y2={sy(0)} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />
+        {/* Ground (only along the actual plot width, not the whole pad) */}
+        <line x1={xOffset} y1={sy(0)} x2={xOffset + usedW} y2={sy(0)} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />
         {/* Y-axis */}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={sy(0)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        <line x1={xOffset} y1={yOffset} x2={xOffset} y2={sy(0)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
 
         {/* Trajectory */}
         <path d={path} stroke={DIAGRAM_COLORS.primary} strokeWidth={2.5} fill="none" />
@@ -237,8 +249,8 @@ export default function ProjectileMotionRenderer({
         )}
 
         {/* Axis captions */}
-        <text x={pad.left - 6} y={pad.top + 8} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
-        <text x={pad.left + plotW} y={sy(0) + 12} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
+        <text x={xOffset - 6} y={yOffset + 8} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
+        <text x={xOffset + usedW} y={sy(0) + 12} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
 
         {notes && (
           <text x={VIEWBOX_W / 2} y={VIEWBOX_H - 6} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle" fontStyle="italic">{notes}</text>
