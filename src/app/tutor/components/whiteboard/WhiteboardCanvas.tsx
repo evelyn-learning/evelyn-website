@@ -47,6 +47,25 @@ import FreeBodyDiagramRenderer from './FreeBodyDiagramRenderer';
 import EnergyBarsRenderer from './EnergyBarsRenderer';
 import CollisionRenderer from './CollisionRenderer';
 import ReactionCoordinateRenderer from './ReactionCoordinateRenderer';
+// Tier-1 structured renderers shipping this batch:
+import CoordinatePlaneRenderer from './CoordinatePlaneRenderer';
+import ScatterPlotRenderer from './ScatterPlotRenderer';
+import CycleDiagramRenderer from './CycleDiagramRenderer';
+import ConceptMapRenderer from './ConceptMapRenderer';
+import MotionDiagramRenderer from './MotionDiagramRenderer';
+import ProjectileMotionRenderer from './ProjectileMotionRenderer';
+import SimpleMachineRenderer from './SimpleMachineRenderer';
+import PendulumRenderer from './PendulumRenderer';
+import SpringMassRenderer from './SpringMassRenderer';
+import RayDiagramRenderer from './RayDiagramRenderer';
+import WaveRenderer from './WaveRenderer';
+// Aliased to avoid collision with legacy `VectorRenderer` already exported from `DiagramRenderer`.
+import Vector2DRenderer from './VectorRenderer';
+import OrbitalDiagramRenderer from './OrbitalDiagramRenderer';
+import PedigreeRenderer from './PedigreeRenderer';
+import CellDiagramRenderer from './CellDiagramRenderer';
+import DnaRenderer from './DnaRenderer';
+import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
 import dynamic from 'next/dynamic';
 
@@ -1085,6 +1104,42 @@ function CommandRenderer({ command }: CommandRendererProps) {
         trait={command.trait}
         showPhenotypeRatio={command.showPhenotypeRatio}
       />;
+
+    // ── Tier-1 structured renderers ──
+    case 'showCoordinatePlane':
+      return <CoordinatePlaneRenderer {...command} />;
+    case 'showScatterPlot':
+      return <ScatterPlotRenderer {...command} />;
+    case 'showCycleDiagram':
+      return <CycleDiagramRenderer {...command} />;
+    case 'showConceptMap':
+      return <ConceptMapRenderer {...command} />;
+    case 'showMotionDiagram':
+      return <MotionDiagramRenderer {...command} />;
+    case 'showProjectileMotion':
+      return <ProjectileMotionRenderer {...command} />;
+    case 'showSimpleMachine':
+      return <SimpleMachineRenderer {...command} />;
+    case 'showPendulum':
+      return <PendulumRenderer {...command} />;
+    case 'showSpringMass':
+      return <SpringMassRenderer {...command} />;
+    case 'showRayDiagram':
+      return <RayDiagramRenderer {...command} />;
+    case 'showWave':
+      return <WaveRenderer {...command} />;
+    case 'showVector':
+      return <Vector2DRenderer {...command} />;
+    case 'showOrbitalDiagram':
+      return <OrbitalDiagramRenderer {...command} />;
+    case 'showPedigree':
+      return <PedigreeRenderer {...command} />;
+    case 'showCellDiagram':
+      return <CellDiagramRenderer {...command} />;
+    case 'showDna':
+      return <DnaRenderer {...command} />;
+    case 'showFoodWeb':
+      return <FoodWebRenderer {...command} />;
 
     case 'highlight':
     case 'clear':

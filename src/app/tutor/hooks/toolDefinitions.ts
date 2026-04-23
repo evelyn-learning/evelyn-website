@@ -86,7 +86,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         points: {
           type: 'array',
-          description: 'Labeled points to mark on the graph',
+          description: 'Labeled points to mark on the graph. CRITICAL when marking intersections of multiple curves: every (x, y) you include MUST satisfy EVERY plotted equation — do NOT label x-intercepts, y-intercepts, vertices, or critical points of a SINGLE curve as intersections. For y=f(x) and y=g(x), verify f(x)=g(x)=y for each point before including it (e.g. for y=x^3 and y=4x−x², only (0,0) and x = (−1+√17)/2 ≈ 1.56 are intersections; (2,4) is the parabola vertex, (4,0) is just an x-intercept — NEITHER is an intersection). Incorrect intersection labels will be auto-removed by the validator.',
           items: {
             type: 'object',
             properties: {
@@ -1002,6 +1002,315 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['object', 'forces'],
     },
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Tier-1 structured tools (batch shipped 2026-04-22)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  {
+    name: 'show_coordinate_plane',
+    description: 'Display a 2D coordinate plane with axes, gridlines, labeled points, line segments, and/or vectors from origin. Broader than show_geometry: always shows axes + ticks, handles vectors as first-class, and does NOT require a points array. USE THIS when teaching vectors from origin, plotting loci, showing ordered pairs, introducing the coordinate plane, or displaying transformations.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        xRange: { type: 'array', items: { type: 'number' }, description: '[min, max] for the x-axis. Default [-10, 10].' },
+        yRange: { type: 'array', items: { type: 'number' }, description: '[min, max] for the y-axis. Default [-10, 10].' },
+        xLabel: { type: 'string' },
+        yLabel: { type: 'string' },
+        showGrid: { type: 'boolean' },
+        points: { type: 'array', items: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, label: { type: 'string' }, color: { type: 'string' } }, required: ['x', 'y'] } },
+        segments: { type: 'array', items: { type: 'object', properties: { from: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' } }, required: ['x', 'y'] }, to: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' } }, required: ['x', 'y'] }, label: { type: 'string' }, color: { type: 'string' }, dashed: { type: 'boolean' }, arrow: { type: 'boolean' } }, required: ['from', 'to'] } },
+        vectors: { type: 'array', items: { type: 'object', properties: { from: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' } } }, to: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' } }, required: ['x', 'y'] }, label: { type: 'string' }, color: { type: 'string' } }, required: ['to'] } },
+        notes: { type: 'string' },
+      },
+      required: [],
+    },
+  },
+
+  {
+    name: 'show_scatter_plot',
+    description: 'Display a scatter plot of (x, y) data points, optionally with a least-squares linear regression line + R². USE THIS for correlation / regression lessons, bivariate data, or visualizing experimental measurements.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        xLabel: { type: 'string' },
+        yLabel: { type: 'string' },
+        points: { type: 'array', items: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, label: { type: 'string' }, color: { type: 'string' }, series: { type: 'string' } }, required: ['x', 'y'] } },
+        xRange: { type: 'array', items: { type: 'number' } },
+        yRange: { type: 'array', items: { type: 'number' } },
+        showTrendLine: { type: 'boolean', description: 'Compute + plot least-squares regression line with R².' },
+        trendLineEquation: { type: 'string', description: 'Override the computed equation string.' },
+        notes: { type: 'string' },
+      },
+      required: ['points'],
+    },
+  },
+
+  {
+    name: 'show_cycle_diagram',
+    description: 'Display stages of a cyclic process arranged around a circle, with arrows flowing back to the start. USE THIS for water cycle, carbon cycle, rock cycle, nitrogen cycle, cell cycle, PDCA, product loops, etc.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        stages: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, description: { type: 'string' }, color: { type: 'string' }, icon: { type: 'string', description: 'Single emoji or unicode symbol shown inside the stage node.' } }, required: ['label'] } },
+        clockwise: { type: 'boolean', description: 'Default true.' },
+        notes: { type: 'string' },
+      },
+      required: ['stages'],
+    },
+  },
+
+  {
+    name: 'show_concept_map',
+    description: 'Display a concept map / mind map: labeled nodes connected by labeled edges. Auto-lays out nodes using BFS from the first (or level-0) node when explicit x,y omitted. USE THIS for vocabulary webs, brainstorming, theme maps, cross-topic links.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        nodes: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, label: { type: 'string' }, x: { type: 'number', description: '0-100 normalized x (optional).' }, y: { type: 'number' }, color: { type: 'string' }, level: { type: 'number', description: 'Set level 0 on the root for auto-layout.' } }, required: ['id', 'label'] } },
+        edges: { type: 'array', items: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, label: { type: 'string' }, directed: { type: 'boolean' }, color: { type: 'string' } }, required: ['from', 'to'] } },
+        notes: { type: 'string' },
+      },
+      required: ['nodes'],
+    },
+  },
+
+  {
+    name: 'show_motion_diagram',
+    description: 'Plot position / velocity / acceleration vs time. Each series is stacked in its own sub-panel with a shared time axis. USE THIS for kinematics lessons instead of show_function_graph when you want x(t), v(t), a(t) side-by-side.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        timeLabel: { type: 'string' },
+        series: { type: 'array', items: { type: 'object', properties: { kind: { type: 'string', enum: ['position', 'velocity', 'acceleration'] }, points: { type: 'array', items: { type: 'object', properties: { t: { type: 'number' }, value: { type: 'number' } }, required: ['t', 'value'] } }, label: { type: 'string' }, color: { type: 'string' }, yLabel: { type: 'string' } }, required: ['kind', 'points'] } },
+        notes: { type: 'string' },
+      },
+      required: ['series'],
+    },
+  },
+
+  {
+    name: 'show_projectile_motion',
+    description: 'Plot projectile trajectory y(x) with decomposed v0 components, angle arc, max-height and range annotations. USE THIS for projectile problems instead of show_function_graph.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        v0: { type: 'number', description: 'Initial speed.' },
+        angle: { type: 'number', description: 'Launch angle from horizontal (degrees).' },
+        y0: { type: 'number', description: 'Launch height (default 0).' },
+        g: { type: 'number', description: 'Gravity (default 9.8).' },
+        showComponents: { type: 'boolean' },
+        sampleCount: { type: 'number' },
+        speedUnit: { type: 'string' },
+        distanceUnit: { type: 'string' },
+        notes: { type: 'string' },
+      },
+      required: ['v0', 'angle'],
+    },
+  },
+
+  {
+    name: 'show_simple_machine',
+    description: 'Display a labeled schematic of a simple machine with effort, load, and mechanical-advantage annotation. Types: lever (class-1/2/3), pulley (fixed/movable/compound), inclined-plane, wedge. USE THIS instead of show_svg_diagram for mechanical-advantage lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        type: { type: 'string', enum: ['lever', 'pulley', 'inclined-plane', 'wedge'] },
+        variant: { type: 'string', enum: ['class-1', 'class-2', 'class-3', 'fixed', 'movable', 'compound'] },
+        effort: { type: 'number' },
+        load: { type: 'number' },
+        effortArm: { type: 'number', description: 'Lever only — distance from fulcrum to effort.' },
+        loadArm: { type: 'number' },
+        angle: { type: 'number', description: 'Inclined plane / wedge angle (degrees).' },
+        length: { type: 'number' },
+        height: { type: 'number' },
+        ropes: { type: 'number', description: 'Pulley only — number of supporting ropes.' },
+        unit: { type: 'string', description: 'Force unit label (default "N").' },
+        notes: { type: 'string' },
+      },
+      required: ['type'],
+    },
+  },
+
+  {
+    name: 'show_pendulum',
+    description: 'Display a simple pendulum swept to ±amplitude, with derived T = 2π √(L/g) readout. USE THIS for SHM intro and pendulum-period problems.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        length: { type: 'number', description: 'String length in meters.' },
+        amplitude: { type: 'number', description: 'Amplitude angle in degrees.' },
+        mass: { type: 'number', description: 'Bob mass in kg (label only).' },
+        g: { type: 'number', description: 'Default 9.8.' },
+        showArc: { type: 'boolean' },
+        notes: { type: 'string' },
+      },
+      required: ['length', 'amplitude'],
+    },
+  },
+
+  {
+    name: 'show_spring_mass',
+    description: 'Horizontal or vertical spring attached to a mass at a displaced position, with natural-length reference, displacement annotation, and derived ω = √(k/m), T = 2π/ω. USE THIS for Hooke\'s law and SHM spring lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        k: { type: 'number', description: 'Spring constant (N/m).' },
+        mass: { type: 'number', description: 'Mass (kg).' },
+        displacement: { type: 'number', description: 'Displacement from equilibrium (m). Negative = compressed.' },
+        naturalLength: { type: 'number' },
+        orientation: { type: 'string', enum: ['horizontal', 'vertical'] },
+        notes: { type: 'string' },
+      },
+      required: ['k', 'mass', 'displacement'],
+    },
+  },
+
+  {
+    name: 'show_ray_diagram',
+    description: 'Thin-lens or spherical-mirror ray diagram with object, image, focal points, principal rays, and thin-lens equation readout. USE THIS for optics instead of show_svg_diagram.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        type: { type: 'string', enum: ['converging', 'diverging', 'concave-mirror', 'convex-mirror'] },
+        focalLength: { type: 'number', description: 'cm; positive for converging / concave-mirror, negative for diverging / convex-mirror (sign auto-corrected by type).' },
+        objectDistance: { type: 'number', description: 'cm, positive in front of the optical element.' },
+        objectHeight: { type: 'number', description: 'cm (default 2).' },
+        showLabels: { type: 'boolean' },
+        notes: { type: 'string' },
+      },
+      required: ['type', 'focalLength', 'objectDistance'],
+    },
+  },
+
+  {
+    name: 'show_wave',
+    description: 'Sinusoidal wave with labeled λ (wavelength), A (amplitude), and optional frequency. Can overlay a second wave + their superposition for interference / beats / phase lessons. USE THIS for any wave visualization.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        wave: { type: 'object', properties: { amplitude: { type: 'number' }, wavelength: { type: 'number' }, phase: { type: 'number', description: 'Degrees; 0 = starts at origin going up.' }, color: { type: 'string' }, label: { type: 'string' } }, required: ['amplitude', 'wavelength'] },
+        secondary: { type: 'object', properties: { amplitude: { type: 'number' }, wavelength: { type: 'number' }, phase: { type: 'number' }, color: { type: 'string' }, label: { type: 'string' } } },
+        showSuperposition: { type: 'boolean', description: 'Overlay the sum of wave + secondary for interference demos.' },
+        frequency: { type: 'number', description: 'Shown as f = … Hz; T = 1/f also displayed.' },
+        showAnnotations: { type: 'boolean', description: 'Toggle λ and A labels (default true).' },
+        xLabel: { type: 'string' },
+        notes: { type: 'string' },
+      },
+      required: ['wave'],
+    },
+  },
+
+  {
+    name: 'show_vector',
+    description: 'Draw one or more 2D vectors with magnitude + direction labels, optional resultant sum, component decomposition, and tip-to-tail or from-origin layout. USE THIS for vector-addition lessons in physics or precalc.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        vectors: { type: 'array', items: { type: 'object', properties: { magnitude: { type: 'number' }, direction: { type: 'number', description: 'Degrees; 0°=East, 90°=North.' }, label: { type: 'string' }, color: { type: 'string' } }, required: ['magnitude', 'direction'] } },
+        layout: { type: 'string', enum: ['from-origin', 'tip-to-tail'] },
+        showResultant: { type: 'boolean' },
+        resultantLabel: { type: 'string' },
+        showComponents: { type: 'boolean' },
+        showAxes: { type: 'boolean' },
+        notes: { type: 'string' },
+      },
+      required: ['vectors'],
+    },
+  },
+
+  {
+    name: 'show_orbital_diagram',
+    description: 'Electron configuration box-and-arrow notation following Aufbau, Pauli, Hund. Pass `element` ("N", "Fe") to derive the configuration, or provide an explicit `configuration` array. USE THIS for electron-configuration lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        element: { type: 'string', description: 'Element symbol (case-sensitive, e.g. "Fe"). Atomic number is looked up.' },
+        configuration: { type: 'array', items: { type: 'object', properties: { subshell: { type: 'string', description: 'e.g. "3d"' }, electrons: { type: 'number' } }, required: ['subshell', 'electrons'] } },
+        condensed: { type: 'boolean', description: 'Prefix with the nearest noble-gas core (e.g. [Ar] 4s2 3d6).' },
+        notes: { type: 'string' },
+      },
+      required: [],
+    },
+  },
+
+  {
+    name: 'show_pedigree',
+    description: 'Standard pedigree notation: squares=male, circles=female, filled=affected, half-filled=carrier, strike=deceased. Horizontal lines between pairs = marriages; vertical drop lines = offspring. USE THIS for genetics inheritance lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        individuals: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, sex: { type: 'string', enum: ['male', 'female', 'unknown'] }, status: { type: 'string', enum: ['unaffected', 'affected', 'carrier', 'deceased'] }, label: { type: 'string' }, generation: { type: 'number', description: '1-based Roman-numeral generation (1 = I at top).' }, position: { type: 'number', description: '0-based left-to-right within that generation.' } }, required: ['id', 'sex', 'generation', 'position'] } },
+        marriages: { type: 'array', items: { type: 'object', properties: { pair: { type: 'array', items: { type: 'string' } }, consanguineous: { type: 'boolean' } }, required: ['pair'] } },
+        children: { type: 'array', items: { type: 'object', properties: { parents: { type: 'array', items: { type: 'string' } }, childId: { type: 'string' } }, required: ['parents', 'childId'] } },
+        legend: { type: 'array', items: { type: 'string' } },
+        notes: { type: 'string' },
+      },
+      required: ['individuals'],
+    },
+  },
+
+  {
+    name: 'show_cell_diagram',
+    description: 'Schematic of an animal or plant cell with labeled organelles (nucleus, mitochondria, ribosomes, ER, Golgi; plant adds chloroplast, vacuole, cell wall). USE THIS for cell biology intro instead of show_svg_diagram.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        type: { type: 'string', enum: ['animal', 'plant'] },
+        highlight: { type: 'array', items: { type: 'object', properties: { organelle: { type: 'string', description: 'One of: nucleus, mitochondria, ribosomes, er, golgi, chloroplast, vacuole, cell-wall.' }, note: { type: 'string' }, color: { type: 'string' } }, required: ['organelle'] } },
+        notes: { type: 'string' },
+      },
+      required: ['type'],
+    },
+  },
+
+  {
+    name: 'show_dna',
+    description: 'DNA double helix (default) or straight base-pair ladder with A-T / G-C complementary pairs. Base-pair mode accepts a 5\'→3\' sequence and auto-complements the antisense strand; optional mRNA row below shows transcription. USE THIS for DNA structure / replication / transcription lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        mode: { type: 'string', enum: ['helix', 'base-pairs'] },
+        sequence: { type: 'string', description: 'Top strand 5\'→3\' for base-pairs mode (e.g. "ATGCATGC").' },
+        complement: { type: 'string', description: 'Override the auto-computed complementary strand.' },
+        mrna: { type: 'string', description: 'If provided (or empty string for auto-transcribe), show an mRNA row beneath the DNA.' },
+        rungs: { type: 'number', description: 'helix mode: number of base-pair rungs (default 12).' },
+        notes: { type: 'string' },
+      },
+      required: [],
+    },
+  },
+
+  {
+    name: 'show_food_web',
+    description: 'Ecological food web: labeled species nodes placed at their trophic level (1=producers, 2=primary, 3=secondary, 4=tertiary, 5=apex) with directed arrows prey → predator (direction of energy flow). USE THIS for ecology lessons.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        species: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, label: { type: 'string' }, level: { type: 'number', description: '1 = producer, 2 = primary consumer, 3 = secondary, 4 = tertiary, 5 = apex predator.' }, color: { type: 'string' }, icon: { type: 'string' } }, required: ['id', 'label', 'level'] } },
+        edges: { type: 'array', items: { type: 'object', properties: { from: { type: 'string', description: 'Prey id.' }, to: { type: 'string', description: 'Predator id.' } }, required: ['from', 'to'] } },
+        showLevelLabels: { type: 'boolean' },
+        notes: { type: 'string' },
+      },
+      required: ['species', 'edges'],
+    },
+  },
 ];
 
 /**
@@ -1378,6 +1687,212 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       notes: funcArgs.notes,
     } as unknown as WhiteboardCommand;
   }
+
+  // ── Tier-1 structured tools (batch shipped 2026-04-22) ──
+  if (funcName === 'show_coordinate_plane') {
+    return {
+      action: 'showCoordinatePlane',
+      title: funcArgs.title,
+      xRange: Array.isArray(funcArgs.xRange) ? funcArgs.xRange : undefined,
+      yRange: Array.isArray(funcArgs.yRange) ? funcArgs.yRange : undefined,
+      xLabel: funcArgs.xLabel,
+      yLabel: funcArgs.yLabel,
+      showGrid: funcArgs.showGrid,
+      points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
+      segments: Array.isArray(funcArgs.segments) ? funcArgs.segments : [],
+      vectors: Array.isArray(funcArgs.vectors) ? funcArgs.vectors : [],
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_scatter_plot') {
+    return {
+      action: 'showScatterPlot',
+      title: funcArgs.title,
+      xLabel: funcArgs.xLabel,
+      yLabel: funcArgs.yLabel,
+      points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
+      xRange: Array.isArray(funcArgs.xRange) ? funcArgs.xRange : undefined,
+      yRange: Array.isArray(funcArgs.yRange) ? funcArgs.yRange : undefined,
+      showTrendLine: funcArgs.showTrendLine,
+      trendLineEquation: funcArgs.trendLineEquation,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_cycle_diagram') {
+    return {
+      action: 'showCycleDiagram',
+      title: funcArgs.title,
+      stages: Array.isArray(funcArgs.stages) ? funcArgs.stages : [],
+      clockwise: funcArgs.clockwise,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_concept_map') {
+    return {
+      action: 'showConceptMap',
+      title: funcArgs.title,
+      nodes: Array.isArray(funcArgs.nodes) ? funcArgs.nodes : [],
+      edges: Array.isArray(funcArgs.edges) ? funcArgs.edges : [],
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_motion_diagram') {
+    return {
+      action: 'showMotionDiagram',
+      title: funcArgs.title,
+      timeLabel: funcArgs.timeLabel,
+      series: Array.isArray(funcArgs.series) ? funcArgs.series : [],
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_projectile_motion') {
+    return {
+      action: 'showProjectileMotion',
+      title: funcArgs.title,
+      v0: funcArgs.v0,
+      angle: funcArgs.angle,
+      y0: funcArgs.y0,
+      g: funcArgs.g,
+      showComponents: funcArgs.showComponents,
+      sampleCount: funcArgs.sampleCount,
+      speedUnit: funcArgs.speedUnit,
+      distanceUnit: funcArgs.distanceUnit,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_simple_machine') {
+    return {
+      action: 'showSimpleMachine',
+      title: funcArgs.title,
+      type: funcArgs.type,
+      variant: funcArgs.variant,
+      effort: funcArgs.effort,
+      load: funcArgs.load,
+      effortArm: funcArgs.effortArm,
+      loadArm: funcArgs.loadArm,
+      angle: funcArgs.angle,
+      length: funcArgs.length,
+      height: funcArgs.height,
+      ropes: funcArgs.ropes,
+      unit: funcArgs.unit,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_pendulum') {
+    return {
+      action: 'showPendulum',
+      title: funcArgs.title,
+      length: funcArgs.length,
+      amplitude: funcArgs.amplitude,
+      mass: funcArgs.mass,
+      g: funcArgs.g,
+      showArc: funcArgs.showArc,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_spring_mass') {
+    return {
+      action: 'showSpringMass',
+      title: funcArgs.title,
+      k: funcArgs.k,
+      mass: funcArgs.mass,
+      displacement: funcArgs.displacement,
+      naturalLength: funcArgs.naturalLength,
+      orientation: funcArgs.orientation,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_ray_diagram') {
+    return {
+      action: 'showRayDiagram',
+      title: funcArgs.title,
+      type: funcArgs.type,
+      focalLength: funcArgs.focalLength,
+      objectDistance: funcArgs.objectDistance,
+      objectHeight: funcArgs.objectHeight,
+      showLabels: funcArgs.showLabels,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_wave') {
+    return {
+      action: 'showWave',
+      title: funcArgs.title,
+      wave: funcArgs.wave,
+      secondary: funcArgs.secondary,
+      showSuperposition: funcArgs.showSuperposition,
+      frequency: funcArgs.frequency,
+      showAnnotations: funcArgs.showAnnotations,
+      xLabel: funcArgs.xLabel,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_vector') {
+    return {
+      action: 'showVector',
+      title: funcArgs.title,
+      vectors: Array.isArray(funcArgs.vectors) ? funcArgs.vectors : [],
+      layout: funcArgs.layout,
+      showResultant: funcArgs.showResultant,
+      resultantLabel: funcArgs.resultantLabel,
+      showComponents: funcArgs.showComponents,
+      showAxes: funcArgs.showAxes,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_orbital_diagram') {
+    return {
+      action: 'showOrbitalDiagram',
+      title: funcArgs.title,
+      element: funcArgs.element,
+      configuration: Array.isArray(funcArgs.configuration) ? funcArgs.configuration : undefined,
+      condensed: funcArgs.condensed,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_pedigree') {
+    return {
+      action: 'showPedigree',
+      title: funcArgs.title,
+      individuals: Array.isArray(funcArgs.individuals) ? funcArgs.individuals : [],
+      marriages: Array.isArray(funcArgs.marriages) ? funcArgs.marriages : [],
+      children: Array.isArray(funcArgs.children) ? funcArgs.children : [],
+      legend: Array.isArray(funcArgs.legend) ? funcArgs.legend : undefined,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_cell_diagram') {
+    return {
+      action: 'showCellDiagram',
+      title: funcArgs.title,
+      type: funcArgs.type,
+      highlight: Array.isArray(funcArgs.highlight) ? funcArgs.highlight : undefined,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_dna') {
+    return {
+      action: 'showDna',
+      title: funcArgs.title,
+      mode: funcArgs.mode,
+      sequence: funcArgs.sequence,
+      complement: funcArgs.complement,
+      mrna: funcArgs.mrna,
+      rungs: funcArgs.rungs,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_food_web') {
+    return {
+      action: 'showFoodWeb',
+      title: funcArgs.title,
+      species: Array.isArray(funcArgs.species) ? funcArgs.species : [],
+      edges: Array.isArray(funcArgs.edges) ? funcArgs.edges : [],
+      showLevelLabels: funcArgs.showLevelLabels,
+      notes: funcArgs.notes,
+    } as unknown as WhiteboardCommand;
+  }
+
   return null;
 }
 

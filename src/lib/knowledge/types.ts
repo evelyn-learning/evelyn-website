@@ -679,6 +679,175 @@ export type WhiteboardCommand =
       reactant_label?: string;
       product_label?: string;
       units?: string;
+    }
+  | {
+      action: 'showCoordinatePlane';
+      title?: string;
+      xRange?: [number, number];
+      yRange?: [number, number];
+      xLabel?: string;
+      yLabel?: string;
+      points?: Array<{ x: number; y: number; label?: string; color?: string }>;
+      segments?: Array<{ from: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string; dashed?: boolean; arrow?: boolean }>;
+      vectors?: Array<{ from?: { x: number; y: number }; to: { x: number; y: number }; label?: string; color?: string }>;
+      showGrid?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showScatterPlot';
+      title?: string;
+      xLabel?: string;
+      yLabel?: string;
+      points: Array<{ x: number; y: number; label?: string; color?: string; series?: string }>;
+      xRange?: [number, number];
+      yRange?: [number, number];
+      showTrendLine?: boolean;
+      trendLineEquation?: string;
+      notes?: string;
+    }
+  | {
+      action: 'showCycleDiagram';
+      title?: string;
+      stages: Array<{ label: string; description?: string; color?: string; icon?: string }>;
+      clockwise?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showConceptMap';
+      title?: string;
+      nodes: Array<{ id: string; label: string; x?: number; y?: number; color?: string; level?: number }>;
+      edges?: Array<{ from: string; to: string; label?: string; directed?: boolean; color?: string }>;
+      notes?: string;
+    }
+  | {
+      action: 'showMotionDiagram';
+      title?: string;
+      timeLabel?: string;
+      series: Array<{ kind: 'position' | 'velocity' | 'acceleration'; points: Array<{ t: number; value: number }>; label?: string; color?: string; yLabel?: string }>;
+      notes?: string;
+    }
+  | {
+      action: 'showProjectileMotion';
+      title?: string;
+      v0: number;
+      angle: number;
+      y0?: number;
+      g?: number;
+      showComponents?: boolean;
+      sampleCount?: number;
+      speedUnit?: string;
+      distanceUnit?: string;
+      notes?: string;
+    }
+  | {
+      action: 'showSimpleMachine';
+      title?: string;
+      type: 'lever' | 'pulley' | 'inclined-plane' | 'wedge';
+      variant?: 'class-1' | 'class-2' | 'class-3' | 'fixed' | 'movable' | 'compound';
+      effort?: number;
+      load?: number;
+      effortArm?: number;
+      loadArm?: number;
+      angle?: number;
+      length?: number;
+      height?: number;
+      ropes?: number;
+      unit?: string;
+      notes?: string;
+    }
+  | {
+      action: 'showPendulum';
+      title?: string;
+      length: number;
+      amplitude: number;
+      mass?: number;
+      g?: number;
+      showArc?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showSpringMass';
+      title?: string;
+      k: number;
+      mass: number;
+      displacement: number;
+      naturalLength?: number;
+      orientation?: 'horizontal' | 'vertical';
+      notes?: string;
+    }
+  | {
+      action: 'showRayDiagram';
+      title?: string;
+      type: 'converging' | 'diverging' | 'concave-mirror' | 'convex-mirror';
+      focalLength: number;
+      objectDistance: number;
+      objectHeight?: number;
+      showLabels?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showWave';
+      title?: string;
+      wave: { amplitude: number; wavelength: number; phase?: number; color?: string; label?: string };
+      secondary?: { amplitude: number; wavelength: number; phase?: number; color?: string; label?: string };
+      showSuperposition?: boolean;
+      frequency?: number;
+      showAnnotations?: boolean;
+      xLabel?: string;
+      notes?: string;
+    }
+  | {
+      action: 'showVector';
+      title?: string;
+      vectors: Array<{ magnitude: number; direction: number; label?: string; color?: string }>;
+      layout?: 'from-origin' | 'tip-to-tail';
+      showResultant?: boolean;
+      resultantLabel?: string;
+      showComponents?: boolean;
+      showAxes?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showOrbitalDiagram';
+      title?: string;
+      element?: string;
+      configuration?: Array<{ subshell: string; electrons: number }>;
+      condensed?: boolean;
+      notes?: string;
+    }
+  | {
+      action: 'showPedigree';
+      title?: string;
+      individuals: Array<{ id: string; sex: 'male' | 'female' | 'unknown'; status?: 'unaffected' | 'affected' | 'carrier' | 'deceased'; label?: string; generation: number; position: number }>;
+      marriages?: Array<{ pair: [string, string]; consanguineous?: boolean }>;
+      children?: Array<{ parents: [string, string]; childId: string }>;
+      legend?: Array<'unaffected' | 'affected' | 'carrier' | 'deceased'>;
+      notes?: string;
+    }
+  | {
+      action: 'showCellDiagram';
+      title?: string;
+      type: 'animal' | 'plant';
+      highlight?: Array<{ organelle: string; note?: string; color?: string }>;
+      notes?: string;
+    }
+  | {
+      action: 'showDna';
+      title?: string;
+      mode?: 'helix' | 'base-pairs';
+      sequence?: string;
+      complement?: string;
+      mrna?: string;
+      rungs?: number;
+      notes?: string;
+    }
+  | {
+      action: 'showFoodWeb';
+      title?: string;
+      species: Array<{ id: string; label: string; level: number; color?: string; icon?: string }>;
+      edges: Array<{ from: string; to: string }>;
+      showLevelLabels?: boolean;
+      notes?: string;
     };
 
 // =============================================================================

@@ -10,7 +10,17 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
-import { mapFunctionCallToCommand } from './toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools } from './toolDefinitions';
+
+// Tier-1 structured tools added 2026-04-22 — sourced from WHITEBOARD_TOOLS
+// rather than duplicated inline to keep the two registries in sync.
+const TIER1_NEW_TOOL_NAMES = new Set([
+  'show_coordinate_plane', 'show_scatter_plot', 'show_cycle_diagram',
+  'show_concept_map', 'show_motion_diagram', 'show_projectile_motion',
+  'show_simple_machine', 'show_pendulum', 'show_spring_mass',
+  'show_ray_diagram', 'show_wave', 'show_vector', 'show_orbital_diagram',
+  'show_pedigree', 'show_cell_diagram', 'show_dna', 'show_food_web',
+]);
 
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
@@ -1669,6 +1679,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   required: ['type'],
                 },
               },
+              // Tier-1 structured tools (batch 2026-04-22) — sourced from
+              // WHITEBOARD_TOOLS via toOpenAITools() so we only maintain
+              // schemas in one place.
+              ...toOpenAITools(WHITEBOARD_TOOLS.filter((t) => TIER1_NEW_TOOL_NAMES.has(t.name))),
             ],
             tool_choice: 'auto',
             audio: {

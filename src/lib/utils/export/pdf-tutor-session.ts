@@ -1247,6 +1247,40 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Collision Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
     case 'showReactionCoordinate':
       return `Reaction Coordinate${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showCoordinatePlane':
+      return `Coordinate Plane${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showScatterPlot':
+      return `Scatter Plot${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showCycleDiagram':
+      return `Cycle Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showConceptMap':
+      return `Concept Map${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showMotionDiagram':
+      return `Motion Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showProjectileMotion':
+      return `Projectile Motion${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showSimpleMachine':
+      return `Simple Machine${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showPendulum':
+      return `Pendulum${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showSpringMass':
+      return `Spring-Mass System${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showRayDiagram':
+      return `Ray Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showWave':
+      return `Wave${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showVector':
+      return `Vector Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showOrbitalDiagram':
+      return `Orbital Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showPedigree':
+      return `Pedigree${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showCellDiagram':
+      return `Cell Diagram${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showDna':
+      return `DNA${cmd.title ? `: ${cmd.title}` : ''}`;
+    case 'showFoodWeb':
+      return `Food Web${cmd.title ? `: ${cmd.title}` : ''}`;
     case 'showWorkedExample':
       return `Worked Example`;
     default:
