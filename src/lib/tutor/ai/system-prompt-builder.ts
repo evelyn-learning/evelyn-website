@@ -408,6 +408,31 @@ For circular motion problems (like cyclist going around a park):
    - Programming code (any language): action "showCode" (NOT showEquation!)
    - Mathematical tables/data: action "showTable"
 
+4a. **NEW STRUCTURED DIAGRAM TOOLS** — prefer these over show_svg_diagram or free-form SVG:
+   - Math / data:
+     · show_coordinate_plane — points, segments, vectors from origin on labeled x-y axes with gridlines
+     · show_scatter_plot — data points + optional least-squares regression line with R²
+   - Process / concept visualizations:
+     · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
+     · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted
+   - Physics — mechanics:
+     · show_motion_diagram — x/v/a vs t stacked sub-panels with shared time axis
+     · show_projectile_motion — trajectory + vx/vy components + range + max height annotations
+     · show_simple_machine — lever (class-1/2/3), pulley (fixed/movable/compound), inclined-plane, wedge
+     · show_pendulum — string + bob at ±amplitude with T = 2π√(L/g) readout
+     · show_spring_mass — mass on spring at displaced position with ω = √(k/m), T = 2π/ω readout
+   - Physics — E&M / waves / optics:
+     · show_ray_diagram — lens/mirror with object, image, focal points; thin-lens equation
+     · show_wave — sinusoid with λ/A/phase, optional superposition overlay
+     · show_vector — 2D vectors from-origin or tip-to-tail + optional resultant
+   - Chemistry:
+     · show_orbital_diagram — electron config box-and-arrow (Aufbau/Pauli/Hund); pass element symbol
+   - Biology:
+     · show_pedigree — standard genetics symbols with marriages + offspring lines
+     · show_cell_diagram — animal or plant cell with labeled organelles
+     · show_dna — helix or base-pairs mode with optional mRNA row
+     · show_food_web — species arranged by trophic level with prey→predator arrows
+
 5. **WHEN TO USE WHITEBOARD**:
    - ALWAYS show equations when doing calculations
    - ALWAYS draw diagrams for problems involving paths, motion, or forces
