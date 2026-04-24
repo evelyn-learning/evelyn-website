@@ -1145,7 +1145,7 @@ function drawGeometryVisual(
 async function drawWhiteboardVisual(
   pdf: jsPDF, rawCmd: WhiteboardCommandData,
   x: number, y: number, width: number,
-  scribbles?: Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string }>,
+  scribbles?: Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string }>,
 ): Promise<number> {
   // Normalize: DB format nests command properties under 'data' (e.g., { action: 'showEquation', data: { latex: '...' } }),
   // while live format has them flat (e.g., { action: 'showEquation', latex: '...' }). Flatten for consistent access.
@@ -1393,7 +1393,7 @@ export async function exportTutorSessionPDF(
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
   //     older scribbles emitted before targetId was available, OR when
   //     the tutor didn't use targetId
-  type ScribbleShape = { shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; color?: string; label?: string };
+  type ScribbleShape = { shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string };
   const scribblesByTargetId = new Map<string, ScribbleShape[]>();
   const scribblesByIndex = new Map<number, ScribbleShape[]>();
   const dedupedCommands = dedupedAll.filter((cmd) => {
@@ -1402,7 +1402,13 @@ export async function exportTutorSessionPDF(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const s = cmd as any;
       if (!['circle','underline','arrow','box','highlight'].includes(s.shape)) return false;
-      const shape: ScribbleShape = { shape: s.shape, region: s.region, color: s.color, label: s.label };
+      const shape: ScribbleShape = {
+        shape: s.shape,
+        region: s.region,
+        targetFeature: typeof s.targetFeature === 'string' ? s.targetFeature : undefined,
+        color: s.color,
+        label: s.label,
+      };
       if (typeof s.targetId === 'string' && s.targetId) {
         const list = scribblesByTargetId.get(s.targetId) || [];
         list.push(shape);

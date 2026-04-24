@@ -15,6 +15,17 @@ import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
+/** See RayDiagramRenderer for documentation. */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-cy': (bbox.cy / DIAGRAM_VIEWBOX.height).toFixed(3),
+    'data-feature-w': (bbox.w / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-h': (bbox.h / DIAGRAM_VIEWBOX.height).toFixed(3),
+  };
+}
+
 /**
  * A single element in a multi-element spring-mass chain.
  * Chains let the tool draw series / coupled setups that single-mass mode
@@ -161,53 +172,64 @@ function ChainRenderer({
         <ArrowMarkers idPrefix="spr-chain-arrow" />
 
         {/* Ground line under the whole chain */}
-        <line x1={padX - 10} y1={groundY} x2={W - padX + 10} y2={groundY} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.2} />
+        <g {...feat('ground', { cx: W / 2, cy: groundY, w: W - 2 * padX + 20, h: 8 })}>
+          <line x1={padX - 10} y1={groundY} x2={W - padX + 10} y2={groundY} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.2} />
+        </g>
 
-        {placed.map(({ el, x, w, i }) => {
-          const cx = x + w / 2;
-          if (el.type === 'wall') {
-            const wallW = Math.min(WALL_PX, w);
-            const wallX = x + (w - wallW) / 2;
+        {(() => {
+          // Per-type indices so the tutor can say "mark spring-2" or
+          // "circle mass-1" unambiguously even when the chain has several
+          // of each. Numbered left-to-right.
+          let wallN = 0, springN = 0, massN = 0;
+          return placed.map(({ el, x, w, i }) => {
+            const cx = x + w / 2;
+            if (el.type === 'wall') {
+              wallN += 1;
+              const wallW = Math.min(WALL_PX, w);
+              const wallX = x + (w - wallW) / 2;
+              return (
+                <g key={`wall-${i}`} {...feat(`wall-${wallN}`, { cx, cy: H_CENTER, w: wallW + 4, h: 100 })}>
+                  <line x1={wallX + wallW} y1={H_CENTER - 50} x2={wallX + wallW} y2={H_CENTER + 30} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
+                  {/* Hatch marks */}
+                  {Array.from({ length: 5 }).map((_, hi) => (
+                    <line key={hi} x1={wallX} y1={H_CENTER - 40 + hi * 18} x2={wallX + wallW} y2={H_CENTER - 30 + hi * 18} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+                  ))}
+                  {el.label && (
+                    <text x={cx} y={H_CENTER - 56} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{el.label}</text>
+                  )}
+                </g>
+              );
+            }
+            if (el.type === 'spring') {
+              springN += 1;
+              return (
+                <g key={`spring-${i}`} {...feat(`spring-${springN}`, { cx, cy: H_CENTER, w, h: 40 })}>
+                  <path d={springPath(x, H_CENTER, x + w, H_CENTER, 6, 10)}
+                    stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
+                  <text x={cx} y={H_CENTER - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>
+                    {el.label ?? `k = ${formatValue(el.k ?? 0)} N/m`}
+                  </text>
+                </g>
+              );
+            }
+            // mass
+            massN += 1;
+            const boxW = Math.min(MASS_PX, w);
+            const boxH = MASS_PX;
+            const boxX = x + (w - boxW) / 2;
+            const boxY = H_CENTER - boxH / 2;
             return (
-              <g key={`wall-${i}`}>
-                <line x1={wallX + wallW} y1={H_CENTER - 50} x2={wallX + wallW} y2={H_CENTER + 30} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
-                {/* Hatch marks */}
-                {Array.from({ length: 5 }).map((_, hi) => (
-                  <line key={hi} x1={wallX} y1={H_CENTER - 40 + hi * 18} x2={wallX + wallW} y2={H_CENTER - 30 + hi * 18} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
-                ))}
-                {el.label && (
-                  <text x={cx} y={H_CENTER - 56} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{el.label}</text>
-                )}
-              </g>
-            );
-          }
-          if (el.type === 'spring') {
-            return (
-              <g key={`spring-${i}`}>
-                <path d={springPath(x, H_CENTER, x + w, H_CENTER, 6, 10)}
-                  stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
-                <text x={cx} y={H_CENTER - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>
-                  {el.label ?? `k = ${formatValue(el.k ?? 0)} N/m`}
+              <g key={`mass-${i}`} {...feat(`mass-${massN}`, { cx, cy: H_CENTER, w: boxW + 4, h: boxH + 24 })}>
+                <rect x={boxX} y={boxY} width={boxW} height={boxH}
+                  fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
+                <text x={cx} y={boxY + boxH / 2 + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
+                <text x={cx} y={boxY + boxH + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
+                  {el.label ?? `m = ${formatValue(el.mass ?? 0)} kg`}
                 </text>
               </g>
             );
-          }
-          // mass
-          const boxW = Math.min(MASS_PX, w);
-          const boxH = MASS_PX;
-          const boxX = x + (w - boxW) / 2;
-          const boxY = H_CENTER - boxH / 2;
-          return (
-            <g key={`mass-${i}`}>
-              <rect x={boxX} y={boxY} width={boxW} height={boxH}
-                fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
-              <text x={cx} y={boxY + boxH / 2 + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
-              <text x={cx} y={boxY + boxH + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
-                {el.label ?? `m = ${formatValue(el.mass ?? 0)} kg`}
-              </text>
-            </g>
-          );
-        })}
+          });
+        })()}
 
         {/* Summary readouts at the bottom — only show when meaningful */}
         {springs.length > 0 && (
@@ -272,33 +294,44 @@ export default function SpringMassRenderer({
           return (
             <g>
               {/* Wall */}
-              <line x1={wallX} y1={cy - 50} x2={wallX} y2={cy + 50} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
-              {Array.from({ length: 5 }).map((_, i) => (
-                <line key={i} x1={wallX - 14} y1={cy - 40 + i * 20} x2={wallX} y2={cy - 30 + i * 20} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
-              ))}
+              <g {...feat('wall', { cx: wallX - 7, cy, w: 22, h: 100 })}>
+                <line x1={wallX} y1={cy - 50} x2={wallX} y2={cy + 50} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <line key={i} x1={wallX - 14} y1={cy - 40 + i * 20} x2={wallX} y2={cy - 30 + i * 20} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
+                ))}
+              </g>
 
               {/* Ground */}
-              <line x1={wallX} y1={cy + 28} x2={W - 30} y2={cy + 28} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
+              <g {...feat('ground', { cx: (wallX + (W - 30)) / 2, cy: cy + 28, w: (W - 30) - wallX, h: 6 })}>
+                <line x1={wallX} y1={cy + 28} x2={W - 30} y2={cy + 28} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
+              </g>
 
               {/* Natural-length reference spring (faint) */}
-              <path d={springPath(wallX, cy, naturalEnd, cy)} stroke={DIAGRAM_COLORS.muted} strokeWidth={1.25} fill="none" opacity={0.35} />
-              <rect x={naturalEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill="none" stroke={DIAGRAM_COLORS.muted} strokeWidth={1} strokeDasharray="4 3" />
-              <text x={naturalEnd + massSize / 2} y={cy - massSize / 2 - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">equilibrium</text>
+              <g {...feat('equilibrium', { cx: naturalEnd + massSize / 2, cy, w: massSize + 6, h: massSize + 18 })}>
+                <path d={springPath(wallX, cy, naturalEnd, cy)} stroke={DIAGRAM_COLORS.muted} strokeWidth={1.25} fill="none" opacity={0.35} />
+                <rect x={naturalEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill="none" stroke={DIAGRAM_COLORS.muted} strokeWidth={1} strokeDasharray="4 3" />
+                <text x={naturalEnd + massSize / 2} y={cy - massSize / 2 - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">equilibrium</text>
+              </g>
 
               {/* Displaced spring */}
-              <path d={springPath(wallX, cy, displacedEnd, cy)} stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
+              <g {...feat('spring', { cx: (wallX + displacedEnd) / 2, cy, w: displacedEnd - wallX, h: 40 })}>
+                <path d={springPath(wallX, cy, displacedEnd, cy)} stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
+                {/* Spring-constant label */}
+                <text x={wallX + naturalPx / 2} y={cy - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>k = {formatValue(k)} N/m</text>
+              </g>
 
               {/* Mass */}
-              <rect x={displacedEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
-              <text x={displacedEnd + massSize / 2} y={cy + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
+              <g {...feat('mass', { cx: displacedEnd + massSize / 2, cy: cy + massSize / 4, w: massSize + 6, h: massSize + 24 })}>
+                <rect x={displacedEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
+                <text x={displacedEnd + massSize / 2} y={cy + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
+                <text x={displacedEnd + massSize / 2} y={cy + massSize / 2 + 14} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={600}>m = {formatValue(mass)} kg</text>
+              </g>
 
               {/* Displacement annotation */}
-              <line x1={naturalEnd} y1={cy + 44} x2={displacedEnd} y2={cy + 44} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} markerStart="url(#spr-arrow-warning)" markerEnd="url(#spr-arrow-warning)" />
-              <text x={(naturalEnd + displacedEnd) / 2} y={cy + 58} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>x = {formatValue(displacement)} m</text>
-
-              {/* Labels */}
-              <text x={wallX + naturalPx / 2} y={cy - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>k = {formatValue(k)} N/m</text>
-              <text x={displacedEnd + massSize / 2} y={cy + massSize / 2 + 14} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={600}>m = {formatValue(mass)} kg</text>
+              <g {...feat('displacement', { cx: (naturalEnd + displacedEnd) / 2, cy: cy + 50, w: Math.abs(displacedEnd - naturalEnd) + 12, h: 24 })}>
+                <line x1={naturalEnd} y1={cy + 44} x2={displacedEnd} y2={cy + 44} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} markerStart="url(#spr-arrow-warning)" markerEnd="url(#spr-arrow-warning)" />
+                <text x={(naturalEnd + displacedEnd) / 2} y={cy + 58} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>x = {formatValue(displacement)} m</text>
+              </g>
             </g>
           );
         })()}

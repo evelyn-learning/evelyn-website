@@ -40,6 +40,17 @@ export interface MotionDiagramProps {
   notes?: string;
 }
 
+/** See RayDiagramRenderer for documentation. */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-cy': (bbox.cy / DIAGRAM_VIEWBOX.height).toFixed(3),
+    'data-feature-w': (bbox.w / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-h': (bbox.h / DIAGRAM_VIEWBOX.height).toFixed(3),
+  };
+}
+
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
@@ -120,8 +131,13 @@ export default function MotionDiagramRenderer({
 
           const midY = (panelTop + panelBottom) / 2;
 
+          // Expose each panel as a feature named after its series kind
+          // (e.g. "x-panel", "v-panel", "a-panel") so the tutor can point
+          // at a specific panel without coordinate guessing.
+          const featureName = `${s.kind}-panel`;
+
           return (
-            <g key={idx}>
+            <g key={idx} {...feat(featureName, { cx: pad.left + plotW / 2, cy: (panelTop + panelBottom) / 2, w: plotW, h: panelH - gap })}>
               {/* Panel frame */}
               <rect x={pad.left} y={panelTop} width={plotW} height={panelH - gap} fill={DIAGRAM_COLORS.panel} stroke={DIAGRAM_COLORS.border} strokeWidth={0.5} />
               {zeroLineY !== null && (

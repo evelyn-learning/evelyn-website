@@ -793,11 +793,57 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
  * while explaining.
  */
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
+type ResolvedRegion = { x: number; y: number; w: number; h: number };
 
 function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  // After paint, walk the parent element for data-feature-* markers the
+  // target renderer exposed (e.g. <g data-feature="object"
+  // data-feature-cx="0.25" data-feature-cy="0.55" data-feature-w="0.08"
+  // data-feature-h="0.25">). Resolved regions override the region passed
+  // by the tutor — the renderer knows where the feature actually is.
+  const [resolvedByFeature, setResolvedByFeature] = useState<Record<string, ResolvedRegion>>({});
+  useEffect(() => {
+    const svg = svgRef.current;
+    const parent = svg?.parentElement;
+    if (!parent) return;
+    const next: Record<string, ResolvedRegion> = {};
+    const seen = new Set<string>();
+    for (const s of scribbles) {
+      if (!s.targetFeature || seen.has(s.targetFeature)) continue;
+      seen.add(s.targetFeature);
+      // Escape attribute-value selector safely.
+      const name = s.targetFeature.replace(/"/g, '\\"');
+      const el = parent.querySelector(`[data-feature="${name}"]`);
+      if (!el) continue;
+      const cx = Number(el.getAttribute('data-feature-cx'));
+      const cy = Number(el.getAttribute('data-feature-cy'));
+      const w = Number(el.getAttribute('data-feature-w'));
+      const h = Number(el.getAttribute('data-feature-h'));
+      if ([cx, cy, w, h].every(Number.isFinite)) {
+        next[s.targetFeature] = {
+          x: Math.max(0, cx - w / 2),
+          y: Math.max(0, cy - h / 2),
+          w: Math.min(1, w),
+          h: Math.min(1, h),
+        };
+      }
+    }
+    setResolvedByFeature((prev) => {
+      // Only update if different to avoid infinite-loop re-renders.
+      const keys = Object.keys(next);
+      if (keys.length !== Object.keys(prev).length) return next;
+      for (const k of keys) {
+        if (!prev[k] || prev[k].x !== next[k].x || prev[k].y !== next[k].y || prev[k].w !== next[k].w || prev[k].h !== next[k].h) return next;
+      }
+      return prev;
+    });
+  }, [scribbles]);
+
   if (scribbles.length === 0) return null;
   return (
     <svg
+      ref={svgRef}
       aria-hidden="true"
       className="absolute inset-0 w-full h-full pointer-events-none"
       viewBox="0 0 100 100"
@@ -805,13 +851,17 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
     >
       {scribbles.map((s, i) => {
         const color = s.color || '#f59e0b';
-        // Default region is the whole item when none was given.
-        const r = s.region ? {
-          x: clamp01(s.region.x) * 100,
-          y: clamp01(s.region.y) * 100,
-          w: clamp01(s.region.w ?? (1 - s.region.x)) * 100,
-          h: clamp01(s.region.h ?? (1 - s.region.y)) * 100,
-        } : { x: 35, y: 40, w: 30, h: 25 }; // small centered mark when tutor forgets the region
+        // Region precedence: feature-resolved > tutor-provided > small-centered default.
+        const resolved = s.targetFeature ? resolvedByFeature[s.targetFeature] : undefined;
+        const source = resolved || (s.region ? {
+          x: clamp01(s.region.x),
+          y: clamp01(s.region.y),
+          w: clamp01(s.region.w ?? (1 - s.region.x)),
+          h: clamp01(s.region.h ?? (1 - s.region.y)),
+        } : null);
+        const r = source
+          ? { x: source.x * 100, y: source.y * 100, w: source.w * 100, h: source.h * 100 }
+          : { x: 35, y: 40, w: 30, h: 25 };
         const cx = r.x + r.w / 2;
         const cy = r.y + r.h / 2;
 

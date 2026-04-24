@@ -422,6 +422,32 @@ export function VoiceTutorRealtime({
               onDebugEvent?.('topic_shift', `dist=${result.distance?.toFixed(3)} — next whiteboard batch will get newPage`);
             }
           });
+
+          // Keyword-based new-problem detector — separate from the
+          // embedding-based topic shift. Fires when the student asks for
+          // a new problem / example / diagram with phrases that are
+          // semantically close to prior topic (so embedding distance may
+          // not trip) but structurally signal a board-clearing moment.
+          // Requires at least one prior show_* so the very first problem
+          // of the session doesn't trigger it.
+          if (commandByIdRef.current.size > 0) {
+            const rawLower = raw.toLowerCase();
+            const newProblemPatterns = [
+              /\bdraw (a|an|me a|me an)\b/,
+              /\bshow (me )?(a|an)\b/,
+              /\bnow (do|show|draw|give me)\b/,
+              /\bnext (problem|one|example)\b/,
+              /\banother (one|example|problem)\b/,
+              /\blet'?s try (a|another)\b/,
+              /\bmove on to\b/,
+              /\bnew (problem|example|one)\b/,
+            ];
+            if (newProblemPatterns.some((re) => re.test(rawLower))) {
+              topicShiftPendingRef.current = { fromDistance: 0 };
+              console.log('[VoiceTutorRealtime] New-problem keyword trigger fired for:', rawLower.slice(0, 80));
+              onDebugEvent?.('new_problem_keyword', `next batch will get newPage`);
+            }
+          }
         }
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
@@ -584,6 +610,99 @@ export function VoiceTutorRealtime({
 
     console.log('[VoiceTutorRealtime] handleWhiteboardCommand called, validateToolCalls:', validateToolCalls, 'commands:', commands.map(c => c.action));
     onDebugEvent?.('tool_call', `Whiteboard tool: ${commands.map(c => c.action).join(', ')}`);
+
+    // Heuristic safety net: if a scribble/scrollTo arrives without a
+    // targetId, try to resolve it by matching the scribble's label or
+    // targetFeature OR the student's recent speech to a recent show_*
+    // command's action or title. Upgrades the command with targetId in
+    // place when the match is unambiguous. Runs BEFORE the hard rejection
+    // below so models in the transitional period (or brief forgetting
+    // their tool_result ids) still get served correctly.
+    const existingIdEntries = Array.from(commandByIdRef.current.entries());
+    if (existingIdEntries.length > 0) {
+      const recentStudentWords = transcriptRef.current
+        .slice(-4)
+        .filter((e) => e.role === 'student')
+        .map((e) => e.text)
+        .join(' ')
+        .toLowerCase();
+
+      for (const cmd of commands) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        if (c.action !== 'scribble' && c.action !== 'scrollTo') continue;
+        if (typeof c.targetId === 'string' && c.targetId) continue;
+
+        // Pool of keywords to hunt for across the id catalog:
+        //   - scribble.label (e.g. "shark")
+        //   - scribble.targetFeature (e.g. "species-shark" → "shark")
+        //   - last few student words ("point at the shark")
+        const hayParts: string[] = [];
+        if (typeof c.label === 'string') hayParts.push(c.label.toLowerCase());
+        if (typeof c.targetFeature === 'string') {
+          hayParts.push(c.targetFeature.toLowerCase().replace(/-/g, ' '));
+        }
+        if (recentStudentWords) hayParts.push(recentStudentWords);
+        const hay = hayParts.join(' ');
+        if (!hay) continue;
+
+        // For each recent show_* id, score by how many of its "keywords"
+        // (action verb + title/label words) appear in the haystack. Most
+        // recent + highest-score wins.
+        type Cand = { id: string; score: number; order: number };
+        const candidates: Cand[] = [];
+        for (const [id, entry] of existingIdEntries) {
+          const cmdObj = entry.cmd as Record<string, unknown>;
+          const actionWords = id.replace(/-\d+$/, '').replace(/^show/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
+          const titleWords = typeof cmdObj.title === 'string' ? (cmdObj.title as string).toLowerCase() : '';
+          const labelWords = typeof cmdObj.label === 'string' ? (cmdObj.label as string).toLowerCase() : '';
+          const signal = `${actionWords} ${titleWords} ${labelWords}`.trim();
+          if (!signal) continue;
+          let score = 0;
+          for (const word of signal.split(/\s+/).filter((w) => w.length > 2)) {
+            if (hay.includes(word)) score += 1;
+          }
+          if (score > 0) candidates.push({ id, score, order: entry.order });
+        }
+
+        if (candidates.length > 0) {
+          // Tie-break: highest score, then most recent (highest order).
+          candidates.sort((a, b) => (b.score - a.score) || (b.order - a.order));
+          const winner = candidates[0];
+          c.targetId = winner.id;
+          console.log('[VoiceTutorRealtime] Heuristic resolved', c.action, '→ targetId:', winner.id, `(score=${winner.score})`);
+          onDebugEvent?.('scribble_heuristic_resolve', `${c.action} → ${winner.id} (hay="${hay.slice(0, 80)}")`);
+        }
+      }
+    }
+
+    // Force stable-id adoption: once a session has 4+ addressable items,
+    // scribble/scrollTo that STILL arrive without targetId (heuristic
+    // above didn't find a match) get rejected with a catalog of available
+    // ids in the failure message. The model learns by failure within the
+    // same turn — faster than waiting for the prompt alone to take hold.
+    const existingIds = Array.from(commandByIdRef.current.keys());
+    if (existingIds.length >= 4) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      commands = commands.filter((cmd: any) => {
+        if (cmd.action !== 'scribble' && cmd.action !== 'scrollTo') return true;
+        if (typeof cmd.targetId === 'string' && cmd.targetId.trim()) return true;
+        const action = cmd.action === 'scribble' ? 'tutor_scribble' : 'tutor_scroll_whiteboard';
+        const catalog = existingIds.slice(-10).join(', '); // last 10 keeps the message short
+        rejected.push({
+          action,
+          reason:
+            `This session has ${existingIds.length} addressable items — ${action} must use targetId. ` +
+            `Available ids (most recent first): ${existingIds.slice().reverse().slice(0, 10).join(', ')}. ` +
+            `Pick the one matching the item you want to reference and retry. ` +
+            `Positional targetItemIndex is no longer accepted once the session has 4+ items. ` +
+            `If pointing at a labeled feature inside the item (object, focal, mass-1, species-shark, ...), also pass targetFeature for precise coordinates.`,
+        });
+        console.warn('[VoiceTutorRealtime] Rejected', action, 'without targetId; session has', existingIds.length, 'items. Catalog:', catalog);
+        onDebugEvent?.('scribble_rejected_no_targetid', `${action} without targetId after ${existingIds.length} items`);
+        return false;
+      });
+    }
 
     // --- Greeting guard: suppress spurious show_problem / show_equation ---
     // If the student's last utterance is a pure greeting (e.g. "hi") and we

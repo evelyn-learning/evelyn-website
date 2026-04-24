@@ -45,6 +45,17 @@ export interface ProjectileMotionProps {
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
+/** See RayDiagramRenderer for documentation. */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / VIEWBOX_W).toFixed(3),
+    'data-feature-cy': (bbox.cy / VIEWBOX_H).toFixed(3),
+    'data-feature-w': (bbox.w / VIEWBOX_W).toFixed(3),
+    'data-feature-h': (bbox.h / VIEWBOX_H).toFixed(3),
+  };
+}
+
 export default function ProjectileMotionRenderer({
   title, v0, angle, y0 = 0, g = 9.8,
   showComponents = true, sampleCount = 5,
@@ -127,12 +138,30 @@ export default function ProjectileMotionRenderer({
         <ArrowMarkers idPrefix="pm-arrow" />
 
         {/* Ground (only along the actual plot width, not the whole pad) */}
-        <line x1={xOffset} y1={sy(0)} x2={xOffset + usedW} y2={sy(0)} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />
+        <g {...feat('ground', { cx: xOffset + usedW / 2, cy: sy(0), w: usedW, h: 4 })}>
+          <line x1={xOffset} y1={sy(0)} x2={xOffset + usedW} y2={sy(0)} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.25} />
+        </g>
         {/* Y-axis */}
-        <line x1={xOffset} y1={yOffset} x2={xOffset} y2={sy(0)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        <g {...feat('y-axis', { cx: xOffset, cy: (yOffset + sy(0)) / 2, w: 4, h: Math.abs(sy(0) - yOffset) })}>
+          <line x1={xOffset} y1={yOffset} x2={xOffset} y2={sy(0)} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        </g>
 
-        {/* Trajectory */}
-        <path d={path} stroke={DIAGRAM_COLORS.primary} strokeWidth={2.5} fill="none" />
+        {/* Trajectory + key points on it. Peak is at t = vy/g (if positive). */}
+        <g {...feat('trajectory', { cx: xOffset + usedW / 2, cy: (yOffset + sy(0)) / 2, w: usedW, h: Math.abs(sy(0) - yOffset) })}>
+          <path d={path} stroke={DIAGRAM_COLORS.primary} strokeWidth={2.5} fill="none" />
+        </g>
+        {/* Launch point feature — at (0, y0) in real-world coords. */}
+        <g {...feat('launch', { cx: sx(0), cy: sy(y0), w: 28, h: 28 })} />
+        {/* Peak feature — at time-of-peak, if it exists above y=0. */}
+        {(() => {
+          const tPeak = vy / g;
+          if (!Number.isFinite(tPeak) || tPeak <= 0) return null;
+          const peakX = vx * tPeak;
+          const peakY = y0 + vy * tPeak - 0.5 * g * tPeak * tPeak;
+          return <g {...feat('peak', { cx: sx(peakX), cy: sy(peakY), w: 28, h: 28 })} />;
+        })()}
+        {/* Landing point — at (range, 0). */}
+        <g {...feat('landing', { cx: sx(range), cy: sy(0), w: 28, h: 28 })} />
         {/* Samples */}
         {samples.map((s, i) => (
           <circle key={i} cx={sx(s.x)} cy={sy(Math.max(0, s.y))} r={3} fill={DIAGRAM_COLORS.primary} stroke="white" strokeWidth={1} />

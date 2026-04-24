@@ -13,6 +13,17 @@ import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
+/** See RayDiagramRenderer for documentation. */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-cy': (bbox.cy / DIAGRAM_VIEWBOX.height).toFixed(3),
+    'data-feature-w': (bbox.w / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-h': (bbox.h / DIAGRAM_VIEWBOX.height).toFixed(3),
+  };
+}
+
 export interface WaveSpec {
   amplitude: number;
   wavelength: number;
@@ -84,11 +95,31 @@ export default function WaveRenderer({
       )}
       <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         {/* Axis */}
-        <line x1={pad.left} y1={axisY} x2={pad.left + plotW} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        <g {...feat('axis', { cx: pad.left + plotW / 2, cy: axisY, w: plotW, h: 4 })}>
+          <line x1={pad.left} y1={axisY} x2={pad.left + plotW} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+          <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} />
+        </g>
 
-        {/* Primary wave */}
-        <path d={pointsFor(wave)} stroke={wave.color || DIAGRAM_COLORS.primary} strokeWidth={2.25} fill="none" />
+        {/* Primary wave — also expose crest and trough features of the
+            first cycle so the tutor can say "circle crest-1" etc. */}
+        <g {...feat('wave', { cx: pad.left + plotW / 2, cy: axisY, w: plotW, h: plotH })}>
+          <path d={pointsFor(wave)} stroke={wave.color || DIAGRAM_COLORS.primary} strokeWidth={2.25} fill="none" />
+        </g>
+        {[0, 1, 2].filter((n) => (n + 0.25) * wave.wavelength <= xExtent).map((n) => {
+          const crestX = sx((n + 0.25) * wave.wavelength);
+          const crestY = sy(wave.amplitude);
+          return (
+            <g key={`crest-${n + 1}`} {...feat(`crest-${n + 1}`, { cx: crestX, cy: crestY, w: 24, h: 24 })} />
+          );
+        })}
+        {[0, 1, 2].filter((n) => (n + 0.75) * wave.wavelength <= xExtent).map((n) => {
+          const troughX = sx((n + 0.75) * wave.wavelength);
+          const troughY = sy(-wave.amplitude);
+          return (
+            <g key={`trough-${n + 1}`} {...feat(`trough-${n + 1}`, { cx: troughX, cy: troughY, w: 24, h: 24 })} />
+          );
+        })}
+
         {/* Secondary wave */}
         {secondary && (
           <path d={pointsFor(secondary)} stroke={secondary.color || DIAGRAM_COLORS.secondary} strokeWidth={2.25} fill="none" strokeDasharray="6 3" />
@@ -105,14 +136,18 @@ export default function WaveRenderer({
           return (
             <g>
               {/* Wavelength bracket */}
-              <line x1={wx1} y1={pad.top + 4} x2={wx2} y2={pad.top + 4} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
-              <line x1={wx1} y1={pad.top + 1} x2={wx1} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
-              <line x1={wx2} y1={pad.top + 1} x2={wx2} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
-              <text x={(wx1 + wx2) / 2} y={pad.top + 18} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={700}>λ = {formatValue(wave.wavelength)}</text>
+              <g {...feat('wavelength', { cx: (wx1 + wx2) / 2, cy: pad.top + 12, w: wx2 - wx1 + 20, h: 24 })}>
+                <line x1={wx1} y1={pad.top + 4} x2={wx2} y2={pad.top + 4} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
+                <line x1={wx1} y1={pad.top + 1} x2={wx1} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
+                <line x1={wx2} y1={pad.top + 1} x2={wx2} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
+                <text x={(wx1 + wx2) / 2} y={pad.top + 18} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={700}>λ = {formatValue(wave.wavelength)}</text>
+              </g>
 
               {/* Amplitude bracket — at the first peak */}
-              <line x1={sx(wave.wavelength / 4) + 6} y1={axisY} x2={sx(wave.wavelength / 4) + 6} y2={sy(wave.amplitude)} stroke={DIAGRAM_COLORS.success} strokeWidth={1.25} />
-              <text x={sx(wave.wavelength / 4) + 10} y={(axisY + sy(wave.amplitude)) / 2} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>A = {formatValue(wave.amplitude)}</text>
+              <g {...feat('amplitude', { cx: sx(wave.wavelength / 4) + 30, cy: (axisY + sy(wave.amplitude)) / 2, w: 60, h: Math.abs(axisY - sy(wave.amplitude)) + 12 })}>
+                <line x1={sx(wave.wavelength / 4) + 6} y1={axisY} x2={sx(wave.wavelength / 4) + 6} y2={sy(wave.amplitude)} stroke={DIAGRAM_COLORS.success} strokeWidth={1.25} />
+                <text x={sx(wave.wavelength / 4) + 10} y={(axisY + sy(wave.amplitude)) / 2} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>A = {formatValue(wave.amplitude)}</text>
+              </g>
             </g>
           );
         })()}

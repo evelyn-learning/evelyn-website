@@ -605,6 +605,22 @@ export type WhiteboardCommand =
       // real teacher circling, underlining, or pointing at something
       // already on the board. Renders as an SVG overlay on top of the
       // target item; does NOT redraw it.
+      //
+      // PREFERRED addressing: targetId + targetFeature. The tutor knows
+      // both from prior tool-call outputs (show_* returns the id) and
+      // from the tool description (each renderer documents its feature
+      // names — "object", "image", "focal", "mass-1", etc.). The client
+      // then resolves targetFeature by reading data-feature / data-
+      // feature-cx / data-feature-cy / data-feature-w / data-feature-h
+      // attributes off the rendered SVG element, so the tutor never has
+      // to guess pixel coordinates.
+      //
+      // Renderer convention: emit attributes of the form
+      //   <g data-feature="object"
+      //      data-feature-cx="0.25" data-feature-cy="0.55"
+      //      data-feature-w="0.08"  data-feature-h="0.25">...</g>
+      // on any labeled / named element that the tutor may want to point
+      // at. All values are fractions of the item's 0-1 coordinate space.
       action: 'scribble';
       /**
        * PRIMARY addressing path: the id assigned to the target item when
@@ -615,6 +631,16 @@ export type WhiteboardCommand =
        */
       targetId?: string;
       /**
+       * Name of a specific labeled feature inside the target item (e.g.
+       * "object", "image", "focal", "mass-1", "species-shark"). When set,
+       * the client resolves it to a region by reading data-feature-*
+       * attributes from the rendered SVG — the tutor does not have to
+       * estimate coordinates. Preferred over `region` for labeled
+       * elements. Each renderer's tool description lists the feature
+       * names it exposes.
+       */
+      targetFeature?: string;
+      /**
        * Fallback addressing path: 1-indexed position of the target item
        * within its page, matching the numbering the student sees. Used
        * only when targetId isn't available. The client also resolves
@@ -622,7 +648,12 @@ export type WhiteboardCommand =
        */
       targetItemIndex?: number;
       shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
-      /** Optional sub-region of the target item, in relative 0-1 coords. */
+      /**
+       * Explicit sub-region of the target item, in relative 0-1 coords.
+       * Usually NOT passed — prefer targetFeature when the element is
+       * labeled. Region is for pointing at something that isn't a named
+       * feature (e.g. "circle this word in a free-form diagram").
+       */
       region?: { x: number; y: number; w: number; h: number };
       color?: string;
       /** Optional callout text drawn near the mark. */

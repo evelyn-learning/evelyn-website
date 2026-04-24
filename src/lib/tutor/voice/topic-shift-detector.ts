@@ -19,14 +19,13 @@
  * trigger multiple synthetic newPages in rapid succession.
  */
 
-// Tuned down from 0.40 after 2026-04-23 session 5 where three clearly
-// distinct topics (inclined plane → pendulum → iron orbital) failed to
-// trigger a single shift. text-embedding-3-small clusters STEM topics
-// around similarity 0.6–0.7 (distance 0.3–0.4), so 0.30 is where a
-// genuine subject pivot actually lands.
-const SHIFT_THRESHOLD = 0.30;  // cosine DISTANCE
+// Tuned again after 2026-04-24 session: wave → shark food web didn't
+// trigger a newPage at 0.30. Empirically "physics topic A → physics
+// topic B" lands around 0.22-0.28 with text-embedding-3-small; 0.25
+// covers it. Cooldown halved so back-to-back subject jumps each fire.
+const SHIFT_THRESHOLD = 0.25;  // cosine DISTANCE
 const EMA_ALPHA = 0.4;         // weight of the latest turn in the signature
-const COOLDOWN_MS = 30_000;    // minimum gap between consecutive shift fires
+const COOLDOWN_MS = 15_000;    // minimum gap between consecutive shift fires
 
 export interface TopicShiftDetectorState {
   signature: Float32Array | null;

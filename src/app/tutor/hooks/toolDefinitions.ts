@@ -1332,12 +1332,13 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'tutor_scribble',
-    description: 'Point at or annotate something ALREADY on the whiteboard — a real teacher circling, underlining, or drawing an arrow to an existing item. Renders as an overlay on the target item; does NOT redraw it. USE THIS when the student asks you to reference, point out, highlight, or emphasize something already shown. Do NOT use this for new content. ADDRESSING: prefer `targetId` — when you drew the item you want to mark, the function_call_output gave you an id like { success: true, id: "showSpringMass-1" }. Pass that same id as targetId here and the client will handle scrolling, page-switching, and item-finding automatically. If you genuinely don\'t remember the id, fall back to targetItemIndex (1-indexed within the current page). REGION: always pass a tight region around the specific thing you\'re pointing at — typically x/y/w/h covering 15–30% of the item. Omit region ONLY if you truly mean the whole item. A default circle on the whole item looks sloppy.',
+    description: 'Point at or annotate something ALREADY on the whiteboard — a real teacher circling, underlining, or drawing an arrow to an existing item. Renders as an overlay on the target item; does NOT redraw it. USE THIS when the student asks you to reference, point out, highlight, or emphasize something already shown. Do NOT use this for new content.\n\nADDRESSING (in strict order of preference):\n1. targetId + targetFeature — when pointing at a LABELED element inside a structured diagram. You learned targetId from the tool result of the show_* call ({ success: true, id: "showRayDiagram-1" }); targetFeature is a named element exposed by that renderer. The client resolves the exact coordinates for you — no guessing. FEATURE NAMES by tool:\n  - show_ray_diagram: "object", "image", "lens" (or "mirror"), "focal" (F), "focalPrime" (F\'), "principalAxis"\n  - show_spring_mass: "wall", "mass" (legacy single-mass), "spring" (legacy), "equilibrium", OR "mass-1", "mass-2", ..., "spring-1", "spring-2", ..., "ground" (chain mode, numbered left-to-right)\n  - show_wave: "crest-1", "crest-2", ..., "trough-1", ..., "wavelength", "amplitude", "axis"\n  - show_food_web: "species-<id>" where <id> is the species id you passed (e.g. "species-shark"), "trophic-<n>" for level labels\n  - show_motion_diagram: "x-panel", "v-panel", "a-panel", "time-axis"\n  - show_projectile_motion: "launch", "peak", "landing", "trajectory", "vx", "vy"\n2. targetId + region — when pointing at an unlabeled sub-area. Pass region as tight 0-1 coordinates.\n3. targetItemIndex (fallback, 1-indexed within current page) — only if you genuinely have no id. Once the session has 4+ items this will be rejected; use targetId.\n\nREGION: omit entirely when targetFeature is set (client computes it). Pass only for unlabeled areas, and keep it tight — typically 15–30% wide and 15–30% tall. A circle that covers the whole item looks sloppy.',
     parameters: {
       type: 'object',
       properties: {
         targetId: { type: 'string', description: 'PREFERRED. The id of the target item as reported in the function_call_output of the show_* call that drew it (e.g. "showSpringMass-1"). Survives page switches and command reordering.' },
-        targetItemIndex: { type: 'number', description: 'FALLBACK ONLY. 1-indexed position within the current page. Use when you don\'t remember the id.' },
+        targetFeature: { type: 'string', description: 'PREFERRED when pointing at a labeled element (object, image, focal, mass-1, species-shark, ...). The renderer exposes these by name; the client computes exact coordinates so you do not have to. See the FEATURE NAMES list in this description for what each tool exposes.' },
+        targetItemIndex: { type: 'number', description: 'FALLBACK ONLY. 1-indexed position within the current page. Rejected once the session has 4+ items — use targetId instead.' },
         shape: { type: 'string', enum: ['circle', 'underline', 'arrow', 'box', 'highlight'], description: 'circle = draw a ring around the region; underline = draw a line beneath text; arrow = draw an arrow pointing at the region from outside; box = rectangle around the region; highlight = semi-transparent yellow fill.' },
         region: {
           type: 'object',
@@ -1347,7 +1348,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             w: { type: 'number', description: 'Region width as a fraction 0-1. Typically 0.15–0.30 for a targeted mark.' },
             h: { type: 'number', description: 'Region height as a fraction 0-1. Typically 0.15–0.30 for a targeted mark.' },
           },
-          description: 'Sub-region of the target item to mark. ALMOST ALWAYS pass this with a tight rectangle around the specific thing (word, number, element) you are pointing at. Only omit if you truly want to mark the entire item.',
+          description: 'Sub-region of the target item to mark. OMIT when targetFeature is set — the client computes region from the feature\'s actual bounding box. Pass a tight rectangle only for unlabeled areas.',
         },
         color: { type: 'string', description: 'CSS color. Defaults to amber (#f59e0b) which reads well on most backgrounds.' },
         label: { type: 'string', description: 'Optional short text (≤3 words) drawn near the annotation — e.g. "here" or "this step". Keep it brief; long labels overlap adjacent scribbles.' },
@@ -1959,6 +1960,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
 
   if (funcName === 'tutor_scribble') {
     const targetId = typeof funcArgs.targetId === 'string' && funcArgs.targetId.trim() ? funcArgs.targetId.trim() : undefined;
+    const targetFeature = typeof funcArgs.targetFeature === 'string' && funcArgs.targetFeature.trim() ? funcArgs.targetFeature.trim() : undefined;
     const rawIdx = Number(funcArgs.targetItemIndex);
     const idx = Number.isFinite(rawIdx) && rawIdx >= 1 ? rawIdx : undefined;
     // Need at least ONE addressing path. Reject the tool call otherwise —
@@ -1970,6 +1972,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     return {
       action: 'scribble',
       ...(targetId ? { targetId } : {}),
+      ...(targetFeature ? { targetFeature } : {}),
       ...(idx !== undefined ? { targetItemIndex: idx } : {}),
       shape: shape as 'circle' | 'underline' | 'arrow' | 'box' | 'highlight',
       region: region ? {

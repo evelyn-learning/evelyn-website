@@ -25,6 +25,25 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
 
+/**
+ * Build the data-feature-* attribute set used by tutor_scribble to locate
+ * a labeled element without the tutor having to guess coordinates. Inputs
+ * are the feature's bounding box in the renderer's pixel space; the
+ * helper converts them to 0-1 fractions of the SVG viewBox. Consumers:
+ *   - live: WhiteboardCanvas.ScribbleOverlays reads these via querySelector
+ *   - PDF:  whiteboard-capture.overlayScribbles reads them from the
+ *     captured SVG string via DOMParser
+ */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-cy': (bbox.cy / DIAGRAM_VIEWBOX.height).toFixed(3),
+    'data-feature-w': (bbox.w / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-h': (bbox.h / DIAGRAM_VIEWBOX.height).toFixed(3),
+  };
+}
+
 export interface RayDiagramProps {
   title?: string;
   type: 'converging' | 'diverging' | 'concave-mirror' | 'convex-mirror';
@@ -100,10 +119,14 @@ export default function RayDiagramRenderer({
         </defs>
 
         {/* Optical axis */}
-        <line x1={30} y1={axisY} x2={W - 30} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} strokeDasharray="4 3" />
+        <g {...feat('principalAxis', { cx: W / 2, cy: axisY, w: W - 60, h: 10 })}>
+          <line x1={30} y1={axisY} x2={W - 30} y2={axisY} stroke={DIAGRAM_COLORS.axis} strokeWidth={1} strokeDasharray="4 3" />
+        </g>
 
         {/* The element itself (lens / mirror visual) */}
-        {renderElement(type, cx, axisY)}
+        <g {...feat(isMirror ? 'mirror' : 'lens', { cx, cy: axisY, w: 34, h: 120 })}>
+          {renderElement(type, cx, axisY)}
+        </g>
 
         {/* Focal point markers + labels.
             Lens: F on object side (left), F' on image side (right).
@@ -111,34 +134,51 @@ export default function RayDiagramRenderer({
             Convex mirror: F behind mirror (right), shown for reference (virtual). */}
         {!isMirror && (
           <>
-            <FocalMark x={fLeftX} y={axisY} label="F" />
-            <FocalMark x={fRightX} y={axisY} label="F'" />
+            <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
+              <FocalMark x={fLeftX} y={axisY} label="F" />
+            </g>
+            <g {...feat('focalPrime', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
+              <FocalMark x={fRightX} y={axisY} label="F'" />
+            </g>
           </>
         )}
         {type === 'concave-mirror' && (
           <>
-            <FocalMark x={fLeftX} y={axisY} label="F" />
+            <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
+              <FocalMark x={fLeftX} y={axisY} label="F" />
+            </g>
             {/* C = center of curvature at 2f */}
-            <FocalMark x={cx - 2 * Math.abs(f) * pxPerCm} y={axisY} label="C" muted />
+            <g {...feat('centerOfCurvature', { cx: cx - 2 * Math.abs(f) * pxPerCm, cy: axisY, w: 22, h: 22 })}>
+              <FocalMark x={cx - 2 * Math.abs(f) * pxPerCm} y={axisY} label="C" muted />
+            </g>
           </>
         )}
         {type === 'convex-mirror' && (
-          <FocalMark x={fRightX} y={axisY} label="F" muted />
+          <g {...feat('focal', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
+            <FocalMark x={fRightX} y={axisY} label="F" muted />
+          </g>
         )}
 
         {/* Object arrow. */}
-        <line
-          x1={objX} y1={axisY}
-          x2={objX} y2={objTopY}
-          stroke={DIAGRAM_COLORS.secondary}
-          strokeWidth={2.5}
-          markerEnd="url(#rd-arrow-obj)"
-        />
-        {showLabels && (
-          <text x={objX - 4} y={objTopY - 6} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="end" fontWeight={700}>
-            Object
-          </text>
-        )}
+        <g {...feat('object', {
+          cx: objX,
+          cy: (axisY + objTopY) / 2,
+          w: 44,
+          h: (axisY - objTopY) + 24,
+        })}>
+          <line
+            x1={objX} y1={axisY}
+            x2={objX} y2={objTopY}
+            stroke={DIAGRAM_COLORS.secondary}
+            strokeWidth={2.5}
+            markerEnd="url(#rd-arrow-obj)"
+          />
+          {showLabels && (
+            <text x={objX - 4} y={objTopY - 6} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="end" fontWeight={700}>
+              Object
+            </text>
+          )}
+        </g>
 
         {/* Principal rays. */}
         {renderRays({
@@ -147,8 +187,11 @@ export default function RayDiagramRenderer({
         })}
 
         {/* Image arrow. Dashed for virtual, solid for real. */}
-        {Number.isFinite(di) && (
-          <g>
+        {Number.isFinite(di) && (() => {
+          const imageCy = (axisY + imageTopY) / 2;
+          const imageH = Math.abs(imageTopY - axisY) + 24;
+          return (
+          <g {...feat('image', { cx: imageX, cy: imageCy, w: 80, h: imageH })}>
             <line
               x1={imageX} y1={axisY}
               x2={imageX} y2={imageTopY}
@@ -171,7 +214,8 @@ export default function RayDiagramRenderer({
               );
             })()}
           </g>
-        )}
+          );
+        })()}
 
         {/* Readout — bottom-left corner. */}
         <g transform={`translate(18, ${H - 74})`}>

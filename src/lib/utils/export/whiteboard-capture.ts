@@ -174,6 +174,14 @@ export async function drawCapturedSvg(pdf: any, svgString: string, x: number, y:
 export interface ScribbleInput {
   shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
   region?: { x: number; y: number; w?: number; h?: number };
+  /**
+   * Name of a data-feature exposed by the target renderer. When set, the
+   * PDF overlay looks up [data-feature="<name>"] in the captured SVG and
+   * reads data-feature-cx / -cy / -w / -h (all 0-1 fractions) to compute
+   * the mark's region. Takes priority over `region`. Mirrors the live
+   * ScribbleOverlays behavior so the PDF matches what the student saw.
+   */
+  targetFeature?: string;
   color?: string;
   label?: string;
 }
@@ -198,16 +206,40 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
     const { width: vw, height: vh } = parseSvgDimensions(svgString);
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
+    // Resolve data-feature references against the captured SVG. Same
+    // resolution rule as the live renderer in WhiteboardCanvas.
+    const resolveFeature = (name: string): { x: number; y: number; w: number; h: number } | null => {
+      const safe = name.replace(/"/g, '\\"');
+      const el = svg.querySelector(`[data-feature="${safe}"]`);
+      if (!el) return null;
+      const cx = Number(el.getAttribute('data-feature-cx'));
+      const cy = Number(el.getAttribute('data-feature-cy'));
+      const w = Number(el.getAttribute('data-feature-w'));
+      const h = Number(el.getAttribute('data-feature-h'));
+      if (![cx, cy, w, h].every(Number.isFinite)) return null;
+      return {
+        x: Math.max(0, cx - w / 2),
+        y: Math.max(0, cy - h / 2),
+        w: Math.min(1, w),
+        h: Math.min(1, h),
+      };
+    };
+
     for (let i = 0; i < scribbles.length; i++) {
       const s = scribbles[i];
       const color = s.color || '#f59e0b';
-      // When the tutor gave no region, use a small centered mark (30%×25%)
-      // instead of covering 90% of the item — matches the live renderer.
+      // Region precedence: feature-resolved > tutor-provided region >
+      // small-centered default. Matches the live ScribbleOverlays.
+      const resolved = s.targetFeature ? resolveFeature(s.targetFeature) : null;
       const hasRegion = !!s.region;
-      const rx = (hasRegion ? (s.region?.x ?? 0) : 0.35) * vw;
-      const ry = (hasRegion ? (s.region?.y ?? 0) : 0.40) * vh;
-      const rw = (hasRegion ? (s.region?.w ?? (1 - (s.region?.x ?? 0))) : 0.30) * vw;
-      const rh = (hasRegion ? (s.region?.h ?? (1 - (s.region?.y ?? 0))) : 0.25) * vh;
+      const rxFrac = resolved ? resolved.x : (hasRegion ? (s.region?.x ?? 0) : 0.35);
+      const ryFrac = resolved ? resolved.y : (hasRegion ? (s.region?.y ?? 0) : 0.40);
+      const rwFrac = resolved ? resolved.w : (hasRegion ? (s.region?.w ?? (1 - (s.region?.x ?? 0))) : 0.30);
+      const rhFrac = resolved ? resolved.h : (hasRegion ? (s.region?.h ?? (1 - (s.region?.y ?? 0))) : 0.25);
+      const rx = rxFrac * vw;
+      const ry = ryFrac * vh;
+      const rw = rwFrac * vw;
+      const rh = rhFrac * vh;
       const cx = rx + rw / 2;
       const cy = ry + rh / 2;
 

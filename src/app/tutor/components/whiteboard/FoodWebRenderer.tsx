@@ -15,6 +15,17 @@ import { DIAGRAM_VIEWBOX, truncate } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
+/** See RayDiagramRenderer for documentation. */
+function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
+  return {
+    'data-feature': name,
+    'data-feature-cx': (bbox.cx / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-cy': (bbox.cy / DIAGRAM_VIEWBOX.height).toFixed(3),
+    'data-feature-w': (bbox.w / DIAGRAM_VIEWBOX.width).toFixed(3),
+    'data-feature-h': (bbox.h / DIAGRAM_VIEWBOX.height).toFixed(3),
+  };
+}
+
 export interface FoodWebSpecies {
   id: string;
   label: string;
@@ -130,14 +141,17 @@ export default function FoodWebRenderer({
           );
         })}
 
-        {/* Species nodes */}
+        {/* Species nodes — each exposes data-feature="species-<id>" so
+            the tutor can say "circle the shark" by passing
+            targetFeature: "species-shark" and have the client figure out
+            the coordinates automatically. */}
         {species.map((s) => {
           const p = positions.get(s.id)!;
           const label = truncate(s.label, 14);
           const rectW = Math.max(70, label.length * 7 + 20);
           const rectH = 34;
           return (
-            <g key={s.id}>
+            <g key={s.id} {...feat(`species-${s.id}`, { cx: p.x, cy: p.y, w: rectW, h: rectH })}>
               <rect x={p.x - rectW / 2} y={p.y - rectH / 2} width={rectW} height={rectH} rx={6}
                 fill={withAlpha(p.color, 0.18)} stroke={p.color} strokeWidth={1.75} />
               {s.icon && (
