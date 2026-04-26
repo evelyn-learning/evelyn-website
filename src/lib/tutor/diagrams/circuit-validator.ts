@@ -66,6 +66,119 @@ function buildAdjacency(components: CircuitComponent[]): Map<string, Array<{ to:
   return adj;
 }
 
+/**
+ * Mirror of the renderer's chainBatteries (CircuitRenderer.tsx). Finds
+ * the two endpoints of a series chain of batteries, or null if they
+ * don't form a simple chain. Kept in sync intentionally — if the
+ * renderer's source-rung detection diverges from the validator's,
+ * we'll get bugs where the validator passes but the renderer can't
+ * lay out the circuit.
+ */
+function chainBatteryEndpoints(batteries: CircuitComponent[]): { start: string; end: string } | null {
+  if (batteries.length === 0) return null;
+  if (batteries.length === 1) return { start: batteries[0].from, end: batteries[0].to };
+  const degree = new Map<string, number>();
+  for (const b of batteries) {
+    degree.set(b.from, (degree.get(b.from) ?? 0) + 1);
+    degree.set(b.to, (degree.get(b.to) ?? 0) + 1);
+  }
+  const endpoints = [...degree.entries()].filter(([, d]) => d === 1).map(([n]) => n);
+  if (endpoints.length !== 2) return null;
+  const [start] = endpoints;
+  const used = new Set<CircuitComponent>();
+  let current = start;
+  while (used.size < batteries.length) {
+    const next = batteries.find((b) => !used.has(b) && (b.from === current || b.to === current));
+    if (!next) break;
+    current = next.from === current ? next.to : next.from;
+    used.add(next);
+  }
+  if (used.size !== batteries.length) return null;
+  return { start, end: current };
+}
+
+/**
+ * Mirror of the renderer's findSimplePath. DFS from start to end through
+ * the given components, never revisiting nodes or re-using edges. Returns
+ * the list of components on the path, or null if no path exists.
+ */
+function findSimplePath(
+  components: CircuitComponent[],
+  start: string,
+  end: string,
+): CircuitComponent[] | null {
+  if (start === end) return null;
+  const adj = new Map<string, Array<{ to: string; comp: CircuitComponent }>>();
+  for (const c of components) {
+    if (!adj.has(c.from)) adj.set(c.from, []);
+    if (!adj.has(c.to)) adj.set(c.to, []);
+    adj.get(c.from)!.push({ to: c.to, comp: c });
+    adj.get(c.to)!.push({ to: c.from, comp: c });
+  }
+  const visitedNodes = new Set<string>();
+  const visitedEdges = new Set<CircuitComponent>();
+  function dfs(node: string): CircuitComponent[] | null {
+    if (node === end) return [];
+    visitedNodes.add(node);
+    for (const { to, comp } of adj.get(node) || []) {
+      if (visitedEdges.has(comp)) continue;
+      if (visitedNodes.has(to) && to !== end) continue;
+      visitedEdges.add(comp);
+      const rest = dfs(to);
+      if (rest !== null) return [comp, ...rest];
+      visitedEdges.delete(comp);
+    }
+    visitedNodes.delete(node);
+    return null;
+  }
+  return dfs(start);
+}
+
+/**
+ * Layout-feasibility check. Mirrors the renderer's iterative
+ * path-decomposition: from the battery's chain endpoints A and B,
+ * repeatedly carve out simple paths through the non-battery
+ * components. Anything left over after all paths are extracted is
+ * what the renderer would mark as "trulyDangling" and the rendered
+ * output would show as "Disconnected from main circuit."
+ *
+ * This catches cases where the netlist passes BFS reachability and
+ * has every node degree ≥ 2 but still can't be decomposed into
+ * parallel rungs. Example from the 2026-04-26 session:
+ *   battery: A↔B
+ *   R1: A↔B
+ *   R2: C↔D
+ *   wire: A↔C
+ *   wire: B↔D
+ * BFS reaches every node, every node has degree ≥ 2, but the
+ * iterative simple-path decomposition consumes wire(A↔C) and
+ * wire(B↔D) on the first parallel branch, leaving R2(C↔D) with no
+ * connection to A or B. The renderer would dangle R2.
+ */
+function layoutWouldDangle(components: CircuitComponent[]): { ok: true } | { ok: false; danglers: CircuitComponent[] } {
+  const batteries = components.filter((c) => c.type === 'battery');
+  if (batteries.length === 0) return { ok: true };  // No source — skip; out of scope.
+  const endpoints = chainBatteryEndpoints(batteries);
+  if (!endpoints) return { ok: true };  // Multi-battery non-chain: renderer warns but doesn't dangle.
+  const { start: A, end: B } = endpoints;
+  // Voltmeters and galvanometers are sampling-only — they don't sit on
+  // the main current path and the renderer treats them as bridges, not
+  // as rung components. Excluding them from the path-decomposition
+  // mirrors the renderer's actual layout pass.
+  const remaining = new Set(
+    components.filter((c) =>
+      c.type !== 'battery' && c.type !== 'voltmeter' && c.type !== 'galvanometer',
+    ),
+  );
+  while (remaining.size > 0) {
+    const path = findSimplePath([...remaining], A, B);
+    if (!path || path.length === 0) break;
+    for (const c of path) remaining.delete(c);
+  }
+  if (remaining.size === 0) return { ok: true };
+  return { ok: false, danglers: [...remaining] };
+}
+
 /** True if every component is reachable from at least one battery via
  * non-self-loops. Disconnected components fail this check. */
 function isReachableFromBattery(components: CircuitComponent[]): boolean {
@@ -214,6 +327,29 @@ export function validateCircuit(
         `Node "${degreeCheck.node}" has degree 1 — it's only connected to one component (${degreeCheck.comp.label || degreeCheck.comp.type}). ` +
         `Every wire endpoint must connect to at least one other component. ` +
         `When two resistors are in parallel between the battery's terminals, BOTH endpoints of BOTH resistors must reference the SAME two node strings as the battery — do not invent fresh node names for each parallel branch.`,
+    };
+  }
+
+  // Layout-feasibility check. Even after passing reachability + degree
+  // checks, a netlist can still be unrenderable if its parallel branches
+  // require intermediate wires that the renderer's iterative simple-path
+  // decomposition consumes on the first branch, leaving later branches
+  // disconnected. This mirrors the renderer's algorithm exactly so
+  // anything the renderer would mark "Disconnected from main circuit"
+  // gets rejected at validation time and the brain re-emits.
+  const layout = layoutWouldDangle(components);
+  if (!layout.ok) {
+    const labels = layout.danglers.map((c) => c.label || c.type).join(', ');
+    return {
+      ok: false,
+      reason:
+        `The netlist can't be laid out as parallel rungs: components [${labels}] ` +
+        `would be left disconnected after the renderer extracts the first parallel branch. ` +
+        `This usually means parallel branches share intermediate wires whose endpoints ` +
+        `don't all match the battery's terminals. Rewrite so each parallel component ` +
+        `goes DIRECTLY between the battery's two terminal node strings — no intermediate ` +
+        `nodes per branch (the only exception is when a series element like an ammeter or ` +
+        `switch must be inline, in which case use exactly ONE mid-node for that one branch).`,
     };
   }
 

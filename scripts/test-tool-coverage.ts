@@ -19,6 +19,12 @@
  * Run: npx tsx scripts/test-tool-coverage.ts
  *      npx tsx scripts/test-tool-coverage.ts --tool show_circuit
  *      npx tsx scripts/test-tool-coverage.ts --tool show_circuit --verbose
+ *      npx tsx scripts/test-tool-coverage.ts --tool show_circuit --iterations 3
+ *
+ * --iterations N: run each prompt N times and require ALL N to pass to
+ * mark the prompt green. Catches stochastic emission bugs where the
+ * brain sometimes emits a renderer-friendly netlist and sometimes
+ * doesn't. Default 1.
  */
 import { readFileSync } from 'fs';
 import { streamBrainTurn, type BrainToolCall } from '../src/lib/tutor/voice/claude-brain';
@@ -213,6 +219,10 @@ async function main() {
     const i = args.indexOf('--limit');
     return i >= 0 ? parseInt(args[i + 1], 10) : Infinity;
   })();
+  const iterations = (() => {
+    const i = args.indexOf('--iterations');
+    return i >= 0 ? Math.max(1, parseInt(args[i + 1], 10)) : 1;
+  })();
 
   const sets = parsePromptDoc('docs/voice-tutor-validator-test-prompts.md');
   const filtered = toolFilter ? sets.filter((s) => s.tool === toolFilter) : sets;
@@ -249,30 +259,53 @@ async function main() {
       const prompt = prompts[i];
       summary.total++;
       try {
-        const res = await runOnePrompt(set.tool, prompt);
+        // Run N iterations of the same prompt to catch stochastic
+        // emissions. Brain output is non-deterministic — the same prompt
+        // can produce a renderer-friendly netlist on one run and a
+        // renderer-hostile one on the next. Pass = ALL iterations passed.
+        const runs: PromptTestResult[] = [];
+        for (let it = 0; it < iterations; it++) {
+          runs.push(await runOnePrompt(set.tool, prompt));
+        }
+        // Aggregate: prompt is green iff every iteration passed.
+        const allPassed = runs.every((r) =>
+          r.emittedAny &&
+          r.emittedExpected &&
+          (r.validator === null || r.validator.ok),
+        );
+        const firstFailure = runs.find((r) =>
+          !r.emittedAny ||
+          !r.emittedExpected ||
+          (r.validator !== null && !r.validator.ok),
+        );
+        const passCount = runs.filter((r) =>
+          r.emittedAny &&
+          r.emittedExpected &&
+          (r.validator === null || r.validator.ok),
+        ).length;
+        const repr = firstFailure ?? runs[0];
         const status = (() => {
-          if (!res.emittedAny) return '✗ NO_TOOL_CALL';
-          if (!res.emittedExpected) return `✗ WRONG_TOOL [${res.toolNames.join(', ')}]`;
-          if (res.validator === null) return '◯ NO_VALIDATOR';
-          if (!res.validator.ok) return `✗ VALIDATOR_FAIL`;
+          if (!repr.emittedAny) return '✗ NO_TOOL_CALL';
+          if (!repr.emittedExpected) return `✗ WRONG_TOOL [${repr.toolNames.join(', ')}]`;
+          if (repr.validator === null) return '◯ NO_VALIDATOR';
+          if (!repr.validator.ok) return `✗ VALIDATOR_FAIL`;
           return '✓ PASS';
         })();
-        const promptShort = prompt.length > 60 ? prompt.slice(0, 60) + '…' : prompt;
-        console.log(`  [${i + 1}/${prompts.length}] ${status} (${res.ms}ms) ${promptShort}`);
-        if (res.emittedExpected) summary.emittedExpected++;
-        if (res.validator?.ok) summary.validatorPassed++;
-        if (res.validator === null && res.emittedExpected) summary.validatorMissing++;
-        const isFailure =
-          !res.emittedAny ||
-          !res.emittedExpected ||
-          (res.validator !== null && !res.validator.ok);
-        if (isFailure) {
-          summary.failures.push(res);
-          if (res.validator && !res.validator.ok) {
-            console.log(`        reason: ${res.validator.reason}`);
+        const itTag = iterations > 1 ? ` [${passCount}/${iterations}]` : '';
+        const promptShort = prompt.length > 55 ? prompt.slice(0, 55) + '…' : prompt;
+        const totalMs = runs.reduce((s, r) => s + r.ms, 0);
+        console.log(`  [${i + 1}/${prompts.length}]${itTag} ${status} (${totalMs}ms) ${promptShort}`);
+        if (allPassed) {
+          summary.emittedExpected++;
+          if (repr.validator?.ok) summary.validatorPassed++;
+          if (repr.validator === null) summary.validatorMissing++;
+        } else {
+          summary.failures.push(repr);
+          if (repr.validator && !repr.validator.ok) {
+            console.log(`        reason: ${repr.validator.reason}`);
           }
-          if (verbose && res.expectedToolArgs) {
-            console.log(`        args: ${JSON.stringify(res.expectedToolArgs).slice(0, 400)}`);
+          if (verbose && repr.expectedToolArgs) {
+            console.log(`        args: ${JSON.stringify(repr.expectedToolArgs).slice(0, 400)}`);
           }
         }
       } catch (err) {
