@@ -94,14 +94,21 @@ export function validateSpringMass(input: SpringMassInput): SpringMassValidation
       return { ok: false, reason: 'Chain has no masses. A spring-mass system needs at least one mass.' };
     }
 
-    // Endpoints must be wall or mass (a spring as an endpoint dangles).
+    // Spring-as-endpoint is allowed as long as the chain has at least one
+    // wall (already verified above). A textbook left-to-right "spring →
+    // mass → wall" rendering is a legitimate request even though the
+    // spring's leftmost end is conceptually free; the wallCount ≥ 1 check
+    // already guarantees the chain is anchored somewhere. Reject only the
+    // truly degenerate case where BOTH endpoints are springs (chain
+    // dangles on both ends despite having an interior wall) — that's
+    // visually ambiguous.
     const firstType = elements[0].type;
     const lastType = elements[elements.length - 1].type;
-    if (firstType === 'spring') {
-      return { ok: false, reason: 'Chain starts with a spring. The leftmost element must be a wall or a mass, otherwise the spring has nothing to anchor against.' };
-    }
-    if (lastType === 'spring') {
-      return { ok: false, reason: 'Chain ends with a spring. The rightmost element must be a wall or a mass, otherwise the spring has nothing to anchor against.' };
+    if (firstType === 'spring' && lastType === 'spring') {
+      return {
+        ok: false,
+        reason: 'Chain has springs at BOTH endpoints. At least one end must be a wall or a mass, otherwise both ends dangle in space and the chain is visually ambiguous.',
+      };
     }
 
     return { ok: true };

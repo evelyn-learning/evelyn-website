@@ -51,17 +51,28 @@ export function validateEnergyBars(input: EnergyBarsInput): EnergyBarsValidation
     }
   }
 
-  // No negative energies. KE, PE (relative to chosen zero), spring PE, and
-  // thermal-loss are all conventionally non-negative in this chart.
+  // KE, spring PE, and thermal-loss are conventionally non-negative.
+  // PE is allowed to be negative when the prompt explicitly chooses a
+  // reference where the system descends below it (e.g. "use the cliff
+  // edge as PE = 0; pit bottom is below"). Rejecting negative PE
+  // outright forces the brain to pick a different reference even when
+  // the student asked for one — so we only reject KE/spring/thermal.
   for (const p of positions) {
-    for (const k of ['ke', 'pe', 'spring', 'thermal'] as const) {
+    for (const k of ['ke', 'spring', 'thermal'] as const) {
       const v = p[k];
       if (v !== undefined && !isNonNegative(v)) {
         return {
           ok: false,
-          reason: `Position "${p.label}" has a negative ${k} (${v}). Energy components in this chart must be ≥ 0. Re-emit with non-negative values; if you need to indicate a different reference height, choose a zero so PE is non-negative throughout.`,
+          reason: `Position "${p.label}" has a negative ${k} (${v}). KE, spring PE, and thermal energy cannot be negative — they're not reference-relative. Re-emit with ${k} ≥ 0.`,
         };
       }
+    }
+    // PE: allowed below zero, but reject NaN / non-finite.
+    if (p.pe !== undefined && (typeof p.pe !== 'number' || !isFinite(p.pe))) {
+      return {
+        ok: false,
+        reason: `Position "${p.label}" has a non-finite pe (${p.pe}). Use a real number; PE may be negative when the reference height is above the system's current position.`,
+      };
     }
   }
 

@@ -68,27 +68,45 @@ export function validateFlowchart(input: FlowchartInput): FlowchartValidationRes
     incoming.get(e.to)!.push({ from: e.from, idx: i });
   }
 
-  // Loop-back rule: if any node is the target of more than one incoming
-  // edge AND it's NOT a decision node, AND the second incoming edge
-  // comes from "later" in the topological flow (a back-edge), it's
-  // probably a loop targeting the body instead of the condition check.
-  // Concretely: a process or io node with ≥2 incoming edges is suspect
-  // unless one of the senders is the start. We flag the case where a
-  // process/io receives a back-edge from a decision (the decision should
-  // loop back to the prior condition node, not to the body it just ran).
+  // Loop-back rule. Distinguishes WHILE-loop bugs from valid DO-WHILE
+  // topology:
+  //
+  //   while:    start → decision → body → decision  ← body has ONE
+  //                                                    incoming edge
+  //                                                    (from decision).
+  //             A back-edge decision→body in this shape would put a
+  //             SECOND incoming edge into body, ALSO from the decision.
+  //             That's a bug — the body would re-run without re-
+  //             evaluating the exit condition.
+  //
+  //   do-while: start → body → decision → body      ← body has TWO
+  //                                                    incoming edges:
+  //                                                    one from start
+  //                                                    (non-decision),
+  //                                                    one from
+  //                                                    decision (back).
+  //             This is correct do-while semantics.
+  //
+  // Heuristic: a process/io with ≥2 incoming edges is buggy ONLY when
+  // ALL of its incoming edges come from decision nodes. If it has at
+  // least one non-decision incoming edge (from the start path), the
+  // second decision incoming is the do-while back-edge and should be
+  // allowed.
   for (const [toId, ins] of incoming.entries()) {
     if (ins.length < 2) continue;
     const target = byId.get(toId)!;
     if (target.type === 'decision' || target.type === 'start' || target.type === 'end') continue;
-    // process / io with multiple incoming edges. Check if any sender is a decision.
     const decisionSenders = ins.filter((e) => byId.get(e.from)?.type === 'decision');
-    if (decisionSenders.length > 0) {
-      const senderIds = decisionSenders.map((e) => `"${e.from}"`).join(', ');
-      return {
-        ok: false,
-        reason: `Loop-back targets a non-decision node: ${senderIds} → "${toId}" (a ${target.type} node). Loop-back edges from a decision should target the condition-check (decision) node, not the loop body — otherwise the loop body re-runs without re-evaluating the exit condition. Re-route the loop edge to the decision node.`,
-      };
-    }
+    if (decisionSenders.length === 0) continue;  // No decision back-edge — not our case.
+    const nonDecisionSenders = ins.filter((e) => byId.get(e.from)?.type !== 'decision');
+    if (nonDecisionSenders.length > 0) continue;  // do-while topology — allow.
+    // Pure-decision incoming: the body is being re-run from the decision
+    // without re-checking the condition. while-loop bug.
+    const senderIds = decisionSenders.map((e) => `"${e.from}"`).join(', ');
+    return {
+      ok: false,
+      reason: `Loop-back targets a non-decision node: ${senderIds} → "${toId}" (a ${target.type} node) and the body has no other incoming edge from the start path. For a WHILE loop, the back-edge must target the decision node so the condition is re-checked. For a DO-WHILE loop, the body should also have an incoming edge from the start path before the decision.`,
+    };
   }
 
   return { ok: true };
