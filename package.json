@@ -58,7 +58,7 @@
     "socket.io-client": "^4.8.3",
     "svg2pdf.js": "^2.7.0",
     "tailwind-merge": "^3.0.1",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "zod": "^3.24.0",
     "zustand": "^5.0.10"
   },
@@ -85,6 +85,15 @@
   "overrides": {
     "fast-xml-parser": "^5.3.6",
     "immutable": "^3.8.3",
-    "minimatch": "^3.1.4"
+    "minimatch": "^3.1.4",
+    "exceljs": {
+      "uuid": "^14.0.0"
+    },
+    "next-auth": {
+      "uuid": "^14.0.0"
+    },
+    "next": {
+      "postcss": "^8.5.10"
+    }
   }
 }
