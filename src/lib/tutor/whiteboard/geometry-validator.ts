@@ -83,6 +83,75 @@ function round2(n: number): number {
 }
 
 /**
+ * Try to parse the numeric value out of a length-like label such as
+ * "5", "√13", "sqrt(13)", "b = √13", "AB = 4". Returns null when the
+ * label is not interpretable as a length (e.g. plain "AB", "side a",
+ * "angle θ"), so we leave those untouched.
+ */
+function parseLengthLabel(label: string): number | null {
+  if (!label) return null;
+  const cleaned = label.trim();
+  // Take the rightmost expression after a "=" if present, e.g. "b = √13"
+  // → "√13". This handles the LLM's occasional "AB = 5" style.
+  const afterEq = cleaned.includes('=') ? cleaned.split('=').pop()!.trim() : cleaned;
+  // sqrt(N) or sqrt N
+  const sqrtFn = afterEq.match(/^sqrt\s*\(?\s*(\d+(?:\.\d+)?)\s*\)?$/i);
+  if (sqrtFn) return Math.sqrt(parseFloat(sqrtFn[1]));
+  // √N
+  const sqrtSym = afterEq.match(/^√\s*(\d+(?:\.\d+)?)$/);
+  if (sqrtSym) return Math.sqrt(parseFloat(sqrtSym[1]));
+  // Plain number (possibly decimal)
+  const num = afterEq.match(/^-?\d+(?:\.\d+)?$/);
+  if (num) return parseFloat(afterEq);
+  return null;
+}
+
+/**
+ * Format a numeric distance as a clean length label. Uses the integer
+ * form when possible, an exact √N form when the squared value is a
+ * positive integer, and a 2dp decimal otherwise.
+ */
+function formatLengthLabel(value: number): string {
+  if (value <= 0) return String(round2(value));
+  if (Number.isInteger(value)) return String(value);
+  const squared = value * value;
+  const roundedSq = Math.round(squared);
+  if (Math.abs(squared - roundedSq) < 1e-6 && roundedSq > 0) {
+    return `√${roundedSq}`;
+  }
+  return String(round2(value));
+}
+
+/**
+ * Recompute segment-length labels from the actual point coordinates.
+ * If the label parses as a length and disagrees with the computed
+ * distance by more than 1%, replace it with the correct value. Labels
+ * that aren't length-like (e.g. "side a", "AB", or empty) are left as-is.
+ */
+function fixSegmentLengthLabels(cmd: GeometryCommand, pointMap: Map<string, GeoPoint>): void {
+  const segments = cmd.segments || [];
+  for (const seg of segments) {
+    if (!seg.label) continue;
+    const a = pointMap.get(seg.from);
+    const b = pointMap.get(seg.to);
+    if (!a || !b) continue;
+    // Preserve a leading prefix like "b = " so the label stays in its
+    // original form (the LLM often uses "side-name = value"). We rewrite
+    // only the value part.
+    const eqIdx = seg.label.indexOf('=');
+    const prefix = eqIdx >= 0 ? seg.label.slice(0, eqIdx + 1) + ' ' : '';
+    const valuePart = eqIdx >= 0 ? seg.label.slice(eqIdx + 1).trim() : seg.label.trim();
+    const claimed = parseLengthLabel(valuePart);
+    if (claimed === null) continue;  // Not a length label — leave alone.
+    const actual = dist(a, b);
+    if (actual === 0) continue;
+    if (Math.abs(claimed - actual) / actual <= 0.01) continue;  // Within 1%, OK.
+    const corrected = formatLengthLabel(actual);
+    seg.label = prefix + corrected;
+  }
+}
+
+/**
  * Validate and fix a showGeometry command.
  * Returns the (possibly modified) command.
  */
@@ -106,6 +175,12 @@ export function validateGeometryCommand(cmd: GeometryCommand): GeometryCommand {
 
   // 1. Fix triangles with incorrect geometry
   fixTriangleGeometry(result, pointMap);
+
+  // 1b. Recompute segment-length labels from coordinates. Catches bugs
+  // like Sonnet labeling BC = √5 when the actual distance is √13. We
+  // trust the points (which the model usually gets right) over the
+  // labels (which it sometimes computes wrong).
+  fixSegmentLengthLabels(result, pointMap);
 
   // 2. Ensure all polygon vertices have labels
   ensureVertexLabels(result, pointMap);

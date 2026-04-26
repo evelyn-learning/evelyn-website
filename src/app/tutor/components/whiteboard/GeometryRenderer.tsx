@@ -78,6 +78,17 @@ function mathToPixelX(range: { x: [number, number] }, dist: number): number {
   return (dist / xSpan) * SVG_WIDTH;
 }
 
+/** Convert a math-unit distance to pixel distance (y-axis scale). Used to
+ *  draw circles as ellipses when the SVG aspect ratio doesn't match the
+ *  math viewport — without this, "radius 5" maps to one pixel value on
+ *  the x-axis and a different one on the y-axis, and points at math-
+ *  distance 5 from the center don't fall on the rendered circle outline.
+ */
+function mathToPixelY(range: { y: [number, number] }, dist: number): number {
+  const ySpan = range.y[1] - range.y[0] || 1;
+  return (dist / ySpan) * SVG_HEIGHT;
+}
+
 // ─── Sub-renderers ───────────────────────────────────────────────────────────
 
 /** Render grid lines */
@@ -357,18 +368,25 @@ function renderCircles(
     if (!center) return null;
 
     const [cx, cy] = toSvg(center.x, center.y);
-    const r = mathToPixelX(range, circ.radius);
+    // Use separate x/y pixel radii so the rendered circle exactly contains
+    // all math-points at math-distance `radius` from the center. With a
+    // single `r`, the chord endpoints would fall inside or outside the
+    // circle whenever the SVG aspect ratio (500×400) differs from the
+    // math viewport's aspect ratio.
+    const rx = mathToPixelX(range, circ.radius);
+    const ry = mathToPixelY(range, circ.radius);
 
     let dashArray: string | undefined;
     if (circ.style === 'dashed') dashArray = '6,4';
 
     const circName = circ.label ? `shape-${featSlug(circ.label)}` : `shape-circle-${i + 1}`;
     return (
-      <g key={`circle-${i}`} {...feat(circName, { cx, cy, w: r * 2 + 10, h: r * 2 + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
-        <circle
+      <g key={`circle-${i}`} {...feat(circName, { cx, cy, w: rx * 2 + 10, h: ry * 2 + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
+        <ellipse
           cx={cx}
           cy={cy}
-          r={r}
+          rx={rx}
+          ry={ry}
           fill="none"
           stroke={circ.color || '#4f8cff'}
           strokeWidth={2}
@@ -377,7 +395,7 @@ function renderCircles(
         {circ.label && (
           <text
             x={cx}
-            y={cy - r - 8}
+            y={cy - ry - 8}
             textAnchor="middle"
             fontSize={12}
             fill={circ.color || '#4f8cff'}
