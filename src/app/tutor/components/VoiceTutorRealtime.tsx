@@ -228,6 +228,14 @@ export function VoiceTutorRealtime({
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
+  // Serialization for brain calls. When a student utterance arrives while
+  // a brain call is in flight, the second call's speakText would interrupt
+  // the first one's audio — observed 2026-04-26 when the user typed two
+  // requests in rapid succession and the first request's response was
+  // silently discarded. Queue overlapping utterances and combine them
+  // into one follow-up call after the in-flight one completes.
+  const brainBusyRef = useRef(false);
+  const queuedTranscriptsRef = useRef<string[]>([]);
 
   // Variable-name continuity: track declared functions across the session.
   // When the tutor silently renames f→g without redeclaring, we rewrite the
@@ -2742,8 +2750,10 @@ export function VoiceTutorRealtime({
       console.log('[VoiceTutorRealtime] Realtime engine active (legacy authoring path), validateToolCalls=', validateToolCalls);
     }
   }, [claudeBrainMode, validateToolCalls]);
-  const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
-    console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
+  // Inner brain-call worker — does the actual fetch + dispatch. Pulled out
+  // so the outer wrapper can serialize calls and process queued transcripts
+  // without duplicating the body.
+  const callBrainOnce = useCallback(async (transcript: string) => {
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -2862,6 +2872,37 @@ export function VoiceTutorRealtime({
       speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate]);
+
+  // Serialized entry point used by the relay-mode hook. Ensures only one
+  // brain call is in flight at a time. Utterances arriving during an
+  // in-flight call are queued, then combined and sent as a single
+  // follow-up call once the current call finishes. Combining (rather
+  // than serialing each individually) is what the user actually
+  // expects: if they say "draw the perpendicular" then "now find the
+  // area", they want one coherent response, not two responses where
+  // the first is interrupted by the second.
+  const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
+    console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
+    if (brainBusyRef.current) {
+      console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
+      queuedTranscriptsRef.current.push(transcript);
+      return;
+    }
+    brainBusyRef.current = true;
+    try {
+      await callBrainOnce(transcript);
+      // Drain the queue. If multiple utterances arrived while we were
+      // processing, combine them into one transcript so Claude sees a
+      // single follow-up question rather than a stale chain.
+      while (queuedTranscriptsRef.current.length > 0) {
+        const combined = queuedTranscriptsRef.current.splice(0).join(' ');
+        console.log('[brain-orchestrator] processing queued combined:', JSON.stringify(combined).slice(0, 100));
+        await callBrainOnce(combined);
+      }
+    } finally {
+      brainBusyRef.current = false;
+    }
+  }, [callBrainOnce]);
 
   // Short relay-mode prompt for Realtime when claudeBrainMode is on.
   // Realtime is reduced to STT + verbatim TTS. It does not author content.
