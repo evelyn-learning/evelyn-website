@@ -55,6 +55,25 @@ export async function POST(req: NextRequest) {
       maxTokens: body.maxTokens,
     });
 
+    // Server-side telemetry. Without this, "no tool call emitted" failures
+    // are unfalsifiable — we can't tell whether Claude returned a tool call
+    // that got dropped downstream or returned text-only. Logs the student
+    // utterance, the response text, and the tool call names so the next
+    // session is debuggable from the server log alone.
+    const studentSnippet = body.studentTranscript.slice(0, 80);
+    const textSnippet = output.text.slice(0, 120).replace(/\n/g, ' ');
+    const toolNames = output.toolCalls.map((t) => t.name).join(', ') || '(none)';
+    const promiseRegex = /\b(let me|i['’]ll|i will|here['’]s|here is|i['’]m going to)\s+(draw|plot|show|sketch|display|render|graph|create)\b/i;
+    const promisedVisual = promiseRegex.test(output.text);
+    const violatedRule8 = promisedVisual && output.toolCalls.length === 0;
+    console.log(
+      `[brain] student="${studentSnippet}${body.studentTranscript.length > 80 ? '…' : ''}" ` +
+      `→ tools=[${toolNames}] · text="${textSnippet}${output.text.length > 120 ? '…' : ''}" ` +
+      `· stop=${output.stopReason} · in=${output.usage.inputTokens} out=${output.usage.outputTokens} ` +
+      `cache_read=${output.usage.cacheReadTokens}` +
+      (violatedRule8 ? ' ⚠ RULE8_VIOLATION (promised visual, emitted no tool call)' : '')
+    );
+
     return NextResponse.json(output);
   } catch (err) {
     console.error('[brain] error:', err);
