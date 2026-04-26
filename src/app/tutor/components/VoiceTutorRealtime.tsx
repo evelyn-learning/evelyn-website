@@ -2771,9 +2771,24 @@ export function VoiceTutorRealtime({
         }));
       // Drop the just-recorded user turn from history; it goes in the
       // dedicated studentTranscript field.
-      const priorHistory = history.length > 0 && history[history.length - 1].role === 'user' && history[history.length - 1].content === transcript
+      const priorWithoutCurrent = history.length > 0 && history[history.length - 1].role === 'user' && history[history.length - 1].content === transcript
         ? history.slice(0, -1)
         : history;
+      // Synthetic greeting prepend: the tutor system prompt has a Rule 6
+      // ("opening response is 'Hey [name]!' — three words. Wait for the
+      // student.") that was tuned for a flow where the tutor greets BEFORE
+      // the student speaks. In claude-brain mode the student speaks first,
+      // so without this synthetic turn the brain wastes its first response
+      // greeting instead of answering the actual request. Faking a prior
+      // assistant turn moves the conversation into the "working phase"
+      // (per Rule 6) so the brain engages with content immediately.
+      const hasPriorTutorTurn = priorWithoutCurrent.some((m) => m.role === 'assistant');
+      const priorHistory = hasPriorTutorTurn
+        ? priorWithoutCurrent
+        : [
+            { role: 'assistant' as const, content: studentName ? `Hey ${studentName}!` : 'Hey there!' },
+            ...priorWithoutCurrent,
+          ];
 
       const whiteboardSnapshot = catalogRef.current.getSnapshot();
       const t0 = Date.now();
@@ -2799,8 +2814,17 @@ export function VoiceTutorRealtime({
         usage?: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
       };
       const ms = Date.now() - t0;
-      console.log(`[brain-orchestrator] turn ok in ${ms}ms (in=${out.usage?.inputTokens} out=${out.usage?.outputTokens} cache_read=${out.usage?.cacheReadTokens})`);
+      console.log(`[brain-orchestrator] turn ok in ${ms}ms · ${out.toolCalls.length} tool call(s) · ${out.text.length} chars · text="${out.text.slice(0, 80)}${out.text.length > 80 ? '…' : ''}" · tools=[${out.toolCalls.map((t) => t.name).join(', ')}] · in=${out.usage?.inputTokens} out=${out.usage?.outputTokens} cache_read=${out.usage?.cacheReadTokens}`);
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${out.toolCalls.length} tool call(s) · ${out.text.length} chars`);
+      // If the brain returns NEITHER text NOR tool calls, the user gets
+      // silence — observed on ambient/uncertain turns ("Hello" alone, or
+      // a Whisper-mistranscribed utterance). Speak a brief recovery
+      // prompt so the student isn't left staring at a frozen tutor.
+      if (!out.text.trim() && out.toolCalls.length === 0) {
+        console.warn('[brain-orchestrator] brain returned empty text + no tool calls — speaking fallback');
+        speakTextRef.current?.('Sorry, could you say that again?');
+        return;
+      }
 
       // Dispatch tool calls through the existing whiteboard pipeline. We
       // map Anthropic-shape calls to WhiteboardCommand[] and let
