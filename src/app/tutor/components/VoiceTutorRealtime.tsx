@@ -2730,6 +2730,21 @@ export function VoiceTutorRealtime({
   const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
     try {
+      // Make sure the student turn is in transcriptRef so subsequent turns
+      // see it as conversation history. In voice mode the hook's
+      // handleTranscriptUpdate appends before this runs; in typed-input
+      // and relayed-sendTextMessage paths nobody else does, so we have to.
+      const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
+      if (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== transcript) {
+        const studentEntry: TranscriptEntry = {
+          id: `student-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'student',
+          text: transcript,
+        };
+        transcriptRef.current = [...transcriptRef.current, studentEntry];
+        onTranscriptUpdate([...transcriptRef.current]);
+      }
       // Convert the transcript log to the Claude conversation shape. We
       // collapse 'system' entries (greeting prompts, etc.) — they're not
       // genuine turns from Claude's perspective.
@@ -2739,16 +2754,11 @@ export function VoiceTutorRealtime({
           role: (e.role === 'student' ? 'user' : 'assistant') as 'user' | 'assistant',
           content: e.text,
         }));
-      // The student's just-committed turn is already in transcriptRef by
-      // the time this fires (handleTranscriptUpdate runs first), but defend
-      // against ordering surprises by ensuring the latest user turn matches.
-      // If it doesn't, push the transcript so the brain sees it.
-      if (history.length === 0 || history[history.length - 1].role !== 'user' || history[history.length - 1].content !== transcript) {
-        history.push({ role: 'user', content: transcript });
-      }
-      // Drop the just-pushed user turn from history; it goes in the
+      // Drop the just-recorded user turn from history; it goes in the
       // dedicated studentTranscript field.
-      const priorHistory = history.slice(0, -1);
+      const priorHistory = history.length > 0 && history[history.length - 1].role === 'user' && history[history.length - 1].content === transcript
+        ? history.slice(0, -1)
+        : history;
 
       const whiteboardSnapshot = catalogRef.current.getSnapshot();
       const t0 = Date.now();
@@ -2792,8 +2802,19 @@ export function VoiceTutorRealtime({
         }
       }
 
-      // Voice the brain's text response (if any) through Realtime.
+      // Voice the brain's text response (if any) through Realtime, and
+      // record it in transcriptRef so subsequent turns include it as
+      // conversation history. Without this, Claude would see only student
+      // turns and have no memory of what it (the tutor) just said.
       if (out.text.trim()) {
+        const tutorEntry: TranscriptEntry = {
+          id: `tutor-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'tutor',
+          text: out.text.trim(),
+        };
+        transcriptRef.current = [...transcriptRef.current, tutorEntry];
+        onTranscriptUpdate([...transcriptRef.current]);
         speakTextRef.current?.(out.text.trim());
       }
     } catch (err) {
@@ -2801,7 +2822,7 @@ export function VoiceTutorRealtime({
       onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
       speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
     }
-  }, [handleWhiteboardCommand, onDebugEvent]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate]);
 
   // Short relay-mode prompt for Realtime when claudeBrainMode is on.
   // Realtime is reduced to STT + verbatim TTS. It does not author content.
@@ -2993,11 +3014,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // Respect the student's muted state even when interrupting the tutor.
       if (!isMicMuted) realtime.startListening();
     } else if (realtime.isConnected) {
-      // On first click, send context-aware greeting to get tutor's introduction
+      // On first click, send context-aware greeting to get tutor's introduction.
+      // In claudeBrainMode the greeting prompt is a system-style instruction
+      // ("Open with 'Hey [name]!' — three words. Wait for the student.") that
+      // would confuse the brain if routed as a student transcript. Skip the
+      // auto-greeting; the student initiates with their first utterance and
+      // the brain greets in its first turn (the system prompt already
+      // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
-        const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
-        realtime.sendTextMessage(greetingMessage);
+        if (!claudeBrainMode) {
+          const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
+          realtime.sendTextMessage(greetingMessage);
+        } else {
+          console.log('[VoiceTutorRealtime] claude-brain: skipping auto-greeting; brain handles first turn.');
+        }
       }
       // If the student hit the Mute button BEFORE clicking Start, honour that
       // the whole way through — send the greeting but do not open the mic.

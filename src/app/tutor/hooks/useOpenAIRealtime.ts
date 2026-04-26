@@ -1502,6 +1502,26 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     lastUserInputRef.current = Date.now();
     consecutiveRejectionsRef.current = 0; // Fresh student input breaks the rejection cascade
 
+    // Relay mode: don't author a Realtime reply. Hand the text to the brain
+    // orchestrator which decides what to say + which tools to call, then
+    // voices the result via speakText. Without this branch, typed input
+    // and any other sendTextMessage caller would let Realtime author under
+    // the relay prompt — which produces refusals like "I'm unable to draw
+    // or label images directly" because Realtime has no tools and is told
+    // not to author. (Found 2026-04-26: incognito session showed the
+    // typed "Draw a triangle..." input getting a refusal because the form
+    // bypassed the brain entirely.)
+    if (isRelayRef.current) {
+      try {
+        console.log('[Realtime] sendTextMessage relayed to brain, len=', text.length);
+        relayUserTranscriptRef.current?.(text);
+      } catch (err) {
+        console.error('[Realtime] sendTextMessage relay threw:', err);
+      }
+      updateState('processing');
+      return;
+    }
+
     // Add user message to conversation
     wsRef.current.send(JSON.stringify({
       type: 'conversation.item.create',
