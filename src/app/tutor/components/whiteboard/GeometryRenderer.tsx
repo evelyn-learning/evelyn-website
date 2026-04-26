@@ -160,6 +160,10 @@ function niceStep(span: number): number {
 function renderAxes(
   range: { x: [number, number]; y: [number, number] },
   toSvg: (x: number, y: number) => [number, number],
+  /** When the brain has already emitted a labeled point at (0, 0)
+   *  (e.g. circle's center O), suppress the renderer's auto-origin
+   *  marker so the user doesn't see two "O" labels at the same spot. */
+  hasPointAtOrigin: boolean = false,
 ) {
   const [xMin, xMax] = range.x;
   const [yMin, yMax] = range.y;
@@ -213,8 +217,10 @@ function renderAxes(
         y
       </text>,
     );
-    // If the x-axis is also drawn, mark the origin.
-    if (showXAxis) {
+    // If the x-axis is also drawn AND the brain hasn't already labeled
+    // a point at the origin, mark it. Without the second guard, a circle
+    // whose center O sits at (0,0) renders two "O" labels.
+    if (showXAxis && !hasPointAtOrigin) {
       const [ox, oy] = toSvg(0, 0);
       elements.push(
         <text key="origin-label" x={ox - 6} y={oy + 14} textAnchor="end" fontSize={11} fill="#666">
@@ -640,15 +646,19 @@ interface LabelBox {
   /** Perpendicular direction used to push this label away from collisions. */
   pushX: number;
   pushY: number;
-  /** The geometric feature this label refers to. The collision resolver
-   *  springs each label back toward this anchor; if the label ends up far
-   *  from the anchor, a leader line is drawn from anchor to label edge so
-   *  the eye can recover the connection. Without this, the resolver
-   *  silently displaces labels and the user reads the displacement as
-   *  "the geometry is wrong" — observed 2026-04-26 with the chord whose
-   *  midpoint coincides with the labeled origin O. */
+  /** The geometric feature this label refers to (dot center, segment
+   *  midpoint, angle vertex). Used for leader-line endpoints when the
+   *  resolver displaces the label far from where it points. NOT the
+   *  spring target — labels would land on top of their dots if it were. */
   anchorX: number;
   anchorY: number;
+  /** The label's "preferred" rest position — the offset placement from
+   *  the anchor that the layout chose initially. The spring force in
+   *  resolveLabelCollisions pulls each label back toward THIS, not the
+   *  anchor. Without separate ideal vs anchor, my first attempt at
+   *  the force-directed resolver pulled labels onto their own dots. */
+  idealX: number;
+  idealY: number;
 }
 
 /** Rough width estimate for a text label in SVG (monospace-ish averaging). */
@@ -684,14 +694,27 @@ function textTop(a: LabelBox): number {
 }
 
 /**
- * Distance squared between a label's center and its anchor. Used to size
- * the spring force pulling the label back toward what it describes.
+ * The label's visual center, accounting for text-anchor and baseline.
+ * (Different anchor combos produce different left/top edges.)
  */
-function anchorOffset(a: LabelBox): { dx: number; dy: number } {
-  // The label's "center of mass" depends on text-anchor + baseline.
+function labelCenter(a: LabelBox): { x: number; y: number } {
   const cx = a.x + (a.textAnchor === 'middle' ? 0 : a.textAnchor === 'end' ? -a.w / 2 : a.w / 2);
   const cy = a.y + (a.dominantBaseline === 'central' || a.dominantBaseline === 'middle' ? 0 : -a.h * 0.4);
-  return { dx: cx - a.anchorX, dy: cy - a.anchorY };
+  return { x: cx, y: cy };
+}
+
+/** Vector from the label's anchor (the geometric feature) to the
+ *  label's current visual center. Used by leader-line drawing. */
+function anchorOffset(a: LabelBox): { dx: number; dy: number } {
+  const c = labelCenter(a);
+  return { dx: c.x - a.anchorX, dy: c.y - a.anchorY };
+}
+
+/** Vector from the label's IDEAL rest position to its current visual
+ *  center. Used by the spring force in collision resolution. */
+function idealOffset(a: LabelBox): { dx: number; dy: number } {
+  const c = labelCenter(a);
+  return { dx: c.x - a.idealX, dy: c.y - a.idealY };
 }
 
 /**
@@ -725,16 +748,11 @@ function resolveLabelCollisions(labels: LabelBox[]): void {
         if (i === j) continue;
         const b = labels[j];
         if (!boxesOverlap(a, b)) continue;
-        // Direction: from b's center to a's center, with small jitter to
-        // avoid collinear deadlocks.
-        const ab = anchorOffset(a);
-        const bb = anchorOffset(b);
-        const acx = a.anchorX + ab.dx;
-        const acy = a.anchorY + ab.dy;
-        const bcx = b.anchorX + bb.dx;
-        const bcy = b.anchorY + bb.dy;
-        let rdx = acx - bcx;
-        let rdy = acy - bcy;
+        // Direction: from b's center to a's center.
+        const ac = labelCenter(a);
+        const bc = labelCenter(b);
+        let rdx = ac.x - bc.x;
+        let rdy = ac.y - bc.y;
         const rlen = Math.sqrt(rdx * rdx + rdy * rdy) || 1;
         rdx /= rlen;
         rdy /= rlen;
@@ -744,8 +762,10 @@ function resolveLabelCollisions(labels: LabelBox[]): void {
         fx += rdx * REPULSION_STEP * 0.7 + a.pushX * REPULSION_STEP * 0.3;
         fy += rdy * REPULSION_STEP * 0.7 + a.pushY * REPULSION_STEP * 0.3;
       }
-      // Spring back to anchor.
-      const off = anchorOffset(a);
+      // Spring back to IDEAL rest position (the offset placement),
+      // NOT to the anchor (the dot itself). Pulling to anchor would
+      // make labels land on top of their own dots.
+      const off = idealOffset(a);
       fx -= off.dx * SPRING_K;
       fy -= off.dy * SPRING_K;
       // Apply.
@@ -815,6 +835,8 @@ function computeLabels(
       pushY: -0.6,
       anchorX: px,
       anchorY: py,
+      idealX: px + LABEL_OFFSET,
+      idealY: py - LABEL_OFFSET,
     });
   }
 
@@ -850,6 +872,8 @@ function computeLabels(
       pushY: ny,
       anchorX: mx,
       anchorY: my,
+      idealX: mx + nx * LABEL_OFFSET,
+      idealY: my + ny * LABEL_OFFSET,
     });
   });
 
@@ -906,11 +930,13 @@ function computeLabels(
       labelDist = size * 2.4;
     }
 
+    const lx = vx + bisectorX * labelDist;
+    const ly = vy + bisectorY * labelDist;
     labels.push({
       key: `ang:${i}`,
       text,
-      x: vx + bisectorX * labelDist,
-      y: vy + bisectorY * labelDist,
+      x: lx,
+      y: ly,
       w: estimateTextWidth(text, fontSize),
       h: fontSize + 2,
       color,
@@ -920,10 +946,13 @@ function computeLabels(
       // Push further along the bisector if a collision pushes us out.
       pushX: bisectorX,
       pushY: bisectorY,
-      // Anchor for the angle label is roughly where it sits on the
-      // bisector — that's the spot the eye associates with the angle.
-      anchorX: vx + bisectorX * labelDist,
-      anchorY: vy + bisectorY * labelDist,
+      // Anchor: the angle's vertex (so leader lines, if drawn,
+      // point at the vertex — the geometric feature being labeled).
+      anchorX: vx,
+      anchorY: vy,
+      // Ideal: where we initially placed it on the bisector.
+      idealX: lx,
+      idealY: ly,
     });
   });
 
@@ -1281,8 +1310,8 @@ export function GeometryRenderer({
         {/* Grid lines (behind everything) */}
         {showGrid && renderGrid(range, toSvg)}
 
-        {/* Axes */}
-        {showAxes && renderAxes(range, toSvg)}
+        {/* Axes — pass hasPointAtOrigin so we don't double-label O */}
+        {showAxes && renderAxes(range, toSvg, points.some((p) => p.x === 0 && p.y === 0 && !!p.label))}
 
         {/* Polygons (filled areas behind lines and points) */}
         {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg)}
