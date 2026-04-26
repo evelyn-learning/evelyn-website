@@ -2855,6 +2855,14 @@ export function VoiceTutorRealtime({
       // record it in transcriptRef so subsequent turns include it as
       // conversation history. Without this, Claude would see only student
       // turns and have no memory of what it (the tutor) just said.
+      //
+      // Critical: even when out.text is empty but tool calls fired, we
+      // STILL append an assistant turn to transcriptRef. Otherwise Claude
+      // on the next turn sees the prior student request as unanswered
+      // (no intervening assistant turn in history) and responds to THAT
+      // instead of the new turn — observed 2026-04-26 as a "brain one
+      // turn behind" cascade. The synthetic placeholder isn't shown to
+      // the user, just kept in history so Claude knows it acted.
       if (out.text.trim()) {
         const tutorEntry: TranscriptEntry = {
           id: `tutor-${Date.now()}`,
@@ -2865,6 +2873,17 @@ export function VoiceTutorRealtime({
         transcriptRef.current = [...transcriptRef.current, tutorEntry];
         onTranscriptUpdate([...transcriptRef.current]);
         speakTextRef.current?.(out.text.trim());
+      } else if (out.toolCalls.length > 0) {
+        const toolNames = out.toolCalls.map((t) => t.name).join(', ');
+        const placeholderEntry: TranscriptEntry = {
+          id: `tutor-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'tutor',
+          text: `(rendered: ${toolNames})`,
+        };
+        transcriptRef.current = [...transcriptRef.current, placeholderEntry];
+        // Deliberately NOT calling onTranscriptUpdate — this entry is
+        // for Claude's history only, not the UI transcript view.
       }
     } catch (err) {
       console.error('[brain-orchestrator] error:', err);
