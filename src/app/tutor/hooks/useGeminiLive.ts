@@ -720,5 +720,11 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     pause,
     sendTextMessage,
     injectContext,
+    // speakText is a Realtime-relay-mode primitive (Claude brain orchestrator
+    // uses it). Gemini Live doesn't run in relay mode, so this is a no-op
+    // with a warning if anything ever calls it on the Gemini engine.
+    speakText: (text: string) => {
+      console.warn('[Gemini] speakText called but relay mode is not supported on Gemini Live.', { len: text.length });
+    },
   };
 }

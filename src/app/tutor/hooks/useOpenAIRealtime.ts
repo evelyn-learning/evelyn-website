@@ -114,6 +114,24 @@ export interface RealtimeConfig {
   onStateChange?: (state: RealtimeState) => void;
   onStudentAudioChunk?: (float32: Float32Array) => void;
   onTutorAudioChunk?: (float32: Float32Array) => void;
+  /**
+   * Relay mode — when set, Realtime is used purely as STT + TTS. The hook
+   * suppresses Realtime's own response generation (no auto-`response.create`
+   * on student transcript completion) and hands the transcript to the caller
+   * via `onUserTranscript`. The caller is then responsible for calling the
+   * external brain (e.g. Claude), dispatching any whiteboard tool calls, and
+   * voicing the brain's text via the `speakText` method on the hook return.
+   *
+   * When this option is set:
+   *   - `tools` are omitted from the session.update (Claude is the author).
+   *   - `instructions` here OVERRIDE the top-level `instructions` so the
+   *     model is told to behave as a transport layer.
+   *   - The student-transcript handler does NOT call response.create.
+   */
+  relayMode?: {
+    instructions: string;
+    onUserTranscript: (transcript: string) => void | Promise<void>;
+  };
 }
 
 export type RealtimeState =
@@ -140,6 +158,13 @@ export interface RealtimeResult {
   pause: () => void;
   sendTextMessage: (text: string) => void;
   injectContext: (contextText: string) => void;
+  /**
+   * Voice the given text through Realtime's TTS without authoring it.
+   * Used in relay mode: an external brain (Claude) decided what to say,
+   * Realtime just speaks it. Sends a `response.create` with explicit
+   * instructions to read the text verbatim. No-op when not connected.
+   */
+  speakText: (text: string) => void;
 }
 
 /**
@@ -378,8 +403,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     instructions, voice = 'alloy',
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk,
+    onStudentAudioChunk, onTutorAudioChunk, relayMode,
   } = config;
+  // Effective instructions: relay-mode overrides the caller's instructions
+  // so the Realtime model behaves as a transport layer, not a tutor.
+  const effectiveInstructions = relayMode?.instructions ?? instructions;
+  const isRelay = Boolean(relayMode);
 
   const [state, setState] = useState<RealtimeState>('disconnected');
   const [error, setError] = useState<Error | null>(null);
@@ -430,11 +459,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // AND (b) the instructions string has arrived — whichever completes last.
   const tokenPromiseRef = useRef<Promise<string | null> | null>(null);
   const sessionUpdateSentRef = useRef(false);
-  const currentInstructionsRef = useRef(instructions);
+  const currentInstructionsRef = useRef(effectiveInstructions);
   const trySendSessionUpdateRef = useRef<(() => void) | null>(null);
   useEffect(() => {
-    currentInstructionsRef.current = instructions;
-  }, [instructions]);
+    currentInstructionsRef.current = effectiveInstructions;
+  }, [effectiveInstructions]);
+  // Stable ref to the relay-mode transcript handler so the WebSocket
+  // message handler (long-lived closure) always sees the latest callback.
+  const relayUserTranscriptRef = useRef(relayMode?.onUserTranscript);
+  useEffect(() => {
+    relayUserTranscriptRef.current = relayMode?.onUserTranscript;
+  }, [relayMode?.onUserTranscript]);
+  const isRelayRef = useRef(isRelay);
+  useEffect(() => {
+    isRelayRef.current = isRelay;
+  }, [isRelay]);
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
@@ -563,7 +602,19 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             console.log('[Realtime] User transcript:', JSON.stringify(transcript), `(${classification})`);
             lastUserInputRef.current = Date.now();
             onTranscriptUpdate?.('user', transcript, true);
-            if (wsRef.current?.readyState === WebSocket.OPEN) {
+            if (isRelayRef.current) {
+              // Relay mode: hand the transcript to the external brain. The
+              // caller is responsible for orchestrating the response and
+              // calling speakText() with the text Realtime should voice.
+              // We do NOT send response.create here — that would let
+              // Realtime author its own reply against the relay-mode
+              // instructions (which tell it to relay only).
+              try {
+                relayUserTranscriptRef.current?.(transcript);
+              } catch (err) {
+                console.error('[Realtime] relayMode.onUserTranscript threw:', err);
+              }
+            } else if (wsRef.current?.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify({ type: 'response.create' }));
             }
           }
@@ -1066,15 +1117,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             return;
           }
           if (ws.readyState !== WebSocket.OPEN) return;
-          console.log('[Realtime] Sending session.update (instructions length:', inst.length, ')');
+          console.log('[Realtime] Sending session.update (instructions length:', inst.length, ', relay:', isRelayRef.current, ')');
           sessionUpdateSentRef.current = true;
+          // Relay mode: omit tools entirely. Realtime is STT+TTS only;
+          // Claude (called from VoiceTutorRealtime via /api/tutor/brain)
+          // is the author of every tool call.
+          const toolsBlock = isRelayRef.current
+            ? {}
+            : { tools: toOpenAITools(WHITEBOARD_TOOLS), tool_choice: 'auto' as const };
           ws.send(JSON.stringify({
           type: 'session.update',
           session: {
             type: 'realtime',
             instructions: inst,
-            tools: toOpenAITools(WHITEBOARD_TOOLS),
-            tool_choice: 'auto',
+            ...toolsBlock,
             audio: {
               input: {
                 transcription: { model: 'whisper-1' },
@@ -1487,6 +1543,44 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     console.log('[Realtime] Context injected:', contextText.substring(0, 100));
   }, []);
 
+  // Voice arbitrary text through Realtime's TTS without authoring it. Used
+  // by the Claude-brain relay path: the brain decides what to say, Realtime
+  // just speaks it. We add the text to the conversation as an assistant
+  // message AND trigger a response.create whose instructions tell the model
+  // to read that exact text — the dual-channel approach is more reliable
+  // than instructions alone (which the model sometimes paraphrases) and
+  // keeps the conversation history accurate so subsequent turns have the
+  // right context.
+  const speakText = useCallback((text: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.error('[Realtime] speakText: not connected');
+      return;
+    }
+    if (!text || !text.trim()) return;
+    const trimmed = text.trim();
+    // Insert assistant message into conversation history.
+    wsRef.current.send(JSON.stringify({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'assistant',
+        content: [{ type: 'output_text', text: trimmed }],
+      },
+    }));
+    // Ask Realtime to voice the message verbatim. The instructions
+    // override is single-response scoped per the Realtime API spec.
+    wsRef.current.send(JSON.stringify({
+      type: 'response.create',
+      response: {
+        instructions:
+          'Read the most recent assistant message aloud verbatim. ' +
+          'Do not add any words. Do not paraphrase. Do not introduce yourself. ' +
+          'Do not say "the assistant said". Just voice the text.',
+      },
+    }));
+    updateState('processing');
+  }, [updateState]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -1509,5 +1603,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     pause,
     sendTextMessage,
     injectContext,
+    speakText,
   };
 }

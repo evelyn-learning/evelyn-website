@@ -11,6 +11,7 @@
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
+import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
@@ -140,6 +141,16 @@ interface VoiceTutorRealtimeProps {
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
   validateToolCalls?: boolean;
+  /**
+   * When true, the Realtime API is used as a thin STT+TTS relay. Every
+   * student turn is routed to Claude (via /api/tutor/brain) which decides
+   * what to say and which tools to call. Realtime voices the brain's text
+   * verbatim; the existing structural validators / dedup / catalog flow
+   * still runs on whatever tool calls the brain emits.
+   *
+   * Default false — the legacy "Realtime authors everything" path.
+   */
+  claudeBrainMode?: boolean;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -169,6 +180,7 @@ export function VoiceTutorRealtime({
   onDebugEvent,
   handleRef,
   validateToolCalls = false,
+  claudeBrainMode = false,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -209,6 +221,13 @@ export function VoiceTutorRealtime({
   const tutorTurnCountRef = useRef(0);
   const CONTEXT_INJECT_INTERVAL = 6; // Inject context summary every N tutor turns
   const injectContextRef = useRef<((text: string) => void) | null>(null);
+  // Claude-brain mode: refs filled after the useOpenAIRealtime call so the
+  // orchestrator (which is constructed BEFORE the hook returns) can call
+  // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
+  const speakTextRef = useRef<((text: string) => void) | null>(null);
+  // Full tutor system prompt. In claudeBrainMode the brain reads this; the
+  // Realtime model gets a separate, much shorter relay-only prompt.
+  const claudeSystemPromptRef = useRef<string>('');
 
   // Variable-name continuity: track declared functions across the session.
   // When the tutor silently renames f→g without redeclaring, we rewrite the
@@ -2689,6 +2708,100 @@ export function VoiceTutorRealtime({
   const vadSilenceDurationMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_SILENCE_MS || '1500', 10);
   const vadPrefixPaddingMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_PREFIX_MS || '500', 10);
 
+  // ── Claude-brain orchestrator ────────────────────────────────────────────
+  // When claudeBrainMode is on, every student transcript completion is
+  // routed here instead of letting the Realtime model author its own reply.
+  // The flow is: build conversation history + whiteboard snapshot → POST
+  // to /api/tutor/brain → receive { text, toolCalls } → dispatch tool calls
+  // through the existing handleWhiteboardCommand pipeline → speak the text
+  // through Realtime's TTS via speakTextRef.
+  const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
+    try {
+      // Convert the transcript log to the Claude conversation shape. We
+      // collapse 'system' entries (greeting prompts, etc.) — they're not
+      // genuine turns from Claude's perspective.
+      const history = transcriptRef.current
+        .filter((e) => e.role === 'student' || e.role === 'tutor')
+        .map((e) => ({
+          role: (e.role === 'student' ? 'user' : 'assistant') as 'user' | 'assistant',
+          content: e.text,
+        }));
+      // The student's just-committed turn is already in transcriptRef by
+      // the time this fires (handleTranscriptUpdate runs first), but defend
+      // against ordering surprises by ensuring the latest user turn matches.
+      // If it doesn't, push the transcript so the brain sees it.
+      if (history.length === 0 || history[history.length - 1].role !== 'user' || history[history.length - 1].content !== transcript) {
+        history.push({ role: 'user', content: transcript });
+      }
+      // Drop the just-pushed user turn from history; it goes in the
+      // dedicated studentTranscript field.
+      const priorHistory = history.slice(0, -1);
+
+      const whiteboardSnapshot = catalogRef.current.getSnapshot();
+      const t0 = Date.now();
+      const res = await fetch('/api/tutor/brain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: claudeSystemPromptRef.current,
+          conversationHistory: priorHistory,
+          studentTranscript: transcript,
+          whiteboardSnapshot,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        console.error('[brain-orchestrator] /api/tutor/brain failed:', res.status, err);
+        speakTextRef.current?.('Sorry, I lost my train of thought. Could you say that again?');
+        return;
+      }
+      const out = (await res.json()) as {
+        text: string;
+        toolCalls: Array<{ id: string; name: string; args: Record<string, unknown> }>;
+        usage?: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+      };
+      const ms = Date.now() - t0;
+      console.log(`[brain-orchestrator] turn ok in ${ms}ms (in=${out.usage?.inputTokens} out=${out.usage?.outputTokens} cache_read=${out.usage?.cacheReadTokens})`);
+      onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${out.toolCalls.length} tool call(s) · ${out.text.length} chars`);
+
+      // Dispatch tool calls through the existing whiteboard pipeline. We
+      // map Anthropic-shape calls to WhiteboardCommand[] and let
+      // handleWhiteboardCommand run all the structural validators.
+      if (out.toolCalls.length > 0) {
+        const commands: WhiteboardCommand[] = [];
+        for (const tc of out.toolCalls) {
+          const cmd = mapFunctionCallToCommand(tc.name, tc.args);
+          if (cmd) commands.push(cmd);
+          else console.warn('[brain-orchestrator] unmapped tool call:', tc.name);
+        }
+        if (commands.length > 0) {
+          await handleWhiteboardCommand(commands);
+        }
+      }
+
+      // Voice the brain's text response (if any) through Realtime.
+      if (out.text.trim()) {
+        speakTextRef.current?.(out.text.trim());
+      }
+    } catch (err) {
+      console.error('[brain-orchestrator] error:', err);
+      onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
+      speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+    }
+  }, [handleWhiteboardCommand, onDebugEvent]);
+
+  // Short relay-mode prompt for Realtime when claudeBrainMode is on.
+  // Realtime is reduced to STT + verbatim TTS. It does not author content.
+  const RELAY_MODE_PROMPT = [
+    'You are a voice transport layer, not a tutor.',
+    'When the user finishes speaking, do nothing — wait. The application will',
+    'hand you text via response.create instructions and ask you to read it.',
+    'Read those messages aloud verbatim. Do not paraphrase, do not improvise,',
+    'do not add greetings, do not call tools, do not author replies on your',
+    'own. Match the voice and pace described in the instructions for each',
+    'response.',
+  ].join(' ');
+
   // Initialize the realtime connection
   const realtime = useOpenAIRealtime({
     instructions,
@@ -2696,6 +2809,12 @@ export function VoiceTutorRealtime({
     vadThreshold,
     vadSilenceDurationMs,
     vadPrefixPaddingMs,
+    relayMode: claudeBrainMode
+      ? {
+          instructions: RELAY_MODE_PROMPT,
+          onUserTranscript: handleStudentTranscriptForBrain,
+        }
+      : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,
     onWhiteboardCommand: handleWhiteboardCommand,
     onQueryFeatures: (args) => {
@@ -2730,6 +2849,7 @@ export function VoiceTutorRealtime({
   // Wire up refs so callbacks can access hook functions
   injectContextRef.current = realtime.injectContext;
   sendTextMessageRef.current = realtime.sendTextMessage;
+  speakTextRef.current = realtime.speakText;
 
   // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {
@@ -2799,6 +2919,11 @@ Whiteboard tool rules and the structured-tool catalog are covered in the system 
 
 Open with "Hey [name]!" — three words. Wait for the student.`;
 
+        // Stash the full prompt for Claude (read by the brain orchestrator).
+        // In relay mode the actual Realtime `instructions` get overridden
+        // with the short RELAY_MODE_PROMPT inside the hook, but Claude still
+        // needs the full tutoring rules to author the conversation.
+        claudeSystemPromptRef.current = openAIInstructions;
         setInstructions(openAIInstructions);
         setIsInitialized(true);
       } catch (err) {

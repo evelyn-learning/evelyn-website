@@ -33,7 +33,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 
 type InputMode = 'text' | 'voice';
-type VoiceEngine = 'classic' | 'realtime' | 'realtime-validated' | 'gemini-live';
+type VoiceEngine = 'classic' | 'realtime' | 'realtime-validated' | 'claude-brain' | 'gemini-live';
 
 // Voice settings from environment variables (hides UI options)
 const ENV_VOICE_ENGINE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_ENGINE as VoiceEngine) || 'classic';
@@ -94,7 +94,7 @@ function TutorPage() {
   // Allow query param override for engine: /tutor?engine=classic
   const searchParams = useSearchParams();
   const engineParam = searchParams.get('engine') as VoiceEngine | null;
-  const VALID_ENGINES: VoiceEngine[] = ['classic', 'realtime', 'realtime-validated', 'gemini-live'];
+  const VALID_ENGINES: VoiceEngine[] = ['classic', 'realtime', 'realtime-validated', 'claude-brain', 'gemini-live'];
 
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -1158,7 +1158,7 @@ function TutorPage() {
         >
           <div className={inputMode === 'voice' ? '' : 'container mx-auto'}>
             {inputMode === 'voice' && selectedTopicId ? (
-              (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated') ? (
+              (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
                 <VoiceTutorRealtime
                   subject={selectedSubject}
                   topic={selectedTopicId}
@@ -1177,6 +1177,7 @@ function TutorPage() {
                   onTrackInteraction={trackInteraction}
                   handleRef={realtimeHandleRef}
                   validateToolCalls={voiceEngine === 'realtime-validated'}
+                  claudeBrainMode={voiceEngine === 'claude-brain'}
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini
