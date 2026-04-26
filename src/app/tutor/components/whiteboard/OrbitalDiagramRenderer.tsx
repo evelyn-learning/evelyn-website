@@ -15,7 +15,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface OrbitalDiagramProps {
@@ -96,6 +96,61 @@ function hundFill(electrons: number, boxes: number): Array<'empty' | 'up' | 'pai
   return slots;
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Mirrors the renderer's config-derivation + condensed-prefix logic so names
+ * match exactly.
+ */
+export function buildOrbitalDiagramManifest(props: OrbitalDiagramProps): FeatureManifestEntry[] {
+  let config: Array<{ subshell: string; electrons: number }> = [];
+  if (props.configuration && props.configuration.length > 0) {
+    config = props.configuration;
+  } else if (props.element && ELEMENT_Z[props.element]) {
+    config = configFromZ(ELEMENT_Z[props.element]);
+  }
+  if (config.length === 0) return [];
+
+  const NOBLE: Array<{ symbol: string; after: string }> = [
+    { symbol: '[Rn]', after: '6p' }, { symbol: '[Xe]', after: '5p' },
+    { symbol: '[Kr]', after: '4p' }, { symbol: '[Ar]', after: '3p' },
+    { symbol: '[Ne]', after: '2p' }, { symbol: '[He]', after: '1s' },
+  ];
+  if (props.condensed) {
+    for (const n of NOBLE) {
+      const idx = config.findIndex((c) => c.subshell === n.after);
+      if (idx >= 0) {
+        const upTo = config.slice(0, idx + 1);
+        const complete = upTo.every((c) => {
+          const cap = SUBSHELL_ORDER.find((s) => s.name === c.subshell)?.capacity ?? 0;
+          return c.electrons === cap;
+        });
+        if (complete) {
+          config = config.slice(idx + 1);
+          break;
+        }
+      }
+    }
+  }
+
+  return config.map((sh) => {
+    const labels = new Set<string>([
+      `orbital-${sh.subshell}`,
+      sh.subshell,
+      `${sh.subshell} orbital`,
+      `${sh.subshell} subshell`,
+      `the ${sh.subshell}`,
+      `the ${sh.subshell} orbital`,
+    ]);
+    return {
+      name: `orbital-${sh.subshell}`,
+      kind: 'object' as const,
+      description: `${sh.subshell} subshell with ${sh.electrons} electron${sh.electrons === 1 ? '' : 's'}`,
+      labels: Array.from(labels),
+    };
+  });
+}
+
 export default function OrbitalDiagramRenderer({
   title, element, configuration, condensed, notes,
 }: OrbitalDiagramProps) {
@@ -155,8 +210,9 @@ export default function OrbitalDiagramRenderer({
           const y = top + rowIdx * rowHeight;
           const boxes = boxesFor(sh.subshell);
           const fill = hundFill(sh.electrons, boxes);
+          const rowCx = labelW + (boxes * (boxSize + boxGap)) / 2;
           return (
-            <g key={sh.subshell}>
+            <g key={sh.subshell} {...feat(`orbital-${sh.subshell}`, { cx: rowCx, cy: y + boxSize / 2, w: boxes * (boxSize + boxGap) + 20, h: boxSize + 10 })}>
               {/* Subshell label (e.g. "2p") */}
               <text x={labelW - 12} y={y + boxSize / 2 + 4} fontSize={12} fill={DIAGRAM_COLORS.text} textAnchor="end" fontWeight={700}>
                 {sh.subshell}

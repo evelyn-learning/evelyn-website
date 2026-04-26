@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export type CircuitComponentType =
   | 'resistor'
@@ -103,6 +104,7 @@ function ComponentShape({
   value,
   unit,
   label,
+  featureName,
 }: {
   type: CircuitComponentType;
   from: [number, number];
@@ -110,6 +112,7 @@ function ComponentShape({
   value?: string;
   unit?: string;
   label?: string;
+  featureName?: string;
 }) {
   const [x1, y1] = from;
   const [x2, y2] = to;
@@ -289,16 +292,42 @@ function ComponentShape({
   })();
 
   const hasLabel = !!(label || value);
-  const displayLabel = label
-    ? value
-      ? `${label} = ${value}${unit ? ' ' + unit : ''}`
+  // De-duplicate when the model passed the magnitude in `label` instead
+  // of (or in addition to) `value`. Without this, "150Ω" + value:150 +
+  // unit:Ω renders as the comically duplicated "150Ω = 150 Ω".
+  const valueWithUnit = value ? `${value}${unit ? ' ' + unit : ''}` : '';
+  const labelLooksLikeValue = (() => {
+    if (!label) return false;
+    if (!valueWithUnit) return false;
+    const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+    const nL = norm(label);
+    const nV = norm(valueWithUnit);
+    return nL === nV || nL === norm(value || '') || nL.includes(nV) || nV.includes(nL);
+  })();
+  const displayLabel = label && !labelLooksLikeValue
+    ? valueWithUnit
+      ? `${label} = ${valueWithUnit}`
       : label
-    : value
-    ? `${value}${unit ? ' ' + unit : ''}`
-    : '';
+    : valueWithUnit
+    ? valueWithUnit
+    : label || '';
+
+  // Bounding box approximating the feature's extent in SVG pixel space.
+  const featBbox = (() => {
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+    const bw = Math.max(40, (maxX - minX) + 40);
+    const bh = Math.max(40, (maxY - minY) + 40);
+    return { cx: (x1 + x2) / 2, cy: (y1 + y2) / 2, w: bw, h: bh };
+  })();
+  const featureProps = featureName
+    ? feat(featureName, featBbox, { width: SVG_WIDTH, height: SVG_HEIGHT })
+    : {};
 
   return (
-    <g>
+    <g {...featureProps}>
       {/* Wires on both sides of the symbol */}
       {half > 0 && (
         <>
@@ -675,6 +704,97 @@ function autoLayoutCircuit(components: CircuitComponent[]): LayoutResult {
   return { nodes: outNodes, components: outComponents, warnings };
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * We invoke the same autoLayoutCircuit pass so the synthesized rail-wire
+ * feature names (wire-<from>-to-<to>) match what the renderer produces, and
+ * we reproduce the component naming rule exactly (`<type>-<label-slug>` or
+ * `<type>-<typeCount>`).
+ */
+export function buildCircuitManifest(props: CircuitRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const { components: laidOutComponents } = autoLayoutCircuit(props.components ?? []);
+  const typeCounts: Record<string, number> = {};
+
+  // Per-type synonym banks the tutor is likely to speak aloud.
+  const TYPE_SYNONYMS: Record<CircuitComponentType, string[]> = {
+    resistor: ['resistor', 'R'],
+    capacitor: ['capacitor', 'cap', 'C'],
+    inductor: ['inductor', 'coil', 'L'],
+    battery: ['battery', 'cell', 'voltage source', 'emf', 'EMF'],
+    wire: ['wire', 'connection'],
+    'switch-open': ['open switch', 'switch'],
+    'switch-closed': ['closed switch', 'switch'],
+    bulb: ['bulb', 'lamp', 'light bulb'],
+    voltmeter: ['voltmeter', 'V meter', 'voltage meter'],
+    ammeter: ['ammeter', 'A meter', 'current meter'],
+    galvanometer: ['galvanometer', 'ammeter', 'current meter'],
+    ground: ['ground', 'earth', 'GND'],
+  };
+
+  for (const c of laidOutComponents) {
+    if (c.type === 'wire') {
+      const stripLayout = (id: string) => id.replace(/^__layout__/, '').replace(/__r\d+_\d+$/, '');
+      const fromId = stripLayout(c.from);
+      const toId = stripLayout(c.to);
+      const name = `wire-${featSlug(fromId)}-to-${featSlug(toId)}`;
+      const labels = new Set<string>([
+        name,
+        `wire ${fromId} to ${toId}`,
+        `wire from ${fromId} to ${toId}`,
+        `connection ${fromId}-${toId}`,
+        `${fromId}-${toId} wire`,
+      ]);
+      entries.push({
+        name,
+        kind: 'edge',
+        description: `wire connecting ${fromId} to ${toId}`,
+        labels: Array.from(labels),
+      });
+    } else {
+      typeCounts[c.type] = (typeCounts[c.type] ?? 0) + 1;
+      const idx = typeCounts[c.type];
+      const name = c.label
+        ? `${c.type}-${featSlug(c.label)}`
+        : `${c.type}-${idx}`;
+      const valuePart = c.value ? ` (${c.value}${c.unit ? ' ' + c.unit : ''})` : '';
+      const labels = new Set<string>([name]);
+      // Synonyms for the component type
+      for (const syn of TYPE_SYNONYMS[c.type] ?? [c.type]) {
+        labels.add(syn);
+        labels.add(`${syn} ${idx}`);
+        labels.add(`the ${syn}`);
+      }
+      // Positional alias (always present so "resistor 2" works regardless of label)
+      labels.add(`${c.type}-${idx}`);
+      // Label-based variants
+      if (c.label) {
+        labels.add(c.label);
+        labels.add(`${c.type} ${c.label}`);
+        labels.add(`${c.label} ${c.type}`);
+        for (const syn of TYPE_SYNONYMS[c.type] ?? []) {
+          labels.add(`${syn} ${c.label}`);
+          labels.add(`${c.label} ${syn}`);
+        }
+      }
+      // If a value is given (e.g. "10 Ω"), allow referring by it
+      if (c.value) {
+        const valText = `${c.value}${c.unit ? ' ' + c.unit : ''}`;
+        labels.add(`${c.type} ${valText}`);
+        labels.add(`${valText} ${c.type}`);
+      }
+      entries.push({
+        name,
+        kind: 'object',
+        description: `${c.type}${c.label ? ` "${c.label}"` : ''}${valuePart}`,
+        labels: Array.from(labels),
+      });
+    }
+  }
+  return entries;
+}
+
 export default function CircuitRenderer({
   title,
   components,
@@ -706,22 +826,40 @@ export default function CircuitRenderer({
       >
         <rect width={SVG_WIDTH} height={SVG_HEIGHT + extraHeight} fill="#fafbfc" rx={4} />
 
-        {laidOutComponents.map((c, i) => {
-          const from = nodeMap.get(c.from);
-          const to = nodeMap.get(c.to);
-          if (!from || !to) return null;
-          return (
-            <ComponentShape
-              key={`c-${i}`}
-              type={c.type}
-              from={from}
-              to={to}
-              value={c.value}
-              unit={c.unit}
-              label={c.label}
-            />
-          );
-        })}
+        {(() => {
+          // Assign predictable feature names: wire-<from>-to-<to>, and for
+          // components either <type>-<label-slug> or <type>-<index>.
+          const typeCounts: Record<string, number> = {};
+          return laidOutComponents.map((c, i) => {
+            const from = nodeMap.get(c.from);
+            const to = nodeMap.get(c.to);
+            if (!from || !to) return null;
+            let featureName: string;
+            if (c.type === 'wire') {
+              // Strip our synthetic __layout__ prefix when constructing
+              // tutor-facing wire names.
+              const stripLayout = (id: string) => id.replace(/^__layout__/, '').replace(/__r\d+_\d+$/, '');
+              featureName = `wire-${featSlug(stripLayout(c.from))}-to-${featSlug(stripLayout(c.to))}`;
+            } else {
+              typeCounts[c.type] = (typeCounts[c.type] ?? 0) + 1;
+              featureName = c.label
+                ? `${c.type}-${featSlug(c.label)}`
+                : `${c.type}-${typeCounts[c.type]}`;
+            }
+            return (
+              <ComponentShape
+                key={`c-${i}`}
+                type={c.type}
+                from={from}
+                to={to}
+                value={c.value}
+                unit={c.unit}
+                label={c.label}
+                featureName={featureName}
+              />
+            );
+          });
+        })()}
 
         {showNodes &&
           laidOutNodes

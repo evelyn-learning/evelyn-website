@@ -32,6 +32,23 @@ interface DesmosGraphRendererProps {
 }
 
 /**
+ * Promote bare function names to LaTeX backslash form so Desmos doesn't
+ * parse them as variable products. Idempotent — already-escaped forms are
+ * skipped via the negative lookbehind.
+ *
+ * Why: the model commonly emits `sin(x)`, `cos(x)`, `pi` as plain text in
+ * the `expr` field. In Desmos LaTeX, `sin(x)` is parsed as s·i·n·(x), so
+ * the curve renders as nothing. We have to escape these before submission.
+ */
+function normalizeBareLatex(s: string): string {
+  s = s.replace(/(?<!\\)\b(sin|cos|tan|sec|csc|cot|sinh|cosh|tanh|log|ln|arcsin|arccos|arctan)\b/g, '\\$1');
+  s = s.replace(/(?<!\\)\bsqrt\(([^()]*)\)/g, '\\sqrt{$1}');
+  s = s.replace(/(?<!\\)\bpi\b/g, '\\pi');
+  s = s.replace(/(?<!\\)\btheta\b/g, '\\theta');
+  return s;
+}
+
+/**
  * Convert a legacy JS function expression to LaTeX.
  * Handles common patterns from AI-generated expressions.
  */
@@ -64,6 +81,9 @@ function jsExprToLatex(expr: string, variable: string = 'x'): string {
   // Remove remaining explicit * (Desmos uses implicit multiplication)
   s = s.replace(/\s*\*\s*/g, '');
 
+  // Promote any remaining bare function names (sin, cos, pi, etc.)
+  s = normalizeBareLatex(s);
+
   return s;
 }
 
@@ -71,7 +91,7 @@ function jsExprToLatex(expr: string, variable: string = 'x'): string {
  * Get LaTeX for a graph function, preferring the latex field, falling back to JS conversion.
  */
 function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string = 'x'): string {
-  if (fn.latex) return fn.latex;
+  if (fn.latex) return normalizeBareLatex(fn.latex);
   if (fn.fn) return jsExprToLatex(fn.fn, variable);
   return variable;
 }

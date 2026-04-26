@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor, withAlpha } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, truncate } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, truncate, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -111,6 +111,71 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   return pos;
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildConceptMapManifest(props: ConceptMapProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const nodes = props.nodes ?? [];
+  const edges = props.edges ?? [];
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+
+  edges.forEach((e) => {
+    if (!nodeIds.has(e.from) || !nodeIds.has(e.to)) return;
+    const fromNode = nodeById.get(e.from);
+    const toNode = nodeById.get(e.to);
+    const fromLabel = fromNode?.label ?? e.from;
+    const toLabel = toNode?.label ?? e.to;
+    const name = `edge-${featSlug(e.from)}-to-${featSlug(e.to)}`;
+    const labels = new Set<string>([
+      name,
+      `${e.from} → ${e.to}`,
+      `${e.from}-to-${e.to}`,
+      `edge from ${e.from} to ${e.to}`,
+      `edge from ${fromLabel} to ${toLabel}`,
+      `${fromLabel} to ${toLabel}`,
+      `${fromLabel} → ${toLabel}`,
+    ]);
+    if (e.label) {
+      labels.add(e.label);
+      labels.add(e.label.toLowerCase());
+      labels.add(`${fromLabel} ${e.label} ${toLabel}`);
+    }
+    entries.push({
+      name,
+      kind: 'edge',
+      description: e.label
+        ? `edge from "${e.from}" to "${e.to}" labeled "${e.label}"`
+        : `edge from "${e.from}" to "${e.to}"`,
+      labels: Array.from(labels),
+    });
+  });
+
+  nodes.forEach((n) => {
+    const labels = new Set<string>([
+      `node-${featSlug(n.id)}`,
+      n.id,
+      n.label,
+      n.label.toLowerCase(),
+      `the ${n.label.toLowerCase()}`,
+      `"${n.label}"`,
+      `${n.label} concept`,
+    ]);
+    entries.push({
+      name: `node-${featSlug(n.id)}`,
+      kind: 'node',
+      description: `concept node "${n.label}"`,
+      labels: Array.from(labels),
+    });
+  });
+
+  return entries;
+}
+
 export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: ConceptMapProps) {
   if (!nodes || nodes.length === 0) {
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No concept nodes.</div>;
@@ -158,8 +223,10 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           // (≈ 6.2 px per char + 10 px padding). The previous estimate was
           // too narrow and clipped the text.
           const labelW = e.label ? e.label.length * 6.4 + 14 : 0;
+          const eminX = Math.min(pa.x, pb.x); const emaxX = Math.max(pa.x, pb.x);
+          const eminY = Math.min(pa.y, pb.y); const emaxY = Math.max(pa.y, pb.y);
           return (
-            <g key={`edge${i}`}>
+            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (pa.x + pb.x) / 2, cy: (pa.y + pb.y) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
               <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke={color} strokeWidth={1.25}
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
               {e.label && (
@@ -181,7 +248,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           const rectW = Math.max(60, label.length * 7);
           const rectH = 26;
           return (
-            <g key={n.id}>
+            <g key={n.id} {...feat(`node-${featSlug(n.id)}`, { cx: p.x, cy: p.y, w: rectW + 10, h: rectH + 10 })}>
               <rect x={p.x - rectW / 2} y={p.y - rectH / 2} width={rectW} height={rectH} rx={6}
                 fill={withAlpha(color, 0.15)} stroke={color} strokeWidth={1.75} />
               <text x={p.x} y={p.y + 4} fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={700}>{label}</text>

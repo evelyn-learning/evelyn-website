@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 /** See RayDiagramRenderer for documentation. */
@@ -57,6 +57,88 @@ function sample(spec: WaveSpec, x: number): number {
   const k = (2 * Math.PI) / Math.max(spec.wavelength, 1e-6);
   const phi = ((spec.phase ?? 0) * Math.PI) / 180;
   return spec.amplitude * Math.sin(k * x + phi);
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildWaveManifest(props: WaveProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  entries.push({
+    name: 'axis',
+    kind: 'axis',
+    description: 'horizontal and vertical axes framing the plot',
+    labels: ['axis', 'the axis', 'axes', 'plot axes', 'x-axis', 'y-axis'],
+  });
+  entries.push({
+    name: 'wave',
+    kind: 'curve',
+    description: `primary wave (λ = ${formatValue(props.wave.wavelength)}, A = ${formatValue(props.wave.amplitude)})`,
+    labels: ['wave', 'the wave', 'primary wave', 'sine wave', 'waveform', 'curve', props.wave.label || 'wave'],
+  });
+
+  // Crest / trough markers — same loop bounds as the JSX below (3 cycles).
+  const xExtent = Math.max(
+    props.wave.wavelength * 3,
+    props.secondary ? props.secondary.wavelength * 3 : 0,
+  );
+  [0, 1, 2].forEach((n) => {
+    if ((n + 0.25) * props.wave.wavelength <= xExtent) {
+      const idx = n + 1;
+      entries.push({
+        name: `crest-${idx}`,
+        kind: 'point',
+        description: `crest ${idx} (positive peak of the primary wave)`,
+        labels: [
+          `crest-${idx}`,
+          `crest ${idx}`,
+          `peak ${idx}`,
+          `top ${idx}`,
+          idx === 1 ? 'first crest' : idx === 2 ? 'second crest' : 'third crest',
+          idx === 1 ? 'first peak' : idx === 2 ? 'second peak' : 'third peak',
+          ...(idx === 1 ? ['crest', 'peak', 'top of wave', 'the crest', 'the peak'] : []),
+        ],
+      });
+    }
+  });
+  [0, 1, 2].forEach((n) => {
+    if ((n + 0.75) * props.wave.wavelength <= xExtent) {
+      const idx = n + 1;
+      entries.push({
+        name: `trough-${idx}`,
+        kind: 'point',
+        description: `trough ${idx} (negative peak of the primary wave)`,
+        labels: [
+          `trough-${idx}`,
+          `trough ${idx}`,
+          `valley ${idx}`,
+          `bottom ${idx}`,
+          idx === 1 ? 'first trough' : idx === 2 ? 'second trough' : 'third trough',
+          idx === 1 ? 'first valley' : idx === 2 ? 'second valley' : 'third valley',
+          ...(idx === 1 ? ['trough', 'valley', 'bottom of wave', 'the trough', 'the valley'] : []),
+        ],
+      });
+    }
+  });
+
+  const showAnn = props.showAnnotations ?? true;
+  if (showAnn) {
+    entries.push({
+      name: 'wavelength',
+      kind: 'annotation',
+      description: `wavelength bracket λ = ${formatValue(props.wave.wavelength)} at top of plot`,
+      labels: ['wavelength', 'lambda', 'λ', 'the wavelength', 'wave length', 'λ bracket'],
+    });
+    entries.push({
+      name: 'amplitude',
+      kind: 'annotation',
+      description: `amplitude indicator A = ${formatValue(props.wave.amplitude)} at first peak`,
+      labels: ['amplitude', 'A', 'the amplitude', 'wave height', 'height', 'amplitude bracket'],
+    });
+  }
+
+  return entries;
 }
 
 export default function WaveRenderer({

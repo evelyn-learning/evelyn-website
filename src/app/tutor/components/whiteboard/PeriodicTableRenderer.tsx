@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import {
   ELEMENTS,
   ELEMENT_BY_SYMBOL,
@@ -44,6 +45,33 @@ const ROWS = 10;
 
 const GRID_W = COLS * (CELL_W + GAP);
 const GRID_H = ROWS * (CELL_H + GAP) + 16; // extra vertical gap between row 7 and row 9 (lanthanides)
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * The table renders ALL elements from the ELEMENTS table — one feature per element.
+ */
+export function buildPeriodicTableManifest(_props: PeriodicTableRendererProps): FeatureManifestEntry[] {
+  return ELEMENTS.map((el) => {
+    const labels = new Set<string>([
+      `element-${el.symbol}`,
+      el.symbol,
+      el.name,
+      el.name.toLowerCase(),
+      `the ${el.name.toLowerCase()}`,
+      `atomic number ${el.z}`,
+      `Z=${el.z}`,
+      `Z ${el.z}`,
+      `element ${el.z}`,
+    ]);
+    return {
+      name: `element-${el.symbol}`,
+      kind: 'object' as const,
+      description: `${el.name} (${el.symbol}, Z=${el.z}, period ${el.row}, group ${el.col})`,
+      labels: Array.from(labels),
+    };
+  });
+}
 
 export default function PeriodicTableRenderer({
   title,
@@ -93,7 +121,10 @@ export default function PeriodicTableRenderer({
           const textColor = anyHighlight && !active ? '#9ca3af' : '#111827';
 
           return (
-            <g key={el.symbol}>
+            <g key={el.symbol}
+              {...feat(`element-${el.symbol}`,
+                { cx: x + CELL_W / 2, cy: y + CELL_H / 2, w: CELL_W + 4, h: CELL_H + 4 },
+                { width: GRID_W + 10, height: GRID_H + 60 })}>
               <rect
                 x={x}
                 y={y}

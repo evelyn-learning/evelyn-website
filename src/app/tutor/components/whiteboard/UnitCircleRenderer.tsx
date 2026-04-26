@@ -9,6 +9,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,6 +148,74 @@ const labelOffset = (deg: number, distance: number = 18): { dx: number; dy: numb
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildUnitCircleManifest(props: UnitCircleRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  entries.push({
+    name: 'x-axis',
+    kind: 'axis',
+    description: 'x-axis (cos)',
+    labels: ['x-axis', 'x axis', 'x', 'cosine axis', 'cos axis', 'horizontal axis'],
+  });
+  entries.push({
+    name: 'y-axis',
+    kind: 'axis',
+    description: 'y-axis (sin)',
+    labels: ['y-axis', 'y axis', 'y', 'sine axis', 'sin axis', 'vertical axis'],
+  });
+  entries.push({
+    name: 'origin',
+    kind: 'point',
+    description: 'origin (0, 0)',
+    labels: ['origin', '(0, 0)', '(0,0)', 'center', 'the center', 'point O'],
+  });
+  entries.push({
+    name: 'circle',
+    kind: 'shape',
+    description: 'unit circle (radius 1)',
+    labels: ['circle', 'unit circle', 'the circle', 'the unit circle'],
+  });
+
+  const highlightAngles = props.highlightAngles ?? [];
+  highlightAngles.forEach((ha) => {
+    const deg = ((ha.angle % 360) + 360) % 360;
+    const entry = STANDARD_ANGLES[deg];
+    const radStr = entry ? entry[2] : undefined;
+    const labels = new Set<string>([
+      `angle-${deg}`,
+      `angle ${deg}`,
+      `${deg}°`,
+      `${deg} degrees`,
+      `${deg} degree angle`,
+      `the ${deg}° angle`,
+      `angle of ${deg}°`,
+    ]);
+    if (radStr) {
+      labels.add(radStr);
+      labels.add(`${radStr} radians`);
+      labels.add(radStr.replace('π', 'pi'));
+      labels.add(`${radStr.replace('π', 'pi')} radians`);
+    }
+    if (ha.label) {
+      labels.add(ha.label);
+      labels.add(`angle ${ha.label}`);
+    }
+    entries.push({
+      name: `angle-${deg}`,
+      kind: 'annotation',
+      description: ha.label ? `highlighted angle ${deg}° ("${ha.label}")` : `highlighted angle ${deg}°`,
+      labels: Array.from(labels),
+    });
+  });
+
+  return entries;
+}
+
 export function UnitCircleRenderer({
   title,
   highlightAngles = [],
@@ -198,12 +267,15 @@ export function UnitCircleRenderer({
         <line
           x1={CX - R - 40} y1={CY} x2={CX + R + 40} y2={CY}
           stroke="#94a3b8" strokeWidth={1.2} markerEnd="url(#uc-arrow)"
+          {...feat('x-axis', { cx: CX, cy: CY, w: (R + 40) * 2, h: 20 }, { width: VB, height: VB })}
         />
         {/* y-axis */}
         <line
           x1={CX} y1={CY + R + 40} x2={CX} y2={CY - R - 40}
           stroke="#94a3b8" strokeWidth={1.2} markerEnd="url(#uc-arrow)"
+          {...feat('y-axis', { cx: CX, cy: CY, w: 20, h: (R + 40) * 2 }, { width: VB, height: VB })}
         />
+        <g {...feat('origin', { cx: CX, cy: CY, w: 24, h: 24 }, { width: VB, height: VB })} />
 
         {/* Axis labels */}
         <text x={CX + R + 48} y={CY + 4} fontSize={13} fill="#64748b" textAnchor="start" fontFamily="serif" fontStyle="italic">
@@ -236,6 +308,7 @@ export function UnitCircleRenderer({
           cx={CX} cy={CY} r={R}
           fill="none" stroke="#2563eb" strokeWidth={2}
           opacity={0.85}
+          {...feat('circle', { cx: CX, cy: CY, w: R * 2 + 10, h: R * 2 + 10 }, { width: VB, height: VB })}
         />
 
         {/* ---- Show all standard angles ---- */}
@@ -304,7 +377,7 @@ export function UnitCircleRenderer({
           const arcR = 30 + idx * 8; // stagger arcs if multiple
 
           return (
-            <g key={`hl-${idx}-${deg}`}>
+            <g key={`hl-${idx}-${deg}`} {...feat(`angle-${deg}`, { cx: (CX + px) / 2, cy: (CY + py) / 2, w: Math.max(80, Math.abs(px - CX) + 40), h: Math.max(80, Math.abs(py - CY) + 40) }, { width: VB, height: VB })}>
               {/* --- Reference triangle (dashed) --- */}
               {ha.showTriangle && (
                 <g>

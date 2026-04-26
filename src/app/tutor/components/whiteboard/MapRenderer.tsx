@@ -12,6 +12,7 @@
  */
 
 import React from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { MAP_BACKGROUND_PATHS, MAP_BACKGROUND_BBOXES } from './map-backgrounds.generated';
 
 export interface MapPin {
@@ -262,6 +263,66 @@ const LEGACY_BACKGROUND_PATHS: Record<string, string> = {
     'M 310,140 Q 400,130 500,140 Q 540,150 540,180 L 525,200 L 480,210 L 430,215 L 370,210 L 320,195 L 300,175 L 310,140 Z',
 };
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Regions without a path or points produce no feature (renderer returns null).
+ */
+export function buildMapManifest(props: MapRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const regions = props.regions ?? [];
+  regions.forEach((region, i) => {
+    if (!region.path && !region.points) return;
+    const name = region.label ? `region-${featSlug(region.label)}` : `region-${i + 1}`;
+    const labels = new Set<string>([
+      name,
+      `region-${i + 1}`,
+      `region ${i + 1}`,
+      `area ${i + 1}`,
+      `zone ${i + 1}`,
+    ]);
+    if (region.label) {
+      labels.add(region.label);
+      labels.add(`the ${region.label}`);
+      labels.add(`${region.label} region`);
+      labels.add(`${region.label} area`);
+      labels.add(`the ${region.label} region`);
+    }
+    entries.push({
+      name,
+      kind: 'region',
+      description: region.label ? `region "${region.label}"` : `region ${i + 1}`,
+      labels: Array.from(labels),
+    });
+  });
+  const pins = props.pins ?? [];
+  pins.forEach((pin, i) => {
+    const name = pin.label ? `pin-${featSlug(pin.label)}` : `pin-${i + 1}`;
+    const labels = new Set<string>([
+      name,
+      `pin-${i + 1}`,
+      `pin ${i + 1}`,
+      `marker ${i + 1}`,
+      `location ${i + 1}`,
+    ]);
+    if (pin.label) {
+      labels.add(pin.label);
+      labels.add(`the ${pin.label}`);
+      labels.add(`${pin.label} pin`);
+      labels.add(`pin ${pin.label}`);
+      labels.add(`${pin.label} marker`);
+      labels.add(`the ${pin.label} pin`);
+    }
+    entries.push({
+      name,
+      kind: 'point',
+      description: pin.label ? `map pin "${pin.label}"` : `map pin ${i + 1}`,
+      labels: Array.from(labels),
+    });
+  });
+  return entries;
+}
+
 export default function MapRenderer({
   title,
   background = 'blank',
@@ -301,9 +362,10 @@ export default function MapRenderer({
         {/* Regions: labeled highlighted areas */}
         {regions.map((region, i) => {
           const color = region.color || '#fbbf24';
+          const regionName = region.label ? `region-${featSlug(region.label)}` : `region-${i + 1}`;
           if (region.path) {
             return (
-              <g key={`region-${i}`}>
+              <g key={`region-${i}`} {...feat(regionName, { cx: SVG_WIDTH / 2, cy: SVG_HEIGHT / 2, w: SVG_WIDTH, h: SVG_HEIGHT }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
                 <path
                   d={region.path}
                   fill={color}
@@ -325,8 +387,15 @@ export default function MapRenderer({
                 return `${sx},${sy}`;
               })
               .join(' ');
+            const ptCoords = region.points.trim().split(/\s+/).map((pt) => pt.split(',').map(Number));
+            const rMinX = Math.min(...ptCoords.map((p) => p[0]));
+            const rMaxX = Math.max(...ptCoords.map((p) => p[0]));
+            const rMinY = Math.min(...ptCoords.map((p) => p[1]));
+            const rMaxY = Math.max(...ptCoords.map((p) => p[1]));
+            const [bbxMin, bbyMin] = normToSvg(rMinX, rMinY);
+            const [bbxMax, bbyMax] = normToSvg(rMaxX, rMaxY);
             return (
-              <g key={`region-${i}`}>
+              <g key={`region-${i}`} {...feat(regionName, { cx: (bbxMin + bbxMax) / 2, cy: (bbyMin + bbyMax) / 2, w: bbxMax - bbxMin + 20, h: bbyMax - bbyMin + 20 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
                 <polygon
                   points={svgPts}
                   fill={color}
@@ -368,8 +437,9 @@ export default function MapRenderer({
           }
           const [px, py] = normToSvg(normX, normY);
           const color = pin.color || '#dc2626';
+          const pinName = pin.label ? `pin-${featSlug(pin.label)}` : `pin-${i + 1}`;
           return (
-            <g key={`pin-${i}`}>
+            <g key={`pin-${i}`} {...feat(pinName, { cx: px, cy: py, w: 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
               {/* Pin shape: circle with small triangle tail */}
               <circle cx={px} cy={py} r={6} fill={color} stroke="#fff" strokeWidth={2} />
               <text

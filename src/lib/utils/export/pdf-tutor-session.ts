@@ -1241,16 +1241,48 @@ async function drawWhiteboardVisual(
   // the React CommandRenderer off-screen, capture its SVG output, and
   // embed as vector via svg2pdf. Works identically for current and past
   // sessions because we re-render from the command data each time.
+  //
+  // Two embed modes:
+  //   1. SVG embed (vector) via svg2pdf — default. Crisp + searchable.
+  //   2. Raster via html2canvas → PNG — used when the renderer mixes
+  //      emoji / exotic unicode into SVG text that svg2pdf can't render
+  //      (see RASTER_PREFERRED_ACTIONS). html2canvas uses browser fonts,
+  //      which include emoji.
   try {
-    const { captureCommandSvg, drawCapturedSvg, overlayScribbles } = await import('./whiteboard-capture');
-    // The capture helper consumes the live WhiteboardCommand shape; rawCmd
-    // here is either live (flat) or DB-normalised (has .data), and cmd is
-    // already the flattened form. Cast is safe since the helper only
-    // reads known properties through CommandRenderer's switch.
-    let svgString = await captureCommandSvg(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
+    const {
+      captureCommandSvg,
+      captureCommandRaster,
+      drawCapturedSvg,
+      overlayScribbles,
+      RASTER_PREFERRED_ACTIONS,
+      svgContainsExoticGlyphs,
+    } = await import('./whiteboard-capture');
+    const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
+    const prefersRaster = RASTER_PREFERRED_ACTIONS.has(String(cmd.action));
+
+    // Fast-path: known raster-preferred action — skip the SVG probe.
+    if (prefersRaster) {
+      const raster = await captureCommandRaster(whiteboardCmd, scribbles);
+      if (raster && raster.dataUrl) {
+        const heightMm = (raster.heightPx / raster.widthPx) * width;
+        pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
+        return y + heightMm + 2;
+      }
+    }
+
+    // SVG path (default) — probe for exotic glyphs AFTER we have the SVG so
+    // we catch emoji that slipped into tutor-provided labels even on
+    // renderers not in the static allowlist.
+    let svgString = await captureCommandSvg(whiteboardCmd);
     if (svgString) {
-      // Bake any scribble overlays targeted at this item into the SVG
-      // before embedding so the PDF matches what the student saw.
+      if (svgContainsExoticGlyphs(svgString)) {
+        const raster = await captureCommandRaster(whiteboardCmd, scribbles);
+        if (raster && raster.dataUrl) {
+          const heightMm = (raster.heightPx / raster.widthPx) * width;
+          pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
+          return y + heightMm + 2;
+        }
+      }
       if (scribbles && scribbles.length > 0) {
         svgString = overlayScribbles(svgString, scribbles);
       }

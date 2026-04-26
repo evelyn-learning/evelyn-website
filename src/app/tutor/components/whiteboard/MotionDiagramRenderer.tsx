@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface MotionSample {
@@ -80,6 +80,44 @@ function smoothPath(pts: Array<{ x: number; y: number }>): string {
   }
   d += ` T ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
   return d;
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildMotionDiagramManifest(props: MotionDiagramProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const valid = (props.series || []).filter((s) => s.points && s.points.length > 0);
+  for (const s of valid) {
+    const label = s.label || KIND_DEFAULT_LABEL[s.kind];
+    const panelLabels: string[] = [
+      `${s.kind}-panel`,
+      `${s.kind} panel`,
+      `${s.kind} plot`,
+      `${s.kind} graph`,
+      `${s.kind} vs time`,
+      `${s.kind} chart`,
+      s.kind,
+      `the ${s.kind}`,
+      `${s.kind}(t)`,
+    ];
+    if (s.kind === 'position') {
+      panelLabels.push('position-panel', 'x-panel', 'x(t) panel', 'x vs t', 'displacement panel', 'x', 'x(t)');
+    } else if (s.kind === 'velocity') {
+      panelLabels.push('velocity-panel', 'v-panel', 'v(t) panel', 'v vs t', 'speed panel', 'v', 'v(t)');
+    } else if (s.kind === 'acceleration') {
+      panelLabels.push('acceleration-panel', 'a-panel', 'a(t) panel', 'a vs t', 'a', 'a(t)');
+    }
+    if (s.label) panelLabels.push(s.label);
+    entries.push({
+      name: `${s.kind}-panel`,
+      kind: 'region',
+      description: `${s.kind} vs time panel (${label})`,
+      labels: panelLabels,
+    });
+  }
+  return entries;
 }
 
 export default function MotionDiagramRenderer({

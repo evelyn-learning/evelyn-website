@@ -16,6 +16,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export type FbdDirection =
   | 'up'
@@ -65,6 +66,7 @@ export interface FreeBodyDiagramProps {
 
 const VIEWBOX_W = 520;
 const VIEWBOX_H = 380;
+const FBD_VIEWBOX = { width: VIEWBOX_W, height: VIEWBOX_H };
 const DEFAULT_ARROW_LEN = 90;
 
 // Auto-assign colors based on force name conventions.
@@ -79,15 +81,34 @@ function colorForForce(name: string, explicit?: string): string {
 }
 
 // Convert named direction to degrees (math convention: CCW from +x, 90 = up).
-// Accepts a named direction OR a raw number OR a numeric string (e.g. "45")
-// — the OpenAI Realtime strict-schema validator forbids union types on tool
-// parameters, so the model sends numeric angles as strings.
+// Accepts a named direction, a raw number, a numeric string (e.g. "45"), or
+// a natural-language phrase like "30 below horizontal" / "45 above horizontal
+// toward left". The phrase form exists because the model frequently fumbles
+// the sign when translating "below horizontal" into math convention; letting
+// it write the side word directly removes the foot-gun.
 function dirToAngle(dir: FbdDirection | number | string, surfaceAngle: number): number {
   if (typeof dir === 'number') return dir;
   if (typeof dir === 'string') {
     const trimmed = dir.trim();
     if (/^-?\d+(\.\d+)?$/.test(trimmed)) return parseFloat(trimmed);
-    switch (trimmed as FbdDirection) {
+    const lower = trimmed.toLowerCase();
+    // "30 below horizontal", "30° above", "45 below horizontal toward left", etc.
+    const nl = lower.match(
+      /^(-?\d+(?:\.\d+)?)\s*°?\s*(above|below)\s*(?:the\s+)?(?:horizontal)?\s*(?:(?:toward(?:s)?|to\s+the)\s+(left|right))?\s*$/,
+    );
+    if (nl) {
+      const magnitude = Math.abs(parseFloat(nl[1]));
+      const side = nl[2];                      // 'above' | 'below'
+      const horizontal = nl[3] || 'right';     // default: pointing right
+      // Map quadrant from (side, horizontal):
+      //   above + right  →  +mag        (Q1)
+      //   above + left   →  180 - mag   (Q2)
+      //   below + left   →  mag - 180   (Q3)
+      //   below + right  →  -mag        (Q4)
+      if (horizontal === 'right') return side === 'below' ? -magnitude : magnitude;
+      return side === 'below' ? magnitude - 180 : 180 - magnitude;
+    }
+    switch (lower as FbdDirection) {
       case 'right': return 0;
       case 'up-right': return 45;
       case 'up': return 90;
@@ -152,6 +173,117 @@ function SlopeHatching({
   return <g>{lines}</g>;
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Force slugs are derived from each force's name via the same kebab-case
+ * transform used inside the renderer.
+ */
+export function buildFreeBodyDiagramManifest(props: FreeBodyDiagramProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const surface = props.surface ?? { type: 'none' as FbdSurfaceType };
+
+  if (surface.type !== 'none') {
+    const surfaceLabels: string[] = ['surface', 'the surface'];
+    if (surface.type === 'horizontal') {
+      surfaceLabels.push('ground', 'floor', 'bottom', 'baseline', 'horizontal surface');
+    } else if (surface.type === 'vertical') {
+      surfaceLabels.push('wall', 'the wall', 'vertical surface', 'vertical wall');
+    } else if (surface.type === 'inclined') {
+      surfaceLabels.push('incline', 'ramp', 'slope', 'inclined plane', 'hypotenuse', 'inclined surface');
+    }
+    entries.push({
+      name: 'surface',
+      kind: 'object',
+      description:
+        surface.type === 'horizontal'
+          ? 'horizontal hatched ground surface'
+          : surface.type === 'vertical'
+            ? 'vertical hatched wall surface'
+            : `inclined surface (θ = ${surface.angle ?? 0}°)`,
+      labels: surfaceLabels,
+    });
+    if (surface.type === 'inclined') {
+      entries.push({
+        name: 'angle',
+        kind: 'annotation',
+        description: `incline angle arc θ = ${surface.angle ?? 0}° at base-left vertex`,
+        labels: ['angle', 'θ', 'theta', 'incline angle', 'ramp angle', 'angle theta', 'the angle'],
+      });
+    }
+  }
+
+  const shape = props.object.shape ?? 'box';
+  const objectLabels = ['object', 'the object', 'body', 'the body', shape, `the ${shape}`];
+  if (shape === 'box') objectLabels.push('block', 'crate', 'mass');
+  else if (shape === 'circle') objectLabels.push('ball', 'sphere', 'disk');
+  else if (shape === 'person') objectLabels.push('person', 'figure');
+  if (props.object.label) objectLabels.push(props.object.label);
+  if (props.object.mass) objectLabels.push('mass', 'm');
+  entries.push({
+    name: 'object',
+    kind: 'object',
+    description: `${shape} representing the body${props.object.label ? ` (${props.object.label})` : ''}`,
+    labels: objectLabels,
+  });
+
+  (props.forces ?? []).forEach((f, i) => {
+    const slug = (f.name || `force-${i + 1}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `force-${i + 1}`;
+    const n = (f.name || '').toLowerCase().trim();
+    const forceLabels: string[] = [`force-${slug}`, `force ${slug}`, f.name];
+    // Domain synonyms by force type. Each branch ALSO includes the
+    // canonical "force-<category>" name the system prompt teaches the
+    // tutor (e.g. "force-weight", "force-normal", "force-friction"),
+    // even when the actual force was named with a single letter ("W",
+    // "N", "f_k"). Without these the tutor's prompt-derived target
+    // strings don't resolve and the scribble silently misses (2026-04-24
+    // inclined-plane session: "force-normal" rejected because the FBD
+    // had only "force-n" registered).
+    if (/^(w|mg|f[_ ]?g|gravity|weight)/.test(n)) {
+      forceLabels.push(
+        'weight', 'gravity', 'Fg', 'W', 'mg',
+        'weight force', 'gravity force', 'force of gravity', 'gravitational force',
+        'force-weight', 'force-gravity', 'force-mg', 'force-fg', 'force-w',
+      );
+    } else if (/^n\b|normal/.test(n)) {
+      forceLabels.push(
+        'normal', 'normal force', 'N', 'Fn', 'the normal', 'reaction force',
+        'force-normal', 'force-n', 'force-fn', 'normal-force',
+      );
+    } else if (/^f[_ ]?[skf]\b|friction/.test(n)) {
+      forceLabels.push(
+        'friction', 'friction force', 'f', 'Ff', 'fs', 'fk', 'the friction', 'frictional force',
+        'kinetic friction', 'static friction',
+        'force-friction', 'force-f', 'force-fk', 'force-fs', 'force-ff',
+        'friction-force',
+      );
+    } else if (/^t\b|tension/.test(n)) {
+      forceLabels.push(
+        'tension', 'tension force', 'T', 'Ft', 'the tension', 'rope tension', 'string tension',
+        'force-tension', 'force-t', 'force-ft', 'tension-force',
+      );
+    } else if (/applied|push|pull|f_?app/.test(n)) {
+      forceLabels.push(
+        'applied force', 'Fapp', 'applied', 'push', 'pull', 'F',
+        'force-applied', 'force-app', 'force-fapp', 'applied-force',
+      );
+    } else {
+      forceLabels.push(n, `${n} force`, `${f.name} force`);
+    }
+    entries.push({
+      name: `force-${slug}`,
+      kind: 'other',
+      description: `force vector "${f.name}"${f.magnitude ? ` (${f.magnitude})` : ''}`,
+      labels: forceLabels.filter(Boolean),
+    });
+  });
+
+  return entries;
+}
+
 export default function FreeBodyDiagramRenderer({
   title,
   object,
@@ -199,14 +331,15 @@ export default function FreeBodyDiagramRenderer({
   }
 
   const renderObject = (): React.ReactElement => {
+    const attrs = feat('object', { cx: objX, cy: objY, w: 72, h: 72 }, FBD_VIEWBOX);
     if (shape === 'circle') {
       return (
-        <circle cx={objX} cy={objY} r={28} fill="#93c5fd" stroke="#1e40af" strokeWidth={2} />
+        <circle cx={objX} cy={objY} r={28} fill="#93c5fd" stroke="#1e40af" strokeWidth={2} {...attrs} />
       );
     }
     if (shape === 'person') {
       return (
-        <g stroke="#1e40af" strokeWidth={2} fill="#93c5fd" strokeLinecap="round">
+        <g stroke="#1e40af" strokeWidth={2} fill="#93c5fd" strokeLinecap="round" {...attrs}>
           <circle cx={objX} cy={objY - 22} r={10} />
           <line x1={objX} y1={objY - 12} x2={objX} y2={objY + 18} />
           <line x1={objX} y1={objY - 4} x2={objX - 14} y2={objY + 10} />
@@ -230,6 +363,7 @@ export default function FreeBodyDiagramRenderer({
         strokeWidth={2}
         rx={4}
         transform={rotation || undefined}
+        {...attrs}
       />
     );
   };
@@ -239,7 +373,7 @@ export default function FreeBodyDiagramRenderer({
     if (surface.type === 'horizontal') {
       const groundY = objY + 32;
       return (
-        <g>
+        <g {...feat('surface', { cx: 260, cy: groundY, w: 420, h: 14 }, FBD_VIEWBOX)}>
           <line x1={50} y1={groundY} x2={470} y2={groundY} stroke="#64748b" strokeWidth={2.5} />
           <HatchPattern x1={50} x2={470} y={groundY} angleDeg={45} />
         </g>
@@ -248,7 +382,7 @@ export default function FreeBodyDiagramRenderer({
     if (surface.type === 'vertical') {
       const wallX = objX + 44;
       return (
-        <g>
+        <g {...feat('surface', { cx: wallX + 6, cy: 190, w: 20, h: 300 }, FBD_VIEWBOX)}>
           <line x1={wallX} y1={40} x2={wallX} y2={340} stroke="#64748b" strokeWidth={2.5} />
           {/* Hatches to the right of the wall, slanting up-right */}
           {Array.from({ length: 24 }).map((_, i) => {
@@ -286,7 +420,7 @@ export default function FreeBodyDiagramRenderer({
       const arcEndX = ax + arcRadius * Math.cos(arcRad);
       const arcEndY = ay - arcRadius * Math.sin(arcRad);
       return (
-        <g>
+        <g {...feat('surface', { cx: (ax + cx) / 2, cy: (ay + cy) / 2, w: cx - ax, h: ay - cy }, FBD_VIEWBOX)}>
           <polygon
             points={`${ax},${ay} ${bx},${by} ${cx},${cy}`}
             fill="#f1f5f9"
@@ -300,6 +434,7 @@ export default function FreeBodyDiagramRenderer({
             fill="none"
             stroke="#475569"
             strokeWidth={1.5}
+            {...feat('angle', { cx: ax + arcRadius / 2, cy: ay - arcRadius / 3, w: arcRadius + 28, h: arcRadius + 12 }, FBD_VIEWBOX)}
           />
           <text
             x={ax + arcRadius + 6}
@@ -392,8 +527,21 @@ export default function FreeBodyDiagramRenderer({
       const nameN = truncate(stripLatex((f.name || '').trim()), 8);
       const magN = truncate(stripLatex((f.magnitude || '').trim()), 14);
       const label = magN && magN !== nameN ? `${nameN} = ${magN}` : nameN;
+      // Expose the force as a targetable feature. Slug uses the original
+      // force name (not the truncated/sanitized display) so the tutor can
+      // predict it: "force-weight", "force-normal", "force-friction", etc.
+      const slug = (f.name || `force-${i + 1}`)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || `force-${i + 1}`;
+      const forceBBox = {
+        cx: (startX + tipX) / 2,
+        cy: (startY + tipY) / 2,
+        w: Math.max(24, Math.abs(tipX - startX) + 40),
+        h: Math.max(24, Math.abs(tipY - startY) + 40),
+      };
       return (
-        <g key={`${f.name}-${i}`}>
+        <g key={`${f.name}-${i}`} {...feat(`force-${slug}`, forceBBox, FBD_VIEWBOX)}>
           <line
             x1={startX}
             y1={startY}

@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export interface EnergyBarsPosition {
   label: string;        // e.g. "Top", "Middle", "Bottom", or "A", "B", "C"
@@ -56,6 +57,124 @@ const LEGEND_ENTRIES: Array<{ key: keyof Omit<EnergyBarsPosition, 'label'>; labe
   { key: 'spring', label: 'PE (spring)', color: COLORS.spring },
   { key: 'thermal', label: 'Thermal (lost)', color: COLORS.thermal },
 ];
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Replicates the auto-detect logic for the total-energy line so the manifest
+ * agrees with whatever the renderer draws.
+ */
+export function buildEnergyBarsManifest(props: EnergyBarsProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const positions = props.positions ?? [];
+  if (positions.length === 0) return entries;
+
+  const totals = positions.map(
+    (p) => (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0),
+  );
+  const maxTotal = Math.max(...totals, 1);
+  const firstTotal = totals[0];
+  const allSame = totals.every((t) => Math.abs(t - firstTotal) < 0.01 * maxTotal);
+  const drawTotalLine = props.showTotalLine ?? allSame;
+
+  if (drawTotalLine) {
+    entries.push({
+      name: 'total-line',
+      kind: 'line',
+      description: `dashed total-energy line at ${formatValue(firstTotal)} J (conservation reference)`,
+      labels: ['total-line', 'total line', 'total energy', 'total energy line', 'conservation line', 'total', 'E total', 'Etot'],
+    });
+  }
+
+  const lastIdx = positions.length - 1;
+  positions.forEach((p, i) => {
+    // Strip parenthetical qualifiers from the label so "Release (10 m)"
+    // becomes "Release" when generating natural-language aliases. The
+    // model reliably says "Release", "the Release bar", "KE at Release"
+    // — never "Release (10 m)" — so the parens form is useless as a
+    // matching surface and actively breaks per-segment aliases.
+    const fullLabel = p.label ?? '';
+    const bareMatch = fullLabel.match(/^([^\(]+?)\s*\(/);
+    const bare = bareMatch ? bareMatch[1].trim() : fullLabel.trim();
+    const name = bare ? `bar-${featSlug(bare)}` : `bar-${i + 1}`;
+    const ref = bare || `${i + 1}`;
+    const barLabels: string[] = [name];
+    if (fullLabel) {
+      barLabels.push(
+        fullLabel,
+        `bar ${fullLabel}`,
+        `the ${fullLabel} bar`,
+        `${fullLabel} bar`,
+        `position ${fullLabel}`,
+        `at ${fullLabel}`,
+        `bar at ${fullLabel}`,
+      );
+      if (bare && bare !== fullLabel) {
+        barLabels.push(
+          bare,
+          `bar ${bare}`,
+          `the ${bare} bar`,
+          `${bare} bar`,
+          `position ${bare}`,
+          `at ${bare}`,
+          `bar at ${bare}`,
+          `bar-${featSlug(bare)}`,
+        );
+      }
+    }
+    // Positional aliases — added regardless of whether a label exists.
+    // Model frequently says "bar 1" / "first bar" / "the last bar"
+    // alongside named references, so both surfaces should resolve.
+    barLabels.push(
+      `bar ${i + 1}`,
+      `bar-${i + 1}`,
+      `${ordinal(i + 1)} bar`,
+      `the ${ordinal(i + 1)} bar`,
+      `position ${i + 1}`,
+    );
+    if (i === 0) barLabels.push('first bar', 'the first bar');
+    if (i === lastIdx) barLabels.push('last bar', 'the last bar', 'final bar', 'the final bar');
+    // Energy sub-segment aliases. Marking the whole bar is enough — the
+    // colored stack is visually self-explanatory once circled. We add
+    // every plausible tutor reference to each present component so
+    // "kinetic at release", "release-KE", "KE in the rebound bar",
+    // etc. all resolve to the bar. Use the BARE phase name for these
+    // (parens-stripped) because that's what the model speaks.
+    const seg = (full: string, abbr: string, present: boolean) => {
+      if (!present) return;
+      const segRefs = bare && bare !== fullLabel ? [bare, fullLabel] : [ref];
+      for (const r of segRefs) {
+        if (!r) continue;
+        barLabels.push(
+          `${full} at ${r}`, `${full} in ${r}`, `${full} of ${r}`,
+          `${r} ${full}`, `${r}-${abbr.toLowerCase()}`, `${abbr.toLowerCase()}-${featSlug(r)}`,
+          `${abbr} at ${r}`, `${abbr} in ${r}`, `${abbr} of ${r}`,
+          `${r} ${abbr}`, `${r}'s ${abbr}`, `${r}'s ${full}`,
+          `the ${abbr} ${r}`, `the ${abbr} bar at ${r}`,
+          `the ${abbr} in the ${r} bar`, `${abbr} in the ${r} bar`,
+        );
+      }
+    };
+    seg('kinetic energy', 'KE', (p.ke ?? 0) !== 0);
+    seg('gravitational potential energy', 'PE', (p.pe ?? 0) !== 0);
+    seg('spring potential energy', 'spring PE', (p.spring ?? 0) !== 0);
+    seg('thermal energy', 'thermal', (p.thermal ?? 0) !== 0);
+    entries.push({
+      name,
+      kind: 'shape',
+      description: `stacked energy bar at position "${fullLabel || i + 1}" (total ${formatValue(totals[i])} J)`,
+      labels: Array.from(new Set(barLabels.filter(Boolean))),
+    });
+  });
+
+  return entries;
+}
+
+function ordinal(n: number): string {
+  const suffix = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+}
 
 export default function EnergyBarsRenderer({
   title,
@@ -188,7 +307,7 @@ export default function EnergyBarsRenderer({
 
         {/* Total-energy line */}
         {drawTotalLine && (
-          <g>
+          <g {...feat('total-line', { cx: (plotLeft + plotRight) / 2, cy: totalLineY, w: plotRight - plotLeft + 20, h: 20 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
             <line
               x1={plotLeft}
               y1={totalLineY}
@@ -260,8 +379,9 @@ export default function EnergyBarsRenderer({
           });
 
           const total = (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0);
+          const barName = p.label ? `bar-${featSlug(p.label)}` : `bar-${i + 1}`;
           return (
-            <g key={p.label}>
+            <g key={p.label} {...feat(barName, { cx: centerX, cy: plotBottom - plotHeight / 2, w: barWidth + 16, h: plotHeight }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
               {segments}
               {/* Column label below */}
               <text

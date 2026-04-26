@@ -9,6 +9,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -110,6 +111,8 @@ function renderBar(
   numerator: number,
   denominator: number,
   color: string,
+  barIdx: number,
+  viewbox: { width: number; height: number },
 ): React.ReactElement[] {
   const partWidth = BAR_WIDTH / denominator;
   const elements: React.ReactElement[] = [];
@@ -127,6 +130,7 @@ function renderBar(
         stroke={BORDER_COLOR}
         strokeWidth={1}
         rx={i === 0 ? 3 : i === denominator - 1 ? 3 : 0}
+        {...feat(`part-${barIdx + 1}-${i + 1}`, { cx: x + (i + 0.5) * partWidth, cy: y + BAR_HEIGHT / 2, w: partWidth, h: BAR_HEIGHT }, viewbox)}
       />,
     );
   }
@@ -156,6 +160,8 @@ function renderCircle(
   numerator: number,
   denominator: number,
   color: string,
+  barIdx: number,
+  viewbox: { width: number; height: number },
 ): React.ReactElement[] {
   const elements: React.ReactElement[] = [];
   const sectorAngle = 360 / denominator;
@@ -164,6 +170,10 @@ function renderCircle(
     const shaded = i < numerator;
     const startAngle = i * sectorAngle;
     const endAngle = startAngle + sectorAngle;
+    // Approximate sector center — midpoint between the center and the rim at mid-angle
+    const midRad = ((startAngle + endAngle) / 2 - 90) * (Math.PI / 180);
+    const pcx = cx + (CIRCLE_RADIUS / 2) * Math.cos(midRad);
+    const pcy = cy + (CIRCLE_RADIUS / 2) * Math.sin(midRad);
 
     elements.push(
       <path
@@ -172,6 +182,7 @@ function renderCircle(
         fill={shaded ? color : UNSHADED_COLOR}
         stroke={BORDER_COLOR}
         strokeWidth={1}
+        {...feat(`part-${barIdx + 1}-${i + 1}`, { cx: pcx, cy: pcy, w: CIRCLE_RADIUS, h: CIRCLE_RADIUS }, viewbox)}
       />,
     );
   }
@@ -199,6 +210,8 @@ function renderGrid(
   numerator: number,
   denominator: number,
   color: string,
+  barIdx: number,
+  viewbox: { width: number; height: number },
 ): React.ReactElement[] {
   const { rows, cols } = gridDimensions(denominator);
   const elements: React.ReactElement[] = [];
@@ -219,6 +232,7 @@ function renderGrid(
           stroke={BORDER_COLOR}
           strokeWidth={1}
           rx={2}
+          {...feat(`part-${barIdx + 1}-${cellIndex + 1}`, { cx: x + (c + 0.5) * GRID_CELL, cy: y + (r + 0.5) * GRID_CELL, w: GRID_CELL, h: GRID_CELL }, viewbox)}
         />,
       );
       cellIndex++;
@@ -249,6 +263,107 @@ function itemShapeSize(item: FractionItem): { w: number; h: number } {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+/** Spell a small integer as an English word for "one half", "two thirds", etc. */
+function numberWord(n: number): string {
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+  return words[n] ?? String(n);
+}
+function denomWord(d: number, plural: boolean): string {
+  const map: Record<number, [string, string]> = {
+    2: ['half', 'halves'],
+    3: ['third', 'thirds'],
+    4: ['quarter', 'quarters'],
+    5: ['fifth', 'fifths'],
+    6: ['sixth', 'sixths'],
+    7: ['seventh', 'sevenths'],
+    8: ['eighth', 'eighths'],
+    9: ['ninth', 'ninths'],
+    10: ['tenth', 'tenths'],
+    12: ['twelfth', 'twelfths'],
+  };
+  const pair = map[d];
+  if (!pair) return plural ? `${d}ths` : `${d}th`;
+  return plural ? pair[1] : pair[0];
+}
+function ordinal(n: number): string {
+  const ords = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth'];
+  return ords[n] ?? `${n}th`;
+}
+
+export function buildFractionBarManifest(props: FractionBarRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const items = props.items ?? [];
+  items.forEach((item, idx) => {
+    const labelText = item.label ?? `${item.numerator}/${item.denominator}`;
+    const style = item.style ?? 'bar';
+    const fracSpoken = `${numberWord(item.numerator)} ${denomWord(item.denominator, item.numerator !== 1)}`;
+    const barLabels = new Set<string>([
+      `bar-${idx + 1}`,
+      `bar ${idx + 1}`,
+      `${style} ${idx + 1}`,
+      `${style}-${idx + 1}`,
+      `fraction ${idx + 1}`,
+      `${ordinal(idx + 1)} ${style}`,
+      `the ${ordinal(idx + 1)} bar`,
+      `${item.numerator}/${item.denominator}`,
+      fracSpoken,
+    ]);
+    if (item.label) {
+      barLabels.add(item.label);
+      barLabels.add(`the ${item.label}`);
+    }
+    entries.push({
+      name: `bar-${idx + 1}`,
+      kind: 'shape',
+      description: `${style} fraction ${idx + 1} (${labelText})`,
+      labels: Array.from(barLabels),
+    });
+    const partCount = style === 'grid'
+      ? (() => {
+          const cols = Math.ceil(Math.sqrt(item.denominator));
+          const rows = Math.ceil(item.denominator / cols);
+          return Math.min(rows * cols, item.denominator);
+        })()
+      : item.denominator;
+    for (let i = 0; i < partCount; i++) {
+      const shaded = i < item.numerator;
+      const unitFrac = `1/${item.denominator}`;
+      const unitSpoken = `one ${denomWord(item.denominator, false)}`;
+      const partLabels = new Set<string>([
+        `part-${idx + 1}-${i + 1}`,
+        `part ${i + 1}`,
+        `part ${idx + 1}-${i + 1}`,
+        `${ordinal(i + 1)} part`,
+        `the ${ordinal(i + 1)} piece`,
+        `piece ${i + 1}`,
+        `section ${i + 1}`,
+        unitFrac,
+        unitSpoken,
+      ]);
+      if (shaded) {
+        partLabels.add(`shaded part ${i + 1}`);
+        partLabels.add(`shaded piece ${i + 1}`);
+      } else {
+        partLabels.add(`unshaded part ${i + 1}`);
+        partLabels.add(`empty part ${i + 1}`);
+      }
+      entries.push({
+        name: `part-${idx + 1}-${i + 1}`,
+        kind: 'region',
+        description: `${style} ${idx + 1}, part ${i + 1} (${shaded ? 'shaded' : 'unshaded'})`,
+        labels: Array.from(partLabels),
+      });
+    }
+  });
+  return entries;
+}
 
 export function FractionBarRenderer({
   title,
@@ -330,9 +445,9 @@ export function FractionBarRenderer({
         const labelY = pos.y + pos.h + LABEL_OFFSET - 4;
 
         return (
-          <g key={idx}>
+          <g key={idx} {...feat(`bar-${idx + 1}`, { cx: pos.x + pos.w / 2, cy: pos.y + pos.h / 2, w: pos.w + 10, h: pos.h + 10 }, { width: viewWidth, height: viewHeight })}>
             {/* Shape */}
-            {style === 'bar' && renderBar(pos.x, pos.y, item.numerator, item.denominator, color)}
+            {style === 'bar' && renderBar(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
             {style === 'circle' &&
               renderCircle(
                 pos.x + CIRCLE_RADIUS,
@@ -340,8 +455,10 @@ export function FractionBarRenderer({
                 item.numerator,
                 item.denominator,
                 color,
+                idx,
+                { width: viewWidth, height: viewHeight },
               )}
-            {style === 'grid' && renderGrid(pos.x, pos.y, item.numerator, item.denominator, color)}
+            {style === 'grid' && renderGrid(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
 
             {/* Fraction label */}
             <text

@@ -22,11 +22,15 @@ interface UseAudioRecorderResult {
   finalize: () => Promise<void>;
 }
 
-function float32ToPCM16Base64(chunks: Float32Array[]): string {
+// Returns raw PCM16 bytes (ArrayBuffer) for the concatenated float32
+// chunks. We POST these directly to /api/tutor/session-audio as an
+// application/octet-stream body — cheaper than base64 and not subject
+// to the 10MB JSON-body cap that bit long sessions on 2026-04-24.
+function float32ToPCM16Bytes(chunks: Float32Array[]): ArrayBuffer | null {
   // Calculate total length
   let totalLength = 0;
   for (const chunk of chunks) totalLength += chunk.length;
-  if (totalLength === 0) return '';
+  if (totalLength === 0) return null;
 
   // Convert to int16
   const int16 = new Int16Array(totalLength);
@@ -37,19 +41,7 @@ function float32ToPCM16Base64(chunks: Float32Array[]): string {
       int16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
   }
-
-  // Convert to base64
-  const bytes = new Uint8Array(int16.buffer);
-  let binary = '';
-  // Process in chunks to avoid call stack overflow with large arrays
-  const CHUNK_SIZE = 32768;
-  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-    const slice = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
-    for (let j = 0; j < slice.length; j++) {
-      binary += String.fromCharCode(slice[j]);
-    }
-  }
-  return btoa(binary);
+  return int16.buffer;
 }
 
 export function useAudioRecorder({
@@ -80,21 +72,21 @@ export function useAudioRecorder({
 
   const sendChunk = useCallback(async (
     role: 'student' | 'tutor',
-    audio: string,
+    audio: ArrayBuffer | null,
     chunkIndex: number,
     finalize: boolean,
   ) => {
     try {
-      await fetch('/api/tutor/session-audio', {
+      const qs = new URLSearchParams({
+        sessionId: sessionIdRef.current,
+        role,
+        chunkIndex: String(chunkIndex),
+        finalize: finalize ? 'true' : 'false',
+      });
+      await fetch(`/api/tutor/session-audio?${qs.toString()}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionIdRef.current,
-          role,
-          chunkIndex,
-          audio,
-          finalize,
-        }),
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: audio ?? new ArrayBuffer(0),
       });
     } catch (err) {
       console.error(`[AudioRecorder] Failed to send ${role} chunk ${chunkIndex}:`, err);
@@ -110,10 +102,10 @@ export function useAudioRecorder({
 
       // Flush student buffer (continuous mic — already time-aligned)
       if (studentBufferRef.current.length > 0) {
-        const base64 = float32ToPCM16Base64(studentBufferRef.current);
+        const bytes = float32ToPCM16Bytes(studentBufferRef.current);
         studentBufferRef.current = [];
-        if (base64) {
-          promises.push(sendChunk('student', base64, studentChunkIndexRef.current++, false));
+        if (bytes) {
+          promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false));
         }
       }
 
@@ -140,9 +132,9 @@ export function useAudioRecorder({
           tutorSamplesWrittenRef.current += chunk.data.length;
         }
 
-        const base64 = float32ToPCM16Base64(alignedChunks);
-        if (base64) {
-          promises.push(sendChunk('tutor', base64, tutorChunkIndexRef.current++, false));
+        const bytes = float32ToPCM16Bytes(alignedChunks);
+        if (bytes) {
+          promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false));
         }
       }
 
@@ -158,10 +150,11 @@ export function useAudioRecorder({
     // Flush remaining buffers
     await flush();
 
-    // Send finalize signals
+    // Send finalize signals (empty body — the server only reads the
+    // finalize flag from the query string in this mode).
     await Promise.all([
-      sendChunk('student', '', studentChunkIndexRef.current, true),
-      sendChunk('tutor', '', tutorChunkIndexRef.current, true),
+      sendChunk('student', null, studentChunkIndexRef.current, true),
+      sendChunk('tutor', null, tutorChunkIndexRef.current, true),
     ]);
 
     console.log('[AudioRecorder] Finalized audio recording for session', sessionIdRef.current);

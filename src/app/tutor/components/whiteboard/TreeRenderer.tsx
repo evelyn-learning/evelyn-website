@@ -9,6 +9,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -256,9 +257,26 @@ function renderTree(
   showLeafProbabilities: boolean,
   elements: JSX.Element[],
   keyPrefix: string,
+  viewbox: { width: number; height: number; ox?: number; oy?: number },
+  nodeCounter: { n: number } = { n: 0 },
+  isRoot: boolean = true,
 ) {
   const { x, y, w, h, node, children, isLeaf, leafProbability } = layout;
   const primeLeaf = isPrimeLeaf(type, node, isLeaf);
+  // Predictable feature name: "root" for top node, otherwise node-<label-slug>
+  // falling back to node-<index> if no label.
+  nodeCounter.n += 1;
+  const featureName = isRoot
+    ? 'root'
+    : node.label
+      ? `node-${featSlug(node.label)}`
+      : `node-${nodeCounter.n}`;
+  // Translate from raw layout coords into viewBox-origin-relative coords so
+  // the resulting 0..1 fractions match what the scribble overlay expects.
+  const vbOx = (viewbox as { ox?: number }).ox ?? 0;
+  const vbOy = (viewbox as { oy?: number }).oy ?? 0;
+  const featureBbox = { cx: x - vbOx, cy: y - vbOy, w: w + 8, h: h + 8 };
+  const featureProps = feat(featureName, featureBbox, viewbox);
 
   // --- Draw branches from this node to each child ---
   children.forEach((child, i) => {
@@ -327,7 +345,7 @@ function renderTree(
     }
 
     // Recurse into child
-    renderTree(child.layoutNode, type, showLeafProbabilities, elements, `${keyPrefix}-${i}`);
+    renderTree(child.layoutNode, type, showLeafProbabilities, elements, `${keyPrefix}-${i}`, viewbox, nodeCounter, false);
   });
 
   // --- Draw this node ---
@@ -342,6 +360,7 @@ function renderTree(
         fill={node.color || '#dbeafe'}
         stroke="#2563eb"
         strokeWidth={2}
+        {...featureProps}
       />
     );
     elements.push(
@@ -373,6 +392,7 @@ function renderTree(
         fill={fill}
         stroke="#e2e8f0"
         strokeWidth={1.5}
+        {...featureProps}
       />
     );
     // Label text
@@ -430,6 +450,91 @@ function renderTree(
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls in
+ * renderTree(): root node named 'root', subsequent nodes use node-<slug>
+ * (falling back to node-<n> where n is the pre-order traversal index).
+ */
+export function buildTreeManifest(props: TreeRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const safeRoot: TreeNode = props.root ?? { label: '' };
+  const counter = { n: 0 };
+  const leafCounter = { n: 0 };
+  const visit = (
+    node: TreeNode | undefined,
+    isRoot: boolean,
+    childSlot: 'left' | 'right' | 'middle' | null,
+    depth: number,
+  ) => {
+    const safe: TreeNode = node ?? { label: '' };
+    counter.n += 1;
+    const name = isRoot
+      ? 'root'
+      : safe.label
+        ? `node-${featSlug(safe.label)}`
+        : `node-${counter.n}`;
+    const isLeaf = !safe.children || safe.children.length === 0;
+    const labels = new Set<string>([name]);
+    if (isRoot) {
+      labels.add('root');
+      labels.add('the root');
+      labels.add('root node');
+    } else {
+      if (safe.label) {
+        labels.add(safe.label);
+        labels.add(safe.label.toLowerCase());
+        labels.add(`the ${safe.label.toLowerCase()}`);
+        labels.add(`node ${safe.label}`);
+      }
+      labels.add(`node-${counter.n}`);
+      labels.add(`node ${counter.n}`);
+    }
+    if (childSlot === 'left') {
+      labels.add('left child');
+      labels.add('left branch');
+      if (safe.label) labels.add(`left child ${safe.label.toLowerCase()}`);
+    }
+    if (childSlot === 'right') {
+      labels.add('right child');
+      labels.add('right branch');
+      if (safe.label) labels.add(`right child ${safe.label.toLowerCase()}`);
+    }
+    if (childSlot === 'middle') {
+      labels.add('middle child');
+    }
+    if (isLeaf && !isRoot) {
+      leafCounter.n += 1;
+      labels.add('leaf');
+      labels.add(`leaf ${leafCounter.n}`);
+      labels.add(`leaf node`);
+      labels.add(`leaf node ${leafCounter.n}`);
+      if (safe.label) labels.add(`leaf ${safe.label.toLowerCase()}`);
+    }
+    entries.push({
+      name,
+      kind: 'node',
+      description: isRoot
+        ? `root node "${safe.label}"`
+        : isLeaf
+          ? `leaf node "${safe.label}"`
+          : `node "${safe.label}"`,
+      labels: Array.from(labels),
+    });
+    if (safe.children) {
+      const kids = safe.children.filter((c) => c && c.node !== undefined);
+      kids.forEach((c, i) => {
+        let slot: 'left' | 'right' | 'middle' | null = null;
+        if (kids.length === 2) slot = i === 0 ? 'left' : 'right';
+        else if (kids.length === 3) slot = i === 0 ? 'left' : i === 1 ? 'middle' : 'right';
+        visit(c.node, false, slot, depth + 1);
+      });
+    }
+  };
+  visit(safeRoot, true, null, 0);
+  return entries;
+}
+
 export function TreeRenderer({
   title,
   type = 'generic',
@@ -482,9 +587,12 @@ export function TreeRenderer({
       );
     }
 
-    renderTree(layout, type, showLeafProbabilities, elements, 'n');
-
     const viewBoxStr = `${vbX} ${vbY - titleOffset} ${vbW} ${vbH + titleOffset}`;
+    // Feat coordinates need viewBox-space translation: our layout's x/y are in
+    // the same coord system as the viewBox, so fractions are relative to the
+    // viewBox width/height and origin.
+    renderTree(layout, type, showLeafProbabilities, elements, 'n',
+      { width: vbW, height: vbH + titleOffset, ox: vbX, oy: vbY - titleOffset });
 
     return { svgContent: elements, viewBox: viewBoxStr };
   }, [root, type, showLeafProbabilities, title]);

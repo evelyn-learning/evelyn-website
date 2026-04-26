@@ -40,6 +40,9 @@ import {
 } from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
+import { WhiteboardCatalog, buildShowSignature, extractCommandTitle } from '@/lib/tutor/whiteboard/catalog';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 export interface RealtimeHandle {
@@ -105,6 +108,16 @@ const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\
 // Words that Whisper commonly misrecognizes as inappropriate
 import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
+import { detectStudentIntent, isContinuationRequest } from '@/lib/tutor/voice/student-intent';
+import { detectTutorSameContext, decidePageStrip } from '@/lib/tutor/voice/tutor-context-detector';
+import { validateCircuit } from '@/lib/tutor/diagrams/circuit-validator';
+import { validateCollision } from '@/lib/tutor/diagrams/collision-validator';
+import { validateEnergyBars } from '@/lib/tutor/diagrams/energy-bars-validator';
+import { validateSpringMass } from '@/lib/tutor/diagrams/spring-mass-validator';
+import { validateReactionCoordinate } from '@/lib/tutor/diagrams/reaction-coordinate-validator';
+import { validateManipulative } from '@/lib/tutor/diagrams/manipulative-validator';
+import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
+import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -248,9 +261,25 @@ export function VoiceTutorRealtime({
   const idCountersRef = useRef<Map<string, number>>(new Map());
   // Map from assigned id back to the command object itself + the batch
   // order in which it arrived. Used by scribble/scrollTo to resolve
-  // targetId into "which page + which item" at render time.
+  // targetId into "which page + which item" at render time. Also stores
+  // the feature manifest (if the renderer has been migrated) so the
+  // list_whiteboard_features tool can resurface it when the original
+  // tool-result has rolled out of the Realtime context window.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commandByIdRef = useRef<Map<string, { cmd: any; order: number }>>(new Map());
+  const commandByIdRef = useRef<Map<string, { cmd: any; order: number; manifest?: FeatureManifestEntry[] }>>(new Map());
+  // Authoritative session catalog — every rendered item + its labeled
+  // features, keyed by itemId. scribble.target is resolved against this
+  // deterministically (no fuzzy DOM lookup, no featAliases). The tutor
+  // never picks an itemId or a canonical feature name — it picks a
+  // human-readable target and the catalog finds the match.
+  const catalogRef = useRef<WhiteboardCatalog>(new WhiteboardCatalog());
+  // Tracks structural-visual actions (show_* other than
+  // Equation/Code/Table/SvgDiagram) already emitted in the current tutor
+  // turn. Used by handleWhiteboardCommand to drop a SECOND call to the
+  // SAME action within one turn (e.g. showCoordinatePlane emitted twice).
+  // Different actions (showProblem + showGraph) are legitimate and pass.
+  // Reset on every student transcript finalization.
+  const visualActionsThisTurnRef = useRef<Set<string>>(new Set());
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -319,6 +348,15 @@ export function VoiceTutorRealtime({
         .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`)
         .join('\n');
 
+      // Actions the tutor ALREADY emitted on this turn (via function_call).
+      // Passed to the enricher so it doesn't duplicate commands the tutor
+      // handled directly. Limited to the last ~8 to keep the payload small.
+      const recentActions = whiteboardCommandsRef.current
+        .slice(-8)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((c) => String((c as any).action ?? ''))
+        .filter(Boolean);
+
       const response = await fetch('/api/tutor/generate-whiteboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -327,6 +365,7 @@ export function VoiceTutorRealtime({
           studentText: lastStudentMsg || '',
           sessionId: sessionIdRef.current,
           recentContext,
+          recentActions,
         }),
       });
 
@@ -414,40 +453,7 @@ export function VoiceTutorRealtime({
         // page. Skip for 'uncertain' turns — we don't want a garbled
         // transcript to look like a topic pivot.
         if (classification === 'clean') {
-          void checkTopicShift(topicShiftStateRef.current, raw).then((result) => {
-            topicShiftStateRef.current = result.nextState;
-            if (result.shifted) {
-              topicShiftPendingRef.current = { fromDistance: result.distance ?? 0 };
-              console.log('[VoiceTutorRealtime] Topic shift detected (distance=', result.distance?.toFixed(3), ')');
-              onDebugEvent?.('topic_shift', `dist=${result.distance?.toFixed(3)} — next whiteboard batch will get newPage`);
-            }
-          });
-
-          // Keyword-based new-problem detector — separate from the
-          // embedding-based topic shift. Fires when the student asks for
-          // a new problem / example / diagram with phrases that are
-          // semantically close to prior topic (so embedding distance may
-          // not trip) but structurally signal a board-clearing moment.
-          // Requires at least one prior show_* so the very first problem
-          // of the session doesn't trigger it.
-          if (commandByIdRef.current.size > 0) {
-            const rawLower = raw.toLowerCase();
-            const newProblemPatterns = [
-              /\bdraw (a|an|me a|me an)\b/,
-              /\bshow (me )?(a|an)\b/,
-              /\bnow (do|show|draw|give me)\b/,
-              /\bnext (problem|one|example)\b/,
-              /\banother (one|example|problem)\b/,
-              /\blet'?s try (a|another)\b/,
-              /\bmove on to\b/,
-              /\bnew (problem|example|one)\b/,
-            ];
-            if (newProblemPatterns.some((re) => re.test(rawLower))) {
-              topicShiftPendingRef.current = { fromDistance: 0 };
-              console.log('[VoiceTutorRealtime] New-problem keyword trigger fired for:', rawLower.slice(0, 80));
-              onDebugEvent?.('new_problem_keyword', `next batch will get newPage`);
-            }
-          }
+          runStudentTurnDetection(raw, 'voice');
         }
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
@@ -460,6 +466,11 @@ export function VoiceTutorRealtime({
         onTranscriptUpdate(transcriptRef.current);
         onTrackInteraction?.('message', filteredText, undefined, 'student');
         currentUserTextRef.current = '';
+        // Fresh student message → fresh tutor turn. Reset the per-turn
+        // visual-action tracker so the tutor gets a clean slot to draw
+        // one of each visual type for this message.
+        visualActionsThisTurnRef.current = new Set();
+        console.log('[VoiceTutor] Student turn start — cleared visualActionsThisTurn');
 
         // Detect if student is requesting a visual (e.g., "show it on the board")
         const studentRequestsVisual = /\b(show|board|whiteboard|draw|write it|display|diagram|see it|visual)\b/i.test(filteredText);
@@ -601,108 +612,118 @@ export function VoiceTutorRealtime({
     }
   }, []);
 
+  // Run student-turn detection (topic-shift embedding + new-problem
+  // keyword). Shared between the voice-final handler and the typed-input
+  // submit path so typed prompts like "Draw a 30° inclined plane…" don't
+  // bypass newPage triggering. No-ops on empty text.
+  const runStudentTurnDetection = useCallback((rawText: string, source: 'voice' | 'typed') => {
+    const text = (rawText || '').trim();
+    if (!text) return;
+    // Keyword-based new-problem detector — fires synchronously off the
+    // shared pattern set. Guarded by "must have at least one prior
+    // show_*" so the very first problem of the session doesn't trigger.
+    if (commandByIdRef.current.size > 0) {
+      const intent = detectStudentIntent(text);
+      if (intent.newProblem) {
+        topicShiftPendingRef.current = { fromDistance: 0 };
+        console.log(
+          `[VoiceTutorRealtime] New-problem keyword (${source}):`,
+          intent.matchedPattern,
+          '—', text.slice(0, 80),
+        );
+        onDebugEvent?.('new_problem_keyword', `(${source}) next batch will get newPage`);
+      }
+    }
+    // Embedding-based topic shift (async) — catches pivots that the
+    // keyword list misses (e.g. "What's photosynthesis?" after a physics
+    // thread).
+    void checkTopicShift(topicShiftStateRef.current, text).then((result) => {
+      topicShiftStateRef.current = result.nextState;
+      if (result.shifted) {
+        topicShiftPendingRef.current = { fromDistance: result.distance ?? 0 };
+        console.log(
+          '[VoiceTutorRealtime] Topic shift detected (distance=',
+          result.distance?.toFixed(3), ')',
+        );
+        onDebugEvent?.('topic_shift', `dist=${result.distance?.toFixed(3)} — next whiteboard batch will get newPage`);
+      }
+    });
+  }, [onDebugEvent]);
+
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
   const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
+    // Structured entry log — gives us the shape of every batch arriving
+    // at the handler (from Realtime function_call, from text-parse, or
+    // from the enricher's validation pass). Easy to grep for
+    // `[VoiceTutor] batch` when diagnosing "why did X show up on the
+    // board" from server/browser logs.
+    console.log(
+      '[VoiceTutor] batch arrived — count=%d actions=%s turnHadVisual=%s',
+      commands.length,
+      commands.map((c) => String((c as { action?: string }).action ?? '?')).join(','),
+      Array.from(visualActionsThisTurnRef.current).join(',') || 'none',
+    );
+
+    // Per-turn EXACT-ACTION dedup. We only drop two calls to the SAME
+    // show_* action within one turn (e.g. showCoordinatePlane emitted
+    // twice for the same triangle). DIFFERENT actions in one turn — a
+    // showProblem followed by a showGraph for that problem, or a
+    // showSolution after a showCoordinatePlane — are legitimate and
+    // pass through. The earlier "first structural visual wins" rule
+    // killed the graph in the 2026-04-25 pre-calc session: tutor emitted
+    // showProblem then showGraph; only the problem rendered, the graph
+    // was rejected, and the later "show me the graph" scrollTo had
+    // nothing on the board to navigate to.
+    const NON_VISUAL_ACTIONS = new Set([
+      'showEquation', 'showCode', 'showTable', 'showSvgDiagram',
+    ]);
+    const DEDUP_META_ACTIONS = new Set([
+      'newPage', 'clear', 'goToPage', 'scribble', 'scrollTo',
+      'highlight', 'drawVector', 'annotate',
+    ]);
+    const isStructuralVisual = (action: string): boolean =>
+      action.startsWith('show')
+      && !NON_VISUAL_ACTIONS.has(action)
+      && !DEDUP_META_ACTIONS.has(action);
+
     // Accumulator: reasons we rejected a command so the Realtime hook can
-    // report truth to the LLM instead of lying with success:true.
+    // report truth to the LLM instead of lying with success:true. Hoisted
+    // above the dedup filter so we can push dedup-drops into it.
     const rejected: Array<{ action: string; reason: string }> = [];
+
+    const visualActionsThisTurn = visualActionsThisTurnRef.current;
+    commands = commands.filter((cmd) => {
+      const action = String((cmd as { action?: string }).action ?? '');
+      if (!isStructuralVisual(action)) return true;
+      if (!visualActionsThisTurn.has(action)) {
+        visualActionsThisTurn.add(action);
+        console.log('[VoiceTutor] visual-emit first this turn: %s', action);
+        return true;
+      }
+      const reason =
+        `You already emitted ${action} on this turn and that is already on the whiteboard. `
+        + `This second call to ${action} was dropped so the student doesn't see two duplicate figures. `
+        + `Use tutor_scroll_whiteboard({ target: ... }) to bring the existing one back into view if needed.`;
+      console.warn('[VoiceTutor] dedup-drop: %s — already emitted this turn', action);
+      onDebugEvent?.('visual_dedup_drop', `${action} (duplicate)`);
+      rejected.push({ action, reason });
+      return false;
+    });
+    if (commands.length === 0) {
+      // All commands in the batch were dedup-dropped. Return early with
+      // the rejection list so the Realtime hook tells the tutor none
+      // rendered.
+      return {
+        rejected,
+        assignedIds: [],
+        manifests: [],
+        boardSnapshot: catalogRef.current.getSnapshot(),
+      };
+    }
 
     console.log('[VoiceTutorRealtime] handleWhiteboardCommand called, validateToolCalls:', validateToolCalls, 'commands:', commands.map(c => c.action));
     onDebugEvent?.('tool_call', `Whiteboard tool: ${commands.map(c => c.action).join(', ')}`);
-
-    // Heuristic safety net: if a scribble/scrollTo arrives without a
-    // targetId, try to resolve it by matching the scribble's label or
-    // targetFeature OR the student's recent speech to a recent show_*
-    // command's action or title. Upgrades the command with targetId in
-    // place when the match is unambiguous. Runs BEFORE the hard rejection
-    // below so models in the transitional period (or brief forgetting
-    // their tool_result ids) still get served correctly.
-    const existingIdEntries = Array.from(commandByIdRef.current.entries());
-    if (existingIdEntries.length > 0) {
-      const recentStudentWords = transcriptRef.current
-        .slice(-4)
-        .filter((e) => e.role === 'student')
-        .map((e) => e.text)
-        .join(' ')
-        .toLowerCase();
-
-      for (const cmd of commands) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const c = cmd as any;
-        if (c.action !== 'scribble' && c.action !== 'scrollTo') continue;
-        if (typeof c.targetId === 'string' && c.targetId) continue;
-
-        // Pool of keywords to hunt for across the id catalog:
-        //   - scribble.label (e.g. "shark")
-        //   - scribble.targetFeature (e.g. "species-shark" → "shark")
-        //   - last few student words ("point at the shark")
-        const hayParts: string[] = [];
-        if (typeof c.label === 'string') hayParts.push(c.label.toLowerCase());
-        if (typeof c.targetFeature === 'string') {
-          hayParts.push(c.targetFeature.toLowerCase().replace(/-/g, ' '));
-        }
-        if (recentStudentWords) hayParts.push(recentStudentWords);
-        const hay = hayParts.join(' ');
-        if (!hay) continue;
-
-        // For each recent show_* id, score by how many of its "keywords"
-        // (action verb + title/label words) appear in the haystack. Most
-        // recent + highest-score wins.
-        type Cand = { id: string; score: number; order: number };
-        const candidates: Cand[] = [];
-        for (const [id, entry] of existingIdEntries) {
-          const cmdObj = entry.cmd as Record<string, unknown>;
-          const actionWords = id.replace(/-\d+$/, '').replace(/^show/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
-          const titleWords = typeof cmdObj.title === 'string' ? (cmdObj.title as string).toLowerCase() : '';
-          const labelWords = typeof cmdObj.label === 'string' ? (cmdObj.label as string).toLowerCase() : '';
-          const signal = `${actionWords} ${titleWords} ${labelWords}`.trim();
-          if (!signal) continue;
-          let score = 0;
-          for (const word of signal.split(/\s+/).filter((w) => w.length > 2)) {
-            if (hay.includes(word)) score += 1;
-          }
-          if (score > 0) candidates.push({ id, score, order: entry.order });
-        }
-
-        if (candidates.length > 0) {
-          // Tie-break: highest score, then most recent (highest order).
-          candidates.sort((a, b) => (b.score - a.score) || (b.order - a.order));
-          const winner = candidates[0];
-          c.targetId = winner.id;
-          console.log('[VoiceTutorRealtime] Heuristic resolved', c.action, '→ targetId:', winner.id, `(score=${winner.score})`);
-          onDebugEvent?.('scribble_heuristic_resolve', `${c.action} → ${winner.id} (hay="${hay.slice(0, 80)}")`);
-        }
-      }
-    }
-
-    // Force stable-id adoption: once a session has 4+ addressable items,
-    // scribble/scrollTo that STILL arrive without targetId (heuristic
-    // above didn't find a match) get rejected with a catalog of available
-    // ids in the failure message. The model learns by failure within the
-    // same turn — faster than waiting for the prompt alone to take hold.
-    const existingIds = Array.from(commandByIdRef.current.keys());
-    if (existingIds.length >= 4) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      commands = commands.filter((cmd: any) => {
-        if (cmd.action !== 'scribble' && cmd.action !== 'scrollTo') return true;
-        if (typeof cmd.targetId === 'string' && cmd.targetId.trim()) return true;
-        const action = cmd.action === 'scribble' ? 'tutor_scribble' : 'tutor_scroll_whiteboard';
-        const catalog = existingIds.slice(-10).join(', '); // last 10 keeps the message short
-        rejected.push({
-          action,
-          reason:
-            `This session has ${existingIds.length} addressable items — ${action} must use targetId. ` +
-            `Available ids (most recent first): ${existingIds.slice().reverse().slice(0, 10).join(', ')}. ` +
-            `Pick the one matching the item you want to reference and retry. ` +
-            `Positional targetItemIndex is no longer accepted once the session has 4+ items. ` +
-            `If pointing at a labeled feature inside the item (object, focal, mass-1, species-shark, ...), also pass targetFeature for precise coordinates.`,
-        });
-        console.warn('[VoiceTutorRealtime] Rejected', action, 'without targetId; session has', existingIds.length, 'items. Catalog:', catalog);
-        onDebugEvent?.('scribble_rejected_no_targetid', `${action} without targetId after ${existingIds.length} items`);
-        return false;
-      });
-    }
 
     // --- Greeting guard: suppress spurious show_problem / show_equation ---
     // If the student's last utterance is a pure greeting (e.g. "hi") and we
@@ -714,6 +735,50 @@ export function VoiceTutorRealtime({
       .slice(-1)[0]?.text || '';
     const priorStudentTurns = transcriptRef.current.filter(e => e.role === 'student').length;
     const greetingGuardActive = priorStudentTurns <= 1 && isPureGreeting(lastStudentText);
+
+    // Continuation guard: if the student's last utterance was clearly a
+    // continuation of the current problem ("got it, next?", "ok next",
+    // "keep going"), the tutor sometimes still emits a newPage because
+    // its prompt lists "next" as a new-problem signal. Strip those
+    // markers so the same-problem content stays on the same board
+    // (2026-04-24 geometry session: "got it, next?" opened a new page
+    // mid-triangle-area walkthrough).
+    const continuationGuardActive = isContinuationRequest(lastStudentText);
+    if (continuationGuardActive) {
+      const beforeCount = commands.length;
+      commands = commands.filter((cmd) => {
+        if (cmd.action !== 'newPage') return true;
+        console.log('[VoiceTutorRealtime] Stripped tutor-emitted newPage — student said a continuation:', lastStudentText.slice(0, 60));
+        onDebugEvent?.('continuation_guard_strip_newpage', `"${lastStudentText.slice(0, 40)}…"`);
+        return false;
+      });
+      if (commands.length !== beforeCount) {
+        console.log('[VoiceTutorRealtime] Continuation guard removed', beforeCount - commands.length, 'newPage marker(s)');
+      }
+    }
+
+    // Tutor-side same-context guard: strip a tutor-emitted newPage when
+    // the new content is structurally or referentially a continuation
+    // of an existing catalog item. See tutor-context-detector.ts.
+    if (commands.some((c) => c.action === 'newPage')) {
+      const tutorCtx = detectTutorSameContext({
+        batch: commands,
+        tutorSpeech: pendingTutorTextRef.current || currentAssistantTextRef.current || '',
+        catalog: catalogRef.current,
+      });
+      const decision = decidePageStrip({
+        tutorContext: tutorCtx,
+        studentText: lastStudentText,
+      });
+      if (decision.stripNewPage) {
+        const before = commands.length;
+        commands = commands.filter((c) => c.action !== 'newPage');
+        if (commands.length !== before) {
+          console.log('[VoiceTutorRealtime] Tutor-side same-context guard stripped', before - commands.length, 'newPage marker(s):', decision.reason);
+          onDebugEvent?.('tutor_context_strip_newpage', decision.reason);
+        }
+      }
+    }
 
     // Placeholder / unfinished-equation patterns. LLMs sometimes emit
     // "[Using Integration by Parts]" or "[TODO]" as an RHS — we reject
@@ -765,6 +830,106 @@ export function VoiceTutorRealtime({
           console.warn('[VoiceTutorRealtime] Dropping show_problem — student only greeted, did not ask for a problem');
           onDebugEvent?.('tool_call', 'Dropped show_problem (student greeted, no problem request)');
           rejected.push({ action: 'show_problem', reason });
+          return [];
+        }
+      }
+      if (cmd.action === 'showCircuit') {
+        const components = Array.isArray(cmdAny.components) ? cmdAny.components : [];
+        const result = validateCircuit(components, lastStudentText);
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showCircuit validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_circuit: ${result.reason}`);
+          rejected.push({ action: 'show_circuit', reason: result.reason || 'circuit validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showCollision') {
+        const result = validateCollision({
+          dimension: cmdAny.dimension,
+          type: cmdAny.type,
+          before: cmdAny.before,
+          after: cmdAny.after,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showCollision validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_collision: ${result.reason}`);
+          rejected.push({ action: 'show_collision', reason: result.reason || 'collision validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showEnergyBars') {
+        const result = validateEnergyBars({ positions: cmdAny.positions });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showEnergyBars validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_energy_bars: ${result.reason}`);
+          rejected.push({ action: 'show_energy_bars', reason: result.reason || 'energy_bars validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showSpringMass') {
+        const result = validateSpringMass({
+          elements: cmdAny.elements,
+          k: cmdAny.k,
+          mass: cmdAny.mass,
+          displacement: cmdAny.displacement,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showSpringMass validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_spring_mass: ${result.reason}`);
+          rejected.push({ action: 'show_spring_mass', reason: result.reason || 'spring_mass validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showReactionCoordinate') {
+        const result = validateReactionCoordinate({
+          reactants_energy: cmdAny.reactants_energy,
+          products_energy: cmdAny.products_energy,
+          activation_energies: cmdAny.activation_energies,
+          curve_labels: cmdAny.curve_labels,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showReactionCoordinate validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_reaction_coordinate: ${result.reason}`);
+          rejected.push({ action: 'show_reaction_coordinate', reason: result.reason || 'reaction_coordinate validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showManipulative') {
+        const result = validateManipulative({
+          type: cmdAny.type,
+          base10: cmdAny.base10,
+          tenFrame: cmdAny.tenFrame,
+          areaModel: cmdAny.areaModel,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showManipulative validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_manipulative: ${result.reason}`);
+          rejected.push({ action: 'show_manipulative', reason: result.reason || 'manipulative validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showPedigree') {
+        const result = validatePedigree({
+          individuals: cmdAny.individuals,
+          marriages: cmdAny.marriages,
+          children: cmdAny.children,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showPedigree validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_pedigree: ${result.reason}`);
+          rejected.push({ action: 'show_pedigree', reason: result.reason || 'pedigree validation failed' });
+          return [];
+        }
+      }
+      if (cmd.action === 'showFlowchart') {
+        const result = validateFlowchart({
+          nodes: cmdAny.nodes,
+          edges: cmdAny.edges,
+        });
+        if (!result.ok) {
+          console.warn('[VoiceTutorRealtime] showFlowchart validation failed:', result.reason);
+          onDebugEvent?.('tool_call', `Rejected show_flowchart: ${result.reason}`);
+          rejected.push({ action: 'show_flowchart', reason: result.reason || 'flowchart validation failed' });
           return [];
         }
       }
@@ -843,15 +1008,17 @@ export function VoiceTutorRealtime({
           return null;
         };
         const err = !root
-          ? 'show_tree was called without `root`. Provide the full tree as root: { label, children: [{ label, probability?, node: {...} }, ...] }.'
+          ? 'show_tree requires `root: { label: string, children?: TreeChild[] }` where TreeChild = { label: string, probability?: string, node: TreeNode }.'
           : !(root as Record<string, unknown>).children || !Array.isArray((root as Record<string, unknown>).children) || ((root as Record<string, unknown>).children as unknown[]).length === 0
-            ? 'show_tree root has no `children`. A single-node tree is never useful — send the full branching structure.'
+            ? 'show_tree `root` has no `children`. Provide the full branching structure.'
             : checkNode(root, 'root');
         if (err) {
-          const reason = `show_tree rejected: ${err}. Retry with a full, valid tree. For a coin-flip × 3 probability tree: root: { label: "Start", children: [ { label: "H", probability: "1/2", node: { label: "H", children: [ { label: "H", probability: "1/2", node: { label: "HH", children: [ { label: "H", probability: "1/2", node: { label: "HHH" } }, { label: "T", probability: "1/2", node: { label: "HHT" } } ] } }, { label: "T", probability: "1/2", node: { label: "HT", children: [ { label: "H", probability: "1/2", node: { label: "HTH" } }, { label: "T", probability: "1/2", node: { label: "HTT" } } ] } } ] } }, { label: "T", probability: "1/2", node: { /* mirror */ } } ] }.`;
           console.warn('[VoiceTutorRealtime] Dropping invalid show_tree:', err);
           onDebugEvent?.('tool_call', `Dropped invalid show_tree: ${err}`);
-          rejected.push({ action: 'show_tree', reason });
+          // Allow the model's retry to pass through the dedup filter — this
+          // call never actually rendered, so it shouldn't count as "emitted".
+          visualActionsThisTurnRef.current.delete('showTree');
+          rejected.push({ action: 'show_tree', reason: err });
           return [];
         }
       }
@@ -1395,13 +1562,67 @@ export function VoiceTutorRealtime({
     //      semantically far from the running signature (see
     //      topic-shift-detector.ts), so even within the same subject a
     //      fresh board makes sense.
+    // Continuation guard takes precedence over BOTH — if the student's
+    // last utterance was clearly a continuation ("for this", "got it
+    // next", "show me the steps to find T for this"), the tutor is
+    // answering a sub-question of the same problem and the fresh board
+    // makes the student lose their place. (2026-04-24 vertical-spring
+    // session: "Can you show me the steps to find T for this?" after
+    // solving ω fired auto-newPage because ω was tagged as a Final Answer
+    // in the prior batch.)
     const justSolvedPending = recentlyFinishedProblemRef.current;
     const topicShiftPending = topicShiftPendingRef.current;
-    if ((justSolvedPending || topicShiftPending) && processed.length > 0) {
+    // Tutor-side same-context check also suppresses auto-newPage.
+    const tutorCtxAuto = (justSolvedPending || topicShiftPending) && processed.length > 0
+      ? detectTutorSameContext({
+          batch: processed,
+          tutorSpeech: pendingTutorTextRef.current || currentAssistantTextRef.current || '',
+          catalog: catalogRef.current,
+        })
+      : { same: false, signals: [] as Array<'A' | 'B' | 'C' | 'D'>, decisive: false, reason: '' };
+    const tutorCtxAutoStrip = tutorCtxAuto.same
+      && decidePageStrip({ tutorContext: tutorCtxAuto, studentText: lastStudentText }).stripNewPage;
+    if ((justSolvedPending || topicShiftPending) && processed.length > 0 && continuationGuardActive) {
+      console.log('[VoiceTutorRealtime] Suppressed auto-newPage — student said a continuation:', lastStudentText.slice(0, 60));
+      onDebugEvent?.('auto_new_page_suppressed_continuation', `"${lastStudentText.slice(0, 40)}…"`);
+      // Clear both flags so this path doesn't fire again next batch.
+      recentlyFinishedProblemRef.current = null;
+      topicShiftPendingRef.current = null;
+    } else if ((justSolvedPending || topicShiftPending) && processed.length > 0 && tutorCtxAutoStrip) {
+      console.log('[VoiceTutorRealtime] Suppressed auto-newPage — tutor same-context:', tutorCtxAuto.reason);
+      onDebugEvent?.('auto_new_page_suppressed_tutor_context', tutorCtxAuto.reason);
+      recentlyFinishedProblemRef.current = null;
+      topicShiftPendingRef.current = null;
+    } else if ((justSolvedPending || topicShiftPending) && processed.length > 0) {
+      // All show_* actions that represent "fresh teaching content" — i.e.
+      // anything that should start on its own whiteboard page. Meta-
+      // actions (scribble/scrollTo/newPage/clear/goToPage) and pure
+      // annotations (highlight/drawVector/annotate) are excluded so they
+      // don't spuriously trigger a page break.
+      //
+      // Must stay in sync with CommandRenderer's case list in
+      // WhiteboardCanvas.tsx — new show_* renderers added there must be
+      // registered here too, or auto-newPage injection silently fails
+      // for them (2026-04-24 regression: showVennDiagram/showFlowchart/
+      // showOrbital/showDna/showPendulum/showSimpleMachine missing).
       const teachingActions = new Set([
+        // Legacy generic
         'showEquation', 'showDiagram', 'showGraph', 'showTable',
         'showProblem', 'showSolution', 'showSvgDiagram', 'showGeometry',
         'showCode', 'showDerivation',
+        // Tier-1 structured renderers
+        'showRayDiagram', 'showSpringMass', 'showWave', 'showFoodWeb',
+        'showMotionDiagram', 'showProjectileMotion', 'showSimpleMachine',
+        'showPendulum', 'showVector', 'showCoordinatePlane',
+        'showScatterPlot', 'showCycleDiagram', 'showConceptMap',
+        'showOrbitalDiagram', 'showPedigree', 'showCellDiagram',
+        'showDna', 'showFreeBodyDiagram', 'showEnergyBars',
+        'showCollision', 'showReactionCoordinate', 'showPunnett',
+        'showLewis', 'showPeriodicTable', 'showAnnotatedPassage',
+        'showCallStack', 'showFlowchart', 'showManipulative',
+        'showNumberLine', 'showFractionBar', 'showTree',
+        'showTimeline', 'showMap', 'showVennDiagram', 'showStats',
+        'showUnitCircle', 'showCircuit', 'showMolecule',
       ]);
       const firstTeachingCmd = processed.find((c) => teachingActions.has(String(c.action)));
       const alreadyHasNewPage = processed[0]?.action === 'newPage';
@@ -1446,37 +1667,116 @@ export function VoiceTutorRealtime({
     // goToPage / scribble / scrollTo) do NOT get IDs — they're addressers
     // or structural markers, not addressable items themselves.
     const META_ACTIONS = new Set(['newPage', 'clear', 'goToPage', 'scribble', 'scrollTo']);
+    // Running page title used to stamp catalog entries with the page
+    // they were rendered on. Updated whenever we see a newPage in the
+    // full history up to and including the current batch.
+    let currentPageTitle: string | undefined;
+    for (const c of whiteboardCommandsRef.current) {
+      if (c.action === 'newPage') currentPageTitle = (c as { title?: string }).title;
+    }
+    // Track which input commands turned out to be duplicates of items
+    // already in the catalog (same args). The Realtime hook surfaces
+    // these to the tutor as success:false / duplicate:true so it
+    // switches to scrollTo / scribble instead of redrawing.
+    const duplicates: Array<
+      | {
+          existingItemId: string;
+          existingFeatures: Array<{ target: string; canonical: string; kind: string; description?: string }>;
+        }
+      | undefined
+    > = commands.map(() => undefined);
+    const droppedAsDuplicate = new Set<WhiteboardCommand>();
     for (const cmd of processed) {
       const action = String(cmd.action);
+      if (action === 'newPage') {
+        currentPageTitle = (cmd as { title?: string }).title;
+        continue;
+      }
       if (META_ACTIONS.has(action)) continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdWithId = cmd as any;
       if (cmdWithId.id) continue; // caller already assigned
+
+      // Idempotency check: hash the tool args and look up an item with
+      // the same signature. If found, skip the render entirely and
+      // surface the existing itemId + its features. The tutor reads
+      // `duplicate: true` in the tool_result and routes through
+      // tutor_scroll_whiteboard / tutor_scribble. Production root cause
+      // for issue #1 in the 2026-04-25 session: tutor re-rendered an
+      // energy bar chart in response to "show me the chart" because
+      // chat-history advice to use scroll was drowned out.
+      const signature = buildShowSignature(action, cmd);
+      const existing = catalogRef.current.findBySignature(signature);
+      if (existing) {
+        const inputIdx = commands.indexOf(cmd);
+        if (inputIdx >= 0) {
+          duplicates[inputIdx] = {
+            existingItemId: existing.itemId,
+            existingFeatures: existing.features.map((f) => ({
+              target: (f.labels && f.labels[0]) || f.canonical,
+              canonical: f.canonical,
+              kind: f.kind,
+              ...(f.description ? { description: f.description } : {}),
+            })),
+          };
+        }
+        droppedAsDuplicate.add(cmd);
+        cmdWithId._duplicateOf = existing.itemId;
+        console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
+        onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        continue;
+      }
+
       const next = (idCountersRef.current.get(action) ?? 0) + 1;
       idCountersRef.current.set(action, next);
       const id = `${action}-${next}`;
       cmdWithId.id = id;
-      commandByIdRef.current.set(id, { cmd: cmdWithId, order: nextCommandOrderRef.current++ });
+      // Build the feature manifest for this command synchronously so we can
+      // surface authoritative feature names in the tool-result JSON. Only
+      // migrated renderers produce a non-null manifest; unknown actions get
+      // undefined and fall back to the prompt's per-renderer feature docs.
+      const manifest = buildManifestForCommand(cmd) ?? undefined;
+      commandByIdRef.current.set(id, { cmd: cmdWithId, order: nextCommandOrderRef.current++, manifest });
+      // Register in the authoritative session catalog. The catalog is the
+      // single source of truth for tutor_scribble target resolution —
+      // every feature the tutor may reference gets a row here.
+      if (manifest && manifest.length > 0) {
+        catalogRef.current.append({
+          itemId: id,
+          action,
+          pageTitle: currentPageTitle,
+          title: extractCommandTitle(cmd),
+          signature,
+          features: manifest,
+        });
+      }
     }
+    // Strip duplicate-skipped commands from the render pipeline. They
+    // remain in `commands` for index alignment in the duplicates[] array
+    // returned to the Realtime hook.
+    processed = processed.filter((c) => !droppedAsDuplicate.has(c));
 
-    // Resolve scribble / scrollTo targetId → targetItemIndex + targetPageTitle
-    // so the existing per-page rendering path works. Also note which page
-    // the referenced item lives on (by walking backward to the last newPage
-    // preceding it in the session log) for auto page-switch injection.
-    const resolveTargetFromId = (targetId: string): { itemIndex: number; pageTitle?: string; order: number } | null => {
+    // Resolve a stamped targetId → which page + item index it lives at,
+    // by walking the running command history. The catalog gives us the
+    // itemId; this step maps that id onto (pageIndex, itemIndexInPage)
+    // so the overlay router + auto-scroll injector can place the mark.
+    const resolveTargetFromId = (targetId: string): { itemIndex: number; pageTitle?: string; pageIndex: number; order: number } | null => {
       const entry = commandByIdRef.current.get(targetId);
       if (!entry) return null;
-      // Walk the running commands list (including this batch) in order.
-      // Count real items within each page bucket; find which bucket holds
-      // the referenced order value.
       const fullList = [...whiteboardCommandsRef.current, ...processed];
       let pageTitle: string | undefined;
+      let pageIndex = 0;
       let itemIndexInPage = 0;
       let foundIndex = -1;
       for (let i = 0, o = 0; i < fullList.length; i++) {
         const c = fullList[i];
         const act = String(c.action);
         if (act === 'newPage') {
+          if (pageIndex === 0 && itemIndexInPage === 0 && pageTitle === undefined) {
+            // Implicit page 0 had no content — this newPage IS page 0.
+          } else {
+            pageIndex += 1;
+          }
           pageTitle = (c as { title?: string }).title;
           itemIndexInPage = 0;
           continue;
@@ -1487,8 +1787,117 @@ export function VoiceTutorRealtime({
         o += 1;
       }
       if (foundIndex < 0) return null;
-      return { itemIndex: foundIndex, pageTitle, order: entry.order };
+      return { itemIndex: foundIndex, pageTitle, pageIndex, order: entry.order };
     };
+
+    // Resolve every scribble's `target` string against the session catalog.
+    // The catalog is the single source of truth — no DOM lookup, no
+    // featAliases, no fuzzy fallback. If a scribble's target fails to
+    // resolve, push a structured error into `rejected` with the current
+    // feature list so the tutor's next response picks a real target.
+    for (const cmd of processed) {
+      if (cmd.action !== 'scribble') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdAny = cmd as any;
+      const raw = typeof cmdAny.target === 'string' ? cmdAny.target.trim() : '';
+      if (!raw) {
+        const cands = catalogRef.current.getItems()
+          .flatMap((it) => it.features.map((f) => f.labels[0] || f.canonical))
+          .slice(0, 12);
+        rejected.push({
+          action: 'tutor_scribble',
+          reason: cands.length > 0
+            ? `tutor_scribble needs a target. Current whiteboard features: ${cands.map((c) => `"${c}"`).join(', ')}. Retry with one of these.`
+            : 'tutor_scribble needs a target, but the whiteboard is empty. Render a show_* item first.',
+        });
+        console.warn('[VoiceTutor] scribble-reject: empty target');
+        cmdAny._scribbleRejected = true;
+        continue;
+      }
+      const result = catalogRef.current.resolveTarget(raw);
+      if (!result.ok) {
+        const hint = result.candidates.length > 0
+          ? ` Valid targets right now: ${result.candidates.slice(0, 14).map((c) => `"${c.target}" on ${c.on}`).join(', ')}.`
+          : '';
+        // If the board has iframe-only items (Desmos graph, Ketcher
+        // molecule), call them out explicitly. Tutor misses on names
+        // like "intersection points" usually mean the target lives
+        // INSIDE one of these; the right action is scrollTo, never a
+        // redraw of the same item.
+        const iframeItems = catalogRef.current.getNonScribbleableItems();
+        const iframeNote = iframeItems.length > 0
+          ? ` Items on the board that are SCROLL-ONLY iframes (cannot scribble inside them, do NOT redraw them): ${
+              iframeItems.map((it) => `${it.action} → tutor_scroll_whiteboard({ target: "${it.features[0].labels[0] ?? it.features[0].canonical}" })`).join('; ')
+            }. If "${raw}" is inside one of these, scroll to it and describe verbally.`
+          : '';
+        rejected.push({
+          action: 'tutor_scribble',
+          reason: `${result.message}${hint}${iframeNote} Retry with the exact name of an existing feature — do not invent names. Do NOT redraw an existing item to make a feature appear.`,
+        });
+        console.warn('[VoiceTutor] scribble-reject: target="%s" (%s)', raw, result.reason);
+        onDebugEvent?.('scribble_reject_no_match', `"${raw}" (${result.reason})`);
+        cmdAny._scribbleRejected = true;
+        continue;
+      }
+      // Non-scribbleable feature. Two cases:
+      //   (a) the synthetic whole-item alias (canonical === itemId) —
+      //       tutor should scroll, then scribble a sub-feature.
+      //   (b) iframe-backed item (Desmos graph, Ketcher molecule) — the
+      //       overlay can't reach inside a third-party iframe; the
+      //       right action is scrollTo + verbal explanation.
+      if (result.scribbleable === false) {
+        const isWholeItemAlias = result.canonical === result.itemId;
+        if (isWholeItemAlias) {
+          const item = catalogRef.current.getItem(result.itemId);
+          const subFeatures = (item?.features ?? [])
+            .filter((f) => f.scribbleable && f.canonical !== result.itemId)
+            .slice(0, 6)
+            .map((f) => `"${f.labels[0] || f.canonical}"`)
+            .join(', ');
+          rejected.push({
+            action: 'tutor_scribble',
+            reason:
+              `"${raw}" refers to the whole ${result.action} item, not a single feature. ` +
+              `To MARK something specific on it, retry tutor_scribble with one of: ${subFeatures || '(no sub-features available)'}. ` +
+              `To just bring it into view, use tutor_scroll_whiteboard({ target: "${raw}" }) instead.`,
+          });
+          console.warn('[VoiceTutor] scribble-reject: target="%s" → whole-item alias (%s)', raw, result.action);
+          onDebugEvent?.('scribble_reject_whole_item', `"${raw}" → ${result.action}`);
+        } else {
+          rejected.push({
+            action: 'tutor_scribble',
+            reason:
+              `"${raw}" resolved to ${result.action} which is rendered in an iframe and cannot be marked. ` +
+              `Use tutor_scroll_whiteboard({ target: "${raw}" }) to bring it into the student's view, ` +
+              `then explain what to look at verbally. Do NOT retry tutor_scribble on this item.`,
+          });
+          console.warn('[VoiceTutor] scribble-reject: target="%s" → iframe (%s)', raw, result.action);
+          onDebugEvent?.('scribble_reject_iframe', `"${raw}" → ${result.action}`);
+        }
+        cmdAny._scribbleRejected = true;
+        continue;
+      }
+      // Catalog match — stamp the resolved addressing onto the command
+      // so downstream (auto-scroll, overlay router, PDF capture) can
+      // place the mark without any further guessing.
+      cmdAny.targetId = result.itemId;
+      cmdAny.targetFeature = result.canonical;
+      const located = resolveTargetFromId(result.itemId);
+      if (located) {
+        cmdAny.targetItemIndex = located.itemIndex;
+        cmdAny.targetPageIndex = located.pageIndex;
+        if (located.pageTitle) cmdAny.targetPageTitle = located.pageTitle;
+      }
+      console.log(
+        '[VoiceTutor] scribble-resolved: target="%s" → %s/%s (item %d, page %d)',
+        raw, result.itemId, result.canonical,
+        located?.itemIndex ?? -1, located?.pageIndex ?? -1,
+      );
+    }
+    // Strip any scribbles we pushed rejections for — they get surfaced to
+    // the tutor as tool_result errors, NOT rendered on the board.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    processed = processed.filter((c) => !(c as any)._scribbleRejected);
 
     // Auto-inject scrollTo before any scribble that doesn't have one.
     // The tutor sometimes emits tutor_scribble without tutor_scroll_whiteboard
@@ -1501,60 +1910,113 @@ export function VoiceTutorRealtime({
     const withAutoScrolls: WhiteboardCommand[] = [];
     const itemsAlreadyScrolledThisBatch = new Set<number>();
     const pagesAlreadyNavigatedThisBatch = new Set<string>();
+    // Also track page-index navigations so the untitled implicit first
+    // page ("page 0") doesn't get a duplicate scrollTo injected for
+    // each successive scribble that targets it.
+    const pageIndicesAlreadyNavigatedThisBatch = new Set<number>();
+    // Emit either a pageTitle- or pageIndex-keyed scrollTo depending on
+    // what the resolver returned. Titled pages use the title (robust
+    // against page reordering); the untitled first page uses pageIndex=0.
+    const pushPageScrollTo = (pageTitle: string | undefined, pageIndex: number) => {
+      if (pageTitle) {
+        if (pagesAlreadyNavigatedThisBatch.has(pageTitle)) return;
+        withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle });
+        pagesAlreadyNavigatedThisBatch.add(pageTitle);
+      } else {
+        if (pageIndicesAlreadyNavigatedThisBatch.has(pageIndex)) return;
+        withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageIndex });
+        pageIndicesAlreadyNavigatedThisBatch.add(pageIndex);
+      }
+    };
     for (const cmd of processed) {
       if (cmd.action === 'scrollTo') {
-        if (cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
-          itemsAlreadyScrolledThisBatch.add(cmd.itemIndex);
-        }
-        if (cmd.target === 'page' && cmd.pageTitle) {
-          pagesAlreadyNavigatedThisBatch.add(cmd.pageTitle);
-        }
-        // Resolve scrollTo by targetId if present.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tid = (cmd as any).targetId;
-        if (typeof tid === 'string') {
-          const resolved = resolveTargetFromId(tid);
-          if (resolved) {
-            if (resolved.pageTitle && !pagesAlreadyNavigatedThisBatch.has(resolved.pageTitle)) {
-              withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle: resolved.pageTitle });
-              pagesAlreadyNavigatedThisBatch.add(resolved.pageTitle);
-            }
-            withAutoScrolls.push({ action: 'scrollTo', target: 'item', itemIndex: resolved.itemIndex });
-            itemsAlreadyScrolledThisBatch.add(resolved.itemIndex);
-            continue; // swallow the original id-only scrollTo
-          }
+        const cmdAny = cmd as any;
+        const raw = typeof cmdAny.target === 'string' ? cmdAny.target.trim() : '';
+        // Reserved keywords scroll the current page edges. Keep the
+        // command as-is so WhiteboardCanvas's scrollTo handler runs it.
+        if (raw === 'top' || raw === 'bottom') {
+          // Re-stamp into the WhiteboardCanvas-friendly shape.
+          cmdAny.target = raw;
+          withAutoScrolls.push(cmd);
+          continue;
         }
+        // Feature-name path: resolve via the session catalog. On hit,
+        // emit a page-switch (if cross-page) + an item scroll. On miss,
+        // surface a structured error so the tutor retries.
+        if (!raw) {
+          rejected.push({ action: 'tutor_scroll_whiteboard', reason: 'target is required.' });
+          continue;
+        }
+        const result = catalogRef.current.resolveTarget(raw);
+        if (!result.ok) {
+          const hint = result.candidates.length > 0
+            ? ` Valid targets: ${result.candidates.slice(0, 14).map((c) => `"${c.target}" on ${c.on}`).join(', ')}.`
+            : '';
+          rejected.push({
+            action: 'tutor_scroll_whiteboard',
+            reason: `${result.message}${hint} Retry with the exact name of an existing feature, or "top"/"bottom" to scroll the current page.`,
+          });
+          console.warn('[VoiceTutor] scrollTo-reject: target="%s" (%s)', raw, result.reason);
+          onDebugEvent?.('scrollTo_reject_no_match', `"${raw}" (${result.reason})`);
+          continue;
+        }
+        const located = resolveTargetFromId(result.itemId);
+        if (located) {
+          pushPageScrollTo(located.pageTitle, located.pageIndex);
+          // Stamp targetFeature so the renderer's scroll handler can
+          // scrollIntoView() the specific feature element (not just the
+          // item's top). Avoids landing above a feature that lives near
+          // the bottom of a tall item — e.g. "scroll to intersection
+          // points" landed at the top of the graph instead of where
+          // the points sit.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (withAutoScrolls as any).push({
+            action: 'scrollTo', target: 'item',
+            itemIndex: located.itemIndex,
+            targetId: result.itemId,
+            targetFeature: result.canonical,
+          });
+          itemsAlreadyScrolledThisBatch.add(located.itemIndex);
+          console.log(
+            '[VoiceTutor] scrollTo-resolved: target="%s" → %s (item %d, page %d)',
+            raw, result.itemId, located.itemIndex, located.pageIndex,
+          );
+        }
+        continue; // original feature-name scrollTo is replaced by the synthesised pair
       }
 
       if (cmd.action === 'scribble') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tid = (cmd as any).targetId;
-        let effectiveIndex = cmd.targetItemIndex;
-        let effectivePageTitle: string | undefined;
-        if (typeof tid === 'string') {
-          const resolved = resolveTargetFromId(tid);
-          if (resolved) {
-            effectiveIndex = resolved.itemIndex;
-            effectivePageTitle = resolved.pageTitle;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (cmd as any).targetItemIndex = effectiveIndex;
-          } else {
-            console.warn('[VoiceTutorRealtime] Scribble targetId not found:', tid);
-          }
+        // The catalog-driven resolver above already stamped targetId,
+        // targetFeature, targetItemIndex, targetPageIndex, and (when
+        // available) targetPageTitle. Here we just inject any needed
+        // page-switch + item-scroll before the scribble renders.
+        const effectiveIndex = cmd.targetItemIndex;
+        const effectivePageTitle = cmd.targetPageTitle;
+        const effectivePageIndex = cmd.targetPageIndex;
+        if (typeof effectivePageIndex === 'number') {
+          pushPageScrollTo(effectivePageTitle, effectivePageIndex);
+          console.log(
+            '[VoiceTutorRealtime] Auto-page-switch injected before scribble →',
+            effectivePageTitle ?? `page ${effectivePageIndex}`,
+          );
+          onDebugEvent?.(
+            'auto_page_switch_before_scribble',
+            effectivePageTitle ?? `page ${effectivePageIndex}`,
+          );
         }
-        // Page navigation first (if cross-page)
-        if (effectivePageTitle && !pagesAlreadyNavigatedThisBatch.has(effectivePageTitle)) {
-          withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle: effectivePageTitle });
-          pagesAlreadyNavigatedThisBatch.add(effectivePageTitle);
-          console.log('[VoiceTutorRealtime] Auto-page-switch injected before scribble →', effectivePageTitle);
-          onDebugEvent?.('auto_page_switch_before_scribble', effectivePageTitle);
-        }
-        // Item scroll next (if not already scrolled)
         if (typeof effectiveIndex === 'number' && !itemsAlreadyScrolledThisBatch.has(effectiveIndex)) {
-          withAutoScrolls.push({ action: 'scrollTo', target: 'item', itemIndex: effectiveIndex });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tf = (cmd as any).targetFeature as string | undefined;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (withAutoScrolls as any).push({
+            action: 'scrollTo', target: 'item',
+            itemIndex: effectiveIndex,
+            ...(tf ? { targetFeature: tf } : {}),
+          });
           itemsAlreadyScrolledThisBatch.add(effectiveIndex);
-          console.log('[VoiceTutorRealtime] Auto-scrollTo injected before scribble for item', effectiveIndex);
-          onDebugEvent?.('auto_scroll_before_scribble', `Item ${effectiveIndex}`);
+          console.log('[VoiceTutorRealtime] Auto-scrollTo injected before scribble for item', effectiveIndex, 'feature', tf ?? '(none)');
+          onDebugEvent?.('auto_scroll_before_scribble', `Item ${effectiveIndex}${tf ? ` (${tf})` : ''}`);
         }
       }
       withAutoScrolls.push(cmd);
@@ -1612,7 +2074,14 @@ export function VoiceTutorRealtime({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((c) => (c as any).id)
       .filter((id): id is string => typeof id === 'string');
-    return { rejected, assignedIds };
+    // Mirror manifests in the same order as assignedIds so the Realtime
+    // hook can zip them together when building the tool-result payload.
+    const manifests = assignedIds.map((id) => commandByIdRef.current.get(id)?.manifest);
+    // Per-turn whiteboard snapshot — every show_* tool_result echoes the
+    // current board state so the tutor sees what's already drawn at
+    // decision time and routes through scroll/scribble for repeats.
+    const boardSnapshot = catalogRef.current.getSnapshot();
+    return { rejected, assignedIds, manifests, duplicates, boardSnapshot };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent]);
 
   // Build a context summary from the current transcript
@@ -2229,6 +2698,28 @@ export function VoiceTutorRealtime({
     vadPrefixPaddingMs,
     onTranscriptUpdate: handleTranscriptUpdate,
     onWhiteboardCommand: handleWhiteboardCommand,
+    onQueryFeatures: (args) => {
+      // Resolve list_whiteboard_features against the session catalog.
+      // With an id, return just that item's features; otherwise return
+      // every feature currently on the whiteboard so the tutor can pick
+      // any target without needing an id.
+      const catalog = catalogRef.current;
+      const items = args.id
+        ? (catalog.getItem(args.id) ? [catalog.getItem(args.id)!] : [])
+        : catalog.getItems();
+      if (items.length === 0) return null;
+      return items.map((item) => ({
+        itemId: item.itemId,
+        action: item.action,
+        pageTitle: item.pageTitle,
+        features: item.features.map((f) => ({
+          target: f.labels[0] || f.canonical,
+          canonical: f.canonical,
+          kind: f.kind,
+          description: f.description,
+        })),
+      }));
+    },
     onResponseDone: handleResponseDone,
     onError: handleError,
     onStateChange,
@@ -2270,31 +2761,6 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] Module not loaded, using base prompts');
         }
 
-        // Fetch prior-session weak topics for this student+subject+topic
-        // so the opening greeting can surface targeted review. Time-boxed to
-        // 400 ms — if Mongo is slow we proceed without personalization rather
-        // than hold up the connection. Session-open latency matters more than
-        // a (often empty) prior-progress block.
-        let priorProgress: { sessionCount: number; weakTopics: Array<{ topic: string; count: number }>; topicsCovered: string[] } | null = null;
-        if (studentName) {
-          try {
-            const fetchPromise = fetch('/api/tutor/student-progress', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ studentName, subject, topic, level }),
-            }).then(r => r.ok ? r.json() : null);
-            priorProgress = await Promise.race([
-              fetchPromise,
-              new Promise<null>((resolve) => setTimeout(() => {
-                console.warn('[VoiceTutorRealtime] student-progress lookup >600ms — skipping prior-session block');
-                resolve(null);
-              }, 600)),
-            ]);
-          } catch (err) {
-            console.warn('[VoiceTutorRealtime] student-progress lookup failed:', err);
-          }
-        }
-
         // Build system prompt using existing builder
         const systemPrompt = buildSystemPrompt({
           module: knowledgeModule,
@@ -2306,28 +2772,6 @@ export function VoiceTutorRealtime({
           topic,
           level,
         });
-
-        // Personalized prior-session block — appended to instructions so the
-        // tutor can open with targeted review instead of a cold greeting.
-        //
-        // IMPORTANT: skip the block entirely when we have NO real content to
-        // share (no weak topics AND no covered topics). Previously we injected
-        // the block whenever sessionCount > 0, which forced the tutor to
-        // invent a memory ("I remember last time we tackled X") pulling X
-        // from the student's current question — a confabulation that
-        // students noticed and called out. A cold greeting is better than a
-        // fabricated one.
-        let priorBlock = '';
-        if (priorProgress && priorProgress.sessionCount > 0) {
-          const weak = priorProgress.weakTopics.slice(0, 3).map(w => w.topic).filter(Boolean);
-          const covered = priorProgress.topicsCovered.slice(0, 6);
-          if (weak.length > 0 || covered.length > 0) {
-            priorBlock = `\n\n## Prior Session Context\nThis student has had ${priorProgress.sessionCount} prior session(s) with you on this subject.\n` +
-              (covered.length > 0 ? `Previously covered: ${covered.join(', ')}.\n` : '') +
-              (weak.length > 0 ? `Areas they struggled with most: ${weak.join(', ')}.\n` : '') +
-              `\nAFTER your greeting, briefly check in: mention you remember where you left off (referencing ONLY the specific topics listed above — never invent other topics), and offer to either (a) revisit the weak spots above with a quick review problem, or (b) move on to new material. Keep this check-in to one sentence — do NOT lecture about what they got wrong last time. Respect whatever they pick.`;
-          }
-        }
 
         // Read optional voice personality from env
         const voicePersonality = process.env.NEXT_PUBLIC_TUTOR_VOICE_PERSONALITY
@@ -2346,67 +2790,16 @@ ${voicePersonality}
 - React naturally to student responses - you'll hear them in real-time.
 - If the student interrupts, acknowledge it and adjust your response.
 
-## Visual Tools — MANDATORY USAGE
+## Visual Tools
 
-CRITICAL: You MUST use whiteboard tools proactively. Students learn visually.
+Whiteboard tool rules and the structured-tool catalog are covered in the system prompt above. Two reminders specific to the realtime voice channel:
 
-### show_equation — USE EVERY TIME you mention a formula
-Call show_equation EVERY TIME you mention ANY equation, formula, or mathematical relationship.
-- Say "pressure equals rho g h" → MUST also call show_equation with latex "P = \\\\rho g h"
-- Say "buoyant force equals weight of displaced fluid" → call show_equation with "F_b = \\\\rho_{fluid} \\\\cdot V_{disp} \\\\cdot g"
-- ANY time you reference a formula in speech, you MUST also display it. No exceptions.
+- **One question, one visual.** Render only the visual that directly answers what the student asked. Do NOT add an unrequested second diagram (e.g. a Lewis structure alongside a reaction-coordinate diagram, a timeline alongside a map). Extra visuals clutter the board.
+- **Final-answer equation.** When a problem is solved, close with show_equation whose label is "Final Answer" and whose latex restates the original problem on the left and the result on the right (e.g. "\\\\int_0^2 (4x - x^2)\\\\, dx = \\\\frac{16}{3}"). One-line glanceable summary.
 
-### show_function_graph — USE for ALL mathematical function graphs
-This is your tool for plotting mathematical functions, curves, and shaded regions. The rendering engine computes exact coordinates automatically — you just provide function expressions.
-- Use this INSTEAD of show_svg_diagram whenever you need to plot y=f(x) or x=f(y) curves.
-- "functions" array: y=f(x) plots. Expression uses "x" variable with JS math: "4 - 0.5*x", "x**2", "Math.sin(x)".
-- "functionsOfY" array: x=f(y) plots (e.g. x=y³). Expression uses "y" variable: "y**3", "3*y - 2".
-- "points" array: labeled intersection points or key points to mark.
-- "shadedRegion": shade area between two curves. Set axis="y" for horizontal slices (provide x=f(y) expressions), axis="x" for vertical slices (provide y=f(x) expressions), with from/to bounds.
-- Set xRange and yRange to show the relevant portion of the coordinate plane.
-- ALWAYS choose ranges that show the full region of interest including all intersection points and labeled features.
+Open with "Hey [name]!" — three words. Wait for the student.`;
 
-### Structured diagram tools (PREFER these over show_svg_diagram)
-When a structured tool covers the scenario, you MUST use it — free-form SVG produces colliding labels and inconsistent layout.
-
-• **show_free_body_diagram** — ALWAYS use for free-body diagrams, force analyses, Newton's-laws problems, inclined planes. You supply object shape, surface type, and a list of forces with names + directions; the renderer draws arrows and places labels automatically. Force colors auto-assign by name convention (W/Mg → green, N → amber, f → purple, T → blue).
-• **show_energy_bars** — ALWAYS use for conservation-of-energy visualization, roller-coaster / pendulum / spring energy transforms, and friction dissipation. Supply a \`positions\` array — each item has a label plus optional ke / pe / spring / thermal values. The renderer stacks bars and draws a dashed "total energy (conserved)" line automatically when totals match across positions.
-• **show_collision** — ALWAYS use for conservation of momentum, elastic/inelastic/perfectly-inelastic collisions, and any two-object interaction before/after. Supply \`before\` and \`after\` arrays of bodies with mass and velocity. The renderer scales circles by mass, scales arrows by speed, and merges bodies automatically for perfectly-inelastic collisions. Pass \`type: "perfectly-inelastic"\` for stick-together collisions, \`"elastic"\` for bounce-apart, \`"inelastic"\` for energy-loss-but-separate.
-
-### show_svg_diagram — FALLBACK for novel scenarios only
-Use this for physical setups that don't fit a structured tool above (pipes, custom machinery, uncommon illustrations). NOT for free-body diagrams, NOT for mathematical function graphs.
-- Draw SVG with viewBox="0 0 400 300". Use actual shapes, arrows, labels.
-- For diagrams: draw realistic shapes (e.g. actual car shapes for motion, actual pipes for fluid flow). Use fill colors, stroke, and clear labels.
-- Use ACTUAL VALUES from the problem being discussed. Include title and description.
-- Make diagrams educational, detailed, and visually appealing. Think like a textbook illustrator.
-- CRITICAL — PROPORTIONAL SIZING: When drawing objects with different dimensions (e.g. a hose and nozzle), the SVG element sizes MUST be proportional to the actual values.
-- SVG markup must be on a single line — do NOT include literal newlines in the SVG string.
-
-RULE: If you say "let me show you" or describe any visual, you MUST call the tool. Never describe visuals without showing them.
-
-RULE — NO EXTRANEOUS DIAGRAMS: Only render diagrams that directly answer what the student asked. If the question is about reaction energetics (activation energy / ΔH / energy profile), use show_reaction_coordinate alone — do NOT also draw a Lewis structure of a reactant the student didn't ask about. If the question is about a map, do NOT also draw a timeline. One question, one visual artifact — unless the student explicitly asked for multiple. Extra diagrams are not helpful "bonus content"; they clutter the whiteboard and distract from the point.
-
-### Homework uploads
-When a student uploads a homework problem:
-1. IMMEDIATELY draw the problem setup on the whiteboard:
-   - For problems involving graphing functions/curves: use show_function_graph with the function expressions
-   - For free-body / force / Newton's-laws problems: use show_free_body_diagram (structured, always preferred for this scenario)
-   - For other physics setups that don't fit a structured tool: use show_svg_diagram
-2. Verbally acknowledge the upload and summarize what the problem asks.
-3. As you work through each solution step, call show_equation for every formula and substitution.
-4. Guide the student step by step, asking questions to check understanding.
-
-### Solution steps on the whiteboard
-As you solve problems, show EACH step on the whiteboard:
-- The starting equation (show_equation)
-- Each substitution with actual values (show_equation)
-- Intermediate results (show_equation)
-- **The final answer** (show_equation with label "Final Answer") — THIS IS REQUIRED. When the problem is solved (whether you stated the result or the student did), you MUST close with a show_equation whose latex restates the original problem = the final result, and whose label is "Final Answer". Example: after solving ∫₀² (4x − x²) dx, call show_equation with latex "\\int_0^2 (4x - x^2)\\, dx = \\frac{16}{3}" and label "Final Answer". The student should be able to glance at the board and see the one-line summary of what was solved. Do NOT end a problem without this summary equation.
-The student should be able to follow the entire solution by looking at the whiteboard.
-
-Start by warmly greeting the student and asking how you can help them today.`;
-
-        setInstructions(openAIInstructions + priorBlock);
+        setInstructions(openAIInstructions);
         setIsInitialized(true);
       } catch (err) {
         console.error('[VoiceTutorRealtime] Failed to build instructions:', err);
@@ -2740,6 +3133,15 @@ Start by warmly greeting the student and asking how you can help them today.`;
             transcriptRef.current = [...transcriptRef.current, entry];
             onTranscriptUpdate(transcriptRef.current);
             onTrackInteraction?.('message', text, undefined, 'student');
+            // Fresh student message → fresh tutor turn. Same reset as the
+            // voice-finalization path.
+            visualActionsThisTurnRef.current = new Set();
+            console.log('[VoiceTutor] Student turn start (typed) — cleared visualActionsThisTurn');
+            // Run the same new-problem / topic-shift detectors we run on
+            // voice-final transcripts, so typed prompts like "Draw a 30°
+            // inclined plane…" trigger a fresh whiteboard page. Before
+            // this hook, typed messages bypassed detection entirely.
+            runStudentTurnDetection(text, 'typed');
             // Send to AI
             realtime.sendTextMessage(text);
             input.value = '';

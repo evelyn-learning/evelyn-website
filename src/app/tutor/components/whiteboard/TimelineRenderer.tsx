@@ -15,6 +15,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export interface TimelineEvent {
   date: string; // e.g. "1776", "1492 CE", "500 BCE", "Jan 1, 1776"
@@ -153,6 +154,54 @@ function assignCollisionRows(
     }
   }
   return rows;
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Both swimlane and axis layouts emit one axis + one event-<slug> per event.
+ */
+export function buildTimelineManifest(props: TimelineRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const events = props.events ?? [];
+  if (events.length === 0) return entries;
+  entries.push({
+    name: 'axis',
+    kind: 'axis',
+    description: 'timeline axis line',
+    labels: ['axis', 'timeline', 'the timeline', 'timeline axis', 'date axis', 'time axis'],
+  });
+  events.forEach((e, i) => {
+    const slug = e.title ? featSlug(e.title) : `${i + 1}`;
+    const name = e.title ? `event-${slug}` : `event-${i + 1}`;
+    const labels = new Set<string>([
+      name,
+      `event-${i + 1}`,
+      `event ${i + 1}`,
+      `pin ${i + 1}`,
+    ]);
+    if (e.title) {
+      labels.add(e.title);
+      labels.add(`event ${e.title}`);
+      labels.add(`event-${slug}`);
+      labels.add(`the-${slug}-event`);
+      labels.add(`the ${e.title} event`);
+      labels.add(`the ${e.title}`);
+      labels.add(`${e.title} event`);
+    }
+    if (e.date) {
+      labels.add(e.date);
+      labels.add(`the ${e.date} event`);
+      labels.add(`event in ${e.date}`);
+    }
+    entries.push({
+      name,
+      kind: 'point',
+      description: `event "${e.title}" (${e.date})${e.category ? ` — ${e.category}` : ''}`,
+      labels: Array.from(labels),
+    });
+  });
+  return entries;
 }
 
 export default function TimelineRenderer({
@@ -346,8 +395,9 @@ function renderSwimlane({ title, events, xs, plotLeft, plotRight, ticks, categor
           // Stack labels above the pin when multiple pins share x-space on a row.
           const labelY = laneMidY - 12 - labelRow * 20;
           const wrapped = wrapTitle(event.title, 18);
+          const evName = event.title ? `event-${featSlug(event.title)}` : `event-${i + 1}`;
           return (
-            <g key={`event-${i}`}>
+            <g key={`event-${i}`} {...feat(evName, { cx: x, cy: laneMidY, w: 80, h: SWIMLANE_HEIGHT }, { width: SVG_WIDTH, height })}>
               <line
                 x1={x}
                 y1={laneMidY}
@@ -400,6 +450,7 @@ function renderSwimlane({ title, events, xs, plotLeft, plotRight, ticks, categor
           y2={axisY}
           stroke="#94a3b8"
           strokeWidth={2}
+          {...feat('axis', { cx: (plotLeft + plotRight) / 2, cy: axisY, w: plotRight - plotLeft + 20, h: 20 }, { width: SVG_WIDTH, height })}
         />
         {ticks.map((tick, i) => (
           <g key={`tick-${i}`}>
@@ -494,6 +545,7 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
           y2={axisY}
           stroke="#94a3b8"
           strokeWidth={2}
+          {...feat('axis', { cx: SVG_WIDTH / 2, cy: axisY, w: SVG_WIDTH - AXIS_MODE_PADDING_X * 2 + 20, h: 20 }, { width: SVG_WIDTH, height })}
         />
 
         {ticks.map((tick, i) => (
@@ -533,8 +585,9 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
           const titleStartY = above
             ? dateY - 14 - (wrapped.length - 1) * 14
             : dateY + 16;
+          const evName = event.title ? `event-${featSlug(event.title)}` : `event-${i + 1}`;
           return (
-            <g key={`event-${i}`}>
+            <g key={`event-${i}`} {...feat(evName, { cx: x, cy: (axisY + leaderEndY) / 2, w: 100, h: Math.abs(leaderEndY - axisY) + 30 }, { width: SVG_WIDTH, height })}>
               <line
                 x1={x}
                 y1={axisY}

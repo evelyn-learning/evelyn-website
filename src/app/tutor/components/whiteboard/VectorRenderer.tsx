@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -43,6 +43,79 @@ export interface VectorRendererProps {
 
 const W = DIAGRAM_VIEWBOX.width;
 const H = DIAGRAM_VIEWBOX.height;
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildVectorManifest(props: VectorRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const vectors = props.vectors ?? [];
+  vectors.forEach((v, i) => {
+    const slug = (v.label || `vector-${i + 1}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `vector-${i + 1}`;
+    const labels = new Set<string>([
+      `vector-${slug}`,
+      `vector-${i + 1}`,
+      `vector ${i + 1}`,
+      `arrow ${i + 1}`,
+    ]);
+    if (v.label) {
+      labels.add(v.label);
+      labels.add(`vector ${v.label}`);
+      labels.add(`${v.label} vector`);
+      labels.add(`${v.label}-vector`);
+      labels.add(`arrow ${v.label}`);
+      labels.add(`the ${v.label} vector`);
+    } else {
+      labels.add(`v${i + 1}`);
+    }
+    entries.push({
+      name: `vector-${slug}`,
+      kind: 'line',
+      description: v.label
+        ? `vector "${v.label}" — magnitude ${formatValue(v.magnitude)}, direction ${formatValue(v.direction)}°`
+        : `vector ${i + 1} — magnitude ${formatValue(v.magnitude)}, direction ${formatValue(v.direction)}°`,
+      labels: Array.from(labels),
+    });
+    entries.push({
+      name: `vector-${i + 1}`,
+      kind: 'line',
+      description: `vector ${i + 1} (positional alias)`,
+      labels: [
+        `vector-${i + 1}`,
+        `vector ${i + 1}`,
+        `arrow ${i + 1}`,
+        `v${i + 1}`,
+        `the ${i + 1}${i === 0 ? 'st' : i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'} vector`,
+      ],
+    });
+  });
+  if (props.showResultant && vectors.length > 0) {
+    const rLabel = props.resultantLabel ?? 'R';
+    entries.push({
+      name: 'resultant',
+      kind: 'line',
+      description: `resultant vector "${rLabel}" (sum of all vectors)`,
+      labels: [
+        'resultant',
+        'resultant vector',
+        'the resultant',
+        'sum',
+        'vector sum',
+        'sum vector',
+        rLabel,
+        `vector ${rLabel}`,
+        `${rLabel}-vector`,
+      ],
+    });
+  }
+  return entries;
+}
 
 export default function VectorRenderer({
   title, vectors, layout = 'from-origin',
@@ -107,15 +180,31 @@ export default function VectorRenderer({
           </g>
         )}
 
-        {/* Individual vectors */}
+        {/* Individual vectors. Exposed as "vector-<N>" by position, plus
+            "vector-<label-slug>" when the vector has a label — so the
+            tutor can point at "vector-1" or at "vector-wind" by name. */}
         {vectors.map((v, i) => {
           const color = v.color || cycleColor(i);
           const tail = tails[i]; const tip = tips[i];
+          const bbox = {
+            cx: (sx(tail.x) + sx(tip.x)) / 2,
+            cy: (sy(tail.y) + sy(tip.y)) / 2,
+            w: Math.max(30, Math.abs(sx(tip.x) - sx(tail.x)) + 40),
+            h: Math.max(20, Math.abs(sy(tip.y) - sy(tail.y)) + 30),
+          };
+          const slug = (v.label || `vector-${i + 1}`)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || `vector-${i + 1}`;
           return (
-            <g key={`v${i}`}>
-              <line x1={sx(tail.x)} y1={sy(tail.y)} x2={sx(tip.x)} y2={sy(tip.y)}
-                stroke={color} strokeWidth={2.5}
-                markerEnd={`url(#${arrowMarkerId(color, 'vr-arrow')})`} />
+            <g key={`v${i}`} {...feat(`vector-${slug}`, bbox)}>
+              {/* Also expose the positional alias so the tutor can use
+                  "vector-1" / "vector-2" when labels are missing. */}
+              <g {...feat(`vector-${i + 1}`, bbox)}>
+                <line x1={sx(tail.x)} y1={sy(tail.y)} x2={sx(tip.x)} y2={sy(tip.y)}
+                  stroke={color} strokeWidth={2.5}
+                  markerEnd={`url(#${arrowMarkerId(color, 'vr-arrow')})`} />
+              </g>
               {showComponents && (
                 <g>
                   <line x1={sx(tail.x)} y1={sy(tail.y)} x2={sx(tip.x)} y2={sy(tail.y)} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.7} />
@@ -133,7 +222,7 @@ export default function VectorRenderer({
 
         {/* Resultant */}
         {showResultant && (
-          <g>
+          <g {...feat('resultant', { cx: (sx(0) + sx(resultant.x)) / 2, cy: (sy(0) + sy(resultant.y)) / 2, w: Math.max(30, Math.abs(sx(resultant.x) - sx(0)) + 40), h: Math.max(20, Math.abs(sy(resultant.y) - sy(0)) + 30) })}>
             <line x1={sx(0)} y1={sy(0)} x2={sx(resultant.x)} y2={sy(resultant.y)}
               stroke={DIAGRAM_COLORS.primary} strokeWidth={3}
               strokeDasharray="8 4"

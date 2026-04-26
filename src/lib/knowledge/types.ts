@@ -606,68 +606,56 @@ export type WhiteboardCommand =
       // already on the board. Renders as an SVG overlay on top of the
       // target item; does NOT redraw it.
       //
-      // PREFERRED addressing: targetId + targetFeature. The tutor knows
-      // both from prior tool-call outputs (show_* returns the id) and
-      // from the tool description (each renderer documents its feature
-      // names — "object", "image", "focal", "mass-1", etc.). The client
-      // then resolves targetFeature by reading data-feature / data-
-      // feature-cx / data-feature-cy / data-feature-w / data-feature-h
-      // attributes off the rendered SVG element, so the tutor never has
-      // to guess pixel coordinates.
+      // Tutor-facing addressing: a single `target` string naming the
+      // feature. The handler resolves `target` against the session's
+      // WhiteboardCatalog and stamps `targetId` + `targetFeature` on
+      // this command before it reaches the renderer — all the other
+      // fields below are populated by the resolver, not the tutor.
       //
-      // Renderer convention: emit attributes of the form
-      //   <g data-feature="object"
-      //      data-feature-cx="0.25" data-feature-cy="0.55"
-      //      data-feature-w="0.08"  data-feature-h="0.25">...</g>
-      // on any labeled / named element that the tutor may want to point
-      // at. All values are fractions of the item's 0-1 coordinate space.
+      // Renderer convention (unchanged): feat() emits attributes of the
+      // form <g data-feature="object" data-feature-cx="0.25" ...> on
+      // every labeled element, and the overlay looks up the resolved
+      // `targetFeature` directly against those attributes.
       action: 'scribble';
       /**
-       * PRIMARY addressing path: the id assigned to the target item when
-       * it was originally drawn. The tutor learns this id from the
-       * function_call_output of the show_* call that created the item
-       * (e.g. { success: true, id: "showSpringMass-1" }). Robust across
-       * page switches and command reordering.
+       * TUTOR-SUPPLIED: a natural-language or canonical name for the
+       * feature to mark (e.g. "point-a", "vertex A", "the object").
+       * The resolver maps this to targetId + targetFeature.
        */
+      target?: string;
+      /** Resolver output — id of the item owning the matched feature. */
       targetId?: string;
-      /**
-       * Name of a specific labeled feature inside the target item (e.g.
-       * "object", "image", "focal", "mass-1", "species-shark"). When set,
-       * the client resolves it to a region by reading data-feature-*
-       * attributes from the rendered SVG — the tutor does not have to
-       * estimate coordinates. Preferred over `region` for labeled
-       * elements. Each renderer's tool description lists the feature
-       * names it exposes.
-       */
+      /** Resolver output — canonical data-feature name (e.g. "point-a"). */
       targetFeature?: string;
-      /**
-       * Fallback addressing path: 1-indexed position of the target item
-       * within its page, matching the numbering the student sees. Used
-       * only when targetId isn't available. The client also resolves
-       * targetId into this field before rendering.
-       */
+      /** Resolver output — 1-indexed item position for overlay routing. */
       targetItemIndex?: number;
+      /** Resolver output — title of the page holding the target item. */
+      targetPageTitle?: string;
+      /** Resolver output — 0-indexed page holding the target item. */
+      targetPageIndex?: number;
       shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
-      /**
-       * Explicit sub-region of the target item, in relative 0-1 coords.
-       * Usually NOT passed — prefer targetFeature when the element is
-       * labeled. Region is for pointing at something that isn't a named
-       * feature (e.g. "circle this word in a free-form diagram").
-       */
-      region?: { x: number; y: number; w: number; h: number };
       color?: string;
       /** Optional callout text drawn near the mark. */
       label?: string;
     }
   | {
-      // Bring a specific item or page into the student's view so the
-      // tutor can reference "see this part" without redrawing.
+      // Bring an item into view so the tutor can reference it without
+      // redrawing. Tutor passes a single `target` string — same shape as
+      // tutor_scribble. The handler resolves it via the WhiteboardCatalog
+      // and stamps the resolved page + item onto the command. Reserved
+      // values "top" / "bottom" scroll the current page edges.
       action: 'scrollTo';
-      /** Id of the item to scroll to. When set, target is inferred. */
+      /** Tutor-supplied: feature name OR "top" / "bottom". */
+      target: string;
+      /** Resolver output — id of the item to focus. */
       targetId?: string;
-      target: 'top' | 'bottom' | 'item' | 'page';
+      /** Resolver output — canonical feature name to bring into view. */
+      targetFeature?: string;
+      /** Resolver output — 1-indexed item position. */
       itemIndex?: number;
+      /** Resolver output — 0-indexed page. */
       pageIndex?: number;
+      /** Resolver output — title of the page (when titled). */
       pageTitle?: string;
     }
   | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }

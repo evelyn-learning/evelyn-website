@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export interface ReactionCoordinateProps {
   title?: string;
@@ -60,6 +61,91 @@ function niceTickStep(range: number): number {
   else if (normalized < 7) nice = 1;
   else nice = 2;
   return nice * base;
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildReactionCoordinateManifest(props: ReactionCoordinateProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const units = props.units ?? 'kJ/mol';
+  const reactantName = props.reactant_label ?? 'Reactants';
+  const productName = props.product_label ?? 'Products';
+  entries.push({
+    name: 'reactants',
+    kind: 'label',
+    description: `reactants baseline label (${reactantName})`,
+    labels: ['reactants', 'reactant', 'the reactants', 'starting material', 'starting materials', 'LHS', 'left-hand side', 'left side', 'initial state', reactantName, reactantName.toLowerCase()],
+  });
+  entries.push({
+    name: 'products',
+    kind: 'label',
+    description: `products baseline label (${productName}, ${props.products_energy} ${units})`,
+    labels: ['products', 'product', 'the products', 'RHS', 'right-hand side', 'right side', 'output', 'final state', productName, productName.toLowerCase()],
+  });
+  const eas = props.activation_energies && props.activation_energies.length > 0 ? props.activation_energies : [50];
+  eas.forEach((ea, i) => {
+    const curveName = eas.length > 1 ? `curve-${i + 1}` : 'curve';
+    const label = props.curve_labels?.[i];
+    const curveLabels = new Set<string>([
+      curveName,
+      'curve',
+      'energy profile',
+      'reaction curve',
+      'energy profile curve',
+      'energy diagram',
+      `curve ${i + 1}`,
+    ]);
+    if (label) {
+      curveLabels.add(label);
+      curveLabels.add(label.toLowerCase());
+      curveLabels.add(`the ${label.toLowerCase()}`);
+    }
+    entries.push({
+      name: curveName,
+      kind: 'curve',
+      description: label ? `energy profile curve (${label}, Ea = ${ea} ${units})` : `energy profile curve (Ea = ${ea} ${units})`,
+      labels: Array.from(curveLabels),
+    });
+    const tsLabels = new Set<string>([
+      `ts-${i + 1}`,
+      'transition state',
+      'transition-state',
+      'TS',
+      'activated complex',
+      'peak',
+      `transition state ${i + 1}`,
+      `TS ${i + 1}`,
+      `peak ${i + 1}`,
+    ]);
+    if (label) tsLabels.add(`transition state for ${label}`);
+    entries.push({
+      name: `ts-${i + 1}`,
+      kind: 'point',
+      description: `transition state at peak of curve ${i + 1}`,
+      labels: Array.from(tsLabels),
+    });
+    const eaLabels = new Set<string>([
+      `ea-${i + 1}`,
+      'activation energy',
+      'activation-energy',
+      'Ea',
+      'Ea barrier',
+      'energy barrier',
+      'activation barrier',
+      `Ea ${i + 1}`,
+      `activation energy ${i + 1}`,
+    ]);
+    if (label) eaLabels.add(`activation energy for ${label}`);
+    entries.push({
+      name: `ea-${i + 1}`,
+      kind: 'annotation',
+      description: `activation energy label (Ea = ${ea} ${units}) for curve ${i + 1}`,
+      labels: Array.from(eaLabels),
+    });
+  });
+  return entries;
 }
 
 export default function ReactionCoordinateRenderer({
@@ -243,6 +329,7 @@ export default function ReactionCoordinateRenderer({
           fontSize={12}
           fontWeight={600}
           fill="#1f2937"
+          {...feat('reactants', { cx: (xReactStart + xReactEnd) / 2, cy: yReact, w: xReactEnd - xReactStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
           {reactant_label}
           {reactants_energy !== 0 && ` (${reactants_energy} ${units})`}
@@ -256,6 +343,7 @@ export default function ReactionCoordinateRenderer({
           fontSize={12}
           fontWeight={600}
           fill="#1f2937"
+          {...feat('products', { cx: (xProdStart + xProdEnd) / 2, cy: yProd, w: xProdEnd - xProdStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
           {product_label}
         </text>
@@ -274,13 +362,15 @@ export default function ReactionCoordinateRenderer({
           const color = CURVE_PALETTE[i % CURVE_PALETTE.length];
           const yTop = yToSvg(reactants_energy + ea);
           return (
-            <g key={`curve-${i}`}>
+            <g key={`curve-${i}`} {...feat(eas.length > 1 ? `curve-${i + 1}` : 'curve', { cx: xPeak, cy: (yReact + yTop) / 2, w: xProdStart - xReactEnd + 20, h: Math.max(40, yReact - yTop + 20) }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
               <path
                 d={humpPath(ea)}
                 fill="none"
                 stroke={color}
                 strokeWidth={2.2}
               />
+              {/* Transition state / activation-energy markers */}
+              <g {...feat(`ts-${i + 1}`, { cx: xPeak, cy: yTop, w: 30, h: 30 }, { width: SVG_WIDTH, height: SVG_HEIGHT })} />
               {/* Ea label near the peak */}
               <text
                 x={xPeak}
@@ -289,6 +379,7 @@ export default function ReactionCoordinateRenderer({
                 fontSize={11}
                 fontWeight={600}
                 fill={color}
+                {...feat(`ea-${i + 1}`, { cx: xPeak, cy: (yReact + yTop) / 2, w: 60, h: Math.max(20, yReact - yTop) }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
               >
                 E_a = {ea} {units}
               </text>

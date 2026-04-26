@@ -17,7 +17,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -54,6 +54,59 @@ function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number
     'data-feature-w': (bbox.w / VIEWBOX_W).toFixed(3),
     'data-feature-h': (bbox.h / VIEWBOX_H).toFixed(3),
   };
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildProjectileMotionManifest(props: ProjectileMotionProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const g = props.g ?? 9.8;
+  const y0 = props.y0 ?? 0;
+  const theta = (props.angle * Math.PI) / 180;
+  const vy = props.v0 * Math.sin(theta);
+
+  entries.push({
+    name: 'ground',
+    kind: 'line',
+    description: 'horizontal ground line (landing plane)',
+    labels: ['ground', 'floor', 'bottom', 'surface', 'baseline', 'landing plane', 'x-axis'],
+  });
+  entries.push({
+    name: 'y-axis',
+    kind: 'axis',
+    description: 'vertical axis on the left of the plot',
+    labels: ['y-axis', 'y axis', 'vertical axis', 'height axis', 'left axis'],
+  });
+  entries.push({
+    name: 'trajectory',
+    kind: 'curve',
+    description: `parabolic trajectory (v₀ = ${formatValue(props.v0)}, angle = ${formatValue(props.angle)}°)`,
+    labels: ['trajectory', 'path', 'parabola', 'the trajectory', 'flight path', 'curve', 'arc', 'projectile path'],
+  });
+  entries.push({
+    name: 'launch',
+    kind: 'point',
+    description: `launch point at (0, ${formatValue(y0)})`,
+    labels: ['launch', 'launch point', 'start', 'starting point', 'origin', 'release point', 'initial point'],
+  });
+  const tPeak = vy / g;
+  if (Number.isFinite(tPeak) && tPeak > 0) {
+    entries.push({
+      name: 'peak',
+      kind: 'point',
+      description: 'peak (maximum height) of the trajectory',
+      labels: ['peak', 'apex', 'maximum height', 'max height', 'top', 'highest point', 'the peak', 'h'],
+    });
+  }
+  entries.push({
+    name: 'landing',
+    kind: 'point',
+    description: 'landing point where the trajectory meets the ground',
+    labels: ['landing', 'landing point', 'end', 'endpoint', 'impact', 'impact point', 'range point', 'touchdown'],
+  });
+  return entries;
 }
 
 export default function ProjectileMotionRenderer({

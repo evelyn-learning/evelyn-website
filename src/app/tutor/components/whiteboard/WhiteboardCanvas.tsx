@@ -7,7 +7,7 @@
  * from the AI tutor including equations, graphs, and diagrams.
  */
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
@@ -258,7 +258,47 @@ export function WhiteboardCanvas({
     if (current.commands.length > 0) {
       result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
     }
-    return result;
+
+    // Relocate scribbles tagged with targetPageTitle OR targetPageIndex:
+    // the tutor auto-scroll injector stamps these on cross-page scribbles
+    // so we can move them into their target bucket. Without this the
+    // scribble lives in whichever bucket it was *emitted* into (usually
+    // the current page at the time of the tool call), and renders on the
+    // wrong item when the student flips to the target page (2026-04-24
+    // physics session: "point at start of probability tree" scribble
+    // landed on the triangle page because the scribble came after a
+    // later newPage). pageIndex fallback added after the 2026-04-24
+    // physics scatter-plot session where the vertex-A scribble targeted
+    // page 0 (untitled implicit first page) and stayed on the wrong
+    // page because title-only relocation had nothing to match.
+    const relocated: typeof result = result.map((p) => ({ ...p, commands: [...p.commands] }));
+    for (let i = 0; i < relocated.length; i++) {
+      const keep: WhiteboardCommand[] = [];
+      for (const cmd of relocated[i].commands) {
+        if (cmd.action !== 'scribble') { keep.push(cmd); continue; }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cmdAny = cmd as any;
+        const targetPageTitle = cmdAny.targetPageTitle as string | undefined;
+        const targetPageIndex = cmdAny.targetPageIndex as number | undefined;
+        let targetIdx = -1;
+        if (targetPageTitle) {
+          const targetLower = targetPageTitle.toLowerCase();
+          // Find the LAST matching page — if the title repeats, the most
+          // recent one is the intended target.
+          for (let j = relocated.length - 1; j >= 0; j--) {
+            if (relocated[j].title?.toLowerCase() === targetLower) { targetIdx = j; break; }
+          }
+        }
+        if (targetIdx < 0 && typeof targetPageIndex === 'number'
+            && targetPageIndex >= 0 && targetPageIndex < relocated.length) {
+          targetIdx = targetPageIndex;
+        }
+        if (targetIdx < 0 || targetIdx === i) { keep.push(cmd); continue; }
+        relocated[targetIdx].commands.push(cmd);
+      }
+      relocated[i].commands = keep;
+    }
+    return relocated;
   }, [commands]);
 
   // Handle goToPage navigation: find the target page by title
@@ -278,50 +318,80 @@ export function WhiteboardCanvas({
   }, [commands.length, pages]);
 
   // Handle tutor_scroll_whiteboard — navigate to page/item when the tutor
-  // wants to draw the student's attention to existing content. Only fires
-  // for genuinely new scrollTo commands (guarded by commands.length).
+  // wants to draw the student's attention to existing content. Process
+  // ALL unprocessed scrollTos in arrival order, not just the latest: a
+  // scribble can auto-inject both a page-switch and an item-scroll, and
+  // dropping the page-switch leaves the scribble rendering on the wrong
+  // page (2026-04-24 elementary session: "galvanometer" scribble landed
+  // on base-10 blocks because the cross-page scrollTo was swallowed).
   const lastScrollIndexRef = useRef(-1);
   useEffect(() => {
-    const scrollCmds = commands
+    const pending = commands
       .map((cmd, i) => ({ cmd, i }))
-      .filter((x) => x.cmd.action === 'scrollTo');
-    const latest = scrollCmds[scrollCmds.length - 1];
-    if (!latest) return;
-    if (latest.i <= lastScrollIndexRef.current) return;
-    lastScrollIndexRef.current = latest.i;
+      .filter((x) => x.cmd.action === 'scrollTo' && x.i > lastScrollIndexRef.current);
+    if (pending.length === 0) return;
+    lastScrollIndexRef.current = pending[pending.length - 1].i;
 
-    if (latest.cmd.action !== 'scrollTo') return; // narrow the union
-    const scroll = latest.cmd;
-
-    // Switch page first if requested.
-    if (scroll.target === 'page') {
+    // Partition: page switches apply synchronously (state update), item /
+    // top / bottom scrolls need a frame after any page switch so new refs
+    // are mounted.
+    let pageSwitched = false;
+    for (const { cmd } of pending) {
+      if (cmd.action !== 'scrollTo') continue;
+      if (cmd.target !== 'page') continue;
       let idx = -1;
-      if (typeof scroll.pageIndex === 'number' && scroll.pageIndex >= 0 && scroll.pageIndex < pages.length) {
-        idx = scroll.pageIndex;
-      } else if (scroll.pageTitle) {
-        const title = scroll.pageTitle.toLowerCase();
+      if (typeof cmd.pageIndex === 'number' && cmd.pageIndex >= 0 && cmd.pageIndex < pages.length) {
+        idx = cmd.pageIndex;
+      } else if (cmd.pageTitle) {
+        const title = cmd.pageTitle.toLowerCase();
         for (let i = pages.length - 1; i >= 0; i--) {
           if (pages[i].title?.toLowerCase() === title) { idx = i; break; }
         }
       }
-      if (idx >= 0) setCurrentIndex(idx);
-      return;
+      if (idx >= 0) {
+        setCurrentIndex(idx);
+        pageSwitched = true;
+      }
     }
 
-    // top / bottom / item scroll within the current page. Wait a tick so
-    // that if we JUST switched pages the new refs are mounted.
-    requestAnimationFrame(() => {
+    const runInPageScrolls = () => {
       const container = scrollContainerRef.current;
       if (!container) return;
-      if (scroll.target === 'top') {
-        container.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (scroll.target === 'bottom') {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      } else if (scroll.target === 'item' && typeof scroll.itemIndex === 'number') {
-        const el = itemRefsRef.current[scroll.itemIndex - 1];
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      for (const { cmd } of pending) {
+        if (cmd.action !== 'scrollTo') continue;
+        if (cmd.target === 'top') {
+          container.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (cmd.target === 'bottom') {
+          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        } else if (cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
+          const itemEl = itemRefsRef.current[cmd.itemIndex - 1];
+          if (!itemEl) continue;
+          // Prefer scrolling the specific feature into view if the
+          // resolver tagged one — lets "scroll to intersection points"
+          // land on those points instead of the top of a tall graph.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const targetFeature = (cmd as any).targetFeature as string | undefined;
+          let scrolled = false;
+          if (typeof targetFeature === 'string' && targetFeature) {
+            const safe = targetFeature.replace(/"/g, '\\"');
+            const featureEl = itemEl.querySelector(`[data-feature="${safe}"]`) as HTMLElement | null;
+            if (featureEl) {
+              featureEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              scrolled = true;
+            }
+          }
+          if (!scrolled) itemEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
-    });
+    };
+
+    if (pageSwitched) {
+      // Two frames: one for React to commit the page switch, one for
+      // refs to be attached to the newly-rendered page's items.
+      requestAnimationFrame(() => requestAnimationFrame(runInPageScrolls));
+    } else {
+      requestAnimationFrame(runInPageScrolls);
+    }
   // Only re-run when the commands array grows.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands.length, pages]);
@@ -803,67 +873,265 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   // data-feature-h="0.25">). Resolved regions override the region passed
   // by the tutor — the renderer knows where the feature actually is.
   const [resolvedByFeature, setResolvedByFeature] = useState<Record<string, ResolvedRegion>>({});
-  useEffect(() => {
-    const svg = svgRef.current;
-    const parent = svg?.parentElement;
+  // Bounds of the target SVG within its parent container. We anchor the
+  // overlay to the SVG rect (not the full parent), because the parent
+  // usually also contains a title / notes div above or below the SVG —
+  // mapping our 0-1 coords against the parent would shift the mark
+  // vertically (2026-04-24 flowchart regression: "point to Start" landed
+  // on the title "Binary Search Algorithm" instead of the Start node).
+  const [svgRect, setSvgRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  // Target SVG's viewBox + preserveAspectRatio, read at effect time. The
+  // overlay inherits BOTH so the two SVGs letterbox identically inside
+  // the same outer rect. Without this, when the target letterboxes (its
+  // aspect != rendered container's aspect — common with maxHeight caps),
+  // the overlay's preserveAspectRatio="none" stretch-filled the full rect
+  // while features sat in the letterboxed content area → visible offset.
+  // (2026-04-24 pendulum session: "circle the 20° angle" landed off-mark.)
+  const [targetViewBox, setTargetViewBox] = useState<{ w: number; h: number } | null>(null);
+  const [targetPAR, setTargetPAR] = useState<string>('xMidYMid meet');
+  // useLayoutEffect so the first measurement happens BEFORE the browser
+  // paints. Without it, the overlay flashed on page switches because the
+  // first paint showed the fallback (overlay spanning the full parent
+  // with viewBox 0-100, par="none") and the effect-driven correction came
+  // on the next frame — during page transitions the user would catch the
+  // flash and then see the circle vanish if the measured rect came back
+  // 0×0 (target SVG width:100% before layout settles).
+  useLayoutEffect(() => {
+    const self = svgRef.current;
+    const parent = self?.parentElement;
     if (!parent) return;
-    const next: Record<string, ResolvedRegion> = {};
-    const seen = new Set<string>();
-    for (const s of scribbles) {
-      if (!s.targetFeature || seen.has(s.targetFeature)) continue;
-      seen.add(s.targetFeature);
-      // Escape attribute-value selector safely.
-      const name = s.targetFeature.replace(/"/g, '\\"');
-      const el = parent.querySelector(`[data-feature="${name}"]`);
-      if (!el) continue;
-      const cx = Number(el.getAttribute('data-feature-cx'));
-      const cy = Number(el.getAttribute('data-feature-cy'));
-      const w = Number(el.getAttribute('data-feature-w'));
-      const h = Number(el.getAttribute('data-feature-h'));
-      if ([cx, cy, w, h].every(Number.isFinite)) {
-        next[s.targetFeature] = {
-          x: Math.max(0, cx - w / 2),
-          y: Math.max(0, cy - h / 2),
-          w: Math.min(1, w),
-          h: Math.min(1, h),
-        };
+
+    // Re-find the target SVG inside the measure closure so that when
+    // CommandRenderer swaps its inner SVG (e.g., a page switch reuses
+    // the same overlay component position), subsequent resize/mutation
+    // events observe the FRESH SVG rather than a stale reference that
+    // has since been detached from the DOM. Only return SVGs that
+    // actually carry data-feature attrs — an SVG-without-features is a
+    // signal to fall through to HTML mode.
+    const findTargetSvg = (): SVGSVGElement | null => {
+      const current = svgRef.current;
+      if (!current) return null;
+      const svgs = Array.from(parent.querySelectorAll('svg'));
+      for (const svg of svgs) {
+        if (svg === current) continue;
+        if (svg.querySelector('[data-feature]')) return svg as SVGSVGElement;
       }
-    }
-    setResolvedByFeature((prev) => {
-      // Only update if different to avoid infinite-loop re-renders.
-      const keys = Object.keys(next);
-      if (keys.length !== Object.keys(prev).length) return next;
-      for (const k of keys) {
-        if (!prev[k] || prev[k].x !== next[k].x || prev[k].y !== next[k].y || prev[k].w !== next[k].w || prev[k].h !== next[k].h) return next;
+      return null;
+    };
+
+    const measure = () => {
+      const overlay = svgRef.current;
+      const targetSvg = findTargetSvg();
+
+      // Mode selection. SVG mode wins when an inner SVG has data-feature
+      // children (every structured renderer). HTML mode kicks in for
+      // KaTeX / table / problem-card / solution / code renderers — we
+      // walk the parent for any data-feature element, skipping the
+      // overlay's own subtree, and resolve via getBoundingClientRect.
+      // Same `resolvedByFeature` shape (0–1 fractions of the overlay
+      // viewBox), so the render loop below stays unchanged.
+      const next: Record<string, ResolvedRegion> = {};
+      const seen = new Set<string>();
+      const parentBB = parent.getBoundingClientRect();
+      let mode: 'svg' | 'html' | 'none' = targetSvg ? 'svg' : 'none';
+
+      if (mode === 'svg' && targetSvg) {
+        for (const s of scribbles) {
+          if (!s.targetFeature || seen.has(s.targetFeature)) continue;
+          seen.add(s.targetFeature);
+          const safe = s.targetFeature.replace(/"/g, '\\"');
+          const el = targetSvg.querySelector(`[data-feature="${safe}"]`);
+          if (!el) {
+            console.warn('[Scribble] resolve-miss: data-feature="%s" not in DOM', s.targetFeature);
+            continue;
+          }
+          const cx = Number(el.getAttribute('data-feature-cx'));
+          const cy = Number(el.getAttribute('data-feature-cy'));
+          const w = Number(el.getAttribute('data-feature-w'));
+          const h = Number(el.getAttribute('data-feature-h'));
+          if ([cx, cy, w, h].every(Number.isFinite)) {
+            next[s.targetFeature] = {
+              x: Math.max(0, cx - w / 2),
+              y: Math.max(0, cy - h / 2),
+              w: Math.min(1, w),
+              h: Math.min(1, h),
+            };
+          } else {
+            console.warn(
+              '[Scribble] resolve-bad-bbox: data-feature="%s" had non-finite attrs (cx=%s cy=%s w=%s h=%s)',
+              s.targetFeature, cx, cy, w, h,
+            );
+          }
+        }
+      } else {
+        // No SVG-with-features in this item. Try HTML mode: the parent
+        // (or its descendants) carries [data-feature] on a div / span.
+        const candidates = Array.from(parent.querySelectorAll('[data-feature]'))
+          .filter((el) => !overlay || !overlay.contains(el));
+        if (candidates.length > 0) mode = 'html';
+        if (mode === 'html' && parentBB.width > 0 && parentBB.height > 0) {
+          for (const s of scribbles) {
+            if (!s.targetFeature || seen.has(s.targetFeature)) continue;
+            seen.add(s.targetFeature);
+            const safe = s.targetFeature.replace(/"/g, '\\"');
+            const el = parent.querySelector(`[data-feature="${safe}"]`);
+            if (!el || (overlay && overlay.contains(el))) {
+              console.warn('[Scribble] resolve-miss: data-feature="%s" not in HTML DOM', s.targetFeature);
+              continue;
+            }
+            const elRect = el.getBoundingClientRect();
+            if (elRect.width <= 0 || elRect.height <= 0) continue;
+            next[s.targetFeature] = {
+              x: Math.max(0, (elRect.left - parentBB.left) / parentBB.width),
+              y: Math.max(0, (elRect.top - parentBB.top) / parentBB.height),
+              w: Math.min(1, elRect.width / parentBB.width),
+              h: Math.min(1, elRect.height / parentBB.height),
+            };
+          }
+        } else if (mode === 'none') {
+          const featuresAsked = scribbles
+            .map((s) => s.targetFeature)
+            .filter((f): f is string => Boolean(f));
+          if (featuresAsked.length > 0) {
+            console.warn(
+              '[Scribble] no target with data-feature in DOM yet — features=[%s]. Will retry on next measure.',
+              featuresAsked.join(','),
+            );
+          }
+        }
       }
-      return prev;
-    });
+
+      setResolvedByFeature((prev) => {
+        const keys = Object.keys(next);
+        if (keys.length !== Object.keys(prev).length) return next;
+        for (const k of keys) {
+          if (!prev[k] || prev[k].x !== next[k].x || prev[k].y !== next[k].y || prev[k].w !== next[k].w || prev[k].h !== next[k].h) return next;
+        }
+        return prev;
+      });
+
+      if (mode === 'svg' && targetSvg) {
+        const vb = targetSvg.getAttribute('viewBox');
+        if (vb) {
+          const parts = vb.split(/[\s,]+/).map(Number);
+          if (parts.length === 4 && parts.every((n) => Number.isFinite(n))) {
+            const w = parts[2];
+            const h = parts[3];
+            if (w > 0 && h > 0) {
+              setTargetViewBox((prev) => (prev && prev.w === w && prev.h === h ? prev : { w, h }));
+            }
+          }
+        }
+        const par = targetSvg.getAttribute('preserveAspectRatio') || 'xMidYMid meet';
+        setTargetPAR((prev) => (prev === par ? prev : par));
+
+        const svgBB = targetSvg.getBoundingClientRect();
+        if (svgBB.width < 1 || svgBB.height < 1) return;
+        setSvgRect((prev) => {
+          const nextRect = {
+            top: svgBB.top - parentBB.top,
+            left: svgBB.left - parentBB.left,
+            width: svgBB.width,
+            height: svgBB.height,
+          };
+          if (
+            prev
+            && Math.abs(prev.top - nextRect.top) < 0.5
+            && Math.abs(prev.left - nextRect.left) < 0.5
+            && Math.abs(prev.width - nextRect.width) < 0.5
+            && Math.abs(prev.height - nextRect.height) < 0.5
+          ) return prev;
+          return nextRect;
+        });
+      } else if (mode === 'html') {
+        // HTML mode: overlay covers the parent in CSS-pixel space. Use
+        // `preserveAspectRatio="none"` so the overlay's viewBox stretches
+        // 1:1 with parentRect, keeping mark positions accurate after
+        // letterboxing-free fits.
+        if (parentBB.width < 1 || parentBB.height < 1) return;
+        setTargetViewBox((prev) => {
+          const w = parentBB.width;
+          const h = parentBB.height;
+          return prev && Math.abs(prev.w - w) < 0.5 && Math.abs(prev.h - h) < 0.5 ? prev : { w, h };
+        });
+        setTargetPAR((prev) => (prev === 'none' ? prev : 'none'));
+        setSvgRect((prev) => {
+          const nextRect = { top: 0, left: 0, width: parentBB.width, height: parentBB.height };
+          if (
+            prev
+            && Math.abs(prev.top - nextRect.top) < 0.5
+            && Math.abs(prev.left - nextRect.left) < 0.5
+            && Math.abs(prev.width - nextRect.width) < 0.5
+            && Math.abs(prev.height - nextRect.height) < 0.5
+          ) return prev;
+          return nextRect;
+        });
+      }
+    };
+
+    measure();
+
+    // Observe target + parent for size changes. Also observe the parent
+    // for DOM mutations so if the CommandRenderer swaps its SVG out from
+    // under us (page switch, async renderer mount), we re-measure and
+    // re-resolve features against the new SVG without waiting for the
+    // next prop change.
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(parent);
+    const currentTarget = findTargetSvg();
+    if (currentTarget) ro?.observe(currentTarget);
+
+    const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(measure) : null;
+    mo?.observe(parent, { childList: true, subtree: true });
+
+    return () => {
+      ro?.disconnect();
+      mo?.disconnect();
+    };
   }, [scribbles]);
 
   if (scribbles.length === 0) return null;
+  // The overlay SVG must be in the DOM on first render so svgRef attaches
+  // and the useLayoutEffect can walk the parent to find the target SVG —
+  // returning null at first render stranded measurement and the mark
+  // never appeared live (2026-04-24 vertex-C regression). Instead, render
+  // the container SVG immediately with a neutral fallback, and defer only
+  // the MARKS until measurement succeeds. When the target SVG doesn't
+  // exist (non-SVG item, HTML renderer), the overlay stays empty.
+  const measured = !!(targetViewBox && svgRect);
+  const vbW = targetViewBox?.w ?? 100;
+  const vbH = targetViewBox?.h ?? 100;
+  const viewBoxAttr = `0 0 ${vbW} ${vbH}`;
+  const parAttr = targetPAR;
   return (
     <svg
       ref={svgRef}
       aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
+      className="absolute pointer-events-none"
+      style={svgRect
+        ? { top: svgRect.top, left: svgRect.left, width: svgRect.width, height: svgRect.height }
+        : { top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', visibility: 'hidden' }
+      }
+      viewBox={viewBoxAttr}
+      preserveAspectRatio={parAttr}
     >
-      {scribbles.map((s, i) => {
+      {measured && scribbles.map((s, i) => {
         const color = s.color || '#f59e0b';
-        // Region precedence: feature-resolved > tutor-provided > small-centered default.
+        // Region: feature-resolved (via catalog + data-feature lookup) or
+        // small-centered default when the target SVG hasn't laid out yet.
         const resolved = s.targetFeature ? resolvedByFeature[s.targetFeature] : undefined;
-        const source = resolved || (s.region ? {
-          x: clamp01(s.region.x),
-          y: clamp01(s.region.y),
-          w: clamp01(s.region.w ?? (1 - s.region.x)),
-          h: clamp01(s.region.h ?? (1 - s.region.y)),
-        } : null);
-        const r = source
-          ? { x: source.x * 100, y: source.y * 100, w: source.w * 100, h: source.h * 100 }
-          : { x: 35, y: 40, w: 30, h: 25 };
+        const source = resolved || { x: 0.35, y: 0.40, w: 0.30, h: 0.25 };
+        // Map 0–1 fractions into the target viewBox's pixel space so
+        // positions match features baked into the target SVG itself.
+        const r = { x: source.x * vbW, y: source.y * vbH, w: source.w * vbW, h: source.h * vbH };
         const cx = r.x + r.w / 2;
         const cy = r.y + r.h / 2;
+
+        // Scale stroke/font constants to viewBox pixel space — same rules
+        // the PDF overlay uses so live and PDF match visually.
+        const strokeThin = Math.max(1.5, vbW / 500);
+        const strokeMed = Math.max(2, vbW / 200);
+        const fontSizePx = Math.max(10, vbW / 50);
 
         let mark: React.ReactNode;
         switch (s.shape) {
@@ -871,9 +1139,8 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
             mark = (
               <ellipse
                 cx={cx} cy={cy}
-                rx={Math.max(4, r.w / 2)} ry={Math.max(3, r.h / 2)}
-                fill="none" stroke={color} strokeWidth="0.6"
-                vectorEffect="non-scaling-stroke"
+                rx={Math.max(vbW * 0.015, r.w / 2)} ry={Math.max(vbH * 0.015, r.h / 2)}
+                fill="none" stroke={color} strokeWidth={strokeMed}
               />
             );
             break;
@@ -882,9 +1149,8 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
               <line
                 x1={r.x} y1={r.y + r.h}
                 x2={r.x + r.w} y2={r.y + r.h}
-                stroke={color} strokeWidth="0.8"
+                stroke={color} strokeWidth={Math.max(2.5, vbW / 170)}
                 strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
               />
             );
             break;
@@ -892,8 +1158,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
             mark = (
               <rect
                 x={r.x} y={r.y} width={r.w} height={r.h}
-                fill="none" stroke={color} strokeWidth="0.6"
-                vectorEffect="non-scaling-stroke"
+                fill="none" stroke={color} strokeWidth={strokeMed}
               />
             );
             break;
@@ -907,8 +1172,8 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
             break;
           case 'arrow': {
             // Arrow coming in from top-left toward the region's centre.
-            const tailX = Math.max(0, r.x - 8);
-            const tailY = Math.max(0, r.y - 8);
+            const tailX = Math.max(0, r.x - vbW * 0.08);
+            const tailY = Math.max(0, r.y - vbH * 0.08);
             const headX = cx;
             const headY = cy;
             const markerId = `scribble-arrow-${i}`;
@@ -921,8 +1186,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
                 </defs>
                 <line
                   x1={tailX} y1={tailY} x2={headX} y2={headY}
-                  stroke={color} strokeWidth="0.7"
-                  vectorEffect="non-scaling-stroke"
+                  stroke={color} strokeWidth={strokeMed}
                   markerEnd={`url(#${markerId})`}
                 />
               </g>
@@ -933,24 +1197,24 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
 
         // Stagger label y so multiple labels on the same item don't pile
         // up at the same horizontal line. Alternates above / below the
-        // region, cycling through a few offsets.
+        // region, cycling through a few offsets (scaled to viewBox).
         const staggerSign = i % 2 === 0 ? -1 : 1;
-        const staggerBand = Math.floor(i / 2) * 3;
+        const staggerBand = Math.floor(i / 2) * vbH * 0.03;
         const labelY = staggerSign < 0
-          ? Math.max(2, r.y - 1 - staggerBand)
-          : Math.min(98, r.y + r.h + 3 + staggerBand);
+          ? Math.max(vbH * 0.04, r.y - fontSizePx * 0.4 - staggerBand)
+          : Math.min(vbH * 0.97, r.y + r.h + fontSizePx + staggerBand);
         return (
           <g key={i}>
             {mark}
             {s.label && (
               <text
                 x={cx} y={labelY}
-                fontSize="3" fill={color} textAnchor="middle"
-                fontWeight="600"
+                fontSize={fontSizePx} fill={color} textAnchor="middle"
+                fontWeight="700"
                 // White halo for readability on busy backgrounds.
                 paintOrder="stroke"
                 stroke="white"
-                strokeWidth="0.7"
+                strokeWidth={strokeThin}
                 strokeLinejoin="round"
               >
                 {s.label}
@@ -961,12 +1225,6 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
       })}
     </svg>
   );
-}
-
-function clamp01(n: number | undefined): number {
-  if (!Number.isFinite(n as number)) return 0;
-  const v = n as number;
-  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 interface CommandRendererProps {
@@ -1056,34 +1314,43 @@ export function CommandRenderer({ command }: CommandRendererProps) {
         ? 'bg-emerald-100 text-emerald-800'
         : '';
       return (
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          {/* Provenance tags row: source + difficulty badges */}
+        <div
+          className="p-4 bg-blue-50 rounded-lg border border-blue-200"
+          data-feature="problem"
+          style={{ position: 'relative' }}
+        >
           {(problem.sourceTag || problem.difficultyLabel) && (
             <div className="flex items-center gap-2 mb-2">
               {problem.sourceTag && (
-                <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                <span
+                  className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-blue-100 text-blue-800"
+                  data-feature="source"
+                >
                   {problem.sourceTag}
                 </span>
               )}
               {problem.difficultyLabel && (
-                <span className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${difficultyStyle}`}>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${difficultyStyle}`}
+                  data-feature="difficulty"
+                >
                   {problem.difficultyLabel}
                 </span>
               )}
             </div>
           )}
-          <h4 className="font-semibold text-blue-900 mb-2">
+          <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
             {problem.title || 'Problem'}
           </h4>
-          <p className="text-gray-800 whitespace-pre-wrap">
+          <p className="text-gray-800 whitespace-pre-wrap" data-feature="statement">
             <InlineMathText text={problem.statement || ''} />
           </p>
           {validGivenValues.length > 0 && (
-            <div className="mt-3">
+            <div className="mt-3" data-feature="given">
               <p className="text-sm font-medium text-gray-600">Given:</p>
               <ul className="text-sm text-gray-700 ml-4 list-disc">
                 {validGivenValues.map((gv, i) => (
-                  <li key={i}>
+                  <li key={i} data-feature={`given-${i + 1}`}>
                     <EquationRenderer
                       latex={`${gv.symbol || '?'} = ${gv.value ?? '?'} \\text{ ${gv.unit || ''}}`}
                       displayMode={false}
@@ -1095,9 +1362,13 @@ export function CommandRenderer({ command }: CommandRendererProps) {
             </div>
           )}
           {answerChoices.length > 0 && (
-            <ul className="mt-3 space-y-1.5">
+            <ul className="mt-3 space-y-1.5" data-feature="choices">
               {answerChoices.map((ac, i) => (
-                <li key={i} className="flex items-start gap-2">
+                <li
+                  key={i}
+                  className="flex items-start gap-2"
+                  data-feature={`choice-${(ac.letter || String.fromCharCode(65 + i)).toLowerCase()}`}
+                >
                   <span className="font-semibold text-blue-900 flex-shrink-0 min-w-[1.25rem]">
                     {ac.letter})
                   </span>
@@ -1117,41 +1388,54 @@ export function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showSolution':
       return (
-        <div className="space-y-4">
-          <h4 className="font-semibold text-gray-800">Solution</h4>
-          {command.steps.map((step, index) => (
-            <div key={index} className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium">
-                {step.stepNumber}
+        <div className="space-y-4" data-feature="solution" style={{ position: 'relative' }}>
+          <h4 className="font-semibold text-gray-800" data-feature="solution-title">Solution</h4>
+          {command.steps.map((step, index) => {
+            const stepNum = step.stepNumber ?? (index + 1);
+            return (
+              <div key={index} className="flex gap-3" data-feature={`step-${stepNum}`} style={{ position: 'relative' }}>
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium">
+                  {stepNum}
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-700" data-feature={`step-${stepNum}-description`}>{step.description}</p>
+                  {step.equation && (
+                    <div data-feature={`step-${stepNum}-equation`}>
+                      <EquationRenderer latex={step.equation} className="mt-2" />
+                    </div>
+                  )}
+                  {step.substitution && (
+                    <div data-feature={`step-${stepNum}-substitution`}>
+                      <EquationRenderer latex={step.substitution} className="mt-1 text-gray-600" />
+                    </div>
+                  )}
+                  {step.result && (
+                    <div data-feature={`step-${stepNum}-result`}>
+                      <EquationRenderer latex={step.result} className="mt-1 font-medium" />
+                    </div>
+                  )}
+                  {step.explanation && (
+                    <p className="text-sm text-gray-500 mt-1 italic" data-feature={`step-${stepNum}-explanation`}>{step.explanation}</p>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-gray-700">{step.description}</p>
-                {step.equation && (
-                  <EquationRenderer latex={step.equation} className="mt-2" />
-                )}
-                {step.substitution && (
-                  <EquationRenderer latex={step.substitution} className="mt-1 text-gray-600" />
-                )}
-                {step.result && (
-                  <EquationRenderer latex={step.result} className="mt-1 font-medium" />
-                )}
-                {step.explanation && (
-                  <p className="text-sm text-gray-500 mt-1 italic">{step.explanation}</p>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
 
     case 'showTable':
       return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-feature="table" style={{ position: 'relative' }}>
           <table className="min-w-full border-collapse border border-gray-300">
             <thead>
-              <tr className="bg-gray-100">
+              <tr className="bg-gray-100" data-feature="header-row">
                 {command.headers.map((header, i) => (
-                  <th key={i} className="border border-gray-300 px-4 py-2 text-left font-medium">
+                  <th
+                    key={i}
+                    className="border border-gray-300 px-4 py-2 text-left font-medium"
+                    data-feature={`header-col-${i + 1}`}
+                  >
                     <CellContent value={String(header)} />
                   </th>
                 ))}
@@ -1159,9 +1443,17 @@ export function CommandRenderer({ command }: CommandRendererProps) {
             </thead>
             <tbody>
               {command.rows.map((row, i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr
+                  key={i}
+                  className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  data-feature={`row-${i + 1}`}
+                >
                   {row.map((cell, j) => (
-                    <td key={j} className="border border-gray-300 px-4 py-2">
+                    <td
+                      key={j}
+                      className="border border-gray-300 px-4 py-2"
+                      data-feature={`cell-r${i + 1}-c${j + 1}`}
+                    >
                       <CellContent value={String(cell)} />
                     </td>
                   ))}
@@ -1287,7 +1579,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
       return <MatrixRenderer title={command.title} rows={command.rows} brackets={command.brackets} augmented={command.augmented} rowLabels={command.rowLabels} colLabels={command.colLabels} rowOperations={command.rowOperations} resultMatrix={command.resultMatrix} operatorSymbol={command.operatorSymbol} />;
 
     case 'showStats':
-      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} />;
+      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} distribution={command.distribution} />;
 
     case 'showTimeline':
       return <TimelineRenderer title={command.title} events={command.events} orientation={command.orientation} />;

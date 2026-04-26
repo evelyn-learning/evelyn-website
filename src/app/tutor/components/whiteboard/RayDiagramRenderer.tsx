@@ -23,7 +23,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 /**
  * Build the data-feature-* attribute set used by tutor_scribble to locate
@@ -56,6 +56,102 @@ export interface RayDiagramProps {
 
 const W = DIAGRAM_VIEWBOX.width;
 const H = DIAGRAM_VIEWBOX.height;
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildRayDiagramManifest(props: RayDiagramProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const isMirror = props.type === 'concave-mirror' || props.type === 'convex-mirror';
+  const isConverging = props.type === 'converging' || props.type === 'concave-mirror';
+  const f = isConverging ? Math.abs(props.focalLength) : -Math.abs(props.focalLength);
+  const doObj = Math.abs(props.objectDistance);
+
+  entries.push({
+    name: 'principalAxis',
+    kind: 'axis',
+    description: 'optical (principal) axis, horizontal dashed line',
+    labels: ['principal axis', 'principalAxis', 'optical axis', 'axis', 'the axis', 'center line', 'central axis'],
+  });
+  entries.push({
+    name: isMirror ? 'mirror' : 'lens',
+    kind: 'object',
+    description: isMirror
+      ? `${props.type} mirror at the center of the axis`
+      : `${props.type} lens at the center of the axis`,
+    labels: isMirror
+      ? ['mirror', 'the mirror', props.type, `${props.type} mirror`]
+      : ['lens', 'the lens', props.type, `${props.type} lens`],
+  });
+
+  if (!isMirror) {
+    entries.push({
+      name: 'focal',
+      kind: 'point',
+      description: `focal point F (object side), f = ${formatValue(f)} cm`,
+      labels: ['focal', 'focal point', 'focus', 'F', 'focal point F', 'near focal point', 'object-side focal point'],
+    });
+    entries.push({
+      name: 'focalPrime',
+      kind: 'point',
+      description: `focal point F' (image side), f = ${formatValue(f)} cm`,
+      labels: ["focalPrime", "focal prime", "F'", "F prime", "focal point F'", "far focal point", "image-side focal point", "second focal point"],
+    });
+  } else if (props.type === 'concave-mirror') {
+    entries.push({
+      name: 'focal',
+      kind: 'point',
+      description: `focal point F on object side, f = ${formatValue(Math.abs(f))} cm`,
+      labels: ['focal', 'focal point', 'focus', 'F', 'focal point F'],
+    });
+    entries.push({
+      name: 'centerOfCurvature',
+      kind: 'point',
+      description: `center of curvature C at 2f on object side`,
+      labels: ['centerOfCurvature', 'center of curvature', 'C', 'radius center', '2f point', 'the center'],
+    });
+  } else {
+    // convex-mirror
+    entries.push({
+      name: 'focal',
+      kind: 'point',
+      description: `virtual focal point F behind the mirror`,
+      labels: ['focal', 'focal point', 'focus', 'F', 'virtual focal point', 'focal point F'],
+    });
+  }
+
+  entries.push({
+    name: 'object',
+    kind: 'object',
+    description: `object arrow at distance do = ${formatValue(doObj)} cm (height ${formatValue(props.objectHeight ?? 2)} cm)`,
+    labels: ['object', 'the object', 'object arrow', 'source', 'object height', 'ho'],
+  });
+
+  // Image feature emitted only when di is finite.
+  const diInv = 1 / f - 1 / doObj;
+  const di = Math.abs(diInv) < 1e-9 ? Infinity : 1 / diInv;
+  if (Number.isFinite(di)) {
+    const imageReal = di > 0;
+    entries.push({
+      name: 'image',
+      kind: 'object',
+      description: `${imageReal ? 'real' : 'virtual'} image arrow, di = ${formatValue(di)} cm`,
+      labels: [
+        'image',
+        'the image',
+        'image arrow',
+        imageReal ? 'real image' : 'virtual image',
+        'hi',
+        'image height',
+      ],
+    });
+  }
+
+  return entries;
+}
 
 export default function RayDiagramRenderer({
   title, type, focalLength, objectDistance, objectHeight = 2, showLabels = true, notes,

@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -75,6 +75,171 @@ export interface SpringMassProps {
 
 const W = DIAGRAM_VIEWBOX.width;
 const H = DIAGRAM_VIEWBOX.height;
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildSpringMassManifest(props: SpringMassProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+
+  // Chain mode takes precedence when elements[] is supplied.
+  if (props.elements && props.elements.length > 0) {
+    entries.push({
+      name: 'ground',
+      kind: 'line',
+      description: 'horizontal ground line under the chain',
+      labels: ['ground', 'floor', 'bottom', 'surface', 'baseline', 'ground line'],
+    });
+    const totalWalls = props.elements.filter((e) => e.type === 'wall').length;
+    const totalSprings = props.elements.filter((e) => e.type === 'spring').length;
+    const totalMasses = props.elements.filter((e) => e.type === 'mass').length;
+    let wallN = 0, springN = 0, massN = 0;
+    for (const el of props.elements) {
+      if (el.type === 'wall') {
+        wallN += 1;
+        const wallLabels = [
+          `wall-${wallN}`,
+          `wall ${wallN}`,
+          `support ${wallN}`,
+          `attachment ${wallN}`,
+          `anchor ${wallN}`,
+        ];
+        if (totalWalls === 1) {
+          wallLabels.push('wall', 'support', 'attachment', 'anchor', 'ceiling', 'the wall');
+        } else {
+          wallLabels.push(
+            wallN === 1 ? 'first wall' : wallN === totalWalls ? 'last wall' : `${ordinal(wallN)} wall`,
+            wallN === 1 ? 'left wall' : wallN === totalWalls ? 'right wall' : '',
+          );
+        }
+        if (el.label) wallLabels.push(el.label);
+        entries.push({
+          name: `wall-${wallN}`,
+          kind: 'object',
+          description: el.label ?? `fixed wall ${wallN} (left-to-right)`,
+          labels: wallLabels.filter(Boolean),
+        });
+      } else if (el.type === 'spring') {
+        springN += 1;
+        const springLabels = [
+          `spring-${springN}`,
+          `spring ${springN}`,
+          `${ordinal(springN)} spring`,
+        ];
+        if (totalSprings === 1) springLabels.push('spring', 'the spring');
+        if (el.label) springLabels.push(el.label);
+        if (el.k != null) springLabels.push(`k${springN}`, `k-${springN}`);
+        entries.push({
+          name: `spring-${springN}`,
+          kind: 'object',
+          description: el.label ?? `spring ${springN}, k = ${formatValue(el.k ?? 0)} N/m`,
+          labels: springLabels,
+        });
+      } else if (el.type === 'mass') {
+        massN += 1;
+        const massLabels = [
+          `mass-${massN}`,
+          `mass ${massN}`,
+          `m${massN}`,
+          `m-${massN}`,
+          `${ordinal(massN)} mass`,
+          `block ${massN}`,
+        ];
+        if (totalMasses === 1) massLabels.push('mass', 'the mass', 'block', 'weight');
+        if (el.label) massLabels.push(el.label);
+        entries.push({
+          name: `mass-${massN}`,
+          kind: 'object',
+          description: el.label ?? `mass ${massN}, m = ${formatValue(el.mass ?? 0)} kg`,
+          labels: massLabels,
+        });
+      }
+    }
+    return entries;
+  }
+
+  // Legacy single-mass modes.
+  const orientation = props.orientation ?? 'horizontal';
+  if (orientation === 'horizontal') {
+    entries.push({
+      name: 'wall',
+      kind: 'object',
+      description: 'fixed wall (left edge, hatched)',
+      labels: ['wall', 'support', 'attachment', 'anchor', 'ceiling', 'the wall', 'fixed wall', 'left wall'],
+    });
+    entries.push({
+      name: 'ground',
+      kind: 'line',
+      description: 'horizontal ground line',
+      labels: ['ground', 'floor', 'bottom', 'surface', 'baseline'],
+    });
+    entries.push({
+      name: 'equilibrium',
+      kind: 'annotation',
+      description: 'faint reference spring + dashed mass at natural length',
+      labels: ['equilibrium', 'natural length', 'rest position', 'equilibrium position', 'reference position'],
+    });
+    entries.push({
+      name: 'spring',
+      kind: 'object',
+      description: `spring (k = ${formatValue(props.k ?? 0)} N/m)`,
+      labels: ['spring', 'the spring', 'coil', 'k'],
+    });
+    entries.push({
+      name: 'mass',
+      kind: 'object',
+      description: `mass block (m = ${formatValue(props.mass ?? 0)} kg)`,
+      labels: ['mass', 'the mass', 'block', 'weight', 'm'],
+    });
+    entries.push({
+      name: 'displacement',
+      kind: 'annotation',
+      description: `displacement arrow x = ${formatValue(props.displacement ?? 0)} m`,
+      labels: ['displacement', 'x', 'the displacement', 'stretch', 'compression', 'offset'],
+    });
+  } else if (orientation === 'vertical') {
+    entries.push({
+      name: 'ceiling',
+      kind: 'object',
+      description: 'fixed ceiling (top, horizontal line)',
+      labels: ['ceiling', 'wall', 'support', 'attachment', 'top', 'anchor', 'the ceiling', 'pivot'],
+    });
+    entries.push({
+      name: 'equilibrium',
+      kind: 'annotation',
+      description: 'faint reference spring + dashed mass at natural length',
+      labels: ['equilibrium', 'natural length', 'rest position', 'equilibrium position', 'reference position'],
+    });
+    entries.push({
+      name: 'spring',
+      kind: 'object',
+      description: `vertical spring (k = ${formatValue(props.k ?? 0)} N/m)`,
+      labels: ['spring', 'the spring', 'coil', 'k', 'vertical spring'],
+    });
+    entries.push({
+      name: 'mass',
+      kind: 'object',
+      description: `mass block hanging from spring (m = ${formatValue(props.mass ?? 0)} kg)`,
+      labels: ['mass', 'the mass', 'block', 'weight', 'm', 'bob'],
+    });
+    entries.push({
+      name: 'displacement',
+      kind: 'annotation',
+      description: `displacement arrow x = ${formatValue(props.displacement ?? 0)} m`,
+      labels: ['displacement', 'x', 'the displacement', 'stretch', 'offset'],
+    });
+  }
+  return entries;
+}
+
+function ordinal(n: number): string {
+  const suffix = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+}
 
 function springPath(x1: number, y1: number, x2: number, y2: number, coils = 6, amplitude = 12): string {
   // Draw a zig-zag spring between the two points with `coils` zigzags.
@@ -348,19 +513,31 @@ export default function SpringMassRenderer({
           return (
             <g>
               {/* Ceiling */}
-              <line x1={cx - 70} y1={topY} x2={cx + 70} y2={topY} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
-              {/* Natural-length reference */}
-              <path d={springPath(cx, topY, cx, naturalEnd)} stroke={DIAGRAM_COLORS.muted} strokeWidth={1.25} fill="none" opacity={0.35} />
-              <rect x={cx - massSize / 2} y={naturalEnd} width={massSize} height={massSize} fill="none" stroke={DIAGRAM_COLORS.muted} strokeWidth={1} strokeDasharray="4 3" />
+              <g {...feat('ceiling', { cx, cy: topY - 4, w: 160, h: 12 })}>
+                <line x1={cx - 70} y1={topY} x2={cx + 70} y2={topY} stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
+              </g>
+              {/* Natural-length reference — also the "equilibrium" feature */}
+              <g {...feat('equilibrium', { cx, cy: naturalEnd + massSize / 2, w: massSize + 6, h: (naturalEnd - topY) + massSize + 8 })}>
+                <path d={springPath(cx, topY, cx, naturalEnd)} stroke={DIAGRAM_COLORS.muted} strokeWidth={1.25} fill="none" opacity={0.35} />
+                <rect x={cx - massSize / 2} y={naturalEnd} width={massSize} height={massSize} fill="none" stroke={DIAGRAM_COLORS.muted} strokeWidth={1} strokeDasharray="4 3" />
+              </g>
 
-              {/* Displaced */}
-              <path d={springPath(cx, topY, cx, displacedEnd)} stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
-              <rect x={cx - massSize / 2} y={displacedEnd} width={massSize} height={massSize} fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
-              <text x={cx} y={displacedEnd + massSize / 2 + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
+              {/* Displaced spring */}
+              <g {...feat('spring', { cx, cy: (topY + displacedEnd) / 2, w: 40, h: displacedEnd - topY })}>
+                <path d={springPath(cx, topY, cx, displacedEnd)} stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
+              </g>
+
+              {/* Mass block */}
+              <g {...feat('mass', { cx, cy: displacedEnd + massSize / 2, w: massSize + 6, h: massSize + 8 })}>
+                <rect x={cx - massSize / 2} y={displacedEnd} width={massSize} height={massSize} fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
+                <text x={cx} y={displacedEnd + massSize / 2 + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
+              </g>
 
               {/* Displacement annotation */}
-              <line x1={cx + massSize / 2 + 20} y1={naturalEnd} x2={cx + massSize / 2 + 20} y2={displacedEnd} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} markerStart="url(#spr-arrow-warning)" markerEnd="url(#spr-arrow-warning)" />
-              <text x={cx + massSize / 2 + 26} y={(naturalEnd + displacedEnd) / 2} fontSize={11} fill={DIAGRAM_COLORS.warning} fontWeight={600}>x = {formatValue(displacement)} m</text>
+              <g {...feat('displacement', { cx: cx + massSize / 2 + 26, cy: (naturalEnd + displacedEnd) / 2, w: 60, h: Math.abs(displacedEnd - naturalEnd) + 12 })}>
+                <line x1={cx + massSize / 2 + 20} y1={naturalEnd} x2={cx + massSize / 2 + 20} y2={displacedEnd} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} markerStart="url(#spr-arrow-warning)" markerEnd="url(#spr-arrow-warning)" />
+                <text x={cx + massSize / 2 + 26} y={(naturalEnd + displacedEnd) / 2} fontSize={11} fill={DIAGRAM_COLORS.warning} fontWeight={600}>x = {formatValue(displacement)} m</text>
+              </g>
             </g>
           );
         })()}

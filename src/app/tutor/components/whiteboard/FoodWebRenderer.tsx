@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, withAlpha } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, truncate } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, truncate, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -69,6 +69,33 @@ const LEVEL_COLORS: Record<number, string> = {
   4: DIAGRAM_COLORS.accent,
   5: DIAGRAM_COLORS.slate,
 };
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildFoodWebManifest(props: FoodWebProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const species = props.species ?? [];
+  for (const s of species) {
+    const levelName = LEVEL_LABELS[s.level] || `level ${s.level}`;
+    const labels = new Set<string>([
+      `species-${s.id}`,
+      s.id,
+      s.label,
+      `the ${s.label}`,
+      s.label.toLowerCase(),
+      `the ${s.label.toLowerCase()}`,
+    ]);
+    entries.push({
+      name: `species-${s.id}`,
+      kind: 'node',
+      description: `${s.label} (${levelName.toLowerCase()})`,
+      labels: Array.from(labels),
+    });
+  }
+  return entries;
+}
 
 export default function FoodWebRenderer({
   title, species, edges, showLevelLabels = true, notes,

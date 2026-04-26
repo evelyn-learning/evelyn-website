@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface ScatterPoint {
@@ -36,6 +36,94 @@ export interface ScatterPlotProps {
 
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildScatterPlotManifest(props: ScatterPlotProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const xLab = props.xLabel ?? 'x';
+  const yLab = props.yLabel ?? 'y';
+  entries.push({
+    name: 'x-axis',
+    kind: 'axis',
+    description: `x-axis (${xLab})`,
+    labels: ['x-axis', 'x axis', 'horizontal axis', 'bottom axis', xLab, `${xLab} axis`],
+  });
+  entries.push({
+    name: 'y-axis',
+    kind: 'axis',
+    description: `y-axis (${yLab})`,
+    labels: ['y-axis', 'y axis', 'vertical axis', 'left axis', yLab, `${yLab} axis`],
+  });
+
+  const pts = props.points ?? [];
+  if (props.showTrendLine && pts.length >= 2) {
+    const reg = linearRegression(pts);
+    if (reg) {
+      entries.push({
+        name: 'trendline',
+        kind: 'line',
+        description: props.trendLineEquation
+          ?? `regression line y = ${formatValue(reg.m)}x ${reg.b >= 0 ? '+' : '−'} ${formatValue(Math.abs(reg.b))}`,
+        labels: ['trendline', 'trend line', 'regression line', 'best fit line', 'line of best fit', 'fit line'],
+      });
+      entries.push({
+        name: 'trendline-equation',
+        kind: 'equation',
+        description: 'equation label for the regression line, top-right of plot',
+        labels: ['trendline equation', 'regression equation', 'line equation', 'equation', 'fit equation'],
+      });
+      entries.push({
+        name: 'r-squared',
+        kind: 'annotation',
+        description: `R² goodness-of-fit value = ${formatValue(reg.r2)}, top-right of plot`,
+        labels: ['r-squared', 'r squared', 'R²', 'R2', 'goodness of fit', 'coefficient of determination'],
+      });
+    }
+  }
+
+  pts.forEach((p, i) => {
+    const name = p.label ? `point-${featSlug(p.label)}` : `point-${i + 1}`;
+    const pointLabels: string[] = [name];
+    if (p.label) {
+      pointLabels.push(
+        p.label,
+        `point ${p.label}`,
+        `the point ${p.label}`,
+        `data point ${p.label}`,
+        `vertex-${featSlug(p.label)}`,
+        `node-${featSlug(p.label)}`,
+      );
+    } else {
+      pointLabels.push(
+        `point ${i + 1}`,
+        `the ${ordinal(i + 1)} point`,
+        `data point ${i + 1}`,
+        `point-${i + 1}`,
+      );
+    }
+    entries.push({
+      name,
+      kind: 'point',
+      description: p.label
+        ? `data point "${p.label}" at (${formatValue(p.x)}, ${formatValue(p.y)})`
+        : `data point ${i + 1} at (${formatValue(p.x)}, ${formatValue(p.y)})`,
+      labels: pointLabels,
+    });
+  });
+
+  return entries;
+}
+
+function ordinal(n: number): string {
+  const suffix = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+}
 
 function linearRegression(pts: ScatterPoint[]): { m: number; b: number; r2: number } | null {
   const n = pts.length;
@@ -113,8 +201,10 @@ export default function ScatterPlotRenderer({
         ))}
 
         {/* Axes */}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1.25} />
-        <line x1={pad.left} y1={pad.top + plotH} x2={pad.left + plotW} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1.25} />
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1.25}
+          {...feat('y-axis', { cx: pad.left, cy: pad.top + plotH / 2, w: 16, h: plotH + 10 })} />
+        <line x1={pad.left} y1={pad.top + plotH} x2={pad.left + plotW} y2={pad.top + plotH} stroke={DIAGRAM_COLORS.axis} strokeWidth={1.25}
+          {...feat('x-axis', { cx: pad.left + plotW / 2, cy: pad.top + plotH, w: plotW + 10, h: 16 })} />
 
         {/* Tick labels */}
         {xTicks.map((t, i) => (
@@ -130,13 +220,15 @@ export default function ScatterPlotRenderer({
 
         {/* Trend line */}
         {reg && (
-          <g>
+          <g {...feat('trendline', { cx: pad.left + plotW / 2, cy: pad.top + plotH / 2, w: plotW, h: plotH })}>
             <line x1={sx(xMin)} y1={sy(reg.m * xMin + reg.b)} x2={sx(xMax)} y2={sy(reg.m * xMax + reg.b)}
               stroke={DIAGRAM_COLORS.primary} strokeWidth={1.75} strokeDasharray="6 4" />
-            <text x={pad.left + plotW - 6} y={pad.top + 14} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="end" fontWeight={600}>
+            <text x={pad.left + plotW - 6} y={pad.top + 14} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="end" fontWeight={600}
+              {...feat('trendline-equation', { cx: pad.left + plotW - 40, cy: pad.top + 14, w: 90, h: 14 })}>
               {trendLineEquation ?? `y = ${formatValue(reg.m)}x ${reg.b >= 0 ? '+' : '−'} ${formatValue(Math.abs(reg.b))}`}
             </text>
-            <text x={pad.left + plotW - 6} y={pad.top + 28} fontSize={10} fill={DIAGRAM_COLORS.primary} textAnchor="end">
+            <text x={pad.left + plotW - 6} y={pad.top + 28} fontSize={10} fill={DIAGRAM_COLORS.primary} textAnchor="end"
+              {...feat('r-squared', { cx: pad.left + plotW - 30, cy: pad.top + 28, w: 70, h: 14 })}>
               R² = {formatValue(reg.r2)}
             </text>
           </g>
@@ -146,8 +238,9 @@ export default function ScatterPlotRenderer({
         {points.map((p, i) => {
           const key = p.series || '__default__';
           const color = p.color || seriesMap.get(key) || DIAGRAM_COLORS.secondary;
+          const ptName = p.label ? `point-${featSlug(p.label)}` : `point-${i + 1}`;
           return (
-            <g key={`pt${i}`}>
+            <g key={`pt${i}`} {...feat(ptName, { cx: sx(p.x), cy: sy(p.y), w: 20, h: 20 })}>
               <circle cx={sx(p.x)} cy={sy(p.y)} r={3.5} fill={color} stroke="white" strokeWidth={1} />
               {p.label && (
                 <text x={sx(p.x) + 5} y={sy(p.y) - 5} fontSize={9} fill={DIAGRAM_COLORS.muted}>{p.label}</text>

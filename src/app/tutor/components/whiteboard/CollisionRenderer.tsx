@@ -19,6 +19,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export interface CollisionBody {
   label?: string;
@@ -118,6 +119,108 @@ function Panel({
   );
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Mirrors the "perfectly-inelastic 1D after" collapsing rule — in that case
+ * the after panel emits a single combined object (object-1-after).
+ */
+export function buildCollisionManifest(props: CollisionProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const dimension = props.dimension ?? '1D';
+  const type = props.type ?? 'elastic';
+  const before = Array.isArray(props.before) ? props.before : [];
+  const after = Array.isArray(props.after) ? props.after : [];
+
+  before.forEach((b, i) => {
+    const idx = i + 1;
+    const label = b.label || String.fromCharCode(65 + i);
+    const letter = String.fromCharCode(65 + i);
+    entries.push({
+      name: `object-${idx}-before`,
+      kind: 'object',
+      description: `body "${label}" in the "before" panel${b.mass != null ? `, m = ${b.mass}` : ''}`,
+      labels: [
+        `object-${idx}-before`,
+        `object ${idx} before`,
+        `m${idx} before`,
+        `mass ${idx} before`,
+        `body ${idx} before`,
+        `${letter} before`,
+        `${label} before`,
+        `before ${letter}`,
+        `before ${label}`,
+        `${label} (before)`,
+        idx === 1 ? 'first object before' : idx === 2 ? 'second object before' : `${ordinal(idx)} object before`,
+      ].filter(Boolean),
+    });
+  });
+
+  const combine = type === 'perfectly-inelastic' && dimension === '1D' && after.length >= 1;
+  if (combine) {
+    const mergedLabel = after.map((b) => b.label ?? '').filter(Boolean).join('+') || 'A+B';
+    entries.push({
+      name: 'object-1-after',
+      kind: 'object',
+      description: `merged object "${mergedLabel}" in the "after" panel (perfectly inelastic)`,
+      labels: [
+        'object-1-after',
+        'object 1 after',
+        'merged object',
+        'combined object',
+        'stuck together',
+        'the merged object',
+        mergedLabel,
+        `${mergedLabel} after`,
+        'after',
+        'combined mass',
+      ],
+    });
+  } else {
+    after.forEach((b, i) => {
+      const idx = i + 1;
+      const label = b.label || String.fromCharCode(65 + i);
+      const letter = String.fromCharCode(65 + i);
+      entries.push({
+        name: `object-${idx}-after`,
+        kind: 'object',
+        description: `body "${label}" in the "after" panel${b.mass != null ? `, m = ${b.mass}` : ''}`,
+        labels: [
+          `object-${idx}-after`,
+          `object ${idx} after`,
+          `m${idx} after`,
+          `mass ${idx} after`,
+          `body ${idx} after`,
+          `${letter} after`,
+          `${label} after`,
+          `after ${letter}`,
+          `after ${label}`,
+          `${label} (after)`,
+          `${label}'`,
+          idx === 1 ? 'first object after' : idx === 2 ? 'second object after' : `${ordinal(idx)} object after`,
+        ].filter(Boolean),
+      });
+    });
+  }
+
+  if (props.momentumAnnotation) {
+    entries.push({
+      name: 'momentum',
+      kind: 'annotation',
+      description: `momentum annotation: ${props.momentumAnnotation}`,
+      labels: ['momentum', 'p', 'momentum annotation', 'total momentum', 'Σmv', 'conservation of momentum', 'p total'],
+    });
+  }
+
+  return entries;
+}
+
+function ordinal(n: number): string {
+  const suffix = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+}
+
 export default function CollisionRenderer({
   title,
   dimension = '1D',
@@ -127,9 +230,14 @@ export default function CollisionRenderer({
   notes,
   momentumAnnotation,
 }: CollisionProps) {
+  // Defensive: the enricher / tool-call payload occasionally omits or
+  // mistypes `before`/`after`. Coerce to arrays so the renderer never
+  // crashes on `[...before]` when the field is undefined or an object.
+  const beforeBodies: CollisionBody[] = Array.isArray(before) ? before : [];
+  const afterBodies: CollisionBody[] = Array.isArray(after) ? after : [];
   // Compute universal scales for mass→radius and speed→arrow-length so the
   // "before" and "after" panels render at compatible scales.
-  const allBodies = [...before, ...after];
+  const allBodies = [...beforeBodies, ...afterBodies];
   const maxMass = Math.max(...allBodies.map((b) => Math.abs(b.mass ?? 1)), 1);
   const speedOf = (b: CollisionBody): number => {
     if (dimension === '2D') return Math.hypot(b.vx ?? 0, b.vy ?? 0);
@@ -178,10 +286,10 @@ export default function CollisionRenderer({
     }
     return ke;
   };
-  const pBefore = momentumOf(before);
-  const pAfter = momentumOf(after);
-  const keBefore = kineticEnergyOf(before);
-  const keAfter = kineticEnergyOf(after);
+  const pBefore = momentumOf(beforeBodies);
+  const pAfter = momentumOf(afterBodies);
+  const keBefore = kineticEnergyOf(beforeBodies);
+  const keAfter = kineticEnergyOf(afterBodies);
   const pMag = (p: { px: number; py: number }) => Math.hypot(p.px, p.py);
   // Relative error threshold: 1% of the larger total (with a small absolute
   // floor so comparisons near zero don't explode).
@@ -230,7 +338,7 @@ export default function CollisionRenderer({
       const color = pickColor(combined, 0);
       const mergedLabel = bodies.map((b) => b.label ?? '').filter(Boolean).join('+') || 'A+B';
       return (
-        <g>
+        <g {...feat('object-1-after', { cx: centerX, cy: panelCenterY, w: r * 2 + 40, h: r * 2 + 40 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
           <circle
             cx={centerX}
             cy={panelCenterY}
@@ -334,6 +442,7 @@ export default function CollisionRenderer({
     return (
       <g>
         {bodies.map((b, i) => {
+          const featName = isAfter ? `object-${i + 1}-after` : `object-${i + 1}-before`;
           const r = radii[i];
           const cx = centers[i];
           const cy = panelCenterY;
@@ -392,7 +501,7 @@ export default function CollisionRenderer({
           const labelText = isAfter ? `v′ = ${vString(b, dimension)}` : `v = ${vString(b, dimension)}`;
 
           return (
-            <g key={`body-${i}`}>
+            <g key={`body-${i}`} {...feat(featName, { cx, cy, w: r * 2 + 40, h: r * 2 + 40 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
               <circle cx={cx} cy={cy} r={r} fill={color} stroke={darken(color)} strokeWidth={2} />
               <text
                 x={cx}
@@ -532,8 +641,8 @@ export default function CollisionRenderer({
           />
         </g>
 
-        {renderPanel(before, LEFT_PANEL_X, false)}
-        {renderPanel(after, RIGHT_PANEL_X, true)}
+        {renderPanel(beforeBodies, LEFT_PANEL_X, false)}
+        {renderPanel(afterBodies, RIGHT_PANEL_X, true)}
 
         {momentumAnnotation && (
           <text
@@ -543,6 +652,7 @@ export default function CollisionRenderer({
             fill={COLORS.text}
             textAnchor="middle"
             fontWeight={600}
+            {...feat('momentum', { cx: VIEWBOX_W / 2, cy: PANEL_Y + PANEL_H + 30, w: Math.max(240, momentumAnnotation.length * 8 + 20), h: 24 }, { width: VIEWBOX_W, height: VIEWBOX_H })}
           >
             {momentumAnnotation}
           </text>

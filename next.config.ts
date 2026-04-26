@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Raise the middleware-enforced request body cap. Default is 10MB,
+  // which was being exceeded by /api/tutor/session-audio flushes on
+  // longer sessions (2026-04-24: Unterminated JSON at position
+  // 10436608 = exactly the 10MB cutoff). The audio route switched to
+  // raw-binary PCM16 uploads so typical chunks are well under this,
+  // but we leave headroom for late-finalize flushes that might batch
+  // several minutes of audio at once.
+  experimental: {
+    middlewareClientMaxBodySize: '50mb',
+  },
   images: {
     remotePatterns: [
       {

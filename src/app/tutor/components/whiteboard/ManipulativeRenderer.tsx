@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export type ManipulativeType = 'base-10' | 'ten-frame' | 'area-model';
 
@@ -80,7 +81,7 @@ function Base10Blocks({
     const bx = x;
     const by = baselineY;
     blocks.push(
-      <g key={`th-${i}`}>
+      <g key={`th-${i}`} {...feat(`thousands-${i + 1}`, { cx: bx + 5 * UNIT, cy: by + 5 * UNIT, w: 10 * UNIT + 10, h: 10 * UNIT + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <rect x={bx + 4} y={by - 4} width={10 * UNIT} height={10 * UNIT} fill="#e0e7ff" stroke="#6366f1" strokeWidth={1} />
         <rect x={bx} y={by} width={10 * UNIT} height={10 * UNIT} fill="#c7d2fe" stroke="#4338ca" strokeWidth={1.2} />
         {Array.from({ length: 10 }).map((_, r) =>
@@ -110,7 +111,7 @@ function Base10Blocks({
     const bx = x;
     const by = baselineY;
     blocks.push(
-      <g key={`h-${i}`}>
+      <g key={`h-${i}`} {...feat(`hundreds-${i + 1}`, { cx: bx + 5 * UNIT, cy: by + 5 * UNIT, w: 10 * UNIT + 10, h: 10 * UNIT + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <rect x={bx} y={by} width={10 * UNIT} height={10 * UNIT} fill="#bbf7d0" stroke="#16a34a" strokeWidth={1.2} />
         {Array.from({ length: 10 }).map((_, r) =>
           Array.from({ length: 10 }).map((__, c) => (
@@ -139,7 +140,7 @@ function Base10Blocks({
     const bx = x;
     const by = baselineY;
     blocks.push(
-      <g key={`t-${i}`}>
+      <g key={`t-${i}`} {...feat(`tens-${i + 1}`, { cx: bx + UNIT / 2, cy: by + 5 * UNIT, w: UNIT + 6, h: 10 * UNIT + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <rect x={bx} y={by} width={UNIT} height={10 * UNIT} fill="#fed7aa" stroke="#ea580c" strokeWidth={1.2} />
         {Array.from({ length: 10 }).map((_, r) => (
           <line key={`t-${i}-${r}`} x1={bx} y1={by + r * UNIT} x2={bx + UNIT} y2={by + r * UNIT} stroke="#9a3412" strokeWidth={0.3} />
@@ -163,7 +164,7 @@ function Base10Blocks({
     // Stack rows upward from the bottom so the tens rods' bottom line is shared
     const by = baselineY + 9 * UNIT - row * (UNIT + 2);
     blocks.push(
-      <g key={`o-${i}`}>
+      <g key={`o-${i}`} {...feat(`ones-${i + 1}`, { cx: bx + UNIT / 2, cy: by + UNIT / 2, w: UNIT + 4, h: UNIT + 4 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <rect x={bx} y={by} width={UNIT} height={UNIT} fill="#fecaca" stroke="#dc2626" strokeWidth={1.2} />
       </g>
     );
@@ -223,6 +224,7 @@ function TenFrame({ count, color = '#2563eb', label }: NonNullable<ManipulativeR
               fill={filled ? color : 'none'}
               stroke={filled ? color : '#cbd5e1'}
               strokeWidth={filled ? 0 : 1.5}
+              {...feat(`cell-${fIdx + 1}-${i + 1}`, { cx, cy, w: CELL, h: CELL }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
             />
           );
         }
@@ -302,7 +304,7 @@ function AreaModel({ rows, cols, showProducts = true, showSum = true, rowLabel, 
       const product = rows[i] * cols[j];
       const color = cellColors[(i + j) % cellColors.length];
       elements.push(
-        <g key={`cell-${i}-${j}`}>
+        <g key={`cell-${i}-${j}`} {...feat(`region-${i + 1}-${j + 1}`, { cx: xAcc + colWidths[j] / 2, cy: yAcc + rowHeights[i] / 2, w: colWidths[j], h: rowHeights[i] }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
           <rect x={xAcc} y={yAcc} width={colWidths[j]} height={rowHeights[i]} fill={color} stroke="#1f2937" strokeWidth={1.5} />
           {showProducts && (
             <text
@@ -356,6 +358,138 @@ function AreaModel({ rows, cols, showProducts = true, showSum = true, rowLabel, 
   }
 
   return <g>{elements}</g>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Manifest builder
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildManipulativeManifest(props: ManipulativeRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const { type, base10, tenFrame, areaModel } = props;
+
+  if (type === 'base-10' && base10) {
+    const thousands = base10.thousands ?? 0;
+    const hundreds = base10.hundreds ?? 0;
+    const tens = base10.tens ?? 0;
+    const ones = base10.ones ?? 0;
+    const thousandsClamped = Math.min(thousands, 3);
+    const hundredsClamped = Math.min(hundreds, 6);
+    const tensClamped = Math.min(tens, 9);
+    const onesClamped = Math.min(ones, 18);
+    for (let i = 0; i < thousandsClamped; i++) {
+      entries.push({
+        name: `thousands-${i + 1}`,
+        kind: 'object',
+        description: `thousands block ${i + 1} (1000)`,
+        labels: [
+          `thousands-${i + 1}`,
+          `thousands ${i + 1}`,
+          `thousand ${i + 1}`,
+          `thousands block ${i + 1}`,
+          `thousands cube ${i + 1}`,
+          '1000', '1,000',
+        ],
+      });
+    }
+    for (let i = 0; i < hundredsClamped; i++) {
+      entries.push({
+        name: `hundreds-${i + 1}`,
+        kind: 'object',
+        description: `hundreds flat ${i + 1} (100)`,
+        labels: [
+          `hundreds-${i + 1}`,
+          `hundreds ${i + 1}`,
+          `hundred ${i + 1}`,
+          `hundreds flat ${i + 1}`,
+          `flat ${i + 1}`,
+          '100',
+        ],
+      });
+    }
+    for (let i = 0; i < tensClamped; i++) {
+      entries.push({
+        name: `tens-${i + 1}`,
+        kind: 'object',
+        description: `tens rod ${i + 1} (10)`,
+        labels: [
+          `tens-${i + 1}`,
+          `tens ${i + 1}`,
+          `ten ${i + 1}`,
+          `tens rod ${i + 1}`,
+          `rod ${i + 1}`,
+          '10',
+        ],
+      });
+    }
+    for (let i = 0; i < onesClamped; i++) {
+      entries.push({
+        name: `ones-${i + 1}`,
+        kind: 'object',
+        description: `ones unit cube ${i + 1} (1)`,
+        labels: [
+          `ones-${i + 1}`,
+          `ones ${i + 1}`,
+          `one ${i + 1}`,
+          `unit ${i + 1}`,
+          `cube ${i + 1}`,
+          `unit cube ${i + 1}`,
+        ],
+      });
+    }
+  } else if (type === 'ten-frame' && tenFrame) {
+    const count = tenFrame.count;
+    const frames = count > 10 ? 2 : 1;
+    for (let f = 0; f < frames; f++) {
+      for (let i = 0; i < 10; i++) {
+        entries.push({
+          name: `cell-${f + 1}-${i + 1}`,
+          kind: 'shape',
+          description: `ten-frame ${f + 1}, cell ${i + 1}`,
+          labels: [
+            `cell-${f + 1}-${i + 1}`,
+            `cell ${f + 1}-${i + 1}`,
+            `cell ${i + 1}`,
+            `frame ${f + 1} cell ${i + 1}`,
+            `ten-frame ${f + 1} cell ${i + 1}`,
+            `box ${i + 1}`,
+            `square ${i + 1}`,
+          ],
+        });
+      }
+    }
+  } else if (type === 'area-model' && areaModel) {
+    for (let i = 0; i < areaModel.rows.length; i++) {
+      for (let j = 0; j < areaModel.cols.length; j++) {
+        const rVal = areaModel.rows[i];
+        const cVal = areaModel.cols[j];
+        entries.push({
+          name: `region-${i + 1}-${j + 1}`,
+          kind: 'region',
+          description: `area-model cell row ${i + 1} × col ${j + 1} = ${rVal} × ${cVal}`,
+          labels: [
+            `region-${i + 1}-${j + 1}`,
+            `region ${i + 1} ${j + 1}`,
+            `cell ${i + 1} ${j + 1}`,
+            `cell-${i + 1}-${j + 1}`,
+            `row ${i + 1} col ${j + 1}`,
+            `row ${i + 1} column ${j + 1}`,
+            `${rVal} × ${cVal}`,
+            `${rVal} times ${cVal}`,
+            `the ${rVal}-by-${cVal} cell`,
+          ],
+        });
+      }
+    }
+  }
+
+  return entries;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

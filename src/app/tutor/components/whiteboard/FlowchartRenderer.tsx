@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export type FlowchartNodeType = 'start' | 'end' | 'process' | 'decision' | 'io';
 
@@ -219,6 +220,85 @@ function autoLayout(nodes: FlowchartNode[], layout: 'top-down' | 'left-right'): 
   });
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Edges use the same `edge-<fromSlug>-to-<toSlug>` convention as the renderer,
+ * regardless of whether they take the straight-edge or detour path.
+ */
+export function buildFlowchartManifest(props: FlowchartRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const nodes = props.nodes ?? [];
+  const edges = props.edges ?? [];
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  for (const e of edges) {
+    const fromNode = nodeById.get(e.from);
+    const toNode = nodeById.get(e.to);
+    const fromLabel = fromNode?.label ?? e.from;
+    const toLabel = toNode?.label ?? e.to;
+    const name = `edge-${featSlug(e.from)}-to-${featSlug(e.to)}`;
+    const labels = new Set<string>([
+      name,
+      `${e.from} → ${e.to}`,
+      `${e.from}-to-${e.to}`,
+      `arrow from ${e.from} to ${e.to}`,
+      `arrow from ${fromLabel} to ${toLabel}`,
+      `flow from ${fromLabel} to ${toLabel}`,
+      `${fromLabel} → ${toLabel}`,
+    ]);
+    if (e.label) {
+      labels.add(e.label);
+      labels.add(e.label.toLowerCase());
+      labels.add(`${e.label} arrow`);
+      labels.add(`the ${e.label.toLowerCase()} branch`);
+    }
+    entries.push({
+      name,
+      kind: 'edge',
+      description: e.label ? `edge ${e.from} → ${e.to} (${e.label})` : `edge ${e.from} → ${e.to}`,
+      labels: Array.from(labels),
+    });
+  }
+  for (const n of nodes) {
+    const labels = new Set<string>([
+      `node-${featSlug(n.id)}`,
+      n.id,
+      n.label,
+      n.label.toLowerCase(),
+      `the ${n.label.toLowerCase()}`,
+      `"${n.label}"`,
+      `${n.type} node`,
+      `the ${n.type} node`,
+      `${n.type} "${n.label}"`,
+    ]);
+    // For start/end nodes allow bare aliases ("start", "end").
+    if (n.type === 'start') {
+      labels.add('start');
+      labels.add('the start');
+      labels.add('start node');
+      labels.add('beginning');
+    }
+    if (n.type === 'end') {
+      labels.add('end');
+      labels.add('the end');
+      labels.add('end node');
+      labels.add('terminator');
+    }
+    if (n.type === 'decision') {
+      labels.add(`decision ${n.label.toLowerCase()}`);
+      labels.add(`the ${n.label.toLowerCase()} decision`);
+      labels.add('decision diamond');
+    }
+    entries.push({
+      name: `node-${featSlug(n.id)}`,
+      kind: 'node',
+      description: `${n.type} node "${n.label}"`,
+      labels: Array.from(labels),
+    });
+  }
+  return entries;
+}
+
 export default function FlowchartRenderer({
   title,
   nodes,
@@ -366,7 +446,11 @@ export default function FlowchartRenderer({
             const labelY = (sourceExitY + targetEntryY) / 2;
 
             return (
-              <g key={`e-${i}`}>
+              <g key={`e-${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`,
+                { cx: (sourceExitX + arrowTipX) / 2, cy: (sourceExitY + targetEntryY) / 2,
+                  w: Math.max(40, Math.abs(channelX - sourceExitX) + Math.abs(channelX - arrowTipX) + 30),
+                  h: Math.max(40, Math.abs(targetEntryY - sourceExitY) + 30) },
+                { width: SVG_WIDTH, height: svgHeight })}>
                 <path
                   d={pathD}
                   fill="none"
@@ -419,7 +503,11 @@ export default function FlowchartRenderer({
           const mx = (sx + ex) / 2;
           const my = (sy + ey) / 2;
           return (
-            <g key={`e-${i}`}>
+            <g key={`e-${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`,
+              { cx: (sx + ex) / 2, cy: (sy + ey) / 2,
+                w: Math.max(40, Math.abs(ex - sx) + 30),
+                h: Math.max(40, Math.abs(ey - sy) + 30) },
+              { width: SVG_WIDTH, height: svgHeight })}>
               <line
                 x1={sx}
                 y1={sy}
@@ -519,8 +607,12 @@ export default function FlowchartRenderer({
           // Center multi-line labels vertically on cy.
           const lineHeight = 14;
           const firstLineY = cy + 4 - ((lines.length - 1) * lineHeight) / 2;
+          const nodeHW = nodeHalfW(n.type);
+          const nodeHH = nodeHalfH(n.type);
           return (
-            <g key={`n-${n.id}`}>
+            <g key={`n-${n.id}`} {...feat(`node-${featSlug(n.id)}`,
+              { cx, cy, w: nodeHW * 2 + 10, h: nodeHH * 2 + 10 },
+              { width: SVG_WIDTH, height: svgHeight })}>
               {shape}
               <text
                 x={cx}

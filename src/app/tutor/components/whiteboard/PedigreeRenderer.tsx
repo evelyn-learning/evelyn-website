@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
 export interface PedigreeIndividual {
@@ -59,6 +59,64 @@ function symbolForStatus(status: PedigreeIndividual['status']): { fill: string; 
   if (status === 'carrier') return { fill: DIAGRAM_COLORS.slate, half: true };
   if (status === 'deceased') return { fill: 'white', strike: true };
   return { fill: 'white' };
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildPedigreeManifest(props: PedigreeProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const individuals = props.individuals ?? [];
+  const marriages = props.marriages ?? [];
+  const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+  marriages.forEach((m, i) => {
+    const labels = new Set<string>([
+      `mating-${i + 1}`,
+      `mating ${i + 1}`,
+      `marriage ${i + 1}`,
+      `couple ${i + 1}`,
+      `mating line ${i + 1}`,
+      `mating between ${m.pair[0]} and ${m.pair[1]}`,
+      `${m.pair[0]}-${m.pair[1]}`,
+    ]);
+    if (m.consanguineous) labels.add(`consanguineous mating ${i + 1}`);
+    entries.push({
+      name: `mating-${i + 1}`,
+      kind: 'edge',
+      description: `mating line between ${m.pair[0]} and ${m.pair[1]}${m.consanguineous ? ' (consanguineous)' : ''}`,
+      labels: Array.from(labels),
+    });
+  });
+  for (const ind of individuals) {
+    const sexLabel = ind.sex === 'male' ? 'male' : ind.sex === 'female' ? 'female' : 'unknown sex';
+    const statusLabel = ind.status && ind.status !== 'unaffected' ? `, ${ind.status}` : '';
+    const slug = featSlug(ind.id);
+    const labels = new Set<string>([
+      `person-${slug}`,
+      ind.id,
+      `individual ${ind.id}`,
+      `person ${ind.id}`,
+    ]);
+    if (ind.label) {
+      labels.add(ind.label);
+      labels.add(ind.label.toLowerCase());
+      labels.add(`the ${ind.label.toLowerCase()}`);
+    }
+    // Generation-based aliases: "I-1", "individual I-1", "generation I person 1"
+    const roman = ROMAN[ind.generation] || String(ind.generation);
+    labels.add(`${roman}-${ind.position + 1}`);
+    labels.add(`${roman}:${ind.position + 1}`);
+    labels.add(`generation ${roman} position ${ind.position + 1}`);
+    labels.add(`generation ${ind.generation}, position ${ind.position + 1}`);
+    entries.push({
+      name: `person-${slug}`,
+      kind: 'node',
+      description: `${ind.label || ind.id} (${sexLabel}${statusLabel}, generation ${ind.generation})`,
+      labels: Array.from(labels),
+    });
+  }
+  return entries;
 }
 
 export default function PedigreeRenderer({
@@ -132,7 +190,7 @@ export default function PedigreeRenderer({
           if (!a || !b) return null;
           const pa = place(a); const pb = place(b);
           return (
-            <g key={`m${i}`}>
+            <g key={`m${i}`} {...feat(`mating-${i + 1}`, { cx: (pa.x + pb.x) / 2, cy: (pa.y + pb.y) / 2, w: Math.abs(pb.x - pa.x) + 20, h: 20 })}>
               <line x1={pa.x + nodeR} y1={pa.y} x2={pb.x - nodeR} y2={pb.y} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
               {m.consanguineous && (
                 <line x1={pa.x + nodeR} y1={pa.y - 2} x2={pb.x - nodeR} y2={pb.y - 2} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />
@@ -163,7 +221,7 @@ export default function PedigreeRenderer({
           const { x, y } = place(ind);
           const sym = symbolForStatus(ind.status);
           return (
-            <g key={ind.id}>
+            <g key={ind.id} {...feat(`person-${featSlug(ind.id)}`, { cx: x, cy: y, w: nodeR * 2 + 8, h: nodeR * 2 + 8 })}>
               {ind.sex === 'male' || ind.sex === 'unknown' ? (
                 <g>
                   <rect x={x - nodeR} y={y - nodeR} width={nodeR * 2} height={nodeR * 2} fill={sym.fill} stroke={DIAGRAM_COLORS.slate} strokeWidth={1.5} />

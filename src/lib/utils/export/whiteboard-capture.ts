@@ -97,9 +97,50 @@ export interface RasterCapture {
  * Capture the command's rendered DOM as a PNG data URL via html2canvas.
  * Used for equations (KaTeX spans) and other non-SVG output. Scale 2x for
  * retina-quality embedding into the PDF.
+ *
+ * If `scribbles` is provided, the helper first serializes the mounted SVG,
+ * bakes the scribble marks in via overlayScribbles, re-parses the enriched
+ * SVG back into the live DOM (replacing the original <svg>), then rasterizes.
+ * This is the preferred path for renderers that mix emoji / system-font
+ * glyphs into SVG <text>, because html2canvas uses the browser's font stack
+ * (which has emoji) while svg2pdf relies on PDF-embedded fonts (which do
+ * not).
  */
-export async function captureCommandRaster(command: WhiteboardCommand): Promise<RasterCapture | null> {
+export async function captureCommandRaster(
+  command: WhiteboardCommand,
+  scribbles?: ScribbleInput[],
+): Promise<RasterCapture | null> {
   return withMountedCommand(command, async (_cmd, container) => {
+    // If scribbles requested, enrich the mounted SVG first so the rasterizer
+    // captures the marks along with the underlying diagram.
+    if (scribbles && scribbles.length > 0) {
+      const svgWithFeatures = container.querySelector('svg [data-feature]')?.closest('svg');
+      if (svgWithFeatures) {
+        // SVG-mode item: bake scribbles into the SVG string and re-mount.
+        if (!svgWithFeatures.getAttribute('xmlns')) svgWithFeatures.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        const original = new XMLSerializer().serializeToString(svgWithFeatures);
+        const enriched = overlayScribbles(original, scribbles);
+        if (enriched !== original) {
+          try {
+            const doc = new DOMParser().parseFromString(enriched, 'image/svg+xml');
+            const newSvg = doc.documentElement;
+            if (newSvg && newSvg.nodeName.toLowerCase() === 'svg') {
+              svgWithFeatures.parentNode?.replaceChild(document.importNode(newSvg, true), svgWithFeatures);
+              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+            }
+          } catch (err) {
+            console.warn('[whiteboard-capture] Failed to re-mount enriched SVG:', err);
+          }
+        }
+      } else {
+        // HTML-mode item (KaTeX equation, table, problem card, ...).
+        // Inject an absolutely-positioned SVG overlay over the rendered
+        // element so html2canvas captures the marks together with the
+        // content. Mirrors the live ScribbleOverlays HTML path.
+        injectHtmlScribbleOverlay(container, scribbles);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+    }
     const { default: html2canvas } = await import('html2canvas');
     // Find the smallest rendered child so we don't capture the full container
     // width when the content is narrow (keeps the PDF embed tight).
@@ -116,6 +157,189 @@ export async function captureCommandRaster(command: WhiteboardCommand): Promise<
       heightPx: canvas.height,
     };
   });
+}
+
+/**
+ * Bake scribble overlays into an HTML-rendered command (equation, table,
+ * problem card, ...) by appending an absolutely-positioned SVG to the
+ * firstElementChild. The SVG's viewBox matches the target's CSS-pixel
+ * dimensions and uses preserveAspectRatio="none" so marks stay 1:1 with
+ * the captured area when html2canvas rasters it. Mirrors the live
+ * ScribbleOverlays HTML mode so the PDF matches what the student saw.
+ */
+function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleInput[]): void {
+  const target = (container.firstElementChild as HTMLElement) || null;
+  if (!target) return;
+  const targetRect = target.getBoundingClientRect();
+  if (targetRect.width <= 0 || targetRect.height <= 0) return;
+
+  type Resolved = { s: ScribbleInput; rx: number; ry: number; rw: number; rh: number };
+  const resolved: Resolved[] = [];
+  for (const s of scribbles) {
+    if (!s.targetFeature) continue;
+    const safe = s.targetFeature.replace(/"/g, '\\"');
+    const el = target.querySelector(`[data-feature="${safe}"]`);
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    resolved.push({
+      s,
+      rx: r.left - targetRect.left,
+      ry: r.top - targetRect.top,
+      rw: r.width,
+      rh: r.height,
+    });
+  }
+  if (resolved.length === 0) return;
+
+  const computedPosition = window.getComputedStyle(target).position;
+  if (computedPosition === 'static') target.style.position = 'relative';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const overlay = document.createElementNS(SVG_NS, 'svg');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.setAttribute('viewBox', `0 0 ${targetRect.width} ${targetRect.height}`);
+  overlay.setAttribute('preserveAspectRatio', 'none');
+  overlay.style.position = 'absolute';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.overflow = 'visible';
+
+  const vw = targetRect.width;
+  const vh = targetRect.height;
+
+  resolved.forEach((entry, i) => {
+    const { s, rx, ry, rw, rh } = entry;
+    const color = s.color || '#f59e0b';
+    const cx = rx + rw / 2;
+    const cy = ry + rh / 2;
+
+    const group = document.createElementNS(SVG_NS, 'g');
+    const setAttrs = (el: Element, attrs: Record<string, string | number>) => {
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    };
+
+    switch (s.shape) {
+      case 'circle': {
+        const ellipse = document.createElementNS(SVG_NS, 'ellipse');
+        setAttrs(ellipse, {
+          cx, cy,
+          rx: Math.max(vw * 0.015, rw / 2 + 4),
+          ry: Math.max(vh * 0.015, rh / 2 + 4),
+          fill: 'none', stroke: color,
+          'stroke-width': Math.max(2, vw / 200),
+        });
+        group.appendChild(ellipse);
+        break;
+      }
+      case 'underline': {
+        const line = document.createElementNS(SVG_NS, 'line');
+        setAttrs(line, {
+          x1: rx, y1: ry + rh,
+          x2: rx + rw, y2: ry + rh,
+          stroke: color,
+          'stroke-width': Math.max(2.5, vw / 170),
+          'stroke-linecap': 'round',
+        });
+        group.appendChild(line);
+        break;
+      }
+      case 'box': {
+        const rect = document.createElementNS(SVG_NS, 'rect');
+        setAttrs(rect, {
+          x: rx - 2, y: ry - 2, width: rw + 4, height: rh + 4,
+          fill: 'none', stroke: color,
+          'stroke-width': Math.max(2, vw / 200),
+        });
+        group.appendChild(rect);
+        break;
+      }
+      case 'highlight': {
+        const rect = document.createElementNS(SVG_NS, 'rect');
+        setAttrs(rect, {
+          x: rx, y: ry, width: rw, height: rh,
+          fill: color, 'fill-opacity': '0.25', stroke: 'none',
+        });
+        group.appendChild(rect);
+        break;
+      }
+      case 'arrow': {
+        const tailX = Math.max(0, rx - vw * 0.08);
+        const tailY = Math.max(0, ry - vh * 0.08);
+        const markerId = `pdf-html-arrow-${i}`;
+        const defs = document.createElementNS(SVG_NS, 'defs');
+        const marker = document.createElementNS(SVG_NS, 'marker');
+        setAttrs(marker, {
+          id: markerId, viewBox: '0 0 10 10',
+          refX: '8', refY: '5',
+          markerWidth: '4', markerHeight: '4',
+          orient: 'auto-start-reverse',
+        });
+        const markerPath = document.createElementNS(SVG_NS, 'path');
+        setAttrs(markerPath, { d: 'M0,0 L10,5 L0,10 Z', fill: color });
+        marker.appendChild(markerPath);
+        defs.appendChild(marker);
+        group.appendChild(defs);
+        const line = document.createElementNS(SVG_NS, 'line');
+        setAttrs(line, {
+          x1: tailX, y1: tailY, x2: cx, y2: cy,
+          stroke: color,
+          'stroke-width': Math.max(2, vw / 200),
+          'marker-end': `url(#${markerId})`,
+        });
+        group.appendChild(line);
+        break;
+      }
+    }
+
+    if (s.label) {
+      const text = document.createElementNS(SVG_NS, 'text');
+      const labelY = Math.max(vh * 0.05, ry - 4);
+      setAttrs(text, {
+        x: cx, y: labelY,
+        'font-size': Math.max(10, vw / 50),
+        fill: color,
+        'text-anchor': 'middle',
+        'font-weight': '700',
+        'paint-order': 'stroke',
+        stroke: 'white',
+        'stroke-width': Math.max(1.5, vw / 250),
+        'stroke-linejoin': 'round',
+      });
+      text.textContent = s.label;
+      group.appendChild(text);
+    }
+
+    overlay.appendChild(group);
+  });
+
+  target.appendChild(overlay);
+}
+
+/**
+ * Set of show_* actions that should bypass the svg2pdf path and rasterize
+ * via html2canvas instead. Add actions here when their renderer embeds
+ * emoji / unicode / non-ASCII glyphs inside SVG <text> that svg2pdf can't
+ * faithfully reproduce.
+ */
+export const RASTER_PREFERRED_ACTIONS: ReadonlySet<string> = new Set([
+  'showCycleDiagram', // stage icons are emoji (🌧️, 🧬, ⚡)
+  'showConceptMap',   // tutor-supplied node icons
+  'showFlowchart',    // tutor-supplied node icons
+]);
+
+/**
+ * Heuristic: does the captured SVG contain any character outside the
+ * common Latin + punctuation + math range that svg2pdf renders faithfully?
+ * This catches emoji and exotic unicode even when a renderer isn't in the
+ * static allowlist above. Intentionally permissive — we'd rather raster a
+ * few extra diagrams than ship a garbled glyph.
+ */
+export function svgContainsExoticGlyphs(svgString: string): boolean {
+  return /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F9FF}]/u.test(svgString);
 }
 
 /**
@@ -170,17 +394,15 @@ export async function drawCapturedSvg(pdf: any, svgString: string, x: number, y:
 /**
  * A scribble command as it appears in WhiteboardCommand — narrowed for
  * this helper so callers don't need to import the full union.
+ *
+ * targetFeature is the canonical data-feature name the catalog resolver
+ * stamped on the scribble command. The PDF overlay looks it up directly
+ * against the captured SVG's data-feature-* attributes — no aliases, no
+ * fuzzy matching. Mirrors the live ScribbleOverlays behavior so the PDF
+ * is visually identical to the session.
  */
 export interface ScribbleInput {
   shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
-  region?: { x: number; y: number; w?: number; h?: number };
-  /**
-   * Name of a data-feature exposed by the target renderer. When set, the
-   * PDF overlay looks up [data-feature="<name>"] in the captured SVG and
-   * reads data-feature-cx / -cy / -w / -h (all 0-1 fractions) to compute
-   * the mark's region. Takes priority over `region`. Mirrors the live
-   * ScribbleOverlays behavior so the PDF matches what the student saw.
-   */
   targetFeature?: string;
   color?: string;
   label?: string;
@@ -206,8 +428,10 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
     const { width: vw, height: vh } = parseSvgDimensions(svgString);
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
-    // Resolve data-feature references against the captured SVG. Same
-    // resolution rule as the live renderer in WhiteboardCanvas.
+    // Resolve a scribble's targetFeature against the captured SVG by exact
+    // data-feature match. Same rule as the live overlay (ScribbleOverlays):
+    // the catalog has already translated the tutor's input to a canonical
+    // name that matches what the renderer emitted, so no aliases are needed.
     const resolveFeature = (name: string): { x: number; y: number; w: number; h: number } | null => {
       const safe = name.replace(/"/g, '\\"');
       const el = svg.querySelector(`[data-feature="${safe}"]`);
@@ -228,14 +452,11 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
     for (let i = 0; i < scribbles.length; i++) {
       const s = scribbles[i];
       const color = s.color || '#f59e0b';
-      // Region precedence: feature-resolved > tutor-provided region >
-      // small-centered default. Matches the live ScribbleOverlays.
       const resolved = s.targetFeature ? resolveFeature(s.targetFeature) : null;
-      const hasRegion = !!s.region;
-      const rxFrac = resolved ? resolved.x : (hasRegion ? (s.region?.x ?? 0) : 0.35);
-      const ryFrac = resolved ? resolved.y : (hasRegion ? (s.region?.y ?? 0) : 0.40);
-      const rwFrac = resolved ? resolved.w : (hasRegion ? (s.region?.w ?? (1 - (s.region?.x ?? 0))) : 0.30);
-      const rhFrac = resolved ? resolved.h : (hasRegion ? (s.region?.h ?? (1 - (s.region?.y ?? 0))) : 0.25);
+      const rxFrac = resolved ? resolved.x : 0.35;
+      const ryFrac = resolved ? resolved.y : 0.40;
+      const rwFrac = resolved ? resolved.w : 0.30;
+      const rhFrac = resolved ? resolved.h : 0.25;
       const rx = rxFrac * vw;
       const ry = ryFrac * vh;
       const rw = rwFrac * vw;

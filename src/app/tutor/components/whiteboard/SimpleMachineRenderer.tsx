@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, formatValue } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, formatValue, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
@@ -39,6 +39,151 @@ export interface SimpleMachineProps {
 
 const W = DIAGRAM_VIEWBOX.width;
 const H = DIAGRAM_VIEWBOX.height;
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Each machine type (lever/pulley/inclined-plane/wedge) emits its own feature
+ * set, so we branch on props.type.
+ */
+export function buildSimpleMachineManifest(props: SimpleMachineProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  if (props.type === 'lever') {
+    entries.push({
+      name: 'fulcrum',
+      kind: 'object',
+      description: 'triangular fulcrum pivot under the beam',
+      labels: ['fulcrum', 'the fulcrum', 'pivot', 'pivot point', 'support', 'hinge', 'triangle', 'pivot triangle'],
+    });
+    entries.push({
+      name: 'load',
+      kind: 'object',
+      description: `load block${props.load != null ? ` = ${formatValue(props.load)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['load', 'the load', 'resistance', 'weight', 'load block', 'load force', 'output force', 'Fr', 'FL'],
+    });
+    entries.push({
+      name: 'effort',
+      kind: 'other',
+      description: `effort force arrow${props.effort != null ? ` = ${formatValue(props.effort)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['effort', 'the effort', 'effort force', 'applied force', 'input force', 'force', 'Fe', 'F applied'],
+    });
+    entries.push({
+      name: 'load-arm',
+      kind: 'label',
+      description: `load-arm length label = ${formatValue(props.loadArm ?? 1)}`,
+      labels: ['load-arm', 'load arm', 'resistance arm', 'load arm length', 'd load', 'dL'],
+    });
+    entries.push({
+      name: 'effort-arm',
+      kind: 'label',
+      description: `effort-arm length label = ${formatValue(props.effortArm ?? 2)}`,
+      labels: ['effort-arm', 'effort arm', 'input arm', 'effort arm length', 'd effort', 'dE'],
+    });
+  } else if (props.type === 'pulley') {
+    const movable = props.variant === 'movable' || props.variant === 'compound';
+    entries.push({
+      name: 'pulley-fixed',
+      kind: 'object',
+      description: 'fixed pulley attached to ceiling',
+      labels: ['pulley-fixed', 'fixed pulley', 'top pulley', 'upper pulley', 'ceiling pulley', ...(movable ? [] : ['pulley', 'the pulley'])],
+    });
+    if (movable) {
+      entries.push({
+        name: 'pulley-movable',
+        kind: 'object',
+        description: 'movable pulley that rises with the load',
+        labels: ['pulley-movable', 'movable pulley', 'moving pulley', 'lower pulley', 'bottom pulley', 'load pulley'],
+      });
+    }
+    entries.push({
+      name: 'load',
+      kind: 'object',
+      description: `load block${props.load != null ? ` = ${formatValue(props.load)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['load', 'the load', 'weight', 'mass', 'load block', 'hanging weight', 'W', 'FL'],
+    });
+    entries.push({
+      name: 'effort',
+      kind: 'other',
+      description: `effort force arrow on free rope end${props.effort != null ? ` = ${formatValue(props.effort)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['effort', 'the effort', 'effort force', 'applied force', 'input force', 'pull', 'tension', 'Fe'],
+    });
+  } else if (props.type === 'inclined-plane') {
+    entries.push({
+      name: 'ground',
+      kind: 'line',
+      description: 'horizontal ground line under the ramp',
+      labels: ['ground', 'floor', 'bottom', 'surface', 'baseline', 'ground line'],
+    });
+    entries.push({
+      name: 'ramp',
+      kind: 'shape',
+      description: `triangular ramp (angle ${formatValue(props.angle ?? 30)}°)`,
+      labels: ['ramp', 'the ramp', 'incline', 'slope', 'inclined plane', 'triangle', 'hypotenuse'],
+    });
+    entries.push({
+      name: 'load',
+      kind: 'object',
+      description: 'load box resting on the hypotenuse',
+      labels: ['load', 'the load', 'box', 'block', 'crate', 'mass', 'weight', 'object on ramp'],
+    });
+    entries.push({
+      name: 'effort',
+      kind: 'other',
+      description: `effort force arrow parallel to the ramp${props.effort != null ? ` = ${formatValue(props.effort)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['effort', 'the effort', 'effort force', 'applied force', 'push', 'pull', 'force up ramp', 'Fe'],
+    });
+    entries.push({
+      name: 'angle',
+      kind: 'annotation',
+      description: `ramp angle arc θ = ${formatValue(props.angle ?? 30)}° at base-right vertex`,
+      labels: ['angle', 'θ', 'theta', 'ramp angle', 'incline angle', 'the angle', 'angle of incline'],
+    });
+    entries.push({
+      name: 'length',
+      kind: 'label',
+      description: `hypotenuse length label = ${formatValue(props.length ?? 4)} m`,
+      labels: ['length', 'ramp length', 'hypotenuse', 'L', 'ramp length label', 'slope length'],
+    });
+    entries.push({
+      name: 'height',
+      kind: 'label',
+      description: 'vertical height label on the left edge of the triangle',
+      labels: ['height', 'h', 'vertical height', 'rise', 'height label'],
+    });
+    entries.push({
+      name: 'base',
+      kind: 'label',
+      description: 'base length label below the ground edge',
+      labels: ['base', 'base length', 'run', 'horizontal distance', 'base label'],
+    });
+  } else if (props.type === 'wedge') {
+    entries.push({
+      name: 'object',
+      kind: 'object',
+      description: 'horizontal block being split by the wedge',
+      labels: ['object', 'the object', 'block', 'log', 'material', 'workpiece', 'the block', 'split object'],
+    });
+    entries.push({
+      name: 'wedge',
+      kind: 'shape',
+      description: `wedge (downward-pointing triangle, angle ${formatValue(props.angle ?? 20)}°)`,
+      labels: ['wedge', 'the wedge', 'triangle', 'splitting wedge', 'axe head', 'blade'],
+    });
+    entries.push({
+      name: 'effort',
+      kind: 'other',
+      description: `effort force pushing down on the wedge${props.effort != null ? ` = ${formatValue(props.effort)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['effort', 'the effort', 'effort force', 'applied force', 'input force', 'push', 'downward force', 'Fe'],
+    });
+    entries.push({
+      name: 'load',
+      kind: 'other',
+      description: `splitting reaction forces on the object${props.load != null ? ` = ${formatValue(props.load)} ${props.unit ?? 'N'}` : ''}`,
+      labels: ['load', 'the load', 'splitting force', 'reaction force', 'splitting forces', 'output force', 'resistance'],
+    });
+  }
+  return entries;
+}
 
 export default function SimpleMachineRenderer({
   title, type, variant,
@@ -100,20 +245,36 @@ function renderLever(
       {/* Beam */}
       <line x1={Math.min(loadX, effortX) - 20} y1={beamY} x2={Math.max(loadX, effortX) + 20} y2={beamY} stroke={DIAGRAM_COLORS.slate} strokeWidth={5} strokeLinecap="round" />
       {/* Fulcrum — triangle */}
-      <polygon points={`${fulcrumX},${beamY + 2} ${fulcrumX - 16},${beamY + 32} ${fulcrumX + 16},${beamY + 32}`} fill={DIAGRAM_COLORS.slate} />
+      <polygon
+        points={`${fulcrumX},${beamY + 2} ${fulcrumX - 16},${beamY + 32} ${fulcrumX + 16},${beamY + 32}`}
+        fill={DIAGRAM_COLORS.slate}
+        {...feat('fulcrum', { cx: fulcrumX, cy: beamY + 24, w: 40, h: 48 })}
+      />
       <text x={fulcrumX} y={beamY + 48} fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>Fulcrum</text>
 
       {/* Load */}
-      <rect x={loadX - 20} y={beamY - 44} width={40} height={40} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
-      <text x={loadX} y={beamY - 52} fontSize={11} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={700}>Load{load != null ? ` = ${formatValue(load)} ${unit}` : ''}</text>
+      <g {...feat('load', { cx: loadX, cy: beamY - 24, w: 50, h: 60 })}>
+        <rect x={loadX - 20} y={beamY - 44} width={40} height={40} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
+        <text x={loadX} y={beamY - 52} fontSize={11} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={700}>Load{load != null ? ` = ${formatValue(load)} ${unit}` : ''}</text>
+      </g>
 
       {/* Effort arrow (downward push on beam) */}
-      <line x1={effortX} y1={beamY - 60} x2={effortX} y2={beamY - 6} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
-      <text x={effortX} y={beamY - 68} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}>Effort{effort != null ? ` = ${formatValue(effort)} ${unit}` : ''}</text>
+      <g {...feat('effort', { cx: effortX, cy: beamY - 40, w: 60, h: 80 })}>
+        <line x1={effortX} y1={beamY - 60} x2={effortX} y2={beamY - 6} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
+        <text x={effortX} y={beamY - 68} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}>Effort{effort != null ? ` = ${formatValue(effort)} ${unit}` : ''}</text>
+      </g>
 
       {/* Arms */}
-      <text x={(fulcrumX + loadX) / 2} y={beamY + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">Load arm = {formatValue(loadArm)}</text>
-      <text x={(fulcrumX + effortX) / 2} y={beamY + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">Effort arm = {formatValue(effortArm)}</text>
+      <text
+        x={(fulcrumX + loadX) / 2} y={beamY + 14} fontSize={10}
+        fill={DIAGRAM_COLORS.muted} textAnchor="middle"
+        {...feat('load-arm', { cx: (fulcrumX + loadX) / 2, cy: beamY + 14, w: Math.abs(fulcrumX - loadX), h: 14 })}
+      >Load arm = {formatValue(loadArm)}</text>
+      <text
+        x={(fulcrumX + effortX) / 2} y={beamY + 14} fontSize={10}
+        fill={DIAGRAM_COLORS.muted} textAnchor="middle"
+        {...feat('effort-arm', { cx: (fulcrumX + effortX) / 2, cy: beamY + 14, w: Math.abs(fulcrumX - effortX), h: 14 })}
+      >Effort arm = {formatValue(effortArm)}</text>
 
       {/* Title: MA */}
       <text x={W / 2} y={36} fontSize={13} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>
@@ -142,12 +303,14 @@ function renderPulley(
       ))}
 
       {/* Fixed pulley */}
-      <circle cx={cx} cy={topY} r={22} fill="white" stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
-      <circle cx={cx} cy={topY} r={4} fill={DIAGRAM_COLORS.slate} />
+      <g {...feat('pulley-fixed', { cx: cx, cy: topY, w: 52, h: 52 })}>
+        <circle cx={cx} cy={topY} r={22} fill="white" stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
+        <circle cx={cx} cy={topY} r={4} fill={DIAGRAM_COLORS.slate} />
+      </g>
 
       {/* Movable pulley for compound/movable */}
       {movable && (
-        <g>
+        <g {...feat('pulley-movable', { cx: cx, cy: loadY - 60, w: 52, h: 52 })}>
           <circle cx={cx} cy={loadY - 60} r={22} fill="white" stroke={DIAGRAM_COLORS.slate} strokeWidth={3} />
           <circle cx={cx} cy={loadY - 60} r={4} fill={DIAGRAM_COLORS.slate} />
           <line x1={cx} y1={loadY - 38} x2={cx} y2={loadY - 16} stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
@@ -178,17 +341,19 @@ function renderPulley(
       )}
 
       {/* Load */}
-      <rect x={cx - 30} y={loadY - 40} width={60} height={50} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
-      <text x={cx} y={loadY - 12} fontSize={11} fill="white" textAnchor="middle" fontWeight={700}>Load</text>
-      {load != null && (
-        <text x={cx} y={loadY + 22} fontSize={11} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={600}>{formatValue(load)} {unit}</text>
-      )}
+      <g {...feat('load', { cx: cx, cy: loadY - 15, w: 80, h: 70 })}>
+        <rect x={cx - 30} y={loadY - 40} width={60} height={50} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
+        <text x={cx} y={loadY - 12} fontSize={11} fill="white" textAnchor="middle" fontWeight={700}>Load</text>
+        {load != null && (
+          <text x={cx} y={loadY + 22} fontSize={11} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={600}>{formatValue(load)} {unit}</text>
+        )}
+      </g>
 
       {/* Effort arrow: always pulling down on the free end of the rope */}
       {(() => {
         const ex = variant === 'compound' ? cx + 44 : cx + 22;
         return (
-          <g>
+          <g {...feat('effort', { cx: ex + 20, cy: loadY - 55, w: 80, h: 60 })}>
             <line x1={ex} y1={loadY - 80} x2={ex} y2={loadY - 30} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
             <text x={ex + 6} y={loadY - 60} fontSize={11} fill={DIAGRAM_COLORS.secondary} fontWeight={700}>Effort{effort != null ? ` = ${formatValue(effort)} ${unit}` : ''}</text>
           </g>
@@ -253,35 +418,55 @@ function renderInclinedPlane(
   const e1 = hypo(effortT1);
   const offset = 26;
 
+  // Triangle centroid + bounding box so the whole ramp is one addressable
+  // feature ("ramp").
+  const rampCx = (originX + baseEndX + originX) / 3;
+  const rampCy = (baseY + baseY + apexY) / 3;
+  const rampW = baseEndX - originX;
+  const rampH = baseY - apexY;
+
   return (
     <g>
       {/* Ground */}
-      <line x1={40} y1={baseY} x2={W - 40} y2={baseY} stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
+      <line
+        x1={40} y1={baseY} x2={W - 40} y2={baseY}
+        stroke={DIAGRAM_COLORS.slate} strokeWidth={2}
+        {...feat('ground', { cx: W / 2, cy: baseY, w: W - 80, h: 6 })}
+      />
       {/* Triangle ramp */}
-      <polygon points={`${originX},${baseY} ${baseEndX},${baseY} ${originX},${apexY}`} fill="#e0e7ef" stroke={DIAGRAM_COLORS.slate} strokeWidth={2} />
+      <polygon
+        points={`${originX},${baseY} ${baseEndX},${baseY} ${originX},${apexY}`}
+        fill="#e0e7ef" stroke={DIAGRAM_COLORS.slate} strokeWidth={2}
+        {...feat('ramp', { cx: rampCx, cy: rampCy, w: rampW, h: rampH })}
+      />
 
-      {/* Box on the hypotenuse */}
-      <g transform={`translate(${bxy.x}, ${bxy.y}) rotate(${theta})`}>
+      {/* Box on the hypotenuse — the "load" / "mass" / "crate" */}
+      <g
+        transform={`translate(${bxy.x}, ${bxy.y}) rotate(${theta})`}
+        {...feat('load', { cx: bxy.x, cy: bxy.y - boxSize / 2, w: boxSize * 1.3, h: boxSize * 1.3 })}
+      >
         <rect x={-boxSize / 2} y={-boxSize} width={boxSize} height={boxSize} fill={DIAGRAM_COLORS.success} stroke="#166534" strokeWidth={1.5} />
         <text x={0} y={-boxSize / 2 + 4} fontSize={11} fill="white" textAnchor="middle" fontWeight={700}>Load</text>
       </g>
 
       {/* Effort arrow (uphill along the ramp, offset on the air side) */}
-      <line
-        x1={e0.x + normX * offset} y1={e0.y + normY * offset}
-        x2={e1.x + normX * offset} y2={e1.y + normY * offset}
-        stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5}
-        markerEnd="url(#sm-arrow-secondary)"
-      />
-      {effort != null && (
-        <text
-          x={(e0.x + e1.x) / 2 + normX * (offset + 14)}
-          y={(e0.y + e1.y) / 2 + normY * (offset + 14)}
-          fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}
-        >
-          Effort = {formatValue(effort)} {unit}
-        </text>
-      )}
+      <g {...feat('effort', { cx: (e0.x + e1.x) / 2 + normX * offset, cy: (e0.y + e1.y) / 2 + normY * offset, w: 80, h: 40 })}>
+        <line
+          x1={e0.x + normX * offset} y1={e0.y + normY * offset}
+          x2={e1.x + normX * offset} y2={e1.y + normY * offset}
+          stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5}
+          markerEnd="url(#sm-arrow-secondary)"
+        />
+        {effort != null && (
+          <text
+            x={(e0.x + e1.x) / 2 + normX * (offset + 14)}
+            y={(e0.y + e1.y) / 2 + normY * (offset + 14)}
+            fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}
+          >
+            Effort = {formatValue(effort)} {unit}
+          </text>
+        )}
+      </g>
 
       {/* Angle arc at the base-right corner (where θ is measured: between
           the ground going LEFT from baseEnd and the hypotenuse going UP-LEFT
@@ -293,7 +478,7 @@ function renderInclinedPlane(
         const endX = baseEndX - arcR * Math.cos(rad);
         const endY = baseY - arcR * Math.sin(rad);
         return (
-          <g>
+          <g {...feat('angle', { cx: baseEndX - arcR / 2, cy: baseY - arcR / 3, w: arcR + 20, h: arcR + 12 })}>
             <path d={`M ${startX} ${startY} A ${arcR} ${arcR} 0 0 1 ${endX} ${endY}`}
               stroke={DIAGRAM_COLORS.accent} strokeWidth={1.75} fill="none" />
             <text
@@ -307,11 +492,13 @@ function renderInclinedPlane(
         );
       })()}
 
-      {/* Length label along the hypotenuse, OUTSIDE the triangle (offset
-          perpendicular on the air side, rotated to align with the ramp). */}
+      {/* Length label along the hypotenuse. Parked at t=0.22 (uphill of the
+          box at t=0.50, downhill of the effort-arrow tail area around
+          t=0.08-0.22) so it never overlaps the load box. Also bumped the
+          perpendicular offset from 16 → 22 for a bit more breathing room. */}
       {(() => {
-        const mid = hypo(0.5);
-        const labelOffset = 16;
+        const mid = hypo(0.22);
+        const labelOffset = 22;
         const lX = mid.x + normX * labelOffset;
         const lY = mid.y + normY * labelOffset;
         return (
@@ -319,6 +506,7 @@ function renderInclinedPlane(
             x={lX} y={lY}
             fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}
             transform={`rotate(${theta} ${lX} ${lY})`}
+            {...feat('length', { cx: lX, cy: lY, w: 90, h: 18 })}
           >
             Length = {formatValue(length)} m
           </text>
@@ -326,12 +514,20 @@ function renderInclinedPlane(
       })()}
 
       {/* Height label along the vertical left edge */}
-      <text x={originX - 8} y={(apexY + baseY) / 2} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end">
+      <text
+        x={originX - 8} y={(apexY + baseY) / 2}
+        fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="end"
+        {...feat('height', { cx: originX - 30, cy: (apexY + baseY) / 2, w: 70, h: 18 })}
+      >
         Height = {formatValue(h)} m
       </text>
 
       {/* Base label below the ground edge */}
-      <text x={(originX + baseEndX) / 2} y={baseY + 18} fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
+      <text
+        x={(originX + baseEndX) / 2} y={baseY + 18}
+        fontSize={11} fill={DIAGRAM_COLORS.muted} textAnchor="middle"
+        {...feat('base', { cx: (originX + baseEndX) / 2, cy: baseY + 18, w: baseEndX - originX, h: 18 })}
+      >
         Base = {formatValue(base)} m
       </text>
 
@@ -362,18 +558,30 @@ function renderWedge(
   return (
     <g>
       {/* Object being split (horizontal block) */}
-      <rect x={cx - 140} y={cy - 10} width={280} height={30} fill="#e7d8b0" stroke="#997a3b" strokeWidth={1.5} />
+      <rect
+        x={cx - 140} y={cy - 10} width={280} height={30}
+        fill="#e7d8b0" stroke="#997a3b" strokeWidth={1.5}
+        {...feat('object', { cx: cx, cy: cy + 5, w: 280, h: 30 })}
+      />
       {/* Wedge — triangle pointing down */}
-      <polygon points={`${cx - halfW},${cy - 10 - h} ${cx + halfW},${cy - 10 - h} ${cx},${cy - 10}`} fill={DIAGRAM_COLORS.warning} stroke="#9a4f09" strokeWidth={2} />
+      <polygon
+        points={`${cx - halfW},${cy - 10 - h} ${cx + halfW},${cy - 10 - h} ${cx},${cy - 10}`}
+        fill={DIAGRAM_COLORS.warning} stroke="#9a4f09" strokeWidth={2}
+        {...feat('wedge', { cx: cx, cy: cy - 10 - h / 2, w: halfW * 2, h: h })}
+      />
       {/* Effort arrow downward on wedge */}
-      <line x1={cx} y1={cy - 10 - h - 70} x2={cx} y2={cy - 10 - h - 4} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
-      <text x={cx} y={cy - 10 - h - 80} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}>Effort{effort != null ? ` = ${formatValue(effort)} ${unit}` : ''}</text>
+      <g {...feat('effort', { cx: cx, cy: cy - 10 - h - 40, w: 80, h: 80 })}>
+        <line x1={cx} y1={cy - 10 - h - 70} x2={cx} y2={cy - 10 - h - 4} stroke={DIAGRAM_COLORS.secondary} strokeWidth={2.5} markerEnd="url(#sm-arrow-secondary)" />
+        <text x={cx} y={cy - 10 - h - 80} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={700}>Effort{effort != null ? ` = ${formatValue(effort)} ${unit}` : ''}</text>
+      </g>
       {/* Splitting forces */}
-      <line x1={cx} y1={cy + 6} x2={cx - 80} y2={cy + 6} stroke={DIAGRAM_COLORS.success} strokeWidth={2} markerEnd="url(#sm-arrow-success)" />
-      <line x1={cx} y1={cy + 6} x2={cx + 80} y2={cy + 6} stroke={DIAGRAM_COLORS.success} strokeWidth={2} markerEnd="url(#sm-arrow-success)" />
-      {load != null && (
-        <text x={cx} y={cy + 28} fontSize={10} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={600}>Load split force = {formatValue(load)} {unit}</text>
-      )}
+      <g {...feat('load', { cx: cx, cy: cy + 6, w: 180, h: 30 })}>
+        <line x1={cx} y1={cy + 6} x2={cx - 80} y2={cy + 6} stroke={DIAGRAM_COLORS.success} strokeWidth={2} markerEnd="url(#sm-arrow-success)" />
+        <line x1={cx} y1={cy + 6} x2={cx + 80} y2={cy + 6} stroke={DIAGRAM_COLORS.success} strokeWidth={2} markerEnd="url(#sm-arrow-success)" />
+        {load != null && (
+          <text x={cx} y={cy + 28} fontSize={10} fill={DIAGRAM_COLORS.success} textAnchor="middle" fontWeight={600}>Load split force = {formatValue(load)} {unit}</text>
+        )}
+      </g>
 
       <text x={cx} y={36} fontSize={13} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>
         Wedge ({formatValue(theta)}°) · MA = {formatValue(1 / Math.sin(rad))}

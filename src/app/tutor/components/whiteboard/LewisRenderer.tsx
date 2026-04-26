@@ -14,6 +14,7 @@
  */
 
 import React from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 export interface LewisAtom {
   id: string;
@@ -87,7 +88,8 @@ function renderLonePairs(
   cx: number,
   cy: number,
   count: number,
-  bondAngles: number[]
+  bondAngles: number[],
+  lpOffset: number = 0,
 ): React.ReactElement[] {
   if (count <= 0) return [];
   const dots: React.ReactElement[] = [];
@@ -118,14 +120,126 @@ function renderLonePairs(
     const perpX = -Math.sin(rad) * dotGap;
     const perpY = -Math.cos(rad) * dotGap;
     dots.push(
-      <circle key={`lp-${i}-a`} cx={cxLp - perpX} cy={cyLp - perpY} r={1.8} fill="#1f2937" />
-    );
-    dots.push(
-      <circle key={`lp-${i}-b`} cx={cxLp + perpX} cy={cyLp + perpY} r={1.8} fill="#1f2937" />
+      <g key={`lp-${i}`}
+        {...feat(`lonepair-${lpOffset + i + 1}`, { cx: cxLp, cy: cyLp, w: 16, h: 16 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
+        <circle key={`lp-${i}-a`} cx={cxLp - perpX} cy={cyLp - perpY} r={1.8} fill="#1f2937" />
+        <circle key={`lp-${i}-b`} cx={cxLp + perpX} cy={cyLp + perpY} r={1.8} fill="#1f2937" />
+      </g>
     );
   });
 
   return dots;
+}
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ */
+export function buildLewisManifest(props: LewisRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const atoms = props.atoms ?? [];
+  const bonds = props.bonds ?? [];
+  const ELEMENT_NAMES: Record<string, string> = {
+    H: 'hydrogen', C: 'carbon', N: 'nitrogen', O: 'oxygen', F: 'fluorine',
+    P: 'phosphorus', S: 'sulfur', Cl: 'chlorine', Br: 'bromine', I: 'iodine',
+    Na: 'sodium', K: 'potassium', Mg: 'magnesium', Ca: 'calcium', Fe: 'iron',
+    B: 'boron', Si: 'silicon', Li: 'lithium', Be: 'beryllium', Al: 'aluminum',
+  };
+  const atomById = new Map(atoms.map((a) => [a.id, a]));
+  // Find a "central atom" — the one with the most bonds — so we can tag it.
+  const bondCount = new Map<string, number>();
+  for (const b of bonds) {
+    bondCount.set(b.from, (bondCount.get(b.from) ?? 0) + 1);
+    bondCount.set(b.to, (bondCount.get(b.to) ?? 0) + 1);
+  }
+  let centralId: string | null = null;
+  let maxBonds = -1;
+  for (const [id, c] of bondCount) {
+    if (c > maxBonds) { maxBonds = c; centralId = id; }
+  }
+  bonds.forEach((b, i) => {
+    const orderLabel = b.order === 2 ? 'double bond' : b.order === 3 ? 'triple bond' : 'single bond';
+    const fromAtom = atomById.get(b.from);
+    const toAtom = atomById.get(b.to);
+    const fromEl = fromAtom?.element ?? b.from;
+    const toEl = toAtom?.element ?? b.to;
+    const bareFrom = fromEl.replace(/[+\-0-9]/g, '');
+    const bareTo = toEl.replace(/[+\-0-9]/g, '');
+    const labels = new Set<string>([
+      `bond-${i + 1}`,
+      `bond ${i + 1}`,
+      orderLabel,
+      `${bareFrom}-${bareTo} bond`,
+      `${bareFrom}-${bareTo}`,
+      `${bareTo}-${bareFrom} bond`,
+      `${bareTo}-${bareFrom}`,
+      `${bareFrom}${bareTo} bond`,
+      `${orderLabel} ${i + 1}`,
+    ]);
+    if (b.order === 2) labels.add('double');
+    if (b.order === 3) labels.add('triple');
+    if (b.order === 1) labels.add('single');
+    entries.push({
+      name: `bond-${i + 1}`,
+      kind: 'edge',
+      description: `${orderLabel} between ${b.from} and ${b.to}`,
+      labels: Array.from(labels),
+    });
+  });
+  let lpCounter = 0;
+  atoms.forEach((a, aIdx) => {
+    const bareEl = a.element.replace(/[+\-0-9]/g, '');
+    const fullName = ELEMENT_NAMES[bareEl];
+    const labels = new Set<string>([
+      `atom-${aIdx + 1}`,
+      `atom ${aIdx + 1}`,
+      a.id,
+      a.element,
+      bareEl,
+      `atom ${a.element}`,
+      `${a.element} atom`,
+      `the ${a.element}`,
+    ]);
+    if (fullName) {
+      labels.add(fullName);
+      labels.add(`the ${fullName}`);
+      labels.add(`${fullName} atom`);
+    }
+    if (a.id === centralId) {
+      labels.add('central atom');
+      labels.add('the central atom');
+      if (fullName) labels.add(`central ${fullName}`);
+    }
+    entries.push({
+      name: `atom-${aIdx + 1}`,
+      kind: 'node',
+      description: `atom ${a.element}${a.formalCharge ? ` (formal charge ${a.formalCharge > 0 ? '+' : ''}${a.formalCharge})` : ''}`,
+      labels: Array.from(labels),
+    });
+    const lp = a.lonePairs ?? 0;
+    for (let i = 0; i < lp; i++) {
+      lpCounter += 1;
+      const lpLabels = new Set<string>([
+        `lonepair-${lpCounter}`,
+        `lone pair ${lpCounter}`,
+        `lone-pair ${lpCounter}`,
+        `lone pair on ${a.element}`,
+        `lone pair on ${bareEl}`,
+      ]);
+      if (fullName) lpLabels.add(`lone pair on ${fullName}`);
+      if (i === 0 && lp >= 1) {
+        // First lone pair on this atom — allow unindexed "lone pair on X".
+        lpLabels.add(`lone pair`);
+      }
+      entries.push({
+        name: `lonepair-${lpCounter}`,
+        kind: 'annotation',
+        description: `lone pair ${lpCounter} on atom ${a.element} (#${aIdx + 1})`,
+        labels: Array.from(lpLabels),
+      });
+    }
+  });
+  return entries;
 }
 
 export default function LewisRenderer({
@@ -176,6 +290,13 @@ export default function LewisRenderer({
           const from = atomMap.get(b.from);
           const to = atomMap.get(b.to);
           if (!from || !to) return null;
+          const [fxFeat, fyFeat] = toSvg(from.x, from.y);
+          const [txFeat, tyFeat] = toSvg(to.x, to.y);
+          const bondFeatProps = feat(`bond-${i + 1}`,
+            { cx: (fxFeat + txFeat) / 2, cy: (fyFeat + tyFeat) / 2,
+              w: Math.max(30, Math.abs(txFeat - fxFeat) + 20),
+              h: Math.max(30, Math.abs(tyFeat - fyFeat) + 20) },
+            { width: SVG_WIDTH, height: SVG_HEIGHT });
           const [fx, fy] = toSvg(from.x, from.y);
           const [tx, ty] = toSvg(to.x, to.y);
           // Shrink bond ends so they don't cut into atom circles
@@ -205,12 +326,13 @@ export default function LewisRenderer({
                 stroke="#1f2937"
                 strokeWidth={2}
                 strokeDasharray={dash}
+                {...bondFeatProps}
               />
             );
           }
           if (b.order === 2) {
             return (
-              <g key={`b-${i}`}>
+              <g key={`b-${i}`} {...bondFeatProps}>
                 <line x1={x1 + nx * BOND_OFFSET} y1={y1 + ny * BOND_OFFSET} x2={x2 + nx * BOND_OFFSET} y2={y2 + ny * BOND_OFFSET} stroke="#1f2937" strokeWidth={2} />
                 <line x1={x1 - nx * BOND_OFFSET} y1={y1 - ny * BOND_OFFSET} x2={x2 - nx * BOND_OFFSET} y2={y2 - ny * BOND_OFFSET} stroke="#1f2937" strokeWidth={2} />
               </g>
@@ -218,7 +340,7 @@ export default function LewisRenderer({
           }
           // Triple bond
           return (
-            <g key={`b-${i}`}>
+            <g key={`b-${i}`} {...bondFeatProps}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1f2937" strokeWidth={2} />
               <line x1={x1 + nx * (BOND_OFFSET + 1)} y1={y1 + ny * (BOND_OFFSET + 1)} x2={x2 + nx * (BOND_OFFSET + 1)} y2={y2 + ny * (BOND_OFFSET + 1)} stroke="#1f2937" strokeWidth={2} />
               <line x1={x1 - nx * (BOND_OFFSET + 1)} y1={y1 - ny * (BOND_OFFSET + 1)} x2={x2 - nx * (BOND_OFFSET + 1)} y2={y2 - ny * (BOND_OFFSET + 1)} stroke="#1f2937" strokeWidth={2} />
@@ -227,12 +349,17 @@ export default function LewisRenderer({
         })}
 
         {/* Atoms */}
-        {atoms.map((a) => {
-          const [ax, ay] = toSvg(a.x, a.y);
-          const bondAngles = bondAnglesByAtom.get(a.id) || [];
-          return (
-            <g key={`a-${a.id}`}>
-              {renderLonePairs(ax, ay, a.lonePairs ?? 0, bondAngles)}
+        {(() => {
+          let lpCounter = 0;
+          return atoms.map((a, aIdx) => {
+            const [ax, ay] = toSvg(a.x, a.y);
+            const bondAngles = bondAnglesByAtom.get(a.id) || [];
+            const lpStart = lpCounter;
+            lpCounter += a.lonePairs ?? 0;
+            return (
+              <g key={`a-${a.id}`}
+                {...feat(`atom-${aIdx + 1}`, { cx: ax, cy: ay, w: ATOM_RADIUS * 2 + 8, h: ATOM_RADIUS * 2 + 8 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
+                {renderLonePairs(ax, ay, a.lonePairs ?? 0, bondAngles, lpStart)}
               <circle cx={ax} cy={ay} r={ATOM_RADIUS} fill="#fafbfc" />
               <text
                 x={ax}
@@ -256,9 +383,10 @@ export default function LewisRenderer({
                   {a.formalCharge > 0 ? `+${a.formalCharge}` : a.formalCharge}
                 </text>
               )}
-            </g>
-          );
-        })}
+              </g>
+            );
+          });
+        })()}
       </svg>
       {geometry && (
         <div className="text-center text-xs text-gray-500 mt-1 italic">

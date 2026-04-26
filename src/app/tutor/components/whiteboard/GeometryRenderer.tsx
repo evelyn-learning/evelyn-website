@@ -9,6 +9,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import type {
   GeometryPoint,
   GeometrySegment,
@@ -234,8 +235,13 @@ function renderPolygons(
     const cx = pathPoints.reduce((s, [px]) => s + px, 0) / pathPoints.length;
     const cy = pathPoints.reduce((s, [, py]) => s + py, 0) / pathPoints.length;
 
+    const polyXs = pathPoints.map(([px]) => px);
+    const polyYs = pathPoints.map(([, py]) => py);
+    const polyMinX = Math.min(...polyXs), polyMaxX = Math.max(...polyXs);
+    const polyMinY = Math.min(...polyYs), polyMaxY = Math.max(...polyYs);
+    const polyName = poly.label ? `shape-${featSlug(poly.label)}` : `shape-${i + 1}`;
     return (
-      <g key={`poly-${i}`}>
+      <g key={`poly-${i}`} {...feat(polyName, { cx: (polyMinX + polyMaxX) / 2, cy: (polyMinY + polyMaxY) / 2, w: polyMaxX - polyMinX + 16, h: polyMaxY - polyMinY + 16 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <path
           d={d}
           fill={poly.fill || '#4f8cff'}
@@ -284,7 +290,9 @@ function renderSegments(
     const ny = dx / len;
 
     return (
-      <g key={`seg-${i}`}>
+      <g key={`seg-${i}`} {...feat(`segment-${featSlug(seg.from)}-${featSlug(seg.to)}`,
+        { cx: mx, cy: my, w: Math.max(20, Math.abs(x2 - x1) + 20), h: Math.max(20, Math.abs(y2 - y1) + 20) },
+        { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <line
           x1={x1}
           y1={y1}
@@ -354,8 +362,9 @@ function renderCircles(
     let dashArray: string | undefined;
     if (circ.style === 'dashed') dashArray = '6,4';
 
+    const circName = circ.label ? `shape-${featSlug(circ.label)}` : `shape-circle-${i + 1}`;
     return (
-      <g key={`circle-${i}`}>
+      <g key={`circle-${i}`} {...feat(circName, { cx, cy, w: r * 2 + 10, h: r * 2 + 10 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
         <circle
           cx={cx}
           cy={cy}
@@ -511,6 +520,11 @@ function renderAngles(
     const color = angle.color || '#e74c3c';
     const size = ANGLE_MARKER_SIZE;
 
+    const vertexName = vertex.label ? featSlug(vertex.label) : featSlug(angle.vertex);
+    const angleFeatProps = feat(`angle-${vertexName}`,
+      { cx: vx, cy: vy, w: size * 3, h: size * 3 },
+      { width: SVG_WIDTH, height: SVG_HEIGHT });
+
     if (angle.style === 'square') {
       // Right angle: draw a small square at the vertex.
       const p1x = vx + ufx * size;
@@ -526,6 +540,7 @@ function renderAngles(
           fill="none"
           stroke={color}
           strokeWidth={1.5}
+          {...angleFeatProps}
         />
       );
     }
@@ -552,6 +567,7 @@ function renderAngles(
         fill="none"
         stroke={color}
         strokeWidth={1.5}
+        {...angleFeatProps}
       />
     );
   });
@@ -565,6 +581,7 @@ function renderPointDots(
   return points.map((pt) => {
     const [px, py] = toSvg(pt.x, pt.y);
     const color = pt.color || '#2563eb';
+    const ptName = pt.label ? `point-${featSlug(pt.label)}` : `point-${featSlug(pt.id)}`;
     return (
       <circle
         key={`pt-${pt.id}`}
@@ -574,6 +591,7 @@ function renderPointDots(
         fill={color}
         stroke="#fff"
         strokeWidth={1.5}
+        {...feat(ptName, { cx: px, cy: py, w: POINT_RADIUS * 4, h: POINT_RADIUS * 4 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
       />
     );
   });
@@ -823,6 +841,213 @@ function renderLabels(labels: LabelBox[]) {
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildGeometryManifest(props: GeometryRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const points = props.points ?? [];
+  const segments = props.segments ?? [];
+  const polygons = props.polygons ?? [];
+  const circles = props.circles ?? [];
+  const angles = props.angles ?? [];
+
+  const ptMap = new Map(points.map((p) => [p.id, p]));
+
+  // Resolve a point id to its human name (its label if set, else the id).
+  const pointName = (id: string): string => ptMap.get(id)?.label ?? id;
+
+  polygons.forEach((poly, i) => {
+    const hasAllVertices = poly.vertices.every((id) => ptMap.has(id));
+    if (!hasAllVertices || poly.vertices.length < 3) return;
+    const name = poly.label ? `shape-${featSlug(poly.label)}` : `shape-${i + 1}`;
+    // Humanized vertex list, e.g. "ABC" for vertices [A, B, C]
+    const vertexNames = poly.vertices.map(pointName);
+    const vertexJoined = vertexNames.join('');
+    const vertexSpaced = vertexNames.join(' ');
+    const n = poly.vertices.length;
+    const polyKind = n === 3 ? 'triangle' : n === 4 ? 'quadrilateral' : n === 5 ? 'pentagon' : n === 6 ? 'hexagon' : 'polygon';
+    const labels = new Set<string>([
+      name,
+      `shape-${i + 1}`,
+      `shape ${i + 1}`,
+      polyKind,
+      `the ${polyKind}`,
+      `${polyKind} ${vertexJoined}`,
+      `${polyKind} ${vertexSpaced}`,
+      `polygon ${vertexJoined}`,
+    ]);
+    if (poly.label) {
+      labels.add(poly.label);
+      labels.add(`${polyKind} ${poly.label}`);
+      labels.add(`the ${poly.label}`);
+    }
+    entries.push({
+      name,
+      kind: 'shape',
+      description: poly.label
+        ? `polygon "${poly.label}" (${poly.vertices.join(', ')})`
+        : `polygon ${i + 1} (${poly.vertices.join(', ')})`,
+      labels: Array.from(labels),
+    });
+  });
+
+  circles.forEach((circ, i) => {
+    if (!ptMap.has(circ.center)) return;
+    const name = circ.label ? `shape-${featSlug(circ.label)}` : `shape-circle-${i + 1}`;
+    const centerName = pointName(circ.center);
+    const labels = new Set<string>([
+      name,
+      `shape-circle-${i + 1}`,
+      'circle',
+      'the circle',
+      `circle ${i + 1}`,
+      `circle centered at ${centerName}`,
+      `circle with center ${centerName}`,
+    ]);
+    if (circ.label) {
+      labels.add(circ.label);
+      labels.add(`circle ${circ.label}`);
+      labels.add(`the ${circ.label} circle`);
+    }
+    entries.push({
+      name,
+      kind: 'shape',
+      description: circ.label
+        ? `circle "${circ.label}" (center ${circ.center}, radius ${circ.radius})`
+        : `circle ${i + 1} (center ${circ.center}, radius ${circ.radius})`,
+      labels: Array.from(labels),
+    });
+  });
+
+  segments.forEach((seg) => {
+    if (!ptMap.has(seg.from) || !ptMap.has(seg.to)) return;
+    const fromN = pointName(seg.from);
+    const toN = pointName(seg.to);
+    const pair = `${fromN}${toN}`;
+    const revPair = `${toN}${fromN}`;
+    const name = `segment-${featSlug(seg.from)}-${featSlug(seg.to)}`;
+    const labels = new Set<string>([
+      name,
+      `segment-${featSlug(seg.from)}-${featSlug(seg.to)}`,
+      `segment ${pair}`,
+      `segment ${revPair}`,
+      `segment-${featSlug(pair)}`,
+      `segment-${featSlug(revPair)}`,
+      `edge ${pair}`,
+      `edge-${featSlug(pair)}`,
+      `edge-${featSlug(revPair)}`,
+      `side ${pair}`,
+      `side-${featSlug(pair)}`,
+      `line ${pair}`,
+      `line-${featSlug(pair)}`,
+      `line-${featSlug(revPair)}`,
+      pair,
+      revPair,
+      `${fromN} to ${toN}`,
+      `${fromN}-${toN}`,
+    ]);
+    if (seg.label) {
+      labels.add(seg.label);
+      labels.add(`segment ${seg.label}`);
+      labels.add(`side ${seg.label}`);
+      labels.add(`the ${seg.label} side`);
+    }
+    entries.push({
+      name,
+      kind: 'segment',
+      description: seg.label
+        ? `segment ${seg.from}→${seg.to} labeled "${seg.label}"`
+        : `segment ${seg.from}→${seg.to}`,
+      labels: Array.from(labels),
+    });
+  });
+
+  angles.forEach((angle) => {
+    const vertex = ptMap.get(angle.vertex);
+    if (!vertex || !ptMap.has(angle.from) || !ptMap.has(angle.to)) return;
+    const vertexHuman = vertex.label ?? angle.vertex;
+    const vertexName = vertex.label ? featSlug(vertex.label) : featSlug(angle.vertex);
+    const fromN = pointName(angle.from);
+    const toN = pointName(angle.to);
+    const labels = new Set<string>([
+      `angle-${vertexName}`,
+      `angle ${vertexHuman}`,
+      `∠${vertexHuman}`,
+      `angle at ${vertexHuman}`,
+      `angle at vertex ${vertexHuman}`,
+      `the angle at ${vertexHuman}`,
+      `angle ${fromN}${vertexHuman}${toN}`,
+      `∠${fromN}${vertexHuman}${toN}`,
+      `angle-${featSlug(`${fromN}${vertexHuman}${toN}`)}`,
+    ]);
+    if (angle.label) {
+      labels.add(angle.label);
+    }
+    if (angle.style === 'square') {
+      labels.add('right angle');
+      labels.add('90 degree angle');
+      labels.add(`right angle at ${vertexHuman}`);
+    }
+    entries.push({
+      name: `angle-${vertexName}`,
+      kind: 'annotation',
+      description: `angle at vertex ${vertexHuman} (from ${angle.from} to ${angle.to})`,
+      labels: Array.from(labels),
+    });
+  });
+
+  points.forEach((pt) => {
+    const name = pt.label ? `point-${featSlug(pt.label)}` : `point-${featSlug(pt.id)}`;
+    const human = pt.label ?? pt.id;
+    const slug = featSlug(human);
+    // Strip a trailing coordinate annotation like "A (0, 0)" → "A" so
+    // the tutor's plain reference ("point A", "vertex A", "C") still
+    // resolves. Without this, labels are dominated by coord-bearing
+    // strings and bare-letter targets miss. Captures the leading
+    // identifier portion before the first parenthesis.
+    const bareMatch = human.match(/^([^\(]+?)\s*\(/);
+    const bare = bareMatch ? bareMatch[1].trim() : '';
+    const bareSlug = bare ? featSlug(bare) : '';
+    const labels = new Set<string>([
+      name,
+      `point-${slug}`,
+      `vertex-${slug}`,
+      `node-${slug}`,
+      `point ${human}`,
+      `vertex ${human}`,
+      `node ${human}`,
+      human,
+      `the ${human} point`,
+      `the point ${human}`,
+      `(${pt.x}, ${pt.y})`,
+    ]);
+    if (bare && bare !== human) {
+      labels.add(bare);
+      labels.add(`point ${bare}`);
+      labels.add(`vertex ${bare}`);
+      labels.add(`node ${bare}`);
+      labels.add(`point-${bareSlug}`);
+      labels.add(`vertex-${bareSlug}`);
+      labels.add(`the point ${bare}`);
+      labels.add(`the ${bare} point`);
+    }
+    entries.push({
+      name,
+      kind: 'point',
+      description: pt.label
+        ? `point "${pt.label}" at (${pt.x}, ${pt.y})`
+        : `point ${pt.id} at (${pt.x}, ${pt.y})`,
+      labels: Array.from(labels),
+    });
+  });
+
+  return entries;
+}
 
 export function GeometryRenderer({
   title,

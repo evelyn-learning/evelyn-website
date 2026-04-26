@@ -8,6 +8,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 // --- Prop types ---
 
@@ -101,6 +102,105 @@ function formatLabel(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildNumberLineManifest(props: NumberLineRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  entries.push({
+    name: 'axis',
+    kind: 'axis',
+    description: 'main horizontal number-line axis',
+    labels: ['axis', 'number line', 'the line', 'number-line', 'main axis', 'the axis'],
+  });
+
+  const step = props.step ?? computeStep(props.min, props.max);
+  const tickVals: number[] = [];
+  const first = Math.ceil(props.min / step) * step;
+  for (let v = first; v <= props.max + step * 0.0001; v += step) {
+    tickVals.push(parseFloat(v.toFixed(10)));
+  }
+  tickVals.forEach((v, i) => {
+    const val = formatLabel(v);
+    entries.push({
+      name: `tick-${i + 1}`,
+      kind: 'annotation',
+      description: `major tick ${i + 1} at ${val}`,
+      labels: [
+        `tick-${i + 1}`,
+        `tick ${i + 1}`,
+        `tick at ${val}`,
+        val,
+        `${val} tick`,
+        `the ${val} mark`,
+      ],
+    });
+  });
+
+  const intervals = props.intervals ?? [];
+  intervals.forEach((iv, i) => {
+    const name = iv.label ? `interval-${featSlug(iv.label)}` : `interval-${i + 1}`;
+    const fromV = formatLabel(iv.from);
+    const toV = formatLabel(iv.to);
+    const labels = new Set<string>([
+      name,
+      `interval-${i + 1}`,
+      `interval ${i + 1}`,
+      `range ${i + 1}`,
+      `${fromV} to ${toV}`,
+      `from ${fromV} to ${toV}`,
+      `the interval from ${fromV} to ${toV}`,
+    ]);
+    if (iv.label) {
+      labels.add(iv.label);
+      labels.add(`interval ${iv.label}`);
+      labels.add(`the ${iv.label} interval`);
+    }
+    entries.push({
+      name,
+      kind: 'segment',
+      description: iv.label
+        ? `interval "${iv.label}" from ${fromV} to ${toV}`
+        : `interval ${i + 1} from ${fromV} to ${toV}`,
+      labels: Array.from(labels),
+    });
+  });
+
+  const points = props.points ?? [];
+  points.forEach((pt, i) => {
+    const name = pt.label ? `point-${featSlug(pt.label)}` : `point-${i + 1}`;
+    const val = formatLabel(pt.value);
+    const labels = new Set<string>([
+      name,
+      `point-${i + 1}`,
+      `point ${i + 1}`,
+      val,
+      `point ${val}`,
+      `the ${val}`,
+      `${val} on the line`,
+      `point at ${val}`,
+    ]);
+    if (pt.label) {
+      labels.add(pt.label);
+      labels.add(`point ${pt.label}`);
+      labels.add(`the ${pt.label} point`);
+    }
+    entries.push({
+      name,
+      kind: 'point',
+      description: pt.label
+        ? `point "${pt.label}" at ${val}`
+        : `point ${i + 1} at ${val}`,
+      labels: Array.from(labels),
+    });
+  });
+
+  return entries;
+}
+
 export function NumberLineRenderer({
   title,
   min,
@@ -176,6 +276,7 @@ export function NumberLineRenderer({
           y2={LINE_Y}
           stroke={COLOR_LINE}
           strokeWidth={2}
+          {...feat('axis', { cx: SVG_WIDTH / 2, cy: LINE_Y, w: SVG_WIDTH - PADDING_X * 2 + 28, h: 20 }, { width: SVG_WIDTH, height: svgHeight })}
         />
 
         {/* Left arrow */}
@@ -197,10 +298,10 @@ export function NumberLineRenderer({
         />
 
         {/* ======================== Major ticks + labels ======================== */}
-        {ticks.map((v) => {
+        {ticks.map((v, i) => {
           const x = toX(v);
           return (
-            <g key={`tick-${v}`}>
+            <g key={`tick-${v}`} {...feat(`tick-${i + 1}`, { cx: x, cy: LINE_Y, w: 20, h: 30 }, { width: SVG_WIDTH, height: svgHeight })}>
               <line
                 x1={x}
                 y1={LINE_Y - TICK_HALF}
@@ -257,8 +358,9 @@ export function NumberLineRenderer({
           const x1 = toX(iv.from);
           const x2 = toX(iv.to);
           const color = iv.color ?? COLOR_INTERVAL;
+          const ivName = iv.label ? `interval-${featSlug(iv.label)}` : `interval-${i + 1}`;
           return (
-            <g key={`interval-${i}`}>
+            <g key={`interval-${i}`} {...feat(ivName, { cx: (x1 + x2) / 2, cy: LINE_Y, w: Math.max(30, Math.abs(x2 - x1) + 30), h: 40 }, { width: SVG_WIDTH, height: svgHeight })}>
               {/* Thick colored line between endpoints */}
               <line
                 x1={x1}
@@ -383,8 +485,9 @@ export function NumberLineRenderer({
           const x = toX(pt.value);
           const color = pt.color ?? COLOR_POINT;
           const isFilled = pt.style !== 'open';
+          const ptName = pt.label ? `point-${featSlug(pt.label)}` : `point-${i + 1}`;
           return (
-            <g key={`point-${i}`}>
+            <g key={`point-${i}`} {...feat(ptName, { cx: x, cy: LINE_Y, w: 28, h: 32 }, { width: SVG_WIDTH, height: svgHeight })}>
               <circle
                 cx={x}
                 cy={LINE_Y}

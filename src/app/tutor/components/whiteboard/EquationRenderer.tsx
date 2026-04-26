@@ -74,9 +74,13 @@ export function EquationRenderer({
   }, [latex, highlight, displayMode]);
 
   return (
-    <div className={`equation-container ${className}`}>
+    <div
+      className={`equation-container ${className}`}
+      data-feature="equation"
+      style={{ position: 'relative' }}
+    >
       {label && (
-        <div className="text-sm font-medium text-gray-600 mb-2">{label}</div>
+        <div className="text-sm font-medium text-gray-600 mb-2" data-feature="equation-label">{label}</div>
       )}
       <div
         ref={containerRef}

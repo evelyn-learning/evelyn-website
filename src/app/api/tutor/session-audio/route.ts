@@ -15,16 +15,30 @@ function validateRole(role: string): role is 'student' | 'tutor' {
   return role === 'student' || role === 'tutor';
 }
 
-// POST: Receive audio chunk and append to file
+// POST: Receive audio chunk and append to file.
+//
+// Request format: raw PCM16 bytes in the request body (Content-Type
+// application/octet-stream), with metadata in the URL query string:
+//   ?sessionId=<id>&role=student|tutor&chunkIndex=<n>&finalize=<bool>
+//
+// Switched from base64-in-JSON after the 2026-04-24 regression where
+// long-session flushes hit the 10MB middleware JSON-body cap ("Unterminated
+// string in JSON at position 10436608"). Raw binary is ~25% smaller than
+// base64 AND skips the JSON parser, so a single request no longer holds
+// the entire payload as a string in memory during parse.
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { sessionId, role, chunkIndex, audio, finalize } = body;
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+    const role = searchParams.get('role');
+    const chunkIndexStr = searchParams.get('chunkIndex');
+    const finalize = searchParams.get('finalize') === 'true';
 
     if (!sessionId || !role || !validateRole(role)) {
       return NextResponse.json({ error: 'Invalid sessionId or role' }, { status: 400 });
     }
 
+    const chunkIndex = chunkIndexStr ? Number.parseInt(chunkIndexStr, 10) : 0;
     const safeId = sanitizeSessionId(sessionId);
     const sessionDir = path.join(AUDIO_BASE_DIR, safeId);
 
@@ -60,21 +74,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, finalized: true });
     }
 
-    // Decode base64 audio and append to file
-    if (!audio) {
+    // Read raw PCM16 bytes from the body stream. Empty body → skip (the
+    // client sometimes sends an empty final chunk just before finalize).
+    const arrayBuffer = await request.arrayBuffer();
+    if (arrayBuffer.byteLength === 0) {
       return NextResponse.json({ success: true, skipped: true });
     }
 
-    const binaryString = Buffer.from(audio, 'base64');
+    const buffer = Buffer.from(arrayBuffer);
     const filePath = path.join(sessionDir, `${role}.pcm16`);
 
     // Append to file (creates if doesn't exist)
-    await fs.appendFile(filePath, binaryString);
+    await fs.appendFile(filePath, buffer);
 
     return NextResponse.json({
       success: true,
       chunkIndex,
-      bytesWritten: binaryString.length,
+      bytesWritten: buffer.length,
     });
   } catch (error) {
     console.error('[session-audio] POST error:', error);

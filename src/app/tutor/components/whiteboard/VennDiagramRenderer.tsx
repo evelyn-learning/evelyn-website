@@ -8,6 +8,10 @@
  */
 
 import { useMemo } from 'react';
+import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
+const VB_W = 500;
+const VB_H = 400;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -139,6 +143,164 @@ function RegionText({
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Each set circle (circle-A, circle-B, …) + each region (region-only-A,
+ * region-intersection-AB, region-outside, …) + optional number-<value> hooks
+ * when a region's value is a plain integer.
+ */
+export function buildVennDiagramManifest(props: VennDiagramRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const sets = props.sets ?? [];
+  const safeRegions: Record<string, VennRegion> = props.regions ?? {};
+  const isThreeSet = sets.length >= 3;
+
+  // Circles — one per set, named A / B / C.
+  const circleCount = isThreeSet ? 3 : Math.min(2, sets.length);
+  const setLabelByLetter: Record<string, string> = {};
+  for (let i = 0; i < circleCount; i++) {
+    const letter = String.fromCharCode(65 + i);
+    const label = sets[i]?.label ?? '';
+    setLabelByLetter[letter] = label;
+    const labels = new Set<string>([
+      `circle-${letter}`,
+      `circle ${letter}`,
+      `set ${letter}`,
+      letter,
+      `circle of ${letter}`,
+    ]);
+    if (label) {
+      labels.add(label);
+      labels.add(label.toLowerCase());
+      labels.add(`the ${label.toLowerCase()}`);
+      labels.add(`set ${label}`);
+      labels.add(`circle for ${label}`);
+    }
+    entries.push({
+      name: `circle-${letter}`,
+      kind: 'shape',
+      description: label ? `circle for set ${letter} (${label})` : `circle for set ${letter}`,
+      labels: Array.from(labels),
+    });
+  }
+
+  // Region hooks: must match the internal keyMap in the renderer.
+  const twoSetKeys: Record<string, string> = {
+    onlyA: 'only-A', onlyB: 'only-B',
+    intersection: 'intersection-AB',
+    neither: 'outside',
+  };
+  const threeSetKeys: Record<string, string> = {
+    onlyA: 'only-A', onlyB: 'only-B', onlyC: 'only-C',
+    AB: 'intersection-AB', AC: 'intersection-AC',
+    BC: 'intersection-BC', ABC: 'intersection-ABC',
+    neither: 'outside',
+  };
+  const keyMap = isThreeSet ? threeSetKeys : twoSetKeys;
+  // Helper: build natural-language labels for a region slug.
+  const labelsForRegion = (slug: string): Set<string> => {
+    const out = new Set<string>([
+      `region-${slug}`,
+      `the ${slug.replace(/-/g, ' ')} region`,
+    ]);
+    const setA = setLabelByLetter['A'];
+    const setB = setLabelByLetter['B'];
+    const setC = setLabelByLetter['C'];
+    if (slug === 'only-A') {
+      out.add('only A');
+      out.add('A only');
+      out.add('only in A');
+      out.add('set A only');
+      out.add('A minus B');
+      if (setA) out.add(`only ${setA}`);
+      if (setA) out.add(`${setA} only`);
+    } else if (slug === 'only-B') {
+      out.add('only B');
+      out.add('B only');
+      out.add('only in B');
+      out.add('set B only');
+      out.add('B minus A');
+      if (setB) out.add(`only ${setB}`);
+      if (setB) out.add(`${setB} only`);
+    } else if (slug === 'only-C') {
+      out.add('only C');
+      out.add('C only');
+      out.add('only in C');
+      out.add('set C only');
+      if (setC) out.add(`only ${setC}`);
+      if (setC) out.add(`${setC} only`);
+    } else if (slug === 'intersection-AB') {
+      out.add('A∩B');
+      out.add('A and B');
+      out.add('A intersect B');
+      out.add('intersection of A and B');
+      out.add('AB');
+      out.add('A cap B');
+      if (!isThreeSet) {
+        out.add('intersection');
+        out.add('the intersection');
+        out.add('both');
+        out.add('overlap');
+      }
+      if (setA && setB) {
+        out.add(`${setA} and ${setB}`);
+        out.add(`intersection of ${setA} and ${setB}`);
+      }
+    } else if (slug === 'intersection-AC') {
+      out.add('A∩C');
+      out.add('A and C');
+      out.add('A intersect C');
+      out.add('intersection of A and C');
+      out.add('AC');
+      if (setA && setC) out.add(`${setA} and ${setC}`);
+    } else if (slug === 'intersection-BC') {
+      out.add('B∩C');
+      out.add('B and C');
+      out.add('B intersect C');
+      out.add('intersection of B and C');
+      out.add('BC');
+      if (setB && setC) out.add(`${setB} and ${setC}`);
+    } else if (slug === 'intersection-ABC') {
+      out.add('A∩B∩C');
+      out.add('A and B and C');
+      out.add('all three');
+      out.add('intersection of all three');
+      out.add('ABC');
+      out.add('center');
+      out.add('the center');
+      if (setA && setB && setC) out.add(`${setA}, ${setB}, and ${setC}`);
+    } else if (slug === 'outside') {
+      out.add('outside');
+      out.add('neither');
+      out.add('universal set');
+      out.add('neither set');
+      out.add('complement');
+      out.add('universe');
+    }
+    return out;
+  };
+  for (const [internalKey, slug] of Object.entries(keyMap)) {
+    entries.push({
+      name: `region-${slug}`,
+      kind: 'region',
+      description: `Venn region ${slug.replace(/-/g, ' ')}`,
+      labels: Array.from(labelsForRegion(slug)),
+    });
+    const region = safeRegions[internalKey];
+    const raw = region?.value?.trim();
+    if (raw && /^\d+$/.test(raw)) {
+      entries.push({
+        name: `number-${raw}`,
+        kind: 'annotation',
+        description: `numeric label ${raw} shown in ${slug}`,
+        labels: [`number-${raw}`, raw, `the number ${raw}`, `${raw}`, `value ${raw}`],
+      });
+    }
+  }
+  return entries;
+}
+
 export function VennDiagramRenderer({
   title,
   sets,
@@ -254,18 +416,22 @@ export function VennDiagramRenderer({
       })}
 
       {/* Circles — stroke + low-opacity fill */}
-      {circles.map((c, i) => (
-        <circle
-          key={`circle-${i}`}
-          cx={c.cx}
-          cy={c.cy}
-          r={c.r}
-          fill={c.color}
-          fillOpacity={0.15}
-          stroke={c.color}
-          strokeWidth={2}
-        />
-      ))}
+      {circles.map((c, i) => {
+        const letter = String.fromCharCode(65 + i); // A, B, C
+        return (
+          <circle
+            key={`circle-${i}`}
+            cx={c.cx}
+            cy={c.cy}
+            r={c.r}
+            fill={c.color}
+            fillOpacity={0.15}
+            stroke={c.color}
+            strokeWidth={2}
+            {...feat(`circle-${letter}`, { cx: c.cx, cy: c.cy, w: c.r * 2 + 10, h: c.r * 2 + 10 }, { width: VB_W, height: VB_H })}
+          />
+        );
+      })}
 
       {/* Set labels */}
       {circles.map((c, i) => (
@@ -296,6 +462,56 @@ export function VennDiagramRenderer({
           />
         );
       })}
+
+      {/* Feature hooks for regions (invisible, used by tutor scribble).
+          Each region exposes TWO names:
+            - region-<key>   (e.g. region-only-A, region-intersection-AB)
+            - number-<value> (e.g. number-25 when that region's value is "25")
+          so the tutor can map either "circle the Set-A-only region" or
+          "circle the number 25" to the correct spot. */}
+      {(() => {
+        const centers = regionCenters as Record<string, { x: number; y: number }>;
+        // Build a list of (featureName, bbox) pairs to render.
+        const regionHooks: Array<[string, { x: number; y: number; w: number; h: number }]> = [];
+        const twoSetKeys: Record<string, string> = {
+          onlyA: 'only-A', onlyB: 'only-B',
+          intersection: 'intersection-AB',
+          neither: 'outside',
+        };
+        const threeSetKeys: Record<string, string> = {
+          onlyA: 'only-A', onlyB: 'only-B', onlyC: 'only-C',
+          AB: 'intersection-AB', AC: 'intersection-AC',
+          BC: 'intersection-BC', ABC: 'intersection-ABC',
+          neither: 'outside',
+        };
+        const sizes: Record<string, number> = {
+          onlyA: 60, onlyB: 60, onlyC: 60,
+          AB: 60, AC: 60, BC: 60, ABC: 60,
+          intersection: 80, neither: 100,
+        };
+        const keyMap = isThreeSet ? threeSetKeys : twoSetKeys;
+        for (const [internalKey, slug] of Object.entries(keyMap)) {
+          const center = centers[internalKey];
+          if (!center) continue;
+          const side = sizes[internalKey] ?? 60;
+          const bbox = {
+            x: center.x, y: center.y,
+            w: internalKey === 'neither' ? 100 : side,
+            h: internalKey === 'neither' ? 60 : side,
+          };
+          regionHooks.push([`region-${slug}`, { x: bbox.x, y: bbox.y, w: bbox.w, h: bbox.h }]);
+          // If the tutor supplied a numeric value for this region, also
+          // expose number-<value> so "circle the number 25" works.
+          const region = safeRegions[internalKey];
+          const raw = region?.value?.trim();
+          if (raw && /^\d+$/.test(raw)) {
+            regionHooks.push([`number-${raw}`, { x: bbox.x, y: bbox.y, w: bbox.w, h: bbox.h }]);
+          }
+        }
+        return regionHooks.map(([name, b]) => (
+          <g key={name} {...feat(name, { cx: b.x, cy: b.y, w: b.w, h: b.h }, { width: VB_W, height: VB_H })} />
+        ));
+      })()}
     </svg>
   );
 }

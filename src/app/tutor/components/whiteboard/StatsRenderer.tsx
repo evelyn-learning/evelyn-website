@@ -8,6 +8,7 @@
  */
 
 import { useMemo } from 'react';
+import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 
 // ─── Default color palette ────────────────────────────────────────────────────
 const DEFAULT_COLORS = [
@@ -153,19 +154,25 @@ function Histogram({ data, binWidth: bw, xLabel, yLabel }: StatsRendererProps) {
   return (
     <g>
       {/* Bars */}
-      {bins.map((bin, i) => (
-        <rect
-          key={i}
-          x={xScale(bin.lo)}
-          y={yScale(bin.count)}
-          width={Math.max(xScale(bin.hi) - xScale(bin.lo) - 1, 1)}
-          height={yScale(0) - yScale(bin.count)}
-          fill={color(0)}
-          opacity={0.8}
-          stroke="#fff"
-          strokeWidth={1}
-        />
-      ))}
+      {bins.map((bin, i) => {
+        const bx = xScale(bin.lo);
+        const bw = Math.max(xScale(bin.hi) - xScale(bin.lo) - 1, 1);
+        const bh = yScale(0) - yScale(bin.count);
+        return (
+          <rect
+            key={i}
+            x={bx}
+            y={yScale(bin.count)}
+            width={bw}
+            height={bh}
+            fill={color(0)}
+            opacity={0.8}
+            stroke="#fff"
+            strokeWidth={1}
+            {...feat(`bar-${i + 1}`, { cx: bx + bw / 2, cy: yScale(bin.count) + bh / 2, w: bw, h: bh }, { width: WIDTH, height: HEIGHT })}
+          />
+        );
+      })}
 
       {/* X-axis */}
       <line x1={MARGIN.left} y1={yScale(0)} x2={MARGIN.left + CHART_W} y2={yScale(0)} stroke="#374151" strokeWidth={1.5} />
@@ -218,10 +225,13 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
       {datasets.map((ds, i) => {
         const cy = MARGIN.top + bandH * i + bandH / 2;
         const c = color(i, ds.color);
+        const boxName = ds.label ? `box-${featSlug(ds.label)}` : `box-${i + 1}`;
         return (
-          <g key={i}>
+          <g key={i} {...feat(boxName, { cx: (xScale(ds.min) + xScale(ds.max)) / 2, cy, w: xScale(ds.max) - xScale(ds.min) + 20, h: boxH + 20 }, { width: WIDTH, height: HEIGHT })}>
             {/* Whisker line: min to max */}
             <line x1={xScale(ds.min)} y1={cy} x2={xScale(ds.max)} y2={cy} stroke={c} strokeWidth={1.5} />
+            {/* Median marker hook */}
+            <g {...feat(`median-${i + 1}`, { cx: xScale(ds.median), cy, w: 10, h: boxH + 8 }, { width: WIDTH, height: HEIGHT })} />
             {/* Min / max caps */}
             <line x1={xScale(ds.min)} y1={cy - boxH / 4} x2={xScale(ds.min)} y2={cy + boxH / 4} stroke={c} strokeWidth={1.5} />
             <line x1={xScale(ds.max)} y1={cy - boxH / 4} x2={xScale(ds.max)} y2={cy + boxH / 4} stroke={c} strokeWidth={1.5} />
@@ -302,20 +312,24 @@ function DotPlot({ data, xLabel }: StatsRendererProps) {
 
   return (
     <g>
-      {values.map(val => {
+      {values.map((val, vi) => {
         const count = stacks.get(val)!;
-        return Array.from({ length: count }, (_, i) => (
-          <circle
-            key={`${val}-${i}`}
-            cx={xScale(val)}
-            cy={baseline - dotR - i * dotR * 2.2}
-            r={dotR}
-            fill={color(0)}
-            opacity={0.85}
-            stroke="#fff"
-            strokeWidth={1}
-          />
-        ));
+        return (
+          <g key={`dp-${vi}`} {...feat(`point-${vi + 1}`, { cx: xScale(val), cy: baseline - (count * dotR * 2.2) / 2, w: dotR * 3, h: count * dotR * 2.4 + 10 }, { width: WIDTH, height: HEIGHT })}>
+            {Array.from({ length: count }, (_, i) => (
+              <circle
+                key={`${val}-${i}`}
+                cx={xScale(val)}
+                cy={baseline - dotR - i * dotR * 2.2}
+                r={dotR}
+                fill={color(0)}
+                opacity={0.85}
+                stroke="#fff"
+                strokeWidth={1}
+              />
+            ))}
+          </g>
+        );
       })}
 
       {/* X-axis */}
@@ -358,8 +372,9 @@ function BarChart({ bar, xLabel, yLabel }: StatsRendererProps) {
         const x = startX + i * (barW + gap);
         const h = yScale(0) - yScale(values[i]);
         const c = color(i, customColors?.[i]);
+        const barName = cat ? `bar-${featSlug(cat)}` : `bar-${i + 1}`;
         return (
-          <g key={i}>
+          <g key={i} {...feat(barName, { cx: x + barW / 2, cy: yScale(values[i]) + h / 2, w: barW + 8, h: h + 8 }, { width: WIDTH, height: HEIGHT })}>
             <rect x={x} y={yScale(values[i])} width={barW} height={h} fill={c} opacity={0.85} rx={2} />
             {/* Value above bar */}
             <text x={x + barW / 2} y={yScale(values[i]) - 5} textAnchor="middle" fontSize={11} fill="#374151" fontWeight={500}>{fmt(values[i])}</text>
@@ -441,8 +456,9 @@ function PieChart({ pie }: StatsRendererProps) {
         const edgeY = cy + r * Math.sin(arc.midAngle);
         const pct = (arc.fraction * 100).toFixed(1).replace(/\.0$/, '') + '%';
 
+        const sliceName = arc.label ? `slice-${featSlug(arc.label)}` : `slice-${arc.index + 1}`;
         return (
-          <g key={arc.index}>
+          <g key={arc.index} {...feat(sliceName, { cx: cx + (r / 2) * Math.cos(arc.midAngle), cy: cy + (r / 2) * Math.sin(arc.midAngle), w: r + 20, h: r + 20 }, { width: WIDTH, height: HEIGHT })}>
             {/* Sector */}
             <path d={arcPath(arc.startAngle, arc.endAngle, r)} fill={c} stroke="#fff" strokeWidth={2} />
 
@@ -707,7 +723,12 @@ function DistributionChart({
         fill="none"
         stroke="#1e293b"
         strokeWidth={2}
+        {...feat('curve', { cx: MARGIN.left + CHART_W / 2, cy: MARGIN.top + CHART_H / 2, w: CHART_W, h: CHART_H }, { width: WIDTH, height: HEIGHT })}
       />
+      {/* Mean marker hook */}
+      {showMean && mean !== null && (
+        <g {...feat('mean', { cx: toX(mean), cy: MARGIN.top + CHART_H / 2, w: 12, h: CHART_H }, { width: WIDTH, height: HEIGHT })} />
+      )}
 
       {/* Probability label in the shaded region */}
       {probabilityLabel && shadeLabelX !== null && (
@@ -749,6 +770,218 @@ function DistributionChart({
       )}
     </g>
   );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Manifest builder
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Pure manifest builder — enumerates the named features this renderer emits
+ * for a given set of props. MUST stay in sync with the feat() calls below.
+ * Called by the command handler before the React render so the tutor receives
+ * authoritative names in the tool-result JSON and doesn't have to guess.
+ */
+export function buildStatsManifest(props: StatsRendererProps): FeatureManifestEntry[] {
+  const entries: FeatureManifestEntry[] = [];
+  const { type } = props;
+
+  if (type === 'histogram') {
+    const data = props.data ?? [];
+    if (data.length === 0) return entries;
+    const sorted = [...data].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const binWidth = props.binWidth ?? Math.max((max - min) / Math.ceil(Math.log2(data.length) + 1), 1);
+    const start = Math.floor(min / binWidth) * binWidth;
+    const end = Math.ceil(max / binWidth) * binWidth + binWidth;
+    const bins: { lo: number; hi: number }[] = [];
+    for (let lo = start; lo < end; lo += binWidth) {
+      bins.push({ lo, hi: lo + binWidth });
+    }
+    bins.forEach((bin, i) => {
+      entries.push({
+        name: `bar-${i + 1}`,
+        kind: 'shape',
+        description: `histogram bar ${i + 1} for bin [${fmt(bin.lo)}, ${fmt(bin.hi)})`,
+        labels: [
+          `bar-${i + 1}`,
+          `bar ${i + 1}`,
+          `bin ${i + 1}`,
+          `bin-${i + 1}`,
+          `histogram bar ${i + 1}`,
+          `the ${i + 1}${i === 0 ? 'st' : i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'} bar`,
+          `bin [${fmt(bin.lo)}, ${fmt(bin.hi)})`,
+        ],
+      });
+    });
+  } else if (type === 'boxplot') {
+    const datasets = props.boxplot?.datasets ?? [];
+    datasets.forEach((ds, i) => {
+      const boxName = ds.label ? `box-${featSlug(ds.label)}` : `box-${i + 1}`;
+      const boxLabels = new Set<string>([
+        boxName,
+        `box-${i + 1}`,
+        `box ${i + 1}`,
+        `boxplot ${i + 1}`,
+        `box plot ${i + 1}`,
+      ]);
+      if (ds.label) {
+        boxLabels.add(ds.label);
+        boxLabels.add(`box ${ds.label}`);
+        boxLabels.add(`${ds.label} box`);
+        boxLabels.add(`${ds.label} boxplot`);
+        boxLabels.add(`box plot for ${ds.label}`);
+      }
+      entries.push({
+        name: boxName,
+        kind: 'shape',
+        description: ds.label ? `box plot for "${ds.label}"` : `box plot ${i + 1}`,
+        labels: Array.from(boxLabels),
+      });
+      const medianLabels = new Set<string>([
+        `median-${i + 1}`,
+        `median ${i + 1}`,
+        'median',
+        'Q2',
+        'second quartile',
+        'middle',
+      ]);
+      if (ds.label) {
+        medianLabels.add(`median of ${ds.label}`);
+        medianLabels.add(`${ds.label} median`);
+      }
+      entries.push({
+        name: `median-${i + 1}`,
+        kind: 'annotation',
+        description: ds.label
+          ? `median marker for "${ds.label}" at ${fmt(ds.median)}`
+          : `median marker ${i + 1} at ${fmt(ds.median)}`,
+        labels: Array.from(medianLabels),
+      });
+    });
+  } else if (type === 'dotplot') {
+    const data = props.data ?? [];
+    if (data.length === 0) return entries;
+    const map = new Map<number, number>();
+    for (const v of data) map.set(v, (map.get(v) ?? 0) + 1);
+    const values = [...map.keys()].sort((a, b) => a - b);
+    values.forEach((val, vi) => {
+      const count = map.get(val)!;
+      entries.push({
+        name: `point-${vi + 1}`,
+        kind: 'point',
+        description: `dot plot stack at ${fmt(val)} (${count} dot${count === 1 ? '' : 's'})`,
+        labels: [
+          `point-${vi + 1}`,
+          `point ${vi + 1}`,
+          `stack-${vi + 1}`,
+          `stack ${vi + 1}`,
+          `dot stack at ${fmt(val)}`,
+          `${fmt(val)}`,
+          `the stack at ${fmt(val)}`,
+        ],
+      });
+    });
+  } else if (type === 'bar') {
+    const bar = props.bar;
+    if (bar) {
+      bar.categories.forEach((cat, i) => {
+        const barName = cat ? `bar-${featSlug(cat)}` : `bar-${i + 1}`;
+        const labels = new Set<string>([
+          barName,
+          `bar-${i + 1}`,
+          `bar ${i + 1}`,
+          `category ${i + 1}`,
+        ]);
+        if (cat) {
+          labels.add(cat);
+          labels.add(`bar ${cat}`);
+          labels.add(`${cat} bar`);
+          labels.add(`the ${cat} bar`);
+          labels.add(`${cat} column`);
+        }
+        entries.push({
+          name: barName,
+          kind: 'shape',
+          description: cat
+            ? `bar "${cat}" with value ${fmt(bar.values[i] ?? 0)}`
+            : `bar ${i + 1} with value ${fmt(bar.values[i] ?? 0)}`,
+          labels: Array.from(labels),
+        });
+      });
+    }
+  } else if (type === 'pie') {
+    const pie = props.pie;
+    if (pie) {
+      pie.slices.forEach((sl, i) => {
+        const name = sl.label ? `slice-${featSlug(sl.label)}` : `slice-${i + 1}`;
+        const labels = new Set<string>([
+          name,
+          `slice-${i + 1}`,
+          `slice ${i + 1}`,
+          `sector ${i + 1}`,
+          `wedge ${i + 1}`,
+        ]);
+        if (sl.label) {
+          labels.add(sl.label);
+          labels.add(`${sl.label} slice`);
+          labels.add(`slice for ${sl.label}`);
+          labels.add(`the ${sl.label} slice`);
+          labels.add(`${sl.label} wedge`);
+        }
+        entries.push({
+          name,
+          kind: 'shape',
+          description: sl.label
+            ? `pie slice "${sl.label}" (value ${fmt(sl.value)})`
+            : `pie slice ${i + 1} (value ${fmt(sl.value)})`,
+          labels: Array.from(labels),
+        });
+      });
+    }
+  } else if (type === 'distribution') {
+    const dist = props.distribution;
+    if (dist) {
+      entries.push({
+        name: 'curve',
+        kind: 'curve',
+        description: `${dist.family} probability density curve`,
+        labels: [
+          'curve',
+          'the curve',
+          `${dist.family} curve`,
+          `${dist.family} distribution`,
+          'distribution',
+          'density curve',
+          'probability density',
+          'pdf',
+          'PDF',
+        ],
+      });
+      const showMean = dist.showMean ?? true;
+      const hasCenter = dist.family === 'normal' || dist.family === 't';
+      if (showMean && hasCenter) {
+        entries.push({
+          name: 'mean',
+          kind: 'annotation',
+          description: 'vertical reference line at the distribution center (mean)',
+          labels: [
+            'mean',
+            'average',
+            'μ',
+            'mu',
+            'center',
+            'center line',
+            'the mean',
+            'distribution center',
+          ],
+        });
+      }
+    }
+  }
+
+  return entries;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
