@@ -85,6 +85,48 @@ function isReachableFromBattery(components: CircuitComponent[]): boolean {
   return components.every((c) => visited.has(c.from) && visited.has(c.to));
 }
 
+/** Every internal node must have degree ≥ 2 — i.e. every wire endpoint
+ * must connect to at least one other component. A degree-1 node means
+ * a dangling wire end that can't carry current.
+ *
+ * Voltmeters and galvanometers measure across two nodes and don't need
+ * their probe nodes to lead anywhere else (a voltmeter probe can be a
+ * dead-end — it samples voltage, doesn't carry current). Same for
+ * `ground`. We exclude probes of those instruments from the check.
+ *
+ * This catches the cause of the 2026-04-26 parallel-circuit rendering
+ * bugs: Sonnet emitted parallel branches like
+ *   wire(A↔q1), R2(q1↔q2), wire(q3↔B)
+ * with q3 ≠ q2. BFS reachability passed (q3 reaches B), but no simple
+ * path from A to B traverses the chain because q2 is a dead-end and
+ * q3's chain is severed from q2's. After this check, q2 (degree 1)
+ * would fail validation and the brain would re-emit with consistent
+ * node names.
+ */
+function nonProbeNodesHaveDegreeAtLeastTwo(components: CircuitComponent[]): { ok: true } | { ok: false; node: string; comp: CircuitComponent } {
+  const nodeDegree = new Map<string, number>();
+  for (const c of components) {
+    nodeDegree.set(c.from, (nodeDegree.get(c.from) ?? 0) + 1);
+    nodeDegree.set(c.to, (nodeDegree.get(c.to) ?? 0) + 1);
+  }
+  // Probe / dead-end-tolerant node names: any node that ONLY appears on
+  // a voltmeter, galvanometer, or ground component is allowed degree 1.
+  const probeOnlyNodes = new Set<string>();
+  for (const [node] of nodeDegree.entries()) {
+    const touching = components.filter((c) => c.from === node || c.to === node);
+    if (touching.every((c) => c.type === 'voltmeter' || c.type === 'galvanometer' || c.type === 'ground')) {
+      probeOnlyNodes.add(node);
+    }
+  }
+  for (const c of components) {
+    for (const n of [c.from, c.to]) {
+      if (probeOnlyNodes.has(n)) continue;
+      if ((nodeDegree.get(n) ?? 0) < 2) return { ok: false, node: n, comp: c };
+    }
+  }
+  return { ok: true };
+}
+
 /** Every battery node should appear on at least 2 components (otherwise
  * the battery is dangling — current has nowhere to flow). */
 function batteryFormsLoop(components: CircuitComponent[]): boolean {
@@ -157,6 +199,21 @@ export function validateCircuit(
     return {
       ok: false,
       reason: 'One or more components are disconnected from the battery. Re-emit so every component is reachable from the battery through wires or other components.',
+    };
+  }
+
+  // Stricter than reachability: every internal node must have degree ≥ 2.
+  // Catches parallel-branch bugs where the brain uses a fresh node name
+  // for each branch endpoint instead of reusing the battery's terminals,
+  // which leaves dangling-leaf nodes that BFS reachability misses.
+  const degreeCheck = nonProbeNodesHaveDegreeAtLeastTwo(components);
+  if (!degreeCheck.ok) {
+    return {
+      ok: false,
+      reason:
+        `Node "${degreeCheck.node}" has degree 1 — it's only connected to one component (${degreeCheck.comp.label || degreeCheck.comp.type}). ` +
+        `Every wire endpoint must connect to at least one other component. ` +
+        `When two resistors are in parallel between the battery's terminals, BOTH endpoints of BOTH resistors must reference the SAME two node strings as the battery — do not invent fresh node names for each parallel branch.`,
     };
   }
 

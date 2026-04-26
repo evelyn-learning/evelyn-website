@@ -532,7 +532,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_circuit',
-    description: 'Schematic circuit diagram from a netlist of components. Each component has type, from-node, to-node, and optional value/unit/label. The renderer auto-places nodes and draws IEEE symbols.',
+    description: 'Schematic circuit diagram from a netlist of components. Each component has type, from-node, to-node, and optional value/unit/label. The renderer auto-places nodes and draws IEEE symbols. NETLIST CONVENTION: components in parallel between the SAME two terminals must reference the SAME two node names. If R1 and R2 are wired in parallel across the battery, all four endpoint references (R1.from, R1.to, R2.from, R2.to) must be drawn from the same pair of node strings as the battery — otherwise the renderer treats the branches as separate disconnected sub-circuits. Use a single node string per electrical junction; do NOT invent fresh node names for each branch.',
     parameters: {
       type: 'object',
       properties: {
