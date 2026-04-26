@@ -2358,7 +2358,12 @@ export function VoiceTutorRealtime({
 
     // --- Whiteboard validation pass ---
     // Trigger if: (a) tutor claims to show something visually, OR (b) student asked for visual in their last message
-    const shouldValidate = !turnHadToolCallRef.current && (claimsToShowVisual(tutorText) || studentRequestedVisualRef.current);
+    // SKIP in claudeBrainMode — the brain emits tool calls directly, so this
+    // fallback would duplicate visuals and run on Realtime's relay prompt
+    // refusals ("I can't draw...") which we never want on the whiteboard.
+    const shouldValidate = !claudeBrainMode
+      && !turnHadToolCallRef.current
+      && (claimsToShowVisual(tutorText) || studentRequestedVisualRef.current);
     if (shouldValidate) {
       console.log('[VoiceTutorRealtime] No tool call but visual expected — running validation pass',
         { tutorClaims: claimsToShowVisual(tutorText), studentRequested: studentRequestedVisualRef.current });
@@ -2715,7 +2720,15 @@ export function VoiceTutorRealtime({
   // to /api/tutor/brain → receive { text, toolCalls } → dispatch tool calls
   // through the existing handleWhiteboardCommand pipeline → speak the text
   // through Realtime's TTS via speakTextRef.
+  useEffect(() => {
+    if (claudeBrainMode) {
+      console.log('[VoiceTutorRealtime] claude-brain engine ACTIVE — Realtime is STT+TTS only, Claude Sonnet 4.6 is the author.');
+    } else {
+      console.log('[VoiceTutorRealtime] Realtime engine active (legacy authoring path), validateToolCalls=', validateToolCalls);
+    }
+  }, [claudeBrainMode, validateToolCalls]);
   const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
+    console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
     try {
       // Convert the transcript log to the Claude conversation shape. We
       // collapse 'system' entries (greeting prompts, etc.) — they're not
@@ -2792,14 +2805,21 @@ export function VoiceTutorRealtime({
 
   // Short relay-mode prompt for Realtime when claudeBrainMode is on.
   // Realtime is reduced to STT + verbatim TTS. It does not author content.
+  // Critically: if response.create ever fires WITHOUT explicit read-aloud
+  // instructions, Realtime must produce ZERO output — not "I'm sorry I
+  // can't do that", not "let me think", nothing. Otherwise you get the
+  // refusal-narration bug where Realtime authors against the relay prompt
+  // and says things like "I can't plot or draw directly".
   const RELAY_MODE_PROMPT = [
-    'You are a voice transport layer, not a tutor.',
-    'When the user finishes speaking, do nothing — wait. The application will',
-    'hand you text via response.create instructions and ask you to read it.',
-    'Read those messages aloud verbatim. Do not paraphrase, do not improvise,',
-    'do not add greetings, do not call tools, do not author replies on your',
-    'own. Match the voice and pace described in the instructions for each',
-    'response.',
+    'You are a voice transport layer, not a tutor or assistant.',
+    'NEVER author your own response. NEVER refuse, NEVER apologize,',
+    'NEVER explain that you can\'t do something. If you receive a',
+    'response.create with no explicit read-aloud instructions, output',
+    'silence — produce no audio, no text. The application drives every',
+    'utterance via response.create with explicit read-aloud instructions.',
+    'When you do receive read-aloud instructions, read the supplied text',
+    'verbatim — no paraphrasing, no greetings, no additions, no apologies.',
+    'Do not call tools.',
   ].join(' ');
 
   // Initialize the realtime connection
