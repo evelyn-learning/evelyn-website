@@ -225,6 +225,7 @@ export function VoiceTutorRealtime({
   // orchestrator (which is constructed BEFORE the hook returns) can call
   // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
   const speakTextRef = useRef<((text: string) => void) | null>(null);
+  const clearSpeechQueueRef = useRef<(() => void) | null>(null);
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
@@ -2845,6 +2846,12 @@ export function VoiceTutorRealtime({
         const toolNamesThisAttempt: string[] = [];
         const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
         let attemptText = '';
+        // Once a tool call in this attempt is rejected, the attempt is
+        // doomed and we'll retry. Stop voicing further sentences from
+        // this attempt (otherwise the student hears both the bad voice-
+        // over and the corrected one). Tool calls keep dispatching so
+        // we collect ALL rejections in one pass for the retry message.
+        let attemptKilled = false;
 
         try {
           while (true) {
@@ -2870,7 +2877,9 @@ export function VoiceTutorRealtime({
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   attemptText += (attemptText ? ' ' : '') + sentence.trim();
-                  speakTextRef.current?.(sentence.trim());
+                  if (!attemptKilled) {
+                    speakTextRef.current?.(sentence.trim());
+                  }
                 } else if (ev.type === 'tool-call') {
                   const name = ev.name as string;
                   const args = (ev.args as Record<string, unknown>) || {};
@@ -2879,9 +2888,17 @@ export function VoiceTutorRealtime({
                   const cmd = mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     const result = await handleWhiteboardCommand([cmd]);
-                    if (result && Array.isArray(result.rejected)) {
+                    if (result && Array.isArray(result.rejected) && result.rejected.length > 0) {
                       for (const r of result.rejected) {
                         rejectionsThisAttempt.push(r);
+                      }
+                      // First rejection in this attempt → cancel any
+                      // already-queued/playing audio + stop voicing further
+                      // sentences from this attempt. The retry will speak
+                      // a fresh corrected response.
+                      if (!attemptKilled) {
+                        attemptKilled = true;
+                        clearSpeechQueueRef.current?.();
                       }
                     }
                   } else {
@@ -2899,9 +2916,15 @@ export function VoiceTutorRealtime({
           try { reader.releaseLock(); } catch { /* already released */ }
         }
 
-        aggregatedFullText = aggregatedFullText
-          ? `${aggregatedFullText} ${attemptText}`
-          : attemptText;
+        // Only the WINNING attempt's text goes into aggregatedFullText
+        // (which becomes the tutor turn in transcriptRef + the brain's
+        // memory of "what I said"). Killed attempts are dropped — the
+        // student didn't hear them and Claude shouldn't pretend it did.
+        if (!attemptKilled) {
+          aggregatedFullText = aggregatedFullText
+            ? `${aggregatedFullText} ${attemptText}`
+            : attemptText;
+        }
 
         // No rejections OR we've burned the retry budget → done with this turn.
         if (rejectionsThisAttempt.length === 0 || attempt === MAX_VALIDATOR_RETRIES) {
@@ -3087,6 +3110,7 @@ export function VoiceTutorRealtime({
   injectContextRef.current = realtime.injectContext;
   sendTextMessageRef.current = realtime.sendTextMessage;
   speakTextRef.current = realtime.speakText;
+  clearSpeechQueueRef.current = realtime.clearSpeechQueue;
 
   // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {

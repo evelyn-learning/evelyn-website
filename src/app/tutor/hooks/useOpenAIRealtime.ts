@@ -165,6 +165,12 @@ export interface RealtimeResult {
    * instructions to read the text verbatim. No-op when not connected.
    */
   speakText: (text: string) => void;
+  /**
+   * Cancel the in-flight speakText response (if any) and drop everything
+   * waiting in the speakText queue. Used on validator-feedback retry so
+   * the rejected attempt's voice doesn't bleed into the corrected one.
+   */
+  clearSpeechQueue: () => void;
 }
 
 /**
@@ -1639,6 +1645,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     if (next) sendOneSpeakText(next);
   };
 
+  // Cancel any in-flight TTS response and drop pending sentences.
+  // Used by the orchestrator's validator-feedback retry path so the
+  // rejected attempt's voice doesn't bleed into the corrected one.
+  const clearSpeechQueue = useCallback(() => {
+    const droppedCount = speakTextQueueRef.current.length;
+    speakTextQueueRef.current = [];
+    if (speakTextInFlightRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+      // Stop client-side audio that's already arrived.
+      try { playbackSourceRef.current?.stop(); } catch { /* may already be stopped */ }
+      audioQueueRef.current = [];
+      isPlayingRef.current = false;
+      speakTextInFlightRef.current = false;
+    }
+    if (droppedCount > 0) {
+      console.log(`[Realtime] clearSpeechQueue: dropped ${droppedCount} queued sentence(s)`);
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -1662,5 +1687,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     sendTextMessage,
     injectContext,
     speakText,
+    clearSpeechQueue,
   };
 }

@@ -597,10 +597,15 @@ export function TreeRenderer({
     return { svgContent: elements, viewBox: viewBoxStr };
   }, [root, type, showLeafProbabilities, title]);
 
-  // For left-right direction, we apply a 90-degree rotation and swap the viewBox axes.
-  // This keeps the layout logic simple (always top-down) and rotates the output.
-  const isLeftRight = direction === 'left-right';
-  const transform = isLeftRight ? 'rotate(90) scale(1, -1)' : undefined;
+  // direction='left-right' formerly applied an SVG `rotate(90) scale(1, -1)`
+  // wrapper to a top-down layout, but that rotated/flipped every text node
+  // along with the structure — labels rendered upside-down and mirrored
+  // (observed 2026-04-26 on a probability tree). Properly supporting
+  // left-right requires swapping x/y in the layout pass, not a transform.
+  // Until that lands, ignore the direction prop and always render top-down.
+  // This is a no-op for the common case (default is top-down) and keeps
+  // text upright on the rare left-right request at the cost of orientation.
+  void direction;
 
   return (
     <div className="w-full flex justify-center">
@@ -610,11 +615,7 @@ export function TreeRenderer({
         style={{ maxHeight: '500px' }}
         preserveAspectRatio="xMidYMid meet"
       >
-        {isLeftRight ? (
-          <g transform={transform}>{svgContent}</g>
-        ) : (
-          svgContent
-        )}
+        {svgContent}
       </svg>
     </div>
   );

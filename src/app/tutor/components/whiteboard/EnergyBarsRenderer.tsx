@@ -201,11 +201,25 @@ export default function EnergyBarsRenderer({
   const totals = positions.map(
     (p) => (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0),
   );
-  const maxTotal = Math.max(...totals, 1);
+  // Y-axis range. Positive-stack ceiling = max of (sum of positive components)
+  // across all positions. Negative-stack floor = min of (sum of negative
+  // components) — only PE can go negative; KE/spring/thermal are validated
+  // ≥ 0. Without considering negatives, a position with PE=-50 + KE=150
+  // would draw a 150 J bar that overshoots a y-axis sized to total=100.
+  const positiveStackPerPos = positions.map(
+    (p) => Math.max(0, p.ke ?? 0) + Math.max(0, p.pe ?? 0) + Math.max(0, p.spring ?? 0) + Math.max(0, p.thermal ?? 0),
+  );
+  const negativeStackPerPos = positions.map(
+    (p) => Math.min(0, p.pe ?? 0),  // only PE can be negative
+  );
+  const yPositiveMax = Math.max(...positiveStackPerPos, 1);
+  const yNegativeMin = Math.min(...negativeStackPerPos, 0);
+  const yRange = yPositiveMax - yNegativeMin;
+  const maxTotal = yPositiveMax;  // kept for total-line auto-detect logic
 
   // Auto-detect total-invariance if the caller didn't set showTotalLine explicitly.
   const firstTotal = totals[0];
-  const allSame = totals.every((t) => Math.abs(t - firstTotal) < 0.01 * maxTotal);
+  const allSame = totals.every((t) => Math.abs(t - firstTotal) < 0.01 * Math.max(maxTotal, 1));
   const drawTotalLine = showTotalLine ?? allSame;
 
   // Layout.
@@ -219,13 +233,16 @@ export default function EnergyBarsRenderer({
   const columnWidth = plotWidth / positions.length;
   const barWidth = Math.min(60, columnWidth * 0.55);
 
-  const yForValue = (v: number): number => plotBottom - (v / maxTotal) * plotHeight;
+  // y=0 may not be at plotBottom anymore; place it according to where
+  // zero falls between yNegativeMin and yPositiveMax.
+  const zeroY = plotBottom - ((0 - yNegativeMin) / yRange) * plotHeight;
+  const yForValue = (v: number): number => plotBottom - ((v - yNegativeMin) / yRange) * plotHeight;
 
-  // Y-axis ticks at 0, 25%, 50%, 75%, 100%
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((frac) => ({
-    y: plotBottom - frac * plotHeight,
-    label: formatValue(frac * maxTotal),
-  }));
+  // Y-axis ticks. Span from yNegativeMin to yPositiveMax in 5 steps.
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((frac) => {
+    const value = yNegativeMin + frac * yRange;
+    return { y: plotBottom - frac * plotHeight, label: formatValue(value) };
+  });
 
   const totalLineY = yForValue(firstTotal);
 
@@ -334,7 +351,6 @@ export default function EnergyBarsRenderer({
         {positions.map((p, i) => {
           const centerX = plotLeft + columnWidth * (i + 0.5);
           const x = centerX - barWidth / 2;
-          let runningTop = plotBottom;
           // Stack order: thermal first (bottom), then PE (gravitational), then spring PE, then KE on top.
           const stack: Array<[number, string]> = [];
           if (hasThermal) stack.push([p.thermal ?? 0, COLORS.thermal]);
@@ -342,11 +358,19 @@ export default function EnergyBarsRenderer({
           if (hasSpring) stack.push([p.spring ?? 0, COLORS.spring]);
           if (hasKE) stack.push([p.ke ?? 0, COLORS.ke]);
 
+          // Positives stack upward from zeroY; negatives stack downward.
+          // Track running edges separately so a position with mixed signs
+          // (e.g. PE=-50 + KE=150) renders both: the −50 J segment below
+          // the zero line in green, the 150 J segment above in red.
+          const pxPerUnit = plotHeight / yRange;
+          let posTop = zeroY;
+          let negBottom = zeroY;
+
           const segments: React.ReactElement[] = [];
           stack.forEach(([value, color], j) => {
-            if (value <= 0) return;
-            const h = (value / maxTotal) * plotHeight;
-            const y = runningTop - h;
+            if (value === 0) return;
+            const h = Math.abs(value) * pxPerUnit;
+            const y = value > 0 ? posTop - h : negBottom;
             segments.push(
               <rect
                 key={j}
@@ -359,7 +383,6 @@ export default function EnergyBarsRenderer({
                 strokeWidth={1}
               />,
             );
-            // Value label inside the segment (only if segment is tall enough).
             if (h > 16) {
               segments.push(
                 <text
@@ -375,7 +398,8 @@ export default function EnergyBarsRenderer({
                 </text>,
               );
             }
-            runningTop = y;
+            if (value > 0) posTop = y;
+            else negBottom = y + h;
           });
 
           const total = (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0);
