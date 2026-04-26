@@ -547,6 +547,21 @@ export function VoiceTutorRealtime({
           .replace(/\[whiteboard command[^\]]*\][^\n]*/gi, '')
           .trim();
 
+        // In claude-brain mode the brain orchestrator is the authoritative
+        // source of tutor turns: it appends to transcriptRef BEFORE
+        // calling speakText. When Realtime then echoes the audio
+        // transcript back here, the duplicate detection below sees
+        // the orchestrator's entry and (a) injects a spurious
+        // "you just repeated yourself" context reminder and
+        // (b) appends a second copy. Both wreck subsequent brain
+        // turns. Skip the duplicate-detection + append paths in
+        // claude-brain mode; just keep the housekeeping.
+        if (claudeBrainMode) {
+          currentAssistantTextRef.current = '';
+          pendingTutorTextRef.current = cleanText;
+          return;
+        }
+
         // Duplicate response detection — check if this is identical to a recent tutor message
         const recentTutorMessages = transcriptRef.current
           .filter(e => e.role === 'tutor')
@@ -582,7 +597,7 @@ export function VoiceTutorRealtime({
         pendingTutorTextRef.current = cleanText;
       }
     }
-  }, [onTranscriptUpdate, onTrackInteraction]);
+  }, [onTranscriptUpdate, onTrackInteraction, claudeBrainMode]);
 
   // Validate a tool call via Claude (async, for openai-realtime-validated engine)
   const validateToolCallViaClaude = useCallback(async (
