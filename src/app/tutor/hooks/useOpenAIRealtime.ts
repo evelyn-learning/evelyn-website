@@ -450,6 +450,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const startListeningRef = useRef<() => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
   const hasAudioInBufferRef = useRef(false);
+  // ── speakText queue (Phase 5 streaming brain → Realtime) ──────────────────
+  // Realtime allows only ONE response.create in flight at a time. With
+  // streaming, the orchestrator may call speakText() per sentence and a
+  // brain turn can produce 2–5 sentences in quick succession. Without
+  // a queue, the second response.create races the first and one of them
+  // is lost. The queue holds pending sentences; response.done drains it.
+  const speakTextQueueRef = useRef<string[]>([]);
+  const speakTextInFlightRef = useRef(false);
 
   // --- Parallel-connect plumbing ---------------------------------------------
   // Goal: shave ~1–2 s off session start-up. Previously we serialized
@@ -687,6 +695,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           console.log('[Realtime] Response complete');
           lastResponseDoneRef.current = Date.now();
           currentResponseTextRef.current = '';
+          // Drain one queued speakText sentence (Phase 5 streaming brain).
+          // Idempotent: if no queue, this just clears the in-flight flag.
+          // Must run BEFORE the listening-state branch below, so a queued
+          // sentence can fire before we open the mic.
+          drainSpeakTextQueueRef.current();
 
           // Extract usage data from response.done event
           const responseUsage = data.response?.usage;
@@ -1571,14 +1584,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // than instructions alone (which the model sometimes paraphrases) and
   // keeps the conversation history accurate so subsequent turns have the
   // right context.
-  const speakText = useCallback((text: string) => {
+  //
+  // Queueing: in streaming mode the orchestrator calls speakText() per
+  // sentence as Sonnet emits them. Realtime permits only one response in
+  // flight, so we queue subsequent calls and drain on `response.done`.
+  // The first speakText fires immediately; the next sentences wait in
+  // line and play seamlessly as the previous one finishes voicing.
+  const sendOneSpeakText = useCallback((trimmed: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[Realtime] speakText: not connected');
+      console.error('[Realtime] sendOneSpeakText: not connected');
       return;
     }
-    if (!text || !text.trim()) return;
-    const trimmed = text.trim();
-    // Insert assistant message into conversation history.
     wsRef.current.send(JSON.stringify({
       type: 'conversation.item.create',
       item: {
@@ -1587,8 +1603,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         content: [{ type: 'output_text', text: trimmed }],
       },
     }));
-    // Ask Realtime to voice the message verbatim. The instructions
-    // override is single-response scoped per the Realtime API spec.
     wsRef.current.send(JSON.stringify({
       type: 'response.create',
       response: {
@@ -1598,8 +1612,32 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           'Do not say "the assistant said". Just voice the text.',
       },
     }));
+    speakTextInFlightRef.current = true;
     updateState('processing');
   }, [updateState]);
+
+  const speakText = useCallback((text: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.error('[Realtime] speakText: not connected');
+      return;
+    }
+    if (!text || !text.trim()) return;
+    const trimmed = text.trim();
+    if (speakTextInFlightRef.current) {
+      speakTextQueueRef.current.push(trimmed);
+      return;
+    }
+    sendOneSpeakText(trimmed);
+  }, [sendOneSpeakText]);
+
+  // Stable ref so the response.done handler (long-lived closure) can
+  // drain the queue without depending on speakText's identity.
+  const drainSpeakTextQueueRef = useRef<() => void>(() => {});
+  drainSpeakTextQueueRef.current = () => {
+    speakTextInFlightRef.current = false;
+    const next = speakTextQueueRef.current.shift();
+    if (next) sendOneSpeakText(next);
+  };
 
   // Cleanup on unmount
   useEffect(() => {
