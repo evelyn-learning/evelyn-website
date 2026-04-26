@@ -1971,6 +1971,20 @@ export function toOpenAITools(tools: ToolDefinition[]): any[] {
 }
 
 /**
+ * Convert tool definitions to the Anthropic Messages API format. Anthropic
+ * uses `input_schema` instead of `parameters` — otherwise the JSON Schema
+ * shape is the same as OpenAI's, so no field-by-field conversion needed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function toAnthropicTools(tools: ToolDefinition[]): any[] {
+  return tools.map(tool => ({
+    name: tool.name,
+    description: tool.description,
+    input_schema: tool.parameters,
+  }));
+}
+
+/**
  * Convert JSON Schema types to Gemini format (uppercase types, no unsupported features).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
