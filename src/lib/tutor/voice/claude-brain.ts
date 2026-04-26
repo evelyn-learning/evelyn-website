@@ -19,6 +19,13 @@ import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 
 export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
+/**
+ * Hard cap on agent-loop iterations per brain turn. Each iteration is one
+ * Anthropic call. Sonnet's typical multi-step plan completes in 1-3 rounds;
+ * cap exists to prevent a runaway loop if the model keeps emitting tool_use
+ * forever without converging.
+ */
+const MAX_AGENT_ITERATIONS = 5;
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -81,9 +88,22 @@ export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string
 
 /**
  * Run one turn of the brain. The caller passes the latest student utterance
- * plus context, gets back a structured response. No streaming for now —
- * Realtime can voice the full text once it arrives. (Streaming is a Phase 5
- * latency optimization, not a correctness concern.)
+ * plus context, gets back a structured response with all text + tool calls
+ * accumulated across however many round-trips Sonnet needed.
+ *
+ * The agent loop. This is the architectural piece without which Sonnet's
+ * multi-step plans die after step 1: when Claude returns stop_reason=tool_use,
+ * it is PAUSING for tool results, not finishing. We must send tool_result
+ * blocks back to let it continue (e.g. emit new_page first, then follow up
+ * with show_geometry once the page swap is acknowledged). Earlier versions
+ * of this function executed only one round-trip; the result was that any
+ * sequencing tool (new_page, list_whiteboard_features, etc.) would orphan
+ * the actual rendering call. Observed 2026-04-26: every "Can you draw a
+ * perpendicular CD" produced tools=[new_page] with no show_geometry follow-up.
+ *
+ * For now, tool_results are synthetic acknowledgments ("executed
+ * successfully"). Phase 2 of this fix will pipe real validator feedback
+ * (rejection reasons, board state changes) so Claude can self-correct.
  */
 export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutput> {
   const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
@@ -96,49 +116,86 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
-  const response = await anthropic.messages.create({
-    model: input.model ?? BRAIN_MODEL_ID,
-    max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
-    // Ephemeral cache marker on the system prompt — Anthropic caches up to
-    // the marker, so subsequent turns in this session read the prompt at
-    // ~90% discount.
-    system: [
-      {
-        type: 'text',
-        text: input.systemPrompt,
-        cache_control: { type: 'ephemeral' },
-      },
-    ],
-    tools: toAnthropicTools(input.tools),
-    messages: [
-      ...input.conversationHistory.map((m) => ({ role: m.role, content: m.content })),
-      { role: 'user' as const, content: userContent },
-    ],
-  });
+  // Initial messages: prior conversation + the student's just-said wrapper.
+  let messages: Anthropic.MessageParam[] = [
+    ...input.conversationHistory.map((m) => ({ role: m.role, content: m.content })),
+    { role: 'user' as const, content: userContent },
+  ];
 
-  let text = '';
-  const toolCalls: BrainToolCall[] = [];
-  for (const block of response.content) {
-    if (block.type === 'text') {
-      text += (text ? '\n' : '') + block.text;
-    } else if (block.type === 'tool_use') {
-      toolCalls.push({
-        id: block.id,
-        name: block.name,
-        args: (block.input ?? {}) as Record<string, unknown>,
-      });
+  let accumulatedText = '';
+  const accumulatedToolCalls: BrainToolCall[] = [];
+  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+  let lastStopReason: string = 'unknown';
+
+  for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
+    const response = await anthropic.messages.create({
+      model: input.model ?? BRAIN_MODEL_ID,
+      max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
+      system: [
+        {
+          type: 'text',
+          text: input.systemPrompt,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      tools: toAnthropicTools(input.tools),
+      messages,
+    });
+
+    totalUsage.inputTokens += response.usage.input_tokens;
+    totalUsage.outputTokens += response.usage.output_tokens;
+    totalUsage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0;
+    totalUsage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+    lastStopReason = response.stop_reason ?? 'unknown';
+
+    // Extract text + tool_use blocks from this iteration.
+    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown }> = [];
+    for (const block of response.content) {
+      if (block.type === 'text') {
+        accumulatedText += (accumulatedText ? '\n' : '') + block.text;
+      } else if (block.type === 'tool_use') {
+        newToolUseBlocks.push({ id: block.id, name: block.name, input: block.input });
+        accumulatedToolCalls.push({
+          id: block.id,
+          name: block.name,
+          args: (block.input ?? {}) as Record<string, unknown>,
+        });
+      }
     }
+
+    // If Claude is done OR didn't actually emit tool calls this round,
+    // exit the loop. (Defensive: if stop_reason were tool_use but no
+    // blocks came through, looping without tool_results would hang.)
+    if (response.stop_reason !== 'tool_use' || newToolUseBlocks.length === 0) {
+      break;
+    }
+    if (iter === MAX_AGENT_ITERATIONS - 1) {
+      console.warn('[brain] hit MAX_AGENT_ITERATIONS, returning partial result');
+      break;
+    }
+
+    // Append the assistant's tool_use response and a synthetic tool_result
+    // turn so Claude can continue. The result content is intentionally
+    // generic — the actual rendering happens client-side after this
+    // function returns. Phase 2 will plumb real validator feedback here.
+    messages = [
+      ...messages,
+      { role: 'assistant', content: response.content },
+      {
+        role: 'user',
+        content: newToolUseBlocks.map((b) => ({
+          type: 'tool_result' as const,
+          tool_use_id: b.id,
+          content: `${b.name} executed successfully.`,
+        })),
+      },
+    ];
   }
 
   return {
-    text: text.trim(),
-    toolCalls,
-    stopReason: response.stop_reason ?? 'unknown',
-    usage: {
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
-      cacheReadTokens: response.usage.cache_read_input_tokens ?? 0,
-      cacheCreationTokens: response.usage.cache_creation_input_tokens ?? 0,
-    },
+    text: accumulatedText.trim(),
+    toolCalls: accumulatedToolCalls,
+    stopReason: lastStopReason,
+    usage: totalUsage,
   };
 }
