@@ -727,32 +727,60 @@ export function CircularPathDiagram({
   path = [],
   title = 'Circular Path',
 }: CircularPathProps) {
+  // Defensive: reject points missing a numeric angle, and clamp center
+  // / radius to safe defaults if the brain omitted them. Without these
+  // guards, an emission like `points: [{ label: 'S' }]` produces NaN
+  // angle → NaN coordinates → SVG attribute errors and a blank canvas
+  // (observed 2026-04-26 on "circular orbit of radius 3 with the
+  // satellite at the top": the satellite was emitted without an angle).
+  const safeCenter = {
+    x: typeof center?.x === 'number' && isFinite(center.x) ? center.x : 0,
+    y: typeof center?.y === 'number' && isFinite(center.y) ? center.y : 0,
+  };
+  const safeRadius = typeof radius === 'number' && isFinite(radius) && radius > 0 ? radius : 3;
+  const safePoints = useMemo(() => {
+    return (points ?? []).map((p) => {
+      let angle = p.angle;
+      if (typeof angle !== 'number' || !isFinite(angle)) {
+        // "Top" / "satellite at the top" → assume 90°.
+        const lower = (p.label || '').toLowerCase();
+        if (/top|north/.test(lower)) angle = 90;
+        else if (/bottom|south/.test(lower)) angle = 270;
+        else if (/right|east/.test(lower)) angle = 0;
+        else if (/left|west/.test(lower)) angle = 180;
+        else angle = 0;
+      }
+      return { ...p, angle };
+    });
+  }, [points]);
+
   // Calculate point positions
   const pointPositions = useMemo(() => {
     const positions: Record<string, { x: number; y: number }> = {
-      'O': { x: center.x, y: center.y },
+      'O': { x: safeCenter.x, y: safeCenter.y },
     };
-    points.forEach((p) => {
+    safePoints.forEach((p) => {
       const rad = (p.angle * Math.PI) / 180;
       positions[p.label] = {
-        x: center.x + radius * Math.cos(rad),
-        y: center.y + radius * Math.sin(rad),
+        x: safeCenter.x + safeRadius * Math.cos(rad),
+        y: safeCenter.y + safeRadius * Math.sin(rad),
       };
     });
     return positions;
-  }, [center, radius, points]);
+  }, [safeCenter, safeRadius, safePoints]);
 
-  // Generate circle points for drawing
+  // Generate circle points for drawing — use the sanitized center / radius
+  // so a missing-radius emission still draws something instead of NaNing.
   const circlePoints = useMemo(() => {
     const pts: [number, number][] = [];
     for (let i = 0; i <= 64; i++) {
       const angle = (i / 64) * 2 * Math.PI;
-      pts.push([center.x + radius * Math.cos(angle), center.y + radius * Math.sin(angle)]);
+      pts.push([safeCenter.x + safeRadius * Math.cos(angle), safeCenter.y + safeRadius * Math.sin(angle)]);
     }
     return pts;
-  }, [center, radius]);
+  }, [safeCenter, safeRadius]);
 
-  const viewRange = radius + 2;
+  const viewRange = safeRadius + 2;
 
   return (
     <div className="diagram-container">
@@ -773,12 +801,13 @@ export function CircularPathDiagram({
         ))}
 
         {/* Center point O */}
-        <Point x={center.x} y={center.y} color="#16a34a" />
-        <Text x={center.x - 0.4} y={center.y - 0.4} size={14}>O</Text>
+        <Point x={safeCenter.x} y={safeCenter.y} color="#16a34a" />
+        <Text x={safeCenter.x - 0.4} y={safeCenter.y - 0.4} size={14}>O</Text>
 
         {/* Labeled points on circle */}
-        {points.map((p, index) => {
+        {safePoints.map((p, index) => {
           const pos = pointPositions[p.label];
+          if (!pos || !isFinite(pos.x) || !isFinite(pos.y)) return null;
           const labelOffset = 0.5;
           const rad = (p.angle * Math.PI) / 180;
           return (

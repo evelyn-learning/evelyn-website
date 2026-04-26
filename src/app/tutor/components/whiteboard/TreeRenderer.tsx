@@ -200,14 +200,28 @@ function getBounds(layout: LayoutNode): { minX: number; minY: number; maxX: numb
 // Fraction math helpers (for cumulative leaf probabilities)
 // ---------------------------------------------------------------------------
 
-/** Parse a fraction string like "1/2" or a whole number "3" into [numerator, denominator] */
+/**
+ * Parse a fraction string into [numerator, denominator]. Accepts:
+ *   "1/2"            → [1, 2]
+ *   "3"              → [3, 1]
+ *   "13/52 = 1/4"    → [1, 4]   (uses the LAST clean fraction)
+ *   "0.5"            → [0.5, 1]
+ *
+ * The brain occasionally emits probabilities in mixed-form notation
+ * ("13/52 = 1/4") to show both raw and simplified values. The naive
+ * split-on-`/` parser produced NaN denominators ("52 = 1" isn't a
+ * number) which propagated to leaf probabilities as "P = 1/NaN".
+ * Walking from the end and taking the last n/d (or n) match handles
+ * all observed forms.
+ */
 function parseFraction(s: string): [number, number] {
   const trimmed = s.trim();
-  if (trimmed.includes('/')) {
-    const [n, d] = trimmed.split('/').map(Number);
-    return [n, d];
-  }
-  return [Number(trimmed), 1];
+  if (!trimmed) return [NaN, NaN];
+  const fracMatch = trimmed.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/);
+  if (fracMatch) return [Number(fracMatch[1]), Number(fracMatch[2])];
+  const intMatch = trimmed.match(/(\d+(?:\.\d+)?)\s*$/);
+  if (intMatch) return [Number(intMatch[1]), 1];
+  return [NaN, NaN];
 }
 
 /** Greatest common divisor */

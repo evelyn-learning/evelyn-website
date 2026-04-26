@@ -2823,6 +2823,19 @@ export function VoiceTutorRealtime({
       let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
 
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
+        // On retry attempts, clear the per-turn dedup set so the brain's
+        // CORRECTED tool call (e.g. show_collision with proper momentum)
+        // isn't dropped as a duplicate of the rejected one. Without this,
+        // attempts 2-N never reach the validator — they're filtered out
+        // by the dedup pre-check that ran before the original validator
+        // rejection (observed 2026-04-26 with the inelastic-collision
+        // prompt: brain corrected its momentum value across 3 attempts
+        // but every retry's show_collision was dedup-dropped so the user
+        // saw nothing rendered and the validator kept rejecting the
+        // stale-but-still-bad attempt-1 args).
+        if (attempt > 0) {
+          visualActionsThisTurnRef.current = new Set();
+        }
         const res = await fetch('/api/tutor/brain/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
