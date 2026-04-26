@@ -640,6 +640,15 @@ interface LabelBox {
   /** Perpendicular direction used to push this label away from collisions. */
   pushX: number;
   pushY: number;
+  /** The geometric feature this label refers to. The collision resolver
+   *  springs each label back toward this anchor; if the label ends up far
+   *  from the anchor, a leader line is drawn from anchor to label edge so
+   *  the eye can recover the connection. Without this, the resolver
+   *  silently displaces labels and the user reads the displacement as
+   *  "the geometry is wrong" — observed 2026-04-26 with the chord whose
+   *  midpoint coincides with the labeled origin O. */
+  anchorX: number;
+  anchorY: number;
 }
 
 /** Rough width estimate for a text label in SVG (monospace-ish averaging). */
@@ -675,27 +684,101 @@ function textTop(a: LabelBox): number {
 }
 
 /**
- * Shift colliding labels apart. Iterates a few times, pushing each label
- * that overlaps another in the direction that most reduces the overlap.
- * Earlier labels (lower index) are kept in place; later labels get pushed.
+ * Distance squared between a label's center and its anchor. Used to size
+ * the spring force pulling the label back toward what it describes.
+ */
+function anchorOffset(a: LabelBox): { dx: number; dy: number } {
+  // The label's "center of mass" depends on text-anchor + baseline.
+  const cx = a.x + (a.textAnchor === 'middle' ? 0 : a.textAnchor === 'end' ? -a.w / 2 : a.w / 2);
+  const cy = a.y + (a.dominantBaseline === 'central' || a.dominantBaseline === 'middle' ? 0 : -a.h * 0.4);
+  return { dx: cx - a.anchorX, dy: cy - a.anchorY };
+}
+
+/**
+ * Force-directed label-collision resolver. Each label has:
+ *   • a SPRING force pulling it back toward its anchor (proportional to
+ *     displacement) — so labels drift no further than necessary, and
+ *     symmetrically (no first-label-wins bias).
+ *   • a REPULSION force from every other overlapping label (constant
+ *     magnitude in the direction that most reduces overlap).
+ *
+ * Iterating these forces a few dozen times reaches a stable equilibrium
+ * where labels are spread out only as much as needed. Compared to the
+ * old fixed-step push-the-later-one strategy, this:
+ *   • doesn't over-push when there's room.
+ *   • doesn't anchor label A in place while pushing B halfway across.
+ *   • converges symmetrically when two labels both want the same spot.
  */
 function resolveLabelCollisions(labels: LabelBox[]): void {
-  const MAX_ITERS = 6;
-  const STEP = 10;
+  const MAX_ITERS = 30;
+  const REPULSION_STEP = 4;     // px moved per iter when overlapping
+  const SPRING_K = 0.06;        // fraction of displacement reverted per iter
+  const MIN_DELTA = 0.5;        // stop early when no label moves more than this
   for (let iter = 0; iter < MAX_ITERS; iter++) {
-    let moved = false;
+    let maxMove = 0;
     for (let i = 0; i < labels.length; i++) {
-      for (let j = i + 1; j < labels.length; j++) {
-        if (!boxesOverlap(labels[i], labels[j])) continue;
-        // Push the later label along its own push vector.
+      const a = labels[i];
+      let fx = 0;
+      let fy = 0;
+      // Repulsion from each overlapping neighbor.
+      for (let j = 0; j < labels.length; j++) {
+        if (i === j) continue;
         const b = labels[j];
-        b.x += b.pushX * STEP;
-        b.y += b.pushY * STEP;
-        moved = true;
+        if (!boxesOverlap(a, b)) continue;
+        // Direction: from b's center to a's center, with small jitter to
+        // avoid collinear deadlocks.
+        const ab = anchorOffset(a);
+        const bb = anchorOffset(b);
+        const acx = a.anchorX + ab.dx;
+        const acy = a.anchorY + ab.dy;
+        const bcx = b.anchorX + bb.dx;
+        const bcy = b.anchorY + bb.dy;
+        let rdx = acx - bcx;
+        let rdy = acy - bcy;
+        const rlen = Math.sqrt(rdx * rdx + rdy * rdy) || 1;
+        rdx /= rlen;
+        rdy /= rlen;
+        // Bias along this label's preferred push direction so the
+        // movement still feels "natural" (perpendicular for segments,
+        // outward-radial for points and angles).
+        fx += rdx * REPULSION_STEP * 0.7 + a.pushX * REPULSION_STEP * 0.3;
+        fy += rdy * REPULSION_STEP * 0.7 + a.pushY * REPULSION_STEP * 0.3;
       }
+      // Spring back to anchor.
+      const off = anchorOffset(a);
+      fx -= off.dx * SPRING_K;
+      fy -= off.dy * SPRING_K;
+      // Apply.
+      a.x += fx;
+      a.y += fy;
+      const move = Math.abs(fx) + Math.abs(fy);
+      if (move > maxMove) maxMove = move;
     }
-    if (!moved) break;
+    if (maxMove < MIN_DELTA) break;
   }
+}
+
+/**
+ * Co-located label de-duplication. If a non-point label (segment
+ * midpoint, etc.) shares its anchor (within COLOC_PX) with a point
+ * label, the segment label is redundant — the point's letter already
+ * names the location. Drop it. Specific case: a chord whose midpoint
+ * IS a labeled point (the chord is a diameter through O) — the user
+ * sees "O" and "Chord" both wanting to live at origin; collapse.
+ */
+function dedupCoLocatedLabels(labels: LabelBox[]): LabelBox[] {
+  const COLOC_PX = 4;
+  const pointLabels = labels.filter((l) => l.key.startsWith('pt:'));
+  return labels.filter((l) => {
+    if (l.key.startsWith('pt:')) return true;
+    // For non-point labels, drop if any point label sits at the same anchor.
+    for (const pl of pointLabels) {
+      const dx = l.anchorX - pl.anchorX;
+      const dy = l.anchorY - pl.anchorY;
+      if (dx * dx + dy * dy <= COLOC_PX * COLOC_PX) return false;
+    }
+    return true;
+  });
 }
 
 /** Compute all label boxes (point labels + segment labels + angle labels)
@@ -730,6 +813,8 @@ function computeLabels(
       // Push further up-right if crowded.
       pushX: 1,
       pushY: -0.6,
+      anchorX: px,
+      anchorY: py,
     });
   }
 
@@ -763,6 +848,8 @@ function computeLabels(
       dominantBaseline: 'central',
       pushX: nx,
       pushY: ny,
+      anchorX: mx,
+      anchorY: my,
     });
   });
 
@@ -833,15 +920,58 @@ function computeLabels(
       // Push further along the bisector if a collision pushes us out.
       pushX: bisectorX,
       pushY: bisectorY,
+      // Anchor for the angle label is roughly where it sits on the
+      // bisector — that's the spot the eye associates with the angle.
+      anchorX: vx + bisectorX * labelDist,
+      anchorY: vy + bisectorY * labelDist,
     });
   });
 
-  resolveLabelCollisions(labels);
-  return labels;
+  // De-dup: if a segment-midpoint label shares its anchor with a labeled
+  // point (e.g. chord-as-diameter where the midpoint IS the origin O),
+  // drop the segment label. The point label already names the location.
+  const deduped = dedupCoLocatedLabels(labels);
+  resolveLabelCollisions(deduped);
+  return deduped;
 }
 
 function renderLabels(labels: LabelBox[]) {
-  return labels.map((l) => (
+  // Two passes so leader lines render BEHIND text (no character cutting).
+  // Pass 1: leader lines for labels displaced far enough from anchor that
+  // the connection between label and feature would otherwise be lost.
+  const leaders: React.ReactElement[] = [];
+  for (const l of labels) {
+    const off = anchorOffset(l);
+    const distSq = off.dx * off.dx + off.dy * off.dy;
+    // Threshold: label center must be at least 1.4× line height away from
+    // anchor before we draw a leader. Below that, the label visually
+    // hugs its feature and a line would just add noise.
+    const threshold = l.h * 1.4;
+    if (distSq < threshold * threshold) continue;
+    // Stop the leader line at the label's bounding box edge, not at its
+    // text-anchor point — otherwise the line would sometimes stab through
+    // the text. Approximate by trimming a few px in the direction of the
+    // anchor along the label-to-anchor vector.
+    const dist = Math.sqrt(distSq);
+    const ux = off.dx / dist;
+    const uy = off.dy / dist;
+    const labelEdgeX = (l.anchorX + off.dx) - ux * (l.h * 0.5);
+    const labelEdgeY = (l.anchorY + off.dy) - uy * (l.h * 0.5);
+    leaders.push(
+      <line
+        key={`lead:${l.key}`}
+        x1={l.anchorX}
+        y1={l.anchorY}
+        x2={labelEdgeX}
+        y2={labelEdgeY}
+        stroke="#94a3b8"
+        strokeWidth={0.6}
+        strokeDasharray="2,2"
+      />,
+    );
+  }
+  // Pass 2: the text itself.
+  const texts = labels.map((l) => (
     <text
       key={l.key}
       x={l.x}
@@ -856,6 +986,7 @@ function renderLabels(labels: LabelBox[]) {
       {l.text}
     </text>
   ));
+  return [...leaders, ...texts];
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
