@@ -69,6 +69,76 @@ export interface BrainTurnOutput {
 }
 
 /**
+ * One event in the streaming brain output. The streaming variant of
+ * runBrainTurn emits these incrementally so the orchestrator can voice
+ * sentences as they arrive (instead of waiting for the entire response)
+ * and dispatch tool calls inline (interleaved with speech).
+ *
+ * Order within a turn is well-defined: sentences from one text block
+ * appear before any tool-call from the same block, and blocks within
+ * one Anthropic response appear in the order Claude emits them. Across
+ * agent-loop iterations, all events from iteration N appear before any
+ * event from iteration N+1.
+ */
+export type BrainStreamEvent =
+  /** A complete sentence ready to be voiced. Already trimmed. */
+  | { type: 'sentence'; text: string }
+  /** A tool call whose input JSON is fully assembled. Dispatch inline. */
+  | { type: 'tool-call'; id: string; name: string; args: Record<string, unknown> }
+  /** Terminal event. Includes cumulative metadata for telemetry. */
+  | {
+      type: 'done';
+      stopReason: string;
+      usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+      /** Concatenated text across all sentences, for transcriptRef storage. */
+      fullText: string;
+      /** All tool calls, in emission order. */
+      toolCalls: BrainToolCall[];
+    };
+
+/**
+ * Sentence boundary detector. Buffers text deltas as they arrive and
+ * extracts complete sentences once a sentence-terminator is seen with
+ * enough preceding context to avoid false positives on abbreviations
+ * ("Dr.", "1.", "v = 4 m/s.") and decimal numbers ("3.14").
+ *
+ * The 25-char minimum is a heuristic: most legitimate tutor sentences
+ * are longer than that, while abbreviations + numbers are typically
+ * shorter. False negatives (sentence held back too long) are corrected
+ * on flush; false positives (premature flush) would cause speakText to
+ * fire on a fragment, which is worse — so we err toward holding back.
+ */
+class SentenceBuffer {
+  private buf = '';
+  private static readonly MIN_LEN = 25;
+
+  /** Append delta, return zero or more newly-completed sentences. */
+  push(delta: string): string[] {
+    this.buf += delta;
+    const out: string[] = [];
+    // Lazy quantifier {25,}? + terminator + trailing whitespace.
+    // Use [\s\S] instead of `.` with the `s` flag so this builds under
+    // ES2017 targets (Sonnet sometimes emits multi-line text mid-response).
+    const re = /^([\s\S]{25,}?[.!?])(\s+)/;
+    while (true) {
+      const m = this.buf.match(re);
+      if (!m) break;
+      const sentence = m[1].trim();
+      if (sentence) out.push(sentence);
+      this.buf = this.buf.slice(m[0].length);
+    }
+    return out;
+  }
+
+  /** Flush whatever is left. Called at block boundaries and stream end. */
+  flush(): string | null {
+    const trimmed = this.buf.trim();
+    this.buf = '';
+    return trimmed || null;
+  }
+}
+
+/**
  * Build a compact, human-readable description of what's on the whiteboard so
  * Claude can reason about whether to add a new figure, scribble on an existing
  * one, or just talk. Keeps the per-turn cost bounded — full structured state
@@ -197,5 +267,136 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     toolCalls: accumulatedToolCalls,
     stopReason: lastStopReason,
     usage: totalUsage,
+  };
+}
+
+/**
+ * Streaming variant of runBrainTurn. Emits BrainStreamEvent values as
+ * Anthropic produces them — sentences as soon as a boundary is seen,
+ * tool calls as soon as their content_block_stop event fires. Caller
+ * voices each sentence via Realtime's TTS and dispatches each tool call
+ * through the existing handleWhiteboardCommand pipeline.
+ *
+ * The agent loop runs across multiple Anthropic iterations, all within
+ * the lifetime of this single generator. The consumer sees events from
+ * iteration N before iteration N+1; loop boundaries are invisible to
+ * the consumer.
+ */
+export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<BrainStreamEvent, void, void> {
+  const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
+  const userContent =
+    `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    `<student_said>\n${input.studentTranscript}\n</student_said>`;
+
+  let messages: Anthropic.MessageParam[] = [
+    ...input.conversationHistory.map((m) => ({ role: m.role, content: m.content })),
+    { role: 'user' as const, content: userContent },
+  ];
+
+  let accumulatedText = '';
+  const accumulatedToolCalls: BrainToolCall[] = [];
+  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+  let lastStopReason: string = 'unknown';
+
+  for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
+    const sentenceBuffer = new SentenceBuffer();
+    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown }> = [];
+    // Per-block tool-use accumulator. Anthropic streams the input JSON
+    // as `input_json_delta` events; we parse it once on content_block_stop.
+    let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
+
+    const stream = anthropic.messages.stream({
+      model: input.model ?? BRAIN_MODEL_ID,
+      max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
+      system: [
+        {
+          type: 'text',
+          text: input.systemPrompt,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      tools: toAnthropicTools(input.tools),
+      messages,
+    });
+
+    for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        if (event.content_block.type === 'tool_use') {
+          currentToolUse = {
+            id: event.content_block.id,
+            name: event.content_block.name,
+            rawJson: '',
+          };
+        }
+      } else if (event.type === 'content_block_delta') {
+        if (event.delta.type === 'text_delta') {
+          accumulatedText += event.delta.text;
+          for (const sentence of sentenceBuffer.push(event.delta.text)) {
+            yield { type: 'sentence', text: sentence };
+          }
+        } else if (event.delta.type === 'input_json_delta' && currentToolUse) {
+          currentToolUse.rawJson += event.delta.partial_json;
+        }
+      } else if (event.type === 'content_block_stop') {
+        // Flush any buffered text before dispatching a tool call from the
+        // same response — keeps the audio→visual ordering correct (the
+        // student hears "Here's the triangle" then sees the triangle pop in).
+        const remaining = sentenceBuffer.flush();
+        if (remaining) yield { type: 'sentence', text: remaining };
+        if (currentToolUse) {
+          let args: Record<string, unknown> = {};
+          if (currentToolUse.rawJson) {
+            try {
+              args = JSON.parse(currentToolUse.rawJson) as Record<string, unknown>;
+            } catch (err) {
+              console.error('[brain.stream] failed to parse tool input JSON:', err, currentToolUse.rawJson);
+            }
+          }
+          const tc: BrainToolCall = { id: currentToolUse.id, name: currentToolUse.name, args };
+          newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
+          accumulatedToolCalls.push(tc);
+          yield { type: 'tool-call', id: tc.id, name: tc.name, args: tc.args };
+          currentToolUse = null;
+        }
+      }
+    }
+
+    // Stream finished. Pull final metadata + assistant content for the
+    // next agent-loop iteration.
+    const finalMessage = await stream.finalMessage();
+    totalUsage.inputTokens += finalMessage.usage.input_tokens;
+    totalUsage.outputTokens += finalMessage.usage.output_tokens;
+    totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;
+    totalUsage.cacheCreationTokens += finalMessage.usage.cache_creation_input_tokens ?? 0;
+    lastStopReason = finalMessage.stop_reason ?? 'unknown';
+
+    if (finalMessage.stop_reason !== 'tool_use' || newToolUseBlocks.length === 0) {
+      break;
+    }
+    if (iter === MAX_AGENT_ITERATIONS - 1) {
+      console.warn('[brain.stream] hit MAX_AGENT_ITERATIONS, ending early');
+      break;
+    }
+
+    messages = [
+      ...messages,
+      { role: 'assistant', content: finalMessage.content },
+      {
+        role: 'user',
+        content: newToolUseBlocks.map((b) => ({
+          type: 'tool_result' as const,
+          tool_use_id: b.id,
+          content: `${b.name} executed successfully.`,
+        })),
+      },
+    ];
+  }
+
+  yield {
+    type: 'done',
+    stopReason: lastStopReason,
+    usage: totalUsage,
+    fullText: accumulatedText.trim(),
+    toolCalls: accumulatedToolCalls,
   };
 }

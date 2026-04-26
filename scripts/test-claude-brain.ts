@@ -11,7 +11,7 @@
  *
  * Exit 0 if the brain handles the turn cleanly; exit 1 otherwise.
  */
-import { runBrainTurn } from '../src/lib/tutor/voice/claude-brain';
+import { runBrainTurn, streamBrainTurn } from '../src/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '../src/app/tutor/hooks/toolDefinitions';
 
 async function main() {
@@ -161,6 +161,65 @@ async function main() {
 
   console.log('✅ Brain navigated the trap moment without coupling base=DC with height=y-coord.');
   if (safe2) console.log('   (It explicitly chose a perpendicular-pair or used point-to-line.)');
+
+  // ───────────────────────────────────────────────────────────────────
+  // Test 3: streaming variant — verify sentences arrive incrementally
+  // and the first sentence shows up well before the full response.
+  // ───────────────────────────────────────────────────────────────────
+  console.log('\n═══ Test 3: streamBrainTurn — incremental sentence delivery ═══\n');
+
+  const t2 = Date.now();
+  let firstSentenceMs: number | null = null;
+  let lastEventMs: number | null = null;
+  const sentencesSeen: Array<{ at: number; text: string }> = [];
+  const toolCallsSeen: Array<{ at: number; name: string }> = [];
+  let doneEvent: { stopReason: string; toolCallCount: number; chars: number } | null = null;
+
+  for await (const ev of streamBrainTurn({
+    systemPrompt,
+    conversationHistory: extended,
+    studentTranscript: 'About 5.39, since sqrt(4+25) is sqrt(29).',
+    whiteboardSnapshot,
+    tools: WHITEBOARD_TOOLS,
+  })) {
+    const at = Date.now() - t2;
+    lastEventMs = at;
+    if (ev.type === 'sentence') {
+      if (firstSentenceMs === null) firstSentenceMs = at;
+      sentencesSeen.push({ at, text: ev.text });
+    } else if (ev.type === 'tool-call') {
+      toolCallsSeen.push({ at, name: ev.name });
+    } else if (ev.type === 'done') {
+      doneEvent = {
+        stopReason: ev.stopReason,
+        toolCallCount: ev.toolCalls.length,
+        chars: ev.fullText.length,
+      };
+    }
+  }
+
+  console.log(`── Stream timeline (total ${lastEventMs}ms) ──`);
+  for (const s of sentencesSeen) {
+    console.log(`  +${String(s.at).padStart(5)}ms · sentence (${s.text.length} chars): "${s.text.slice(0, 70)}${s.text.length > 70 ? '…' : ''}"`);
+  }
+  for (const t of toolCallsSeen) {
+    console.log(`  +${String(t.at).padStart(5)}ms · tool-call: ${t.name}`);
+  }
+  console.log(`  +${String(lastEventMs).padStart(5)}ms · done · stop=${doneEvent?.stopReason} · ${doneEvent?.toolCallCount} tool(s) · ${doneEvent?.chars} chars`);
+
+  // Sanity checks. The big claim of streaming is that the FIRST sentence
+  // arrives well before the LAST event. If first-sentence latency is
+  // close to total latency, streaming bought us nothing.
+  if (firstSentenceMs === null) {
+    console.warn('⚠️  No sentences arrived during streaming. Either the response was tool-only or the buffer never flushed.');
+  } else if (lastEventMs === null) {
+    console.error('❌ Stream ended without a `done` event.');
+    process.exit(1);
+  } else if (firstSentenceMs > lastEventMs * 0.9) {
+    console.warn(`⚠️  First sentence at ${firstSentenceMs}ms vs total ${lastEventMs}ms — streaming gave little headroom. Acceptable for short responses, worth investigating for long ones.`);
+  } else {
+    console.log(`✅ First sentence arrived at ${firstSentenceMs}ms; total turn ${lastEventMs}ms — streaming saved ~${lastEventMs - firstSentenceMs}ms of perceived latency.`);
+  }
 
   process.exit(0);
 }
