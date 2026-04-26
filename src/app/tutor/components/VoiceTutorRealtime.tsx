@@ -2802,99 +2802,155 @@ export function VoiceTutorRealtime({
 
       const whiteboardSnapshot = catalogRef.current.getSnapshot();
       const t0 = Date.now();
-      // Switched to the streaming SSE route in Phase 5. Sentences arrive
-      // incrementally and are voiced via speakTextRef as soon as each
-      // boundary is detected; tool calls dispatch inline (the renderer
-      // updates appear at roughly the same time the student hears the
-      // sentence that introduced them). The hook-side queue in
-      // useOpenAIRealtime.speakText serializes overlapping calls so we
-      // don't race response.create on the WebSocket.
-      const res = await fetch('/api/tutor/brain/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemPrompt: claudeSystemPromptRef.current,
-          conversationHistory: priorHistory,
-          studentTranscript: transcript,
-          whiteboardSnapshot,
-        }),
-      });
-      if (!res.ok || !res.body) {
-        const err = res.body ? await res.text() : '(no body)';
-        console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);
-        speakTextRef.current?.('Sorry, I lost my train of thought. Could you say that again?');
-        return;
-      }
 
-      // SSE reader: parses "data: <json>\n\n" frames and yields events.
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
+      // Validator-feedback retry loop (Phase 5 Option B). When a tool
+      // call is rejected by a structural validator (circuit topology,
+      // pedigree, flowchart, etc.), capture the rejection reason and
+      // re-prompt Claude with that reason as a synthetic user message
+      // so it can self-correct in a follow-up turn. Without this, a
+      // rejected tool call leaves the user with no figure and Claude
+      // doesn't learn from the rejection until the next student turn.
+      // Capped at MAX_VALIDATOR_RETRIES to prevent runaway.
+      const MAX_VALIDATOR_RETRIES = 2;
+      let runHistory = priorHistory;
+      let runTranscript = transcript;
       let firstSentenceMs: number | null = null;
-      let sentenceCount = 0;
-      const toolNamesSeen: string[] = [];
-      let fullText = '';
-      let stopReason = 'unknown';
-      let usage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
+      let totalSentenceCount = 0;
+      let totalToolNamesSeen: string[] = [];
+      let aggregatedFullText = '';
+      let lastStopReason = 'unknown';
+      let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          let idx;
-          while ((idx = buf.indexOf('\n\n')) >= 0) {
-            const block = buf.slice(0, idx);
-            buf = buf.slice(idx + 2);
-            for (const line of block.split('\n')) {
-              if (!line.startsWith('data: ')) continue;
-              let ev: { type: string; [k: string]: unknown };
-              try {
-                ev = JSON.parse(line.slice(6)) as { type: string; [k: string]: unknown };
-              } catch (parseErr) {
-                console.warn('[brain-orchestrator] failed to parse SSE frame:', parseErr, line);
-                continue;
-              }
-              if (ev.type === 'sentence') {
-                const sentence = (ev.text as string) || '';
-                if (!sentence.trim()) continue;
-                sentenceCount++;
-                if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
-                fullText += (fullText ? ' ' : '') + sentence.trim();
-                speakTextRef.current?.(sentence.trim());
-              } else if (ev.type === 'tool-call') {
-                const name = ev.name as string;
-                const args = (ev.args as Record<string, unknown>) || {};
-                toolNamesSeen.push(name);
-                const cmd = mapFunctionCallToCommand(name, args);
-                if (cmd) {
-                  await handleWhiteboardCommand([cmd]);
-                } else {
-                  console.warn('[brain-orchestrator] unmapped tool call:', name);
+      for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
+        const res = await fetch('/api/tutor/brain/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemPrompt: claudeSystemPromptRef.current,
+            conversationHistory: runHistory,
+            studentTranscript: runTranscript,
+            whiteboardSnapshot: catalogRef.current.getSnapshot(),
+          }),
+        });
+        if (!res.ok || !res.body) {
+          const err = res.body ? await res.text() : '(no body)';
+          console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);
+          speakTextRef.current?.('Sorry, I lost my train of thought. Could you say that again?');
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        const toolNamesThisAttempt: string[] = [];
+        const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
+        let attemptText = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            let idx;
+            while ((idx = buf.indexOf('\n\n')) >= 0) {
+              const block = buf.slice(0, idx);
+              buf = buf.slice(idx + 2);
+              for (const line of block.split('\n')) {
+                if (!line.startsWith('data: ')) continue;
+                let ev: { type: string; [k: string]: unknown };
+                try {
+                  ev = JSON.parse(line.slice(6)) as { type: string; [k: string]: unknown };
+                } catch (parseErr) {
+                  console.warn('[brain-orchestrator] failed to parse SSE frame:', parseErr, line);
+                  continue;
                 }
-              } else if (ev.type === 'done') {
-                stopReason = (ev.stopReason as string) ?? 'unknown';
-                fullText = ((ev.fullText as string) ?? fullText).trim();
-                usage = ev.usage as typeof usage;
+                if (ev.type === 'sentence') {
+                  const sentence = (ev.text as string) || '';
+                  if (!sentence.trim()) continue;
+                  totalSentenceCount++;
+                  if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
+                  attemptText += (attemptText ? ' ' : '') + sentence.trim();
+                  speakTextRef.current?.(sentence.trim());
+                } else if (ev.type === 'tool-call') {
+                  const name = ev.name as string;
+                  const args = (ev.args as Record<string, unknown>) || {};
+                  toolNamesThisAttempt.push(name);
+                  totalToolNamesSeen.push(name);
+                  const cmd = mapFunctionCallToCommand(name, args);
+                  if (cmd) {
+                    const result = await handleWhiteboardCommand([cmd]);
+                    if (result && Array.isArray(result.rejected)) {
+                      for (const r of result.rejected) {
+                        rejectionsThisAttempt.push(r);
+                      }
+                    }
+                  } else {
+                    console.warn('[brain-orchestrator] unmapped tool call:', name);
+                  }
+                } else if (ev.type === 'done') {
+                  lastStopReason = (ev.stopReason as string) ?? 'unknown';
+                  attemptText = ((ev.fullText as string) ?? attemptText).trim();
+                  lastUsage = ev.usage as typeof lastUsage;
+                }
               }
             }
           }
+        } finally {
+          try { reader.releaseLock(); } catch { /* already released */ }
         }
-      } finally {
-        try { reader.releaseLock(); } catch { /* already released */ }
+
+        aggregatedFullText = aggregatedFullText
+          ? `${aggregatedFullText} ${attemptText}`
+          : attemptText;
+
+        // No rejections OR we've burned the retry budget → done with this turn.
+        if (rejectionsThisAttempt.length === 0 || attempt === MAX_VALIDATOR_RETRIES) {
+          if (rejectionsThisAttempt.length > 0) {
+            console.warn(
+              `[brain-orchestrator] hit MAX_VALIDATOR_RETRIES with ${rejectionsThisAttempt.length} rejection(s); giving up.`,
+            );
+          }
+          break;
+        }
+
+        // Build a follow-up turn that echoes Claude's just-completed
+        // attempt as an assistant turn (so Claude can see what it
+        // emitted) and frames the rejection as a system-style user
+        // turn (validators are the runtime, not the student).
+        console.log(
+          `[brain-orchestrator] attempt ${attempt + 1} produced ${rejectionsThisAttempt.length} rejection(s); retrying.`,
+        );
+        onDebugEvent?.(
+          'brain_validator_retry',
+          `Retrying: ${rejectionsThisAttempt.map((r) => `${r.action}: ${r.reason.slice(0, 60)}`).join('; ')}`,
+        );
+        const summarizedRejections = rejectionsThisAttempt
+          .map((r, i) => `[${i + 1}] ${r.action}: ${r.reason}`)
+          .join('\n');
+        runHistory = [
+          ...runHistory,
+          { role: 'user', content: runTranscript },
+          { role: 'assistant', content: attemptText || '(emitted only tool calls)' },
+        ];
+        runTranscript =
+          `[validator feedback — not from the student] Your last turn emitted ` +
+          `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
+          `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
+          `Keep your verbal response brief and natural — pretend the prior attempt didn't happen.`;
       }
 
       const ms = Date.now() - t0;
+      const fullText = aggregatedFullText.trim();
       console.log(
-        `[brain-orchestrator] turn ok in ${ms}ms · ${toolNamesSeen.length} tool call(s) · ${sentenceCount} sentence(s) · ` +
+        `[brain-orchestrator] turn ok in ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · ` +
         `first_sentence=${firstSentenceMs}ms · text="${fullText.slice(0, 80)}${fullText.length > 80 ? '…' : ''}" · ` +
-        `tools=[${toolNamesSeen.join(', ')}] · stop=${stopReason} · ` +
-        `in=${usage?.inputTokens} out=${usage?.outputTokens} cache_read=${usage?.cacheReadTokens}`,
+        `tools=[${totalToolNamesSeen.join(', ')}] · stop=${lastStopReason} · ` +
+        `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
-      onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${toolNamesSeen.length} tool call(s) · ${sentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
 
       // Empty-turn fallback. Brain produced neither text nor tool calls.
-      if (!fullText.trim() && toolNamesSeen.length === 0) {
+      if (!fullText.trim() && totalToolNamesSeen.length === 0) {
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
         speakTextRef.current?.('Sorry, could you say that again?');
         return;
@@ -2915,12 +2971,12 @@ export function VoiceTutorRealtime({
         };
         transcriptRef.current = [...transcriptRef.current, tutorEntry];
         onTranscriptUpdate([...transcriptRef.current]);
-      } else if (toolNamesSeen.length > 0) {
+      } else if (totalToolNamesSeen.length > 0) {
         const placeholderEntry: TranscriptEntry = {
           id: `tutor-${Date.now()}`,
           timestamp: new Date(),
           role: 'tutor',
-          text: `(rendered: ${toolNamesSeen.join(', ')})`,
+          text: `(rendered: ${totalToolNamesSeen.join(', ')})`,
         };
         transcriptRef.current = [...transcriptRef.current, placeholderEntry];
         // Deliberately NOT calling onTranscriptUpdate — this entry is

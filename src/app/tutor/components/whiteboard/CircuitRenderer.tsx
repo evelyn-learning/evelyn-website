@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { collapseRailWires as collapseRailWiresShared, extendSourceRung as extendSourceRungShared } from '@/lib/tutor/diagrams/circuit-graph';
 
 export type CircuitComponentType =
   | 'resistor'
@@ -493,25 +494,41 @@ function traceRungNodes(rung: CircuitComponent[], startNode: string): string[] {
   return sequence;
 }
 
-function autoLayoutCircuit(components: CircuitComponent[]): LayoutResult {
+function autoLayoutCircuit(rawComponents: CircuitComponent[]): LayoutResult {
   const warnings: string[] = [];
-  if (components.length === 0) {
+  if (rawComponents.length === 0) {
     return { nodes: [], components: [], warnings };
   }
 
+  // Preprocess: collapse rail-extension wires. Sonnet's preferred
+  // parallel-circuit style emits short lead wires connecting battery
+  // terminals to "rail" nodes (top, bot) with parallel components
+  // hung between the rails. Without collapsing, the path decomposition
+  // below consumes those rail wires on the first parallel branch and
+  // orphans subsequent branches. After collapse, the rail nodes ARE
+  // the battery terminals and parallel branches lay out cleanly.
+  // Cast: the shared helper uses `type: string` for cross-module
+  // portability; the renderer's local type narrows to a union.
+  const components = collapseRailWiresShared(rawComponents) as CircuitComponent[];
+
   const batteries = components.filter((c) => c.type === 'battery');
-  const nonBatteries = components.filter((c) => c.type !== 'battery');
 
   let sourceRung: CircuitComponent[] = [];
   let A = '';
   let B = '';
 
   if (batteries.length > 0) {
-    const chain = chainBatteries(batteries);
-    if (chain) {
-      sourceRung = chain.chain;
-      A = chain.start;
-      B = chain.end;
+    // extendSourceRung: collapseRailWires + chainBatteries + walk through
+    // single-path "trunk" non-batteries (e.g. a switch in series with a
+    // parallel block). The result is the FULL source-rung topology so
+    // the path decomposition below only sees the parallel branches.
+    const extended = extendSourceRungShared(components, batteries) as
+      | { sourceRung: CircuitComponent[]; A: string; B: string }
+      | null;
+    if (extended) {
+      sourceRung = extended.sourceRung as CircuitComponent[];
+      A = extended.A;
+      B = extended.B;
     } else {
       // Batteries don't form a clean chain — use the first one as source, rest
       // will be laid out as normal components on their own rungs.
@@ -533,17 +550,12 @@ function autoLayoutCircuit(components: CircuitComponent[]): LayoutResult {
     warnings.push('No battery/source — laying out around arbitrary rails');
   }
 
-  // Decompose non-batteries into simple paths from A to B.
+  // Decompose components into simple paths from A to B. Anything in the
+  // source rung (batteries + extended trunk components like in-series
+  // switches) is excluded — it's already on the source row.
+  const sourceSet = new Set(sourceRung);
   const returnPaths: CircuitComponent[][] = [];
-  const remaining = new Set(
-    sourceRung.length > 0
-      ? nonBatteries
-      : components.filter((c) => !sourceRung.includes(c)),
-  );
-  // Include any batteries that weren't used in the source chain
-  for (const b of batteries) {
-    if (!sourceRung.includes(b)) remaining.add(b);
-  }
+  const remaining = new Set(components.filter((c) => !sourceSet.has(c)));
 
   while (remaining.size > 0) {
     const path = findSimplePath([...remaining], A, B);
