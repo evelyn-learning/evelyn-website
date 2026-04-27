@@ -133,7 +133,8 @@ export type Step =
   | StepConicFoci
   | StepConicVertices
   | StepConicDirectrix
-  | StepConicAsymptotes;
+  | StepConicAsymptotes
+  | StepAngleMarker;
 
 interface StepCommon {
   id: string;
@@ -636,6 +637,24 @@ export interface StepConicAsymptotes extends StepCommon {
   length?: number;
 }
 
+/** Angle marker — a small arc (or right-angle square) drawn at a vertex
+ *  showing the angle between rays vertex→from and vertex→to. The brain
+ *  reaches for this whenever it wants to call out a measurement (e.g.
+ *  "30° at point P") or a perpendicularity (right-angle square at the
+ *  foot of an altitude). Use style: "right" as a shortcut for the
+ *  perpendicular indicator. Omit `label` to let the renderer auto-
+ *  compute the angle measure in degrees. */
+export interface StepAngleMarker extends StepCommon {
+  kind: 'angle_marker';
+  vertex: PtRef;
+  from: PtRef;
+  to: PtRef;
+  /** "right" → small square indicating 90°; "arc" → small arc with the
+   *  measured angle; "square" is an alias for "right". */
+  style?: 'arc' | 'square' | 'right';
+  color?: string;
+}
+
 // ─── Internal resolution state ────────────────────────────────────────────────
 
 interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string }
@@ -664,6 +683,16 @@ interface ResolvedConic {
   label?: string;
   style?: 'solid' | 'dashed';
 }
+interface ResolvedAngle {
+  kind: 'angle';
+  id: string;
+  vertex: string;
+  from: string;
+  to: string;
+  style?: 'arc' | 'square';
+  label?: string;
+  color?: string;
+}
 
 type Resolved =
   | ResolvedPoint
@@ -672,7 +701,8 @@ type Resolved =
   | ResolvedLine
   | ResolvedPolygon
   | ResolvedArc
-  | ResolvedConic;
+  | ResolvedConic
+  | ResolvedAngle;
 
 interface State {
   byId: Map<string, Resolved>;
@@ -904,6 +934,7 @@ function solveStep(step: Step, state: State): void {
     case 'conic_vertices': return solveConicVertices(step, state);
     case 'conic_directrix': return solveConicDirectrix(step, state);
     case 'conic_asymptotes': return solveConicAsymptotes(step, state);
+    case 'angle_marker': return solveAngleMarker(step, state);
   }
 }
 
@@ -2138,6 +2169,18 @@ function solveConicAsymptotes(step: StepConicAsymptotes, state: State): void {
   setObject(state, { kind: 'segment', id: `${step.id}_2`, from: a2, to: b2 });
 }
 
+function solveAngleMarker(step: StepAngleMarker, state: State): void {
+  const vId = normalizePointRef(state, step.vertex, step.id, 'vertex');
+  const fId = normalizePointRef(state, step.from, step.id, 'from');
+  const tId = normalizePointRef(state, step.to, step.id, 'to');
+  const style: 'arc' | 'square' = step.style === 'right' || step.style === 'square' ? 'square' : 'arc';
+  setObject(state, {
+    kind: 'angle', id: step.id,
+    vertex: vId, from: fId, to: tId,
+    style, label: step.label, color: step.color,
+  });
+}
+
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 export interface SolverOutput {
@@ -2224,6 +2267,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const arcs: GeometryArc[] = [];
   const circles: GeometryCircle[] = [];
   const conics: GeometryConic[] = [];
+  const anglesOut: GeometryAngle[] = [];
   const polygons: GeometryPolygon[] = [];
   // Build a co-location set for labeled points so we can suppress the
   // unlabeled scaffolding dots (chord_from, chord_to, hex_v0, …) when
@@ -2300,6 +2344,15 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         color: colorOverrides[obj.id],
         style: dashedSet.has(obj.id) ? 'dashed' : obj.style,
       });
+    } else if (obj.kind === 'angle') {
+      anglesOut.push({
+        vertex: obj.vertex,
+        from: obj.from,
+        to: obj.to,
+        style: obj.style,
+        label: labelOverrides[obj.id] ?? obj.label,
+        color: colorOverrides[obj.id] ?? obj.color,
+      });
     }
     // Lines are not directly rendered — they're construction scaffolding.
     // If a brain wants a line drawn it should also emit a long segment.
@@ -2312,7 +2365,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     circles,
     polygons,
     arcs,
-    angles: [],
+    angles: anglesOut,
     conics,
     // Axes and grid default ON. Brain forgets to set them on follow-up
     // turns and the resulting axisless figures are hard to read against
@@ -2328,6 +2381,9 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 // they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
 // pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
+  // Anonymous synthesized points (inline {x,y} literals materialized by
+  // pt() / normalizePointRef) — never render their internal id as text.
+  if (id.startsWith('__')) return undefined;
   if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|vertex|arc\d+|v\d+|e\d+|m\d+|T\d+|F\d+|V\d+|d\d+(_a|_b)?|\d+_a|\d+_b|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id)) return undefined;
   return id;
 }

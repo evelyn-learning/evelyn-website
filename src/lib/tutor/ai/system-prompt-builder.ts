@@ -459,7 +459,12 @@ composing top-to-bottom feels more natural.
     altitude                  { vertex, opposite, footId? }       # in a triangle
     median                    { vertex, opposite, midpointId? }
 
-  Conics (Tier 3):
+  Conics (Tier 3) — these draw the actual CURVE. Without one of these
+  steps the figure shows only the points/lines you emit, no conic. If a
+  problem references an ellipse/parabola/hyperbola by name, the FIRST
+  step emitting it is the curve itself; foci/vertices/directrices come
+  AFTER as derivations referring back to it by id.
+
     ellipse                   { center, a, b?, rotation? }  OR  { foci: [F1,F2], sum }
     parabola                  { vertex, focalLength, opens: "right"|"left"|"up"|"down" }
                               OR { vertex, focus }  OR  { focus, directrix }
@@ -468,6 +473,14 @@ composing top-to-bottom feels more natural.
     conic_vertices            { conic, pointIds? }                # _V1/_V2 (parabola: _V1)
     conic_directrix           { conic, which?: "first"|"second"|"both" }
     conic_asymptotes          { conic, length? }                  # hyperbola only
+
+  Angle markers:
+    angle_marker              { vertex, from, to, style?: "arc"|"right", label? }
+                              # "right" or "square" → small perpendicular indicator;
+                              # "arc" → curved marker (omit label to auto-compute degrees).
+                              # Use this whenever you want to call out an angle measurement
+                              # (e.g. "30°" at a point on a circle) or perpendicularity
+                              # (right-angle square at a foot of altitude / tangent / perpendicular).
 
 Line references (used by reflect_point.across, perpendicular_from.to,
 parallel_through.of) accept any of:
