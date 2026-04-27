@@ -52,11 +52,34 @@ export interface LessonPlanFilter {
   locale?: string;
 }
 
+/** Map a "band" id (k-2, 3-5, 6-8, 9-10, 11-12) to the set of single
+ *  grade ids that fall within it. Identity for already-single grades.
+ *  Plans are tagged with single grades (K, 2, 8); the demo page passes
+ *  bands. Without expansion the filter `grade=6-8` would never match
+ *  a plan tagged `grade=8`. */
+function gradesInBand(band: string): string[] {
+  const b = band.trim().toLowerCase();
+  if (b === 'k-2') return ['k', '1', '2'];
+  if (b === '3-5') return ['3', '4', '5'];
+  if (b === '6-8') return ['6', '7', '8'];
+  if (b === '9-10') return ['9', '10'];
+  if (b === '11-12') return ['11', '12'];
+  if (b === 'ap' || b === 'sat-act' || b === 'college') return [b];
+  return [b];
+}
+
+function gradeMatches(filterGrade: string | undefined, planGrade: string): boolean {
+  if (!filterGrade) return true;
+  const filterSet = gradesInBand(filterGrade);
+  const plan = planGrade.trim().toLowerCase();
+  return filterSet.includes(plan);
+}
+
 /** List plans matching the filter. Seeds + DB merged, deduped by id. */
 export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<LessonPlan[]> {
   const matches = (p: LessonPlan) =>
     (!filter.subject || p.subject === filter.subject) &&
-    (!filter.grade || p.grade === filter.grade) &&
+    gradeMatches(filter.grade, p.grade) &&
     (!filter.curriculum || p.curriculum === filter.curriculum) &&
     (!filter.topic || p.topic === filter.topic) &&
     (!filter.locale || p.locale === filter.locale);
@@ -68,7 +91,13 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = {};
     if (filter.subject) query.subject = filter.subject;
-    if (filter.grade) query.grade = filter.grade;
+    if (filter.grade) {
+      // DB-side: expand band → set of grades. Mongo $in matches any.
+      // Case-insensitive grades are matched via a lowercase regex set.
+      const grades = gradesInBand(filter.grade);
+      if (grades.length === 1) query.grade = { $regex: `^${grades[0]}$`, $options: 'i' };
+      else query.grade = { $in: grades.flatMap((g) => [g, g.toUpperCase()]) };
+    }
     if (filter.curriculum) query.curriculum = filter.curriculum;
     if (filter.topic) query.topic = filter.topic;
     if (filter.locale) query.locale = filter.locale;
