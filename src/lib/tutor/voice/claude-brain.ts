@@ -42,10 +42,36 @@ export interface BrainTurnInput {
   whiteboardSnapshot: CatalogSnapshotEntry[];
   /** Tool definitions in the neutral format. Converted to Anthropic shape internally. */
   tools: ToolDefinition[];
+  /** Active lesson plan context, when the session is plan-driven. The brain
+   *  treats the current segment as the proximate teaching goal and uses
+   *  `advance_lesson` to move on. Free-form sessions omit this. */
+  lessonPlanContext?: LessonPlanContext;
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
   /** Optional override (defaults to 1500). */
   maxTokens?: number;
+}
+
+/** Plan slice the brain sees on each turn. */
+export interface LessonPlanContext {
+  /** Plan id, title, grade, subject, LO descriptions — for the brain to
+   *  understand what the lesson is about. */
+  plan: {
+    id: string;
+    title: string;
+    grade: string;
+    subject: string;
+    los: Array<{ id: string; description: string }>;
+    estimatedMinutes: number;
+  };
+  /** Id of the segment the brain is currently in. */
+  currentSegmentId: string;
+  /** The full current segment (kind-specific fields included). The brain
+   *  reads `goal` / `keyIdeas` / `problem` / etc. and translates intent
+   *  into tool calls + voice. */
+  currentSegment: unknown;
+  /** Ordered list of segment ids + kinds, so the brain knows what's next. */
+  segmentIndex: Array<{ id: string; kind: string }>;
 }
 
 export interface BrainToolCall {
@@ -147,6 +173,41 @@ class SentenceBuffer {
  * imagining them off-circle. Without this, the brain sees only metadata
  * and has no way to keep figures consistent across turns.
  */
+/** Render a LessonPlanContext into a compact prompt block. The brain
+ *  reads this BEFORE deciding what to do this turn, so it must be
+ *  unambiguous: which segment is current, what's next, what the segment
+ *  asks for. Kind-specific fields are inlined as a small structured
+ *  block so the brain doesn't have to guess at the schema. */
+export function formatLessonPlanContext(ctx: LessonPlanContext): string {
+  const { plan, currentSegmentId, currentSegment, segmentIndex } = ctx;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seg = currentSegment as any;
+  const segDetail = seg
+    ? Object.entries(seg)
+        .filter(([k, v]) => k !== 'id' && k !== 'kind' && v !== undefined && v !== null)
+        .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+        .join('\n')
+    : '(unknown)';
+  const idx = segmentIndex
+    .map((s, i) => `  ${i + 1}. ${s.id} [${s.kind}]${s.id === currentSegmentId ? '  ← current' : ''}`)
+    .join('\n');
+  return [
+    `plan: ${plan.title} — grade ${plan.grade}, ${plan.subject} (${plan.estimatedMinutes} min)`,
+    `learning objectives:`,
+    ...plan.los.map((lo) => `  - ${lo.description} (${lo.id})`),
+    ``,
+    `segments:`,
+    idx,
+    ``,
+    `current segment "${currentSegmentId}" [${seg?.kind ?? 'unknown'}]:`,
+    segDetail,
+    ``,
+    `Stay within the current segment until its goal is met. Move on with`,
+    `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,
+    `Mark progress with mark_segment_complete({ segmentId, masteryDelta? }).`,
+  ].join('\n');
+}
+
 export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string {
   if (snapshot.length === 0) return '(whiteboard is empty)';
   return snapshot
@@ -195,7 +256,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // wrapped in clearly labeled blocks. Keeping them in the user role (rather
   // than as a separate "system" injection) lets prompt caching segment the
   // stable preamble from the volatile per-turn payload.
+  const lessonBlock = input.lessonPlanContext
+    ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
+    : '';
   const userContent =
+    lessonBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -297,7 +362,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
  */
 export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<BrainStreamEvent, void, void> {
   const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
+  const lessonBlock = input.lessonPlanContext
+    ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
+    : '';
   const userContent =
+    lessonBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

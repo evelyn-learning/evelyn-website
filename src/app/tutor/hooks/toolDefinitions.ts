@@ -1390,6 +1390,32 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['target'],
     },
   },
+  // ─── Lesson-plan control (only meaningful when <lesson_plan> is present) ──
+  {
+    name: 'advance_lesson',
+    description: 'Move to a different segment of the active lesson plan. Call this when the current segment\'s goal is met and you want to proceed (`to: "next"`), to revisit a previous one (`to: "previous"`), or to branch to a specific segment by id. Use sparingly — staying in the current segment until its goal is achieved is the default.',
+    parameters: {
+      type: 'object',
+      properties: {
+        to: { type: 'string', description: '"next" | "previous" | "<segmentId>" — destination.' },
+        reason: { type: 'string', description: 'Brief why (for telemetry). E.g. "student answered try-1 correctly".' },
+      },
+      required: ['to'],
+    },
+  },
+  {
+    name: 'mark_segment_complete',
+    description: 'Record that a lesson-plan segment is finished. Optionally include a mastery delta (-1 to 1) reflecting how well the student handled the segment\'s goal. Used by the session intelligence layer to update the student profile.',
+    parameters: {
+      type: 'object',
+      properties: {
+        segmentId: { type: 'string' },
+        masteryDelta: { type: 'number', description: 'Optional, -1 to 1. Negative = struggled, 0 = neutral, positive = strong.' },
+        notes: { type: 'string', description: 'Optional free-form note about the student\'s engagement / difficulties.' },
+      },
+      required: ['segmentId'],
+    },
+  },
 ];
 
 /**
@@ -1989,6 +2015,17 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     const target = typeof funcArgs.target === 'string' ? funcArgs.target.trim() : '';
     if (!target) return null;
     return { action: 'scrollTo', target };
+  }
+  if (funcName === 'advance_lesson') {
+    return { action: 'advanceLesson', to: String(funcArgs.to ?? 'next'), reason: funcArgs.reason };
+  }
+  if (funcName === 'mark_segment_complete') {
+    return {
+      action: 'markSegmentComplete',
+      segmentId: String(funcArgs.segmentId ?? ''),
+      masteryDelta: typeof funcArgs.masteryDelta === 'number' ? funcArgs.masteryDelta : undefined,
+      notes: typeof funcArgs.notes === 'string' ? funcArgs.notes : undefined,
+    };
   }
 
   return null;

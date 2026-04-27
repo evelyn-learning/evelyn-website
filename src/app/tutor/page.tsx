@@ -100,6 +100,11 @@ function TutorPage() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState('');
+  // Lesson-plan selection. Optional — when set, the brain runs in
+  // plan-driven mode (treats segments as a teaching script) instead of
+  // free-conversation mode.
+  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{ id: string; title: string; los: Array<{ id: string; description: string }>; estimatedMinutes: number }>>([]);
+  const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('text');
@@ -318,12 +323,43 @@ function TutorPage() {
     setSelectedSubject(subjectId);
     setSelectedLevel('');
     setSelectedTopicId('');
+    setSelectedLessonPlanId('');
+    setAvailableLessonPlans([]);
   }, []);
 
   const handleLevelChange = useCallback((levelId: string) => {
     setSelectedLevel(levelId);
     setSelectedTopicId('');
+    setSelectedLessonPlanId('');
+    setAvailableLessonPlans([]);
   }, []);
+
+  // Fetch available lesson plans when (subject, level, topic) is set.
+  // Plans are filtered server-side; the demo UI only shows a dropdown
+  // when at least one plan matches.
+  useEffect(() => {
+    if (!selectedSubject || !selectedTopicId) {
+      setAvailableLessonPlans([]);
+      setSelectedLessonPlanId('');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set('subject', selectedSubject);
+        if (selectedLevel) params.set('grade', selectedLevel);
+        const res = await fetch(`/api/tutor/lesson-plans?${params.toString()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setAvailableLessonPlans(data.items || []);
+      } catch {
+        if (!cancelled) setAvailableLessonPlans([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedSubject, selectedLevel, selectedTopicId]);
 
   // Resizable split between transcript and whiteboard (percentage for transcript)
   const [splitPercent, setSplitPercent] = useState(50);
@@ -841,6 +877,33 @@ function TutorPage() {
                   {availableTopics.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Lesson plan / LO selection — only shown when at least one
+                plan exists for the chosen subject. Optional: when blank,
+                the tutor runs in free-conversation mode. */}
+            {selectedTopicId && availableLessonPlans.length > 0 && (
+              <div>
+                <label htmlFor="lesson-plan" className="block text-sm font-medium text-gray-700 mb-2">
+                  Lesson plan (optional)
+                  <span className="ml-2 text-xs font-normal text-gray-500">
+                    Pick one to follow a structured lesson, or leave blank for open conversation.
+                  </span>
+                </label>
+                <select
+                  id="lesson-plan"
+                  value={selectedLessonPlanId}
+                  onChange={(e) => setSelectedLessonPlanId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">No plan — open conversation</option>
+                  {availableLessonPlans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} ({p.estimatedMinutes} min)
                     </option>
                   ))}
                 </select>
