@@ -1547,7 +1547,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
       return <NumberLineRenderer title={command.title} min={command.min} max={command.max} step={command.step} points={command.points} intervals={command.intervals} segments={command.segments} fractionTicks={command.fractionTicks} />;
 
     case 'showGeometry':
-      return <GeometryRenderer title={command.title} points={command.points} segments={command.segments} polygons={command.polygons} circles={command.circles} arcs={command.arcs} angles={command.angles} showGrid={command.showGrid} showAxes={command.showAxes} viewRange={command.viewRange} />;
+      return <GeometryRenderer title={command.title} points={command.points} segments={command.segments} polygons={command.polygons} circles={command.circles} arcs={command.arcs} angles={command.angles} conics={command.conics} showGrid={command.showGrid} showAxes={command.showAxes} viewRange={command.viewRange} />;
 
     case 'showGeometryConstructed': {
       // Solve constructions into a primitive geometry payload, then render
@@ -1575,6 +1575,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
             circles={solved.circles}
             arcs={solved.arcs}
             angles={solved.angles}
+            conics={solved.conics}
             showGrid={solved.showGrid}
             showAxes={solved.showAxes}
             viewRange={solved.viewRange}

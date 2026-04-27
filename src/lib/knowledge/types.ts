@@ -567,6 +567,33 @@ export interface GeometryArc {
   label?: string;
 }
 
+/**
+ * Conic section — ellipse, parabola, or hyperbola — as a renderable
+ * primitive. Stored in canonical form with center/vertex + semi-axes
+ * + rotation (radians, CCW). The renderer samples the curve into an
+ * SVG path. Foci, vertices, directrices, and asymptotes are NOT stored
+ * here — they're emitted as separate points / segments / lines by the
+ * solver when the brain asks for them, so they pick up labels and
+ * styling like any other point.
+ */
+export interface GeometryConic {
+  type: 'ellipse' | 'parabola' | 'hyperbola';
+  /** Point id for the center (ellipse, hyperbola) or vertex (parabola). */
+  center: string;
+  /** Semi-major / semi-minor for ellipse and hyperbola; `a` is the
+   *  focal-vertex distance (focal length) for a parabola, `b` unused. */
+  a: number;
+  b?: number;
+  /** Rotation in radians, CCW from the canonical orientation
+   *  (major axis along +x for ellipse/hyperbola; opens along +x for
+   *  parabola). */
+  rotation?: number;
+  color?: string;
+  label?: string;
+  /** Style options for the rendered curve. */
+  style?: 'solid' | 'dashed';
+}
+
 export interface UnitCircleHighlight {
   angle: number;
   color?: string;
@@ -686,7 +713,7 @@ export type WhiteboardCommand =
   | { action: 'showCode'; code: string; language?: string; label?: string }
   // ── New structured math diagram tools ──
   | { action: 'showNumberLine'; title?: string; min: number; max: number; step?: number; points?: NumberLinePoint[]; intervals?: NumberLineInterval[]; segments?: NumberLineSegment[]; fractionTicks?: { denominator: number; showLabels?: boolean } }
-  | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
+  | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; conics?: GeometryConic[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
   | { action: 'showGeometryConstructed'; title?: string; given?: unknown[]; steps?: unknown[]; display?: Record<string, unknown> }
   | { action: 'showUnitCircle'; title?: string; highlightAngles?: UnitCircleHighlight[]; showAllStandard?: boolean; showRadians?: boolean; showDegrees?: boolean; showArc?: { from: number; to: number; color?: string; label?: string } }
   | { action: 'showFractionBar'; title?: string; items: Array<{ numerator: number; denominator: number; label?: string; highlightColor?: string; style?: 'bar' | 'circle' | 'grid' }>; layout?: 'vertical' | 'horizontal'; showComparison?: boolean }

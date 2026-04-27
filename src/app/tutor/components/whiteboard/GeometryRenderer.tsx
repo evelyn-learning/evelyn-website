@@ -17,6 +17,7 @@ import type {
   GeometryCircle,
   GeometryArc,
   GeometryAngle,
+  GeometryConic,
 } from '@/lib/knowledge/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ interface GeometryRendererProps {
   circles?: GeometryCircle[];
   arcs?: GeometryArc[];
   angles?: GeometryAngle[];
+  conics?: GeometryConic[];
   showGrid?: boolean;
   showAxes?: boolean;
   viewRange?: { x: [number, number]; y: [number, number] };
@@ -453,6 +455,116 @@ function renderCircles(
             fill={circ.color || '#4f8cff'}
           >
             {circ.label}
+          </text>
+        )}
+      </g>
+    );
+  });
+}
+
+/**
+ * Render conic sections (ellipse, parabola, hyperbola). Each conic is
+ * sampled into an SVG path. We sample in math coords and project per
+ * point so the rendered curve survives matchRangeAspect's non-uniform
+ * pixel scales correctly.
+ *
+ * Hyperbola: only the portion intersecting the visible viewRange is
+ * sampled per branch. Parabola: arms extend until they leave the
+ * range. Ellipse: closed path, always fully drawn.
+ */
+function renderConics(
+  conics: GeometryConic[],
+  ptMap: Map<string, GeometryPoint>,
+  toSvg: (x: number, y: number) => [number, number],
+  range: { x: [number, number]; y: [number, number] },
+) {
+  return conics.map((c, i) => {
+    const center = ptMap.get(c.center);
+    if (!center) return null;
+    const rot = c.rotation ?? 0;
+    const cosR = Math.cos(rot);
+    const sinR = Math.sin(rot);
+    const project = (lx: number, ly: number): [number, number] => {
+      // Local (canonical) → world: rotate by `rot`, translate to center.
+      const wx = center.x + lx * cosR - ly * sinR;
+      const wy = center.y + lx * sinR + ly * cosR;
+      return toSvg(wx, wy);
+    };
+
+    let d = '';
+    let bbox: { cx: number; cy: number; w: number; h: number };
+
+    if (c.type === 'ellipse') {
+      const a = c.a;
+      const b = c.b ?? c.a;
+      const N = 96;
+      for (let k = 0; k <= N; k++) {
+        const theta = (2 * Math.PI * k) / N;
+        const [px, py] = project(a * Math.cos(theta), b * Math.sin(theta));
+        d += `${k === 0 ? 'M' : 'L'} ${px.toFixed(2)},${py.toFixed(2)} `;
+      }
+      d += 'Z';
+      const [cpx, cpy] = toSvg(center.x, center.y);
+      bbox = { cx: cpx, cy: cpy, w: 2 * a * 30, h: 2 * b * 30 };
+    } else if (c.type === 'parabola') {
+      // Canonical: y² = 4ax — opens along +x. Parameter t spans the
+      // visible y-extent (in local coords). At local point (t²/(4a), t),
+      // we extend t until x leaves a generous bound based on viewRange.
+      const a = c.a;
+      const span = Math.max(range.x[1] - range.x[0], range.y[1] - range.y[0]);
+      const tMax = Math.sqrt(4 * Math.abs(a) * span * 2) || span;
+      const N = 96;
+      for (let k = 0; k <= N; k++) {
+        const t = -tMax + (2 * tMax * k) / N;
+        const lx = (t * t) / (4 * a);
+        const [px, py] = project(lx, t);
+        d += `${k === 0 ? 'M' : 'L'} ${px.toFixed(2)},${py.toFixed(2)} `;
+      }
+      const [cpx, cpy] = toSvg(center.x, center.y);
+      bbox = { cx: cpx, cy: cpy, w: span * 30, h: span * 30 };
+    } else {
+      // Hyperbola, canonical: x²/a² − y²/b² = 1. Two branches.
+      const a = c.a;
+      const b = c.b ?? c.a;
+      const span = Math.max(range.x[1] - range.x[0], range.y[1] - range.y[0]);
+      const tMax = Math.acosh(Math.max(2, span / a));
+      const N = 64;
+      // Right branch: x = a cosh(t), y = b sinh(t).
+      for (let k = 0; k <= N; k++) {
+        const t = -tMax + (2 * tMax * k) / N;
+        const [px, py] = project(a * Math.cosh(t), b * Math.sinh(t));
+        d += `${k === 0 ? 'M' : 'L'} ${px.toFixed(2)},${py.toFixed(2)} `;
+      }
+      // Left branch (move to start, then sample).
+      for (let k = 0; k <= N; k++) {
+        const t = -tMax + (2 * tMax * k) / N;
+        const [px, py] = project(-a * Math.cosh(t), b * Math.sinh(t));
+        d += `${k === 0 ? 'M' : 'L'} ${px.toFixed(2)},${py.toFixed(2)} `;
+      }
+      const [cpx, cpy] = toSvg(center.x, center.y);
+      bbox = { cx: cpx, cy: cpy, w: span * 30, h: span * 30 };
+    }
+
+    const dashArray = c.style === 'dashed' ? '6,4' : undefined;
+    const conicName = c.label ? `shape-${featSlug(c.label)}` : `shape-conic-${i + 1}`;
+    return (
+      <g key={`conic-${i}`} {...feat(conicName, bbox, { width: SVG_WIDTH, height: SVG_HEIGHT })}>
+        <path
+          d={d}
+          fill="none"
+          stroke={c.color || '#4f8cff'}
+          strokeWidth={2}
+          strokeDasharray={dashArray}
+        />
+        {c.label && (
+          <text
+            x={toSvg(center.x, center.y)[0]}
+            y={toSvg(center.x, center.y)[1] - (c.b ?? c.a) * 30 - 8}
+            textAnchor="middle"
+            fontSize={12}
+            fill={c.color || '#4f8cff'}
+          >
+            {c.label}
           </text>
         )}
       </g>
@@ -1361,6 +1473,7 @@ export function GeometryRenderer({
   circles = [],
   arcs = [],
   angles = [],
+  conics = [],
   showGrid = false,
   showAxes = false,
   viewRange,
@@ -1399,6 +1512,19 @@ export function GeometryRenderer({
         yMax = Math.max(yMax, center.y + c.radius);
       }
 
+      // Conic extents — bound by 2*max(a, b) around the center. Parabolas
+      // are unbounded; treat them as ellipse-like for viewport purposes
+      // so the brain's vertex shows centered with reasonable padding.
+      for (const cn of conics) {
+        const center = ptMap.get(cn.center);
+        if (!center) continue;
+        const span = 2 * Math.max(cn.a, cn.b ?? cn.a);
+        xMin = Math.min(xMin, center.x - span);
+        xMax = Math.max(xMax, center.x + span);
+        yMin = Math.min(yMin, center.y - span);
+        yMax = Math.max(yMax, center.y + span);
+      }
+
       if (xMax - xMin < 1) { xMin -= 1; xMax += 1; }
       if (yMax - yMin < 1) { yMin -= 1; yMax += 1; }
 
@@ -1408,7 +1534,7 @@ export function GeometryRenderer({
       };
     }
     return matchRangeAspect(baseRange);
-  }, [viewRange, points, circles, ptMap]);
+  }, [viewRange, points, circles, conics, ptMap]);
 
   // Coordinate transform function
   const toSvg = useMemo(() => makeTransform(range), [range]);
@@ -1466,6 +1592,9 @@ export function GeometryRenderer({
 
         {/* Circles */}
         {circles.length > 0 && renderCircles(circles, ptMap, toSvg, range)}
+
+        {/* Conics — ellipse, parabola, hyperbola sampled into SVG paths. */}
+        {conics.length > 0 && renderConics(conics, ptMap, toSvg, range)}
 
         {/* Arcs */}
         {arcs.length > 0 && renderArcs(arcs, ptMap, toSvg, range)}

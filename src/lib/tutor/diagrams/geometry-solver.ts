@@ -24,6 +24,7 @@ import type {
   GeometryPolygon,
   GeometryArc,
   GeometryAngle,
+  GeometryConic,
 } from '@/lib/knowledge/types';
 
 // ─── Public spec ─────────────────────────────────────────────────────────────
@@ -124,7 +125,15 @@ export type Step =
   | StepParallelogram
   | StepMidsegment
   | StepAltitude
-  | StepMedian;
+  | StepMedian
+  // Tier 3 — conic sections.
+  | StepEllipse
+  | StepParabola
+  | StepHyperbola
+  | StepConicFoci
+  | StepConicVertices
+  | StepConicDirectrix
+  | StepConicAsymptotes;
 
 interface StepCommon {
   id: string;
@@ -547,6 +556,86 @@ export interface StepMedian extends StepCommon {
   midpointId?: string;
 }
 
+// ─── Tier 3 — conics ──────────────────────────────────────────────────────────
+
+/** Ellipse. Two declarative modes:
+ *   - center + a (semi-major) + b (semi-minor) + optional rotation (deg)
+ *   - foci: [F1, F2] + sum (sum of distances 2a; b derived from c=|F1F2|/2)
+ *  Stored as a GeometryConic primitive that the renderer paths into SVG. */
+export interface StepEllipse extends StepCommon {
+  kind: 'ellipse';
+  center?: PtRef;
+  a?: number;
+  b?: number;
+  rotation?: number;          // degrees
+  foci?: [PtRef, PtRef];
+  sum?: number;               // 2a — sum of distances to foci
+}
+
+/** Parabola. Modes:
+ *   - vertex + focal length (a) + opens: "right" | "left" | "up" | "down"
+ *   - vertex + focus (focal direction inferred)
+ *   - focus + directrix (vertex computed)
+ *  Stored canonically as GeometryConic with rotation set to the opening
+ *  direction. */
+export interface StepParabola extends StepCommon {
+  kind: 'parabola';
+  vertex?: PtRef;
+  focalLength?: number;
+  opens?: 'right' | 'left' | 'up' | 'down';
+  focus?: PtRef;
+  /** Directrix as a line ref (id, "x-axis"/"y-axis", or inline). */
+  directrix?: string | { through: [PtRef, PtRef] };
+}
+
+/** Hyperbola. Modes:
+ *   - center + a (transverse semi-axis) + b (conjugate) + rotation
+ *   - foci: [F1, F2] + difference (|d1−d2| = 2a) */
+export interface StepHyperbola extends StepCommon {
+  kind: 'hyperbola';
+  center?: PtRef;
+  a?: number;
+  b?: number;
+  rotation?: number;
+  foci?: [PtRef, PtRef];
+  difference?: number;        // 2a
+}
+
+/** Foci of an existing conic (ellipse / hyperbola). Yields two points
+ *  named `${id}_F1` and `${id}_F2`. */
+export interface StepConicFoci extends StepCommon {
+  kind: 'conic_foci';
+  conic: string;              // conic id
+  pointIds?: [string, string];
+}
+
+/** Vertices of an existing conic. Two for ellipse / hyperbola, one for
+ *  parabola. Auto-ids `${id}_V1`, `${id}_V2`. */
+export interface StepConicVertices extends StepCommon {
+  kind: 'conic_vertices';
+  conic: string;
+  pointIds?: [string, string];
+}
+
+/** Directrices of an existing conic (lines). For ellipse / hyperbola,
+ *  two directrices; for parabola, one. Yields segments long enough to
+ *  show across the diagram. */
+export interface StepConicDirectrix extends StepCommon {
+  kind: 'conic_directrix';
+  conic: string;
+  /** "first" | "second" | "both" — defaults to "both" for ellipse /
+   *  hyperbola, ignored for parabola. */
+  which?: 'first' | 'second' | 'both';
+}
+
+/** Asymptotes of a hyperbola (two lines through center). Yields two
+ *  long segments. */
+export interface StepConicAsymptotes extends StepCommon {
+  kind: 'conic_asymptotes';
+  conic: string;
+  length?: number;
+}
+
 // ─── Internal resolution state ────────────────────────────────────────────────
 
 interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string }
@@ -563,8 +652,27 @@ interface ResolvedArc {
   endAngle: number;       // degrees
   label?: string;
 }
+interface ResolvedConic {
+  kind: 'conic';
+  id: string;
+  /** "ellipse" | "parabola" | "hyperbola". */
+  conicType: 'ellipse' | 'parabola' | 'hyperbola';
+  center: string;
+  a: number;
+  b?: number;
+  rotation?: number;      // radians
+  label?: string;
+  style?: 'solid' | 'dashed';
+}
 
-type Resolved = ResolvedPoint | ResolvedCircle | ResolvedSegment | ResolvedLine | ResolvedPolygon | ResolvedArc;
+type Resolved =
+  | ResolvedPoint
+  | ResolvedCircle
+  | ResolvedSegment
+  | ResolvedLine
+  | ResolvedPolygon
+  | ResolvedArc
+  | ResolvedConic;
 
 interface State {
   byId: Map<string, Resolved>;
@@ -789,6 +897,13 @@ function solveStep(step: Step, state: State): void {
     case 'midsegment': return solveMidsegment(step, state);
     case 'altitude': return solveAltitude(step, state);
     case 'median': return solveMedian(step, state);
+    case 'ellipse': return solveEllipse(step, state);
+    case 'parabola': return solveParabola(step, state);
+    case 'hyperbola': return solveHyperbola(step, state);
+    case 'conic_foci': return solveConicFoci(step, state);
+    case 'conic_vertices': return solveConicVertices(step, state);
+    case 'conic_directrix': return solveConicDirectrix(step, state);
+    case 'conic_asymptotes': return solveConicAsymptotes(step, state);
   }
 }
 
@@ -1768,6 +1883,261 @@ function solveMedian(step: StepMedian, state: State): void {
   void V;
 }
 
+// ─── Tier 3 — conic solvers ───────────────────────────────────────────────────
+
+function conic(state: State, id: string): ResolvedConic {
+  const o = state.byId.get(id);
+  if (!o || o.kind !== 'conic') throw new Error(`expected conic "${id}", got ${o?.kind ?? 'undefined'}`);
+  return o;
+}
+
+/** Register a synthetic point under a derived id, used by conic
+ *  derivation steps to emit foci / vertices / etc. */
+function emitPoint(state: State, id: string, x: number, y: number, label?: string): void {
+  setObject(state, { kind: 'point', id, x: round2(x), y: round2(y), label });
+}
+
+function solveEllipse(step: StepEllipse, state: State): void {
+  let centerId: string, a: number, b: number, rotationRad: number;
+  if (step.foci && step.sum !== undefined) {
+    const F1 = pt(state, step.foci[0]);
+    const F2 = pt(state, step.foci[1]);
+    const cx = (F1.x + F2.x) / 2, cy = (F1.y + F2.y) / 2;
+    const c = Math.hypot(F2.x - F1.x, F2.y - F1.y) / 2;
+    a = step.sum / 2;
+    if (a <= c) throw new Error(`ellipse "${step.id}": sum=${step.sum} too small for foci distance ${c * 2}`);
+    b = Math.sqrt(a * a - c * c);
+    rotationRad = Math.atan2(F2.y - F1.y, F2.x - F1.x);
+    centerId = `${step.id}_center`;
+    emitPoint(state, centerId, cx, cy);
+  } else if (step.center !== undefined && step.a !== undefined) {
+    centerId = normalizePointRef(state, step.center, step.id, 'center');
+    a = step.a;
+    b = step.b ?? step.a;
+    rotationRad = ((step.rotation ?? 0) * Math.PI) / 180;
+  } else {
+    throw new Error(`ellipse "${step.id}": need (foci+sum) OR (center+a, b?)`);
+  }
+  setObject(state, {
+    kind: 'conic', id: step.id, conicType: 'ellipse',
+    center: centerId, a, b, rotation: rotationRad, label: step.label,
+  });
+}
+
+function solveParabola(step: StepParabola, state: State): void {
+  // Mode 1: focus + directrix → vertex computed.
+  if (step.focus && step.directrix) {
+    const F = pt(state, step.focus);
+    const ln = resolveLineRef(state, step.directrix as LineRef);
+    const dx = ln.bx - ln.ax, dy = ln.by - ln.ay;
+    const len2 = dx * dx + dy * dy || 1;
+    const t = ((F.x - ln.ax) * dx + (F.y - ln.ay) * dy) / len2;
+    const fx = ln.ax + t * dx;
+    const fy = ln.ay + t * dy;
+    // Vertex is the midpoint of (F, foot of F on directrix).
+    const vx = (F.x + fx) / 2, vy = (F.y + fy) / 2;
+    const focalLen = Math.hypot(F.x - vx, F.y - vy);
+    const rotation = Math.atan2(F.y - vy, F.x - vx);
+    const centerId = `${step.id}_center`;
+    emitPoint(state, centerId, vx, vy);
+    setObject(state, {
+      kind: 'conic', id: step.id, conicType: 'parabola',
+      center: centerId, a: focalLen, rotation, label: step.label,
+    });
+    return;
+  }
+  // Mode 2: vertex + focus.
+  if (step.vertex && step.focus) {
+    const V = pt(state, step.vertex);
+    const F = pt(state, step.focus);
+    const focalLen = Math.hypot(F.x - V.x, F.y - V.y);
+    const rotation = Math.atan2(F.y - V.y, F.x - V.x);
+    const centerId = normalizePointRef(state, step.vertex, step.id, 'vertex');
+    setObject(state, {
+      kind: 'conic', id: step.id, conicType: 'parabola',
+      center: centerId, a: focalLen, rotation, label: step.label,
+    });
+    return;
+  }
+  // Mode 3: vertex + focal length + opens direction.
+  if (step.vertex && step.focalLength !== undefined) {
+    const opens = step.opens ?? 'right';
+    const angles = { right: 0, up: Math.PI / 2, left: Math.PI, down: -Math.PI / 2 };
+    const centerId = normalizePointRef(state, step.vertex, step.id, 'vertex');
+    setObject(state, {
+      kind: 'conic', id: step.id, conicType: 'parabola',
+      center: centerId, a: step.focalLength, rotation: angles[opens], label: step.label,
+    });
+    return;
+  }
+  throw new Error(`parabola "${step.id}": need (focus+directrix) OR (vertex+focus) OR (vertex+focalLength+opens)`);
+}
+
+function solveHyperbola(step: StepHyperbola, state: State): void {
+  let centerId: string, a: number, b: number, rotationRad: number;
+  if (step.foci && step.difference !== undefined) {
+    const F1 = pt(state, step.foci[0]);
+    const F2 = pt(state, step.foci[1]);
+    const cx = (F1.x + F2.x) / 2, cy = (F1.y + F2.y) / 2;
+    const c = Math.hypot(F2.x - F1.x, F2.y - F1.y) / 2;
+    a = step.difference / 2;
+    if (a >= c) throw new Error(`hyperbola "${step.id}": |difference|=${step.difference} too large for foci`);
+    b = Math.sqrt(c * c - a * a);
+    rotationRad = Math.atan2(F2.y - F1.y, F2.x - F1.x);
+    centerId = `${step.id}_center`;
+    emitPoint(state, centerId, cx, cy);
+  } else if (step.center !== undefined && step.a !== undefined && step.b !== undefined) {
+    centerId = normalizePointRef(state, step.center, step.id, 'center');
+    a = step.a;
+    b = step.b;
+    rotationRad = ((step.rotation ?? 0) * Math.PI) / 180;
+  } else {
+    throw new Error(`hyperbola "${step.id}": need (foci+difference) OR (center+a+b)`);
+  }
+  setObject(state, {
+    kind: 'conic', id: step.id, conicType: 'hyperbola',
+    center: centerId, a, b, rotation: rotationRad, label: step.label,
+  });
+}
+
+function solveConicFoci(step: StepConicFoci, state: State): void {
+  const c = conic(state, step.conic);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  let f: number;
+  if (c.conicType === 'ellipse') {
+    const a = c.a, b = c.b ?? a;
+    f = Math.sqrt(Math.max(0, a * a - b * b));
+  } else if (c.conicType === 'hyperbola') {
+    const a = c.a, b = c.b ?? a;
+    f = Math.sqrt(a * a + b * b);
+  } else {
+    // Parabola has a single focus at distance `a` along axis from vertex.
+    const F = project(c.a, 0);
+    const [id1] = step.pointIds ?? [`${step.id}_F1`];
+    emitPoint(state, id1, F.x, F.y);
+    return;
+  }
+  const F1 = project(-f, 0);
+  const F2 = project(f, 0);
+  const [id1, id2] = step.pointIds ?? [`${step.id}_F1`, `${step.id}_F2`];
+  emitPoint(state, id1, F1.x, F1.y);
+  emitPoint(state, id2, F2.x, F2.y);
+}
+
+function solveConicVertices(step: StepConicVertices, state: State): void {
+  const c = conic(state, step.conic);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  if (c.conicType === 'parabola') {
+    // The "center" of a parabola in our representation IS the vertex.
+    const [id1] = step.pointIds ?? [`${step.id}_V1`];
+    emitPoint(state, id1, center.x, center.y);
+    return;
+  }
+  const a = c.a;
+  const V1 = project(-a, 0);
+  const V2 = project(a, 0);
+  const [id1, id2] = step.pointIds ?? [`${step.id}_V1`, `${step.id}_V2`];
+  emitPoint(state, id1, V1.x, V1.y);
+  emitPoint(state, id2, V2.x, V2.y);
+}
+
+function solveConicDirectrix(step: StepConicDirectrix, state: State): void {
+  const c = conic(state, step.conic);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  // Directrix in canonical coords: x = ±d. Project the line endpoints to
+  // world and emit as a long segment.
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  const long = Math.max(c.a, c.b ?? c.a) * 4;
+  if (c.conicType === 'parabola') {
+    // Directrix at x = -a in canonical (perpendicular to axis at -a).
+    const A = project(-c.a, -long);
+    const B = project(-c.a, long);
+    const aId = `${step.id}_a`, bId = `${step.id}_b`;
+    emitPoint(state, aId, A.x, A.y);
+    emitPoint(state, bId, B.x, B.y);
+    setObject(state, { kind: 'segment', id: step.id, from: aId, to: bId, label: step.label });
+    return;
+  }
+  const a = c.a, b = c.b ?? c.a;
+  let f: number, dx: number;
+  if (c.conicType === 'ellipse') {
+    f = Math.sqrt(Math.max(0, a * a - b * b));
+    if (f < 1e-9) throw new Error(`conic_directrix "${step.id}": ellipse is a circle (no directrix)`);
+    dx = (a * a) / f;
+  } else {
+    f = Math.sqrt(a * a + b * b);
+    dx = (a * a) / f;
+  }
+  const which = step.which ?? 'both';
+  const emitAt = (sx: number, idSuffix: string) => {
+    const A = project(sx, -long);
+    const B = project(sx, long);
+    const aId = `${step.id}_${idSuffix}_a`, bId = `${step.id}_${idSuffix}_b`;
+    emitPoint(state, aId, A.x, A.y);
+    emitPoint(state, bId, B.x, B.y);
+    setObject(state, { kind: 'segment', id: `${step.id}_${idSuffix}`, from: aId, to: bId });
+  };
+  if (which === 'first' || which === 'both') emitAt(-dx, 'd1');
+  if (which === 'second' || which === 'both') emitAt(dx, 'd2');
+  // Synthesize the parent id as a segment to one of them when single-sided
+  // so the brain can reference `${id}` directly.
+  if (which === 'first') {
+    const child = state.byId.get(`${step.id}_d1`) as ResolvedSegment;
+    if (child) setObject(state, { kind: 'segment', id: step.id, from: child.from, to: child.to, label: step.label });
+  } else if (which === 'second') {
+    const child = state.byId.get(`${step.id}_d2`) as ResolvedSegment;
+    if (child) setObject(state, { kind: 'segment', id: step.id, from: child.from, to: child.to, label: step.label });
+  }
+}
+
+function solveConicAsymptotes(step: StepConicAsymptotes, state: State): void {
+  const c = conic(state, step.conic);
+  if (c.conicType !== 'hyperbola') {
+    throw new Error(`conic_asymptotes "${step.id}": only hyperbolas have asymptotes`);
+  }
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  const a = c.a, b = c.b ?? a;
+  const long = step.length ?? Math.max(a, b) * 6;
+  // Asymptotes are y = ±(b/a) x in canonical frame.
+  const slope = b / a;
+  // First asymptote: through (-long/2, -slope*long/2) and (long/2, slope*long/2)
+  const A1 = project(-long / 2, -slope * long / 2);
+  const B1 = project(long / 2, slope * long / 2);
+  const A2 = project(-long / 2, slope * long / 2);
+  const B2 = project(long / 2, -slope * long / 2);
+  const a1 = `${step.id}_1_a`, b1 = `${step.id}_1_b`;
+  const a2 = `${step.id}_2_a`, b2 = `${step.id}_2_b`;
+  emitPoint(state, a1, A1.x, A1.y);
+  emitPoint(state, b1, B1.x, B1.y);
+  emitPoint(state, a2, A2.x, A2.y);
+  emitPoint(state, b2, B2.x, B2.y);
+  setObject(state, { kind: 'segment', id: `${step.id}_1`, from: a1, to: b1 });
+  setObject(state, { kind: 'segment', id: `${step.id}_2`, from: a2, to: b2 });
+}
+
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 export interface SolverOutput {
@@ -1778,6 +2148,7 @@ export interface SolverOutput {
   polygons: GeometryPolygon[];
   arcs: GeometryArc[];
   angles: GeometryAngle[];
+  conics: GeometryConic[];
   showGrid?: boolean;
   showAxes?: boolean;
   viewRange?: { x: [number, number]; y: [number, number] };
@@ -1852,6 +2223,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const segments: GeometrySegment[] = [];
   const arcs: GeometryArc[] = [];
   const circles: GeometryCircle[] = [];
+  const conics: GeometryConic[] = [];
   const polygons: GeometryPolygon[] = [];
   // Build a co-location set for labeled points so we can suppress the
   // unlabeled scaffolding dots (chord_from, chord_to, hex_v0, …) when
@@ -1867,7 +2239,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   }
   const isAutoScaffold = (id: string) =>
     id.startsWith('__') ||
-    /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|arc\d+|v\d+|e\d+|m\d+|T\d+|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id);
+    /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|vertex|arc\d+|v\d+|e\d+|m\d+|T\d+|F\d+|V\d+|d\d+(_a|_b)?|\d+_a|\d+_b|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id);
 
   for (const id of state.order) {
     const obj = state.byId.get(id);
@@ -1917,6 +2289,17 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         label: labelOverrides[obj.id] ?? obj.label,
         color: colorOverrides[obj.id],
       });
+    } else if (obj.kind === 'conic') {
+      conics.push({
+        type: obj.conicType,
+        center: obj.center,
+        a: obj.a,
+        b: obj.b,
+        rotation: obj.rotation,
+        label: labelOverrides[obj.id] ?? obj.label,
+        color: colorOverrides[obj.id],
+        style: dashedSet.has(obj.id) ? 'dashed' : obj.style,
+      });
     }
     // Lines are not directly rendered — they're construction scaffolding.
     // If a brain wants a line drawn it should also emit a long segment.
@@ -1930,6 +2313,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     polygons,
     arcs,
     angles: [],
+    conics,
     // Axes and grid default ON. Brain forgets to set them on follow-up
     // turns and the resulting axisless figures are hard to read against
     // a coordinate plane backdrop. Brain can still opt out explicitly.
@@ -1944,7 +2328,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 // they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
 // pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
-  if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|arc\d+|v\d+|e\d+|m\d+|T\d+|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id)) return undefined;
+  if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|vertex|arc\d+|v\d+|e\d+|m\d+|T\d+|F\d+|V\d+|d\d+(_a|_b)?|\d+_a|\d+_b|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id)) return undefined;
   return id;
 }
 

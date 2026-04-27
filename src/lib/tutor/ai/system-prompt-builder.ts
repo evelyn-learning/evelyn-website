@@ -459,6 +459,16 @@ composing top-to-bottom feels more natural.
     altitude                  { vertex, opposite, footId? }       # in a triangle
     median                    { vertex, opposite, midpointId? }
 
+  Conics (Tier 3):
+    ellipse                   { center, a, b?, rotation? }  OR  { foci: [F1,F2], sum }
+    parabola                  { vertex, focalLength, opens: "right"|"left"|"up"|"down" }
+                              OR { vertex, focus }  OR  { focus, directrix }
+    hyperbola                 { center, a, b, rotation? }   OR  { foci: [F1,F2], difference }
+    conic_foci                { conic, pointIds? }                # _F1/_F2 (parabola: _F1)
+    conic_vertices            { conic, pointIds? }                # _V1/_V2 (parabola: _V1)
+    conic_directrix           { conic, which?: "first"|"second"|"both" }
+    conic_asymptotes          { conic, length? }                  # hyperbola only
+
 Line references (used by reflect_point.across, perpendicular_from.to,
 parallel_through.of) accept any of:
   - id of a declared line/segment
