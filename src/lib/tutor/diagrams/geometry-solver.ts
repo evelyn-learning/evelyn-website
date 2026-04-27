@@ -79,7 +79,23 @@ export type Step =
   | StepParallelThrough
   | StepIntersect
   | StepPolygonRegular
-  | StepTriangleCenter;
+  | StepTriangleCenter
+  // "Given-shape" steps — explicit objects the brain naturally declares
+  // alongside derived constructions, not separately under `given`.
+  | StepDeclareSegment
+  | StepDeclareLine
+  | StepDeclarePolygon
+  | StepDeclareCircle
+  // Circle-creation constructions — without these, the brain has no way
+  // to define a circle from constraints (only from explicit center+radius
+  // in `given`). Common asks like "the incircle of triangle ABC" or "the
+  // circle through A, B, C" need a one-shot construction, otherwise the
+  // brain composes a radius step that references a circle that doesn't
+  // exist yet and we error out.
+  | StepCircleThroughPoint
+  | StepCircleThroughThree
+  | StepIncircle
+  | StepCircumcircle;
 
 interface StepCommon {
   id: string;
@@ -223,6 +239,66 @@ export interface StepTriangleCenter extends StepCommon {
   type: 'centroid' | 'incenter' | 'circumcenter' | 'orthocenter';
 }
 
+// Given-shape steps. The brain often emits these in `steps` rather than
+// `given` because composition reads top-to-bottom (declare points →
+// connect them → derive things from those connections). The data is
+// the same as the corresponding Given variant.
+
+export interface StepDeclareSegment extends StepCommon {
+  kind: 'segment';
+  from: string;
+  to: string;
+}
+export interface StepDeclareLine extends StepCommon {
+  kind: 'line';
+  through: [string, string];
+}
+export interface StepDeclarePolygon extends StepCommon {
+  kind: 'polygon';
+  vertices: string[];
+}
+export interface StepDeclareCircle extends StepCommon {
+  kind: 'circle';
+  center: string;
+  radius: number;
+}
+
+/** Circle defined by a center and a point that lies on it. Useful when
+ *  the brain wants "the circle centered at I through tangent point T1"
+ *  without computing the radius itself. */
+export interface StepCircleThroughPoint extends StepCommon {
+  kind: 'circle_through_point';
+  center: string;
+  through: string;
+}
+
+/** Circle defined by three points it passes through (the unique
+ *  circumscribed circle of those points). */
+export interface StepCircleThroughThree extends StepCommon {
+  kind: 'circle_through_three';
+  points: [string, string, string];
+}
+
+/** Inscribed circle of a triangle. Yields the circle plus the incenter
+ *  point and the three tangent-point feet on the sides. Auto-ids:
+ *  `${id}_center`, `${id}_T1`, `${id}_T2`, `${id}_T3`. Brain can override
+ *  via `centerId` and `tangentIds`. */
+export interface StepIncircle extends StepCommon {
+  kind: 'incircle';
+  vertices: [string, string, string];
+  centerId?: string;
+  tangentIds?: [string, string, string];
+}
+
+/** Circumscribed circle of a triangle. Yields the circle plus the
+ *  circumcenter point. Auto-id: `${id}_center` for the circumcenter
+ *  unless `centerId` is provided. */
+export interface StepCircumcircle extends StepCommon {
+  kind: 'circumcircle';
+  vertices: [string, string, string];
+  centerId?: string;
+}
+
 // ─── Internal resolution state ────────────────────────────────────────────────
 
 interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string }
@@ -315,6 +391,26 @@ function solveStep(step: Step, state: State): void {
     case 'intersect': return solveIntersect(step, state);
     case 'polygon_regular': return solvePolygonRegular(step, state);
     case 'triangle_center': return solveTriangleCenter(step, state);
+    // Given-shape steps: same logic as their `given` counterparts, but
+    // declarable inline alongside derived steps. Keeps brain emissions
+    // that mix givens and constructions in one array working.
+    case 'segment':
+      setObject(state, { kind: 'segment', id: step.id, from: step.from, to: step.to, label: step.label });
+      return;
+    case 'line':
+      setObject(state, { kind: 'line', id: step.id, pointA: step.through[0], pointB: step.through[1], label: step.label });
+      return;
+    case 'polygon':
+      setObject(state, { kind: 'polygon', id: step.id, vertices: step.vertices, label: step.label });
+      return;
+    case 'circle':
+      if (!state.byId.has(step.center)) throw new Error(`circle "${step.id}": center "${step.center}" not declared`);
+      setObject(state, { kind: 'circle', id: step.id, center: step.center, radius: step.radius, label: step.label });
+      return;
+    case 'circle_through_point': return solveCircleThroughPoint(step, state);
+    case 'circle_through_three': return solveCircleThroughThree(step, state);
+    case 'incircle': return solveIncircle(step, state);
+    case 'circumcircle': return solveCircumcircle(step, state);
   }
 }
 
@@ -745,6 +841,91 @@ function solveTriangleCenter(step: StepTriangleCenter, state: State): void {
   setObject(state, { kind: 'point', id: step.id, x: round2(x), y: round2(y), label: step.label });
 }
 
+// ─── Circle creation ──────────────────────────────────────────────────────────
+
+function solveCircleThroughPoint(step: StepCircleThroughPoint, state: State): void {
+  const center = pt(state, step.center);
+  const through = pt(state, step.through);
+  const radius = Math.hypot(through.x - center.x, through.y - center.y);
+  setObject(state, { kind: 'circle', id: step.id, center: step.center, radius, label: step.label });
+}
+
+function circumcenterOf(A: ResolvedPoint, B: ResolvedPoint, C: ResolvedPoint): { x: number; y: number; r: number } {
+  const d = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+  if (Math.abs(d) < 1e-9) throw new Error('circumcenter: triangle is degenerate');
+  const A2 = A.x * A.x + A.y * A.y;
+  const B2 = B.x * B.x + B.y * B.y;
+  const C2 = C.x * C.x + C.y * C.y;
+  const x = (A2 * (B.y - C.y) + B2 * (C.y - A.y) + C2 * (A.y - B.y)) / d;
+  const y = (A2 * (C.x - B.x) + B2 * (A.x - C.x) + C2 * (B.x - A.x)) / d;
+  const r = Math.hypot(x - A.x, y - A.y);
+  return { x, y, r };
+}
+
+function solveCircleThroughThree(step: StepCircleThroughThree, state: State): void {
+  const A = pt(state, step.points[0]);
+  const B = pt(state, step.points[1]);
+  const C = pt(state, step.points[2]);
+  const cc = circumcenterOf(A, B, C);
+  const centerId = `${step.id}_center`;
+  setObject(state, { kind: 'point', id: centerId, x: round2(cc.x), y: round2(cc.y) });
+  setObject(state, { kind: 'circle', id: step.id, center: centerId, radius: cc.r, label: step.label });
+}
+
+/** Inscribed circle of a triangle. Outputs:
+ *  - circle with id `step.id` (the incircle itself)
+ *  - point with id `${step.id}_center` (the incenter), or `centerId` override
+ *  - three tangent-foot points T1, T2, T3 (override via tangentIds)
+ */
+function solveIncircle(step: StepIncircle, state: State): void {
+  const A = pt(state, step.vertices[0]);
+  const B = pt(state, step.vertices[1]);
+  const C = pt(state, step.vertices[2]);
+  // Side lengths opposite each vertex.
+  const a = Math.hypot(B.x - C.x, B.y - C.y);
+  const b = Math.hypot(C.x - A.x, C.y - A.y);
+  const c = Math.hypot(A.x - B.x, A.y - B.y);
+  const sum = a + b + c;
+  if (sum < 1e-9) throw new Error(`incircle "${step.id}": triangle is degenerate`);
+  const ix = (a * A.x + b * B.x + c * C.x) / sum;
+  const iy = (a * A.y + b * B.y + c * C.y) / sum;
+  // Inradius = area / semiperimeter. Use signed area / 2.
+  const area = Math.abs((B.x - A.x) * (C.y - A.y) - (C.x - A.x) * (B.y - A.y)) / 2;
+  const r = area / (sum / 2);
+  // Tangent point on a side = foot of perpendicular from incenter to that side.
+  const foot = (P: ResolvedPoint, Q: ResolvedPoint) => {
+    const dx = Q.x - P.x;
+    const dy = Q.y - P.y;
+    const len2 = dx * dx + dy * dy || 1;
+    const t = ((ix - P.x) * dx + (iy - P.y) * dy) / len2;
+    return { x: P.x + t * dx, y: P.y + t * dy };
+  };
+  const fAB = foot(A, B);
+  const fBC = foot(B, C);
+  const fCA = foot(C, A);
+  const centerId = step.centerId ?? `${step.id}_center`;
+  const [tab, tbc, tca] = step.tangentIds ?? [`${step.id}_T1`, `${step.id}_T2`, `${step.id}_T3`];
+  setObject(state, { kind: 'point', id: centerId, x: round2(ix), y: round2(iy) });
+  setObject(state, { kind: 'point', id: tab, x: round2(fAB.x), y: round2(fAB.y) });
+  setObject(state, { kind: 'point', id: tbc, x: round2(fBC.x), y: round2(fBC.y) });
+  setObject(state, { kind: 'point', id: tca, x: round2(fCA.x), y: round2(fCA.y) });
+  setObject(state, { kind: 'circle', id: step.id, center: centerId, radius: r, label: step.label });
+}
+
+/** Circumscribed circle of a triangle. Outputs:
+ *  - circle with id `step.id`
+ *  - point with id `${step.id}_center` (the circumcenter), or `centerId` override
+ */
+function solveCircumcircle(step: StepCircumcircle, state: State): void {
+  const A = pt(state, step.vertices[0]);
+  const B = pt(state, step.vertices[1]);
+  const C = pt(state, step.vertices[2]);
+  const cc = circumcenterOf(A, B, C);
+  const centerId = step.centerId ?? `${step.id}_center`;
+  setObject(state, { kind: 'point', id: centerId, x: round2(cc.x), y: round2(cc.y) });
+  setObject(state, { kind: 'circle', id: step.id, center: centerId, radius: cc.r, label: step.label });
+}
+
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 export interface SolverOutput {
@@ -828,7 +1009,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     labeledKeys.add(`${roundForKey(obj.x)}|${roundForKey(obj.y)}`);
   }
   const isAutoScaffold = (id: string) =>
-    /_(from|to|end|touch|foot|v\d+|e\d+|b)$/.test(id);
+    /_(from|to|end|touch|foot|center|v\d+|e\d+|T\d+|b)$/.test(id);
 
   for (const id of state.order) {
     const obj = state.byId.get(id);
@@ -896,7 +1077,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 // they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
 // pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
-  if (/_(from|to|end|touch|foot|v\d+|e\d+|b)$/.test(id)) return undefined;
+  if (/_(from|to|end|touch|foot|center|v\d+|e\d+|T\d+|b)$/.test(id)) return undefined;
   return id;
 }
 
