@@ -859,6 +859,20 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_balanced_equation',
+    description: 'Render a chemical equation balanced DETERMINISTICALLY. You provide the unbalanced equation as a string ("Fe + O2 -> Fe2O3" or "C3H8 + O2 -> CO2 + H2O" — coefficients ignored / recomputed). The solver parses formulas (parentheses + subscripts supported), builds the conservation matrix, and computes smallest positive-integer coefficients. Output is the balanced equation rendered with subscripts. PREFER THIS over writing balanced equations into show_equation by hand — the brain frequently miscounts atoms in non-trivial reactions (combustion of larger hydrocarbons, redox, etc.). Errors propagate cleanly: if the equation is structurally unbalanceable (different elements on each side, missing terms), the solver throws a specific message the brain can react to.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Optional header, defaults to "Balanced equation".' },
+        equation: { type: 'string', description: 'Unbalanced (or partially balanced) equation. Use " -> ", " → ", or " = " between reactants and products. Existing coefficients are stripped.' },
+        reactionType: { type: 'string', description: 'Optional category label shown below: "synthesis", "decomposition", "single replacement", "double replacement", "combustion", "redox", "neutralization".' },
+        note: { type: 'string', description: 'Optional follow-up note shown below the equation.' },
+      },
+      required: ['equation'],
+    },
+  },
+  {
     name: 'show_lewis_constructed',
     description: 'PREFER THIS over show_lewis whenever you can describe the molecule by atoms + bonds (which is most of the time). You declare atoms by element, bonds by atom-id pair + order; the solver places atoms via auto-layout, derives lone-pair counts from valence (no need to count electrons yourself), and validates octet/duet rules. The brain is freed from coordinate placement and electron arithmetic — both are documented frequent failure modes. Reserve show_lewis for cases where you need explicit pixel control (resonance arrows mid-structure, expanded octets you want to assert manually, etc.).',
     parameters: {
@@ -1881,6 +1895,15 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_quiz') {
     return { action: 'showQuiz', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_balanced_equation') {
+    return {
+      action: 'showBalancedEquation',
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      equation: String(funcArgs.equation ?? ''),
+      reactionType: typeof funcArgs.reactionType === 'string' ? funcArgs.reactionType : undefined,
+      note: typeof funcArgs.note === 'string' ? funcArgs.note : undefined,
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_lewis_constructed') {
     return {

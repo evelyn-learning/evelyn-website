@@ -19,6 +19,7 @@ import WritingFrameRenderer from './WritingFrameRenderer';
 import LabeledImageRenderer from './LabeledImageRenderer';
 import SolvedExampleRenderer from './SolvedExampleRenderer';
 import QuizRenderer from './QuizRenderer';
+import BalancedEquationRenderer from './BalancedEquationRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1681,6 +1682,31 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showQuiz':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <QuizRenderer spec={command.spec as any} />;
+
+    case 'showBalancedEquation': {
+      // Balance deterministically here. Same pattern as
+      // showGeometryConstructed → solver → existing renderer.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { balanceEquation } = require('@/lib/tutor/chemistry/balancer') as typeof import('@/lib/tutor/chemistry/balancer');
+        const balanced = balanceEquation(command.equation);
+        return (
+          <BalancedEquationRenderer
+            title={command.title}
+            reactants={balanced.reactants}
+            products={balanced.products}
+            reactionType={command.reactionType}
+            note={command.note}
+          />
+        );
+      } catch (err) {
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Equation balance error: {(err as Error).message}
+          </div>
+        );
+      }
+    }
 
     case 'showLewisConstructed': {
       // Solve the declarative spec into a primitive Lewis payload, then
