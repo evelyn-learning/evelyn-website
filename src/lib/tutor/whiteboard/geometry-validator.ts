@@ -123,6 +123,34 @@ function formatLengthLabel(value: number): string {
 }
 
 /**
+ * If a point's label embeds explicit coordinates like "A(3, 6)" but the
+ * point's actual x/y disagree, rewrite the label to match the coords. The
+ * brain (Sonnet 4.6) reliably gets the geometry right but sometimes writes
+ * off-by-one coordinate text — observed 2026-04-26 with circle center O(3,2)
+ * radius 5 where A was emitted at (3,7) labeled "A(3,6)" and B at (8,2)
+ * labeled "B(7,2)". The visual position is correct; only the label text was
+ * stale. Labels that don't embed a (number, number) tuple are left alone.
+ */
+function fixPointCoordLabels(cmd: GeometryCommand): void {
+  const re = /\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/;
+  for (const p of cmd.points || []) {
+    if (!p.label) continue;
+    const m = p.label.match(re);
+    if (!m) continue;
+    const labelX = parseFloat(m[1]);
+    const labelY = parseFloat(m[2]);
+    if (!Number.isFinite(labelX) || !Number.isFinite(labelY)) continue;
+    const matchesX = Math.abs(labelX - p.x) < 1e-6;
+    const matchesY = Math.abs(labelY - p.y) < 1e-6;
+    if (matchesX && matchesY) continue;
+    // Format coordinates the way the LLM tends to: integers when whole,
+    // otherwise round to 2 decimal places (mirrors round2 elsewhere).
+    const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(round2(n)));
+    p.label = p.label.replace(re, `(${fmt(p.x)}, ${fmt(p.y)})`);
+  }
+}
+
+/**
  * Recompute segment-length labels from the actual point coordinates.
  * If the label parses as a length and disagrees with the computed
  * distance by more than 1%, replace it with the correct value. Labels
@@ -181,6 +209,10 @@ export function validateGeometryCommand(cmd: GeometryCommand): GeometryCommand {
   // trust the points (which the model usually gets right) over the
   // labels (which it sometimes computes wrong).
   fixSegmentLengthLabels(result, pointMap);
+
+  // 1c. Same idea for point-label coordinate text: if a point at (3,7) is
+  // labeled "A(3,6)" the visual is correct but the text reads wrong.
+  fixPointCoordLabels(result);
 
   // 2. Ensure all polygon vertices have labels
   ensureVertexLabels(result, pointMap);
