@@ -52,12 +52,18 @@ export interface DisplayOpts {
 }
 
 // Givens: explicit, raw objects.
+/** Anywhere a point id is expected, an inline `{ x, y }` literal also
+ *  works — the solver synthesizes an anonymous point and threads its
+ *  id through. Saves the brain from declaring trivial anchor points
+ *  for ad-hoc lines / segments / polygon vertices. */
+type PtRef = string | { x: number; y: number };
+
 export type Given =
   | { id: string; kind: 'point'; x: number; y: number; label?: string }
   | { id: string; kind: 'circle'; center: string; radius: number; label?: string }
-  | { id: string; kind: 'segment'; from: string; to: string; label?: string }
-  | { id: string; kind: 'line'; through: [string, string]; label?: string }
-  | { id: string; kind: 'polygon'; vertices: string[]; label?: string };
+  | { id: string; kind: 'segment'; from: PtRef; to: PtRef; label?: string }
+  | { id: string; kind: 'line'; through: [PtRef, PtRef]; label?: string }
+  | { id: string; kind: 'polygon'; vertices: PtRef[]; label?: string };
 
 // Steps: derived objects. Each step has an id (its primary output).
 // Multi-output steps (chord = 2 points + 1 segment) name child outputs by
@@ -254,16 +260,16 @@ export interface StepTriangleCenter extends StepCommon {
 
 export interface StepDeclareSegment extends StepCommon {
   kind: 'segment';
-  from: string;
-  to: string;
+  from: PtRef;
+  to: PtRef;
 }
 export interface StepDeclareLine extends StepCommon {
   kind: 'line';
-  through: [string, string];
+  through: [PtRef, PtRef];
 }
 export interface StepDeclarePolygon extends StepCommon {
   kind: 'polygon';
-  vertices: string[];
+  vertices: PtRef[];
 }
 export interface StepDeclareCircle extends StepCommon {
   kind: 'circle';
@@ -516,6 +522,34 @@ function resolvePointRef(state: State, ref: PointRef): { x: number; y: number } 
   return { x: ref.x, y: ref.y };
 }
 
+/**
+ * Normalize a "point ref or inline {x,y}" to a point id. If the ref is an
+ * inline object, register a synthetic anonymous point and return its id.
+ * The synthetic id is derived from `ownerId` so identical inline coords
+ * inside the same parent (line, segment, polygon) get stable distinct ids.
+ *
+ * Used wherever a Given/Step expects a point id (line.through entries,
+ * segment.from/to, polygon.vertices). Brains naturally inline `{x,y}`
+ * for ad-hoc reference points without a separate point declaration.
+ */
+function normalizePointRef(
+  state: State,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ref: any,
+  ownerId: string,
+  slot: string,
+): string {
+  if (typeof ref === 'string') return ref;
+  if (ref && typeof ref === 'object' && Number.isFinite(ref.x) && Number.isFinite(ref.y)) {
+    const synthId = `${ownerId}__${slot}`;
+    if (!state.byId.has(synthId)) {
+      setObject(state, { kind: 'point', id: synthId, x: ref.x, y: ref.y });
+    }
+    return synthId;
+  }
+  throw new Error(`expected point id or { x, y } at ${ownerId}.${slot}, got ${JSON.stringify(ref)}`);
+}
+
 function resolveLineRef(state: State, ref: LineRef): { ax: number; ay: number; bx: number; by: number } {
   if (typeof ref === 'string') {
     if (ref === 'x-axis') return { ax: -1000, ay: 0, bx: 1000, by: 0 };
@@ -581,13 +615,27 @@ function solveStep(step: Step, state: State): void {
     // declarable inline alongside derived steps. Keeps brain emissions
     // that mix givens and constructions in one array working.
     case 'segment':
-      setObject(state, { kind: 'segment', id: step.id, from: step.from, to: step.to, label: step.label });
+      setObject(state, {
+        kind: 'segment', id: step.id,
+        from: normalizePointRef(state, step.from, step.id, 'from'),
+        to: normalizePointRef(state, step.to, step.id, 'to'),
+        label: step.label,
+      });
       return;
     case 'line':
-      setObject(state, { kind: 'line', id: step.id, pointA: step.through[0], pointB: step.through[1], label: step.label });
+      setObject(state, {
+        kind: 'line', id: step.id,
+        pointA: normalizePointRef(state, step.through[0], step.id, 'a'),
+        pointB: normalizePointRef(state, step.through[1], step.id, 'b'),
+        label: step.label,
+      });
       return;
     case 'polygon':
-      setObject(state, { kind: 'polygon', id: step.id, vertices: step.vertices, label: step.label });
+      setObject(state, {
+        kind: 'polygon', id: step.id,
+        vertices: step.vertices.map((v, i) => normalizePointRef(state, v, step.id, `v${i}`)),
+        label: step.label,
+      });
       return;
     case 'circle':
       if (!state.byId.has(step.center)) throw new Error(`circle "${step.id}": center "${step.center}" not declared`);
@@ -1417,13 +1465,27 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         setObject(state, { kind: 'circle', id: g.id, center: g.center, radius: g.radius, label: g.label });
         break;
       case 'segment':
-        setObject(state, { kind: 'segment', id: g.id, from: g.from, to: g.to, label: g.label });
+        setObject(state, {
+          kind: 'segment', id: g.id,
+          from: normalizePointRef(state, g.from, g.id, 'from'),
+          to: normalizePointRef(state, g.to, g.id, 'to'),
+          label: g.label,
+        });
         break;
       case 'line':
-        setObject(state, { kind: 'line', id: g.id, pointA: g.through[0], pointB: g.through[1], label: g.label });
+        setObject(state, {
+          kind: 'line', id: g.id,
+          pointA: normalizePointRef(state, g.through[0], g.id, 'a'),
+          pointB: normalizePointRef(state, g.through[1], g.id, 'b'),
+          label: g.label,
+        });
         break;
       case 'polygon':
-        setObject(state, { kind: 'polygon', id: g.id, vertices: g.vertices, label: g.label });
+        setObject(state, {
+          kind: 'polygon', id: g.id,
+          vertices: g.vertices.map((v, i) => normalizePointRef(state, v, g.id, `v${i}`)),
+          label: g.label,
+        });
         break;
     }
   }
@@ -1459,7 +1521,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     labeledKeys.add(`${roundForKey(obj.x)}|${roundForKey(obj.y)}`);
   }
   const isAutoScaffold = (id: string) =>
-    /_(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id);
+    /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id);
 
   for (const id of state.order) {
     const obj = state.byId.get(id);
@@ -1536,7 +1598,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 // they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
 // pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
-  if (/_(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id)) return undefined;
+  if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id)) return undefined;
   return id;
 }
 

@@ -454,6 +454,12 @@ parallel_through.of) accept any of:
   - "x-axis" or "y-axis" keyword
   - inline { through: [a, b] } where a, b are point ids OR { x, y } literals
 
+Point references — anywhere a point id is expected (segment.from/to,
+line.through, polygon.vertices, etc.), an inline { x, y } literal also
+resolves. The solver synthesizes an anonymous point under the hood.
+Use this for ad-hoc anchors you don't need to name elsewhere; declare
+proper points only when you need to refer to them again.
+
 Auto-generated child ids use UNDERSCORE — id "ch" → "ch_from"/"ch_to";
 "hex" → "hex_v0"…"hex_v5"; incircle "inc" → "inc_center","inc_T1","inc_T2",
 "inc_T3"; circumcircle "cc" → "cc_center"; tangents_from_external "tt" →
