@@ -601,6 +601,75 @@ function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void
   pt.y = round2(center.y + (dy / d) * radius);
 }
 
+/**
+ * Place a chord on a circle while preserving the chord's length and direction
+ * (not just the angles of its endpoints). Used when the brain explicitly
+ * labels a segment "chord" but emits endpoints that are inside the circle —
+ * a common failure mode where the brain computes the half-chord length
+ * correctly but forgets that the chord midpoint sits at perpendicular
+ * distance from the center, not at the center.
+ *
+ * Independent radial snapping (the previous behavior) would preserve each
+ * endpoint's angular direction from center, but for points on the same
+ * diameter line through O it produces the FULL diameter — destroying the
+ * student-facing length the brain was trying to communicate. This routine
+ * preserves |AB| and the chord's direction, then chooses whichever of the
+ * two valid on-circle positions is closer to where the brain placed it.
+ *
+ * Returns true if the chord was repositioned, false if no fix applied
+ * (caller can fall back to per-endpoint snapping for "almost on circle"
+ * cases that don't need a full chord-aware repositioning).
+ */
+function snapChordToCircle(
+  from: GeoPoint,
+  to: GeoPoint,
+  center: GeoPoint,
+  radius: number,
+): boolean {
+  if (from.showCoords || to.showCoords) return false; // brain owns coords
+  const chordLen = Math.hypot(to.x - from.x, to.y - from.y);
+  if (chordLen < 1e-6) return false;                  // degenerate
+  if (chordLen > 2 * radius) return false;            // impossible chord on this circle
+  const dxFrom = from.x - center.x;
+  const dyFrom = from.y - center.y;
+  const dxTo = to.x - center.x;
+  const dyTo = to.y - center.y;
+  const dFrom = Math.hypot(dxFrom, dyFrom);
+  const dTo = Math.hypot(dxTo, dyTo);
+  const errFrom = Math.abs(dFrom - radius);
+  const errTo = Math.abs(dTo - radius);
+  // If both endpoints are already close to on-circle, fall through to
+  // per-endpoint radial snap (handles small math slips correctly).
+  if (errFrom < 0.05 && errTo < 0.05) return false;
+  if (errFrom < 0.12 * radius && errTo < 0.12 * radius) return false;
+  // Direction along the chord (from → to).
+  const ux = (to.x - from.x) / chordLen;
+  const uy = (to.y - from.y) / chordLen;
+  // Perpendicular distance from center for a chord of this length.
+  const half = chordLen / 2;
+  const h = Math.sqrt(Math.max(0, radius * radius - half * half));
+  // Two candidate midpoints, one on each side of the chord line through O.
+  const perpX = -uy;
+  const perpY = ux;
+  const cand = [
+    [center.x + h * perpX, center.y + h * perpY],
+    [center.x - h * perpX, center.y - h * perpY],
+  ];
+  const brainMidX = (from.x + to.x) / 2;
+  const brainMidY = (from.y + to.y) / 2;
+  // Choose the candidate midpoint closer to the brain's intended midpoint.
+  // If the brain placed the chord through the center (M ≈ O), both
+  // candidates are equidistant; deterministic tiebreaker is the +perp side.
+  const d0 = Math.hypot(brainMidX - cand[0][0], brainMidY - cand[0][1]);
+  const d1 = Math.hypot(brainMidX - cand[1][0], brainMidY - cand[1][1]);
+  const [mx, my] = d0 <= d1 ? cand[0] : cand[1];
+  from.x = round2(mx - half * ux);
+  from.y = round2(my - half * uy);
+  to.x = round2(mx + half * ux);
+  to.y = round2(my + half * uy);
+  return true;
+}
+
 // ─── Geometric invariants ────────────────────────────────────────────────────
 
 /**
@@ -656,8 +725,17 @@ function enforceGeometricInvariants(cmd: GeometryCommand, pointMap: Map<string, 
       const from = pointMap.get(seg.from);
       const to = pointMap.get(seg.to);
       if (!from || !to) continue;
-      snapPointToCircle(from, center, circle.radius);
-      snapPointToCircle(to, center, circle.radius);
+      // First try chord-aware repositioning (preserves length + direction).
+      // Fires when both endpoints are well off the circle — the brain
+      // typically gets this wrong by forgetting perpendicular distance and
+      // emitting a chord that runs through the center.
+      const repositioned = snapChordToCircle(from, to, center, circle.radius);
+      if (!repositioned) {
+        // Endpoints are close to on-circle already — small math slips. Per-
+        // endpoint radial snap handles these without changing chord length.
+        snapPointToCircle(from, center, circle.radius);
+        snapPointToCircle(to, center, circle.radius);
+      }
       continue;
     }
 
