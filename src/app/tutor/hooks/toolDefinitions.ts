@@ -213,6 +213,40 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_geometry_constructed',
+    description: 'PREFER THIS over show_geometry whenever the figure can be described as a construction (chord on a circle, tangent at a point, perpendicular bisector, regular polygon, triangle center, intersection of two circles, etc). You declare GIVENS (raw points/circles/segments/lines/polygons) and STEPS (constructions referenced by id). The renderer solves the geometry exactly — you never compute coordinates for derived points and never get them wrong. Each step has one closed-form solution. Available step kinds: midpoint, point_on_circle, chord, radius, diameter, tangent_at, tangent_from, perpendicular_bisector, perpendicular_from, parallel_through, intersect (line∩line, line∩circle, circle∩circle), polygon_regular, triangle_center (centroid/incenter/circumcenter/orthocenter). Refer to objects by id. Use display.showCoords / showLength / labels / colors to control text. Reserve show_geometry for free-form sketches that don\'t fit a construction language.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        given: {
+          type: 'array',
+          description: 'Raw objects with explicit data: { id, kind: "point"|"circle"|"segment"|"line"|"polygon", ...kind-specific fields }. point: { x, y }. circle: { center: pointId, radius }. segment: { from, to }. line: { through: [pointA_id, pointB_id] }. polygon: { vertices: [pointId, ...] }.',
+          items: { type: 'object' },
+        },
+        steps: {
+          type: 'array',
+          description: 'Construction steps. Each: { id, kind, label?, ...args }. Examples — chord: { kind: "chord", on: circleId, length: { ratio: 0.25, of: "diameter" }, direction: "horizontal", position: "top" }. radius: { kind: "radius", on: circleId, to: { angle: 60 } } or { to: pointId }. tangent_at: { kind: "tangent_at", on: circleId, point: pointId, length?: number }. perpendicular_bisector: { kind: "perpendicular_bisector", of: segmentId | { from, to } }. intersect: { kind: "intersect", of: [aId, bId], prefer?: "first"|"second", secondId?: string }. polygon_regular: { kind: "polygon_regular", on: circleId, sides, rotation? }. triangle_center: { kind: "triangle_center", vertices: [a,b,c], type: "centroid"|"incenter"|"circumcenter"|"orthocenter" }.',
+          items: { type: 'object' },
+        },
+        display: {
+          type: 'object',
+          properties: {
+            grid: { type: 'boolean' },
+            axes: { type: 'boolean' },
+            viewRange: { type: 'object', properties: { x: { type: 'array', items: { type: 'number' } }, y: { type: 'array', items: { type: 'number' } } } },
+            showCoords: { type: 'array', description: 'Point ids whose label should display "(x, y)".', items: { type: 'string' } },
+            showLength: { type: 'array', description: 'Segment ids whose label should display the computed length.', items: { type: 'string' } },
+            labels: { type: 'object', description: 'Override default label text per id.' },
+            colors: { type: 'object', description: 'Override default color per id.' },
+            dashed: { type: 'array', description: 'Segment ids to render dashed.', items: { type: 'string' } },
+          },
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'show_unit_circle',
     description: 'Display the unit circle with angle markers, reference triangles, and trig coordinates.',
     parameters: {
@@ -1461,6 +1495,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_geometry') {
     return { action: 'showGeometry', ...funcArgs } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_geometry_constructed') {
+    return { action: 'showGeometryConstructed', ...funcArgs } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_unit_circle') {
     return { action: 'showUnitCircle', ...funcArgs } as unknown as WhiteboardCommand;

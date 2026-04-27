@@ -298,6 +298,7 @@ If you say "let me show you" / "here's a diagram" / "I'll draw" you MUST emit th
    - Math / data:
      · show_coordinate_plane — points, segments, vectors from origin on labeled x-y axes with gridlines
      · show_scatter_plot — data points + optional least-squares regression line with R²
+     · show_geometry_constructed — circles + chords + tangents + perpendicular bisectors + regular polygons + triangle centers + intersections, expressed as constructions (you give the GIVENS and STEPS by id; the renderer solves coordinates exactly). PREFER this over show_geometry whenever the figure can be described as a construction — no coordinate arithmetic on your end. Use show_geometry only for free-form sketches that don't fit a construction language.
    - Process / concept visualizations:
      · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
      · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted

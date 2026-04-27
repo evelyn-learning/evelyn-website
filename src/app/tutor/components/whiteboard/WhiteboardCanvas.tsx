@@ -1549,6 +1549,46 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showGeometry':
       return <GeometryRenderer title={command.title} points={command.points} segments={command.segments} polygons={command.polygons} circles={command.circles} arcs={command.arcs} angles={command.angles} showGrid={command.showGrid} showAxes={command.showAxes} viewRange={command.viewRange} />;
 
+    case 'showGeometryConstructed': {
+      // Solve constructions into a primitive geometry payload, then render
+      // through the existing GeometryRenderer. If the solver throws (bad
+      // spec), surface a small inline error so the brain sees something
+      // failed and can self-correct on retry.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { solveGeometry } = require('@/lib/tutor/diagrams/geometry-solver') as typeof import('@/lib/tutor/diagrams/geometry-solver');
+        const solved = solveGeometry({
+          title: command.title,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          given: command.given as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          steps: command.steps as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          display: command.display as any,
+        });
+        return (
+          <GeometryRenderer
+            title={solved.title}
+            points={solved.points}
+            segments={solved.segments}
+            polygons={solved.polygons}
+            circles={solved.circles}
+            arcs={solved.arcs}
+            angles={solved.angles}
+            showGrid={solved.showGrid}
+            showAxes={solved.showAxes}
+            viewRange={solved.viewRange}
+          />
+        );
+      } catch (err) {
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Construction error: {(err as Error).message}
+          </div>
+        );
+      }
+    }
+
     case 'showUnitCircle':
       return <UnitCircleRenderer title={command.title} highlightAngles={command.highlightAngles} showAllStandard={command.showAllStandard} showRadians={command.showRadians} showDegrees={command.showDegrees} showArc={command.showArc} />;
 
