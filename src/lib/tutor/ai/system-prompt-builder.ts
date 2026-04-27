@@ -303,6 +303,7 @@ If you say "let me show you" / "here's a diagram" / "I'll draw" you MUST emit th
      · show_scatter_plot — data points + optional least-squares regression line with R²
      · show_geometry_constructed — declarative construction tool (see <geometry_constructions> below for the full step catalog). PREFER this over show_geometry whenever the figure has a construction description.
      · show_lewis_constructed — declarative Lewis-structure tool (atoms by element, bonds by atom-id pair, lone-pair counts auto-derived from valence, octet validated). PREFER this over show_lewis whenever you can describe the molecule by atoms + bonds — which is most of the time. Reserve show_lewis for resonance arrows mid-structure or expanded octets you want to assert manually.
+     · show_early_math — K-2 / K-5 visual primitives: place_value (base-10 blocks), ten_frame (5×2 dot grid), array (rows×cols dots for multiplication intro), skip_count (number line with hop arcs), bar_model (Singapore-style tape diagram). PREFER this over the dense math tools when the student is in early grades or a concept is being introduced for the first time.
    - Process / concept visualizations:
      · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
      · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted

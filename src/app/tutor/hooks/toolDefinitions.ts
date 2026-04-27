@@ -660,6 +660,41 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_early_math',
+    description: 'K-2 / K-5 visual primitives — pick `kind` from: place_value (base-10 blocks: hundreds/tens/ones), ten_frame (5×2 dot grid for early number sense), array (rows×cols dots for multiplication intro), skip_count (number line with hop arcs), bar_model (Singapore-style tape diagram for word problems). One tool, five shapes; all share a small-canvas, large-font, picture-heavy register appropriate for K-2 / K-5. Pick this over the dense math tools when the student is in the lower grades or the concept is being introduced for the first time.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', enum: ['place_value', 'ten_frame', 'array', 'skip_count', 'bar_model'] },
+        title: { type: 'string', description: 'Optional short header.' },
+        // place_value
+        hundreds: { type: 'number' },
+        tens: { type: 'number' },
+        ones: { type: 'number' },
+        showCount: { type: 'boolean' },
+        // ten_frame
+        count: { type: 'number', description: 'For ten_frame: how many cells to fill (0–total).' },
+        total: { type: 'number', description: 'For ten_frame: total cells (default 10).' },
+        // array
+        rows: { type: 'number' },
+        cols: { type: 'number' },
+        showProduct: { type: 'boolean' },
+        // skip_count
+        from: { type: 'number' },
+        step: { type: 'number' },
+        stops: { type: 'number' },
+        maxLabel: { type: 'number' },
+        // bar_model — `value` accepts number or string ("?"); leave the
+        // schema loose since JSON Schema's mixed-type form is rejected by
+        // some tool runtimes and the renderer tolerates either at runtime.
+        whole: { type: 'object', properties: { value: { type: 'string' }, label: { type: 'string' } } },
+        parts: { type: 'array', items: { type: 'object', properties: { value: { type: 'string' }, label: { type: 'string' }, color: { type: 'string' } } } },
+        question: { type: 'string' },
+      },
+      required: ['kind'],
+    },
+  },
+  {
     name: 'show_lewis_constructed',
     description: 'PREFER THIS over show_lewis whenever you can describe the molecule by atoms + bonds (which is most of the time). You declare atoms by element, bonds by atom-id pair + order; the solver places atoms via auto-layout, derives lone-pair counts from valence (no need to count electrons yourself), and validates octet/duet rules. The brain is freed from coordinate placement and electron arithmetic — both are documented frequent failure modes. Reserve show_lewis for cases where you need explicit pixel control (resonance arrows mid-structure, expanded octets you want to assert manually, etc.).',
     parameters: {
@@ -1656,6 +1691,13 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       nodes: Array.isArray(funcArgs.nodes) ? funcArgs.nodes : undefined,
       components: Array.isArray(funcArgs.components) ? funcArgs.components : [],
       showNodes: funcArgs.showNodes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_early_math') {
+    return {
+      action: 'showEarlyMath',
+      // Pass everything through; the renderer reads spec by `kind`.
+      spec: funcArgs as never,
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_lewis_constructed') {

@@ -12,6 +12,7 @@ import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, 
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
+import EarlyMathRenderer from './EarlyMathRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1646,6 +1647,10 @@ export function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showLewis':
       return <LewisRenderer title={command.title} atoms={command.atoms} bonds={command.bonds} formula={command.formula} geometry={command.geometry} />;
+
+    case 'showEarlyMath':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <EarlyMathRenderer spec={command.spec as any} />;
 
     case 'showLewisConstructed': {
       // Solve the declarative spec into a primitive Lewis payload, then
