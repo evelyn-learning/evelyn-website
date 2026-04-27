@@ -43,6 +43,44 @@ import { buildManipulativeManifest } from '@/app/tutor/components/whiteboard/Man
 import { buildNumberLineManifest } from '@/app/tutor/components/whiteboard/NumberLineRenderer';
 import { buildFractionBarManifest } from '@/app/tutor/components/whiteboard/FractionBarRenderer';
 import { buildGeometryManifest } from '@/app/tutor/components/whiteboard/GeometryRenderer';
+import { solveGeometry } from '@/lib/tutor/diagrams/geometry-solver';
+
+/**
+ * Run the same solver used at render time, then feed the resulting
+ * primitive geometry into buildGeometryManifest. This registers the
+ * SOLVED point coordinates with the catalog (e.g. "point \"A\" at
+ * (-1.21, 3.83)") so the snapshot the brain sees on the next turn
+ * carries those coords. Without this, every showGeometryConstructed
+ * item registers as zero features and the brain has to re-imagine
+ * where it placed P, Q, A, etc. — observed as cross-turn coordinate
+ * drift across slides 21-25 in the 2026-04-26 session.
+ */
+function buildGeometryConstructedManifest(cmd: { title?: string; given?: unknown[]; steps?: unknown[]; display?: Record<string, unknown> }) {
+  try {
+    const solved = solveGeometry({
+      title: cmd.title,
+      given: cmd.given as never,
+      steps: cmd.steps as never,
+      display: cmd.display as never,
+    });
+    return buildGeometryManifest({
+      title: solved.title,
+      points: solved.points,
+      segments: solved.segments,
+      polygons: solved.polygons,
+      circles: solved.circles,
+      arcs: solved.arcs,
+      angles: solved.angles,
+      showGrid: solved.showGrid,
+      showAxes: solved.showAxes,
+      viewRange: solved.viewRange,
+    });
+  } catch {
+    // Bad spec — manifest is empty. Renderer will surface the
+    // construction error; we don't need to double-report.
+    return [];
+  }
+}
 import { buildUnitCircleManifest } from '@/app/tutor/components/whiteboard/UnitCircleRenderer';
 import { buildVectorManifest } from '@/app/tutor/components/whiteboard/VectorRenderer';
 
@@ -606,6 +644,7 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     case 'showNumberLine':        return buildNumberLineManifest(cmd as any);
     case 'showFractionBar':       return buildFractionBarManifest(cmd as any);
     case 'showGeometry':          return buildGeometryManifest(cmd as any);
+    case 'showGeometryConstructed': return buildGeometryConstructedManifest(cmd as any);
     case 'showUnitCircle':        return buildUnitCircleManifest(cmd as any);
     case 'showVector':            return buildVectorManifest(cmd as any);
     // Biology / Chemistry
