@@ -570,11 +570,13 @@ function enforceGeometricInvariants(cmd: GeometryCommand, pointMap: Map<string, 
     const label = (seg.label || '').toLowerCase();
     if (!label) continue;
 
-    // Chord: both endpoints lie on a circle, and the chord is NOT a diameter
-    // (its midpoint should not be the center — otherwise it's a diameter, not
-    // a "short chord"). If the LLM picked a chord that passes through the
-    // center when the shape is titled with "chord" (not "diameter"), rotate
-    // one endpoint to break that coincidence.
+    // Chord: both endpoints lie on the circle. We snap them onto the circle
+    // (defensive — the LLM sometimes picks endpoints that are 0.1 off radius)
+    // but do NOT rotate "diameter-like" chords away from the center. A
+    // diameter IS a chord, and when the user explicitly says "chord from
+    // (-3, 4) to (3, -4)" they mean exactly those endpoints. The previous
+    // 40° rotation silently turned the user's correct (3, -4) into ~(5, -1)
+    // and made the rendered chord visibly miss the origin.
     if (/\bchord\b/.test(label) && circles.length > 0) {
       const circle = pickCircleForSegment(seg, circles, pointMap);
       if (!circle) continue;
@@ -585,18 +587,6 @@ function enforceGeometricInvariants(cmd: GeometryCommand, pointMap: Map<string, 
       if (!from || !to) continue;
       snapPointToCircle(from, center, circle.radius);
       snapPointToCircle(to, center, circle.radius);
-      // If the chord is effectively a diameter (passes through center), nudge
-      // one endpoint by a small angle so it becomes a proper shorter chord.
-      const midX = (from.x + to.x) / 2;
-      const midY = (from.y + to.y) / 2;
-      const distFromCenter = Math.sqrt((midX - center.x) ** 2 + (midY - center.y) ** 2);
-      if (distFromCenter < 0.15 * circle.radius) {
-        // Rotate `to` by 40° around the center — keeps it on the circle,
-        // pulls the midpoint clearly off-center.
-        const theta = Math.atan2(to.y - center.y, to.x - center.x) + (40 * Math.PI) / 180;
-        to.x = round2(center.x + circle.radius * Math.cos(theta));
-        to.y = round2(center.y + circle.radius * Math.sin(theta));
-      }
       continue;
     }
 
