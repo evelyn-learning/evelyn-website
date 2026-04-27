@@ -1230,6 +1230,7 @@ function TutorPage() {
                   sessionId={sessionId}
                   sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
                   sessionGoal={sessionGoal}
+                  lessonPlanId={selectedLessonPlanId || undefined}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}

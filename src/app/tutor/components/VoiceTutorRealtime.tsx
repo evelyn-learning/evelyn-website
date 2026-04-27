@@ -14,6 +14,7 @@ import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type
 import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildLessonPlanContext, resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
@@ -130,6 +131,11 @@ interface VoiceTutorRealtimeProps {
   // so both .pcm16 tracks align with the chat timeline in the replay UI.
   sessionStartedAtMs?: number;
   sessionGoal: SessionGoal;
+  /** Optional lesson plan id. When set, the brain runs in plan-driven
+   *  mode: each turn carries lessonPlanContext (current segment + plan
+   *  metadata) and segment transitions are managed via advance_lesson /
+   *  mark_segment_complete tools. Blank = free-conversation mode. */
+  lessonPlanId?: string;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -169,6 +175,7 @@ export function VoiceTutorRealtime({
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
+  lessonPlanId,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -229,6 +236,13 @@ export function VoiceTutorRealtime({
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
+
+  // Active lesson plan (when lessonPlanId prop is set). Held in refs so
+  // the in-flight brain call always sees the latest segment id even if
+  // it advances mid-turn via advance_lesson. Plan is fetched once at
+  // mount; segment progression is tracked locally.
+  const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
+  const currentSegmentIdRef = useRef<string>('');
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
   // the first one's audio — observed 2026-04-26 when the user typed two
@@ -1516,6 +1530,36 @@ export function VoiceTutorRealtime({
           if (!topicsCoveredRef.current.includes(title)) topicsCoveredRef.current.push(title);
         }
       }
+
+      // Lesson-plan navigation. The brain emits advance_lesson when it
+      // wants to move within the active plan; we resolve "next" /
+      // "previous" / explicit segment id and update currentSegmentIdRef
+      // so the NEXT brain turn ships the new segment in lessonPlanContext.
+      // The command itself is consumed here — it does not flow to the
+      // whiteboard renderer (no visual side effect).
+      if (cmd.action === 'advanceLesson') {
+        const plan = lessonPlanRef.current;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const to = (cmd as any).to as string | undefined;
+        if (plan && to) {
+          const next = resolveAdvanceTarget(plan, currentSegmentIdRef.current, to);
+          if (next) {
+            console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+            currentSegmentIdRef.current = next;
+          } else {
+            console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
+          }
+        }
+        continue;
+      }
+      if (cmd.action === 'markSegmentComplete') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
+        // Future (Track 4): write to a session-mastery store. For now,
+        // logged for telemetry only.
+        continue;
+      }
       // Problem ↔ original-equation drift check. When the tutor emits a
       // showEquation labeled like "Original Equation" or "Problem" right
       // after a showProblem, the equation latex must match what the problem
@@ -2653,6 +2697,34 @@ export function VoiceTutorRealtime({
   // Use a ref to access sendTextMessage without re-creating the listener
   const sendTextMessageRef = useRef<((text: string) => void) | null>(null);
 
+  // Load the active lesson plan (when lessonPlanId is set) at mount.
+  // The plan is held in lessonPlanRef so the brain-call assembler always
+  // sees the latest segment id without re-rendering.
+  useEffect(() => {
+    if (!lessonPlanId) {
+      lessonPlanRef.current = null;
+      currentSegmentIdRef.current = '';
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tutor/lesson-plans/${encodeURIComponent(lessonPlanId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const plan = data.plan as import('@/lib/tutor/lesson-plan/types').LessonPlan | undefined;
+        if (!plan || !plan.segments?.length) return;
+        lessonPlanRef.current = plan;
+        currentSegmentIdRef.current = plan.segments[0].id;
+        console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${plan.segments[0].id}"`);
+      } catch (err) {
+        console.error('[VoiceTutorRealtime] lesson plan fetch failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [lessonPlanId]);
+
   useEffect(() => {
     // Debounce to avoid false triggers from SMILES normalization on load
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -2836,6 +2908,15 @@ export function VoiceTutorRealtime({
         if (attempt > 0) {
           visualActionsThisTurnRef.current = new Set();
         }
+        // Compose lesson plan context from the active plan + current
+        // segment id (both ref-tracked so segment advances mid-turn are
+        // picked up on the next call). Free-conversation sessions omit
+        // this — `lessonPlanRef.current` is null.
+        const plan = lessonPlanRef.current;
+        const lessonPlanContext = plan && currentSegmentIdRef.current
+          ? buildLessonPlanContext(plan, currentSegmentIdRef.current)
+          : undefined;
+
         const res = await fetch('/api/tutor/brain/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2844,6 +2925,7 @@ export function VoiceTutorRealtime({
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
             whiteboardSnapshot: catalogRef.current.getSnapshot(),
+            lessonPlanContext,
           }),
         });
         if (!res.ok || !res.body) {

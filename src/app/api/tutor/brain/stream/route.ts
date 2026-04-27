@@ -21,7 +21,8 @@
  * the JSON route remains authoritative.
  */
 import { NextRequest } from 'next/server';
-import { streamBrainTurn, type BrainTurnInput, type BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
+import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
+import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
 
 export const runtime = 'nodejs';
@@ -31,6 +32,8 @@ interface BrainStreamRequestBody {
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   studentTranscript: string;
   whiteboardSnapshot: BrainTurnInput['whiteboardSnapshot'];
+  /** Active lesson plan context, when the session is plan-driven. */
+  lessonPlanContext?: BrainTurnInput['lessonPlanContext'];
   model?: string;
   maxTokens?: number;
 }
@@ -92,11 +95,12 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        for await (const ev of streamBrainTurn({
+        for await (const ev of runTutorTurn({
           systemPrompt: body.systemPrompt,
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,
           whiteboardSnapshot: body.whiteboardSnapshot,
+          lessonPlanContext: body.lessonPlanContext,
           tools: WHITEBOARD_TOOLS,
           model: body.model,
           maxTokens: body.maxTokens,
