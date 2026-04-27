@@ -470,9 +470,25 @@ function setObject(state: State, obj: Resolved): void {
   state.byId.set(obj.id, obj);
 }
 
-function pt(state: State, id: string): ResolvedPoint {
-  const o = state.byId.get(id);
-  if (!o || o.kind !== 'point') throw new Error(`Expected point "${id}", got ${o?.kind ?? 'undefined'}`);
+function pt(state: State, ref: string | { x: number; y: number } | undefined): ResolvedPoint {
+  // Inline { x, y } literal: synthesize a deterministic anonymous point.
+  // Identical coords return the same id across the spec so we don't
+  // proliferate duplicate dots when the brain references the same
+  // anchor (e.g. the origin) from multiple steps. Anonymous ids start
+  // with "__" so the auto-scaffold suppression skips drawing them as
+  // labelless orphans.
+  if (ref && typeof ref === 'object' && Number.isFinite(ref.x) && Number.isFinite(ref.y)) {
+    const id = `__inline_${ref.x}_${ref.y}`.replace(/[^A-Za-z0-9_-]/g, '_');
+    const existing = state.byId.get(id);
+    if (existing && existing.kind === 'point') return existing;
+    setObject(state, { kind: 'point', id, x: ref.x, y: ref.y });
+    return state.byId.get(id) as ResolvedPoint;
+  }
+  if (typeof ref !== 'string') {
+    throw new Error(`Expected point id or { x, y }, got ${JSON.stringify(ref)}`);
+  }
+  const o = state.byId.get(ref);
+  if (!o || o.kind !== 'point') throw new Error(`Expected point "${ref}", got ${o?.kind ?? 'undefined'}`);
   return o;
 }
 function circ(state: State, id: string): ResolvedCircle {
@@ -1521,6 +1537,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     labeledKeys.add(`${roundForKey(obj.x)}|${roundForKey(obj.y)}`);
   }
   const isAutoScaffold = (id: string) =>
+    id.startsWith('__') ||
     /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id);
 
   for (const id of state.order) {
