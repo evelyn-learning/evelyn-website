@@ -20,6 +20,7 @@ import LabeledImageRenderer from './LabeledImageRenderer';
 import SolvedExampleRenderer from './SolvedExampleRenderer';
 import QuizRenderer from './QuizRenderer';
 import BalancedEquationRenderer from './BalancedEquationRenderer';
+import DimensionalCheckRenderer from './DimensionalCheckRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1682,6 +1683,75 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showQuiz':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <QuizRenderer spec={command.spec as any} />;
+
+    case 'showDimensionalCheck': {
+      // Run the existing dimensional validator and render the result.
+      // Same pattern as showBalancedEquation: deterministic at canvas
+      // dispatch; errors render inline so the brain sees them.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { checkFormulaDimensions, checkAgainstUnit, dimensionsOf } = require('@/lib/tutor/validation/dimensional') as typeof import('@/lib/tutor/validation/dimensional');
+        const fmtDimLocal = (d: readonly number[]) => {
+          const labels = ['M', 'L', 'T', 'I', 'Θ', 'N', 'J'];
+          const parts: string[] = [];
+          for (let i = 0; i < 7; i++) {
+            if (d[i] !== 0) parts.push(d[i] === 1 ? labels[i] : `${labels[i]}^${d[i]}`);
+          }
+          return parts.length ? parts.join('·') : '1 (dimensionless)';
+        };
+        if (command.formula) {
+          const res = checkFormulaDimensions(command.formula);
+          return (
+            <DimensionalCheckRenderer
+              title={command.title}
+              expression={command.formula}
+              match={res.match}
+              computed={res.leftDim ? fmtDimLocal(res.leftDim) : '?'}
+              expected={res.rightDim ? fmtDimLocal(res.rightDim) : undefined}
+              issues={res.issues}
+              note={command.note}
+            />
+          );
+        }
+        if (command.expression && command.expectedUnit) {
+          const res = checkAgainstUnit(command.expression, command.expectedUnit);
+          return (
+            <DimensionalCheckRenderer
+              title={command.title}
+              expression={`${command.expression} →? [${command.expectedUnit}]`}
+              match={res.match}
+              computed={res.computed ? fmtDimLocal(res.computed) : '?'}
+              expected={res.expected ? fmtDimLocal(res.expected) : undefined}
+              issues={res.issues}
+              note={command.note}
+            />
+          );
+        }
+        if (command.expression) {
+          const r = dimensionsOf(command.expression);
+          return (
+            <DimensionalCheckRenderer
+              title={command.title}
+              expression={command.expression}
+              match
+              computed={fmtDimLocal(r.dim)}
+              note={command.note}
+            />
+          );
+        }
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Dimensional check error: provide either `formula` or `expression` (with optional `expectedUnit`).
+          </div>
+        );
+      } catch (err) {
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Dimensional check error: {(err as Error).message}
+          </div>
+        );
+      }
+    }
 
     case 'showBalancedEquation': {
       // Balance deterministically here. Same pattern as

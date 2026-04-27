@@ -859,6 +859,21 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_dimensional_check',
+    description: 'Render a physics formula or expression with DETERMINISTIC dimensional verification. Two modes: (a) pass `formula` like "F = m·a" — both sides parsed, dimensions compared, mismatch flagged ("M·L·T⁻² ≠ M·L"); (b) pass `expression` like "m v² / r" + `expectedUnit` like "N" — expression parsed, computed dimensions compared against the named unit. PREFER THIS over writing a formula into show_equation when there\'s any chance of a units mistake — forgetting a square ("KE = m·v"), missing a denominator ("F = m·v"), confusing energy and power, etc. Recognized symbols include the standard physics letters (m, v, a, F, E, K, U, p, P, q, V, R, ω, …). Recognized units include SI base + N, J, W, Pa, Hz, V, Ω, m/s, m/s².',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        formula: { type: 'string', description: 'Mode A: a formula with "=", e.g. "F = m·a", "T = 2π√(L/g)".' },
+        expression: { type: 'string', description: 'Mode B: a single expression to check against expectedUnit.' },
+        expectedUnit: { type: 'string', description: 'Mode B: target unit name from the recognized set (N, J, W, Pa, Hz, V, Ω, m/s, m/s², s, m, kg, A, C).' },
+        note: { type: 'string', description: 'Optional one-line note shown below.' },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'show_balanced_equation',
     description: 'Render a chemical equation balanced DETERMINISTICALLY. You provide the unbalanced equation as a string ("Fe + O2 -> Fe2O3" or "C3H8 + O2 -> CO2 + H2O" — coefficients ignored / recomputed). The solver parses formulas (parentheses + subscripts supported), builds the conservation matrix, and computes smallest positive-integer coefficients. Output is the balanced equation rendered with subscripts. PREFER THIS over writing balanced equations into show_equation by hand — the brain frequently miscounts atoms in non-trivial reactions (combustion of larger hydrocarbons, redox, etc.). Errors propagate cleanly: if the equation is structurally unbalanceable (different elements on each side, missing terms), the solver throws a specific message the brain can react to.',
     parameters: {
@@ -1895,6 +1910,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_quiz') {
     return { action: 'showQuiz', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_dimensional_check') {
+    return {
+      action: 'showDimensionalCheck',
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      formula: typeof funcArgs.formula === 'string' ? funcArgs.formula : undefined,
+      expression: typeof funcArgs.expression === 'string' ? funcArgs.expression : undefined,
+      expectedUnit: typeof funcArgs.expectedUnit === 'string' ? funcArgs.expectedUnit : undefined,
+      note: typeof funcArgs.note === 'string' ? funcArgs.note : undefined,
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_balanced_equation') {
     return {
