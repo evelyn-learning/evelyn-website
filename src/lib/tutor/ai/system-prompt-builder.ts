@@ -298,7 +298,7 @@ If you say "let me show you" / "here's a diagram" / "I'll draw" you MUST emit th
    - Math / data:
      · show_coordinate_plane — points, segments, vectors from origin on labeled x-y axes with gridlines
      · show_scatter_plot — data points + optional least-squares regression line with R²
-     · show_geometry_constructed — circles + chords + tangents + perpendicular bisectors + regular polygons + triangle centers + intersections, expressed as constructions (you give the GIVENS and STEPS by id; the renderer solves coordinates exactly). PREFER this over show_geometry whenever the figure can be described as a construction — no coordinate arithmetic on your end. Use show_geometry only for free-form sketches that don't fit a construction language.
+     · show_geometry_constructed — declarative construction tool (see <geometry_constructions> below for the full step catalog). PREFER this over show_geometry whenever the figure has a construction description.
    - Process / concept visualizations:
      · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
      · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted
@@ -388,6 +388,87 @@ If you call show_* with arguments equivalent to an existing item, the
 tool_result will come back as 'success: false, duplicate: true,
 existingItemId: "..."' and your render is skipped. Treat that as a
 hint to scroll/scribble against the existing item instead.
+
+<geometry_constructions>
+show_geometry_constructed reference. Spec shape:
+  { title?, given?: Given[], steps?: Step[], display?: Display }
+
+Given (raw objects):
+  point     { id, x, y, label?, showCoords? }
+  circle    { id, center, radius, label? }
+  segment   { id, from, to, label? }
+  line      { id, through: [a, b], label? }
+  polygon   { id, vertices: [...], label? }
+
+Steps. All take { id, label? } plus the kind-specific fields below.
+Givens may also appear as steps (segment/line/polygon/circle) when
+composing top-to-bottom feels more natural.
+
+  Points and ratios:
+    midpoint                  { of: segId | { from, to } }
+    point_on_circle           { on, angle }                       # degrees CCW
+    section_point             { of, ratio: [m, n] }                # m toward to, n toward from
+    reflect_point             { point, across }                    # see line refs below
+    rotate_point              { point, around, angle }             # degrees CCW
+    translate_point           { point, by: { dx, dy } }
+    dilate_point              { point, about, factor }
+
+  Lines, rays, segments derived:
+    ray                       { from, toward, length?, endId? }
+    perpendicular_bisector    { of: segId | { from, to }, length? }
+    perpendicular_from        { from: pt, to: lineRef, footId? }
+    parallel_through          { through: pt, of: lineRef, length? }
+    angle_bisector            { vertex, from, to, length? }        # interior
+    external_angle_bisector   { vertex, from, to, length? }
+
+  Circles and pieces:
+    chord                     { on, length?: number | { ratio, of: "radius"|"diameter" },
+                                direction?: number | "horizontal" | "vertical",
+                                position?: "top"|"bottom"|"left"|"right",
+                                through?, endpoints? }
+    radius                    { on, to: pointId | { angle, pointId? } }
+    diameter                  { on, direction? | through?, endpoints? }
+    tangent_at                { on, point, length? }
+    tangent_from              { on, external, prefer?: "cw"|"ccw", touchId? }
+    tangents_from_external    { on, external, segmentIds?, touchIds? }   # both
+    arc                       { on, from, to, direction?: "ccw"|"cw" }
+    sector                    { on, from, to, direction?, arcSegments? }
+
+  Intersections:
+    intersect                 { of: [a, b], prefer?, secondId? }   # line∩line, line∩circle, circle∩circle
+
+  Polygons & triangles:
+    polygon_regular           { on, sides, rotation?, vertexIds? }
+    triangle_center           { vertices: [a,b,c], type: "centroid"|"incenter"|"circumcenter"|"orthocenter" }
+
+  Circle creation:
+    circle_through_point      { center, through }
+    circle_through_three      { points: [a,b,c] }
+    incircle                  { vertices: [a,b,c], centerId?, tangentIds? }
+    circumcircle              { vertices: [a,b,c], centerId? }
+    excircle                  { vertices: [a,b,c], opposite?: "first"|"second"|"third", centerId?, tangentIds? }
+
+Line references (used by reflect_point.across, perpendicular_from.to,
+parallel_through.of) accept any of:
+  - id of a declared line/segment
+  - "x-axis" or "y-axis" keyword
+  - inline { through: [a, b] } where a, b are point ids OR { x, y } literals
+
+Auto-generated child ids use UNDERSCORE — id "ch" → "ch_from"/"ch_to";
+"hex" → "hex_v0"…"hex_v5"; incircle "inc" → "inc_center","inc_T1","inc_T2",
+"inc_T3"; circumcircle "cc" → "cc_center"; tangents_from_external "tt" →
+"tt_a"/"tt_b" segments and "tt_touchA"/"tt_touchB" points. To pick your
+own names, pass endpoints / vertexIds / centerId / footId / touchId /
+touchIds / tangentIds / segmentIds directly on the step.
+
+Display options (display: { ... }):
+  axes, grid                  default true; pass false to opt out
+  viewRange                   { x: [min, max], y: [min, max] }
+  showCoords                  string[]  — point ids that render with "(x, y)" appended
+  showLength                  string[]  — segment ids that render with computed length
+  labels, colors              Record<id, string>  — override label text or color
+  dashed                      string[]  — segment ids drawn dashed
+</geometry_constructions>
 
 **"Point at X" / "Show me where Y is" / "Can you locate Z" REQUIRE a
 tool call.** These phrases are direct instructions to mark the board.

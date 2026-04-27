@@ -197,12 +197,9 @@ export interface StepPerpBisector extends StepCommon {
  *  from the point to the foot of the perpendicular. */
 export interface StepPerpFrom extends StepCommon {
   kind: 'perpendicular_from';
-  /** The point we drop the perpendicular from. Brain reaches naturally
-   *  for `from`; `point` is accepted as a legacy alias. */
-  from?: string;
-  point?: string;
-  /** The line or segment we drop onto. Accepts an id, the keywords
-   *  "x-axis" / "y-axis", or an inline `{ through: [a, b] }`. */
+  /** The point we drop the perpendicular from. */
+  from: string;
+  /** The line or segment we drop onto (id, "x-axis"/"y-axis", or inline). */
   to: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
   /** Id of the foot point. Defaults to `${id}_foot`. */
   footId?: string;
@@ -211,15 +208,11 @@ export interface StepPerpFrom extends StepCommon {
 /** Line through a point parallel to a reference line/segment. */
 export interface StepParallelThrough extends StepCommon {
   kind: 'parallel_through';
-  /** The point the parallel line passes through. Brain reaches naturally
-   *  for `through`; `point` is accepted as a legacy alias. */
-  through?: string;
-  point?: string;
-  /** The line/segment we want to be parallel to. Brain reaches naturally
-   *  for `of`; `to` is accepted as a legacy alias. Accepts an id, the
-   *  keywords "x-axis" / "y-axis", or an inline `{ through: [a, b] }`. */
-  of?: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
-  to?: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
+  /** The point the parallel line passes through. */
+  through: string;
+  /** The line/segment we want to be parallel to (id, "x-axis"/"y-axis",
+   *  or inline). */
+  of: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
   length?: number;
 }
 
@@ -861,8 +854,12 @@ function solvePerpBisector(step: StepPerpBisector, state: State): void {
 }
 
 function solvePerpFrom(step: StepPerpFrom, state: State): void {
-  const fromPointId = step.from ?? step.point;
-  if (!fromPointId) throw new Error(`perpendicular_from "${step.id}": missing 'from' (or 'point')`);
+  // Silent backward-compat: brain may still emit `point` (legacy alias for
+  // `from`). Documented schema is `from`/`to` only.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = step as any;
+  const fromPointId = step.from ?? raw.point;
+  if (!fromPointId) throw new Error(`perpendicular_from "${step.id}": missing 'from'`);
   if (!step.to) throw new Error(`perpendicular_from "${step.id}": missing 'to'`);
   const P = pt(state, fromPointId);
   const ln = resolveLineRef(state, step.to as LineRef);
@@ -878,10 +875,15 @@ function solvePerpFrom(step: StepPerpFrom, state: State): void {
 }
 
 function solveParallelThrough(step: StepParallelThrough, state: State): void {
-  const throughPointId = step.through ?? step.point;
-  const refLineId = step.of ?? step.to;
-  if (!throughPointId) throw new Error(`parallel_through "${step.id}": missing 'through' (or 'point')`);
-  if (!refLineId) throw new Error(`parallel_through "${step.id}": missing 'of' (or 'to')`);
+  // Silent backward-compat: brain may still emit `point` (legacy alias for
+  // `through`) or `to` (legacy alias for `of`). Documented schema is
+  // `through`/`of` only.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = step as any;
+  const throughPointId = step.through ?? raw.point;
+  const refLineId = step.of ?? raw.to;
+  if (!throughPointId) throw new Error(`parallel_through "${step.id}": missing 'through'`);
+  if (!refLineId) throw new Error(`parallel_through "${step.id}": missing 'of'`);
   const P = pt(state, throughPointId);
   const ln = resolveLineRef(state, refLineId as LineRef);
   const dx = ln.bx - ln.ax;
