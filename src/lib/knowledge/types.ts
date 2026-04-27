@@ -717,6 +717,15 @@ export type WhiteboardCommand =
   | { action: 'showGeometryConstructed'; title?: string; given?: unknown[]; steps?: unknown[]; display?: Record<string, unknown> }
   | { action: 'advanceLesson'; to: string; reason?: string }
   | { action: 'markSegmentComplete'; segmentId: string; masteryDelta?: number; notes?: string }
+  | {
+      action: 'showTryYourself';
+      problem: string;
+      expectedAnswer?: string;
+      responseFormat?: 'mcq' | 'frq' | 'numeric';
+      choices?: Array<{ id: string; text: string; correct?: boolean }>;
+      hints?: string[];
+      title?: string;
+    }
   | { action: 'showUnitCircle'; title?: string; highlightAngles?: UnitCircleHighlight[]; showAllStandard?: boolean; showRadians?: boolean; showDegrees?: boolean; showArc?: { from: number; to: number; color?: string; label?: string } }
   | { action: 'showFractionBar'; title?: string; items: Array<{ numerator: number; denominator: number; label?: string; highlightColor?: string; style?: 'bar' | 'circle' | 'grid' }>; layout?: 'vertical' | 'horizontal'; showComparison?: boolean }
   | { action: 'showTree'; title?: string; type?: 'probability' | 'factor' | 'decision' | 'generic'; root: TreeNode; showLeafProbabilities?: boolean; direction?: 'top-down' | 'left-right' }

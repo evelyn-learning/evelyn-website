@@ -2926,6 +2926,7 @@ export function VoiceTutorRealtime({
             studentTranscript: runTranscript,
             whiteboardSnapshot: catalogRef.current.getSnapshot(),
             lessonPlanContext,
+            grade: level,
           }),
         });
         if (!res.ok || !res.body) {
@@ -2971,9 +2972,25 @@ export function VoiceTutorRealtime({
                   if (!sentence.trim()) continue;
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
-                  attemptText += (attemptText ? ' ' : '') + sentence.trim();
+                  // Strip the `*emphasis*` markers before storing transcript /
+                  // voicing — the markers are a hint to the speaking layer
+                  // (P-01 talk-like-a-teacher), not student-visible text.
+                  // Realtime / Cartesia consumers can intercept the raw form
+                  // upstream when needed; until then, plain text is correct.
+                  const cleanSentence = sentence.trim().replace(/\*([^*]+)\*/g, '$1');
+                  attemptText += (attemptText ? ' ' : '') + cleanSentence;
                   if (!attemptKilled) {
-                    speakTextRef.current?.(sentence.trim());
+                    speakTextRef.current?.(cleanSentence);
+                  }
+                } else if (ev.type === 'pause') {
+                  // P-02 comprehension pause. The brain or the engine asked
+                  // us to wait before voicing the next sentence so the
+                  // student can read what just landed on the board / let
+                  // a key idea settle. Honored only when this attempt is
+                  // still alive — a killed attempt skips its tail anyway.
+                  if (!attemptKilled) {
+                    const ms = Math.max(0, Math.min(4000, (ev.ms as number) || 0));
+                    if (ms > 0) await new Promise((r) => setTimeout(r, ms));
                   }
                 } else if (ev.type === 'tool-call') {
                   const name = ev.name as string;

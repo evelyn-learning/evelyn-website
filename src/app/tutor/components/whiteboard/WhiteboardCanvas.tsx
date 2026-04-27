@@ -11,6 +11,7 @@ import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } fr
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
+import { TryYourselfRenderer } from './TryYourselfRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1292,6 +1293,18 @@ export function CommandRenderer({ command }: CommandRendererProps) {
         >
           <p className="text-lg">{command.text}</p>
         </div>
+      );
+
+    case 'showTryYourself':
+      return (
+        <TryYourselfRenderer
+          title={command.title}
+          problem={command.problem}
+          expectedAnswer={command.expectedAnswer}
+          responseFormat={command.responseFormat}
+          choices={command.choices}
+          hints={command.hints}
+        />
       );
 
     case 'showProblem': {

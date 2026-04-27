@@ -107,10 +107,19 @@ export interface BrainTurnOutput {
  * event from iteration N+1.
  */
 export type BrainStreamEvent =
-  /** A complete sentence ready to be voiced. Already trimmed. */
-  | { type: 'sentence'; text: string }
+  /** A complete sentence ready to be voiced. Already trimmed.
+   *  May contain `*emphasized*` markers — the speakText layer maps
+   *  those to TTS emphasis (Realtime: prosody hint; Cartesia: SSML).
+   *  May also carry an inline `pauseAfter` hint requesting the speaking
+   *  client to wait before the next sentence (used after dense
+   *  explanations or when `<show_*>` just landed). */
+  | { type: 'sentence'; text: string; pauseAfter?: 'small' | 'medium' | 'large' }
   /** A tool call whose input JSON is fully assembled. Dispatch inline. */
   | { type: 'tool-call'; id: string; name: string; args: Record<string, unknown> }
+  /** Explicit pause directive emitted between sentences. The speakText
+   *  layer waits this long before voicing the next sentence. Cancelled
+   *  immediately if the student speaks (barge-in). */
+  | { type: 'pause'; ms: number; reason?: string }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';

@@ -10,6 +10,9 @@
 import type { KnowledgeModule } from '../../knowledge/types';
 import type { SessionState, SessionGoal } from '../types';
 import { formatPronunciationPrompt } from '@/data/tutor/pronunciation';
+import { getGradeProfile, renderGradeProfileBlock } from '@/lib/tutor/pedagogy/grade-profile';
+import { renderVoiceCadenceBlock } from '@/lib/tutor/pedagogy/voice-cadence';
+import { renderHumorBlock } from '@/lib/tutor/pedagogy/humor';
 
 /**
  * Generate a context-aware initial greeting prompt based on session goal
@@ -719,6 +722,11 @@ Every academic response includes a whiteboard tool call — never explain withou
 export function buildSystemPrompt(context: SystemPromptContext): string {
   let prompt = BASE_PROMPT;
 
+  // Pedagogy spine — grade-band behavior + voice cadence + humor.
+  // Inlined once, cached in the system-prompt preamble. Read this BEFORE
+  // anything else; it modulates every other rule below.
+  prompt += `\n\n${renderPedagogyBlock(context.level)}\n`;
+
   // Add module-specific content
   if (context.module) {
     prompt += `\n\n## Topic-Specific Guidelines\n\n`;
@@ -817,4 +825,25 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   }
 
   return prompt;
+}
+
+/** Compose grade profile + voice cadence + humor into one prompt block.
+ *  Kept here (not in the pedagogy/ module) so the system prompt builder
+ *  controls the order and the framing intro. */
+function renderPedagogyBlock(level: string | undefined): string {
+  const profile = getGradeProfile(level);
+  return [
+    `## Pedagogy spine — read before every turn`,
+    ``,
+    `Three things modulate everything else: the student's grade band, how`,
+    `you SOUND when speaking, and how you can use humor / stories. The blocks`,
+    `below tell you what's appropriate for THIS session. The other rules in`,
+    `this prompt assume you've already adjusted for these.`,
+    ``,
+    renderGradeProfileBlock(profile),
+    ``,
+    renderVoiceCadenceBlock(),
+    ``,
+    renderHumorBlock(profile.humorCeiling),
+  ].join('\n');
 }

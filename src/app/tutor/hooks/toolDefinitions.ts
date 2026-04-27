@@ -325,6 +325,30 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_try_yourself',
+    description: 'Hand off a small problem for the student to try right now. Different from show_problem — this is mid-explanation, the student is expected to answer in the next turn (voice, scribble on the whiteboard, upload a picture of work, or tap an MCQ choice). Use this when you\'ve just explained a concept and want to check if it landed BEFORE moving on. Provide expectedAnswer so the engine can verify; provide hints in escalating order. Choose responseFormat="mcq" with choices for tap-to-answer; "frq" for free response; "numeric" for a single number.',
+    parameters: {
+      type: 'object',
+      properties: {
+        problem: { type: 'string', description: 'The problem the student should attempt. Keep short — 1-2 sentences.' },
+        expectedAnswer: { type: 'string', description: 'The correct answer. The engine matches student responses against this.' },
+        responseFormat: { type: 'string', enum: ['mcq', 'frq', 'numeric'] },
+        choices: {
+          type: 'array',
+          description: 'Required when responseFormat="mcq". 2-4 options, exactly one correct.',
+          items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' }, correct: { type: 'boolean' } }, required: ['id', 'text'] },
+        },
+        hints: {
+          type: 'array',
+          description: 'Hints in escalating specificity. The engine reveals them on demand.',
+          items: { type: 'string' },
+        },
+        title: { type: 'string', description: 'Optional short header, e.g. "Your turn."' },
+      },
+      required: ['problem'],
+    },
+  },
+  {
     name: 'show_problem',
     description: 'Problem card for practice / quiz / homework prompts. `statement` carries the full problem text; `format` selects the presentation (multiple-choice cards require `answerChoices`).',
     parameters: {
@@ -1714,6 +1738,17 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       title: funcArgs.title,
       trait: funcArgs.trait,
       showPhenotypeRatio: funcArgs.showPhenotypeRatio !== false,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_try_yourself') {
+    return {
+      action: 'showTryYourself',
+      problem: String(funcArgs.problem ?? ''),
+      expectedAnswer: typeof funcArgs.expectedAnswer === 'string' ? funcArgs.expectedAnswer : undefined,
+      responseFormat: funcArgs.responseFormat,
+      choices: Array.isArray(funcArgs.choices) ? funcArgs.choices : undefined,
+      hints: Array.isArray(funcArgs.hints) ? funcArgs.hints : undefined,
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_problem') {
