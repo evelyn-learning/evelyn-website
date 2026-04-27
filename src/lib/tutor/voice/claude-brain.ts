@@ -46,6 +46,11 @@ export interface BrainTurnInput {
    *  treats the current segment as the proximate teaching goal and uses
    *  `advance_lesson` to move on. Free-form sessions omit this. */
   lessonPlanContext?: LessonPlanContext;
+  /** Compact student-profile block for cross-session memory. Empty for
+   *  unauthenticated demo sessions; populated for retail / B2B with a
+   *  persistent student id. The brain reads it for past mastery, open
+   *  gaps, and recent-session continuity. */
+  studentProfileBlock?: string;
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
   /** Optional override (defaults to 1500). */
@@ -265,10 +270,12 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // wrapped in clearly labeled blocks. Keeping them in the user role (rather
   // than as a separate "system" injection) lets prompt caching segment the
   // stable preamble from the volatile per-turn payload.
+  const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
   const userContent =
+    profileBlock +
     lessonBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
@@ -371,10 +378,12 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
  */
 export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<BrainStreamEvent, void, void> {
   const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
+  const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
   const userContent =
+    profileBlock +
     lessonBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;

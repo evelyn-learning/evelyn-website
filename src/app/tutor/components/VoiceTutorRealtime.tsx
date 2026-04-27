@@ -136,6 +136,11 @@ interface VoiceTutorRealtimeProps {
    *  metadata) and segment transitions are managed via advance_lesson /
    *  mark_segment_complete tools. Blank = free-conversation mode. */
   lessonPlanId?: string;
+  /** Optional student id. When set, the brain receives a
+   *  <student_profile> block on every turn (mastery, gaps, recent
+   *  sessions) and end-of-session deltas are committed. Demo flows
+   *  without auth omit this — the session is ephemeral. */
+  studentId?: string;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -176,6 +181,7 @@ export function VoiceTutorRealtime({
   sessionStartedAtMs,
   sessionGoal,
   lessonPlanId,
+  studentId,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -237,12 +243,67 @@ export function VoiceTutorRealtime({
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
 
+  // Commit accumulated session events to the student profile (mastery,
+  // gaps, recent-session memory + auto-generated notes). Fire-and-forget;
+  // the user doesn't wait for notes generation. Safe to call multiple
+  // times (the accumulator is reset after each commit so no double-
+  // counting). No-op when studentId is unset (demo flow).
+  const commitSessionToProfile = useCallback(async () => {
+    if (!studentId) return;
+    const accum = sessionAccumRef.current;
+    if (accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0) return;
+    const transcript = transcriptRef.current
+      .filter((t) => t.role === 'student' || t.role === 'tutor')
+      .map((t) => ({ role: t.role as 'student' | 'tutor', text: t.text }));
+    const body = {
+      sessionId: sessionIdRef.current,
+      endedAt: new Date().toISOString(),
+      subject,
+      topic,
+      grade: level,
+      lessonPlanId,
+      losTouched: Array.from(accum.losTouched),
+      masteryDeltas: accum.masteryDeltas,
+      gaps: accum.gaps,
+      transcript,
+    };
+    sessionAccumRef.current = { losTouched: new Set(), masteryDeltas: [], gaps: [] };
+    try {
+      const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        console.warn('[VoiceTutorRealtime] profile commit failed:', res.status);
+        return;
+      }
+      const data = await res.json();
+      if (data.notes) {
+        console.log('[VoiceTutorRealtime] session notes generated:', data.notes.summary);
+      }
+    } catch (err) {
+      console.warn('[VoiceTutorRealtime] profile commit error:', err);
+    }
+  }, [studentId, subject, topic, level, lessonPlanId]);
+
   // Active lesson plan (when lessonPlanId prop is set). Held in refs so
   // the in-flight brain call always sees the latest segment id even if
   // it advances mid-turn via advance_lesson. Plan is fetched once at
   // mount; segment progression is tracked locally.
   const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const currentSegmentIdRef = useRef<string>('');
+
+  // Student profile context (when studentId prop is set). The block is
+  // a pre-rendered string the brain reads on every turn. The accumulator
+  // collects session events (mastery deltas from mark_segment_complete,
+  // gaps from record_gap, LOs touched) and commits them at session end.
+  const studentProfileBlockRef = useRef<string>('');
+  const sessionAccumRef = useRef<{
+    losTouched: Set<string>;
+    masteryDeltas: Array<{ loId: string; delta: number }>;
+    gaps: Array<{ loId: string; description: string }>;
+  }>({ losTouched: new Set(), masteryDeltas: [], gaps: [] });
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
   // the first one's audio — observed 2026-04-26 when the user typed two
@@ -1556,8 +1617,26 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
         console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
-        // Future (Track 4): write to a session-mastery store. For now,
-        // logged for telemetry only.
+        // Push the mastery delta into the session accumulator so it
+        // commits at end-of-session. We tag it with the lesson plan's
+        // first LO when available — the segment itself doesn't carry an
+        // LO id directly, but the plan is the proximate scope.
+        const plan = lessonPlanRef.current;
+        const loId = plan?.los?.[0]?.id;
+        if (loId && typeof c.masteryDelta === 'number') {
+          sessionAccumRef.current.masteryDeltas.push({ loId, delta: c.masteryDelta });
+          sessionAccumRef.current.losTouched.add(loId);
+        }
+        continue;
+      }
+      if (cmd.action === 'recordGap') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        if (c.loId && c.description) {
+          sessionAccumRef.current.gaps.push({ loId: c.loId, description: c.description });
+          sessionAccumRef.current.losTouched.add(c.loId);
+          console.log(`[VoiceTutorRealtime] gap recorded: [${c.loId}] ${c.description}`);
+        }
         continue;
       }
       // Problem ↔ original-equation drift check. When the tutor emits a
@@ -2697,6 +2776,30 @@ export function VoiceTutorRealtime({
   // Use a ref to access sendTextMessage without re-creating the listener
   const sendTextMessageRef = useRef<((text: string) => void) | null>(null);
 
+  // Load the student profile block at mount when a studentId is
+  // configured. The block is a pre-rendered string the brain reads on
+  // every turn. Errors are swallowed — a missing profile block is fine
+  // (brain just runs without cross-session memory for this turn).
+  useEffect(() => {
+    if (!studentId) {
+      studentProfileBlockRef.current = '';
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        studentProfileBlockRef.current = data.block ?? '';
+      } catch (err) {
+        console.warn('[VoiceTutorRealtime] student profile fetch failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [studentId]);
+
   // Load the active lesson plan (when lessonPlanId is set) at mount.
   // The plan is held in lessonPlanRef so the brain-call assembler always
   // sees the latest segment id without re-rendering.
@@ -2926,6 +3029,7 @@ export function VoiceTutorRealtime({
             studentTranscript: runTranscript,
             whiteboardSnapshot: catalogRef.current.getSnapshot(),
             lessonPlanContext,
+            studentProfileBlock: studentProfileBlockRef.current || undefined,
             grade: level,
           }),
         });
@@ -3723,6 +3827,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
                   if (audioRecordEnabled) {
                     try { await audioRecorder.finalize(); } catch {}
                   }
+                  // Commit session to student profile (mastery, gaps, notes).
+                  // Fire-and-forget; doesn't block end-of-session UI.
+                  void commitSessionToProfile();
                   onEndSession();
                 }, 20000);
                 return;
@@ -3731,6 +3838,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               if (audioRecordEnabled) {
                 try { await audioRecorder.finalize(); } catch {}
               }
+              void commitSessionToProfile();
               onEndSession();
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"

@@ -1428,6 +1428,18 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'record_gap',
+    description: 'Record a learning gap you noticed in the student. Call this when you spot a misconception, a missing prerequisite, or an LO they\'re struggling with that should be revisited later. The gap is persisted on the student profile and shows up in future sessions\' <student_profile> block. Be specific: cite what the student said or did. Don\'t over-record — one gap per genuinely distinct issue per session.',
+    parameters: {
+      type: 'object',
+      properties: {
+        loId: { type: 'string', description: 'LO id this gap relates to. Use a known curriculum id (e.g. "ccss.math.5.nf.a.1") when possible; free-form ids OK if no standard match.' },
+        description: { type: 'string', description: 'Specific note: what the student said or did that revealed the gap. 1-2 sentences.' },
+      },
+      required: ['loId', 'description'],
+    },
+  },
+  {
     name: 'mark_segment_complete',
     description: 'Record that a lesson-plan segment is finished. Optionally include a mastery delta (-1 to 1) reflecting how well the student handled the segment\'s goal. Used by the session intelligence layer to update the student profile.',
     parameters: {
@@ -2060,6 +2072,13 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       segmentId: String(funcArgs.segmentId ?? ''),
       masteryDelta: typeof funcArgs.masteryDelta === 'number' ? funcArgs.masteryDelta : undefined,
       notes: typeof funcArgs.notes === 'string' ? funcArgs.notes : undefined,
+    };
+  }
+  if (funcName === 'record_gap') {
+    return {
+      action: 'recordGap',
+      loId: String(funcArgs.loId ?? ''),
+      description: String(funcArgs.description ?? ''),
     };
   }
 

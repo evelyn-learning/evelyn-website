@@ -98,4 +98,28 @@ When a principle is wired, mark it `wired` and link the file. When it's a known 
 - where: `src/app/tutor/hooks/toolDefinitions.ts` (tool registered + dispatch); `src/app/tutor/components/whiteboard/TryYourselfRenderer.tsx` (UI); `src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx` (case wired). Whiteboard scribble + photo upload flow through `/api/tutor/extract-homework` as before.
 - notes: still to do — wire the `onSubmit` callback to inject a synthetic student turn into the brain so the brain sees the answer immediately (today the student would need to also speak the answer). Tracking under Track 2e completion.
 
-<!-- Append new principles below. Suggested numbering continues from P-03. -->
+### [P-06] Tutor remembers across sessions
+
+**Principle.** A real human tutor remembers what the student worked on last week, where they got stuck, what they're strong at, and starts the next session there. A tutor that re-introduces itself and re-discovers the student's level every session is a chatbot, not a tutor.
+
+**Manifestation in tutor.** When the student is logged in (retail) or has a partner-supplied id (B2B), the brain receives a `<student_profile>` block on every turn containing per-LO mastery, open learning gaps, and recent-session memories. The brain refers back ("last time you struggled with X — let's start there") rather than treating each session as fresh.
+
+**Implementation.**
+- type: engine-rule + system-prompt-rule
+- status: wired (Track 4a)
+- where: `src/lib/tutor/student-profile/types.ts` (StudentProfile, MasteryEntry, GapEntry, SessionMemory, StudentPreferences); `src/lib/tutor/student-profile/store.ts` (DB-backed with ephemeral fallback; `getOrCreateStudentProfile`, `applyMasteryDeltas`, `recordGap`, `appendSessionMemory`, `saveStudentProfile`); `src/lib/tutor/student-profile/render.ts` (compact prompt block); `src/models/StudentProfile.ts` (Mongo model); `src/app/api/tutor/student-profile/[id]/route.ts` (GET load + POST commit at end of session).
+- notes: brain reads via `BrainTurnInput.studentProfileBlock`. Mid-session, the brain calls `record_gap({ loId, description })` to flag an issue and `mark_segment_complete({ segmentId, masteryDelta })` to log a positive/negative mastery delta. End-of-session, VoiceTutorRealtime POSTs the accumulated deltas + transcript to the profile route, which applies the deltas, generates session notes, and persists the result.
+
+### [P-07] Every session ends with notes the student can keep
+
+**Principle.** Tutoring isn't just the conversation — it's the residue. After a good lesson, the student should walk away with theory, methods, and a cheat sheet they can refer back to, calibrated to their grade level.
+
+**Manifestation in tutor.** When a session ends, three artifacts auto-generate from the transcript + lesson plan: a Theory note (concepts + formulas + intuition), a Methods note (solving approaches with worked examples), and a Cheat Sheet at three sizes (short / medium / complete). Calibrated to the student's grade band so the language matches.
+
+**Implementation.**
+- type: engine-rule
+- status: wired (Track 4b)
+- where: `src/lib/tutor/student-profile/notes.ts` — `generateSessionNotes()` runs Claude Haiku 4.5 with a structured-output system prompt; called from the profile commit route after deltas are applied. Result returned in the POST response and persisted as `summary` on the SessionMemory.
+- notes: model defaults to `claude-haiku-4-5-20251001` for cost; override via `NOTES_MODEL` env. Generation is part of the commit response today (~3-5s); future commit will move it to a background queue with a `notes-pending` placeholder + email-when-ready, so end-of-session UX is instant.
+
+<!-- Append new principles below. Suggested numbering continues from P-08. -->

@@ -717,6 +717,7 @@ export type WhiteboardCommand =
   | { action: 'showGeometryConstructed'; title?: string; given?: unknown[]; steps?: unknown[]; display?: Record<string, unknown> }
   | { action: 'advanceLesson'; to: string; reason?: string }
   | { action: 'markSegmentComplete'; segmentId: string; masteryDelta?: number; notes?: string }
+  | { action: 'recordGap'; loId: string; description: string }
   | {
       action: 'showTryYourself';
       problem: string;

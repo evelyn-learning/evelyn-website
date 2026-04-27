@@ -34,6 +34,8 @@ interface BrainStreamRequestBody {
   whiteboardSnapshot: BrainTurnInput['whiteboardSnapshot'];
   /** Active lesson plan context, when the session is plan-driven. */
   lessonPlanContext?: BrainTurnInput['lessonPlanContext'];
+  /** Pre-rendered student profile block (cross-session memory). */
+  studentProfileBlock?: string;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   model?: string;
@@ -103,6 +105,7 @@ export async function POST(req: NextRequest) {
           studentTranscript: body.studentTranscript,
           whiteboardSnapshot: body.whiteboardSnapshot,
           lessonPlanContext: body.lessonPlanContext,
+          studentProfileBlock: body.studentProfileBlock,
           grade: body.grade,
           tools: WHITEBOARD_TOOLS,
           model: body.model,
