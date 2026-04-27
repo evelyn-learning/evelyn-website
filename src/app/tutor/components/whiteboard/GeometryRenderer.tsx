@@ -72,6 +72,42 @@ function makeTransform(range: { x: [number, number]; y: [number, number] }) {
   };
 }
 
+/**
+ * Expand the math range so its aspect ratio matches the SVG's pixel aspect.
+ * Without this, a square math viewport (e.g. radius-5 circle in a [-7,7]×[-7,7]
+ * window) gets stretched horizontally by SVG_WIDTH/SVG_HEIGHT = 1.25, so
+ * circles render as ellipses and equal angles look unequal. We always
+ * EXPAND (never shrink) the tighter dimension so all content stays visible
+ * and the diagram remains centered on its original midpoint.
+ */
+function matchRangeAspect(
+  range: { x: [number, number]; y: [number, number] },
+): { x: [number, number]; y: [number, number] } {
+  const [xMin, xMax] = range.x;
+  const [yMin, yMax] = range.y;
+  const xSpan = xMax - xMin;
+  const ySpan = yMax - yMin;
+  const targetAspect = SVG_WIDTH / SVG_HEIGHT;
+  const currentAspect = xSpan / ySpan;
+  if (Math.abs(currentAspect - targetAspect) < 1e-6) return range;
+  if (currentAspect < targetAspect) {
+    // Math is too narrow → expand x (keeping it centered).
+    const newXSpan = ySpan * targetAspect;
+    const xCenter = (xMin + xMax) / 2;
+    return {
+      x: [xCenter - newXSpan / 2, xCenter + newXSpan / 2],
+      y: range.y,
+    };
+  }
+  // Math is too wide → expand y.
+  const newYSpan = xSpan / targetAspect;
+  const yCenter = (yMin + yMax) / 2;
+  return {
+    x: range.x,
+    y: [yCenter - newYSpan / 2, yCenter + newYSpan / 2],
+  };
+}
+
 /** Convert a math-unit distance to pixel distance (x-axis scale) */
 function mathToPixelX(range: { x: [number, number] }, dist: number): number {
   const xSpan = range.x[1] - range.x[0] || 1;
@@ -238,6 +274,7 @@ function renderPolygons(
   polygons: GeometryPolygon[],
   ptMap: Map<string, GeometryPoint>,
   toSvg: (x: number, y: number) => [number, number],
+  labeledPoints: GeometryPoint[],
 ) {
   return polygons.map((poly, i) => {
     const pts = poly.vertices
@@ -251,6 +288,15 @@ function renderPolygons(
     // Compute centroid for label placement
     const cx = pathPoints.reduce((s, [px]) => s + px, 0) / pathPoints.length;
     const cy = pathPoints.reduce((s, [, py]) => s + py, 0) / pathPoints.length;
+
+    // Suppress polygon center label if a labeled point sits at the centroid
+    // (e.g. hexagon centered at O(0,0) — otherwise "Regular Hexagon" stomps
+    // on the "O" label and any auto-origin marker).
+    const CENTROID_COLLIDE_PX = 16;
+    const labelCollidesWithPoint = labeledPoints.some((p) => {
+      const [px, py] = toSvg(p.x, p.y);
+      return Math.hypot(px - cx, py - cy) < CENTROID_COLLIDE_PX;
+    });
 
     const polyXs = pathPoints.map(([px]) => px);
     const polyYs = pathPoints.map(([, py]) => py);
@@ -266,7 +312,7 @@ function renderPolygons(
           stroke={poly.stroke || '#4f8cff'}
           strokeWidth={2}
         />
-        {poly.label && (
+        {poly.label && !labelCollidesWithPoint && (
           <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={13} fill="#333" fontWeight={500}>
             {poly.label}
           </text>
@@ -1243,44 +1289,45 @@ export function GeometryRenderer({
   // Build point lookup map
   const ptMap = useMemo(() => buildPointMap(points), [points]);
 
-  // Auto-compute view range from points (with padding) if not provided
+  // Auto-compute view range from points (with padding) if not provided.
+  // Then expand to match SVG aspect so circles render as circles.
   const range = useMemo(() => {
-    if (viewRange) return viewRange;
+    let baseRange: { x: [number, number]; y: [number, number] };
+    if (viewRange) {
+      baseRange = viewRange;
+    } else if (points.length === 0) {
+      baseRange = { x: [-5, 5], y: [-5, 5] };
+    } else {
+      let xMin = Infinity;
+      let xMax = -Infinity;
+      let yMin = Infinity;
+      let yMax = -Infinity;
 
-    if (points.length === 0) {
-      return { x: [-5, 5] as [number, number], y: [-5, 5] as [number, number] };
+      for (const p of points) {
+        if (p.x < xMin) xMin = p.x;
+        if (p.x > xMax) xMax = p.x;
+        if (p.y < yMin) yMin = p.y;
+        if (p.y > yMax) yMax = p.y;
+      }
+
+      for (const c of circles) {
+        const center = ptMap.get(c.center);
+        if (!center) continue;
+        xMin = Math.min(xMin, center.x - c.radius);
+        xMax = Math.max(xMax, center.x + c.radius);
+        yMin = Math.min(yMin, center.y - c.radius);
+        yMax = Math.max(yMax, center.y + c.radius);
+      }
+
+      if (xMax - xMin < 1) { xMin -= 1; xMax += 1; }
+      if (yMax - yMin < 1) { yMin -= 1; yMax += 1; }
+
+      baseRange = {
+        x: [xMin - PADDING, xMax + PADDING],
+        y: [yMin - PADDING, yMax + PADDING],
+      };
     }
-
-    let xMin = Infinity;
-    let xMax = -Infinity;
-    let yMin = Infinity;
-    let yMax = -Infinity;
-
-    for (const p of points) {
-      if (p.x < xMin) xMin = p.x;
-      if (p.x > xMax) xMax = p.x;
-      if (p.y < yMin) yMin = p.y;
-      if (p.y > yMax) yMax = p.y;
-    }
-
-    // Also consider circle extents
-    for (const c of circles) {
-      const center = ptMap.get(c.center);
-      if (!center) continue;
-      xMin = Math.min(xMin, center.x - c.radius);
-      xMax = Math.max(xMax, center.x + c.radius);
-      yMin = Math.min(yMin, center.y - c.radius);
-      yMax = Math.max(yMax, center.y + c.radius);
-    }
-
-    // Ensure we have some span even if all points coincide
-    if (xMax - xMin < 1) { xMin -= 1; xMax += 1; }
-    if (yMax - yMin < 1) { yMin -= 1; yMax += 1; }
-
-    return {
-      x: [xMin - PADDING, xMax + PADDING] as [number, number],
-      y: [yMin - PADDING, yMax + PADDING] as [number, number],
-    };
+    return matchRangeAspect(baseRange);
   }, [viewRange, points, circles, ptMap]);
 
   // Coordinate transform function
@@ -1314,7 +1361,7 @@ export function GeometryRenderer({
         {showAxes && renderAxes(range, toSvg, points.some((p) => p.x === 0 && p.y === 0 && !!p.label))}
 
         {/* Polygons (filled areas behind lines and points) */}
-        {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg)}
+        {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg, points.filter((p) => !!p.label))}
 
         {/* Circles */}
         {circles.length > 0 && renderCircles(circles, ptMap, toSvg, range)}
