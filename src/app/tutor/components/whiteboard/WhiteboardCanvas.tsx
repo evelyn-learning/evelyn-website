@@ -21,6 +21,7 @@ import SolvedExampleRenderer from './SolvedExampleRenderer';
 import QuizRenderer from './QuizRenderer';
 import BalancedEquationRenderer from './BalancedEquationRenderer';
 import DimensionalCheckRenderer from './DimensionalCheckRenderer';
+import CodeRunDispatcher from './CodeRunDispatcher';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1683,6 +1684,19 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showQuiz':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <QuizRenderer spec={command.spec as any} />;
+
+    case 'showRunCode':
+      return (
+        <CodeRunDispatcher
+          title={command.title}
+          code={command.code}
+          entry={command.entry}
+          language={command.language}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tests={command.tests as any}
+          timeoutMs={command.timeoutMs}
+        />
+      );
 
     case 'showDimensionalCheck': {
       // Run the existing dimensional validator and render the result.

@@ -859,6 +859,33 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_run_code',
+    description: 'Run JavaScript code against tutor-provided test cases in a server-side sandbox and render pass/fail per test plus captured stdout. Use when teaching algorithms or verifying that a student\'s solution actually works. The code must define a function (default name: "solve", override via `entry`); each test calls that function with `input` args and checks `expected` via deep equality. Sandbox has no file/network/process access; 5-second timeout cap.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        code: { type: 'string', description: 'The JavaScript snippet to run. Must define a top-level function named "solve" unless `entry` overrides it.' },
+        entry: { type: 'string', description: 'Function name to invoke per test (default "solve").' },
+        language: { type: 'string', description: 'Display label only (default "javascript"). Today only JS is supported.' },
+        tests: {
+          type: 'array',
+          description: 'Test cases. Empty array runs the code once with no tests (useful for "see what this prints").',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Test name shown to the student.' },
+              input: { type: 'array', description: 'Positional args passed to the entry function.' },
+              expected: { type: 'string', description: 'Expected return value (deep-equality compared). Pass any JSON-serializable value; the schema is loose-string here for compatibility but runtime accepts the value as-is.' },
+            },
+          },
+        },
+        timeoutMs: { type: 'number', description: 'Max execution time in ms (capped to 5000).' },
+      },
+      required: ['code'],
+    },
+  },
+  {
     name: 'show_dimensional_check',
     description: 'Render a physics formula or expression with DETERMINISTIC dimensional verification. Two modes: (a) pass `formula` like "F = m·a" — both sides parsed, dimensions compared, mismatch flagged ("M·L·T⁻² ≠ M·L"); (b) pass `expression` like "m v² / r" + `expectedUnit` like "N" — expression parsed, computed dimensions compared against the named unit. PREFER THIS over writing a formula into show_equation when there\'s any chance of a units mistake — forgetting a square ("KE = m·v"), missing a denominator ("F = m·v"), confusing energy and power, etc. Recognized symbols include the standard physics letters (m, v, a, F, E, K, U, p, P, q, V, R, ω, …). Recognized units include SI base + N, J, W, Pa, Hz, V, Ω, m/s, m/s².',
     parameters: {
@@ -1910,6 +1937,17 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_quiz') {
     return { action: 'showQuiz', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_run_code') {
+    return {
+      action: 'showRunCode',
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      code: String(funcArgs.code ?? ''),
+      entry: typeof funcArgs.entry === 'string' ? funcArgs.entry : undefined,
+      language: typeof funcArgs.language === 'string' ? funcArgs.language : undefined,
+      tests: Array.isArray(funcArgs.tests) ? funcArgs.tests : undefined,
+      timeoutMs: typeof funcArgs.timeoutMs === 'number' ? funcArgs.timeoutMs : undefined,
+    } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_dimensional_check') {
     return {
