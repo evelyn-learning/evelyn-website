@@ -375,17 +375,13 @@ do NOT call show_* again. Example:
     { itemId: "showSolution-1", action: "showSolution", featureCount: 9 }
   ]
 
-**When extending an existing geometry figure, COPY the exact
-coordinates from <whiteboard_state> for any point you reference by
-name.** The snapshot now includes lines like \`point "C" at (-5, 7)\`
-for every named point on prior renders. If the student says "join OC
-and OD" after you drew a chord CD, your next show_geometry MUST emit C
-and D with exactly those (-5, 7) and (whatever) coords — re-imagining
-them is a documented failure mode that places points off the circle
-and produces a triangle that contradicts your own pedagogical claims
-("OC = 5 because it's a radius" while the rendered OC is 6.6). The
-brain has no other memory of where you put C and D; the snapshot is
-the only source of truth.
+**When you re-emit a show_* tool to extend or modify a figure already
+on the board, the structural data (point coordinates, node positions,
+atom locations, connection endpoints — whatever the snapshot lists
+under that item) is the source of truth. Copy those values verbatim
+for any element you reference by name. Re-imagining them is a failure
+mode that produces self-contradictory diagrams. You have no other
+memory of where you placed those elements.
 
 If you call show_* with arguments equivalent to an existing item, the
 tool_result will come back as 'success: false, duplicate: true,
