@@ -763,10 +763,22 @@ export interface SolverOutput {
 export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const state: State = { byId: new Map(), order: [] };
 
-  for (const g of spec.given ?? []) {
+  // Two-pass given registration: points first, then everything that
+  // references them. Brains naturally declare concept-first ("two
+  // circles") before specifics ("with these centers"), so requiring
+  // source-order forward declarations is brittle. The given array is
+  // pure data — its order shouldn't matter as long as references
+  // resolve.
+  const givens = spec.given ?? [];
+  for (const g of givens) {
+    if (g.kind === 'point') {
+      setObject(state, { kind: 'point', id: g.id, x: g.x, y: g.y, label: g.label });
+    }
+  }
+  for (const g of givens) {
     switch (g.kind) {
       case 'point':
-        setObject(state, { kind: 'point', id: g.id, x: g.x, y: g.y, label: g.label });
+        // Already registered above.
         break;
       case 'circle':
         if (!state.byId.has(g.center)) {
