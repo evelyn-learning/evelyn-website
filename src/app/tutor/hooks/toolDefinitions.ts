@@ -695,6 +695,78 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_phonics',
+    description: 'Phonics visualizations for K-2 reading: sound_out (each grapheme in a colored box), syllables (word split with break dots, optional stressed syllable), blend (word with leading consonant cluster underlined). Pick `kind` and pass the relevant fields. Color-coding: vowels red, consonants blue, digraphs purple, silent letters gray.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', enum: ['sound_out', 'syllables', 'blend'] },
+        title: { type: 'string' },
+        word: { type: 'string', description: 'Whole word — used by sound_out and blend.' },
+        graphemes: {
+          type: 'array',
+          description: 'For sound_out: ordered list of orthographic units. A digraph like "ch" is one entry. Defaults to one entry per character.',
+          items: { type: 'object', properties: { text: { type: 'string' }, type: { type: 'string', enum: ['consonant', 'vowel', 'digraph', 'silent'] } } },
+        },
+        phonetic: { type: 'string', description: 'Optional IPA-ish transcription shown below for sound_out.' },
+        syllables: { type: 'array', description: 'For syllables: ["but", "ter", "fly"].', items: { type: 'string' } },
+        stressed: { type: 'number', description: 'For syllables: 0-based index of the stressed syllable.' },
+        cluster: { type: 'string', description: 'For blend: the consonant cluster to highlight, e.g. "st".' },
+        clusterStart: { type: 'number', description: 'For blend: where the cluster starts in the word (default = first occurrence).' },
+      },
+      required: ['kind'],
+    },
+  },
+  {
+    name: 'show_graphic_organizer',
+    description: 'ELA / writing graphic organizers: story_map (character/setting/problem/solution), kwl (Know/Want/Learned columns), t_chart (two columns with headers), sequence (horizontal arrow chain of steps), cause_effect (cause boxes → arrows → effect boxes). One tool, five layouts.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', enum: ['story_map', 'kwl', 't_chart', 'sequence', 'cause_effect'] },
+        title: { type: 'string' },
+        // story_map
+        character: { type: 'string' },
+        setting: { type: 'string' },
+        problem: { type: 'string' },
+        solution: { type: 'string' },
+        // kwl
+        know: { type: 'array', items: { type: 'string' } },
+        want: { type: 'array', items: { type: 'string' } },
+        learned: { type: 'array', items: { type: 'string' } },
+        // t_chart
+        leftHeader: { type: 'string' },
+        rightHeader: { type: 'string' },
+        leftItems: { type: 'array', items: { type: 'string' } },
+        rightItems: { type: 'array', items: { type: 'string' } },
+        // sequence
+        steps: { type: 'array', items: { type: 'string' } },
+        // cause_effect
+        causes: { type: 'array', items: { type: 'string' } },
+        effects: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['kind'],
+    },
+  },
+  {
+    name: 'show_writing_frame',
+    description: 'Writing scaffolds: sentence_stems (numbered list of starter prompts on dashed lines), paragraph_frame (topic-sentence + 3 details + closing labelled boxes), five_paragraph (intro/body1/body2/body3/conclusion stack with thesis & topic-sentence hints). The student writes in the blanks; the brain reads via the existing extract-homework path.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', enum: ['sentence_stems', 'paragraph_frame', 'five_paragraph'] },
+        title: { type: 'string' },
+        stems: { type: 'array', description: 'For sentence_stems: list of starter phrases.', items: { type: 'string' } },
+        topicSentenceHint: { type: 'string' },
+        detailHints: { type: 'array', items: { type: 'string' } },
+        closingHint: { type: 'string' },
+        thesisHint: { type: 'string' },
+        bodyTopics: { type: 'array', description: 'For five_paragraph: 1-3 topic-sentence hints for the body paragraphs.', items: { type: 'string' } },
+      },
+      required: ['kind'],
+    },
+  },
+  {
     name: 'show_lewis_constructed',
     description: 'PREFER THIS over show_lewis whenever you can describe the molecule by atoms + bonds (which is most of the time). You declare atoms by element, bonds by atom-id pair + order; the solver places atoms via auto-layout, derives lone-pair counts from valence (no need to count electrons yourself), and validates octet/duet rules. The brain is freed from coordinate placement and electron arithmetic — both are documented frequent failure modes. Reserve show_lewis for cases where you need explicit pixel control (resonance arrows mid-structure, expanded octets you want to assert manually, etc.).',
     parameters: {
@@ -1699,6 +1771,15 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       // Pass everything through; the renderer reads spec by `kind`.
       spec: funcArgs as never,
     } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_phonics') {
+    return { action: 'showPhonics', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_graphic_organizer') {
+    return { action: 'showGraphicOrganizer', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_writing_frame') {
+    return { action: 'showWritingFrame', spec: funcArgs as never } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_lewis_constructed') {
     return {

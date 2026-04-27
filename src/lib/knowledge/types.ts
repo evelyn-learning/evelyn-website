@@ -740,6 +740,9 @@ export type WhiteboardCommand =
   | { action: 'showLewis'; title?: string; atoms: Array<{ id: string; element: string; x: number; y: number; lonePairs?: number; formalCharge?: number }>; bonds?: Array<{ from: string; to: string; order: 1 | 2 | 3; style?: 'solid' | 'dashed' | 'wedge' | 'dash-wedge' }>; formula?: string; geometry?: string }
   | { action: 'showLewisConstructed'; title?: string; formula?: string; geometry?: string; atoms: unknown[]; bonds: unknown[]; layout?: string; centerAtomId?: string; skipValidation?: boolean }
   | { action: 'showEarlyMath'; spec: unknown }
+  | { action: 'showPhonics'; spec: unknown }
+  | { action: 'showGraphicOrganizer'; spec: unknown }
+  | { action: 'showWritingFrame'; spec: unknown }
   | { action: 'showPeriodicTable'; title?: string; highlight?: Array<{ symbol: string; color?: string; note?: string }>; highlightGroup?: number; highlightPeriod?: number; highlightCategory?: 'alkali' | 'alkaline-earth' | 'transition' | 'post-transition' | 'metalloid' | 'reactive-nonmetal' | 'halogen' | 'noble-gas' | 'lanthanide' | 'actinide'; showMass?: boolean }
   | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
   | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }

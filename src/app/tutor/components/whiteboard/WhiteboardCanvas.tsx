@@ -13,6 +13,9 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import EarlyMathRenderer from './EarlyMathRenderer';
+import PhonicsRenderer from './PhonicsRenderer';
+import GraphicOrganizerRenderer from './GraphicOrganizerRenderer';
+import WritingFrameRenderer from './WritingFrameRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1651,6 +1654,18 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showEarlyMath':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <EarlyMathRenderer spec={command.spec as any} />;
+
+    case 'showPhonics':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <PhonicsRenderer spec={command.spec as any} />;
+
+    case 'showGraphicOrganizer':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <GraphicOrganizerRenderer spec={command.spec as any} />;
+
+    case 'showWritingFrame':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <WritingFrameRenderer spec={command.spec as any} />;
 
     case 'showLewisConstructed': {
       // Solve the declarative spec into a primitive Lewis payload, then
