@@ -201,8 +201,9 @@ export interface StepPerpFrom extends StepCommon {
    *  for `from`; `point` is accepted as a legacy alias. */
   from?: string;
   point?: string;
-  /** The line or segment we drop onto. */
-  to: string;
+  /** The line or segment we drop onto. Accepts an id, the keywords
+   *  "x-axis" / "y-axis", or an inline `{ through: [a, b] }`. */
+  to: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
   /** Id of the foot point. Defaults to `${id}_foot`. */
   footId?: string;
 }
@@ -215,9 +216,10 @@ export interface StepParallelThrough extends StepCommon {
   through?: string;
   point?: string;
   /** The line/segment we want to be parallel to. Brain reaches naturally
-   *  for `of`; `to` is accepted as a legacy alias. */
-  of?: string;
-  to?: string;
+   *  for `of`; `to` is accepted as a legacy alias. Accepts an id, the
+   *  keywords "x-axis" / "y-axis", or an inline `{ through: [a, b] }`. */
+  of?: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
+  to?: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
   length?: number;
 }
 
@@ -355,11 +357,15 @@ export interface StepSectionPoint extends StepCommon {
   ratio: [number, number];   // [m, n] — m toward "to", n toward "from"
 }
 
-/** Reflect a point across a line/segment. */
+/** Reflect a point across a line/segment. The mirror can be:
+ *   - id of a declared line/segment
+ *   - "x-axis" or "y-axis" keyword
+ *   - inline { through: [a, b] } where each endpoint is a point id or
+ *     a literal { x, y } coord. */
 export interface StepReflectPoint extends StepCommon {
   kind: 'reflect_point';
   point: string;
-  across: string;            // line or segment id
+  across: string | { through: [string | { x: number; y: number }, string | { x: number; y: number }] };
 }
 
 /** Rotate a point around a center by angle (degrees, CCW positive). */
@@ -487,6 +493,48 @@ function lineLike(state: State, id: string): { ax: number; ay: number; bx: numbe
     return { ax: A.x, ay: A.y, bx: B.x, by: B.y };
   }
   throw new Error(`Expected line or segment, got ${o.kind} for "${id}"`);
+}
+
+/**
+ * A line reference. Brains reach for several natural forms beyond the
+ * "id of a previously declared line/segment" we originally accepted:
+ *   - "x-axis" / "y-axis" — keyword shortcuts (very common in K-12
+ *     reflection / mirror problems).
+ *   - { through: [pointId | {x,y}, pointId | {x,y}] } — inline
+ *     anonymous line. Useful when the brain wants to reflect across an
+ *     ad-hoc line without first declaring it.
+ *   - id string — the original form, still works.
+ *
+ * resolveLineRef accepts any of these and returns the same shape
+ * lineLike does. Used by reflect_point / perpendicular_from /
+ * parallel_through; intersect still requires explicit ids since it
+ * needs to know whether the reference is a line or a circle.
+ */
+type LineRef =
+  | string
+  | { through: [PointRef, PointRef] };
+type PointRef = string | { x: number; y: number };
+
+function resolvePointRef(state: State, ref: PointRef): { x: number; y: number } {
+  if (typeof ref === 'string') {
+    const p = pt(state, ref);
+    return { x: p.x, y: p.y };
+  }
+  return { x: ref.x, y: ref.y };
+}
+
+function resolveLineRef(state: State, ref: LineRef): { ax: number; ay: number; bx: number; by: number } {
+  if (typeof ref === 'string') {
+    if (ref === 'x-axis') return { ax: -1000, ay: 0, bx: 1000, by: 0 };
+    if (ref === 'y-axis') return { ax: 0, ay: -1000, bx: 0, by: 1000 };
+    return lineLike(state, ref);
+  }
+  if (ref && typeof ref === 'object' && 'through' in ref && Array.isArray(ref.through) && ref.through.length === 2) {
+    const a = resolvePointRef(state, ref.through[0]);
+    const b = resolvePointRef(state, ref.through[1]);
+    return { ax: a.x, ay: a.y, bx: b.x, by: b.y };
+  }
+  throw new Error(`Unknown line reference: ${JSON.stringify(ref)}`);
 }
 
 function dirVec(direction: StepChord['direction']): [number, number] {
@@ -817,7 +865,7 @@ function solvePerpFrom(step: StepPerpFrom, state: State): void {
   if (!fromPointId) throw new Error(`perpendicular_from "${step.id}": missing 'from' (or 'point')`);
   if (!step.to) throw new Error(`perpendicular_from "${step.id}": missing 'to'`);
   const P = pt(state, fromPointId);
-  const ln = lineLike(state, step.to);
+  const ln = resolveLineRef(state, step.to as LineRef);
   const dx = ln.bx - ln.ax;
   const dy = ln.by - ln.ay;
   const len2 = dx * dx + dy * dy;
@@ -835,7 +883,7 @@ function solveParallelThrough(step: StepParallelThrough, state: State): void {
   if (!throughPointId) throw new Error(`parallel_through "${step.id}": missing 'through' (or 'point')`);
   if (!refLineId) throw new Error(`parallel_through "${step.id}": missing 'of' (or 'to')`);
   const P = pt(state, throughPointId);
-  const ln = lineLike(state, refLineId);
+  const ln = resolveLineRef(state, refLineId as LineRef);
   const dx = ln.bx - ln.ax;
   const dy = ln.by - ln.ay;
   const m = Math.hypot(dx, dy) || 1;
@@ -1165,7 +1213,7 @@ function solveSectionPoint(step: StepSectionPoint, state: State): void {
 
 function solveReflectPoint(step: StepReflectPoint, state: State): void {
   const P = pt(state, step.point);
-  const ln = lineLike(state, step.across);
+  const ln = resolveLineRef(state, step.across as LineRef);
   const dx = ln.bx - ln.ax;
   const dy = ln.by - ln.ay;
   const len2 = dx * dx + dy * dy || 1;
