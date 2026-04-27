@@ -16,6 +16,9 @@ import EarlyMathRenderer from './EarlyMathRenderer';
 import PhonicsRenderer from './PhonicsRenderer';
 import GraphicOrganizerRenderer from './GraphicOrganizerRenderer';
 import WritingFrameRenderer from './WritingFrameRenderer';
+import LabeledImageRenderer from './LabeledImageRenderer';
+import SolvedExampleRenderer from './SolvedExampleRenderer';
+import QuizRenderer from './QuizRenderer';
 import { GraphRenderer, PositionTimeGraph, VelocityTimeGraph, AccelerationTimeGraph } from './GraphRenderer';
 import {
   VectorRenderer,
@@ -1666,6 +1669,18 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showWritingFrame':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return <WritingFrameRenderer spec={command.spec as any} />;
+
+    case 'showLabeledImage':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <LabeledImageRenderer spec={command.spec as any} />;
+
+    case 'showSolvedExample':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <SolvedExampleRenderer spec={command.spec as any} />;
+
+    case 'showQuiz':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <QuizRenderer spec={command.spec as any} />;
 
     case 'showLewisConstructed': {
       // Solve the declarative spec into a primitive Lewis payload, then

@@ -743,6 +743,9 @@ export type WhiteboardCommand =
   | { action: 'showPhonics'; spec: unknown }
   | { action: 'showGraphicOrganizer'; spec: unknown }
   | { action: 'showWritingFrame'; spec: unknown }
+  | { action: 'showLabeledImage'; spec: unknown }
+  | { action: 'showSolvedExample'; spec: unknown }
+  | { action: 'showQuiz'; spec: unknown }
   | { action: 'showPeriodicTable'; title?: string; highlight?: Array<{ symbol: string; color?: string; note?: string }>; highlightGroup?: number; highlightPeriod?: number; highlightCategory?: 'alkali' | 'alkaline-earth' | 'transition' | 'post-transition' | 'metalloid' | 'reactive-nonmetal' | 'halogen' | 'noble-gas' | 'lanthanide' | 'actinide'; showMass?: boolean }
   | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
   | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }

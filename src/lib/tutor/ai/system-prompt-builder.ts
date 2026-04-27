@@ -307,6 +307,9 @@ If you say "let me show you" / "here's a diagram" / "I'll draw" you MUST emit th
      · show_phonics — K-2 reading: sound_out (graphemes in colored boxes), syllables (split + stress), blend (consonant cluster underlined). For decoding instruction.
      · show_graphic_organizer — ELA / writing organizers: story_map, kwl, t_chart, sequence, cause_effect. One tool, five layouts.
      · show_writing_frame — writing scaffolds: sentence_stems (numbered starters with dashed lines), paragraph_frame (topic + 3 details + closing), five_paragraph (intro / body×3 / conclusion stack with thesis hint).
+     · show_labeled_image — a real photo / illustration with brain-supplied callouts (percentage coords). For biology / social studies / chemistry where a real image carries information a synthesized diagram can\'t.
+     · show_solved_example — a standalone "Example 1" artifact: problem + ordered steps with reasoning + boxed answer + key idea. Pedagogically: the model the student studies BEFORE attempting a try-yourself.
+     · show_quiz — small embedded quiz (1-5 items, mixed mcq/frq/numeric) the student works through on their own with auto-scoring. Use at end-of-segment or end-of-session to check retention.
    - Process / concept visualizations:
      · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
      · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted

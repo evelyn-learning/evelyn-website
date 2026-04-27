@@ -749,6 +749,98 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_labeled_image',
+    description: 'A real photograph or stock illustration with brain-supplied callouts overlaid. Different from the synthesized-diagram tools (cell_diagram, dna, ray_diagram, etc.) — those draw schematic vector art; this shows an actual image. Use for biology (real flower with parts labeled), social studies (a map with regions), chemistry (lab apparatus), or any concept where a real image carries information a diagram can\'t. Callouts are placed at percentage coordinates (0-100) on the image. Provide alt text for accessibility.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        src: { type: 'string', description: 'Public image URL (https). Use Unsplash, Wikimedia, NASA, or other appropriate-license source.' },
+        alt: { type: 'string', description: 'Alt text — required.' },
+        credit: { type: 'string', description: 'Attribution / credit shown below the image.' },
+        callouts: {
+          type: 'array',
+          description: 'Labels to overlay. Each callout has x/y as percentages of the image dimensions.',
+          items: {
+            type: 'object',
+            properties: {
+              x: { type: 'number', description: '0-100 percent of image width.' },
+              y: { type: 'number', description: '0-100 percent of image height.' },
+              text: { type: 'string', description: 'Short label.' },
+              caption: { type: 'string', description: 'Optional longer caption shown smaller below the label.' },
+              color: { type: 'string' },
+            },
+            required: ['x', 'y', 'text'],
+          },
+        },
+      },
+      required: ['src', 'alt'],
+    },
+  },
+  {
+    name: 'show_solved_example',
+    description: 'A standalone worked-example artifact — different from show_solution (conversational step narration) and show_problem (problem only). Pedagogically: "Example 1" boxes that the student studies BEFORE attempting a try-yourself. Includes problem, ordered steps with optional reasoning, boxed final answer, and an optional "key idea" takeaway.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        problem: { type: 'string', description: 'The problem statement. Inline LaTeX `$...$` supported.' },
+        steps: {
+          type: 'array',
+          description: 'Ordered solution steps.',
+          items: {
+            type: 'object',
+            properties: {
+              expression: { type: 'string', description: 'The math / action for this step.' },
+              reason: { type: 'string', description: 'Optional one-line reasoning shown to the right.' },
+            },
+            required: ['expression'],
+          },
+        },
+        answer: { type: 'string', description: 'Final answer, shown boxed.' },
+        keyIdea: { type: 'string', description: 'Optional one-line takeaway / "what you should remember".' },
+        difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+      },
+      required: ['problem', 'steps', 'answer'],
+    },
+  },
+  {
+    name: 'show_quiz',
+    description: 'A small embedded quiz (1-5 items) the student works through on their own with auto-scoring. Different from show_problem (single problem, brain-driven) and show_try_yourself (mid-explanation hand-off). Use at end-of-segment or end-of-session to check retention. Items can mix mcq / frq / numeric formats.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', description: 'Unique within the quiz. Used as the choice id for mcq.' },
+              question: { type: 'string' },
+              format: { type: 'string', enum: ['mcq', 'frq', 'numeric'] },
+              choices: {
+                type: 'array',
+                description: 'For mcq. Exactly one should have correct: true.',
+                items: {
+                  type: 'object',
+                  properties: { id: { type: 'string' }, text: { type: 'string' }, correct: { type: 'boolean' } },
+                  required: ['id', 'text'],
+                },
+              },
+              expectedAnswer: { type: 'string', description: 'For frq / numeric.' },
+              tolerance: { type: 'number', description: 'For numeric, default 0.01.' },
+              explanation: { type: 'string', description: 'Shown after submit.' },
+            },
+            required: ['id', 'question', 'format'],
+          },
+        },
+        immediate: { type: 'boolean', description: 'Grade as student answers vs. require a Submit click.' },
+      },
+      required: ['items'],
+    },
+  },
+  {
     name: 'show_writing_frame',
     description: 'Writing scaffolds: sentence_stems (numbered list of starter prompts on dashed lines), paragraph_frame (topic-sentence + 3 details + closing labelled boxes), five_paragraph (intro/body1/body2/body3/conclusion stack with thesis & topic-sentence hints). The student writes in the blanks; the brain reads via the existing extract-homework path.',
     parameters: {
@@ -1780,6 +1872,15 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_writing_frame') {
     return { action: 'showWritingFrame', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_labeled_image') {
+    return { action: 'showLabeledImage', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_solved_example') {
+    return { action: 'showSolvedExample', spec: funcArgs as never } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_quiz') {
+    return { action: 'showQuiz', spec: funcArgs as never } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_lewis_constructed') {
     return {
