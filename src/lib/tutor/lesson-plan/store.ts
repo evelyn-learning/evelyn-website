@@ -14,10 +14,20 @@ import type { LessonPlan } from './types';
 import { parseLessonPlan } from './parser';
 
 import { SEED_G6_FRACTIONS_ADD_UNLIKE } from './seeds/g6-fractions-add-unlike';
+import { SEED_K_COUNTING_TO_10 } from './seeds/k-counting-to-10';
+import { SEED_G2_PLACE_VALUE } from './seeds/g2-place-value';
+import { SEED_G4_MULTIPLICATION_AS_ARRAYS } from './seeds/g4-multiplication-as-arrays';
+import { SEED_G8_LINEAR_EQUATIONS } from './seeds/g8-linear-equations';
 
-/** Seeded plans bundled with the codebase. */
+/** Seeded plans bundled with the codebase. Curated for the public demo
+ *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
+  // Batch 1 — math foundations through middle school.
+  SEED_K_COUNTING_TO_10,
+  SEED_G2_PLACE_VALUE,
+  SEED_G4_MULTIPLICATION_AS_ARRAYS,
   SEED_G6_FRACTIONS_ADD_UNLIKE,
+  SEED_G8_LINEAR_EQUATIONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
