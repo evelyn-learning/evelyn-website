@@ -712,6 +712,47 @@ function estimateTextWidth(text: string, fontSize: number): number {
   return text.length * fontSize * 0.6;
 }
 
+/** Format a single coordinate component: integer when whole, else 2dp. */
+function formatCoordComponent(n: number): string {
+  if (!Number.isFinite(n)) return '?';
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 100) / 100);
+}
+
+/** Render a "(x, y)" tuple from numeric coords. The renderer is the single
+ *  source of truth for coordinate text — the brain only emits x/y/showCoords
+ *  and never writes the tuple directly. */
+function formatCoordTuple(x: number, y: number): string {
+  return `(${formatCoordComponent(x)}, ${formatCoordComponent(y)})`;
+}
+
+/** Format a computed segment length: integer when whole, exact "√N" when the
+ *  squared length is an integer (so √20 stays as √20 instead of 4.47…), else
+ *  decimal to 2dp. */
+function formatComputedLength(distance: number): string {
+  if (!Number.isFinite(distance)) return '?';
+  if (Number.isInteger(distance)) return String(distance);
+  const squared = distance * distance;
+  const roundedSq = Math.round(squared);
+  if (Math.abs(squared - roundedSq) < 1e-6 && roundedSq > 0) {
+    const sqrt = Math.sqrt(roundedSq);
+    if (Number.isInteger(sqrt)) return String(sqrt);
+    return `√${roundedSq}`;
+  }
+  return String(Math.round(distance * 100) / 100);
+}
+
+/** Compose a segment label: if the brain wrote "AB = ?" leave the prefix,
+ *  if it wrote a free-form name like "chord AB" append " = <length>", and
+ *  if there's no base label just show the length on its own. */
+function composeSegmentLabel(base: string | undefined, lengthText: string): string {
+  if (!lengthText) return base || '';
+  if (!base) return lengthText;
+  const eq = base.indexOf('=');
+  if (eq >= 0) return `${base.slice(0, eq + 1)} ${lengthText}`;
+  return `${base} = ${lengthText}`;
+}
+
 /** AABB overlap test with a small buffer. */
 function boxesOverlap(a: LabelBox, b: LabelBox, buffer = 2): boolean {
   const ax1 = textLeft(a);
@@ -858,12 +899,18 @@ function computeLabels(
 ): LabelBox[] {
   const labels: LabelBox[] = [];
 
-  // Point labels — offset diagonally up-right by default.
+  // Point labels — offset diagonally up-right by default. The displayed text
+  // is composed from `pt.label` plus a renderer-derived "(x, y)" tuple when
+  // pt.showCoords is true. The brain emits only the name (e.g. "A") and a
+  // boolean — the coord text is computed from pt.x/pt.y so it can never
+  // disagree with where the dot is drawn.
   for (const pt of points) {
-    if (!pt.label) continue;
+    const baseText = pt.label?.trim();
+    const coordText = pt.showCoords ? formatCoordTuple(pt.x, pt.y) : '';
+    const text = [baseText, coordText].filter(Boolean).join(' ');
+    if (!text) continue;
     const [px, py] = toSvg(pt.x, pt.y);
     const fontSize = 13;
-    const text = pt.label;
     labels.push({
       key: `pt:${pt.id}`,
       text,
@@ -886,14 +933,21 @@ function computeLabels(
     });
   }
 
-  // Segment labels — offset perpendicular to the segment by default.
+  // Segment labels — offset perpendicular to the segment by default. As with
+  // points, when seg.showLength is true the renderer appends the actual
+  // computed length so the brain can't write "AB = √20" while AB is √13.
   segments.forEach((seg, i) => {
-    if (!seg.label) return;
     const from = ptMap.get(seg.from);
     const to = ptMap.get(seg.to);
     if (!from || !to) return;
     const [x1, y1] = toSvg(from.x, from.y);
     const [x2, y2] = toSvg(to.x, to.y);
+    const baseText = seg.label?.trim();
+    const lengthText = seg.showLength
+      ? formatComputedLength(Math.hypot(to.x - from.x, to.y - from.y))
+      : '';
+    const text = composeSegmentLabel(baseText, lengthText);
+    if (!text) return;
     const mx = (x1 + x2) / 2;
     const my = (y1 + y2) / 2;
     const dx = x2 - x1;
@@ -904,10 +958,10 @@ function computeLabels(
     const fontSize = 12;
     labels.push({
       key: `seg:${i}`,
-      text: seg.label,
+      text,
       x: mx + nx * LABEL_OFFSET,
       y: my + ny * LABEL_OFFSET,
-      w: estimateTextWidth(seg.label, fontSize),
+      w: estimateTextWidth(text, fontSize),
       h: fontSize + 2,
       color: seg.color || '#333',
       fontSize,
@@ -1358,7 +1412,7 @@ export function GeometryRenderer({
         {showGrid && renderGrid(range, toSvg)}
 
         {/* Axes — pass hasPointAtOrigin so we don't double-label O */}
-        {showAxes && renderAxes(range, toSvg, points.some((p) => p.x === 0 && p.y === 0 && !!p.label))}
+        {showAxes && renderAxes(range, toSvg, points.some((p) => p.x === 0 && p.y === 0 && (!!p.label || !!p.showCoords)))}
 
         {/* Polygons (filled areas behind lines and points) */}
         {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg, points.filter((p) => !!p.label))}

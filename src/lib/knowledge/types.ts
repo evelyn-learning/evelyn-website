@@ -508,7 +508,14 @@ export interface GeometryPoint {
   id: string;
   x: number;
   y: number;
+  /** Display name only — e.g. "A", "O", "P_1". Do NOT embed coordinates here;
+   *  set `showCoords: true` and the renderer will append "(x, y)" derived from
+   *  the actual numeric x/y. This avoids "label says (3,6) but point is at
+   *  (3,7)" drift, which the LLM gets wrong with high frequency. */
   label?: string;
+  /** When true, the renderer appends a `(x, y)` tuple to the label using the
+   *  actual numeric coordinates. */
+  showCoords?: boolean;
   color?: string;
 }
 
@@ -517,7 +524,13 @@ export interface GeometrySegment {
   to: string;
   style?: 'solid' | 'dashed' | 'dotted';
   color?: string;
+  /** Free-form label, e.g. "chord AB", "altitude h", "side a". Do NOT write
+   *  the numeric length here — set `showLength: true` and the renderer will
+   *  compute it from the endpoints. */
   label?: string;
+  /** When true, the renderer appends/uses the actual computed segment length
+   *  (e.g. "4.47" or "√20") instead of trusting LLM arithmetic. */
+  showLength?: boolean;
   tickMarks?: number;
 }
 
