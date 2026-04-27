@@ -16,6 +16,7 @@ interface GeoPoint {
   x: number;
   y: number;
   label?: string;
+  showCoords?: boolean;
   color?: string;
 }
 
@@ -567,15 +568,21 @@ function ensureTitleShapeExists(cmd: GeometryCommand, pointMap: Map<string, GeoP
  * angular direction from the center. If the point coincides with the center,
  * place it to the right (angle 0).
  *
- * Snaps small errors (< 2% of radius) silently — these are LLM rounding
- * artifacts (e.g. (2.99, 4.0) on a radius-5 circle).
+ * The right rule for "should we snap?" is:
+ *   - If the brain set showCoords on this point, those exact coords are
+ *     visible to the student. Snapping silently would make the displayed
+ *     numbers disagree with the rendered position (the prior bug class
+ *     where (-5.5, 0.5) was rewritten to (-5.54, 0.54) on screen).
+ *   - Otherwise we should snap generously. Sonnet's circle-arithmetic is
+ *     routinely off by 1-5% (e.g. picks 3.165 when the right y is 3.330);
+ *     leaving those errors in produces visible inconsistencies — most
+ *     painfully showLength on a "radius" segment that reports 4.86 when
+ *     the brain claimed the segment is a radius of length 5.
  *
- * For LARGE errors (≥ 2%) we leave the point alone. With showCoords now
- * displaying the actual numeric x/y, a silent radial projection from
- * (-5.5, 0.5) to (-5.54, 0.54) shows the student fractional coordinates
- * they didn't ask for. Better to render the point slightly off-circle —
- * the brain's mistake stays visible (and self-correctable) instead of
- * being papered over with ugly decimals.
+ * So: skip if showCoords is set, otherwise snap up to 12% of radius. The
+ * 12% bound preserves intentionally-interior points (something at the
+ * centroid of a small triangle, for example) while catching realistic
+ * math errors.
  */
 function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void {
   const dx = pt.x - center.x;
@@ -587,8 +594,9 @@ function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void
     return;
   }
   const err = Math.abs(d - radius);
-  if (err < 0.05) return;            // already on the circle (floating-point only)
-  if (err > 0.02 * radius) return;   // clearly intentional or a real brain error — preserve coords
+  if (err < 0.05) return;                          // already on circle (FP noise only)
+  if (pt.showCoords) return;                       // brain owns the displayed coords
+  if (err > 0.12 * radius) return;                 // clearly intentional, not a math slip
   pt.x = round2(center.x + (dx / d) * radius);
   pt.y = round2(center.y + (dy / d) * radius);
 }
@@ -608,6 +616,26 @@ function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void
 function enforceGeometricInvariants(cmd: GeometryCommand, pointMap: Map<string, GeoPoint>): void {
   const segments = cmd.segments || [];
   const circles = cmd.circles || [];
+
+  // Implicit radii. Any segment with one endpoint at a circle's center is
+  // structurally a radius — the other endpoint should sit on the circle.
+  // The brain often labels these "OC" / "OD" rather than "radius", so the
+  // label-keyword rules below don't fire. Without this pass, showLength
+  // on those segments computes against off-circle coords and reports
+  // "OC = 4.86" while the brain narrates "OC is a radius, so OC = 5".
+  for (const seg of segments) {
+    for (const circle of circles) {
+      const isFromCenter = seg.from === circle.center;
+      const isToCenter = seg.to === circle.center;
+      if (!isFromCenter && !isToCenter) continue;
+      const center = pointMap.get(circle.center);
+      const otherId = isFromCenter ? seg.to : seg.from;
+      const other = pointMap.get(otherId);
+      if (!center || !other) continue;
+      snapPointToCircle(other, center, circle.radius);
+      break;
+    }
+  }
 
   for (const seg of segments) {
     const label = (seg.label || '').toLowerCase();
