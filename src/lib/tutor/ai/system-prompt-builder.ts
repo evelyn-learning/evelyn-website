@@ -448,6 +448,17 @@ composing top-to-bottom feels more natural.
     circumcircle              { vertices: [a,b,c], centerId? }
     excircle                  { vertices: [a,b,c], opposite?: "first"|"second"|"third", centerId?, tangentIds? }
 
+  Specific shapes (Tier 2):
+    triangle_from_sss         { sides: [a,b,c], vertexIds? }     # opposite A,B,C
+    triangle_from_sas         { sides: [b,c], angle, vertexIds? } # angle at A, deg
+    triangle_from_asa         { angles: [A,B], side, vertexIds? } # side AB
+    square                    { corners: [P,Q] | (center+side+rotation?), vertexIds? }
+    rectangle                 { corners: [P,Q] | (center+width+height+rotation?), vertexIds? }
+    parallelogram             { vertices: [A,B,C], fourthId?, vertexIds? }   # 4th derived
+    midsegment                { of: [seg1, seg2] }                # connects midpoints
+    altitude                  { vertex, opposite, footId? }       # in a triangle
+    median                    { vertex, opposite, midpointId? }
+
 Line references (used by reflect_point.across, perpendicular_from.to,
 parallel_through.of) accept any of:
   - id of a declared line/segment

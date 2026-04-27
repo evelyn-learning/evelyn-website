@@ -114,7 +114,17 @@ export type Step =
   | StepExcircle
   | StepTangentsFromExternal
   | StepArc
-  | StepSector;
+  | StepSector
+  // Tier 2 — specific shape constructors (closed-form K-10 geometry).
+  | StepTriangleFromSSS
+  | StepTriangleFromSAS
+  | StepTriangleFromASA
+  | StepSquare
+  | StepRectangle
+  | StepParallelogram
+  | StepMidsegment
+  | StepAltitude
+  | StepMedian;
 
 interface StepCommon {
   id: string;
@@ -440,6 +450,103 @@ export interface StepSector extends StepCommon {
   arcSegments?: number;
 }
 
+// ─── Tier 2 — specific shape constructors ─────────────────────────────────────
+
+/** Triangle by three side lengths a, b, c (opposite vertices A, B, C
+ *  respectively). The renderer places A at the origin, B at (c, 0), and
+ *  C in the upper half-plane. Brain can override anchor with `placement`
+ *  or rename via `vertexIds`. */
+export interface StepTriangleFromSSS extends StepCommon {
+  kind: 'triangle_from_sss';
+  /** [a, b, c] — sides opposite A, B, C. */
+  sides: [number, number, number];
+  vertexIds?: [string, string, string];
+}
+
+/** Triangle by two sides and the included angle. `sides: [b, c]` are the
+ *  two sides meeting at vertex A; `angle` is the included angle ∠BAC in
+ *  degrees. */
+export interface StepTriangleFromSAS extends StepCommon {
+  kind: 'triangle_from_sas';
+  sides: [number, number];   // [b, c] — both meet at A
+  angle: number;             // degrees, included between the two sides
+  vertexIds?: [string, string, string];
+}
+
+/** Triangle by two angles and the included side. `angles: [A, B]` in
+ *  degrees, `side: c` is the side AB between them. */
+export interface StepTriangleFromASA extends StepCommon {
+  kind: 'triangle_from_asa';
+  angles: [number, number];
+  side: number;
+  vertexIds?: [string, string, string];
+}
+
+/** Square. Two declarative modes:
+ *   - `corners: [P, Q]` for two diagonally OPPOSITE corners (any orientation)
+ *   - `center: P` + `side: number` + optional `rotation` (degrees, default 0)
+ *  Brain can name vertices via `vertexIds` (4 ids, ccw from bottom-left). */
+export interface StepSquare extends StepCommon {
+  kind: 'square';
+  corners?: [PtRef, PtRef];
+  center?: PtRef;
+  side?: number;
+  rotation?: number;
+  vertexIds?: [string, string, string, string];
+}
+
+/** Rectangle. Same modes as square plus separate width/height. */
+export interface StepRectangle extends StepCommon {
+  kind: 'rectangle';
+  corners?: [PtRef, PtRef];   // opposite corners (axis-aligned only)
+  center?: PtRef;
+  width?: number;
+  height?: number;
+  rotation?: number;
+  vertexIds?: [string, string, string, string];
+}
+
+/** Parallelogram by three vertices A, B, C. The fourth (D) is computed
+ *  as A + C − B (assuming the cyclic order ABCD). */
+export interface StepParallelogram extends StepCommon {
+  kind: 'parallelogram';
+  vertices: [PtRef, PtRef, PtRef];
+  fourthId?: string;          // defaults to `${id}_d`
+  vertexIds?: [string, string, string, string];
+}
+
+/** Midsegment connecting midpoints of two segments (commonly two sides
+ *  of a triangle). Yields the segment plus the two midpoint anchors. */
+export interface StepMidsegment extends StepCommon {
+  kind: 'midsegment';
+  /** Two source segments — id strings or inline `{ from, to }`. */
+  of: [
+    string | { from: PtRef; to: PtRef },
+    string | { from: PtRef; to: PtRef },
+  ];
+  /** Override midpoint ids. Defaults `${id}_m1`, `${id}_m2`. */
+  midpointIds?: [string, string];
+}
+
+/** Altitude from a vertex of a triangle to the opposite side. Yields the
+ *  foot of the perpendicular plus the altitude segment. */
+export interface StepAltitude extends StepCommon {
+  kind: 'altitude';
+  vertex: PtRef;
+  /** Opposite side as a segment id or inline `{ from, to }`. */
+  opposite: string | { from: PtRef; to: PtRef };
+  footId?: string;
+}
+
+/** Median from a vertex of a triangle to the midpoint of the opposite
+ *  side. Yields the midpoint plus the median segment. */
+export interface StepMedian extends StepCommon {
+  kind: 'median';
+  vertex: PtRef;
+  opposite: string | { from: PtRef; to: PtRef };
+  midpointId?: string;
+}
+
 // ─── Internal resolution state ────────────────────────────────────────────────
 
 interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string }
@@ -673,6 +780,15 @@ function solveStep(step: Step, state: State): void {
     case 'tangents_from_external': return solveTangentsFromExternal(step, state);
     case 'arc': return solveArc(step, state);
     case 'sector': return solveSector(step, state);
+    case 'triangle_from_sss': return solveTriangleSSS(step, state);
+    case 'triangle_from_sas': return solveTriangleSAS(step, state);
+    case 'triangle_from_asa': return solveTriangleASA(step, state);
+    case 'square': return solveSquare(step, state);
+    case 'rectangle': return solveRectangle(step, state);
+    case 'parallelogram': return solveParallelogram(step, state);
+    case 'midsegment': return solveMidsegment(step, state);
+    case 'altitude': return solveAltitude(step, state);
+    case 'median': return solveMedian(step, state);
   }
 }
 
@@ -1439,6 +1555,219 @@ function solveSector(step: StepSector, state: State): void {
   setObject(state, { kind: 'polygon', id: step.id, vertices: verts, label: step.label });
 }
 
+// ─── Tier 2 solvers ───────────────────────────────────────────────────────────
+
+/** Materialize a triangle from three computed vertex coords plus optional
+ *  brain-supplied vertex ids. Always emits 3 points + 3 segments + the
+ *  polygon itself under `step.id`. Used by all three triangle_from_*. */
+function emitTriangle(
+  state: State,
+  step: StepCommon,
+  vertexIds: [string, string, string] | undefined,
+  coords: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }],
+): void {
+  const [aId, bId, cId] = vertexIds ?? [`${step.id}_A`, `${step.id}_B`, `${step.id}_C`];
+  setObject(state, { kind: 'point', id: aId, x: round2(coords[0].x), y: round2(coords[0].y) });
+  setObject(state, { kind: 'point', id: bId, x: round2(coords[1].x), y: round2(coords[1].y) });
+  setObject(state, { kind: 'point', id: cId, x: round2(coords[2].x), y: round2(coords[2].y) });
+  setObject(state, { kind: 'segment', id: `${step.id}_ab`, from: aId, to: bId });
+  setObject(state, { kind: 'segment', id: `${step.id}_bc`, from: bId, to: cId });
+  setObject(state, { kind: 'segment', id: `${step.id}_ca`, from: cId, to: aId });
+  setObject(state, { kind: 'polygon', id: step.id, vertices: [aId, bId, cId], label: step.label });
+}
+
+function solveTriangleSSS(step: StepTriangleFromSSS, state: State): void {
+  const [a, b, c] = step.sides;
+  if (a + b <= c || a + c <= b || b + c <= a) {
+    throw new Error(`triangle_from_sss "${step.id}": sides ${a},${b},${c} violate triangle inequality`);
+  }
+  // A at origin, B at (c, 0). C found via law of cosines.
+  // cos(angle at A) = (b² + c² − a²) / (2bc)
+  const cosA = (b * b + c * c - a * a) / (2 * b * c);
+  const sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA));
+  emitTriangle(state, step, step.vertexIds, [
+    { x: 0, y: 0 },
+    { x: c, y: 0 },
+    { x: b * cosA, y: b * sinA },
+  ]);
+}
+
+function solveTriangleSAS(step: StepTriangleFromSAS, state: State): void {
+  const [b, c] = step.sides;
+  const A = (step.angle * Math.PI) / 180;
+  // A at origin, B at (c, 0), C at (b cosA, b sinA).
+  emitTriangle(state, step, step.vertexIds, [
+    { x: 0, y: 0 },
+    { x: c, y: 0 },
+    { x: b * Math.cos(A), y: b * Math.sin(A) },
+  ]);
+}
+
+function solveTriangleASA(step: StepTriangleFromASA, state: State): void {
+  const [Adeg, Bdeg] = step.angles;
+  const A = (Adeg * Math.PI) / 180;
+  const B = (Bdeg * Math.PI) / 180;
+  const Cangle = Math.PI - A - B;
+  if (Cangle <= 0) throw new Error(`triangle_from_asa "${step.id}": angles ${Adeg}+${Bdeg} ≥ 180`);
+  // Law of sines: AC / sin(B) = AB / sin(C). Side AB = step.side.
+  const AC = (step.side * Math.sin(B)) / Math.sin(Cangle);
+  emitTriangle(state, step, step.vertexIds, [
+    { x: 0, y: 0 },
+    { x: step.side, y: 0 },
+    { x: AC * Math.cos(A), y: AC * Math.sin(A) },
+  ]);
+}
+
+/** Common quad emitter — 4 vertices ccw from "bottom-left". */
+function emitQuad(
+  state: State,
+  step: StepCommon,
+  vertexIds: [string, string, string, string] | undefined,
+  corners: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }],
+): void {
+  const ids = vertexIds ?? [`${step.id}_v0`, `${step.id}_v1`, `${step.id}_v2`, `${step.id}_v3`];
+  for (let i = 0; i < 4; i++) {
+    setObject(state, { kind: 'point', id: ids[i], x: round2(corners[i].x), y: round2(corners[i].y) });
+  }
+  for (let i = 0; i < 4; i++) {
+    setObject(state, { kind: 'segment', id: `${step.id}_e${i}`, from: ids[i], to: ids[(i + 1) % 4] });
+  }
+  setObject(state, { kind: 'polygon', id: step.id, vertices: ids, label: step.label });
+}
+
+function solveSquare(step: StepSquare, state: State): void {
+  if (step.corners) {
+    // Two opposite corners. The square is the smallest one containing both
+    // as DIAGONAL endpoints; perpendicular pair derives from the diagonal.
+    const P = pt(state, step.corners[0]);
+    const Q = pt(state, step.corners[1]);
+    const cx = (P.x + Q.x) / 2, cy = (P.y + Q.y) / 2;
+    const dx = (Q.x - P.x) / 2, dy = (Q.y - P.y) / 2;
+    // Other two corners are along the perpendicular at the same half-distance.
+    emitQuad(state, step, step.vertexIds, [
+      { x: cx + dx, y: cy + dy },
+      { x: cx - dy, y: cy + dx },
+      { x: cx - dx, y: cy - dy },
+      { x: cx + dy, y: cy - dx },
+    ]);
+    return;
+  }
+  if (step.center !== undefined && step.side !== undefined) {
+    const C = pt(state, step.center);
+    const half = step.side / 2;
+    const r = ((step.rotation ?? 0) * Math.PI) / 180;
+    const cos = Math.cos(r), sin = Math.sin(r);
+    const rot = (x: number, y: number) => ({ x: C.x + x * cos - y * sin, y: C.y + x * sin + y * cos });
+    emitQuad(state, step, step.vertexIds, [
+      rot(-half, -half),
+      rot(half, -half),
+      rot(half, half),
+      rot(-half, half),
+    ]);
+    return;
+  }
+  throw new Error(`square "${step.id}": need either corners[2] or center+side`);
+}
+
+function solveRectangle(step: StepRectangle, state: State): void {
+  if (step.corners) {
+    // Axis-aligned rectangle from two opposite corners.
+    const P = pt(state, step.corners[0]);
+    const Q = pt(state, step.corners[1]);
+    emitQuad(state, step, step.vertexIds, [
+      { x: P.x, y: P.y },
+      { x: Q.x, y: P.y },
+      { x: Q.x, y: Q.y },
+      { x: P.x, y: Q.y },
+    ]);
+    return;
+  }
+  if (step.center !== undefined && step.width !== undefined && step.height !== undefined) {
+    const C = pt(state, step.center);
+    const w = step.width / 2, h = step.height / 2;
+    const r = ((step.rotation ?? 0) * Math.PI) / 180;
+    const cos = Math.cos(r), sin = Math.sin(r);
+    const rot = (x: number, y: number) => ({ x: C.x + x * cos - y * sin, y: C.y + x * sin + y * cos });
+    emitQuad(state, step, step.vertexIds, [
+      rot(-w, -h),
+      rot(w, -h),
+      rot(w, h),
+      rot(-w, h),
+    ]);
+    return;
+  }
+  throw new Error(`rectangle "${step.id}": need corners[2] or center+width+height`);
+}
+
+function solveParallelogram(step: StepParallelogram, state: State): void {
+  // Given A, B, C in cyclic order, the fourth vertex D = A + C − B.
+  const A = pt(state, step.vertices[0]);
+  const B = pt(state, step.vertices[1]);
+  const C = pt(state, step.vertices[2]);
+  const Dx = A.x + C.x - B.x;
+  const Dy = A.y + C.y - B.y;
+  const dId = step.fourthId ?? `${step.id}_d`;
+  setObject(state, { kind: 'point', id: dId, x: round2(Dx), y: round2(Dy) });
+  // Resolve the source vertex ids for the polygon (synthesizing inline if
+  // the brain passed literals).
+  const aId = normalizePointRef(state, step.vertices[0], step.id, 'A');
+  const bId = normalizePointRef(state, step.vertices[1], step.id, 'B');
+  const cId = normalizePointRef(state, step.vertices[2], step.id, 'C');
+  const ids = step.vertexIds ?? [aId, bId, cId, dId];
+  for (let i = 0; i < 4; i++) {
+    setObject(state, { kind: 'segment', id: `${step.id}_e${i}`, from: ids[i], to: ids[(i + 1) % 4] });
+  }
+  setObject(state, { kind: 'polygon', id: step.id, vertices: ids, label: step.label });
+}
+
+/** Helper: read endpoints of either a segment id or an inline {from,to}. */
+function endpointsOf(state: State, ref: string | { from: PtRef; to: PtRef }): { a: ResolvedPoint; b: ResolvedPoint } {
+  if (typeof ref === 'string') {
+    const o = state.byId.get(ref);
+    if (!o || o.kind !== 'segment') throw new Error(`expected segment id, got "${ref}"`);
+    return { a: pt(state, o.from), b: pt(state, o.to) };
+  }
+  return { a: pt(state, ref.from), b: pt(state, ref.to) };
+}
+
+function solveMidsegment(step: StepMidsegment, state: State): void {
+  const { a: a1, b: b1 } = endpointsOf(state, step.of[0]);
+  const { a: a2, b: b2 } = endpointsOf(state, step.of[1]);
+  const m1x = (a1.x + b1.x) / 2, m1y = (a1.y + b1.y) / 2;
+  const m2x = (a2.x + b2.x) / 2, m2y = (a2.y + b2.y) / 2;
+  const [m1Id, m2Id] = step.midpointIds ?? [`${step.id}_m1`, `${step.id}_m2`];
+  setObject(state, { kind: 'point', id: m1Id, x: round2(m1x), y: round2(m1y) });
+  setObject(state, { kind: 'point', id: m2Id, x: round2(m2x), y: round2(m2y) });
+  setObject(state, { kind: 'segment', id: step.id, from: m1Id, to: m2Id, label: step.label });
+}
+
+function solveAltitude(step: StepAltitude, state: State): void {
+  const V = pt(state, step.vertex);
+  const { a, b } = endpointsOf(state, step.opposite);
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy || 1;
+  const t = ((V.x - a.x) * dx + (V.y - a.y) * dy) / len2;
+  const fx = a.x + t * dx;
+  const fy = a.y + t * dy;
+  const footId = step.footId ?? `${step.id}_foot`;
+  setObject(state, { kind: 'point', id: footId, x: round2(fx), y: round2(fy) });
+  // Use whatever id was passed as the vertex ref (may be inline-synthesized).
+  const vId = normalizePointRef(state, step.vertex, step.id, 'vertex');
+  setObject(state, { kind: 'segment', id: step.id, from: vId, to: footId, label: step.label });
+}
+
+function solveMedian(step: StepMedian, state: State): void {
+  const V = pt(state, step.vertex);
+  const { a, b } = endpointsOf(state, step.opposite);
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const midId = step.midpointId ?? `${step.id}_mid`;
+  setObject(state, { kind: 'point', id: midId, x: round2(mx), y: round2(my) });
+  const vId = normalizePointRef(state, step.vertex, step.id, 'vertex');
+  setObject(state, { kind: 'segment', id: step.id, from: vId, to: midId, label: step.label });
+  // Silence unused: V referenced only for validation.
+  void V;
+}
+
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 export interface SolverOutput {
@@ -1538,7 +1867,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   }
   const isAutoScaffold = (id: string) =>
     id.startsWith('__') ||
-    /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id);
+    /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|arc\d+|v\d+|e\d+|m\d+|T\d+|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id);
 
   for (const id of state.order) {
     const obj = state.byId.get(id);
@@ -1615,7 +1944,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 // they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
 // pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
-  if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|arc\d+|v\d+|e\d+|T\d+|a|b)$/.test(id)) return undefined;
+  if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|arc\d+|v\d+|e\d+|m\d+|T\d+|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id)) return undefined;
   return id;
 }
 
