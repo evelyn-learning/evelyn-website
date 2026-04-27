@@ -61,9 +61,11 @@ export type Given =
 
 // Steps: derived objects. Each step has an id (its primary output).
 // Multi-output steps (chord = 2 points + 1 segment) name child outputs by
-// suffixing the parent id, e.g. "AB.from" / "AB.to". The brain may also
-// pass explicit `endpoints: { from: 'A', to: 'B' }` to name the points
-// directly; those names go into the same namespace.
+// underscore-suffixing the parent id: e.g. step id "ch" creates points
+// "ch_from" and "ch_to". Underscore (not dot) because the brain reaches
+// for it naturally and the dot form was a documented friction point. The
+// brain may also pass explicit `endpoints: { from: 'A', to: 'B' }` to
+// name the points directly; those names go into the same namespace.
 export type Step =
   | StepMidpoint
   | StepPointOnCircle
@@ -103,7 +105,7 @@ export interface StepPointOnCircle extends StepCommon {
 export interface StepChord extends StepCommon {
   kind: 'chord';
   on: string;
-  /** Endpoint ids — defaults to `${id}.from` / `${id}.to`. */
+  /** Endpoint ids — defaults to `${id}_from` / `${id}_to`. */
   endpoints?: { from: string; to: string };
   length?: number | { ratio: number; of: 'radius' | 'diameter' };
   /** Degrees CCW from +x, OR a keyword. */
@@ -149,7 +151,7 @@ export interface StepTangentFrom extends StepCommon {
   on: string;
   external: string;
   prefer?: 'cw' | 'ccw';   // clockwise / counter-clockwise from external→center
-  /** Id of the point of tangency. Defaults to `${id}.touch`. */
+  /** Id of the point of tangency. Defaults to `${id}_touch`. */
   touchId?: string;
 }
 
@@ -168,7 +170,7 @@ export interface StepPerpFrom extends StepCommon {
   kind: 'perpendicular_from';
   point: string;
   to: string;       // line or segment id
-  /** Id of the foot point. Defaults to `${id}.foot`. */
+  /** Id of the foot point. Defaults to `${id}_foot`. */
   footId?: string;
 }
 
@@ -188,7 +190,7 @@ export interface StepIntersect extends StepCommon {
   of: [string, string];
   prefer?: 'cw' | 'ccw' | 'first' | 'second';
   /** When two intersection points exist, the secondary id (defaults to
-   *  `${id}.b`). */
+   *  `${id}_b`). */
   secondId?: string;
 }
 
@@ -411,8 +413,8 @@ function solveChord(step: StepChord, state: State): void {
     mid = { x: center.x + sign * h * perp[0], y: center.y + sign * h * perp[1] };
   }
 
-  const fromId = step.endpoints?.from ?? `${step.id}.from`;
-  const toId = step.endpoints?.to ?? `${step.id}.to`;
+  const fromId = step.endpoints?.from ?? `${step.id}_from`;
+  const toId = step.endpoints?.to ?? `${step.id}_to`;
   setObject(state, {
     kind: 'point', id: fromId,
     x: round2(mid.x - half * dir[0]),
@@ -436,7 +438,7 @@ function solveRadius(step: StepRadius, state: State): void {
     endId = step.to;
     pt(state, endId); // validate exists
   } else {
-    endId = step.to.pointId ?? `${step.id}.end`;
+    endId = step.to.pointId ?? `${step.id}_end`;
     const r = (step.to.angle * Math.PI) / 180;
     setObject(state, {
       kind: 'point', id: endId,
@@ -462,8 +464,8 @@ function solveDiameter(step: StepDiameter, state: State): void {
   } else {
     dir = dirVec(step.direction);
   }
-  const fromId = step.endpoints?.from ?? `${step.id}.from`;
-  const toId = step.endpoints?.to ?? `${step.id}.to`;
+  const fromId = step.endpoints?.from ?? `${step.id}_from`;
+  const toId = step.endpoints?.to ?? `${step.id}_to`;
   setObject(state, {
     kind: 'point', id: fromId,
     x: round2(center.x - c.radius * dir[0]),
@@ -490,8 +492,8 @@ function solveTangentAt(step: StepTangentAt, state: State): void {
   const tx = -ry / m;
   const ty = rx / m;
   const half = (step.length ?? c.radius * 1.5) / 2;
-  const fromId = `${step.id}.from`;
-  const toId = `${step.id}.to`;
+  const fromId = `${step.id}_from`;
+  const toId = `${step.id}_to`;
   setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * tx), y: round2(P.y - half * ty) });
   setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * tx), y: round2(P.y + half * ty) });
   setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
@@ -515,7 +517,7 @@ function solveTangentFrom(step: StepTangentFrom, state: State): void {
   const baseAngle = Math.atan2(dy, dx);
   const sign = step.prefer === 'cw' ? -1 : 1;
   const touchAngle = baseAngle + sign * theta;
-  const touchId = step.touchId ?? `${step.id}.touch`;
+  const touchId = step.touchId ?? `${step.id}_touch`;
   const Tx = center.x + r * Math.cos(touchAngle);
   const Ty = center.y + r * Math.sin(touchAngle);
   setObject(state, { kind: 'point', id: touchId, x: round2(Tx), y: round2(Ty) });
@@ -540,8 +542,8 @@ function solvePerpBisector(step: StepPerpBisector, state: State): void {
   const px = -dy / m;
   const py = dx / m;
   const half = (step.length ?? Math.hypot(dx, dy)) / 2;
-  const fromId = `${step.id}.from`;
-  const toId = `${step.id}.to`;
+  const fromId = `${step.id}_from`;
+  const toId = `${step.id}_to`;
   setObject(state, { kind: 'point', id: fromId, x: round2(mx - half * px), y: round2(my - half * py) });
   setObject(state, { kind: 'point', id: toId, x: round2(mx + half * px), y: round2(my + half * py) });
   setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
@@ -556,7 +558,7 @@ function solvePerpFrom(step: StepPerpFrom, state: State): void {
   const t = ((P.x - ln.ax) * dx + (P.y - ln.ay) * dy) / (len2 || 1);
   const fx = ln.ax + t * dx;
   const fy = ln.ay + t * dy;
-  const footId = step.footId ?? `${step.id}.foot`;
+  const footId = step.footId ?? `${step.id}_foot`;
   setObject(state, { kind: 'point', id: footId, x: round2(fx), y: round2(fy) });
   setObject(state, { kind: 'segment', id: step.id, from: step.point, to: footId, label: step.label });
 }
@@ -570,8 +572,8 @@ function solveParallelThrough(step: StepParallelThrough, state: State): void {
   const ux = dx / m;
   const uy = dy / m;
   const half = (step.length ?? Math.hypot(dx, dy)) / 2;
-  const fromId = `${step.id}.from`;
-  const toId = `${step.id}.to`;
+  const fromId = `${step.id}_from`;
+  const toId = `${step.id}_to`;
   setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * ux), y: round2(P.y - half * uy) });
   setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * ux), y: round2(P.y + half * uy) });
   setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
@@ -658,7 +660,7 @@ function solvePolygonRegular(step: StepPolygonRegular, state: State): void {
   const ids: string[] = [];
   for (let i = 0; i < n; i++) {
     const angle = baseRot + (2 * Math.PI * i) / n;
-    const id = step.vertexIds?.[i] ?? `${step.id}.v${i}`;
+    const id = step.vertexIds?.[i] ?? `${step.id}_v${i}`;
     setObject(state, {
       kind: 'point', id,
       x: round2(center.x + c.radius * Math.cos(angle)),
@@ -668,7 +670,7 @@ function solvePolygonRegular(step: StepPolygonRegular, state: State): void {
   }
   // Edge segments around the polygon.
   for (let i = 0; i < n; i++) {
-    const segId = `${step.id}.e${i}`;
+    const segId = `${step.id}_e${i}`;
     setObject(state, { kind: 'segment', id: segId, from: ids[i], to: ids[(i + 1) % n] });
   }
   setObject(state, { kind: 'polygon', id: step.id, vertices: ids, label: step.label });
@@ -837,9 +839,11 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
 }
 
 // Convenience: derive a sensible label from the id when none is provided.
-// "AB.from" → no label; "A" → "A". Two-character ids like "AB" stay as-is.
+// Auto-generated child ids ("ch_from", "hex_v0") suppress the label —
+// they're scaffolding, not user-facing names. Plain ids ("A", "O", "AB")
+// pass through verbatim.
 function defaultPointLabel(id: string): string | undefined {
-  if (id.includes('.')) return undefined;
+  if (/_(from|to|end|touch|foot|v\d+|e\d+|b)$/.test(id)) return undefined;
   return id;
 }
 
