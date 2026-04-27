@@ -355,6 +355,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           const tc: BrainToolCall = { id: currentToolUse.id, name: currentToolUse.name, args };
           newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
           accumulatedToolCalls.push(tc);
+          // Log args in dev so we can diagnose render-vs-brain disagreements
+          // (e.g. "the chord doesn't pass through origin" — is that the
+          // renderer's fault or did the brain emit asymmetric coords?).
+          if (process.env.NODE_ENV !== 'production') {
+            try {
+              const preview = JSON.stringify(tc.args);
+              console.log(
+                `[brain.stream] tool-call ${tc.name} ${preview.length > 1500 ? preview.slice(0, 1500) + '…' : preview}`,
+              );
+            } catch {}
+          }
           yield { type: 'tool-call', id: tc.id, name: tc.name, args: tc.args };
           currentToolUse = null;
         }
