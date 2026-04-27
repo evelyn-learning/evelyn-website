@@ -660,6 +660,56 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_lewis_constructed',
+    description: 'PREFER THIS over show_lewis whenever you can describe the molecule by atoms + bonds (which is most of the time). You declare atoms by element, bonds by atom-id pair + order; the solver places atoms via auto-layout, derives lone-pair counts from valence (no need to count electrons yourself), and validates octet/duet rules. The brain is freed from coordinate placement and electron arithmetic — both are documented frequent failure modes. Reserve show_lewis for cases where you need explicit pixel control (resonance arrows mid-structure, expanded octets you want to assert manually, etc.).',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        formula: { type: 'string', description: 'Molecular formula shown above the structure (e.g., "H2O", "CO2"). Optional but pedagogically useful.' },
+        geometry: { type: 'string', description: 'Optional VSEPR label, e.g. "bent", "trigonal planar", "tetrahedral".' },
+        atoms: {
+          type: 'array',
+          description: 'Atoms in the molecule. Element is the standard symbol (H, He, Li-Ar, K, Ca, Br, Kr, I, Xe). formalCharge optional (+1, -1, etc.). x/y override auto-layout in the rare case you want to.',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              element: { type: 'string' },
+              formalCharge: { type: 'number' },
+              x: { type: 'number' },
+              y: { type: 'number' },
+              lonePairs: { type: 'number', description: 'Override the solver-computed lone-pair count. Almost always omit this.' },
+            },
+            required: ['id', 'element'],
+          },
+        },
+        bonds: {
+          type: 'array',
+          description: 'Bonds. order ∈ {1, 2, 3} for single/double/triple.',
+          items: {
+            type: 'object',
+            properties: {
+              from: { type: 'string' },
+              to: { type: 'string' },
+              order: { type: 'number', enum: [1, 2, 3] },
+              style: { type: 'string', enum: ['solid', 'dashed', 'wedge', 'dash-wedge'] },
+            },
+            required: ['from', 'to', 'order'],
+          },
+        },
+        layout: {
+          type: 'string',
+          enum: ['auto', 'linear', 'trigonal', 'tetrahedral', 'tetrahedral-around'],
+          description: '"auto" picks a sensible shape from the bond graph (default). "linear" for CO2-like; "trigonal" for BF3-like; "tetrahedral-around" needs centerAtomId.',
+        },
+        centerAtomId: { type: 'string', description: 'Required for layout="tetrahedral-around"; ignored otherwise.' },
+        skipValidation: { type: 'boolean', description: 'Skip octet/duet checks. Use only for radicals or expanded octets.' },
+      },
+      required: ['atoms', 'bonds'],
+    },
+  },
+  {
     name: 'show_periodic_table',
     description: 'Full periodic table (118 elements, standard group/period layout, colored by category). Highlight options: `highlight` (specific symbols), `highlightGroup` (column 1–18), `highlightPeriod` (row 1–7), `highlightCategory` (all of one category). `showMass` adds atomic masses.',
     parameters: {
@@ -1606,6 +1656,19 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       nodes: Array.isArray(funcArgs.nodes) ? funcArgs.nodes : undefined,
       components: Array.isArray(funcArgs.components) ? funcArgs.components : [],
       showNodes: funcArgs.showNodes,
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_lewis_constructed') {
+    return {
+      action: 'showLewisConstructed',
+      title: funcArgs.title,
+      formula: funcArgs.formula,
+      geometry: funcArgs.geometry,
+      atoms: Array.isArray(funcArgs.atoms) ? funcArgs.atoms : [],
+      bonds: Array.isArray(funcArgs.bonds) ? funcArgs.bonds : [],
+      layout: funcArgs.layout,
+      centerAtomId: funcArgs.centerAtomId,
+      skipValidation: funcArgs.skipValidation,
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_lewis') {

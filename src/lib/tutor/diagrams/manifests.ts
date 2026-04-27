@@ -91,6 +91,35 @@ import { buildFoodWebManifest } from '@/app/tutor/components/whiteboard/FoodWebR
 import { buildPedigreeManifest } from '@/app/tutor/components/whiteboard/PedigreeRenderer';
 import { buildReactionCoordinateManifest } from '@/app/tutor/components/whiteboard/ReactionCoordinateRenderer';
 import { buildLewisManifest } from '@/app/tutor/components/whiteboard/LewisRenderer';
+import { solveLewis } from '@/lib/tutor/diagrams/lewis-solver';
+
+/** Solve a constructed-Lewis spec and feed the resulting primitive
+ *  payload through buildLewisManifest — same approach as the
+ *  geometry-constructed manifest. Lets cross-turn snapshot show solved
+ *  atom positions instead of an empty manifest. */
+function buildLewisConstructedManifest(cmd: { title?: string; formula?: string; geometry?: string; atoms: unknown[]; bonds: unknown[]; layout?: string; centerAtomId?: string; skipValidation?: boolean }) {
+  try {
+    const solved = solveLewis({
+      title: cmd.title,
+      formula: cmd.formula,
+      geometry: cmd.geometry,
+      atoms: cmd.atoms as never,
+      bonds: cmd.bonds as never,
+      layout: cmd.layout as never,
+      centerAtomId: cmd.centerAtomId,
+      skipValidation: cmd.skipValidation,
+    });
+    return buildLewisManifest({
+      title: solved.title,
+      formula: solved.formula,
+      geometry: solved.geometry,
+      atoms: solved.atoms,
+      bonds: solved.bonds,
+    });
+  } catch {
+    return [];
+  }
+}
 import { buildOrbitalDiagramManifest } from '@/app/tutor/components/whiteboard/OrbitalDiagramRenderer';
 import { buildPeriodicTableManifest } from '@/app/tutor/components/whiteboard/PeriodicTableRenderer';
 import { buildCycleDiagramManifest } from '@/app/tutor/components/whiteboard/CycleDiagramRenderer';
@@ -654,6 +683,7 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     case 'showPedigree':          return buildPedigreeManifest(cmd as any);
     case 'showReactionCoordinate':return buildReactionCoordinateManifest(cmd as any);
     case 'showLewis':             return buildLewisManifest(cmd as any);
+    case 'showLewisConstructed': return buildLewisConstructedManifest(cmd as any);
     case 'showOrbitalDiagram':    return buildOrbitalDiagramManifest(cmd as any);
     case 'showPeriodicTable':     return buildPeriodicTableManifest(cmd as any);
     // Diagrams / Timelines / Maps

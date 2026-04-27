@@ -1647,6 +1647,44 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'showLewis':
       return <LewisRenderer title={command.title} atoms={command.atoms} bonds={command.bonds} formula={command.formula} geometry={command.geometry} />;
 
+    case 'showLewisConstructed': {
+      // Solve the declarative spec into a primitive Lewis payload, then
+      // route to the existing renderer. Same pattern as
+      // showGeometryConstructed → GeometryRenderer.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { solveLewis } = require('@/lib/tutor/diagrams/lewis-solver') as typeof import('@/lib/tutor/diagrams/lewis-solver');
+        const solved = solveLewis({
+          title: command.title,
+          formula: command.formula,
+          geometry: command.geometry,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          atoms: command.atoms as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          bonds: command.bonds as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          layout: command.layout as any,
+          centerAtomId: command.centerAtomId,
+          skipValidation: command.skipValidation,
+        });
+        return (
+          <LewisRenderer
+            title={solved.title}
+            formula={solved.formula}
+            geometry={solved.geometry}
+            atoms={solved.atoms}
+            bonds={solved.bonds}
+          />
+        );
+      } catch (err) {
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Lewis construction error: {(err as Error).message}
+          </div>
+        );
+      }
+    }
+
     case 'showPeriodicTable':
       return <PeriodicTableRenderer title={command.title} highlight={command.highlight} highlightGroup={command.highlightGroup} highlightPeriod={command.highlightPeriod} highlightCategory={command.highlightCategory} showMass={command.showMass} />;
 
