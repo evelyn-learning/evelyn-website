@@ -80,6 +80,13 @@ export interface CatalogSnapshotEntry {
   title?: string;
   pageTitle?: string;
   featureCount: number;
+  /** Per-feature short descriptions surfaced to the brain so it can preserve
+   *  exact coordinates / labels across turns. Without these, the brain sees
+   *  only "[1] showGeometry — Circle: Center O(-2,3), Radius 5 (5 features)"
+   *  and re-imagines coordinates on the next turn — observed 2026-04-26 with
+   *  C and D on a circle being silently relocated off-circle when the user
+   *  asked to extend the figure. */
+  features?: Array<{ canonical: string; kind: string; description?: string }>;
 }
 
 export interface ResolveSuccess {
@@ -263,6 +270,18 @@ export class WhiteboardCatalog {
       title: it.title,
       pageTitle: it.pageTitle,
       featureCount: it.features.length,
+      // Pull a compact list of per-feature descriptions. Skip the synthetic
+      // whole-item region (kind === 'region') — its description is just the
+      // title we already surface above. The remaining descriptions carry
+      // the structural detail (coordinates for points, endpoint refs for
+      // segments) that the brain needs to extend a figure consistently.
+      features: it.features
+        .filter((f) => f.kind !== 'region' && !!f.description)
+        .map((f) => ({
+          canonical: f.canonical,
+          kind: f.kind,
+          description: f.description,
+        })),
     }));
   }
 

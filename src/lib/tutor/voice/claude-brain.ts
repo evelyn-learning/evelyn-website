@@ -141,8 +141,11 @@ class SentenceBuffer {
 /**
  * Build a compact, human-readable description of what's on the whiteboard so
  * Claude can reason about whether to add a new figure, scribble on an existing
- * one, or just talk. Keeps the per-turn cost bounded — full structured state
- * would balloon the prompt.
+ * one, or just talk. Includes the per-feature descriptions (point coords,
+ * segment endpoints, etc.) so a follow-up "join OC and OD" turn preserves
+ * the exact coordinates of C and D from the prior render instead of re-
+ * imagining them off-circle. Without this, the brain sees only metadata
+ * and has no way to keep figures consistent across turns.
  */
 export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string {
   if (snapshot.length === 0) return '(whiteboard is empty)';
@@ -150,8 +153,18 @@ export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string
     .map((entry, i) => {
       const title = entry.title ? ` — ${entry.title}` : '';
       const page = entry.pageTitle ? ` [page: ${entry.pageTitle}]` : '';
-      const features = entry.featureCount > 0 ? ` (${entry.featureCount} addressable features)` : '';
-      return `[${i + 1}] ${entry.action}${title}${page}${features}`;
+      const head = `[${i + 1}] ${entry.action}${title}${page}`;
+      const feats = entry.features ?? [];
+      if (feats.length === 0) {
+        const count = entry.featureCount > 0 ? ` (${entry.featureCount} addressable features)` : '';
+        return `${head}${count}`;
+      }
+      // Cap per-item feature dump so a chess-board-sized renderer can't blow
+      // up the prompt; in practice geometry items have ≤ 20 features.
+      const MAX = 30;
+      const shown = feats.slice(0, MAX).map((f) => `   - ${f.description}`);
+      const overflow = feats.length > MAX ? `   - …and ${feats.length - MAX} more` : '';
+      return [head, ...shown, overflow].filter(Boolean).join('\n');
     })
     .join('\n');
 }

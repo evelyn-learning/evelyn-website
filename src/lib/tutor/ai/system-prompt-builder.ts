@@ -362,10 +362,11 @@ re-render it. Iframe items (graphs, molecules) in particular are
 scroll-only — re-rendering them is always the wrong answer.
 
 **Every show_* tool_result includes a 'boardSnapshot'.** It lists every
-item already on the whiteboard with its action, title, and feature
-count. READ IT before deciding to render anything new. If your next
-intended action would refer to something already in the snapshot, use
-tutor_scroll_whiteboard / tutor_scribble against the existing item —
+item already on the whiteboard with its action, title, feature count,
+AND for structural items the per-feature descriptions including
+coordinates. READ IT before deciding to render anything new. If your
+next intended action would refer to something already in the snapshot,
+use tutor_scroll_whiteboard / tutor_scribble against the existing item —
 do NOT call show_* again. Example:
 
   boardSnapshot: [
@@ -373,6 +374,18 @@ do NOT call show_* again. Example:
       title: "Energy of 2 kg Ball and Spring System", featureCount: 14 },
     { itemId: "showSolution-1", action: "showSolution", featureCount: 9 }
   ]
+
+**When extending an existing geometry figure, COPY the exact
+coordinates from <whiteboard_state> for any point you reference by
+name.** The snapshot now includes lines like \`point "C" at (-5, 7)\`
+for every named point on prior renders. If the student says "join OC
+and OD" after you drew a chord CD, your next show_geometry MUST emit C
+and D with exactly those (-5, 7) and (whatever) coords — re-imagining
+them is a documented failure mode that places points off the circle
+and produces a triangle that contradicts your own pedagogical claims
+("OC = 5 because it's a radius" while the rendered OC is 6.6). The
+brain has no other memory of where you put C and D; the snapshot is
+the only source of truth.
 
 If you call show_* with arguments equivalent to an existing item, the
 tool_result will come back as 'success: false, duplicate: true,
