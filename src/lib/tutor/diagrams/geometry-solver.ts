@@ -168,8 +168,12 @@ export interface StepPerpBisector extends StepCommon {
  *  from the point to the foot of the perpendicular. */
 export interface StepPerpFrom extends StepCommon {
   kind: 'perpendicular_from';
-  point: string;
-  to: string;       // line or segment id
+  /** The point we drop the perpendicular from. Brain reaches naturally
+   *  for `from`; `point` is accepted as a legacy alias. */
+  from?: string;
+  point?: string;
+  /** The line or segment we drop onto. */
+  to: string;
   /** Id of the foot point. Defaults to `${id}_foot`. */
   footId?: string;
 }
@@ -177,8 +181,14 @@ export interface StepPerpFrom extends StepCommon {
 /** Line through a point parallel to a reference line/segment. */
 export interface StepParallelThrough extends StepCommon {
   kind: 'parallel_through';
-  point: string;
-  to: string;
+  /** The point the parallel line passes through. Brain reaches naturally
+   *  for `through`; `point` is accepted as a legacy alias. */
+  through?: string;
+  point?: string;
+  /** The line/segment we want to be parallel to. Brain reaches naturally
+   *  for `of`; `to` is accepted as a legacy alias. */
+  of?: string;
+  to?: string;
   length?: number;
 }
 
@@ -550,7 +560,10 @@ function solvePerpBisector(step: StepPerpBisector, state: State): void {
 }
 
 function solvePerpFrom(step: StepPerpFrom, state: State): void {
-  const P = pt(state, step.point);
+  const fromPointId = step.from ?? step.point;
+  if (!fromPointId) throw new Error(`perpendicular_from "${step.id}": missing 'from' (or 'point')`);
+  if (!step.to) throw new Error(`perpendicular_from "${step.id}": missing 'to'`);
+  const P = pt(state, fromPointId);
   const ln = lineLike(state, step.to);
   const dx = ln.bx - ln.ax;
   const dy = ln.by - ln.ay;
@@ -560,12 +573,16 @@ function solvePerpFrom(step: StepPerpFrom, state: State): void {
   const fy = ln.ay + t * dy;
   const footId = step.footId ?? `${step.id}_foot`;
   setObject(state, { kind: 'point', id: footId, x: round2(fx), y: round2(fy) });
-  setObject(state, { kind: 'segment', id: step.id, from: step.point, to: footId, label: step.label });
+  setObject(state, { kind: 'segment', id: step.id, from: fromPointId, to: footId, label: step.label });
 }
 
 function solveParallelThrough(step: StepParallelThrough, state: State): void {
-  const P = pt(state, step.point);
-  const ln = lineLike(state, step.to);
+  const throughPointId = step.through ?? step.point;
+  const refLineId = step.of ?? step.to;
+  if (!throughPointId) throw new Error(`parallel_through "${step.id}": missing 'through' (or 'point')`);
+  if (!refLineId) throw new Error(`parallel_through "${step.id}": missing 'of' (or 'to')`);
+  const P = pt(state, throughPointId);
+  const ln = lineLike(state, refLineId);
   const dx = ln.bx - ln.ax;
   const dy = ln.by - ln.ay;
   const m = Math.hypot(dx, dy) || 1;
