@@ -803,15 +803,36 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const segments: GeometrySegment[] = [];
   const circles: GeometryCircle[] = [];
   const polygons: GeometryPolygon[] = [];
+  // Build a co-location set for labeled points so we can suppress the
+  // unlabeled scaffolding dots (chord_from, chord_to, hex_v0, …) when
+  // they sit on top of a brain-named point. Without this, the scaffolding
+  // shows up as label-less blue dots adjacent to "P", "Q", "A" and reads
+  // as a rendering artifact (image #23 / #24).
+  const labeledKeys = new Set<string>();
+  for (const obj of state.byId.values()) {
+    if (obj.kind !== 'point') continue;
+    const label = labelOverrides[obj.id] ?? obj.label ?? defaultPointLabel(obj.id);
+    if (!label) continue;
+    labeledKeys.add(`${roundForKey(obj.x)}|${roundForKey(obj.y)}`);
+  }
+  const isAutoScaffold = (id: string) =>
+    /_(from|to|end|touch|foot|v\d+|e\d+|b)$/.test(id);
+
   for (const id of state.order) {
     const obj = state.byId.get(id);
     if (!obj) continue;
     if (obj.kind === 'point') {
+      const label = labelOverrides[obj.id] ?? obj.label ?? defaultPointLabel(obj.id);
+      // Suppress an auto-scaffolding dot that coincides with a labeled point.
+      if (!label && isAutoScaffold(obj.id)) {
+        const k = `${roundForKey(obj.x)}|${roundForKey(obj.y)}`;
+        if (labeledKeys.has(k)) continue;
+      }
       points.push({
         id: obj.id,
         x: obj.x,
         y: obj.y,
-        label: labelOverrides[obj.id] ?? obj.label ?? defaultPointLabel(obj.id),
+        label,
         color: colorOverrides[obj.id],
         showCoords: showCoordsSet.has(obj.id) || undefined,
       });
@@ -849,8 +870,11 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     polygons,
     arcs: [],
     angles: [],
-    showGrid: display.grid,
-    showAxes: display.axes,
+    // Axes and grid default ON. Brain forgets to set them on follow-up
+    // turns and the resulting axisless figures are hard to read against
+    // a coordinate plane backdrop. Brain can still opt out explicitly.
+    showGrid: display.grid !== false,
+    showAxes: display.axes !== false,
     viewRange: display.viewRange,
   };
 }
@@ -865,3 +889,7 @@ function defaultPointLabel(id: string): string | undefined {
 }
 
 function round2(n: number): number { return Math.round(n * 100) / 100; }
+
+/** Rounded to 1dp for the colocation key — co-located dots shouldn't be
+ *  considered "different" because of a 0.01-unit floating-point drift. */
+function roundForKey(n: number): string { return (Math.round(n * 10) / 10).toFixed(1); }

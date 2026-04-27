@@ -819,9 +819,19 @@ function idealOffset(a: LabelBox): { dx: number; dy: number } {
  *   • doesn't anchor label A in place while pushing B halfway across.
  *   • converges symmetrically when two labels both want the same spot.
  */
-function resolveLabelCollisions(labels: LabelBox[]): void {
+function resolveLabelCollisions(
+  labels: LabelBox[],
+  /** Axis pixel positions when both axes are visible. The resolver
+   *  treats the visible portion of each axis as an obstacle so segment-
+   *  length labels don't land on top of "x" / "y" axis lines. Observed
+   *  in image #21 where the chord length "2.5" sat squarely on the
+   *  x-axis and was almost unreadable. */
+  axes?: { xAxisY?: number; yAxisX?: number },
+): void {
   const MAX_ITERS = 30;
   const REPULSION_STEP = 4;     // px moved per iter when overlapping
+  const AXIS_REPULSION = 3;     // px moved per iter when crossing an axis
+  const AXIS_BUFFER = 4;        // distance from axis line considered "too close"
   const SPRING_K = 0.06;        // fraction of displacement reverted per iter
   const MIN_DELTA = 0.5;        // stop early when no label moves more than this
   for (let iter = 0; iter < MAX_ITERS; iter++) {
@@ -835,7 +845,6 @@ function resolveLabelCollisions(labels: LabelBox[]): void {
         if (i === j) continue;
         const b = labels[j];
         if (!boxesOverlap(a, b)) continue;
-        // Direction: from b's center to a's center.
         const ac = labelCenter(a);
         const bc = labelCenter(b);
         let rdx = ac.x - bc.x;
@@ -843,19 +852,33 @@ function resolveLabelCollisions(labels: LabelBox[]): void {
         const rlen = Math.sqrt(rdx * rdx + rdy * rdy) || 1;
         rdx /= rlen;
         rdy /= rlen;
-        // Bias along this label's preferred push direction so the
-        // movement still feels "natural" (perpendicular for segments,
-        // outward-radial for points and angles).
         fx += rdx * REPULSION_STEP * 0.7 + a.pushX * REPULSION_STEP * 0.3;
         fy += rdy * REPULSION_STEP * 0.7 + a.pushY * REPULSION_STEP * 0.3;
       }
-      // Spring back to IDEAL rest position (the offset placement),
-      // NOT to the anchor (the dot itself). Pulling to anchor would
-      // make labels land on top of their own dots.
+      // Repulsion from axis lines. Push perpendicular (away from the
+      // line) so the label clears the axis. Bias toward the side the
+      // label is already on so we don't bounce it across the axis.
+      if (axes?.xAxisY !== undefined) {
+        const c = labelCenter(a);
+        const top = textTop(a);
+        const bottom = top + a.h;
+        if (top - AXIS_BUFFER < axes.xAxisY && bottom + AXIS_BUFFER > axes.xAxisY) {
+          const sign = c.y < axes.xAxisY ? -1 : 1;
+          fy += sign * AXIS_REPULSION;
+        }
+      }
+      if (axes?.yAxisX !== undefined) {
+        const c = labelCenter(a);
+        const left = textLeft(a);
+        const right = left + a.w;
+        if (left - AXIS_BUFFER < axes.yAxisX && right + AXIS_BUFFER > axes.yAxisX) {
+          const sign = c.x < axes.yAxisX ? -1 : 1;
+          fx += sign * AXIS_REPULSION;
+        }
+      }
       const off = idealOffset(a);
       fx -= off.dx * SPRING_K;
       fy -= off.dy * SPRING_K;
-      // Apply.
       a.x += fx;
       a.y += fy;
       const move = Math.abs(fx) + Math.abs(fy);
@@ -896,6 +919,9 @@ function computeLabels(
   angles: GeometryAngle[],
   ptMap: Map<string, GeometryPoint>,
   toSvg: (x: number, y: number) => [number, number],
+  /** When axes are drawn, their pixel positions so the collision
+   *  resolver can keep labels off the axis lines. */
+  axes?: { xAxisY?: number; yAxisX?: number },
 ): LabelBox[] {
   const labels: LabelBox[] = [];
 
@@ -1060,7 +1086,7 @@ function computeLabels(
   // point (e.g. chord-as-diameter where the midpoint IS the origin O),
   // drop the segment label. The point label already names the location.
   const deduped = dedupCoLocatedLabels(labels);
-  resolveLabelCollisions(deduped);
+  resolveLabelCollisions(deduped, axes);
   return deduped;
 }
 
@@ -1390,10 +1416,18 @@ export function GeometryRenderer({
   // Pre-compute label positions with collision resolution across points,
   // segments, and angles. Labels are drawn in a single pass on top of the
   // diagram so they sit above arcs and strokes.
-  const labelBoxes = useMemo(
-    () => computeLabels(points, segments, angles, ptMap, toSvg),
-    [points, segments, angles, ptMap, toSvg],
-  );
+  const labelBoxes = useMemo(() => {
+    // Compute axis pixel positions once (only when axes are drawn AND the
+    // origin lies inside the visible math range — same conditions
+    // renderAxes uses).
+    const [xMin, xMax] = range.x;
+    const [yMin, yMax] = range.y;
+    const showXAxis = showAxes && yMin <= 0 && yMax >= 0;
+    const showYAxis = showAxes && xMin <= 0 && xMax >= 0;
+    const xAxisY = showXAxis ? toSvg(0, 0)[1] : undefined;
+    const yAxisX = showYAxis ? toSvg(0, 0)[0] : undefined;
+    return computeLabels(points, segments, angles, ptMap, toSvg, { xAxisY, yAxisX });
+  }, [points, segments, angles, ptMap, toSvg, range, showAxes]);
 
   return (
     <div className={`geometry-renderer ${className}`}>
