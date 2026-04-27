@@ -566,6 +566,16 @@ function ensureTitleShapeExists(cmd: GeometryCommand, pointMap: Map<string, GeoP
  * Move a point onto the circle of a given center/radius, preserving its
  * angular direction from the center. If the point coincides with the center,
  * place it to the right (angle 0).
+ *
+ * Snaps small errors (< 2% of radius) silently — these are LLM rounding
+ * artifacts (e.g. (2.99, 4.0) on a radius-5 circle).
+ *
+ * For LARGE errors (≥ 2%) we leave the point alone. With showCoords now
+ * displaying the actual numeric x/y, a silent radial projection from
+ * (-5.5, 0.5) to (-5.54, 0.54) shows the student fractional coordinates
+ * they didn't ask for. Better to render the point slightly off-circle —
+ * the brain's mistake stays visible (and self-correctable) instead of
+ * being papered over with ugly decimals.
  */
 function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void {
   const dx = pt.x - center.x;
@@ -576,8 +586,9 @@ function snapPointToCircle(pt: GeoPoint, center: GeoPoint, radius: number): void
     pt.y = round2(center.y);
     return;
   }
-  // Only snap if it's noticeably off the circle
-  if (Math.abs(d - radius) < 0.05) return;
+  const err = Math.abs(d - radius);
+  if (err < 0.05) return;            // already on the circle (floating-point only)
+  if (err > 0.02 * radius) return;   // clearly intentional or a real brain error — preserve coords
   pt.x = round2(center.x + (dx / d) * radius);
   pt.y = round2(center.y + (dy / d) * radius);
 }

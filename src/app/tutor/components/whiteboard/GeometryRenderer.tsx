@@ -1412,7 +1412,20 @@ export function GeometryRenderer({
         {showGrid && renderGrid(range, toSvg)}
 
         {/* Axes — pass hasPointAtOrigin so we don't double-label O */}
-        {showAxes && renderAxes(range, toSvg, points.some((p) => p.x === 0 && p.y === 0 && (!!p.label || !!p.showCoords)))}
+        {showAxes && renderAxes(
+          range,
+          toSvg,
+          // Suppress the auto "O" origin marker if any emitted point either
+          // (a) sits exactly at (0,0) and has a label/coords, OR (b) is
+          // labeled "O" anywhere on the diagram. Case (b) catches circles
+          // whose center O is at (-2, -3): without it, the student sees
+          // both a big "O(-2,-3)" near the circle center and a faint axis
+          // "O" near (0,0), which reads as two competing origin markers.
+          points.some((p) =>
+            (p.x === 0 && p.y === 0 && (!!p.label || !!p.showCoords))
+            || (p.label?.trim().toLowerCase() === 'o')
+          ),
+        )}
 
         {/* Polygons (filled areas behind lines and points) */}
         {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg, points.filter((p) => !!p.label))}
