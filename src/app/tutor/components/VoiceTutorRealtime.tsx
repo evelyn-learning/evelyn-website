@@ -3988,7 +3988,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           name="studentText"
           type="text"
           placeholder="Type here if you can't speak..."
-          className="flex-1 min-w-0 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+          // 16px font-size on mobile — anything smaller triggers iOS Safari's
+          // auto-zoom on focus, which makes the entire page appear zoomed in
+          // and pushes the send button off-screen. text-base = 16px.
+          className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
           disabled={!realtime.isConnected}
           onFocus={() => {
             // Mute mic while typing to prevent it picking up speech

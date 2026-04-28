@@ -652,7 +652,15 @@ export function WhiteboardCanvas({
       {/* `key={currentIndex}` re-mounts the inner div on page change so
           the entrance animation fires. Direction-aware: forward slides
           in from the right, backward slides in from the left. */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4">
+      <div
+        ref={scrollContainerRef}
+        // On mobile, drop the inner overflow-auto — it creates a
+        // scroll-within-scroll feel that's jarring on small screens.
+        // Content flows naturally and the parent / page handles scroll.
+        // Desktop keeps the inner scroll for the side-by-side split.
+        className="flex-1 lg:overflow-auto p-4"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <div key={currentIndex} className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}>
         {renderableCommands.length === 1 ? (
           <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
@@ -773,8 +781,11 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
   const isDrawingRef = useRef(false);
   const lastPosRef = useRef({ x: 0, y: 0 });
 
-  // Scale mouse position to canvas coordinates (CSS size may differ from canvas pixel size)
-  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Scale pointer position to canvas coordinates (CSS size may differ
+  // from canvas pixel size). PointerEvent is unified across mouse,
+  // touch, and stylus on all modern browsers — using it makes the
+  // pencil scribbler work on mobile without separate touch handlers.
+  const getCanvasPos = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -785,14 +796,19 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
     };
   }, []);
 
-  // Drawing handlers
-  const startDraw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Drawing handlers (pointer events — work for mouse + touch + stylus)
+  const startDraw = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     isDrawingRef.current = true;
     lastPosRef.current = getCanvasPos(e);
+    // Capture so subsequent move/up events come even if the finger
+    // leaves the canvas bounds (which happens often on mobile).
+    try { (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId); } catch {}
   }, [getCanvasPos]);
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current || !canvasRef.current) return;
+    // Prevent the page from scrolling while the user draws on mobile.
+    e.preventDefault();
     const ctx = canvasRef.current.getContext('2d')!;
     const pos = getCanvasPos(e);
     ctx.beginPath();
@@ -812,8 +828,9 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
     lastPosRef.current = pos;
   }, [getCanvasPos, drawTool]);
 
-  const endDraw = useCallback(() => {
+  const endDraw = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     isDrawingRef.current = false;
+    try { (e.target as HTMLCanvasElement).releasePointerCapture(e.pointerId); } catch {}
   }, []);
 
   const submitDrawing = useCallback(() => {
@@ -907,10 +924,10 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
             height={150}
             className="w-full border border-gray-300 rounded bg-white cursor-crosshair"
             style={{ height: 150, touchAction: 'none' }}
-            onMouseDown={startDraw}
-            onMouseMove={draw}
-            onMouseUp={endDraw}
-            onMouseLeave={endDraw}
+            onPointerDown={startDraw}
+            onPointerMove={draw}
+            onPointerUp={endDraw}
+            onPointerCancel={endDraw}
           />
           <div className="flex items-center gap-2 mt-1">
             <button

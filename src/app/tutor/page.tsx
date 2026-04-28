@@ -1016,7 +1016,7 @@ function TutorPage() {
   // Render session stage
   if (stage === 'session') {
     return (
-      <div ref={pageContainerRef} className="fixed inset-0 bg-gray-100 flex flex-col overflow-hidden">
+      <div ref={pageContainerRef} className="lg:fixed lg:inset-0 lg:overflow-hidden min-h-screen bg-gray-100 flex flex-col overflow-x-hidden">
         {/* Desmos Graphing Calculator API */}
         <Script
           src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a"

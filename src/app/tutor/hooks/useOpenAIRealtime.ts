@@ -486,6 +486,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // is lost. The queue holds pending sentences; response.done drains it.
   const speakTextQueueRef = useRef<string[]>([]);
   const speakTextInFlightRef = useRef(false);
+  // Pre-fetch cache for the openai-mini path. While sentence N is
+  // playing, we kick off the HTTP fetch for sentence N+1 in parallel,
+  // so its PCM bytes are ready the moment N's audio ends. Without this,
+  // each sentence pays a 200-400ms HTTP round-trip after the previous
+  // ends, producing audible gaps between sentences. The map is keyed by
+  // the sentence text; cleared when the bytes are consumed.
+  const ttsPrefetchCacheRef = useRef<Map<string, Promise<Float32Array | null>>>(new Map());
 
   // --- Parallel-connect plumbing ---------------------------------------------
   // Goal: shave ~1–2 s off session start-up. Previously we serialized
@@ -1755,40 +1762,68 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('processing');
   }, [updateState]);
 
+  // Helper: fetch the TTS audio for a sentence and cache the Promise so
+  // subsequent lookups return the same in-flight or completed result.
+  // Pre-fetching: while sentence N plays, we call this for sentence N+1
+  // and the bytes are usually ready by the time N ends, eliminating the
+  // inter-sentence HTTP round-trip gap.
+  const fetchTTSPromise = useCallback((trimmed: string): Promise<Float32Array | null> => {
+    const cache = ttsPrefetchCacheRef.current;
+    const cached = cache.get(trimmed);
+    if (cached) return cached;
+    const promise = (async (): Promise<Float32Array | null> => {
+      try {
+        const res = await fetch('/api/tutor/tts-openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: trimmed }),
+        });
+        if (!res.ok) {
+          console.error('[Realtime] openai-mini TTS fetch failed:', res.status);
+          return null;
+        }
+        const buf = await res.arrayBuffer();
+        return new Float32Array(buf);
+      } catch (err) {
+        if ((err as { name?: string })?.name !== 'AbortError') {
+          console.error('[Realtime] openai-mini TTS error:', err);
+        }
+        return null;
+      }
+    })();
+    cache.set(trimmed, promise);
+    return promise;
+  }, []);
+
   // Alternative TTS path for relay mode: gpt-4o-mini-tts via HTTP. Returns
   // Float32 PCM at 24kHz, dropped directly into the audio playback queue.
   // Cheaper than Realtime audio output; chosen via relayMode.ttsProvider.
   const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string) => {
     speakTextInFlightRef.current = true;
     updateState('processing');
-    const ctrl = new AbortController();
-    ttsAbortRef.current = ctrl;
     try {
-      const res = await fetch('/api/tutor/tts-openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: trimmed }),
-        signal: ctrl.signal,
-      });
-      if (!res.ok) {
-        console.error('[Realtime] openai-mini TTS fetch failed:', res.status);
+      const float32 = await fetchTTSPromise(trimmed);
+      // Consume the cache entry now that we're playing it.
+      ttsPrefetchCacheRef.current.delete(trimmed);
+      if (!float32) {
         speakTextInFlightRef.current = false;
         return;
       }
-      const buf = await res.arrayBuffer();
-      const float32 = new Float32Array(buf);
       onTutorAudioChunk?.(float32);
       audioQueueRef.current.push(float32);
       if (!isPlayingRef.current) playNextAudio();
-    } catch (err) {
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        console.error('[Realtime] openai-mini TTS error:', err);
+      // Pre-fetch the NEXT queued sentence's audio in parallel so its
+      // bytes are ready when this one ends. Idempotent — repeat calls
+      // for the same text return the cached Promise.
+      const nextSentence = speakTextQueueRef.current[0];
+      if (nextSentence) {
+        // Fire-and-forget; result lands in the cache for the next dispatch.
+        void fetchTTSPromise(nextSentence);
       }
-      speakTextInFlightRef.current = false;
     } finally {
       ttsAbortRef.current = null;
     }
-  }, [updateState, onTutorAudioChunk, playNextAudio]);
+  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise]);
   const sendOneSpeakTextViaOpenAITTSRef = useRef(sendOneSpeakTextViaOpenAITTS);
   sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
 
@@ -1835,6 +1870,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const clearSpeechQueue = useCallback(() => {
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
+    // Drop any pre-fetched TTS bytes — they're for sentences we're
+    // about to skip via clearSpeechQueue (validator-feedback retry).
+    ttsPrefetchCacheRef.current.clear();
     // openai-mini path: abort any in-flight TTS fetch + stop playback.
     if (ttsAbortRef.current) {
       ttsAbortRef.current.abort();

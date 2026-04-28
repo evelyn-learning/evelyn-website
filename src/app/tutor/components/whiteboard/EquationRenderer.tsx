@@ -76,33 +76,45 @@ export function EquationRenderer({
         containerRef.current.textContent = latex;
       }
     }
-    // Fit-to-width: KaTeX equations don't wrap, so on narrow screens
-    // they get clipped horizontally. Detect overflow and shrink the
-    // rendered math via CSS transform so the whole equation fits in
-    // the parent column. We use scale rather than font-size to avoid
-    // KaTeX re-layouts.
-    requestAnimationFrame(() => {
+    // Fit-to-width: KaTeX equations don't wrap. On narrow screens,
+    // long expressions overflow and get clipped at the viewport edge.
+    // Measure the rendered math, compare against the container, and
+    // apply a scale transform if the math is wider than its container.
+    // Re-runs on resize via ResizeObserver so the scale stays correct
+    // when the panel width changes.
+    const fitToWidth = () => {
       const el = containerRef.current;
       if (!el) return;
       const inner = el.firstElementChild as HTMLElement | null;
       if (!inner) return;
-      // Reset before measuring so prior scales don't compound.
       inner.style.transform = '';
-      inner.style.transformOrigin = 'left center';
+      inner.style.transformOrigin = 'left top';
       inner.style.display = 'inline-block';
+      el.style.height = '';
       const containerWidth = el.clientWidth;
-      const innerWidth = inner.scrollWidth;
+      // KaTeX displayMode wraps in a centering parent; measure the
+      // deepest element to get the actual math width.
+      const mathEl = (inner.querySelector('.katex') as HTMLElement) || inner;
+      const innerWidth = mathEl.scrollWidth;
       if (containerWidth > 0 && innerWidth > containerWidth) {
-        const scale = Math.max(0.55, containerWidth / innerWidth);
+        const scale = Math.max(0.5, containerWidth / innerWidth);
         inner.style.transform = `scale(${scale})`;
-        // Adjust container height so the scaled element doesn't leave
-        // empty space below it.
         const innerHeight = inner.scrollHeight * scale;
         el.style.height = `${innerHeight}px`;
-      } else {
-        el.style.height = '';
       }
-    });
+    };
+    const raf = requestAnimationFrame(fitToWidth);
+    // Watch the container for size changes (panel resize, viewport
+    // rotation, mobile-tab toggle, etc.) and re-fit.
+    let observer: ResizeObserver | null = null;
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => fitToWidth());
+      observer.observe(containerRef.current);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
   }, [latex, highlight, displayMode]);
 
   return (
