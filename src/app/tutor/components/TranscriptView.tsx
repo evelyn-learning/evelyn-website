@@ -6,13 +6,44 @@
  * Displays the conversation history between student and tutor.
  */
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { User, Bot } from 'lucide-react';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
   isProcessing?: boolean;
+}
+
+/** Render markdown-style *emphasis* and **strong** as actual styled spans
+ *  instead of leaving the asterisks raw in the chat bubble. The brain
+ *  uses *word* as a TTS hint AND as visual emphasis; we strip the
+ *  asterisks and apply <em>/<strong> in their place. */
+function renderInlineEmphasis(text: string): React.ReactNode {
+  if (!text) return text;
+  // Split on **bold** and *italic*. Order: bold first, then italic, so
+  // ** doesn't get eaten by the * matcher.
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+  // Combined regex: capture either a bold (**...**) or italic (*...*) run.
+  const RE = /(\*\*([^*\n]+)\*\*|\*([^*\n]+)\*)/g;
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = RE.exec(text)) !== null) {
+    if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
+    if (m[2] !== undefined) {
+      parts.push(<strong key={`b-${key++}`} className="font-semibold">{m[2]}</strong>);
+    } else if (m[3] !== undefined) {
+      parts.push(<em key={`i-${key++}`} className="italic">{m[3]}</em>);
+    }
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  // If nothing matched, return the plain string unchanged.
+  if (parts.length === 0) return text;
+  void remaining; // silence linter
+  return parts;
 }
 
 export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps) {
@@ -77,7 +108,12 @@ export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps
                   : 'bg-gray-100 text-gray-800 rounded-bl-none'
               }`}
             >
-              <p className="whitespace-pre-wrap">{entry.text}</p>
+              {/* `typing-caret` shows a blinking caret on the current
+                  streaming tutor entry (id starts with "tutor-streaming-")
+                  so the bubble visibly "types" as sentences land. */}
+              <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.id.startsWith('tutor-streaming-') ? 'typing-caret' : ''}`}>
+                {renderInlineEmphasis(entry.text)}
+              </p>
             </div>
 
             {/* Timestamp */}

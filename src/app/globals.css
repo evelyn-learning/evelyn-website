@@ -111,3 +111,54 @@
 .animate-progress-bar {
   animation: progressBar 8s ease-out forwards;
 }
+
+/* Whiteboard page transitions.
+   Direction-aware slide + fade — when moving forward (next page) the
+   new page slides in from the right; when moving back (previous page)
+   it slides in from the left. ~250ms, small horizontal offset, no
+   book-flip metaphor (whiteboards aren't books). */
+@keyframes wb-page-enter-forward {
+  0%   { opacity: 0; transform: translateX(16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes wb-page-enter-backward {
+  0%   { opacity: 0; transform: translateX(-16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.wb-page-enter-forward {
+  animation: wb-page-enter-forward 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.wb-page-enter-backward {
+  animation: wb-page-enter-backward 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes wb-item-enter {
+  0%   { opacity: 0;    transform: translateY(14px) scale(0.97); }
+  60%  { opacity: 0.85; transform: translateY(2px)  scale(0.998); }
+  100% { opacity: 1;    transform: translateY(0)    scale(1); }
+}
+.wb-item-enter {
+  animation: wb-item-enter 480ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-fill-mode: backwards;
+}
+
+@keyframes wb-skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.9; }
+}
+.wb-skeleton {
+  animation: wb-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+/* Streaming chat — a subtle caret blink at the end of an in-progress
+   tutor message so the user feels typing momentum. */
+@keyframes typing-caret {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+.typing-caret::after {
+  content: '▍';
+  margin-left: 2px;
+  color: #6366f1;
+  animation: typing-caret 1s steps(1) infinite;
+}

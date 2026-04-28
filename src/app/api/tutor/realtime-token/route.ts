@@ -19,22 +19,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { voice = 'alloy' } = body;
+    const { voice = 'alloy', instructions } = body as {
+      voice?: string;
+      instructions?: string;
+    };
 
-    // Request an ephemeral token from OpenAI (GA endpoint)
-    // Note: model is specified in WebSocket URL, not here
+    // Instructions, when supplied, replace OpenAI's default tutor persona
+    // at session-creation time. Relay mode uses this so Realtime never
+    // has a default-tutor turn before our session.update lands —
+    // otherwise Realtime authors greetings + answers questions in the
+    // brain's text instead of voicing it verbatim.
+    const sessionConfig: Record<string, unknown> = {
+      type: 'realtime',
+      model: 'gpt-realtime',
+    };
+    if (typeof instructions === 'string' && instructions.trim()) {
+      sessionConfig.instructions = instructions;
+    }
     const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        session: {
-          type: 'realtime',
-          model: 'gpt-realtime',
-        },
-      }),
+      body: JSON.stringify({ session: sessionConfig }),
     });
 
     if (!response.ok) {

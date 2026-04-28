@@ -729,5 +729,8 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     clearSpeechQueue: () => {
       // No-op. Gemini Live doesn't run in relay mode and has no speech queue.
     },
+    unlockAudio: () => {
+      // No-op for Gemini Live; iOS audio-unlock is a Realtime-engine concern.
+    },
   };
 }

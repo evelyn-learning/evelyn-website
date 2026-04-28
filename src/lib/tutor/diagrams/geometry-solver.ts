@@ -2304,10 +2304,35 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         showCoords: showCoordsSet.has(obj.id) || undefined,
       });
     } else if (obj.kind === 'segment') {
+      // Numeric-label sanity check: if the label text is a bare number
+      // (e.g. "3", "1.5", "√2") that disagrees with the segment's
+      // computed length by more than 5%, drop the label. Without this,
+      // the brain can write contradictory annotations onto the figure
+      // (e.g. "3" on the hypotenuse of a unit-circle triangle whose
+      // actual length is 1) and the renderer trusts whatever it's told.
+      const requestedLabel = labelOverrides[obj.id] ?? obj.label;
+      let safeLabel: string | undefined = requestedLabel;
+      if (requestedLabel && typeof requestedLabel === 'string') {
+        const fromPt = state.byId.get(obj.from);
+        const toPt = state.byId.get(obj.to);
+        if (fromPt && fromPt.kind === 'point' && toPt && toPt.kind === 'point') {
+          const dx = toPt.x - fromPt.x;
+          const dy = toPt.y - fromPt.y;
+          const actualLen = Math.sqrt(dx * dx + dy * dy);
+          const labelNum = parseNumericLabel(requestedLabel);
+          if (labelNum !== null && actualLen > 1e-6) {
+            const rel = Math.abs(labelNum - actualLen) / actualLen;
+            if (rel > 0.05) {
+              console.warn(`[geometry-solver] dropping mislabeled segment ${obj.id}: label "${requestedLabel}" (${labelNum}) but computed length ${actualLen.toFixed(3)}`);
+              safeLabel = undefined;
+            }
+          }
+        }
+      }
       segments.push({
         from: obj.from,
         to: obj.to,
-        label: labelOverrides[obj.id] ?? obj.label,
+        label: safeLabel,
         color: colorOverrides[obj.id],
         showLength: showLengthSet.has(obj.id) || undefined,
         style: dashedSet.has(obj.id) ? 'dashed' : undefined,
@@ -2393,3 +2418,29 @@ function round2(n: number): number { return Math.round(n * 100) / 100; }
 /** Rounded to 1dp for the colocation key — co-located dots shouldn't be
  *  considered "different" because of a 0.01-unit floating-point drift. */
 function roundForKey(n: number): string { return (Math.round(n * 10) / 10).toFixed(1); }
+
+/** Parse a bare-number segment label like "3", "1.5", "√2", "sqrt(2)",
+ *  "π/2" into a numeric value if possible. Returns null when the label
+ *  is descriptive ("hypotenuse", "side a", "5x") rather than a number,
+ *  which means we can't sanity-check it. */
+function parseNumericLabel(label: string): number | null {
+  const t = label.trim();
+  if (!t) return null;
+  // Plain number.
+  const n = Number(t);
+  if (Number.isFinite(n)) return n;
+  // √n  or  sqrt(n)
+  const sqrt = t.match(/^(?:√|sqrt\s*\(\s*)(\d+(?:\.\d+)?)\s*\)?$/i);
+  if (sqrt) {
+    const inner = Number(sqrt[1]);
+    if (Number.isFinite(inner) && inner >= 0) return Math.sqrt(inner);
+  }
+  // a/b
+  const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+  if (frac) {
+    const a = Number(frac[1]);
+    const b = Number(frac[2]);
+    if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) return a / b;
+  }
+  return null;
+}

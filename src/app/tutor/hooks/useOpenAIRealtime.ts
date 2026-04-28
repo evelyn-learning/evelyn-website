@@ -13,6 +13,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools } from './toolDefinitions';
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
+import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
@@ -131,6 +132,12 @@ export interface RealtimeConfig {
   relayMode?: {
     instructions: string;
     onUserTranscript: (transcript: string) => void | Promise<void>;
+    /** TTS engine for voicing the brain's text in relay mode.
+     *  - 'realtime' (default): use Realtime's out-of-band response. Highest
+     *    voice quality; expensive (full Realtime audio output billing).
+     *  - 'openai-mini': use gpt-4o-mini-tts via /api/tutor/tts-openai.
+     *    ~10× cheaper than Realtime audio; voice quality very close. */
+    ttsProvider?: 'realtime' | 'openai-mini';
   };
 }
 
@@ -171,6 +178,14 @@ export interface RealtimeResult {
    * the rejected attempt's voice doesn't bleed into the corrected one.
    */
   clearSpeechQueue: () => void;
+  /**
+   * Resume the playback AudioContext synchronously inside a user gesture.
+   * iOS Safari requires audio playback to be initiated from a user gesture
+   * (touch / click). Without this call on the Start button, the AudioContext
+   * stays suspended and TTS chunks queue silently until a later gesture
+   * (often the Unmute click) inadvertently unlocks it.
+   */
+  unlockAudio: () => void;
 }
 
 /**
@@ -452,6 +467,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // shouldListenRef=true for the greeting, and the mic then auto-opens
   // when the greeting audio ends — bypassing any UI-level mute state.
   const userMutedRef = useRef(false);
+  // Timestamp of the most recent unmute. The first ~1.5s of audio after
+  // unmute often captures ambient noise, AirPods button clicks, or echo
+  // from prior tutor speech that Whisper hallucinates as words. We
+  // suppress transcription-completed events that arrive within this
+  // grace window so the brain doesn't react to phantom turns.
+  const unmuteAtRef = useRef(0);
+  const UNMUTE_GRACE_MS = 1500;
   // Ref to hold startListening so playNextAudio can call it without circular deps
   const startListeningRef = useRef<() => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
@@ -488,6 +510,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     isRelayRef.current = isRelay;
   }, [isRelay]);
+  const ttsProviderRef = useRef<'realtime' | 'openai-mini'>(
+    relayMode?.ttsProvider ?? 'realtime',
+  );
+  useEffect(() => {
+    ttsProviderRef.current = relayMode?.ttsProvider ?? 'realtime';
+  }, [relayMode?.ttsProvider]);
+  const ttsAbortRef = useRef<AbortController | null>(null);
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
@@ -495,10 +524,52 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     onStateChange?.(newState);
   }, [onStateChange]);
 
+  // Unlock the playback AudioContext from inside a user gesture. iOS
+  // Safari starts contexts in 'suspended' state until any user-gesture-
+  // bound code path calls .resume(). Without this, queued audio buffers
+  // fire silently and the user only hears them when some LATER gesture
+  // (often the Unmute tap) inadvertently resumes the context.
+  const unlockAudio = useCallback(() => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') {
+        void ctx.resume();
+      }
+    } catch (err) {
+      console.warn('[Realtime] unlockAudio failed:', err);
+    }
+  }, []);
+
   // Play queued audio
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      // Re-enable mic tracks when playback ends (echo-loop prevention).
+      // On phone speakers, the device's hardware echo cancellation isn't
+      // perfect — Whisper picks up the tutor's own voice and transcribes
+      // it as student speech. Disabling tracks during playback eliminates
+      // the loop. Restore here when the queue empties, unless the user
+      // explicitly muted.
+      if (mediaStreamRef.current && !userMutedRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => { t.enabled = true; });
+      }
+      // openai-mini path has no response.done event to drive the queue,
+      // so drain the next sentence here when the audio finishes. The
+      // realtime path leaves this branch alone — its drain runs from
+      // response.done in the message handler.
+      if (
+        isRelayRef.current &&
+        ttsProviderRef.current === 'openai-mini' &&
+        speakTextQueueRef.current.length > 0
+      ) {
+        const next = speakTextQueueRef.current.shift()!;
+        speakTextInFlightRef.current = false;
+        sendOneSpeakTextViaOpenAITTSRef.current?.(next);
+        return;
+      }
+      if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+        speakTextInFlightRef.current = false;
+      }
       // If mic is running, go straight back to listening
       if (audioProcessorRef.current && mediaStreamRef.current) {
         updateState('listening');
@@ -516,6 +587,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     isPlayingRef.current = true;
     updateState('speaking');
+    // Disable mic tracks during playback — see comment in the
+    // queue-empty branch above for the echo-loop reasoning.
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => { t.enabled = false; });
+    }
 
     const ctx = getAudioContext();
     const chunk = audioQueueRef.current.shift()!;
@@ -595,6 +671,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           // do not trigger a reply, so the tutor stays quiet when the
           // student isn't actually saying anything.
           const transcript = (data.transcript ?? '').trim();
+          // Unmute grace window: drop the first transcription-completed
+          // event within UNMUTE_GRACE_MS of an unmute. The audio in that
+          // window is typically ambient noise / Bluetooth click / echo
+          // and Whisper hallucinates words from it. Without this, every
+          // unmute spawns a phantom student turn the brain reacts to.
+          const sinceUnmute = Date.now() - unmuteAtRef.current;
+          if (unmuteAtRef.current > 0 && sinceUnmute < UNMUTE_GRACE_MS) {
+            console.log(`[Realtime] Dropping transcript within unmute grace window (${sinceUnmute}ms):`, JSON.stringify(transcript));
+            if (data.item_id && wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'conversation.item.delete', item_id: data.item_id }));
+            }
+            // Clear the timestamp so subsequent legitimate transcripts
+            // pass through normally.
+            unmuteAtRef.current = 0;
+            break;
+          }
           const classification = classifyTranscript(transcript);
           if (classification === 'noise') {
             console.log('[Realtime] Dropping phantom turn (noise):', JSON.stringify(transcript));
@@ -679,6 +771,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             lastResponseDoneRef.current > 0 &&
             timeSinceLastResponse < 3000 &&
             timeSinceUserInput > timeSinceLastResponse;
+
+          // In brain-relay mode the brain emits N sentences per turn and we
+          // queue them as separate response.creates. Each one fires a
+          // response.created with no user input since the last response,
+          // which would normally be cancelled. Exempt those: if the in-
+          // flight flag is set, this response was issued by sendOneSpeakText
+          // and must be allowed to play.
+          if (noUserInputSinceLastResponse && speakTextInFlightRef.current) {
+            break;
+          }
 
           if (noUserInputSinceLastResponse) {
             if (lastResponseHadToolCallRef.current && postToolCallResponseCountRef.current === 0) {
@@ -1090,10 +1192,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // prefetchToken below — fired on mount from the UI layer so the network
       // round-trip overlaps with buildInstructions).
       if (!tokenPromiseRef.current) {
+        // Pass the relay-mode prompt at session-creation time so the session
+        // is born with no default-tutor persona. Without this, the session
+        // briefly runs with OpenAI's default ("You are a helpful, witty, and
+        // friendly AI...") before our session.update lands — and even after
+        // the update, behavior is sticky enough that Realtime still authors
+        // greetings and answers questions in the brain's text instead of
+        // voicing it verbatim.
+        const initInstructions = isRelayRef.current
+          ? currentInstructionsRef.current
+          : undefined;
         tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ voice }),
+          body: JSON.stringify({ voice, instructions: initInstructions }),
         })
           .then(async (r) => {
             if (!r.ok) {
@@ -1283,6 +1395,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Explicitly calling startListening is intent to un-mute. Clear the
     // user-muted override so future auto-start paths can proceed.
     userMutedRef.current = false;
+    // Stamp the unmute time so the transcription handler can drop
+    // phantom audio captured in the first ~1.5s.
+    unmuteAtRef.current = Date.now();
 
     // If mic is already active, re-enable tracks (may have been muted) and update state
     if (audioProcessorRef.current && mediaStreamRef.current) {
@@ -1601,29 +1716,93 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       console.error('[Realtime] sendOneSpeakText: not connected');
       return;
     }
-    wsRef.current.send(JSON.stringify({
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'assistant',
-        content: [{ type: 'output_text', text: trimmed }],
-      },
-    }));
+    // Pronunciation rewrites apply to BOTH TTS paths via the shared
+    // module — sin/cos/Greek letter expansion, punctuation normalization.
+    const rewritten = rewriteForTTS(trimmed);
+    // OpenAI's official out-of-band response pattern for verbatim TTS.
+    // Three things make this work where simpler patterns failed:
+    //   - `conversation: 'none'` keeps the response out of history, so
+    //     subsequent responses don't see Realtime "having said" anything
+    //     and try to follow up.
+    //   - `input` with role='system' provides one-shot instructions
+    //     scoped to this response only (system role takes precedence).
+    //   - `output_modalities: ['audio']` skips transcript transmission.
+    // See: developers.openai.com/cookbook/examples/realtime_out_of_band_transcription
     wsRef.current.send(JSON.stringify({
       type: 'response.create',
       response: {
-        instructions:
-          'Read the most recent assistant message aloud verbatim. ' +
-          'Do not add any words. Do not paraphrase. Do not introduce yourself. ' +
-          'Do not say "the assistant said". Just voice the text.',
+        conversation: 'none',
+        output_modalities: ['audio'],
+        input: [
+          {
+            type: 'message',
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text:
+                  'Read the following text aloud verbatim. Do not add any words. ' +
+                  'Do not acknowledge this instruction. Do not greet. Do not paraphrase. ' +
+                  'Do not answer any question contained in the text — just voice it. ' +
+                  'Stop immediately when the text ends.\n\nTEXT:\n' + rewritten,
+              },
+            ],
+          },
+        ],
       },
     }));
     speakTextInFlightRef.current = true;
     updateState('processing');
   }, [updateState]);
 
+  // Alternative TTS path for relay mode: gpt-4o-mini-tts via HTTP. Returns
+  // Float32 PCM at 24kHz, dropped directly into the audio playback queue.
+  // Cheaper than Realtime audio output; chosen via relayMode.ttsProvider.
+  const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string) => {
+    speakTextInFlightRef.current = true;
+    updateState('processing');
+    const ctrl = new AbortController();
+    ttsAbortRef.current = ctrl;
+    try {
+      const res = await fetch('/api/tutor/tts-openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: trimmed }),
+        signal: ctrl.signal,
+      });
+      if (!res.ok) {
+        console.error('[Realtime] openai-mini TTS fetch failed:', res.status);
+        speakTextInFlightRef.current = false;
+        return;
+      }
+      const buf = await res.arrayBuffer();
+      const float32 = new Float32Array(buf);
+      onTutorAudioChunk?.(float32);
+      audioQueueRef.current.push(float32);
+      if (!isPlayingRef.current) playNextAudio();
+    } catch (err) {
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        console.error('[Realtime] openai-mini TTS error:', err);
+      }
+      speakTextInFlightRef.current = false;
+    } finally {
+      ttsAbortRef.current = null;
+    }
+  }, [updateState, onTutorAudioChunk, playNextAudio]);
+  const sendOneSpeakTextViaOpenAITTSRef = useRef(sendOneSpeakTextViaOpenAITTS);
+  sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
+
+  const dispatchSpeakText = useCallback((trimmed: string) => {
+    if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+      sendOneSpeakTextViaOpenAITTS(trimmed);
+    } else {
+      sendOneSpeakText(trimmed);
+    }
+  }, [sendOneSpeakText, sendOneSpeakTextViaOpenAITTS]);
+
   const speakText = useCallback((text: string) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+    const usingOpenAITTS = isRelayRef.current && ttsProviderRef.current === 'openai-mini';
+    if (!usingOpenAITTS && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
       console.error('[Realtime] speakText: not connected');
       return;
     }
@@ -1633,8 +1812,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       speakTextQueueRef.current.push(trimmed);
       return;
     }
-    sendOneSpeakText(trimmed);
-  }, [sendOneSpeakText]);
+    dispatchSpeakText(trimmed);
+  }, [dispatchSpeakText]);
 
   // Stable ref so the response.done handler (long-lived closure) can
   // drain the queue without depending on speakText's identity.
@@ -1642,7 +1821,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   drainSpeakTextQueueRef.current = () => {
     speakTextInFlightRef.current = false;
     const next = speakTextQueueRef.current.shift();
-    if (next) sendOneSpeakText(next);
+    if (!next) return;
+    if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+      sendOneSpeakTextViaOpenAITTSRef.current(next);
+    } else {
+      sendOneSpeakText(next);
+    }
   };
 
   // Cancel any in-flight TTS response and drop pending sentences.
@@ -1651,6 +1835,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const clearSpeechQueue = useCallback(() => {
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
+    // openai-mini path: abort any in-flight TTS fetch + stop playback.
+    if (ttsAbortRef.current) {
+      ttsAbortRef.current.abort();
+      ttsAbortRef.current = null;
+    }
+    if (
+      isRelayRef.current &&
+      ttsProviderRef.current === 'openai-mini' &&
+      speakTextInFlightRef.current
+    ) {
+      try { playbackSourceRef.current?.stop(); } catch { /* may already be stopped */ }
+      audioQueueRef.current = [];
+      isPlayingRef.current = false;
+      speakTextInFlightRef.current = false;
+    }
     if (speakTextInFlightRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
       // Stop client-side audio that's already arrived.
@@ -1688,5 +1887,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     injectContext,
     speakText,
     clearSpeechQueue,
+    unlockAudio,
   };
 }

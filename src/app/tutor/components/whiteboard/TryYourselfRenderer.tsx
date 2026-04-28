@@ -18,6 +18,48 @@
 
 import { useState } from 'react';
 
+/** Compare a student's typed answer against the expected answer with
+ *  format-aware tolerance:
+ *  - numeric: parse both sides as numbers; "024" matches "24", "0.5" matches "1/2".
+ *  - frq / mcq: case-insensitive, trim, collapse internal whitespace.
+ *  Falls back to a relaxed string equality if numeric parsing doesn't fit. */
+function matchesAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean {
+  const s = submitted.trim();
+  const e = expected.trim();
+  if (!s || !e) return false;
+  // Numeric path: try to parse and compare values, including simple fractions.
+  const tryParse = (v: string): number | null => {
+    const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
+    if (cleaned === '') return null;
+    const frac = cleaned.match(/^(-?\d+)\/(-?\d+)$/);
+    if (frac) {
+      const num = Number(frac[1]);
+      const den = Number(frac[2]);
+      if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) return num / den;
+      return null;
+    }
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : null;
+  };
+  const sn = tryParse(s);
+  const en = tryParse(e);
+  if (sn !== null && en !== null) {
+    return Math.abs(sn - en) < 1e-9;
+  }
+  // Otherwise compare as text — case- and whitespace-insensitive, and
+  // strip a leading "x = " kind of prefix the brain often uses.
+  const norm = (v: string) =>
+    v.toLowerCase()
+      .replace(/^[a-z]\s*=\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  if (format === 'numeric') {
+    // Format said numeric but parsing failed — be strict.
+    return norm(s) === norm(e);
+  }
+  return norm(s) === norm(e);
+}
+
 interface Choice {
   id: string;
   text: string;
@@ -56,7 +98,7 @@ export function TryYourselfRenderer({
   };
 
   const isCorrect = submitted && expectedAnswer
-    ? submitted.trim().toLowerCase() === expectedAnswer.trim().toLowerCase()
+    ? matchesAnswer(submitted, expectedAnswer, responseFormat)
     : null;
 
   return (

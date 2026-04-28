@@ -15,6 +15,7 @@ import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { buildLessonPlanContext, resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
+import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
@@ -162,6 +163,20 @@ interface VoiceTutorRealtimeProps {
    * Default false — the legacy "Realtime authors everything" path.
    */
   claudeBrainMode?: boolean;
+  /** TTS provider for relay-mode voicing of the brain's text.
+   *  - 'realtime' (default): Realtime out-of-band response. Highest quality, expensive.
+   *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper. */
+  ttsProvider?: 'realtime' | 'openai-mini';
+  /** Fires whenever the active lesson plan or current segment changes.
+   *  Lets the parent render a progress strip above the whiteboard. */
+  onLessonPlanProgress?: (info: {
+    plan: import('@/lib/tutor/lesson-plan/types').LessonPlan | null;
+    currentSegmentId: string;
+  }) => void;
+  /** Fires whenever the tutor enters / leaves a "composing" state — the
+   *  brain is fetching a response, warm-up is in progress, or TTS is
+   *  rendering. Parent can use this to drive a typing indicator. */
+  onTutorBusy?: (busy: boolean) => void;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -194,6 +209,9 @@ export function VoiceTutorRealtime({
   handleRef,
   validateToolCalls = false,
   claudeBrainMode = false,
+  ttsProvider = 'realtime',
+  onLessonPlanProgress,
+  onTutorBusy,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -293,6 +311,19 @@ export function VoiceTutorRealtime({
   // mount; segment progression is tracked locally.
   const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const currentSegmentIdRef = useRef<string>('');
+  // UI-facing state — refs above are for the brain orchestrator, but the
+  // progress bar / segment chips / time remaining must re-render on
+  // changes. Kept in sync with the refs by the loader and the advance
+  // handler below.
+  const [activePlan, setActivePlan] = useState<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
+  const [activeSegmentId, setActiveSegmentId] = useState<string>('');
+  // Notify parent whenever the plan or segment changes so it can render
+  // a progress strip outside this control row.
+  const onLessonPlanProgressRef = useRef(onLessonPlanProgress);
+  useEffect(() => { onLessonPlanProgressRef.current = onLessonPlanProgress; }, [onLessonPlanProgress]);
+  useEffect(() => {
+    onLessonPlanProgressRef.current?.({ plan: activePlan, currentSegmentId: activeSegmentId });
+  }, [activePlan, activeSegmentId]);
 
   // Student profile context (when studentId prop is set). The block is
   // a pre-rendered string the brain reads on every turn. The accumulator
@@ -852,7 +883,15 @@ export function VoiceTutorRealtime({
       .filter(e => e.role === 'student')
       .slice(-1)[0]?.text || '';
     const priorStudentTurns = transcriptRef.current.filter(e => e.role === 'student').length;
-    const greetingGuardActive = priorStudentTurns <= 1 && isPureGreeting(lastStudentText);
+    // Greeting guard: when the student has just said hi and not yet
+    // asked for a problem, the brain shouldn't hallucinate one. EXCEPT
+    // when a lesson plan is active — the plan's Hook segment frequently
+    // *opens* with a problem on the board (that's the whole point of a
+    // hook), and dropping it leaves the brain narrating an empty
+    // whiteboard. Disable the guard whenever the orchestrator has a
+    // plan loaded.
+    const lessonPlanActive = !!lessonPlanRef.current;
+    const greetingGuardActive = !lessonPlanActive && priorStudentTurns <= 1 && isPureGreeting(lastStudentText);
 
     // Continuation guard: if the student's last utterance was clearly a
     // continuation of the current problem ("got it, next?", "ok next",
@@ -1607,6 +1646,7 @@ export function VoiceTutorRealtime({
           if (next) {
             console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
             currentSegmentIdRef.current = next;
+            setActiveSegmentId(next);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
           }
@@ -2188,6 +2228,18 @@ export function VoiceTutorRealtime({
       withAutoScrolls.push(cmd);
     }
     processed = withAutoScrolls;
+
+    // Drop non-visual bookkeeping commands before they reach the renderer.
+    // advanceLesson + markSegmentComplete + recordGap are state side-effects
+    // already applied above (segment id advance, mastery deltas, gaps).
+    // Without this filter the canvas tries to render them and shows
+    // "Unknown command type" cards.
+    processed = processed.filter(
+      (c) =>
+        c.action !== 'advanceLesson' &&
+        c.action !== 'markSegmentComplete' &&
+        c.action !== 'recordGap',
+    );
 
     onWhiteboardCommand(processed);
     // Mirror into our local running log so targetId lookups across future
@@ -2807,6 +2859,8 @@ export function VoiceTutorRealtime({
     if (!lessonPlanId) {
       lessonPlanRef.current = null;
       currentSegmentIdRef.current = '';
+      setActivePlan(null);
+      setActiveSegmentId('');
       return;
     }
     let cancelled = false;
@@ -2820,6 +2874,8 @@ export function VoiceTutorRealtime({
         if (!plan || !plan.segments?.length) return;
         lessonPlanRef.current = plan;
         currentSegmentIdRef.current = plan.segments[0].id;
+        setActivePlan(plan);
+        setActiveSegmentId(plan.segments[0].id);
         console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${plan.segments[0].id}"`);
       } catch (err) {
         console.error('[VoiceTutorRealtime] lesson plan fetch failed:', err);
@@ -2929,14 +2985,24 @@ export function VoiceTutorRealtime({
   // Inner brain-call worker — does the actual fetch + dispatch. Pulled out
   // so the outer wrapper can serialize calls and process queued transcripts
   // without duplicating the body.
-  const callBrainOnce = useCallback(async (transcript: string) => {
+  const callBrainOnce = useCallback(async (transcript: string, opts?: { silent?: boolean }) => {
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
       // handleTranscriptUpdate appends before this runs; in typed-input
       // and relayed-sendTextMessage paths nobody else does, so we have to.
+      // `silent` skips this — used by lesson-plan kickoff where the
+      // transcript is a synthetic trigger ("I'm ready — let's begin")
+      // that shouldn't appear in the chat or in conversation history.
+      // Auto-detect bracketed system messages like
+      // "[The student drew...]" — these are runtime-injected hints to
+      // the brain, not actual student speech, and shouldn't appear in
+      // the visible chat. The brain still receives them via studentTranscript.
+      const trimmedT = transcript.trim();
+      const isBracketed = trimmedT.startsWith('[') && trimmedT.endsWith(']');
+      const silent = opts?.silent || isBracketed;
       const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
-      if (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== transcript) {
+      if (!silent && (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== transcript)) {
         const studentEntry: TranscriptEntry = {
           id: `student-${Date.now()}`,
           timestamp: new Date(),
@@ -3074,18 +3140,70 @@ export function VoiceTutorRealtime({
                 if (ev.type === 'sentence') {
                   const sentence = (ev.text as string) || '';
                   if (!sentence.trim()) continue;
+                  // Mid-session greeting filter: if the brain opens a
+                  // mid-session response with "Hey/Hi/Hello [name]!"
+                  // when there's already a prior tutor turn in history,
+                  // drop that opener entirely. The brain occasionally
+                  // re-greets despite the prompt rule; this is a hard
+                  // safety net at the orchestrator layer. Only applies
+                  // to the FIRST sentence of a turn (totalSentenceCount
+                  // is still 0 when we get here).
+                  const isFirstSentenceOfTurn = totalSentenceCount === 0;
+                  if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
+                    const greetingRe = /^\s*(?:hey|hi|hello|howdy)(?:\s+[A-Z][a-z]+)?[!.,]*\s*/i;
+                    const stripped = sentence.replace(greetingRe, '').trim();
+                    if (stripped && stripped !== sentence.trim()) {
+                      console.log('[brain-orchestrator] stripped mid-session re-greet from first sentence');
+                      // Skip this sentence entirely if the greeting WAS
+                      // the whole sentence; otherwise voice the rest.
+                      if (stripped.length < 4) continue;
+                      // Replace the sentence content with the stripped version.
+                      (ev as { text?: string }).text = stripped;
+                    }
+                  }
+                  const updatedSentence = (ev.text as string) || '';
+                  if (!updatedSentence.trim()) continue;
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
-                  // Strip the `*emphasis*` markers before storing transcript /
-                  // voicing — the markers are a hint to the speaking layer
-                  // (P-01 talk-like-a-teacher), not student-visible text.
-                  // Realtime / Cartesia consumers can intercept the raw form
-                  // upstream when needed; until then, plain text is correct.
-                  const cleanSentence = sentence.trim().replace(/\*([^*]+)\*/g, '$1');
-                  attemptText += (attemptText ? ' ' : '') + cleanSentence;
+                  // KEEP markdown emphasis (*word*, **strong**) in the
+                  // chat-bound text so TranscriptView can render it as
+                  // italic / bold. Strip ONLY for TTS — the speaking
+                  // layer doesn't need or want the asterisks.
+                  const trimmedSentence = updatedSentence.trim();
+                  const sentenceForSpeech = trimmedSentence
+                    .replace(/\*\*([^*]+)\*\*/g, '$1')
+                    .replace(/\*([^*]+)\*/g, '$1');
+                  attemptText += (attemptText ? ' ' : '') + trimmedSentence;
                   if (!attemptKilled) {
-                    speakTextRef.current?.(cleanSentence);
+                    speakTextRef.current?.(sentenceForSpeech);
                   }
+                  // Streaming reveal in the chat: incrementally append
+                  // each sentence to a tutor entry so the student sees
+                  // the response materialize as it's being composed,
+                  // not all at once at the end. Use a stable per-turn
+                  // entry id so subsequent sentences update the same row.
+                  const streamingId = `tutor-streaming-${t0}`;
+                  const last = transcriptRef.current[transcriptRef.current.length - 1];
+                  if (last && last.role === 'tutor' && last.id === streamingId) {
+                    transcriptRef.current = [
+                      ...transcriptRef.current.slice(0, -1),
+                      { ...last, text: attemptText },
+                    ];
+                  } else {
+                    transcriptRef.current = [
+                      ...transcriptRef.current,
+                      {
+                        id: streamingId,
+                        timestamp: new Date(),
+                        role: 'tutor',
+                        text: attemptText,
+                      } as TranscriptEntry,
+                    ];
+                    // Signal that a streaming bubble is now visible so
+                    // the typing indicator can hide itself.
+                    setStreamingEntryActive(true);
+                  }
+                  onTranscriptUpdate([...transcriptRef.current]);
                 } else if (ev.type === 'pause') {
                   // P-02 comprehension pause. The brain or the engine asked
                   // us to wait before voicing the next sentence so the
@@ -3195,20 +3313,42 @@ export function VoiceTutorRealtime({
         return;
       }
 
-      // Append the tutor turn to transcriptRef. The text was already
-      // voiced sentence-by-sentence above; this is for conversation
-      // history (so the next brain turn knows what the tutor said) and
-      // for the UI transcript view. Even when fullText is empty but
-      // tool calls fired, we record a placeholder so Claude doesn't
-      // see the student's request as unanswered on the next turn.
+      // Finalize the tutor turn in transcriptRef. The streaming reveal
+      // above incrementally pushed sentences into a "tutor-streaming-*"
+      // entry as they arrived; here we either upgrade that entry's id
+      // to its final form, or — if no sentences streamed — create a
+      // placeholder for tool-only turns.
       if (fullText.trim()) {
-        const tutorEntry: TranscriptEntry = {
-          id: `tutor-${Date.now()}`,
-          timestamp: new Date(),
-          role: 'tutor',
-          text: fullText.trim(),
-        };
-        transcriptRef.current = [...transcriptRef.current, tutorEntry];
+        const streamingId = `tutor-streaming-${t0}`;
+        // Clear the streaming-active flag — the bubble is finalized,
+        // any future composing event is a fresh turn.
+        setStreamingEntryActive(false);
+        const finalText = fullText.trim();
+        const idx = transcriptRef.current.findIndex((e) => e.id === streamingId);
+        if (idx >= 0) {
+          // Upgrade the streaming entry: stable id + final text.
+          const finalEntry: TranscriptEntry = {
+            ...transcriptRef.current[idx],
+            id: `tutor-${Date.now()}`,
+            text: finalText,
+          };
+          transcriptRef.current = [
+            ...transcriptRef.current.slice(0, idx),
+            finalEntry,
+            ...transcriptRef.current.slice(idx + 1),
+          ];
+        } else {
+          // No streaming entry existed (shouldn't happen, but be safe).
+          transcriptRef.current = [
+            ...transcriptRef.current,
+            {
+              id: `tutor-${Date.now()}`,
+              timestamp: new Date(),
+              role: 'tutor',
+              text: finalText,
+            } as TranscriptEntry,
+          ];
+        }
         onTranscriptUpdate([...transcriptRef.current]);
       } else if (totalToolNamesSeen.length > 0) {
         const placeholderEntry: TranscriptEntry = {
@@ -3236,7 +3376,7 @@ export function VoiceTutorRealtime({
   // expects: if they say "draw the perpendicular" then "now find the
   // area", they want one coherent response, not two responses where
   // the first is interrupted by the second.
-  const handleStudentTranscriptForBrain = useCallback(async (transcript: string) => {
+  const handleStudentTranscriptForBrain = useCallback(async (transcript: string, opts?: { silent?: boolean }) => {
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
     if (brainBusyRef.current) {
       console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
@@ -3245,7 +3385,7 @@ export function VoiceTutorRealtime({
     }
     brainBusyRef.current = true;
     try {
-      await callBrainOnce(transcript);
+      await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
       // single follow-up question rather than a stale chain.
@@ -3289,6 +3429,7 @@ export function VoiceTutorRealtime({
       ? {
           instructions: RELAY_MODE_PROMPT,
           onUserTranscript: handleStudentTranscriptForBrain,
+          ttsProvider,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,
@@ -3459,11 +3600,25 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
+        // Immediate visual feedback while the brain composes its first turn.
+        setIsWarmingUp(true);
+        // CRITICAL on iOS: the user's Start tap is the gesture iOS uses
+        // to "unlock" audio playback. Calling resume() synchronously
+        // inside this handler ensures TTS chunks play audibly. Without
+        // this, audio queues silently until some other gesture (like
+        // unmute) inadvertently unlocks the AudioContext.
+        realtime.unlockAudio();
         if (!claudeBrainMode) {
           const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
           realtime.sendTextMessage(greetingMessage);
+        } else if (lessonPlanRef.current) {
+          // Lesson-plan-driven session: the brain owns the opening (Hook
+          // segment). Kick it with a synthetic student-side trigger so it
+          // starts teaching immediately rather than waiting for a "hi".
+          console.log('[VoiceTutorRealtime] claude-brain: kicking off lesson plan via brain.');
+          handleStudentTranscriptForBrain('[start lesson]', { silent: true });
         } else {
-          console.log('[VoiceTutorRealtime] claude-brain: skipping auto-greeting; brain handles first turn.');
+          console.log('[VoiceTutorRealtime] claude-brain: free-conversation, brain greets after first student turn.');
         }
       }
       // If the student hit the Mute button BEFORE clicking Start, honour that
@@ -3476,7 +3631,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log('[VoiceTutorRealtime] Start clicked while muted — skipping startListening');
       }
     }
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {
@@ -3499,13 +3654,23 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log('[VoiceTutorRealtime] Student mic muted (buffer cleared)');
         onDebugEvent?.('mic_mute', 'Student muted mic');
       } else {
+        // On unmute, reset any stale orchestrator flags. A pending
+        // brain call from before a mute can leave brainBusyRef=true; if
+        // the orchestrator's promise threw without finalizing (network
+        // hiccup, aborted fetch), subsequent turns get queued forever
+        // and the UI shows "thinking" indefinitely.
+        if (brainBusyRef.current) {
+          console.log('[VoiceTutorRealtime] Unmute: clearing stale brain-busy flag');
+          brainBusyRef.current = false;
+          queuedTranscriptsRef.current = [];
+        }
         realtime.startListening();
         console.log('[VoiceTutorRealtime] Student mic unmuted');
         onDebugEvent?.('mic_unmute', 'Student unmuted mic');
       }
       return newMuted;
     });
-  }, [realtime]);
+  }, [realtime, onDebugEvent]);
 
   // Handle user's "continue" choice on the 55-min rotation prompt. We
   // disconnect the current session and immediately reconnect; on fresh
@@ -3632,13 +3797,69 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }
   };
 
-  const stateUI = getStateUI();
-  const isDisabled = realtime.state === 'connecting' || realtime.state === 'processing';
+  // While the brain is composing its first turn (claude-brain mode kickoff),
+  // realtime.state stays 'connected' until the first audio chunk arrives —
+  // which can take 5-8s. The button needs an instant visual reaction so the
+  // user knows the click landed. `isWarmingUp` flips true on the click and
+  // resets when the realtime state moves to processing/listening/speaking
+  // OR when the first whiteboard command renders OR when the first
+  // tutor sentence appears in the transcript.
+  const [isWarmingUp, setIsWarmingUp] = useState(false);
+  useEffect(() => {
+    if (!isWarmingUp) return;
+    // Only exit warm-up on STRONG signals that the tutor's response is
+    // imminent or arriving — not on intermediate states like 'listening'
+    // (which just means mic opened, brain hasn't returned yet) or
+    // generic 'connected'. The skeleton must persist through the gap
+    // between mic-grant and first brain output.
+    const exitStates = ['processing', 'speaking', 'error'];
+    if (exitStates.includes(realtime.state)) setIsWarmingUp(false);
+  }, [realtime.state, isWarmingUp]);
+  // Also exit warm-up when the first tutor turn lands.
+  useEffect(() => {
+    if (!isWarmingUp) return;
+    const hasTutorTurn = transcriptRef.current.some((t) => t.role === 'tutor' && t.text.trim());
+    if (hasTutorTurn) setIsWarmingUp(false);
+  });
+
+  const baseStateUI = getStateUI();
+  const stateUI = isWarmingUp
+    ? {
+        icon: <Loader2 className="w-5 h-5 animate-spin" />,
+        text: 'Starting…',
+        subtext: 'preparing your tutor',
+        color: 'bg-yellow-500',
+        pulse: false,
+      }
+    : baseStateUI;
+  const isDisabled = realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp;
+
+  // Surface composing state to the parent. The typing indicator should
+  // only appear when the brain is composing AND no streaming bubble has
+  // landed yet — once even one sentence has streamed in, the bubble
+  // itself is the visible signal of activity. So:
+  //   busy = (warmingUp OR processing) AND no in-flight tutor entry yet
+  // We deliberately exclude 'speaking' — by the time we're speaking,
+  // the streaming bubble has appeared and the indicator is redundant.
+  // `streamingEntryActive` tracks whether a tutor-streaming-* bubble
+  // is currently in transcriptRef. Set true when the brain orchestrator
+  // pushes the first sentence; cleared when the entry is finalized.
+  // Drives suppression of the typing indicator so it disappears the
+  // moment text starts arriving.
+  const [streamingEntryActive, setStreamingEntryActive] = useState(false);
+  useEffect(() => {
+    const composing = isWarmingUp || realtime.state === 'processing';
+    if (!composing || streamingEntryActive) {
+      onTutorBusy?.(false);
+    } else {
+      onTutorBusy?.(true);
+    }
+  }, [isWarmingUp, realtime.state, onTutorBusy, streamingEntryActive]);
 
   return (
-    <div className="voice-tutor-realtime flex items-center gap-3 py-2 px-2">
-      {/* Connection indicator */}
-      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+    <div className="voice-tutor-realtime flex items-center gap-2 sm:gap-3 py-2 px-2 flex-wrap">
+      {/* Connection indicator — hide on mobile to save horizontal room */}
+      <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
         realtime.isConnected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
       }`}>
         {realtime.isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
@@ -3683,8 +3904,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             {stateUI.icon}
           </button>
 
-          {/* State text */}
-          <div className="min-w-0">
+          {/* State text — hidden on mobile to free room for the input.
+              The mic button itself + its color/pulse already convey state. */}
+          <div className="hidden md:block min-w-0">
             <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
             {stateUI.subtext && (
               <p className="text-xs text-gray-500 truncate">{stateUI.subtext}</p>
@@ -3727,9 +3949,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         </span>
       )}
 
-      {/* Text input — for when the student can't speak */}
+      {/* Text input — for when the student can't speak. On mobile the
+          input wraps to its own row (full width); on desktop it shares
+          the row with the mic + status. */}
       <form
-        className="flex-1 flex items-center gap-2 min-w-0"
+        className="order-last w-full md:order-none md:flex-1 md:w-auto flex items-center gap-2 min-w-0"
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
@@ -3812,29 +4036,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         {onEndSession && (
           <button
             onClick={async () => {
-              // First click: trigger the recap + practice-problem flow and
-              // give the tutor up to 20 seconds to deliver. During that
-              // window the button flips to "Finish" for an immediate exit.
-              // If the user had already clicked once (isWrappingUp), a
-              // second click skips the wait and exits immediately.
-              if (!isWrappingUp && injectContextRef.current) {
-                setIsWrappingUp(true);
-                injectContextRef.current(buildRecapPrompt());
-                onDebugEvent?.('session_recap_triggered',
-                  `Topics=${topicsCoveredRef.current.length}, weak=${weaknessesRef.current.size}`);
-                // Auto-finish after 20 seconds max
-                setTimeout(async () => {
-                  if (audioRecordEnabled) {
-                    try { await audioRecorder.finalize(); } catch {}
-                  }
-                  // Commit session to student profile (mastery, gaps, notes).
-                  // Fire-and-forget; doesn't block end-of-session UI.
-                  void commitSessionToProfile();
-                  onEndSession();
-                }, 20000);
-                return;
-              }
-              // Immediate finish (either no inject available, or 2nd click)
+              // Instant end — no recap delay, no spinner. Finalize
+              // recording and commit profile in the background; the
+              // student sees the summary page immediately.
               if (audioRecordEnabled) {
                 try { await audioRecorder.finalize(); } catch {}
               }
@@ -3843,15 +4047,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
           >
-            {isWrappingUp ? (
+            {false ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Wrapping up… (click to finish)
+                <span className="hidden sm:inline">Wrapping up… (click to finish)</span>
+                <span className="sm:hidden">…</span>
               </>
             ) : (
               <>
                 <LogOut className="w-3.5 h-3.5" />
-                End
+                <span>End</span>
               </>
             )}
           </button>

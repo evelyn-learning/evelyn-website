@@ -248,7 +248,7 @@ export function SessionControls({
 
   return (
     <>
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+      <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
         {/* Timer */}
         <div className="flex items-center gap-2">
           <Clock
@@ -269,7 +269,8 @@ export function SessionControls({
                 : 'text-gray-700'
             }`}
           >
-            {formatTime(elapsedSeconds)} / {maxDuration}:00
+            {formatTime(elapsedSeconds)}
+            <span className="hidden sm:inline"> / {maxDuration}:00</span>
           </span>
           {isLowTime && !isOvertime && (
             <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">
@@ -308,15 +309,9 @@ export function SessionControls({
             <span className="hidden sm:inline">Upload Problem</span>
           </button>
 
-          {/* End session button */}
-          <button
-            onClick={onEndSession}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
-            title="End session"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">End Session</span>
-          </button>
+          {/* End session lives in the bottom control row (VoiceTutorRealtime)
+              where it triggers the recap + wrap-up flow. Removed here to
+              avoid two End buttons competing in the same view. */}
         </div>
       </div>
 

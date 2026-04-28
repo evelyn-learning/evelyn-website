@@ -18,6 +18,11 @@ import { SEED_K_COUNTING_TO_10 } from './seeds/k-counting-to-10';
 import { SEED_G2_PLACE_VALUE } from './seeds/g2-place-value';
 import { SEED_G4_MULTIPLICATION_AS_ARRAYS } from './seeds/g4-multiplication-as-arrays';
 import { SEED_G8_LINEAR_EQUATIONS } from './seeds/g8-linear-equations';
+import { SEED_G9_SYSTEMS_OF_EQUATIONS } from './seeds/g9-systems-of-equations';
+import { SEED_G9_PYTHAGOREAN } from './seeds/g9-pythagorean';
+import { SEED_G10_RIGHT_TRIANGLE_TRIG } from './seeds/g10-right-triangle-trig';
+import { SEED_G11_UNIT_CIRCLE } from './seeds/g11-unit-circle';
+import { SEED_G12_DERIVATIVE_INTUITION } from './seeds/g12-derivative-intuition';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -28,6 +33,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G4_MULTIPLICATION_AS_ARRAYS,
   SEED_G6_FRACTIONS_ADD_UNLIKE,
   SEED_G8_LINEAR_EQUATIONS,
+  // Batch 2 — math advanced (G9-12).
+  SEED_G9_SYSTEMS_OF_EQUATIONS,
+  SEED_G9_PYTHAGOREAN,
+  SEED_G10_RIGHT_TRIANGLE_TRIG,
+  SEED_G11_UNIT_CIRCLE,
+  SEED_G12_DERIVATIVE_INTUITION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

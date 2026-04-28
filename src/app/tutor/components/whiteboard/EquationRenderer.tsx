@@ -32,10 +32,15 @@ export function EquationRenderer({
     if (!containerRef.current) return;
 
     try {
-      // Fix double-escaped LaTeX (e.g. \\frac → \frac) that can come from AI model output
+      // Fix double-escaped LaTeX (e.g. \\frac → \frac) that can come from AI model output.
+      // The newline conversion uses a negative lookahead so it doesn't eat
+      // the start of LaTeX commands that begin with `\n` — \neq, \not, \nabla,
+      // \nu, \nrightarrow, etc. Without this, "23 \neq 5" rendered as "23eq5"
+      // because the \n was stripped as a "literal newline" escape.
       let processedLatex = latex
-        .replace(/\\\\(?=[a-zA-Z{])/g, '\\')  // \\frac → \frac, \\{ → \{
-        .replace(/\\n/g, '\n');                 // literal \n → newline
+        .replace(/\\\\(?=[a-zA-Z{])/g, '\\')      // \\frac → \frac, \\{ → \{
+        .replace(/\\n(?![a-zA-Z])/g, '\n');       // \n → newline, but NOT \neq / \nabla / \nu
+
       if (highlight && highlight.length > 0) {
         // Wrap highlighted terms in a colored box
         highlight.forEach((term) => {
@@ -71,6 +76,33 @@ export function EquationRenderer({
         containerRef.current.textContent = latex;
       }
     }
+    // Fit-to-width: KaTeX equations don't wrap, so on narrow screens
+    // they get clipped horizontally. Detect overflow and shrink the
+    // rendered math via CSS transform so the whole equation fits in
+    // the parent column. We use scale rather than font-size to avoid
+    // KaTeX re-layouts.
+    requestAnimationFrame(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const inner = el.firstElementChild as HTMLElement | null;
+      if (!inner) return;
+      // Reset before measuring so prior scales don't compound.
+      inner.style.transform = '';
+      inner.style.transformOrigin = 'left center';
+      inner.style.display = 'inline-block';
+      const containerWidth = el.clientWidth;
+      const innerWidth = inner.scrollWidth;
+      if (containerWidth > 0 && innerWidth > containerWidth) {
+        const scale = Math.max(0.55, containerWidth / innerWidth);
+        inner.style.transform = `scale(${scale})`;
+        // Adjust container height so the scaled element doesn't leave
+        // empty space below it.
+        const innerHeight = inner.scrollHeight * scale;
+        el.style.height = `${innerHeight}px`;
+      } else {
+        el.style.height = '';
+      }
+    });
   }, [latex, highlight, displayMode]);
 
   return (
@@ -84,7 +116,7 @@ export function EquationRenderer({
       )}
       <div
         ref={containerRef}
-        className="equation-content overflow-x-auto py-2"
+        className="equation-content overflow-x-auto py-2 fit-to-width"
       />
     </div>
   );

@@ -7,7 +7,7 @@
  * from the AI tutor including equations, graphs, and diagrams.
  */
 
-import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
@@ -37,6 +37,8 @@ import {
 } from './DiagramRenderer';
 import DesmosGraphRenderer from './DesmosGraphRenderer';
 import NumberLineRenderer from './NumberLineRenderer';
+import { CatalogDispatch } from './CatalogDispatch';
+import { solveDiagram, isImplementedKind, DiagramSolverError } from '@/lib/tutor/diagrams/catalog/manifest';
 import GeometryRenderer from './GeometryRenderer';
 import UnitCircleRenderer from './UnitCircleRenderer';
 import FractionBarRenderer from './FractionBarRenderer';
@@ -185,16 +187,54 @@ interface WhiteboardCanvasProps {
   commands: WhiteboardCommand[];
   onClear?: () => void;
   onStudentInput?: (type: 'text' | 'drawing' | 'image', content: string) => void;
+  /** When the student submits an answer in a try-yourself card on the
+   *  whiteboard, this fires with the submitted text. The parent routes
+   *  the answer to the brain as a synthetic student turn so the tutor
+   *  can react with personalized feedback (correct → praise + advance,
+   *  wrong → gentle correction). */
+  onTryYourselfAnswer?: (answer: string, expected: string | undefined, isCorrect: boolean | null) => void;
+  /** Fires when the tutor performs an explicit "look at this" action —
+   *  scrollTo a different page or a scribble to mark something. The
+   *  parent uses this on mobile to auto-switch from the chat tab to
+   *  the board tab so the student actually sees what the tutor is
+   *  pointing at. */
+  onAttentionShift?: () => void;
   className?: string;
+  /** When true, the tutor is composing a response (brain busy + nothing
+   *  rendered yet on the current page). Drives a skeleton placeholder
+   *  at the bottom of the current page so the student knows something
+   *  is incoming, instead of staring at an unchanged board. */
+  tutorBusy?: boolean;
 }
+
+/** Callback fan-out for renderers nested inside CommandRenderer. Set
+ *  once at the WhiteboardCanvas level; deeply-nested renderers (like
+ *  TryYourselfRenderer) read from context instead of threading props
+ *  through every intermediate. */
+export const WhiteboardCallbackContext = React.createContext<{
+  onTryYourselfAnswer?: WhiteboardCanvasProps['onTryYourselfAnswer'];
+}>({});
 
 export function WhiteboardCanvas({
   commands,
   onClear,
   onStudentInput,
+  onTryYourselfAnswer,
+  onAttentionShift,
   className = '',
+  tutorBusy = false,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  // Track which direction the page-change happened in so the entrance
+  // animation slides correctly (forward = next page, backward = prev).
+  const prevIndexRef = useRef(0);
+  const [pageDir, setPageDir] = useState<'forward' | 'backward'>('forward');
+  useEffect(() => {
+    if (currentIndex !== prevIndexRef.current) {
+      setPageDir(currentIndex > prevIndexRef.current ? 'forward' : 'backward');
+      prevIndexRef.current = currentIndex;
+    }
+  }, [currentIndex]);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Resizable expanded panel state
@@ -342,6 +382,10 @@ export function WhiteboardCanvas({
       .filter((x) => x.cmd.action === 'scrollTo' && x.i > lastScrollIndexRef.current);
     if (pending.length === 0) return;
     lastScrollIndexRef.current = pending[pending.length - 1].i;
+    // Tutor is explicitly redirecting attention — let the parent know
+    // so it can auto-switch the mobile tab to the whiteboard if the
+    // student is currently on the chat tab.
+    onAttentionShift?.();
 
     // Partition: page switches apply synchronously (state update), item /
     // top / bottom scrolls need a frame after any page switch so new refs
@@ -496,12 +540,25 @@ export function WhiteboardCanvas({
   if (pages.length === 0) {
     return (
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-400 p-8">
-            <div className="text-4xl mb-3">📝</div>
-            <p className="text-sm">Your conversation will appear here.</p>
-            <p className="text-sm">Start speaking to begin!</p>
-          </div>
+        <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
+          {tutorBusy ? (
+            // Skeleton placeholder — runs whenever the tutor is composing
+            // even if no page exists yet. Replaces the cold empty state
+            // ("Your conversation will appear here…") so the student
+            // sees activity from the moment Start is tapped.
+            <div className="space-y-3 w-full max-w-md">
+              <div className="wb-skeleton h-5 bg-gray-200 rounded w-2/3 mx-auto" />
+              <div className="wb-skeleton h-32 bg-gray-100 rounded" />
+              <div className="wb-skeleton h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+              <p className="text-xs text-gray-500 italic text-center">✏️ Your tutor is preparing the board…</p>
+            </div>
+          ) : (
+            <div className="text-center text-gray-400">
+              <div className="text-4xl mb-3">📝</div>
+              <p className="text-sm">Your conversation will appear here.</p>
+              <p className="text-sm">Start speaking to begin!</p>
+            </div>
+          )}
         </div>
         {onStudentInput && <StudentInputBar onStudentInput={onStudentInput} />}
       </div>
@@ -592,9 +649,13 @@ export function WhiteboardCanvas({
 
   const bodyContent = (
     <>
+      {/* `key={currentIndex}` re-mounts the inner div on page change so
+          the entrance animation fires. Direction-aware: forward slides
+          in from the right, backward slides in from the left. */}
       <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4">
+        <div key={currentIndex} className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}>
         {renderableCommands.length === 1 ? (
-          <div className="relative" ref={(el) => { itemRefsRef.current[0] = el; }}>
+          <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
             <CommandRenderer command={renderableCommands[0]} />
             <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
           </div>
@@ -603,7 +664,7 @@ export function WhiteboardCanvas({
             {renderableCommands.map((cmd, i) => {
               const overlays = scribbles.filter((s) => s.targetItemIndex === i + 1);
               return (
-                <div key={i}>
+                <div key={i} className="wb-item-enter">
                   {i > 0 && (
                     <div className="flex items-center gap-2 py-1">
                       <div className="flex-1 border-t border-dashed border-gray-200" />
@@ -622,6 +683,19 @@ export function WhiteboardCanvas({
             })}
           </div>
         )}
+        {/* Drawing skeleton — shown whenever the tutor is composing.
+            Empty board: takes center stage. Existing items on the page:
+            renders at the bottom as a "next thing coming" hint so the
+            student knows the tutor is actively working, not stalled. */}
+        {tutorBusy && (
+          <div className={`space-y-3 ${renderableCommands.length === 0 ? 'py-8' : 'py-4 mt-4 border-t border-dashed border-gray-200'}`}>
+            <div className="wb-skeleton h-5 bg-gray-200 rounded w-2/3" />
+            <div className="wb-skeleton h-24 bg-gray-100 rounded" />
+            <div className="wb-skeleton h-4 bg-gray-200 rounded w-1/2" />
+            <p className="text-xs text-gray-400 italic">✏️ Tutor is preparing something…</p>
+          </div>
+        )}
+        </div>
       </div>
       {/* Scroll-down hint: visible when multi-item page has overflow */}
       {currentPage.commands.length > 1 && hasOverflow && (
@@ -677,11 +751,13 @@ export function WhiteboardCanvas({
   ) : null;
 
   return (
-    <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
-      {headerContent}
-      {bodyContent}
-      {studentInputBar}
-    </div>
+    <WhiteboardCallbackContext.Provider value={{ onTryYourselfAnswer }}>
+      <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
+        {headerContent}
+        {bodyContent}
+        {studentInputBar}
+      </div>
+    </WhiteboardCallbackContext.Provider>
   );
 }
 
@@ -1238,6 +1314,66 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   );
 }
 
+/** Wraps TryYourselfRenderer with a context-bound onSubmit so the
+ *  student's answer flows up to the parent (page.tsx) and back into
+ *  the brain as a synthetic student turn — closing the loop on
+ *  try-yourself segments. */
+function TryYourselfWithBrainHookup(props: {
+  title?: string;
+  problem: string;
+  expectedAnswer?: string;
+  responseFormat?: 'mcq' | 'frq' | 'numeric';
+  choices?: Array<{ id: string; text: string; correct?: boolean }>;
+  hints?: string[];
+}) {
+  const ctx = React.useContext(WhiteboardCallbackContext);
+  return (
+    <TryYourselfRenderer
+      title={props.title}
+      problem={props.problem}
+      expectedAnswer={props.expectedAnswer}
+      responseFormat={props.responseFormat}
+      choices={props.choices}
+      hints={props.hints}
+      onSubmit={(answer) => {
+        // The renderer already runs a format-aware comparison locally;
+        // we re-derive the same flag here so the parent gets the trio.
+        const isCorrect = props.expectedAnswer
+          ? compareAnswer(answer, props.expectedAnswer, props.responseFormat)
+          : null;
+        ctx.onTryYourselfAnswer?.(answer, props.expectedAnswer, isCorrect);
+      }}
+    />
+  );
+}
+
+/** Same comparator as TryYourselfRenderer's matchesAnswer — duplicated
+ *  here so the bridge can decide correct/incorrect without forcing
+ *  every renderer to expose the result. Keep in sync with that file. */
+function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean {
+  const s = submitted.trim();
+  const e = expected.trim();
+  if (!s || !e) return false;
+  const tryParse = (v: string): number | null => {
+    const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
+    if (cleaned === '') return null;
+    const frac = cleaned.match(/^(-?\d+)\/(-?\d+)$/);
+    if (frac) {
+      const num = Number(frac[1]); const den = Number(frac[2]);
+      if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) return num / den;
+      return null;
+    }
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : null;
+  };
+  const sn = tryParse(s); const en = tryParse(e);
+  if (sn !== null && en !== null) return Math.abs(sn - en) < 1e-9;
+  const norm = (v: string) =>
+    v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
+  if (format === 'numeric') return norm(s) === norm(e);
+  return norm(s) === norm(e);
+}
+
 interface CommandRendererProps {
   command: WhiteboardCommand;
 }
@@ -1307,7 +1443,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showTryYourself':
       return (
-        <TryYourselfRenderer
+        <TryYourselfWithBrainHookup
           title={command.title}
           problem={command.problem}
           expectedAnswer={command.expectedAnswer}
@@ -2077,6 +2213,32 @@ function DiagramDispatcher({ type, params }: DiagramDispatcherProps) {
       );
 
     default:
+      // Catalog dispatch — every kind in the diagram catalog is solved
+      // through the manifest and routed to its dedicated renderer.
+      // Solver errors render as a small inline message so the brain's
+      // validator-feedback loop can pick up the rejection reason.
+      if (isImplementedKind(type)) {
+        try {
+          const figure = solveDiagram(type, params);
+          return <CatalogDispatch kind={type} figure={figure} />;
+        } catch (err) {
+          // Solver rejected the brain's params. Log for debugging and
+          // render a subtle "preparing" hint so the user doesn't see
+          // a blank board (page badge says "1 item" but the canvas is
+          // empty). The orchestrator's validator-feedback retry will
+          // re-emit the command with corrected params shortly after.
+          const msg = err instanceof DiagramSolverError ? err.message : String(err);
+          console.warn('[CommandRenderer] diagram solver rejected:', msg);
+          return (
+            <div className="space-y-3 py-6 px-2">
+              <div className="wb-skeleton h-5 bg-gray-200 rounded w-2/3" />
+              <div className="wb-skeleton h-24 bg-gray-100 rounded" />
+              <p className="text-xs text-gray-400 italic text-center">✏️ Tutor is figuring out how to draw this…</p>
+            </div>
+          );
+        }
+      }
+
       // For unknown types, show a description if provided
       if (params.description) {
         return (

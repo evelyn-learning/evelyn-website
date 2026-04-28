@@ -375,17 +375,35 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_diagram',
-    description: 'Specialized diagrams not covered by other tools: circular paths (cyclist, orbit, banked turn) and pipe-flow / continuity for fluid dynamics. For force / motion / projectile / vector / coordinate-plane diagrams use the dedicated structured tools instead.',
+    description: 'Structured diagrams from the catalog. Pick a kind that fits the concept; the solver validates params and the renderer draws. Do not invent kinds — only use the listed enum. Legacy kinds (circular-path, pipe-flow, fluid-flow, continuity) remain supported.',
     parameters: {
       type: 'object',
       properties: {
         type: {
           type: 'string',
-          enum: ['circular-path', 'pipe-flow', 'fluid-flow', 'continuity'],
+          enum: [
+            // Catalog kinds
+            'number_line', 'equation_balance', 'tape_diagram', 'fraction_comparison',
+            'area_model', 'pie_chart', 'bar_chart', 'line_plot',
+            'balance_scale', 'lever', 'pulley_system', 'inclined_plane', 'spring_mass',
+            'pendulum', 'simple_circuit', 'wave_diagram', 'ray_diagram_lens',
+            'ray_diagram_mirror', 'vector_addition',
+            'electron_configuration', 'orbital_diagram', 'periodic_table_highlight',
+            'punnett_square', 'life_cycle', 'water_cycle', 'rock_cycle', 'body_system',
+            'phases_of_moon', 'solar_system', 'earth_layers', 'eclipse_diagram',
+            'seasons_diagram', 'plate_tectonics',
+            'flowchart_simple', 'state_machine', 'binary_tree', 'truth_table', 'logic_gate',
+            'unit_circle', 'transformation', 'inequality_graph',
+            'sentence_diagram', 'argument_structure', 'historical_timeline',
+            'government_branches',
+            'comparison_table', 't_chart', 'kwl_chart', 'frayer_model', 'hierarchy_pyramid',
+            // Legacy kinds (existing behavior)
+            'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
+          ],
         },
         params: {
           type: 'object',
-          description: 'Type-specific parameters.',
+          description: 'Kind-specific parameters. The solver for each kind validates these — see the catalog block in the system context for each kind\'s schema.',
         },
       },
       required: ['type', 'params'],

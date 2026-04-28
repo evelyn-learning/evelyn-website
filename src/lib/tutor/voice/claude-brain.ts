@@ -205,6 +205,26 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
   const idx = segmentIndex
     .map((s, i) => `  ${i + 1}. ${s.id} [${s.kind}]${s.id === currentSegmentId ? '  ← current' : ''}`)
     .join('\n');
+  // Segments that carry an authored problem / question statement.
+  // The brain MUST render that text verbatim to the whiteboard —
+  // paraphrasing or substituting different numbers creates a
+  // divergence between the brain's memory (the script) and what the
+  // student sees (the rendered figure), which breaks answer validation.
+  // Applies to every segment kind whose script names a specific problem,
+  // question, or challenge.
+  const segHasAuthoredText =
+    seg && (
+      (seg.kind === 'try_yourself' && typeof seg.problem === 'string') ||
+      (seg.kind === 'worked_example' && typeof seg.problem === 'string') ||
+      (seg.kind === 'misconception_check' && typeof seg.question === 'string') ||
+      (seg.kind === 'extension' && typeof seg.advancedQuestion === 'string')
+    );
+  const problemLock = segHasAuthoredText
+    ? [
+        ``,
+        `PROBLEM-LOCK for this segment: render the EXACT problem / question text from the segment above on the whiteboard before asking the student. Do not paraphrase, change numbers, or substitute a different problem. The student answers against the rendered version. If you depart from the script's text — even with the same intent — the validation gate compares against what you rendered, not what you remembered.`,
+      ]
+    : [];
   return [
     `plan: ${plan.title} — grade ${plan.grade}, ${plan.subject} (${plan.estimatedMinutes} min)`,
     `learning objectives:`,
@@ -215,6 +235,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     ``,
     `current segment "${currentSegmentId}" [${seg?.kind ?? 'unknown'}]:`,
     segDetail,
+    ...problemLock,
     ``,
     `Stay within the current segment until its goal is met. Move on with`,
     `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,

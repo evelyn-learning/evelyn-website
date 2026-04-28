@@ -26,6 +26,8 @@ import { SessionControls } from './components/SessionControls';
 import { WhiteboardCanvas } from './components/whiteboard';
 import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
+import { LessonPlanProgress } from './components/LessonPlanProgress';
+import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
@@ -82,6 +84,19 @@ export default function TutorPageWrapper() {
   );
 }
 
+/** Compact pill showing one setup step's done-or-pending state. */
+function StepChip({ label, done }: { label: string; done: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+        done ? 'bg-green-100 text-green-800' : 'bg-white text-blue-700 border border-blue-300'
+      }`}
+    >
+      {done ? '✓' : '○'} {label}
+    </span>
+  );
+}
+
 function TutorPage() {
   // Demo tracking
   const { onView, onTry, onComplete, trackInteraction } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
@@ -95,6 +110,10 @@ function TutorPage() {
   const searchParams = useSearchParams();
   const engineParam = searchParams.get('engine') as VoiceEngine | null;
   const VALID_ENGINES: VoiceEngine[] = ['classic', 'realtime', 'realtime-validated', 'claude-brain', 'gemini-live'];
+  // /tutor?tts=mini switches relay-mode TTS to gpt-4o-mini-tts for cost
+  // comparison. Default 'realtime' (out-of-band response, highest quality).
+  const ttsParam = searchParams.get('tts');
+  const ttsProvider: 'realtime' | 'openai-mini' = ttsParam === 'mini' ? 'openai-mini' : 'realtime';
 
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -107,10 +126,14 @@ function TutorPage() {
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
-  const [inputMode, setInputMode] = useState<InputMode>('text');
+  const [inputMode, setInputMode] = useState<InputMode>('voice');
   // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
-  const voiceEngine: VoiceEngine = (engineParam && VALID_ENGINES.includes(engineParam)) ? engineParam : ENV_VOICE_ENGINE;
+  const baseVoiceEngine: VoiceEngine = (engineParam && VALID_ENGINES.includes(engineParam)) ? engineParam : ENV_VOICE_ENGINE;
+  // Lesson plans only work in claude-brain mode (the brain orchestrator
+  // is what consumes lessonPlanContext). Force the engine when one is
+  // selected so the user doesn't have to know about engine flags.
+  const voiceEngine: VoiceEngine = selectedLessonPlanId ? 'claude-brain' : baseVoiceEngine;
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
 
   // Session state
@@ -118,6 +141,8 @@ function TutorPage() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
+  // Lesson-plan progress state — fed by VoiceTutorRealtime via onLessonPlanProgress.
+  const [lessonProgress, setLessonProgress] = useState<{ plan: LessonPlanType | null; currentSegmentId: string }>({ plan: null, currentSegmentId: '' });
   // Source-of-truth event log for whiteboard commands. Each entry is captured
   // at the moment a command is emitted so we keep accurate timestamps and a
   // best-effort link to the surrounding transcript message. This avoids the
@@ -363,6 +388,22 @@ function TutorPage() {
 
   // Resizable split between transcript and whiteboard (percentage for transcript)
   const [splitPercent, setSplitPercent] = useState(50);
+  // Mobile tab state — on screens narrower than `lg`, the split-panel
+  // layout doesn't fit. Show one panel at a time via a tab toggle and
+  // let the user switch between the chat and whiteboard.
+  const [mobileTab, setMobileTab] = useState<'chat' | 'whiteboard'>('whiteboard');
+  // SSR-safe desktop detection. Defaults to false on the server (renders
+  // mobile-friendly layout) then flips to true on the client when the
+  // viewport is wider than the lg breakpoint (1024px). Listens to resize.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)') : null;
+    if (!mq) return;
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
   const isDraggingSplit = useRef(false);
   const splitContainerRef = useRef<HTMLDivElement>(null);
 
@@ -800,7 +841,23 @@ function TutorPage() {
           </div>
 
           {/* Setup form */}
-          <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 space-y-5">
+            {/* Status header — shows the user exactly which steps remain
+                so they don't feel like they're walking down an unknown
+                tunnel of dropdowns. Subject → Level → Topic → Start. */}
+            <div className="rounded-lg bg-blue-50/60 border border-blue-100 px-4 py-3">
+              <div className="flex items-center gap-2 flex-wrap text-sm">
+                <span className="font-semibold text-blue-900">3 quick choices to begin:</span>
+                <StepChip label="Subject" done={!!selectedSubject} />
+                <span className="text-blue-300">›</span>
+                <StepChip label="Level" done={!!selectedLevel} />
+                <span className="text-blue-300">›</span>
+                <StepChip label="Topic" done={!!selectedTopicId} />
+                <span className="text-blue-300">›</span>
+                <span className="text-blue-700/70 text-xs italic">then Start</span>
+              </div>
+            </div>
+
             {/* Name input */}
             <div>
               <label
@@ -822,15 +879,21 @@ function TutorPage() {
             {/* Subject selection */}
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">1</span>
                 Subject
               </label>
               <select
                 id="subject"
                 value={selectedSubject}
                 onChange={(e) => handleSubjectChange(e.target.value)}
+                onInput={(e) => handleSubjectChange((e.target as HTMLSelectElement).value)}
+                onBlur={(e) => {
+                  const v = (e.target as HTMLSelectElement).value;
+                  if (v !== selectedSubject) handleSubjectChange(v);
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
-                <option value="">Select a subject...</option>
+                <option value="">Select a subject…</option>
                 {SUBJECTS.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.icon} {s.label}
@@ -843,15 +906,21 @@ function TutorPage() {
             {selectedSubject && (
               <div>
                 <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">2</span>
                   Level
                 </label>
                 <select
                   id="level"
                   value={selectedLevel}
                   onChange={(e) => handleLevelChange(e.target.value)}
+                  onInput={(e) => handleLevelChange((e.target as HTMLSelectElement).value)}
+                  onBlur={(e) => {
+                    const v = (e.target as HTMLSelectElement).value;
+                    if (v !== selectedLevel) handleLevelChange(v);
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  <option value="">Select a level...</option>
+                  <option value="">Select a level…</option>
                   {availableLevels.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.label}
@@ -865,15 +934,21 @@ function TutorPage() {
             {selectedLevel && availableTopics.length > 0 && (
               <div>
                 <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">3</span>
                   Topic
                 </label>
                 <select
                   id="topic"
                   value={selectedTopicId}
                   onChange={(e) => setSelectedTopicId(e.target.value)}
+                  onInput={(e) => setSelectedTopicId((e.target as HTMLSelectElement).value)}
+                  onBlur={(e) => {
+                    const v = (e.target as HTMLSelectElement).value;
+                    if (v !== selectedTopicId) setSelectedTopicId(v);
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  <option value="">Select a topic...</option>
+                  <option value="">Select a topic…</option>
                   {availableTopics.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.label}
@@ -883,97 +958,36 @@ function TutorPage() {
               </div>
             )}
 
-            {/* Lesson plan / LO selection — only shown when at least one
-                plan exists for the chosen subject. Optional: when blank,
+            {/* Lesson plan — the primary "what are we doing today" picker.
+                Visually emphasized: bigger, bolder, blue accent. When blank,
                 the tutor runs in free-conversation mode. */}
             {selectedTopicId && availableLessonPlans.length > 0 && (
-              <div>
-                <label htmlFor="lesson-plan" className="block text-sm font-medium text-gray-700 mb-2">
-                  Lesson plan (optional)
-                  <span className="ml-2 text-xs font-normal text-gray-500">
-                    Pick one to follow a structured lesson, or leave blank for open conversation.
-                  </span>
+              <div className="rounded-lg border-2 border-blue-200 bg-blue-50/40 p-4">
+                <label htmlFor="lesson-plan" className="block text-base font-semibold text-blue-900 mb-1">
+                  ✨ Pick a lesson
                 </label>
+                <p className="text-xs text-blue-700/70 mb-3">
+                  Or leave blank for open conversation.
+                </p>
                 <select
                   id="lesson-plan"
                   value={selectedLessonPlanId}
                   onChange={(e) => setSelectedLessonPlanId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  onInput={(e) => setSelectedLessonPlanId((e.target as HTMLSelectElement).value)}
+                  className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-base"
                 >
-                  <option value="">No plan — open conversation</option>
+                  <option value="">— Just chat (no plan) —</option>
                   {availableLessonPlans.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.title} ({p.estimatedMinutes} min)
+                      {p.title} · {p.estimatedMinutes} min
                     </option>
                   ))}
                 </select>
               </div>
             )}
 
-            {/* Goal selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                What do you want to do?
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {SESSION_GOALS.map((goal) => (
-                  <button
-                    key={goal.id}
-                    onClick={() => setSessionGoal(goal.id as SessionGoal)}
-                    className={`p-3 text-left border rounded-lg transition-all ${
-                      sessionGoal === goal.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <span className="text-xl">{goal.icon}</span>
-                    <span className="block mt-1 text-sm font-medium">
-                      {goal.label}
-                    </span>
-                    <span className="block text-xs text-gray-500">
-                      {goal.description}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Mode selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                How do you want to interact?
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setInputMode('text')}
-                  className={`p-4 text-left border rounded-lg transition-all flex items-center gap-3 ${
-                    inputMode === 'text'
-                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <MessageSquare className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <span className="block font-medium">Text Chat</span>
-                    <span className="text-xs text-gray-500">Type messages</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setInputMode('voice')}
-                  className={`p-4 text-left border rounded-lg transition-all flex items-center gap-3 ${
-                    inputMode === 'voice'
-                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Mic className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <span className="block font-medium">Voice Chat</span>
-                    <span className="text-xs text-gray-500">Speak naturally</span>
-                  </div>
-                </button>
-              </div>
-            </div>
+            {/* Mode is fixed to Voice — the in-session UI lets the
+                student type as a fallback. No setup-time choice. */}
 
 
             {/* Start button */}
@@ -1010,22 +1024,44 @@ function TutorPage() {
         />
         {/* Header */}
         <header className="flex-shrink-0 bg-white border-b px-4 py-2">
-          <div className="container mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="font-semibold text-gray-900">
-                {topicDisplayName || 'AI Tutor'}
-              </h1>
-              <p className="text-sm text-gray-500">
-                {sessionGoal === 'practice'
-                  ? 'Practice Session'
-                  : sessionGoal === 'homework-help'
-                  ? 'Homework Help'
-                  : sessionGoal === 'concept-review'
-                  ? 'Concept Review'
-                  : 'Test Prep'}
-              </p>
+          <div className="container mx-auto flex items-center justify-between gap-2 sm:gap-4">
+            <div className="min-w-0 flex-shrink-0 max-w-[60%] sm:max-w-[40%]">
+              {/* When a lesson plan is active, the title IS the lesson — the
+                  topic + level live in the subtitle. Otherwise, fall back
+                  to topic display name + session-goal subtitle. */}
+              {lessonProgress.plan ? (
+                <>
+                  <h1 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+                    {lessonProgress.plan.title}
+                  </h1>
+                  <p className="text-xs text-gray-500 truncate hidden sm:block">
+                    {topicDisplayName} · grade {lessonProgress.plan.grade}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="font-semibold text-gray-900 truncate">
+                    {topicDisplayName || 'AI Tutor'}
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    {sessionGoal === 'practice'
+                      ? 'Practice Session'
+                      : sessionGoal === 'homework-help'
+                      ? 'Homework Help'
+                      : sessionGoal === 'concept-review'
+                      ? 'Concept Review'
+                      : 'Test Prep'}
+                  </p>
+                </>
+              )}
             </div>
-
+            {/* Lesson-plan progress strip — sits inline with the title so
+                it doesn't claim its own row. Hidden when no plan is active. */}
+            {lessonProgress.plan && (
+              <div className="hidden md:block flex-1 min-w-0 overflow-x-auto">
+                <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} />
+              </div>
+            )}
           </div>
         </header>
 
@@ -1046,10 +1082,10 @@ function TutorPage() {
           />
         </div>
 
-        {/* Main content - resizable split */}
+        {/* Main content - resizable split on desktop, tabbed on mobile */}
         <div
           ref={splitContainerRef}
-          className="flex-1 min-h-0 px-4 py-1 flex flex-col"
+          className="flex-1 min-h-0 px-2 sm:px-4 py-1 flex flex-col"
         >
           {/* Status message banner */}
           {statusMessage && (
@@ -1058,11 +1094,40 @@ function TutorPage() {
               {statusMessage}
             </div>
           )}
-          <div className="flex-1 min-h-0 flex">
+
+          {/* Mobile-only tab toggle. On desktop (lg+) the split layout
+              shows both panels side-by-side and these tabs are hidden. */}
+          <div className="lg:hidden flex gap-1 mb-2 bg-gray-100 rounded-lg p-1 flex-shrink-0">
+            <button
+              onClick={() => setMobileTab('chat')}
+              className={`flex-1 py-2 rounded-md text-sm font-medium transition ${
+                mobileTab === 'chat' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              💬 Chat
+            </button>
+            <button
+              onClick={() => setMobileTab('whiteboard')}
+              className={`flex-1 py-2 rounded-md text-sm font-medium transition ${
+                mobileTab === 'whiteboard' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              📝 Board
+              {whiteboardCommands.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">
+                  {whiteboardCommands.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
           {/* Transcript */}
           <div
-            className="min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col"
-            style={{ width: `${splitPercent}%` }}
+            className={`min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col ${
+              mobileTab === 'chat' ? 'flex' : 'hidden'
+            } lg:flex`}
+            style={{ width: isDesktop ? `${splitPercent}%` : '100%' }}
           >
             <div className="flex-1 min-h-0 overflow-y-auto">
               <TranscriptView
@@ -1088,14 +1153,35 @@ function TutorPage() {
             </div>
           </div>
 
-          {/* Whiteboard — use flex always; hidden lg:flex breaks in iframes narrower than 1024px */}
+          {/* Whiteboard — full width on mobile (when its tab is active),
+              splitPercent-based width on desktop. */}
           <div
-            className="flex min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col"
-            style={{ width: `${100 - splitPercent}%` }}
+            className={`min-h-0 bg-white rounded-lg shadow-lg overflow-hidden flex-col h-full ${
+              mobileTab === 'whiteboard' ? 'flex' : 'hidden'
+            } lg:flex`}
+            style={{ width: isDesktop ? `${100 - splitPercent}%` : '100%' }}
           >
             <WhiteboardCanvas
               commands={whiteboardCommands}
+              tutorBusy={isProcessing || (transcript.some((t) => t.role === 'tutor') && whiteboardCommands.length === 0)}
               onClear={() => setWhiteboardCommands([])}
+              onAttentionShift={() => {
+                // Tutor wants the student to look at the board — auto-
+                // switch mobile tabs so they actually see it. No-op on
+                // desktop where both panels are visible.
+                if (!isDesktop) setMobileTab('whiteboard');
+              }}
+              onTryYourselfAnswer={(answer, expected, isCorrect) => {
+                // Route the student's submitted answer back to the brain
+                // as a synthetic student turn so the tutor can react with
+                // personalized feedback. Wrap in a marker the brain
+                // recognizes as a structured submission (not free chat).
+                const correctness = isCorrect === true ? 'matches expected' : isCorrect === false ? 'does not match expected' : 'no expected answer set';
+                const marker = `[try-yourself submission] The student submitted: "${answer}". Expected: ${expected ?? '(none)'} (${correctness}). Respond accordingly.`;
+                if (realtimeHandleRef.current) {
+                  realtimeHandleRef.current.sendTextMessage(marker);
+                }
+              }}
               onStudentInput={(type, content) => {
                 // Add student input to whiteboard as a command
                 const cmd: WhiteboardCommand = type === 'image'
@@ -1198,10 +1284,11 @@ function TutorPage() {
           </div>{/* close inner flex */}
         </div>
 
-        {/* Vertical resize handle */}
+        {/* Vertical resize handle — desktop only; mobile uses tabs and
+            doesn't need a vertical drag-to-resize splitter. */}
         <div
           onMouseDown={handleVerticalMouseDown}
-          className="flex-shrink-0 h-2 cursor-row-resize flex items-center justify-center group hover:bg-blue-100 active:bg-blue-200 transition-colors bg-white border-t"
+          className="hidden lg:flex flex-shrink-0 h-2 cursor-row-resize items-center justify-center group hover:bg-blue-100 active:bg-blue-200 transition-colors bg-white border-t"
           title="Drag to resize"
         >
           <div className="flex gap-1 items-center">
@@ -1214,10 +1301,13 @@ function TutorPage() {
           </div>
         </div>
 
-        {/* Input area */}
+        {/* Input area. On mobile, the voice-tutor's text input wraps to a
+            second row (flex-wrap), which a fixed-height parent + overflow-hidden
+            would clip. So height is fixed only on desktop; on mobile we let
+            the row grow to fit its wrapped contents. */}
         <div
-          className={`bg-white flex-shrink-0 overflow-hidden ${inputMode === 'voice' ? 'px-2 py-0' : 'px-4 py-4'}`}
-          style={{ height: `${inputHeight}px` }}
+          className={`bg-white flex-shrink-0 ${inputMode === 'voice' ? 'px-2 py-0' : 'px-4 py-4 overflow-hidden'} lg:overflow-hidden`}
+          style={isDesktop ? { height: `${inputHeight}px` } : undefined}
         >
           <div className={inputMode === 'voice' ? '' : 'container mx-auto'}>
             {inputMode === 'voice' && selectedTopicId ? (
@@ -1242,6 +1332,9 @@ function TutorPage() {
                   handleRef={realtimeHandleRef}
                   validateToolCalls={voiceEngine === 'realtime-validated'}
                   claudeBrainMode={voiceEngine === 'claude-brain'}
+                  ttsProvider={ttsProvider}
+                  onLessonPlanProgress={setLessonProgress}
+                  onTutorBusy={setIsProcessing}
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini
@@ -1325,34 +1418,116 @@ function TutorPage() {
   }
 
   // Render summary stage
+  // Pull what was covered + how far the lesson plan got + minutes used.
+  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? { topicsCovered: [], weakTopics: [] };
+  const segmentsCompletedIdx = lessonProgress.plan
+    ? lessonProgress.plan.segments.findIndex((s) => s.id === lessonProgress.currentSegmentId)
+    : -1;
+  const segmentsCompleted = lessonProgress.plan
+    ? (segmentsCompletedIdx >= 0 ? segmentsCompletedIdx : lessonProgress.plan.segments.length)
+    : 0;
+  const totalSegments = lessonProgress.plan?.segments.length ?? 0;
+  const planCompletePct = totalSegments > 0 ? Math.round((segmentsCompleted / totalSegments) * 100) : 0;
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Great Session!
-        </h1>
-        <p className="text-gray-600 mb-8">
-          You completed a tutoring session on {topicDisplayName || 'AI Tutor'}.
-        </p>
+      <div className="container mx-auto px-4 py-10 max-w-3xl">
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-3">🎉</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            Nice work, {studentName || 'student'}!
+          </h1>
+          <p className="text-gray-600">
+            {lessonProgress.plan
+              ? `You spent time on ${lessonProgress.plan.title}.`
+              : `You spent time on ${topicDisplayName || 'AI Tutor'}.`}
+          </p>
+        </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-4">Session Summary</h2>
-          <div className="grid grid-cols-2 gap-4 text-left mb-6">
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Messages Exchanged</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {transcript.length}
-              </p>
+        {/* Lesson plan progress card — only when a plan was active. */}
+        {lessonProgress.plan && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="text-base font-semibold text-gray-800">Lesson progress</h2>
+              <span className="text-sm font-medium text-gray-600">
+                {segmentsCompleted} of {totalSegments} segments · {planCompletePct}%
+              </span>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Topic</p>
-              <p className="text-lg font-medium text-gray-900">
-                {topicDisplayName || 'N/A'}
-              </p>
+            <div className="h-2 rounded-full bg-gray-100 overflow-hidden mb-4">
+              <div className="h-full bg-blue-600 transition-all" style={{ width: `${planCompletePct}%` }} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {lessonProgress.plan.segments.map((s, i) => {
+                const done = i < segmentsCompleted;
+                return (
+                  <span
+                    key={s.id}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      done ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {done ? '✓' : '○'} {s.kind.replace(/_/g, ' ')}
+                  </span>
+                );
+              })}
             </div>
           </div>
+        )}
 
+        {/* What you covered */}
+        {sessionSummary.topicsCovered.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">What you covered</h2>
+            <ul className="space-y-1.5">
+              {sessionSummary.topicsCovered.map((t, i) => (
+                <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">✓</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Areas to revisit (only when present) */}
+        {sessionSummary.weakTopics.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-amber-400">
+            <h2 className="text-base font-semibold text-gray-800 mb-1">Worth revisiting</h2>
+            <p className="text-xs text-gray-500 mb-3">Topics that came up more than once — try a focused practice session.</p>
+            <ul className="space-y-1.5">
+              {sessionSummary.weakTopics.slice(0, 5).map((w, i) => (
+                <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-amber-600 mt-0.5">⚡</span>
+                  <span>{w.topic}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Suggested next step — pull from the lesson plan's followUps if any */}
+        {lessonProgress.plan && lessonProgress.plan.followUps && lessonProgress.plan.followUps.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+            <h2 className="text-base font-semibold text-blue-900 mb-2">Suggested next</h2>
+            <p className="text-sm text-blue-800">
+              When you&apos;re ready, the natural next step is one of: <span className="font-medium">{lessonProgress.plan.followUps.join(', ')}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Stats card */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-lg shadow p-3 text-center">
+            <p className="text-xs text-gray-500">Messages</p>
+            <p className="text-xl font-bold text-gray-900">{transcript.length}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-3 text-center">
+            <p className="text-xs text-gray-500">Whiteboard items</p>
+            <p className="text-xl font-bold text-gray-900">{whiteboardCommands.length}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-3 text-center">
+            <p className="text-xs text-gray-500">Topic</p>
+            <p className="text-sm font-medium text-gray-900 truncate" title={topicDisplayName}>{topicDisplayName || 'N/A'}</p>
+          </div>
         </div>
 
         <div className="flex gap-4 justify-center flex-wrap">
