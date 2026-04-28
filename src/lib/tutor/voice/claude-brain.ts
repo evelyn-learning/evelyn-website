@@ -16,6 +16,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { CatalogSnapshotEntry } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
+import { getSegmentTruth } from '../lesson-plan/context';
+import type { Segment } from '../lesson-plan/types';
 
 export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
@@ -243,6 +245,41 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
   ].join('\n');
 }
 
+/** Render the segment's authored ground truth as a compact, fenced block
+ *  the brain reads alongside `<lesson_plan>`. Distinct from the lesson
+ *  plan dump because:
+ *    1) it's only the bits the orchestrator can mechanically check
+ *       (problem text, expected answer) — no goal/keyIdeas prose,
+ *    2) the wording is enforcement-focused so the brain treats it as a
+ *       contract not a hint, and
+ *    3) the orchestrator uses the same `getSegmentTruth(seg)` helper to
+ *       drift-check rendered tool calls, keeping prompt + runtime in
+ *       lock-step. Returns '' for segments without authored truth.
+ */
+export function formatSegmentTruth(seg: unknown): string {
+  const truth = getSegmentTruth(seg as Segment | undefined);
+  if (!truth) return '';
+  const lines: string[] = [
+    `kind: ${truth.kind}`,
+    `problemText: ${JSON.stringify(truth.problemText)}`,
+  ];
+  if (truth.expectedAnswer !== undefined) {
+    lines.push(`expectedAnswer: ${JSON.stringify(truth.expectedAnswer)}`);
+  }
+  lines.push(
+    '',
+    'CONTRACT: When you call show_problem (or show_equation labeled "Original' +
+      ' Equation" / "Problem" / "Given"), the rendered text must match' +
+      ' problemText above — same numbers, same operators, same wording.' +
+      ' Paraphrasing or substituting different values will be rejected by' +
+      ' the runtime drift check and you will be asked to retry. When you' +
+      ' verbally state the answer, it must match expectedAnswer if one is' +
+      ' provided. The student answers against what the board shows, not' +
+      ' against your memory of the script.',
+  );
+  return lines.join('\n');
+}
+
 export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string {
   if (snapshot.length === 0) return '(whiteboard is empty)';
   return snapshot
@@ -295,9 +332,14 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
+  const truthBody = input.lessonPlanContext
+    ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
+    : '';
+  const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const userContent =
     profileBlock +
     lessonBlock +
+    truthBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -403,9 +445,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
+  const truthBody = input.lessonPlanContext
+    ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
+    : '';
+  const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const userContent =
     profileBlock +
     lessonBlock +
+    truthBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

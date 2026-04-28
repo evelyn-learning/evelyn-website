@@ -14,7 +14,8 @@ import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type
 import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
-import { buildLessonPlanContext, resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
+import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
+import { getSegment } from '@/lib/tutor/lesson-plan/types';
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
@@ -186,6 +187,48 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-1': 'echo',       // Calm
   'male-2': 'alloy',      // Energetic
 };
+
+/** Coherence pass: compare a rendered problem statement against the
+ *  segment's authored truth and return a 0..1 similarity. Tokenizes on
+ *  word boundaries (keeping numbers + fractions intact — `1/2` is ONE
+ *  token, not three), then scores prose and numeric content separately
+ *  and returns min(prose, numeric). The min() matters: a prose-heavy
+ *  authored problem like "Try this one: 1/4 + 2/3. Walk me through it."
+ *  has so many filler words that a single weighted overlap would let
+ *  number substitution slip through ("Try this one: 1/3 + 2/5. Walk me
+ *  through it." would still score above 0.5). Splitting the two
+ *  dimensions and taking the worst score forces drift in either to
+ *  trigger a rejection. Operator swaps (+ vs -) still escape — that's
+ *  an accepted hole for v1; if it shows up in real sessions, add a
+ *  dedicated operator-swap detector rather than tightening this one. */
+function problemSimilarity(rendered: string, authored: string): number {
+  const tokenize = (s: string): string[] => {
+    const lowered = s.toLowerCase()
+      .replace(/\$([^$]+)\$/g, ' $1 ')
+      // Collapse \frac{a}{b} → a/b so the latex form of "1/2" matches
+      // the prose form. No spaces around the slash on purpose.
+      .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, ' $1/$2 ')
+      .replace(/\\(cdot|times)/g, ' * ')
+      .replace(/\\[a-z]+/g, ' ')
+      // Strip prose punctuation including period — "2/3." should
+      // tokenize to "2/3", same as a bare "2/3" in the renderer.
+      .replace(/[{}()\[\],;:!?"'.]/g, ' ');
+    return lowered.split(/\s+/).filter((t) => t.length > 0);
+  };
+  const isNumeric = (t: string) => /^[-+]?\d+(?:\.\d+)?$|[\d/^*+\-=<>]/.test(t);
+  const aTokens = tokenize(authored);
+  if (aTokens.length === 0) return 1;
+  const renderedSet = new Set(tokenize(rendered));
+  const aNumerics = aTokens.filter(isNumeric);
+  const aProse = aTokens.filter((t) => !isNumeric(t));
+  const numericMatch = aNumerics.length === 0
+    ? 1
+    : aNumerics.filter((t) => renderedSet.has(t)).length / aNumerics.length;
+  const proseMatch = aProse.length === 0
+    ? 1
+    : aProse.filter((t) => renderedSet.has(t)).length / aProse.length;
+  return Math.min(numericMatch, proseMatch);
+}
 
 export function VoiceTutorRealtime({
   subject,
@@ -989,6 +1032,41 @@ export function VoiceTutorRealtime({
           rejected.push({ action: 'show_problem', reason });
           return [];
         }
+        // Segment-truth drift check (coherence pass). When a lesson plan
+        // is active and the current segment has authored ground truth
+        // (try_yourself / worked_example / misconception_check / extension),
+        // the rendered problem must match that text. Otherwise the brain
+        // is teaching against a script the student can't see — answer
+        // validation, hints, and progress-tracking all break. Threshold
+        // is intentionally generous: we want to catch number-substitution
+        // and operator-swap drift, not punish minor rewording.
+        const planForDrift = lessonPlanRef.current;
+        const segIdForDrift = currentSegmentIdRef.current;
+        if (planForDrift && segIdForDrift) {
+          const seg = getSegment(planForDrift, segIdForDrift);
+          const truth = getSegmentTruth(seg);
+          if (truth?.problemText) {
+            const sim = problemSimilarity(statement, truth.problemText);
+            if (sim < 0.5) {
+              const reason =
+                `show_problem text drifted from the segment's authored problem. ` +
+                `You rendered: ${JSON.stringify(statement.slice(0, 200))}. ` +
+                `The segment's authored problem is: ${JSON.stringify(truth.problemText.slice(0, 200))}. ` +
+                `Re-emit show_problem with the EXACT authored text — same numbers, same operators, ` +
+                `same wording. The student answers against what the board shows; if the board has a ` +
+                `different problem than the script, your hints and the answer check won't line up.`;
+              console.warn('[VoiceTutorRealtime] show_problem ↔ segment-truth drift', {
+                rendered: statement.slice(0, 120),
+                authored: truth.problemText.slice(0, 120),
+                similarity: sim,
+              });
+              onDebugEvent?.('segment_truth_drift',
+                `show_problem drift (sim=${sim.toFixed(2)}): board="${statement.slice(0, 60)}…" vs script="${truth.problemText.slice(0, 60)}…"`);
+              rejected.push({ action: 'show_problem', reason });
+              return [];
+            }
+          }
+        }
       }
       if (cmd.action === 'showCircuit') {
         const components = Array.isArray(cmdAny.components) ? cmdAny.components : [];
@@ -1120,6 +1198,41 @@ export function VoiceTutorRealtime({
           return [];
         }
         lastEquationLatexRef.current = normalized;
+        // Segment-truth drift check (coherence pass). When the brain
+        // calls show_equation with a label like "Original Equation" /
+        // "Problem" / "Given" but no show_problem precedes it (common
+        // for try_yourself segments where the equation IS the problem),
+        // the equation latex must align with the segment's authored
+        // problemText. Catches the case where the brain renders a
+        // different equation than the script's authored one.
+        const eqLabelLower: string = (cmdAny.label || '').toLowerCase();
+        const planForEqDrift = lessonPlanRef.current;
+        const segIdForEqDrift = currentSegmentIdRef.current;
+        if (planForEqDrift && segIdForEqDrift && /original|problem|given|restated/.test(eqLabelLower) && latex.length > 4) {
+          const seg = getSegment(planForEqDrift, segIdForEqDrift);
+          const truth = getSegmentTruth(seg);
+          if (truth?.problemText) {
+            const sim = problemSimilarity(latex, truth.problemText);
+            if (sim < 0.5) {
+              const reason =
+                `show_equation labeled "${cmdAny.label}" doesn't match the segment's authored problem. ` +
+                `You rendered latex: ${JSON.stringify(latex.slice(0, 200))}. ` +
+                `The segment's authored problem is: ${JSON.stringify(truth.problemText.slice(0, 200))}. ` +
+                `Re-emit show_equation with latex that matches the authored problem exactly. ` +
+                `If the authored problem isn't an equation, render the actual problem text via ` +
+                `show_problem instead and skip the labeled equation.`;
+              console.warn('[VoiceTutorRealtime] show_equation ↔ segment-truth drift', {
+                rendered: latex.slice(0, 120),
+                authored: truth.problemText.slice(0, 120),
+                similarity: sim,
+              });
+              onDebugEvent?.('segment_truth_drift',
+                `show_equation drift (sim=${sim.toFixed(2)}): board="${latex.slice(0, 60)}…" vs script="${truth.problemText.slice(0, 60)}…"`);
+              rejected.push({ action: 'show_equation', reason });
+              return [];
+            }
+          }
+        }
       }
 
       // Punnett-square repair: when show_table has collapsed gamete headers
@@ -3054,6 +3167,22 @@ export function VoiceTutorRealtime({
       // doesn't learn from the rejection until the next student turn.
       // Capped at MAX_VALIDATOR_RETRIES to prevent runaway.
       const MAX_VALIDATOR_RETRIES = 2;
+      // RULE8 (promise-without-visual) gets a SEPARATE single-shot
+      // budget. Don't let promised-visual retries stack with structural
+      // validator retries — a brain that's spamming "let me draw" with
+      // no follow-through after one repair is unlikely to recover from
+      // a second nudge, and we don't want the student waiting through
+      // three full turns of silence.
+      const MAX_RULE8_RETRIES = 1;
+      let rule8RetriesUsed = 0;
+      // Catches BOTH verb-form ("Let me draw / I'll plot") and noun-form
+      // ("Here's a graph / Here is a quick diagram") visual promises.
+      // The server-side telemetry regex (brain/stream/route.ts) only
+      // covers verb-form; this one is the superset because we need
+      // higher recall for the rejection path. Optional article + size
+      // adjective ("a quick", "the small") between subject and noun
+      // handles the most common phrasings.
+      const visualPromiseRegex = /\b(let me|i['’]ll|i will|here['’]s|here is|i['’]m going to)\s+(?:(?:a|an|the|this|that|some)\s+(?:quick\s+|simple\s+|small\s+|nice\s+)?)?(draw|plot|show|sketch|display|render|graph|create|drawing|chart|diagram|figure|illustration|visualization|image|picture|rendering)\b/i;
       let runHistory = priorHistory;
       let runTranscript = transcript;
       let firstSentenceMs: number | null = null;
@@ -3248,6 +3377,37 @@ export function VoiceTutorRealtime({
           }
         } finally {
           try { reader.releaseLock(); } catch { /* already released */ }
+        }
+
+        // RULE8 coherence check (promise-without-visual). The brain
+        // SAID "let me draw / I'll show / I'm going to plot" but emitted
+        // zero render tools (`show_*`). Today this would silently leave
+        // the student staring at an empty board while the tutor narrates.
+        // Promote to a synthetic rejection so the existing retry loop
+        // re-prompts the brain with explicit feedback. Render-only check
+        // (show_* prefix) — non-visual tools like advance_lesson /
+        // mark_segment_complete / new_page don't satisfy a visual
+        // promise. Suppressed once attemptKilled is set so we don't
+        // double-stack RULE8 on top of a structural rejection.
+        if (
+          !attemptKilled &&
+          rule8RetriesUsed < MAX_RULE8_RETRIES &&
+          attemptText &&
+          visualPromiseRegex.test(attemptText) &&
+          !toolNamesThisAttempt.some((n) => n.startsWith('show_'))
+        ) {
+          const promisedSnippet = attemptText.slice(0, 160);
+          const reason =
+            `You promised a visual ("${promisedSnippet}…") but emitted no show_* render tool. ` +
+            `Re-emit your response and INCLUDE the render tool call you promised. ` +
+            `If you can't produce a renderable figure right now, rephrase your verbal response to ` +
+            `not promise a visual — describe the idea in words instead.`;
+          rejectionsThisAttempt.push({ action: 'rule8_promise_without_visual', reason });
+          rule8RetriesUsed++;
+          attemptKilled = true;
+          clearSpeechQueueRef.current?.();
+          console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
+          onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
         }
 
         // Only the WINNING attempt's text goes into aggregatedFullText
