@@ -52,6 +52,12 @@ import type { InteractionType } from '@/hooks/useDemoTracking';
 
 export interface RealtimeHandle {
   sendTextMessage: (text: string) => void;
+  /** Speak tutor-side text directly through TTS without routing
+   *  through the brain. Used by the in-session lesson picker to
+   *  voice its greeting bubble (the picker is a UI element rendered
+   *  in the transcript area, not a brain turn, so without this it
+   *  appears in the chat but isn't spoken aloud). */
+  speakText: (text: string) => void;
   getSessionSummary: () => {
     topicsCovered: string[];
     weakTopics: Array<{ topic: string; count: number }>;
@@ -3965,6 +3971,7 @@ export function VoiceTutorRealtime({
     if (handleRef) {
       handleRef.current = {
         sendTextMessage: (text: string) => realtime.sendTextMessage(text),
+        speakText: (text: string) => realtime.speakText(text),
         getSessionSummary: () => ({
           topicsCovered: [...topicsCoveredRef.current],
           weakTopics: Array.from(weaknessesRef.current.entries())

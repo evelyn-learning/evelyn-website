@@ -382,6 +382,10 @@ function TutorPage() {
   // the brain's first turn lands, so the picker bubble sits naturally
   // between "What are we working on today?" and the next message —
   // and stays there as the conversation grows.
+  // Also voice the picker greeting through TTS the first time it
+  // shows. The picker is rendered as JSX inside TranscriptView, so
+  // without this it appeared visually but wasn't spoken aloud
+  // (observed 2026-04-29 physics-basics session).
   useEffect(() => {
     if (stage !== 'session') return;
     if (pickerAnchorIndex !== null) return;
@@ -390,7 +394,13 @@ function TutorPage() {
     const hasTutorMsg = transcript.some((t) => t.role === 'tutor');
     if (!hasTutorMsg) return;
     setPickerAnchorIndex(transcript.length);
-  }, [stage, transcript, availableLessonPlans.length, nudgeDismissed, pickerAnchorIndex]);
+    const topic = selectedTopicId ? buildDisplayName(selectedSubject, selectedLevel, selectedTopicId) : '';
+    if (topic && realtimeHandleRef.current?.speakText) {
+      realtimeHandleRef.current.speakText(
+        `I see you chose ${topic} — nice. You can tell me ANY topic in this area, or jump straight into one of these lessons.`,
+      );
+    }
+  }, [stage, transcript, availableLessonPlans.length, nudgeDismissed, pickerAnchorIndex, selectedSubject, selectedLevel, selectedTopicId]);
   useEffect(() => {
     if (stage !== 'session') return;
     const interval = setInterval(() => {
