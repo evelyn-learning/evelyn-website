@@ -349,8 +349,19 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_segment_card',
+    description: 'Render the CURRENT or a NAMED lesson-plan segment\'s authored problem / question card. Pass only the segment id; the runtime pulls the exact authored text from the lesson plan and renders it. Use this whenever the active lesson plan has authored content (try_yourself, worked_example, misconception_check, extension) — it is impossible for the rendered card to drift from the script with this tool, so prefer it over `show_problem` for any authored segment. Falls back to no-op if the segment id is unknown or the segment has no authored card.',
+    parameters: {
+      type: 'object',
+      properties: {
+        segmentId: { type: 'string', description: 'Stable id from the active lesson plan, e.g. "try-1", "worked-2".' },
+      },
+      required: ['segmentId'],
+    },
+  },
+  {
     name: 'show_problem',
-    description: 'Problem card for practice / quiz / homework prompts. `statement` carries the full problem text; `format` selects the presentation (multiple-choice cards require `answerChoices`).',
+    description: 'Free-form problem card. Use ONLY when no authored segment exists for the problem you want to render — for any active lesson plan segment with authored text, prefer `show_segment_card({ segmentId })` so the card cannot drift from the script. `statement` carries the full problem text; `format` selects the presentation (multiple-choice cards require `answerChoices`).',
     parameters: {
       type: 'object',
       properties: {

@@ -3437,7 +3437,45 @@ export function VoiceTutorRealtime({
                   const args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
                   totalToolNamesSeen.push(name);
-                  const cmd = mapFunctionCallToCommand(name, args);
+                  // Lever A — show_segment_card resolution. Brain emits a
+                  // segment id; the runtime pulls authored data from the
+                  // active lesson plan and synthesizes the equivalent
+                  // show_problem command. The brain literally cannot drift
+                  // from the script with this path because it isn't
+                  // writing the script. Falls back to a logged warning if
+                  // the segment id is unknown or has no authored card.
+                  let resolvedCmd: ReturnType<typeof mapFunctionCallToCommand> | null = null;
+                  if (name === 'show_segment_card') {
+                    const segId = typeof args.segmentId === 'string' ? args.segmentId : '';
+                    const plan = lessonPlanRef.current;
+                    if (plan && segId) {
+                      const seg = getSegment(plan, segId);
+                      const truth = getSegmentTruth(seg);
+                      if (truth?.problemText) {
+                        resolvedCmd = {
+                          action: 'showProblem',
+                          problem: {
+                            statement: truth.problemText,
+                            format: 'free-response',
+                            title: truth.kind === 'try_yourself' ? 'Try Yourself'
+                              : truth.kind === 'worked_example' ? 'Worked Example'
+                              : truth.kind === 'misconception_check' ? 'Check'
+                              : truth.kind === 'extension' ? 'Extension'
+                              : undefined,
+                          },
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        } as unknown as any;
+                        console.log(`[brain-orchestrator] show_segment_card resolved: ${segId} → "${truth.problemText.slice(0, 60)}…"`);
+                        onDebugEvent?.('show_segment_card_resolved', `${segId}: "${truth.problemText.slice(0, 50)}…"`);
+                      } else {
+                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" has no authored card; ignoring.`);
+                        onDebugEvent?.('show_segment_card_no_truth', segId);
+                      }
+                    } else {
+                      console.warn(`[brain-orchestrator] show_segment_card: no active plan or empty segmentId.`);
+                    }
+                  }
+                  const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     const result = await handleWhiteboardCommand([cmd]);
                     if (result && Array.isArray(result.rejected) && result.rejected.length > 0) {

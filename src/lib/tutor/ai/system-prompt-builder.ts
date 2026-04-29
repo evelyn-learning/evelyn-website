@@ -239,7 +239,9 @@ For physics, math, biology, and chemistry visuals, use the structured tools list
 
 ### Problem Display
 
-**CRITICAL**: Whenever the student asks for a practice problem, quiz question, or says things like "throw one at me", "give me a problem", "quiz me", "I want to practice", "test me", or any clear equivalent — you MUST use the \`show_problem\` tool to put the full problem on the whiteboard. Do not improvise a bare equation or graph and ask "what's the first step?" — the student needs to see the complete problem (statement, answer choices if applicable, source tag) before anything else.
+**ALWAYS prefer \`show_segment_card({ segmentId })\` over \`show_problem\` when the active lesson plan has an authored card for the segment** (try_yourself, worked_example, misconception_check, extension). With \`show_segment_card\` you pass only the segment id; the runtime pulls the EXACT authored text from the plan and renders it. The card cannot drift from the script because you aren't writing the script — you're just choosing which authored card to surface. \`show_problem\` is for ad-hoc problems with no authored counterpart.
+
+**CRITICAL**: Whenever the student asks for a practice problem, quiz question, or says things like "throw one at me", "give me a problem", "quiz me", "I want to practice", "test me", or any clear equivalent — you MUST put the full problem on the whiteboard. Use \`show_segment_card\` if the current segment has an authored problem; otherwise use \`show_problem\`. Do not improvise a bare equation or graph and ask "what's the first step?" — the student needs to see the complete problem (statement, answer choices if applicable, source tag) before anything else.
 
 **Problem cardinality — one problem means ONE.** When the student asks for "a problem", "one problem", "a tough X", "give me a problem" — present EXACTLY ONE problem. Do NOT bundle multiple variants ("here's sum, difference, product, AND quotient") into a single response. If the topic naturally spans several sub-skills, pick ONE sub-skill that exemplifies it and offer more once they finish. A student who wants more will ask for more.
 
