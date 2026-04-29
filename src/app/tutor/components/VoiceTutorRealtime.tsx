@@ -3156,6 +3156,30 @@ export function VoiceTutorRealtime({
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
       let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
+      // E3 — renderer-error spoken bridge. When the FIRST kill of this
+      // turn fires (validator rejection / RULE8 / judge / show_problem
+      // block), we cancel the audio queue + speak a brief acknowledgment
+      // so the student doesn't experience 5-15s of silence before the
+      // retry's first sentence arrives. Once per turn (don't compound
+      // bridges across multiple kills) and only when there's been
+      // audible speech to bridge from.
+      let bridgeSpokenThisTurn = false;
+      const BRIDGE_PHRASES = [
+        'Let me try that a different way.',
+        'One sec — let me reframe that.',
+        'Actually, hold on — let me redo that.',
+      ];
+      const speakKillBridge = () => {
+        if (bridgeSpokenThisTurn) return;
+        // No point bridging if no speech has happened yet — would just
+        // be the first thing the student hears for the turn.
+        if (totalSentenceCount === 0) return;
+        bridgeSpokenThisTurn = true;
+        const phrase = BRIDGE_PHRASES[Math.floor(Math.random() * BRIDGE_PHRASES.length)];
+        speakTextRef.current?.(phrase);
+        console.log('[brain-orchestrator] kill-bridge spoken:', phrase);
+        onDebugEvent?.('kill_bridge_spoken', phrase);
+      };
 
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
@@ -3387,6 +3411,7 @@ export function VoiceTutorRealtime({
                         if (!attemptKilled) {
                           attemptKilled = true;
                           clearSpeechQueueRef.current?.();
+                          speakKillBridge();
                         }
                         console.warn(`[brain-orchestrator] blocked free-form show_problem in segment "${segId}" (authored truth exists) — retrying with show_segment_card hint`);
                         onDebugEvent?.('show_problem_blocked', `segment "${segId}" has authored card; brain must use show_segment_card`);
@@ -3442,10 +3467,13 @@ export function VoiceTutorRealtime({
                       // First rejection in this attempt → cancel any
                       // already-queued/playing audio + stop voicing further
                       // sentences from this attempt. The retry will speak
-                      // a fresh corrected response.
+                      // a fresh corrected response, with a brief spoken
+                      // bridge ("Let me try that a different way") so the
+                      // student doesn't experience silent dead air.
                       if (!attemptKilled) {
                         attemptKilled = true;
                         clearSpeechQueueRef.current?.();
+                        speakKillBridge();
                       }
                     }
                   } else {
@@ -3490,6 +3518,7 @@ export function VoiceTutorRealtime({
           rule8RetriesUsed++;
           attemptKilled = true;
           clearSpeechQueueRef.current?.();
+          speakKillBridge();
           console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
           onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
         }
@@ -3535,6 +3564,7 @@ export function VoiceTutorRealtime({
                 judgeRetriesUsed++;
                 attemptKilled = true;
                 clearSpeechQueueRef.current?.();
+                speakKillBridge();
                 console.warn(`[brain-orchestrator] judge flagged ${judgeJson.issues.length} ungrounded claim(s) — retrying`);
                 onDebugEvent?.('judge_retry', `${judgeJson.issues.length} issue(s): ${judgeJson.issues[0].claim.slice(0, 60)}…`);
               } else {
