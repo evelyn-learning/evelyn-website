@@ -134,6 +134,11 @@ import { SEED_G4_MATH_LONG_DIVISION } from './seeds/g4-math-long-division';
 import { SEED_G4_MATH_EQUIVALENT_FRACTIONS } from './seeds/g4-math-equivalent-fractions';
 import { SEED_G4_MATH_DECIMALS_INTRO } from './seeds/g4-math-decimals-intro';
 import { SEED_G4_MATH_FACTORS_MULTIPLES } from './seeds/g4-math-factors-multiples';
+import { SEED_G5_MATH_DECIMAL_OPERATIONS } from './seeds/g5-math-decimal-operations';
+import { SEED_G5_MATH_FRACTION_OPERATIONS } from './seeds/g5-math-fraction-operations';
+import { SEED_G5_MATH_VOLUME } from './seeds/g5-math-volume';
+import { SEED_G5_MATH_COORDINATE_PLANE } from './seeds/g5-math-coordinate-plane';
+import { SEED_G5_MATH_ORDER_OF_OPERATIONS } from './seeds/g5-math-order-of-operations';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -299,6 +304,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G4_MATH_EQUIVALENT_FRACTIONS,
   SEED_G4_MATH_DECIMALS_INTRO,
   SEED_G4_MATH_FACTORS_MULTIPLES,
+  // Batch 6 — G5 math (operations on fractions/decimals + volume + coords + PEMDAS).
+  SEED_G5_MATH_DECIMAL_OPERATIONS,
+  SEED_G5_MATH_FRACTION_OPERATIONS,
+  SEED_G5_MATH_VOLUME,
+  SEED_G5_MATH_COORDINATE_PLANE,
+  SEED_G5_MATH_ORDER_OF_OPERATIONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
