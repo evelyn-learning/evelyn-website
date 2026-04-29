@@ -108,6 +108,13 @@ import { SEED_PHYS_FRICTION } from './seeds/phys-friction';
 import { SEED_PHYS_WORK_ENERGY } from './seeds/phys-work-energy';
 import { SEED_PHYS_CONSERVATION_ENERGY } from './seeds/phys-conservation-energy';
 import { SEED_PHYS_MOMENTUM_COLLISIONS } from './seeds/phys-momentum-collisions';
+import { SEED_PHYS_CIRCULAR_MOTION } from './seeds/phys-circular-motion';
+import { SEED_PHYS_GRAVITATION } from './seeds/phys-gravitation';
+import { SEED_PHYS_SIMPLE_HARMONIC_MOTION } from './seeds/phys-simple-harmonic-motion';
+import { SEED_PHYS_WAVES_SOUND } from './seeds/phys-waves-sound';
+import { SEED_PHYS_LIGHT_OPTICS } from './seeds/phys-light-optics';
+import { SEED_PHYS_ELECTRIC_CHARGE_COULOMB } from './seeds/phys-electric-charge-coulomb';
+import { SEED_PHYS_CIRCUITS_OHMS_LAW } from './seeds/phys-circuits-ohms-law';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -245,6 +252,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_PHYS_WORK_ENERGY,
   SEED_PHYS_CONSERVATION_ENERGY,
   SEED_PHYS_MOMENTUM_COLLISIONS,
+  SEED_PHYS_CIRCULAR_MOTION,
+  SEED_PHYS_GRAVITATION,
+  SEED_PHYS_SIMPLE_HARMONIC_MOTION,
+  SEED_PHYS_WAVES_SOUND,
+  SEED_PHYS_LIGHT_OPTICS,
+  SEED_PHYS_ELECTRIC_CHARGE_COULOMB,
+  SEED_PHYS_CIRCUITS_OHMS_LAW,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
