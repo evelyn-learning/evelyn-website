@@ -2410,7 +2410,23 @@ function defaultPointLabel(id: string): string | undefined {
   // pt() / normalizePointRef) — never render their internal id as text.
   if (id.startsWith('__')) return undefined;
   if (/_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|vertex|arc\d+|v\d+|e\d+|m\d+|T\d+|F\d+|V\d+|d\d+(_a|_b)?|\d+_a|\d+_b|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id)) return undefined;
-  return id;
+  // Allow only ids that LOOK like a clean math point label — single
+  // letter (with optional digit suffix or prime), Greek letters, or
+  // 2-3 char identifiers without underscores. Reject anything that
+  // looks like a descriptive variable name (e.g. "wall_top", "base",
+  // "ladder_base") — those are internal ids the brain forgot to map
+  // to a clean display label, and dumping them on the diagram looks
+  // unprofessional. Observed 2026-04-29 geometry session: brain
+  // emitted points with id="wall_top"/"ladder_base"/"base" and no
+  // label field; the renderer drew "wall_top" / "ladder_base" /
+  // "base" right next to the dots. The brain should always supply a
+  // label; when it doesn't, we'd rather show a bare dot than expose
+  // the internal id.
+  if (/^[A-Za-z][\d']?$/.test(id)) return id;        // A, B, P', x, y0
+  if (/^[A-Z]_?\d+$/.test(id)) return id;            // P1, A_2
+  // Greek letter names (theta, alpha, etc.) up to 6 chars all-lower.
+  if (/^[a-z]{3,6}$/.test(id) && !/_/.test(id)) return id;
+  return undefined;
 }
 
 function round2(n: number): number { return Math.round(n * 100) / 100; }

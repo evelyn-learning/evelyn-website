@@ -1239,15 +1239,35 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
 
         let mark: React.ReactNode;
         switch (s.shape) {
-          case 'circle':
+          case 'circle': {
+            // Cap the ellipse radii so a circle around a long/angled
+            // target (segment, vector, hypotenuse) doesn't blow up
+            // into a giant oval encompassing the whole figure. Observed
+            // 2026-04-29 geometry session: brain emitted scribble
+            // shape:circle around the hypotenuse → ellipse rx/ry
+            // computed from the bounding box of the angled segment ate
+            // the entire triangle. Cap each radius to a moderate
+            // fraction of the smaller viewBox dimension so the mark
+            // stays a recognizable circle around the target's centroid.
+            const radiusCap = Math.min(vbW, vbH) * 0.08;
+            const rxRaw = Math.max(vbW * 0.015, r.w / 2);
+            const ryRaw = Math.max(vbH * 0.015, r.h / 2);
+            const aspectRatio = Math.max(r.w, r.h) / Math.max(0.0001, Math.min(r.w, r.h));
+            const isLineLike = aspectRatio > 3;
+            // Line-like targets get a tighter radius — a small circle
+            // around the centroid points at the feature without
+            // visually swallowing the rest of the diagram.
+            const rx = isLineLike ? Math.min(rxRaw, radiusCap) : Math.min(rxRaw, radiusCap * 1.3);
+            const ry = isLineLike ? Math.min(ryRaw, radiusCap) : Math.min(ryRaw, radiusCap * 1.3);
             mark = (
               <ellipse
                 cx={cx} cy={cy}
-                rx={Math.max(vbW * 0.015, r.w / 2)} ry={Math.max(vbH * 0.015, r.h / 2)}
+                rx={rx} ry={ry}
                 fill="none" stroke={color} strokeWidth={strokeMed}
               />
             );
             break;
+          }
           case 'underline':
             mark = (
               <line

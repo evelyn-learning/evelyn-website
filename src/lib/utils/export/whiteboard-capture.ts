@@ -60,6 +60,27 @@ async function withMountedCommand<T>(command: WhiteboardCommand, capture: Captur
     // Two rAFs — first lets React commit, second lets the browser paint and
     // any KaTeX / icon-font async work finish its first tick.
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    // Wait for ALL fonts referenced by the off-screen mount to finish
+    // loading. Without this, html2canvas can capture a frame where
+    // KaTeX has rendered the layout (so the math LOOKS placed) but
+    // KaTeX_Main / KaTeX_Math / KaTeX_Size* fonts haven't finished
+    // downloading — the radical glyph (√) renders without the vinculum
+    // bar over its radicand and stacked fractions detach from their
+    // numerator/denominator pieces. This was visible in the 2026-04-28
+    // trig PDF (page 7 #15: tan 60° = √3/2 / 1/2). document.fonts.ready
+    // resolves once every @font-face the document depends on has loaded
+    // (or failed). Bounded with a 600ms timeout so a stuck/missing
+    // font doesn't block the entire PDF export — better to ship a
+    // slightly less crisp glyph than to hang forever.
+    if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise<void>((resolve) => setTimeout(resolve, 600)),
+      ]);
+      // One more rAF after the font load so the browser repaints with
+      // the now-loaded glyphs before html2canvas snapshots.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
     return await capture(command, container);
   } catch (err) {
     console.warn('[whiteboard-capture] Failed to render command for capture:', err);
