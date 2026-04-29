@@ -889,17 +889,17 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_run_code',
-    description: 'Run JavaScript code against tutor-provided test cases in a server-side sandbox and render pass/fail per test plus captured stdout. Use when teaching algorithms or verifying that a student\'s solution actually works. The code must define a function (default name: "solve", override via `entry`); each test calls that function with `input` args and checks `expected` via deep equality. Sandbox has no file/network/process access; 5-second timeout cap.',
+    description: 'Run code against tests in a sandbox and render pass/fail per test plus captured stdout. Two languages supported: JavaScript (default — runs server-side via node:vm with `tests[]` of {input, expected}) and Python (set `language: "python"` — runs IN THE STUDENT\'S BROWSER via Pyodide; numpy/pandas/sympy preloaded; tests are `test_*` functions embedded in the source itself, pytest-style). First Python use in a session triggers a one-time ~7-15 MB download (cached afterward). 5-15 second timeout cap.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        code: { type: 'string', description: 'The JavaScript snippet to run. Must define a top-level function named "solve" unless `entry` overrides it.' },
-        entry: { type: 'string', description: 'Function name to invoke per test (default "solve").' },
-        language: { type: 'string', description: 'Display label only (default "javascript"). Today only JS is supported.' },
+        code: { type: 'string', description: 'The code to run. JS: must define a top-level function named "solve" unless `entry` overrides it. Python: include any pytest-style test functions inline (e.g. `def test_add(): assert add(2,3) == 5`); the runtime discovers and runs every top-level callable named `test_*`.' },
+        entry: { type: 'string', description: 'JS only: function name to invoke per test (default "solve"). Ignored for Python.' },
+        language: { type: 'string', enum: ['javascript', 'js', 'python', 'py', 'python3'], description: 'Default "javascript". Set to "python" to use the in-browser Pyodide sandbox.' },
         tests: {
           type: 'array',
-          description: 'Test cases. Empty array runs the code once with no tests (useful for "see what this prints").',
+          description: 'JS only — test cases. Empty array runs the code once with no tests (useful for "see what this prints"). For Python, embed `test_*` functions in `code` instead.',
           items: {
             type: 'object',
             properties: {
@@ -909,7 +909,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             },
           },
         },
-        timeoutMs: { type: 'number', description: 'Max execution time in ms (capped to 5000).' },
+        timeoutMs: { type: 'number', description: 'Max execution time in ms. JS capped to 5000; Python capped to 15000.' },
       },
       required: ['code'],
     },

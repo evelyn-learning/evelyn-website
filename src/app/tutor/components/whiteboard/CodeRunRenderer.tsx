@@ -24,6 +24,10 @@ export interface CodeRunRendererProps {
   /** When result is undefined the canvas hasn't fetched yet; show a loader. */
   pending?: boolean;
   error?: string;
+  /** Optional progress text from a long-running setup (e.g. Pyodide
+   *  cold-load: "Loading Python sandbox… (~7 MB, one-time)"). Replaces
+   *  the generic "Running…" spinner when set. */
+  loadStatus?: string;
 }
 
 const fmt = (v: unknown): string => {
@@ -39,6 +43,7 @@ export default function CodeRunRenderer({
   result,
   pending,
   error,
+  loadStatus,
 }: CodeRunRendererProps) {
   const [showStdout, setShowStdout] = useState(false);
 
@@ -61,7 +66,7 @@ export default function CodeRunRenderer({
           {title || `Code · ${language}`}
         </div>
         {pending ? (
-          <span className="text-xs text-slate-600">Running…</span>
+          <span className="text-xs text-slate-600">{loadStatus ?? 'Running…'}</span>
         ) : result ? (
           <span className={`text-xs font-semibold text-white px-2 py-0.5 rounded ${palette.tag}`}>
             {compileError ? '✗ compile error'
