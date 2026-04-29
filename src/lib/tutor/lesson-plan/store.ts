@@ -119,6 +119,11 @@ import { SEED_PHYS_MAGNETISM } from './seeds/phys-magnetism';
 import { SEED_PHYS_EM_INDUCTION } from './seeds/phys-em-induction';
 import { SEED_PHYS_MODERN_INTRO } from './seeds/phys-modern-intro';
 import { SEED_PHYS_SPECIAL_RELATIVITY_INTRO } from './seeds/phys-special-relativity-intro';
+import { SEED_K_COUNTING_TO_100 } from './seeds/k-counting-to-100';
+import { SEED_K_SHAPES_2D } from './seeds/k-shapes-2d';
+import { SEED_G1_ADD_WITHIN_20 } from './seeds/g1-add-within-20';
+import { SEED_G1_SUBTRACT_WITHIN_20 } from './seeds/g1-subtract-within-20';
+import { SEED_G2_ADD_SUBTRACT_WITHIN_100 } from './seeds/g2-add-subtract-within-100';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -267,6 +272,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_PHYS_EM_INDUCTION,
   SEED_PHYS_MODERN_INTRO,
   SEED_PHYS_SPECIAL_RELATIVITY_INTRO,
+  SEED_K_COUNTING_TO_100,
+  SEED_K_SHAPES_2D,
+  SEED_G1_ADD_WITHIN_20,
+  SEED_G1_SUBTRACT_WITHIN_20,
+  SEED_G2_ADD_SUBTRACT_WITHIN_100,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
