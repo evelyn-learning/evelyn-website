@@ -23,6 +23,12 @@ import { SEED_G9_PYTHAGOREAN } from './seeds/g9-pythagorean';
 import { SEED_G10_RIGHT_TRIANGLE_TRIG } from './seeds/g10-right-triangle-trig';
 import { SEED_G11_UNIT_CIRCLE } from './seeds/g11-unit-circle';
 import { SEED_G12_DERIVATIVE_INTUITION } from './seeds/g12-derivative-intuition';
+// Batch 3 — Science K-12 kickoff (one plan per grade band as proof-of-quality;
+// remaining ~106 science plans queued in TRACKER.md).
+import { SEED_K2_SCI_PUSH_PULL } from './seeds/k2-sci-push-pull';
+import { SEED_G3_SCI_FORCES_MOTION } from './seeds/g3-sci-forces-motion';
+import { SEED_G6_SCI_CELLS } from './seeds/g6-sci-cells';
+import { SEED_BIO_CELL_THEORY_STRUCTURE } from './seeds/bio-cell-theory-structure';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -39,6 +45,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G10_RIGHT_TRIANGLE_TRIG,
   SEED_G11_UNIT_CIRCLE,
   SEED_G12_DERIVATIVE_INTUITION,
+  // Batch 3 — Science K-12 (kickoff; full coverage tracked in TRACKER.md).
+  SEED_K2_SCI_PUSH_PULL,
+  SEED_G3_SCI_FORCES_MOTION,
+  SEED_G6_SCI_CELLS,
+  SEED_BIO_CELL_THEORY_STRUCTURE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

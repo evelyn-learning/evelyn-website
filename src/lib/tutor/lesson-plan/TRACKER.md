@@ -175,10 +175,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 
 ## Science — 110 plans
 
-### K-2 — Combined (12 plans)
+### K-2 — Combined (12 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Pushes & pulls | ⬜ TODO | `k2-sci-push-pull` | OpenStax K-2 Sci |
+| Pushes & pulls | ✅ DONE | `k2-sci-push-pull` | OpenStax K-2 Sci, NGSS K-PS2 |
 | Sunlight & weather | ⬜ TODO | `k2-sci-sunlight-weather` | NGSS K-PS3 |
 | Plant needs | ⬜ TODO | `k2-sci-plant-needs` | OpenStax K-2 Sci |
 | Animal needs | ⬜ TODO | `k2-sci-animal-needs` | NGSS 1-LS1 |
@@ -191,10 +191,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Day & night sky | ⬜ TODO | `k2-sci-day-night-sky` | OpenStax K-2 Sci |
 | Weather patterns & seasons | ⬜ TODO | `k2-sci-weather-seasons` | NGSS K-ESS2 |
 
-### Grade 3 (6 plans)
+### Grade 3 (6 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Forces & motion (balanced/unbalanced) | ⬜ TODO | `g3-sci-forces-motion` | OpenStax 3 Sci |
+| Forces & motion (balanced/unbalanced) | ✅ DONE | `g3-sci-forces-motion` | OpenStax 3 Sci, NGSS 3-PS2 |
 | Magnets & static electricity | ⬜ TODO | `g3-sci-magnets-electricity` | NGSS 3-PS2 |
 | Life cycles (plants & animals) | ⬜ TODO | `g3-sci-life-cycles` | OpenStax 3 Sci |
 | Inheritance & traits | ⬜ TODO | `g3-sci-inheritance-traits` | NGSS 3-LS3 |
@@ -221,10 +221,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Earth's systems (geo, hydro, atmo, bio) | ⬜ TODO | `g5-sci-earth-systems` | OpenStax 5 Sci |
 | Solar system (planets, moon, sun) | ⬜ TODO | `g5-sci-solar-system` | NGSS 5-ESS1 |
 
-### Grade 6 (8 plans)
+### Grade 6 (8 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Cells (structure & function) | ⬜ TODO | `g6-sci-cells` | OpenStax 6 Sci |
+| Cells (structure & function) | ✅ DONE | `g6-sci-cells` | OpenStax 6 Sci, NGSS MS-LS1 |
 | Body systems intro | ⬜ TODO | `g6-sci-body-systems-intro` | CK-12 6 Sci |
 | Ecosystems & energy flow | ⬜ TODO | `g6-sci-ecosystems` | OpenStax 6 Sci |
 | Climate & weather systems | ⬜ TODO | `g6-sci-climate-weather` | NGSS MS-ESS2 |
@@ -257,10 +257,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Climate change | ⬜ TODO | `g8-sci-climate-change` | NGSS MS-ESS3 |
 | Engineering design process | ⬜ TODO | `g8-sci-engineering-design` | OpenStax 8 Sci |
 
-### Grade 9-12 — Biology (18 plans)
+### Grade 9-12 — Biology (18 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Cell theory & structure | ⬜ TODO | `bio-cell-theory-structure` | OpenStax Biology 2e |
+| Cell theory & structure | ✅ DONE | `bio-cell-theory-structure` | OpenStax Biology 2e Ch. 4 |
 | Cell membrane & transport | ⬜ TODO | `bio-cell-membrane-transport` | OpenStax Biology 2e |
 | Cellular respiration | ⬜ TODO | `bio-cellular-respiration` | OpenStax Biology 2e |
 | Photosynthesis (Calvin cycle) | ⬜ TODO | `bio-photosynthesis-calvin` | OpenStax Biology 2e |
@@ -636,9 +636,20 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 ## Progress
 
 - **Total plans target**: ~462
-- **Done**: 10 (Math K, 2, 4, 6, 8, 9×2, 10, 11, 12)
+- **Done**: 14 (Math 10 + Science 4)
 - **In progress**: 0
-- **Remaining**: 452
+- **Remaining**: 448
+
+### Recently completed (2026-04-29 Batch 3 kickoff)
+- `k2-sci-push-pull` — K-2 Science (NGSS K-PS2)
+- `g3-sci-forces-motion` — Grade 3 Science (NGSS 3-PS2)
+- `g6-sci-cells` — Grade 6 Science (NGSS MS-LS1)
+- `bio-cell-theory-structure` — HS Biology (NGSS HS-LS1)
+
+These four span every grade band (K-2 / 3-5 / 6-8 / 9-12) as
+proof-of-quality across the full K-12 range. Future Batch 3
+sessions can fill in horizontally — adding remaining K-2 topics
+(11 more), grade 3 (5 more), grade 6 (7 more), HS Bio (17 more).
 
 ## Next batch order
 
