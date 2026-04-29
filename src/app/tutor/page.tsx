@@ -1126,35 +1126,11 @@ function TutorPage() {
           />
         </div>
 
-        {/* In-session lesson nudge — surfaces when the student is being
-            vague ("Teach me / Anything") so they can tap a specific
-            plan instead of dragging the bot through 4 voice turns to
-            extract a topic. Runs in PARALLEL with voice — voice still
-            asks "what do you want?" while this picker shows below. */}
-        {!nudgeDismissed && availableLessonPlans.length > 0 && (
-          <div className="flex-shrink-0 container mx-auto px-4">
-            <LessonNudgePicker
-              plans={availableLessonPlans}
-              recentTurns={transcript.slice(-6).map(t => ({ role: t.role, text: t.text }))}
-              lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
-              currentTopicId={selectedTopicId}
-              onSelect={(plan) => {
-                setSelectedLessonPlanId(plan.id);
-                setNudgeDismissed(true);
-                // Tell the brain via the existing text-message channel
-                // — same path the homework-upload + try-yourself flows
-                // use. Bracketed system-style hint so the brain treats
-                // it as a runtime instruction, not student speech.
-                if (realtimeHandleRef.current) {
-                  realtimeHandleRef.current.sendTextMessage(
-                    `[The student picked the lesson "${plan.title}" from the in-session picker. Start that lesson now using show_segment_card for the first segment.]`,
-                  );
-                }
-              }}
-              onDismiss={() => setNudgeDismissed(true)}
-            />
-          </div>
-        )}
+        {/* The in-session lesson picker (LessonNudgePicker) used to
+            render here as a separate strip above the chat. It now
+            renders INSIDE TranscriptView as a tutor-style chat bubble
+            via the `footer` prop — it feels like part of the
+            conversation rather than a UI panel grafted on top. */}
 
         {/* Main content - resizable split on desktop, tabbed on mobile */}
         <div
@@ -1207,6 +1183,41 @@ function TutorPage() {
               <TranscriptView
                 transcript={transcript}
                 isProcessing={isProcessing}
+                footer={!nudgeDismissed && availableLessonPlans.length > 0 ? (
+                  <LessonNudgePicker
+                    plans={availableLessonPlans}
+                    recentTurns={transcript.slice(-6).map(t => ({ role: t.role, text: t.text }))}
+                    lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
+                    currentTopicId={selectedTopicId}
+                    introText={(() => {
+                      const lvl = availableLevels.find(l => l.id === selectedLevel)?.label;
+                      const topic = topicDisplayName;
+                      if (topic && lvl) {
+                        return `Ooh, blank canvas — I love it! I see you chose ${topic}${lvl ? ` (${lvl})` : ''}. Pick a lesson to jump straight in, or just tell me what you want to learn.`;
+                      }
+                      return undefined;
+                    })()}
+                    onSelect={(plan) => {
+                      setSelectedLessonPlanId(plan.id);
+                      setNudgeDismissed(true);
+                      if (realtimeHandleRef.current) {
+                        // Don't name a specific segment id — the picker
+                        // doesn't know the plan's segment schema, and a
+                        // hard-coded id like "intro-1" caused the brain
+                        // to call show_segment_card with a non-existent
+                        // id (2026-04-29 algebra-2: hallucinated
+                        // "intro-1", silent failure, narrated puzzle
+                        // with nothing on the board). The brain has the
+                        // plan loaded by the time this lands and can
+                        // pick the real first segment id itself.
+                        realtimeHandleRef.current.sendTextMessage(
+                          `[The student picked the lesson "${plan.title}" from the in-session picker. Start that lesson now: call show_segment_card with the FIRST segment id from the plan's segments[] array — do not invent segment ids.]`,
+                        );
+                      }
+                    }}
+                    onDismiss={() => setNudgeDismissed(true)}
+                  />
+                ) : undefined}
               />
             </div>
           </div>

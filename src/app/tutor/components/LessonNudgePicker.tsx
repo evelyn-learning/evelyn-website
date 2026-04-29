@@ -23,7 +23,7 @@
  */
 
 import { useMemo } from 'react';
-import { BookOpen, Clock } from 'lucide-react';
+import { Bot, Clock } from 'lucide-react';
 
 export type NudgePlan = {
   id: string;
@@ -45,6 +45,11 @@ interface LessonNudgePickerProps {
    *  surfaced first; plans for other topics in the grade appear after,
    *  grouped by their topic. */
   currentTopicId?: string;
+  /** Tutor-bubble intro text shown above the plan cards. Defaults to a
+   *  warm "blank canvas" greeting if not set. Parent passes a contextual
+   *  one — e.g. "Ooh, blank canvas — I love it! I see you chose Algebra
+   *  2 (High School). Pick a lesson to jump straight in." */
+  introText?: string;
   /** Tap-to-start handler. */
   onSelect: (plan: NudgePlan) => void;
   /** Optional dismiss handler — if user explicitly closes the panel,
@@ -63,7 +68,7 @@ function isVague(text: string): boolean {
   return false;
 }
 
-export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTopicId, onSelect, onDismiss }: LessonNudgePickerProps) {
+export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTopicId, introText, onSelect, onDismiss }: LessonNudgePickerProps) {
   const studentTurns = useMemo(
     () => recentTurns.filter((t) => t.role === 'student'),
     [recentTurns],
@@ -118,49 +123,58 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTo
 
   if (!shouldShow) return null;
 
+  const greeting = introText ?? 'Ooh, blank canvas — I love it! Pick a lesson to jump straight in, or just tell me what you want to learn.';
+
   return (
-    <div className="border border-blue-200 bg-blue-50/60 rounded-lg p-3 my-2 flex-shrink-0">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-blue-900">
-          <BookOpen className="w-4 h-4" />
-          Pick a lesson to jump straight in
-        </div>
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            className="text-xs text-blue-700/70 hover:text-blue-900"
-            aria-label="Hide lesson suggestions"
-          >
-            hide
-          </button>
-        )}
+    <div className="flex gap-3">
+      {/* Tutor avatar — matches the styling of real tutor entries in
+          TranscriptView so the picker feels like a chat bubble in the
+          conversation flow. */}
+      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
+        <Bot className="w-4 h-4" />
       </div>
-      {currentPlans.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {currentPlans.slice(0, 8).map((plan) => (
-            <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
-          ))}
-        </div>
-      )}
-      {otherByTopic.size > 0 && (
-        <details className="mt-2" open={defaultShowOther}>
-          <summary className="cursor-pointer text-xs font-medium text-blue-800 hover:text-blue-900 py-1">
-            Other topics in this grade ({Array.from(otherByTopic.values()).reduce((s, l) => s + l.length, 0)} more)
-          </summary>
-          <div className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
-            {Array.from(otherByTopic.entries()).map(([topic, list]) => (
-              <div key={topic}>
-                <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{topic.replace(/-/g, ' ')}</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {list.map((plan) => (
-                    <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
-                  ))}
-                </div>
-              </div>
-            ))}
+      <div className="flex-1 min-w-0">
+        <div className="inline-block max-w-[95%] bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <p className="whitespace-pre-wrap text-sm">{greeting}</p>
+            {onDismiss && (
+              <button
+                onClick={onDismiss}
+                className="flex-shrink-0 text-[11px] text-gray-500 hover:text-gray-800 underline"
+                aria-label="Hide lesson suggestions"
+              >
+                hide
+              </button>
+            )}
           </div>
-        </details>
-      )}
+          {currentPlans.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {currentPlans.slice(0, 8).map((plan) => (
+                <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
+              ))}
+            </div>
+          )}
+          {otherByTopic.size > 0 && (
+            <details className="mt-2" open={defaultShowOther}>
+              <summary className="cursor-pointer text-xs font-medium text-blue-700 hover:text-blue-900 py-1">
+                Other topics in this grade ({Array.from(otherByTopic.values()).reduce((s, l) => s + l.length, 0)} more)
+              </summary>
+              <div className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
+                {Array.from(otherByTopic.entries()).map(([topic, list]) => (
+                  <div key={topic}>
+                    <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{topic.replace(/-/g, ' ')}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {list.map((plan) => (
+                        <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -169,9 +183,9 @@ function PlanButton({ plan, onSelect }: { plan: NudgePlan; onSelect: (p: NudgePl
   return (
     <button
       onClick={() => onSelect(plan)}
-      className="text-left bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 rounded-md px-3 py-2 transition group"
+      className="text-left bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-400 rounded-md px-3 py-2 transition group shadow-sm"
     >
-      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 line-clamp-1">
+      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 line-clamp-2">
         {plan.title}
       </div>
       <div className="flex items-center gap-2 mt-0.5">

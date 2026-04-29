@@ -13,6 +13,11 @@ import type { TranscriptEntry } from '@/lib/tutor/types';
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
   isProcessing?: boolean;
+  /** Optional footer rendered inside the scroll container, AFTER the
+   *  transcript map. Used by the in-session lesson picker so it can
+   *  appear as a tutor-bubble inline with the chat instead of as a
+   *  separate strip outside the conversation flow. */
+  footer?: React.ReactNode;
 }
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
@@ -87,17 +92,18 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   return { body, question };
 }
 
-export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, footer }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (or when the footer
+  // mounts/unmounts so the picker bubble stays visible).
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [transcript]);
+  }, [transcript, footer]);
 
-  if (transcript.length === 0 && !isProcessing) {
+  if (transcript.length === 0 && !isProcessing && !footer) {
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
         <p className="text-center">
@@ -233,6 +239,8 @@ export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps
           </div>
         </div>
       )}
+
+      {footer}
     </div>
   );
 }

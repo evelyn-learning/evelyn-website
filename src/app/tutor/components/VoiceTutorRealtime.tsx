@@ -3532,9 +3532,52 @@ export function VoiceTutorRealtime({
                         } as unknown as any;
                         console.log(`[brain-orchestrator] show_segment_card resolved: ${segId} → "${truth.problemText.slice(0, 60)}…"`);
                         onDebugEvent?.('show_segment_card_resolved', `${segId}: "${truth.problemText.slice(0, 50)}…"`);
+                      } else if (seg) {
+                        // Hook / concept / recap segments don't have a
+                        // problem field, but they DO have authored
+                        // content (script / keyIdeas / mustRemember)
+                        // worth rendering. Earlier path silently
+                        // dropped them, leaving the board blank while
+                        // the brain narrated — observed 2026-04-29
+                        // algebra-2 session: brain said "Here's a
+                        // real-life puzzle..." but the board stayed
+                        // empty because show_segment_card("hook") fell
+                        // through. Render a labeled text card from
+                        // each segment kind's authored content.
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const s = seg as any;
+                        let title: string | undefined;
+                        let body: string | undefined;
+                        if (seg.kind === 'hook' && typeof s.script === 'string' && s.script.length > 0) {
+                          title = 'Hook';
+                          body = s.script;
+                        } else if (seg.kind === 'concept' && Array.isArray(s.keyIdeas) && s.keyIdeas.length > 0) {
+                          title = 'Key ideas';
+                          body = s.keyIdeas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n');
+                        } else if (seg.kind === 'recap' && Array.isArray(s.mustRemember) && s.mustRemember.length > 0) {
+                          title = 'Recap';
+                          body = s.mustRemember.map((k: string) => `• ${k}`).join('\n');
+                        }
+                        if (title && body) {
+                          catalogRef.current.setCurrentSegment(segId);
+                          resolvedCmd = {
+                            action: 'showProblem',
+                            problem: {
+                              statement: body,
+                              format: 'free-response',
+                              title,
+                            },
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          } as unknown as any;
+                          console.log(`[brain-orchestrator] show_segment_card resolved (${seg.kind}): ${segId} → "${body.slice(0, 60)}…"`);
+                          onDebugEvent?.('show_segment_card_resolved', `${segId} (${seg.kind})`);
+                        } else {
+                          console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
+                          onDebugEvent?.('show_segment_card_no_truth', segId);
+                        }
                       } else {
-                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" has no authored card; ignoring.`);
-                        onDebugEvent?.('show_segment_card_no_truth', segId);
+                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" not found in plan; ignoring.`);
+                        onDebugEvent?.('show_segment_card_unknown', segId);
                       }
                     } else {
                       console.warn(`[brain-orchestrator] show_segment_card: no active plan or empty segmentId.`);
@@ -4053,7 +4096,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           console.log('[VoiceTutorRealtime] claude-brain: kicking off lesson plan via brain.');
           handleStudentTranscriptForBrain('[start lesson]', { silent: true });
         } else {
-          console.log('[VoiceTutorRealtime] claude-brain: free-conversation, brain greets after first student turn.');
+          // Free-conversation mode: also kick the brain so it greets
+          // first instead of leaving the student staring at "preparing
+          // your tutor" until they type or speak. Without this nudge the
+          // UI stays in isWarmingUp until the first student utterance,
+          // which felt stuck (observed 2026-04-29 algebra-2 session
+          // where the student had to type "teach me anything" to break
+          // out of the preparing state).
+          console.log('[VoiceTutorRealtime] claude-brain: free-conversation, kicking brain to greet first.');
+          handleStudentTranscriptForBrain('[start session]', { silent: true });
         }
       }
       // If the student hit the Mute button BEFORE clicking Start, honour that
