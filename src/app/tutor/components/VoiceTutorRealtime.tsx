@@ -188,19 +188,64 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-2': 'alloy',      // Energetic
 };
 
+/** Extract bare numeric constants (integers + decimals) from a problem
+ *  statement. These are the "load-bearing" numbers — the right-hand
+ *  sides of equations, target values, dimensions — whose substitution
+ *  changes what problem the student is actually solving. Skips numbers
+ *  embedded in identifiers ("3x" stays as one token in the tokenizer
+ *  but here we filter it out — we want STANDALONE constants like the
+ *  16 in "3x + 2y = 16", not the coefficient 3). */
+function extractConstants(s: string): number[] {
+  const out: number[] = [];
+  // Match integers/decimals that are NOT immediately followed by a
+  // letter (so coefficients like "3x" are skipped) and NOT preceded by
+  // a letter or another digit (so subscripts/superscripts in "x_2"
+  // aren't pulled out). Matches "= 16", " - 4", "= 12.5", standalone
+  // "16" in lists, etc.
+  const re = /(?<![A-Za-z\d])-?\d+(?:\.\d+)?(?![A-Za-z])/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const n = parseFloat(m[0]);
+    if (!isNaN(n)) out.push(n);
+  }
+  return out;
+}
+
+/** Extract coefficients — digits immediately attached to a single
+ *  variable letter ("3" in "3x", "2" in "2y"). Complements
+ *  extractConstants to catch the case where the brain swapped LHS
+ *  coefficients but kept the RHS the same ("3x + 2y = 12" rendered as
+ *  "5x + 7y = 12"). Without this, coefficient drift would only nudge
+ *  the broader numericMatch subscore (3x vs 5x are different tokens)
+ *  but not enough to fail the 0.5 threshold when most other tokens
+ *  still match. */
+function extractCoefficients(s: string): number[] {
+  const out: number[] = [];
+  const re = /(?<![A-Za-z\d])(\d+(?:\.\d+)?)(?=[A-Za-z]\b)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const n = parseFloat(m[1]);
+    if (!isNaN(n)) out.push(n);
+  }
+  return out;
+}
+
 /** Coherence pass: compare a rendered problem statement against the
  *  segment's authored truth and return a 0..1 similarity. Tokenizes on
  *  word boundaries (keeping numbers + fractions intact — `1/2` is ONE
  *  token, not three), then scores prose and numeric content separately
- *  and returns min(prose, numeric). The min() matters: a prose-heavy
- *  authored problem like "Try this one: 1/4 + 2/3. Walk me through it."
- *  has so many filler words that a single weighted overlap would let
- *  number substitution slip through ("Try this one: 1/3 + 2/5. Walk me
- *  through it." would still score above 0.5). Splitting the two
- *  dimensions and taking the worst score forces drift in either to
- *  trigger a rejection. Operator swaps (+ vs -) still escape — that's
- *  an accepted hole for v1; if it shows up in real sessions, add a
- *  dedicated operator-swap detector rather than tightening this one. */
+ *  AND extracts standalone numeric constants for a sharper third
+ *  subscore. Returns min(prose, numeric, constants).
+ *
+ *  Why constants matter: the elimination drift case from the
+ *  2026-04-29 geometry session showed authored "3x + 2y = 12" vs
+ *  rendered "3x + 2y = 16" passing the prior numeric check at 0.8 —
+ *  most numeric tokens (3x, 2y, +, =, 5x, -) matched, only the
+ *  right-hand sides drifted. The constants subscore extracts just
+ *  the standalone numbers ([12, 4] vs [16, 8]) so right-hand-side
+ *  substitution is caught immediately at 0.0 overlap. Coefficients
+ *  embedded in identifiers (the "3" in "3x") are skipped so coefficient
+ *  changes still drop through the broader numeric subscore. */
 function problemSimilarity(rendered: string, authored: string): number {
   const tokenize = (s: string): string[] => {
     const lowered = s.toLowerCase()
@@ -227,7 +272,28 @@ function problemSimilarity(rendered: string, authored: string): number {
   const proseMatch = aProse.length === 0
     ? 1
     : aProse.filter((t) => renderedSet.has(t)).length / aProse.length;
-  return Math.min(numericMatch, proseMatch);
+  // Constants subscore: standalone integers/decimals only. Set-based
+  // overlap because position-based comparison would penalize "3x + 2y
+  // = 16, 5x - 2y = 8" vs "5x - 2y = 8, 3x + 2y = 16" (legal reorder).
+  const aConstants = extractConstants(authored);
+  const constantsMatch = aConstants.length === 0
+    ? 1
+    : (() => {
+        const rSet = new Set(extractConstants(rendered));
+        return aConstants.filter((n) => rSet.has(n)).length / aConstants.length;
+      })();
+  // Coefficients subscore: digits attached to identifiers ("3" in 3x).
+  // Catches LHS-coefficient drift like "3x + 2y" → "5x + 7y" that the
+  // standalone-constants check misses. Also set-based for reorder
+  // tolerance.
+  const aCoeffs = extractCoefficients(authored);
+  const coeffMatch = aCoeffs.length === 0
+    ? 1
+    : (() => {
+        const rSet = new Set(extractCoefficients(rendered));
+        return aCoeffs.filter((n) => rSet.has(n)).length / aCoeffs.length;
+      })();
+  return Math.min(numericMatch, proseMatch, constantsMatch, coeffMatch);
 }
 
 export function VoiceTutorRealtime({

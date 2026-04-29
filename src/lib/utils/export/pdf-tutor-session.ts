@@ -28,6 +28,14 @@ function sanitizeForPDF(text: string): string {
   s = s.replace(/\*\*(.*?)\*\*/g, '$1');
   s = s.replace(/\*(.*?)\*/g, '$1');
   s = s.replace(/`(.*?)`/g, '$1');
+  // Emoji fallback BEFORE the Latin-1 strip \u2014 replaces known emoji with
+  // bracketed ASCII (e.g., \uD83C\uDFAC \u2192 [movie]) so titles stay readable. Order
+  // matters: variation-selector keys (\uD83C\uDF27\uFE0F) must be tried before bare
+  // (\uD83C\uDF27) so the more specific match wins. JS replaceAll handles each
+  // string key as a literal substring.
+  for (const [emoji, ascii] of Object.entries(EMOJI_FALLBACK_MAP)) {
+    if (s.includes(emoji)) s = s.split(emoji).join(ascii);
+  }
   // Transliterate Greek, math symbols, etc. before stripping non-Latin-1
   s = s.replace(LATIN_DIACRITIC_REGEX, (ch) => LATIN_DIACRITIC_MAP[ch] || ch);
   s = s.replace(/[^\x00-\xFF]/g, '?');
@@ -105,6 +113,32 @@ const LATIN_DIACRITIC_MAP: Record<string, string> = {
   '×': 'x', '÷': '/', '±': '+/-', '∞': 'inf', '≈': '~=', '≠': '!=', '≤': '<=', '≥': '>=',
   '→': '->', '←': '<-', '⇒': '=>', '∑': 'Sum', '∏': 'Product', '∫': 'Integral',
   '∂': 'd', '∇': 'del', '√': 'sqrt', '∝': ' proportional to ',
+  // Unicode minus sign (U+2212). Distinct from ASCII hyphen-minus (U+002D)
+  // and from en-dash. Catalog renderers (showProblem, showEquation labels)
+  // emit U+2212 in problem text — without this map, "5x − 2y = 8" sanitized
+  // to "5x ? 2y = 8" in the 2026-04-29 geometry PDF (page 4 #10).
+  '−': '-',
+};
+
+// Emoji → ASCII fallback. Kept SEPARATE from LATIN_DIACRITIC_MAP because
+// most emoji are surrogate pairs (string length 2 in JS) and would corrupt
+// the character-class regex that LATIN_DIACRITIC_MAP uses. Applied via
+// individual string.replaceAll passes instead. Without this, emoji in
+// tutor-supplied titles (e.g., "The Ticket Puzzle 🎬🍿") sanitized to a
+// run of '?' marks because each surrogate fell outside Latin-1 (the
+// 2026-04-29 geometry PDF page 1 #1 showed "The Ticket Puzzle ????").
+// Add new entries as fresh emoji surface in real sessions.
+const EMOJI_FALLBACK_MAP: Record<string, string> = {
+  '🎬': '[movie]', '🍿': '[popcorn]', '🎟️': '[ticket]', '🎟': '[ticket]', '🎫': '[ticket]',
+  '🌧️': '[rain]', '🌧': '[rain]', '☔': '[rain]', '☀️': '[sun]', '☀': '[sun]',
+  '🌞': '[sun]', '⛅': '[cloud]',
+  '🧬': '[dna]', '🧪': '[test-tube]', '🧫': '[petri]', '🔬': '[microscope]',
+  '⚡': '[lightning]', '🔋': '[battery]', '🧲': '[magnet]',
+  '📐': '[ruler]', '📏': '[ruler]', '📊': '[chart]', '📈': '[graph-up]', '📉': '[graph-down]',
+  '⚖️': '[scales]', '⚖': '[scales]', '⏱️': '[stopwatch]', '⏱': '[stopwatch]', '⏰': '[clock]',
+  '🚀': '[rocket]', '🌍': '[earth]', '🌎': '[earth]', '🌏': '[earth]',
+  '🔥': '[fire]', '❄️': '[snow]', '❄': '[snow]', '💧': '[water]',
+  '✓': 'OK', '✔': 'OK', '✗': 'X', '✘': 'X',
 };
 
 // Build a regex that matches any character in the map (compiled once)
@@ -1324,6 +1358,49 @@ async function drawWhiteboardVisual(
   return y; // No visual drawn — caller falls back to its existing text label.
 }
 
+/** Estimate the vertical space (in mm) that drawWhiteboardVisual will
+ *  consume for a given command. Used to decide whether the next render
+ *  fits on the current PDF page or needs a fresh page. Without this,
+ *  inline transcript renders use a fixed 20mm reservation that's way
+ *  too small for graphs/circles/geometry — the 2026-04-29 geometry PDF
+ *  page 6 showed the "Two Equations, Two Lines" graph clipped at the
+ *  page bottom because only 20mm was reserved before an 85mm graph.
+ *  Estimates are intentionally on the generous side: a slightly-too-
+ *  large reservation just creates an early page break (cosmetic), but
+ *  a too-small one chops the bottom off the figure (broken). */
+function estimateCommandHeight(rawCmd: WhiteboardCommandData): number {
+  const cmdData = rawCmd.data as Record<string, unknown> | undefined;
+  const dbOnlyKeys = new Set(['action', 'data', 'timestamp', 'sourceMessageIndex']);
+  const hasOnlyDbKeys = Object.keys(rawCmd).every(k => dbOnlyKeys.has(k));
+  const cmd: WhiteboardCommandData = (hasOnlyDbKeys && cmdData && typeof cmdData === 'object' && !Array.isArray(cmdData))
+    ? { ...cmdData, action: rawCmd.action }
+    : rawCmd;
+  const action = String(cmd.action || '');
+  // Tall visuals (graphs, full SVG diagrams, geometry, unit circles).
+  if (action === 'showGraph' || action === 'showSvgDiagram'
+      || action === 'showGeometry' || action === 'showGeometryConstructed'
+      || action === 'showUnitCircle' || action === 'showSpecialTriangles'
+      || action === 'showCircuit' || action === 'showLewis'
+      || action === 'showFreeBodyDiagram' || action === 'showCollision'
+      || action === 'showEnergyBars' || action === 'showSpringMass'
+      || action === 'showReactionCoordinate' || action === 'showPedigree'
+      || action === 'showFlowchart' || action === 'showCoordinatePlane'
+      || action === 'showScatterPlot' || action === 'showCycleDiagram'
+      || action === 'showConceptMap' || action === 'showMotionDiagram'
+      || action === 'showProjectileMotion' || action === 'showRayDiagram'
+      || action === 'showWave' || action === 'showVector'
+      || action === 'showOrbitalDiagram' || action === 'showDiagram'
+      || action === 'showTree' || action === 'showManipulative') {
+    return 90;
+  }
+  if (action === 'showEquation') return 35;
+  if (action === 'showProblem') return 30;
+  if (action === 'showTable') return 60;
+  if (action === 'showCode') return 50;
+  // Generic safe default — covers everything else with room to spare.
+  return 40;
+}
+
 function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
   // Normalize DB format (nested data) to flat format
   const cmdData = rawCmd.data as Record<string, unknown> | undefined;
@@ -1693,7 +1770,11 @@ export async function exportTutorSessionPDF(
     // Inline whiteboard visuals for commands attached to this message
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {
-        addPageIfNeeded(20);
+        // Reserve enough room for the *actual* command type — graphs/
+        // diagrams/circles need ~85mm, equations ~30mm. The prior
+        // hard-coded 20mm reservation let the 2026-04-29 geometry
+        // session's graph spill off the bottom of page 6.
+        addPageIfNeeded(estimateCommandHeight(cmd));
         const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, textAreaWidth);
         if (newY > y) {
           y = newY;

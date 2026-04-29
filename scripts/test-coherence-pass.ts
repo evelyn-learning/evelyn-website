@@ -25,6 +25,26 @@ function check(name: string, ok: boolean, detail?: string) {
 // problemSimilarity is defined inline in VoiceTutorRealtime.tsx — re-implement
 // the same logic here so we test the actual algorithm without pulling React.
 // Keep this in sync with the helper in VoiceTutorRealtime.tsx.
+function extractConstants(s: string): number[] {
+  const out: number[] = [];
+  const re = /(?<![A-Za-z\d])-?\d+(?:\.\d+)?(?![A-Za-z])/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const n = parseFloat(m[0]);
+    if (!isNaN(n)) out.push(n);
+  }
+  return out;
+}
+function extractCoefficients(s: string): number[] {
+  const out: number[] = [];
+  const re = /(?<![A-Za-z\d])(\d+(?:\.\d+)?)(?=[A-Za-z]\b)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const n = parseFloat(m[1]);
+    if (!isNaN(n)) out.push(n);
+  }
+  return out;
+}
 function problemSimilarity(rendered: string, authored: string): number {
   const tokenize = (s: string): string[] => {
     const lowered = s.toLowerCase()
@@ -48,7 +68,19 @@ function problemSimilarity(rendered: string, authored: string): number {
   const proseMatch = aProse.length === 0
     ? 1
     : aProse.filter((t) => renderedSet.has(t)).length / aProse.length;
-  return Math.min(numericMatch, proseMatch);
+  const aConstants = extractConstants(authored);
+  const constantsMatch = aConstants.length === 0 ? 1
+    : (() => {
+        const rSet = new Set(extractConstants(rendered));
+        return aConstants.filter((n) => rSet.has(n)).length / aConstants.length;
+      })();
+  const aCoeffs = extractCoefficients(authored);
+  const coeffMatch = aCoeffs.length === 0 ? 1
+    : (() => {
+        const rSet = new Set(extractCoefficients(rendered));
+        return aCoeffs.filter((n) => rSet.has(n)).length / aCoeffs.length;
+      })();
+  return Math.min(numericMatch, proseMatch, constantsMatch, coeffMatch);
 }
 
 const visualPromiseRegex = /\b(let me|i['’]ll|i will|here['’]s|here is|i['’]m going to)\s+(?:(?:a|an|the|this|that|some)\s+(?:quick\s+|simple\s+|small\s+|nice\s+)?)?(draw|plot|show|sketch|display|render|graph|create|drawing|chart|diagram|figure|illustration|visualization|image|picture|rendering)\b/i;
@@ -127,6 +159,72 @@ console.log('\n=== Test 4: problemSimilarity (drifted renders score low) ===');
   const drift3 = 'Find the area of a triangle with base 5 and height 6.';
   const s3 = problemSimilarity(drift3, authored);
   check('different-problem drift scores < 0.3', s3 < 0.3, String(s3));
+}
+
+console.log('\n=== Test 4b: constants subscore catches RHS substitution ===');
+{
+  // The 2026-04-29 geometry session drift case. Authored:
+  // "3x + 2y = 12, 5x - 2y = 4" rendered as
+  // "3x + 2y = 16, 5x - 2y = 8" — same shape, different right-hand sides.
+  // Pre-fix this scored 0.8 numericMatch and escaped the < 0.5 threshold,
+  // so the brain proceeded to gaslight the student about which equation
+  // was on the board. The constants subscore catches it now: authored
+  // [12, 4] vs rendered [16, 8] = 0/2 overlap.
+  const authored = 'Solve the system using elimination: 3x + 2y = 12, 5x - 2y = 4';
+  const renderedDrift = 'Solve the system using elimination: 3x + 2y = 16, 5x - 2y = 8';
+  const sim = problemSimilarity(renderedDrift, authored);
+  check('elimination RHS drift (12→16, 4→8) scores < 0.5', sim < 0.5, String(sim));
+
+  // Coefficient changes (which DO ride along in identifiers like "3x")
+  // should still drift the broader numeric subscore. Authored "3x + 2y"
+  // vs rendered "5x + 7y" with same RHS:
+  const renderedCoeffSwap = 'Solve the system using elimination: 5x + 7y = 12, 9x - 4y = 4';
+  const simCoeff = problemSimilarity(renderedCoeffSwap, authored);
+  check('coefficient drift (3x→5x, 2y→7y, etc.) still rejected', simCoeff < 0.5, String(simCoeff));
+
+  // Faithful render scores 1.0 — confirm the new subscore doesn't
+  // false-positive when constants are unchanged.
+  const sameSim = problemSimilarity(authored, authored);
+  check('verbatim render still scores 1.0 (no constants false-positive)', sameSim === 1, String(sameSim));
+
+  // Reorder-only: legal change that should NOT trigger drift. Authored
+  // "12, 4" vs rendered "4, 12" (swapped the two equations).
+  const reorder = 'Solve the system using elimination: 5x - 2y = 4, 3x + 2y = 12';
+  const simReorder = problemSimilarity(reorder, authored);
+  check('equation reorder is NOT drift (constants set still matches)', simReorder >= 0.8, String(simReorder));
+}
+
+console.log('\n=== Test 4d: coefficient drift caught by extractCoefficients subscore ===');
+{
+  const authored = 'Solve the system using elimination: 3x + 2y = 12, 5x - 2y = 4';
+  // Same RHS [12, 4], swapped LHS coefficients [3,2,5,2] → [5,7,9,4]
+  const renderedCoeffSwap = 'Solve the system using elimination: 5x + 7y = 12, 9x - 4y = 4';
+  const sim = problemSimilarity(renderedCoeffSwap, authored);
+  check('coefficient drift (3x→5x, 2y→7y, etc.) now rejected', sim < 0.5, String(sim));
+
+  // Verify the helper itself
+  check('extractCoefficients("3x + 2y = 12") = [3, 2]',
+    JSON.stringify(extractCoefficients('3x + 2y = 12')) === JSON.stringify([3, 2]),
+    JSON.stringify(extractCoefficients('3x + 2y = 12')));
+  check('extractCoefficients("Compute 12 things") = [] (no identifiers)',
+    JSON.stringify(extractCoefficients('Compute 12 things')) === JSON.stringify([]),
+    JSON.stringify(extractCoefficients('Compute 12 things')));
+}
+
+console.log('\n=== Test 4c: extractConstants standalone ===');
+{
+  const cases: Array<[string, number[]]> = [
+    ['3x + 2y = 12', [12]],          // coefficients in identifiers skipped
+    ['3x + 2y = 16, 5x - 2y = 8', [16, 8]], // RHS-only — coefficients skipped, "-2y" rejected by lookahead (y follows).
+    ['Compute 1/2 + 1/3.', [1, 2, 1, 3]],     // 1/2 isn't standalone (slash isn't punctuation in our regex), so 1 then 2 then 1 then 3
+    ['x = 12.5', [12.5]],
+    ['no numbers here', []],
+  ];
+  for (const [input, expected] of cases) {
+    const got = extractConstants(input);
+    const ok = JSON.stringify(got) === JSON.stringify(expected);
+    check(`extractConstants("${input}")`, ok, `expected=${JSON.stringify(expected)} got=${JSON.stringify(got)}`);
+  }
 }
 
 console.log('\n=== Test 5: problemSimilarity on a try_yourself prose problem ===');
