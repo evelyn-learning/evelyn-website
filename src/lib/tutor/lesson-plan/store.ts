@@ -143,6 +143,11 @@ import { SEED_G6_MATH_RATIOS_RATES } from './seeds/g6-math-ratios-rates';
 import { SEED_G6_MATH_PERCENT } from './seeds/g6-math-percent';
 import { SEED_G6_MATH_INTEGERS } from './seeds/g6-math-integers';
 import { SEED_G6_MATH_EXPRESSIONS_VARIABLES } from './seeds/g6-math-expressions-variables';
+import { SEED_G7_MATH_PROPORTIONAL_RELATIONSHIPS } from './seeds/g7-math-proportional-relationships';
+import { SEED_G7_MATH_INTEGER_OPERATIONS } from './seeds/g7-math-integer-operations';
+import { SEED_G7_MATH_ONE_STEP_EQUATIONS } from './seeds/g7-math-one-step-equations';
+import { SEED_G7_MATH_TWO_STEP_EQUATIONS } from './seeds/g7-math-two-step-equations';
+import { SEED_G7_MATH_DISTRIBUTIVE_COMBINE } from './seeds/g7-math-distributive-combine';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -319,6 +324,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G6_MATH_PERCENT,
   SEED_G6_MATH_INTEGERS,
   SEED_G6_MATH_EXPRESSIONS_VARIABLES,
+  // Batch 8 — G7 math (algebra bridge: proportional, integers, equations, expressions).
+  SEED_G7_MATH_PROPORTIONAL_RELATIONSHIPS,
+  SEED_G7_MATH_INTEGER_OPERATIONS,
+  SEED_G7_MATH_ONE_STEP_EQUATIONS,
+  SEED_G7_MATH_TWO_STEP_EQUATIONS,
+  SEED_G7_MATH_DISTRIBUTIVE_COMBINE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
