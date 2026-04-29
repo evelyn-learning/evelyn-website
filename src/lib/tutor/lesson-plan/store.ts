@@ -131,6 +131,9 @@ import { SEED_G3_MATH_AREA_PERIMETER } from './seeds/g3-math-area-perimeter';
 import { SEED_G3_MATH_TIME_MONEY } from './seeds/g3-math-time-money';
 import { SEED_G4_MATH_MULTI_DIGIT_MULTIPLICATION } from './seeds/g4-math-multi-digit-multiplication';
 import { SEED_G4_MATH_LONG_DIVISION } from './seeds/g4-math-long-division';
+import { SEED_G4_MATH_EQUIVALENT_FRACTIONS } from './seeds/g4-math-equivalent-fractions';
+import { SEED_G4_MATH_DECIMALS_INTRO } from './seeds/g4-math-decimals-intro';
+import { SEED_G4_MATH_FACTORS_MULTIPLES } from './seeds/g4-math-factors-multiples';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -293,6 +296,9 @@ export const SEED_PLANS: LessonPlan[] = [
   // Batch 5 — G4 math (continuing the multiplication/division strand).
   SEED_G4_MATH_MULTI_DIGIT_MULTIPLICATION,
   SEED_G4_MATH_LONG_DIVISION,
+  SEED_G4_MATH_EQUIVALENT_FRACTIONS,
+  SEED_G4_MATH_DECIMALS_INTRO,
+  SEED_G4_MATH_FACTORS_MULTIPLES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
