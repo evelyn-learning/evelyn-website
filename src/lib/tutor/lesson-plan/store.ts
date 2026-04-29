@@ -100,6 +100,14 @@ import { SEED_CHEM_KINETICS } from './seeds/chem-kinetics';
 import { SEED_CHEM_EQUILIBRIUM } from './seeds/chem-equilibrium';
 import { SEED_CHEM_REDOX } from './seeds/chem-redox';
 import { SEED_CHEM_ORGANIC_INTRO } from './seeds/chem-organic-intro';
+import { SEED_PHYS_KINEMATICS_2D_PROJECTILE } from './seeds/phys-kinematics-2d-projectile';
+import { SEED_PHYS_NEWTONS_FIRST_LAW } from './seeds/phys-newtons-first-law';
+import { SEED_PHYS_NEWTONS_SECOND_LAW } from './seeds/phys-newtons-second-law';
+import { SEED_PHYS_NEWTONS_THIRD_LAW } from './seeds/phys-newtons-third-law';
+import { SEED_PHYS_FRICTION } from './seeds/phys-friction';
+import { SEED_PHYS_WORK_ENERGY } from './seeds/phys-work-energy';
+import { SEED_PHYS_CONSERVATION_ENERGY } from './seeds/phys-conservation-energy';
+import { SEED_PHYS_MOMENTUM_COLLISIONS } from './seeds/phys-momentum-collisions';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -229,6 +237,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_CHEM_REDOX,
   SEED_CHEM_ORGANIC_INTRO,
   SEED_PHYS_KINEMATICS_1D,
+  SEED_PHYS_KINEMATICS_2D_PROJECTILE,
+  SEED_PHYS_NEWTONS_FIRST_LAW,
+  SEED_PHYS_NEWTONS_SECOND_LAW,
+  SEED_PHYS_NEWTONS_THIRD_LAW,
+  SEED_PHYS_FRICTION,
+  SEED_PHYS_WORK_ENERGY,
+  SEED_PHYS_CONSERVATION_ENERGY,
+  SEED_PHYS_MOMENTUM_COLLISIONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
