@@ -18,6 +18,7 @@ import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
 import type { Segment } from '../lesson-plan/types';
+import { buildWhiteboardSummary } from '../whiteboard/summary';
 
 export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
@@ -280,27 +281,12 @@ export function formatSegmentTruth(seg: unknown): string {
   return lines.join('\n');
 }
 
-export function buildWhiteboardSummary(snapshot: CatalogSnapshotEntry[]): string {
-  if (snapshot.length === 0) return '(whiteboard is empty)';
-  return snapshot
-    .map((entry, i) => {
-      const title = entry.title ? ` — ${entry.title}` : '';
-      const page = entry.pageTitle ? ` [page: ${entry.pageTitle}]` : '';
-      const head = `[${i + 1}] ${entry.action}${title}${page}`;
-      const feats = entry.features ?? [];
-      if (feats.length === 0) {
-        const count = entry.featureCount > 0 ? ` (${entry.featureCount} addressable features)` : '';
-        return `${head}${count}`;
-      }
-      // Cap per-item feature dump so a chess-board-sized renderer can't blow
-      // up the prompt; in practice geometry items have ≤ 20 features.
-      const MAX = 30;
-      const shown = feats.slice(0, MAX).map((f) => `   - ${f.description}`);
-      const overflow = feats.length > MAX ? `   - …and ${feats.length - MAX} more` : '';
-      return [head, ...shown, overflow].filter(Boolean).join('\n');
-    })
-    .join('\n');
-}
+// Re-export from whiteboard/summary so client-side callers (the
+// orchestrator's judge call) can import the helper without pulling in
+// the Anthropic SDK that this file imports at top-level. The internal
+// import below is what local callers (runBrainTurn / streamBrainTurn)
+// use; the re-export keeps the public surface unchanged.
+export { buildWhiteboardSummary };
 
 /**
  * Run one turn of the brain. The caller passes the latest student utterance

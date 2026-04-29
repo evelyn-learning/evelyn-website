@@ -16,6 +16,7 @@ import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
 import { getSegment } from '@/lib/tutor/lesson-plan/types';
+import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
@@ -3241,6 +3242,17 @@ export function VoiceTutorRealtime({
       // three full turns of silence.
       const MAX_RULE8_RETRIES = 1;
       let rule8RetriesUsed = 0;
+      // Judge LLM (Lever B1 of the coherence redesign) gets its own
+      // single-shot budget. Calls /api/tutor/judge with the post-render
+      // board snapshot + the brain's spoken text; if Haiku flags any
+      // ungrounded claim ("you said 12 but the board has 16"), we
+      // promote that to a synthetic rejection so the existing retry
+      // loop re-prompts the brain with the issues attached. One repair
+      // attempt is enough — if the brain still drifts after seeing the
+      // explicit issue list, a second judge call is unlikely to help
+      // and the student is waiting on each round-trip.
+      const MAX_JUDGE_RETRIES = 1;
+      let judgeRetriesUsed = 0;
       // Catches BOTH verb-form ("Let me draw / I'll plot") and noun-form
       // ("Here's a graph / Here is a quick diagram") visual promises.
       // The server-side telemetry regex (brain/stream/route.ts) only
@@ -3535,6 +3547,52 @@ export function VoiceTutorRealtime({
           clearSpeechQueueRef.current?.();
           console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
           onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
+        }
+
+        // Judge LLM groundedness check (Lever B1). Only fires when the
+        // attempt produced spoken text AND wasn't already killed by a
+        // structural rejection (no point judging speech we're about to
+        // throw away). Calls Haiku with the post-render board snapshot
+        // + the brain's full spoken text; ungrounded claims become a
+        // synthetic rejection that feeds the existing retry loop.
+        // Domain-agnostic by design — works for math number mismatches,
+        // chemistry diagram claims, ELA passage refs, code line refs.
+        if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attemptText && attemptText.trim().length > 0) {
+          try {
+            const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot());
+            const judgeRes = await fetch('/api/tutor/judge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ boardSummary, spokenText: attemptText }),
+            });
+            if (judgeRes.ok) {
+              const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string }> };
+              if (!judgeJson.grounded && judgeJson.issues.length > 0) {
+                const issueList = judgeJson.issues
+                  .slice(0, 5)
+                  .map((iss, i) => `[${i + 1}] You said: "${iss.claim}" — ${iss.why}`)
+                  .join('\n');
+                const reason =
+                  `Your spoken response contained claims that don't match what's currently on the whiteboard:\n${issueList}\n` +
+                  `Re-speak using ONLY values, equations, and entities that actually appear on the board. ` +
+                  `If you need to reference a value that isn't on the board yet, render it first via show_equation / show_problem / show_segment_card BEFORE speaking it.`;
+                rejectionsThisAttempt.push({ action: 'judge_groundedness', reason });
+                judgeRetriesUsed++;
+                attemptKilled = true;
+                clearSpeechQueueRef.current?.();
+                console.warn(`[brain-orchestrator] judge flagged ${judgeJson.issues.length} ungrounded claim(s) — retrying`);
+                onDebugEvent?.('judge_retry', `${judgeJson.issues.length} issue(s): ${judgeJson.issues[0].claim.slice(0, 60)}…`);
+              } else {
+                onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);
+              }
+            } else {
+              console.warn('[brain-orchestrator] judge call failed:', judgeRes.status);
+            }
+          } catch (err) {
+            // Fail-open on network errors — don't block the conversation
+            // on a flaky judge call. The error is logged for observability.
+            console.warn('[brain-orchestrator] judge error (failing open):', err);
+          }
         }
 
         // Only the WINNING attempt's text goes into aggregatedFullText
