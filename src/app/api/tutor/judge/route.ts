@@ -109,6 +109,36 @@ function badRequest(message: string): Response {
   });
 }
 
+/** Find the first balanced {...} object in a string, ignoring braces
+ *  inside string literals. Returns the substring or null if none.
+ *  Used to pull JSON out of Haiku responses that sometimes wrap the
+ *  JSON in code fences AND add explanation prose around it (observed
+ *  2026-04-29 geometry session). */
+function extractFirstJsonObject(s: string): string | null {
+  let depth = 0;
+  let start = -1;
+  let inStr = false;
+  let escape = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (escape) { escape = false; continue; }
+    if (inStr) {
+      if (c === '\\') escape = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') { inStr = true; continue; }
+    if (c === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (c === '}') {
+      depth--;
+      if (depth === 0 && start >= 0) return s.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest): Promise<Response> {
   let body: JudgeRequestBody;
   try {
@@ -150,21 +180,18 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     let parsed: { grounded?: boolean; issues?: JudgeIssue[] } | null = null;
     try {
-      // Tolerate fenced code blocks. Haiku occasionally wraps JSON in
-      // ```json ... ``` even when told not to. Strip both forms (with
-      // and without language tag, leading whitespace/newlines), AND
-      // fall back to extracting the first {...} object if Haiku adds
-      // prose around it.
-      let jsonStr = raw.trim()
-        .replace(/^```(?:json)?\s*\n?/i, '')
-        .replace(/\n?\s*```\s*$/i, '')
-        .trim();
-      // Last-resort: grab the first balanced { ... } block.
-      if (!jsonStr.startsWith('{')) {
-        const m = jsonStr.match(/\{[\s\S]*\}/);
-        if (m) jsonStr = m[0];
-      }
-      parsed = JSON.parse(jsonStr);
+      // Robust extraction: walk the raw string and pull out the first
+      // top-level {...} object via a brace counter that respects string
+      // literals. Handles every observed failure mode:
+      //   - prose before JSON
+      //   - prose after JSON
+      //   - fenced code blocks (with or without `json` tag)
+      //   - fenced JSON followed by explanation prose (the 2026-04-29
+      //     geometry session: ```json\n{...}\n```\n\nThe tutor's...)
+      //   - nested braces inside the JSON itself
+      //   - braces inside string literals (e.g., {"claim":"x = {3}"})
+      const jsonStr = extractFirstJsonObject(raw);
+      if (jsonStr) parsed = JSON.parse(jsonStr);
     } catch {
       console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));
     }

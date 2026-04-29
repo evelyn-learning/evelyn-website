@@ -1112,6 +1112,45 @@ export function VoiceTutorRealtime({
           return [];
         }
       }
+      // Pre-validate showGeometryConstructed by running the same solver
+      // the renderer uses. Without this, a malformed construction (e.g.,
+      // polygon_regular emitted with `vertices` instead of `on`+`sides`)
+      // throws inside the renderer, which catches it and shows a small
+      // red error box — but the orchestrator never learns the figure
+      // failed, so the brain proceeds reasoning about a non-existent
+      // diagram. The 2026-04-29 geometry session #5 was exactly this
+      // case: brain emitted `polygon_regular {vertices: [A,B,C]}` →
+      // solver threw "Expected circle 'undefined', got undefined" → the
+      // renderer showed a red error → the brain narrated arithmetic for
+      // a triangle the student couldn't see. solveGeometry is pure
+      // (no side effects) so we can call it as a validator.
+      if (cmd.action === 'showGeometryConstructed') {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { solveGeometry } = require('@/lib/tutor/diagrams/geometry-solver') as typeof import('@/lib/tutor/diagrams/geometry-solver');
+          solveGeometry({
+            title: cmdAny.title,
+            given: cmdAny.given,
+            steps: cmdAny.steps,
+            display: cmdAny.display,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          // Targeted hint when the brain misuses polygon_regular —
+          // by far the most common failure mode (it sounds like a more
+          // descriptive `polygon` so the brain reaches for it).
+          const polygonRegularHint = /polygon_regular|Expected circle.*undefined/i.test(msg)
+            ? ' Hint: polygon_regular requires `on` (a circle id) and `sides` (number) — it inscribes a regular n-gon in an EXISTING circle. If you just want a polygon defined by named vertices, use `kind: "polygon"` with `vertices: [id1, id2, ...]` instead.'
+            : '';
+          const reason =
+            `show_geometry_constructed solver rejected the spec: ${msg}.${polygonRegularHint} ` +
+            `Re-emit show_geometry_constructed with the corrected step shape. Check each step's required fields against the schema.`;
+          console.warn('[VoiceTutorRealtime] showGeometryConstructed solver failed:', msg);
+          onDebugEvent?.('tool_call', `Rejected show_geometry_constructed: ${msg}`);
+          rejected.push({ action: 'show_geometry_constructed', reason });
+          return [];
+        }
+      }
       if (cmd.action === 'showEquation') {
         const latex = cmdAny.latex?.trim() || '';
         if (isPlaceholderLatex(latex)) {
