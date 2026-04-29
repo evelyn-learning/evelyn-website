@@ -66,6 +66,16 @@ export interface CatalogItem {
    * call is reported back as a duplicate and not rendered.
    */
   signature?: string;
+  /**
+   * The lesson-plan segment id that was active when this item was
+   * appended (e.g. "worked-1"). Empty string for free-conversation
+   * sessions. Used by getSnapshot's segment filter to restrict the
+   * brain's per-turn view to current-segment content only — old
+   * segments stay visually accessible to the student via page nav
+   * but don't bloat the brain's prompt or confuse the judge LLM
+   * about which card the student is attending to.
+   */
+  segmentId?: string;
   features: CatalogFeature[];
 }
 
@@ -80,6 +90,11 @@ export interface CatalogSnapshotEntry {
   title?: string;
   pageTitle?: string;
   featureCount: number;
+  /** Segment id the entry was appended in (mirrors CatalogItem.segmentId).
+   *  When the brain's per-turn snapshot filters by segment, the entries
+   *  that survive will all have the same segmentId — but we still
+   *  surface the field for downstream debugging / telemetry. */
+  segmentId?: string;
   /** Per-feature short descriptions surfaced to the brain so it can preserve
    *  exact coordinates / labels across turns. Without these, the brain sees
    *  only "[1] showGeometry — Circle: Center O(-2,3), Radius 5 (5 features)"
@@ -178,6 +193,19 @@ export function canonicalizeLabels(entry: Pick<FeatureManifestEntry, 'name' | 'k
 export class WhiteboardCatalog {
   private items: CatalogItem[] = [];
   private nextOrder = 0;
+  /** Active lesson-plan segment id at the time of the next append().
+   *  Stamped onto each CatalogItem so getSnapshot can filter to the
+   *  current segment for the brain's per-turn view. Empty string =
+   *  no plan / free-conversation session (filter is a no-op then). */
+  private currentSegmentId = '';
+
+  /** Update the current-segment marker. Subsequent append()s stamp
+   *  this segmentId on their items. The orchestrator calls this on
+   *  every brain turn to mirror lessonPlanRef + currentSegmentIdRef
+   *  state into the catalog. Idempotent. */
+  setCurrentSegment(segmentId: string): void {
+    this.currentSegmentId = segmentId || '';
+  }
 
   append(input: {
     itemId: string;
@@ -241,6 +269,7 @@ export class WhiteboardCatalog {
       pageTitle: input.pageTitle,
       title: input.title,
       signature: input.signature,
+      segmentId: this.currentSegmentId || undefined,
       features,
     };
     const existing = this.items.findIndex((i) => i.itemId === input.itemId);
@@ -262,14 +291,30 @@ export class WhiteboardCatalog {
    * Compact per-turn board state appended to every show_* tool_result.
    * Lets the tutor see what is already drawn and route through
    * tutor_scroll_whiteboard / tutor_scribble instead of redrawing.
+   *
+   * When `opts.currentSegmentId` is provided, the snapshot is FILTERED
+   * to items stamped with that segmentId. This is the auto-clear
+   * mechanism: the brain only sees current-segment content per turn,
+   * keeping its prompt focused and the judge LLM unambiguous about
+   * which card the student is looking at. Items from prior segments
+   * remain in the catalog (still scrollable for the student) but
+   * don't bloat the brain's view. Items with NO segmentId (e.g.,
+   * free-conversation sessions, or items appended before the
+   * orchestrator wired setCurrentSegment) are always included so we
+   * don't accidentally hide free-form content.
    */
-  getSnapshot(): CatalogSnapshotEntry[] {
-    return this.items.map((it) => ({
+  getSnapshot(opts?: { currentSegmentId?: string }): CatalogSnapshotEntry[] {
+    const filterSeg = opts?.currentSegmentId;
+    const items = filterSeg
+      ? this.items.filter((it) => !it.segmentId || it.segmentId === filterSeg)
+      : this.items;
+    return items.map((it) => ({
       itemId: it.itemId,
       action: it.action,
       title: it.title,
       pageTitle: it.pageTitle,
       featureCount: it.features.length,
+      segmentId: it.segmentId,
       // Pull a compact list of per-feature descriptions. Skip the synthetic
       // whole-item region (kind === 'region') — its description is just the
       // title we already surface above. The remaining descriptions carry

@@ -1714,6 +1714,36 @@ export function VoiceTutorRealtime({
             console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
             currentSegmentIdRef.current = next;
             setActiveSegmentId(next);
+            // Mirror into the catalog so subsequent appends stamp the
+            // new segment id. The brain's per-turn snapshot filter
+            // uses this to scope its view to current-segment items.
+            catalogRef.current.setCurrentSegment(next);
+            // Auto-newPage for visual freshness: every segment
+            // transition starts the student on a fresh whiteboard
+            // page so they aren't scrolling through stacked content
+            // from prior segments. Synthesized as a real catalog-aware
+            // newPage command (uses the resolved segment's title when
+            // available) so the page break shows up in the page nav.
+            const nextSeg = plan.segments.find((s) => s.id === next);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newPageTitle = (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newPageCmd: any = {
+              action: 'newPage',
+              title: typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '',
+            };
+            // Append the newPage to the running command stream so the
+            // canvas page-grouping picks it up. Done OUTSIDE this
+            // dispatch loop via the live commands array setter that
+            // the canvas listens to.
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onWhiteboardCommand?.([newPageCmd as any]);
+              console.log(`[VoiceTutorRealtime] auto-newPage on segment advance → "${next}" ("${newPageCmd.title}")`);
+              onDebugEvent?.('auto_newpage_on_advance', `${next}: ${newPageCmd.title}`);
+            } catch (err) {
+              console.warn('[VoiceTutorRealtime] auto-newPage emission failed:', err);
+            }
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
           }
@@ -3109,7 +3139,15 @@ export function VoiceTutorRealtime({
             ...priorWithoutCurrent,
           ];
 
-      const whiteboardSnapshot = catalogRef.current.getSnapshot();
+      // Mirror current segment id into the catalog so subsequent
+      // appends are stamped with it AND getSnapshot's filter scopes
+      // the brain's view to current-segment items only. Items appended
+      // before this wire-up (no segmentId) always pass the filter.
+      catalogRef.current.setCurrentSegment(currentSegmentIdRef.current || '');
+      const segmentSnapshotOpts = currentSegmentIdRef.current
+        ? { currentSegmentId: currentSegmentIdRef.current }
+        : undefined;
+      const whiteboardSnapshot = catalogRef.current.getSnapshot(segmentSnapshotOpts);
       const t0 = Date.now();
 
       // Validator-feedback retry loop (Phase 5 Option B). When a tool
@@ -3211,7 +3249,7 @@ export function VoiceTutorRealtime({
             systemPrompt: claudeSystemPromptRef.current,
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
-            whiteboardSnapshot: catalogRef.current.getSnapshot(),
+            whiteboardSnapshot: catalogRef.current.getSnapshot(segmentSnapshotOpts),
             lessonPlanContext,
             studentProfileBlock: studentProfileBlockRef.current || undefined,
             grade: level,
@@ -3434,6 +3472,16 @@ export function VoiceTutorRealtime({
                       const seg = getSegment(plan, segId);
                       const truth = getSegmentTruth(seg);
                       if (truth?.problemText) {
+                        // Stamp the catalog with this segment id BEFORE
+                        // appending the resolved show_problem so the
+                        // card belongs to the segment it represents
+                        // (even if the brain calls show_segment_card
+                        // before advance_lesson). Without this, an
+                        // out-of-order emission would tag the new
+                        // segment's card with the prior segment id and
+                        // the snapshot filter would hide it on the
+                        // next turn. Idempotent — same segId is fine.
+                        catalogRef.current.setCurrentSegment(segId);
                         resolvedCmd = {
                           action: 'showProblem',
                           problem: {
@@ -3533,7 +3581,7 @@ export function VoiceTutorRealtime({
         // chemistry diagram claims, ELA passage refs, code line refs.
         if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attemptText && attemptText.trim().length > 0) {
           try {
-            const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot());
+            const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot(segmentSnapshotOpts));
             // Focus = the most recently rendered problem statement.
             // Without focus, the judge passes any speech that's grounded
             // against ANY card on the board — exactly the failure mode
