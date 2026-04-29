@@ -139,6 +139,10 @@ import { SEED_G5_MATH_FRACTION_OPERATIONS } from './seeds/g5-math-fraction-opera
 import { SEED_G5_MATH_VOLUME } from './seeds/g5-math-volume';
 import { SEED_G5_MATH_COORDINATE_PLANE } from './seeds/g5-math-coordinate-plane';
 import { SEED_G5_MATH_ORDER_OF_OPERATIONS } from './seeds/g5-math-order-of-operations';
+import { SEED_G6_MATH_RATIOS_RATES } from './seeds/g6-math-ratios-rates';
+import { SEED_G6_MATH_PERCENT } from './seeds/g6-math-percent';
+import { SEED_G6_MATH_INTEGERS } from './seeds/g6-math-integers';
+import { SEED_G6_MATH_EXPRESSIONS_VARIABLES } from './seeds/g6-math-expressions-variables';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -310,6 +314,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G5_MATH_VOLUME,
   SEED_G5_MATH_COORDINATE_PLANE,
   SEED_G5_MATH_ORDER_OF_OPERATIONS,
+  // Batch 7 — G6 math (ratios, percent, integers, expressions).
+  SEED_G6_MATH_RATIOS_RATES,
+  SEED_G6_MATH_PERCENT,
+  SEED_G6_MATH_INTEGERS,
+  SEED_G6_MATH_EXPRESSIONS_VARIABLES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
