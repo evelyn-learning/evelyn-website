@@ -238,12 +238,23 @@ export default function CoordinatePlaneRenderer({
           const segName = s.label ? `line-${shortLabelSlug(s.label)}` : `line-${i + 1}`;
           const sminX = Math.min(x1, x2); const smaxX = Math.max(x1, x2);
           const sminY = Math.min(y1, y2); const smaxY = Math.max(y1, y2);
+          // Perpendicular stagger: push each segment's label off the
+          // segment line by `(idx + 1) * 8` along the perpendicular,
+          // alternating sides via the sign so segments with parallel
+          // midpoints (common in vector-addition / linear-system
+          // diagrams) don't pile their labels at the same Y.
+          const segDx = x2 - x1; const segDy = y2 - y1;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy) || 1;
+          const segPerpX = -segDy / segLen; const segPerpY = segDx / segLen;
+          const segStagger = (Math.floor(i / 2) + 1) * 8 * (i % 2 === 0 ? 1 : -1);
+          const segLx = (x1 + x2) / 2 + segPerpX * segStagger;
+          const segLy = (y1 + y2) / 2 + segPerpY * segStagger - 6;
           return (
             <g key={`seg${i}`} {...feat(segName, { cx: (x1 + x2) / 2, cy: (y1 + y2) / 2, w: Math.max(30, smaxX - sminX + 20), h: Math.max(30, smaxY - sminY + 20) })}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2} strokeDasharray={s.dashed ? '6 4' : undefined}
                 markerEnd={s.arrow ? `url(#${arrowMarkerId(color, 'cp-arrow')})` : undefined} />
               {s.label && (
-                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} fontSize={11} fill={color} textAnchor="middle" fontWeight={600}>{s.label}</text>
+                <text x={segLx} y={segLy} fontSize={11} fill={color} textAnchor="middle" fontWeight={600}>{s.label}</text>
               )}
             </g>
           );
@@ -258,12 +269,22 @@ export default function CoordinatePlaneRenderer({
           const vecName = v.label ? `vector-${shortLabelSlug(v.label)}` : `vector-${i + 1}`;
           const vminX = Math.min(x1, x2); const vmaxX = Math.max(x1, x2);
           const vminY = Math.min(y1, y2); const vmaxY = Math.max(y1, y2);
+          // Tip-label stagger by idx so converging vectors (e.g.,
+          // vector addition with multiple vectors ending at the same
+          // resultant point) don't pile labels at identical (x2,y2).
+          // Push each successive vector's label further out along the
+          // vector direction so they fan out radially.
+          const vecDx = x2 - x1; const vecDy = y2 - y1;
+          const vecLen = Math.sqrt(vecDx * vecDx + vecDy * vecDy) || 1;
+          const vecExtra = i * 14;
+          const vecLx = x2 + 6 + (vecDx / vecLen) * vecExtra;
+          const vecLy = y2 - 4 + (vecDy / vecLen) * vecExtra;
           return (
             <g key={`vec${i}`} {...feat(vecName, { cx: (x1 + x2) / 2, cy: (y1 + y2) / 2, w: Math.max(30, vmaxX - vminX + 20), h: Math.max(30, vmaxY - vminY + 20) })}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2.5}
                 markerEnd={`url(#${arrowMarkerId(color, 'cp-arrow')})`} />
               {v.label && (
-                <text x={x2 + 6} y={y2 - 4} fontSize={12} fill={color} fontWeight={700}>{v.label}</text>
+                <text x={vecLx} y={vecLy} fontSize={12} fill={color} fontWeight={700}>{v.label}</text>
               )}
             </g>
           );
@@ -274,11 +295,21 @@ export default function CoordinatePlaneRenderer({
           const color = p.color || DIAGRAM_COLORS.secondary;
           const cx = sx(p.x); const cy = sy(p.y);
           const ptName = p.label ? `point-${shortLabelSlug(p.label)}` : `point-${i + 1}`;
+          // Cluster-aware stagger: alternate label corner around the
+          // dot by idx so two close points don't put labels in the
+          // same NE quadrant. Cycles through NE / NW / SE / SW.
+          const corners: Array<{ dx: number; dy: number; anchor: 'start' | 'end' }> = [
+            { dx: 6,  dy: -6, anchor: 'start' },  // NE
+            { dx: -6, dy: -6, anchor: 'end'   },  // NW
+            { dx: 6,  dy: 12, anchor: 'start' },  // SE
+            { dx: -6, dy: 12, anchor: 'end'   },  // SW
+          ];
+          const corner = corners[i % corners.length];
           return (
             <g key={`pt${i}`} {...feat(ptName, { cx, cy, w: 28, h: 28 })}>
               <circle cx={cx} cy={cy} r={4} fill={color} stroke="white" strokeWidth={1.5} />
               {p.label && (
-                <text x={cx + 6} y={cy - 6} fontSize={11} fill={DIAGRAM_COLORS.text} fontWeight={600}>{p.label}</text>
+                <text x={cx + corner.dx} y={cy + corner.dy} fontSize={11} fill={DIAGRAM_COLORS.text} fontWeight={600} textAnchor={corner.anchor}>{p.label}</text>
               )}
             </g>
           );

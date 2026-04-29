@@ -40,12 +40,15 @@ export function CatalogVectorAdditionRenderer({ figure }: { figure: VectorAdditi
         <line x1={px(minX) - 20} y1={py(0)} x2={px(maxX) + 20} y2={py(0)} stroke="#e5e7eb" strokeWidth={1} />
         <line x1={px(0)} y1={py(minY) - 20} x2={px(0)} y2={py(maxY) + 20} stroke="#e5e7eb" strokeWidth={1} />
         {method === 'tip_to_tail' ? renderTipToTail(vectors, px, py) : renderParallelogram(vectors, px, py)}
-        {/* Resultant */}
+        {/* Resultant — labelSide pulls its label perpendicular to the
+            line so it doesn't sit on top of the parallelogram-method
+            sum vectors that share the same midpoint. */}
         <Vec
           x1={px(0)} y1={py(0)} x2={px(resultant.x)} y2={py(resultant.y)}
           color={resultant.color || '#dc2626'}
           label={resultant.label || 'R'}
           dashed
+          labelSide={1}
         />
       </svg>
     </div>
@@ -59,20 +62,35 @@ function renderTipToTail(vectors: VectorAdditionFigure['vectors'], px: (x: numbe
     cx += v.x; cy += v.y;
     const x2 = px(cx), y2 = py(cy);
     const color = v.color || PALETTE[i % PALETTE.length];
-    return <Vec key={i} x1={x1} y1={y1} x2={x2} y2={y2} color={color} label={v.label || `v${i + 1}`} />;
+    // Tip-to-tail vectors don't usually overlap (each starts where
+    // the prior ended), so a tiny stagger keeps labels off the line
+    // when consecutive vectors are nearly parallel.
+    return <Vec key={i} x1={x1} y1={y1} x2={x2} y2={y2} color={color} label={v.label || `v${i + 1}`} labelSide={i % 2 === 0 ? 1 : -1} />;
   });
 }
 
 function renderParallelogram(vectors: VectorAdditionFigure['vectors'], px: (x: number) => number, py: (y: number) => number) {
   // Draw both vectors from origin + dotted parallelogram completion.
+  // All vectors share the (0,0) start, so their label midpoints are
+  // close together — alternating labelSide pushes each label to the
+  // opposite side of its arrow.
   return vectors.map((v, i) => {
     const color = v.color || PALETTE[i % PALETTE.length];
-    return <Vec key={i} x1={px(0)} y1={py(0)} x2={px(v.x)} y2={py(v.y)} color={color} label={v.label || `v${i + 1}`} />;
+    return <Vec key={i} x1={px(0)} y1={py(0)} x2={px(v.x)} y2={py(v.y)} color={color} label={v.label || `v${i + 1}`} labelSide={i % 2 === 0 ? 1 : -1} />;
   });
 }
 
-function Vec({ x1, y1, x2, y2, color, label, dashed }: { x1: number; y1: number; x2: number; y2: number; color: string; label: string; dashed?: boolean }) {
+function Vec({ x1, y1, x2, y2, color, label, dashed, labelSide = 1 }: { x1: number; y1: number; x2: number; y2: number; color: string; label: string; dashed?: boolean; labelSide?: 1 | -1 }) {
   const id = `vec-arr-${color.replace('#', '')}`;
+  // Place the label perpendicular to the vector at its midpoint, on
+  // the side indicated by labelSide. Falls back to the legacy "+6 right
+  // of midpoint" when the vector has zero length.
+  const dx = x2 - x1; const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const perpX = len > 0 ? (-dy / len) * 12 * labelSide : 6;
+  const perpY = len > 0 ? (dx / len) * 12 * labelSide : 0;
+  const lx = (x1 + x2) / 2 + perpX;
+  const ly = (y1 + y2) / 2 + perpY;
   return (
     <g>
       <defs>
@@ -81,7 +99,7 @@ function Vec({ x1, y1, x2, y2, color, label, dashed }: { x1: number; y1: number;
         </marker>
       </defs>
       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2.5} markerEnd={`url(#${id})`} strokeDasharray={dashed ? '5 4' : undefined} />
-      <text x={(x1 + x2) / 2 + 6} y={(y1 + y2) / 2} fontSize={13} fill={color} fontWeight={700}>{label}</text>
+      <text x={lx} y={ly} fontSize={13} fill={color} fontWeight={700} textAnchor="middle" dominantBaseline="middle">{label}</text>
     </g>
   );
 }

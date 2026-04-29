@@ -486,6 +486,23 @@ export function NumberLineRenderer({
           const color = pt.color ?? COLOR_POINT;
           const isFilled = pt.style !== 'open';
           const ptName = pt.label ? `point-${featSlug(pt.label)}` : `point-${i + 1}`;
+          // Cluster-aware label placement: points whose x-position is
+          // within ~24px of an EARLIER point get pushed to a higher
+          // (or lower) label row so labels don't pile up. Default
+          // position is above the line; alternate to BELOW the line
+          // when the row above is taken. Beyond 2 rows, alternate
+          // between far-above / far-below to spread further.
+          const COLLISION_PX = 24;
+          let row = 0;
+          for (let j = 0; j < i; j++) {
+            const prevX = toX(points[j].value);
+            if (Math.abs(prevX - x) < COLLISION_PX) row++;
+          }
+          // row 0 = above, row 1 = below, row 2 = further-above, row 3 = further-below, ...
+          const aboveLine = row % 2 === 0;
+          const ringIndex = Math.floor(row / 2);
+          const labelOffsetY = (POINT_RADIUS + 6 + ringIndex * 12) * (aboveLine ? -1 : 1)
+            + (aboveLine ? 0 : 12); // push down by font height when below
           return (
             <g key={`point-${i}`} {...feat(ptName, { cx: x, cy: LINE_Y, w: 28, h: 32 }, { width: SVG_WIDTH, height: svgHeight })}>
               <circle
@@ -499,7 +516,7 @@ export function NumberLineRenderer({
               {pt.label && (
                 <text
                   x={x}
-                  y={LINE_Y - POINT_RADIUS - 6}
+                  y={LINE_Y + labelOffsetY}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="600"
