@@ -110,7 +110,7 @@ DO NOT flag:
   the final answer is still wrong
 
 For self-contained claims you're not confident about, leave them alone.
-Only flag when you're confident the claim is wrong.
+Only flag when you're CERTAIN the claim is wrong.
 
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}

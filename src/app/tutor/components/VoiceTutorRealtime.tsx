@@ -3689,22 +3689,23 @@ export function VoiceTutorRealtime({
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string }> };
+              // ADVISORY-ONLY: judge no longer kills the turn. The
+              // brain (Opus 4.7) is the source of truth; a Haiku
+              // fact-checker can't be 100% accurate, and false
+              // positives — which observably do happen — kill correct
+              // turns mid-stream and make the bot sound confused (two
+              // voices talking past each other after the kill bridge).
+              // 2026-04-29 ocean session: judge wrongly flagged
+              // student-affirmation as ungrounded, retry pivoted to a
+              // different topic and the student heard both. Better
+              // outcome: brain is occasionally wrong, student catches
+              // it conversationally, brain corrects on next turn.
+              // Keep the judge running for telemetry so we can see
+              // false-positive rate over time and re-evaluate.
               if (!judgeJson.grounded && judgeJson.issues.length > 0) {
-                const issueList = judgeJson.issues
-                  .slice(0, 5)
-                  .map((iss, i) => `[${i + 1}] You said: "${iss.claim}" — ${iss.why}`)
-                  .join('\n');
-                const reason =
-                  `Your spoken response contained claims that don't match what's currently on the whiteboard:\n${issueList}\n` +
-                  `Re-speak using ONLY values, equations, and entities that actually appear on the board. ` +
-                  `If you need to reference a value that isn't on the board yet, render it first via show_equation / show_problem / show_segment_card BEFORE speaking it.`;
-                rejectionsThisAttempt.push({ action: 'judge_groundedness', reason });
-                judgeRetriesUsed++;
-                attemptKilled = true;
-                clearSpeechQueueRef.current?.();
-                speakKillBridge();
-                console.warn(`[brain-orchestrator] judge flagged ${judgeJson.issues.length} ungrounded claim(s) — retrying`);
-                onDebugEvent?.('judge_retry', `${judgeJson.issues.length} issue(s): ${judgeJson.issues[0].claim.slice(0, 60)}…`);
+                console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${judgeJson.issues.length} flagged claim(s):`,
+                  judgeJson.issues.map((i) => i.claim.slice(0, 80)));
+                onDebugEvent?.('judge_advisory_flag', `${judgeJson.issues.length} issue(s): ${judgeJson.issues[0].claim.slice(0, 60)}…`);
               } else {
                 onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);
               }

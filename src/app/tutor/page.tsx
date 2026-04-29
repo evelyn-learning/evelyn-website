@@ -1231,14 +1231,9 @@ function TutorPage() {
                     lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
                     currentTopicId={selectedTopicId}
                     introText={(() => {
-                      // topicDisplayName already includes the level
-                      // suffix (e.g. "Trigonometry (High School
-                      // (11-12))"), so don't append the level again —
-                      // 2026-04-29 trig showed "Trigonometry (HS
-                      // (11-12)) (HS (11-12))" with the duplication.
                       const topic = topicDisplayName;
                       if (topic) {
-                        return `Ooh, blank canvas — I love it! I see you chose ${topic}. Pick a lesson to jump straight in, or just tell me what you want to learn.`;
+                        return `I see you chose ${topic} — nice. You can tell me ANY topic in this area, or jump straight into one of these lessons:`;
                       }
                       return undefined;
                     })()}

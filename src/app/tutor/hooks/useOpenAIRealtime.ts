@@ -459,6 +459,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const MAX_CONSECUTIVE_REJECTIONS = 2;
   // Track whether the session should be in listening mode (survives audio playback)
   const shouldListenRef = useRef(false);
+  // Set in disconnect() so speakText() can swallow the "not connected"
+  // path silently when the user has explicitly ended the session
+  // (avoids a noisy console error on the way out — the ws is closed
+  // because we closed it). 2026-04-29 ocean session.
+  const intentionallyDisconnectedRef = useRef(false);
   // True when the user has explicitly muted themselves. Distinct from
   // shouldListenRef (which is the INTENT — "we want to listen after the
   // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
@@ -1191,6 +1196,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
+    intentionallyDisconnectedRef.current = false;
     updateState('connecting');
     setError(null);
 
@@ -1362,6 +1368,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Disconnect
   const disconnect = useCallback(() => {
     shouldListenRef.current = false;
+    // Mark as intentionally disconnected so any in-flight speakText
+    // calls (final brain sentence still streaming when "End" was
+    // tapped) silently skip instead of logging "speakText: not
+    // connected" — observed 2026-04-29 ocean session.
+    intentionallyDisconnectedRef.current = true;
 
     // Stop audio capture
     if (audioProcessorRef.current) {
@@ -1838,7 +1849,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const speakText = useCallback((text: string) => {
     const usingOpenAITTS = isRelayRef.current && ttsProviderRef.current === 'openai-mini';
     if (!usingOpenAITTS && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
-      console.error('[Realtime] speakText: not connected');
+      // Quietly skip when the disconnect is intentional (End tapped).
+      if (!intentionallyDisconnectedRef.current) {
+        console.error('[Realtime] speakText: not connected');
+      }
       return;
     }
     if (!text || !text.trim()) return;
