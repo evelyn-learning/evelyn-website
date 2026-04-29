@@ -1367,10 +1367,28 @@ function TryYourselfWithBrainHookup(props: {
 /** Same comparator as TryYourselfRenderer's matchesAnswer — duplicated
  *  here so the bridge can decide correct/incorrect without forcing
  *  every renderer to expose the result. Keep in sync with that file. */
-function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean {
+/** Compare submitted vs expected answer. Returns:
+ *   true  — strings/numerics definitively match
+ *   false — definitively don't match (only used when we have a reliable signal)
+ *   null  — can't tell (FRQ with non-trivial expected, or anything where
+ *           string normalization is hopeless). Caller MUST treat null
+ *           as "let the brain judge" — don't pre-assert a verdict.
+ *
+ * Why this returns null for most FRQ cases: free-response answers are
+ * routinely written in algebraically-equivalent-but-textually-different
+ * forms. The 2026-04-29 pre-calc session showed expected
+ * "sin 225° = −√2/2, cos 225° = −√2/2; Q3; reference angle 45°" vs
+ * submitted "sin 225=cos 225 = - 1/ root 2, quadrant 3, ref angle 45 deg"
+ * — algebraically identical (-1/√2 = -√2/2), but no string normalization
+ * can match them. The string-compare verdict was "doesn't match" → the
+ * brain saw the pre-judgment in its prompt and HAD to fight against it
+ * to tell the student "your value is actually correct, just a different
+ * form". Returning null here drops the pre-judgment so the brain can
+ * judge equivalence without bias. */
+function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
   const s = submitted.trim();
   const e = expected.trim();
-  if (!s || !e) return false;
+  if (!s || !e) return null;
   const tryParse = (v: string): number | null => {
     const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
     if (cleaned === '') return null;
@@ -1384,11 +1402,21 @@ function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq
     return Number.isFinite(n) ? n : null;
   };
   const sn = tryParse(s); const en = tryParse(e);
+  // Numeric / MCQ: pure-string comparison is reliable.
   if (sn !== null && en !== null) return Math.abs(sn - en) < 1e-9;
+  if (format === 'numeric') return null; // numeric expected couldn't parse — defer to brain
+  if (format === 'mcq') {
+    const norm = (v: string) =>
+      v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
+    return norm(s) === norm(e);
+  }
+  // FRQ (or undefined format): string normalization is unreliable — defer
+  // to the brain rather than asserting a wrong verdict. Only a strict
+  // post-normalization equality returns true; any difference returns null.
   const norm = (v: string) =>
     v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
-  if (format === 'numeric') return norm(s) === norm(e);
-  return norm(s) === norm(e);
+  if (norm(s) === norm(e)) return true;
+  return null;
 }
 
 interface CommandRendererProps {

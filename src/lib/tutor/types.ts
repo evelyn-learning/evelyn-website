@@ -55,6 +55,13 @@ export interface TranscriptEntry {
   // Content
   text: string;
 
+  /** True while sentences are still streaming into this tutor entry.
+   *  TranscriptView reads this to render the typing-caret class without
+   *  needing the id to change between streaming and final state — so the
+   *  React key stays stable and the bubble doesn't unmount/remount on
+   *  finalization (which produced visible flicker before 2026-04-29). */
+  streaming?: boolean;
+
   // For tutor messages
   whiteboardCommands?: WhiteboardCommand[];
   pedagogicalIntent?: PedagogicalIntent;

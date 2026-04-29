@@ -1176,8 +1176,23 @@ function TutorPage() {
                 // as a synthetic student turn so the tutor can react with
                 // personalized feedback. Wrap in a marker the brain
                 // recognizes as a structured submission (not free chat).
-                const correctness = isCorrect === true ? 'matches expected' : isCorrect === false ? 'does not match expected' : 'no expected answer set';
-                const marker = `[try-yourself submission] The student submitted: "${answer}". Expected: ${expected ?? '(none)'} (${correctness}). Respond accordingly.`;
+                //
+                // The marker is intentionally NEUTRAL when isCorrect is
+                // null (compareAnswer returns null for FRQ where string
+                // normalization is unreliable — see WhiteboardCanvas.tsx).
+                // Asserting "does not match expected" in that case biased
+                // the brain toward calling correct-but-different-form
+                // answers wrong (the 2026-04-29 pre-calc session: student
+                // wrote -1/√2, expected -√2/2 — algebraically identical
+                // but the marker said "does not match" and the brain had
+                // to fight that bias).
+                const verdict =
+                  isCorrect === true ? 'matches the expected answer (string-equal)'
+                  : isCorrect === false ? 'does NOT match the expected answer'
+                  : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
+                const marker = expected
+                  ? `[try-yourself submission] The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. Respond accordingly.`
+                  : `[try-yourself submission] The student submitted: "${answer}". No expected answer set — judge correctness yourself and respond accordingly.`;
                 if (realtimeHandleRef.current) {
                   realtimeHandleRef.current.sendTextMessage(marker);
                 }

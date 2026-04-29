@@ -375,6 +375,16 @@ export function UnitCircleRenderer({
 
           // Arc radius for the angle indicator
           const arcR = 30 + idx * 8; // stagger arcs if multiple
+          // When multiple highlighted angles share the same quadrant
+          // (e.g., the special-triangles 30°/45°/60° trio), their cos
+          // and sin labels land in nearly identical positions and pile
+          // up illegibly. Stagger the label Y (cos) and X (sin)
+          // offsets by `idx` so each label sits in its own row/column.
+          // The 2026-04-29 pre-calc session showed "60° 45° 30°"
+          // stacked at the origin and "cos 60° cos 45° cos 30°"
+          // overlapping on the x-axis.
+          const labelStaggerY = idx * 12;   // pushes cos labels further below the axis per index
+          const labelStaggerX = idx * 12;   // pushes sin labels further from the vertical line per index
 
           return (
             <g key={`hl-${idx}-${deg}`} {...feat(`angle-${deg}`, { cx: (CX + px) / 2, cy: (CY + py) / 2, w: Math.max(80, Math.abs(px - CX) + 40), h: Math.max(80, Math.abs(py - CY) + 40) }, { width: VB, height: VB })}>
@@ -393,10 +403,11 @@ export function UnitCircleRenderer({
                     stroke={color} strokeWidth={1.2}
                     strokeDasharray="5,3" opacity={0.6}
                   />
-                  {/* cos label on x-axis */}
+                  {/* cos label on x-axis — staggered vertically by idx
+                      so multi-angle overlays don't pile up. */}
                   <text
                     x={(CX + px) / 2}
-                    y={CY + 14}
+                    y={CY + 14 + labelStaggerY}
                     fontSize={9}
                     fill={color}
                     textAnchor="middle"
@@ -404,9 +415,10 @@ export function UnitCircleRenderer({
                   >
                     cos {ha.label || `${deg}°`}
                   </text>
-                  {/* sin label on vertical line */}
+                  {/* sin label on vertical line — staggered horizontally
+                      by idx for the same reason. */}
                   <text
-                    x={px + (cosVal >= 0 ? 8 : -8)}
+                    x={px + (cosVal >= 0 ? 8 + labelStaggerX : -(8 + labelStaggerX))}
                     y={(CY + py) / 2}
                     fontSize={9}
                     fill={color}

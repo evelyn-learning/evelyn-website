@@ -3308,12 +3308,18 @@ export function VoiceTutorRealtime({
                   // "Encountered two children with the same key"
                   // (observed 2026-04-29 algebra session, 3 duplicate
                   // renders during a judge retry).
+                  // Stable per-attempt id. Used as the React key in
+                  // TranscriptView; we DON'T rename it on finalization
+                  // (just clear `streaming`), so the chat bubble keeps
+                  // the same key across the streaming → final transition
+                  // and React doesn't unmount/remount it (which produced
+                  // visible flicker before 2026-04-29).
                   const streamingId = `tutor-streaming-${t0}-${attempt}`;
                   const last = transcriptRef.current[transcriptRef.current.length - 1];
                   if (last && last.role === 'tutor' && last.id === streamingId) {
                     transcriptRef.current = [
                       ...transcriptRef.current.slice(0, -1),
-                      { ...last, text: attemptText },
+                      { ...last, text: attemptText, streaming: true },
                     ];
                   } else {
                     transcriptRef.current = [
@@ -3323,6 +3329,7 @@ export function VoiceTutorRealtime({
                         timestamp: new Date(),
                         role: 'tutor',
                         text: attemptText,
+                        streaming: true,
                       } as TranscriptEntry,
                     ];
                     // Signal that a streaming bubble is now visible so
@@ -3636,11 +3643,16 @@ export function VoiceTutorRealtime({
         const finalText = fullText.trim();
         const idx = transcriptRef.current.findIndex((e) => typeof e.id === 'string' && e.id.startsWith(streamingPrefix));
         if (idx >= 0) {
-          // Upgrade the streaming entry: stable id + final text.
+          // Finalize in place: KEEP the same id (so React doesn't
+          // remount the bubble — pre-2026-04-29 we renamed the id to
+          // tutor-${Date.now()} here, which changed the React key and
+          // produced visible flicker on every turn). Just clear the
+          // streaming flag and replace the text with the final
+          // aggregated value.
           const finalEntry: TranscriptEntry = {
             ...transcriptRef.current[idx],
-            id: `tutor-${Date.now()}`,
             text: finalText,
+            streaming: false,
           };
           transcriptRef.current = [
             ...transcriptRef.current.slice(0, idx),
@@ -3652,7 +3664,7 @@ export function VoiceTutorRealtime({
           transcriptRef.current = [
             ...transcriptRef.current,
             {
-              id: `tutor-${Date.now()}`,
+              id: `tutor-${t0}-final`,
               timestamp: new Date(),
               role: 'tutor',
               text: finalText,

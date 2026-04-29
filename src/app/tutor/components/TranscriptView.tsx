@@ -46,6 +46,47 @@ function renderInlineEmphasis(text: string): React.ReactNode {
   return parts;
 }
 
+/** Find the trailing question in a tutor turn — the actionable ask the
+ *  student needs to respond to. The brain typically structures turns as
+ *  "[explanation]. [question]?", and the question is what we want to
+ *  highlight visually. We look for the LAST sentence-ending '?' and
+ *  treat everything from the prior sentence boundary to that '?' as
+ *  the question. Returns [bodyBefore, question, restAfter] or null when
+ *  no trailing question exists (statement-only turns aren't bolded).
+ *
+ *  Conservative on edge cases: a '?' inside parens or quotes still
+ *  counts (the heuristic is "last ? in the text"). The boundary
+ *  detection uses /[.!?]\s+/ before the question — same heuristic the
+ *  SentenceBuffer uses on the brain side. */
+function splitTrailingQuestion(text: string): { body: string; question: string } | null {
+  if (!text) return null;
+  // The trailing ? must be near the end of the text — no significant
+  // content after it, otherwise it's a mid-sentence question.
+  const trimmed = text.trimEnd();
+  const lastQ = trimmed.lastIndexOf('?');
+  if (lastQ < 0) return null;
+  const tail = trimmed.slice(lastQ + 1).trim();
+  // Allow a short trailing fragment after the ? (e.g., "?)" or "? :)")
+  // but not a whole sentence.
+  if (tail.length > 8) return null;
+  // Find the last sentence boundary BEFORE the question. Look for
+  // ". " or "! " or "? " before lastQ. The chosen boundary is the
+  // start of the question sentence.
+  let qStart = 0;
+  // Scan backward for a sentence terminator followed by whitespace.
+  const boundary = trimmed.slice(0, lastQ).match(/[.!?]\s+(?=[^.!?]*$)/);
+  if (boundary) {
+    qStart = boundary.index! + boundary[0].length;
+  }
+  const body = trimmed.slice(0, qStart).trimEnd();
+  const question = trimmed.slice(qStart, lastQ + 1).trim() + (tail ? ' ' + tail : '');
+  // Don't bold tiny questions ("Yes?") or ones that look like an
+  // interjection — keep the bubble visually calm when the "question"
+  // is just an acknowledgement.
+  if (question.length < 6) return null;
+  return { body, question };
+}
+
 export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -109,11 +150,46 @@ export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps
               }`}
             >
               {/* `typing-caret` shows a blinking caret on the current
-                  streaming tutor entry (id starts with "tutor-streaming-")
-                  so the bubble visibly "types" as sentences land. */}
-              <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.id.startsWith('tutor-streaming-') ? 'typing-caret' : ''}`}>
-                {renderInlineEmphasis(entry.text)}
-              </p>
+                  streaming tutor entry. Driven by entry.streaming so the
+                  React key (entry.id) stays stable through finalization
+                  — the prior id-prefix check forced a key change on
+                  finalize, which unmounted/remounted the bubble and
+                  produced visible flicker.
+                  For tutor turns, bold the trailing question so the
+                  actionable ask stands out from the explanation. We
+                  only bold AFTER streaming finishes — bolding mid-
+                  stream creates a visible "appears-then-bolds" effect
+                  as new sentences arrive. */}
+              {entry.role === 'tutor' && !entry.streaming
+                ? (() => {
+                    const split = splitTrailingQuestion(entry.text);
+                    if (!split) {
+                      return (
+                        <p className="whitespace-pre-wrap">
+                          {renderInlineEmphasis(entry.text)}
+                        </p>
+                      );
+                    }
+                    return (
+                      <p className="whitespace-pre-wrap">
+                        {split.body && (
+                          <>
+                            {renderInlineEmphasis(split.body)}
+                            {' '}
+                          </>
+                        )}
+                        <span className="font-semibold">
+                          {renderInlineEmphasis(split.question)}
+                        </span>
+                      </p>
+                    );
+                  })()
+                : (
+                  <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
+                    {renderInlineEmphasis(entry.text)}
+                  </p>
+                )
+              }
             </div>
 
             {/* Timestamp */}
