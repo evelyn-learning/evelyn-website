@@ -66,6 +66,27 @@ import { SEED_G5_SCI_MIXTURES_SOLUTIONS } from './seeds/g5-sci-mixtures-solution
 import { SEED_G5_SCI_ENERGY_FOOD_CHAINS } from './seeds/g5-sci-energy-food-chains';
 import { SEED_G5_SCI_EARTH_SYSTEMS } from './seeds/g5-sci-earth-systems';
 import { SEED_G5_SCI_SOLAR_SYSTEM } from './seeds/g5-sci-solar-system';
+// Grades 6-8 Science completion.
+import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
+import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
+import { SEED_G6_SCI_CLIMATE_WEATHER } from './seeds/g6-sci-climate-weather';
+import { SEED_G6_SCI_ATOMS_ELEMENTS } from './seeds/g6-sci-atoms-elements';
+import { SEED_G6_SCI_DENSITY_BUOYANCY } from './seeds/g6-sci-density-buoyancy';
+import { SEED_G6_SCI_HEAT_TRANSFER } from './seeds/g6-sci-heat-transfer';
+import { SEED_G6_SCI_EARTH_INTERIOR } from './seeds/g6-sci-earth-interior';
+import { SEED_G7_SCI_EVOLUTION_SELECTION } from './seeds/g7-sci-evolution-selection';
+import { SEED_G7_SCI_GEOLOGIC_TIME } from './seeds/g7-sci-geologic-time';
+import { SEED_G7_SCI_CHEMICAL_REACTIONS_INTRO } from './seeds/g7-sci-chemical-reactions-intro';
+import { SEED_G7_SCI_PERIODIC_TABLE_INTRO } from './seeds/g7-sci-periodic-table-intro';
+import { SEED_G7_SCI_CONSERVATION_MASS } from './seeds/g7-sci-conservation-mass';
+import { SEED_G7_SCI_BODY_SYSTEMS_DEEP } from './seeds/g7-sci-body-systems-deep';
+import { SEED_G8_SCI_FORCES_ENERGY } from './seeds/g8-sci-forces-energy';
+import { SEED_G8_SCI_WAVE_PROPERTIES } from './seeds/g8-sci-wave-properties';
+import { SEED_G8_SCI_SOUND_LIGHT } from './seeds/g8-sci-sound-light';
+import { SEED_G8_SCI_ELECTRICITY } from './seeds/g8-sci-electricity';
+import { SEED_G8_SCI_SOLAR_SYSTEM_BEYOND } from './seeds/g8-sci-solar-system-beyond';
+import { SEED_G8_SCI_CLIMATE_CHANGE } from './seeds/g8-sci-climate-change';
+import { SEED_G8_SCI_ENGINEERING_DESIGN } from './seeds/g8-sci-engineering-design';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -114,9 +135,29 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G5_SCI_EARTH_SYSTEMS,
   SEED_G5_SCI_SOLAR_SYSTEM,
   SEED_G6_SCI_CELLS,
+  SEED_G6_SCI_BODY_SYSTEMS_INTRO,
+  SEED_G6_SCI_ECOSYSTEMS,
+  SEED_G6_SCI_CLIMATE_WEATHER,
+  SEED_G6_SCI_ATOMS_ELEMENTS,
+  SEED_G6_SCI_DENSITY_BUOYANCY,
+  SEED_G6_SCI_HEAT_TRANSFER,
+  SEED_G6_SCI_EARTH_INTERIOR,
   SEED_G7_SCI_GENETICS_PUNNETT,
   SEED_G7_SCI_PLATE_TECTONICS,
+  SEED_G7_SCI_EVOLUTION_SELECTION,
+  SEED_G7_SCI_GEOLOGIC_TIME,
+  SEED_G7_SCI_CHEMICAL_REACTIONS_INTRO,
+  SEED_G7_SCI_PERIODIC_TABLE_INTRO,
+  SEED_G7_SCI_CONSERVATION_MASS,
+  SEED_G7_SCI_BODY_SYSTEMS_DEEP,
   SEED_G8_SCI_NEWTONS_LAWS,
+  SEED_G8_SCI_FORCES_ENERGY,
+  SEED_G8_SCI_WAVE_PROPERTIES,
+  SEED_G8_SCI_SOUND_LIGHT,
+  SEED_G8_SCI_ELECTRICITY,
+  SEED_G8_SCI_SOLAR_SYSTEM_BEYOND,
+  SEED_G8_SCI_CLIMATE_CHANGE,
+  SEED_G8_SCI_ENGINEERING_DESIGN,
   SEED_BIO_CELL_THEORY_STRUCTURE,
   SEED_BIO_CELLULAR_RESPIRATION,
   SEED_CHEM_ATOMIC_STRUCTURE,
