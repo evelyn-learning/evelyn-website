@@ -109,12 +109,14 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // On final save (completed/abandoned), store transcript + whiteboard data
-    if (
-      (body.status === "completed" || body.status === "abandoned") &&
-      Array.isArray(body.transcript)
-    ) {
-      // Replace transcript entirely (not append) — use $set
+    // Persist transcript + whiteboard on EVERY save that includes them.
+    // Was previously gated on completed/abandoned, but that meant
+    // sessions ending abnormally (mobile swipe-away, network drop, OS
+    // kill before beforeunload fires) lost everything — observed
+    // 2026-04-29 physical-science: 2 student msgs visible to the user
+    // but no DB record. Periodic active flushes from the client now
+    // include the transcript so the DB stays current within ~30s.
+    if (Array.isArray(body.transcript)) {
       updateFields.transcript = body.transcript.map(
         (t: { role: string; text: string; timestamp: string; whiteboardCommands?: unknown[]; pedagogicalIntent?: string }) => ({
           role: t.role,
@@ -126,10 +128,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (
-      (body.status === "completed" || body.status === "abandoned") &&
-      Array.isArray(body.whiteboardCommands)
-    ) {
+    if (Array.isArray(body.whiteboardCommands)) {
       updateFields.whiteboardCommands = body.whiteboardCommands.map(
         (cmd: { action: string; data?: Record<string, unknown>; timestamp?: string; sourceMessageIndex?: number }) => ({
           action: cmd.action,

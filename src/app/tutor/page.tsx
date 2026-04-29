@@ -27,6 +27,7 @@ import { WhiteboardCanvas } from './components/whiteboard';
 import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
 import { LessonPlanProgress } from './components/LessonPlanProgress';
+import { LessonNudgePicker } from './components/LessonNudgePicker';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
@@ -124,6 +125,9 @@ function TutorPage() {
   // free-conversation mode.
   const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{ id: string; title: string; los: Array<{ id: string; description: string }>; estimatedMinutes: number }>>([]);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
+  // Sticky-dismiss for the in-session lesson nudge. Once the student
+  // hides it, don't pop it back up later in the same session.
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('voice');
@@ -254,8 +258,15 @@ function TutorPage() {
         ...(u.outputTextTokens ? { outputTextTokens: u.outputTextTokens } : {}),
       })) } : {}),
       ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
-      // Include full transcript + whiteboard data on final save
-      ...(isFinal ? {
+      // Always include the full transcript + whiteboard snapshot. Was
+      // previously gated on isFinal, but that meant sessions ending
+      // abnormally (mobile swipe-away, tab kill, network drop) lost
+      // their entire transcript — beforeunload doesn't always fire and
+      // the abandoned-on-unmount path can race with the page tearing
+      // down. Sending it on each periodic active flush is bounded
+      // bandwidth (transcripts are small text payloads) and means the
+      // DB copy stays current within the 30s flush window.
+      ...(transcript.length > 0 ? {
         transcript: transcript.map(t => ({
           role: t.role,
           text: t.text,
@@ -263,6 +274,10 @@ function TutorPage() {
           ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
           ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
         })),
+      } : {}),
+      // Whiteboard commands also flushed on active saves so abnormal
+      // exits don't lose them. Same rationale as transcript above.
+      ...((whiteboardEventsRef.current.length > 0 || whiteboardCommands.length > 0) ? {
         whiteboardCommands: (() => {
           // Primary source of truth: the event log captured at emission time.
           // Each entry carries its own timestamp + transcript anchor, so the
@@ -332,6 +347,24 @@ function TutorPage() {
         saveSessionUsage('abandoned');
       }
     };
+  }, [stage, saveSessionUsage]);
+
+  // Periodic active flush. Without this, sessions that end abnormally
+  // (mobile tab swipe-away, OS-level kill, network drop, etc.) don't
+  // fire beforeunload reliably and lose their entire transcript.
+  // Observed 2026-04-29: physical-science session showed 2 student
+  // messages on the dashboard but had NO record in the DB — the user
+  // closed the tab on mobile before any tutor turn landed, beforeunload
+  // didn't fire, and the abandoned-on-unmount save never reached the
+  // server. Periodic flush every 30s while in session keeps the DB
+  // copy current — at most we lose 30s of trailing turns.
+  useEffect(() => {
+    if (stage !== 'session') return;
+    const interval = setInterval(() => {
+      if (sessionEndedRef.current) return;
+      saveSessionUsage('active');
+    }, 30_000);
+    return () => clearInterval(interval);
   }, [stage, saveSessionUsage]);
 
   // Derived taxonomy state
@@ -1081,6 +1114,35 @@ function TutorPage() {
             level={selectedLevel}
           />
         </div>
+
+        {/* In-session lesson nudge — surfaces when the student is being
+            vague ("Teach me / Anything") so they can tap a specific
+            plan instead of dragging the bot through 4 voice turns to
+            extract a topic. Runs in PARALLEL with voice — voice still
+            asks "what do you want?" while this picker shows below. */}
+        {!nudgeDismissed && availableLessonPlans.length > 0 && (
+          <div className="flex-shrink-0 container mx-auto px-4">
+            <LessonNudgePicker
+              plans={availableLessonPlans}
+              recentTurns={transcript.slice(-6).map(t => ({ role: t.role, text: t.text }))}
+              lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
+              onSelect={(plan) => {
+                setSelectedLessonPlanId(plan.id);
+                setNudgeDismissed(true);
+                // Tell the brain via the existing text-message channel
+                // — same path the homework-upload + try-yourself flows
+                // use. Bracketed system-style hint so the brain treats
+                // it as a runtime instruction, not student speech.
+                if (realtimeHandleRef.current) {
+                  realtimeHandleRef.current.sendTextMessage(
+                    `[The student picked the lesson "${plan.title}" from the in-session picker. Start that lesson now using show_segment_card for the first segment.]`,
+                  );
+                }
+              }}
+              onDismiss={() => setNudgeDismissed(true)}
+            />
+          </div>
+        )}
 
         {/* Main content - resizable split on desktop, tabbed on mobile */}
         <div
