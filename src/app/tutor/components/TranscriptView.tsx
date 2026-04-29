@@ -13,11 +13,18 @@ import type { TranscriptEntry } from '@/lib/tutor/types';
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
   isProcessing?: boolean;
-  /** Optional footer rendered inside the scroll container, AFTER the
-   *  transcript map. Used by the in-session lesson picker so it can
-   *  appear as a tutor-bubble inline with the chat instead of as a
-   *  separate strip outside the conversation flow. */
-  footer?: React.ReactNode;
+  /** In-session lesson picker bubble. Rendered INLINE between
+   *  visible-transcript entries, anchored at `pickerAnchorIndex`
+   *  (captured the first time the picker becomes eligible). Without
+   *  the anchor the picker would float at the end of the transcript
+   *  and "drift downward" as the conversation grows — observed
+   *  2026-04-29 geometry session, where the picker bubble kept
+   *  jumping to the bottom on every new turn. */
+  picker?: React.ReactNode;
+  /** Visible-transcript index (post-bracket-strip) at/before which
+   *  the picker should be inserted. e.g. 1 → picker appears after
+   *  the first visible entry. */
+  pickerAnchorIndex?: number | null;
 }
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
@@ -92,18 +99,18 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   return { body, question };
 }
 
-export function TranscriptView({ transcript, isProcessing, footer }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive (or when the footer
-  // mounts/unmounts so the picker bubble stays visible).
+  // Auto-scroll to bottom when new messages arrive (or when the picker
+  // mounts/unmounts so it stays visible).
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [transcript, footer]);
+  }, [transcript, picker]);
 
-  if (transcript.length === 0 && !isProcessing && !footer) {
+  if (transcript.length === 0 && !isProcessing && !picker) {
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
         <p className="text-center">
@@ -148,96 +155,98 @@ export function TranscriptView({ transcript, isProcessing, footer }: TranscriptV
     })
     .filter((e): e is TranscriptEntry => e !== null);
 
+  // Compute the split point: clamp the anchor to [0, visibleTranscript.length].
+  // If the anchor was never set (picker not yet eligible) or the picker
+  // is null (dismissed/started), no split happens.
+  const anchor = picker != null && typeof pickerAnchorIndex === 'number'
+    ? Math.max(0, Math.min(pickerAnchorIndex, visibleTranscript.length))
+    : null;
+  const beforePicker = anchor !== null ? visibleTranscript.slice(0, anchor) : visibleTranscript;
+  const afterPicker = anchor !== null ? visibleTranscript.slice(anchor) : [];
+
+  const renderEntry = (entry: TranscriptEntry) => (
+    <div
+      key={entry.id}
+      className={`flex gap-3 ${
+        entry.role === 'student' ? 'flex-row-reverse' : ''
+      }`}
+    >
+      {/* Avatar */}
+      <div
+        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+          entry.role === 'student'
+            ? 'bg-blue-100 text-blue-600'
+            : 'bg-purple-100 text-purple-600'
+        }`}
+      >
+        {entry.role === 'student' ? (
+          <User className="w-4 h-4" />
+        ) : (
+          <Bot className="w-4 h-4" />
+        )}
+      </div>
+
+      {/* Message */}
+      <div
+        className={`flex-1 ${
+          entry.role === 'student' ? 'text-right' : ''
+        }`}
+      >
+        <div
+          className={`inline-block max-w-[80%] p-3 rounded-lg ${
+            entry.role === 'student'
+              ? 'bg-blue-500 text-white rounded-br-none'
+              : 'bg-gray-100 text-gray-800 rounded-bl-none'
+          }`}
+        >
+          {entry.role === 'tutor' && !entry.streaming
+            ? (() => {
+                const split = splitTrailingQuestion(entry.text);
+                if (!split) {
+                  return (
+                    <p className="whitespace-pre-wrap">
+                      {renderInlineEmphasis(entry.text)}
+                    </p>
+                  );
+                }
+                return (
+                  <p className="whitespace-pre-wrap">
+                    {split.body && (
+                      <>
+                        {renderInlineEmphasis(split.body)}
+                        {' '}
+                      </>
+                    )}
+                    <span className="font-semibold">
+                      {renderInlineEmphasis(split.question)}
+                    </span>
+                  </p>
+                );
+              })()
+            : (
+              <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
+                {renderInlineEmphasis(entry.text)}
+              </p>
+            )
+          }
+        </div>
+
+        {/* Timestamp */}
+        <p className="text-xs text-gray-400 mt-1">
+          {formatTime(entry.timestamp)}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div
       ref={containerRef}
       className="h-full overflow-y-auto p-4 space-y-4"
     >
-      {visibleTranscript.map((entry) => (
-        <div
-          key={entry.id}
-          className={`flex gap-3 ${
-            entry.role === 'student' ? 'flex-row-reverse' : ''
-          }`}
-        >
-          {/* Avatar */}
-          <div
-            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              entry.role === 'student'
-                ? 'bg-blue-100 text-blue-600'
-                : 'bg-purple-100 text-purple-600'
-            }`}
-          >
-            {entry.role === 'student' ? (
-              <User className="w-4 h-4" />
-            ) : (
-              <Bot className="w-4 h-4" />
-            )}
-          </div>
-
-          {/* Message */}
-          <div
-            className={`flex-1 ${
-              entry.role === 'student' ? 'text-right' : ''
-            }`}
-          >
-            <div
-              className={`inline-block max-w-[80%] p-3 rounded-lg ${
-                entry.role === 'student'
-                  ? 'bg-blue-500 text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-800 rounded-bl-none'
-              }`}
-            >
-              {/* `typing-caret` shows a blinking caret on the current
-                  streaming tutor entry. Driven by entry.streaming so the
-                  React key (entry.id) stays stable through finalization
-                  — the prior id-prefix check forced a key change on
-                  finalize, which unmounted/remounted the bubble and
-                  produced visible flicker.
-                  For tutor turns, bold the trailing question so the
-                  actionable ask stands out from the explanation. We
-                  only bold AFTER streaming finishes — bolding mid-
-                  stream creates a visible "appears-then-bolds" effect
-                  as new sentences arrive. */}
-              {entry.role === 'tutor' && !entry.streaming
-                ? (() => {
-                    const split = splitTrailingQuestion(entry.text);
-                    if (!split) {
-                      return (
-                        <p className="whitespace-pre-wrap">
-                          {renderInlineEmphasis(entry.text)}
-                        </p>
-                      );
-                    }
-                    return (
-                      <p className="whitespace-pre-wrap">
-                        {split.body && (
-                          <>
-                            {renderInlineEmphasis(split.body)}
-                            {' '}
-                          </>
-                        )}
-                        <span className="font-semibold">
-                          {renderInlineEmphasis(split.question)}
-                        </span>
-                      </p>
-                    );
-                  })()
-                : (
-                  <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
-                    {renderInlineEmphasis(entry.text)}
-                  </p>
-                )
-              }
-            </div>
-
-            {/* Timestamp */}
-            <p className="text-xs text-gray-400 mt-1">
-              {formatTime(entry.timestamp)}
-            </p>
-          </div>
-        </div>
-      ))}
+      {beforePicker.map(renderEntry)}
+      {anchor !== null && picker}
+      {afterPicker.map(renderEntry)}
 
       {/* Typing indicator */}
       {isProcessing && (
@@ -263,7 +272,6 @@ export function TranscriptView({ transcript, isProcessing, footer }: TranscriptV
         </div>
       )}
 
-      {footer}
     </div>
   );
 }

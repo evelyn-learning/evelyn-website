@@ -128,6 +128,13 @@ function TutorPage() {
   // Sticky-dismiss for the in-session lesson nudge. Once the student
   // hides it, don't pop it back up later in the same session.
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  // Anchor position for the picker bubble inside TranscriptView. Set
+  // ONCE when the picker first becomes eligible (right after the
+  // brain's first turn lands) and frozen for the rest of the session.
+  // Without this, the picker — rendered as a transcript "footer" —
+  // floated to the bottom and visibly drifted on every new turn
+  // (observed 2026-04-29 geometry session).
+  const [pickerAnchorIndex, setPickerAnchorIndex] = useState<number | null>(null);
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('voice');
@@ -369,6 +376,21 @@ function TutorPage() {
   useEffect(() => {
     saveSessionUsageRef.current = saveSessionUsage;
   }, [saveSessionUsage]);
+
+  // Capture the picker anchor position the first time the picker is
+  // eligible to show. Anchored to the visible-transcript length AFTER
+  // the brain's first turn lands, so the picker bubble sits naturally
+  // between "What are we working on today?" and the next message —
+  // and stays there as the conversation grows.
+  useEffect(() => {
+    if (stage !== 'session') return;
+    if (pickerAnchorIndex !== null) return;
+    if (nudgeDismissed) return;
+    if (availableLessonPlans.length === 0) return;
+    const hasTutorMsg = transcript.some((t) => t.role === 'tutor');
+    if (!hasTutorMsg) return;
+    setPickerAnchorIndex(transcript.length);
+  }, [stage, transcript, availableLessonPlans.length, nudgeDismissed, pickerAnchorIndex]);
   useEffect(() => {
     if (stage !== 'session') return;
     const interval = setInterval(() => {
@@ -628,6 +650,7 @@ function TutorPage() {
     setTokenUsage([]);
     setLessonProgress({ plan: null, currentSegmentId: '' });
     setNudgeDismissed(false);
+    setPickerAnchorIndex(null);
     setStatusMessage(null);
     setError(null);
     debugEventsRef.current = [];
@@ -1200,7 +1223,8 @@ function TutorPage() {
               <TranscriptView
                 transcript={transcript}
                 isProcessing={isProcessing}
-                footer={!nudgeDismissed && availableLessonPlans.length > 0 ? (
+                pickerAnchorIndex={pickerAnchorIndex}
+                picker={!nudgeDismissed && availableLessonPlans.length > 0 ? (
                   <LessonNudgePicker
                     plans={availableLessonPlans}
                     recentTurns={transcript.slice(-6).map(t => ({ role: t.role, text: t.text }))}
@@ -1234,17 +1258,20 @@ function TutorPage() {
                         // brain didn't have the segments[] schema in
                         // context — the resolver also has a fallback
                         // to the first segment when the id is unknown).
-                        // Avoid nested brackets inside the bracketed
-                        // system hint. The TranscriptView strip-regex
-                        // is non-greedy and stops at the first closing
-                        // `]` it sees — a payload containing
-                        // `segments[]` previously truncated mid-
-                        // instruction and leaked the trailing
-                        // " array — do not invent segment ids.]" into
-                        // the visible bubble (observed 2026-04-29
-                        // trigonometry session). Reword in plain prose.
+                        // Strong OVERRIDE wording — earlier message
+                        // was treated as soft suggestion and the brain
+                        // ignored it, narrating an unrelated topic
+                        // instead (2026-04-29 geometry session: brain
+                        // taught Projectile Motion when the student
+                        // had explicitly tapped Pythagorean Theorem,
+                        // because its prior turn had teased "fun
+                        // physics" and the synthetic msg was weak).
+                        // Be explicit: cancel any prior tangent, this
+                        // is the active lesson now.
+                        // Also avoid nested brackets — the
+                        // TranscriptView strip-regex is non-greedy.
                         realtimeHandleRef.current.sendTextMessage(
-                          `Let's do: ${plan.title}. [Start the lesson by calling show_segment_card with the FIRST authored segment id from the plan; do not invent segment ids.]`,
+                          `Let's do: ${plan.title}. [SYSTEM OVERRIDE: The student has explicitly selected the lesson "${plan.title}" via the in-session picker. Disregard any prior teasing or conversational tangent. This is now the active lesson. Begin teaching it immediately by calling show_segment_card with the FIRST authored segment id from the plan that is now loaded; do not invent segment ids and do not narrate any other topic.]`,
                         );
                       }
                     }}
@@ -1716,6 +1743,7 @@ function TutorPage() {
               setSelectedLessonPlanId('');
               setLessonProgress({ plan: null, currentSegmentId: '' });
               setNudgeDismissed(false);
+              setPickerAnchorIndex(null);
               setStatusMessage(null);
               setError(null);
               debugEventsRef.current = [];
