@@ -189,113 +189,17 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-2': 'alloy',      // Energetic
 };
 
-/** Extract bare numeric constants (integers + decimals) from a problem
- *  statement. These are the "load-bearing" numbers — the right-hand
- *  sides of equations, target values, dimensions — whose substitution
- *  changes what problem the student is actually solving. Skips numbers
- *  embedded in identifiers ("3x" stays as one token in the tokenizer
- *  but here we filter it out — we want STANDALONE constants like the
- *  16 in "3x + 2y = 16", not the coefficient 3). */
-function extractConstants(s: string): number[] {
-  const out: number[] = [];
-  // Match integers/decimals that are NOT immediately followed by a
-  // letter (so coefficients like "3x" are skipped) and NOT preceded by
-  // a letter or another digit (so subscripts/superscripts in "x_2"
-  // aren't pulled out). Matches "= 16", " - 4", "= 12.5", standalone
-  // "16" in lists, etc.
-  const re = /(?<![A-Za-z\d])-?\d+(?:\.\d+)?(?![A-Za-z])/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(s)) !== null) {
-    const n = parseFloat(m[0]);
-    if (!isNaN(n)) out.push(n);
-  }
-  return out;
-}
-
-/** Extract coefficients — digits immediately attached to a single
- *  variable letter ("3" in "3x", "2" in "2y"). Complements
- *  extractConstants to catch the case where the brain swapped LHS
- *  coefficients but kept the RHS the same ("3x + 2y = 12" rendered as
- *  "5x + 7y = 12"). Without this, coefficient drift would only nudge
- *  the broader numericMatch subscore (3x vs 5x are different tokens)
- *  but not enough to fail the 0.5 threshold when most other tokens
- *  still match. */
-function extractCoefficients(s: string): number[] {
-  const out: number[] = [];
-  const re = /(?<![A-Za-z\d])(\d+(?:\.\d+)?)(?=[A-Za-z]\b)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(s)) !== null) {
-    const n = parseFloat(m[1]);
-    if (!isNaN(n)) out.push(n);
-  }
-  return out;
-}
-
-/** Coherence pass: compare a rendered problem statement against the
- *  segment's authored truth and return a 0..1 similarity. Tokenizes on
- *  word boundaries (keeping numbers + fractions intact — `1/2` is ONE
- *  token, not three), then scores prose and numeric content separately
- *  AND extracts standalone numeric constants for a sharper third
- *  subscore. Returns min(prose, numeric, constants).
- *
- *  Why constants matter: the elimination drift case from the
- *  2026-04-29 geometry session showed authored "3x + 2y = 12" vs
- *  rendered "3x + 2y = 16" passing the prior numeric check at 0.8 —
- *  most numeric tokens (3x, 2y, +, =, 5x, -) matched, only the
- *  right-hand sides drifted. The constants subscore extracts just
- *  the standalone numbers ([12, 4] vs [16, 8]) so right-hand-side
- *  substitution is caught immediately at 0.0 overlap. Coefficients
- *  embedded in identifiers (the "3" in "3x") are skipped so coefficient
- *  changes still drop through the broader numeric subscore. */
-function problemSimilarity(rendered: string, authored: string): number {
-  const tokenize = (s: string): string[] => {
-    const lowered = s.toLowerCase()
-      .replace(/\$([^$]+)\$/g, ' $1 ')
-      // Collapse \frac{a}{b} → a/b so the latex form of "1/2" matches
-      // the prose form. No spaces around the slash on purpose.
-      .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, ' $1/$2 ')
-      .replace(/\\(cdot|times)/g, ' * ')
-      .replace(/\\[a-z]+/g, ' ')
-      // Strip prose punctuation including period — "2/3." should
-      // tokenize to "2/3", same as a bare "2/3" in the renderer.
-      .replace(/[{}()\[\],;:!?"'.]/g, ' ');
-    return lowered.split(/\s+/).filter((t) => t.length > 0);
-  };
-  const isNumeric = (t: string) => /^[-+]?\d+(?:\.\d+)?$|[\d/^*+\-=<>]/.test(t);
-  const aTokens = tokenize(authored);
-  if (aTokens.length === 0) return 1;
-  const renderedSet = new Set(tokenize(rendered));
-  const aNumerics = aTokens.filter(isNumeric);
-  const aProse = aTokens.filter((t) => !isNumeric(t));
-  const numericMatch = aNumerics.length === 0
-    ? 1
-    : aNumerics.filter((t) => renderedSet.has(t)).length / aNumerics.length;
-  const proseMatch = aProse.length === 0
-    ? 1
-    : aProse.filter((t) => renderedSet.has(t)).length / aProse.length;
-  // Constants subscore: standalone integers/decimals only. Set-based
-  // overlap because position-based comparison would penalize "3x + 2y
-  // = 16, 5x - 2y = 8" vs "5x - 2y = 8, 3x + 2y = 16" (legal reorder).
-  const aConstants = extractConstants(authored);
-  const constantsMatch = aConstants.length === 0
-    ? 1
-    : (() => {
-        const rSet = new Set(extractConstants(rendered));
-        return aConstants.filter((n) => rSet.has(n)).length / aConstants.length;
-      })();
-  // Coefficients subscore: digits attached to identifiers ("3" in 3x).
-  // Catches LHS-coefficient drift like "3x + 2y" → "5x + 7y" that the
-  // standalone-constants check misses. Also set-based for reorder
-  // tolerance.
-  const aCoeffs = extractCoefficients(authored);
-  const coeffMatch = aCoeffs.length === 0
-    ? 1
-    : (() => {
-        const rSet = new Set(extractCoefficients(rendered));
-        return aCoeffs.filter((n) => rSet.has(n)).length / aCoeffs.length;
-      })();
-  return Math.min(numericMatch, proseMatch, constantsMatch, coeffMatch);
-}
+// Coherence pass v1 (problemSimilarity, extractConstants,
+// extractCoefficients) was retired 2026-04-29 in favor of A + B1:
+//   Lever A — show_segment_card resolves segmentId → authored data
+//             at dispatch time, so the brain can't drift on authored
+//             problems (it isn't writing the statement anymore).
+//   Lever B1 — judge LLM (/api/tutor/judge) checks the brain's spoken
+//             text against the post-render board snapshot for any
+//             ungrounded claim, and pushes a synthetic rejection on
+//             drift so the existing retry loop re-prompts the brain.
+// The fuzzy thresholds (0.5 / 0.8) are gone. See git history for the
+// helpers if a fast-path becomes useful again.
 
 export function VoiceTutorRealtime({
   subject,
@@ -1099,41 +1003,14 @@ export function VoiceTutorRealtime({
           rejected.push({ action: 'show_problem', reason });
           return [];
         }
-        // Segment-truth drift check (coherence pass). When a lesson plan
-        // is active and the current segment has authored ground truth
-        // (try_yourself / worked_example / misconception_check / extension),
-        // the rendered problem must match that text. Otherwise the brain
-        // is teaching against a script the student can't see — answer
-        // validation, hints, and progress-tracking all break. Threshold
-        // is intentionally generous: we want to catch number-substitution
-        // and operator-swap drift, not punish minor rewording.
-        const planForDrift = lessonPlanRef.current;
-        const segIdForDrift = currentSegmentIdRef.current;
-        if (planForDrift && segIdForDrift) {
-          const seg = getSegment(planForDrift, segIdForDrift);
-          const truth = getSegmentTruth(seg);
-          if (truth?.problemText) {
-            const sim = problemSimilarity(statement, truth.problemText);
-            if (sim < 0.5) {
-              const reason =
-                `show_problem text drifted from the segment's authored problem. ` +
-                `You rendered: ${JSON.stringify(statement.slice(0, 200))}. ` +
-                `The segment's authored problem is: ${JSON.stringify(truth.problemText.slice(0, 200))}. ` +
-                `Re-emit show_problem with the EXACT authored text — same numbers, same operators, ` +
-                `same wording. The student answers against what the board shows; if the board has a ` +
-                `different problem than the script, your hints and the answer check won't line up.`;
-              console.warn('[VoiceTutorRealtime] show_problem ↔ segment-truth drift', {
-                rendered: statement.slice(0, 120),
-                authored: truth.problemText.slice(0, 120),
-                similarity: sim,
-              });
-              onDebugEvent?.('segment_truth_drift',
-                `show_problem drift (sim=${sim.toFixed(2)}): board="${statement.slice(0, 60)}…" vs script="${truth.problemText.slice(0, 60)}…"`);
-              rejected.push({ action: 'show_problem', reason });
-              return [];
-            }
-          }
-        }
+        // Segment-truth drift check (fuzzy similarity) was retired
+        // 2026-04-29 in favor of show_segment_card (Lever A) +
+        // judge LLM (Lever B1). The brain SHOULD use show_segment_card
+        // for any authored segment; if it falls back to free-form
+        // show_problem instead, the judge will catch any spoken claim
+        // that contradicts the rendered card. The fuzzy 0.5 threshold
+        // had escapes documented in git history (operator swap, RHS
+        // drift on shared-shape problems) that exact tools handle now.
       }
       if (cmd.action === 'showCircuit') {
         const components = Array.isArray(cmdAny.components) ? cmdAny.components : [];
@@ -1265,41 +1142,12 @@ export function VoiceTutorRealtime({
           return [];
         }
         lastEquationLatexRef.current = normalized;
-        // Segment-truth drift check (coherence pass). When the brain
-        // calls show_equation with a label like "Original Equation" /
-        // "Problem" / "Given" but no show_problem precedes it (common
-        // for try_yourself segments where the equation IS the problem),
-        // the equation latex must align with the segment's authored
-        // problemText. Catches the case where the brain renders a
-        // different equation than the script's authored one.
-        const eqLabelLower: string = (cmdAny.label || '').toLowerCase();
-        const planForEqDrift = lessonPlanRef.current;
-        const segIdForEqDrift = currentSegmentIdRef.current;
-        if (planForEqDrift && segIdForEqDrift && /original|problem|given|restated/.test(eqLabelLower) && latex.length > 4) {
-          const seg = getSegment(planForEqDrift, segIdForEqDrift);
-          const truth = getSegmentTruth(seg);
-          if (truth?.problemText) {
-            const sim = problemSimilarity(latex, truth.problemText);
-            if (sim < 0.5) {
-              const reason =
-                `show_equation labeled "${cmdAny.label}" doesn't match the segment's authored problem. ` +
-                `You rendered latex: ${JSON.stringify(latex.slice(0, 200))}. ` +
-                `The segment's authored problem is: ${JSON.stringify(truth.problemText.slice(0, 200))}. ` +
-                `Re-emit show_equation with latex that matches the authored problem exactly. ` +
-                `If the authored problem isn't an equation, render the actual problem text via ` +
-                `show_problem instead and skip the labeled equation.`;
-              console.warn('[VoiceTutorRealtime] show_equation ↔ segment-truth drift', {
-                rendered: latex.slice(0, 120),
-                authored: truth.problemText.slice(0, 120),
-                similarity: sim,
-              });
-              onDebugEvent?.('segment_truth_drift',
-                `show_equation drift (sim=${sim.toFixed(2)}): board="${latex.slice(0, 60)}…" vs script="${truth.problemText.slice(0, 60)}…"`);
-              rejected.push({ action: 'show_equation', reason });
-              return [];
-            }
-          }
-        }
+        // show_equation segment-truth drift check (fuzzy similarity)
+        // was retired 2026-04-29 alongside the show_problem one. The
+        // judge LLM (Lever B1) catches the speech-side claim mismatches
+        // these checks were aimed at. For authored content the brain
+        // should render via show_segment_card (Lever A) instead of a
+        // free-form show_equation labeled "Original Equation".
       }
 
       // Punnett-square repair: when show_table has collapsed gamete headers
