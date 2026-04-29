@@ -66,6 +66,16 @@ import { SEED_G5_SCI_MIXTURES_SOLUTIONS } from './seeds/g5-sci-mixtures-solution
 import { SEED_G5_SCI_ENERGY_FOOD_CHAINS } from './seeds/g5-sci-energy-food-chains';
 import { SEED_G5_SCI_EARTH_SYSTEMS } from './seeds/g5-sci-earth-systems';
 import { SEED_G5_SCI_SOLAR_SYSTEM } from './seeds/g5-sci-solar-system';
+// HS Bio additions.
+import { SEED_BIO_CELL_MEMBRANE_TRANSPORT } from './seeds/bio-cell-membrane-transport';
+import { SEED_BIO_PHOTOSYNTHESIS_DEEP } from './seeds/bio-photosynthesis-deep';
+import { SEED_BIO_CELL_CYCLE_MITOSIS } from './seeds/bio-cell-cycle-mitosis';
+import { SEED_BIO_MEIOSIS_SEXUAL_REPRO } from './seeds/bio-meiosis-sexual-repro';
+import { SEED_BIO_MENDELIAN_GENETICS } from './seeds/bio-mendelian-genetics';
+import { SEED_BIO_DNA_STRUCTURE_REPLICATION } from './seeds/bio-dna-structure-replication';
+import { SEED_BIO_PROTEIN_SYNTHESIS } from './seeds/bio-protein-synthesis';
+import { SEED_BIO_MUTATIONS_GENETIC_ENG } from './seeds/bio-mutations-genetic-eng';
+import { SEED_BIO_NATURAL_SELECTION_EVOL } from './seeds/bio-natural-selection-evol';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -159,7 +169,16 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G8_SCI_CLIMATE_CHANGE,
   SEED_G8_SCI_ENGINEERING_DESIGN,
   SEED_BIO_CELL_THEORY_STRUCTURE,
+  SEED_BIO_CELL_MEMBRANE_TRANSPORT,
   SEED_BIO_CELLULAR_RESPIRATION,
+  SEED_BIO_PHOTOSYNTHESIS_DEEP,
+  SEED_BIO_CELL_CYCLE_MITOSIS,
+  SEED_BIO_MEIOSIS_SEXUAL_REPRO,
+  SEED_BIO_MENDELIAN_GENETICS,
+  SEED_BIO_DNA_STRUCTURE_REPLICATION,
+  SEED_BIO_PROTEIN_SYNTHESIS,
+  SEED_BIO_MUTATIONS_GENETIC_ENG,
+  SEED_BIO_NATURAL_SELECTION_EVOL,
   SEED_CHEM_ATOMIC_STRUCTURE,
   SEED_PHYS_KINEMATICS_1D,
 ];
