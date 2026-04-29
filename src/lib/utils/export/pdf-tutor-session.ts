@@ -1573,11 +1573,34 @@ export async function exportTutorSessionPDF(
       const c = cmd as any;
       const latex = (typeof c.latex === 'string' ? c.latex : c.data?.latex) ?? '';
       if (typeof latex !== 'string' || latex.trim().length === 0) {
+        // Diagnostic: log which equation got dropped. The
+        // 2026-04-29 algebra-session PDF showed multiple empty
+        // equation cards still appearing — meaning some path is
+        // bringing them through unfiltered. Per-drop logging here
+        // will let us see the label/source of each empty equation
+        // when a fresh PDF is generated against current code.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const label = (c.label ?? c.data?.label ?? '(no label)');
+        console.log(`[pdf-tutor-session] dropping empty showEquation: label="${label}", keys=[${Object.keys(c).join(',')}]`);
         return false;
       }
     }
     return true;
   });
+  // Diagnostic: log how many showEquation entries survived the
+  // filter and what their labels are. If the PDF still shows empty
+  // cards, the survivors here will tell us which equations have
+  // non-empty latex but render blank (or whether the empties are
+  // coming through a path that bypasses this filter entirely).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const survivingEquations = dedupedCommands.filter((c: any) => c.action === 'showEquation');
+  console.log(`[pdf-tutor-session] surviving equations: ${survivingEquations.length}`,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    survivingEquations.map((c: any) => {
+      const latex = (typeof c.latex === 'string' ? c.latex : c.data?.latex) ?? '';
+      const label = c.label ?? c.data?.label ?? '(no label)';
+      return `${label} (latex: ${latex.length} chars: "${latex.slice(0, 60)}…")`;
+    }));
 
   const addPageIfNeeded = (space: number) => {
     if (y + space > 272) { pdf.addPage(); y = 20; }

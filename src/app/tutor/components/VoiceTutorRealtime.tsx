@@ -3258,9 +3258,18 @@ export function VoiceTutorRealtime({
                   // Streaming reveal in the chat: incrementally append
                   // each sentence to a tutor entry so the student sees
                   // the response materialize as it's being composed,
-                  // not all at once at the end. Use a stable per-turn
-                  // entry id so subsequent sentences update the same row.
-                  const streamingId = `tutor-streaming-${t0}`;
+                  // not all at once at the end.
+                  //
+                  // The id is per-ATTEMPT, not per-turn — when judge or
+                  // RULE8 retry fires, the old attempt's entry is
+                  // removed (see retry-cleanup below) and the new
+                  // attempt creates its own entry. Without the attempt
+                  // suffix, retries collided on a shared
+                  // `tutor-streaming-${t0}` key and React threw
+                  // "Encountered two children with the same key"
+                  // (observed 2026-04-29 algebra session, 3 duplicate
+                  // renders during a judge retry).
+                  const streamingId = `tutor-streaming-${t0}-${attempt}`;
                   const last = transcriptRef.current[transcriptRef.current.length - 1];
                   if (last && last.role === 'tutor' && last.id === streamingId) {
                     transcriptRef.current = [
@@ -3539,6 +3548,18 @@ export function VoiceTutorRealtime({
           `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
           `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
           `Keep your verbal response brief and natural — pretend the prior attempt didn't happen.`;
+        // Remove the killed attempt's streaming entry from the chat
+        // before the next attempt creates a fresh one. Without this,
+        // the user would see the killed text remain alongside the new
+        // attempt's text — and even with attempt-suffixed ids, the
+        // killed entry is no longer the canonical "what the tutor
+        // said" so it shouldn't linger in the transcript.
+        const killedStreamingId = `tutor-streaming-${t0}-${attempt}`;
+        const beforeLen = transcriptRef.current.length;
+        transcriptRef.current = transcriptRef.current.filter((e) => e.id !== killedStreamingId);
+        if (transcriptRef.current.length !== beforeLen) {
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
       }
 
       const ms = Date.now() - t0;
@@ -3564,12 +3585,17 @@ export function VoiceTutorRealtime({
       // to its final form, or — if no sentences streamed — create a
       // placeholder for tool-only turns.
       if (fullText.trim()) {
-        const streamingId = `tutor-streaming-${t0}`;
+        // Find the WINNING attempt's streaming entry (id includes the
+        // attempt index now). The winning attempt is whatever attempt
+        // didn't get killed — count actual attempts that ran. Easiest:
+        // search for the highest-numbered tutor-streaming-${t0}-N entry
+        // that's still in the transcript.
+        const streamingPrefix = `tutor-streaming-${t0}-`;
         // Clear the streaming-active flag — the bubble is finalized,
         // any future composing event is a fresh turn.
         setStreamingEntryActive(false);
         const finalText = fullText.trim();
-        const idx = transcriptRef.current.findIndex((e) => e.id === streamingId);
+        const idx = transcriptRef.current.findIndex((e) => typeof e.id === 'string' && e.id.startsWith(streamingPrefix));
         if (idx >= 0) {
           // Upgrade the streaming entry: stable id + final text.
           const finalEntry: TranscriptEntry = {
