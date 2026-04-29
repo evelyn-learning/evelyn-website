@@ -6,7 +6,7 @@
  * Displays the conversation history between student and tutor.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { User, Bot } from 'lucide-react';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 
@@ -109,6 +109,23 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [transcript, picker]);
+
+  // Progressive hint under the typing-dots while the brain is composing.
+  // Most turns finish in 2-7s; if it takes longer, fade in a soft
+  // "still thinking…" reassurance, then a recovery hint near the
+  // page-level 10s watchdog so the student knows what to do if the
+  // request truly stalled.
+  const [thinkingHint, setThinkingHint] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isProcessing) {
+      setThinkingHint(null);
+      return;
+    }
+    setThinkingHint(null);
+    const t1 = setTimeout(() => setThinkingHint('Still thinking…'), 4000);
+    const t2 = setTimeout(() => setThinkingHint('Hmm, that\'s taking a moment — feel free to type below if I missed you.'), 8000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [isProcessing]);
 
   if (transcript.length === 0 && !isProcessing && !picker) {
     return (
@@ -267,6 +284,9 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   style={{ animationDelay: '0.2s' }}
                 />
               </div>
+              {thinkingHint && (
+                <p className="text-xs text-gray-500 mt-1.5 italic">{thinkingHint}</p>
+              )}
             </div>
           </div>
         </div>

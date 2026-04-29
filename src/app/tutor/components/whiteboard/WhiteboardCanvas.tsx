@@ -651,7 +651,16 @@ export function WhiteboardCanvas({
         // scroll-within-scroll feel that's jarring on small screens.
         // Content flows naturally and the parent / page handles scroll.
         // Desktop keeps the inner scroll for the side-by-side split.
-        className="flex-1 lg:overflow-auto p-4"
+        // Use overflow-y-auto instead of overflow-auto so wide
+        // renderers (concept maps with many nodes, diagrams, tables)
+        // never trigger a horizontal scrollbar across the WB pane —
+        // observed 2026-04-29 electricity session, where a 5-node
+        // concept map's right-most box extended past the visible
+        // edge. Renderers that legitimately need horizontal scroll
+        // (long equations, code blocks, wide tables) have their own
+        // inner overflow-x-auto on the specific element, so those
+        // still work.
+        className="flex-1 lg:overflow-y-auto lg:overflow-x-hidden p-4"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div key={currentIndex} className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}>

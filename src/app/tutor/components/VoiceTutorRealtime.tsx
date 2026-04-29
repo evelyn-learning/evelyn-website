@@ -3881,6 +3881,21 @@ export function VoiceTutorRealtime({
       return;
     }
     brainBusyRef.current = true;
+    // Watchdog: if callBrainOnce hangs (network never resolves, no
+    // error thrown), brainBusyRef stays true forever and every
+    // subsequent student turn gets queued silently. Observed
+    // 2026-04-29 electricity session: voice "I don't think so" never
+    // reached the brain and the user stared at "Thinking…" until they
+    // gave up and typed it. 90-second hard cap forces the flag back
+    // to false and clears the queue so the next input can flow.
+    const watchdog = setTimeout(() => {
+      if (brainBusyRef.current) {
+        console.warn('[brain-orchestrator] watchdog: brain stuck > 90s — force-resetting busy flag');
+        brainBusyRef.current = false;
+        queuedTranscriptsRef.current = [];
+        onDebugEvent?.('brain_watchdog_reset', '90s timeout');
+      }
+    }, 90_000);
     try {
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
@@ -3892,9 +3907,10 @@ export function VoiceTutorRealtime({
         await callBrainOnce(combined);
       }
     } finally {
+      clearTimeout(watchdog);
       brainBusyRef.current = false;
     }
-  }, [callBrainOnce]);
+  }, [callBrainOnce, onDebugEvent]);
 
   // Short relay-mode prompt for Realtime when claudeBrainMode is on.
   // Realtime is reduced to STT + verbatim TTS. It does not author content.
@@ -4465,6 +4481,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
           const text = input?.value?.trim();
           if (text && realtime.isConnected) {
+            // The student typing into this textbox is a strong signal
+            // they think the system is stuck — clear any stale brain-
+            // busy flag and queued transcripts so the typed turn
+            // doesn't get silently swallowed behind a hung previous
+            // request. Observed 2026-04-29 electricity session.
+            if (brainBusyRef.current) {
+              console.warn('[VoiceTutor] typed input while brainBusy=true — force-clearing stale busy flag');
+              brainBusyRef.current = false;
+              queuedTranscriptsRef.current = [];
+            }
             // Add to transcript
             const entry: TranscriptEntry = {
               id: `user-${Date.now()}`,

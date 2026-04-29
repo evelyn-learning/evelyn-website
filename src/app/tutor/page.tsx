@@ -167,6 +167,25 @@ function TutorPage() {
     sourceMessageIndex: number;
   }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  // Watchdog for the "Thinking…" indicator. If something flips
+  // isProcessing=true and forgets to flip it back (stuck brain
+  // request, dropped voice transcription, network hiccup), the user
+  // stares at "Thinking…" forever. Observed 2026-04-29 electricity
+  // session: voice "I don't think so" never reached the brain, the
+  // indicator stayed up for ~90s until the user typed. Auto-clear
+  // after 10 seconds — short enough that the UX recovers quickly,
+  // long enough that normal multi-tool brain turns (~5-9s of total
+  // brain.stream time observed) finish first.
+  useEffect(() => {
+    if (!isProcessing) return;
+    const t = setTimeout(() => {
+      console.warn('[tutor/page] isProcessing watchdog fired — clearing stuck indicator after 10s');
+      setIsProcessing(false);
+      setStatusMessage('That took a moment — try saying it again, or type below if I missed it.');
+      setTimeout(() => setStatusMessage(null), 6000);
+    }, 10_000);
+    return () => clearTimeout(t);
+  }, [isProcessing]);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
