@@ -3274,20 +3274,43 @@ export function VoiceTutorRealtime({
                   // when there's already a prior tutor turn in history,
                   // drop that opener entirely. The brain occasionally
                   // re-greets despite the prompt rule; this is a hard
-                  // safety net at the orchestrator layer. Only applies
-                  // to the FIRST sentence of a turn (totalSentenceCount
-                  // is still 0 when we get here).
+                  // safety net at the orchestrator layer.
+                  // Greeting can land in two shapes:
+                  //   (a) entire first sentence is just a greeting
+                  //       ("Hey Praveen!") — drop the whole sentence and
+                  //       fall through *without* incrementing
+                  //       totalSentenceCount, so the NEXT sentence is
+                  //       still treated as first-of-turn (it might also
+                  //       open with a greeting we want to strip).
+                  //   (b) greeting is a prefix on a longer sentence
+                  //       ("Hey Praveen! No worries — let me draw…") —
+                  //       strip the prefix, voice the remainder.
+                  // The 2026-04-29 trig session hit case (a): brain
+                  // emitted "Hey Praveen!" as a standalone sentence
+                  // after the student's first content reply. The prior
+                  // version of this filter only handled (b), so the
+                  // greeting-only sentence got voiced. The student then
+                  // replied "hello" thinking the session had restarted.
                   const isFirstSentenceOfTurn = totalSentenceCount === 0;
                   if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
-                    const greetingRe = /^\s*(?:hey|hi|hello|howdy)(?:\s+[A-Z][a-z]+)?[!.,]*\s*/i;
-                    const stripped = sentence.replace(greetingRe, '').trim();
-                    if (stripped && stripped !== sentence.trim()) {
-                      console.log('[brain-orchestrator] stripped mid-session re-greet from first sentence');
-                      // Skip this sentence entirely if the greeting WAS
-                      // the whole sentence; otherwise voice the rest.
-                      if (stripped.length < 4) continue;
-                      // Replace the sentence content with the stripped version.
-                      (ev as { text?: string }).text = stripped;
+                    // \b after the greeting word so "Heyo" / "Hilarious" /
+                    // "Howdoyou" don't get falsely stripped as "Hey" / "Hi" /
+                    // "Howdy" + leftover. The word boundary requires a
+                    // non-word char (or end of string) right after the match.
+                    const greetingRe = /^\s*(?:hey|hi|hello|howdy)\b(?:\s+[A-Z][a-z]+)?[!.,]*\s*/i;
+                    if (greetingRe.test(sentence)) {
+                      const stripped = sentence.replace(greetingRe, '').trim();
+                      if (!stripped || stripped.length < 4) {
+                        console.log('[brain-orchestrator] dropped greeting-only mid-session sentence:', JSON.stringify(sentence.slice(0, 60)));
+                        onDebugEvent?.('mid_session_regreet_dropped', sentence.slice(0, 60));
+                        // continue WITHOUT incrementing totalSentenceCount
+                        // so the next sentence still counts as first-of-turn.
+                        continue;
+                      }
+                      if (stripped !== sentence.trim()) {
+                        console.log('[brain-orchestrator] stripped mid-session re-greet prefix:', JSON.stringify(sentence.slice(0, 40)));
+                        (ev as { text?: string }).text = stripped;
+                      }
                     }
                   }
                   const updatedSentence = (ev.text as string) || '';

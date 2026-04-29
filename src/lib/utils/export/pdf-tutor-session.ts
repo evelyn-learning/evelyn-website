@@ -1482,6 +1482,23 @@ export async function exportTutorSessionPDF(
       return false;
     }
     if (META_PDF_ACTIONS.has(String(action))) return false;
+    // Drop showEquation cards whose latex payload is empty/missing —
+    // they render as label-only blanks ("sin 30° confirmed" with no
+    // formula) in the Whiteboard Content section, which looks broken.
+    // Observed 2026-04-29 trig session: brain emitted two-stage
+    // equations (label-first, then a corrected version with full
+    // latex) and JSON-key dedup kept both. The corrected version still
+    // renders inline in the conversation transcript via msg.whiteboardCommands,
+    // so dropping the empty placeholder here loses nothing the student saw.
+    // DB format nests latex under data; check both shapes.
+    if (action === 'showEquation') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = cmd as any;
+      const latex = (typeof c.latex === 'string' ? c.latex : c.data?.latex) ?? '';
+      if (typeof latex !== 'string' || latex.trim().length === 0) {
+        return false;
+      }
+    }
     return true;
   });
 
