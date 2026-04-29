@@ -95,6 +95,11 @@ import { SEED_CHEM_REACTIONS_TYPES } from './seeds/chem-reactions-types';
 import { SEED_CHEM_GAS_LAWS } from './seeds/chem-gas-laws';
 import { SEED_CHEM_SOLUTIONS_CONCENTRATION } from './seeds/chem-solutions-concentration';
 import { SEED_CHEM_ACIDS_BASES_PH } from './seeds/chem-acids-bases-ph';
+import { SEED_CHEM_THERMOCHEMISTRY } from './seeds/chem-thermochemistry';
+import { SEED_CHEM_KINETICS } from './seeds/chem-kinetics';
+import { SEED_CHEM_EQUILIBRIUM } from './seeds/chem-equilibrium';
+import { SEED_CHEM_REDOX } from './seeds/chem-redox';
+import { SEED_CHEM_ORGANIC_INTRO } from './seeds/chem-organic-intro';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -218,6 +223,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_CHEM_GAS_LAWS,
   SEED_CHEM_SOLUTIONS_CONCENTRATION,
   SEED_CHEM_ACIDS_BASES_PH,
+  SEED_CHEM_THERMOCHEMISTRY,
+  SEED_CHEM_KINETICS,
+  SEED_CHEM_EQUILIBRIUM,
+  SEED_CHEM_REDOX,
+  SEED_CHEM_ORGANIC_INTRO,
   SEED_PHYS_KINEMATICS_1D,
 ];
 
