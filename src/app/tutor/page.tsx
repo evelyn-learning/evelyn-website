@@ -358,14 +358,25 @@ function TutorPage() {
   // didn't fire, and the abandoned-on-unmount save never reached the
   // server. Periodic flush every 30s while in session keeps the DB
   // copy current — at most we lose 30s of trailing turns.
+  //
+  // CRITICAL: must use a ref to hold `saveSessionUsage` and a stable
+  // effect dep list. The callback's deps include transcript.length,
+  // tokenUsage, etc. — every new turn re-creates the callback, which
+  // would tear down + recreate the interval, restarting its 30s clock.
+  // During an active conversation that timer would never fire (turns
+  // arrive faster than 30s), defeating the entire flush.
+  const saveSessionUsageRef = useRef(saveSessionUsage);
+  useEffect(() => {
+    saveSessionUsageRef.current = saveSessionUsage;
+  }, [saveSessionUsage]);
   useEffect(() => {
     if (stage !== 'session') return;
     const interval = setInterval(() => {
       if (sessionEndedRef.current) return;
-      saveSessionUsage('active');
+      saveSessionUsageRef.current('active');
     }, 30_000);
     return () => clearInterval(interval);
-  }, [stage, saveSessionUsage]);
+  }, [stage]);
 
   // Derived taxonomy state
   const availableLevels = useMemo(() => getLevelsForSubject(selectedSubject), [selectedSubject]);

@@ -109,12 +109,22 @@ export function TranscriptView({ transcript, isProcessing }: TranscriptViewProps
     );
   }
 
+  // Filter out bracketed system-style hints sent via sendTextMessage()
+  // (e.g. "[The student picked the lesson "X" from the in-session picker.
+  // Start that lesson now using show_segment_card for the first segment.]"
+  // from LessonNudgePicker, or homework-upload context). These belong in
+  // the transcript-to-brain channel for the model's context but should
+  // not render as student chat bubbles.
+  const visibleTranscript = transcript.filter(
+    (entry) => !(entry.role === 'student' && /^\s*\[[\s\S]+\]\s*$/.test(entry.text)),
+  );
+
   return (
     <div
       ref={containerRef}
       className="h-full overflow-y-auto p-4 space-y-4"
     >
-      {transcript.map((entry) => (
+      {visibleTranscript.map((entry) => (
         <div
           key={entry.id}
           className={`flex gap-3 ${

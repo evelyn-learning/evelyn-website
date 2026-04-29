@@ -3352,7 +3352,16 @@ export function VoiceTutorRealtime({
                   // kill the rest of the attempt, suppress audio, and
                   // route to a judge retry — the brain has already
                   // told us it doesn't trust its own output.
-                  const selfCorrectionRe = /\b(?:wait,?\s+(?:actually|let me|that['’]s)|actually,?\s+(?:i was wrong|that['’]s wrong|let me re|never mind)|let me re-?check|my mistake|sorry,?\s+(?:i was wrong|let me|that['’]s wrong)|i was wrong|never mind\s+(?:that|what i)|scratch that|hmm,?\s+actually|hold on,?\s+(?:that['’]s wrong|i was wrong))/i;
+                  //
+                  // Only match phrases where the bot is clearly attributing
+                  // wrongness to ITSELF. Earlier broader version had high
+                  // FP risk: "wait, that's a great question" (filler),
+                  // "wait, let me show you" (legit pedagogical), "actually,
+                  // that's wrong" / "sorry, that's wrong" (correcting the
+                  // STUDENT's wrong answer — extremely common in tutor
+                  // turns), "actually, let me reframe", "hmm, actually" all
+                  // false-positived. Keep only unambiguous self-attribution.
+                  const selfCorrectionRe = /\b(?:wait,?\s+actually|actually,?\s+(?:i was wrong|i['’]m wrong|never mind)|let me re-?(?:check|verify|consider|examine)|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong)/i;
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionRe.test(updatedSentence)) {
                     const reason =
                       `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +

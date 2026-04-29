@@ -60,7 +60,11 @@ const EMOJI_REPLACEMENTS: Record<string, string> = {
   '🔥': '[fire]', '❄️': '[snow]', '❄': '[snow]', '💧': '[water]',
 };
 function replaceEmojiInString(s: string): string {
-  if (!s.includes('\u{1F000}'.charAt(0)) && !/[☀-➿⬀-⯿]/.test(s)) return s;
+  // Gate on ANY high surrogate (D800-DBFF) — earlier version checked only
+  // the D83C high-surrogate, which silently skipped 1F400+ animals (D83D),
+  // 1F600+ faces (D83D), and 1F900+ symbols (D83E), making most of the
+  // EMOJI_REPLACEMENTS map dead code. Also include common BMP emoji ranges.
+  if (!/[\uD800-\uDBFF]/.test(s) && !/[☀-➿⬀-⯿]/.test(s)) return s;
   let out = s;
   for (const [k, v] of Object.entries(EMOJI_REPLACEMENTS)) {
     if (out.includes(k)) out = out.split(k).join(v);

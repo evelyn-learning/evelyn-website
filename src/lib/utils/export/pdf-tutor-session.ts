@@ -1620,22 +1620,18 @@ export async function exportTutorSessionPDF(
         return false;
       }
       // Drop placeholder-latex cards. Observed 2026-04-29 pre-algebra
-      // session: brain emitted show_equation with latex="x = 5 + 3" and
-      // label="The equation", but the live state ALSO contained a
-      // sibling card whose latex was a literal placeholder string ("The
-      // equation"). KaTeX can't parse plain English as latex, falls
-      // back to textContent (EquationRenderer.tsx:92), and the captured
-      // raster shows the label twice (header + body) with no math.
-      // Heuristic: if the latex matches the label verbatim, OR contains
-      // no math operators / latex commands AT ALL, treat it as a
-      // placeholder draft and drop. Real equations always have at
-      // least one of: =, +, -, *, /, ^, _, \, (, ), {, }, digits.
+      // session: a sibling equation card had latex="The equation" (a
+      // literal placeholder) — KaTeX can't parse English as latex,
+      // falls back to textContent (EquationRenderer.tsx:92), and the
+      // captured raster shows the label twice with no math.
+      // Heuristic: latex must contain at least one of =, +, -, *, /, ^,
+      // _, \, (, ), {, }, digits. (Earlier version also dropped when
+      // latex === label, but that mis-fires when the brain echoes a
+      // real equation as both fields, e.g. latex="x = 5"/label="x = 5".)
       const trimmedLatex = latex.trim();
       const trimmedLabel = String(label).trim();
-      const looksLikePlaceholder =
-        (trimmedLabel.length > 0 && trimmedLatex === trimmedLabel) ||
-        !/[=+\-*/^_\\(){}\[\]0-9]/.test(trimmedLatex);
-      if (looksLikePlaceholder) {
+      const hasMath = /[=+\-*/^_\\(){}\[\]0-9]/.test(trimmedLatex);
+      if (!hasMath) {
         console.log(`[pdf-tutor-session] dropping placeholder showEquation: latex="${trimmedLatex}", label="${trimmedLabel}"`);
         return false;
       }
