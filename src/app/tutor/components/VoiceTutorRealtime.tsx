@@ -3342,6 +3342,32 @@ export function VoiceTutorRealtime({
                   }
                   const updatedSentence = (ev.text as string) || '';
                   if (!updatedSentence.trim()) continue;
+                  // Mid-turn self-correction detection. Observed
+                  // 2026-04-29 grammar session: brain wrong-claimed "3
+                  // nouns" then visibly walked it back ("third is park
+                  // — wait, you already said that... my mistake"). The
+                  // student watched the bot self-correct in real time
+                  // ("how can you make the mistake"). When the brain
+                  // emits a phrase that signals a mid-turn walkback,
+                  // kill the rest of the attempt, suppress audio, and
+                  // route to a judge retry — the brain has already
+                  // told us it doesn't trust its own output.
+                  const selfCorrectionRe = /\b(?:wait,?\s+(?:actually|let me|that['’]s)|actually,?\s+(?:i was wrong|that['’]s wrong|let me re|never mind)|let me re-?check|my mistake|sorry,?\s+(?:i was wrong|let me|that['’]s wrong)|i was wrong|never mind\s+(?:that|what i)|scratch that|hmm,?\s+actually|hold on,?\s+(?:that['’]s wrong|i was wrong))/i;
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionRe.test(updatedSentence)) {
+                    const reason =
+                      `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +
+                      `That's confusing for the student to hear. Re-emit your response cleanly: ` +
+                      `recompute the answer first, then speak ONLY the correct version. ` +
+                      `Do not narrate your own confusion or backtrack out loud.`;
+                    rejectionsThisAttempt.push({ action: 'mid_turn_self_correction', reason });
+                    judgeRetriesUsed++;
+                    attemptKilled = true;
+                    clearSpeechQueueRef.current?.();
+                    speakKillBridge();
+                    console.warn('[brain-orchestrator] mid-turn self-correction detected — retrying:', updatedSentence.slice(0, 80));
+                    onDebugEvent?.('self_correction_retry', updatedSentence.slice(0, 80));
+                    continue;
+                  }
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   // KEEP markdown emphasis (*word*, **strong**) in the
