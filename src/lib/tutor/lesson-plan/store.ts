@@ -83,6 +83,12 @@ import { SEED_BIO_HUMAN_CIRC_RESP } from './seeds/bio-human-circ-resp';
 import { SEED_BIO_HUMAN_NERV_ENDO } from './seeds/bio-human-nerv-endo';
 import { SEED_BIO_HUMAN_IMMUNE_DIGEST } from './seeds/bio-human-immune-digest';
 import { SEED_BIO_BIOTECH_ETHICS } from './seeds/bio-biotech-ethics';
+import { SEED_CHEM_ELECTRON_CONFIG } from './seeds/chem-electron-config';
+import { SEED_CHEM_PERIODIC_TRENDS } from './seeds/chem-periodic-trends';
+import { SEED_CHEM_IONIC_BONDING } from './seeds/chem-ionic-bonding';
+import { SEED_CHEM_COVALENT_BONDING_LEWIS } from './seeds/chem-covalent-bonding-lewis';
+import { SEED_CHEM_MOLECULAR_GEOMETRY_VSEPR } from './seeds/chem-molecular-geometry-vsepr';
+import { SEED_CHEM_NAMING_COMPOUNDS } from './seeds/chem-naming-compounds';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -194,6 +200,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_BIO_HUMAN_IMMUNE_DIGEST,
   SEED_BIO_BIOTECH_ETHICS,
   SEED_CHEM_ATOMIC_STRUCTURE,
+  SEED_CHEM_ELECTRON_CONFIG,
+  SEED_CHEM_PERIODIC_TRENDS,
+  SEED_CHEM_IONIC_BONDING,
+  SEED_CHEM_COVALENT_BONDING_LEWIS,
+  SEED_CHEM_MOLECULAR_GEOMETRY_VSEPR,
+  SEED_CHEM_NAMING_COMPOUNDS,
   SEED_PHYS_KINEMATICS_1D,
 ];
 
