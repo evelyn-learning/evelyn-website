@@ -1172,19 +1172,16 @@ async function drawWhiteboardVisual(
       if (raster && raster.dataUrl) {
         const heightMm = (raster.heightPx / raster.widthPx) * width;
         // Light blue box behind the image to match drawEquationVisual's look.
+        // The captured image already contains the EquationRenderer's own label
+        // header (see EquationRenderer.tsx:127), so we DON'T draw a separate
+        // label band here — that was producing the duplicate "Starting point /
+        // Starting point" stack visible in the 2026-04-28 trig session export.
         const boxPad = 3;
-        const labelH = cmd.label ? 6 : 0;
-        const boxH = labelH + heightMm + boxPad * 2;
+        const boxH = heightMm + boxPad * 2;
         pdf.setFillColor(239, 246, 255);
         pdf.setDrawColor(191, 219, 254);
         pdf.roundedRect(x, y, width, boxH, 2, 2, 'FD');
-        if (cmd.label) {
-          pdf.setFont('helvetica', 'italic');
-          pdf.setFontSize(7);
-          pdf.setTextColor(100, 116, 139);
-          pdf.text(sanitizeForPDF(String(cmd.label)), x + boxPad, y + 4);
-        }
-        pdf.addImage(raster.dataUrl, 'PNG', x + boxPad, y + labelH + boxPad, width - boxPad * 2, heightMm);
+        pdf.addImage(raster.dataUrl, 'PNG', x + boxPad, y + boxPad, width - boxPad * 2, heightMm);
         return y + boxH + 2;
       }
     } catch (err) {
@@ -1217,6 +1214,37 @@ async function drawWhiteboardVisual(
   }
 
   if (cmd.action === 'showGeometry' && cmd.points) {
+    // Try the capture path first — GeometryRenderer's SVG is the source
+    // of truth for what the student saw, and it handles polygons,
+    // circles, arcs, conics, axes/grid that drawGeometryVisual ignores
+    // entirely. The 2026-04-28 trig session export had a "Right Triangle
+    // Trig" geometry where only the three vertex labels rendered (no
+    // edges); the capture path fixes that without us re-deriving the
+    // segment-drawing logic in jsPDF. Falls back to drawGeometryVisual
+    // when capture returns null (no DOM, off-screen render failed, etc.).
+    try {
+      const { captureCommandSvg, captureCommandRaster, drawCapturedSvg, svgContainsExoticGlyphs } = await import('./whiteboard-capture');
+      const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
+      const svgString = await captureCommandSvg(whiteboardCmd);
+      if (svgString) {
+        // Geometry diagrams routinely contain π, √, Greek letters in
+        // angle labels — same exotic-glyph check the generic fallback
+        // uses, so unit-circle-style labeling routes through raster.
+        if (svgContainsExoticGlyphs(svgString)) {
+          const raster = await captureCommandRaster(whiteboardCmd);
+          if (raster && raster.dataUrl) {
+            const heightMm = (raster.heightPx / raster.widthPx) * width;
+            pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
+            return y + heightMm + 2;
+          }
+        } else {
+          const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
+          if (consumed > 0) return y + consumed + 2;
+        }
+      }
+    } catch (err) {
+      console.warn('[pdf-tutor-session] Geometry capture failed, using legacy text path:', err);
+    }
     return drawGeometryVisual(pdf, cmd, x, y, width);
   }
 

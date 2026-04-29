@@ -326,20 +326,53 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
  * faithfully reproduce.
  */
 export const RASTER_PREFERRED_ACTIONS: ReadonlySet<string> = new Set([
-  'showCycleDiagram', // stage icons are emoji (🌧️, 🧬, ⚡)
-  'showConceptMap',   // tutor-supplied node icons
-  'showFlowchart',    // tutor-supplied node icons
+  'showCycleDiagram',  // stage icons are emoji (🌧️, 🧬, ⚡)
+  'showConceptMap',    // tutor-supplied node icons
+  'showFlowchart',     // tutor-supplied node icons
+  // The trig diagrams below embed √, π, and Greek letters in SVG <text>.
+  // svg2pdf falls back to helvetica (WinAnsi only) and substitutes those
+  // glyphs with whatever lookalike (or junk) sits at the same code point —
+  // observed 2026-04-28: "(-1/2, √3/2)" rendered as "(-1/2, "3/2)" in the
+  // unit-circle export. Force raster so the browser's font stack is used.
+  'showUnitCircle',
+  'showSpecialTriangles',
 ]);
 
 /**
+ * Char range that helvetica's WinAnsi (Latin-1) covers cleanly, plus the
+ * common Unicode punctuation we transliterate up-stream. Anything OUTSIDE
+ * this range that lands in SVG <text> via svg2pdf will either substitute,
+ * drop, or render with a wrong glyph (the unit-circle "√" → '"' bug).
+ *
+ * Kept as a single regex per `svgContainsExoticGlyphs` call so the hot
+ * path is one .test() per captured SVG.
+ */
+const EXOTIC_GLYPH_REGEX = new RegExp(
+  // Emoji & symbols (kept from prior version)
+  '[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{1F000}-\\u{1F9FF}]'
+  // Greek + Coptic — π θ Δ Σ etc. (math labels in unit circle, geometry)
+  + '|[\\u{0370}-\\u{03FF}]'
+  // Mathematical Operators block — √ ∞ ∫ ∂ ≤ ≥ ≠ ± ⊥ ∥ ∈ ∉ etc.
+  + '|[\\u{2200}-\\u{22FF}]'
+  // Arrows (→ ← ⇒ ⇔) — appear as labels in vector diagrams
+  + '|[\\u{2190}-\\u{21FF}]'
+  // Superscripts/subscripts (² ³ ⁻ ₂ ₃) — common in physics diagrams
+  + '|[\\u{2070}-\\u{209F}]'
+  // Mathematical Alphanumeric Symbols (𝛼 𝜋 etc.) — rare but real
+  + '|[\\u{1D400}-\\u{1D7FF}]',
+  'u',
+);
+
+/**
  * Heuristic: does the captured SVG contain any character outside the
- * common Latin + punctuation + math range that svg2pdf renders faithfully?
- * This catches emoji and exotic unicode even when a renderer isn't in the
- * static allowlist above. Intentionally permissive — we'd rather raster a
- * few extra diagrams than ship a garbled glyph.
+ * common Latin + punctuation range that svg2pdf renders faithfully?
+ * Catches emoji, math operators (√ ∫ ∞ ≤), Greek letters (π θ Δ), and
+ * arrows even when a renderer isn't in the static allowlist above.
+ * Intentionally permissive — we'd rather raster a few extra diagrams
+ * than ship a garbled glyph.
  */
 export function svgContainsExoticGlyphs(svgString: string): boolean {
-  return /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F9FF}]/u.test(svgString);
+  return EXOTIC_GLYPH_REGEX.test(svgString);
 }
 
 /**
