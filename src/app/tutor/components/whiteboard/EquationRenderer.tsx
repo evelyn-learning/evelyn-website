@@ -41,6 +41,22 @@ export function EquationRenderer({
         .replace(/\\\\(?=[a-zA-Z{])/g, '\\')      // \\frac → \frac, \\{ → \{
         .replace(/\\n(?![a-zA-Z])/g, '\n');       // \n → newline, but NOT \neq / \nabla / \nu
 
+      // Auto-wrap multi-line latex in \begin{aligned}...\end{aligned} when
+      // the brain emits `\\` line breaks or `\hline` outside an environment.
+      // KaTeX only interprets these inside aligned/array/cases/matrix; outside
+      // it errors with throwOnError:false and renders the raw input in red
+      // (the 2026-04-29 algebra session #30 "Subtraction Step" showed
+      // "10x + 15y = 60 \\ -\;(10x + 8y = 46) \\ \hline 7y = 14 \implies y = 2"
+      // as raw red text). The wrap also normalizes `\hline` to `\\\hline`
+      // so the row break before the rule actually fires.
+      const isAlreadyWrapped = /\\begin\{(aligned|array|cases|matrix|gathered|split|align|alignat|equation|multline)\}/.test(processedLatex);
+      const looksMultiLine = /\\\\|\\hline\b/.test(processedLatex);
+      if (looksMultiLine && !isAlreadyWrapped) {
+        // Strip a stray leading `\\` that some emissions start with.
+        processedLatex = processedLatex.replace(/^\s*\\\\\s*/, '');
+        processedLatex = `\\begin{aligned}${processedLatex}\\end{aligned}`;
+      }
+
       if (highlight && highlight.length > 0) {
         // Wrap highlighted terms in a colored box
         highlight.forEach((term) => {

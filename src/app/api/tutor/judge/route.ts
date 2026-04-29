@@ -41,6 +41,17 @@ interface JudgeRequestBody {
   boardSummary: string;
   /** Concatenated tutor speech for the turn being judged. */
   spokenText: string;
+  /** Optional FOCUS card — the most recently rendered show_problem (or
+   *  show_segment_card-resolved) statement. The student is most likely
+   *  attending to this; the judge weights claims against it MORE than
+   *  against other board items. Without focus, the judge can pass a
+   *  speech claim that's grounded against ANY board item, even if it
+   *  contradicts the card the student is looking at — exactly the
+   *  failure mode in the 2026-04-29 algebra session where two coexisting
+   *  problem cards (one free-form 16/8 and one authored 12/4) let the
+   *  judge pass speech that matched ONE of them while the student
+   *  attended to the OTHER. */
+  focus?: string;
 }
 
 interface JudgeIssue {
@@ -87,6 +98,8 @@ or
 
 If the whiteboard is empty, no claims can be grounded against it — but be permissive about general explanation; only flag claims that explicitly state board content (e.g., "the equation on the board is X" when the board is empty).
 
+If a FOCUS section is provided, treat it as the single card the student is most likely attending to. A claim that contradicts FOCUS is ungrounded EVEN IF some other board item happens to support it — the student would experience the contradiction. A claim that contradicts a non-focus item but matches focus is grounded. When FOCUS isn't provided, treat all board items equally.
+
 Output ONLY the JSON object. No prose before or after.`;
 
 function badRequest(message: string): Response {
@@ -111,8 +124,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
+  const focusBlock = (typeof body.focus === 'string' && body.focus.trim().length > 0)
+    ? `<focus>\n${body.focus.trim()}\n</focus>\n\n`
+    : '';
   const userContent =
     `<whiteboard_state>\n${body.boardSummary || '(whiteboard is empty)'}\n</whiteboard_state>\n\n` +
+    focusBlock +
     `<tutor_said>\n${body.spokenText.trim()}\n</tutor_said>`;
 
   const t0 = Date.now();
@@ -133,8 +150,20 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     let parsed: { grounded?: boolean; issues?: JudgeIssue[] } | null = null;
     try {
-      // Tolerate fenced code blocks just in case.
-      const jsonStr = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      // Tolerate fenced code blocks. Haiku occasionally wraps JSON in
+      // ```json ... ``` even when told not to. Strip both forms (with
+      // and without language tag, leading whitespace/newlines), AND
+      // fall back to extracting the first {...} object if Haiku adds
+      // prose around it.
+      let jsonStr = raw.trim()
+        .replace(/^```(?:json)?\s*\n?/i, '')
+        .replace(/\n?\s*```\s*$/i, '')
+        .trim();
+      // Last-resort: grab the first balanced { ... } block.
+      if (!jsonStr.startsWith('{')) {
+        const m = jsonStr.match(/\{[\s\S]*\}/);
+        if (m) jsonStr = m[0];
+      }
       parsed = JSON.parse(jsonStr);
     } catch {
       console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));

@@ -3297,6 +3297,48 @@ export function VoiceTutorRealtime({
                   const args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
                   totalToolNamesSeen.push(name);
+                  // Authored-truth guard: when the active segment has an
+                  // authored card, free-form show_problem is forbidden.
+                  // The brain MUST use show_segment_card so the rendered
+                  // text comes from the lesson plan verbatim. Otherwise
+                  // the brain's free-form variant ends up coexisting on
+                  // the board with the authored card the brain emits in
+                  // a later turn — observed 2026-04-29 algebra session:
+                  // brain emitted show_problem("3x+2y=16, x+2y=8") in
+                  // turn N, then show_segment_card → authored
+                  // ("3x+2y=12, 5x-2y=4") in turn N+1. Both stayed on
+                  // the board, brain narrated arithmetic for the
+                  // authored one while the student looked at the
+                  // free-form one ("they r same. so subtract" / brain:
+                  // "Almost! y-terms are opposite"). The judge LLM
+                  // can't catch this because both cards are on the
+                  // board and the brain's claim IS grounded against
+                  // ONE of them.
+                  if (name === 'show_problem') {
+                    const plan = lessonPlanRef.current;
+                    const segId = currentSegmentIdRef.current;
+                    if (plan && segId) {
+                      const seg = getSegment(plan, segId);
+                      const truth = getSegmentTruth(seg);
+                      if (truth?.problemText) {
+                        const reason =
+                          `The current segment "${segId}" has an authored problem and you tried to render a free-form one. ` +
+                          `Use show_segment_card({ segmentId: "${segId}" }) instead — it pulls the EXACT authored text. ` +
+                          `Free-form show_problem is blocked here because it lets you accidentally render a different ` +
+                          `problem than the lesson plan defines (the "two coexisting problems" bug). If you genuinely ` +
+                          `need a different problem, advance_lesson({ to: "..." }) to a segment that has it, or work ` +
+                          `with the authored card already on the board.`;
+                        rejectionsThisAttempt.push({ action: 'show_problem', reason });
+                        if (!attemptKilled) {
+                          attemptKilled = true;
+                          clearSpeechQueueRef.current?.();
+                        }
+                        console.warn(`[brain-orchestrator] blocked free-form show_problem in segment "${segId}" (authored truth exists) — retrying with show_segment_card hint`);
+                        onDebugEvent?.('show_problem_blocked', `segment "${segId}" has authored card; brain must use show_segment_card`);
+                        continue;
+                      }
+                    }
+                  }
                   // Lever A — show_segment_card resolution. Brain emits a
                   // segment id; the runtime pulls authored data from the
                   // active lesson plan and synthesizes the equivalent
@@ -3408,10 +3450,20 @@ export function VoiceTutorRealtime({
         if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attemptText && attemptText.trim().length > 0) {
           try {
             const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot());
+            // Focus = the most recently rendered problem statement.
+            // Without focus, the judge passes any speech that's grounded
+            // against ANY card on the board — exactly the failure mode
+            // in the 2026-04-29 algebra session where two coexisting
+            // problem cards (free-form 16/8 + authored 12/4) let the
+            // judge pass speech that matched ONE while the student
+            // attended to the OTHER. Focus tells the judge "this is
+            // the card the student is looking at; flag claims that
+            // contradict it specifically."
+            const focus = currentProblemRef.current?.statement ?? undefined;
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary, spokenText: attemptText }),
+              body: JSON.stringify({ boardSummary, spokenText: attemptText, focus }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string }> };
