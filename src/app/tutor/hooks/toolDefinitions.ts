@@ -164,14 +164,15 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_molecule',
-    description: 'Display a molecular structure on the whiteboard using an interactive chemistry editor. The editor renders a proper 2D structural formula from the SMILES notation with correct bond angles and atom positions. Students can modify the structure. Use for: organic molecules, functional groups, chemical structures, reactions.',
+    description: 'Display a chemical structure using an interactive chemistry editor. Auto-detects three kinds of compound from the input: (a) MOLECULAR (default — organic molecules, functional groups, ordinary covalent compounds — pass standard SMILES like "CCO" / "c1ccccc1" / "CC(=O)O"); (b) HYDRATE (a salt with water of crystallization — pass formula-with-dot like "CuSO4·5H2O" or "MgSO4·7H2O"; the runtime expands `·nH2O` into `n` water molecules drawn inline beside the primary structure); (c) IONIC (binary ionic compounds like "NaCl", "MgCl2", or bracketed-ion SMILES like "[Na+].[Cl-]"; the runtime renders the ions in the editor AND draws an inline SVG unit-cell lattice diagram below). Override auto-detection with `mode` if needed.',
     parameters: {
       type: 'object',
       properties: {
-        smiles: { type: 'string', description: 'SMILES notation for the molecule (e.g., "CCO" for ethanol, "c1ccccc1" for benzene, "CC(=O)O" for acetic acid)' },
-        title: { type: 'string', description: 'Title/name of the molecule' },
+        smiles: { type: 'string', description: 'SMILES, formula, or hydrate notation. Examples: "CCO" (ethanol, molecular), "c1ccccc1" (benzene), "CuSO4·5H2O" (copper sulfate pentahydrate), "[Na+].[Cl-]" or "NaCl" (ionic).' },
+        title: { type: 'string', description: 'Title/name of the compound' },
         description: { type: 'string', description: 'What to notice about this structure' },
         interactive: { type: 'boolean', description: 'Allow student to edit the structure (default: false)' },
+        mode: { type: 'string', enum: ['auto', 'molecular', 'hydrate', 'ionic'], description: 'Override auto-detection (default "auto"). Use when the auto-detector picks wrong — rare in practice.' },
       },
       required: ['smiles', 'title'],
     },
@@ -1884,6 +1885,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       title: funcArgs.title,
       description: funcArgs.description,
       interactive: !!(funcArgs.interactive),
+      mode: typeof funcArgs.mode === 'string' ? funcArgs.mode : undefined,
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_number_line') {

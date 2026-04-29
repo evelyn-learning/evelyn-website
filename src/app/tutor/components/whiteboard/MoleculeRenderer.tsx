@@ -14,7 +14,9 @@
  * - SVG export for PDF
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { classifyCompound, type CompoundKind } from '@/lib/tutor/chemistry/compound-classifier';
+import UnitCellLatticeRenderer from './UnitCellLatticeRenderer';
 
 interface MoleculeRendererProps {
   smiles: string;
@@ -22,6 +24,9 @@ interface MoleculeRendererProps {
   description?: string;
   interactive?: boolean;
   className?: string;
+  /** Optional override for the auto-detected compound kind. Default is
+   *  'auto' — classifyCompound picks based on the SMILES/formula shape. */
+  mode?: 'auto' | CompoundKind;
   onMoleculeChanged?: (newSmiles: string) => void;
 }
 
@@ -31,12 +36,18 @@ export default function MoleculeRenderer({
   description,
   interactive = false,
   className = '',
+  mode = 'auto',
   onMoleculeChanged,
 }: MoleculeRendererProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const pendingSmilesRef = useRef<string>(smiles);
+  // Classify on the input. Hydrates rewrite the SMILES so Ketcher
+  // draws water molecules inline; ionic compounds keep the SMILES
+  // as-is but trigger the lattice diagram below the iframe.
+  const classified = useMemo(() => classifyCompound(smiles, mode), [smiles, mode]);
+  const ketcherSmiles = classified.ketcherSmiles;
+  const pendingSmilesRef = useRef<string>(ketcherSmiles);
 
   // Listen for messages from the Ketcher iframe
   useEffect(() => {
@@ -68,16 +79,19 @@ export default function MoleculeRenderer({
     return () => window.removeEventListener('message', handleMessage);
   }, [onMoleculeChanged]);
 
-  // Send SMILES to iframe when it changes
+  // Send SMILES to iframe when it changes. Always send the classified
+  // (potentially rewritten) SMILES — for hydrates this is the
+  // expanded form with `.O.O.O...` so Ketcher draws the water
+  // molecules inline.
   useEffect(() => {
-    pendingSmilesRef.current = smiles;
+    pendingSmilesRef.current = ketcherSmiles;
     if (ready && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage({
         type: 'set-molecule',
-        smiles,
+        smiles: ketcherSmiles,
       }, '*');
     }
-  }, [smiles, ready]);
+  }, [ketcherSmiles, ready]);
 
   // Export SVG (for PDF export)
   const exportSvg = useCallback((): Promise<string | null> => {
@@ -116,6 +130,16 @@ export default function MoleculeRenderer({
     );
   }
 
+  // Compose the info-bar label. For hydrates, surface the original
+  // formula with the dot notation ("CuSO4·5H2O") rather than the
+  // expanded SMILES — that's what the student is learning to read.
+  const infoLabel = classified.kind === 'hydrate'
+    ? `${classified.anhydrousFormula ?? ''}·${(classified.hydrateCount ?? 1)}H₂O`
+    : classified.originalInput;
+  const kindBadge = classified.kind === 'hydrate' ? 'Hydrate'
+    : classified.kind === 'ionic' ? 'Ionic compound'
+    : null;
+
   return (
     <div className={`molecule-container ${className}`}>
       {title && (
@@ -137,19 +161,35 @@ export default function MoleculeRenderer({
         />
 
         {/* Info bar */}
-        <div className="px-4 py-2 border-t border-blue-100 bg-blue-50/50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="px-4 py-2 border-t border-blue-100 bg-blue-50/50 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs">🧪</span>
             {title && <span className="text-sm font-medium text-gray-700">{title}</span>}
             <span className="font-mono text-xs text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-100">
-              {smiles}
+              {infoLabel}
             </span>
+            {kindBadge && (
+              <span className="text-[10px] uppercase tracking-wider text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                {kindBadge}
+              </span>
+            )}
           </div>
           {interactive && (
             <span className="text-xs text-blue-500">Edit the structure above</span>
           )}
         </div>
       </div>
+
+      {/* Ionic compounds get an inline SVG unit-cell lattice below the
+          structural formula. Skipped when the classifier couldn't
+          parse a clean binary ionic structure (e.g., transition-metal
+          salts where charges aren't unique, or polyatomic ion
+          compounds like sodium sulfate). */}
+      {classified.kind === 'ionic' && classified.ions && (
+        <div className="mt-3">
+          <UnitCellLatticeRenderer ions={classified.ions} />
+        </div>
+      )}
     </div>
   );
 }

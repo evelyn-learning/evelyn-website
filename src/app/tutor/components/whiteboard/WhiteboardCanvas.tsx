@@ -1826,6 +1826,8 @@ export function CommandRenderer({ command }: CommandRendererProps) {
         title={command.title}
         description={command.description}
         interactive={command.interactive}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mode={(command as any).mode}
         onMoleculeChanged={(newSmiles) => {
           // Dispatch custom event so VoiceTutorRealtime can inject it into the AI conversation
           window.dispatchEvent(new CustomEvent('molecule-changed', {
