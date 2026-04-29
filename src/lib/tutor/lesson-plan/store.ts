@@ -29,6 +29,19 @@ import { SEED_K2_SCI_PUSH_PULL } from './seeds/k2-sci-push-pull';
 import { SEED_G3_SCI_FORCES_MOTION } from './seeds/g3-sci-forces-motion';
 import { SEED_G6_SCI_CELLS } from './seeds/g6-sci-cells';
 import { SEED_BIO_CELL_THEORY_STRUCTURE } from './seeds/bio-cell-theory-structure';
+// Batch 3 continued — 12 more Science plans across grade bands.
+import { SEED_K2_SCI_SUNLIGHT_WEATHER } from './seeds/k2-sci-sunlight-weather';
+import { SEED_K2_SCI_PLANT_NEEDS } from './seeds/k2-sci-plant-needs';
+import { SEED_K2_SCI_STATES_OF_MATTER } from './seeds/k2-sci-states-of-matter';
+import { SEED_G3_SCI_LIFE_CYCLES } from './seeds/g3-sci-life-cycles';
+import { SEED_G4_SCI_ENERGY_TRANSFER } from './seeds/g4-sci-energy-transfer';
+import { SEED_G5_SCI_PHOTOSYNTHESIS_BASICS } from './seeds/g5-sci-photosynthesis-basics';
+import { SEED_G7_SCI_GENETICS_PUNNETT } from './seeds/g7-sci-genetics-punnett';
+import { SEED_G7_SCI_PLATE_TECTONICS } from './seeds/g7-sci-plate-tectonics';
+import { SEED_G8_SCI_NEWTONS_LAWS } from './seeds/g8-sci-newtons-laws';
+import { SEED_CHEM_ATOMIC_STRUCTURE } from './seeds/chem-atomic-structure';
+import { SEED_PHYS_KINEMATICS_1D } from './seeds/phys-kinematics-1d';
+import { SEED_BIO_CELLULAR_RESPIRATION } from './seeds/bio-cellular-respiration';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -45,11 +58,23 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G10_RIGHT_TRIANGLE_TRIG,
   SEED_G11_UNIT_CIRCLE,
   SEED_G12_DERIVATIVE_INTUITION,
-  // Batch 3 — Science K-12 (kickoff; full coverage tracked in TRACKER.md).
+  // Batch 3 — Science K-12 (full coverage tracked in TRACKER.md).
   SEED_K2_SCI_PUSH_PULL,
+  SEED_K2_SCI_SUNLIGHT_WEATHER,
+  SEED_K2_SCI_PLANT_NEEDS,
+  SEED_K2_SCI_STATES_OF_MATTER,
   SEED_G3_SCI_FORCES_MOTION,
+  SEED_G3_SCI_LIFE_CYCLES,
+  SEED_G4_SCI_ENERGY_TRANSFER,
+  SEED_G5_SCI_PHOTOSYNTHESIS_BASICS,
   SEED_G6_SCI_CELLS,
+  SEED_G7_SCI_GENETICS_PUNNETT,
+  SEED_G7_SCI_PLATE_TECTONICS,
+  SEED_G8_SCI_NEWTONS_LAWS,
   SEED_BIO_CELL_THEORY_STRUCTURE,
+  SEED_BIO_CELLULAR_RESPIRATION,
+  SEED_CHEM_ATOMIC_STRUCTURE,
+  SEED_PHYS_KINEMATICS_1D,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

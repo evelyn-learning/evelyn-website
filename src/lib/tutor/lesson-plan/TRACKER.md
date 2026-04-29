@@ -175,49 +175,49 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 
 ## Science — 110 plans
 
-### K-2 — Combined (12 plans, 1 done)
+### K-2 — Combined (12 plans, 4 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
 | Pushes & pulls | ✅ DONE | `k2-sci-push-pull` | OpenStax K-2 Sci, NGSS K-PS2 |
-| Sunlight & weather | ⬜ TODO | `k2-sci-sunlight-weather` | NGSS K-PS3 |
-| Plant needs | ⬜ TODO | `k2-sci-plant-needs` | OpenStax K-2 Sci |
+| Sunlight & weather | ✅ DONE | `k2-sci-sunlight-weather` | OpenStax K-2 Sci, NGSS K-PS3 |
+| Plant needs | ✅ DONE | `k2-sci-plant-needs` | OpenStax K-2 Sci, NGSS K-LS1 |
 | Animal needs | ⬜ TODO | `k2-sci-animal-needs` | NGSS 1-LS1 |
 | Sound vibrations | ⬜ TODO | `k2-sci-sound-vibrations` | OpenStax K-2 Sci |
 | Light & shadows | ⬜ TODO | `k2-sci-light-shadows` | NGSS 1-PS4 |
-| Properties of matter (states) | ⬜ TODO | `k2-sci-states-of-matter` | CK-12 K-2 |
+| Properties of matter (states) | ✅ DONE | `k2-sci-states-of-matter` | OpenStax K-2 Sci, NGSS 2-PS1 |
 | Reversible & irreversible changes | ⬜ TODO | `k2-sci-reversible-changes` | NGSS 2-PS1 |
 | Habitats | ⬜ TODO | `k2-sci-habitats` | OpenStax K-2 Sci |
 | Earth materials (rocks, soil, water) | ⬜ TODO | `k2-sci-earth-materials` | NGSS 2-ESS2 |
 | Day & night sky | ⬜ TODO | `k2-sci-day-night-sky` | OpenStax K-2 Sci |
 | Weather patterns & seasons | ⬜ TODO | `k2-sci-weather-seasons` | NGSS K-ESS2 |
 
-### Grade 3 (6 plans, 1 done)
+### Grade 3 (6 plans, 2 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
 | Forces & motion (balanced/unbalanced) | ✅ DONE | `g3-sci-forces-motion` | OpenStax 3 Sci, NGSS 3-PS2 |
 | Magnets & static electricity | ⬜ TODO | `g3-sci-magnets-electricity` | NGSS 3-PS2 |
-| Life cycles (plants & animals) | ⬜ TODO | `g3-sci-life-cycles` | OpenStax 3 Sci |
+| Life cycles (plants & animals) | ✅ DONE | `g3-sci-life-cycles` | OpenStax 3 Sci, NGSS 3-LS1 |
 | Inheritance & traits | ⬜ TODO | `g3-sci-inheritance-traits` | NGSS 3-LS3 |
 | Weather & climate | ⬜ TODO | `g3-sci-weather-climate` | CK-12 3 Sci |
 | Adaptations & environments | ⬜ TODO | `g3-sci-adaptations` | OpenStax 3 Sci |
 
-### Grade 4 (6 plans)
+### Grade 4 (6 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Energy transfer & conservation | ⬜ TODO | `g4-sci-energy-transfer` | OpenStax 4 Sci |
+| Energy transfer & conservation | ✅ DONE | `g4-sci-energy-transfer` | OpenStax 4 Sci, NGSS 4-PS3 |
 | Waves (light, sound, water) | ⬜ TODO | `g4-sci-waves-intro` | NGSS 4-PS4 |
 | Information transfer (signals) | ⬜ TODO | `g4-sci-information-transfer` | CK-12 4 Sci |
 | Plant & animal structures | ⬜ TODO | `g4-sci-plant-animal-structures` | OpenStax 4 Sci |
 | Earth's features (rocks, fossils, weathering) | ⬜ TODO | `g4-sci-earth-features` | NGSS 4-ESS1 |
 | Natural hazards | ⬜ TODO | `g4-sci-natural-hazards` | OpenStax 4 Sci |
 
-### Grade 5 (6 plans)
+### Grade 5 (6 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
 | Matter & its properties | ⬜ TODO | `g5-sci-matter-properties` | OpenStax 5 Sci |
 | Mixtures & solutions | ⬜ TODO | `g5-sci-mixtures-solutions` | NGSS 5-PS1 |
 | Energy in food chains | ⬜ TODO | `g5-sci-energy-food-chains` | OpenStax 5 Sci |
-| Photosynthesis basics | ⬜ TODO | `g5-sci-photosynthesis-basics` | CK-12 5 Sci |
+| Photosynthesis basics | ✅ DONE | `g5-sci-photosynthesis-basics` | OpenStax 5 Sci, NGSS 5-LS1 |
 | Earth's systems (geo, hydro, atmo, bio) | ⬜ TODO | `g5-sci-earth-systems` | OpenStax 5 Sci |
 | Solar system (planets, moon, sun) | ⬜ TODO | `g5-sci-solar-system` | NGSS 5-ESS1 |
 
@@ -233,22 +233,22 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Heat transfer | ⬜ TODO | `g6-sci-heat-transfer` | OpenStax 6 Sci |
 | Earth's interior structure | ⬜ TODO | `g6-sci-earth-interior` | NGSS MS-ESS2 |
 
-### Grade 7 (8 plans)
+### Grade 7 (8 plans, 2 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Genetics (traits, Punnett squares) | ⬜ TODO | `g7-sci-genetics-punnett` | OpenStax 7 Sci |
+| Genetics (traits, Punnett squares) | ✅ DONE | `g7-sci-genetics-punnett` | OpenStax Concepts of Bio, NGSS MS-LS3 |
 | Evolution & natural selection | ⬜ TODO | `g7-sci-evolution-selection` | CK-12 7 Sci |
 | Geologic time & fossils | ⬜ TODO | `g7-sci-geologic-time` | NGSS MS-ESS1 |
-| Plate tectonics | ⬜ TODO | `g7-sci-plate-tectonics` | OpenStax 7 Sci |
+| Plate tectonics | ✅ DONE | `g7-sci-plate-tectonics` | OpenStax Earth Sci, NGSS MS-ESS2 |
 | Chemical reactions intro | ⬜ TODO | `g7-sci-chemical-reactions-intro` | CK-12 7 Sci |
 | Periodic table intro | ⬜ TODO | `g7-sci-periodic-table-intro` | OpenStax 7 Sci |
 | Conservation of mass | ⬜ TODO | `g7-sci-conservation-mass` | NGSS MS-PS1 |
 | Human body systems (deeper) | ⬜ TODO | `g7-sci-body-systems-deep` | OpenStax 7 Sci |
 
-### Grade 8 (8 plans)
+### Grade 8 (8 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Newton's laws of motion | ⬜ TODO | `g8-sci-newtons-laws` | OpenStax 8 Sci |
+| Newton's laws of motion | ✅ DONE | `g8-sci-newtons-laws` | OpenStax 8 Sci, NGSS MS-PS2 |
 | Forces & energy (KE, PE) | ⬜ TODO | `g8-sci-forces-energy` | NGSS MS-PS3 |
 | Wave properties (frequency, amplitude) | ⬜ TODO | `g8-sci-wave-properties` | CK-12 8 Sci |
 | Sound & light waves | ⬜ TODO | `g8-sci-sound-light` | OpenStax 8 Sci |
@@ -257,12 +257,12 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Climate change | ⬜ TODO | `g8-sci-climate-change` | NGSS MS-ESS3 |
 | Engineering design process | ⬜ TODO | `g8-sci-engineering-design` | OpenStax 8 Sci |
 
-### Grade 9-12 — Biology (18 plans, 1 done)
+### Grade 9-12 — Biology (18 plans, 2 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
 | Cell theory & structure | ✅ DONE | `bio-cell-theory-structure` | OpenStax Biology 2e Ch. 4 |
 | Cell membrane & transport | ⬜ TODO | `bio-cell-membrane-transport` | OpenStax Biology 2e |
-| Cellular respiration | ⬜ TODO | `bio-cellular-respiration` | OpenStax Biology 2e |
+| Cellular respiration | ✅ DONE | `bio-cellular-respiration` | OpenStax Biology 2e Ch. 7 |
 | Photosynthesis (Calvin cycle) | ⬜ TODO | `bio-photosynthesis-calvin` | OpenStax Biology 2e |
 | Cell cycle & mitosis | ⬜ TODO | `bio-cell-cycle-mitosis` | CK-12 Biology |
 | Meiosis & sexual reproduction | ⬜ TODO | `bio-meiosis-sexual-repro` | OpenStax Biology 2e |
@@ -279,10 +279,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Human body — immune & digestive | ⬜ TODO | `bio-human-immune-digest` | OpenStax Biology 2e |
 | Biotechnology & ethics | ⬜ TODO | `bio-biotech-ethics` | OpenStax Biology 2e |
 
-### Grade 9-12 — Chemistry (18 plans)
+### Grade 9-12 — Chemistry (18 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Atomic structure & subatomic particles | ⬜ TODO | `chem-atomic-structure` | OpenStax Chemistry 2e |
+| Atomic structure & subatomic particles | ✅ DONE | `chem-atomic-structure` | OpenStax Chemistry 2e Ch. 2 |
 | Electron configuration | ⬜ TODO | `chem-electron-configuration` | OpenStax Chemistry 2e |
 | Periodic table & periodicity | ⬜ TODO | `chem-periodic-table-trends` | OpenStax Chemistry 2e |
 | Ionic bonding | ⬜ TODO | `chem-ionic-bonding` | CK-12 Chemistry |
@@ -301,10 +301,10 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 | Redox reactions | ⬜ TODO | `chem-redox` | OpenStax Chemistry 2e |
 | Organic chemistry intro | ⬜ TODO | `chem-organic-intro` | OpenStax Chemistry 2e |
 
-### Grade 9-12 — Physics (20 plans)
+### Grade 9-12 — Physics (20 plans, 1 done)
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
-| Kinematics in 1D | ⬜ TODO | `phys-kinematics-1d` | OpenStax College Physics |
+| Kinematics in 1D | ✅ DONE | `phys-kinematics-1d` | OpenStax College Physics Ch. 2 |
 | Kinematics in 2D (projectile motion) | ⬜ TODO | `phys-kinematics-2d-projectile` | OpenStax College Physics |
 | Newton's first law (inertia) | ⬜ TODO | `phys-newtons-first-law` | OpenStax College Physics |
 | Newton's second law (F=ma) | ⬜ TODO | `phys-newtons-second-law` | OpenStax College Physics |
@@ -636,20 +636,35 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 ## Progress
 
 - **Total plans target**: ~462
-- **Done**: 14 (Math 10 + Science 4)
+- **Done**: 26 (Math 10 + Science 16)
 - **In progress**: 0
-- **Remaining**: 448
+- **Remaining**: 436
 
-### Recently completed (2026-04-29 Batch 3 kickoff)
+### Recently completed (2026-04-29 Batch 3 — Science)
+
+Initial kickoff (4 across grade bands):
 - `k2-sci-push-pull` — K-2 Science (NGSS K-PS2)
 - `g3-sci-forces-motion` — Grade 3 Science (NGSS 3-PS2)
 - `g6-sci-cells` — Grade 6 Science (NGSS MS-LS1)
 - `bio-cell-theory-structure` — HS Biology (NGSS HS-LS1)
 
-These four span every grade band (K-2 / 3-5 / 6-8 / 9-12) as
-proof-of-quality across the full K-12 range. Future Batch 3
-sessions can fill in horizontally — adding remaining K-2 topics
-(11 more), grade 3 (5 more), grade 6 (7 more), HS Bio (17 more).
+Batch 3 expansion (12 more across grade bands):
+- `k2-sci-sunlight-weather` — K-2 (NGSS K-PS3)
+- `k2-sci-plant-needs` — K-2 (NGSS K-LS1)
+- `k2-sci-states-of-matter` — K-2 (NGSS 2-PS1)
+- `g3-sci-life-cycles` — Grade 3 (NGSS 3-LS1)
+- `g4-sci-energy-transfer` — Grade 4 (NGSS 4-PS3)
+- `g5-sci-photosynthesis-basics` — Grade 5 (NGSS 5-LS1)
+- `g7-sci-genetics-punnett` — Grade 7 (NGSS MS-LS3)
+- `g7-sci-plate-tectonics` — Grade 7 (NGSS MS-ESS2)
+- `g8-sci-newtons-laws` — Grade 8 (NGSS MS-PS2)
+- `chem-atomic-structure` — HS Chemistry (NGSS HS-PS1)
+- `phys-kinematics-1d` — HS Physics (NGSS HS-PS2)
+- `bio-cellular-respiration` — HS Biology (NGSS HS-LS1-7)
+
+Coverage now: every grade band (K-2, 3-5, 6-8, 9-12) and every
+HS science (Bio, Chem, Physics) has at least one plan landed. ~94
+science plans remaining for future sessions.
 
 ## Next batch order
 
