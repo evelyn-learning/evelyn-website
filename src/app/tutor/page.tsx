@@ -610,15 +610,32 @@ function TutorPage() {
     onTry();
     trackInteraction('navigation', 'session_start', { topic: selectedTopicId, goal: sessionGoal, inputMode });
 
-    setStage('session');
+    // Full reset BEFORE flipping stage so the freshly-mounting
+    // VoiceTutorRealtime (key={sessionId}) starts with no carry-over.
+    // Spillover bug observed 2026-04-29 algebra-1 session: clicking
+    // "Start New Session" then re-starting carried session 1's
+    // transcript and lesson plan into session 2 — brain narrated
+    // Systems-of-Linear-Equations content in a "no plan" session
+    // because selectedLessonPlanId, lesson progress, picker dismissal,
+    // wb event log, debug log, and the VoiceTutorRealtime internal
+    // refs (transcriptRef, lessonPlanRef, queuedTranscriptsRef, the
+    // catalog) all carried over.
+    setSessionId(`session-${Date.now()}`);
     setTranscript([]);
     setConversationHistory([]);
     setWhiteboardCommands([]);
     whiteboardEventsRef.current = [];
-    setTokenUsage([]); // Reset token usage for new session
+    setTokenUsage([]);
+    setLessonProgress({ plan: null, currentSegmentId: '' });
+    setNudgeDismissed(false);
+    setStatusMessage(null);
+    setError(null);
+    debugEventsRef.current = [];
+    lastSavedDebugCountRef.current = 0;
     sessionStartTimeRef.current = new Date();
     lastSavedTokenCountRef.current = 0;
     sessionEndedRef.current = false;
+    setStage('session');
 
     // For voice mode, VoiceTutor handles initialization
     if (inputMode === 'voice') {
@@ -1201,17 +1218,20 @@ function TutorPage() {
                       setSelectedLessonPlanId(plan.id);
                       setNudgeDismissed(true);
                       if (realtimeHandleRef.current) {
-                        // Don't name a specific segment id — the picker
-                        // doesn't know the plan's segment schema, and a
-                        // hard-coded id like "intro-1" caused the brain
-                        // to call show_segment_card with a non-existent
-                        // id (2026-04-29 algebra-2: hallucinated
-                        // "intro-1", silent failure, narrated puzzle
-                        // with nothing on the board). The brain has the
-                        // plan loaded by the time this lands and can
-                        // pick the real first segment id itself.
+                        // Combined message: student-visible prefix +
+                        // bracketed system instruction. TranscriptView
+                        // strips the bracketed part at render time so
+                        // the student sees a clean "Let's do: ..." chat
+                        // bubble (visual confirmation that their tap
+                        // registered) while the brain receives the
+                        // full text including the bracketed instruction
+                        // not to invent segment ids (2026-04-29:
+                        // hallucinated "intro" / "intro-1" because the
+                        // brain didn't have the segments[] schema in
+                        // context — the resolver also has a fallback
+                        // to the first segment when the id is unknown).
                         realtimeHandleRef.current.sendTextMessage(
-                          `[The student picked the lesson "${plan.title}" from the in-session picker. Start that lesson now: call show_segment_card with the FIRST segment id from the plan's segments[] array — do not invent segment ids.]`,
+                          `Let's do: ${plan.title}. [Start the lesson: call show_segment_card with the FIRST segment id from the loaded plan's segments[] array — do not invent segment ids.]`,
                         );
                       }
                     }}
@@ -1413,6 +1433,15 @@ function TutorPage() {
             {inputMode === 'voice' && selectedTopicId ? (
               (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
                 <VoiceTutorRealtime
+                  // key={sessionId} forces a remount on every new session
+                  // so the component's internal refs (transcriptRef,
+                  // lessonPlanRef, catalogRef, queuedTranscriptsRef, the
+                  // judge/brain busy flags) start fresh. Without this,
+                  // session 2 inherits session 1's state — observed
+                  // 2026-04-29: a stale lessonPlanRef in a "no plan"
+                  // re-start narrated Systems-of-Linear-Equations
+                  // because the prior plan was still loaded.
+                  key={sessionId}
                   subject={selectedSubject}
                   topic={selectedTopicId}
                   level={selectedLevel}
@@ -1438,6 +1467,7 @@ function TutorPage() {
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini
+                  key={sessionId}
                   subject={selectedSubject}
                   topic={selectedTopicId}
                   level={selectedLevel}
@@ -1658,11 +1688,27 @@ function TutorPage() {
           )}
           <button
             onClick={() => {
+              // Full reset between sessions. Earlier minimal version
+              // left selectedLessonPlanId, lesson progress, picker
+              // dismissal, debug events, and the wb event log dirty;
+              // session 2 then loaded the prior session's plan + ref
+              // state. Match handleStartSession so both entry points
+              // start clean.
               setSessionId(`session-${Date.now()}`);
               setTranscript([]);
               setConversationHistory([]);
               setWhiteboardCommands([]);
+              whiteboardEventsRef.current = [];
               setTokenUsage([]);
+              setSelectedLessonPlanId('');
+              setLessonProgress({ plan: null, currentSegmentId: '' });
+              setNudgeDismissed(false);
+              setStatusMessage(null);
+              setError(null);
+              debugEventsRef.current = [];
+              lastSavedDebugCountRef.current = 0;
+              lastSavedTokenCountRef.current = 0;
+              sessionEndedRef.current = false;
               setStage('setup');
             }}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

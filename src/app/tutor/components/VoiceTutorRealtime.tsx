@@ -3501,12 +3501,25 @@ export function VoiceTutorRealtime({
                   // the segment id is unknown or has no authored card.
                   let resolvedCmd: ReturnType<typeof mapFunctionCallToCommand> | null = null;
                   if (name === 'show_segment_card') {
-                    const segId = typeof args.segmentId === 'string' ? args.segmentId : '';
+                    const requestedId = typeof args.segmentId === 'string' ? args.segmentId : '';
                     const plan = lessonPlanRef.current;
-                    if (plan && segId) {
-                      const seg = getSegment(plan, segId);
+                    if (plan) {
+                      // Resolve the brain's requested segment id. If the
+                      // brain hallucinates an id ("intro", "intro-1"
+                      // observed 2026-04-29) we fall back to the first
+                      // segment of the plan that has renderable
+                      // content — better than silently dropping the
+                      // call and leaving the board blank.
+                      let seg = requestedId ? getSegment(plan, requestedId) : undefined;
+                      let segId = requestedId;
+                      if (!seg && plan.segments && plan.segments.length > 0) {
+                        seg = plan.segments[0];
+                        segId = seg.id;
+                        console.warn(`[brain-orchestrator] show_segment_card: unknown segmentId "${requestedId}" — falling back to first segment "${segId}".`);
+                        onDebugEvent?.('show_segment_card_fallback_first', `requested="${requestedId}" → "${segId}"`);
+                      }
                       const truth = getSegmentTruth(seg);
-                      if (truth?.problemText) {
+                      if (seg && truth?.problemText) {
                         // Stamp the catalog with this segment id BEFORE
                         // appending the resolved show_problem so the
                         // card belongs to the segment it represents
@@ -3576,11 +3589,10 @@ export function VoiceTutorRealtime({
                           onDebugEvent?.('show_segment_card_no_truth', segId);
                         }
                       } else {
-                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" not found in plan; ignoring.`);
-                        onDebugEvent?.('show_segment_card_unknown', segId);
+                        console.warn(`[brain-orchestrator] show_segment_card: plan has no segments to fall back on.`);
                       }
                     } else {
-                      console.warn(`[brain-orchestrator] show_segment_card: no active plan or empty segmentId.`);
+                      console.warn(`[brain-orchestrator] show_segment_card: no active plan.`);
                     }
                   }
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);

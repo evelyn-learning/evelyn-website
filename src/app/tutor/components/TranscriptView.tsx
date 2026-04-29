@@ -115,15 +115,23 @@ export function TranscriptView({ transcript, isProcessing, footer }: TranscriptV
     );
   }
 
-  // Filter out bracketed system-style hints sent via sendTextMessage()
-  // (e.g. "[The student picked the lesson "X" from the in-session picker.
-  // Start that lesson now using show_segment_card for the first segment.]"
-  // from LessonNudgePicker, or homework-upload context). These belong in
-  // the transcript-to-brain channel for the model's context but should
-  // not render as student chat bubbles.
-  const visibleTranscript = transcript.filter(
-    (entry) => !(entry.role === 'student' && /^\s*\[[\s\S]+\]\s*$/.test(entry.text)),
-  );
+  // Strip bracketed system-style segments from student bubbles. The
+  // picker / homework-upload paths embed runtime instructions for the
+  // brain inside `[...]` so the model knows context without the student
+  // seeing model-facing text. Two cases:
+  //   - Whole-bubble bracketed (e.g. "[start session]"): hide entirely.
+  //   - Mixed bubble ("Let's do: Algebra. [Use show_segment_card...]"):
+  //     keep the visible prefix, strip the brackets at render time.
+  // The brain still sees the FULL text in its prompt — only the chat
+  // display is sanitized.
+  const visibleTranscript = transcript
+    .map((entry) => {
+      if (entry.role !== 'student') return entry;
+      const stripped = entry.text.replace(/\s*\[[\s\S]*?\]\s*/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!stripped) return null;
+      return stripped === entry.text ? entry : { ...entry, text: stripped };
+    })
+    .filter((e): e is TranscriptEntry => e !== null);
 
   return (
     <div
