@@ -175,21 +175,21 @@ Schema match: every plan must conform to `src/lib/tutor/lesson-plan/types.ts` (L
 
 ## Science — 110 plans
 
-### K-2 — Combined (12 plans, 4 done)
+### K-2 — Combined (12 plans, 12 done) ✅ COMPLETE
 | Topic | Status | Plan ID | Source |
 |---|---|---|---|
 | Pushes & pulls | ✅ DONE | `k2-sci-push-pull` | OpenStax K-2 Sci, NGSS K-PS2 |
 | Sunlight & weather | ✅ DONE | `k2-sci-sunlight-weather` | OpenStax K-2 Sci, NGSS K-PS3 |
 | Plant needs | ✅ DONE | `k2-sci-plant-needs` | OpenStax K-2 Sci, NGSS K-LS1 |
-| Animal needs | ⬜ TODO | `k2-sci-animal-needs` | NGSS 1-LS1 |
-| Sound vibrations | ⬜ TODO | `k2-sci-sound-vibrations` | OpenStax K-2 Sci |
-| Light & shadows | ⬜ TODO | `k2-sci-light-shadows` | NGSS 1-PS4 |
+| Animal needs | ✅ DONE | `k2-sci-animal-needs` | OpenStax K-2 Sci, NGSS 1-LS1 |
+| Sound vibrations | ✅ DONE | `k2-sci-sound-vibrations` | OpenStax K-2 Sci, NGSS 1-PS4 |
+| Light & shadows | ✅ DONE | `k2-sci-light-shadows` | OpenStax K-2 Sci, NGSS 1-PS4 |
 | Properties of matter (states) | ✅ DONE | `k2-sci-states-of-matter` | OpenStax K-2 Sci, NGSS 2-PS1 |
-| Reversible & irreversible changes | ⬜ TODO | `k2-sci-reversible-changes` | NGSS 2-PS1 |
-| Habitats | ⬜ TODO | `k2-sci-habitats` | OpenStax K-2 Sci |
-| Earth materials (rocks, soil, water) | ⬜ TODO | `k2-sci-earth-materials` | NGSS 2-ESS2 |
-| Day & night sky | ⬜ TODO | `k2-sci-day-night-sky` | OpenStax K-2 Sci |
-| Weather patterns & seasons | ⬜ TODO | `k2-sci-weather-seasons` | NGSS K-ESS2 |
+| Reversible & irreversible changes | ✅ DONE | `k2-sci-reversible-changes` | OpenStax K-2 Sci, NGSS 2-PS1 |
+| Habitats | ✅ DONE | `k2-sci-habitats` | OpenStax K-2 Sci, NGSS 2-LS4 |
+| Earth materials (rocks, soil, water) | ✅ DONE | `k2-sci-earth-materials` | OpenStax K-2 Sci, NGSS 2-ESS2 |
+| Day & night sky | ✅ DONE | `k2-sci-day-night-sky` | OpenStax K-2 Sci, NGSS 1-ESS1 |
+| Weather patterns & seasons | ✅ DONE | `k2-sci-weather-seasons` | OpenStax K-2 Sci, NGSS K-ESS2 |
 
 ### Grade 3 (6 plans, 2 done)
 | Topic | Status | Plan ID | Source |

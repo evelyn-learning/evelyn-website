@@ -42,6 +42,15 @@ import { SEED_G8_SCI_NEWTONS_LAWS } from './seeds/g8-sci-newtons-laws';
 import { SEED_CHEM_ATOMIC_STRUCTURE } from './seeds/chem-atomic-structure';
 import { SEED_PHYS_KINEMATICS_1D } from './seeds/phys-kinematics-1d';
 import { SEED_BIO_CELLULAR_RESPIRATION } from './seeds/bio-cellular-respiration';
+// Batch 3 K-2 Science completion (8 more — finishes K-2 Science cluster).
+import { SEED_K2_SCI_ANIMAL_NEEDS } from './seeds/k2-sci-animal-needs';
+import { SEED_K2_SCI_SOUND_VIBRATIONS } from './seeds/k2-sci-sound-vibrations';
+import { SEED_K2_SCI_LIGHT_SHADOWS } from './seeds/k2-sci-light-shadows';
+import { SEED_K2_SCI_REVERSIBLE_CHANGES } from './seeds/k2-sci-reversible-changes';
+import { SEED_K2_SCI_HABITATS } from './seeds/k2-sci-habitats';
+import { SEED_K2_SCI_EARTH_MATERIALS } from './seeds/k2-sci-earth-materials';
+import { SEED_K2_SCI_DAY_NIGHT_SKY } from './seeds/k2-sci-day-night-sky';
+import { SEED_K2_SCI_WEATHER_SEASONS } from './seeds/k2-sci-weather-seasons';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -62,7 +71,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_K2_SCI_PUSH_PULL,
   SEED_K2_SCI_SUNLIGHT_WEATHER,
   SEED_K2_SCI_PLANT_NEEDS,
+  SEED_K2_SCI_ANIMAL_NEEDS,
+  SEED_K2_SCI_SOUND_VIBRATIONS,
+  SEED_K2_SCI_LIGHT_SHADOWS,
   SEED_K2_SCI_STATES_OF_MATTER,
+  SEED_K2_SCI_REVERSIBLE_CHANGES,
+  SEED_K2_SCI_HABITATS,
+  SEED_K2_SCI_EARTH_MATERIALS,
+  SEED_K2_SCI_DAY_NIGHT_SKY,
+  SEED_K2_SCI_WEATHER_SEASONS,
   SEED_G3_SCI_FORCES_MOTION,
   SEED_G3_SCI_LIFE_CYCLES,
   SEED_G4_SCI_ENERGY_TRANSFER,
