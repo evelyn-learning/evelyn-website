@@ -51,6 +51,21 @@ import { SEED_K2_SCI_HABITATS } from './seeds/k2-sci-habitats';
 import { SEED_K2_SCI_EARTH_MATERIALS } from './seeds/k2-sci-earth-materials';
 import { SEED_K2_SCI_DAY_NIGHT_SKY } from './seeds/k2-sci-day-night-sky';
 import { SEED_K2_SCI_WEATHER_SEASONS } from './seeds/k2-sci-weather-seasons';
+// Grades 3-5 Science completion.
+import { SEED_G3_SCI_MAGNETS_ELECTRICITY } from './seeds/g3-sci-magnets-electricity';
+import { SEED_G3_SCI_INHERITANCE_TRAITS } from './seeds/g3-sci-inheritance-traits';
+import { SEED_G3_SCI_WEATHER_CLIMATE } from './seeds/g3-sci-weather-climate';
+import { SEED_G3_SCI_ADAPTATIONS } from './seeds/g3-sci-adaptations';
+import { SEED_G4_SCI_WAVES_INTRO } from './seeds/g4-sci-waves-intro';
+import { SEED_G4_SCI_INFORMATION_TRANSFER } from './seeds/g4-sci-information-transfer';
+import { SEED_G4_SCI_PLANT_ANIMAL_STRUCTURES } from './seeds/g4-sci-plant-animal-structures';
+import { SEED_G4_SCI_EARTH_FEATURES } from './seeds/g4-sci-earth-features';
+import { SEED_G4_SCI_NATURAL_HAZARDS } from './seeds/g4-sci-natural-hazards';
+import { SEED_G5_SCI_MATTER_PROPERTIES } from './seeds/g5-sci-matter-properties';
+import { SEED_G5_SCI_MIXTURES_SOLUTIONS } from './seeds/g5-sci-mixtures-solutions';
+import { SEED_G5_SCI_ENERGY_FOOD_CHAINS } from './seeds/g5-sci-energy-food-chains';
+import { SEED_G5_SCI_EARTH_SYSTEMS } from './seeds/g5-sci-earth-systems';
+import { SEED_G5_SCI_SOLAR_SYSTEM } from './seeds/g5-sci-solar-system';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -81,9 +96,23 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_K2_SCI_DAY_NIGHT_SKY,
   SEED_K2_SCI_WEATHER_SEASONS,
   SEED_G3_SCI_FORCES_MOTION,
+  SEED_G3_SCI_MAGNETS_ELECTRICITY,
   SEED_G3_SCI_LIFE_CYCLES,
+  SEED_G3_SCI_INHERITANCE_TRAITS,
+  SEED_G3_SCI_WEATHER_CLIMATE,
+  SEED_G3_SCI_ADAPTATIONS,
   SEED_G4_SCI_ENERGY_TRANSFER,
+  SEED_G4_SCI_WAVES_INTRO,
+  SEED_G4_SCI_INFORMATION_TRANSFER,
+  SEED_G4_SCI_PLANT_ANIMAL_STRUCTURES,
+  SEED_G4_SCI_EARTH_FEATURES,
+  SEED_G4_SCI_NATURAL_HAZARDS,
+  SEED_G5_SCI_MATTER_PROPERTIES,
+  SEED_G5_SCI_MIXTURES_SOLUTIONS,
+  SEED_G5_SCI_ENERGY_FOOD_CHAINS,
   SEED_G5_SCI_PHOTOSYNTHESIS_BASICS,
+  SEED_G5_SCI_EARTH_SYSTEMS,
+  SEED_G5_SCI_SOLAR_SYSTEM,
   SEED_G6_SCI_CELLS,
   SEED_G7_SCI_GENETICS_PUNNETT,
   SEED_G7_SCI_PLATE_TECTONICS,
