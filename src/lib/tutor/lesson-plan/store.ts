@@ -124,6 +124,11 @@ import { SEED_K_SHAPES_2D } from './seeds/k-shapes-2d';
 import { SEED_G1_ADD_WITHIN_20 } from './seeds/g1-add-within-20';
 import { SEED_G1_SUBTRACT_WITHIN_20 } from './seeds/g1-subtract-within-20';
 import { SEED_G2_ADD_SUBTRACT_WITHIN_100 } from './seeds/g2-add-subtract-within-100';
+import { SEED_G3_MATH_MULTIPLICATION_INTRO } from './seeds/g3-math-multiplication-intro';
+import { SEED_G3_MATH_DIVISION_INTRO } from './seeds/g3-math-division-intro';
+import { SEED_G3_MATH_FRACTIONS_INTRO } from './seeds/g3-math-fractions-intro';
+import { SEED_G3_MATH_AREA_PERIMETER } from './seeds/g3-math-area-perimeter';
+import { SEED_G3_MATH_TIME_MONEY } from './seeds/g3-math-time-money';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -277,6 +282,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G1_ADD_WITHIN_20,
   SEED_G1_SUBTRACT_WITHIN_20,
   SEED_G2_ADD_SUBTRACT_WITHIN_100,
+  // Batch 4 — G3 math foundations.
+  SEED_G3_MATH_MULTIPLICATION_INTRO,
+  SEED_G3_MATH_DIVISION_INTRO,
+  SEED_G3_MATH_FRACTIONS_INTRO,
+  SEED_G3_MATH_AREA_PERIMETER,
+  SEED_G3_MATH_TIME_MONEY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
