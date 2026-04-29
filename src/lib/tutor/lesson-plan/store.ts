@@ -115,6 +115,10 @@ import { SEED_PHYS_WAVES_SOUND } from './seeds/phys-waves-sound';
 import { SEED_PHYS_LIGHT_OPTICS } from './seeds/phys-light-optics';
 import { SEED_PHYS_ELECTRIC_CHARGE_COULOMB } from './seeds/phys-electric-charge-coulomb';
 import { SEED_PHYS_CIRCUITS_OHMS_LAW } from './seeds/phys-circuits-ohms-law';
+import { SEED_PHYS_MAGNETISM } from './seeds/phys-magnetism';
+import { SEED_PHYS_EM_INDUCTION } from './seeds/phys-em-induction';
+import { SEED_PHYS_MODERN_INTRO } from './seeds/phys-modern-intro';
+import { SEED_PHYS_SPECIAL_RELATIVITY_INTRO } from './seeds/phys-special-relativity-intro';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -259,6 +263,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_PHYS_LIGHT_OPTICS,
   SEED_PHYS_ELECTRIC_CHARGE_COULOMB,
   SEED_PHYS_CIRCUITS_OHMS_LAW,
+  SEED_PHYS_MAGNETISM,
+  SEED_PHYS_EM_INDUCTION,
+  SEED_PHYS_MODERN_INTRO,
+  SEED_PHYS_SPECIAL_RELATIVITY_INTRO,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
