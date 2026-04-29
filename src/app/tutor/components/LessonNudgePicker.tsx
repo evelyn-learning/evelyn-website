@@ -28,17 +28,23 @@ import { BookOpen, Clock } from 'lucide-react';
 export type NudgePlan = {
   id: string;
   title: string;
+  topic?: string;
   los: Array<{ id: string; description: string }>;
   estimatedMinutes: number;
 };
 
 interface LessonNudgePickerProps {
-  /** Lesson plans available for the active (subject, level, topic). */
+  /** Lesson plans available for the active (subject, level). May span
+   *  multiple topics within the grade — the picker groups them when so. */
   plans: NudgePlan[];
   /** Most-recent transcript messages (just role + text are needed). */
   recentTurns: Array<{ role: 'student' | 'tutor' | 'system'; text: string }>;
   /** Whether a lesson plan has already been picked / started in this session. */
   lessonStarted: boolean;
+  /** Topic id the student picked at setup. Plans matching this topic get
+   *  surfaced first; plans for other topics in the grade appear after,
+   *  grouped by their topic. */
+  currentTopicId?: string;
   /** Tap-to-start handler. */
   onSelect: (plan: NudgePlan) => void;
   /** Optional dismiss handler — if user explicitly closes the panel,
@@ -57,7 +63,7 @@ function isVague(text: string): boolean {
   return false;
 }
 
-export function LessonNudgePicker({ plans, recentTurns, lessonStarted, onSelect, onDismiss }: LessonNudgePickerProps) {
+export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTopicId, onSelect, onDismiss }: LessonNudgePickerProps) {
   const studentTurns = useMemo(
     () => recentTurns.filter((t) => t.role === 'student'),
     [recentTurns],
@@ -78,6 +84,38 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, onSelect,
     return vagueCount >= 2;
   }, [studentTurns, lessonStarted, plans.length]);
 
+  // Split plans into "current topic" and "other topics in the grade".
+  // When the student picked a topic at setup, surface plans for that
+  // topic prominently and stash the cross-grade catalog under a
+  // collapsed "Other topics" section so they can browse if nothing
+  // matches their current topic. Plans without a topic field fall into
+  // the current bucket (back-compat with seed plans pre-topic).
+  const { currentPlans, otherByTopic } = useMemo(() => {
+    const current: NudgePlan[] = [];
+    const otherMap = new Map<string, NudgePlan[]>();
+    for (const p of plans) {
+      const matchesCurrent = !currentTopicId || !p.topic || p.topic === currentTopicId;
+      if (matchesCurrent) {
+        current.push(p);
+      } else {
+        const list = otherMap.get(p.topic!) ?? [];
+        list.push(p);
+        otherMap.set(p.topic!, list);
+      }
+    }
+    return { currentPlans: current, otherByTopic: otherMap };
+  }, [plans, currentTopicId]);
+
+  // Reactive expansion: if the latest 1-3 student turns are vague enough
+  // ("anything", "I don't know", "you decide"), default-expand the
+  // grade-wide catalog so they can pick across topics without an extra
+  // click. For specific student turns, keep "Other topics" collapsed.
+  const defaultShowOther = useMemo(() => {
+    const lastThree = studentTurns.slice(-3);
+    const vagueCount = lastThree.filter((t) => isVague(t.text)).length;
+    return vagueCount >= 2 || studentTurns.length === 0;
+  }, [studentTurns]);
+
   if (!shouldShow) return null;
 
   return (
@@ -97,23 +135,49 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, onSelect,
           </button>
         )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {plans.slice(0, 6).map((plan) => (
-          <button
-            key={plan.id}
-            onClick={() => onSelect(plan)}
-            className="text-left bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 rounded-md px-3 py-2 transition group"
-          >
-            <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 line-clamp-1">
-              {plan.title}
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <Clock className="w-3 h-3 text-gray-400" />
-              <span className="text-xs text-gray-500">{plan.estimatedMinutes} min</span>
-            </div>
-          </button>
-        ))}
-      </div>
+      {currentPlans.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {currentPlans.slice(0, 8).map((plan) => (
+            <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
+          ))}
+        </div>
+      )}
+      {otherByTopic.size > 0 && (
+        <details className="mt-2" open={defaultShowOther}>
+          <summary className="cursor-pointer text-xs font-medium text-blue-800 hover:text-blue-900 py-1">
+            Other topics in this grade ({Array.from(otherByTopic.values()).reduce((s, l) => s + l.length, 0)} more)
+          </summary>
+          <div className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
+            {Array.from(otherByTopic.entries()).map(([topic, list]) => (
+              <div key={topic}>
+                <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{topic.replace(/-/g, ' ')}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {list.map((plan) => (
+                    <PlanButton key={plan.id} plan={plan} onSelect={onSelect} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
+  );
+}
+
+function PlanButton({ plan, onSelect }: { plan: NudgePlan; onSelect: (p: NudgePlan) => void }) {
+  return (
+    <button
+      onClick={() => onSelect(plan)}
+      className="text-left bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 rounded-md px-3 py-2 transition group"
+    >
+      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-900 line-clamp-1">
+        {plan.title}
+      </div>
+      <div className="flex items-center gap-2 mt-0.5">
+        <Clock className="w-3 h-3 text-gray-400" />
+        <span className="text-xs text-gray-500">{plan.estimatedMinutes} min</span>
+      </div>
+    </button>
   );
 }

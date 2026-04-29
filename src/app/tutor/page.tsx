@@ -123,7 +123,7 @@ function TutorPage() {
   // Lesson-plan selection. Optional — when set, the brain runs in
   // plan-driven mode (treats segments as a teaching script) instead of
   // free-conversation mode.
-  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{ id: string; title: string; los: Array<{ id: string; description: string }>; estimatedMinutes: number }>>([]);
+  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{ id: string; title: string; topic?: string; los: Array<{ id: string; description: string }>; estimatedMinutes: number }>>([]);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
   // Sticky-dismiss for the in-session lesson nudge. Once the student
   // hides it, don't pop it back up later in the same session.
@@ -1137,6 +1137,7 @@ function TutorPage() {
               plans={availableLessonPlans}
               recentTurns={transcript.slice(-6).map(t => ({ role: t.role, text: t.text }))}
               lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
+              currentTopicId={selectedTopicId}
               onSelect={(plan) => {
                 setSelectedLessonPlanId(plan.id);
                 setNudgeDismissed(true);
