@@ -76,6 +76,13 @@ import { SEED_BIO_DNA_STRUCTURE_REPLICATION } from './seeds/bio-dna-structure-re
 import { SEED_BIO_PROTEIN_SYNTHESIS } from './seeds/bio-protein-synthesis';
 import { SEED_BIO_MUTATIONS_GENETIC_ENG } from './seeds/bio-mutations-genetic-eng';
 import { SEED_BIO_NATURAL_SELECTION_EVOL } from './seeds/bio-natural-selection-evol';
+import { SEED_BIO_SPECIATION_PHYLOGENY } from './seeds/bio-speciation-phylogeny';
+import { SEED_BIO_ECOLOGY_POPULATIONS } from './seeds/bio-ecology-populations';
+import { SEED_BIO_ECOSYSTEMS_CYCLES } from './seeds/bio-ecosystems-cycles';
+import { SEED_BIO_HUMAN_CIRC_RESP } from './seeds/bio-human-circ-resp';
+import { SEED_BIO_HUMAN_NERV_ENDO } from './seeds/bio-human-nerv-endo';
+import { SEED_BIO_HUMAN_IMMUNE_DIGEST } from './seeds/bio-human-immune-digest';
+import { SEED_BIO_BIOTECH_ETHICS } from './seeds/bio-biotech-ethics';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -179,6 +186,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_BIO_PROTEIN_SYNTHESIS,
   SEED_BIO_MUTATIONS_GENETIC_ENG,
   SEED_BIO_NATURAL_SELECTION_EVOL,
+  SEED_BIO_SPECIATION_PHYLOGENY,
+  SEED_BIO_ECOLOGY_POPULATIONS,
+  SEED_BIO_ECOSYSTEMS_CYCLES,
+  SEED_BIO_HUMAN_CIRC_RESP,
+  SEED_BIO_HUMAN_NERV_ENDO,
+  SEED_BIO_HUMAN_IMMUNE_DIGEST,
+  SEED_BIO_BIOTECH_ETHICS,
   SEED_CHEM_ATOMIC_STRUCTURE,
   SEED_PHYS_KINEMATICS_1D,
 ];
