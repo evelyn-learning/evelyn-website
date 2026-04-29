@@ -138,6 +138,35 @@ const EMOJI_FALLBACK_MAP: Record<string, string> = {
   '⚖️': '[scales]', '⚖': '[scales]', '⏱️': '[stopwatch]', '⏱': '[stopwatch]', '⏰': '[clock]',
   '🚀': '[rocket]', '🌍': '[earth]', '🌎': '[earth]', '🌏': '[earth]',
   '🔥': '[fire]', '❄️': '[snow]', '❄': '[snow]', '💧': '[water]',
+  // Food/objects — observed 2026-04-29 integers-rational session ("Pizza
+  // Puzzle 🍕" rendered as "Pizza Puzzle Ø<ßU" because html2canvas had
+  // no emoji font and the surrogate pair bytes leaked through as
+  // Latin-1). Add common food/animal/object emoji used in puzzles.
+  '🍕': '[pizza]', '🍎': '[apple]', '🍊': '[orange]', '🍌': '[banana]', '🍇': '[grapes]',
+  '🍓': '[strawberry]', '🍪': '[cookie]', '🍩': '[donut]', '🎂': '[cake]', '🍰': '[cake]',
+  '🍞': '[bread]', '🧀': '[cheese]', '🍔': '[burger]', '🌭': '[hotdog]', '🌮': '[taco]',
+  '🥕': '[carrot]', '🥦': '[broccoli]', '🌽': '[corn]', '🥚': '[egg]', '🥛': '[milk]',
+  '🐶': '[dog]', '🐱': '[cat]', '🐭': '[mouse]', '🐰': '[rabbit]', '🦊': '[fox]',
+  '🐻': '[bear]', '🐼': '[panda]', '🐯': '[tiger]', '🦁': '[lion]', '🐮': '[cow]',
+  '🐷': '[pig]', '🐸': '[frog]', '🐔': '[chicken]', '🐧': '[penguin]', '🐦': '[bird]',
+  '🐟': '[fish]', '🐢': '[turtle]', '🦋': '[butterfly]', '🐝': '[bee]', '🐛': '[bug]',
+  '🌳': '[tree]', '🌲': '[tree]', '🌴': '[palm]', '🌵': '[cactus]', '🌷': '[tulip]',
+  '🌸': '[blossom]', '🌹': '[rose]', '🌻': '[sunflower]', '🍀': '[clover]', '🍂': '[leaf]',
+  '⭐': '[star]', '✨': '[sparkles]', '💫': '[dizzy]', '🌟': '[star]', '🌙': '[moon]',
+  '☁️': '[cloud]', '☁': '[cloud]', '⛈️': '[storm]', '⛈': '[storm]', '🌈': '[rainbow]',
+  '⛄': '[snowman]', '☃️': '[snowman]', '☃': '[snowman]',
+  '🚗': '[car]', '🚌': '[bus]', '✈️': '[plane]', '✈': '[plane]', '🚲': '[bike]',
+  '🚂': '[train]', '🚢': '[ship]', '⛵': '[boat]',
+  '🏠': '[house]', '🏫': '[school]', '🏥': '[hospital]', '🏦': '[bank]', '🏪': '[shop]',
+  '⚽': '[soccer]', '🏀': '[basketball]', '⚾': '[baseball]', '🎾': '[tennis]', '🏈': '[football]',
+  '🎯': '[target]', '🎲': '[dice]', '🎮': '[gamepad]', '🧩': '[puzzle]',
+  '📚': '[books]', '📖': '[book]', '✏️': '[pencil]', '✏': '[pencil]', '📝': '[memo]',
+  '🎨': '[art]', '🎵': '[music]', '🎶': '[music]', '🎤': '[mic]',
+  '💡': '[bulb]', '🔑': '[key]', '🔒': '[lock]', '🔓': '[unlock]',
+  '❤️': '[heart]', '❤': '[heart]', '💙': '[heart]', '💚': '[heart]', '💛': '[heart]',
+  '👍': '[thumbs-up]', '👎': '[thumbs-down]', '👏': '[clap]', '🙌': '[raise]', '🤔': '[think]',
+  '😀': '[smile]', '😊': '[smile]', '😄': '[smile]', '😃': '[smile]', '🙂': '[smile]',
+  '😎': '[cool]', '🤩': '[wow]', '🎉': '[party]', '🎊': '[party]', '🎁': '[gift]',
   '✓': 'OK', '✔': 'OK', '✗': 'X', '✘': 'X',
 };
 
@@ -1351,6 +1380,18 @@ async function drawWhiteboardVisual(
       const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
       if (consumed > 0) return y + consumed + 2;
     }
+    // No SVG captured — likely an HTML-only renderer (comparison_table,
+    // organizers, KWL chart, Frayer model, etc.). Fall back to raster
+    // via html2canvas so we still get a visual instead of a label-only
+    // card. Observed 2026-04-29 grammar-mechanics session: a comparison
+    // table command rendered as just "Diagram: comparison_table -
+    // Present vs. Past Tense" with no visual underneath.
+    const rasterFallback = await captureCommandRaster(whiteboardCmd, scribbles);
+    if (rasterFallback && rasterFallback.dataUrl) {
+      const heightMm = (rasterFallback.heightPx / rasterFallback.widthPx) * width;
+      pdf.addImage(rasterFallback.dataUrl, 'PNG', x, y, width, heightMm);
+      return y + heightMm + 2;
+    }
   } catch (err) {
     console.warn('[pdf-tutor-session] Whiteboard capture fallback failed:', err);
   }
@@ -1572,16 +1613,30 @@ export async function exportTutorSessionPDF(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const c = cmd as any;
       const latex = (typeof c.latex === 'string' ? c.latex : c.data?.latex) ?? '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const label = (c.label ?? c.data?.label ?? '');
       if (typeof latex !== 'string' || latex.trim().length === 0) {
-        // Diagnostic: log which equation got dropped. The
-        // 2026-04-29 algebra-session PDF showed multiple empty
-        // equation cards still appearing — meaning some path is
-        // bringing them through unfiltered. Per-drop logging here
-        // will let us see the label/source of each empty equation
-        // when a fresh PDF is generated against current code.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const label = (c.label ?? c.data?.label ?? '(no label)');
-        console.log(`[pdf-tutor-session] dropping empty showEquation: label="${label}", keys=[${Object.keys(c).join(',')}]`);
+        console.log(`[pdf-tutor-session] dropping empty showEquation: label="${label || '(no label)'}", keys=[${Object.keys(c).join(',')}]`);
+        return false;
+      }
+      // Drop placeholder-latex cards. Observed 2026-04-29 pre-algebra
+      // session: brain emitted show_equation with latex="x = 5 + 3" and
+      // label="The equation", but the live state ALSO contained a
+      // sibling card whose latex was a literal placeholder string ("The
+      // equation"). KaTeX can't parse plain English as latex, falls
+      // back to textContent (EquationRenderer.tsx:92), and the captured
+      // raster shows the label twice (header + body) with no math.
+      // Heuristic: if the latex matches the label verbatim, OR contains
+      // no math operators / latex commands AT ALL, treat it as a
+      // placeholder draft and drop. Real equations always have at
+      // least one of: =, +, -, *, /, ^, _, \, (, ), {, }, digits.
+      const trimmedLatex = latex.trim();
+      const trimmedLabel = String(label).trim();
+      const looksLikePlaceholder =
+        (trimmedLabel.length > 0 && trimmedLatex === trimmedLabel) ||
+        !/[=+\-*/^_\\(){}\[\]0-9]/.test(trimmedLatex);
+      if (looksLikePlaceholder) {
+        console.log(`[pdf-tutor-session] dropping placeholder showEquation: latex="${trimmedLatex}", label="${trimmedLabel}"`);
         return false;
       }
     }

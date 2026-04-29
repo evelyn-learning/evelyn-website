@@ -26,6 +26,63 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 const CAPTURE_WIDTH_PX = 760;   // matches the whiteboard's nominal width
 const CAPTURE_PADDING_PX = 16;  // matches the renderer's inner padding
 
+/**
+ * Replace emoji codepoints in any string field with bracketed ASCII so the
+ * off-screen capture (which runs in a headless layout pass without system
+ * emoji fonts) doesn't render surrogate-pair halves as Latin-1 mojibake.
+ * Observed 2026-04-29 integers-rational session: "Pizza Puzzle 🍕"
+ * captured as "Pizza Puzzle Ø<ßU" (bytes D8 3C DF 55 = UTF-8(🍕U) read as
+ * Latin-1). Applied recursively over the command's title/label/text-style
+ * fields and any nested string in `data` / `params`.
+ */
+const EMOJI_REPLACEMENTS: Record<string, string> = {
+  '🍕': '[pizza]', '🍎': '[apple]', '🍊': '[orange]', '🍌': '[banana]', '🍇': '[grapes]',
+  '🍓': '[strawberry]', '🍪': '[cookie]', '🍩': '[donut]', '🎂': '[cake]', '🍰': '[cake]',
+  '🍞': '[bread]', '🧀': '[cheese]', '🍔': '[burger]', '🌭': '[hotdog]', '🌮': '[taco]',
+  '🥕': '[carrot]', '🥦': '[broccoli]', '🌽': '[corn]', '🥚': '[egg]', '🥛': '[milk]',
+  '🐶': '[dog]', '🐱': '[cat]', '🐭': '[mouse]', '🐰': '[rabbit]', '🦊': '[fox]',
+  '🐻': '[bear]', '🐼': '[panda]', '🐯': '[tiger]', '🦁': '[lion]', '🐮': '[cow]',
+  '🐷': '[pig]', '🐸': '[frog]', '🐔': '[chicken]', '🐧': '[penguin]', '🐦': '[bird]',
+  '🐟': '[fish]', '🐢': '[turtle]', '🦋': '[butterfly]', '🐝': '[bee]', '🐛': '[bug]',
+  '🌳': '[tree]', '🌲': '[tree]', '🌴': '[palm]', '🌵': '[cactus]',
+  '⭐': '[star]', '✨': '[sparkles]', '🌟': '[star]', '🌙': '[moon]',
+  '🌧️': '[rain]', '🌧': '[rain]', '☀️': '[sun]', '☀': '[sun]', '☁️': '[cloud]', '☁': '[cloud]',
+  '🚗': '[car]', '🚌': '[bus]', '✈️': '[plane]', '✈': '[plane]',
+  '🏠': '[house]', '🏫': '[school]', '⚽': '[soccer]', '🏀': '[basketball]',
+  '🎯': '[target]', '🎲': '[dice]', '🧩': '[puzzle]',
+  '📚': '[books]', '📖': '[book]', '🎨': '[art]', '🎵': '[music]', '💡': '[bulb]',
+  '❤️': '[heart]', '❤': '[heart]', '💙': '[heart]', '💚': '[heart]', '💛': '[heart]',
+  '👍': '[thumbs-up]', '👏': '[clap]', '🎉': '[party]', '🎊': '[party]', '🎁': '[gift]',
+  '🎬': '[movie]', '🍿': '[popcorn]', '🎟️': '[ticket]', '🎟': '[ticket]', '🎫': '[ticket]',
+  '🧬': '[dna]', '🧪': '[test-tube]', '🔬': '[microscope]',
+  '⚡': '[lightning]', '🔋': '[battery]', '🧲': '[magnet]',
+  '⚖️': '[scales]', '⚖': '[scales]', '⏱️': '[stopwatch]', '⏱': '[stopwatch]',
+  '🔥': '[fire]', '❄️': '[snow]', '❄': '[snow]', '💧': '[water]',
+};
+function replaceEmojiInString(s: string): string {
+  if (!s.includes('\u{1F000}'.charAt(0)) && !/[☀-➿⬀-⯿]/.test(s)) return s;
+  let out = s;
+  for (const [k, v] of Object.entries(EMOJI_REPLACEMENTS)) {
+    if (out.includes(k)) out = out.split(k).join(v);
+  }
+  // Catch-all for surrogate pairs we didn't enumerate — replace with [emoji]
+  // so the capture doesn't leak surrogate halves through Latin-1.
+  out = out.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '[emoji]');
+  return out;
+}
+function deepReplaceEmoji<T>(value: T): T {
+  if (typeof value === 'string') return replaceEmojiInString(value) as T;
+  if (Array.isArray(value)) return value.map(deepReplaceEmoji) as T;
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = deepReplaceEmoji(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 type CaptureFn<T> = (command: WhiteboardCommand, container: HTMLDivElement) => Promise<T | null>;
 
 /**
@@ -56,7 +113,12 @@ async function withMountedCommand<T>(command: WhiteboardCommand, capture: Captur
 
   const root = createRoot(container);
   try {
-    root.render(React.createElement(CommandRenderer, { command }));
+    // Strip emoji from command before mounting so headless capture (no
+    // system emoji fonts) doesn't render surrogate halves as Latin-1
+    // mojibake. The brain still sees emoji on the live whiteboard;
+    // this is PDF-export-only.
+    const sanitizedCommand = deepReplaceEmoji(command);
+    root.render(React.createElement(CommandRenderer, { command: sanitizedCommand }));
     // Two rAFs — first lets React commit, second lets the browser paint and
     // any KaTeX / icon-font async work finish its first tick.
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));

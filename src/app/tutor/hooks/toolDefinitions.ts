@@ -35,12 +35,12 @@ export interface ToolDefinition {
 export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   {
     name: 'show_equation',
-    description: 'Display an equation on the whiteboard. You MUST call this whenever you mention ANY equation, formula, or mathematical relationship in your speech. Always show equations visually — never just say them without also displaying them.',
+    description: 'Display an equation on the whiteboard. You MUST call this whenever you mention ANY equation, formula, or mathematical relationship in your speech. Always show equations visually — never just say them without also displaying them. CRITICAL: `latex` MUST be the actual mathematical expression in LaTeX (e.g., "x = 5 + 3", "F = m \\cdot a", "\\frac{1}{2}mv^2"). NEVER pass placeholder text like "The equation", "Equation", "Formula", or English prose as `latex` — it renders as broken plain text. Emit the call ONCE with the final latex; do not stage a draft call followed by a corrected one.',
     parameters: {
       type: 'object',
       properties: {
-        latex: { type: 'string', description: 'The equation in LaTeX format' },
-        label: { type: 'string', description: 'A label for the equation' },
+        latex: { type: 'string', description: 'The equation in LaTeX format. Must contain math (digits, operators, variables), NOT English placeholder text.' },
+        label: { type: 'string', description: 'A short descriptive label shown above the equation (e.g., "Newton\'s 2nd Law", "Balance solved").' },
       },
       required: ['latex'],
     },
