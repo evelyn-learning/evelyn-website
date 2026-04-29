@@ -77,8 +77,12 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTo
   const shouldShow = useMemo(() => {
     if (lessonStarted) return false;
     if (plans.length === 0) return false;
-    // Proactive: first 3 student turns and no specific lesson chosen.
-    if (studentTurns.length > 0 && studentTurns.length <= 3) return true;
+    // Proactive: first 3 student turns INCLUDING zero — so the picker
+    // appears right after the brain's opening "What are we working on?"
+    // instead of waiting for the student to say something vague first
+    // (observed 2026-04-29 trig session: student typed "anything"
+    // before the picker showed; we want it visible on session start).
+    if (studentTurns.length <= 3) return true;
     // Reactive: latest student turn was vague.
     const last = studentTurns[studentTurns.length - 1];
     if (last && isVague(last.text)) return true;

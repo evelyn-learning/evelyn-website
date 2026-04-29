@@ -541,24 +541,17 @@ export function WhiteboardCanvas({
     return (
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
         <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
-          {tutorBusy ? (
-            // Skeleton placeholder — runs whenever the tutor is composing
-            // even if no page exists yet. Replaces the cold empty state
-            // ("Your conversation will appear here…") so the student
-            // sees activity from the moment Start is tapped.
-            <div className="space-y-3 w-full max-w-md">
-              <div className="wb-skeleton h-5 bg-gray-200 rounded w-2/3 mx-auto" />
-              <div className="wb-skeleton h-32 bg-gray-100 rounded" />
-              <div className="wb-skeleton h-4 bg-gray-200 rounded w-1/2 mx-auto" />
-              <p className="text-xs text-gray-500 italic text-center">✏️ Your tutor is preparing the board…</p>
-            </div>
-          ) : (
-            <div className="text-center text-gray-400">
-              <div className="text-4xl mb-3">📝</div>
-              <p className="text-sm">Your conversation will appear here.</p>
-              <p className="text-sm">Start speaking to begin!</p>
-            </div>
-          )}
+          {/* Calm empty state — earlier the placeholder was a "preparing
+              the board…" skeleton during tutorBusy, but the tutor's
+              first turn is often a conversational greeting that doesn't
+              touch the board. Showing a "preparing" message there is
+              misleading (observed 2026-04-29 trig session). The board
+              fills in naturally once a render command lands. */}
+          <div className="text-center text-gray-400">
+            <div className="text-4xl mb-3">📝</div>
+            <p className="text-sm">Nothing on the board yet.</p>
+            <p className="text-sm">I&apos;ll draw here as we work through things.</p>
+          </div>
         </div>
         {onStudentInput && <StudentInputBar onStudentInput={onStudentInput} />}
       </div>

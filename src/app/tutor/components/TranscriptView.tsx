@@ -124,10 +124,25 @@ export function TranscriptView({ transcript, isProcessing, footer }: TranscriptV
   //     keep the visible prefix, strip the brackets at render time.
   // The brain still sees the FULL text in its prompt — only the chat
   // display is sanitized.
+  //
+  // Defensive: also strip a TRAILING orphan `]...]` if a synthetic
+  // message accidentally contained nested brackets (e.g. `segments[]`
+  // inside the instruction) — observed 2026-04-29 trig session, where
+  // " array — do not invent segment ids.]" leaked into the bubble
+  // because the inner `]` truncated the non-greedy match early.
   const visibleTranscript = transcript
     .map((entry) => {
       if (entry.role !== 'student') return entry;
-      const stripped = entry.text.replace(/\s*\[[\s\S]*?\]\s*/g, ' ').replace(/\s+/g, ' ').trim();
+      let stripped = entry.text.replace(/\s*\[[\s\S]*?\]\s*/g, ' ');
+      // Trailing orphan `]` (no matching `[` ahead in remaining text):
+      // anything from the last unmatched `]` back to the prior sentence
+      // boundary is brain-only instruction that leaked.
+      if (stripped.includes(']') && !stripped.includes('[')) {
+        const lastBracket = stripped.lastIndexOf(']');
+        const cutFrom = stripped.lastIndexOf('.', lastBracket);
+        stripped = (cutFrom >= 0 ? stripped.slice(0, cutFrom + 1) : '').trim();
+      }
+      stripped = stripped.replace(/\s+/g, ' ').trim();
       if (!stripped) return null;
       return stripped === entry.text ? entry : { ...entry, text: stripped };
     })

@@ -1207,10 +1207,14 @@ function TutorPage() {
                     lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
                     currentTopicId={selectedTopicId}
                     introText={(() => {
-                      const lvl = availableLevels.find(l => l.id === selectedLevel)?.label;
+                      // topicDisplayName already includes the level
+                      // suffix (e.g. "Trigonometry (High School
+                      // (11-12))"), so don't append the level again —
+                      // 2026-04-29 trig showed "Trigonometry (HS
+                      // (11-12)) (HS (11-12))" with the duplication.
                       const topic = topicDisplayName;
-                      if (topic && lvl) {
-                        return `Ooh, blank canvas — I love it! I see you chose ${topic}${lvl ? ` (${lvl})` : ''}. Pick a lesson to jump straight in, or just tell me what you want to learn.`;
+                      if (topic) {
+                        return `Ooh, blank canvas — I love it! I see you chose ${topic}. Pick a lesson to jump straight in, or just tell me what you want to learn.`;
                       }
                       return undefined;
                     })()}
@@ -1230,8 +1234,17 @@ function TutorPage() {
                         // brain didn't have the segments[] schema in
                         // context — the resolver also has a fallback
                         // to the first segment when the id is unknown).
+                        // Avoid nested brackets inside the bracketed
+                        // system hint. The TranscriptView strip-regex
+                        // is non-greedy and stops at the first closing
+                        // `]` it sees — a payload containing
+                        // `segments[]` previously truncated mid-
+                        // instruction and leaked the trailing
+                        // " array — do not invent segment ids.]" into
+                        // the visible bubble (observed 2026-04-29
+                        // trigonometry session). Reword in plain prose.
                         realtimeHandleRef.current.sendTextMessage(
-                          `Let's do: ${plan.title}. [Start the lesson: call show_segment_card with the FIRST segment id from the loaded plan's segments[] array — do not invent segment ids.]`,
+                          `Let's do: ${plan.title}. [Start the lesson by calling show_segment_card with the FIRST authored segment id from the plan; do not invent segment ids.]`,
                         );
                       }
                     }}
