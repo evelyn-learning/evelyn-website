@@ -89,6 +89,12 @@ import { SEED_CHEM_IONIC_BONDING } from './seeds/chem-ionic-bonding';
 import { SEED_CHEM_COVALENT_BONDING_LEWIS } from './seeds/chem-covalent-bonding-lewis';
 import { SEED_CHEM_MOLECULAR_GEOMETRY_VSEPR } from './seeds/chem-molecular-geometry-vsepr';
 import { SEED_CHEM_NAMING_COMPOUNDS } from './seeds/chem-naming-compounds';
+import { SEED_CHEM_MOLE_STOICHIOMETRY } from './seeds/chem-mole-stoichiometry';
+import { SEED_CHEM_BALANCING_EQUATIONS } from './seeds/chem-balancing-equations';
+import { SEED_CHEM_REACTIONS_TYPES } from './seeds/chem-reactions-types';
+import { SEED_CHEM_GAS_LAWS } from './seeds/chem-gas-laws';
+import { SEED_CHEM_SOLUTIONS_CONCENTRATION } from './seeds/chem-solutions-concentration';
+import { SEED_CHEM_ACIDS_BASES_PH } from './seeds/chem-acids-bases-ph';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -206,6 +212,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_CHEM_COVALENT_BONDING_LEWIS,
   SEED_CHEM_MOLECULAR_GEOMETRY_VSEPR,
   SEED_CHEM_NAMING_COMPOUNDS,
+  SEED_CHEM_MOLE_STOICHIOMETRY,
+  SEED_CHEM_BALANCING_EQUATIONS,
+  SEED_CHEM_REACTIONS_TYPES,
+  SEED_CHEM_GAS_LAWS,
+  SEED_CHEM_SOLUTIONS_CONCENTRATION,
+  SEED_CHEM_ACIDS_BASES_PH,
   SEED_PHYS_KINEMATICS_1D,
 ];
 
