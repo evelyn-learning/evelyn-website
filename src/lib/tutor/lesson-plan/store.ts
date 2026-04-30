@@ -355,6 +355,33 @@ import { SEED_G11_SS_GLOBALIZATION_MODERN } from './seeds/g11-ss-globalization-m
 import { SEED_G8_MATH_BIVARIATE_DATA } from './seeds/g8-math-bivariate-data';
 import { SEED_SAT_ACT_ESSAY_STRATEGY } from './seeds/sat-act-essay-strategy';
 import { SEED_G5_SCI_WATER_CYCLE } from './seeds/g5-sci-water-cycle';
+// Batch 34 — High-impact AP completion + foundational fillers.
+import { SEED_AP_CALC_OPTIMIZATION } from './seeds/ap-calc-optimization';
+import { SEED_AP_CALC_LHOPITAL } from './seeds/ap-calc-lhopital';
+import { SEED_AP_CALC_VOLUMES_REVOLUTION } from './seeds/ap-calc-volumes-revolution';
+import { SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP } from './seeds/ap-bio-cellular-respiration-deep';
+import { SEED_AP_BIO_HARDY_WEINBERG } from './seeds/ap-bio-hardy-weinberg';
+import { SEED_AP_STATS_CHI_SQUARE } from './seeds/ap-stats-chi-square';
+import { SEED_AP_STATS_REGRESSION_INFERENCE } from './seeds/ap-stats-regression-inference';
+import { SEED_AP_USH_COLONIAL_PURITANS } from './seeds/ap-ush-colonial-puritans';
+import { SEED_AP_USH_JACKSONIAN } from './seeds/ap-ush-jacksonian';
+import { SEED_AP_USH_1920S } from './seeds/ap-ush-1920s-jazz-age';
+import { SEED_AP_USH_CIVIL_RIGHTS_DEEP } from './seeds/ap-ush-civil-rights-deep';
+import { SEED_AP_WORLD_MONGOL_EMPIRE } from './seeds/ap-world-mongol-empire';
+import { SEED_AP_WORLD_IMPERIALISM } from './seeds/ap-world-imperialism';
+import { SEED_AP_WORLD_WWI_CAUSES } from './seeds/ap-world-wwi-causes';
+import { SEED_K2_SCI_FIVE_SENSES } from './seeds/k2-sci-five-senses';
+import { SEED_K_MATH_CALENDAR_TIME } from './seeds/k-math-calendar-time';
+import { SEED_K2_SS_NEEDS_WANTS } from './seeds/k2-ss-needs-wants';
+import { SEED_G2_MATH_EVEN_ODD } from './seeds/g2-math-even-odd';
+import { SEED_G2_ELA_CONTRACTIONS } from './seeds/g2-ela-contractions';
+import { SEED_G3_MATH_MULTIPLICATION_FLUENCY } from './seeds/g3-math-multiplication-fluency';
+import { SEED_G3_MATH_WORD_PROBLEMS_STRATEGY } from './seeds/g3-math-word-problems-strategy';
+import { SEED_G4_MATH_MIXED_NUMBERS } from './seeds/g4-math-mixed-numbers';
+import { SEED_G7_ELA_COUNTERCLAIM } from './seeds/g7-ela-counterclaim';
+import { SEED_G8_ELA_THEME_ANALYSIS } from './seeds/g8-ela-theme-analysis';
+import { SEED_AP_LANG_ARGUMENT_ESSAY } from './seeds/ap-lang-argument-essay';
+import { SEED_AP_LANG_SYNTHESIS_ESSAY } from './seeds/ap-lang-synthesis-essay';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -722,6 +749,33 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G8_MATH_BIVARIATE_DATA,
   SEED_SAT_ACT_ESSAY_STRATEGY,
   SEED_G5_SCI_WATER_CYCLE,
+  // Batch 34 — High-impact AP completion + foundational fillers.
+  SEED_AP_CALC_OPTIMIZATION,
+  SEED_AP_CALC_LHOPITAL,
+  SEED_AP_CALC_VOLUMES_REVOLUTION,
+  SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP,
+  SEED_AP_BIO_HARDY_WEINBERG,
+  SEED_AP_STATS_CHI_SQUARE,
+  SEED_AP_STATS_REGRESSION_INFERENCE,
+  SEED_AP_USH_COLONIAL_PURITANS,
+  SEED_AP_USH_JACKSONIAN,
+  SEED_AP_USH_1920S,
+  SEED_AP_USH_CIVIL_RIGHTS_DEEP,
+  SEED_AP_WORLD_MONGOL_EMPIRE,
+  SEED_AP_WORLD_IMPERIALISM,
+  SEED_AP_WORLD_WWI_CAUSES,
+  SEED_K2_SCI_FIVE_SENSES,
+  SEED_K_MATH_CALENDAR_TIME,
+  SEED_K2_SS_NEEDS_WANTS,
+  SEED_G2_MATH_EVEN_ODD,
+  SEED_G2_ELA_CONTRACTIONS,
+  SEED_G3_MATH_MULTIPLICATION_FLUENCY,
+  SEED_G3_MATH_WORD_PROBLEMS_STRATEGY,
+  SEED_G4_MATH_MIXED_NUMBERS,
+  SEED_G7_ELA_COUNTERCLAIM,
+  SEED_G8_ELA_THEME_ANALYSIS,
+  SEED_AP_LANG_ARGUMENT_ESSAY,
+  SEED_AP_LANG_SYNTHESIS_ESSAY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
