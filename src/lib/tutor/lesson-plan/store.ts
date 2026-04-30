@@ -382,6 +382,33 @@ import { SEED_G7_ELA_COUNTERCLAIM } from './seeds/g7-ela-counterclaim';
 import { SEED_G8_ELA_THEME_ANALYSIS } from './seeds/g8-ela-theme-analysis';
 import { SEED_AP_LANG_ARGUMENT_ESSAY } from './seeds/ap-lang-argument-essay';
 import { SEED_AP_LANG_SYNTHESIS_ESSAY } from './seeds/ap-lang-synthesis-essay';
+// Batch 35 — Test prep pipeline + remaining AP gaps.
+import { SEED_GRE_QUANT_STRATEGY } from './seeds/gre-quant-strategy';
+import { SEED_GRE_VERBAL_STRATEGY } from './seeds/gre-verbal-strategy';
+import { SEED_GRE_ANALYTICAL_WRITING } from './seeds/gre-analytical-writing';
+import { SEED_GMAT_QUANT_STRATEGY } from './seeds/gmat-quant-strategy';
+import { SEED_GMAT_VERBAL_STRATEGY } from './seeds/gmat-verbal-strategy';
+import { SEED_SSAT_ISEE_STRATEGY } from './seeds/ssat-isee-strategy';
+import { SEED_AP_TEST_STRATEGY } from './seeds/ap-test-strategy';
+import { SEED_AP_CALC_BC_PARAMETRIC } from './seeds/ap-calc-bc-parametric';
+import { SEED_AP_CALC_BC_POLAR } from './seeds/ap-calc-bc-polar';
+import { SEED_AP_CALC_BC_SERIES_CONVERGENCE } from './seeds/ap-calc-bc-series-convergence';
+import { SEED_AP_CALC_BC_TAYLOR_SERIES } from './seeds/ap-calc-bc-taylor-series';
+import { SEED_AP_PHYSICS2_FLUIDS } from './seeds/ap-physics2-fluids';
+import { SEED_AP_PHYSICS2_THERMO } from './seeds/ap-physics2-thermo';
+import { SEED_AP_PHYSICS2_ELECTROSTATICS } from './seeds/ap-physics2-electrostatics';
+import { SEED_AP_PHYSICS2_OPTICS } from './seeds/ap-physics2-optics';
+import { SEED_AP_PSYCH_LEARNING } from './seeds/ap-psych-learning';
+import { SEED_AP_PSYCH_MEMORY } from './seeds/ap-psych-memory';
+import { SEED_AP_PSYCH_DEVELOPMENT } from './seeds/ap-psych-development';
+import { SEED_AP_HUMAN_GEO_POPULATION } from './seeds/ap-human-geo-population';
+import { SEED_AP_HUMAN_GEO_AGRICULTURE } from './seeds/ap-human-geo-agriculture';
+import { SEED_AP_GOV_FEDERALISM } from './seeds/ap-gov-federalism';
+import { SEED_AP_GOV_POLITICAL_PARTIES } from './seeds/ap-gov-political-parties';
+import { SEED_AP_CHEM_THERMODYNAMICS } from './seeds/ap-chem-thermodynamics';
+import { SEED_AP_CHEM_BUFFERS_TITRATION } from './seeds/ap-chem-buffers-titration';
+import { SEED_AP_BIO_POPULATION_ECOLOGY } from './seeds/ap-bio-population-ecology';
+import { SEED_AP_BIO_SPECIATION } from './seeds/ap-bio-speciation';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -776,6 +803,33 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G8_ELA_THEME_ANALYSIS,
   SEED_AP_LANG_ARGUMENT_ESSAY,
   SEED_AP_LANG_SYNTHESIS_ESSAY,
+  // Batch 35 — Test-prep pipeline + remaining AP gaps.
+  SEED_GRE_QUANT_STRATEGY,
+  SEED_GRE_VERBAL_STRATEGY,
+  SEED_GRE_ANALYTICAL_WRITING,
+  SEED_GMAT_QUANT_STRATEGY,
+  SEED_GMAT_VERBAL_STRATEGY,
+  SEED_SSAT_ISEE_STRATEGY,
+  SEED_AP_TEST_STRATEGY,
+  SEED_AP_CALC_BC_PARAMETRIC,
+  SEED_AP_CALC_BC_POLAR,
+  SEED_AP_CALC_BC_SERIES_CONVERGENCE,
+  SEED_AP_CALC_BC_TAYLOR_SERIES,
+  SEED_AP_PHYSICS2_FLUIDS,
+  SEED_AP_PHYSICS2_THERMO,
+  SEED_AP_PHYSICS2_ELECTROSTATICS,
+  SEED_AP_PHYSICS2_OPTICS,
+  SEED_AP_PSYCH_LEARNING,
+  SEED_AP_PSYCH_MEMORY,
+  SEED_AP_PSYCH_DEVELOPMENT,
+  SEED_AP_HUMAN_GEO_POPULATION,
+  SEED_AP_HUMAN_GEO_AGRICULTURE,
+  SEED_AP_GOV_FEDERALISM,
+  SEED_AP_GOV_POLITICAL_PARTIES,
+  SEED_AP_CHEM_THERMODYNAMICS,
+  SEED_AP_CHEM_BUFFERS_TITRATION,
+  SEED_AP_BIO_POPULATION_ECOLOGY,
+  SEED_AP_BIO_SPECIATION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
