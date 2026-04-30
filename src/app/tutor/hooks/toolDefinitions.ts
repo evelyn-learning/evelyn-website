@@ -422,18 +422,13 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['type', 'params'],
     },
   },
-  {
-    name: 'show_image',
-    description: 'Display an image on the whiteboard — e.g. a photograph, a periodic table image, a historical photo, a painting, an anatomical diagram, a microscope image. Use this when the best teaching aid is a real image rather than a generated diagram. Only use image URLs you are confident exist (well-known public domain images, Wikimedia, or URLs the student provided). If unsure, draw instead of linking.',
-    parameters: {
-      type: 'object',
-      properties: {
-        url: { type: 'string', description: 'Fully qualified image URL.' },
-        alt: { type: 'string', description: 'Short caption / alt text shown below the image.' },
-      },
-      required: ['url'],
-    },
-  },
+  // show_image was removed 2026-04-30 — brain hallucinated URLs
+  // (notably plausible-looking Wikimedia paths that don't exist),
+  // and prompt-side "only use URLs you're confident exist" guidance
+  // didn't constrain the model. Use show_diagram, show_geometry,
+  // show_cell_diagram, etc. — the catalog of structured renderers
+  // covers the legitimate "I want a real image here" cases without
+  // letting the brain author URLs.
   {
     name: 'show_solution',
     description: 'GATE — READ FIRST: Reserved for walk-through mode AFTER the student has insisted on being walked through TWICE within the same problem (see Rule 4 and "Socratic Method First" in the system prompt). On a FIRST "show me the steps" / "walk me through it" / "just show me how" / "show me the calculation" / "explain how you got that" request, do NOT call this tool. Instead: acknowledge warmly, ensure the setup is on the board, and ask ONE guiding question about the first step ("What formula would you start with?"). Then wait. Calling show_solution on a first ask — even when the student says "show me the steps" — is a documented teaching failure that strips the student of their own thinking. Only after a SECOND insistence ("no, just walk me through it", "I said show me, don\'t ask") may you call this tool. Once the gate is satisfied: displays a structured multi-step solution card with numbered steps. Each step has a description and optionally an equation, substitution, result, and short explanation.',
@@ -2102,13 +2097,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       params: funcArgs.params || {},
     } as unknown as WhiteboardCommand;
   }
-  if (funcName === 'show_image') {
-    return {
-      action: 'showImage',
-      url: funcArgs.url,
-      alt: funcArgs.alt,
-    } as unknown as WhiteboardCommand;
-  }
+  // show_image removed — see comment above the tool definition. If
+  // the brain still emits it (cached prompt or otherwise), the call
+  // returns null and the orchestrator drops it.
   if (funcName === 'show_solution') {
     return {
       action: 'showSolution',

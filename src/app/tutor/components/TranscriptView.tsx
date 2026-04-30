@@ -245,18 +245,32 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // only on that one (and only when its trailing question is yes/no
   // or true/false). Without this gating we'd show buttons under every
   // tutor turn in scrollback, which would clutter and confuse.
-  const latestTutorEntryId = (() => {
-    for (let i = visibleTranscript.length - 1; i >= 0; i--) {
-      const e = visibleTranscript[i];
-      if (e.role === 'tutor' && !e.streaming) return e.id;
+  //
+  // ADDITIONAL gate: hide the buttons once the student has responded
+  // to that tutor turn (typed something, or already tapped a button).
+  // The new tutor turn might still be in flight — latestTutorEntryId
+  // doesn't shift until streaming completes — so without this, a
+  // late tap on the now-stale buttons gets queued and processed as
+  // an answer to the NEXT question. Observed 2026-04-30 geography
+  // session: user typed "got it" / "ok" then clicked Yes; "Yes"
+  // arrived as a fresh student turn against the next tutor question.
+  let latestTutorEntryId: string | null = null;
+  let studentRespondedAfterLatest = false;
+  for (let i = visibleTranscript.length - 1; i >= 0; i--) {
+    const e = visibleTranscript[i];
+    if (e.role === 'tutor' && !e.streaming) {
+      latestTutorEntryId = e.id;
+      break;
     }
-    return null;
-  })();
+    if (e.role === 'student') {
+      studentRespondedAfterLatest = true;
+    }
+  }
 
   const renderEntry = (entry: TranscriptEntry) => {
     const split = entry.role === 'tutor' && !entry.streaming ? splitTrailingQuestion(entry.text) : null;
     const quickKind = (
-      onQuickAnswer && entry.id === latestTutorEntryId && split
+      onQuickAnswer && entry.id === latestTutorEntryId && split && !studentRespondedAfterLatest
         ? classifyQuestionForQuickAnswer(split.question)
         : 'open'
     );
