@@ -3771,7 +3771,7 @@ export function VoiceTutorRealtime({
           `[validator feedback — not from the student] Your last turn emitted ` +
           `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
           `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
-          `Keep your verbal response brief and natural — pretend the prior attempt didn't happen.`;
+          `Re-deliver the spoken portion in full — the student likely heard the prior attempt only partially because a kill bridge cut it off. If you asked a question, re-ask and wait; do not answer it yourself or skip ahead.`;
         // Remove the killed attempt's streaming entry from the chat
         // before the next attempt creates a fresh one. Without this,
         // the user would see the killed text remain alongside the new
