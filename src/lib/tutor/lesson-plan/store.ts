@@ -178,6 +178,11 @@ import { SEED_G4_ELA_THEME_LESSON } from './seeds/g4-ela-theme-lesson';
 import { SEED_G4_ELA_SENTENCE_STRUCTURE } from './seeds/g4-ela-sentence-structure';
 import { SEED_G5_ELA_SUMMARIZING } from './seeds/g5-ela-summarizing';
 import { SEED_G5_ELA_NARRATIVE_WRITING } from './seeds/g5-ela-narrative-writing';
+import { SEED_G6_ELA_TEXTUAL_EVIDENCE } from './seeds/g6-ela-textual-evidence';
+import { SEED_G6_ELA_ARGUMENT_WRITING } from './seeds/g6-ela-argument-writing';
+import { SEED_G7_ELA_AUTHOR_PURPOSE_POV } from './seeds/g7-ela-author-purpose-pov';
+import { SEED_G7_ELA_FIGURATIVE_LANGUAGE } from './seeds/g7-ela-figurative-language';
+import { SEED_G8_ELA_THESIS_STATEMENTS } from './seeds/g8-ela-thesis-statements';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -396,6 +401,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G4_ELA_SENTENCE_STRUCTURE,
   SEED_G5_ELA_SUMMARIZING,
   SEED_G5_ELA_NARRATIVE_WRITING,
+  // Batch 15 — G6-G8 ELA (textual evidence, argument, POV/purpose, figurative language, thesis).
+  SEED_G6_ELA_TEXTUAL_EVIDENCE,
+  SEED_G6_ELA_ARGUMENT_WRITING,
+  SEED_G7_ELA_AUTHOR_PURPOSE_POV,
+  SEED_G7_ELA_FIGURATIVE_LANGUAGE,
+  SEED_G8_ELA_THESIS_STATEMENTS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
