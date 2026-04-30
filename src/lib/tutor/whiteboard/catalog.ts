@@ -696,10 +696,19 @@ function wholeItemLabelsFor(action: string, title?: string): string[] {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildShowSignature(action: string, cmd: any): string {
+  // Decorative / orchestration fields that don't change the rendered
+  // figure. Stripping `title` (and similar) so two calls with the
+  // same parametric content but different headings dedup as one
+  // diagram. Otherwise the brain re-renders the same figure under a
+  // new section heading instead of scrolling — observed 2026-04-30
+  // cell-bio session, where 9 identical earth_layers diagrams were
+  // emitted across the session because each had a different
+  // "Inside the Earth" / "Earth's Four Layers" / etc. title.
   const STRIP = new Set([
     'id', 'action', 'page', 'targetId', 'targetFeature',
     'targetItemIndex', 'targetPageIndex', 'targetPageTitle',
     '_scribbleRejected', '_duplicateOf',
+    'title', 'heading', 'label',
   ]);
   const seen = new WeakSet<object>();
   const canon = (v: unknown): unknown => {

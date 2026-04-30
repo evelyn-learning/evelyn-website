@@ -113,16 +113,22 @@ export function CatalogSolarSystemRenderer({ figure }: { figure: SolarSystemFigu
 
 export function CatalogEarthLayersRenderer({ figure }: { figure: EarthLayersFigure }) {
   const { layers, title } = figure;
-  const W = 360;
+  // Circle area kept centered around cx=180, but viewBox W extended to
+  // 540 so the right-side labels (e.g. "Outer Core", "Inner Core") fit
+  // inside the SVG. Earlier W=360 cut labels at ~360 px even though
+  // text started at x=354 — observed 2026-04-30 cell-bio session
+  // export, where every page showed only the first letter of each
+  // label.
+  const W = 540;
   const H = 360;
-  const cx = W / 2;
+  const cx = 180;
   const cy = H / 2;
   const maxR = 150;
   const step = maxR / layers.length;
   return (
     <div className="earth-layers-renderer w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[400px]">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[560px]">
         {layers.map((l, i) => {
           const r = maxR - i * step;
           return <circle key={i} cx={cx} cy={cy} r={r} fill={l.color || '#9ca3af'} stroke="#1f2937" strokeWidth={1} />;
