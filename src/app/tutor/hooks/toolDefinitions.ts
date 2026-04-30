@@ -367,7 +367,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     parameters: {
       type: 'object',
       properties: {
-        statement: { type: 'string', description: 'The full problem text as a single non-empty string. Empty / placeholder values are rejected.' },
+        statement: { type: 'string', description: 'The full problem text as a single non-empty string. Plain math notation only — no LaTeX. The statement is rendered as plain text on the card; LaTeX commands appear as literal characters and confuse the student. Use show_equation for any math that needs LaTeX rendering.' },
         format: { type: 'string', enum: ['multiple-choice', 'grid-in', 'free-response', 'short-answer', 'true-false'], description: 'Problem format. The renderer currently distinguishes "grid-in" (numeric input grid) from everything else (which is rendered identically based on `answerChoices` presence). Use the correct value for semantic clarity even though the visual rendering is the same outside of grid-in.' },
         answerChoices: {
           type: 'array',
@@ -466,7 +466,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             title: { type: 'string' },
             problem: {
               type: 'object',
-              properties: { statement: { type: 'string' } },
+              properties: { statement: { type: 'string', description: 'Problem text in plain math notation. Do not use LaTeX — the statement is rendered as plain text and LaTeX commands appear as literal characters.' } },
               required: ['statement'],
             },
             walkthrough: {

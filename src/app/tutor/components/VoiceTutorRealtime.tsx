@@ -1999,10 +1999,22 @@ export function VoiceTutorRealtime({
       | undefined
     > = commands.map(() => undefined);
     const droppedAsDuplicate = new Set<WhiteboardCommand>();
+    // Track whether THIS BATCH started with a newPage. If so, the brain
+    // explicitly intended to redraw on a fresh page — skip the dedup
+    // for show_* commands that follow the newPage in the same batch
+    // (otherwise we leave a blank new page while the original card
+    // sits on a previous page, and the student stares at an empty
+    // board while the brain insists the problem is "right there").
+    // Observed 2026-04-30 rational-expressions session: brain emitted
+    // newPage + show_problem(same statement) four times in a row,
+    // each show_problem dedupped, leaving four blank new pages and
+    // the brain switching to Malay trying to apologize.
+    let newPageThisBatch = false;
     for (const cmd of processed) {
       const action = String(cmd.action);
       if (action === 'newPage') {
         currentPageTitle = (cmd as { title?: string }).title;
+        newPageThisBatch = true;
         continue;
       }
       if (META_ACTIONS.has(action)) continue;
@@ -2020,7 +2032,10 @@ export function VoiceTutorRealtime({
       // chat-history advice to use scroll was drowned out.
       const signature = buildShowSignature(action, cmd);
       const existing = catalogRef.current.findBySignature(signature);
-      if (existing) {
+      // Skip dedup when there's a newPage in the same batch — brain
+      // explicitly wants this content on a fresh page, even if it
+      // matches something on a prior page.
+      if (existing && !newPageThisBatch) {
         const inputIdx = commands.indexOf(cmd);
         if (inputIdx >= 0) {
           duplicates[inputIdx] = {
