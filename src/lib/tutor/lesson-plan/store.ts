@@ -336,6 +336,16 @@ import { SEED_G7_SCI_NEWTON_LAWS_BRIDGE } from './seeds/g7-sci-newton-laws-bridg
 import { SEED_G3_ELA_PREFIXES } from './seeds/g3-ela-prefixes';
 import { SEED_G11_SS_SUPREME_COURT_CASES } from './seeds/g11-ss-supreme-court-cases';
 import { SEED_G4_MATH_LINE_PLOTS_DATA } from './seeds/g4-math-line-plots-data';
+// Batch 32 — More elementary, MS, AP supplements.
+import { SEED_G2_ELA_COMPREHENSION_STRATEGIES } from './seeds/g2-ela-comprehension-strategies';
+import { SEED_G5_MATH_DIVISIBILITY_RULES } from './seeds/g5-math-divisibility-rules';
+import { SEED_G8_ELA_TONE_MOOD } from './seeds/g8-ela-tone-mood';
+import { SEED_G7_SS_AGE_OF_EXPLORATION_DEEP } from './seeds/g7-ss-age-of-exploration-deep';
+import { SEED_G3_SCI_STATES_OF_MATTER } from './seeds/g3-sci-states-of-matter';
+import { SEED_G11_ECON_STOCK_MARKET_BASICS } from './seeds/g11-econ-stock-market-basics';
+import { SEED_G6_MATH_STATISTICS_INTRO } from './seeds/g6-math-statistics-intro';
+import { SEED_G7_MATH_PROBABILITY_BASICS } from './seeds/g7-math-probability-basics';
+import { SEED_G11_BIO_EVOLUTION_EVIDENCE } from './seeds/g11-bio-evolution-evidence';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -684,6 +694,16 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G3_ELA_PREFIXES,
   SEED_G11_SS_SUPREME_COURT_CASES,
   SEED_G4_MATH_LINE_PLOTS_DATA,
+  // Batch 32 — More elementary, MS, AP supplements.
+  SEED_G2_ELA_COMPREHENSION_STRATEGIES,
+  SEED_G5_MATH_DIVISIBILITY_RULES,
+  SEED_G8_ELA_TONE_MOOD,
+  SEED_G7_SS_AGE_OF_EXPLORATION_DEEP,
+  SEED_G3_SCI_STATES_OF_MATTER,
+  SEED_G11_ECON_STOCK_MARKET_BASICS,
+  SEED_G6_MATH_STATISTICS_INTRO,
+  SEED_G7_MATH_PROBABILITY_BASICS,
+  SEED_G11_BIO_EVOLUTION_EVIDENCE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
