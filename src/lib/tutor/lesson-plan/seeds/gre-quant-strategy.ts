@@ -14,7 +14,7 @@ export const SEED_GRE_QUANT_STRATEGY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '12',
   subject: 'math',
-  topic: 'test-prep',
+  topic: 'gre-quant',
   locale: 'en',
   los: [
     {

@@ -12,7 +12,7 @@ export const SEED_AP_MACRO_FISCAL_POLICY: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-macroeconomics',
   locale: 'en',
   los: [
     {

@@ -12,7 +12,7 @@ export const SEED_AP_CALC_ACCUMULATION: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'math',
-  topic: 'calculus',
+  topic: 'ap-calculus-ab',
   locale: 'en',
   los: [
     {

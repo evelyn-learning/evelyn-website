@@ -12,7 +12,7 @@ export const SEED_AP_USH_WWII: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ss',
-  topic: 'us history',
+  topic: 'ap-us-history',
   locale: 'en',
   los: [
     {

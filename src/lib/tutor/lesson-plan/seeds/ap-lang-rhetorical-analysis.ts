@@ -12,7 +12,7 @@ export const SEED_AP_LANG_RHETORICAL_ANALYSIS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ela',
-  topic: 'literature',
+  topic: 'ap-english-lang',
   locale: 'en',
   los: [
     {

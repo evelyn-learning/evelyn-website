@@ -12,7 +12,7 @@ export const SEED_AP_PHYS1_SHM: LessonPlan = {
   curriculum: 'NGSS',
   grade: '11',
   subject: 'sci',
-  topic: 'physics',
+  topic: 'ap-physics-1',
   locale: 'en',
   los: [
     {

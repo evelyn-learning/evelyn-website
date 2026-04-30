@@ -12,7 +12,7 @@ export const SEED_AP_LIT_POETRY_ANALYSIS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ela',
-  topic: 'literature',
+  topic: 'ap-english-lit',
   locale: 'en',
   los: [
     {

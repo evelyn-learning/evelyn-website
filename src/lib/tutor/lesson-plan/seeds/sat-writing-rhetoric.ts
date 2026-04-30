@@ -12,7 +12,7 @@ export const SEED_SAT_WRITING_RHETORIC: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'sat-writing-full',
   locale: 'en',
   los: [
     {

@@ -497,6 +497,7 @@ function TutorPage() {
         const params = new URLSearchParams();
         params.set('subject', selectedSubject);
         if (selectedLevel) params.set('grade', selectedLevel);
+        if (selectedTopicId) params.set('topic', selectedTopicId);
         const res = await fetch(`/api/tutor/lesson-plans?${params.toString()}`);
         if (!res.ok) return;
         const data = await res.json();

@@ -10,7 +10,7 @@ export const SEED_AP_FRENCH_STRATEGY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'ap-french-lang',
   locale: 'en',
   los: [
     {

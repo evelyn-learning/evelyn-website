@@ -12,7 +12,7 @@ export const SEED_AP_WORLD_DECOLONIZATION: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ss',
-  topic: 'world history',
+  topic: 'ap-world-history',
   locale: 'en',
   los: [
     {

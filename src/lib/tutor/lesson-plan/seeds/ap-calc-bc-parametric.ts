@@ -13,7 +13,7 @@ export const SEED_AP_CALC_BC_PARAMETRIC: LessonPlan = {
   curriculum: 'CCSS',
   grade: '12',
   subject: 'math',
-  topic: 'calculus',
+  topic: 'ap-calculus-bc',
   locale: 'en',
   los: [
     {

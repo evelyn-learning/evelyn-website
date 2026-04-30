@@ -10,7 +10,7 @@ export const SEED_AP_MANDARIN_STRATEGY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'ap-chinese-lang',
   locale: 'en',
   los: [
     {

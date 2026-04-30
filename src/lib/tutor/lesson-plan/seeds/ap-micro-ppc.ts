@@ -11,7 +11,7 @@ export const SEED_AP_MICRO_PPC: LessonPlan = {
   curriculum: 'NCSS',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-microeconomics',
   locale: 'en',
   los: [
     {

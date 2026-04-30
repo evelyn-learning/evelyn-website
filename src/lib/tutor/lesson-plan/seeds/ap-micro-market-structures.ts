@@ -12,7 +12,7 @@ export const SEED_AP_MICRO_MARKET_STRUCTURES: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-microeconomics',
   locale: 'en',
   los: [
     {

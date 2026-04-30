@@ -12,7 +12,7 @@ export const SEED_SAT_READING_HISTORY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'sat-reading-full',
   locale: 'en',
   los: [
     {

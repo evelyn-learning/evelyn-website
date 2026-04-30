@@ -13,7 +13,7 @@ export const SEED_AP_STATS_TWO_SAMPLE_TESTS: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'math',
-  topic: 'statistics',
+  topic: 'ap-statistics',
   locale: 'en',
   los: [
     {

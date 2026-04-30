@@ -12,7 +12,7 @@ export const SEED_AP_CSP_INTERNET: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'cs',
-  topic: 'computer science',
+  topic: 'ap-cs-principles',
   locale: 'en',
   los: [
     {

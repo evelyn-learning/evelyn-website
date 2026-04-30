@@ -13,7 +13,7 @@ export const SEED_AP_MACRO_AD_AS: LessonPlan = {
   curriculum: 'NCSS',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-macroeconomics',
   locale: 'en',
   los: [
     {

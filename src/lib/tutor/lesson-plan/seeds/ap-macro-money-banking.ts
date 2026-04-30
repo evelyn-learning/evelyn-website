@@ -12,7 +12,7 @@ export const SEED_AP_MACRO_MONEY_BANKING: LessonPlan = {
   curriculum: 'NCSS',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-macroeconomics',
   locale: 'en',
   los: [
     {

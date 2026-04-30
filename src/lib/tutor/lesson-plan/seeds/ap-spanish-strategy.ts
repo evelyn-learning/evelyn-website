@@ -12,7 +12,7 @@ export const SEED_AP_SPANISH_STRATEGY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'ap-spanish-lang',
   locale: 'en',
   los: [
     {

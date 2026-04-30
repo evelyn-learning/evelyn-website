@@ -13,7 +13,7 @@ export const SEED_AP_STATS_REGRESSION_INFERENCE: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'math',
-  topic: 'statistics',
+  topic: 'ap-statistics',
   locale: 'en',
   los: [
     {

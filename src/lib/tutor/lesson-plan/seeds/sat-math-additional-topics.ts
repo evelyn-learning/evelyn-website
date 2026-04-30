@@ -12,7 +12,7 @@ export const SEED_SAT_MATH_ADDITIONAL_TOPICS: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'math',
-  topic: 'test-prep',
+  topic: 'sat-math-full',
   locale: 'en',
   los: [
     {

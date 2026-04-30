@@ -12,7 +12,7 @@ export const SEED_AP_BIO_IMMUNE: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'sci',
-  topic: 'biology',
+  topic: 'ap-biology',
   locale: 'en',
   los: [
     {

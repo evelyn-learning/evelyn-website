@@ -14,7 +14,7 @@ export const SEED_AP_CALC_RELATED_RATES: LessonPlan = {
   curriculum: 'CCSS',
   grade: '12',
   subject: 'math',
-  topic: 'calculus',
+  topic: 'ap-calculus-ab',
   locale: 'en',
   los: [
     {

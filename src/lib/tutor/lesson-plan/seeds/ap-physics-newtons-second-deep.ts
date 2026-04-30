@@ -13,7 +13,7 @@ export const SEED_AP_PHYSICS_NEWTONS_SECOND_DEEP: LessonPlan = {
   curriculum: 'NGSS',
   grade: '11',
   subject: 'sci',
-  topic: 'physics',
+  topic: 'ap-physics-1',
   locale: 'en',
   los: [
     {

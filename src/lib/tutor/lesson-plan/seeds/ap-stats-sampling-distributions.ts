@@ -12,7 +12,7 @@ export const SEED_AP_STATS_SAMPLING_DISTRIBUTIONS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'math',
-  topic: 'statistics',
+  topic: 'ap-statistics',
   locale: 'en',
   los: [
     {

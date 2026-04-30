@@ -13,7 +13,7 @@ export const SEED_AP_GOV_FEDERALISM: LessonPlan = {
   curriculum: 'NCSS',
   grade: '11',
   subject: 'ss',
-  topic: 'civics',
+  topic: 'ap-government',
   locale: 'en',
   los: [
     {

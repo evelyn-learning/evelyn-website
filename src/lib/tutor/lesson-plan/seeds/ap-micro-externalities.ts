@@ -13,7 +13,7 @@ export const SEED_AP_MICRO_EXTERNALITIES: LessonPlan = {
   curriculum: 'NCSS',
   grade: '11',
   subject: 'ss',
-  topic: 'economics',
+  topic: 'ap-microeconomics',
   locale: 'en',
   los: [
     {

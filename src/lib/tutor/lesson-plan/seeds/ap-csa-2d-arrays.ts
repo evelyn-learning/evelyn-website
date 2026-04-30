@@ -12,7 +12,7 @@ export const SEED_AP_CSA_2D_ARRAYS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'cs',
-  topic: 'computer science',
+  topic: 'ap-cs-a',
   locale: 'en',
   los: [
     {

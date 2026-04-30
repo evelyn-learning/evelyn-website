@@ -10,7 +10,7 @@ export const SEED_JEE_MAIN_STRATEGY: LessonPlan = {
   curriculum: 'NCERT',
   grade: '11',
   subject: 'math',
-  topic: 'test-prep',
+  topic: 'jee-main',
   locale: 'en',
   los: [
     {

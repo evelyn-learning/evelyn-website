@@ -13,7 +13,7 @@ export const SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP: LessonPlan = {
   curriculum: 'NGSS',
   grade: '11',
   subject: 'sci',
-  topic: 'biology',
+  topic: 'ap-biology',
   locale: 'en',
   los: [
     {

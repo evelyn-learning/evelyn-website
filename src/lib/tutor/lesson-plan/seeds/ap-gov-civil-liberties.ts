@@ -12,7 +12,7 @@ export const SEED_AP_GOV_CIVIL_LIBERTIES: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: '11',
   subject: 'ss',
-  topic: 'civics',
+  topic: 'ap-government',
   locale: 'en',
   los: [
     {
