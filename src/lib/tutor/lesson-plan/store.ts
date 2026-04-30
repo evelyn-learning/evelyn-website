@@ -327,6 +327,15 @@ import { SEED_G6_SS_FEUDALISM } from './seeds/g6-ss-feudalism';
 import { SEED_G7_MATH_VOLUME_PRISMS_PYRAMIDS } from './seeds/g7-math-volume-prisms-pyramids';
 import { SEED_K_MATH_SHAPES_3D } from './seeds/k-math-shapes-3d';
 import { SEED_K2_SCI_MAGNETISM_INTRO } from './seeds/k2-sci-magnetism-intro';
+// Batch 31 — More AP physics, ELA depth, civics, K-2.
+import { SEED_AP_PHYSICS_NEWTONS_SECOND_DEEP } from './seeds/ap-physics-newtons-second-deep';
+import { SEED_G3_ELA_DIALOGUE_PUNCTUATION } from './seeds/g3-ela-dialogue-punctuation';
+import { SEED_G6_ELA_FIGURATIVE_LANGUAGE } from './seeds/g6-ela-figurative-language';
+import { SEED_G6_MATH_AREA_COMPOSITE } from './seeds/g6-math-area-composite';
+import { SEED_G7_SCI_NEWTON_LAWS_BRIDGE } from './seeds/g7-sci-newton-laws-bridge';
+import { SEED_G3_ELA_PREFIXES } from './seeds/g3-ela-prefixes';
+import { SEED_G11_SS_SUPREME_COURT_CASES } from './seeds/g11-ss-supreme-court-cases';
+import { SEED_G4_MATH_LINE_PLOTS_DATA } from './seeds/g4-math-line-plots-data';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -666,6 +675,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G7_MATH_VOLUME_PRISMS_PYRAMIDS,
   SEED_K_MATH_SHAPES_3D,
   SEED_K2_SCI_MAGNETISM_INTRO,
+  // Batch 31 — Newton/physics depth, ELA depth, civics.
+  SEED_AP_PHYSICS_NEWTONS_SECOND_DEEP,
+  SEED_G3_ELA_DIALOGUE_PUNCTUATION,
+  SEED_G6_ELA_FIGURATIVE_LANGUAGE,
+  SEED_G6_MATH_AREA_COMPOSITE,
+  SEED_G7_SCI_NEWTON_LAWS_BRIDGE,
+  SEED_G3_ELA_PREFIXES,
+  SEED_G11_SS_SUPREME_COURT_CASES,
+  SEED_G4_MATH_LINE_PLOTS_DATA,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
