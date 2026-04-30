@@ -163,6 +163,11 @@ import { SEED_G10_GEOM_TRIANGLE_CONGRUENCE } from './seeds/g10-geom-triangle-con
 import { SEED_G10_GEOM_SIMILARITY } from './seeds/g10-geom-similarity';
 import { SEED_G10_GEOM_CIRCLES } from './seeds/g10-geom-circles';
 import { SEED_G10_GEOM_VOLUME_SOLIDS } from './seeds/g10-geom-volume-solids';
+import { SEED_G11_ALG2_QUADRATIC_FORMULA } from './seeds/g11-alg2-quadratic-formula';
+import { SEED_G11_ALG2_LOGARITHMS } from './seeds/g11-alg2-logarithms';
+import { SEED_G11_ALG2_RATIONAL_FUNCTIONS } from './seeds/g11-alg2-rational-functions';
+import { SEED_G11_ALG2_SEQUENCES_SERIES } from './seeds/g11-alg2-sequences-series';
+import { SEED_G11_PRECALC_TRIG_IDENTITIES } from './seeds/g11-precalc-trig-identities';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -363,6 +368,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G10_GEOM_SIMILARITY,
   SEED_G10_GEOM_CIRCLES,
   SEED_G10_GEOM_VOLUME_SOLIDS,
+  // Batch 12 — HS Algebra 2 / Pre-calc (quadratic formula, logs, rationals, sequences, trig identities).
+  SEED_G11_ALG2_QUADRATIC_FORMULA,
+  SEED_G11_ALG2_LOGARITHMS,
+  SEED_G11_ALG2_RATIONAL_FUNCTIONS,
+  SEED_G11_ALG2_SEQUENCES_SERIES,
+  SEED_G11_PRECALC_TRIG_IDENTITIES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
