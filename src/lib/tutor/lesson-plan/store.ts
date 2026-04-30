@@ -443,6 +443,82 @@ import { SEED_G8_SS_INDUSTRIAL_REVOLUTION_DEEP } from './seeds/g8-ss-industrial-
 import { SEED_AP_LIT_PROSE_ANALYSIS } from './seeds/ap-lit-prose-analysis';
 import { SEED_AP_LIT_Q3_ESSAY } from './seeds/ap-lit-q3-essay';
 import { SEED_AP_SPANISH_STRATEGY } from './seeds/ap-spanish-strategy';
+// Batch 38 — AP Physics 1 expansion (kinematics through waves).
+import { SEED_AP_PHYS1_KINEMATICS } from './seeds/ap-phys1-kinematics';
+import { SEED_AP_PHYS1_ENERGY_CONSERVATION } from './seeds/ap-phys1-energy-conservation';
+import { SEED_AP_PHYS1_MOMENTUM } from './seeds/ap-phys1-momentum';
+import { SEED_AP_PHYS1_ROTATION } from './seeds/ap-phys1-rotation';
+import { SEED_AP_PHYS1_SHM } from './seeds/ap-phys1-shm';
+import { SEED_AP_PHYS1_WAVES } from './seeds/ap-phys1-waves';
+import { SEED_AP_PHYS1_CIRCULAR_GRAVITATION } from './seeds/ap-phys1-circular-gravitation';
+// Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
+import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
+import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
+import { SEED_AP_CSA_ARRAYLIST } from './seeds/ap-csa-arraylist';
+import { SEED_AP_CSA_2D_ARRAYS } from './seeds/ap-csa-2d-arrays';
+// Batch 40 — AP CSP expansion (Internet, cybersecurity, programming, impact).
+import { SEED_AP_CSP_INTERNET } from './seeds/ap-csp-internet';
+import { SEED_AP_CSP_CYBERSECURITY } from './seeds/ap-csp-cybersecurity';
+import { SEED_AP_CSP_PROGRAMMING } from './seeds/ap-csp-programming';
+import { SEED_AP_CSP_IMPACT } from './seeds/ap-csp-impact';
+// Batch 41 — AP Gov expansion (Constitution, civil liberties, Congress, Presidency).
+import { SEED_AP_GOV_CONSTITUTION } from './seeds/ap-gov-constitution';
+import { SEED_AP_GOV_CIVIL_LIBERTIES } from './seeds/ap-gov-civil-liberties';
+import { SEED_AP_GOV_CONGRESS } from './seeds/ap-gov-congress';
+import { SEED_AP_GOV_PRESIDENCY } from './seeds/ap-gov-presidency';
+// Batch 42 — AP Stats expansion (probability, sampling distributions, one-sample inference).
+import { SEED_AP_STATS_PROBABILITY } from './seeds/ap-stats-probability';
+import { SEED_AP_STATS_SAMPLING_DISTRIBUTIONS } from './seeds/ap-stats-sampling-distributions';
+import { SEED_AP_STATS_ONE_SAMPLE_INFERENCE } from './seeds/ap-stats-one-sample-inference';
+// Batch 43 — AP Lit/Lang depth (Modernism, Romanticism, poetry analysis, rhetorical analysis).
+import { SEED_AP_LIT_MODERNISM } from './seeds/ap-lit-modernism';
+import { SEED_AP_LIT_ROMANTICISM } from './seeds/ap-lit-romanticism';
+import { SEED_AP_LIT_POETRY_ANALYSIS } from './seeds/ap-lit-poetry-analysis';
+import { SEED_AP_LANG_RHETORICAL_ANALYSIS } from './seeds/ap-lang-rhetorical-analysis';
+// Batch 44 — AP Calc AB + Bio (accumulation, area between curves, enzymes, immune system).
+import { SEED_AP_CALC_ACCUMULATION } from './seeds/ap-calc-accumulation';
+import { SEED_AP_CALC_AREA_BETWEEN_CURVES } from './seeds/ap-calc-area-between-curves';
+import { SEED_AP_BIO_ENZYMES } from './seeds/ap-bio-enzymes';
+import { SEED_AP_BIO_IMMUNE } from './seeds/ap-bio-immune';
+// Batch 45 — AP Micro/Macro depth.
+import { SEED_AP_MICRO_ELASTICITY } from './seeds/ap-micro-elasticity';
+import { SEED_AP_MICRO_MARKET_STRUCTURES } from './seeds/ap-micro-market-structures';
+import { SEED_AP_MICRO_FACTOR_MARKETS } from './seeds/ap-micro-factor-markets';
+import { SEED_AP_MACRO_FISCAL_POLICY } from './seeds/ap-macro-fiscal-policy';
+import { SEED_AP_MACRO_BUSINESS_CYCLE } from './seeds/ap-macro-business-cycle';
+// Batch 46 — AP USH/World depth.
+import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
+import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
+import { SEED_AP_WORLD_COLD_WAR } from './seeds/ap-world-cold-war';
+import { SEED_AP_WORLD_DECOLONIZATION } from './seeds/ap-world-decolonization';
+// Batch 47 — AP Languages + Capstone (French, Latin, Mandarin, Italian, Seminar, Research).
+import { SEED_AP_FRENCH_STRATEGY } from './seeds/ap-french-strategy';
+import { SEED_AP_LATIN_STRATEGY } from './seeds/ap-latin-strategy';
+import { SEED_AP_MANDARIN_STRATEGY } from './seeds/ap-mandarin-strategy';
+import { SEED_AP_ITALIAN_STRATEGY } from './seeds/ap-italian-strategy';
+import { SEED_AP_SEMINAR_STRATEGY } from './seeds/ap-seminar-strategy';
+import { SEED_AP_RESEARCH_STRATEGY } from './seeds/ap-research-strategy';
+// Batch 48 — SAT depth (math passport + additional, reading lit/history/science, writing rhetoric).
+import { SEED_SAT_MATH_PASSPORT_ADVANCED } from './seeds/sat-math-passport-advanced';
+import { SEED_SAT_MATH_ADDITIONAL_TOPICS } from './seeds/sat-math-additional-topics';
+import { SEED_SAT_READING_LITERATURE } from './seeds/sat-reading-literature';
+import { SEED_SAT_READING_HISTORY } from './seeds/sat-reading-history';
+import { SEED_SAT_READING_SCIENCE } from './seeds/sat-reading-science';
+import { SEED_SAT_WRITING_RHETORIC } from './seeds/sat-writing-rhetoric';
+// Batch 49 — IITJEE strategy + high-yield topics.
+import { SEED_JEE_MAIN_STRATEGY } from './seeds/jee-main-strategy';
+import { SEED_JEE_ADVANCED_STRATEGY } from './seeds/jee-advanced-strategy';
+import { SEED_JEE_PHYSICS_STRATEGY } from './seeds/jee-physics-strategy';
+import { SEED_JEE_CHEMISTRY_STRATEGY } from './seeds/jee-chemistry-strategy';
+import { SEED_JEE_MATH_STRATEGY } from './seeds/jee-math-strategy';
+import { SEED_JEE_ROTATIONAL_MECHANICS } from './seeds/jee-rotational-mechanics';
+import { SEED_JEE_COORDINATE_GEOMETRY } from './seeds/jee-coordinate-geometry';
+// Batch 50 — Rest tier: NCLEX-PN, GRE Subject (math+physics), JEE thermo+organic.
+import { SEED_NCLEX_PN_STRATEGY } from './seeds/nclex-pn-strategy';
+import { SEED_GRE_SUBJECT_MATH } from './seeds/gre-subject-math';
+import { SEED_GRE_SUBJECT_PHYSICS } from './seeds/gre-subject-physics';
+import { SEED_JEE_THERMODYNAMICS } from './seeds/jee-thermodynamics';
+import { SEED_JEE_ORGANIC_MECHANISMS } from './seeds/jee-organic-mechanisms';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -898,6 +974,69 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_LIT_PROSE_ANALYSIS,
   SEED_AP_LIT_Q3_ESSAY,
   SEED_AP_SPANISH_STRATEGY,
+  SEED_AP_PHYS1_KINEMATICS,
+  SEED_AP_PHYS1_ENERGY_CONSERVATION,
+  SEED_AP_PHYS1_MOMENTUM,
+  SEED_AP_PHYS1_ROTATION,
+  SEED_AP_PHYS1_SHM,
+  SEED_AP_PHYS1_WAVES,
+  SEED_AP_PHYS1_CIRCULAR_GRAVITATION,
+  SEED_AP_CSA_RECURSION,
+  SEED_AP_CSA_INHERITANCE,
+  SEED_AP_CSA_ARRAYLIST,
+  SEED_AP_CSA_2D_ARRAYS,
+  SEED_AP_CSP_INTERNET,
+  SEED_AP_CSP_CYBERSECURITY,
+  SEED_AP_CSP_PROGRAMMING,
+  SEED_AP_CSP_IMPACT,
+  SEED_AP_GOV_CONSTITUTION,
+  SEED_AP_GOV_CIVIL_LIBERTIES,
+  SEED_AP_GOV_CONGRESS,
+  SEED_AP_GOV_PRESIDENCY,
+  SEED_AP_STATS_PROBABILITY,
+  SEED_AP_STATS_SAMPLING_DISTRIBUTIONS,
+  SEED_AP_STATS_ONE_SAMPLE_INFERENCE,
+  SEED_AP_LIT_MODERNISM,
+  SEED_AP_LIT_ROMANTICISM,
+  SEED_AP_LIT_POETRY_ANALYSIS,
+  SEED_AP_LANG_RHETORICAL_ANALYSIS,
+  SEED_AP_CALC_ACCUMULATION,
+  SEED_AP_CALC_AREA_BETWEEN_CURVES,
+  SEED_AP_BIO_ENZYMES,
+  SEED_AP_BIO_IMMUNE,
+  SEED_AP_MICRO_ELASTICITY,
+  SEED_AP_MICRO_MARKET_STRUCTURES,
+  SEED_AP_MICRO_FACTOR_MARKETS,
+  SEED_AP_MACRO_FISCAL_POLICY,
+  SEED_AP_MACRO_BUSINESS_CYCLE,
+  SEED_AP_USH_WWII,
+  SEED_AP_USH_MODERN_ERA,
+  SEED_AP_WORLD_COLD_WAR,
+  SEED_AP_WORLD_DECOLONIZATION,
+  SEED_AP_FRENCH_STRATEGY,
+  SEED_AP_LATIN_STRATEGY,
+  SEED_AP_MANDARIN_STRATEGY,
+  SEED_AP_ITALIAN_STRATEGY,
+  SEED_AP_SEMINAR_STRATEGY,
+  SEED_AP_RESEARCH_STRATEGY,
+  SEED_SAT_MATH_PASSPORT_ADVANCED,
+  SEED_SAT_MATH_ADDITIONAL_TOPICS,
+  SEED_SAT_READING_LITERATURE,
+  SEED_SAT_READING_HISTORY,
+  SEED_SAT_READING_SCIENCE,
+  SEED_SAT_WRITING_RHETORIC,
+  SEED_JEE_MAIN_STRATEGY,
+  SEED_JEE_ADVANCED_STRATEGY,
+  SEED_JEE_PHYSICS_STRATEGY,
+  SEED_JEE_CHEMISTRY_STRATEGY,
+  SEED_JEE_MATH_STRATEGY,
+  SEED_JEE_ROTATIONAL_MECHANICS,
+  SEED_JEE_COORDINATE_GEOMETRY,
+  SEED_NCLEX_PN_STRATEGY,
+  SEED_GRE_SUBJECT_MATH,
+  SEED_GRE_SUBJECT_PHYSICS,
+  SEED_JEE_THERMODYNAMICS,
+  SEED_JEE_ORGANIC_MECHANISMS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
