@@ -188,6 +188,45 @@ import { SEED_G4_SS_BRANCHES_OF_GOVERNMENT } from './seeds/g4-ss-branches-of-gov
 import { SEED_G6_SS_ANCIENT_EGYPT } from './seeds/g6-ss-ancient-egypt';
 import { SEED_G8_SS_AMERICAN_REVOLUTION } from './seeds/g8-ss-american-revolution';
 import { SEED_G9_SS_CONSTITUTION_BILL_OF_RIGHTS } from './seeds/g9-ss-constitution-bill-of-rights';
+import { SEED_SAT_MATH_HEART_OF_ALGEBRA } from './seeds/sat-math-heart-of-algebra';
+import { SEED_SAT_MATH_PROBLEM_SOLVING_DATA } from './seeds/sat-math-problem-solving-data';
+import { SEED_SAT_READING_EVIDENCE } from './seeds/sat-reading-evidence';
+import { SEED_SAT_WRITING_GRAMMAR } from './seeds/sat-writing-grammar';
+import { SEED_SAT_TEST_STRATEGY } from './seeds/sat-test-strategy';
+import { SEED_G11_ELA_LITERARY_ANALYSIS } from './seeds/g11-ela-literary-analysis';
+import { SEED_G11_ELA_RESEARCH_WRITING } from './seeds/g11-ela-research-writing';
+import { SEED_G11_ELA_RHETORICAL_ANALYSIS } from './seeds/g11-ela-rhetorical-analysis';
+import { SEED_G9_ELA_ESSAY_STRUCTURE } from './seeds/g9-ela-essay-structure';
+import { SEED_G12_CALC_LIMITS } from './seeds/g12-calc-limits';
+import { SEED_G12_CALC_DERIVATIVE_RULES } from './seeds/g12-calc-derivative-rules';
+import { SEED_G12_CALC_APPLICATIONS } from './seeds/g12-calc-applications';
+import { SEED_G12_CALC_INTEGRATION_INTRO } from './seeds/g12-calc-integration-intro';
+import { SEED_G11_STATS_DESCRIPTIVE } from './seeds/g11-stats-descriptive';
+import { SEED_G11_STATS_NORMAL_DISTRIBUTION } from './seeds/g11-stats-normal-distribution';
+import { SEED_G11_STATS_PROBABILITY } from './seeds/g11-stats-probability';
+import { SEED_G11_STATS_SAMPLING } from './seeds/g11-stats-sampling';
+import { SEED_G11_STATS_CORRELATION_REGRESSION } from './seeds/g11-stats-correlation-regression';
+import { SEED_G7_SS_ANCIENT_GREECE } from './seeds/g7-ss-ancient-greece';
+import { SEED_G7_SS_ROMAN_EMPIRE } from './seeds/g7-ss-roman-empire';
+import { SEED_G7_SS_MIDDLE_AGES } from './seeds/g7-ss-middle-ages';
+import { SEED_G7_SS_RENAISSANCE } from './seeds/g7-ss-renaissance';
+import { SEED_G8_SS_INDUSTRIAL_REVOLUTION } from './seeds/g8-ss-industrial-revolution';
+import { SEED_G8_SS_CIVIL_WAR } from './seeds/g8-ss-civil-war';
+import { SEED_G8_SS_FRENCH_REVOLUTION } from './seeds/g8-ss-french-revolution';
+import { SEED_G10_SS_WORLD_WAR_1 } from './seeds/g10-ss-world-war-1';
+import { SEED_G10_SS_WORLD_WAR_2 } from './seeds/g10-ss-world-war-2';
+import { SEED_G11_SS_COLD_WAR } from './seeds/g11-ss-cold-war';
+import { SEED_G11_SS_CIVIL_RIGHTS_MOVEMENT } from './seeds/g11-ss-civil-rights-movement';
+import { SEED_G11_ECON_SUPPLY_DEMAND } from './seeds/g11-econ-supply-demand';
+import { SEED_G11_ECON_GDP_INFLATION } from './seeds/g11-econ-gdp-inflation';
+import { SEED_G11_ECON_FISCAL_MONETARY } from './seeds/g11-econ-fiscal-monetary';
+import { SEED_G11_ECON_MARKET_STRUCTURES } from './seeds/g11-econ-market-structures';
+import { SEED_G11_SS_ELECTIONS_VOTING } from './seeds/g11-ss-elections-voting';
+import { SEED_ACT_ENGLISH } from './seeds/act-english';
+import { SEED_ACT_MATH } from './seeds/act-math';
+import { SEED_ACT_READING } from './seeds/act-reading';
+import { SEED_ACT_SCIENCE } from './seeds/act-science';
+import { SEED_G2_ELA_PHONICS_DECODING } from './seeds/g2-ela-phonics-decoding';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -418,6 +457,53 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G6_SS_ANCIENT_EGYPT,
   SEED_G8_SS_AMERICAN_REVOLUTION,
   SEED_G9_SS_CONSTITUTION_BILL_OF_RIGHTS,
+  // Batch 17 — Test Prep (SAT all sections + ACT all sections).
+  SEED_SAT_MATH_HEART_OF_ALGEBRA,
+  SEED_SAT_MATH_PROBLEM_SOLVING_DATA,
+  SEED_SAT_READING_EVIDENCE,
+  SEED_SAT_WRITING_GRAMMAR,
+  SEED_SAT_TEST_STRATEGY,
+  SEED_ACT_ENGLISH,
+  SEED_ACT_MATH,
+  SEED_ACT_READING,
+  SEED_ACT_SCIENCE,
+  // Batch 18 — HS ELA (literary analysis, research, rhetoric, essay structure).
+  SEED_G9_ELA_ESSAY_STRUCTURE,
+  SEED_G11_ELA_LITERARY_ANALYSIS,
+  SEED_G11_ELA_RESEARCH_WRITING,
+  SEED_G11_ELA_RHETORICAL_ANALYSIS,
+  // Batch 19 — Calculus (G12).
+  SEED_G12_CALC_LIMITS,
+  SEED_G12_CALC_DERIVATIVE_RULES,
+  SEED_G12_CALC_APPLICATIONS,
+  SEED_G12_CALC_INTEGRATION_INTRO,
+  // Batch 20 — Statistics (G11).
+  SEED_G11_STATS_DESCRIPTIVE,
+  SEED_G11_STATS_NORMAL_DISTRIBUTION,
+  SEED_G11_STATS_PROBABILITY,
+  SEED_G11_STATS_SAMPLING,
+  SEED_G11_STATS_CORRELATION_REGRESSION,
+  // Batch 21 — World History expansion (G7-G10).
+  SEED_G7_SS_ANCIENT_GREECE,
+  SEED_G7_SS_ROMAN_EMPIRE,
+  SEED_G7_SS_MIDDLE_AGES,
+  SEED_G7_SS_RENAISSANCE,
+  SEED_G8_SS_INDUSTRIAL_REVOLUTION,
+  SEED_G8_SS_FRENCH_REVOLUTION,
+  SEED_G10_SS_WORLD_WAR_1,
+  SEED_G10_SS_WORLD_WAR_2,
+  // Batch 22 — US History expansion (G8-G11).
+  SEED_G8_SS_CIVIL_WAR,
+  SEED_G11_SS_COLD_WAR,
+  SEED_G11_SS_CIVIL_RIGHTS_MOVEMENT,
+  // Batch 23 — Economics + Government extras (G11).
+  SEED_G11_ECON_SUPPLY_DEMAND,
+  SEED_G11_ECON_GDP_INFLATION,
+  SEED_G11_ECON_FISCAL_MONETARY,
+  SEED_G11_ECON_MARKET_STRUCTURES,
+  SEED_G11_SS_ELECTIONS_VOTING,
+  // Batch 24 — Elementary ELA gap (G2 phonics).
+  SEED_G2_ELA_PHONICS_DECODING,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
