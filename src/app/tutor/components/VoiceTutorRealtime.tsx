@@ -444,6 +444,17 @@ export function VoiceTutorRealtime({
   // Different actions (showProblem + showGraph) are legitimate and pass.
   // Reset on every student transcript finalization.
   const visualActionsThisTurnRef = useRef<Set<string>>(new Set());
+  // Tracks whether a newPage tool was dispatched anywhere in the current
+  // brain turn. Used to override cross-turn dedup: when the brain has
+  // explicitly opened a fresh page in this turn, a follow-up show_*
+  // command shouldn't be silently dedup'd against something on a prior
+  // page — the student is on a blank page and needs the content there.
+  // Observed 2026-04-30 SHM session: brain emitted new_page +
+  // show_problem in the same turn but as separate handleWhiteboardCommand
+  // calls; the per-batch flag missed it and the misconception question
+  // never re-rendered after a wave-diagram detour. Reset alongside
+  // visualActionsThisTurnRef on every student transcript finalization.
+  const newPageThisTurnRef = useRef(false);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -634,6 +645,7 @@ export function VoiceTutorRealtime({
         // visual-action tracker so the tutor gets a clean slot to draw
         // one of each visual type for this message.
         visualActionsThisTurnRef.current = new Set();
+        newPageThisTurnRef.current = false;
         console.log('[VoiceTutor] Student turn start — cleared visualActionsThisTurn');
 
         // Detect if student is requesting a visual (e.g., "show it on the board")
@@ -2021,6 +2033,7 @@ export function VoiceTutorRealtime({
       if (action === 'newPage') {
         currentPageTitle = (cmd as { title?: string }).title;
         newPageThisBatch = true;
+        newPageThisTurnRef.current = true;
         continue;
       }
       if (META_ACTIONS.has(action)) continue;
@@ -2038,10 +2051,12 @@ export function VoiceTutorRealtime({
       // chat-history advice to use scroll was drowned out.
       const signature = buildShowSignature(action, cmd);
       const existing = catalogRef.current.findBySignature(signature);
-      // Skip dedup when there's a newPage in the same batch — brain
-      // explicitly wants this content on a fresh page, even if it
-      // matches something on a prior page.
-      if (existing && !newPageThisBatch) {
+      // Skip dedup when there's a newPage in the same batch OR earlier
+      // in the same brain turn — brain explicitly wants this content on
+      // a fresh page, even if it matches something on a prior page. The
+      // turn-scoped guard catches the common pattern where new_page and
+      // show_problem are emitted as separate tool calls in one turn.
+      if (existing && !newPageThisBatch && !newPageThisTurnRef.current) {
         const inputIdx = commands.indexOf(cmd);
         if (inputIdx >= 0) {
           duplicates[inputIdx] = {
@@ -3273,6 +3288,7 @@ export function VoiceTutorRealtime({
         // stale-but-still-bad attempt-1 args).
         if (attempt > 0) {
           visualActionsThisTurnRef.current = new Set();
+          newPageThisTurnRef.current = false;
         }
         // Compose lesson plan context from the active plan + current
         // segment id (both ref-tracked so segment advances mid-turn are
@@ -4619,6 +4635,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // Fresh student message → fresh tutor turn. Same reset as the
             // voice-finalization path.
             visualActionsThisTurnRef.current = new Set();
+            newPageThisTurnRef.current = false;
             console.log('[VoiceTutor] Student turn start (typed) — cleared visualActionsThisTurn');
             // Run the same new-problem / topic-shift detectors we run on
             // voice-final transcripts, so typed prompts like "Draw a 30°

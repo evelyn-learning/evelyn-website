@@ -1114,14 +1114,25 @@ function gradeMatches(filterGrade: string | undefined, planGrade: string): boole
 
 /** List plans matching the filter. Seeds + DB merged, deduped by id.
  *
- *  When filter.subject is 'test-prep', plans are also matched if their
- *  topic field is 'test-prep' — many JEE / SAT / NCLEX / GRE seeds use
- *  subject='math'/'sci'/'ela' with topic='test-prep' as the marker. */
+ *  When filter.subject is 'test-prep', the plan is in-scope if any of:
+ *    - plan.subject === 'test-prep' (modern direct tag)
+ *    - plan.topic === 'test-prep' (legacy bucket marker)
+ *    - plan.topic matches filter.topic (e.g. JEE/SAT/GRE seeds where
+ *      plan.subject is the underlying area like 'math' but plan.topic
+ *      is the specific exam ID like 'jee-advanced'). Without this
+ *      third clause, the picker for IIT JEE / SAT / GRE returns empty
+ *      because retagged seeds no longer carry topic='test-prep'. */
 export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<LessonPlan[]> {
   const matches = (p: LessonPlan) => {
-    const subjectOk =
-      subjectMatches(filter.subject, p.subject) ||
-      (filter.subject === 'test-prep' && p.topic === 'test-prep');
+    let subjectOk: boolean;
+    if (filter.subject === 'test-prep') {
+      subjectOk =
+        p.subject === 'test-prep' ||
+        p.topic === 'test-prep' ||
+        (!!filter.topic && p.topic === filter.topic);
+    } else {
+      subjectOk = subjectMatches(filter.subject, p.subject);
+    }
     return (
       subjectOk &&
       gradeMatches(filter.grade, p.grade) &&
@@ -1139,10 +1150,16 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
     const query: any = {};
     if (filter.subject) {
       const aliases = SUBJECT_ALIASES[filter.subject] ?? [filter.subject];
-      // For test-prep, also include plans whose TOPIC is 'test-prep'
-      // (covers seeds tagged with subject=math/sci/ela + topic=test-prep).
       if (filter.subject === 'test-prep') {
-        query.$or = [{ subject: { $in: aliases } }, { topic: 'test-prep' }];
+        // Test-prep universe: subject='test-prep', legacy topic='test-prep',
+        // or plan.topic matches the requested filter.topic (modern UI ID
+        // like 'jee-advanced' / 'sat-math-full' / 'gre-quant').
+        const or: Record<string, unknown>[] = [
+          { subject: 'test-prep' },
+          { topic: 'test-prep' },
+        ];
+        if (filter.topic) or.push({ topic: filter.topic });
+        query.$or = or;
       } else if (aliases.length === 1) {
         query.subject = aliases[0];
       } else {
