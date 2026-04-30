@@ -7,6 +7,7 @@
  */
 
 import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
+import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 
 export interface ToolParameter {
   type: string;
@@ -227,7 +228,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         steps: {
           type: 'array',
-          description: 'Construction steps. Each: { id, kind, label?, ...args }. Step kinds: segment: { kind: "segment", from: pointId, to: pointId, label?: string } — arbitrary line segment between two named points (use for individual polygon edges). polygon: { kind: "polygon", vertices: [id1, id2, ...] } — arbitrary polygon defined by named vertices (use for any non-regular polygon). polygon_regular: { kind: "polygon_regular", on: circleId, sides, rotation? } — inscribes a REGULAR n-gon (all sides equal) in an existing circle; requires both `on` and `sides`; do NOT use for non-regular polygons. chord: { kind: "chord", on: circleId, length: { ratio: 0.25, of: "diameter" }, direction: "horizontal", position: "top" }. radius: { kind: "radius", on: circleId, to: { angle: 60 } } or { to: pointId }. tangent_at: { kind: "tangent_at", on: circleId, point: pointId, length?: number }. perpendicular_bisector: { kind: "perpendicular_bisector", of: segmentId | { from, to } }. intersect: { kind: "intersect", of: [aId, bId], prefer?: "first"|"second", secondId?: string }. triangle_center: { kind: "triangle_center", vertices: [a,b,c], type: "centroid"|"incenter"|"circumcenter"|"orthocenter" }.',
+          description: 'Construction steps. Each: { id, kind, label?, ...args }. Common step kinds with shapes: segment: { kind: "segment", from: pointId, to: pointId, label?: string } — arbitrary line segment between two named points (use for individual polygon edges). polygon: { kind: "polygon", vertices: [id1, id2, ...] } — arbitrary polygon defined by named vertices (use for any non-regular polygon). polygon_regular: { kind: "polygon_regular", on: circleId, sides, rotation? } — inscribes a REGULAR n-gon (all sides equal) in an existing circle; requires both `on` and `sides`; do NOT use for non-regular polygons. chord: { kind: "chord", on: circleId, length: { ratio: 0.25, of: "diameter" }, direction: "horizontal", position: "top" }. radius: { kind: "radius", on: circleId, to: { angle: 60 } } or { to: pointId }. tangent_at: { kind: "tangent_at", on: circleId, point: pointId, length?: number }. perpendicular_bisector: { kind: "perpendicular_bisector", of: segmentId | { from, to } }. intersect: { kind: "intersect", of: [aId, bId], prefer?: "first"|"second", secondId?: string }. triangle_center: { kind: "triangle_center", vertices: [a,b,c], type: "centroid"|"incenter"|"circumcenter"|"orthocenter" }.' + getGeometryStepKindsDescriptionTail(),
           items: { type: 'object' },
         },
         display: {
@@ -367,7 +368,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: {
         statement: { type: 'string', description: 'The full problem text as a single non-empty string. Empty / placeholder values are rejected.' },
-        format: { type: 'string', enum: ['multiple-choice', 'grid-in', 'free-response', 'short-answer', 'true-false'] },
+        format: { type: 'string', enum: ['multiple-choice', 'grid-in', 'free-response', 'short-answer', 'true-false'], description: 'Problem format. The renderer currently distinguishes "grid-in" (numeric input grid) from everything else (which is rendered identically based on `answerChoices` presence). Use the correct value for semantic clarity even though the visual rendering is the same outside of grid-in.' },
         answerChoices: {
           type: 'array',
           description: 'Required when format is "multiple-choice".',

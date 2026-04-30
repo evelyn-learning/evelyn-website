@@ -136,6 +136,111 @@ export type Step =
   | StepConicAsymptotes
   | StepAngleMarker;
 
+/**
+ * Authoritative list of step kinds the solver dispatches in `solveStep`.
+ *
+ * SOURCE OF TRUTH for what the brain is allowed to emit. Do NOT rely on
+ * the schema description in `toolDefinitions.ts` — that description is
+ * built FROM this array (see `getGeometryStepKindsDescriptionTail`),
+ * so the brain can never see a kind that isn't here.
+ *
+ * Compile-time assertion at the bottom of this declaration ensures that
+ * (a) every kind in the `Step` union appears here, and (b) no entry here
+ * is missing from `Step`. If you add a new kind, TypeScript will error
+ * until you update both this list AND the `solveStep` dispatch.
+ */
+export const STEP_KINDS = [
+  'midpoint',
+  'point_on_circle',
+  'chord',
+  'radius',
+  'diameter',
+  'tangent_at',
+  'tangent_from',
+  'perpendicular_bisector',
+  'perpendicular_from',
+  'parallel_through',
+  'intersect',
+  'polygon_regular',
+  'triangle_center',
+  'segment',
+  'line',
+  'polygon',
+  'circle',
+  'circle_through_point',
+  'circle_through_three',
+  'incircle',
+  'circumcircle',
+  'ray',
+  'angle_bisector',
+  'external_angle_bisector',
+  'section_point',
+  'reflect_point',
+  'rotate_point',
+  'translate_point',
+  'dilate_point',
+  'excircle',
+  'tangents_from_external',
+  'arc',
+  'sector',
+  'triangle_from_sss',
+  'triangle_from_sas',
+  'triangle_from_asa',
+  'square',
+  'rectangle',
+  'parallelogram',
+  'midsegment',
+  'altitude',
+  'median',
+  'ellipse',
+  'parabola',
+  'hyperbola',
+  'conic_foci',
+  'conic_vertices',
+  'conic_directrix',
+  'conic_asymptotes',
+  'angle_marker',
+] as const;
+
+// Compile-time assertion: STEP_KINDS must EXACTLY match Step['kind'].
+// If the Step union grows or shrinks without STEP_KINDS being updated,
+// the lines below will fail to compile. Mechanism: cross-assignability
+// in both directions verifies set equality.
+type _StepKindUnion = Step['kind'];
+type _StepKindsArr = typeof STEP_KINDS[number];
+// "Every kind in the Step union is in STEP_KINDS"
+const _stepKindsCovers: Record<_StepKindUnion, true> = (() => {
+  const acc = {} as Record<_StepKindUnion, true>;
+  for (const k of STEP_KINDS) (acc as Record<string, true>)[k] = true;
+  return acc;
+})();
+void _stepKindsCovers;
+// "Every entry in STEP_KINDS is a real Step kind" (catches typos / removed kinds)
+const _stepKindsAllValid: readonly _StepKindUnion[] = STEP_KINDS;
+void _stepKindsAllValid;
+// Equality (defensive): if either direction breaks, TS errors above too.
+type _Assert<T extends true> = T;
+type _Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type _StepKindsExhaustive = _Assert<_Equals<_StepKindUnion, _StepKindsArr>>;
+const _stepKindsExhaustive: _StepKindsExhaustive = true;
+void _stepKindsExhaustive;
+
+/**
+ * Build the trailing "Other supported kinds: ..." string for the
+ * show_geometry_constructed tool description. Called once at module
+ * load by `toolDefinitions.ts`. Stays in sync with the solver dispatch
+ * automatically because it reads from STEP_KINDS.
+ *
+ * The schema description hand-writes detailed shape examples for the
+ * most-used kinds (segment, polygon, polygon_regular, chord, radius,
+ * etc.); this tail enumerates ALL kinds so the brain knows the full
+ * surface area and won't reach for the wrong kind because a desired
+ * one wasn't documented.
+ */
+export function getGeometryStepKindsDescriptionTail(): string {
+  return ` All supported step kinds (use kind: "<one of these>"): ${STEP_KINDS.join(', ')}.`;
+}
+
 interface StepCommon {
   id: string;
   label?: string;
