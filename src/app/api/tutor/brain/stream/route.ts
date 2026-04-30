@@ -88,13 +88,27 @@ export async function POST(req: NextRequest) {
       let stopReason = 'unknown';
       const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
 
+      // Once the client disconnects, every subsequent enqueue throws
+      // "Invalid state: Controller is already closed." We track that
+      // with a flag so:
+      //   1) further send() calls become no-ops (no spammed errors),
+      //   2) the for-await loop breaks early (no wasted brain compute),
+      //   3) controller.close() in finally is also gated.
+      // Observed in production 2026-04-30: a single client disconnect
+      // produced three separate `enqueue failed` errors per turn (one
+      // from the loop, one from the catch's done-event send, one from
+      // the finally close). The streamed content also got truncated
+      // and the client orchestrator may interpret the abrupt end as a
+      // need to retry — surfacing as the "let me reframe" mid-turn
+      // glitch the user reported.
+      let clientGone = false;
       const send = (event: BrainStreamEvent) => {
+        if (clientGone) return;
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
         } catch (err) {
-          // Client disconnected mid-stream. Log and bail.
+          clientGone = true;
           console.warn('[brain.stream] enqueue failed (client gone?):', err);
-          throw err;
         }
       };
 
@@ -126,12 +140,14 @@ export async function POST(req: NextRequest) {
             usage.cacheCreationTokens = ev.usage.cacheCreationTokens;
           }
           send(ev);
+          // Bail early if the client is gone — no point continuing to
+          // pull from the brain generator (costs API tokens) when no
+          // one is listening.
+          if (clientGone) break;
         }
       } catch (err) {
         console.error('[brain.stream] error:', err);
-        try {
-          send({ type: 'done', stopReason: 'error', usage, fullText, toolCalls: [] });
-        } catch { /* client gone */ }
+        send({ type: 'done', stopReason: 'error', usage, fullText, toolCalls: [] });
       } finally {
         const totalMs = Date.now() - startedAt;
         const textSnippet = fullText.slice(0, 120).replace(/\n/g, ' ');
@@ -144,14 +160,19 @@ export async function POST(req: NextRequest) {
           `· first_sentence=${firstSentenceMs}ms · first_tool=${firstToolMs}ms · total=${totalMs}ms ` +
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
           `· stop=${stopReason} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens}` +
-          (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '')
+          (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
+          (clientGone ? ' (client_gone)' : '')
         );
-        controller.close();
+        // Defensive close — already-closed throws here too.
+        if (!clientGone) {
+          try { controller.close(); } catch { /* already closed */ }
+        }
       }
     },
     cancel() {
-      // Client closed the connection. Generator iteration above will
-      // throw on next enqueue and we'll fall through to the finally.
+      // Client closed the connection. The next enqueue inside the
+      // generator loop will throw, set clientGone=true, and the loop
+      // will break out cleanly.
       console.log('[brain.stream] client cancelled');
     },
   });
