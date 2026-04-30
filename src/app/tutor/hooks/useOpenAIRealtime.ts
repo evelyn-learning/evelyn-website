@@ -464,6 +464,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // (avoids a noisy console error on the way out — the ws is closed
   // because we closed it). 2026-04-29 ocean session.
   const intentionallyDisconnectedRef = useRef(false);
+  // Transcription watchdog timeout. Set on speech_stopped; cleared on
+  // transcription.completed / .failed; force-resets state if the
+  // transcription event never arrives. Catches the silently-stuck
+  // "Thinking…" bug from the 2026-04-29 electricity session.
+  const transcriptionWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // True when the user has explicitly muted themselves. Distinct from
   // shouldListenRef (which is the INTENT — "we want to listen after the
   // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
@@ -665,6 +670,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'input_audio_buffer.speech_stopped':
           console.log('[Realtime] Speech ended');
           updateState('processing');
+          // Start a transcription watchdog. If speech_stopped fires but
+          // the transcription event never arrives within 12s (Whisper
+          // is normally <2s; 12s = network/processing failure), force
+          // the UI back to 'listening' so the student isn't stuck on
+          // "Thinking…" with no recovery path. Cleared by either
+          // transcription.completed or transcription.failed.
+          if (transcriptionWatchdogRef.current) {
+            clearTimeout(transcriptionWatchdogRef.current);
+          }
+          transcriptionWatchdogRef.current = setTimeout(() => {
+            console.warn('[Realtime] Transcription watchdog fired — no transcript event in 12s; resetting state');
+            transcriptionWatchdogRef.current = null;
+            updateState(shouldListenRef.current ? 'listening' : 'connected');
+          }, 12_000);
           break;
 
         case 'input_audio_buffer.committed':
@@ -672,7 +691,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           hasAudioInBufferRef.current = false;
           break;
 
+        case 'conversation.item.input_audio_transcription.failed':
+          // Whisper transcription failed (server-side). Without this
+          // case, the watchdog above would kick in eventually — but it's
+          // cleaner to handle the explicit failure event when the server
+          // sends one.
+          console.warn('[Realtime] Transcription failed:', data.error);
+          if (transcriptionWatchdogRef.current) {
+            clearTimeout(transcriptionWatchdogRef.current);
+            transcriptionWatchdogRef.current = null;
+          }
+          updateState(shouldListenRef.current ? 'listening' : 'connected');
+          break;
+
         case 'conversation.item.input_audio_transcription.completed': {
+          // Transcription completed — clear the watchdog (success path).
+          if (transcriptionWatchdogRef.current) {
+            clearTimeout(transcriptionWatchdogRef.current);
+            transcriptionWatchdogRef.current = null;
+          }
           // User's speech transcription.
           //
           // With turn_detection.create_response: false the server no longer
@@ -697,6 +734,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             // Clear the timestamp so subsequent legitimate transcripts
             // pass through normally.
             unmuteAtRef.current = 0;
+            // CRITICAL: reset state from 'processing' back to 'listening'
+            // (or 'connected' if mic is off). speech_stopped flipped us to
+            // 'processing'; if we drop the transcript without forwarding,
+            // nothing else flips us back, and the UI sticks on "Thinking…"
+            // forever. ROOT CAUSE of the 2026-04-29 electricity-session
+            // stuck-tutor bug — the student spoke "I don't think so", the
+            // audio committed, transcription either returned empty or was
+            // dropped, and the indicator stayed up indefinitely.
+            updateState(shouldListenRef.current ? 'listening' : 'connected');
             break;
           }
           const classification = classifyTranscript(transcript);
@@ -713,6 +759,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             }
             // Do NOT call onTranscriptUpdate (keeps the UI clean) and do NOT
             // trigger response.create. The tutor stays silent.
+            // BUT — reset state. speech_stopped previously flipped us to
+            // 'processing'; without this reset the UI hangs on "Thinking…"
+            // forever waiting for a brain response that will never come
+            // (we silently dropped the transcript). Same root cause as the
+            // unmute-grace path above.
+            updateState(shouldListenRef.current ? 'listening' : 'connected');
             break;
           }
           // 'clean' or 'uncertain' — surface to the UI and trigger a reply.
@@ -735,6 +787,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             } else if (wsRef.current?.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify({ type: 'response.create' }));
             }
+          } else {
+            // Defensive: classifier returned non-noise but transcript is
+            // empty (shouldn't happen — empty strings classify as noise
+            // via NOISE_PATTERNS / length === 0 — but if a future change
+            // breaks that invariant, the state would stick on 'processing'
+            // forever. Reset back to listening here too.
+            console.warn('[Realtime] Empty transcript reached forward path — resetting state');
+            updateState(shouldListenRef.current ? 'listening' : 'connected');
           }
           break;
         }
@@ -1373,6 +1433,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // tapped) silently skip instead of logging "speakText: not
     // connected" — observed 2026-04-29 ocean session.
     intentionallyDisconnectedRef.current = true;
+    // Clear any pending transcription watchdog so it doesn't fire
+    // post-disconnect and try to flip state back to 'listening' on
+    // a torn-down session.
+    if (transcriptionWatchdogRef.current) {
+      clearTimeout(transcriptionWatchdogRef.current);
+      transcriptionWatchdogRef.current = null;
+    }
 
     // Stop audio capture
     if (audioProcessorRef.current) {
