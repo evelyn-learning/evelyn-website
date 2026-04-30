@@ -346,6 +346,15 @@ import { SEED_G11_ECON_STOCK_MARKET_BASICS } from './seeds/g11-econ-stock-market
 import { SEED_G6_MATH_STATISTICS_INTRO } from './seeds/g6-math-statistics-intro';
 import { SEED_G7_MATH_PROBABILITY_BASICS } from './seeds/g7-math-probability-basics';
 import { SEED_G11_BIO_EVOLUTION_EVIDENCE } from './seeds/g11-bio-evolution-evidence';
+// Batch 33 — Civil War causes, photosynthesis deep, modern world.
+import { SEED_G8_SS_CIVIL_WAR_CAUSES } from './seeds/g8-ss-civil-war-causes';
+import { SEED_AP_BIO_PHOTOSYNTHESIS_DEEP } from './seeds/g11-bio-photosynthesis-deep';
+import { SEED_K_MATH_COUNTING_OBJECTS } from './seeds/k-math-counting-objects';
+import { SEED_G7_ELA_SUMMARY_PRECIS } from './seeds/g7-ela-summary-precis';
+import { SEED_G11_SS_GLOBALIZATION_MODERN } from './seeds/g11-ss-globalization-modern';
+import { SEED_G8_MATH_BIVARIATE_DATA } from './seeds/g8-math-bivariate-data';
+import { SEED_SAT_ACT_ESSAY_STRATEGY } from './seeds/sat-act-essay-strategy';
+import { SEED_G5_SCI_WATER_CYCLE } from './seeds/g5-sci-water-cycle';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -704,6 +713,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G6_MATH_STATISTICS_INTRO,
   SEED_G7_MATH_PROBABILITY_BASICS,
   SEED_G11_BIO_EVOLUTION_EVIDENCE,
+  // Batch 33 — Civil War causes, photosynthesis deep, modern world.
+  SEED_G8_SS_CIVIL_WAR_CAUSES,
+  SEED_AP_BIO_PHOTOSYNTHESIS_DEEP,
+  SEED_K_MATH_COUNTING_OBJECTS,
+  SEED_G7_ELA_SUMMARY_PRECIS,
+  SEED_G11_SS_GLOBALIZATION_MODERN,
+  SEED_G8_MATH_BIVARIATE_DATA,
+  SEED_SAT_ACT_ESSAY_STRATEGY,
+  SEED_G5_SCI_WATER_CYCLE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
