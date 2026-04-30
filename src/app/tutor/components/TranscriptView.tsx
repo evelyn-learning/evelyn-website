@@ -91,13 +91,15 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   // ". " or "! " or "? " before lastQ. The chosen boundary is the
   // start of the question sentence.
   let qStart = 0;
-  // Scan backward for a sentence terminator followed by whitespace OR
-  // immediately followed by an uppercase letter. The latter handles the
-  // brain's habit of dropping the space between sentences (e.g.
-  // "...equals 1.Now, on that circle..." — observed 2026-04-30 pre-calc
-  // session, where the missing space caused the splitter to find no
-  // boundary and the bubble rendered without the question bolded).
-  const boundary = trimmed.slice(0, lastQ).match(/[.!?](?:\s+|(?=[A-Z]))(?=[^.!?]*$)/);
+  // Scan backward for a sentence terminator. Allow a small run of
+  // closing punctuation (quotes, parens, brackets — straight or curly)
+  // BETWEEN the terminator and the next sentence boundary, since
+  // narration often ends a quoted span with `." Which...` (period
+  // inside the quote). Then require either whitespace or an immediate
+  // uppercase letter (the brain sometimes drops the post-period space:
+  // "...equals 1.Now, on that circle..."). The lookahead `[^.!?]*$`
+  // ensures this is the LAST boundary before the trailing question.
+  const boundary = trimmed.slice(0, lastQ).match(/[.!?][)\]'"’”]*(?:\s+|(?=[A-Z]))(?=[^.!?]*$)/);
   if (boundary) {
     qStart = boundary.index! + boundary[0].length;
   }

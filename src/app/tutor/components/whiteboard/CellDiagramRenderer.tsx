@@ -225,8 +225,16 @@ export default function CellDiagramRenderer({ title, type, highlight, notes }: C
           const h = highlightMap.get(org.id) || highlightMap.get(org.label.toLowerCase());
           const anchorX = org.labelPos.x;
           const anchorY = org.labelPos.y;
-          // Place label outside the cell.
-          const outside = { x: anchorX > cx ? Math.min(W - 10, anchorX + 80) : Math.max(10, anchorX - 80), y: anchorY + (i % 2 === 0 ? -20 : 14) };
+          // Place label outside the cell. For left-side labels the text
+          // is right-anchored, so its visible left edge is roughly
+          // `outside.x - <label-width>` — clamping to 10 leaves a
+          // ~22-char label like "Endoplasmic Reticulum" with its start
+          // off the viewBox. Clamp to ~140 so the longest expected
+          // label still lands inside the canvas (observed 2026-04-30
+          // cell-bio session: "lasmic Reticulum" / "lgi Apparatus" cut
+          // on the left). Right side similarly clamped against the
+          // right edge.
+          const outside = { x: anchorX > cx ? Math.min(W - 140, anchorX + 80) : Math.max(140, anchorX - 80), y: anchorY + (i % 2 === 0 ? -20 : 14) };
           return (
             <g key={org.id}>
               <line x1={anchorX} y1={anchorY} x2={outside.x} y2={outside.y} stroke={DIAGRAM_COLORS.muted} strokeWidth={0.75} />
