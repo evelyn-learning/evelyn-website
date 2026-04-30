@@ -3451,8 +3451,8 @@ export function VoiceTutorRealtime({
                     if (ms > 0) await new Promise((r) => setTimeout(r, ms));
                   }
                 } else if (ev.type === 'tool-call') {
-                  const name = ev.name as string;
-                  const args = (ev.args as Record<string, unknown>) || {};
+                  let name = ev.name as string;
+                  let args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
                   totalToolNamesSeen.push(name);
                   // Authored-truth guard: when the active segment has an
@@ -3479,22 +3479,25 @@ export function VoiceTutorRealtime({
                       const seg = getSegment(plan, segId);
                       const truth = getSegmentTruth(seg);
                       if (truth?.problemText) {
-                        const reason =
-                          `The current segment "${segId}" has an authored problem and you tried to render a free-form one. ` +
-                          `Use show_segment_card({ segmentId: "${segId}" }) instead — it pulls the EXACT authored text. ` +
-                          `Free-form show_problem is blocked here because it lets you accidentally render a different ` +
-                          `problem than the lesson plan defines (the "two coexisting problems" bug). If you genuinely ` +
-                          `need a different problem, advance_lesson({ to: "..." }) to a segment that has it, or work ` +
-                          `with the authored card already on the board.`;
-                        rejectionsThisAttempt.push({ action: 'show_problem', reason });
-                        if (!attemptKilled) {
-                          attemptKilled = true;
-                          clearSpeechQueueRef.current?.();
-                          speakKillBridge();
-                        }
-                        console.warn(`[brain-orchestrator] blocked free-form show_problem in segment "${segId}" (authored truth exists) — retrying with show_segment_card hint`);
-                        onDebugEvent?.('show_problem_blocked', `segment "${segId}" has authored card; brain must use show_segment_card`);
-                        continue;
+                        // Previously we rejected the attempt and retried.
+                        // The retry round-trip costs 5-8s of dead air per
+                        // occurrence, and the brain's narration on the
+                        // first attempt was already half-spoken — making
+                        // the second attempt's narration mismatch the
+                        // first audibly. Production logs (2026-04-30)
+                        // showed this as 31% of all validator retries.
+                        //
+                        // New behavior: SILENTLY substitute show_problem
+                        // with show_segment_card pointing at the same
+                        // segment. Downstream show_segment_card resolver
+                        // pulls the authored text. No reject, no retry,
+                        // no dead air. Speech-vs-card divergence is
+                        // covered by the prompt rule "narrate the
+                        // authored card" (committed a331607).
+                        console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
+                        onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
+                        name = 'show_segment_card';
+                        args = { segmentId: segId };
                       }
                     }
                   }
