@@ -173,6 +173,11 @@ import { SEED_G3_ELA_CONTEXT_CLUES } from './seeds/g3-ela-context-clues';
 import { SEED_G3_ELA_STORY_ELEMENTS } from './seeds/g3-ela-story-elements';
 import { SEED_G3_ELA_PARTS_OF_SPEECH } from './seeds/g3-ela-parts-of-speech';
 import { SEED_G3_ELA_OPINION_WRITING } from './seeds/g3-ela-opinion-writing';
+import { SEED_G4_ELA_INFERENCE } from './seeds/g4-ela-inference';
+import { SEED_G4_ELA_THEME_LESSON } from './seeds/g4-ela-theme-lesson';
+import { SEED_G4_ELA_SENTENCE_STRUCTURE } from './seeds/g4-ela-sentence-structure';
+import { SEED_G5_ELA_SUMMARIZING } from './seeds/g5-ela-summarizing';
+import { SEED_G5_ELA_NARRATIVE_WRITING } from './seeds/g5-ela-narrative-writing';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -385,6 +390,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G3_ELA_STORY_ELEMENTS,
   SEED_G3_ELA_PARTS_OF_SPEECH,
   SEED_G3_ELA_OPINION_WRITING,
+  // Batch 14 — G4-G5 ELA (inference, theme, sentence structure, summarizing, narrative writing).
+  SEED_G4_ELA_INFERENCE,
+  SEED_G4_ELA_THEME_LESSON,
+  SEED_G4_ELA_SENTENCE_STRUCTURE,
+  SEED_G5_ELA_SUMMARIZING,
+  SEED_G5_ELA_NARRATIVE_WRITING,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
