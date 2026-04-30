@@ -353,8 +353,18 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
             ).map((opt) => (
               <button
                 key={opt.label}
+                // Disable while a brain turn is in flight. Otherwise the
+                // tap is queued and processed AFTER the in-flight turn
+                // completes — by which point the question on screen has
+                // already advanced (observed 2026-04-30 algebra-2
+                // session: user typed "Sure", buttons remained on the
+                // prior bubble during streaming, user also clicked
+                // "Yes", brain treated it as a response to the next
+                // question and revealed the misconception answer
+                // unprompted).
+                disabled={!!isProcessing}
                 onClick={() => onQuickAnswer(opt.text)}
-                className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition"
+                className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
               >
                 {opt.label}
               </button>
