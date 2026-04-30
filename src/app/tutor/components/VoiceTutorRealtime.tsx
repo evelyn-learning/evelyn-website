@@ -159,6 +159,11 @@ interface VoiceTutorRealtimeProps {
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
   onStateChange?: (state: RealtimeState) => void;
   onError?: (error: Error) => void;
+  /** Voice transcription status from OpenAI Realtime. 'failed' surfaces
+   *  rate-limit / auth / malformed-audio errors so the parent can prompt
+   *  the student to type instead. 'completed' fires on every successful
+   *  transcription so the parent can dismiss any "voice trouble" banner. */
+  onTranscriptionStatus?: (status: 'failed' | 'completed', errorType?: string) => void;
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
@@ -226,6 +231,7 @@ export function VoiceTutorRealtime({
   onWhiteboardCommand,
   onStateChange,
   onError,
+  onTranscriptionStatus,
   onEndSession,
   onTrackInteraction,
   onUsageUpdate,
@@ -3215,6 +3221,13 @@ export function VoiceTutorRealtime({
       let runTranscript = transcript;
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
+      // Number of sentences actually dispatched to TTS this turn. Tracks
+      // a strict subset of totalSentenceCount — sentences buffered in the
+      // gate then dropped on rejection are counted in totalSentenceCount
+      // but NOT here. Used by speakKillBridge to skip the bridge phrase
+      // when no audible speech has happened yet (otherwise the bridge
+      // becomes the first thing the student hears, which sounds wrong).
+      let audibleSentenceCount = 0;
       let totalToolNamesSeen: string[] = [];
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
@@ -3235,8 +3248,11 @@ export function VoiceTutorRealtime({
       const speakKillBridge = () => {
         if (bridgeSpokenThisTurn) return;
         // No point bridging if no speech has happened yet — would just
-        // be the first thing the student hears for the turn.
-        if (totalSentenceCount === 0) return;
+        // be the first thing the student hears for the turn. Use the
+        // audible count rather than totalSentenceCount so a turn that
+        // buffered sentences in the gate (and is now dropping them)
+        // doesn't trigger a bridge for speech that never played.
+        if (audibleSentenceCount === 0) return;
         bridgeSpokenThisTurn = true;
         const phrase = BRIDGE_PHRASES[Math.floor(Math.random() * BRIDGE_PHRASES.length)];
         speakTextRef.current?.(phrase);
@@ -3299,6 +3315,36 @@ export function VoiceTutorRealtime({
         // over and the corrected one). Tool calls keep dispatching so
         // we collect ALL rejections in one pass for the retry message.
         let attemptKilled = false;
+
+        // TTS gate. Buffer sentences until the first tool dispatch
+        // resolves so a rejected tool can drop its narration before the
+        // student hears it. Falls open via a 1s timer for text-only
+        // turns (the brain emitted no tools); closes (drops queued +
+        // future text from this attempt) on the first rejection — the
+        // validator-feedback retry attempt speaks the corrected version.
+        // Cost: ~0.5–1s of added latency on the first sentence of every
+        // turn. Trade accepted to eliminate audibly bad narration when
+        // the brain promises a render that gets dedup'd or rejected.
+        let gateState: 'gated' | 'open' | 'closed' = 'gated';
+        const pendingSentences: string[] = [];
+        const flushPending = () => {
+          for (const s of pendingSentences) {
+            speakTextRef.current?.(s);
+            audibleSentenceCount++;
+          }
+          pendingSentences.length = 0;
+        };
+        const openGate = () => {
+          if (gateState === 'gated') {
+            gateState = 'open';
+            flushPending();
+          }
+        };
+        const closeGate = () => {
+          gateState = 'closed';
+          pendingSentences.length = 0;
+        };
+        const gateTimer = setTimeout(openGate, 500);
 
         try {
           while (true) {
@@ -3396,6 +3442,8 @@ export function VoiceTutorRealtime({
                     rejectionsThisAttempt.push({ action: 'mid_turn_self_correction', reason });
                     judgeRetriesUsed++;
                     attemptKilled = true;
+                    clearTimeout(gateTimer);
+                    closeGate();
                     clearSpeechQueueRef.current?.();
                     speakKillBridge();
                     console.warn('[brain-orchestrator] mid-turn self-correction detected — retrying:', updatedSentence.slice(0, 80));
@@ -3409,12 +3457,30 @@ export function VoiceTutorRealtime({
                   // italic / bold. Strip ONLY for TTS — the speaking
                   // layer doesn't need or want the asterisks.
                   const trimmedSentence = updatedSentence.trim();
+                  // TTS-only normalization. The chat-bound text keeps the
+                  // brain's punctuation (exclamation marks for emphasis,
+                  // em-dashes for parenthetical clauses) so the transcript
+                  // reads naturally. The spoken layer drops these because:
+                  //   - Exclamation marks make the TTS voice sound forced
+                  //     and over-enthusiastic ("Great work!" → "Great work.").
+                  //   - Em-dashes make the voice run on without the natural
+                  //     pause a comma gives, so the speech feels rushed
+                  //     ("Right — a sub 1 is the first" → "Right, a sub 1
+                  //     is the first").
                   const sentenceForSpeech = trimmedSentence
                     .replace(/\*\*([^*]+)\*\*/g, '$1')
-                    .replace(/\*([^*]+)\*/g, '$1');
+                    .replace(/\*([^*]+)\*/g, '$1')
+                    .replace(/!+/g, '.')
+                    .replace(/\s*[—–]\s*/g, ', ')
+                    .replace(/\s--+\s/g, ', ');
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
                   if (!attemptKilled) {
-                    speakTextRef.current?.(sentenceForSpeech);
+                    if (gateState === 'gated') {
+                      pendingSentences.push(sentenceForSpeech);
+                    } else if (gateState === 'open') {
+                      speakTextRef.current?.(sentenceForSpeech);
+                      audibleSentenceCount++;
+                    }
                   }
                   // Streaming reveal in the chat: incrementally append
                   // each sentence to a tutor entry so the student sees
@@ -3633,14 +3699,26 @@ export function VoiceTutorRealtime({
                       // First rejection in this attempt → cancel any
                       // already-queued/playing audio + stop voicing further
                       // sentences from this attempt. The retry will speak
-                      // a fresh corrected response, with a brief spoken
-                      // bridge ("Let me try that a different way") so the
-                      // student doesn't experience silent dead air.
+                      // a fresh corrected response. The kill-bridge phrase
+                      // ("Let me try that a different way") plays only if
+                      // audible speech has already happened — when the
+                      // gate buffered everything and we close it here, no
+                      // bridge is needed (the student heard nothing yet).
                       if (!attemptKilled) {
                         attemptKilled = true;
+                        clearTimeout(gateTimer);
+                        closeGate();
                         clearSpeechQueueRef.current?.();
                         speakKillBridge();
                       }
+                    } else if (gateState === 'gated') {
+                      // Clean tool dispatch — open the gate and flush any
+                      // sentences we held back while waiting for this
+                      // verdict. Subsequent tools fall through (gate is
+                      // already 'open'); subsequent rejections still kill
+                      // this attempt as before.
+                      clearTimeout(gateTimer);
+                      openGate();
                     }
                   } else {
                     console.warn('[brain-orchestrator] unmapped tool call:', name);
@@ -3656,6 +3734,14 @@ export function VoiceTutorRealtime({
         } finally {
           try { reader.releaseLock(); } catch { /* already released */ }
         }
+
+        // Stream is fully drained. Stop the 1s gate timer (no longer
+        // needed) and flush any sentences still gated. This covers fast
+        // text-only turns that finished before the timer fired and any
+        // stream that ended without a tool ever resolving the gate.
+        // No-op when the gate already opened or closed.
+        clearTimeout(gateTimer);
+        openGate();
 
         // RULE8 coherence check (promise-without-visual). The brain
         // SAID "let me draw / I'll show / I'm going to plot" but emitted
@@ -3683,6 +3769,8 @@ export function VoiceTutorRealtime({
           rejectionsThisAttempt.push({ action: 'rule8_promise_without_visual', reason });
           rule8RetriesUsed++;
           attemptKilled = true;
+          clearTimeout(gateTimer);
+          closeGate();
           clearSpeechQueueRef.current?.();
           speakKillBridge();
           console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
@@ -3993,6 +4081,7 @@ export function VoiceTutorRealtime({
     },
     onResponseDone: handleResponseDone,
     onError: handleError,
+    onTranscriptionStatus,
     onStateChange,
     onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
     onTutorAudioChunk: audioRecordEnabled ? audioRecorder.pushTutorChunk : undefined,
@@ -4536,6 +4625,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // inclined plane…" trigger a fresh whiteboard page. Before
             // this hook, typed messages bypassed detection entirely.
             runStudentTurnDetection(text, 'typed');
+            // Cut off any in-flight tutor TTS before dispatching the typed
+            // turn — otherwise the student waits for the prior bubble to
+            // finish before their message reaches the brain. Mirrors the
+            // quick-answer button path in page.tsx (stopSpeaking →
+            // sendTextMessage).
+            realtime.clearSpeechQueue();
+            realtime.interrupt();
             // Send to AI
             realtime.sendTextMessage(text);
             input.value = '';

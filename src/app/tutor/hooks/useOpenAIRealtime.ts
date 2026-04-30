@@ -112,6 +112,15 @@ export interface RealtimeConfig {
   }> | null;
   onResponseDone?: (usage?: RealtimeUsage) => void;
   onError?: (error: Error) => void;
+  /**
+   * Fires when the server reports an input-audio-transcription state change
+   * for the *student*'s mic. 'failed' means Whisper rejected this commit
+   * (rate_limit_error, auth, malformed audio); the student's turn never
+   * reaches the brain. 'completed' fires on every successful Whisper
+   * transcription. Caller uses this to surface a "voice having trouble —
+   * type instead" banner without burying the student in a dead voice loop.
+   */
+  onTranscriptionStatus?: (status: 'failed' | 'completed', errorType?: string) => void;
   onStateChange?: (state: RealtimeState) => void;
   onStudentAudioChunk?: (float32: Float32Array) => void;
   onTutorAudioChunk?: (float32: Float32Array) => void;
@@ -423,7 +432,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const {
     instructions, voice = 'alloy',
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
-    onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onStateChange,
+    onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
@@ -683,6 +692,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             console.warn('[Realtime] Transcription watchdog fired — no transcript event in 12s; resetting state');
             transcriptionWatchdogRef.current = null;
             updateState(shouldListenRef.current ? 'listening' : 'connected');
+            // Surface the silent failure to the parent. Without this, the
+            // student's utterance disappears with no visible signal: audio
+            // committed, Whisper never returned, state reset, conversation
+            // looks frozen. Triggering the same 'failed' callback as the
+            // explicit failure event lets the parent show its "voice is
+            // having trouble — type instead" banner so the student isn't
+            // stuck talking into the void.
+            onTranscriptionStatus?.('failed');
           }, 12_000);
           break;
 
@@ -702,6 +719,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             transcriptionWatchdogRef.current = null;
           }
           updateState(shouldListenRef.current ? 'listening' : 'connected');
+          onTranscriptionStatus?.('failed', data.error?.type);
           break;
 
         case 'conversation.item.input_audio_transcription.completed': {
@@ -710,6 +728,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             clearTimeout(transcriptionWatchdogRef.current);
             transcriptionWatchdogRef.current = null;
           }
+          onTranscriptionStatus?.('completed');
           // User's speech transcription.
           //
           // With turn_detection.create_response: false the server no longer
@@ -1247,7 +1266,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } catch (err) {
       console.error('[Realtime] Failed to parse message:', err);
     }
-  }, [updateState, onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, queueAudio]);
+  }, [updateState, onTranscriptUpdate, onWhiteboardCommand, onResponseDone, onError, onTranscriptionStatus, queueAudio]);
 
   // Connect to OpenAI Realtime API
   const connect = useCallback(async () => {

@@ -37,7 +37,11 @@ const AXIS_MODE_PADDING_X = 60;
 const SWIMLANE_GUTTER = 130; // Left gutter reserved for category labels
 const SWIMLANE_RIGHT_PAD = 40;
 const SWIMLANE_HEIGHT = 68;
-const SWIMLANE_TOP_PAD = 30;
+// Top pad has to clear one stacked label block (date + 2 wrapped title lines)
+// in the topmost lane. Was 30 when the date rendered below the pin; bumped
+// to 50 after dates moved into the above-pin label block to follow row
+// stacking, so deeply-stacked labels in the top lane don't clip the SVG.
+const SWIMLANE_TOP_PAD = 50;
 const AXIS_FOOT = 40; // Height reserved for the bottom axis (ticks + labels)
 // Rough character width at our font size — used to estimate label widths for
 // collision resolution. Slightly generous to avoid false-negatives.
@@ -392,6 +396,16 @@ function renderSwimlane({ title, events, xs, plotLeft, plotRight, ticks, categor
           const color = categoryColor(event.category, event.color);
           const x = xs[i];
           const labelRow = labelRowByEvent[i];
+          // Cluster-dedup: when an earlier event in the same lane shares
+          // both this x and this date string (e.g. brain emitted two
+          // events at "326 BCE" — Maurya Empire + Alexander's Invasion —
+          // and both parsed to the same year), suppress the duplicate
+          // date label. Each event keeps its own pin and stacked title
+          // so the cluster reads as "two things happened at this date"
+          // rather than one event with merged titles.
+          const dateAlreadyShown = events.slice(0, i).some((prev, j) =>
+            xs[j] === x && prev.category === event.category && prev.date === event.date,
+          );
           // Stack labels above the pin when multiple pins share x-space on a row.
           const labelY = laneMidY - 12 - labelRow * 20;
           const wrapped = wrapTitle(event.title, 18);
@@ -428,16 +442,26 @@ function renderSwimlane({ title, events, xs, plotLeft, plotRight, ticks, categor
                   {line}
                 </text>
               ))}
-              <text
-                x={x}
-                y={laneMidY + 18}
-                textAnchor="middle"
-                fontSize={10}
-                fontWeight={600}
-                fill="#1f2937"
-              >
-                {event.date}
-              </text>
+              {/* Date sits inside the label block (above the title) so it
+                  follows labelRow stacking. Previously rendered at a fixed
+                  y below the pin, which caused dates to overlap horizontally
+                  whenever multiple pins crowded into a narrow x-range — the
+                  bug visible as "17801809" / "18451849" in the western-civ
+                  Sikh Empire row. Cluster-dedup hides the date for the 2nd+
+                  event when a prior same-x same-lane event already showed
+                  the same string. */}
+              {!dateAlreadyShown && (
+                <text
+                  x={x}
+                  y={labelY - wrapped.length * 12 - 2}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fontWeight={600}
+                  fill="#1f2937"
+                >
+                  {event.date}
+                </text>
+              )}
             </g>
           );
         })}
@@ -582,6 +606,12 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
           const wrapped = wrapTitle(event.title, 20);
           // Place date label closest to axis, then title above/below it
           const dateY = above ? leaderEndY - 4 : leaderEndY + 14;
+          // Cluster-dedup: same logic as swimlane mode — when an earlier
+          // event on the same side shares this x and date string, hide
+          // the duplicate date.
+          const dateAlreadyShown = events.slice(0, i).some((prev, j) =>
+            xs[j] === x && (j % 2 === 0) === above && prev.date === event.date,
+          );
           const titleStartY = above
             ? dateY - 14 - (wrapped.length - 1) * 14
             : dateY + 16;
@@ -605,16 +635,18 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
                 stroke="#fff"
                 strokeWidth={1.5}
               />
-              <text
-                x={x}
-                y={dateY}
-                textAnchor="middle"
-                fontSize={11}
-                fontWeight={600}
-                fill="#1f2937"
-              >
-                {event.date}
-              </text>
+              {!dateAlreadyShown && (
+                <text
+                  x={x}
+                  y={dateY}
+                  textAnchor="middle"
+                  fontSize={11}
+                  fontWeight={600}
+                  fill="#1f2937"
+                >
+                  {event.date}
+                </text>
+              )}
               {wrapped.map((line, li) => (
                 <text
                   key={`t-${i}-${li}`}

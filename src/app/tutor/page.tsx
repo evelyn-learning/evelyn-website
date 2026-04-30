@@ -167,6 +167,26 @@ function TutorPage() {
     sourceMessageIndex: number;
   }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  // True only after a whiteboard command has actually landed in the
+  // current brain turn. Drives the "Tutor is preparing something…"
+  // skeleton so it never flashes on text-only turns (which used to
+  // show the skeleton for the entire brain.stream duration despite
+  // never producing any whiteboard work).
+  const [whiteboardActiveThisTurn, setWhiteboardActiveThisTurn] = useState(false);
+  const wasProcessingRef = useRef(false);
+  useEffect(() => {
+    if (isProcessing && !wasProcessingRef.current) {
+      setWhiteboardActiveThisTurn(false);
+    }
+    wasProcessingRef.current = isProcessing;
+  }, [isProcessing]);
+  const prevCommandCountRef = useRef(0);
+  useEffect(() => {
+    if (whiteboardCommands.length > prevCommandCountRef.current) {
+      setWhiteboardActiveThisTurn(true);
+    }
+    prevCommandCountRef.current = whiteboardCommands.length;
+  }, [whiteboardCommands.length]);
   // Watchdog for the "Thinking…" indicator. If something flips
   // isProcessing=true and forgets to flip it back (stuck brain
   // request, dropped voice transcription, network hiccup), the user
@@ -763,6 +783,19 @@ function TutorPage() {
     setTranscript(entries);
   }, []);
 
+  // Voice-transcription trouble banner. Set when OpenAI Realtime reports
+  // an input-audio-transcription failure (rate_limit_error, auth, etc.)
+  // so the student knows to fall back to typing instead of waiting in a
+  // dead voice loop. Auto-clears on the next successful transcription.
+  const [voiceTrouble, setVoiceTrouble] = useState<string | null>(null);
+  const handleTranscriptionStatus = useCallback((status: 'failed' | 'completed') => {
+    if (status === 'failed') {
+      setVoiceTrouble("We're having a technical issue with voice right now — please use the typed chat below for the time being.");
+    } else {
+      setVoiceTrouble(null);
+    }
+  }, []);
+
   // Handle whiteboard commands from VoiceTutor
   const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
     console.log('[TutorPage] Received whiteboard commands:', commands.length, commands.map(c => c.action));
@@ -1352,7 +1385,7 @@ function TutorPage() {
           >
             <WhiteboardCanvas
               commands={whiteboardCommands}
-              tutorBusy={isProcessing || (transcript.some((t) => t.role === 'tutor') && whiteboardCommands.length === 0)}
+              tutorBusy={isProcessing && whiteboardActiveThisTurn}
               onClear={() => setWhiteboardCommands([])}
               onAttentionShift={() => {
                 // Tutor wants the student to look at the board — auto-
@@ -1526,6 +1559,12 @@ function TutorPage() {
           style={isDesktop ? { height: `${inputHeight}px` } : undefined}
         >
           <div className={inputMode === 'voice' ? '' : 'container mx-auto'}>
+            {voiceTrouble && inputMode === 'voice' && (
+              <div className="mb-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{voiceTrouble}</span>
+              </div>
+            )}
             {inputMode === 'voice' && selectedTopicId ? (
               (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
                 <VoiceTutorRealtime
@@ -1552,6 +1591,7 @@ function TutorPage() {
                   onUsageUpdate={handleRealtimeUsage}
                   onDebugEvent={addDebugEvent}
                   onError={(err) => setError(err.message)}
+                  onTranscriptionStatus={handleTranscriptionStatus}
                   onEndSession={handleEndSession}
                   onTrackInteraction={trackInteraction}
                   handleRef={realtimeHandleRef}
