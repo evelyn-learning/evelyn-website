@@ -314,6 +314,19 @@ import { SEED_G8_SS_CIVICS_RIGHTS } from './seeds/g8-ss-civics-rights-responsibi
 import { SEED_G5_SCI_CLASSIFICATION } from './seeds/g5-sci-classification';
 import { SEED_G11_ELA_SYNTAX_STYLE } from './seeds/g11-ela-syntax-style';
 import { SEED_G7_SCI_ENERGY_FLOW_ECOSYSTEMS } from './seeds/g7-sci-energy-flow-ecosystems';
+// Batch 30 — More AP, more K-2 foundations, more world history.
+import { SEED_AP_WORLD_FRENCH_REVOLUTION_DEEP } from './seeds/ap-world-french-revolution-deep';
+import { SEED_G4_ELA_PREFIXES_SUFFIXES } from './seeds/g4-ela-prefixes-suffixes';
+import { SEED_G3_MATH_ELAPSED_TIME } from './seeds/g3-math-elapsed-time';
+import { SEED_G11_STATS_CONFIDENCE_INTERVALS } from './seeds/g11-stats-confidence-intervals';
+import { SEED_G4_ELA_PARAGRAPH_STRUCTURE } from './seeds/g4-ela-paragraph-structure';
+import { SEED_G6_SS_BYZANTINE_ISLAMIC } from './seeds/g6-ss-byzantine-islamic';
+import { SEED_G8_SCI_GENETICS_HEREDITY } from './seeds/g8-sci-genetics-heredity';
+import { SEED_G10_ELA_SHAKESPEARE_INTRO } from './seeds/g10-ela-shakespeare-intro';
+import { SEED_G6_SS_FEUDALISM } from './seeds/g6-ss-feudalism';
+import { SEED_G7_MATH_VOLUME_PRISMS_PYRAMIDS } from './seeds/g7-math-volume-prisms-pyramids';
+import { SEED_K_MATH_SHAPES_3D } from './seeds/k-math-shapes-3d';
+import { SEED_K2_SCI_MAGNETISM_INTRO } from './seeds/k2-sci-magnetism-intro';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -640,6 +653,19 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G5_SCI_CLASSIFICATION,
   SEED_G11_ELA_SYNTAX_STYLE,
   SEED_G7_SCI_ENERGY_FLOW_ECOSYSTEMS,
+  // Batch 30 — More AP/world/depth.
+  SEED_AP_WORLD_FRENCH_REVOLUTION_DEEP,
+  SEED_G4_ELA_PREFIXES_SUFFIXES,
+  SEED_G3_MATH_ELAPSED_TIME,
+  SEED_G11_STATS_CONFIDENCE_INTERVALS,
+  SEED_G4_ELA_PARAGRAPH_STRUCTURE,
+  SEED_G6_SS_BYZANTINE_ISLAMIC,
+  SEED_G8_SCI_GENETICS_HEREDITY,
+  SEED_G10_ELA_SHAKESPEARE_INTRO,
+  SEED_G6_SS_FEUDALISM,
+  SEED_G7_MATH_VOLUME_PRISMS_PYRAMIDS,
+  SEED_K_MATH_SHAPES_3D,
+  SEED_K2_SCI_MAGNETISM_INTRO,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
