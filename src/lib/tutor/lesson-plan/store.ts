@@ -427,6 +427,22 @@ import { SEED_AP_MICRO_PPC } from './seeds/ap-micro-ppc';
 import { SEED_AP_MICRO_EXTERNALITIES } from './seeds/ap-micro-externalities';
 import { SEED_AP_MACRO_AD_AS } from './seeds/ap-macro-ad-as';
 import { SEED_AP_MACRO_MONEY_BANKING } from './seeds/ap-macro-money-banking';
+// Batch 37 — AP ES, music, art history, professional tests, more world/lit.
+import { SEED_AP_ENV_SCI_ECOSYSTEMS } from './seeds/ap-env-sci-ecosystems';
+import { SEED_AP_ENV_SCI_CLIMATE_CHANGE } from './seeds/ap-env-sci-climate-change';
+import { SEED_AP_ENV_SCI_POLLUTION } from './seeds/ap-env-sci-pollution';
+import { SEED_AP_MUSIC_THEORY_FUNDAMENTALS } from './seeds/ap-music-theory-fundamentals';
+import { SEED_AP_MUSIC_CHORDS_PROGRESSIONS } from './seeds/ap-music-chords-progressions';
+import { SEED_AP_ART_HISTORY_ANALYSIS } from './seeds/ap-art-history-analysis';
+import { SEED_AP_ART_HISTORY_MODERN } from './seeds/ap-art-history-modern';
+import { SEED_MCAT_STRATEGY } from './seeds/mcat-strategy';
+import { SEED_LSAT_STRATEGY } from './seeds/lsat-strategy';
+import { SEED_NCLEX_STRATEGY } from './seeds/nclex-strategy';
+import { SEED_G7_SS_RENAISSANCE_REFORMATION } from './seeds/g7-ss-renaissance-reformation';
+import { SEED_G8_SS_INDUSTRIAL_REVOLUTION_DEEP } from './seeds/g8-ss-industrial-revolution-deep';
+import { SEED_AP_LIT_PROSE_ANALYSIS } from './seeds/ap-lit-prose-analysis';
+import { SEED_AP_LIT_Q3_ESSAY } from './seeds/ap-lit-q3-essay';
+import { SEED_AP_SPANISH_STRATEGY } from './seeds/ap-spanish-strategy';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -866,6 +882,22 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MICRO_EXTERNALITIES,
   SEED_AP_MACRO_AD_AS,
   SEED_AP_MACRO_MONEY_BANKING,
+  // Batch 37 — AP ES, music, art history, prof tests, more world/lit.
+  SEED_AP_ENV_SCI_ECOSYSTEMS,
+  SEED_AP_ENV_SCI_CLIMATE_CHANGE,
+  SEED_AP_ENV_SCI_POLLUTION,
+  SEED_AP_MUSIC_THEORY_FUNDAMENTALS,
+  SEED_AP_MUSIC_CHORDS_PROGRESSIONS,
+  SEED_AP_ART_HISTORY_ANALYSIS,
+  SEED_AP_ART_HISTORY_MODERN,
+  SEED_MCAT_STRATEGY,
+  SEED_LSAT_STRATEGY,
+  SEED_NCLEX_STRATEGY,
+  SEED_G7_SS_RENAISSANCE_REFORMATION,
+  SEED_G8_SS_INDUSTRIAL_REVOLUTION_DEEP,
+  SEED_AP_LIT_PROSE_ANALYSIS,
+  SEED_AP_LIT_Q3_ESSAY,
+  SEED_AP_SPANISH_STRATEGY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
