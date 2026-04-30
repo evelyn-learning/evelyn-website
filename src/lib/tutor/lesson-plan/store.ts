@@ -248,6 +248,58 @@ import { SEED_G8_SCI_ELECTRICITY } from './seeds/g8-sci-electricity';
 import { SEED_G8_SCI_SOLAR_SYSTEM_BEYOND } from './seeds/g8-sci-solar-system-beyond';
 import { SEED_G8_SCI_CLIMATE_CHANGE } from './seeds/g8-sci-climate-change';
 import { SEED_G8_SCI_ENGINEERING_DESIGN } from './seeds/g8-sci-engineering-design';
+// Batch 25 — K-2 ELA foundations.
+import { SEED_K_ELA_LETTER_SOUNDS } from './seeds/k-ela-letter-sounds';
+import { SEED_K_ELA_SIGHT_WORDS } from './seeds/k-ela-sight-words';
+import { SEED_G1_ELA_PHONICS_BLENDS } from './seeds/g1-ela-phonics-blends';
+import { SEED_G1_ELA_FLUENCY } from './seeds/g1-ela-fluency';
+import { SEED_G1_ELA_CAPITALIZATION } from './seeds/g1-ela-capitalization';
+import { SEED_G2_ELA_SPELLING_PATTERNS } from './seeds/g2-ela-spelling-patterns';
+// Batch 26 — K-2 SS + math gaps.
+import { SEED_K2_SS_COMMUNITY_HELPERS } from './seeds/k2-ss-community-helpers';
+import { SEED_K2_SS_FAMILIES_CULTURES } from './seeds/k2-ss-families-cultures';
+import { SEED_K2_SS_CONTINENTS_OCEANS } from './seeds/k2-ss-continents-oceans';
+import { SEED_G1_MATH_TIME_TO_HOUR } from './seeds/g1-math-time-to-hour';
+import { SEED_G1_MATH_MEASUREMENT_LENGTH } from './seeds/g1-math-measurement-length';
+import { SEED_G2_MATH_MONEY_COINS } from './seeds/g2-math-money-coins';
+// Batch 27 — G3-G5 SS expansion + math fillers.
+import { SEED_G3_SS_COMMUNITIES } from './seeds/g3-ss-communities';
+import { SEED_G4_SS_US_REGIONS } from './seeds/g4-ss-us-regions';
+import { SEED_G5_SS_EXPLORERS_COLONIZATION } from './seeds/g5-ss-explorers-colonization';
+import { SEED_G5_SS_THIRTEEN_COLONIES } from './seeds/g5-ss-thirteen-colonies';
+import { SEED_G6_MATH_GCF_LCM } from './seeds/g6-math-gcf-lcm';
+import { SEED_G7_MATH_INEQUALITIES } from './seeds/g7-math-inequalities';
+import { SEED_G11_ALG2_COMPLEX_NUMBERS } from './seeds/g11-alg2-complex-numbers';
+import { SEED_G11_ALG2_CONIC_SECTIONS } from './seeds/g11-alg2-conic-sections';
+import { SEED_G11_ALG2_MATRICES_INTRO } from './seeds/g11-alg2-matrices-intro';
+// Batch 28 — Higher-grade SS, AP math/stats, math/ELA/sci fillers.
+import { SEED_G8_SS_IMMIGRATION_INDUSTRIAL } from './seeds/g8-ss-immigration-industrial';
+import { SEED_G8_SS_PROGRESSIVE_ERA } from './seeds/g8-ss-progressive-era';
+import { SEED_G8_SS_WESTWARD_EXPANSION } from './seeds/g8-ss-westward-expansion';
+import { SEED_G11_SS_GREAT_DEPRESSION_NEW_DEAL } from './seeds/g11-ss-great-depression-new-deal';
+import { SEED_G11_SS_COLD_WAR_PROXIES } from './seeds/g11-ss-cold-war-ext';
+import { SEED_G11_ECON_TRADE_GLOBALIZATION } from './seeds/g11-econ-trade-globalization';
+import { SEED_G7_SS_MESOPOTAMIA } from './seeds/g7-ss-mesopotamia';
+import { SEED_G7_SS_ANCIENT_CHINA } from './seeds/g7-ss-ancient-china';
+import { SEED_G7_SS_ANCIENT_INDIA } from './seeds/g7-ss-ancient-india';
+import { SEED_G9_CIVICS_THREE_BRANCHES } from './seeds/g9-civics-three-branches';
+import { SEED_G8_ELA_CITING_EVIDENCE } from './seeds/g8-ela-citing-evidence';
+import { SEED_G10_ELA_RHETORICAL_DEVICES } from './seeds/g10-ela-rhetorical-devices';
+import { SEED_G9_ELA_ACTIVE_PASSIVE } from './seeds/g9-ela-active-passive';
+import { SEED_G6_ELA_ACTIVE_LISTENING } from './seeds/g6-ela-active-listening-discussion';
+import { SEED_G5_ELA_POETRY_INTRO } from './seeds/g5-ela-poetry-intro';
+import { SEED_G11_ELA_POETRY_ANALYSIS } from './seeds/g11-ela-poetry-analysis';
+import { SEED_AP_CALC_FUNDAMENTAL_THEOREM } from './seeds/ap-calc-fundamental-theorem';
+import { SEED_AP_CALC_RELATED_RATES } from './seeds/ap-calc-related-rates';
+import { SEED_AP_STATS_HYPOTHESIS_TESTING } from './seeds/ap-stats-hypothesis-testing';
+import { SEED_G4_MATH_ANGLE_MEASUREMENT } from './seeds/g4-math-angle-measurement';
+import { SEED_G3_MATH_ROUNDING } from './seeds/g3-math-rounding';
+import { SEED_G6_MATH_COORDINATE_QUADRANTS } from './seeds/g6-math-coordinate-quadrants';
+import { SEED_G7_MATH_PERCENT_APPLICATIONS } from './seeds/g7-math-percent-applications';
+import { SEED_G6_SCI_ROCKS_MINERALS } from './seeds/g6-sci-rocks-minerals';
+import { SEED_G4_SCI_EROSION_WEATHERING } from './seeds/g4-sci-erosion-weathering';
+import { SEED_G6_SCI_WATER_CYCLE } from './seeds/g6-sci-water-cycle';
+import { SEED_G4_SCI_CIRCUITS_INTRO } from './seeds/g4-sci-circuits-intro';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -504,6 +556,62 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G11_SS_ELECTIONS_VOTING,
   // Batch 24 — Elementary ELA gap (G2 phonics).
   SEED_G2_ELA_PHONICS_DECODING,
+  // Batch 25 — K-2 ELA foundations (letter sounds, sight words,
+  // phonics blends, fluency, capitalization, spelling patterns).
+  SEED_K_ELA_LETTER_SOUNDS,
+  SEED_K_ELA_SIGHT_WORDS,
+  SEED_G1_ELA_PHONICS_BLENDS,
+  SEED_G1_ELA_FLUENCY,
+  SEED_G1_ELA_CAPITALIZATION,
+  SEED_G2_ELA_SPELLING_PATTERNS,
+  // Batch 26 — K-2 SS + early math gaps (community, families,
+  // continents, time, length, money).
+  SEED_K2_SS_COMMUNITY_HELPERS,
+  SEED_K2_SS_FAMILIES_CULTURES,
+  SEED_K2_SS_CONTINENTS_OCEANS,
+  SEED_G1_MATH_TIME_TO_HOUR,
+  SEED_G1_MATH_MEASUREMENT_LENGTH,
+  SEED_G2_MATH_MONEY_COINS,
+  // Batch 27 — G3-G5 SS expansion + math fillers (G6 GCF/LCM,
+  // G7 inequalities, G11 complex numbers, conics, matrices).
+  SEED_G3_SS_COMMUNITIES,
+  SEED_G4_SS_US_REGIONS,
+  SEED_G5_SS_EXPLORERS_COLONIZATION,
+  SEED_G5_SS_THIRTEEN_COLONIES,
+  SEED_G6_MATH_GCF_LCM,
+  SEED_G7_MATH_INEQUALITIES,
+  SEED_G11_ALG2_COMPLEX_NUMBERS,
+  SEED_G11_ALG2_CONIC_SECTIONS,
+  SEED_G11_ALG2_MATRICES_INTRO,
+  // Batch 28 — World/US history expansion, AP math/stats, civics,
+  // ELA grammar/poetry, science earth/circuits.
+  SEED_G7_SS_MESOPOTAMIA,
+  SEED_G7_SS_ANCIENT_CHINA,
+  SEED_G7_SS_ANCIENT_INDIA,
+  SEED_G8_SS_IMMIGRATION_INDUSTRIAL,
+  SEED_G8_SS_PROGRESSIVE_ERA,
+  SEED_G8_SS_WESTWARD_EXPANSION,
+  SEED_G11_SS_GREAT_DEPRESSION_NEW_DEAL,
+  SEED_G11_SS_COLD_WAR_PROXIES,
+  SEED_G11_ECON_TRADE_GLOBALIZATION,
+  SEED_G9_CIVICS_THREE_BRANCHES,
+  SEED_G8_ELA_CITING_EVIDENCE,
+  SEED_G10_ELA_RHETORICAL_DEVICES,
+  SEED_G9_ELA_ACTIVE_PASSIVE,
+  SEED_G6_ELA_ACTIVE_LISTENING,
+  SEED_G5_ELA_POETRY_INTRO,
+  SEED_G11_ELA_POETRY_ANALYSIS,
+  SEED_AP_CALC_FUNDAMENTAL_THEOREM,
+  SEED_AP_CALC_RELATED_RATES,
+  SEED_AP_STATS_HYPOTHESIS_TESTING,
+  SEED_G4_MATH_ANGLE_MEASUREMENT,
+  SEED_G3_MATH_ROUNDING,
+  SEED_G6_MATH_COORDINATE_QUADRANTS,
+  SEED_G7_MATH_PERCENT_APPLICATIONS,
+  SEED_G6_SCI_ROCKS_MINERALS,
+  SEED_G4_SCI_EROSION_WEATHERING,
+  SEED_G6_SCI_WATER_CYCLE,
+  SEED_G4_SCI_CIRCUITS_INTRO,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
