@@ -300,6 +300,20 @@ import { SEED_G6_SCI_ROCKS_MINERALS } from './seeds/g6-sci-rocks-minerals';
 import { SEED_G4_SCI_EROSION_WEATHERING } from './seeds/g4-sci-erosion-weathering';
 import { SEED_G6_SCI_WATER_CYCLE } from './seeds/g6-sci-water-cycle';
 import { SEED_G4_SCI_CIRCUITS_INTRO } from './seeds/g4-sci-circuits-intro';
+// Batch 29 — AP courses + advanced ELA + middle science.
+import { SEED_AP_BIO_CELL_SIGNALING } from './seeds/ap-bio-cell-signaling';
+import { SEED_AP_USH_RECONSTRUCTION } from './seeds/ap-ush-reconstruction';
+import { SEED_AP_CHEM_REACTION_RATES } from './seeds/ap-chem-reaction-rates';
+import { SEED_G9_ALG1_GRAPHING_FUNCTIONS } from './seeds/g9-alg1-graphing-functions';
+import { SEED_G8_MATH_VOLUME_SURFACE_AREA } from './seeds/g8-math-volume-surface-area';
+import { SEED_G7_ELA_CONTEXT_VOCAB } from './seeds/g7-ela-context-vocab';
+import { SEED_G6_SCI_ENERGY_FORMS } from './seeds/g6-sci-energy-forms';
+import { SEED_G8_SCI_CHEMISTRY_INTRO } from './seeds/g8-sci-chemistry-intro';
+import { SEED_G11_ELA_RESEARCH_CITATION } from './seeds/g11-ela-research-citation';
+import { SEED_G8_SS_CIVICS_RIGHTS } from './seeds/g8-ss-civics-rights-responsibilities';
+import { SEED_G5_SCI_CLASSIFICATION } from './seeds/g5-sci-classification';
+import { SEED_G11_ELA_SYNTAX_STYLE } from './seeds/g11-ela-syntax-style';
+import { SEED_G7_SCI_ENERGY_FLOW_ECOSYSTEMS } from './seeds/g7-sci-energy-flow-ecosystems';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -612,6 +626,20 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G4_SCI_EROSION_WEATHERING,
   SEED_G6_SCI_WATER_CYCLE,
   SEED_G4_SCI_CIRCUITS_INTRO,
+  // Batch 29 — AP courses + middle/HS depth fillers.
+  SEED_AP_BIO_CELL_SIGNALING,
+  SEED_AP_USH_RECONSTRUCTION,
+  SEED_AP_CHEM_REACTION_RATES,
+  SEED_G9_ALG1_GRAPHING_FUNCTIONS,
+  SEED_G8_MATH_VOLUME_SURFACE_AREA,
+  SEED_G7_ELA_CONTEXT_VOCAB,
+  SEED_G6_SCI_ENERGY_FORMS,
+  SEED_G8_SCI_CHEMISTRY_INTRO,
+  SEED_G11_ELA_RESEARCH_CITATION,
+  SEED_G8_SS_CIVICS_RIGHTS,
+  SEED_G5_SCI_CLASSIFICATION,
+  SEED_G11_ELA_SYNTAX_STYLE,
+  SEED_G7_SCI_ENERGY_FLOW_ECOSYSTEMS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
