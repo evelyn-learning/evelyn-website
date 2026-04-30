@@ -168,6 +168,11 @@ import { SEED_G11_ALG2_LOGARITHMS } from './seeds/g11-alg2-logarithms';
 import { SEED_G11_ALG2_RATIONAL_FUNCTIONS } from './seeds/g11-alg2-rational-functions';
 import { SEED_G11_ALG2_SEQUENCES_SERIES } from './seeds/g11-alg2-sequences-series';
 import { SEED_G11_PRECALC_TRIG_IDENTITIES } from './seeds/g11-precalc-trig-identities';
+import { SEED_G3_ELA_MAIN_IDEA } from './seeds/g3-ela-main-idea';
+import { SEED_G3_ELA_CONTEXT_CLUES } from './seeds/g3-ela-context-clues';
+import { SEED_G3_ELA_STORY_ELEMENTS } from './seeds/g3-ela-story-elements';
+import { SEED_G3_ELA_PARTS_OF_SPEECH } from './seeds/g3-ela-parts-of-speech';
+import { SEED_G3_ELA_OPINION_WRITING } from './seeds/g3-ela-opinion-writing';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -374,6 +379,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G11_ALG2_RATIONAL_FUNCTIONS,
   SEED_G11_ALG2_SEQUENCES_SERIES,
   SEED_G11_PRECALC_TRIG_IDENTITIES,
+  // Batch 13 — G3 ELA foundations (reading + writing + grammar).
+  SEED_G3_ELA_MAIN_IDEA,
+  SEED_G3_ELA_CONTEXT_CLUES,
+  SEED_G3_ELA_STORY_ELEMENTS,
+  SEED_G3_ELA_PARTS_OF_SPEECH,
+  SEED_G3_ELA_OPINION_WRITING,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
