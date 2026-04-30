@@ -158,6 +158,11 @@ import { SEED_G9_ALG1_FACTORING } from './seeds/g9-alg1-factoring';
 import { SEED_G9_ALG1_QUADRATICS_INTRO } from './seeds/g9-alg1-quadratics-intro';
 import { SEED_G9_ALG1_EXPONENTIAL_FUNCTIONS } from './seeds/g9-alg1-exponential-functions';
 import { SEED_G9_ALG1_INEQUALITIES } from './seeds/g9-alg1-inequalities';
+import { SEED_G10_GEOM_ANGLE_RELATIONSHIPS } from './seeds/g10-geom-angle-relationships';
+import { SEED_G10_GEOM_TRIANGLE_CONGRUENCE } from './seeds/g10-geom-triangle-congruence';
+import { SEED_G10_GEOM_SIMILARITY } from './seeds/g10-geom-similarity';
+import { SEED_G10_GEOM_CIRCLES } from './seeds/g10-geom-circles';
+import { SEED_G10_GEOM_VOLUME_SOLIDS } from './seeds/g10-geom-volume-solids';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -352,6 +357,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G9_ALG1_QUADRATICS_INTRO,
   SEED_G9_ALG1_EXPONENTIAL_FUNCTIONS,
   SEED_G9_ALG1_INEQUALITIES,
+  // Batch 11 — HS Geometry (angles, congruence, similarity, circles, volume).
+  SEED_G10_GEOM_ANGLE_RELATIONSHIPS,
+  SEED_G10_GEOM_TRIANGLE_CONGRUENCE,
+  SEED_G10_GEOM_SIMILARITY,
+  SEED_G10_GEOM_CIRCLES,
+  SEED_G10_GEOM_VOLUME_SOLIDS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
