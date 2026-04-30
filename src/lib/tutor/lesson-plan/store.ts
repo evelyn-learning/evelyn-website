@@ -409,6 +409,24 @@ import { SEED_AP_CHEM_THERMODYNAMICS } from './seeds/ap-chem-thermodynamics';
 import { SEED_AP_CHEM_BUFFERS_TITRATION } from './seeds/ap-chem-buffers-titration';
 import { SEED_AP_BIO_POPULATION_ECOLOGY } from './seeds/ap-bio-population-ecology';
 import { SEED_AP_BIO_SPECIATION } from './seeds/ap-bio-speciation';
+// Batch 36 — AP CS, more AP Stats/Physics 2/Psych/Geo + Micro/Macro.
+import { SEED_AP_CSP_DATA_BINARY } from './seeds/ap-csp-data-binary';
+import { SEED_AP_CSP_ALGORITHMS_ABSTRACTION } from './seeds/ap-csp-algorithms-abstraction';
+import { SEED_AP_CSA_OBJECTS_CLASSES } from './seeds/ap-csa-objects-classes';
+import { SEED_AP_CSA_ARRAYS_LOOPS } from './seeds/ap-csa-arrays-loops';
+import { SEED_AP_STATS_TWO_SAMPLE_TESTS } from './seeds/ap-stats-two-sample-tests';
+import { SEED_AP_PHYSICS2_CIRCUITS } from './seeds/ap-physics2-circuits';
+import { SEED_AP_PHYSICS2_MAGNETISM } from './seeds/ap-physics2-magnetism';
+import { SEED_AP_PHYSICS2_MODERN } from './seeds/ap-physics2-modern';
+import { SEED_AP_PSYCH_COGNITION } from './seeds/ap-psych-cognition';
+import { SEED_AP_PSYCH_SOCIAL } from './seeds/ap-psych-social';
+import { SEED_AP_PSYCH_BIOLOGICAL } from './seeds/ap-psych-biological';
+import { SEED_AP_HUMAN_GEO_URBAN } from './seeds/ap-human-geo-urban';
+import { SEED_AP_HUMAN_GEO_POLITICAL } from './seeds/ap-human-geo-political';
+import { SEED_AP_MICRO_PPC } from './seeds/ap-micro-ppc';
+import { SEED_AP_MICRO_EXTERNALITIES } from './seeds/ap-micro-externalities';
+import { SEED_AP_MACRO_AD_AS } from './seeds/ap-macro-ad-as';
+import { SEED_AP_MACRO_MONEY_BANKING } from './seeds/ap-macro-money-banking';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -830,6 +848,24 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CHEM_BUFFERS_TITRATION,
   SEED_AP_BIO_POPULATION_ECOLOGY,
   SEED_AP_BIO_SPECIATION,
+  // Batch 36 — AP CS + Stats/Physics 2/Psych/Geo + Micro/Macro.
+  SEED_AP_CSP_DATA_BINARY,
+  SEED_AP_CSP_ALGORITHMS_ABSTRACTION,
+  SEED_AP_CSA_OBJECTS_CLASSES,
+  SEED_AP_CSA_ARRAYS_LOOPS,
+  SEED_AP_STATS_TWO_SAMPLE_TESTS,
+  SEED_AP_PHYSICS2_CIRCUITS,
+  SEED_AP_PHYSICS2_MAGNETISM,
+  SEED_AP_PHYSICS2_MODERN,
+  SEED_AP_PSYCH_COGNITION,
+  SEED_AP_PSYCH_SOCIAL,
+  SEED_AP_PSYCH_BIOLOGICAL,
+  SEED_AP_HUMAN_GEO_URBAN,
+  SEED_AP_HUMAN_GEO_POLITICAL,
+  SEED_AP_MICRO_PPC,
+  SEED_AP_MICRO_EXTERNALITIES,
+  SEED_AP_MACRO_AD_AS,
+  SEED_AP_MACRO_MONEY_BANKING,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
