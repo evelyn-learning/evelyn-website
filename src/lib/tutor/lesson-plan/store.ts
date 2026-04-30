@@ -183,6 +183,11 @@ import { SEED_G6_ELA_ARGUMENT_WRITING } from './seeds/g6-ela-argument-writing';
 import { SEED_G7_ELA_AUTHOR_PURPOSE_POV } from './seeds/g7-ela-author-purpose-pov';
 import { SEED_G7_ELA_FIGURATIVE_LANGUAGE } from './seeds/g7-ela-figurative-language';
 import { SEED_G8_ELA_THESIS_STATEMENTS } from './seeds/g8-ela-thesis-statements';
+import { SEED_G3_SS_MAPS_GLOBES } from './seeds/g3-ss-maps-globes';
+import { SEED_G4_SS_BRANCHES_OF_GOVERNMENT } from './seeds/g4-ss-branches-of-government';
+import { SEED_G6_SS_ANCIENT_EGYPT } from './seeds/g6-ss-ancient-egypt';
+import { SEED_G8_SS_AMERICAN_REVOLUTION } from './seeds/g8-ss-american-revolution';
+import { SEED_G9_SS_CONSTITUTION_BILL_OF_RIGHTS } from './seeds/g9-ss-constitution-bill-of-rights';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -407,6 +412,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G7_ELA_AUTHOR_PURPOSE_POV,
   SEED_G7_ELA_FIGURATIVE_LANGUAGE,
   SEED_G8_ELA_THESIS_STATEMENTS,
+  // Batch 16 — Social Studies foundations (geography, civics, world history, US history).
+  SEED_G3_SS_MAPS_GLOBES,
+  SEED_G4_SS_BRANCHES_OF_GOVERNMENT,
+  SEED_G6_SS_ANCIENT_EGYPT,
+  SEED_G8_SS_AMERICAN_REVOLUTION,
+  SEED_G9_SS_CONSTITUTION_BILL_OF_RIGHTS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
