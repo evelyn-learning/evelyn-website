@@ -153,6 +153,11 @@ import { SEED_G8_MATH_SLOPE_LINEAR_FUNCTIONS } from './seeds/g8-math-slope-linea
 import { SEED_G8_MATH_EXPONENTS_SCIENTIFIC_NOTATION } from './seeds/g8-math-exponents-scientific-notation';
 import { SEED_G8_MATH_TRANSFORMATIONS } from './seeds/g8-math-transformations';
 import { SEED_G8_MATH_SQUARE_ROOTS_IRRATIONALS } from './seeds/g8-math-square-roots-irrationals';
+import { SEED_G9_ALG1_POLYNOMIALS_INTRO } from './seeds/g9-alg1-polynomials-intro';
+import { SEED_G9_ALG1_FACTORING } from './seeds/g9-alg1-factoring';
+import { SEED_G9_ALG1_QUADRATICS_INTRO } from './seeds/g9-alg1-quadratics-intro';
+import { SEED_G9_ALG1_EXPONENTIAL_FUNCTIONS } from './seeds/g9-alg1-exponential-functions';
+import { SEED_G9_ALG1_INEQUALITIES } from './seeds/g9-alg1-inequalities';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -341,6 +346,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G8_MATH_EXPONENTS_SCIENTIFIC_NOTATION,
   SEED_G8_MATH_TRANSFORMATIONS,
   SEED_G8_MATH_SQUARE_ROOTS_IRRATIONALS,
+  // Batch 10 — HS Algebra 1 (polynomials, factoring, quadratics, exponentials, inequalities).
+  SEED_G9_ALG1_POLYNOMIALS_INTRO,
+  SEED_G9_ALG1_FACTORING,
+  SEED_G9_ALG1_QUADRATICS_INTRO,
+  SEED_G9_ALG1_EXPONENTIAL_FUNCTIONS,
+  SEED_G9_ALG1_INEQUALITIES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
