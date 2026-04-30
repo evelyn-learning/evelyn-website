@@ -102,6 +102,12 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   // interjection — keep the bubble visually calm when the "question"
   // is just an acknowledgement.
   if (question.length < 6) return null;
+  // If the body is empty (no sentence terminator before the ?), the
+  // entire bubble is one question. Bolding the whole bubble looks
+  // visually noisy — observed 2026-04-30, single-question turns
+  // rendered fully bold. Skip the split so the renderer falls back
+  // to plain rendering.
+  if (!body) return null;
   return { body, question };
 }
 

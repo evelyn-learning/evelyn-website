@@ -1262,13 +1262,14 @@ function TutorPage() {
                 isProcessing={isProcessing}
                 pickerAnchorIndex={pickerAnchorIndex}
                 onQuickAnswer={(text) => {
-                  // Quick-answer button tap: dispatch directly to the
-                  // brain via sendTextMessage. Same channel as typed
-                  // input → goes through transcriptUpdate hooks and
-                  // produces a normal student bubble. Saves the
-                  // student waiting for TTS to finish (2026-04-30
-                  // calc session feedback).
+                  // Quick-answer button tap: cut off the in-flight TTS
+                  // bubble so the student isn't waiting on the prior
+                  // turn to finish, then dispatch through the same
+                  // channel as typed input. Bracketed system text in
+                  // the message is stripped from the chat by
+                  // TranscriptView's filter.
                   if (realtimeHandleRef.current) {
+                    realtimeHandleRef.current.stopSpeaking();
                     realtimeHandleRef.current.sendTextMessage(text);
                   }
                 }}

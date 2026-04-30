@@ -58,6 +58,10 @@ export interface RealtimeHandle {
    *  in the transcript area, not a brain turn, so without this it
    *  appears in the chat but isn't spoken aloud). */
   speakText: (text: string) => void;
+  /** Cut off the current TTS bubble + drop queued sentences. Used
+   *  when a quick-answer button tap should jump straight to the
+   *  next turn instead of waiting for the prior one to finish. */
+  stopSpeaking: () => void;
   getSessionSummary: () => {
     topicsCovered: string[];
     weakTopics: Array<{ topic: string; count: number }>;
@@ -3991,6 +3995,10 @@ export function VoiceTutorRealtime({
       handleRef.current = {
         sendTextMessage: (text: string) => realtime.sendTextMessage(text),
         speakText: (text: string) => realtime.speakText(text),
+        stopSpeaking: () => {
+          realtime.clearSpeechQueue();
+          realtime.interrupt();
+        },
         getSessionSummary: () => ({
           topicsCovered: [...topicsCoveredRef.current],
           weakTopics: Array.from(weaknessesRef.current.entries())
