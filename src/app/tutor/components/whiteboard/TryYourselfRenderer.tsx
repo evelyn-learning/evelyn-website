@@ -21,12 +21,22 @@ import { useState } from 'react';
 /** Compare a student's typed answer against the expected answer with
  *  format-aware tolerance:
  *  - numeric: parse both sides as numbers; "024" matches "24", "0.5" matches "1/2".
- *  - frq / mcq: case-insensitive, trim, collapse internal whitespace.
- *  Falls back to a relaxed string equality if numeric parsing doesn't fit. */
-function matchesAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean {
+ *  - mcq: case-insensitive, trim, collapse internal whitespace.
+ *  - frq: returns TRISTATE — true (string-equal after normalization),
+ *    false (numeric mismatch only), or null (undecidable; defer to the
+ *    brain). String mismatches in FRQ space are too unreliable to assert
+ *    "wrong" — students write "sin" when expected is "sin(θ)", "1/√2"
+ *    when expected is "√2/2", etc. The brain reads the marker and
+ *    judges algebraic equivalence.
+ *
+ *  Returning null in the FRQ branch keeps the renderer from showing
+ *  "Not quite. Expected: X" when the answer is plausibly correct in a
+ *  different form.
+ */
+export function matchesAnswerStrict(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
   const s = submitted.trim();
   const e = expected.trim();
-  if (!s || !e) return false;
+  if (!s || !e) return null;
   // Numeric path: try to parse and compare values, including simple fractions.
   const tryParse = (v: string): number | null => {
     const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
@@ -46,18 +56,21 @@ function matchesAnswer(submitted: string, expected: string, format: 'mcq' | 'frq
   if (sn !== null && en !== null) {
     return Math.abs(sn - en) < 1e-9;
   }
-  // Otherwise compare as text — case- and whitespace-insensitive, and
-  // strip a leading "x = " kind of prefix the brain often uses.
   const norm = (v: string) =>
     v.toLowerCase()
       .replace(/^[a-z]\s*=\s*/, '')
       .replace(/\s+/g, ' ')
       .trim();
   if (format === 'numeric') {
-    // Format said numeric but parsing failed — be strict.
+    // Format said numeric but parsing failed — strict string equality.
     return norm(s) === norm(e);
   }
-  return norm(s) === norm(e);
+  if (format === 'mcq') {
+    return norm(s) === norm(e);
+  }
+  // FRQ: only assert TRUE on exact normalized match; otherwise undecidable.
+  if (norm(s) === norm(e)) return true;
+  return null;
 }
 
 interface Choice {
@@ -98,7 +111,7 @@ export function TryYourselfRenderer({
   };
 
   const isCorrect = submitted && expectedAnswer
-    ? matchesAnswer(submitted, expectedAnswer, responseFormat)
+    ? matchesAnswerStrict(submitted, expectedAnswer, responseFormat)
     : null;
 
   return (
@@ -179,10 +192,19 @@ export function TryYourselfRenderer({
         </div>
       )}
 
-      {/* Result indicator */}
+      {/* Result indicator. When isCorrect is null (FRQ string mismatch
+          or no expected answer), don't assert wrong/right — show a
+          neutral "submitted, the tutor will respond" hint and defer to
+          the brain. */}
       {submitted && expectedAnswer != null && (
-        <div className={`mt-3 text-sm font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-          {isCorrect ? '✓ Correct!' : `Not quite. Expected: ${expectedAnswer}`}
+        <div className={`mt-3 text-sm font-medium ${
+          isCorrect === true ? 'text-green-700'
+          : isCorrect === false ? 'text-red-700'
+          : 'text-gray-600'
+        }`}>
+          {isCorrect === true ? '✓ Correct!'
+          : isCorrect === false ? `Not quite. Expected: ${expectedAnswer}`
+          : 'Submitted — the tutor is reviewing your answer.'}
         </div>
       )}
 

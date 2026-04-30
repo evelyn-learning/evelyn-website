@@ -113,7 +113,13 @@ export function EquationRenderer({
       const mathEl = (inner.querySelector('.katex') as HTMLElement) || inner;
       const innerWidth = mathEl.scrollWidth;
       if (containerWidth > 0 && innerWidth > containerWidth) {
-        const scale = Math.max(0.5, containerWidth / innerWidth);
+        // Lower floor to 0.32 — the prior 0.5 floor wasn't enough for
+        // chained identity rows on a narrow whiteboard panel
+        // (observed 2026-04-30 pre-calc session: three Pythagorean
+        // identities clipped on both edges). Below ~0.32 the math
+        // becomes hard to read; the carousel allows horizontal scroll
+        // for anything that still doesn't fit.
+        const scale = Math.max(0.32, containerWidth / innerWidth);
         inner.style.transform = `scale(${scale})`;
         const innerHeight = inner.scrollHeight * scale;
         el.style.height = `${innerHeight}px`;

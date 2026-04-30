@@ -91,8 +91,13 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   // ". " or "! " or "? " before lastQ. The chosen boundary is the
   // start of the question sentence.
   let qStart = 0;
-  // Scan backward for a sentence terminator followed by whitespace.
-  const boundary = trimmed.slice(0, lastQ).match(/[.!?]\s+(?=[^.!?]*$)/);
+  // Scan backward for a sentence terminator followed by whitespace OR
+  // immediately followed by an uppercase letter. The latter handles the
+  // brain's habit of dropping the space between sentences (e.g.
+  // "...equals 1.Now, on that circle..." — observed 2026-04-30 pre-calc
+  // session, where the missing space caused the splitter to find no
+  // boundary and the bubble rendered without the question bolded).
+  const boundary = trimmed.slice(0, lastQ).match(/[.!?](?:\s+|(?=[A-Z]))(?=[^.!?]*$)/);
   if (boundary) {
     qStart = boundary.index! + boundary[0].length;
   }
@@ -134,6 +139,15 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   // and is reasonably short. Long questions usually want a richer answer
   // even when phrased as yes/no.
   if (q.length > 140) return 'open';
+  // Polite-imperative open questions ("Can you tell me X?", "Could you
+  // explain Y?", "Will you describe Z?") look like yes/no on the
+  // surface but expect a content answer — filter them BEFORE the
+  // yes-no test so they fall through to 'open'. Pattern: yes/no aux +
+  // "you" + open-imperative verb. Observed 2026-04-30 pre-calc session
+  // showing Yes/No buttons on "Can you tell me what the expansion of
+  // (sin+cos)^2 actually is?".
+  const politeImperative = /^(can|could|will|would|do|did|does|are|is|have|has)\s+(you|i)\s+(tell|explain|describe|show|give|find|name|list|state|write|solve|calculate|compute|figure|work|think|recall|remember|identify|expand|simplify|derive|estimate|guess)\b/;
+  if (politeImperative.test(q)) return 'open';
   const yesNoStart = /^(does|did|do|is|are|was|were|will|would|can|could|should|shall|may|might|have|has|had|want|ready|sure|got|see|make sense|makes sense)\b/;
   if (yesNoStart.test(q)) return 'yes-no';
   // "Want to try X?" / "Ready to do Y?" common tutor close-out form

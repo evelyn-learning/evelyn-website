@@ -1379,9 +1379,21 @@ function TutorPage() {
                   isCorrect === true ? 'matches the expected answer (string-equal)'
                   : isCorrect === false ? 'does NOT match the expected answer'
                   : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
+                // Wrap the WHOLE marker in [...] so TranscriptView strips
+                // it from the visible chat. Previously only the
+                // "[try-yourself submission]" prefix was bracketed; the
+                // rest leaked into the student bubble (observed
+                // 2026-04-30 pre-calc session). Brain still sees the
+                // full text in its prompt.
+                //
+                // ALSO note: do NOT advance to a new problem on a wrong
+                // verdict. Re-prompt the same try-yourself with a hint.
+                // (Reinforced via the system prompt's
+                // answer-validation gate, but called out here too so
+                // anyone reading this code understands the intent.)
                 const marker = expected
-                  ? `[try-yourself submission] The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. Respond accordingly.`
-                  : `[try-yourself submission] The student submitted: "${answer}". No expected answer set — judge correctness yourself and respond accordingly.`;
+                  ? `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.]`
+                  : `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
                 if (realtimeHandleRef.current) {
                   realtimeHandleRef.current.sendTextMessage(marker);
                 }
