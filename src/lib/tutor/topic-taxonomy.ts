@@ -51,6 +51,9 @@ export const LEVELS: TutorLevel[] = [
   { id: '11-12', label: 'High School (11-12)', description: 'Advanced courses' },
   { id: 'ap', label: 'AP / IB', description: 'College-level rigor' },
   { id: 'sat-act', label: 'SAT / ACT', description: 'Standardized test prep' },
+  { id: 'iitjee', label: 'IIT JEE', description: 'JEE Main + Advanced (engineering)' },
+  { id: 'graduate', label: 'Graduate Tests', description: 'GRE / GMAT / LSAT / MCAT' },
+  { id: 'nursing', label: 'Nursing', description: 'NCLEX-RN / NCLEX-PN' },
   { id: 'college', label: 'College Intro', description: 'Freshman-level' },
 ];
 
@@ -409,6 +412,32 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'act-science-full', label: 'ACT Science' },
       { id: 'act-english-full', label: 'ACT English' },
       { id: 'act-reading-full', label: 'ACT Reading' },
+      { id: 'ssat-isee', label: 'SSAT / ISEE' },
+    ],
+    ap: [
+      { id: 'ap-test-strategy', label: 'AP Exam Strategy' },
+    ],
+    iitjee: [
+      { id: 'jee-main', label: 'JEE Main' },
+      { id: 'jee-advanced', label: 'JEE Advanced' },
+      { id: 'jee-physics', label: 'JEE Physics' },
+      { id: 'jee-chemistry', label: 'JEE Chemistry' },
+      { id: 'jee-math', label: 'JEE Math' },
+    ],
+    graduate: [
+      { id: 'gre-quant', label: 'GRE Quant' },
+      { id: 'gre-verbal', label: 'GRE Verbal' },
+      { id: 'gre-aw', label: 'GRE Analytical Writing' },
+      { id: 'gre-math-subject', label: 'GRE Math Subject Test' },
+      { id: 'gre-physics-subject', label: 'GRE Physics Subject Test' },
+      { id: 'gmat-quant', label: 'GMAT Quant' },
+      { id: 'gmat-verbal', label: 'GMAT Verbal' },
+      { id: 'lsat', label: 'LSAT' },
+      { id: 'mcat', label: 'MCAT' },
+    ],
+    nursing: [
+      { id: 'nclex-rn', label: 'NCLEX-RN' },
+      { id: 'nclex-pn', label: 'NCLEX-PN' },
     ],
   },
 };

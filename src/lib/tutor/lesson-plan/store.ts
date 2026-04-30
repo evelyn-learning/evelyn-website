@@ -1065,7 +1065,13 @@ export interface LessonPlanFilter {
  *  grade ids that fall within it. Identity for already-single grades.
  *  Plans are tagged with single grades (K, 2, 8); the demo page passes
  *  bands. Without expansion the filter `grade=6-8` would never match
- *  a plan tagged `grade=8`. */
+ *  a plan tagged `grade=8`.
+ *
+ *  AP / SAT-ACT / IITJEE / Graduate / Nursing bands also expand to
+ *  ['11', '12'] because most exam-prep + AP-level seed plans are
+ *  tagged with the underlying grade rather than the level id. Without
+ *  this expansion the picker would be empty for every level above
+ *  high-school. */
 function gradesInBand(band: string): string[] {
   const b = band.trim().toLowerCase();
   if (b === 'k-2') return ['k', '1', '2'];
@@ -1073,8 +1079,30 @@ function gradesInBand(band: string): string[] {
   if (b === '6-8') return ['6', '7', '8'];
   if (b === '9-10') return ['9', '10'];
   if (b === '11-12') return ['11', '12'];
-  if (b === 'ap' || b === 'sat-act' || b === 'college') return [b];
+  if (b === 'ap') return ['ap', '11', '12', '9-12'];
+  if (b === 'sat-act') return ['sat-act', '11', '12'];
+  if (b === 'iitjee') return ['iitjee', '11', '12'];
+  if (b === 'graduate') return ['graduate', '11', '12'];
+  if (b === 'nursing') return ['nursing', '11', '12'];
+  if (b === 'college') return ['college', '12'];
   return [b];
+}
+
+/** Subject aliases — different seed batches used short ('sci', 'ss')
+ *  vs long ('science', 'social-studies') ids interchangeably. The UI
+ *  uses the long forms; this map lets a filter on the long form match
+ *  plans tagged with either. */
+const SUBJECT_ALIASES: Record<string, string[]> = {
+  science: ['science', 'sci'],
+  sci: ['science', 'sci'],
+  'social-studies': ['social-studies', 'ss'],
+  ss: ['social-studies', 'ss'],
+};
+
+function subjectMatches(filter: string | undefined, planSubject: string): boolean {
+  if (!filter) return true;
+  const aliases = SUBJECT_ALIASES[filter] ?? [filter];
+  return aliases.includes(planSubject);
 }
 
 function gradeMatches(filterGrade: string | undefined, planGrade: string): boolean {
@@ -1084,14 +1112,24 @@ function gradeMatches(filterGrade: string | undefined, planGrade: string): boole
   return filterSet.includes(plan);
 }
 
-/** List plans matching the filter. Seeds + DB merged, deduped by id. */
+/** List plans matching the filter. Seeds + DB merged, deduped by id.
+ *
+ *  When filter.subject is 'test-prep', plans are also matched if their
+ *  topic field is 'test-prep' — many JEE / SAT / NCLEX / GRE seeds use
+ *  subject='math'/'sci'/'ela' with topic='test-prep' as the marker. */
 export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<LessonPlan[]> {
-  const matches = (p: LessonPlan) =>
-    (!filter.subject || p.subject === filter.subject) &&
-    gradeMatches(filter.grade, p.grade) &&
-    (!filter.curriculum || p.curriculum === filter.curriculum) &&
-    (!filter.topic || p.topic === filter.topic) &&
-    (!filter.locale || p.locale === filter.locale);
+  const matches = (p: LessonPlan) => {
+    const subjectOk =
+      subjectMatches(filter.subject, p.subject) ||
+      (filter.subject === 'test-prep' && p.topic === 'test-prep');
+    return (
+      subjectOk &&
+      gradeMatches(filter.grade, p.grade) &&
+      (!filter.curriculum || p.curriculum === filter.curriculum) &&
+      (!filter.topic || p.topic === filter.topic) &&
+      (!filter.locale || p.locale === filter.locale)
+    );
+  };
 
   const seedHits = SEED_PLANS.filter(matches);
   let dbHits: LessonPlan[] = [];
@@ -1099,7 +1137,18 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
     await connectDB();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = {};
-    if (filter.subject) query.subject = filter.subject;
+    if (filter.subject) {
+      const aliases = SUBJECT_ALIASES[filter.subject] ?? [filter.subject];
+      // For test-prep, also include plans whose TOPIC is 'test-prep'
+      // (covers seeds tagged with subject=math/sci/ela + topic=test-prep).
+      if (filter.subject === 'test-prep') {
+        query.$or = [{ subject: { $in: aliases } }, { topic: 'test-prep' }];
+      } else if (aliases.length === 1) {
+        query.subject = aliases[0];
+      } else {
+        query.subject = { $in: aliases };
+      }
+    }
     if (filter.grade) {
       // DB-side: expand band → set of grades. Mongo $in matches any.
       // Case-insensitive grades are matched via a lowercase regex set.
