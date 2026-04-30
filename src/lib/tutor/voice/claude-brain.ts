@@ -24,11 +24,17 @@ export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
 /**
  * Hard cap on agent-loop iterations per brain turn. Each iteration is one
- * Anthropic call. Sonnet's typical multi-step plan completes in 1-3 rounds;
- * cap exists to prevent a runaway loop if the model keeps emitting tool_use
+ * Anthropic call. Typical multi-step plan completes in 1-3 rounds; cap
+ * exists to prevent a runaway loop if the model keeps emitting tool_use
  * forever without converging.
+ *
+ * Bumped 5 → 9 on 2026-04-30 after a circles-session turn that emitted
+ * 1 sentence + 6 tool calls hit the cap before narrating. Symptom: brain
+ * said "Let's build the core vocabulary..." then went silent while the
+ * board filled. Higher cap costs at most a few extra Anthropic calls
+ * per stuck turn; the real protection is still the cap, not its value.
  */
-const MAX_AGENT_ITERATIONS = 5;
+const MAX_AGENT_ITERATIONS = 9;
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -205,8 +211,32 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
         .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
         .join('\n')
     : '(unknown)';
+  // Surface the authored problem/question text for every segment with
+  // one — not just the current segment. The brain often emits
+  // advance_lesson + show_segment_card in the SAME response, then
+  // narrates based on its expectation of the new segment's content
+  // rather than the actual authored text. Listing every authored
+  // problem inline lets the brain reach the correct tokens without an
+  // extra round-trip. Cost: a few hundred extra cached tokens per plan
+  // (the plan is the cache-stable preamble; this addition rides the
+  // same cache window). Observed 2026-04-30 algebra-2 circles session:
+  // chat said "radius 9, 120°" while the rendered worked-sector card
+  // said "radius 8, 90°".
   const idx = segmentIndex
-    .map((s, i) => `  ${i + 1}. ${s.id} [${s.kind}]${s.id === currentSegmentId ? '  ← current' : ''}`)
+    .map((s, i) => {
+      const isCurrent = s.id === currentSegmentId ? '  ← current' : '';
+      const authored = (() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sg = s as any;
+        if (sg.kind === 'try_yourself' && typeof sg.problem === 'string') return sg.problem;
+        if (sg.kind === 'worked_example' && typeof sg.problem === 'string') return sg.problem;
+        if (sg.kind === 'misconception_check' && typeof sg.question === 'string') return sg.question;
+        if (sg.kind === 'extension' && typeof sg.advancedQuestion === 'string') return sg.advancedQuestion;
+        return null;
+      })();
+      const head = `  ${i + 1}. ${s.id} [${s.kind}]${isCurrent}`;
+      return authored ? `${head}\n     authored: ${JSON.stringify(authored)}` : head;
+    })
     .join('\n');
   // Segments that carry an authored problem / question statement.
   // The brain MUST render that text verbatim to the whiteboard —
