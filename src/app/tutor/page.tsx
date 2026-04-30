@@ -410,6 +410,14 @@ function TutorPage() {
     if (pickerAnchorIndex !== null) return;
     if (nudgeDismissed) return;
     if (availableLessonPlans.length === 0) return;
+    // Suppress when a lesson plan was already chosen at setup. The picker
+    // is for "I haven't picked a lesson yet" prompting; if the student
+    // already locked one in, the greeting is wrong (it cites the
+    // configured TOPIC, not the chosen LESSON, and contradicts what the
+    // brain is teaching). Observed 2026-04-30: student picked Calculus
+    // integration plan but the picker greeting said "I see you chose
+    // Trigonometry" — confusing and false.
+    if (selectedLessonPlanId || lessonProgress.plan) return;
     const hasTutorMsg = transcript.some((t) => t.role === 'tutor');
     if (!hasTutorMsg) return;
     setPickerAnchorIndex(transcript.length);
@@ -419,7 +427,7 @@ function TutorPage() {
         `I see you chose ${topic} — nice. You can tell me ANY topic in this area, or jump straight into one of these lessons.`,
       );
     }
-  }, [stage, transcript, availableLessonPlans.length, nudgeDismissed, pickerAnchorIndex, selectedSubject, selectedLevel, selectedTopicId]);
+  }, [stage, transcript, availableLessonPlans.length, nudgeDismissed, pickerAnchorIndex, selectedSubject, selectedLevel, selectedTopicId, selectedLessonPlanId, lessonProgress.plan]);
   useEffect(() => {
     if (stage !== 'session') return;
     const interval = setInterval(() => {
@@ -1253,6 +1261,17 @@ function TutorPage() {
                 transcript={transcript}
                 isProcessing={isProcessing}
                 pickerAnchorIndex={pickerAnchorIndex}
+                onQuickAnswer={(text) => {
+                  // Quick-answer button tap: dispatch directly to the
+                  // brain via sendTextMessage. Same channel as typed
+                  // input → goes through transcriptUpdate hooks and
+                  // produces a normal student bubble. Saves the
+                  // student waiting for TTS to finish (2026-04-30
+                  // calc session feedback).
+                  if (realtimeHandleRef.current) {
+                    realtimeHandleRef.current.sendTextMessage(text);
+                  }
+                }}
                 picker={!nudgeDismissed && availableLessonPlans.length > 0 ? (
                   <LessonNudgePicker
                     plans={availableLessonPlans}

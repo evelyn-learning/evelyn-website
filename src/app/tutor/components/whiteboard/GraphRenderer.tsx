@@ -123,18 +123,27 @@ export function GraphRenderer({
     }));
   }, [functionsOfY, functions.length]);
 
-  // Parse shaded region
+  // Parse shaded region. Defensive: if `between` has fewer than 2
+  // expressions (brain forgot to include the axis baseline for an
+  // "area under the curve" request), default the missing one to "0".
+  // Observed 2026-04-30 calculus session: shading silently failed
+  // because the brain sent only the curve expression and not the
+  // x-axis bound. Without this fallback, parseFunctionString(undefined)
+  // returns NaN and nothing renders.
   const shadedRegionEvaluators = useMemo(() => {
     if (!shadedRegion) return null;
+    const between = Array.isArray(shadedRegion.between) ? shadedRegion.between : [];
+    const expr1 = between[0] ?? '0';
+    const expr2 = between[1] ?? '0';
     if (shadedRegion.axis === 'y') {
       return {
-        fn1: parseFunctionOfYString(shadedRegion.between[0]),
-        fn2: parseFunctionOfYString(shadedRegion.between[1]),
+        fn1: parseFunctionOfYString(expr1),
+        fn2: parseFunctionOfYString(expr2),
       };
     }
     return {
-      fn1: parseFunctionString(shadedRegion.between[0]),
-      fn2: parseFunctionString(shadedRegion.between[1]),
+      fn1: parseFunctionString(expr1),
+      fn2: parseFunctionString(expr2),
     };
   }, [shadedRegion]);
 

@@ -25,6 +25,12 @@ interface TranscriptViewProps {
    *  the picker should be inserted. e.g. 1 → picker appears after
    *  the first visible entry. */
   pickerAnchorIndex?: number | null;
+  /** Optional quick-answer dispatch. When the latest tutor turn ends
+   *  in a yes/no or true/false question, render small buttons next
+   *  to the bubble that send the answer immediately on tap — saves
+   *  the student waiting for TTS to finish before they can speak.
+   *  2026-04-30: feature request from a calc session. */
+  onQuickAnswer?: (text: string) => void;
 }
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
@@ -99,7 +105,39 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   return { body, question };
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex }: TranscriptViewProps) {
+/** Classify the trailing question as yes/no, true/false, or open. Used to
+ *  decide whether to render quick-answer buttons.
+ *  - 'yes-no'      → "Does that make sense?", "Want to try one?", "Did you get it?"
+ *  - 'true-false'  → "True or false: ...", "Is this right or wrong?"
+ *  - 'open'        → anything else; no quick-answer buttons.
+ *
+ *  Conservative: only the most-clearly-structured patterns trigger
+ *  buttons. False positives mean the student sees a quick-answer UI
+ *  for a question that actually needed a longer answer — annoying but
+ *  not blocking. False negatives mean no buttons (current default).
+ */
+export type QuickAnswerKind = 'yes-no' | 'true-false' | 'open';
+export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKind {
+  if (!question) return 'open';
+  const q = question.trim().toLowerCase();
+  // True/false form: explicit "true or false" framing or "is this right or wrong"
+  if (/\btrue or false\b/.test(q) || /\bright or wrong\b/.test(q) || /\bcorrect or incorrect\b/.test(q)) {
+    return 'true-false';
+  }
+  // Yes/no form: starts with one of the canonical yes/no question words
+  // and is reasonably short. Long questions usually want a richer answer
+  // even when phrased as yes/no.
+  if (q.length > 140) return 'open';
+  const yesNoStart = /^(does|did|do|is|are|was|were|will|would|can|could|should|shall|may|might|have|has|had|want|ready|sure|got|see|make sense|makes sense)\b/;
+  if (yesNoStart.test(q)) return 'yes-no';
+  // "Want to try X?" / "Ready to do Y?" common tutor close-out form
+  if (/\b(want to|ready to|shall we|how about|wanna)\b.+\?$/.test(q)) return 'yes-no';
+  // "Does that make sense?" / "Make sense?" specifically
+  if (/\bmake[s]? sense\?$/.test(q)) return 'yes-no';
+  return 'open';
+}
+
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
@@ -181,7 +219,26 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   const beforePicker = anchor !== null ? visibleTranscript.slice(0, anchor) : visibleTranscript;
   const afterPicker = anchor !== null ? visibleTranscript.slice(anchor) : [];
 
-  const renderEntry = (entry: TranscriptEntry) => (
+  // Identify the LATEST tutor entry id — quick-answer buttons render
+  // only on that one (and only when its trailing question is yes/no
+  // or true/false). Without this gating we'd show buttons under every
+  // tutor turn in scrollback, which would clutter and confuse.
+  const latestTutorEntryId = (() => {
+    for (let i = visibleTranscript.length - 1; i >= 0; i--) {
+      const e = visibleTranscript[i];
+      if (e.role === 'tutor' && !e.streaming) return e.id;
+    }
+    return null;
+  })();
+
+  const renderEntry = (entry: TranscriptEntry) => {
+    const split = entry.role === 'tutor' && !entry.streaming ? splitTrailingQuestion(entry.text) : null;
+    const quickKind = (
+      onQuickAnswer && entry.id === latestTutorEntryId && split
+        ? classifyQuestionForQuickAnswer(split.question)
+        : 'open'
+    );
+    return (
     <div
       key={entry.id}
       className={`flex gap-3 ${
@@ -218,7 +275,6 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         >
           {entry.role === 'tutor' && !entry.streaming
             ? (() => {
-                const split = splitTrailingQuestion(entry.text);
                 if (!split) {
                   return (
                     <p className="whitespace-pre-wrap">
@@ -252,9 +308,41 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         <p className="text-xs text-gray-400 mt-1">
           {formatTime(entry.timestamp)}
         </p>
+
+        {/* Quick-answer buttons under the LATEST tutor turn when its
+            trailing question is yes/no or true/false. Lets the student
+            answer without waiting for TTS to finish or typing.
+            Tap → sends text via onQuickAnswer (relayed to brain) and
+            the buttons disappear because the next tutor turn becomes
+            the new "latest". */}
+        {onQuickAnswer && quickKind !== 'open' && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {(quickKind === 'yes-no'
+              ? [
+                  { label: 'Yes', text: 'Yes' },
+                  { label: 'No', text: 'No' },
+                  { label: 'Not sure', text: 'I\'m not sure' },
+                ]
+              : [
+                  { label: 'True', text: 'True' },
+                  { label: 'False', text: 'False' },
+                  { label: 'Not sure', text: 'I\'m not sure' },
+                ]
+            ).map((opt) => (
+              <button
+                key={opt.label}
+                onClick={() => onQuickAnswer(opt.text)}
+                className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div

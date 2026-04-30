@@ -100,10 +100,10 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         shadedRegion: {
           type: 'object',
-          description: 'Shade area between two curves.',
+          description: 'Shade area between two curves (or between a curve and the axis baseline). For "area UNDER y = f(x) from a to b" pass between=["f(x)", "0"] — the "0" is the x-axis. CRITICAL: between MUST be an array of EXACTLY TWO expressions. If you want area under a curve to the x-axis, pass "0" as the second bound; do not omit it.',
           properties: {
             axis: { type: 'string', enum: ['x', 'y'] },
-            between: { type: 'array', items: { type: 'string' } },
+            between: { type: 'array', items: { type: 'string' }, description: 'Two LaTeX expressions naming the upper and lower (or left/right) bounds. For area-under-curve: ["f(x)", "0"].' },
             from: { type: 'number' },
             to: { type: 'number' },
             color: { type: 'string' },
