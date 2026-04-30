@@ -148,6 +148,11 @@ import { SEED_G7_MATH_INTEGER_OPERATIONS } from './seeds/g7-math-integer-operati
 import { SEED_G7_MATH_ONE_STEP_EQUATIONS } from './seeds/g7-math-one-step-equations';
 import { SEED_G7_MATH_TWO_STEP_EQUATIONS } from './seeds/g7-math-two-step-equations';
 import { SEED_G7_MATH_DISTRIBUTIVE_COMBINE } from './seeds/g7-math-distributive-combine';
+import { SEED_G8_MATH_FUNCTIONS_INTRO } from './seeds/g8-math-functions-intro';
+import { SEED_G8_MATH_SLOPE_LINEAR_FUNCTIONS } from './seeds/g8-math-slope-linear-functions';
+import { SEED_G8_MATH_EXPONENTS_SCIENTIFIC_NOTATION } from './seeds/g8-math-exponents-scientific-notation';
+import { SEED_G8_MATH_TRANSFORMATIONS } from './seeds/g8-math-transformations';
+import { SEED_G8_MATH_SQUARE_ROOTS_IRRATIONALS } from './seeds/g8-math-square-roots-irrationals';
 // Grades 6-8 Science completion.
 import { SEED_G6_SCI_BODY_SYSTEMS_INTRO } from './seeds/g6-sci-body-systems-intro';
 import { SEED_G6_SCI_ECOSYSTEMS } from './seeds/g6-sci-ecosystems';
@@ -330,6 +335,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G7_MATH_ONE_STEP_EQUATIONS,
   SEED_G7_MATH_TWO_STEP_EQUATIONS,
   SEED_G7_MATH_DISTRIBUTIVE_COMBINE,
+  // Batch 9 — G8 math (functions, slope, exponents, transformations, irrationals).
+  SEED_G8_MATH_FUNCTIONS_INTRO,
+  SEED_G8_MATH_SLOPE_LINEAR_FUNCTIONS,
+  SEED_G8_MATH_EXPONENTS_SCIENTIFIC_NOTATION,
+  SEED_G8_MATH_TRANSFORMATIONS,
+  SEED_G8_MATH_SQUARE_ROOTS_IRRATIONALS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
