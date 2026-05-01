@@ -3599,6 +3599,27 @@ export function VoiceTutorRealtime({
                   let args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
                   totalToolNamesSeen.push(name);
+                  // Server-only tools — no whiteboard render expected. The
+                  // brain calls these for SIDE EFFECTS resolved server-side
+                  // by claude-brain.ts's toolResultProvider; the result
+                  // flows back via tool_result and the brain decides what
+                  // to do with it. We must NOT route these through
+                  // mapFunctionCallToCommand (which would log "unmapped tool
+                  // call" and leave the gate stuck), and we must open the
+                  // gate so any narration the brain emitted between this
+                  // tool call and a real render-tool gets voiced.
+                  //
+                  // Currently in the set: generate_problem (adaptive-pacing
+                  // v1 — Phase 1). Add new server-only tools here as the
+                  // pipeline grows.
+                  if (name === 'generate_problem') {
+                    if (gateState === 'gated') {
+                      clearTimeout(gateTimer);
+                      openGate();
+                    }
+                    onDebugEvent?.('server_only_tool', name);
+                    continue;
+                  }
                   // Authored-truth guard: when the active segment has an
                   // authored card, free-form show_problem is forbidden.
                   // The brain MUST use show_segment_card so the rendered

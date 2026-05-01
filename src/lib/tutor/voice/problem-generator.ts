@@ -136,42 +136,69 @@ async function brainGenWithVerify(
   return null;
 }
 
-/** Layer 4 — plan-authored ultimate fallback. Returns the next
- *  unshown try_yourself segment from the plan, or the anchor's
- *  same-LO try_yourself if all are exhausted. */
+/** Cheap content-token extraction: lowercase words ≥4 chars, no
+ *  stopwords (we just rely on length to filter them naturally). Used
+ *  by the Layer 4 relevance filter. */
+function contentTokenSet(s: string): Set<string> {
+  return new Set(
+    s
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter((t) => t.length >= 4)
+  );
+}
+
+/** Layer 4 — plan-authored ultimate fallback.
+ *
+ *  RELEVANCE-FILTERED. Returns a try-yourself ONLY if it shares ≥3
+ *  content tokens (≥4 chars each) with the anchor statement. Otherwise
+ *  null.
+ *
+ *  Why: a topically-distant fallback (e.g. returning a bullet+block
+ *  momentum problem when the anchor was a rolling-incline acceleration
+ *  problem) corrupts the brain's context. The brain semantically
+ *  rejects the canonical text and emits its own free-form
+ *  show_problem, breaking the verbatim-quoting contract — observed
+ *  2026-05-01 JEE Physics session.
+ *
+ *  When this returns null, the API resolver returns
+ *  `{ error: 'no_problem_available' }` and the brain follows the
+ *  system-prompt rule: apologize briefly, offer to advance OR ask the
+ *  student what they want next. NEVER emit a free-form show_problem
+ *  in that case. */
 function planAuthoredFallback(
   plan: LessonPlan,
+  anchorStatement: string,
   excludeHashes: string[]
 ): GeneratedProblem | null {
   const tryYourselves = plan.segments.filter(
     (s): s is SegmentTryYourself => s.kind === 'try_yourself'
   );
   if (tryYourselves.length === 0) return null;
+  const anchorTokens = contentTokenSet(anchorStatement);
+  if (anchorTokens.size === 0) return null;
+
+  let best: { ty: SegmentTryYourself; score: number } | null = null;
   for (const ty of tryYourselves) {
     const hash = simpleHash(ty.problem);
-    if (!excludeHashes.includes(hash)) {
-      return {
-        canonicalText: ty.problem,
-        expectedAnswer: ty.expectedAnswer,
-        hints: ty.hints,
-        responseFormat: ty.responseFormat,
-        choices: ty.choices,
-        provenance: 'plan-authored',
-        trackingId: ty.id,
-      };
+    if (excludeHashes.includes(hash)) continue;
+    const tyTokens = contentTokenSet(ty.problem);
+    let overlap = 0;
+    for (const t of anchorTokens) if (tyTokens.has(t)) overlap++;
+    if (overlap >= 3 && (!best || overlap > best.score)) {
+      best = { ty, score: overlap };
     }
   }
-  // All authored try-yourselves shown already — return the first
-  // anyway. Better to repeat than to fail open.
-  const ty = tryYourselves[0];
+  if (!best) return null;
   return {
-    canonicalText: ty.problem,
-    expectedAnswer: ty.expectedAnswer,
-    hints: ty.hints,
-    responseFormat: ty.responseFormat,
-    choices: ty.choices,
+    canonicalText: best.ty.problem,
+    expectedAnswer: best.ty.expectedAnswer,
+    hints: best.ty.hints,
+    responseFormat: best.ty.responseFormat,
+    choices: best.ty.choices,
     provenance: 'plan-authored',
-    trackingId: ty.id,
+    trackingId: best.ty.id,
   };
 }
 
@@ -292,8 +319,12 @@ export async function generateProblem(
     }
   }
 
-  // Layer 4 — plan-authored ultimate fallback.
-  const fallback = planAuthoredFallback(input.plan, excludeHashes);
+  // Layer 4 — plan-authored ultimate fallback (relevance-filtered).
+  const fallback = planAuthoredFallback(
+    input.plan,
+    input.anchor.statement,
+    excludeHashes
+  );
   return {
     result: fallback,
     telemetry: {
