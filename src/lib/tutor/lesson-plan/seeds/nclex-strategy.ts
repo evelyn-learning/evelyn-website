@@ -11,9 +11,9 @@ export const SEED_NCLEX_STRATEGY: LessonPlan = {
   id: 'evelyn.testprep.nclex.strategy.v1',
   title: 'NCLEX strategy: prioritization frameworks for nursing licensure',
   curriculum: 'CCSS',
-  grade: '12',
-  subject: 'sci',
-  topic: 'test-prep',
+  grade: 'nursing',
+  subject: 'test-prep',
+  topic: 'nclex-rn',
   locale: 'en',
   los: [
     {

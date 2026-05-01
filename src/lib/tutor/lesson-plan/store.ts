@@ -467,6 +467,12 @@ import { SEED_AP_PRECALC_POLYNOMIAL_RATIONAL } from './seeds/ap-precalc-polynomi
 import { SEED_AP_PRECALC_EXPONENTIAL_LOGARITHMIC } from './seeds/ap-precalc-exponential-logarithmic';
 import { SEED_AP_PRECALC_TRIGONOMETRIC_POLAR } from './seeds/ap-precalc-trigonometric-polar';
 import { SEED_AP_PRECALC_PARAMETRIC_VECTORS_MATRICES } from './seeds/ap-precalc-parametric-vectors-matrices';
+// Batch 53 — NCLEX-NGN (Next Generation NCLEX, launched April 2023).
+// Currency-checked against NCSBN test-plan + UWorld + Kaplan briefs.
+// Covers the new item types and the Clinical Judgment Measurement Model.
+import { SEED_NCLEX_NGN_OVERVIEW } from './seeds/nclex-ngn-overview';
+import { SEED_NCLEX_NGN_CASE_STUDIES } from './seeds/nclex-ngn-case-studies';
+import { SEED_NCLEX_NGN_STANDALONE_ITEMS } from './seeds/nclex-ngn-standalone-items';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1060,6 +1066,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PRECALC_EXPONENTIAL_LOGARITHMIC,
   SEED_AP_PRECALC_TRIGONOMETRIC_POLAR,
   SEED_AP_PRECALC_PARAMETRIC_VECTORS_MATRICES,
+  SEED_NCLEX_NGN_OVERVIEW,
+  SEED_NCLEX_NGN_CASE_STUDIES,
+  SEED_NCLEX_NGN_STANDALONE_ITEMS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

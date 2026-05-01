@@ -8,8 +8,8 @@ export const SEED_NCLEX_PN_STRATEGY: LessonPlan = {
   id: 'evelyn.nclex.pn.strategy.v1',
   title: 'NCLEX-PN exam strategy',
   curriculum: 'NCSBN',
-  grade: '12',
-  subject: 'sci',
+  grade: 'nursing',
+  subject: 'test-prep',
   topic: 'test-prep',
   locale: 'en',
   los: [
