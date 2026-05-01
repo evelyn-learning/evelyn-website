@@ -585,6 +585,43 @@ import { SEED_GRE_SUBJECT_MATH } from './seeds/gre-subject-math';
 import { SEED_GRE_SUBJECT_PHYSICS } from './seeds/gre-subject-physics';
 import { SEED_JEE_THERMODYNAMICS } from './seeds/jee-thermodynamics';
 import { SEED_JEE_ORGANIC_MECHANISMS } from './seeds/jee-organic-mechanisms';
+// Batch 51 — NEET UG hybrid: 1 META + 8 CONTENT (bio cell/genetics/physiology/ecology, physics mechanics/electrostatics, chem organic/equilibrium).
+import { SEED_NEET_FORMAT_2025 } from './seeds/neet-format-2025';
+import { SEED_NEET_BIO_CELL_BIOLOGY } from './seeds/neet-bio-cell-biology';
+import { SEED_NEET_BIO_GENETICS } from './seeds/neet-bio-genetics';
+import { SEED_NEET_BIO_HUMAN_PHYSIOLOGY } from './seeds/neet-bio-human-physiology';
+import { SEED_NEET_BIO_ECOLOGY } from './seeds/neet-bio-ecology';
+import { SEED_NEET_PHYSICS_MECHANICS } from './seeds/neet-physics-mechanics';
+import { SEED_NEET_PHYSICS_ELECTROSTATICS } from './seeds/neet-physics-electrostatics';
+import { SEED_NEET_CHEMISTRY_ORGANIC } from './seeds/neet-chemistry-organic';
+import { SEED_NEET_CHEMISTRY_EQUILIBRIUM } from './seeds/neet-chemistry-equilibrium';
+// Batch 52 — MCAT hybrid: 1 META + 7 CONTENT (biochem AAs/enzymes, bio organ systems, chem-phys acid-base/thermo, psych-soc research, CARS).
+import { SEED_MCAT_FORMAT_2025 } from './seeds/mcat-format-2025';
+import { SEED_MCAT_BIOCHEM_AMINO_ACIDS } from './seeds/mcat-biochem-amino-acids';
+import { SEED_MCAT_BIOCHEM_ENZYMES } from './seeds/mcat-biochem-enzymes';
+import { SEED_MCAT_BIO_ORGAN_SYSTEMS } from './seeds/mcat-bio-organ-systems';
+import { SEED_MCAT_CHEM_PHYS_ACID_BASE } from './seeds/mcat-chem-phys-acid-base';
+import { SEED_MCAT_CHEM_PHYS_THERMODYNAMICS } from './seeds/mcat-chem-phys-thermodynamics';
+import { SEED_MCAT_PSYCH_SOC_RESEARCH } from './seeds/mcat-psych-soc-research';
+import { SEED_MCAT_CARS_STRATEGY } from './seeds/mcat-cars-strategy';
+// Batch 53 — AP World History depth: 4 unit-fillers (Networks, Land Empires, Transoceanic, Globalization).
+import { SEED_AP_WORLD_UNIT2_NETWORKS } from './seeds/ap-world-unit2-networks';
+import { SEED_AP_WORLD_UNIT3_LAND_EMPIRES } from './seeds/ap-world-unit3-land-empires';
+import { SEED_AP_WORLD_UNIT4_TRANSOCEANIC } from './seeds/ap-world-unit4-transoceanic';
+import { SEED_AP_WORLD_UNIT9_GLOBALIZATION } from './seeds/ap-world-unit9-globalization';
+// Batch 54 — APUSH depth: 4 period-fillers (Period 1 encounter, Period 3 Independence, Period 6 Gilded Age, Period 7 Imperialism+Progressive).
+import { SEED_AP_USH_PERIOD1_ENCOUNTER } from './seeds/ap-ush-period1-encounter';
+import { SEED_AP_USH_PERIOD3_INDEPENDENCE } from './seeds/ap-ush-period3-independence';
+import { SEED_AP_USH_PERIOD6_GILDED_AGE } from './seeds/ap-ush-period6-gilded-age';
+import { SEED_AP_USH_PERIOD7_IMPERIALISM_PROGRESSIVE } from './seeds/ap-ush-period7-imperialism-progressive';
+// Batch 55 — AP Calc AB depth: 4 unit-fillers (limits/continuity, chain+implicit, curve sketching, differential equations).
+import { SEED_AP_CALC_LIMITS_CONTINUITY } from './seeds/ap-calc-limits-continuity';
+import { SEED_AP_CALC_CHAIN_IMPLICIT } from './seeds/ap-calc-chain-implicit';
+import { SEED_AP_CALC_CURVE_SKETCHING } from './seeds/ap-calc-curve-sketching';
+import { SEED_AP_CALC_DIFFERENTIAL_EQUATIONS } from './seeds/ap-calc-differential-equations';
+// Batch 56 — AP Bio Unit 6 depth: central dogma + gene regulation/biotech.
+import { SEED_AP_BIO_CENTRAL_DOGMA } from './seeds/ap-bio-central-dogma';
+import { SEED_AP_BIO_GENE_REGULATION_BIOTECH } from './seeds/ap-bio-gene-regulation-biotech';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -1130,6 +1167,37 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_JEE_MAIN_2025_FORMAT,
   SEED_JEE_MAIN_2025_SYLLABUS_DELETIONS,
   SEED_JEE_MAIN_2025_PREP_STRATEGY,
+  SEED_NEET_FORMAT_2025,
+  SEED_NEET_BIO_CELL_BIOLOGY,
+  SEED_NEET_BIO_GENETICS,
+  SEED_NEET_BIO_HUMAN_PHYSIOLOGY,
+  SEED_NEET_BIO_ECOLOGY,
+  SEED_NEET_PHYSICS_MECHANICS,
+  SEED_NEET_PHYSICS_ELECTROSTATICS,
+  SEED_NEET_CHEMISTRY_ORGANIC,
+  SEED_NEET_CHEMISTRY_EQUILIBRIUM,
+  SEED_MCAT_FORMAT_2025,
+  SEED_MCAT_BIOCHEM_AMINO_ACIDS,
+  SEED_MCAT_BIOCHEM_ENZYMES,
+  SEED_MCAT_BIO_ORGAN_SYSTEMS,
+  SEED_MCAT_CHEM_PHYS_ACID_BASE,
+  SEED_MCAT_CHEM_PHYS_THERMODYNAMICS,
+  SEED_MCAT_PSYCH_SOC_RESEARCH,
+  SEED_MCAT_CARS_STRATEGY,
+  SEED_AP_WORLD_UNIT2_NETWORKS,
+  SEED_AP_WORLD_UNIT3_LAND_EMPIRES,
+  SEED_AP_WORLD_UNIT4_TRANSOCEANIC,
+  SEED_AP_WORLD_UNIT9_GLOBALIZATION,
+  SEED_AP_USH_PERIOD1_ENCOUNTER,
+  SEED_AP_USH_PERIOD3_INDEPENDENCE,
+  SEED_AP_USH_PERIOD6_GILDED_AGE,
+  SEED_AP_USH_PERIOD7_IMPERIALISM_PROGRESSIVE,
+  SEED_AP_CALC_LIMITS_CONTINUITY,
+  SEED_AP_CALC_CHAIN_IMPLICIT,
+  SEED_AP_CALC_CURVE_SKETCHING,
+  SEED_AP_CALC_DIFFERENTIAL_EQUATIONS,
+  SEED_AP_BIO_CENTRAL_DOGMA,
+  SEED_AP_BIO_GENE_REGULATION_BIOTECH,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
@@ -1175,6 +1243,7 @@ function gradesInBand(band: string): string[] {
   if (b === 'ap') return ['ap', '11', '12', '9-12'];
   if (b === 'sat-act') return ['sat-act', '11', '12'];
   if (b === 'iitjee') return ['iitjee', '11', '12'];
+  if (b === 'medical-entrance') return ['medical-entrance', '11', '12'];
   if (b === 'graduate') return ['graduate', '11', '12'];
   if (b === 'nursing') return ['nursing', '11', '12'];
   if (b === 'college') return ['college', '12'];

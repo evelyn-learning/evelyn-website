@@ -52,6 +52,7 @@ export const LEVELS: TutorLevel[] = [
   { id: 'ap', label: 'AP / IB', description: 'College-level rigor' },
   { id: 'sat-act', label: 'SAT / ACT', description: 'Standardized test prep' },
   { id: 'iitjee', label: 'IIT JEE', description: 'JEE Main + Advanced (engineering)' },
+  { id: 'medical-entrance', label: 'Medical Entrance (NEET)', description: 'NEET UG (Indian medical entrance)' },
   { id: 'graduate', label: 'Graduate Tests', description: 'GRE / GMAT / LSAT / MCAT' },
   { id: 'nursing', label: 'Nursing', description: 'NCLEX-RN / NCLEX-PN' },
   { id: 'college', label: 'College Intro', description: 'Freshman-level' },
@@ -426,6 +427,12 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'jee-chemistry', label: 'JEE Chemistry' },
       { id: 'jee-math', label: 'JEE Math' },
     ],
+    'medical-entrance': [
+      { id: 'neet-ug', label: 'NEET UG' },
+      { id: 'neet-biology', label: 'NEET Biology' },
+      { id: 'neet-physics', label: 'NEET Physics' },
+      { id: 'neet-chemistry', label: 'NEET Chemistry' },
+    ],
     graduate: [
       { id: 'gre-quant', label: 'GRE Quant' },
       { id: 'gre-verbal', label: 'GRE Verbal' },
@@ -436,6 +443,10 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'gmat-verbal', label: 'GMAT Verbal' },
       { id: 'lsat', label: 'LSAT' },
       { id: 'mcat', label: 'MCAT' },
+      { id: 'mcat-chem-phys', label: 'MCAT Chem/Phys' },
+      { id: 'mcat-bio-biochem', label: 'MCAT Bio/Biochem' },
+      { id: 'mcat-psych-soc', label: 'MCAT Psych/Soc' },
+      { id: 'mcat-cars', label: 'MCAT CARS' },
     ],
     nursing: [
       { id: 'nclex-rn', label: 'NCLEX-RN' },
