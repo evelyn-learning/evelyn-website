@@ -3644,21 +3644,63 @@ export function VoiceTutorRealtime({
                       const seg = getSegment(plan, segId);
                       const truth = getSegmentTruth(seg);
                       if (truth?.problemText) {
-                        // Previously we rejected the attempt and retried.
-                        // The retry round-trip costs 5-8s of dead air per
-                        // occurrence, and the brain's narration on the
-                        // first attempt was already half-spoken — making
-                        // the second attempt's narration mismatch the
-                        // first audibly. Production logs (2026-04-30)
-                        // showed this as 31% of all validator retries.
+                        // Auto-substitute show_problem → show_segment_card
+                        // when the active segment has authored truth, with
+                        // a query-target divergence guard layered on top.
                         //
-                        // New behavior: SILENTLY substitute show_problem
-                        // with show_segment_card pointing at the same
-                        // segment. Downstream show_segment_card resolver
-                        // pulls the authored text. No reject, no retry,
-                        // no dead air. Speech-vs-card divergence is
-                        // covered by the prompt rule "narrate the
-                        // authored card" (committed a331607).
+                        // Original behavior (committed a331607): SILENTLY
+                        // substitute. Cheap; preserves narration; avoids
+                        // 5-8s retry dead air. Works perfectly when the
+                        // brain's free-form statement is a slight rewording
+                        // of the authored problem.
+                        //
+                        // Failure mode (2026-05-01 JEE Physics session):
+                        // brain emitted show_problem("…Find the SPEED at
+                        // the bottom") for a worked-rolling-incline
+                        // segment whose authored problem reads "…Find its
+                        // ACCELERATION". The substitute swapped the BOARD
+                        // to the authored card, but the brain's narration
+                        // ("find speed at the bottom") was already
+                        // streaming — student saw "Find its acceleration"
+                        // on the board while the chat read "find the speed
+                        // at the bottom." Catastrophic mismatch.
+                        //
+                        // New layered behavior:
+                        //   1. Extract the QUERY TARGET from each statement
+                        //      (the noun after find/calculate/determine).
+                        //   2. If both targets resolve AND differ → KILL
+                        //      this attempt with a validator-feedback
+                        //      rejection. The brain retries, this time
+                        //      narrating the authored target.
+                        //   3. Otherwise → silent-substitute as before.
+                        const brainStatement = typeof (args as { statement?: unknown }).statement === 'string'
+                          ? ((args as { statement: string }).statement)
+                          : '';
+                        const targetRegex = /\b(?:find|calculate|determine|compute|express|what\s+is|what's|whats|how\s+(?:much|many|fast|long))\s+(?:the\s+|its\s+|a\s+|an\s+)?([a-z]{4,})/i;
+                        const brainTarget = brainStatement.match(targetRegex)?.[1]?.toLowerCase();
+                        const authoredTarget = truth.problemText.match(targetRegex)?.[1]?.toLowerCase();
+                        const targetsDiverge = !!brainTarget && !!authoredTarget && brainTarget !== authoredTarget;
+
+                        if (targetsDiverge) {
+                          console.warn(`[brain-orchestrator] show_problem query-target divergence for segment "${segId}": brain asks for "${brainTarget}", authored asks for "${authoredTarget}". Killing attempt for retry.`);
+                          onDebugEvent?.('show_problem_target_divergence', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
+                          rejectionsThisAttempt.push({
+                            action: 'show_problem',
+                            reason: `Your show_problem asked the student to find "${brainTarget}", but the authored ${truth.kind} for segment "${segId}" asks for "${authoredTarget}". This causes a chat-board mismatch where the student hears one question but sees another. RETRY this attempt: (a) call show_segment_card({ segmentId: "${segId}" }) instead of show_problem, and (b) ensure your spoken narration is about finding "${authoredTarget}", NOT "${brainTarget}". The authored problem is: "${truth.problemText.slice(0, 200)}".`,
+                          });
+                          if (!attemptKilled) {
+                            attemptKilled = true;
+                            clearTimeout(gateTimer);
+                            closeGate();
+                            clearSpeechQueueRef.current?.();
+                            speakKillBridge();
+                          }
+                          continue;
+                        }
+                        // Targets match (or aren't extractable) — proceed
+                        // with the silent substitute. Brain's narration is
+                        // either correct or close enough that the prompt
+                        // rule "narrate the authored card" carries it.
                         console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
                         onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
                         name = 'show_segment_card';
