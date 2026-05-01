@@ -509,6 +509,14 @@ import { SEED_LSAT_READING_COMPREHENSION } from './seeds/lsat-reading-comprehens
 import { SEED_GRE_SHORTENED_FORMAT } from './seeds/gre-shortened-format';
 import { SEED_GRE_SHORTENED_VERBAL } from './seeds/gre-shortened-verbal';
 import { SEED_GRE_SHORTENED_QUANT } from './seeds/gre-shortened-quant';
+// Batch 59 — JEE Main 2025-26 (NTA reorganized syllabus + pattern).
+// Currency-checked against NTA's 2025 syllabus PDF + CollegeDekho /
+// iibedu coverage. Two big changes: Section B is now mandatory
+// (no more 10-pick-5) and carries -1 negative marking on numericals;
+// syllabus reduced 25-35% with whole chapters cut from Chemistry.
+import { SEED_JEE_MAIN_2025_FORMAT } from './seeds/jee-main-2025-format';
+import { SEED_JEE_MAIN_2025_SYLLABUS_DELETIONS } from './seeds/jee-main-2025-syllabus-deletions';
+import { SEED_JEE_MAIN_2025_PREP_STRATEGY } from './seeds/jee-main-2025-prep-strategy';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1119,6 +1127,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GRE_SHORTENED_FORMAT,
   SEED_GRE_SHORTENED_VERBAL,
   SEED_GRE_SHORTENED_QUANT,
+  SEED_JEE_MAIN_2025_FORMAT,
+  SEED_JEE_MAIN_2025_SYLLABUS_DELETIONS,
+  SEED_JEE_MAIN_2025_PREP_STRATEGY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
