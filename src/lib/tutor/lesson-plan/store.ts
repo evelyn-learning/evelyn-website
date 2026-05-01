@@ -487,6 +487,14 @@ import { SEED_DIGITAL_SAT_MATH_DOMAINS } from './seeds/digital-sat-math-domains'
 // exam day in Section 2. Exam:Create-PT score split is 70:30.
 import { SEED_AP_CSP_EXAM_FORMAT } from './seeds/ap-csp-exam-format';
 import { SEED_AP_CSP_CREATE_PT } from './seeds/ap-csp-create-pt';
+// Batch 56 — GMAT Focus Edition (replaced GMAT Classic Feb 2024).
+// Currency-checked against mba.com (GMAC) + e-GMAT + Yocket Focus
+// Edition guides. AWA + IR + Sentence Correction + Geometry all
+// removed; Data Insights is the new section absorbing Data Sufficiency.
+// Score scale changed to 205-805.
+import { SEED_GMAT_FOCUS_FORMAT_OVERVIEW } from './seeds/gmat-focus-format-overview';
+import { SEED_GMAT_FOCUS_DATA_INSIGHTS } from './seeds/gmat-focus-data-insights';
+import { SEED_GMAT_FOCUS_QUANT_VERBAL } from './seeds/gmat-focus-quant-verbal';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1088,6 +1096,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_DIGITAL_SAT_MATH_DOMAINS,
   SEED_AP_CSP_EXAM_FORMAT,
   SEED_AP_CSP_CREATE_PT,
+  SEED_GMAT_FOCUS_FORMAT_OVERVIEW,
+  SEED_GMAT_FOCUS_DATA_INSIGHTS,
+  SEED_GMAT_FOCUS_QUANT_VERBAL,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
