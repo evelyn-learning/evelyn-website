@@ -406,9 +406,10 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   'test-prep': {
     'sat-act': [
+      { id: 'sat-strategy', label: 'Digital SAT Strategy & Format' },
       { id: 'sat-math-full', label: 'SAT Math' },
-      { id: 'sat-reading-full', label: 'SAT Reading' },
-      { id: 'sat-writing-full', label: 'SAT Writing' },
+      { id: 'sat-reading-full', label: 'SAT Reading & Writing' },
+      { id: 'sat-writing-full', label: 'SAT Writing (Section)' },
       { id: 'act-math-full', label: 'ACT Math' },
       { id: 'act-science-full', label: 'ACT Science' },
       { id: 'act-english-full', label: 'ACT English' },

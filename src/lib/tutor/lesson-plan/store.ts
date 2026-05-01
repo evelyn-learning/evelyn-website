@@ -473,6 +473,13 @@ import { SEED_AP_PRECALC_PARAMETRIC_VECTORS_MATRICES } from './seeds/ap-precalc-
 import { SEED_NCLEX_NGN_OVERVIEW } from './seeds/nclex-ngn-overview';
 import { SEED_NCLEX_NGN_CASE_STUDIES } from './seeds/nclex-ngn-case-studies';
 import { SEED_NCLEX_NGN_STANDALONE_ITEMS } from './seeds/nclex-ngn-standalone-items';
+// Batch 54 — Digital SAT (US format since March 2024).
+// Currency-checked against College Board SAT Suite + Bluebook docs +
+// cross-referenced with Piqosity / IvyMax / Test Ninjas guides for
+// module-adaptive routing rules and per-section domain breakdowns.
+import { SEED_DIGITAL_SAT_FORMAT_OVERVIEW } from './seeds/digital-sat-format-overview';
+import { SEED_DIGITAL_SAT_READING_WRITING_DOMAINS } from './seeds/digital-sat-reading-writing-domains';
+import { SEED_DIGITAL_SAT_MATH_DOMAINS } from './seeds/digital-sat-math-domains';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1069,6 +1076,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_NCLEX_NGN_OVERVIEW,
   SEED_NCLEX_NGN_CASE_STUDIES,
   SEED_NCLEX_NGN_STANDALONE_ITEMS,
+  SEED_DIGITAL_SAT_FORMAT_OVERVIEW,
+  SEED_DIGITAL_SAT_READING_WRITING_DOMAINS,
+  SEED_DIGITAL_SAT_MATH_DOMAINS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
