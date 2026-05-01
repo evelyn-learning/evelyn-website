@@ -501,6 +501,14 @@ import { SEED_GMAT_FOCUS_QUANT_VERBAL } from './seeds/gmat-focus-quant-verbal';
 import { SEED_LSAT_FORMAT_2024 } from './seeds/lsat-format-2024';
 import { SEED_LSAT_LOGICAL_REASONING } from './seeds/lsat-logical-reasoning';
 import { SEED_LSAT_READING_COMPREHENSION } from './seeds/lsat-reading-comprehension';
+// Batch 58 — GRE General Test shortened format (Sept 22, 2023).
+// Currency-checked against ETS test-structure page + Booster / Yocket /
+// Wizako guides. Test now ~1h 58m (was ~3h 45m); 1 essay (was 2);
+// 27 V + 27 Q questions (was ~40 each); no unscored experimental
+// section. Section-level adaptive routing preserved.
+import { SEED_GRE_SHORTENED_FORMAT } from './seeds/gre-shortened-format';
+import { SEED_GRE_SHORTENED_VERBAL } from './seeds/gre-shortened-verbal';
+import { SEED_GRE_SHORTENED_QUANT } from './seeds/gre-shortened-quant';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1108,6 +1116,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_LSAT_FORMAT_2024,
   SEED_LSAT_LOGICAL_REASONING,
   SEED_LSAT_READING_COMPREHENSION,
+  SEED_GRE_SHORTENED_FORMAT,
+  SEED_GRE_SHORTENED_VERBAL,
+  SEED_GRE_SHORTENED_QUANT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
