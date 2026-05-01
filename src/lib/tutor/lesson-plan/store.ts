@@ -495,6 +495,12 @@ import { SEED_AP_CSP_CREATE_PT } from './seeds/ap-csp-create-pt';
 import { SEED_GMAT_FOCUS_FORMAT_OVERVIEW } from './seeds/gmat-focus-format-overview';
 import { SEED_GMAT_FOCUS_DATA_INSIGHTS } from './seeds/gmat-focus-data-insights';
 import { SEED_GMAT_FOCUS_QUANT_VERBAL } from './seeds/gmat-focus-quant-verbal';
+// Batch 57 — LSAT post-August 2024 format (Logic Games removed).
+// Currency-checked against LSAC's Aug 2024 announcement + Princeton
+// Review and U.S. News coverage of the change.
+import { SEED_LSAT_FORMAT_2024 } from './seeds/lsat-format-2024';
+import { SEED_LSAT_LOGICAL_REASONING } from './seeds/lsat-logical-reasoning';
+import { SEED_LSAT_READING_COMPREHENSION } from './seeds/lsat-reading-comprehension';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1099,6 +1105,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GMAT_FOCUS_FORMAT_OVERVIEW,
   SEED_GMAT_FOCUS_DATA_INSIGHTS,
   SEED_GMAT_FOCUS_QUANT_VERBAL,
+  SEED_LSAT_FORMAT_2024,
+  SEED_LSAT_LOGICAL_REASONING,
+  SEED_LSAT_READING_COMPREHENSION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
