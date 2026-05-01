@@ -118,6 +118,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'matrices', label: 'Matrices' },
     ],
     ap: [
+      { id: 'ap-precalculus', label: 'AP Precalculus' },
       { id: 'ap-calculus-ab', label: 'AP Calculus AB' },
       { id: 'ap-calculus-bc', label: 'AP Calculus BC' },
       { id: 'ap-statistics', label: 'AP Statistics' },

@@ -459,6 +459,14 @@ import { SEED_AP_PHYS1_CIRCULAR_GRAVITATION } from './seeds/ap-phys1-circular-gr
 import { SEED_AP_PHYS1_FLUIDS_DENSITY_PRESSURE } from './seeds/ap-phys1-fluids-density-pressure';
 import { SEED_AP_PHYS1_FLUIDS_BUOYANCY } from './seeds/ap-phys1-fluids-buoyancy';
 import { SEED_AP_PHYS1_FLUIDS_FLOW } from './seeds/ap-phys1-fluids-flow';
+// Batch 52 — AP Pre-Calculus full course (College Board added 2023-24).
+// Currency-checked against the 2025-26 CED (4 units; Units 1-3 tested,
+// Unit 4 optional). Cross-referenced with the AP Pre-Calc Course
+// Framework PDF + Fiveable Unit summaries.
+import { SEED_AP_PRECALC_POLYNOMIAL_RATIONAL } from './seeds/ap-precalc-polynomial-rational';
+import { SEED_AP_PRECALC_EXPONENTIAL_LOGARITHMIC } from './seeds/ap-precalc-exponential-logarithmic';
+import { SEED_AP_PRECALC_TRIGONOMETRIC_POLAR } from './seeds/ap-precalc-trigonometric-polar';
+import { SEED_AP_PRECALC_PARAMETRIC_VECTORS_MATRICES } from './seeds/ap-precalc-parametric-vectors-matrices';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1048,6 +1056,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PHYS1_FLUIDS_DENSITY_PRESSURE,
   SEED_AP_PHYS1_FLUIDS_BUOYANCY,
   SEED_AP_PHYS1_FLUIDS_FLOW,
+  SEED_AP_PRECALC_POLYNOMIAL_RATIONAL,
+  SEED_AP_PRECALC_EXPONENTIAL_LOGARITHMIC,
+  SEED_AP_PRECALC_TRIGONOMETRIC_POLAR,
+  SEED_AP_PRECALC_PARAMETRIC_VECTORS_MATRICES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
