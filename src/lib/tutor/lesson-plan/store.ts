@@ -480,6 +480,13 @@ import { SEED_NCLEX_NGN_STANDALONE_ITEMS } from './seeds/nclex-ngn-standalone-it
 import { SEED_DIGITAL_SAT_FORMAT_OVERVIEW } from './seeds/digital-sat-format-overview';
 import { SEED_DIGITAL_SAT_READING_WRITING_DOMAINS } from './seeds/digital-sat-reading-writing-domains';
 import { SEED_DIGITAL_SAT_MATH_DOMAINS } from './seeds/digital-sat-math-domains';
+// Batch 55 — AP CSP exam restructure (May 2024+ format).
+// Currency-checked against College Board AP CSP page + AP Digital
+// Portfolio submission docs. Create PT was reformatted (not removed):
+// students submit a PPR by April 30, then answer 2 WR questions on
+// exam day in Section 2. Exam:Create-PT score split is 70:30.
+import { SEED_AP_CSP_EXAM_FORMAT } from './seeds/ap-csp-exam-format';
+import { SEED_AP_CSP_CREATE_PT } from './seeds/ap-csp-create-pt';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1079,6 +1086,8 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_DIGITAL_SAT_FORMAT_OVERVIEW,
   SEED_DIGITAL_SAT_READING_WRITING_DOMAINS,
   SEED_DIGITAL_SAT_MATH_DOMAINS,
+  SEED_AP_CSP_EXAM_FORMAT,
+  SEED_AP_CSP_CREATE_PT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
