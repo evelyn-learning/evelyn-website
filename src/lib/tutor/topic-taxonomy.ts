@@ -17,9 +17,40 @@ export interface TutorLevel {
   description: string;
 }
 
+/**
+ * Adaptive-pacing rollout state per topic.
+ *
+ *  - 'disabled' (default): brain-gen does not fire for this topic.
+ *  - 'shadow': pipeline runs invisibly for telemetry only; student
+ *      always sees plan-authored or bank result. Used to validate a
+ *      new topic before exposing brain-gen to students.
+ *  - 'beta': brain-gen serves student-initiated requests live.
+ *      Auto-injection still off.
+ *  - 'live': full pipeline including auto-injection enabled.
+ *
+ * Promotion gates are telemetry-driven (see adaptive-pacing v1 spec):
+ *  shadow → beta: ≥100 runs, ≥95% verifier-pass rate
+ *  beta → live: ≥50 student-initiated served, <5% dissatisfaction signals
+ */
+export type BrainGenState = 'disabled' | 'shadow' | 'beta' | 'live';
+
+/**
+ * OpenStax-style ingested problem-bank coverage per topic.
+ *
+ *  - 'none': nothing ingested. Pipeline skips Layer 1 fast-path.
+ *  - 'seed': initial batch (≥20 problems).
+ *  - 'curated': ≥100 problems, manual spot-check passed.
+ *  - 'maintained': quarterly refresh active.
+ */
+export type BankCoverageState = 'none' | 'seed' | 'curated' | 'maintained';
+
 export interface TutorTopic {
   id: string;
   label: string;
+  /** Adaptive-pacing rollout state. Defaults to 'disabled' if unset. */
+  brainGen?: BrainGenState;
+  /** Problem-bank coverage. Defaults to 'none' if unset. */
+  bankCoverage?: BankCoverageState;
 }
 
 export interface SessionGoalOption {
@@ -120,7 +151,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
     ],
     ap: [
       { id: 'ap-precalculus', label: 'AP Precalculus' },
-      { id: 'ap-calculus-ab', label: 'AP Calculus AB' },
+      { id: 'ap-calculus-ab', label: 'AP Calculus AB', brainGen: 'shadow', bankCoverage: 'none' },
       { id: 'ap-calculus-bc', label: 'AP Calculus BC' },
       { id: 'ap-statistics', label: 'AP Statistics' },
       { id: 'ib-math-analysis', label: 'IB Math Analysis' },
@@ -185,8 +216,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
     ],
     ap: [
       { id: 'ap-biology', label: 'AP Biology' },
-      { id: 'ap-chemistry', label: 'AP Chemistry' },
-      { id: 'ap-physics-1', label: 'AP Physics 1' },
+      { id: 'ap-chemistry', label: 'AP Chemistry', brainGen: 'shadow', bankCoverage: 'none' },
+      { id: 'ap-physics-1', label: 'AP Physics 1', brainGen: 'shadow', bankCoverage: 'none' },
       { id: 'ap-physics-2', label: 'AP Physics 2' },
       { id: 'ap-physics-c-mech', label: 'AP Physics C: Mechanics' },
       { id: 'ap-physics-c-em', label: 'AP Physics C: E&M' },
@@ -483,6 +514,20 @@ export function getLevelLabel(levelId: string): string {
 export function getTopicLabel(subjectId: string, levelId: string, topicId: string): string {
   const topics = getTopicsForSubjectLevel(subjectId, levelId);
   return topics.find((t) => t.id === topicId)?.label ?? topicId;
+}
+
+/** Find a topic by id across all subject/level cells. Topic ids are
+ *  globally unique by convention; first hit wins. Returns undefined
+ *  if not found. Used by adaptive-pacing pipeline to read brainGen
+ *  + bankCoverage fields. */
+export function getTopicById(topicId: string): TutorTopic | undefined {
+  for (const subjectMap of Object.values(TOPIC_MAP)) {
+    for (const topicList of Object.values(subjectMap)) {
+      const hit = topicList.find((t) => t.id === topicId);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
 }
 
 /** Build a display name for a session, e.g. "AP Physics 1" */

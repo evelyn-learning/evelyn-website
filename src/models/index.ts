@@ -69,6 +69,7 @@ export {
 } from "./Prospect";
 export { SavedLesson, type ISavedLesson } from "./SavedLesson";
 export { LessonImage, type ILessonImage } from "./LessonImage";
+export { ProblemBank, type IProblemBank } from "./ProblemBank";
 export {
   TutorSession,
   type ITutorSession,

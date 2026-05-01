@@ -24,6 +24,11 @@ import { NextRequest } from 'next/server';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
+import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import {
+  generateProblem,
+  type Difficulty,
+} from '@/lib/tutor/voice/problem-generator';
 
 export const runtime = 'nodejs';
 
@@ -40,6 +45,88 @@ interface BrainStreamRequestBody {
   grade?: string;
   model?: string;
   maxTokens?: number;
+  /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
+   *  already shown this session, used as exclusion filters when the
+   *  brain calls `generate_problem`. The client maintains this list
+   *  in session-scoped refs and sends it on every brain turn so the
+   *  resolver can dedup. */
+  shownProblemIds?: string[];
+  shownProblemHashes?: string[];
+}
+
+/**
+ * Build a toolResultProvider that resolves `generate_problem` against
+ * the adaptive-pacing pipeline. All other tools fall through to the
+ * default "executed successfully" ack inside claude-brain.ts.
+ *
+ * The provider returns a JSON string the brain reads as tool_result
+ * content. Shape: { canonicalText, expectedAnswer?, hints?,
+ * responseFormat?, choices?, provenance, trackingId }. The brain is
+ * instructed (in the system prompt) to quote canonicalText verbatim
+ * in the next show_problem call.
+ */
+function makeToolResultProvider(
+  ctx: BrainTurnInput['lessonPlanContext'] | undefined,
+  shownProblemIds: string[],
+  shownProblemHashes: string[]
+): BrainTurnInput['toolResultProvider'] {
+  if (!ctx) return undefined;
+  return async (name, args) => {
+    if (name !== 'generate_problem') {
+      return `${name} executed successfully.`;
+    }
+    const planId = ctx.plan.id;
+    const plan = await getLessonPlan(planId);
+    if (!plan) {
+      return JSON.stringify({
+        error: 'plan_not_found',
+        message: 'The runtime could not resolve the lesson plan; falling back to plan-authored.',
+      });
+    }
+    const difficulty = (args.difficulty as Difficulty) ?? 'same';
+    const anchorStatement = String(args.anchorProblem ?? '').trim();
+    const anchorAnswer = typeof args.anchorAnswer === 'string' ? args.anchorAnswer : undefined;
+    if (!anchorStatement) {
+      return JSON.stringify({
+        error: 'missing_anchor',
+        message: 'generate_problem requires anchorProblem (the statement of the prior problem).',
+      });
+    }
+    try {
+      const { result, telemetry } = await generateProblem({
+        planId,
+        plan,
+        topic: plan.topic ?? '',
+        difficulty,
+        anchor: { statement: anchorStatement, expectedAnswer: anchorAnswer },
+        excludeIds: shownProblemIds,
+        excludeHashes: shownProblemHashes,
+      });
+      console.log('[brain.stream:generate_problem] telemetry:', JSON.stringify(telemetry));
+      if (!result) {
+        return JSON.stringify({
+          error: 'no_problem_available',
+          message: 'No problem could be sourced. Continue without injection.',
+          telemetry,
+        });
+      }
+      return JSON.stringify({
+        canonicalText: result.canonicalText,
+        expectedAnswer: result.expectedAnswer,
+        hints: result.hints,
+        responseFormat: result.responseFormat,
+        choices: result.choices,
+        provenance: result.provenance,
+        trackingId: result.trackingId,
+      });
+    } catch (err) {
+      console.error('[brain.stream:generate_problem] pipeline error:', err);
+      return JSON.stringify({
+        error: 'pipeline_error',
+        message: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+  };
 }
 
 function badRequest(message: string): Response {
@@ -124,6 +211,11 @@ export async function POST(req: NextRequest) {
           tools: WHITEBOARD_TOOLS,
           model: body.model,
           maxTokens: body.maxTokens,
+          toolResultProvider: makeToolResultProvider(
+            body.lessonPlanContext,
+            body.shownProblemIds ?? [],
+            body.shownProblemHashes ?? []
+          ),
         })) {
           if (ev.type === 'sentence') {
             sentenceCount++;

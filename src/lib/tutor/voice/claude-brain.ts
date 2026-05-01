@@ -64,6 +64,19 @@ export interface BrainTurnInput {
   model?: string;
   /** Optional override (defaults to 1500). */
   maxTokens?: number;
+  /** Optional async resolver for tool_result content. Default behavior
+   *  returns "${name} executed successfully" — fire-and-forget tools
+   *  like show_problem just need an ack. For tools that produce DATA
+   *  the brain needs in the next iteration (e.g. `generate_problem`
+   *  returning a canonical problem text), pass a resolver here.
+   *
+   *  Resolver receives the tool name + args, returns the string the
+   *  brain sees as tool_result. May throw — the orchestrator will
+   *  catch and fall back to the default ack. */
+  toolResultProvider?: (
+    name: string,
+    args: Record<string, unknown>
+  ) => Promise<string>;
 }
 
 /** Plan slice the brain sees on each turn. */
@@ -573,16 +586,34 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       break;
     }
 
+    // Resolve tool_result content. Default ack for fire-and-forget
+    // tools; data-returning tools (e.g. generate_problem) get the
+    // resolver's output so the brain can use the result on the next
+    // iteration.
+    const resolvedResults = await Promise.all(
+      newToolUseBlocks.map(async (b) => {
+        let content = `${b.name} executed successfully.`;
+        if (input.toolResultProvider) {
+          try {
+            const args = (b.input ?? {}) as Record<string, unknown>;
+            content = await input.toolResultProvider(b.name, args);
+          } catch (err) {
+            console.warn(`[brain.stream] toolResultProvider failed for ${b.name}:`, err);
+          }
+        }
+        return {
+          type: 'tool_result' as const,
+          tool_use_id: b.id,
+          content,
+        };
+      })
+    );
     messages = [
       ...messages,
       { role: 'assistant', content: finalMessage.content },
       {
         role: 'user',
-        content: newToolUseBlocks.map((b) => ({
-          type: 'tool_result' as const,
-          tool_use_id: b.id,
-          content: `${b.name} executed successfully.`,
-        })),
+        content: resolvedResults,
       },
     ];
   }

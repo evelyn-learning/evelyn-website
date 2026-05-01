@@ -401,6 +401,20 @@ export function VoiceTutorRealtime({
   // don't ask"). Reset on new problem requests.
   const walkThroughInsistenceRef = useRef(0);
 
+  // Adaptive-pacing v1 — session-scoped dedup for `generate_problem`.
+  // Bank IDs (when bank entries are shown) and content hashes (for
+  // brain-gen + plan-authored fallbacks) accumulate during the
+  // session and are sent on each brain turn so the pipeline excludes
+  // already-shown problems. Reset on session start (handled implicitly
+  // by component remount).
+  //   shownProblemIdsRef     → bank rows shown this session.
+  //   shownProblemHashesRef  → simpleHash(problemText) for non-bank
+  //                            problems shown this session.
+  // The brain MAY explicitly ask to repeat (intent class
+  // `repeat_previous`); the dedup is then bypassed at the call site.
+  const shownProblemIdsRef = useRef<string[]>([]);
+  const shownProblemHashesRef = useRef<string[]>([]);
+
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
   // ("ok", "k", "yea") — a reliable signal the student has disengaged or is
@@ -1008,6 +1022,27 @@ export function VoiceTutorRealtime({
       const cmdAny = cmd as any;
       if (cmd.action === 'showProblem') {
         const statement = cmdAny.problem?.statement?.trim() || '';
+        // Adaptive-pacing v1 dedup: append the rendered problem's hash
+        // to the session-scoped exclusion list so subsequent
+        // generate_problem calls don't return the same statement.
+        // Tracks ALL show_problem dispatches (bank, brain-gen,
+        // plan-authored) — dedup is "don't show me anything I've
+        // already seen this session," regardless of source.
+        if (statement.length >= 10) {
+          // simpleHash is the same djb2 variant used in the pipeline
+          // so client + server hash to the same string for the same
+          // statement.
+          let h = 5381;
+          for (let i = 0; i < statement.length; i++) h = (h * 33) ^ statement.charCodeAt(i);
+          const hash = (h >>> 0).toString(36);
+          if (!shownProblemHashesRef.current.includes(hash)) {
+            shownProblemHashesRef.current.push(hash);
+            // Cap at last ~40 entries to keep request payloads small.
+            if (shownProblemHashesRef.current.length > 40) {
+              shownProblemHashesRef.current.shift();
+            }
+          }
+        }
         // Empty/near-empty problem card is never useful. Drop regardless of
         // whether the student was greeting or asking for a problem — if the
         // tutor genuinely has a problem to show, it can retry with content.
@@ -3310,6 +3345,11 @@ export function VoiceTutorRealtime({
             lessonPlanContext,
             studentProfileBlock: studentProfileBlockRef.current || undefined,
             grade: level,
+            // Adaptive-pacing v1 dedup state. Empty arrays for sessions
+            // that haven't shown any generated problems yet — fine,
+            // pipeline treats absent + empty identically.
+            shownProblemIds: shownProblemIdsRef.current,
+            shownProblemHashes: shownProblemHashesRef.current,
           }),
         });
         if (!res.ok || !res.body) {
@@ -3338,9 +3378,12 @@ export function VoiceTutorRealtime({
         // turns (the brain emitted no tools); closes (drops queued +
         // future text from this attempt) on the first rejection — the
         // validator-feedback retry attempt speaks the corrected version.
-        // Cost: ~0.5–1s of added latency on the first sentence of every
+        // Cost: ~1s of added latency on the first sentence of every
         // turn. Trade accepted to eliminate audibly bad narration when
         // the brain promises a render that gets dedup'd or rejected.
+        // (Reverted from 500ms after gibberish reports — 1s is the
+        // empirically-stable timeout that gives the first tool dispatch
+        // enough time to resolve before sentences flush.)
         let gateState: 'gated' | 'open' | 'closed' = 'gated';
         const pendingSentences: string[] = [];
         const flushPending = () => {
@@ -3360,7 +3403,7 @@ export function VoiceTutorRealtime({
           gateState = 'closed';
           pendingSentences.length = 0;
         };
-        const gateTimer = setTimeout(openGate, 500);
+        const gateTimer = setTimeout(openGate, 1000);
 
         try {
           while (true) {

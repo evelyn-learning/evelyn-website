@@ -1783,6 +1783,33 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['segmentId'],
     },
   },
+  {
+    name: 'generate_problem',
+    description: 'Request a practice problem at a specified relative difficulty, anchored on the student\'s most recent try-yourself or worked example. Use ONLY when the student explicitly asks for another problem ("give me another one", "harder please", "easier") OR when adaptive thresholds fire. The runtime returns a canonical problem (from problem bank or brain-generated and verified). The brain MUST emit a brief pre-call TTS bridge (≤10 words like "Sure, here\'s another one for you") and then quote the returned canonicalText VERBATIM in the next show_problem call + spoken delivery. Do NOT paraphrase the canonicalText.',
+    parameters: {
+      type: 'object',
+      properties: {
+        difficulty: {
+          type: 'string',
+          enum: ['slightly_easier', 'same', 'slightly_harder', 'much_harder'],
+          description: 'Relative difficulty vs the anchor problem. "same" = same level, useful for "another one like that". "slightly_harder" is the typical step-up.',
+        },
+        anchorProblem: {
+          type: 'string',
+          description: 'The statement of the anchor problem the student just engaged with (the prior try-yourself or worked example).',
+        },
+        anchorAnswer: {
+          type: 'string',
+          description: 'Optional: the expected answer to the anchor problem, used to calibrate generation.',
+        },
+        rationale: {
+          type: 'string',
+          description: 'Brief reason this generation is firing (e.g. "student asked for harder", "adaptive: aced 2 in a row"). For telemetry.',
+        },
+      },
+      required: ['difficulty', 'anchorProblem'],
+    },
+  },
 ];
 
 /**
@@ -2476,6 +2503,14 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       loId: String(funcArgs.loId ?? ''),
       description: String(funcArgs.description ?? ''),
     };
+  }
+  // generate_problem is NOT a whiteboard command — it's a server-side
+  // pipeline trigger handled by toolResultProvider in claude-brain.ts.
+  // The brain receives the canonical text in the tool_result and then
+  // emits a separate show_problem with that text. Returning null here
+  // is intentional.
+  if (funcName === 'generate_problem') {
+    return null;
   }
 
   return null;
