@@ -451,6 +451,14 @@ import { SEED_AP_PHYS1_ROTATION } from './seeds/ap-phys1-rotation';
 import { SEED_AP_PHYS1_SHM } from './seeds/ap-phys1-shm';
 import { SEED_AP_PHYS1_WAVES } from './seeds/ap-phys1-waves';
 import { SEED_AP_PHYS1_CIRCULAR_GRAVITATION } from './seeds/ap-phys1-circular-gravitation';
+// Batch 51 — AP Physics 1 Unit 8 (Fluids), added by College Board for May 2025+ exam.
+// Currency-checked against the 2025-26 CED (Kinematics, Force, Energy, Momentum,
+// Torque/Rotation, Energy/Momentum of Rotating Systems, Oscillations, Fluids).
+// Cross-referenced with Khan Academy + Fiveable Unit 8 study guide for topic
+// breakdown, common misconceptions, and worked-example coverage.
+import { SEED_AP_PHYS1_FLUIDS_DENSITY_PRESSURE } from './seeds/ap-phys1-fluids-density-pressure';
+import { SEED_AP_PHYS1_FLUIDS_BUOYANCY } from './seeds/ap-phys1-fluids-buoyancy';
+import { SEED_AP_PHYS1_FLUIDS_FLOW } from './seeds/ap-phys1-fluids-flow';
 // Batch 39 — AP CSA expansion (recursion, inheritance, ArrayList, 2D arrays).
 import { SEED_AP_CSA_RECURSION } from './seeds/ap-csa-recursion';
 import { SEED_AP_CSA_INHERITANCE } from './seeds/ap-csa-inheritance';
@@ -1037,6 +1045,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GRE_SUBJECT_PHYSICS,
   SEED_JEE_THERMODYNAMICS,
   SEED_JEE_ORGANIC_MECHANISMS,
+  SEED_AP_PHYS1_FLUIDS_DENSITY_PRESSURE,
+  SEED_AP_PHYS1_FLUIDS_BUOYANCY,
+  SEED_AP_PHYS1_FLUIDS_FLOW,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

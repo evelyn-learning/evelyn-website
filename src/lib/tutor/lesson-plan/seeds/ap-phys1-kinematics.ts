@@ -10,8 +10,8 @@ export const SEED_AP_PHYS1_KINEMATICS: LessonPlan = {
   id: 'evelyn.ap.physics1.kinematics.v1',
   title: 'Kinematics in 1D and 2D',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
+  grade: 'ap',
+  subject: 'science',
   topic: 'ap-physics-1',
   locale: 'en',
   los: [

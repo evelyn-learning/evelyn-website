@@ -10,9 +10,9 @@ export const SEED_AP_PHYS1_WAVES: LessonPlan = {
   id: 'evelyn.ap.physics1.waves.v1',
   title: 'Mechanical Waves and Sound',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
-  topic: 'ap-physics-1',
+  grade: 'ap',
+  subject: 'science',
+  topic: 'ap-physics-2',
   locale: 'en',
   los: [
     {

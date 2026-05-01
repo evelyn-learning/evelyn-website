@@ -11,8 +11,8 @@ export const SEED_AP_PHYS1_ROTATION: LessonPlan = {
   id: 'evelyn.ap.physics1.rotation.v1',
   title: 'Rotational Motion and Angular Momentum',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
+  grade: 'ap',
+  subject: 'science',
   topic: 'ap-physics-1',
   locale: 'en',
   los: [

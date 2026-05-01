@@ -10,8 +10,8 @@ export const SEED_AP_PHYS1_ENERGY_CONSERVATION: LessonPlan = {
   id: 'evelyn.ap.physics1.energy-conservation.v1',
   title: 'Conservation of Energy',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
+  grade: 'ap',
+  subject: 'science',
   topic: 'ap-physics-1',
   locale: 'en',
   los: [

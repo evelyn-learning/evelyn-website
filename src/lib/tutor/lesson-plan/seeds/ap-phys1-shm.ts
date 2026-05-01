@@ -10,8 +10,8 @@ export const SEED_AP_PHYS1_SHM: LessonPlan = {
   id: 'evelyn.ap.physics1.shm.v1',
   title: 'Simple Harmonic Motion',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
+  grade: 'ap',
+  subject: 'science',
   topic: 'ap-physics-1',
   locale: 'en',
   los: [

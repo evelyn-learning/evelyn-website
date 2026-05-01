@@ -11,8 +11,8 @@ export const SEED_AP_PHYSICS_NEWTONS_SECOND_DEEP: LessonPlan = {
   id: 'evelyn.ap.physics1.newtons-second-deep.v1',
   title: 'Newton\'s Second Law with free-body diagrams',
   curriculum: 'NGSS',
-  grade: '11',
-  subject: 'sci',
+  grade: 'ap',
+  subject: 'science',
   topic: 'ap-physics-1',
   locale: 'en',
   los: [
