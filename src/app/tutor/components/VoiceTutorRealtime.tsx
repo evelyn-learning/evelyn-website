@@ -469,6 +469,16 @@ export function VoiceTutorRealtime({
   // never re-rendered after a wave-diagram detour. Reset alongside
   // visualActionsThisTurnRef on every student transcript finalization.
   const newPageThisTurnRef = useRef(false);
+  // Distinct from newPageThisTurnRef: tracks whether the brain EMITTED
+  // a new_page tool-call in the current turn, regardless of whether the
+  // tutor-side same-context guard later stripped that command. Set on
+  // tool-call event arrival (BEFORE mapFunctionCallToCommand /
+  // handleWhiteboardCommand). The divergence guard + silent-substitute
+  // bypass uses this so a topic-switch new_page that gets stripped by
+  // the same-context guard still suppresses divergence kills + wrong
+  // segment substitutes downstream — exact failure mode in the
+  // 2026-05-02 incoherence test where mean → median switch deadlocked.
+  const brainEmittedNewPageThisTurnRef = useRef(false);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -660,6 +670,7 @@ export function VoiceTutorRealtime({
         // one of each visual type for this message.
         visualActionsThisTurnRef.current = new Set();
         newPageThisTurnRef.current = false;
+        brainEmittedNewPageThisTurnRef.current = false;
         console.log('[VoiceTutor] Student turn start — cleared visualActionsThisTurn');
 
         // Detect if student is requesting a visual (e.g., "show it on the board")
@@ -3324,6 +3335,7 @@ export function VoiceTutorRealtime({
         if (attempt > 0) {
           visualActionsThisTurnRef.current = new Set();
           newPageThisTurnRef.current = false;
+          brainEmittedNewPageThisTurnRef.current = false;
         }
         // Compose lesson plan context from the active plan + current
         // segment id (both ref-tracked so segment advances mid-turn are
@@ -3599,6 +3611,14 @@ export function VoiceTutorRealtime({
                   let args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
                   totalToolNamesSeen.push(name);
+                  // Mark brain-emitted new_page on event ARRIVAL (before
+                  // any downstream stripping by the same-context guard).
+                  // Used by the divergence guard + silent-substitute
+                  // bypass to recognize topic-switch intent even when
+                  // the new_page command never reaches the renderer.
+                  if (name === 'new_page') {
+                    brainEmittedNewPageThisTurnRef.current = true;
+                  }
                   // Server-only tools — no whiteboard render expected. The
                   // brain calls these for SIDE EFFECTS resolved server-side
                   // by claude-brain.ts's toolResultProvider; the result
@@ -3692,7 +3712,21 @@ export function VoiceTutorRealtime({
                         // divergence guard would otherwise misfire and
                         // deadlock the session — exact failure mode in the
                         // 2026-05-02 incoherence test.
-                        if (targetsDiverge && newPageThisTurnRef.current) {
+                        //
+                        // We use brainEmittedNewPageThisTurnRef here, NOT
+                        // newPageThisTurnRef. The latter only flips after
+                        // the new_page command survives the tutor-side
+                        // same-context guard's strip; the former flips
+                        // when the brain emits a new_page tool-call
+                        // EVENT, regardless of whether it later gets
+                        // stripped. The 2026-05-02 retest deadlocked at
+                        // exactly this gap: same-context guard stripped
+                        // the topic-switch new_page → render-tracking
+                        // ref stayed false → divergence guard interpreted
+                        // it as on-segment and killed the legitimate
+                        // topic switch.
+                        const newPageInTurn = brainEmittedNewPageThisTurnRef.current;
+                        if (targetsDiverge && newPageInTurn) {
                           console.log(`[brain-orchestrator] show_problem target divergence for segment "${segId}" — but new_page in same turn (fresh context); bypassing guard. brain="${brainTarget}" authored="${authoredTarget}"`);
                           onDebugEvent?.('show_problem_target_divergence_bypass', `new_page-in-batch; brain="${brainTarget}" authored="${authoredTarget}"`);
                           // Don't substitute either — the brain is
@@ -3705,7 +3739,7 @@ export function VoiceTutorRealtime({
                           onDebugEvent?.('show_problem_target_divergence', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
                           rejectionsThisAttempt.push({
                             action: 'show_problem',
-                            reason: `Your show_problem asked the student to find "${brainTarget}", but the authored ${truth.kind} for segment "${segId}" asks for "${authoredTarget}". This causes a chat-board mismatch where the student hears one question but sees another. RETRY this attempt: (a) call show_segment_card({ segmentId: "${segId}" }) instead of show_problem, and (b) ensure your spoken narration is about finding "${authoredTarget}", NOT "${brainTarget}". The authored problem is: "${truth.problemText.slice(0, 200)}".`,
+                            reason: `Your show_problem asked the student to find "${brainTarget}", but the authored ${truth.kind} for segment "${segId}" asks for "${authoredTarget}". This causes a chat-board mismatch where the student hears one question but sees another. You have TWO recovery paths depending on intent: (A) IF you intended to render the AUTHORED problem for the current segment: call show_segment_card({ segmentId: "${segId}" }) instead, and ensure your spoken narration is about finding "${authoredTarget}". The authored problem is: "${truth.problemText.slice(0, 200)}". (B) IF you intended a TOPIC SWITCH (new concept, e.g. switching mean → median at the student's request): emit BOTH new_page AND show_problem in the same response — the runtime treats new_page-in-turn as a fresh-context signal and lets your free-form show_problem render. Make sure your show_problem statement is well-formed and your narration matches the new target ("${brainTarget}"). Pick path (A) or (B) based on what the student actually asked for.`,
                           });
                           if (!attemptKilled) {
                             attemptKilled = true;
@@ -3717,17 +3751,27 @@ export function VoiceTutorRealtime({
                           continue;
                         }
                         // Substitute path: only when targets match (or
-                        // aren't extractable) AND the bypass branch
-                        // didn't take us OFF-segment. The bypass case
-                        // falls through with the brain's free-form
-                        // show_problem intact — substituting there would
-                        // route the render back to the prior segment's
-                        // authored card, defeating the topic switch.
-                        if (!targetsDiverge) {
+                        // aren't extractable) AND the brain didn't emit
+                        // new_page in this turn (which signals a fresh
+                        // off-segment render). Without this latter
+                        // guard, a brain emitting `new_page +
+                        // show_problem` for "harder one" with the SAME
+                        // target word but DIFFERENT numbers would get
+                        // its show_problem swapped back to the current
+                        // segment's authored card — exact failure in the
+                        // 2026-05-02 retest where harder {12,14,16,18,20}
+                        // problem became the original {2,4,6,8,10} card
+                        // because both were "find the mean".
+                        if (!targetsDiverge && !newPageInTurn) {
                           console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
                           onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
                           name = 'show_segment_card';
                           args = { segmentId: segId };
+                        } else if (!targetsDiverge && newPageInTurn) {
+                          console.log(`[brain-orchestrator] show_problem on segment "${segId}" with matching target but new_page in turn — fresh-context render, NOT substituting.`);
+                          onDebugEvent?.('show_problem_substitute_bypass', `new_page-in-turn; segId="${segId}" target="${brainTarget}"`);
+                          // Fall through to dispatch the brain's
+                          // free-form show_problem as-is.
                         }
                       }
                     }

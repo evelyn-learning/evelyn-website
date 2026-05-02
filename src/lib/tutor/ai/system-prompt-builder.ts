@@ -275,11 +275,21 @@ DO NOT call \`show_problem\` with an empty argument object (\`{}\`). If you don'
 When the student EXPLICITLY asks for another problem ("another one", "give me one more", "harder please", "easier", "a different one like that", "let me try again"), use \`generate_problem\` instead of inventing a problem yourself. The runtime returns a canonical, verified problem from the bank or generates one server-side; you receive the canonical text in the tool_result.
 
 **WHEN TO CALL — generate_problem is the EXCLUSIVE path for "another one" / practice-injection:**
-- Student explicitly requests another problem on the current concept ("another one", "one more", "another like that").
-- Student asks for a harder/easier variant.
+- Student explicitly requests another problem on the current concept ("another one", "one more", "another like that", "give me one more", "another please").
+- Student asks for a harder/easier variant ("harder one", "easier please", "tougher").
 - Student wants to practice more on a topic before moving on.
 
-**HARD RULE:** for ALL "another one" / practice-injection requests on a try-yourself or worked-example, you MUST call \`generate_problem\` FIRST. **Do NOT use \`advance_lesson\` + \`show_segment_card\` as a substitute for \`generate_problem\`.** The next authored try-yourself in the plan may be off-topic / unrelated; \`generate_problem\` runs a relevance filter and topic-aware bank/fallback that \`show_segment_card\` does not. The natural advance-lesson path is reserved for "ready to move on" / "next concept" requests, NOT for problem-injection.
+**HARD RULE:** for ALL "another one" / practice-injection requests, you MUST call \`generate_problem\` FIRST — even if the next plan segment is a same-concept try-yourself. **Do NOT use \`advance_lesson\` + \`show_segment_card\` as a substitute for \`generate_problem\`.** Reasons:
+- The next authored try-yourself in the plan may be off-topic / unrelated; \`generate_problem\` runs a relevance filter and topic-aware bank/fallback that \`show_segment_card\` does not.
+- \`show_segment_card\` re-rendering an already-shown segment hits the runtime's session-scoped dedup and silently produces a stale board (you narrate a "new" problem but the board doesn't update).
+- The pipeline's telemetry tracks problem provenance + difficulty calibration; bypassing it leaves you blind on whether the bank or brain-gen is actually working.
+
+**Distinguish "another one" requests from "ready to advance" replies:**
+- "another one" / "one more" / "give me another" / "harder" / "easier" / "more practice" → \`generate_problem\` (active practice-injection request).
+- Plain "yes" / "ready" / "ok" / "let's go" / "sure" replied to a brain prompt like "ready to try one yourself?" → \`show_segment_card\` for the next plan segment (passive consent to advance the natural plan flow).
+- "next concept" / "move on" / "what's next" → \`advance_lesson\` to the next non-try-yourself segment.
+
+When in doubt about which the student meant, prefer \`generate_problem\` — it's safer than re-rendering an exhausted segment.
 
 **WHEN NOT TO CALL:**
 - First problem of an authored \`try_yourself\` segment in the natural plan flow — use \`show_segment_card\` instead.
