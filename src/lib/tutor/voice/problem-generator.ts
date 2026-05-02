@@ -179,14 +179,30 @@ function planAuthoredFallback(
   const anchorTokens = contentTokenSet(anchorStatement);
   if (anchorTokens.size === 0) return null;
 
+  // Threshold lowered to ≥1 token. Earlier ≥3 was too strict for
+  // prose ↔ math-notation problem pairs in the same plan: the
+  // worked-example prose ("A class of 5 students scored 70, 75, 80…")
+  // shared only "mean" with the try-yourselves' math notation
+  // ("Compute the mean of {2,4,6,8,10}"), so the relevance filter
+  // returned null and the brain kept seeing no_problem_available
+  // for legitimate practice-injection requests on the same concept
+  // (2026-05-02 retest). Within-plan candidates already passed an
+  // implicit relevance check by virtue of being in the same plan,
+  // so ≥1 token + same-plan is sufficient. Explicit cross-plan
+  // candidates would need a stricter check, but the current
+  // pipeline only ever fetches from input.plan.
   let best: { ty: SegmentTryYourself; score: number } | null = null;
   for (const ty of tryYourselves) {
+    // Skip segments deliberately marked off-topic — they aren't
+    // legitimate practice content and would only get returned to be
+    // rendered as a wrong-concept problem.
+    if (ty.offTopic === true) continue;
     const hash = simpleHash(ty.problem);
     if (excludeHashes.includes(hash)) continue;
     const tyTokens = contentTokenSet(ty.problem);
     let overlap = 0;
     for (const t of anchorTokens) if (tyTokens.has(t)) overlap++;
-    if (overlap >= 3 && (!best || overlap > best.score)) {
+    if (overlap >= 1 && (!best || overlap > best.score)) {
       best = { ty, score: overlap };
     }
   }

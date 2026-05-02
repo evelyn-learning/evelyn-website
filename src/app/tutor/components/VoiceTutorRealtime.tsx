@@ -3574,11 +3574,26 @@ export function VoiceTutorRealtime({
                   // and React doesn't unmount/remount it (which produced
                   // visible flicker before 2026-04-29).
                   const streamingId = `tutor-streaming-${t0}-${attempt}`;
-                  const last = transcriptRef.current[transcriptRef.current.length - 1];
-                  if (last && last.role === 'tutor' && last.id === streamingId) {
+                  // Locate ANY existing entry with this streaming id —
+                  // not just the last one. If a user turn (e.g. typed
+                  // input) lands BETWEEN two of our sentence events,
+                  // the last-only check sees the user entry, fails to
+                  // match, and pushes a NEW streaming entry with the
+                  // SAME id as the prior one. Two entries → React
+                  // duplicate-key warning ("Encountered two children
+                  // with the same key, tutor-streaming-...") — exact
+                  // failure mode in the 2026-05-02 typed-input session
+                  // which spammed the server log with the warning and
+                  // produced 4-5 duplicate chat bubbles for one turn.
+                  const existingIdx = transcriptRef.current.findIndex(
+                    (e) => e.id === streamingId
+                  );
+                  if (existingIdx >= 0) {
+                    const existing = transcriptRef.current[existingIdx];
                     transcriptRef.current = [
-                      ...transcriptRef.current.slice(0, -1),
-                      { ...last, text: attemptText, streaming: true },
+                      ...transcriptRef.current.slice(0, existingIdx),
+                      { ...existing, text: attemptText, streaming: true },
+                      ...transcriptRef.current.slice(existingIdx + 1),
                     ];
                   } else {
                     transcriptRef.current = [
@@ -3803,6 +3818,36 @@ export function VoiceTutorRealtime({
                         onDebugEvent?.('show_segment_card_fallback_first', `requested="${requestedId}" → "${segId}"`);
                       }
                       const truth = getSegmentTruth(seg);
+                      // Off-topic guard: refuse to render a try_yourself
+                      // segment that's marked offTopic via passive
+                      // natural-flow advance. Test plans use this to
+                      // bait the runtime; real plans should never have
+                      // offTopic segments routed via show_segment_card
+                      // either (off-topic content belongs in a separate
+                      // plan or a topic-switch via new_page +
+                      // show_problem). Surface as a tool rejection so
+                      // the brain learns to skip rather than render +
+                      // congratulate the student for an unrelated
+                      // answer — exact failure mode in the 2026-05-02
+                      // session where brain said "Paris -- correct!" in
+                      // a statistics lesson.
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      if (seg && (seg as any).offTopic === true) {
+                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" is marked offTopic — refusing passive render.`);
+                        onDebugEvent?.('show_segment_card_offtopic_refused', segId);
+                        rejectionsThisAttempt.push({
+                          action: 'show_segment_card',
+                          reason: `Segment "${segId}" is marked OFF-TOPIC relative to the rest of this lesson plan and will not be rendered via passive natural-flow advance. The student likely intended to advance within the current concept, NOT into an unrelated drill. Recovery options: (a) call generate_problem to source a topic-relevant practice problem, (b) emit a topic-switch via new_page + show_problem if the student explicitly asked for a different concept, (c) wrap up the session if there's no relevant content left. DO NOT call show_segment_card("${segId}") again — render-refusal is structural, not transient.`,
+                        });
+                        if (!attemptKilled) {
+                          attemptKilled = true;
+                          clearTimeout(gateTimer);
+                          closeGate();
+                          clearSpeechQueueRef.current?.();
+                          speakKillBridge();
+                        }
+                        continue;
+                      }
                       if (seg && truth?.problemText) {
                         // Stamp the catalog with this segment id BEFORE
                         // appending the resolved show_problem so the

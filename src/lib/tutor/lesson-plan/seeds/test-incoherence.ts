@@ -102,7 +102,8 @@ export const SEED_TEST_INCOHERENCE: LessonPlan = {
       // the worked-example or try-mean-* problems on (mean, dataset,
       // compute, etc.). The relevance filter MUST reject this when
       // the student exhausts the on-topic try-yourselfs and asks for
-      // "another one".
+      // "another one". offTopic: true also blocks passive natural-flow
+      // advance into this segment via advance_lesson + show_segment_card.
       id: 'try-offtopic-bait',
       kind: 'try_yourself',
       problem: 'What is the capital city of France?',
@@ -111,6 +112,7 @@ export const SEED_TEST_INCOHERENCE: LessonPlan = {
       hints: [
         'Largest city on the Seine.',
       ],
+      offTopic: true,
       estimatedMinutes: 1,
     },
   ],

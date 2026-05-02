@@ -127,6 +127,13 @@ export interface SegmentTryYourself extends SegmentBase {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   /** When responseFormat === 'mcq', the choices. */
   choices?: Array<{ id: string; text: string; correct?: boolean }>;
+  /** Marks this segment as deliberately off-topic relative to the rest
+   *  of the plan. Test plans use this to bait the runtime's relevance
+   *  checks. The orchestrator MUST refuse to render an offTopic segment
+   *  via passive natural-flow advance (advance_lesson + show_segment_card)
+   *  and surface a tool_result error so the brain knows to route around
+   *  it instead of treating the bait as a legitimate problem. */
+  offTopic?: boolean;
 }
 
 /** A "watch out for" check — the brain poses a distractor problem
