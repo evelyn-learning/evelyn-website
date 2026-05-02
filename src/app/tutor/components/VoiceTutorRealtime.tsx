@@ -3681,7 +3681,26 @@ export function VoiceTutorRealtime({
                         const authoredTarget = truth.problemText.match(targetRegex)?.[1]?.toLowerCase();
                         const targetsDiverge = !!brainTarget && !!authoredTarget && brainTarget !== authoredTarget;
 
-                        if (targetsDiverge) {
+                        // Incoherence-fix BYPASS: when the brain emitted
+                        // new_page in the SAME TURN before this
+                        // show_problem, treat this as a fresh-context
+                        // render (e.g. student asked to switch topic from
+                        // mean → median; brain creates a new page with the
+                        // new problem). The currentSegmentIdRef may still
+                        // point at the prior segment (no advance_lesson
+                        // happened, or it failed at end-of-plan), so the
+                        // divergence guard would otherwise misfire and
+                        // deadlock the session — exact failure mode in the
+                        // 2026-05-02 incoherence test.
+                        if (targetsDiverge && newPageThisTurnRef.current) {
+                          console.log(`[brain-orchestrator] show_problem target divergence for segment "${segId}" — but new_page in same turn (fresh context); bypassing guard. brain="${brainTarget}" authored="${authoredTarget}"`);
+                          onDebugEvent?.('show_problem_target_divergence_bypass', `new_page-in-batch; brain="${brainTarget}" authored="${authoredTarget}"`);
+                          // Don't substitute either — the brain is
+                          // intentionally rendering OFF-segment, and
+                          // showing the authored card would be wrong.
+                          // Fall through to dispatch show_problem with the
+                          // brain's free-form statement as-is.
+                        } else if (targetsDiverge) {
                           console.warn(`[brain-orchestrator] show_problem query-target divergence for segment "${segId}": brain asks for "${brainTarget}", authored asks for "${authoredTarget}". Killing attempt for retry.`);
                           onDebugEvent?.('show_problem_target_divergence', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
                           rejectionsThisAttempt.push({
@@ -3697,14 +3716,19 @@ export function VoiceTutorRealtime({
                           }
                           continue;
                         }
-                        // Targets match (or aren't extractable) — proceed
-                        // with the silent substitute. Brain's narration is
-                        // either correct or close enough that the prompt
-                        // rule "narrate the authored card" carries it.
-                        console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
-                        onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
-                        name = 'show_segment_card';
-                        args = { segmentId: segId };
+                        // Substitute path: only when targets match (or
+                        // aren't extractable) AND the bypass branch
+                        // didn't take us OFF-segment. The bypass case
+                        // falls through with the brain's free-form
+                        // show_problem intact — substituting there would
+                        // route the render back to the prior segment's
+                        // authored card, defeating the topic switch.
+                        if (!targetsDiverge) {
+                          console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
+                          onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
+                          name = 'show_segment_card';
+                          args = { segmentId: segId };
+                        }
                       }
                     }
                   }
@@ -3814,6 +3838,31 @@ export function VoiceTutorRealtime({
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     const result = await handleWhiteboardCommand([cmd]);
+                    // Incoherence-fix: surface dedup-suppressed renders
+                    // for show_segment_card / show_problem as synthetic
+                    // rejections. Otherwise the brain narrates "here's
+                    // your next problem" while the board didn't update —
+                    // exact failure mode in the 2026-05-01 JEE Physics
+                    // session and 2026-05-02 incoherence test (brain
+                    // re-emits show_segment_card for an already-completed
+                    // segment after no_problem_available, dedup catches
+                    // it silently).
+                    const dedupSuppressed = result?.duplicates?.some?.((d) => !!d) ?? false;
+                    const isProblemRender = name === 'show_segment_card' || name === 'show_problem';
+                    if (isProblemRender && dedupSuppressed && (!result?.rejected || result.rejected.length === 0)) {
+                      const segId = typeof args.segmentId === 'string' ? args.segmentId : currentSegmentIdRef.current;
+                      const reason = `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Either: (a) call generate_problem to source a NEW problem, (b) improvise an ad-hoc show_problem with a clearly-different statement and an "off-the-cuff" disclaimer in narration, or (c) summarize that the lesson plan is exhausted and ask the student whether to switch topics or wrap up. Suppressed segment / args: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
+                      rejectionsThisAttempt.push({ action: name, reason });
+                      if (!attemptKilled) {
+                        attemptKilled = true;
+                        clearTimeout(gateTimer);
+                        closeGate();
+                        clearSpeechQueueRef.current?.();
+                        speakKillBridge();
+                      }
+                      onDebugEvent?.('dedup_surfaced_as_rejection', `${name} → ${segId}`);
+                      continue;
+                    }
                     if (result && Array.isArray(result.rejected) && result.rejected.length > 0) {
                       for (const r of result.rejected) {
                         rejectionsThisAttempt.push(r);

@@ -64,7 +64,7 @@ export interface GeneratedProblem {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   choices?: Array<{ id: string; text: string; correct?: boolean }>;
   /** Telemetry: where did this problem come from? */
-  provenance: 'bank' | 'brain-gen' | 'bank-fallback' | 'plan-authored';
+  provenance: 'bank' | 'brain-gen' | 'bank-fallback' | 'plan-authored' | 'none';
   /** ID for dedup tracking — bank's _id for bank rows, content
    *  hash for brain-gen, the segment id for plan-authored. */
   trackingId: string;
@@ -332,7 +332,12 @@ export async function generateProblem(
       brainGenState,
       difficulty: input.difficulty,
       layerReached: 4,
-      provenance: 'plan-authored',
+      // Accurate label: 'plan-authored' only when fallback returned a
+      // real problem; 'none' when the relevance filter rejected every
+      // candidate. Previously hard-coded to 'plan-authored' which
+      // misled debugging — telemetry would say "Layer 4 returned a
+      // plan-authored result" while the actual result was null.
+      provenance: fallback ? 'plan-authored' : 'none',
       totalMs: Date.now() - start,
       brainGenFailed,
     },

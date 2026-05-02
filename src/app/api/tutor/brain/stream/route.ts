@@ -72,6 +72,40 @@ function makeToolResultProvider(
 ): BrainTurnInput['toolResultProvider'] {
   if (!ctx) return undefined;
   return async (name, args) => {
+    // Incoherence-fix: advance_lesson failures (end-of-plan, unknown
+    // segment id) must be reported back to the brain. Without this,
+    // the React orchestrator's silent failure at line 1810-ish leaves
+    // the brain assuming it's on the next segment when it's actually
+    // pinned to the last; subsequent show_segment_card / show_problem
+    // calls then drift catastrophically. We synthesize a feasibility
+    // check here using the plan + currentSegmentId from this turn's
+    // context. The check can be slightly stale relative to mid-turn
+    // catalog state, but the lesson-plan structure + currentSegmentId
+    // are stable enough for end-of-plan detection.
+    if (name === 'advance_lesson') {
+      const to = String((args as { to?: unknown }).to ?? 'next');
+      const segIdx = ctx.segmentIndex;
+      const curIdx = segIdx.findIndex((s) => s.id === ctx.currentSegmentId);
+      let resolvable = false;
+      if (to === 'next') {
+        resolvable = curIdx >= 0 && curIdx < segIdx.length - 1;
+      } else if (to === 'previous') {
+        resolvable = curIdx > 0;
+      } else {
+        resolvable = segIdx.some((s) => s.id === to);
+      }
+      if (!resolvable) {
+        return JSON.stringify({
+          error: 'advance_lesson_failed',
+          message: to === 'next'
+            ? 'Cannot advance — the student is on the LAST segment of the lesson plan. Do NOT pretend to advance. Either (a) wrap the session up gracefully ("nice work, we covered everything in this lesson — anything you want to revisit?"), or (b) suggest a follow-up plan / topic, or (c) offer to drill more on the current concept via generate_problem with difficulty="same" / "slightly_harder". DO NOT call show_segment_card or show_problem assuming a fresh segment is now active.'
+            : `Cannot advance to "${to}" — that segment id is not in this plan. Either correct the id or wrap up the session.`,
+          currentSegmentId: ctx.currentSegmentId,
+          segmentIndex: segIdx,
+        });
+      }
+      return `advance_lesson executed successfully (to=${to}).`;
+    }
     if (name !== 'generate_problem') {
       return `${name} executed successfully.`;
     }

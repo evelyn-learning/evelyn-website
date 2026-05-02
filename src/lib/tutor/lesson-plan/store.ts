@@ -622,13 +622,11 @@ import { SEED_AP_CALC_DIFFERENTIAL_EQUATIONS } from './seeds/ap-calc-differentia
 // Batch 56 — AP Bio Unit 6 depth: central dogma + gene regulation/biotech.
 import { SEED_AP_BIO_CENTRAL_DOGMA } from './seeds/ap-bio-central-dogma';
 import { SEED_AP_BIO_GENE_REGULATION_BIOTECH } from './seeds/ap-bio-gene-regulation-biotech';
-// Test slot — short repro plans for debugging issues. Tagged
+// Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
 // file's header for the bug it triggers + repro steps.
-import { SEED_TEST_BUG1_QUERY_TARGET_DIVERGENCE } from './seeds/test-bug1-query-target-divergence';
-import { SEED_TEST_BUG2_IRRELEVANT_FALLBACK } from './seeds/test-bug2-irrelevant-fallback';
-import { SEED_TEST_BUG3_SERVER_ONLY_TOOL } from './seeds/test-bug3-server-only-tool';
+import { SEED_TEST_INCOHERENCE } from './seeds/test-incoherence';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -1206,9 +1204,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_BIO_CENTRAL_DOGMA,
   SEED_AP_BIO_GENE_REGULATION_BIOTECH,
   // Test slot for debug/repro plans (see import block above).
-  SEED_TEST_BUG1_QUERY_TARGET_DIVERGENCE,
-  SEED_TEST_BUG2_IRRELEVANT_FALLBACK,
-  SEED_TEST_BUG3_SERVER_ONLY_TOOL,
+  SEED_TEST_INCOHERENCE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
