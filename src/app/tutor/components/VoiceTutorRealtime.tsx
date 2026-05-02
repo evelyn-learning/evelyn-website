@@ -388,6 +388,14 @@ export function VoiceTutorRealtime({
   // e.g. after a student says "I don't see it" — leaving two copies on the
   // board). A trailing whitespace / casing difference is treated as identical.
   const lastEquationLatexRef = useRef<string>('');
+  // Session-scoped registry of show_equation labels seen so far.
+  // Keyed by normalized-label (decorations stripped — see use site for
+  // the strip list). Used to surface label-duplicate emissions back to
+  // the brain as a tool rejection so it learns to either keep the
+  // original card or pick a structurally different label, instead of
+  // decorating with ✓ / ✗ / (final) / (1) and producing duplicate
+  // cards. Observed 2026-05-02 session.
+  const equationLabelsThisSessionRef = useRef<Map<string, { originalLabel: string; originalLatex: string; latexNormalized: string }>>(new Map());
 
   // The current problem being worked (from show_problem or a top-level
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
@@ -1255,6 +1263,43 @@ export function VoiceTutorRealtime({
           return [];
         }
         lastEquationLatexRef.current = normalized;
+        // Label-normalization dedup. Brain bypasses the "one label,
+        // one card" system-prompt rule by adding decorations like ✓,
+        // ✗, " (final)", etc. — observed 2026-05-02 session: emitted
+        // "Step 1: Sum" with `=?` then "Step 1: Sum ✓" with `=400` as
+        // separate cards. Strip common decorations before comparing
+        // labels; if two equations have label-equivalent identifiers
+        // emitted in the same session, drop the new one with feedback
+        // telling the brain to either pick a unique label or avoid the
+        // redundant emission.
+        const rawLabel = (cmdAny.label?.trim() || '');
+        if (rawLabel) {
+          const normalizedLabel = rawLabel
+            .toLowerCase()
+            // Strip decorative suffixes / annotations.
+            .replace(/[✓✗✔✘☐☑]/g, '')
+            .replace(/\s*\(final\)\s*$/i, '')
+            .replace(/\s*\(corrected\)\s*$/i, '')
+            .replace(/\s*\(updated\)\s*$/i, '')
+            .replace(/\s*\(\d+\)\s*$/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (normalizedLabel) {
+            const seen = equationLabelsThisSessionRef.current.get(normalizedLabel);
+            if (seen && seen.latexNormalized !== normalized) {
+              const reason = `You already emitted a show_equation with label "${seen.originalLabel}" (latex "${seen.originalLatex.slice(0, 60)}…"). Re-emitting with label "${rawLabel}" produces a duplicate card on the board because the runtime can't mutate existing cards. If this step's value has changed (e.g. the student computed the sum and you want to mark it ✓), do NOT re-emit — keep the original card and speak the confirmation. If you genuinely want a NEW card for a NEW step, pick a structurally different label like "Step 2: …" or "Verified Sum" rather than decorating the existing label with ✓ / (final) / etc.`;
+              console.warn(`[VoiceTutorRealtime] Dropping label-duplicate equation: "${rawLabel}" (normalizes to "${normalizedLabel}", clashes with prior "${seen.originalLabel}")`);
+              onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen.originalLabel}"`);
+              rejected.push({ action: 'show_equation', reason });
+              return [];
+            }
+            equationLabelsThisSessionRef.current.set(normalizedLabel, {
+              originalLabel: rawLabel,
+              originalLatex: latex,
+              latexNormalized: normalized,
+            });
+          }
+        }
         // show_equation segment-truth drift check (fuzzy similarity)
         // was retired 2026-04-29 alongside the show_problem one. The
         // judge LLM (Lever B1) catches the speech-side claim mismatches
@@ -3672,6 +3717,32 @@ export function VoiceTutorRealtime({
                   // can't catch this because both cards are on the
                   // board and the brain's claim IS grounded against
                   // ONE of them.
+                  // show_worked_example bypasses the show_problem
+                  // auto-substitute, so the brain can render an INVENTED
+                  // walkthrough on a segment whose authored truth is
+                  // different — observed 2026-05-02 session, brain
+                  // emitted show_worked_example with {4,7,13,2,9} → 7
+                  // for the worked-mean segment whose authored problem
+                  // is {70,75,80,85,90} → 80. Lesson appeared to "start
+                  // with the example already solved," skipping the
+                  // interactive walk-through. Catch this here:
+                  // substitute show_worked_example → show_segment_card
+                  // when the active segment is itself a worked_example
+                  // with authored truth.
+                  if (name === 'show_worked_example') {
+                    const plan = lessonPlanRef.current;
+                    const segId = currentSegmentIdRef.current;
+                    if (plan && segId) {
+                      const seg = getSegment(plan, segId);
+                      const truth = getSegmentTruth(seg);
+                      if (truth?.problemText && truth.kind === 'worked_example') {
+                        console.log(`[brain-orchestrator] auto-substitute show_worked_example → show_segment_card for segment "${segId}" (authored worked_example truth exists; brain's invented walkthrough would override authored content)`);
+                        onDebugEvent?.('show_worked_example_substituted', `→ show_segment_card("${segId}")`);
+                        name = 'show_segment_card';
+                        args = { segmentId: segId };
+                      }
+                    }
+                  }
                   if (name === 'show_problem') {
                     const plan = lessonPlanRef.current;
                     const segId = currentSegmentIdRef.current;
