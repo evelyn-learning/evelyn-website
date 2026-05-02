@@ -422,6 +422,19 @@ export function VoiceTutorRealtime({
   // `repeat_previous`); the dedup is then bypassed at the call site.
   const shownProblemIdsRef = useRef<string[]>([]);
   const shownProblemHashesRef = useRef<string[]>([]);
+  // Tracks whether the brain narrated language consistent with the
+  // pipeline returning no_problem_available (e.g. "I don't have a
+  // clean follow-up", "the bank's tapped out") earlier in this
+  // session. Server-side `generate_problem` outcomes aren't directly
+  // observable on the client, but the brain's narration is — so we
+  // pattern-match on it. Used by the dedup-rejection feedback to push
+  // the brain toward improvise-with-disclaimer instead of retrying
+  // generate_problem when the bank is genuinely exhausted (observed
+  // 2026-05-02: brain re-emitted show_segment_card three times
+  // because the rejection feedback listed generate_problem as the
+  // first recovery option, but generate_problem had already returned
+  // null earlier in the session).
+  const noProblemAvailableObservedRef = useRef(false);
 
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
@@ -1747,15 +1760,34 @@ export function VoiceTutorRealtime({
               if (!result) return;
               console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
               onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
-              if (!result.correct && result.correctedLatex && injectContextRef.current) {
+              // Numeric-mismatch promotion: previously this branch only
+              // fired when Wolfram produced a `correctedLatex`. For
+              // pure verification mismatches (e.g. "4+7+2+7+3+7+5+4
+              // ≈ 39 but 40 ≈ 40 (mismatch)" — the brain wrote a
+              // wrong sum), Wolfram returns the issue text but no
+              // correctedLatex, so the next-turn correction never
+              // fired and the brain confidently propagated the wrong
+              // value through downstream computations. Now: inject a
+              // correction whenever Wolfram says !correct, regardless
+              // of whether it produced a fully-corrected latex. The
+              // brain reads the issue text, extracts the right value,
+              // and apologizes / re-emits on the next turn.
+              if (!result.correct && injectContextRef.current && (result.correctedLatex || (result.issues && result.issues.length > 0))) {
                 const kind = result.source === 'wolfram-derivative' ? 'derivative'
                   : result.source === 'wolfram-integral' ? 'integral'
                   : 'equation';
+                const correctedHint = result.correctedLatex
+                  ? `The correct form is "${result.expected || result.correctedLatex}". `
+                  : '';
                 injectContextRef.current(
-                  `MATH CORRECTION: The ${kind} you just wrote "${latex}" is wrong. ` +
-                  `The correct form is "${result.expected || result.correctedLatex}". ` +
-                  `${(result.issues || []).join(' ')} ` +
-                  `On your next turn, briefly tell the student you misspoke and re-emit the corrected equation on the whiteboard.`
+                  `MATH CORRECTION (HARD — DO NOT IGNORE): The ${kind} you just wrote "${latex}" is wrong. ` +
+                  `${correctedHint}` +
+                  `Validator details: ${(result.issues || []).join(' ')}. ` +
+                  `On your VERY NEXT turn you MUST: (1) explicitly apologize for the slip in one short sentence, ` +
+                  `(2) re-emit a corrected show_equation with the right numeric value extracted from the validator details, ` +
+                  `(3) update any DOWNSTREAM derivations or final-answer cards that used the wrong value. ` +
+                  `Do not pretend the prior emission was right; do not propagate the bad value forward. ` +
+                  `Do not call show_problem or advance_lesson until you have re-emitted the corrected equation.`
                 );
               }
             })
@@ -3590,6 +3622,19 @@ export function VoiceTutorRealtime({
                     .replace(/\s*[—–]\s*/g, ', ')
                     .replace(/\s--+\s/g, ', ');
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
+                  // Detect brain narration that signals the pipeline
+                  // returned no_problem_available. Generic patterns —
+                  // any utterance roughly meaning "I have nothing
+                  // appropriate to source for this anchor" sets the
+                  // session-scoped flag. Used by dedup-rejection
+                  // feedback to gate the recovery options (don't tell
+                  // the brain to retry generate_problem when the
+                  // bank's already known to be exhausted).
+                  if (!noProblemAvailableObservedRef.current
+                    && /\b(?:don'?t have a clean follow[- ]up|no clean follow[- ]up|bank.{0,30}(?:tapped out|exhausted|empty)|no (?:more )?(?:fresh|relevant|new) problems?\b|exhausted|no problem available)\b/i.test(trimmedSentence)) {
+                    noProblemAvailableObservedRef.current = true;
+                    onDebugEvent?.('no_problem_available_observed', trimmedSentence.slice(0, 100));
+                  }
                   if (!attemptKilled) {
                     if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
@@ -4011,7 +4056,15 @@ export function VoiceTutorRealtime({
                     const isProblemRender = name === 'show_segment_card' || name === 'show_problem';
                     if (isProblemRender && dedupSuppressed && (!result?.rejected || result.rejected.length === 0)) {
                       const segId = typeof args.segmentId === 'string' ? args.segmentId : currentSegmentIdRef.current;
-                      const reason = `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Either: (a) call generate_problem to source a NEW problem, (b) improvise an ad-hoc show_problem with a clearly-different statement and an "off-the-cuff" disclaimer in narration, or (c) summarize that the lesson plan is exhausted and ask the student whether to switch topics or wrap up. Suppressed segment / args: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
+                      // State-aware recovery: if we've already observed
+                      // no_problem_available patterns from the brain
+                      // earlier this session, retrying generate_problem
+                      // is futile. Push the brain toward improvise-with-
+                      // disclaimer or wrap-up first.
+                      const noProblemObserved = noProblemAvailableObservedRef.current;
+                      const reason = noProblemObserved
+                        ? `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup) AND you've already received no_problem_available from generate_problem earlier this session — the bank/plan is exhausted for this concept. RETRY this attempt with ONE of: (1) PREFERRED — improvise an ad-hoc show_problem with clearly different content from anything previously rendered, prefixed by a disclaimer in narration ("here's one off the top of my head, not from the standard bank…"); or (2) ask the student whether they want to switch topic or wrap up. DO NOT call generate_problem again for this anchor — you've already exhausted it. DO NOT re-emit show_segment_card / show_problem with content matching any prior board card. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`
+                        : `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Recovery options, in order: (1) call generate_problem if you haven't already exhausted it for this anchor; (2) improvise an ad-hoc show_problem with clearly different content + explicit "off-the-cuff" disclaimer in narration; (3) ask the student whether to switch topic or wrap up. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
                       rejectionsThisAttempt.push({ action: name, reason });
                       if (!attemptKilled) {
                         attemptKilled = true;
@@ -4135,24 +4188,46 @@ export function VoiceTutorRealtime({
               body: JSON.stringify({ boardSummary, spokenText: attemptText, focus }),
             });
             if (judgeRes.ok) {
-              const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string }> };
-              // ADVISORY-ONLY: judge no longer kills the turn. The
-              // brain (Opus 4.7) is the source of truth; a Haiku
-              // fact-checker can't be 100% accurate, and false
-              // positives — which observably do happen — kill correct
-              // turns mid-stream and make the bot sound confused (two
-              // voices talking past each other after the kill bridge).
-              // 2026-04-29 ocean session: judge wrongly flagged
-              // student-affirmation as ungrounded, retry pivoted to a
-              // different topic and the student heard both. Better
-              // outcome: brain is occasionally wrong, student catches
-              // it conversationally, brain corrects on next turn.
-              // Keep the judge running for telemetry so we can see
-              // false-positive rate over time and re-evaluate.
+              const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
+              // Per-issue severity gating. Default policy is still
+              // ADVISORY (no kill) for soft claims — the 2026-04-29
+              // ocean session showed false-positive kills are worse
+              // than false-negative misses for tone/phrasing/common-
+              // knowledge issues. BUT for narrow concrete claims that
+              // produce an obvious chat-board mismatch (numeric /
+              // dataset / literal contradictions of the board), the
+              // judge can mark severity="kill" and the orchestrator
+              // honors it. 2026-05-02 session showed the judge
+              // correctly flagged a brain-hallucinated dataset that
+              // wasn't on the board, but advisory-only logging let
+              // the brain teach with the wrong dataset for the rest
+              // of the median walkthrough.
               if (!judgeJson.grounded && judgeJson.issues.length > 0) {
-                console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${judgeJson.issues.length} flagged claim(s):`,
-                  judgeJson.issues.map((i) => i.claim.slice(0, 80)));
-                onDebugEvent?.('judge_advisory_flag', `${judgeJson.issues.length} issue(s): ${judgeJson.issues[0].claim.slice(0, 60)}…`);
+                const killIssues = judgeJson.issues.filter((i) => i.severity === 'kill');
+                const advisoryIssues = judgeJson.issues.filter((i) => i.severity !== 'kill');
+                if (advisoryIssues.length > 0) {
+                  console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
+                    advisoryIssues.map((i) => i.claim.slice(0, 80)));
+                  onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}…`);
+                }
+                if (killIssues.length > 0) {
+                  const summary = killIssues.map((i, idx) =>
+                    `(${idx + 1}) Claim: "${i.claim.slice(0, 120)}" — ${i.why.slice(0, 200)}`
+                  ).join(' ');
+                  console.warn(`[brain-orchestrator] judge KILL — ${killIssues.length} board-contradiction claim(s):`, summary);
+                  onDebugEvent?.('judge_kill', `${killIssues.length}: ${killIssues[0].claim.slice(0, 60)}…`);
+                  rejectionsThisAttempt.push({
+                    action: 'judge',
+                    reason: `The judge detected your spoken claim(s) directly contradict what's on the whiteboard — the student would experience an obvious chat-board mismatch. Issues: ${summary}. RETRY: re-derive your statement from the actual content of the active board card(s); do NOT reference numeric values, dataset literals, or labels that don't appear on the board. If the board content is correct and your reasoning needs different content, emit a new render tool (show_problem / show_equation / new_page) FIRST so the board reflects what you're about to say, then narrate.`,
+                  });
+                  if (!attemptKilled) {
+                    attemptKilled = true;
+                    clearTimeout(gateTimer);
+                    closeGate();
+                    clearSpeechQueueRef.current?.();
+                    speakKillBridge();
+                  }
+                }
               } else {
                 onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);
               }

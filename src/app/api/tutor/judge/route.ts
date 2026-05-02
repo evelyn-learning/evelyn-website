@@ -57,6 +57,12 @@ interface JudgeRequestBody {
 interface JudgeIssue {
   claim: string;
   why: string;
+  /** "kill" → orchestrator kills the attempt + retries. Reserved for
+   *  CONCRETE numeric / dataset / literal contradictions of board
+   *  content that produce an obvious chat-board mismatch. "advisory"
+   *  → logged, no kill (default). Older judge responses without
+   *  severity default to "advisory" client-side. */
+  severity?: 'kill' | 'advisory';
 }
 
 interface JudgeResponse {
@@ -112,10 +118,16 @@ DO NOT flag:
 For self-contained claims you're not confident about, leave them alone.
 Only flag when you're CERTAIN the claim is wrong.
 
+Each flagged issue carries a SEVERITY. Use:
+- "kill" — the speech makes a CONCRETE NUMERIC, DATASET, OR LITERAL claim about board content that DIRECTLY CONTRADICTS what's on the board. Examples that warrant kill: spoken dataset values that don't appear on any board card; spoken numeric answers that contradict an equation card's RHS; spoken claims about a card's title/label that don't match. The student would experience an obvious chat-board mismatch — the cost of NOT killing is a stuck or off-board lesson. ONLY use "kill" when (a) the speech contains specific values/literals/numbers, AND (b) those values clearly contradict or do not exist on the board.
+- "advisory" — soft factual issues (tone, phrasing, common-knowledge minor errors, self-contained claims that don't reference the board). The student can recover conversationally; the orchestrator logs but doesn't kill. Default to "advisory" when uncertain.
+
+DO NOT mark "kill" for: pedagogical phrasing, predictions/hypotheticals, restatements of student input, vague references, or self-contained claims that don't anchor against the board. The kill class is narrow on purpose.
+
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}
 or
-{"grounded": false, "issues": [{"claim": "<the spoken claim>", "why": "<board has X / actually it's Y>"}]}
+{"grounded": false, "issues": [{"claim": "<the spoken claim>", "why": "<board has X / actually it's Y>", "severity": "kill" | "advisory"}]}
 
 If the whiteboard is empty, board claims fall through but self-contained
 claims still apply.
