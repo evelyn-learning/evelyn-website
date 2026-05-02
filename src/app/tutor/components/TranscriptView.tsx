@@ -215,6 +215,10 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // " array — do not invent segment ids.]" leaked into the bubble
   // because the inner `]` truncated the non-greedy match early.
   const visibleTranscript = transcript
+    // historyOnly entries exist purely for the brain's conversation
+    // history (e.g. "(rendered: tool, tool, …)" placeholders for
+    // tool-only turns). They MUST NOT render in the chat UI.
+    .filter((entry) => !entry.historyOnly)
     .map((entry) => {
       if (entry.role !== 'student') return entry;
       let stripped = entry.text.replace(/\s*\[[\s\S]*?\]\s*/g, ' ');

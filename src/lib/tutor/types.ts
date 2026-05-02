@@ -62,6 +62,14 @@ export interface TranscriptEntry {
    *  finalization (which produced visible flicker before 2026-04-29). */
   streaming?: boolean;
 
+  /** When true, this entry exists ONLY for the brain's conversation
+   *  history (next-turn input). The chat UI MUST NOT render it. Used
+   *  for the "(rendered: tool, tool, …)" placeholder we append for
+   *  tool-only turns so the brain remembers what it did, but the
+   *  student doesn't see internal tool-call summaries leaking into
+   *  their chat bubble feed (observed 2026-05-02 session). */
+  historyOnly?: boolean;
+
   // For tutor messages
   whiteboardCommands?: WhiteboardCommand[];
   pedagogicalIntent?: PedagogicalIntent;

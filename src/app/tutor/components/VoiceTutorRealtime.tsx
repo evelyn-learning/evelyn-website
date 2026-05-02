@@ -4369,10 +4369,19 @@ export function VoiceTutorRealtime({
           timestamp: new Date(),
           role: 'tutor',
           text: `(rendered: ${totalToolNamesSeen.join(', ')})`,
+          // historyOnly: prevents the chat UI from rendering this
+          // tool-summary placeholder. Earlier comment said "we don't
+          // call onTranscriptUpdate" but the entry still got flushed
+          // by every later onTranscriptUpdate call, leaking
+          // "(rendered: show_segment_card)" debug strings into the
+          // student's chat feed (observed 2026-05-02 session).
+          // TranscriptView filters on this flag.
+          historyOnly: true,
         };
         transcriptRef.current = [...transcriptRef.current, placeholderEntry];
-        // Deliberately NOT calling onTranscriptUpdate — this entry is
-        // for Claude's history only, not the UI transcript view.
+        // Still skip the immediate update — keeps the previous
+        // intent of not flushing for tool-only turns. Later updates
+        // will flush but TranscriptView filters out historyOnly.
       }
     } catch (err) {
       console.error('[brain-orchestrator] error:', err);
