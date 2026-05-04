@@ -512,6 +512,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // is lost. The queue holds pending sentences; response.done drains it.
   const speakTextQueueRef = useRef<string[]>([]);
   const speakTextInFlightRef = useRef(false);
+  // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
+  // captures the epoch at start and re-checks before pushing decoded
+  // PCM into audioQueueRef. If the epoch changed during the in-flight
+  // fetch (i.e., the orchestrator killed the turn), drop the push so
+  // the killed sentence doesn't play despite clearSpeechQueue having
+  // already fired. Without this, the kill+retry flow plays the killed
+  // turn's audio AND the retry's audio back-to-back — observed
+  // 2026-05-04 Linear-Functions session.
+  const speakEpochRef = useRef(0);
   // Pre-fetch cache for the openai-mini path. While sentence N is
   // playing, we kick off the HTTP fetch for sentence N+1 in parallel,
   // so its PCM bytes are ready the moment N's audio ends. Without this,
@@ -1905,10 +1914,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string) => {
     speakTextInFlightRef.current = true;
     updateState('processing');
+    // Capture the speak epoch at dispatch time. If clearSpeechQueue runs
+    // during the await below, the epoch will have changed and we must
+    // NOT push these bytes into the playback queue — the sentence was
+    // killed.
+    const dispatchEpoch = speakEpochRef.current;
     try {
       const float32 = await fetchTTSPromise(trimmed);
       // Consume the cache entry now that we're playing it.
       ttsPrefetchCacheRef.current.delete(trimmed);
+      if (dispatchEpoch !== speakEpochRef.current) {
+        // Killed mid-fetch. Drop the bytes silently. Don't touch
+        // speakTextInFlightRef here — clearSpeechQueue already reset
+        // it, and the next legitimate dispatch will set it again.
+        return;
+      }
       if (!float32) {
         speakTextInFlightRef.current = false;
         return;
@@ -1985,6 +2005,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // student heard the previous attempt's last word bleeding into "Let me
   // try that a different way."
   const clearSpeechQueue = useCallback((): Promise<void> => {
+    // Bump the speak epoch BEFORE we clear queues — any TTS dispatch
+    // currently parked at `await fetchTTSPromise` will compare against
+    // this new value when it resumes and silently drop the bytes
+    // instead of pushing them into the freshly-emptied audio queue.
+    // Without this, the killed turn's pre-fetched sentences leak
+    // through the clear and play after the kill (observed 2026-05-04
+    // Linear-Functions kill-then-retry overlap).
+    speakEpochRef.current++;
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
     // Drop any pre-fetched TTS bytes — they're for sentences we're

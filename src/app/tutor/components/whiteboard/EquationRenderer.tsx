@@ -121,7 +121,22 @@ export function EquationRenderer({
         // for anything that still doesn't fit.
         const scale = Math.max(0.32, containerWidth / innerWidth);
         inner.style.transform = `scale(${scale})`;
-        const innerHeight = inner.scrollHeight * scale;
+        // KaTeX descenders (fraction denominators, brackets, subscripts)
+        // can overhang scrollHeight by a few fractional pixels; combined
+        // with box-sizing:border-box + py-2 padding (16px total) AND
+        // overflow-x:auto coercing overflow-y to non-visible, the bottom
+        // of fractions gets clipped when we set height = scaled content
+        // height (the padding eats into the visible area). Add the el's
+        // computed vertical padding back into the height + descender
+        // buffer. Observed 2026-05-04 sessions: JEE rolling-step L_before
+        // and AP Precalc polar-r equations rendered with bottom edge cut.
+        const cs = (typeof window !== 'undefined' && typeof getComputedStyle === 'function')
+          ? getComputedStyle(el)
+          : null;
+        const padY = cs
+          ? (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+          : 16;
+        const innerHeight = Math.ceil(inner.scrollHeight * scale) + padY + 8;
         el.style.height = `${innerHeight}px`;
       }
     };

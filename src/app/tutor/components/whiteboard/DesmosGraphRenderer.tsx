@@ -226,21 +226,27 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         const sr = data.shadedRegion;
         const id = `shade-${exprId++}`;
         if (sr.axis === 'x') {
-          // Shade between two y=f(x) curves
+          // Shade between two y=f(x) curves. Use min/max so the
+          // brain's `between` order doesn't matter — observed
+          // 2026-05-04 AP Calc session, brain emitted
+          // between:["2*x","0"] for area under y=2x on [0,3]; if
+          // we treat the first entry as the lower bound literally,
+          // the constraint "2x ≤ y ≤ 0" is unsatisfiable on [0,3]
+          // and Desmos shades nothing.
           const f1 = jsExprToLatex(sr.between[0], 'x');
           const f2 = jsExprToLatex(sr.between[1], 'x');
           calculator.setExpression({
             id,
-            latex: `${f1} \\le y \\le ${f2} \\left\\{${sr.from} \\le x \\le ${sr.to}\\right\\}`,
+            latex: `\\min\\left(${f1},${f2}\\right) \\le y \\le \\max\\left(${f1},${f2}\\right) \\left\\{${sr.from} \\le x \\le ${sr.to}\\right\\}`,
             color: sr.color || '#16a34a',
           });
         } else {
-          // Shade between two x=f(y) curves
+          // Shade between two x=f(y) curves. Same min/max guard.
           const f1 = jsExprToLatex(sr.between[0], 'y');
           const f2 = jsExprToLatex(sr.between[1], 'y');
           calculator.setExpression({
             id,
-            latex: `${f1} \\le x \\le ${f2} \\left\\{${sr.from} \\le y \\le ${sr.to}\\right\\}`,
+            latex: `\\min\\left(${f1},${f2}\\right) \\le x \\le \\max\\left(${f1},${f2}\\right) \\left\\{${sr.from} \\le y \\le ${sr.to}\\right\\}`,
             color: sr.color || '#16a34a',
           });
         }

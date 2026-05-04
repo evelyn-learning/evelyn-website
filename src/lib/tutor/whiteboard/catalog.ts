@@ -709,6 +709,16 @@ export function buildShowSignature(action: string, cmd: any): string {
     'targetItemIndex', 'targetPageIndex', 'targetPageTitle',
     '_scribbleRejected', '_duplicateOf',
     'title', 'heading', 'label',
+    // Metadata that decorates the rendered card (badge / source tag /
+    // difficulty pill) but doesn't change the rendered figure's
+    // content. Two problem cards with the same `statement` should
+    // dedup as one regardless of whether one came in via
+    // show_segment_card (no difficultyLabel) and another via
+    // show_problem (difficultyLabel="medium"). Observed 2026-05-04
+    // AP Precalc session: judge-killed show_segment_card("try-1")
+    // stayed on board, retry's free-form show_problem had identical
+    // statement but added difficultyLabel — both cards rendered.
+    'difficultyLabel', 'sourceTag', 'difficulty', 'source',
   ]);
   const seen = new WeakSet<object>();
   const canon = (v: unknown): unknown => {

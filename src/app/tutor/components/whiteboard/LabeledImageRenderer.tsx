@@ -18,7 +18,7 @@
  * via simple horizontal offsets.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 export interface LabeledImageCallout {
   /** Percentage of image width (0-100). */
@@ -46,6 +46,43 @@ export interface LabeledImageSpec {
 }
 
 export default function LabeledImageRenderer({ spec }: { spec: LabeledImageSpec }) {
+  // Track image load failure. When the brain-supplied URL doesn't
+  // resolve (404, blocked CDN, CORS strip, deep-linking restrictions),
+  // the broken-image icon is tiny but the callouts still draw at their
+  // percentage positions and overlap each other unreadably. Observed
+  // 2026-05-04 thermodynamics session: a Wikimedia hot-tea image
+  // failed to load and three callouts collided on the broken-icon.
+  const [imgError, setImgError] = useState(false);
+
+  if (imgError) {
+    return (
+      <div className="labeled-image-renderer max-w-2xl">
+        {spec.title && (
+          <div className="text-center text-sm font-semibold text-gray-700 mb-2">{spec.title}</div>
+        )}
+        <div className="rounded border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
+          <div className="text-sm text-gray-500 italic">{spec.alt || 'Image unavailable'}</div>
+          {spec.callouts && spec.callouts.length > 0 && (
+            <ul className="mt-3 inline-block text-left text-sm text-gray-700 space-y-1">
+              {spec.callouts.map((c, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span
+                    className="inline-block w-2 h-2 rounded-full mt-1.5 shrink-0"
+                    style={{ backgroundColor: c.color || '#2563eb' }}
+                  />
+                  <span>
+                    <span className="font-medium">{c.text}</span>
+                    {c.caption && <span className="text-xs text-gray-500"> — {c.caption}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="labeled-image-renderer max-w-2xl">
       {spec.title && (
@@ -58,6 +95,7 @@ export default function LabeledImageRenderer({ spec }: { spec: LabeledImageSpec 
           alt={spec.alt}
           className="w-full h-auto rounded border border-gray-300 block"
           loading="lazy"
+          onError={() => setImgError(true)}
         />
         {spec.callouts?.map((c, i) => (
           <div key={i}>

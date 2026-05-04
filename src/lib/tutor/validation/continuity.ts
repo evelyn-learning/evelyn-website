@@ -87,11 +87,24 @@ export function normalizeRenamedFunction(
 ): { latex: string; changed: boolean; oldName?: string; newName?: string } {
   if (!latex || declared.length === 0) return { latex, changed: false };
 
-  // Unique base letters already declared.
-  const declaredBases = Array.from(new Set(declared.map(d => d.name.replace(/'+/g, ''))));
+  // Unique base letters already declared. Drop the integrand
+  // pseudonym "I" — extractIntegrand uses that name as an internal
+  // tag to feed integrand-context checks (it's never a real
+  // student-visible function name). If we let it through here, the
+  // whole rename pass treats every F / G / f / g the brain authors
+  // as a "renamed" version of I and rewrites them, turning a
+  // FTC-Part-1 board "G'(x) = x² + 5" into nonsense "I'(x) = x² + 5".
+  // Observed 2026-05-04 AP Calc AB session.
+  const declaredBases = Array.from(new Set(
+    declared
+      .filter(d => d.name.replace(/'+/g, '') !== 'I')
+      .map(d => d.name.replace(/'+/g, ''))
+  ));
   if (declaredBases.length !== 1) {
     // If the session has multiple function names (f and g both declared
     // deliberately), we can't safely disambiguate. Skip normalization.
+    // Also covers: only declarations are integrand pseudonyms → nothing
+    // legitimate to normalize against.
     return { latex, changed: false };
   }
   const canonicalBase = declaredBases[0];

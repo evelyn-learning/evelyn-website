@@ -47,6 +47,7 @@ import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
+import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle } from '@/lib/tutor/whiteboard/catalog';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
@@ -3483,8 +3484,11 @@ export function VoiceTutorRealtime({
       // bridge the silence without sounding like the tutor is
       // walking back its own claims.
       const BRIDGE_PHRASES = [
+        // 'One sec.' was dropped 2026-05-04: TTS in math contexts
+        // pronounces the abbreviation as "One secant" (treats it as
+        // the trig function). User reported hearing "one secant"
+        // mid-kill on the Linear-Functions ladder turn.
         'One moment.',
-        'One sec.',
         'Hmm.',
       ];
       // Round-7 Fix C: drain any in-flight TTS audio FIRST, then speak
@@ -3814,8 +3818,10 @@ export function VoiceTutorRealtime({
                   // to the LAST one used, swap to a different option
                   // from the pool before TTS.
                   const bridgePool = [
+                    // 'One sec — ...' dropped 2026-05-04: TTS in math
+                    // contexts pronounces "sec" as the trig function
+                    // "secant".
                     'Let me see what I have for you.',
-                    'One sec — checking what\'s available.',
                     'Looking for a good one for you.',
                     'Let me grab something.',
                     'Hold on — picking one out.',
@@ -4363,6 +4369,42 @@ export function VoiceTutorRealtime({
                       console.warn(`[brain-orchestrator] show_segment_card: no active plan.`);
                     }
                   }
+                  // Round-7+++++ Issue 5 fix: pre-validate show_diagram
+                  // params against the catalog solver. The solver runs
+                  // client-side in CommandRenderer; if it throws (e.g.
+                  // comparison_table cells row count mismatch with
+                  // items.length), the canvas shows
+                  // "✏️ Tutor is figuring out how to draw this…" forever
+                  // and the brain never gets feedback to retry. Run the
+                  // solver here so we surface a structural rejection
+                  // through the validator-feedback loop. Observed
+                  // 2026-05-04 JEE rotational session: brain emitted
+                  // comparison_table with items=[3 entries] but cells
+                  // rows had 2 entries each → WB stuck on placeholder
+                  // for the entire session.
+                  if (name === 'show_diagram') {
+                    const diagType = typeof (args as { type?: unknown }).type === 'string'
+                      ? ((args as { type: string }).type)
+                      : '';
+                    const rawParams = (args as { params?: unknown }).params;
+                    const paramsObj = rawParams && typeof rawParams === 'object' && !Array.isArray(rawParams)
+                      ? (rawParams as Record<string, unknown>)
+                      : {};
+                    if (diagType) {
+                      try {
+                        solveDiagram(diagType, paramsObj);
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : String(err);
+                        console.warn(`[brain-orchestrator] show_diagram solver pre-check rejected: ${msg}`);
+                        onDebugEvent?.('show_diagram_solver_rejected', `${diagType}: ${msg.slice(0, 100)}`);
+                        rejectionsThisAttempt.push({
+                          action: 'show_diagram',
+                          reason: `Your show_diagram call (type="${diagType}") failed structural validation: ${msg}. Re-emit show_diagram with corrected params that satisfy the schema for kind "${diagType}". If you can't produce valid params for this diagram kind, fall back to show_table for tabular comparisons, show_equation for formulas, or describe the idea verbally without a render.`,
+                        });
+                        continue;
+                      }
+                    }
+                  }
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     const result = await handleWhiteboardCommand([cmd]);
@@ -4635,6 +4677,56 @@ export function VoiceTutorRealtime({
                   console.warn(`[brain-orchestrator] judge KILL → ADVISORY (wolfram-override) — ${wolframOverrideHits.length} claim(s) match wolfram-verified equations`);
                   onDebugEvent?.('judge_kill_wolfram_override', `${wolframOverrideHits.length}: ${wolframOverrideHits[0].claim.slice(0, 60)}…`);
                   for (const i of wolframOverrideHits) advisoryIssues.push(i);
+                }
+                // Round-7+++++ Issue 4 fix: judge-claim grounding override.
+                // Sometimes the judge LLM hallucinates a claim the brain
+                // never actually said and KILLs based on it; the retry
+                // then plays alongside the (correct) original audio,
+                // producing a "two voices" overlap and confusing speech.
+                // Conservative grounding check: if the kill claim's text
+                // (3-word n-grams of alphanumeric tokens) doesn't appear
+                // with substantial overlap in the brain's spoken text
+                // from this turn, downgrade to advisory. Threshold (30%
+                // matched trigrams) is calibrated so paraphrases of real
+                // claims still trigger the kill; pure hallucinations
+                // don't. Observed 2026-05-04 JEE rolling-step turn:
+                // judge KILLed on alleged "I_P = I_cm + MR²" but brain's
+                // actual text only referenced
+                // "L_before = ½MR²·(v/R) + Mv(R-h/4)" — different
+                // equation, judge fabricated the form.
+                const normForGrounding = (s: string): string => s
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+                const sourceNorm = normForGrounding(attemptText);
+                const groundingOverrideHits: typeof rawKillIssues = [];
+                for (let kIdx = killIssues.length - 1; kIdx >= 0; kIdx--) {
+                  const issue = killIssues[kIdx];
+                  const claimNorm = normForGrounding(issue.claim);
+                  const claimWords = claimNorm.length > 0 ? claimNorm.split(' ') : [];
+                  // Need at least 3 words for trigrams. Short claims
+                  // default to keep-as-kill (over-conservative — better
+                  // a false-positive kill on a short claim than a
+                  // false-negative-downgrade of a real contradiction).
+                  if (claimWords.length < 3) continue;
+                  let matched = 0;
+                  let total = 0;
+                  for (let i = 0; i <= claimWords.length - 3; i++) {
+                    const tri = claimWords.slice(i, i + 3).join(' ');
+                    total++;
+                    if (sourceNorm.includes(tri)) matched++;
+                  }
+                  const ratio = total > 0 ? matched / total : 1;
+                  if (ratio < 0.3) {
+                    groundingOverrideHits.push(issue);
+                    advisoryIssues.push(issue);
+                    killIssues.splice(kIdx, 1);
+                  }
+                }
+                if (groundingOverrideHits.length > 0) {
+                  console.warn(`[brain-orchestrator] judge KILL → ADVISORY (grounding-override) — ${groundingOverrideHits.length} claim(s) not substantially present in brain's spoken text`);
+                  onDebugEvent?.('judge_kill_grounding_override', `${groundingOverrideHits.length}: ${groundingOverrideHits[0].claim.slice(0, 60)}…`);
                 }
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
