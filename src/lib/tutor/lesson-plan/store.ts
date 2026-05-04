@@ -715,6 +715,25 @@ import { SEED_G35_ELA_PRONOUN_USAGE } from './seeds/g35-ela-pronoun-usage';
 import { SEED_G35_ELA_VERB_TENSES } from './seeds/g35-ela-verb-tenses';
 import { SEED_G35_ELA_COMMAS_QUOTES } from './seeds/g35-ela-commas-quotes';
 import { SEED_G35_ELA_RESEARCH_BASICS } from './seeds/g35-ela-research-basics';
+// Batch 63 — Grades 6-8 ELA cluster (18 plans).
+import { SEED_G68_ELA_LITERARY_ANALYSIS } from './seeds/g68-ela-literary-analysis';
+import { SEED_G68_ELA_NARRATIVE_ARC } from './seeds/g68-ela-narrative-arc';
+import { SEED_G68_ELA_SYMBOLISM_MOTIF } from './seeds/g68-ela-symbolism-motif';
+import { SEED_G68_ELA_TONE_MOOD } from './seeds/g68-ela-tone-mood';
+import { SEED_G68_ELA_ARGUMENT_CER } from './seeds/g68-ela-argument-cer';
+import { SEED_G68_ELA_COUNTERCLAIM } from './seeds/g68-ela-counterclaim';
+import { SEED_G68_ELA_INFORMATIONAL_RESEARCH } from './seeds/g68-ela-informational-research';
+import { SEED_G68_ELA_NARRATIVE_DEVELOPED } from './seeds/g68-ela-narrative-developed';
+import { SEED_G68_ELA_CITING_EVIDENCE } from './seeds/g68-ela-citing-evidence';
+import { SEED_G68_ELA_SENTENCE_VARIETY } from './seeds/g68-ela-sentence-variety';
+import { SEED_G68_ELA_ACTIVE_PASSIVE_VOICE } from './seeds/g68-ela-active-passive-voice';
+import { SEED_G68_ELA_WORD_CHOICE } from './seeds/g68-ela-word-choice';
+import { SEED_G68_ELA_REVISING_CLARITY } from './seeds/g68-ela-revising-clarity';
+import { SEED_G68_ELA_PHRASES_CLAUSES } from './seeds/g68-ela-phrases-clauses';
+import { SEED_G68_ELA_ADVANCED_PUNCTUATION } from './seeds/g68-ela-advanced-punctuation';
+import { SEED_G68_ELA_COMPARING_TEXTS } from './seeds/g68-ela-comparing-texts';
+import { SEED_G68_ELA_ANALYZING_MEDIA } from './seeds/g68-ela-analyzing-media';
+import { SEED_G68_ELA_GREEK_LATIN_ROOTS } from './seeds/g68-ela-greek-latin-roots';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1388,6 +1407,25 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G35_ELA_VERB_TENSES,
   SEED_G35_ELA_COMMAS_QUOTES,
   SEED_G35_ELA_RESEARCH_BASICS,
+  // Batch 63 — Grades 6-8 ELA cluster.
+  SEED_G68_ELA_LITERARY_ANALYSIS,
+  SEED_G68_ELA_NARRATIVE_ARC,
+  SEED_G68_ELA_SYMBOLISM_MOTIF,
+  SEED_G68_ELA_TONE_MOOD,
+  SEED_G68_ELA_ARGUMENT_CER,
+  SEED_G68_ELA_COUNTERCLAIM,
+  SEED_G68_ELA_INFORMATIONAL_RESEARCH,
+  SEED_G68_ELA_NARRATIVE_DEVELOPED,
+  SEED_G68_ELA_CITING_EVIDENCE,
+  SEED_G68_ELA_SENTENCE_VARIETY,
+  SEED_G68_ELA_ACTIVE_PASSIVE_VOICE,
+  SEED_G68_ELA_WORD_CHOICE,
+  SEED_G68_ELA_REVISING_CLARITY,
+  SEED_G68_ELA_PHRASES_CLAUSES,
+  SEED_G68_ELA_ADVANCED_PUNCTUATION,
+  SEED_G68_ELA_COMPARING_TEXTS,
+  SEED_G68_ELA_ANALYZING_MEDIA,
+  SEED_G68_ELA_GREEK_LATIN_ROOTS,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
