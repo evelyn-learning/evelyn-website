@@ -642,6 +642,25 @@ import { SEED_GCSE_MATH_CUMULATIVE_FREQ } from './seeds/gcse-math-cumulative-fre
 import { SEED_GCSE_MATH_HISTOGRAMS } from './seeds/gcse-math-histograms';
 import { SEED_GCSE_MATH_PROBABILITY_TREES } from './seeds/gcse-math-probability-trees';
 import { SEED_GCSE_MATH_CONDITIONAL_PROB } from './seeds/gcse-math-conditional-prob';
+// Batch 58 — IB DP Math Analysis & Approaches: full topic cluster.
+import { SEED_IBDP_AA_SEQUENCES_SERIES } from './seeds/ibdp-aa-sequences-series';
+import { SEED_IBDP_AA_EXP_LOGS } from './seeds/ibdp-aa-exp-logs';
+import { SEED_IBDP_AA_BINOMIAL_THEOREM } from './seeds/ibdp-aa-binomial-theorem';
+import { SEED_IBDP_AA_FUNCTIONS_INVERSES } from './seeds/ibdp-aa-functions-inverses';
+import { SEED_IBDP_AA_QUADRATICS_DEEP } from './seeds/ibdp-aa-quadratics-deep';
+import { SEED_IBDP_AA_POLY_RATIONAL } from './seeds/ibdp-aa-poly-rational';
+import { SEED_IBDP_AA_TRIG_RADIANS } from './seeds/ibdp-aa-trig-radians';
+import { SEED_IBDP_AA_TRIG_ID_EQUATIONS } from './seeds/ibdp-aa-trig-id-equations';
+import { SEED_IBDP_AA_VECTORS_2D_3D } from './seeds/ibdp-aa-vectors-2d-3d';
+import { SEED_IBDP_AA_VECTOR_LINES_PLANES } from './seeds/ibdp-aa-vector-lines-planes';
+import { SEED_IBDP_AA_STATISTICS_DESCRIPTIVE } from './seeds/ibdp-aa-statistics-descriptive';
+import { SEED_IBDP_AA_PROBABILITY } from './seeds/ibdp-aa-probability';
+import { SEED_IBDP_AA_BINOMIAL_DISTRIBUTION } from './seeds/ibdp-aa-binomial-distribution';
+import { SEED_IBDP_AA_NORMAL_DISTRIBUTION } from './seeds/ibdp-aa-normal-distribution';
+import { SEED_IBDP_AA_LIMITS_CONTINUITY } from './seeds/ibdp-aa-limits-continuity';
+import { SEED_IBDP_AA_DIFFERENTIATION } from './seeds/ibdp-aa-differentiation';
+import { SEED_IBDP_AA_INTEGRATION } from './seeds/ibdp-aa-integration';
+import { SEED_IBDP_AA_DIFFERENTIAL_EQUATIONS } from './seeds/ibdp-aa-differential-equations';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1242,6 +1261,25 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GCSE_MATH_HISTOGRAMS,
   SEED_GCSE_MATH_PROBABILITY_TREES,
   SEED_GCSE_MATH_CONDITIONAL_PROB,
+  // Batch 58 — IB DP Math Analysis & Approaches.
+  SEED_IBDP_AA_SEQUENCES_SERIES,
+  SEED_IBDP_AA_EXP_LOGS,
+  SEED_IBDP_AA_BINOMIAL_THEOREM,
+  SEED_IBDP_AA_FUNCTIONS_INVERSES,
+  SEED_IBDP_AA_QUADRATICS_DEEP,
+  SEED_IBDP_AA_POLY_RATIONAL,
+  SEED_IBDP_AA_TRIG_RADIANS,
+  SEED_IBDP_AA_TRIG_ID_EQUATIONS,
+  SEED_IBDP_AA_VECTORS_2D_3D,
+  SEED_IBDP_AA_VECTOR_LINES_PLANES,
+  SEED_IBDP_AA_STATISTICS_DESCRIPTIVE,
+  SEED_IBDP_AA_PROBABILITY,
+  SEED_IBDP_AA_BINOMIAL_DISTRIBUTION,
+  SEED_IBDP_AA_NORMAL_DISTRIBUTION,
+  SEED_IBDP_AA_LIMITS_CONTINUITY,
+  SEED_IBDP_AA_DIFFERENTIATION,
+  SEED_IBDP_AA_INTEGRATION,
+  SEED_IBDP_AA_DIFFERENTIAL_EQUATIONS,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
