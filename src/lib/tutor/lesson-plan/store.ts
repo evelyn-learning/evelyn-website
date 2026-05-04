@@ -661,6 +661,21 @@ import { SEED_IBDP_AA_LIMITS_CONTINUITY } from './seeds/ibdp-aa-limits-continuit
 import { SEED_IBDP_AA_DIFFERENTIATION } from './seeds/ibdp-aa-differentiation';
 import { SEED_IBDP_AA_INTEGRATION } from './seeds/ibdp-aa-integration';
 import { SEED_IBDP_AA_DIFFERENTIAL_EQUATIONS } from './seeds/ibdp-aa-differential-equations';
+// Batch 59 — GRE Quantitative Reasoning (content topics).
+import { SEED_GRE_Q_ARITHMETIC } from './seeds/gre-q-arithmetic';
+import { SEED_GRE_Q_NUMBER_PROPERTIES } from './seeds/gre-q-number-properties';
+import { SEED_GRE_Q_EXPONENTS_ROOTS } from './seeds/gre-q-exponents-roots';
+import { SEED_GRE_Q_ALGEBRA_EQUATIONS } from './seeds/gre-q-algebra-equations';
+import { SEED_GRE_Q_WORD_PROBLEMS } from './seeds/gre-q-word-problems';
+import { SEED_GRE_Q_COORDINATE_GEOMETRY } from './seeds/gre-q-coordinate-geometry';
+import { SEED_GRE_Q_LINES_ANGLES_TRIANGLES } from './seeds/gre-q-lines-angles-triangles';
+import { SEED_GRE_Q_QUADRILATERALS } from './seeds/gre-q-quadrilaterals';
+import { SEED_GRE_Q_CIRCLES } from './seeds/gre-q-circles';
+import { SEED_GRE_Q_3D_GEOMETRY } from './seeds/gre-q-3d-geometry';
+import { SEED_GRE_Q_DATA_INTERPRETATION } from './seeds/gre-q-data-interpretation';
+import { SEED_GRE_Q_STATISTICS } from './seeds/gre-q-statistics';
+import { SEED_GRE_Q_PROBABILITY_COUNTING } from './seeds/gre-q-probability-counting';
+import { SEED_GRE_Q_QUANT_COMPARISON } from './seeds/gre-q-quant-comparison';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1280,6 +1295,21 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_IBDP_AA_DIFFERENTIATION,
   SEED_IBDP_AA_INTEGRATION,
   SEED_IBDP_AA_DIFFERENTIAL_EQUATIONS,
+  // Batch 59 — GRE Quant content topics.
+  SEED_GRE_Q_ARITHMETIC,
+  SEED_GRE_Q_NUMBER_PROPERTIES,
+  SEED_GRE_Q_EXPONENTS_ROOTS,
+  SEED_GRE_Q_ALGEBRA_EQUATIONS,
+  SEED_GRE_Q_WORD_PROBLEMS,
+  SEED_GRE_Q_COORDINATE_GEOMETRY,
+  SEED_GRE_Q_LINES_ANGLES_TRIANGLES,
+  SEED_GRE_Q_QUADRILATERALS,
+  SEED_GRE_Q_CIRCLES,
+  SEED_GRE_Q_3D_GEOMETRY,
+  SEED_GRE_Q_DATA_INTERPRETATION,
+  SEED_GRE_Q_STATISTICS,
+  SEED_GRE_Q_PROBABILITY_COUNTING,
+  SEED_GRE_Q_QUANT_COMPARISON,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
