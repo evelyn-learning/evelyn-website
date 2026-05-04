@@ -734,6 +734,27 @@ import { SEED_G68_ELA_ADVANCED_PUNCTUATION } from './seeds/g68-ela-advanced-punc
 import { SEED_G68_ELA_COMPARING_TEXTS } from './seeds/g68-ela-comparing-texts';
 import { SEED_G68_ELA_ANALYZING_MEDIA } from './seeds/g68-ela-analyzing-media';
 import { SEED_G68_ELA_GREEK_LATIN_ROOTS } from './seeds/g68-ela-greek-latin-roots';
+// Batch 64 — Grades 9-12 ELA cluster (20 plans).
+import { SEED_G912_ELA_CLOSE_READING } from './seeds/g912-ela-close-reading';
+import { SEED_G912_ELA_LITERARY_DEVICES } from './seeds/g912-ela-literary-devices';
+import { SEED_G912_ELA_RHETORIC_EPL } from './seeds/g912-ela-rhetoric-epl';
+import { SEED_G912_ELA_ARGUMENT_ANALYSIS } from './seeds/g912-ela-argument-analysis';
+import { SEED_G912_ELA_RESEARCH_PAPER } from './seeds/g912-ela-research-paper';
+import { SEED_G912_ELA_SYNTHESIS_ESSAY } from './seeds/g912-ela-synthesis-essay';
+import { SEED_G912_ELA_MLA_APA_CITATION } from './seeds/g912-ela-mla-apa-citation';
+import { SEED_G912_ELA_ANNOTATED_BIB } from './seeds/g912-ela-annotated-bib';
+import { SEED_G912_ELA_LOGICAL_FALLACIES } from './seeds/g912-ela-logical-fallacies';
+import { SEED_G912_ELA_CRITICAL_READING } from './seeds/g912-ela-critical-reading';
+import { SEED_G912_ELA_NARRATIVE_ADVANCED } from './seeds/g912-ela-narrative-advanced';
+import { SEED_G912_ELA_ANALYTICAL_ESSAY } from './seeds/g912-ela-analytical-essay';
+import { SEED_G912_ELA_LITERATURE_PERIODS } from './seeds/g912-ela-literature-periods';
+import { SEED_G912_ELA_SHAKESPEARE_BASICS } from './seeds/g912-ela-shakespeare-basics';
+import { SEED_G912_ELA_POETRY_ANALYSIS } from './seeds/g912-ela-poetry-analysis';
+import { SEED_G912_ELA_SHORT_STORY_CRAFT } from './seeds/g912-ela-short-story-craft';
+import { SEED_G912_ELA_GENRE_COMPARISON } from './seeds/g912-ela-genre-comparison';
+import { SEED_G912_ELA_SPEECH_PRESENTATION } from './seeds/g912-ela-speech-presentation';
+import { SEED_G912_ELA_VOCAB_ADVANCED } from './seeds/g912-ela-vocab-advanced';
+import { SEED_G912_ELA_COLLEGE_ESSAY } from './seeds/g912-ela-college-essay';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1426,6 +1447,27 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G68_ELA_COMPARING_TEXTS,
   SEED_G68_ELA_ANALYZING_MEDIA,
   SEED_G68_ELA_GREEK_LATIN_ROOTS,
+  // Batch 64 — Grades 9-12 ELA cluster.
+  SEED_G912_ELA_CLOSE_READING,
+  SEED_G912_ELA_LITERARY_DEVICES,
+  SEED_G912_ELA_RHETORIC_EPL,
+  SEED_G912_ELA_ARGUMENT_ANALYSIS,
+  SEED_G912_ELA_RESEARCH_PAPER,
+  SEED_G912_ELA_SYNTHESIS_ESSAY,
+  SEED_G912_ELA_MLA_APA_CITATION,
+  SEED_G912_ELA_ANNOTATED_BIB,
+  SEED_G912_ELA_LOGICAL_FALLACIES,
+  SEED_G912_ELA_CRITICAL_READING,
+  SEED_G912_ELA_NARRATIVE_ADVANCED,
+  SEED_G912_ELA_ANALYTICAL_ESSAY,
+  SEED_G912_ELA_LITERATURE_PERIODS,
+  SEED_G912_ELA_SHAKESPEARE_BASICS,
+  SEED_G912_ELA_POETRY_ANALYSIS,
+  SEED_G912_ELA_SHORT_STORY_CRAFT,
+  SEED_G912_ELA_GENRE_COMPARISON,
+  SEED_G912_ELA_SPEECH_PRESENTATION,
+  SEED_G912_ELA_VOCAB_ADVANCED,
+  SEED_G912_ELA_COLLEGE_ESSAY,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
