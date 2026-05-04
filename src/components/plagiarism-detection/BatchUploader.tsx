@@ -3,6 +3,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { UPLOAD_CONSTRAINTS } from './constants';
 import { generateId, validateFile } from './utils';
+import { saveAnalysisToHistory } from '@/lib/plagiarism/save-history';
 import type { BatchSubmission, AssignmentContext, EnhancedAnalysisResult } from './types';
 
 interface BatchUploaderProps {
@@ -107,7 +108,15 @@ export default function BatchUploader({ context, onComplete, enabled = true }: B
         if (data.error) {
           updated[idx] = { ...updated[idx], status: 'error', error: data.error };
         } else {
-          updated[idx] = { ...updated[idx], status: 'complete', result: data.result as EnhancedAnalysisResult };
+          const result = data.result as EnhancedAnalysisResult;
+          updated[idx] = { ...updated[idx], status: 'complete', result };
+          // Best-effort save (no-op if teacher not connected).
+          void saveAnalysisToHistory({
+            documentName: updated[idx].fileName,
+            source: 'upload',
+            result,
+            context,
+          });
         }
       } catch {
         updated[idx] = { ...updated[idx], status: 'error', error: 'Analysis failed.' };

@@ -9,6 +9,8 @@
     "lint": "next lint",
     "migrate": "npx ts-node scripts/migrate-wordpress.ts",
     "seed": "npx ts-node scripts/seed-sample-data.ts",
+    "seed:teacher": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-teacher.ts",
+    "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
     "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {
@@ -30,6 +32,7 @@
     "dropbox": "^10.34.0",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
+    "googleapis": "^171.4.0",
     "gray-matter": "^4.0.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.1.0",

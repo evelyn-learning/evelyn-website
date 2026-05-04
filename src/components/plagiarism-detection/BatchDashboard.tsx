@@ -31,9 +31,9 @@ export default function BatchDashboard({ submissions, onSelectSubmission, enable
     if (filterStatus !== 'all') {
       list = list.filter(s => {
         const score = s.result!.overallScore;
-        if (filterStatus === 'concerns') return score < 30;
-        if (filterStatus === 'review') return score >= 30 && score < 60;
-        return score >= 60;
+        if (filterStatus === 'concerns') return score < 40;
+        if (filterStatus === 'review') return score >= 40 && score < 75;
+        return score >= 75;
       });
     }
 
@@ -73,9 +73,9 @@ export default function BatchDashboard({ submissions, onSelectSubmission, enable
 
   const stats = {
     total: completed.length,
-    concerns: completed.filter(s => s.result!.overallScore < 30).length,
-    review: completed.filter(s => s.result!.overallScore >= 30 && s.result!.overallScore < 60).length,
-    original: completed.filter(s => s.result!.overallScore >= 60).length,
+    concerns: completed.filter(s => s.result!.overallScore < 40).length,
+    review: completed.filter(s => s.result!.overallScore >= 40 && s.result!.overallScore < 75).length,
+    original: completed.filter(s => s.result!.overallScore >= 75).length,
   };
 
   const handleExportAll = async () => {
@@ -94,7 +94,7 @@ export default function BatchDashboard({ submissions, onSelectSubmission, enable
           analysisDate: formatReportDate(),
         };
 
-        const pdfBlob = await generateIntegrityReportBlob(sub.text, sub.result!, metadata);
+        const pdfBlob = await generateIntegrityReportBlob(sub.text || '', sub.result!, metadata);
         const safeName = sub.fileName.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
         zip.file(`${safeName}_Integrity_Report.pdf`, pdfBlob);
       }

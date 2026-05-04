@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { saveAnalysisToHistory } from '@/lib/plagiarism/save-history';
 import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 import AssignmentContextInput from './AssignmentContext';
 import AnnotatedText from './AnnotatedText';
@@ -11,6 +12,8 @@ import ReportExport from './ReportExport';
 import BatchUploader from './BatchUploader';
 import BatchDashboard from './BatchDashboard';
 import ComparisonView from './ComparisonView';
+import ClassroomTab from './ClassroomTab';
+import HistoryTab from './HistoryTab';
 import { SAMPLE_TEXTS, SEVERITY_STYLES } from './constants';
 import type {
   AssignmentContext,
@@ -39,6 +42,18 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('single');
+
+  // If we just returned from Google OAuth, land on the Classroom tab so its
+  // mount effect can ingest the query params (google_connected / teacher_id /
+  // teacher_email or google_error) instead of sitting on Single Analysis with
+  // an unprocessed URL.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('google_connected') || params.has('google_error')) {
+      setViewMode('classroom');
+    }
+  }, []);
 
   // Single analysis state
   const [text, setText] = useState('');
@@ -126,6 +141,13 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
           model: data.result.usage.model,
         }),
       });
+      // Best-effort save to teacher history (no-op if not connected).
+      void saveAnalysisToHistory({
+        documentName: selectedBatchItem?.fileName || 'Pasted text',
+        source: 'upload',
+        result: data.result,
+        context,
+      });
     }
 
     setIsAnalyzing(false);
@@ -142,22 +164,31 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
     trackInteraction('tool_use', 'batch_complete', { count: submissions.filter(s => s.status === 'complete').length });
   }, [trackInteraction]);
 
+  const handleClassroomComplete = useCallback((submissions: BatchSubmission[]) => {
+    setBatchSubmissions(submissions);
+    trackInteraction('tool_use', 'classroom_batch_complete', {
+      count: submissions.filter(s => s.status === 'complete').length,
+      total: submissions.length,
+    });
+    // Stay on the Classroom tab — results render inline below.
+  }, [trackInteraction]);
+
   const handleSelectBatchItem = (sub: BatchSubmission) => {
     setSelectedBatchItem(sub);
-    setText(sub.text);
+    setText(sub.text || '');
     setResult(sub.result || null);
     setViewMode('single');
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 60) return 'text-green-600';
-    if (score >= 30) return 'text-yellow-600';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 40) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getScoreBg = (score: number) => {
-    if (score >= 60) return 'bg-green-50';
-    if (score >= 30) return 'bg-yellow-50';
+    if (score >= 75) return 'bg-green-50';
+    if (score >= 40) return 'bg-yellow-50';
     return 'bg-red-50';
   };
 
@@ -203,6 +234,24 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
                 Batch Upload
               </button>
             )}
+            {features.batchMode && (
+              <button
+                onClick={() => setViewMode('classroom')}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition ${
+                  viewMode === 'classroom' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Google Classroom
+              </button>
+            )}
+            <button
+              onClick={() => setViewMode('history')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition ${
+                viewMode === 'history' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              History
+            </button>
             {features.resubmissionComparison && result && viewMode !== 'batch' && (
               <button
                 onClick={() => setViewMode('comparison')}
@@ -456,6 +505,38 @@ export default function PlagiarismDetector({ features: featureOverrides }: Plagi
             )}
           </div>
         )}
+
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* GOOGLE CLASSROOM MODE */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {viewMode === 'classroom' && features.batchMode && (
+          <div className="space-y-6">
+            <AssignmentContextInput
+              context={context}
+              onChange={setContext}
+              enabled={features.contextInputs}
+            />
+            <ClassroomTab
+              context={context}
+              onAnalysisComplete={handleClassroomComplete}
+            />
+            {batchSubmissions.some(s => s.source === 'classroom' && s.status === 'complete') && (
+              <div id="classroom-results" className="bg-white rounded-2xl shadow-lg p-6 scroll-mt-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Class Dashboard</h3>
+                <BatchDashboard
+                  submissions={batchSubmissions}
+                  onSelectSubmission={handleSelectBatchItem}
+                  enabled={features.batchMode}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* HISTORY MODE */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {viewMode === 'history' && <HistoryTab />}
 
         {/* ═══════════════════════════════════════════════════════════ */}
         {/* COMPARISON MODE */}

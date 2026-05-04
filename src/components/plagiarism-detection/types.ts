@@ -66,7 +66,14 @@ export interface EnhancedAnalysisResult {
 export interface BatchSubmission {
   id: string;
   fileName: string;
-  text: string;
+  /** Optional — populated for the file-upload batch path; omitted for Google Classroom (raw text never stored). */
+  text?: string;
+  /** Classroom-specific metadata. */
+  studentName?: string;
+  studentEmail?: string;
+  driveFileId?: string;
+  submittedAt?: string;
+  source?: 'upload' | 'classroom';
   status: 'pending' | 'analyzing' | 'complete' | 'error';
   result?: EnhancedAnalysisResult;
   error?: string;
@@ -122,4 +129,4 @@ export const DEFAULT_FEATURES: FeatureFlags = {
 // ============================================================================
 // View State
 // ============================================================================
-export type ViewMode = 'single' | 'batch' | 'comparison';
+export type ViewMode = 'single' | 'batch' | 'comparison' | 'classroom' | 'history';

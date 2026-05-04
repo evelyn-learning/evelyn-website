@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  extractDocxText,
+  extractPdfText,
+  normalizeExtractedText,
+} from '@/lib/utils/document-extract';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
     }
 
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'File exceeds 10MB limit.' }, { status: 400 });
     }
@@ -21,18 +26,11 @@ export async function POST(request: NextRequest) {
     if (ext === '.txt') {
       text = await file.text();
     } else if (ext === '.docx') {
-      const mammoth = await import('mammoth');
       const buffer = Buffer.from(await file.arrayBuffer());
-      const result = await mammoth.extractRawText({ buffer });
-      text = result.value;
+      text = await extractDocxText(buffer);
     } else if (ext === '.pdf') {
-      // pdf-parse v1 index.js tries to read a test PDF on import — bypass by
-      // requiring the internal lib entry point directly.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require('pdf-parse/lib/pdf-parse');
       const buffer = Buffer.from(await file.arrayBuffer());
-      const result = await pdfParse(buffer);
-      text = result.text || '';
+      text = await extractPdfText(buffer);
     } else {
       return NextResponse.json(
         { error: `Unsupported file type: ${ext}. Accepted: .docx, .pdf, .txt` },
@@ -40,8 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Clean up whitespace
-    text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    text = normalizeExtractedText(text);
 
     if (!text) {
       return NextResponse.json({ error: 'Could not extract text from file.' }, { status: 400 });

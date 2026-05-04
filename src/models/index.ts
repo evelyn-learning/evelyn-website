@@ -6,6 +6,8 @@ export { Interview, type IInterview } from "./Interview";
 export { Speaker, type ISpeaker } from "./Speaker";
 export { ContactSubmission, type IContactSubmission } from "./ContactSubmission";
 export { AdminUser, type IAdminUser } from "./AdminUser";
+export { Teacher, type ITeacher, type IGoogleAuth } from "./Teacher";
+export { AnalysisHistory, type IAnalysisHistory } from "./AnalysisHistory";
 export { ChatQA, type IChatQA } from "./ChatQA";
 export {
   ChatConversation,
