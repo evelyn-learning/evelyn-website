@@ -689,6 +689,11 @@ import { SEED_JEE_PHYS_MAGNETIC_EFFECTS } from './seeds/jee-phys-magnetic-effect
 import { SEED_JEE_PHYS_EM_INDUCTION } from './seeds/jee-phys-em-induction';
 import { SEED_JEE_PHYS_EM_WAVES_OPTICS } from './seeds/jee-phys-em-waves-optics';
 import { SEED_JEE_PHYS_ATOMS_NUCLEI } from './seeds/jee-phys-atoms-nuclei';
+// Batch 61 — JEE Main Physics completion (final 4 topics).
+import { SEED_JEE_PHYS_KINETIC_THEORY } from './seeds/jee-phys-kinetic-theory';
+import { SEED_JEE_PHYS_DUAL_NATURE } from './seeds/jee-phys-dual-nature';
+import { SEED_JEE_PHYS_SEMICONDUCTORS } from './seeds/jee-phys-semiconductors';
+import { SEED_JEE_PHYS_SOLID_LIQUID_PROPERTIES } from './seeds/jee-phys-solid-liquid-properties';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1336,6 +1341,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_JEE_PHYS_EM_INDUCTION,
   SEED_JEE_PHYS_EM_WAVES_OPTICS,
   SEED_JEE_PHYS_ATOMS_NUCLEI,
+  // Batch 61 — JEE Main Physics completion.
+  SEED_JEE_PHYS_KINETIC_THEORY,
+  SEED_JEE_PHYS_DUAL_NATURE,
+  SEED_JEE_PHYS_SEMICONDUCTORS,
+  SEED_JEE_PHYS_SOLID_LIQUID_PROPERTIES,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
