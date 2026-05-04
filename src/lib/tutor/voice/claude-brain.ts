@@ -60,6 +60,19 @@ export interface BrainTurnInput {
    *  persistent student id. The brain reads it for past mastery, open
    *  gaps, and recent-session continuity. */
   studentProfileBlock?: string;
+  /** Statement of the problem the student is currently working on
+   *  (most-recently-rendered showProblem / show_segment_card / generated
+   *  problem). Surfaces as a dedicated `<active_problem>` block above the
+   *  whiteboard snapshot so the brain anchors verification on this exact
+   *  text — not on stale problem cards still visible in the snapshot from
+   *  earlier in the same segment, and not on the anchor problem passed to
+   *  generate_problem. The catastrophe this addresses (2026-05-02): brain
+   *  called generate_problem with anchor={2,4,6,8,10}, pipeline returned
+   *  canonicalText={12,14,16,18,20}, brain rendered the new card BUT then
+   *  on the next turn verified the student's correct answer against the
+   *  anchor's expected answer — five judge KILLs in a row before the
+   *  brain regrasped which dataset was active. */
+  activeProblem?: { statement: string };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
   /** Optional override (defaults to 1500). */
@@ -97,8 +110,19 @@ export interface LessonPlanContext {
    *  reads `goal` / `keyIdeas` / `problem` / etc. and translates intent
    *  into tool calls + voice. */
   currentSegment: unknown;
-  /** Ordered list of segment ids + kinds, so the brain knows what's next. */
-  segmentIndex: Array<{ id: string; kind: string }>;
+  /** Ordered list of segment ids + kinds, so the brain knows what's next.
+   *  `offTopic: true` segments are bait / test-only and must be skipped
+   *  during advance_lesson; the orchestrator + server-side feasibility
+   *  check both honor this flag. */
+  segmentIndex: Array<{ id: string; kind: string; offTopic?: boolean }>;
+  /** Segment ids the brain has already marked complete this session.
+   *  Surfaced in the rendered lesson_plan block so the brain knows
+   *  which segments to NEVER re-render via show_segment_card. The
+   *  runtime also blocks these calls structurally, but each block
+   *  triggers a validator-feedback retry whose kill-bridge phrase is
+   *  audible to the student. Surfacing the list lets the brain skip
+   *  the call in the first place. */
+  completedSegmentIds?: string[];
 }
 
 export interface BrainToolCall {
@@ -176,7 +200,22 @@ class SentenceBuffer {
 
   /** Append delta, return zero or more newly-completed sentences. */
   push(delta: string): string[] {
-    this.buf += delta;
+    // Sentence-merge defense (narrow). Sonnet occasionally drops the
+    // space between a sentence-end period and the next sentence's
+    // markdown-bold opener — e.g. "is 45.5.*85.4* — that's right"
+    // where the second sentence is "*85.4* — that's right". Detect
+    // ONLY the period-immediately-followed-by-asterisk pattern (an
+    // unambiguous sentence-boundary marker — Sonnet only uses `*`
+    // for bold emphasis, not for math) and insert a space. Real
+    // decimals (3.14, 0.5, 85.4) are NEVER touched because they don't
+    // have asterisks attached to the fractional digit. An earlier
+    // version of this defense used a broader "period+digit followed
+    // by discourse marker" regex that incorrectly split real decimals
+    // — observed 2026-05-04 session where "85.4 — that's right" got
+    // mangled into "85. 4 — that's right" and TTS read it as "eighty
+    // five four". The asterisk-only rule is safe.
+    const asteriskMergeRe = /(\d)\.(\*)/g;
+    this.buf += delta.replace(asteriskMergeRe, '$1. $2');
     const out: string[] = [];
     // Lazy quantifier {25,}? + terminator + trailing whitespace.
     // Use [\s\S] instead of `.` with the `s` flag so this builds under
@@ -215,15 +254,22 @@ class SentenceBuffer {
  *  asks for. Kind-specific fields are inlined as a small structured
  *  block so the brain doesn't have to guess at the schema. */
 export function formatLessonPlanContext(ctx: LessonPlanContext): string {
-  const { plan, currentSegmentId, currentSegment, segmentIndex } = ctx;
+  const { plan, currentSegmentId, currentSegment, segmentIndex, completedSegmentIds } = ctx;
+  const completedSet = new Set(completedSegmentIds ?? []);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seg = currentSegment as any;
-  const segDetail = seg
-    ? Object.entries(seg)
-        .filter(([k, v]) => k !== 'id' && k !== 'kind' && v !== undefined && v !== null)
-        .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
-        .join('\n')
-    : '(unknown)';
+  // Redact off-topic segment content from the current-segment dump —
+  // the brain must not see the off-topic problem text because it will
+  // narrate it before the runtime can refuse the render.
+  const segIsOffTopic = !!seg?.offTopic;
+  const segDetail = segIsOffTopic
+    ? '  ⚠ OFF-TOPIC SEGMENT — content redacted. Do NOT narrate this segment. Do NOT call show_segment_card on it. Do NOT advance into it. Treat it as if it does not exist; if it ended up as the current segment, immediately call generate_problem (to give the student more practice on the prior on-topic concept) or wrap up.'
+    : seg
+      ? Object.entries(seg)
+          .filter(([k, v]) => k !== 'id' && k !== 'kind' && v !== undefined && v !== null)
+          .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+          .join('\n')
+      : '(unknown)';
   // Surface the authored problem/question text for every segment with
   // one — not just the current segment. The brain often emits
   // advance_lesson + show_segment_card in the SAME response, then
@@ -238,19 +284,30 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
   const idx = segmentIndex
     .map((s, i) => {
       const isCurrent = s.id === currentSegmentId ? '  ← current' : '';
+      const isCompleted = completedSet.has(s.id) ? '  ✓ COMPLETED' : '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sg = s as any;
+      // Off-topic segments must NEVER expose their authored content to
+      // the brain. Otherwise Sonnet reads the off-topic problem text
+      // from this listing and speaks it before the runtime can refuse
+      // the show_segment_card call. Mark them clearly and redact.
+      const isOffTopic = sg.offTopic === true;
       const authored = (() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sg = s as any;
+        if (isOffTopic) return null;
         if (sg.kind === 'try_yourself' && typeof sg.problem === 'string') return sg.problem;
         if (sg.kind === 'worked_example' && typeof sg.problem === 'string') return sg.problem;
         if (sg.kind === 'misconception_check' && typeof sg.question === 'string') return sg.question;
         if (sg.kind === 'extension' && typeof sg.advancedQuestion === 'string') return sg.advancedQuestion;
         return null;
       })();
-      const head = `  ${i + 1}. ${s.id} [${s.kind}]${isCurrent}`;
+      const offTopicTag = isOffTopic ? '  ⚠ OFF-TOPIC (do not advance into; do not narrate; content redacted)' : '';
+      const head = `  ${i + 1}. ${s.id} [${s.kind}]${isCurrent}${isCompleted}${offTopicTag}`;
       return authored ? `${head}\n     authored: ${JSON.stringify(authored)}` : head;
     })
     .join('\n');
+  const completedNote = completedSet.size > 0
+    ? `\n\nCOMPLETED segments this session: ${[...completedSet].join(', ')}. NEVER call show_segment_card on any of these — the runtime blocks it and the kill-bridge phrase becomes audible to the student. To give the student more practice, call generate_problem instead.`
+    : '';
   // Segments that carry an authored problem / question statement.
   // The brain MUST render that text verbatim to the whiteboard —
   // paraphrasing or substituting different numbers creates a
@@ -286,6 +343,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     `Stay within the current segment until its goal is met. Move on with`,
     `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,
     `Mark progress with mark_segment_complete({ segmentId, masteryDelta? }).`,
+    completedNote,
   ].join('\n');
 }
 
@@ -301,6 +359,10 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
  *       lock-step. Returns '' for segments without authored truth.
  */
 export function formatSegmentTruth(seg: unknown): string {
+  // Redact off-topic segment truth — the brain must not see the
+  // off-topic problem text via the segment_truth block either.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((seg as any)?.offTopic === true) return '';
   const truth = getSegmentTruth(seg as Segment | undefined);
   if (!truth) return '';
   const lines: string[] = [
@@ -330,6 +392,32 @@ export function formatSegmentTruth(seg: unknown): string {
 // import below is what local callers (runBrainTurn / streamBrainTurn)
 // use; the re-export keeps the public surface unchanged.
 export { buildWhiteboardSummary };
+
+/**
+ * Render the `<active_problem>` block. Empty string when no active
+ * problem is tracked (free-conversation, pre-render turns) so the block
+ * is suppressed entirely. When set, this is the most-recently-rendered
+ * problem statement — sourced from the orchestrator's currentProblemRef
+ * which updates on every showProblem dispatch (including the show_problem
+ * the brain emits with canonicalText after generate_problem returns).
+ *
+ * The block exists so the brain has ONE unambiguous answer to "which
+ * problem is the student currently looking at?" — even when the
+ * whiteboard snapshot still contains stale problem cards from earlier in
+ * the same segment (e.g. the original try-yourself + a fresh
+ * generate_problem variant, both stamped with the same segmentId).
+ */
+function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
+  if (!active?.statement) return '';
+  return (
+    `<active_problem>\n` +
+    `This is the problem the student is currently working on. Verify their answers — and any narration that references "the problem" / numbers / data — against THIS statement only. ` +
+    `Earlier problem cards may still be visible in <whiteboard_state> (the runtime keeps them for scroll-back); ignore them when reasoning about the current attempt. ` +
+    `If you called generate_problem this session, the canonicalText that came back IS the active problem; the anchor problem you passed in was calibration only and is no longer the focus.\n\n` +
+    `Statement: ${active.statement}\n` +
+    `</active_problem>\n\n`
+  );
+}
 
 /**
  * Run one turn of the brain. The caller passes the latest student utterance
@@ -365,10 +453,12 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
+    activeProblemBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -478,10 +568,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
+    activeProblemBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

@@ -11,6 +11,7 @@ import type { LessonPlanContext } from '@/lib/tutor/voice/claude-brain';
 export function buildLessonPlanContext(
   plan: LessonPlan,
   currentSegmentId: string,
+  completedSegmentIds?: ReadonlyArray<string>,
 ): LessonPlanContext | undefined {
   const seg: Segment | undefined = plan.segments.find((s) => s.id === currentSegmentId);
   if (!seg) return undefined;
@@ -25,7 +26,13 @@ export function buildLessonPlanContext(
     },
     currentSegmentId,
     currentSegment: seg,
-    segmentIndex: plan.segments.map((s) => ({ id: s.id, kind: s.kind })),
+    segmentIndex: plan.segments.map((s) => ({
+      id: s.id,
+      kind: s.kind,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      offTopic: (s as any).offTopic === true ? true : undefined,
+    })),
+    completedSegmentIds: completedSegmentIds ? [...completedSegmentIds] : undefined,
   };
 }
 
@@ -69,16 +76,32 @@ export function resolveAdvanceTarget(
   currentSegmentId: string,
   to: string,
 ): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isOffTopic = (s: any): boolean => s?.offTopic === true;
   if (to === 'next') {
     const idx = plan.segments.findIndex((s) => s.id === currentSegmentId);
-    if (idx < 0 || idx >= plan.segments.length - 1) return null;
-    return plan.segments[idx + 1].id;
+    if (idx < 0) return null;
+    // Skip off-topic segments. They're bait / test-only segments —
+    // the brain should never land on them via natural-flow advance.
+    // Auto-skip past them; if no on-topic segment remains, return null
+    // (treated as end-of-plan by the orchestrator).
+    for (let j = idx + 1; j < plan.segments.length; j++) {
+      if (!isOffTopic(plan.segments[j])) return plan.segments[j].id;
+    }
+    return null;
   }
   if (to === 'previous') {
     const idx = plan.segments.findIndex((s) => s.id === currentSegmentId);
     if (idx <= 0) return null;
-    return plan.segments[idx - 1].id;
+    for (let j = idx - 1; j >= 0; j--) {
+      if (!isOffTopic(plan.segments[j])) return plan.segments[j].id;
+    }
+    return null;
   }
-  // Branch by explicit segment id.
-  return plan.segments.some((s) => s.id === to) ? to : null;
+  // Branch by explicit segment id — refuse if the explicit target is
+  // off-topic. Brain should never explicitly request an off-topic
+  // segment; if it does, treat as unresolvable.
+  const target = plan.segments.find((s) => s.id === to);
+  if (!target || isOffTopic(target)) return null;
+  return target.id;
 }

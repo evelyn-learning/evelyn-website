@@ -286,7 +286,7 @@ export function VoiceTutorRealtime({
   // orchestrator (which is constructed BEFORE the hook returns) can call
   // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
   const speakTextRef = useRef<((text: string) => void) | null>(null);
-  const clearSpeechQueueRef = useRef<(() => void) | null>(null);
+  const clearSpeechQueueRef = useRef<(() => Promise<void>) | null>(null);
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
@@ -435,6 +435,38 @@ export function VoiceTutorRealtime({
   // first recovery option, but generate_problem had already returned
   // null earlier in the session).
   const noProblemAvailableObservedRef = useRef(false);
+  // Round-7+++ Fix: track segment ids the brain has already marked
+  // complete this session. Used to block show_segment_card calls that
+  // would regress the student to a previously-solved problem.
+  // Observed 2026-05-03 session: after several rounds of harder
+  // improvised problems, brain emitted show_segment_card("try-mean-1")
+  // on a "harder problem" request, dragging the student all the way
+  // back to the original {2,4,6,8,10} mean problem they'd already
+  // solved. The system-prompt ban on this is in place but Sonnet
+  // sometimes ignores it; orchestrator-side enforcement is the
+  // safety net.
+  const completedSegmentIdsRef = useRef<Set<string>>(new Set());
+  // Round-7+++++ Issue 3 fix: track number-tuples of equations that
+  // Wolfram has verified as CORRECT this session. The judge LLM
+  // periodically hallucinates arithmetic ("511 ÷ 7 = 72.857"; actually
+  // 511/7 = 73 exactly since 7×73 = 511) and kills the brain's
+  // correct claim. When the judge's kill claim numerically overlaps
+  // with a Wolfram-verified equation, downgrade the kill to advisory
+  // — Wolfram's exact arithmetic outranks the judge's heuristic check.
+  // Stored as Set of joined integer tokens (e.g., "511|7|73") so a
+  // judge claim citing those same numbers can be matched fast.
+  const wolframVerifiedNumberSetsRef = useRef<Set<string>>(new Set());
+  // Round-7++++ Fix Issue 8: bridge-phrase rotation. Track the last
+  // generate_problem hedged-bridge sentence the brain spoke. When the
+  // brain repeats the SAME phrase next turn (Sonnet defaults to "Let
+  // me see what I have for you" 5/7 turns observed 2026-05-04 even
+  // with a system-prompt rotation rule), the orchestrator swaps the
+  // sentence to a different alternate from the pool BEFORE TTS dispatches.
+  // Same applies to the post-tool improvise-with-disclaimer opener.
+  // Stored as the normalized form so casing/punctuation drift doesn't
+  // cause false misses.
+  const lastBridgePhraseRef = useRef<string>('');
+  const lastDisclaimerPhraseRef = useRef<string>('');
 
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
@@ -500,6 +532,20 @@ export function VoiceTutorRealtime({
   // segment substitutes downstream — exact failure mode in the
   // 2026-05-02 incoherence test where mean → median switch deadlocked.
   const brainEmittedNewPageThisTurnRef = useRef(false);
+  // Round-7+++++ Issue 1 fix: track generate_problem emission this
+  // turn. When the brain calls generate_problem and follows up with
+  // show_problem in the same turn, the show_problem statement IS the
+  // canonicalText returned by the pipeline — NOT a re-render of the
+  // current segment's authored content. The show_problem auto-
+  // substitute (which swaps free-form show_problem to show_segment_card
+  // when targets match) must NOT fire in this case, because the
+  // segment may already be marked complete and the substitute would
+  // collapse to a blocked render. Observed 2026-05-04: brain on
+  // "Yes" → generate_problem({12,14,16,18,20}) + show_problem(...).
+  // currentSegmentIdRef pinned to "try-mean-1" (completed). show_problem
+  // substituted to show_segment_card("try-mean-1") → completion-block
+  // fired → MAX_VALIDATOR_RETRIES → student stuck.
+  const generateProblemThisTurnRef = useRef(false);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -692,6 +738,7 @@ export function VoiceTutorRealtime({
         visualActionsThisTurnRef.current = new Set();
         newPageThisTurnRef.current = false;
         brainEmittedNewPageThisTurnRef.current = false;
+        generateProblemThisTurnRef.current = false;
         console.log('[VoiceTutor] Student turn start — cleared visualActionsThisTurn');
 
         // Detect if student is requesting a visual (e.g., "show it on the board")
@@ -1300,10 +1347,19 @@ export function VoiceTutorRealtime({
           if (normalizedLabel) {
             const seen = equationLabelsThisSessionRef.current.get(normalizedLabel);
             if (seen && seen.latexNormalized !== normalized) {
-              const reason = `You already emitted a show_equation with label "${seen.originalLabel}" (latex "${seen.originalLatex.slice(0, 60)}…"). Re-emitting with label "${rawLabel}" produces a duplicate card on the board because the runtime can't mutate existing cards. If this step's value has changed (e.g. the student computed the sum and you want to mark it ✓), do NOT re-emit — keep the original card and speak the confirmation. If you genuinely want a NEW card for a NEW step, pick a structurally different label like "Step 2: …" or "Verified Sum" rather than decorating the existing label with ✓ / (final) / etc.`;
-              console.warn(`[VoiceTutorRealtime] Dropping label-duplicate equation: "${rawLabel}" (normalizes to "${normalizedLabel}", clashes with prior "${seen.originalLabel}")`);
-              onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen.originalLabel}"`);
-              rejected.push({ action: 'show_equation', reason });
+              // Round-7+ Fix: silently drop label-duplicate equations.
+              // Previously this pushed a rejection that triggered a
+              // validator-feedback retry cascade — observed 2026-05-03
+              // session: brain emitted show_equation(label="Final
+              // Answer", new latex), runtime pushed rejection, brain on
+              // retry MISINTERPRETED the rejection and emitted a fresh
+              // show_problem({old dataset}) instead of fixing the
+              // label, regressing the student to the FIRST mean problem.
+              // The label-dup is purely cosmetic (the math may even be
+              // identical or a refinement); surfacing it as a rejection
+              // is more harmful than just dropping the duplicate.
+              console.warn(`[VoiceTutorRealtime] Dropping label-duplicate equation: "${rawLabel}" (normalizes to "${normalizedLabel}", clashes with prior "${seen.originalLabel}") — silent drop, no retry`);
+              onDebugEvent?.('show_equation_label_duplicate_silent', `"${rawLabel}" ~= "${seen.originalLabel}"`);
               return [];
             }
             equationLabelsThisSessionRef.current.set(normalizedLabel, {
@@ -1760,6 +1816,26 @@ export function VoiceTutorRealtime({
               if (!result) return;
               console.log(`[VoiceTutorRealtime] Math validation (${result.source}):`, result.correct ? 'correct' : result.issues);
               onDebugEvent?.('tool_call', `Equation validated via ${result.source}: ${result.correct ? 'correct' : result.issues?.join(', ')}`);
+              // Round-7+++++ Issue 3 fix: when Wolfram verifies an
+              // equation as CORRECT, store its integer-number tuple so
+              // a later judge KILL that disputes the same numbers can
+              // be downgraded. Tokens: all multi-digit integers in the
+              // latex. We keep singletons too (the brain may say "73
+              // is the mean" — kill claim cites 73 alone — and we want
+              // to recognize that 73 was a verified result).
+              if (result.correct === true) {
+                const intTokens: string[] = [];
+                const numRe = /\d+/g;
+                let m: RegExpExecArray | null;
+                while ((m = numRe.exec(latex)) !== null) intTokens.push(m[0]);
+                if (intTokens.length > 0) {
+                  const key = [...new Set(intTokens)].sort().join('|');
+                  wolframVerifiedNumberSetsRef.current.add(key);
+                  // Also store each individual token so single-number
+                  // judge claims like "73" can match.
+                  for (const t of intTokens) wolframVerifiedNumberSetsRef.current.add(t);
+                }
+              }
               // Numeric-mismatch promotion: previously this branch only
               // fired when Wolfram produced a `correctedLatex`. For
               // pure verification mismatches (e.g. "4+7+2+7+3+7+5+4
@@ -1905,6 +1981,10 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
         console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
+        // Track completed segment for downstream show_segment_card block.
+        if (typeof c.segmentId === 'string' && c.segmentId) {
+          completedSegmentIdsRef.current.add(c.segmentId);
+        }
         // Push the mastery delta into the session accumulator so it
         // commits at end-of-session. We tag it with the lesson plan's
         // first LO when available — the segment itself doesn't carry an
@@ -2273,41 +2353,28 @@ export function VoiceTutorRealtime({
       const cmdAny = cmd as any;
       const raw = typeof cmdAny.target === 'string' ? cmdAny.target.trim() : '';
       if (!raw) {
-        const cands = catalogRef.current.getItems()
-          .flatMap((it) => it.features.map((f) => f.labels[0] || f.canonical))
-          .slice(0, 12);
-        rejected.push({
-          action: 'tutor_scribble',
-          reason: cands.length > 0
-            ? `tutor_scribble needs a target. Current whiteboard features: ${cands.map((c) => `"${c}"`).join(', ')}. Retry with one of these.`
-            : 'tutor_scribble needs a target, but the whiteboard is empty. Render a show_* item first.',
-        });
-        console.warn('[VoiceTutor] scribble-reject: empty target');
+        // Round-7+ Fix: silently drop empty-target scribble. Soft
+        // pedagogy aid; not worth a retry cascade.
+        console.warn('[VoiceTutor] scribble-reject (silent drop): empty target');
+        onDebugEvent?.('scribble_reject_empty_silent', '(no target)');
         cmdAny._scribbleRejected = true;
         continue;
       }
       const result = catalogRef.current.resolveTarget(raw);
       if (!result.ok) {
-        const hint = result.candidates.length > 0
-          ? ` Valid targets right now: ${result.candidates.slice(0, 14).map((c) => `"${c.target}" on ${c.on}`).join(', ')}.`
-          : '';
-        // If the board has iframe-only items (Desmos graph, Ketcher
-        // molecule), call them out explicitly. Tutor misses on names
-        // like "intersection points" usually mean the target lives
-        // INSIDE one of these; the right action is scrollTo, never a
-        // redraw of the same item.
-        const iframeItems = catalogRef.current.getNonScribbleableItems();
-        const iframeNote = iframeItems.length > 0
-          ? ` Items on the board that are SCROLL-ONLY iframes (cannot scribble inside them, do NOT redraw them): ${
-              iframeItems.map((it) => `${it.action} → tutor_scroll_whiteboard({ target: "${it.features[0].labels[0] ?? it.features[0].canonical}" })`).join('; ')
-            }. If "${raw}" is inside one of these, scroll to it and describe verbally.`
-          : '';
-        rejected.push({
-          action: 'tutor_scribble',
-          reason: `${result.message}${hint}${iframeNote} Retry with the exact name of an existing feature — do not invent names. Do NOT redraw an existing item to make a feature appear.`,
-        });
-        console.warn('[VoiceTutor] scribble-reject: target="%s" (%s)', raw, result.reason);
-        onDebugEvent?.('scribble_reject_no_match', `"${raw}" (${result.reason})`);
+        // Round-7+ Fix: silently drop tutor_scribble no-match. Previously
+        // this pushed a rejection that triggered the full retry cascade
+        // — observed 2026-05-03 session: brain emitted tutor_scribble
+        // with a bad target ("the problem statement text"), runtime
+        // rejected, brain retried with another tutor_scribble, audio
+        // overlapped between attempts producing the "gibberish" the
+        // user reported. tutor_scribble is a SOFT pedagogy aid (a
+        // highlight/circle on the board) — getting the target wrong
+        // doesn't break the lesson, and the brain's spoken narration
+        // is independently usable. Drop the bad scribble silently and
+        // let the speech land cleanly without a retry cascade.
+        console.warn('[VoiceTutor] scribble-reject (silent drop): target="%s" (%s)', raw, result.reason);
+        onDebugEvent?.('scribble_reject_no_match_silent', `"${raw}" (${result.reason})`);
         cmdAny._scribbleRejected = true;
         continue;
       }
@@ -2318,34 +2385,14 @@ export function VoiceTutorRealtime({
       //       overlay can't reach inside a third-party iframe; the
       //       right action is scrollTo + verbal explanation.
       if (result.scribbleable === false) {
+        // Round-7+ Fix: silently drop whole-item-alias and iframe-target
+        // scribbles. Same rationale as the no-match silent-drop above —
+        // tutor_scribble is a soft pedagogy aid; failing to scribble
+        // doesn't break the lesson, and surfacing as a rejection
+        // triggers a retry cascade with overlapping audio.
         const isWholeItemAlias = result.canonical === result.itemId;
-        if (isWholeItemAlias) {
-          const item = catalogRef.current.getItem(result.itemId);
-          const subFeatures = (item?.features ?? [])
-            .filter((f) => f.scribbleable && f.canonical !== result.itemId)
-            .slice(0, 6)
-            .map((f) => `"${f.labels[0] || f.canonical}"`)
-            .join(', ');
-          rejected.push({
-            action: 'tutor_scribble',
-            reason:
-              `"${raw}" refers to the whole ${result.action} item, not a single feature. ` +
-              `To MARK something specific on it, retry tutor_scribble with one of: ${subFeatures || '(no sub-features available)'}. ` +
-              `To just bring it into view, use tutor_scroll_whiteboard({ target: "${raw}" }) instead.`,
-          });
-          console.warn('[VoiceTutor] scribble-reject: target="%s" → whole-item alias (%s)', raw, result.action);
-          onDebugEvent?.('scribble_reject_whole_item', `"${raw}" → ${result.action}`);
-        } else {
-          rejected.push({
-            action: 'tutor_scribble',
-            reason:
-              `"${raw}" resolved to ${result.action} which is rendered in an iframe and cannot be marked. ` +
-              `Use tutor_scroll_whiteboard({ target: "${raw}" }) to bring it into the student's view, ` +
-              `then explain what to look at verbally. Do NOT retry tutor_scribble on this item.`,
-          });
-          console.warn('[VoiceTutor] scribble-reject: target="%s" → iframe (%s)', raw, result.action);
-          onDebugEvent?.('scribble_reject_iframe', `"${raw}" → ${result.action}`);
-        }
+        console.warn('[VoiceTutor] scribble-reject (silent drop): target="%s" → %s (%s)', raw, isWholeItemAlias ? 'whole-item alias' : 'iframe', result.action);
+        onDebugEvent?.(isWholeItemAlias ? 'scribble_reject_whole_item_silent' : 'scribble_reject_iframe_silent', `"${raw}" → ${result.action}`);
         cmdAny._scribbleRejected = true;
         continue;
       }
@@ -3252,6 +3299,10 @@ export function VoiceTutorRealtime({
   // so the outer wrapper can serialize calls and process queued transcripts
   // without duplicating the body.
   const callBrainOnce = useCallback(async (transcript: string, opts?: { silent?: boolean }) => {
+    // Brain-turn start timestamp. Declared OUTSIDE the try so the catch
+    // block can reference it for streaming-entry cleanup (Fix 9).
+    // Re-assigned inside the try once we know the turn actually starts.
+    let t0 = Date.now();
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -3308,6 +3359,22 @@ export function VoiceTutorRealtime({
             ...priorWithoutCurrent,
           ];
 
+      // Round-7++++ Fix Issue 4: detect topic-switch student utterances
+      // and clear currentSegmentIdRef so subsequent turns run in
+      // free-conversation mode. Otherwise the segment cursor stays
+      // pinned to the prior concept's last segment (e.g., "try-mean-2")
+      // while the brain teaches the new concept (mode/median),
+      // creating drift where the brain's lessonPlanContext describes
+      // a stale segment. Triggers on explicit switch language:
+      // "switch to X", "move to X", "let's do X", "let's try X",
+      // "go to X", "do X now". Generic — works for any concept.
+      const topicSwitchRe = /\b(?:switch(?:ing)?\s+to|move\s+(?:to|on\s+to|onto)|let'?s\s+(?:do|try|move\s+to|go\s+to|switch\s+to)|now\s+(?:do|try|let'?s)|go\s+to|head(?:ing)?\s+(?:to|over\s+to))\s+(?:the\s+)?(?:concept\s+of\s+)?\w+/i;
+      if (topicSwitchRe.test(transcript) && currentSegmentIdRef.current) {
+        console.log(`[brain-orchestrator] topic-switch detected ("${transcript.slice(0, 60)}…") — clearing currentSegmentIdRef from "${currentSegmentIdRef.current}" to free-conversation`);
+        onDebugEvent?.('topic_switch_segment_cleared', `was="${currentSegmentIdRef.current}"`);
+        currentSegmentIdRef.current = '';
+        setActiveSegmentId('');
+      }
       // Mirror current segment id into the catalog so subsequent
       // appends are stamped with it AND getSnapshot's filter scopes
       // the brain's view to current-segment items only. Items appended
@@ -3317,7 +3384,7 @@ export function VoiceTutorRealtime({
         ? { currentSegmentId: currentSegmentIdRef.current }
         : undefined;
       const whiteboardSnapshot = catalogRef.current.getSnapshot(segmentSnapshotOpts);
-      const t0 = Date.now();
+      t0 = Date.now();
 
       // Validator-feedback retry loop (Phase 5 Option B). When a tool
       // call is rejected by a structural validator (circuit topology,
@@ -3347,6 +3414,20 @@ export function VoiceTutorRealtime({
       // and the student is waiting on each round-trip.
       const MAX_JUDGE_RETRIES = 1;
       let judgeRetriesUsed = 0;
+      // Round-7 Fix D: kill-loop escalation. Track every judge KILL
+      // claim text we've already rejected in this turn. When a NEW kill
+      // shares structural tokens (numbers / multi-char identifiers /
+      // dataset literals) with a prior one, the brain is stuck in a
+      // re-assertion loop on the SAME wrong content — observed
+      // 2026-05-02 as five consecutive KILLs about "{2,4,6,8,10}, mean
+      // is 6" while the active card was {12,14,16,18,20}. The standard
+      // "re-derive from the board" rejection didn't break it because
+      // the brain kept anchoring on stale conversation context. The
+      // escalated rejection (used on the second-or-later overlap kill)
+      // tells the brain literally that it has retried this claim, lists
+      // the active-problem statement verbatim, and demands a literal
+      // re-read of the board snapshot. Empty until the first KILL.
+      const priorJudgeKillClaimsThisTurn: string[] = [];
       // Catches BOTH verb-form ("Let me draw / I'll plot") and noun-form
       // ("Here's a graph / Here is a quick diagram") visual promises.
       // The server-side telemetry regex (brain/stream/route.ts) only
@@ -3378,19 +3459,60 @@ export function VoiceTutorRealtime({
       // bridges across multiple kills) and only when there's been
       // audible speech to bridge from.
       let bridgeSpokenThisTurn = false;
+      // Round-7+ Fix 4: verbatim-sentence dedup within a turn. The brain
+      // sometimes emits the same sentence twice in one block of text
+      // ("What's the mode of {4, 7, 4, 9, 2}?What's the mode of {4, 7, 4, 9, 2}?")
+      // — observed 2026-05-03 mode segment. Sentence buffer splits these
+      // into two `sentence` events; without a dedup at this layer both
+      // get voiced AND added to the chat transcript. Track normalized
+      // form (lowercase, punctuation stripped, whitespace collapsed) and
+      // skip the second emission when ≥4 words match verbatim. Threshold
+      // avoids false positives on short echoes like "Yes!" / "Right.".
+      const sentencesSpokenThisTurn = new Set<string>();
+      const normalizeForDedup = (s: string): string =>
+        s
+          .toLowerCase()
+          .replace(/[*_~`]/g, '')
+          .replace(/[.,!?;:'"\-—–()\[\]{}]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      // Round-7+++++ Issue: the prior bridge phrases ("Actually,
+      // hold on — let me redo that") were too long and read as the
+      // tutor self-correcting in a confused way, which itself was
+      // disruptive. Shortened to terse, soft acknowledgments that
+      // bridge the silence without sounding like the tutor is
+      // walking back its own claims.
       const BRIDGE_PHRASES = [
-        'Let me try that a different way.',
-        'One sec — let me reframe that.',
-        'Actually, hold on — let me redo that.',
+        'One moment.',
+        'One sec.',
+        'Hmm.',
       ];
-      const speakKillBridge = () => {
+      // Round-7 Fix C: drain any in-flight TTS audio FIRST, then speak
+      // the bridge. Without the await, `clearSpeechQueue` returns the
+      // moment `source.stop()` is called — but the AudioBufferSourceNode's
+      // tail can keep playing for a frame or two while the WebAudio graph
+      // tears down. The bridge phrase enqueued immediately after would
+      // then start audibly overlapping the dying tail, which compounds
+      // the kill-spiral confusion (student hears bits of two attempts +
+      // a bridge in rapid succession). Awaiting the drain produces a
+      // clean cut before the bridge plays.
+      //
+      // The clear is run unconditionally — even when bridgeSpokenThisTurn
+      // is already set or audibleSentenceCount is 0, we still want any
+      // queued/in-flight audio gone before the retry's first sentence
+      // arrives. Returns when the audio is fully torn down.
+      const speakKillBridge = async () => {
+        await clearSpeechQueueRef.current?.();
         if (bridgeSpokenThisTurn) return;
         // No point bridging if no speech has happened yet — would just
         // be the first thing the student hears for the turn. Use the
         // audible count rather than totalSentenceCount so a turn that
         // buffered sentences in the gate (and is now dropping them)
         // doesn't trigger a bridge for speech that never played.
-        if (audibleSentenceCount === 0) return;
+        // Threshold raised to 2 — when only 1 short sentence played,
+        // the bridge phrase is itself more disruptive than the
+        // ~1-2 second silence the student would otherwise experience.
+        if (audibleSentenceCount < 2) return;
         bridgeSpokenThisTurn = true;
         const phrase = BRIDGE_PHRASES[Math.floor(Math.random() * BRIDGE_PHRASES.length)];
         speakTextRef.current?.(phrase);
@@ -3413,6 +3535,7 @@ export function VoiceTutorRealtime({
           visualActionsThisTurnRef.current = new Set();
           newPageThisTurnRef.current = false;
           brainEmittedNewPageThisTurnRef.current = false;
+          generateProblemThisTurnRef.current = false;
         }
         // Compose lesson plan context from the active plan + current
         // segment id (both ref-tracked so segment advances mid-turn are
@@ -3420,7 +3543,7 @@ export function VoiceTutorRealtime({
         // this — `lessonPlanRef.current` is null.
         const plan = lessonPlanRef.current;
         const lessonPlanContext = plan && currentSegmentIdRef.current
-          ? buildLessonPlanContext(plan, currentSegmentIdRef.current)
+          ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
           : undefined;
 
         const res = await fetch('/api/tutor/brain/stream', {
@@ -3439,6 +3562,18 @@ export function VoiceTutorRealtime({
             // pipeline treats absent + empty identically.
             shownProblemIds: shownProblemIdsRef.current,
             shownProblemHashes: shownProblemHashesRef.current,
+            // Round-7 fix: the most recently rendered problem statement,
+            // tracked client-side on every showProblem dispatch (line
+            // 1829). Surfaces to the brain as `<active_problem>` so it
+            // anchors verification on THIS card rather than on a prior
+            // problem still visible in the segment-scoped snapshot.
+            // Catastrophe without this: generate_problem returns a fresh
+            // canonicalText, brain renders it, brain on the NEXT turn
+            // verifies the student's correct answer against the OLD
+            // problem (judge KILL spiral, observed 2026-05-02).
+            activeProblem: currentProblemRef.current?.statement
+              ? { statement: currentProblemRef.current.statement }
+              : undefined,
           }),
         });
         if (!res.ok || !res.body) {
@@ -3581,7 +3716,20 @@ export function VoiceTutorRealtime({
                   // turns), "actually, let me reframe", "hmm, actually" all
                   // false-positived. Keep only unambiguous self-attribution.
                   const selfCorrectionRe = /\b(?:wait,?\s+actually|actually,?\s+(?:i was wrong|i['’]m wrong|never mind)|let me re-?(?:check|verify|consider|examine)|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong)/i;
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionRe.test(updatedSentence)) {
+                  // Round-7+++ Fix Issue 2: skip self-correction
+                  // detection on RETRY attempts. The brain's retry
+                  // following a judge KILL or rejection legitimately
+                  // says "my mistake — X is actually Y" to acknowledge
+                  // the prior wrong claim. Treating that as another
+                  // self-correction triggers a third attempt and
+                  // produces audible 3-attempt cascades. Observed
+                  // 2026-05-03 weighted-mean turn (91 × 0.50 spoken as
+                  // 47.5 → judge KILL → retry "My mistake — 91 times
+                  // 0.50 is *45.5*, not 47.5" → false-positive
+                  // self-correction → another retry). Only fire on
+                  // the FIRST attempt of a turn; retries are already
+                  // corrections, not confused walkbacks.
+                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionRe.test(updatedSentence)) {
                     const reason =
                       `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +
                       `That's confusing for the student to hear. Re-emit your response cleanly: ` +
@@ -3592,19 +3740,146 @@ export function VoiceTutorRealtime({
                     attemptKilled = true;
                     clearTimeout(gateTimer);
                     closeGate();
-                    clearSpeechQueueRef.current?.();
-                    speakKillBridge();
+                    await speakKillBridge();
                     console.warn('[brain-orchestrator] mid-turn self-correction detected — retrying:', updatedSentence.slice(0, 80));
                     onDebugEvent?.('self_correction_retry', updatedSentence.slice(0, 80));
                     continue;
                   }
+                  // Round-7+ Fix 5: contradiction-inversion within a
+                  // single sentence ("not quite right ... actually
+                  // correct" / "wrong ... you're right"). The brain
+                  // misjudges the student's answer, then walks the
+                  // judgment back inside the same utterance. The student
+                  // hears "you're wrong — actually you're correct" which
+                  // is worse than just saying "correct" outright. Treat
+                  // as a self-correction signal: kill the rest of the
+                  // attempt and retry. Narrow regex on the inversion
+                  // pattern only — broader catches would false-positive
+                  // on legit "not exactly, but close" clarifications.
+                  const contradictionInversionRe = /\b(?:not (?:quite|exactly|really)?\s*right|that'?s?\s+(?:not|wrong)|wrong)\b[\s\S]{0,80}?\b(?:actually (?:correct|right)|you'?re (?:actually )?(?:correct|right)|that'?s (?:actually )?(?:correct|right))/i;
+                  // Same gate as selfCorrectionRe above — only fire on
+                  // attempt 0. Retry attempts that contain "wrong …
+                  // actually right" patterns are typically the brain
+                  // re-grounding after a judge KILL, not a confused
+                  // mid-utterance flip.
+                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && contradictionInversionRe.test(updatedSentence)) {
+                    const reason =
+                      `Your sentence contradicts itself: "${updatedSentence.slice(0, 160)}". ` +
+                      `You started by saying the answer was wrong, then immediately said it was correct. ` +
+                      `Decide BEFORE you speak whether the student's answer is right or wrong, and speak only that single judgment. ` +
+                      `Re-emit cleanly: if the answer is correct, affirm it directly. If it is wrong, explain what's wrong without an immediate reversal.`;
+                    rejectionsThisAttempt.push({ action: 'contradiction_inversion', reason });
+                    judgeRetriesUsed++;
+                    attemptKilled = true;
+                    clearTimeout(gateTimer);
+                    closeGate();
+                    await speakKillBridge();
+                    console.warn('[brain-orchestrator] contradiction-inversion detected — retrying:', updatedSentence.slice(0, 80));
+                    onDebugEvent?.('contradiction_inversion_retry', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Round-7++ meta-narration filter. The system prompt
+                  // already forbids speaking internal reasoning ("the
+                  // student said X — that's a greenlight to advance",
+                  // "let me mark this segment complete", "the active
+                  // problem is …"), but Sonnet still leaks meta
+                  // sentences regularly — observed 2026-05-03 session:
+                  // brain spoke "The student already solved this one —
+                  // 16 is correct for {12, 14, 16, 18, 20}." and "Let
+                  // me check — the *active* problem is the dataset
+                  // {2, 4, 6, 8, 10}." Soft prompt rules are not
+                  // enough; orchestrator-side filtering is the safety
+                  // net. Detect canonical leak patterns and drop the
+                  // sentence from TTS + transcript without retrying.
+                  // Generic patterns only — no subject content.
+                  const metaNarrationRe = /^\s*(?:the student\b|the active problem\b|let me mark\b|since the student\b|the runtime\b|the system\b|that'?s? a greenlight\b)/i
+                    .test(updatedSentence)
+                    || /\bactive problem\b|\bgreenlight to advance\b|\bmark (?:it|this|the)? *(?:segment )?complete\b|\b(?:current|active) *segment\s*[Ii][Dd]?\b|\bcanonicaltext\b|\btool[_ ]result\b/i
+                    .test(updatedSentence);
+                  if (metaNarrationRe) {
+                    console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
+                    onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Round-7++++ Fix Issue 8: bridge / disclaimer
+                  // phrase rotation. Sonnet defaults to the SAME hedged
+                  // pre-tool bridge ("Let me see what I have for you")
+                  // and the SAME post-tool disclaimer opener ("Off the
+                  // top of my head, not from the standard bank...")
+                  // turn after turn — observed 5/7 turns in 2026-05-04
+                  // session. The system-prompt rotation rule is weak;
+                  // orchestrator-side rewrite is the safety net.
+                  // Detect a sentence that matches a known bridge /
+                  // disclaimer pattern; if it's identical (normalized)
+                  // to the LAST one used, swap to a different option
+                  // from the pool before TTS.
+                  const bridgePool = [
+                    'Let me see what I have for you.',
+                    'One sec — checking what\'s available.',
+                    'Looking for a good one for you.',
+                    'Let me grab something.',
+                    'Hold on — picking one out.',
+                    'Searching for a good fit.',
+                    'On it — checking the bank.',
+                  ];
+                  const disclaimerPool = [
+                    'Off the top of my head — here\'s one for you.',
+                    'Quick one I\'ll cook up — try this:',
+                    'Let me sketch a fresh one for you.',
+                    'Improvising — here\'s one to try:',
+                    'Made one up on the spot — here you go.',
+                    'Off the top of my head, not from the standard bank — here\'s one for you.',
+                  ];
+                  const sentenceNorm = updatedSentence.trim().toLowerCase().replace(/\s+/g, ' ');
+                  const matchesBridge = /^(let me see what i have|one sec|looking for a good|let me grab|hold on|searching for|on it).{0,60}$/i
+                    .test(updatedSentence.trim());
+                  const matchesDisclaimer = /^(off the top of my head|quick one i'?ll cook up|let me sketch a fresh|improvising|made one up on the spot)/i
+                    .test(updatedSentence.trim());
+                  if (matchesBridge && lastBridgePhraseRef.current === sentenceNorm) {
+                    // Pick a different one from the pool.
+                    const alternatives = bridgePool.filter((p) => p.toLowerCase().replace(/\s+/g, ' ') !== sentenceNorm);
+                    const swap = alternatives[Math.floor(Math.random() * alternatives.length)];
+                    console.log(`[brain-orchestrator] bridge phrase repeat — swapping "${updatedSentence.slice(0, 50)}…" → "${swap}"`);
+                    onDebugEvent?.('bridge_phrase_swapped', `→ ${swap}`);
+                    (ev as { text?: string }).text = swap;
+                    lastBridgePhraseRef.current = swap.toLowerCase().replace(/\s+/g, ' ');
+                  } else if (matchesBridge) {
+                    lastBridgePhraseRef.current = sentenceNorm;
+                  }
+                  if (matchesDisclaimer && lastDisclaimerPhraseRef.current === sentenceNorm) {
+                    const alternatives = disclaimerPool.filter((p) => p.toLowerCase().replace(/\s+/g, ' ') !== sentenceNorm);
+                    const swap = alternatives[Math.floor(Math.random() * alternatives.length)];
+                    console.log(`[brain-orchestrator] disclaimer repeat — swapping "${updatedSentence.slice(0, 50)}…" → "${swap}"`);
+                    onDebugEvent?.('disclaimer_phrase_swapped', `→ ${swap}`);
+                    (ev as { text?: string }).text = swap;
+                    lastDisclaimerPhraseRef.current = swap.toLowerCase().replace(/\s+/g, ' ');
+                  } else if (matchesDisclaimer) {
+                    lastDisclaimerPhraseRef.current = sentenceNorm;
+                  }
+                  // Re-read the (possibly swapped) sentence text.
+                  const finalSentence = (ev.text as string) || updatedSentence;
+                  // Round-7+ Fix 4: verbatim-sentence dedup within turn.
+                  // Skip TTS + transcript add when this exact sentence
+                  // already played this turn AND it has ≥4 words. Avoids
+                  // false-positive drops of legit short echoes.
+                  const dedupNorm = normalizeForDedup(finalSentence);
+                  const wordCount = dedupNorm ? dedupNorm.split(/\s+/).filter(Boolean).length : 0;
+                  if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm)) {
+                    console.log('[brain-orchestrator] dropped duplicate sentence:', JSON.stringify(updatedSentence.slice(0, 80)));
+                    onDebugEvent?.('duplicate_sentence_dropped', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  if (wordCount >= 4) sentencesSpokenThisTurn.add(dedupNorm);
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   // KEEP markdown emphasis (*word*, **strong**) in the
                   // chat-bound text so TranscriptView can render it as
                   // italic / bold. Strip ONLY for TTS — the speaking
                   // layer doesn't need or want the asterisks.
-                  const trimmedSentence = updatedSentence.trim();
+                  // Use finalSentence so the bridge/disclaimer rotation
+                  // swap (Fix Issue 8 above) is reflected in both
+                  // chat-bound text AND TTS.
+                  const trimmedSentence = finalSentence.trim();
                   // TTS-only normalization. The chat-bound text keeps the
                   // brain's punctuation (exclamation marks for emphasis,
                   // em-dashes for parenthetical clauses) so the transcript
@@ -3742,6 +4017,10 @@ export function VoiceTutorRealtime({
                       clearTimeout(gateTimer);
                       openGate();
                     }
+                    // Round-7+++++ Issue 1 fix: mark this turn as
+                    // generate_problem-emitting so the show_problem
+                    // auto-substitute (downstream) can bypass.
+                    generateProblemThisTurnRef.current = true;
                     onDebugEvent?.('server_only_tool', name);
                     continue;
                   }
@@ -3857,7 +4136,27 @@ export function VoiceTutorRealtime({
                         // it as on-segment and killed the legitimate
                         // topic switch.
                         const newPageInTurn = brainEmittedNewPageThisTurnRef.current;
-                        if (targetsDiverge && newPageInTurn) {
+                        // Round-7+++++ Issue 1 fix: when the brain
+                        // emitted generate_problem THIS turn, the
+                        // follow-up show_problem statement IS the
+                        // canonicalText returned by the pipeline — NOT
+                        // a free-form re-render of the segment's
+                        // authored content. Bypass both the divergence
+                        // KILL and the substitute. Otherwise (observed
+                        // 2026-05-04): brain emits generate_problem +
+                        // show_problem for a fresh dataset, the
+                        // currentSegmentIdRef points at a completed
+                        // segment, the substitute swaps to
+                        // show_segment_card on that completed segment,
+                        // and the new completion-block fires →
+                        // MAX_VALIDATOR_RETRIES → student stuck.
+                        const generateProblemInTurn = generateProblemThisTurnRef.current;
+                        if (generateProblemInTurn) {
+                          console.log(`[brain-orchestrator] show_problem follows generate_problem in same turn — bypassing substitute + divergence kill (segId="${segId}", brain target="${brainTarget}")`);
+                          onDebugEvent?.('show_problem_post_generate_bypass', `segId="${segId}" target="${brainTarget}"`);
+                          // Fall through. Treat the brain's show_problem
+                          // statement as canonicalText — render as-is.
+                        } else if (targetsDiverge && newPageInTurn) {
                           console.log(`[brain-orchestrator] show_problem target divergence for segment "${segId}" — but new_page in same turn (fresh context); bypassing guard. brain="${brainTarget}" authored="${authoredTarget}"`);
                           onDebugEvent?.('show_problem_target_divergence_bypass', `new_page-in-batch; brain="${brainTarget}" authored="${authoredTarget}"`);
                           // Don't substitute either — the brain is
@@ -3876,8 +4175,7 @@ export function VoiceTutorRealtime({
                             attemptKilled = true;
                             clearTimeout(gateTimer);
                             closeGate();
-                            clearSpeechQueueRef.current?.();
-                            speakKillBridge();
+                            await speakKillBridge();
                           }
                           continue;
                         }
@@ -3893,7 +4191,7 @@ export function VoiceTutorRealtime({
                         // 2026-05-02 retest where harder {12,14,16,18,20}
                         // problem became the original {2,4,6,8,10} card
                         // because both were "find the mean".
-                        if (!targetsDiverge && !newPageInTurn) {
+                        if (!targetsDiverge && !newPageInTurn && !generateProblemInTurn) {
                           console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
                           onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
                           name = 'show_segment_card';
@@ -3933,6 +4231,32 @@ export function VoiceTutorRealtime({
                         console.warn(`[brain-orchestrator] show_segment_card: unknown segmentId "${requestedId}" — falling back to first segment "${segId}".`);
                         onDebugEvent?.('show_segment_card_fallback_first', `requested="${requestedId}" → "${segId}"`);
                       }
+                      // Round-7+++ Fix Issue 1: block show_segment_card
+                      // on a segment already marked complete this
+                      // session. Observed 2026-05-03: brain emitted
+                      // show_segment_card("try-mean-1") on "harder
+                      // problem" after several improvised harder
+                      // problems, dragging the student all the way
+                      // back to the original easy problem. The
+                      // brain bypassed generate_problem entirely. Block
+                      // the regression at the orchestrator and surface
+                      // a strong correction telling the brain to call
+                      // generate_problem (or improvise) instead.
+                      if (segId && completedSegmentIdsRef.current.has(segId)) {
+                        console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" already marked COMPLETE — blocking re-render.`);
+                        onDebugEvent?.('show_segment_card_completed_blocked', segId);
+                        rejectionsThisAttempt.push({
+                          action: 'show_segment_card',
+                          reason: `Segment "${segId}" is already marked COMPLETE this session — the student already solved it. Re-rendering it would regress the student to easier content they've already done. RECOVERY: (1) PREFERRED — call generate_problem with anchorProblem set to the most-recent problem the student solved, anchorAnswer set to its answer, and difficulty="slightly_harder" or "much_harder"; (2) if you've already received no_problem_available for the current concept, IMPROVISE an ad-hoc show_problem with clearly different content (different numbers, different scenario) than anything previously rendered, prefixed with the disclaimer "Off the top of my head, not from the standard bank — here's one for you." Do NOT call show_segment_card again on any segment id you've previously marked complete. The list of completed segments this session: [${[...completedSegmentIdsRef.current].join(', ')}].`,
+                        });
+                        if (!attemptKilled) {
+                          attemptKilled = true;
+                          clearTimeout(gateTimer);
+                          closeGate();
+                          await speakKillBridge();
+                        }
+                        continue;
+                      }
                       const truth = getSegmentTruth(seg);
                       // Off-topic guard: refuse to render a try_yourself
                       // segment that's marked offTopic via passive
@@ -3959,8 +4283,7 @@ export function VoiceTutorRealtime({
                           attemptKilled = true;
                           clearTimeout(gateTimer);
                           closeGate();
-                          clearSpeechQueueRef.current?.();
-                          speakKillBridge();
+                          await speakKillBridge();
                         }
                         continue;
                       }
@@ -4056,13 +4379,91 @@ export function VoiceTutorRealtime({
                     const isProblemRender = name === 'show_segment_card' || name === 'show_problem';
                     if (isProblemRender && dedupSuppressed && (!result?.rejected || result.rejected.length === 0)) {
                       const segId = typeof args.segmentId === 'string' ? args.segmentId : currentSegmentIdRef.current;
+                      // Round-7+ Fix 1: verification-turn dedup suppression.
+                      // When the student's last utterance looks like an
+                      // ANSWER attempt (numeric / step-of-computation
+                      // language) AND the active card on the board is
+                      // already the focus of verification, the dedup'd
+                      // render call is just a defensive habit by the brain
+                      // ("show the card again before I check the answer").
+                      // Surfacing this as a rejection forces a retry that
+                      // re-anchors the brain on the segment's authored
+                      // truth and abandons the active improvised card —
+                      // exact failure mode in 2026-05-03 session where
+                      // brain on a brain-improvised {3,7,11,15,19} card
+                      // emitted show_segment_card("try-mean-1") during
+                      // verification, dedup'd to {2,4,6,8,10}, retry
+                      // chain dragged the brain back to {2,4,6,8,10}.
+                      // Silently drop the rejection here — the brain's
+                      // narration in this turn is what matters, and Fix
+                      // A1's <active_problem> block already pins it to
+                      // the correct card.
+                      const verificationIntentRe = /\d|=|\bsum\b|\bmean\b|\bdivide\b|\bdivided\b|\bequals?\b|\bplus\b|\bminus\b|\btimes\b|\bover\b|\bso\b|first step|step (?:1|one|two|2)|let me try/i;
+                      const studentVerifying = verificationIntentRe.test(transcript);
+                      const activeStatement = currentProblemRef.current?.statement?.trim() ?? '';
+                      // Round-7+ Fix 2/7: detect off-segment / off-plan
+                      // active card. When currentProblemRef differs from
+                      // the segment's authored problemText, the active
+                      // card is brain-improvised on top of the segment;
+                      // the dedup target (segment authored card) is NOT
+                      // what the student is looking at. The rejection
+                      // text must NOT push the brain toward the segment's
+                      // authored content — it should reaffirm the active
+                      // (improvised) card as the focus and tell the brain
+                      // to just continue the conversation.
+                      let segmentAuthored = '';
+                      try {
+                        const plan = lessonPlanRef.current;
+                        if (plan && segId) {
+                          const seg = getSegment(plan, segId);
+                          const truth = getSegmentTruth(seg);
+                          segmentAuthored = (truth?.problemText ?? '').trim();
+                        }
+                      } catch { /* lookup is best-effort */ }
+                      const activeIsOffSegment = !!activeStatement
+                        && !!segmentAuthored
+                        && activeStatement !== segmentAuthored;
+                      if (studentVerifying && !!activeStatement) {
+                        console.log(`[brain-orchestrator] dedup silently dropped during verification (active="${activeStatement.slice(0, 60)}…")`);
+                        onDebugEvent?.('dedup_silent_drop_verify', `${name} → active="${activeStatement.slice(0, 50)}…"`);
+                        // Don't push a rejection. Don't kill the attempt.
+                        // The brain's already-streaming narration is the
+                        // verification; the redundant render call was
+                        // harmless and would have showed the same card.
+                        continue;
+                      }
+                      // Round-7+ Fix 8: silent dedup on RETRY attempts.
+                      // When attempt > 0, the retry exists because a
+                      // PRIOR attempt got killed by the judge / RULE8 /
+                      // a different validator. The brain's retry then
+                      // re-emits the same render tools (because it sees
+                      // its prior attempt's tool calls in conversation
+                      // history and replays them). Dedup catches these
+                      // re-emissions correctly — but surfacing them as
+                      // rejections triggers ANOTHER retry, and this
+                      // cascades up to MAX_VALIDATOR_RETRIES with each
+                      // retry's spoken sentences playing audibly.
+                      // Observed 2026-05-03 session opening "ready"
+                      // turn: 3 attempts spoke in succession (judge KILL
+                      // → bridge → retry-1 dedup → bridge → retry-2
+                      // dedup → MAX), producing the "gibberish" the
+                      // user reported. Silently dropping dedup on retry
+                      // attempts lets the corrected speech land cleanly
+                      // without re-triggering the cascade.
+                      if (attempt > 0) {
+                        console.log(`[brain-orchestrator] dedup silently dropped on retry attempt ${attempt} (${name})`);
+                        onDebugEvent?.('dedup_silent_drop_retry', `attempt=${attempt} ${name} → ${segId}`);
+                        continue;
+                      }
                       // State-aware recovery: if we've already observed
                       // no_problem_available patterns from the brain
                       // earlier this session, retrying generate_problem
                       // is futile. Push the brain toward improvise-with-
                       // disclaimer or wrap-up first.
                       const noProblemObserved = noProblemAvailableObservedRef.current;
-                      const reason = noProblemObserved
+                      const reason = activeIsOffSegment
+                        ? `Your ${name} call was suppressed because the active card is already on the board. NOTE: the active card is BRAIN-IMPROVISED / off-segment — the student is currently working on "${activeStatement.slice(0, 200)}", which differs from segment "${segId}"'s authored content. Do NOT try to re-render the segment's authored card; the student's focus is on the improvised one. RECOVERY: just continue the conversation against the active card — verify the student's answer, give a hint, or wait for their next attempt. If the student is genuinely done with the active card and wants to move on, call advance_lesson or ask them what they want next; do NOT silently render a different problem.`
+                        : noProblemObserved
                         ? `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup) AND you've already received no_problem_available from generate_problem earlier this session — the bank/plan is exhausted for this concept. RETRY this attempt with ONE of: (1) PREFERRED — improvise an ad-hoc show_problem with clearly different content from anything previously rendered, prefixed by a disclaimer in narration ("here's one off the top of my head, not from the standard bank…"); or (2) ask the student whether they want to switch topic or wrap up. DO NOT call generate_problem again for this anchor — you've already exhausted it. DO NOT re-emit show_segment_card / show_problem with content matching any prior board card. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`
                         : `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Recovery options, in order: (1) call generate_problem if you haven't already exhausted it for this anchor; (2) improvise an ad-hoc show_problem with clearly different content + explicit "off-the-cuff" disclaimer in narration; (3) ask the student whether to switch topic or wrap up. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
                       rejectionsThisAttempt.push({ action: name, reason });
@@ -4070,10 +4471,9 @@ export function VoiceTutorRealtime({
                         attemptKilled = true;
                         clearTimeout(gateTimer);
                         closeGate();
-                        clearSpeechQueueRef.current?.();
-                        speakKillBridge();
+                        await speakKillBridge();
                       }
-                      onDebugEvent?.('dedup_surfaced_as_rejection', `${name} → ${segId}`);
+                      onDebugEvent?.('dedup_surfaced_as_rejection', `${name} → ${segId}${activeIsOffSegment ? ' (off-segment)' : ''}`);
                       continue;
                     }
                     if (result && Array.isArray(result.rejected) && result.rejected.length > 0) {
@@ -4092,8 +4492,7 @@ export function VoiceTutorRealtime({
                         attemptKilled = true;
                         clearTimeout(gateTimer);
                         closeGate();
-                        clearSpeechQueueRef.current?.();
-                        speakKillBridge();
+                        await speakKillBridge();
                       }
                     } else if (gateState === 'gated') {
                       // Clean tool dispatch — open the gate and flush any
@@ -4155,8 +4554,7 @@ export function VoiceTutorRealtime({
           attemptKilled = true;
           clearTimeout(gateTimer);
           closeGate();
-          clearSpeechQueueRef.current?.();
-          speakKillBridge();
+          await speakKillBridge();
           console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
           onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
         }
@@ -4203,8 +4601,41 @@ export function VoiceTutorRealtime({
               // the brain teach with the wrong dataset for the rest
               // of the median walkthrough.
               if (!judgeJson.grounded && judgeJson.issues.length > 0) {
-                const killIssues = judgeJson.issues.filter((i) => i.severity === 'kill');
-                const advisoryIssues = judgeJson.issues.filter((i) => i.severity !== 'kill');
+                const rawKillIssues = judgeJson.issues.filter((i) => i.severity === 'kill');
+                const advisoryIssues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> = judgeJson.issues.filter((i) => i.severity !== 'kill');
+                // Round-7+++++ Issue 3 fix: Wolfram-verified override.
+                // The judge sometimes hallucinates arithmetic and KILLs
+                // a brain claim that's actually correct (and already
+                // wolfram-verified on the board). When a kill claim's
+                // integer tokens overlap with a wolfram-verified
+                // equation's tokens, downgrade the kill to advisory —
+                // Wolfram's exact arithmetic outranks the judge LLM's
+                // heuristic check. Threshold: ≥2 tokens overlap OR
+                // the single key result token (e.g., "73") is in the
+                // verified set, which catches "73 is the mean" claim
+                // matching a verified "511/7=73" equation.
+                const wolframOverrideHits: typeof rawKillIssues = [];
+                const killIssues: typeof rawKillIssues = [];
+                for (const issue of rawKillIssues) {
+                  const claimNums = (issue.claim.match(/\d+/g) ?? []).filter((n) => n.length > 0);
+                  let overlap = 0;
+                  for (const n of claimNums) {
+                    if (wolframVerifiedNumberSetsRef.current.has(n)) overlap++;
+                  }
+                  // Also try the joined-key match (e.g., "511|7|73").
+                  const joinedKey = [...new Set(claimNums)].sort().join('|');
+                  const joinedHit = joinedKey && wolframVerifiedNumberSetsRef.current.has(joinedKey);
+                  if (overlap >= 2 || joinedHit) {
+                    wolframOverrideHits.push(issue);
+                  } else {
+                    killIssues.push(issue);
+                  }
+                }
+                if (wolframOverrideHits.length > 0) {
+                  console.warn(`[brain-orchestrator] judge KILL → ADVISORY (wolfram-override) — ${wolframOverrideHits.length} claim(s) match wolfram-verified equations`);
+                  onDebugEvent?.('judge_kill_wolfram_override', `${wolframOverrideHits.length}: ${wolframOverrideHits[0].claim.slice(0, 60)}…`);
+                  for (const i of wolframOverrideHits) advisoryIssues.push(i);
+                }
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
                     advisoryIssues.map((i) => i.claim.slice(0, 80)));
@@ -4216,16 +4647,44 @@ export function VoiceTutorRealtime({
                   ).join(' ');
                   console.warn(`[brain-orchestrator] judge KILL — ${killIssues.length} board-contradiction claim(s):`, summary);
                   onDebugEvent?.('judge_kill', `${killIssues.length}: ${killIssues[0].claim.slice(0, 60)}…`);
-                  rejectionsThisAttempt.push({
-                    action: 'judge',
-                    reason: `The judge detected your spoken claim(s) directly contradict what's on the whiteboard — the student would experience an obvious chat-board mismatch. Issues: ${summary}. RETRY: re-derive your statement from the actual content of the active board card(s); do NOT reference numeric values, dataset literals, or labels that don't appear on the board. If the board content is correct and your reasoning needs different content, emit a new render tool (show_problem / show_equation / new_page) FIRST so the board reflects what you're about to say, then narrate.`,
-                  });
+                  // Round-7 Fix D: detect re-assertion loops. Tokenize
+                  // each new claim into structural tokens (multi-digit
+                  // numbers, multi-char identifiers, and bracketed
+                  // dataset fragments — exactly the kinds of literals
+                  // the judge flags as contradictory). Compare against
+                  // the bag of tokens accumulated from prior KILLs in
+                  // this turn. ≥2 shared tokens → same-pattern repeat.
+                  // 0-1 shared → genuinely different content (escalate
+                  // would mis-fire). The threshold is calibrated to
+                  // catch dataset-restated kills (those overlap on
+                  // every digit) without firing on shared filler words.
+                  const tokenize = (s: string): string[] => {
+                    const out: string[] = [];
+                    const re = /\d{2,}|[A-Za-z]{4,}|\{[^}]{1,40}\}/g;
+                    let m: RegExpExecArray | null;
+                    while ((m = re.exec(s.toLowerCase())) !== null) out.push(m[0]);
+                    return out;
+                  };
+                  const newTokens = new Set(killIssues.flatMap((i) => tokenize(i.claim)));
+                  const priorTokens = new Set(priorJudgeKillClaimsThisTurn.flatMap(tokenize));
+                  let overlap = 0;
+                  for (const t of newTokens) if (priorTokens.has(t)) overlap++;
+                  const isReassertion = priorJudgeKillClaimsThisTurn.length > 0 && overlap >= 2;
+                  const activeStatement = currentProblemRef.current?.statement?.slice(0, 200) ?? '(no active problem tracked)';
+                  const reason = isReassertion
+                    ? `STOP — you have just retried the SAME contradictory claim ${priorJudgeKillClaimsThisTurn.length + 1} times in a row. The judge keeps killing your speech because you keep re-asserting numbers / dataset literals / labels that are NOT on the active card. Latest issues: ${summary}. The active problem the student is looking at is: "${activeStatement}". HARD RESET: read the <active_problem> block + <whiteboard_state> snapshot LITERALLY token-by-token, and re-derive your next sentence from THAT content alone. Discard everything you've said earlier in this turn — your prior reasoning chain has anchored on stale context. If the active card's content does not match what you intended to teach, emit new_page + show_problem FIRST to reset the board, then narrate against the new card. Do NOT repeat the previous claim.`
+                    : `The judge detected your spoken claim(s) directly contradict what's on the whiteboard — the student would experience an obvious chat-board mismatch. Issues: ${summary}. RETRY: re-derive your statement from the actual content of the active board card(s); do NOT reference numeric values, dataset literals, or labels that don't appear on the board. If the board content is correct and your reasoning needs different content, emit a new render tool (show_problem / show_equation / new_page) FIRST so the board reflects what you're about to say, then narrate.`;
+                  if (isReassertion) {
+                    console.warn(`[brain-orchestrator] judge KILL — ESCALATED (re-assertion loop, attempt ${priorJudgeKillClaimsThisTurn.length + 1}, overlap=${overlap})`);
+                    onDebugEvent?.('judge_kill_escalated', `attempt=${priorJudgeKillClaimsThisTurn.length + 1} overlap=${overlap}`);
+                  }
+                  for (const i of killIssues) priorJudgeKillClaimsThisTurn.push(i.claim);
+                  rejectionsThisAttempt.push({ action: 'judge', reason });
                   if (!attemptKilled) {
                     attemptKilled = true;
                     clearTimeout(gateTimer);
                     closeGate();
-                    clearSpeechQueueRef.current?.();
-                    speakKillBridge();
+                    await speakKillBridge();
                   }
                 }
               } else {
@@ -4309,6 +4768,36 @@ export function VoiceTutorRealtime({
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
 
+      // Round-7+ Fix 9: defensive cleanup of any residual streaming
+      // entries from this turn. The for-loop's per-iteration cleanup at
+      // line ~4471 removes the PRIOR attempt's killed entry on retry,
+      // but if the FINAL attempt is also killed and we exit via
+      // MAX_VALIDATOR_RETRIES, that final attempt's streaming entry is
+      // never filtered. Result: the bubble lingers in transcriptRef
+      // with `streaming: true`, the cursor blinks forever, and the
+      // streamingEntryActive flag stays true. Observed 2026-05-03
+      // session opening turn: 3 attempts all killed, residual bubble
+      // kept blinking through subsequent turns. Filter ANY remaining
+      // streaming-* entries from this t0 here so the transcript is
+      // clean before we either finalize the winning attempt's text or
+      // fall through to the tool-only / empty placeholder paths.
+      const turnStreamingPrefix = `tutor-streaming-${t0}-`;
+      const beforeCleanupLen = transcriptRef.current.length;
+      transcriptRef.current = transcriptRef.current.filter((e) => {
+        if (typeof e.id !== 'string' || !e.id.startsWith(turnStreamingPrefix)) return true;
+        // Keep the entry only if it has TEXT — the winning attempt's
+        // entry survives so the finalize step below can convert it in
+        // place. Empty / killed-attempt entries get filtered.
+        return typeof e.text === 'string' && e.text.trim().length > 0 && fullText.trim().length > 0;
+      });
+      if (transcriptRef.current.length !== beforeCleanupLen) {
+        onTranscriptUpdate([...transcriptRef.current]);
+      }
+      // Always reset the streaming-active flag on turn exit. Required
+      // for tool-only and empty-turn paths that previously skipped the
+      // setStreamingEntryActive(false) call inside the fullText branch.
+      setStreamingEntryActive(false);
+
       // Empty-turn fallback. Brain produced neither text nor tool calls.
       if (!fullText.trim() && totalToolNamesSeen.length === 0) {
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
@@ -4387,6 +4876,18 @@ export function VoiceTutorRealtime({
       console.error('[brain-orchestrator] error:', err);
       onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
       speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+      // Round-7+ Fix 9 (catch path): clear any residual streaming
+      // entries + reset the active flag so the cursor doesn't keep
+      // blinking after a thrown error mid-turn.
+      const turnStreamingPrefix = `tutor-streaming-${t0}-`;
+      const beforeLen = transcriptRef.current.length;
+      transcriptRef.current = transcriptRef.current.filter((e) =>
+        typeof e.id !== 'string' || !e.id.startsWith(turnStreamingPrefix),
+      );
+      if (transcriptRef.current.length !== beforeLen) {
+        onTranscriptUpdate([...transcriptRef.current]);
+      }
+      setStreamingEntryActive(false);
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate]);
 
@@ -5009,7 +5510,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
-          const text = input?.value?.trim();
+          const rawText = input?.value?.trim();
+          // Round-7++++ Fix Issue 5: strip LaTeX inline-math wrappers
+          // (\(...\) and \[...\]) from typed input. Students sometimes
+          // paste replies that contain LaTeX-formatted numbers from
+          // notes / external tools (observed 2026-05-04: "The new
+          // sixth number is \(53\), which increases the sum from
+          // \(312\) to \(324\)..."). The literal \(...\) markup
+          // confuses chat rendering and the brain's parsing. Keep
+          // inner content, drop wrappers.
+          const text = rawText
+            ? rawText
+                .replace(/\\\(([^)]*)\\\)/g, '$1')
+                .replace(/\\\[([^\]]*)\\\]/g, '$1')
+                .replace(/\\\$([^$]*)\\\$/g, '$1')
+            : rawText;
           if (text && realtime.isConnected) {
             // The student typing into this textbox is a strong signal
             // they think the system is stuck — clear any stale brain-
@@ -5046,6 +5561,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // finish before their message reaches the brain. Mirrors the
             // quick-answer button path in page.tsx (stopSpeaking →
             // sendTextMessage).
+            //
+            // NOTE: barge-in here is purely an audio-experience cut-off.
+            // The chat bubble is canonical; the student is assumed to
+            // have READ the full bubble text regardless of how much
+            // audio played. So we do NOT annotate conversation history
+            // — the brain receives the prior tutor turn's text in full
+            // and interprets the typed reply as a response to that
+            // full text.
             realtime.clearSpeechQueue();
             realtime.interrupt();
             // Send to AI

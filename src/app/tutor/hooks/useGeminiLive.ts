@@ -726,8 +726,9 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     speakText: (text: string) => {
       console.warn('[Gemini] speakText called but relay mode is not supported on Gemini Live.', { len: text.length });
     },
-    clearSpeechQueue: () => {
+    clearSpeechQueue: (): Promise<void> => {
       // No-op. Gemini Live doesn't run in relay mode and has no speech queue.
+      return Promise.resolve();
     },
     unlockAudio: () => {
       // No-op for Gemini Live; iOS audio-unlock is a Realtime-engine concern.

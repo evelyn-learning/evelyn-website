@@ -185,8 +185,15 @@ export interface RealtimeResult {
    * Cancel the in-flight speakText response (if any) and drop everything
    * waiting in the speakText queue. Used on validator-feedback retry so
    * the rejected attempt's voice doesn't bleed into the corrected one.
+   *
+   * Returns a Promise that resolves once the in-flight AudioBufferSource
+   * has actually finished tearing down (its `onended` fired). Awaiting
+   * this avoids the kill-path overlap where the bridge phrase + the
+   * retry's first sentence start playing while the dying source's tail
+   * is still audible. Callers that don't care (barge-in / user-typed
+   * input) may fire-and-forget the promise.
    */
-  clearSpeechQueue: () => void;
+  clearSpeechQueue: () => Promise<void>;
   /**
    * Resume the playback AudioContext synchronously inside a user gesture.
    * iOS Safari requires audio playback to be initiated from a user gesture
@@ -1967,7 +1974,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Cancel any in-flight TTS response and drop pending sentences.
   // Used by the orchestrator's validator-feedback retry path so the
   // rejected attempt's voice doesn't bleed into the corrected one.
-  const clearSpeechQueue = useCallback(() => {
+  //
+  // Returns a Promise that resolves AFTER the playing AudioBufferSource
+  // has fired its `onended` event (or immediately if nothing was playing).
+  // The native `source.stop()` call returns synchronously but the actual
+  // audio tail can keep playing for a frame or two while the WebAudio
+  // graph tears down. Without awaiting the drain, the kill-path bridge
+  // phrase queued right after stop() can start audibly overlapping the
+  // dying tail — observed during round-7 judge-KILL spirals where the
+  // student heard the previous attempt's last word bleeding into "Let me
+  // try that a different way."
+  const clearSpeechQueue = useCallback((): Promise<void> => {
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
     // Drop any pre-fetched TTS bytes — they're for sentences we're
@@ -1978,6 +1995,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       ttsAbortRef.current.abort();
       ttsAbortRef.current = null;
     }
+    // Capture the source we're about to stop so we can await its
+    // teardown. Both branches below null this out implicitly via
+    // `audioQueueRef.current = []` clearing the playback chain, but
+    // the source's `onended` is what actually signals the drain.
+    const sourceBeingStopped = playbackSourceRef.current;
+    let stopped = false;
     if (
       isRelayRef.current &&
       ttsProviderRef.current === 'openai-mini' &&
@@ -1987,6 +2010,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       audioQueueRef.current = [];
       isPlayingRef.current = false;
       speakTextInFlightRef.current = false;
+      stopped = true;
     }
     if (speakTextInFlightRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
@@ -1995,10 +2019,33 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       audioQueueRef.current = [];
       isPlayingRef.current = false;
       speakTextInFlightRef.current = false;
+      stopped = true;
     }
     if (droppedCount > 0) {
       console.log(`[Realtime] clearSpeechQueue: dropped ${droppedCount} queued sentence(s)`);
     }
+    // Resolve when the dying source has actually emitted `onended`. The
+    // existing `source.onended = playNextAudio` handler runs first (and
+    // sees an empty audioQueueRef → returns to listening); we chain a
+    // second listener via `addEventListener` so we don't clobber it.
+    // Fail-safe timeout (60ms) so we never hang if the audio context
+    // already torn down or the event was missed in some browser edge case.
+    if (!stopped || !sourceBeingStopped) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      let resolved = false;
+      const done = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve();
+      };
+      try {
+        sourceBeingStopped.addEventListener('ended', done, { once: true });
+      } catch {
+        // Older browsers / non-standard nodes — fall through to the
+        // timeout below as the only resolution path.
+      }
+      setTimeout(done, 60);
+    });
   }, []);
 
   // Cleanup on unmount

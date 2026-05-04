@@ -52,6 +52,12 @@ interface BrainStreamRequestBody {
    *  resolver can dedup. */
   shownProblemIds?: string[];
   shownProblemHashes?: string[];
+  /** Most-recently-rendered problem statement (from the client's
+   *  currentProblemRef). Surfaced to the brain as a dedicated
+   *  `<active_problem>` block so it anchors verification on this exact
+   *  text rather than on stale cards still visible in the snapshot. See
+   *  BrainTurnInput.activeProblem for the catastrophe this addresses. */
+  activeProblem?: BrainTurnInput['activeProblem'];
 }
 
 /**
@@ -86,20 +92,33 @@ function makeToolResultProvider(
       const to = String((args as { to?: unknown }).to ?? 'next');
       const segIdx = ctx.segmentIndex;
       const curIdx = segIdx.findIndex((s) => s.id === ctx.currentSegmentId);
+      const isOffTopic = (s: { offTopic?: boolean }) => s.offTopic === true;
       let resolvable = false;
       if (to === 'next') {
-        resolvable = curIdx >= 0 && curIdx < segIdx.length - 1;
+        // Skip off-topic segments. Mirrors resolveAdvanceTarget client-
+        // side. If no on-topic segment remains after the current one,
+        // treat as end-of-plan (resolvable = false).
+        if (curIdx >= 0) {
+          for (let j = curIdx + 1; j < segIdx.length; j++) {
+            if (!isOffTopic(segIdx[j])) { resolvable = true; break; }
+          }
+        }
       } else if (to === 'previous') {
-        resolvable = curIdx > 0;
+        if (curIdx > 0) {
+          for (let j = curIdx - 1; j >= 0; j--) {
+            if (!isOffTopic(segIdx[j])) { resolvable = true; break; }
+          }
+        }
       } else {
-        resolvable = segIdx.some((s) => s.id === to);
+        const target = segIdx.find((s) => s.id === to);
+        resolvable = !!target && !isOffTopic(target);
       }
       if (!resolvable) {
         return JSON.stringify({
           error: 'advance_lesson_failed',
           message: to === 'next'
-            ? 'Cannot advance — the student is on the LAST segment of the lesson plan. Do NOT pretend to advance. Either (a) wrap the session up gracefully ("nice work, we covered everything in this lesson — anything you want to revisit?"), or (b) suggest a follow-up plan / topic, or (c) offer to drill more on the current concept via generate_problem with difficulty="same" / "slightly_harder". DO NOT call show_segment_card or show_problem assuming a fresh segment is now active.'
-            : `Cannot advance to "${to}" — that segment id is not in this plan. Either correct the id or wrap up the session.`,
+            ? 'Cannot advance — no more on-topic segments remain in the lesson plan. Do NOT pretend to advance. Preferred next move: keep the student engaged with more practice on the concepts already covered via generate_problem (difficulty="same" or "slightly_harder"). Only suggest wrap-up if the student has signaled they want to stop. DO NOT call show_segment_card or show_problem assuming a fresh segment is now active.'
+            : `Cannot advance to "${to}" — that segment id is either not in this plan or is marked off-topic and cannot be entered. Either correct the id or call generate_problem to continue practice.`,
           currentSegmentId: ctx.currentSegmentId,
           segmentIndex: segIdx,
         });
@@ -241,6 +260,7 @@ export async function POST(req: NextRequest) {
           whiteboardSnapshot: body.whiteboardSnapshot,
           lessonPlanContext: body.lessonPlanContext,
           studentProfileBlock: body.studentProfileBlock,
+          activeProblem: body.activeProblem,
           grade: body.grade,
           tools: WHITEBOARD_TOOLS,
           model: body.model,
