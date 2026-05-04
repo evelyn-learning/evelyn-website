@@ -622,6 +622,26 @@ import { SEED_AP_CALC_DIFFERENTIAL_EQUATIONS } from './seeds/ap-calc-differentia
 // Batch 56 — AP Bio Unit 6 depth: central dogma + gene regulation/biotech.
 import { SEED_AP_BIO_CENTRAL_DOGMA } from './seeds/ap-bio-central-dogma';
 import { SEED_AP_BIO_GENE_REGULATION_BIOTECH } from './seeds/ap-bio-gene-regulation-biotech';
+// Batch 57 — GCSE Math Higher (UK exam prep): full topic cluster across
+// number, algebra, geometry, trig, mensuration, statistics, probability.
+import { SEED_GCSE_MATH_SURDS_INDICES } from './seeds/gcse-math-surds-indices';
+import { SEED_GCSE_MATH_BOUNDS_ERROR } from './seeds/gcse-math-bounds-error';
+import { SEED_GCSE_MATH_ALGEBRA_FACTOR } from './seeds/gcse-math-algebra-factor';
+import { SEED_GCSE_MATH_QUADRATIC_COMPLETE_SQUARE } from './seeds/gcse-math-quadratic-complete-square';
+import { SEED_GCSE_MATH_SIMULTANEOUS_LIN_QUAD } from './seeds/gcse-math-simultaneous-lin-quad';
+import { SEED_GCSE_MATH_SEQUENCES } from './seeds/gcse-math-sequences';
+import { SEED_GCSE_MATH_FUNCTIONS_TRANSFORMATIONS } from './seeds/gcse-math-functions-transformations';
+import { SEED_GCSE_MATH_RATIO_PROPORTION_RATE } from './seeds/gcse-math-ratio-proportion-rate';
+import { SEED_GCSE_MATH_CIRCLE_THEOREMS } from './seeds/gcse-math-circle-theorems';
+import { SEED_GCSE_MATH_VECTORS } from './seeds/gcse-math-vectors';
+import { SEED_GCSE_MATH_SINE_COSINE_RULES } from './seeds/gcse-math-sine-cosine-rules';
+import { SEED_GCSE_MATH_TRIG_EXACT_VALUES } from './seeds/gcse-math-trig-exact-values';
+import { SEED_GCSE_MATH_ARCS_SECTORS } from './seeds/gcse-math-arcs-sectors';
+import { SEED_GCSE_MATH_3D_VOLUME_SA } from './seeds/gcse-math-3d-volume-sa';
+import { SEED_GCSE_MATH_CUMULATIVE_FREQ } from './seeds/gcse-math-cumulative-freq';
+import { SEED_GCSE_MATH_HISTOGRAMS } from './seeds/gcse-math-histograms';
+import { SEED_GCSE_MATH_PROBABILITY_TREES } from './seeds/gcse-math-probability-trees';
+import { SEED_GCSE_MATH_CONDITIONAL_PROB } from './seeds/gcse-math-conditional-prob';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1203,6 +1223,25 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALC_DIFFERENTIAL_EQUATIONS,
   SEED_AP_BIO_CENTRAL_DOGMA,
   SEED_AP_BIO_GENE_REGULATION_BIOTECH,
+  // Batch 57 — GCSE Math Higher (UK).
+  SEED_GCSE_MATH_SURDS_INDICES,
+  SEED_GCSE_MATH_BOUNDS_ERROR,
+  SEED_GCSE_MATH_ALGEBRA_FACTOR,
+  SEED_GCSE_MATH_QUADRATIC_COMPLETE_SQUARE,
+  SEED_GCSE_MATH_SIMULTANEOUS_LIN_QUAD,
+  SEED_GCSE_MATH_SEQUENCES,
+  SEED_GCSE_MATH_FUNCTIONS_TRANSFORMATIONS,
+  SEED_GCSE_MATH_RATIO_PROPORTION_RATE,
+  SEED_GCSE_MATH_CIRCLE_THEOREMS,
+  SEED_GCSE_MATH_VECTORS,
+  SEED_GCSE_MATH_SINE_COSINE_RULES,
+  SEED_GCSE_MATH_TRIG_EXACT_VALUES,
+  SEED_GCSE_MATH_ARCS_SECTORS,
+  SEED_GCSE_MATH_3D_VOLUME_SA,
+  SEED_GCSE_MATH_CUMULATIVE_FREQ,
+  SEED_GCSE_MATH_HISTOGRAMS,
+  SEED_GCSE_MATH_PROBABILITY_TREES,
+  SEED_GCSE_MATH_CONDITIONAL_PROB,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
