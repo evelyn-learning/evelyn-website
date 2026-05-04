@@ -767,6 +767,12 @@ import { SEED_K2_ELA_COMPARE_CONTRAST } from './seeds/k2-ela-compare-contrast';
 import { SEED_K2_ELA_ASKING_QUESTIONS } from './seeds/k2-ela-asking-questions';
 import { SEED_K2_ELA_NARRATIVE_WRITING } from './seeds/k2-ela-narrative-writing';
 import { SEED_K2_ELA_OPINION_WRITING } from './seeds/k2-ela-opinion-writing';
+// Batch 66 — K-2 SS cluster (5 plans, fills tracker gaps).
+import { SEED_K2_SS_COMMUNITY_INTRO } from './seeds/k2-ss-community-intro';
+import { SEED_K2_SS_MAPS_SYMBOLS } from './seeds/k2-ss-maps-symbols';
+import { SEED_K2_SS_RULES_LAWS } from './seeds/k2-ss-rules-laws';
+import { SEED_K2_SS_TIMELINE_INTRO } from './seeds/k2-ss-timeline-intro';
+import { SEED_K2_SS_HOLIDAYS_TRADITIONS } from './seeds/k2-ss-holidays-traditions';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1492,6 +1498,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_K2_ELA_ASKING_QUESTIONS,
   SEED_K2_ELA_NARRATIVE_WRITING,
   SEED_K2_ELA_OPINION_WRITING,
+  // Batch 66 — K-2 SS cluster.
+  SEED_K2_SS_COMMUNITY_INTRO,
+  SEED_K2_SS_MAPS_SYMBOLS,
+  SEED_K2_SS_RULES_LAWS,
+  SEED_K2_SS_TIMELINE_INTRO,
+  SEED_K2_SS_HOLIDAYS_TRADITIONS,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
