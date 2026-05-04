@@ -694,6 +694,27 @@ import { SEED_JEE_PHYS_KINETIC_THEORY } from './seeds/jee-phys-kinetic-theory';
 import { SEED_JEE_PHYS_DUAL_NATURE } from './seeds/jee-phys-dual-nature';
 import { SEED_JEE_PHYS_SEMICONDUCTORS } from './seeds/jee-phys-semiconductors';
 import { SEED_JEE_PHYS_SOLID_LIQUID_PROPERTIES } from './seeds/jee-phys-solid-liquid-properties';
+// Batch 62 — Grades 3-5 ELA cluster (20 plans).
+import { SEED_G35_ELA_MULTISYLLABIC } from './seeds/g35-ela-multisyllabic';
+import { SEED_G35_ELA_PREFIXES_SUFFIXES } from './seeds/g35-ela-prefixes-suffixes';
+import { SEED_G35_ELA_CONTEXT_CLUES } from './seeds/g35-ela-context-clues';
+import { SEED_G35_ELA_THEME } from './seeds/g35-ela-theme';
+import { SEED_G35_ELA_INFERENCE_EVIDENCE } from './seeds/g35-ela-inference-evidence';
+import { SEED_G35_ELA_AUTHORS_PURPOSE } from './seeds/g35-ela-authors-purpose';
+import { SEED_G35_ELA_POINT_OF_VIEW } from './seeds/g35-ela-point-of-view';
+import { SEED_G35_ELA_FIGURATIVE_LANGUAGE } from './seeds/g35-ela-figurative-language';
+import { SEED_G35_ELA_TEXT_FEATURES } from './seeds/g35-ela-text-features';
+import { SEED_G35_ELA_SUMMARIZING } from './seeds/g35-ela-summarizing';
+import { SEED_G35_ELA_PARAGRAPH_STRUCTURE } from './seeds/g35-ela-paragraph-structure';
+import { SEED_G35_ELA_NARRATIVE_DEVELOPED } from './seeds/g35-ela-narrative-developed';
+import { SEED_G35_ELA_INFORMATIONAL_WRITING } from './seeds/g35-ela-informational-writing';
+import { SEED_G35_ELA_OPINION_ARGUMENT } from './seeds/g35-ela-opinion-argument';
+import { SEED_G35_ELA_EDITING_REVISION } from './seeds/g35-ela-editing-revision';
+import { SEED_G35_ELA_SUBJECT_VERB_AGREEMENT } from './seeds/g35-ela-subject-verb-agreement';
+import { SEED_G35_ELA_PRONOUN_USAGE } from './seeds/g35-ela-pronoun-usage';
+import { SEED_G35_ELA_VERB_TENSES } from './seeds/g35-ela-verb-tenses';
+import { SEED_G35_ELA_COMMAS_QUOTES } from './seeds/g35-ela-commas-quotes';
+import { SEED_G35_ELA_RESEARCH_BASICS } from './seeds/g35-ela-research-basics';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1346,6 +1367,27 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_JEE_PHYS_DUAL_NATURE,
   SEED_JEE_PHYS_SEMICONDUCTORS,
   SEED_JEE_PHYS_SOLID_LIQUID_PROPERTIES,
+  // Batch 62 — Grades 3-5 ELA cluster.
+  SEED_G35_ELA_MULTISYLLABIC,
+  SEED_G35_ELA_PREFIXES_SUFFIXES,
+  SEED_G35_ELA_CONTEXT_CLUES,
+  SEED_G35_ELA_THEME,
+  SEED_G35_ELA_INFERENCE_EVIDENCE,
+  SEED_G35_ELA_AUTHORS_PURPOSE,
+  SEED_G35_ELA_POINT_OF_VIEW,
+  SEED_G35_ELA_FIGURATIVE_LANGUAGE,
+  SEED_G35_ELA_TEXT_FEATURES,
+  SEED_G35_ELA_SUMMARIZING,
+  SEED_G35_ELA_PARAGRAPH_STRUCTURE,
+  SEED_G35_ELA_NARRATIVE_DEVELOPED,
+  SEED_G35_ELA_INFORMATIONAL_WRITING,
+  SEED_G35_ELA_OPINION_ARGUMENT,
+  SEED_G35_ELA_EDITING_REVISION,
+  SEED_G35_ELA_SUBJECT_VERB_AGREEMENT,
+  SEED_G35_ELA_PRONOUN_USAGE,
+  SEED_G35_ELA_VERB_TENSES,
+  SEED_G35_ELA_COMMAS_QUOTES,
+  SEED_G35_ELA_RESEARCH_BASICS,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
