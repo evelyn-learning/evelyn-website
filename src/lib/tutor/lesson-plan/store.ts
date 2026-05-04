@@ -755,6 +755,18 @@ import { SEED_G912_ELA_GENRE_COMPARISON } from './seeds/g912-ela-genre-compariso
 import { SEED_G912_ELA_SPEECH_PRESENTATION } from './seeds/g912-ela-speech-presentation';
 import { SEED_G912_ELA_VOCAB_ADVANCED } from './seeds/g912-ela-vocab-advanced';
 import { SEED_G912_ELA_COLLEGE_ESSAY } from './seeds/g912-ela-college-essay';
+// Batch 65 — K-2 ELA cluster (11 plans).
+import { SEED_K2_ELA_PHONEMIC_AWARENESS } from './seeds/k2-ela-phonemic-awareness';
+import { SEED_K2_ELA_CVC_DECODING } from './seeds/k2-ela-cvc-decoding';
+import { SEED_K2_ELA_VOWEL_TEAMS } from './seeds/k2-ela-vowel-teams';
+import { SEED_K2_ELA_SENTENCE_STRUCTURE } from './seeds/k2-ela-sentence-structure';
+import { SEED_K2_ELA_STORY_ELEMENTS } from './seeds/k2-ela-story-elements';
+import { SEED_K2_ELA_MAIN_IDEA_DETAILS } from './seeds/k2-ela-main-idea-details';
+import { SEED_K2_ELA_SEQUENCING } from './seeds/k2-ela-sequencing';
+import { SEED_K2_ELA_COMPARE_CONTRAST } from './seeds/k2-ela-compare-contrast';
+import { SEED_K2_ELA_ASKING_QUESTIONS } from './seeds/k2-ela-asking-questions';
+import { SEED_K2_ELA_NARRATIVE_WRITING } from './seeds/k2-ela-narrative-writing';
+import { SEED_K2_ELA_OPINION_WRITING } from './seeds/k2-ela-opinion-writing';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1468,6 +1480,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G912_ELA_SPEECH_PRESENTATION,
   SEED_G912_ELA_VOCAB_ADVANCED,
   SEED_G912_ELA_COLLEGE_ESSAY,
+  // Batch 65 — K-2 ELA cluster.
+  SEED_K2_ELA_PHONEMIC_AWARENESS,
+  SEED_K2_ELA_CVC_DECODING,
+  SEED_K2_ELA_VOWEL_TEAMS,
+  SEED_K2_ELA_SENTENCE_STRUCTURE,
+  SEED_K2_ELA_STORY_ELEMENTS,
+  SEED_K2_ELA_MAIN_IDEA_DETAILS,
+  SEED_K2_ELA_SEQUENCING,
+  SEED_K2_ELA_COMPARE_CONTRAST,
+  SEED_K2_ELA_ASKING_QUESTIONS,
+  SEED_K2_ELA_NARRATIVE_WRITING,
+  SEED_K2_ELA_OPINION_WRITING,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
