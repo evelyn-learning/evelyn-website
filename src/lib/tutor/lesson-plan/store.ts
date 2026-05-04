@@ -676,6 +676,19 @@ import { SEED_GRE_Q_DATA_INTERPRETATION } from './seeds/gre-q-data-interpretatio
 import { SEED_GRE_Q_STATISTICS } from './seeds/gre-q-statistics';
 import { SEED_GRE_Q_PROBABILITY_COUNTING } from './seeds/gre-q-probability-counting';
 import { SEED_GRE_Q_QUANT_COMPARISON } from './seeds/gre-q-quant-comparison';
+// Batch 60 — JEE Main Physics content (10 high-priority topics).
+import { SEED_JEE_PHYS_KINEMATICS } from './seeds/jee-phys-kinematics';
+import { SEED_JEE_PHYS_LAWS_MOTION } from './seeds/jee-phys-laws-motion';
+import { SEED_JEE_PHYS_WORK_ENERGY_POWER } from './seeds/jee-phys-work-energy-power';
+import { SEED_JEE_PHYS_GRAVITATION } from './seeds/jee-phys-gravitation';
+import { SEED_JEE_PHYS_OSCILLATIONS } from './seeds/jee-phys-oscillations';
+import { SEED_JEE_PHYS_WAVES } from './seeds/jee-phys-waves';
+import { SEED_JEE_PHYS_ELECTROSTATICS } from './seeds/jee-phys-electrostatics';
+import { SEED_JEE_PHYS_CURRENT_ELECTRICITY } from './seeds/jee-phys-current-electricity';
+import { SEED_JEE_PHYS_MAGNETIC_EFFECTS } from './seeds/jee-phys-magnetic-effects';
+import { SEED_JEE_PHYS_EM_INDUCTION } from './seeds/jee-phys-em-induction';
+import { SEED_JEE_PHYS_EM_WAVES_OPTICS } from './seeds/jee-phys-em-waves-optics';
+import { SEED_JEE_PHYS_ATOMS_NUCLEI } from './seeds/jee-phys-atoms-nuclei';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1310,6 +1323,19 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GRE_Q_STATISTICS,
   SEED_GRE_Q_PROBABILITY_COUNTING,
   SEED_GRE_Q_QUANT_COMPARISON,
+  // Batch 60 — JEE Main Physics content (12 high-priority topics).
+  SEED_JEE_PHYS_KINEMATICS,
+  SEED_JEE_PHYS_LAWS_MOTION,
+  SEED_JEE_PHYS_WORK_ENERGY_POWER,
+  SEED_JEE_PHYS_GRAVITATION,
+  SEED_JEE_PHYS_OSCILLATIONS,
+  SEED_JEE_PHYS_WAVES,
+  SEED_JEE_PHYS_ELECTROSTATICS,
+  SEED_JEE_PHYS_CURRENT_ELECTRICITY,
+  SEED_JEE_PHYS_MAGNETIC_EFFECTS,
+  SEED_JEE_PHYS_EM_INDUCTION,
+  SEED_JEE_PHYS_EM_WAVES_OPTICS,
+  SEED_JEE_PHYS_ATOMS_NUCLEI,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
