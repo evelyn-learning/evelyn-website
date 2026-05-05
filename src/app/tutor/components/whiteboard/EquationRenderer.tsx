@@ -106,6 +106,7 @@ export function EquationRenderer({
       inner.style.transform = '';
       inner.style.transformOrigin = 'left top';
       inner.style.display = 'inline-block';
+      inner.style.width = '';
       el.style.height = '';
       const containerWidth = el.clientWidth;
       // KaTeX displayMode wraps in a centering parent; measure the
@@ -121,6 +122,14 @@ export function EquationRenderer({
         // for anything that still doesn't fit.
         const scale = Math.max(0.32, containerWidth / innerWidth);
         inner.style.transform = `scale(${scale})`;
+        // Pin the inline-block to the container width so its layout
+        // box can't push the parent wider than the page. Combined
+        // with the outer overflow:hidden, this stops the long-equation
+        // overflow observed in the 2026-05-04 JEE session
+        // (label "Perpendicular condition on λ" had its leading "Pe"
+        // clipped because the pre-scale scrollWidth was wider than
+        // the whiteboard page and the parent didn't clip).
+        inner.style.width = `${containerWidth}px`;
         // KaTeX descenders (fraction denominators, brackets, subscripts)
         // can overhang scrollHeight by a few fractional pixels; combined
         // with box-sizing:border-box + py-2 padding (16px total) AND
@@ -158,14 +167,34 @@ export function EquationRenderer({
     <div
       className={`equation-container ${className}`}
       data-feature="equation"
-      style={{ position: 'relative' }}
+      // Hard horizontal containment. Long equations (especially ones
+      // with \text{} content like 'Perpendicular condition on λ' from
+      // the 2026-05-04 JEE coord-geo session) used to extend past the
+      // whiteboard page on the left AND right because:
+      //   1) inline-block + scale-transform doesn't shrink the
+      //      pre-scale layout box, so scrollWidth still reports the
+      //      pre-scale width and parents that don't clip horizontally
+      //      lay out the card wider than themselves.
+      //   2) the label, rendered above the scrollable inner, had no
+      //      width control of its own — it inherited the runaway box.
+      // overflow:hidden + min-width:0 on this container, plus
+      // max-width:100% + word-break on the label, plus the inner
+      // sized to clientWidth in fitToWidth, keeps everything bounded.
+      style={{ position: 'relative', overflow: 'hidden', minWidth: 0 }}
     >
       {label && (
-        <div className="text-sm font-medium text-gray-600 mb-2" data-feature="equation-label">{label}</div>
+        <div
+          className="text-sm font-medium text-gray-600 mb-2"
+          data-feature="equation-label"
+          style={{ maxWidth: '100%', overflowWrap: 'anywhere' }}
+        >
+          {label}
+        </div>
       )}
       <div
         ref={containerRef}
         className="equation-content overflow-x-auto py-2 fit-to-width"
+        style={{ maxWidth: '100%' }}
       />
     </div>
   );

@@ -398,6 +398,18 @@ export function VoiceTutorRealtime({
   // cards. Observed 2026-05-02 session.
   const equationLabelsThisSessionRef = useRef<Map<string, { originalLabel: string; originalLatex: string; latexNormalized: string }>>(new Map());
 
+  // Set of step indices already emitted on the CURRENT page via a
+  // showEquation labeled "Step N: …" or "Step N — …". Used to drop
+  // sentences in which the brain refers to "Step N" / "step three"
+  // when no such step has been put on the board for the active
+  // problem yet. Observed 2026-05-04 JEE coord-geo session: brain
+  // narrated "Step 3 — do you see why the line through the foot of
+  // perpendicular …" before any step-cards were emitted, pulling
+  // a generic-template formula into a problem where it didn't
+  // belong (h·x + k·y = h² + k² for foot-of-perpendicular, against
+  // a parabola midpoint locus problem). Cleared on every newPage.
+  const stepsEmittedOnCurrentPageRef = useRef<Set<number>>(new Set());
+
   // The current problem being worked (from show_problem or a top-level
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
@@ -1368,6 +1380,14 @@ export function VoiceTutorRealtime({
               originalLatex: latex,
               latexNormalized: normalized,
             });
+            // If the label looks like "Step N…" or "Step N: …",
+            // record N so any future spoken reference to step N is
+            // grounded. Generic — doesn't care about subject content.
+            const stepMatch = /^step\s+(\d+)\b/i.exec(rawLabel);
+            if (stepMatch) {
+              const n = Number(stepMatch[1]);
+              if (Number.isFinite(n)) stepsEmittedOnCurrentPageRef.current.add(n);
+            }
           }
         }
         // show_equation segment-truth drift check (fuzzy similarity)
@@ -2238,6 +2258,9 @@ export function VoiceTutorRealtime({
         currentPageTitle = (cmd as { title?: string }).title;
         newPageThisBatch = true;
         newPageThisTurnRef.current = true;
+        // Reset per-page step tracking — references to "Step N" on
+        // a fresh page must be re-grounded by new emissions.
+        stepsEmittedOnCurrentPageRef.current = new Set();
         continue;
       }
       if (META_ACTIONS.has(action)) continue;
@@ -3804,6 +3827,30 @@ export function VoiceTutorRealtime({
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
                     continue;
+                  }
+                  // Ghost-step filter. If the brain narrates "Step N"
+                  // / "step three" / "in step 2" but no equation
+                  // labeled "Step N…" has been emitted on the current
+                  // page, the sentence is referring to a step that
+                  // doesn't exist on the board — a generic-template
+                  // leak from a different problem. Drop the sentence
+                  // and continue, so the next sentence (if any) can
+                  // recover. Generic regex; no subject content.
+                  const stepRefRe = /\bstep\s+(?:(\d+)|one|two|three|four|five|six|seven|eight|nine)\b/i;
+                  const stepRefMatch = stepRefRe.exec(updatedSentence);
+                  if (stepRefMatch) {
+                    const wordToNum: Record<string, number> = {
+                      one: 1, two: 2, three: 3, four: 4, five: 5,
+                      six: 6, seven: 7, eight: 8, nine: 9,
+                    };
+                    const n = stepRefMatch[1]
+                      ? Number(stepRefMatch[1])
+                      : (wordToNum[stepRefMatch[0].split(/\s+/).pop()!.toLowerCase()] ?? NaN);
+                    if (Number.isFinite(n) && !stepsEmittedOnCurrentPageRef.current.has(n)) {
+                      console.warn(`[brain-orchestrator] dropped ghost-step sentence (Step ${n} not yet on board):`, JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('ghost_step_dropped', `Step ${n} referenced but no labeled card emitted on current page`);
+                      continue;
+                    }
                   }
                   // Round-7++++ Fix Issue 8: bridge / disclaimer
                   // phrase rotation. Sonnet defaults to the SAME hedged
