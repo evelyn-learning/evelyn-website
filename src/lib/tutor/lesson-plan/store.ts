@@ -785,6 +785,17 @@ import { SEED_G35_SS_WORLD_CULTURES } from './seeds/g35-ss-world-cultures';
 import { SEED_G35_SS_ECONOMICS_BASICS } from './seeds/g35-ss-economics-basics';
 import { SEED_G35_SS_LAT_LONG_MAPPING } from './seeds/g35-ss-lat-long-mapping';
 import { SEED_G35_SS_CLIMATE_GEOGRAPHY } from './seeds/g35-ss-climate-geography';
+// Batch 68 — Grades 6-8 SS cluster (10 plans, fills tracker gaps).
+import { SEED_G68_SS_COLONIAL_DEEPER } from './seeds/g68-ss-colonial-deeper';
+import { SEED_G68_SS_CONSTITUTION_BILL_RIGHTS } from './seeds/g68-ss-constitution-bill-rights';
+import { SEED_G68_SS_CIVIL_WAR_RECONSTRUCTION } from './seeds/g68-ss-civil-war-reconstruction';
+import { SEED_G68_SS_IMPERIALISM_WWI } from './seeds/g68-ss-imperialism-wwi';
+import { SEED_G68_SS_DEPRESSION_WWII } from './seeds/g68-ss-depression-wwii';
+import { SEED_G68_SS_CIVIL_RIGHTS_MOVEMENT } from './seeds/g68-ss-civil-rights-movement';
+import { SEED_G68_SS_COLD_WAR_OVERVIEW } from './seeds/g68-ss-cold-war-overview';
+import { SEED_G68_SS_WORLD_RELIGIONS } from './seeds/g68-ss-world-religions';
+import { SEED_G68_SS_WORLD_REGIONS_GEOGRAPHY } from './seeds/g68-ss-world-regions-geography';
+import { SEED_G68_SS_ECONOMIC_SYSTEMS } from './seeds/g68-ss-economic-systems';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1528,6 +1539,17 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G35_SS_ECONOMICS_BASICS,
   SEED_G35_SS_LAT_LONG_MAPPING,
   SEED_G35_SS_CLIMATE_GEOGRAPHY,
+  // Batch 68 — Grades 6-8 SS cluster.
+  SEED_G68_SS_COLONIAL_DEEPER,
+  SEED_G68_SS_CONSTITUTION_BILL_RIGHTS,
+  SEED_G68_SS_CIVIL_WAR_RECONSTRUCTION,
+  SEED_G68_SS_IMPERIALISM_WWI,
+  SEED_G68_SS_DEPRESSION_WWII,
+  SEED_G68_SS_CIVIL_RIGHTS_MOVEMENT,
+  SEED_G68_SS_COLD_WAR_OVERVIEW,
+  SEED_G68_SS_WORLD_RELIGIONS,
+  SEED_G68_SS_WORLD_REGIONS_GEOGRAPHY,
+  SEED_G68_SS_ECONOMIC_SYSTEMS,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];

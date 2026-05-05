@@ -1,0 +1,133 @@
+/**
+ * Grades 6-8 Social Studies — US Constitution & Bill of Rights (Deeper).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_G68_SS_CONSTITUTION_BILL_RIGHTS: LessonPlan = {
+  id: 'evelyn.g68.ss.constitution-bill-rights.v1',
+  title: 'Grades 6-8 SS — Constitution & Bill of Rights',
+  curriculum: 'CCSS',
+  grade: '6-8',
+  subject: 'ss',
+  topic: 'g68-ss',
+  locale: 'en',
+  los: [
+    {
+      id: 'g68.ss.constitution-bill-rights',
+      description: 'Analyse the structure of the US Constitution; identify the Bill of Rights; explain key compromises and ongoing debates.',
+      standard: 'NCSS 6-8 Power, Authority, Governance',
+    },
+  ],
+  prerequisites: ['g68.ss.colonial-deeper'],
+  followUps: ['g68.ss.civil-war-reconstruction'],
+  estimatedMinutes: 23,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'The US Constitution is a working document with deep compromises — including some painful ones.',
+      script: 'Written in 1787, the Constitution shaped the United States. The Bill of Rights protects individual freedoms. Together, they\'re the foundation of US law. But the Constitution also contained compromises with slavery. Today we drill the structure AND the tensions.',
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'concept-constitution-deep',
+      kind: 'concept',
+      goal: 'Articles + Bill of Rights + key compromises + amendments.',
+      keyIdeas: [
+        'PREAMBLE: opens "We the People..." — government draws power from citizens.',
+        'ARTICLES (7 total):',
+        'Article I: Legislative Branch (Congress).',
+        'Article II: Executive (President).',
+        'Article III: Judicial (Supreme Court).',
+        'Article IV: States\' relationships.',
+        'Article V: How to amend.',
+        'Article VI: Supremacy of federal law.',
+        'Article VII: Ratification process.',
+        'CHECKS AND BALANCES: each branch limits the others. President can veto laws; Congress can override; Supreme Court can declare laws unconstitutional.',
+        'BILL OF RIGHTS (1791): first 10 amendments protecting individual rights.',
+        '  1st: free speech, religion, press, assembly, petition.',
+        '  2nd: right to bear arms.',
+        '  3rd: no quartering of troops in homes.',
+        '  4th: protection from unreasonable search/seizure.',
+        '  5th: rights of accused (no double jeopardy, no self-incrimination).',
+        '  6th: right to fair, speedy, public trial.',
+        '  7th: jury trial in civil cases.',
+        '  8th: no cruel or unusual punishment.',
+        '  9th: rights not listed are still protected.',
+        '  10th: powers not given to federal government belong to states or people.',
+        'COMPROMISES at the Constitutional Convention:',
+        '  GREAT COMPROMISE: Senate (equal per state) + House (population-based).',
+        '  3/5 COMPROMISE: enslaved people counted as 3/5 of a person for representation. PROTECTED slavery; we now see this as a moral failing.',
+        '  COMMERCE COMPROMISE: federal trade regulation; states couldn\'t tax exports.',
+        'AMENDMENTS BEYOND 10: 17 more, including 13th (abolish slavery), 14th (citizenship), 15th (Black male vote), 19th (women vote), 26th (vote at 18).',
+      ],
+      vocabulary: [
+        { term: 'amendment', definition: 'a change or addition to the Constitution.' },
+        { term: 'ratify', definition: 'formally approve.' },
+        { term: 'compromise', definition: 'a settlement reached by each side giving up something.' },
+      ],
+      estimatedMinutes: 6,
+    },
+    {
+      id: 'worked-checks',
+      kind: 'worked_example',
+      problem: 'How do checks and balances work when Congress passes a law?',
+      steps: [
+        'Congress (Legislative) passes a bill.',
+        'Bill goes to the PRESIDENT (Executive). President can SIGN it (becomes law) or VETO it (sends back).',
+        'Congress can OVERRIDE the veto with a 2/3 vote in both houses → bill becomes law.',
+        'After becoming law, citizens or groups can challenge it in court.',
+        'SUPREME COURT (Judicial) can rule the law UNCONSTITUTIONAL → law is struck down.',
+        'Each branch can check the others. No single branch can dominate.',
+      ],
+      answer: 'Pass → veto/sign → override → court review.',
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'What does the 1st Amendment protect?',
+      expectedAnswer: 'Free speech, freedom of religion, freedom of the press, freedom to assemble peacefully, freedom to petition the government.',
+      responseFormat: 'free',
+      hints: [
+        'Five freedoms in one amendment.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'misconception-perfect-doc',
+      kind: 'misconception_check',
+      question: 'A student calls the Constitution "a perfect document". Why is this incomplete?',
+      commonErrors: [
+        {
+          answer: 'Constitution = perfect',
+          misconception: 'Treating the Constitution as flawless.',
+          correctsTo: 'The Constitution included MAJOR FLAWS — most notably the 3/5 Compromise that protected slavery, the absence of voting rights for women and most minorities, and the protection of the slave trade until 1808. The Constitution\'s amendments process was DESIGNED for ongoing improvement — abolishing slavery (13th), expanding rights (14th, 15th, 19th, etc.). The Constitution is foundational AND a living document we keep amending. Honest history holds both.',
+        },
+      ],
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'Constitution: 7 articles + 27 amendments.',
+        'Three branches with checks and balances.',
+        'Bill of Rights = first 10 amendments protecting individual freedoms.',
+        'Compromises included 3/5 Compromise (protected slavery).',
+        'Amendments expanded rights over time (13th, 14th, 15th, 19th, 26th).',
+      ],
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'extension',
+      kind: 'extension',
+      advancedQuestion: 'Why is making it HARD to amend the Constitution both a strength AND a weakness?',
+      hint: 'STRENGTH: prevents reckless changes. The Constitution remains stable; rights can\'t be removed by a passing majority. WEAKNESS: makes legitimate progress slow. The Equal Rights Amendment for women has been pending since 1972. Difficult amendment requirements means fundamental wrongs sometimes persist for generations. Designers balanced flexibility with stability — it\'s a constant tension.',
+      estimatedMinutes: 2,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
