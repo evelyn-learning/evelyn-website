@@ -1,0 +1,132 @@
+/**
+ * Grades 9-12 Social Studies — Macroeconomics Intro.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_G912_SS_MACROECONOMICS_INTRO: LessonPlan = {
+  id: 'evelyn.g912.ss.macroeconomics-intro.v1',
+  title: 'Grades 9-12 SS — Macroeconomics Intro',
+  curriculum: 'CCSS',
+  grade: '9-12',
+  subject: 'ss',
+  topic: 'g912-ss',
+  locale: 'en',
+  los: [
+    {
+      id: 'g912.ss.macroeconomics-intro',
+      description: 'Identify core macroeconomics concepts: GDP, inflation, unemployment, fiscal and monetary policy.',
+      standard: 'NCSS 9-12 Production, Distribution, Consumption',
+    },
+  ],
+  prerequisites: ['g912.ss.microeconomics-intro'],
+  followUps: [],
+  estimatedMinutes: 23,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Macroeconomics studies the WHOLE economy — how nations grow, when they stumble, and what governments do about it.',
+      script: 'Why does the news talk about GDP, inflation, unemployment, and "the Fed"? Because these big-picture forces shape every job, salary, and grocery bill. Today we drill the levers.',
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'concept-macroeconomics',
+      kind: 'concept',
+      goal: 'GDP + inflation + unemployment + business cycle + fiscal/monetary policy.',
+      keyIdeas: [
+        'GDP (Gross Domestic Product): total value of all goods and services produced in a country in a year. Measures economic size.',
+        'GDP COMPONENTS (C+I+G+NX): Consumption + Investment + Government + Net Exports.',
+        'GDP PER CAPITA: GDP / population. Better measure of standard of living.',
+        'INFLATION: general rise in prices over time. Measured by CPI (Consumer Price Index).',
+        '  TARGET inflation in US: ~2% per year. Too high → erodes savings. Too low or DEFLATION (negative) → people delay purchases, economy stalls.',
+        'UNEMPLOYMENT RATE: percentage of labour force without jobs but seeking. Healthy economy: ~4-5%.',
+        '  TYPES: frictional (between jobs), structural (skills mismatch), cyclical (recession).',
+        'BUSINESS CYCLE: economy moves through expansion → peak → recession → trough → recovery.',
+        '  RECESSION: typically 2+ quarters of GDP decline. Real recessions: 2008-09, 2020 COVID.',
+        'FISCAL POLICY (government): tax and spending decisions.',
+        '  EXPANSIONARY (in recession): tax cuts + spending → boosts demand.',
+        '  CONTRACTIONARY (overheating): tax hikes + spending cuts → cools demand.',
+        '  Set by Congress + President.',
+        'MONETARY POLICY (central bank — the Federal Reserve / "Fed"): controls money supply and interest rates.',
+        '  EXPANSIONARY: lower interest rates → cheaper borrowing → more spending/investment.',
+        '  CONTRACTIONARY: higher rates → less spending → cools inflation.',
+        '  The Fed is independent of Congress.',
+        'KEY DEBATE: how big should government and Fed roles be? Keynesian economics emphasises demand-side intervention; monetarist/supply-side approaches emphasise different levers.',
+        'KEY UNDERSTANDING: macro is INTERCONNECTED — you can\'t change one variable without affecting others.',
+      ],
+      vocabulary: [
+        { term: 'GDP', definition: 'Gross Domestic Product — total value of goods and services produced in a country in a year.' },
+        { term: 'inflation', definition: 'general rise in prices over time.' },
+        { term: 'monetary policy', definition: 'central bank decisions about money supply and interest rates.' },
+        { term: 'fiscal policy', definition: 'government decisions about taxation and spending.' },
+      ],
+      estimatedMinutes: 6,
+    },
+    {
+      id: 'worked-recession-response',
+      kind: 'worked_example',
+      problem: 'A recession hits. What might the government and the Fed do?',
+      steps: [
+        'GOVERNMENT (FISCAL POLICY) might:',
+        '  Cut taxes — putting more money in consumers\' hands.',
+        '  Increase spending — building infrastructure, sending stimulus checks.',
+        '  Both raise demand and create jobs.',
+        'FED (MONETARY POLICY) might:',
+        '  Lower interest rates — making loans cheaper for businesses and homebuyers.',
+        '  Buy bonds (quantitative easing) — putting money into the financial system.',
+        'Together: both increase economic activity.',
+        'Example: 2008-09, US used $787B stimulus + Fed near-zero rates. 2020 COVID, $5T+ stimulus + emergency Fed actions.',
+        'TRADE-OFF: stimulus can drive up debt and inflation. Policy must balance.',
+      ],
+      answer: 'Government cuts taxes/spends; Fed lowers rates. Both stimulate economy.',
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'If a country\'s INFLATION is 8% and the Fed wants to slow it, will it RAISE or LOWER interest rates?',
+      expectedAnswer: 'Raise rates. Higher rates → borrowing more expensive → less spending and investment → demand falls → inflation cools. (This was the Fed\'s strategy in 2022-23 to tame post-COVID inflation.)',
+      responseFormat: 'free',
+      hints: [
+        'High inflation = too much demand. How do you cool demand?',
+      ],
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'misconception-debt-bad',
+      kind: 'misconception_check',
+      question: 'A student says "all government debt is bad." Why is this oversimplified?',
+      commonErrors: [
+        {
+          answer: 'All debt = bad',
+          misconception: 'Treating government debt with no nuance.',
+          correctsTo: 'Government debt CAN be problematic if too high (interest payments crowd out other spending; risk of default for some countries). BUT debt is normal and useful. During recessions, government borrowing to stimulate is widely accepted (Keynesian economics). Long-term investments (roads, education) yield future returns. The key questions: WHY is the debt being incurred? Is it manageable relative to GDP? Are interest costs sustainable? "Debt = bad" is too simple. Like household debt: a mortgage for a house = different from a credit card binge.',
+        },
+      ],
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'GDP = total economic output. Per capita = standard of living.',
+        'Inflation: rising prices. Target ~2%.',
+        'Unemployment rate: ~4-5% healthy.',
+        'Business cycle: expansion → peak → recession → recovery.',
+        'Fiscal policy: government tax/spend. Monetary: Fed interest rates.',
+        'Both can stimulate or cool the economy.',
+      ],
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'extension',
+      kind: 'extension',
+      advancedQuestion: 'Why is HIGH INFLATION sometimes called a "hidden tax"?',
+      hint: 'Inflation erodes the value of cash savings. If prices rise 8%/year and you keep $1000 in a 0% savings account, that $1000 buys 8% LESS each year. People who hold cash, fixed pensions, fixed-rate debt receivables get poorer. People who hold real assets (homes, stocks, debt-financed assets) get relatively richer. Inflation thus shifts wealth from savers to borrowers — without a vote, without a law. That\'s the "hidden" tax.',
+      estimatedMinutes: 2,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

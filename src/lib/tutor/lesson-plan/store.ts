@@ -796,6 +796,13 @@ import { SEED_G68_SS_COLD_WAR_OVERVIEW } from './seeds/g68-ss-cold-war-overview'
 import { SEED_G68_SS_WORLD_RELIGIONS } from './seeds/g68-ss-world-religions';
 import { SEED_G68_SS_WORLD_REGIONS_GEOGRAPHY } from './seeds/g68-ss-world-regions-geography';
 import { SEED_G68_SS_ECONOMIC_SYSTEMS } from './seeds/g68-ss-economic-systems';
+// Batch 69 — Grades 9-12 SS cluster (6 plans, fills tracker gaps).
+import { SEED_G912_SS_PRE_COLUMBIAN } from './seeds/g912-ss-pre-columbian';
+import { SEED_G912_SS_ANTEBELLUM_SLAVERY } from './seeds/g912-ss-antebellum-slavery';
+import { SEED_G912_SS_WWII_HOME_FRONT } from './seeds/g912-ss-wwii-home-front';
+import { SEED_G912_SS_EARLY_MODERN_WORLD } from './seeds/g912-ss-early-modern-world';
+import { SEED_G912_SS_MICROECONOMICS_INTRO } from './seeds/g912-ss-microeconomics-intro';
+import { SEED_G912_SS_MACROECONOMICS_INTRO } from './seeds/g912-ss-macroeconomics-intro';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1550,6 +1557,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G68_SS_WORLD_RELIGIONS,
   SEED_G68_SS_WORLD_REGIONS_GEOGRAPHY,
   SEED_G68_SS_ECONOMIC_SYSTEMS,
+  // Batch 69 — Grades 9-12 SS cluster.
+  SEED_G912_SS_PRE_COLUMBIAN,
+  SEED_G912_SS_ANTEBELLUM_SLAVERY,
+  SEED_G912_SS_WWII_HOME_FRONT,
+  SEED_G912_SS_EARLY_MODERN_WORLD,
+  SEED_G912_SS_MICROECONOMICS_INTRO,
+  SEED_G912_SS_MACROECONOMICS_INTRO,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];

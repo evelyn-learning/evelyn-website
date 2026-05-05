@@ -1,0 +1,130 @@
+/**
+ * Grades 9-12 Social Studies — Early Modern World (1500-1800).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_G912_SS_EARLY_MODERN_WORLD: LessonPlan = {
+  id: 'evelyn.g912.ss.early-modern-world.v1',
+  title: 'Grades 9-12 SS — Early Modern World (1500-1800)',
+  curriculum: 'CCSS',
+  grade: '9-12',
+  subject: 'ss',
+  topic: 'g912-ss',
+  locale: 'en',
+  los: [
+    {
+      id: 'g912.ss.early-modern-world',
+      description: 'Identify major trends in the early modern world (1500-1800): global exchange, scientific revolution, Enlightenment, age of revolutions.',
+      standard: 'NCSS 9-12 Time, Continuity, Change',
+    },
+  ],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 23,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'In 300 years, the world transformed: continents connected, science replaced superstition, kings fell to revolutions.',
+      script: 'In 1500, most people lived as their grandparents had. By 1800, the world had been globally connected, scientifically revolutionised, and politically reshaped by revolutions in America and France. Today we drill the major shifts.',
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'concept-early-modern',
+      kind: 'concept',
+      goal: 'Four major themes + key events + impact.',
+      keyIdeas: [
+        'GLOBAL EXCHANGE — The Columbian Exchange (1492+): plants, animals, diseases, peoples crossed between Old World and New.',
+        '  CROPS New→Old: corn, potatoes, tomatoes, tobacco. Old→New: wheat, sugar, horses, cattle.',
+        '  DISEASES devastated Indigenous Americans (~90% mortality).',
+        '  TRANSATLANTIC SLAVE TRADE: 12+ million Africans forcibly transported to Americas.',
+        'EUROPEAN COLONIAL EMPIRES: Spain, Portugal, Britain, France, Netherlands. Massive wealth flowed to Europe; conquest reshaped Americas, parts of Africa, Asia.',
+        'ASIAN POWERS: Mughal India, Ming/Qing China, Ottoman Empire, Tokugawa Japan — each strong powers, but increasingly pressured by European maritime trade.',
+        'SCIENTIFIC REVOLUTION (~1543-1700):',
+        '  Copernicus (1543): heliocentric model — Earth orbits Sun.',
+        '  Galileo: telescope confirmed; persecuted by Church.',
+        '  Newton (1687): laws of motion + gravity. Mathematical universe.',
+        '  Method: observation + experiment + math, replacing authority + tradition.',
+        'ENLIGHTENMENT (~1685-1815): philosophical movement applying reason to society.',
+        '  Locke: natural rights, government by consent.',
+        '  Voltaire: religious tolerance, free speech.',
+        '  Rousseau: social contract.',
+        '  Montesquieu: separation of powers.',
+        '  Smith (1776): "Wealth of Nations" — market economics.',
+        'AGE OF REVOLUTIONS:',
+        '  AMERICAN REVOLUTION (1775-83): independence + Constitution + Bill of Rights.',
+        '  FRENCH REVOLUTION (1789-99): overthrew monarchy; "Liberty, Equality, Fraternity"; ended in Napoleon.',
+        '  HAITIAN REVOLUTION (1791-1804): only successful slave revolt; established Haiti as independent Black republic.',
+        '  Latin American independence movements (1810s-1820s) followed.',
+        'BY 1800: world more connected, more science-driven, more politically aware than ever before. Modern world emerging.',
+      ],
+      vocabulary: [
+        { term: 'Columbian Exchange', definition: 'the global transfer of plants, animals, diseases, and peoples between Old and New Worlds after 1492.' },
+        { term: 'Enlightenment', definition: 'an 18th-century philosophical movement emphasising reason, individual rights, and challenging tradition.' },
+        { term: 'mercantilism', definition: 'an economic system where colonies provided raw materials to enrich the mother country.' },
+      ],
+      estimatedMinutes: 6,
+    },
+    {
+      id: 'worked-enlightenment',
+      kind: 'worked_example',
+      problem: 'How did Enlightenment ideas shape the American Revolution?',
+      steps: [
+        'LOCKE\'s natural rights ("life, liberty, property") echo in the Declaration of Independence ("life, liberty, the pursuit of happiness").',
+        'GOVERNMENT BY CONSENT: "Governments are instituted among Men, deriving their just powers from the consent of the governed" — directly Lockean.',
+        'MONTESQUIEU\'s separation of powers shaped the Constitution: legislative, executive, judicial branches.',
+        'THE RIGHT TO REVOLUTION when government fails its purpose — Locke\'s argument, used to justify breaking with Britain.',
+        'CONCLUSION: the American Revolution was the FIRST major application of Enlightenment political philosophy. Founders were direct readers of Locke, Montesquieu, and others.',
+      ],
+      answer: 'Locke\'s rights, Montesquieu\'s separation, government by consent — Enlightenment ideas in action.',
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'What was the COLUMBIAN EXCHANGE and how did it affect global diets?',
+      expectedAnswer: 'The transfer of plants, animals, peoples, and diseases between Old World (Europe/Africa/Asia) and New World (Americas) after 1492. Diet impact: Old World gained corn, potatoes, tomatoes, peppers, beans, cocoa, tobacco. New World received wheat, sugar, rice, cattle, horses. Foods like Italian tomato sauce or Irish potatoes (and the Irish potato famine) reflect this exchange.',
+      responseFormat: 'free',
+      hints: [
+        'Plants, animals, diseases moved between continents.',
+      ],
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'misconception-eurocentric',
+      kind: 'misconception_check',
+      question: 'A student says "the early modern world was driven entirely by Europe." Why is this misleading?',
+      commonErrors: [
+        {
+          answer: 'Europe drove everything',
+          misconception: 'Treating European actions as the only forces in early modern history.',
+          correctsTo: 'Europe was rising — but Asia (Mughal India, Ming/Qing China, Ottoman Empire) remained economically and politically central in 1700. China\'s economy was still the world\'s largest. Many Asian powers chose how much to engage with Europeans. Africa\'s political economies were complex and varied. Indigenous Americans resisted and adapted in many ways. The "European-centred" narrative reflects later 19th-century European dominance, not the actual balance of the early modern era. Honest history is multi-perspective.',
+        },
+      ],
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'Columbian Exchange after 1492 connected continents.',
+        'Slave trade displaced 12M+ Africans.',
+        'Scientific Revolution (Copernicus → Newton) replaced authority with reason + math.',
+        'Enlightenment (Locke, Voltaire, Rousseau, Montesquieu, Smith) applied reason to society.',
+        'Age of Revolutions: American (1775), French (1789), Haitian (1791), Latin American (1810s).',
+        'World by 1800 globally connected, science-driven, politically activated.',
+      ],
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'extension',
+      kind: 'extension',
+      advancedQuestion: 'Why is the HAITIAN REVOLUTION often LESS taught than the American or French — even though it was historically remarkable?',
+      hint: 'Haitian Revolution (1791-1804) was the FIRST successful slave revolt to create an independent state. It abolished slavery throughout French colonial possessions decades before US Civil War. It terrified slaveholders globally. But it was also a Black-led revolution against a European empire — and white-dominated history textbooks long minimised it. Recovering its centrality is part of decolonising history. It was as significant in its time as the others.',
+      estimatedMinutes: 2,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
