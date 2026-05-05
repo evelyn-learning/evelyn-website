@@ -773,6 +773,18 @@ import { SEED_K2_SS_MAPS_SYMBOLS } from './seeds/k2-ss-maps-symbols';
 import { SEED_K2_SS_RULES_LAWS } from './seeds/k2-ss-rules-laws';
 import { SEED_K2_SS_TIMELINE_INTRO } from './seeds/k2-ss-timeline-intro';
 import { SEED_K2_SS_HOLIDAYS_TRADITIONS } from './seeds/k2-ss-holidays-traditions';
+// Batch 67 — Grades 3-5 SS cluster (11 plans, fills tracker gaps).
+import { SEED_G35_SS_NATIVE_AMERICAN } from './seeds/g35-ss-native-american';
+import { SEED_G35_SS_AMERICAN_REVOLUTION } from './seeds/g35-ss-american-revolution';
+import { SEED_G35_SS_CONSTITUTION_INTRO } from './seeds/g35-ss-constitution-intro';
+import { SEED_G35_SS_WESTWARD_EXPANSION } from './seeds/g35-ss-westward-expansion';
+import { SEED_G35_SS_CIVIL_WAR_OVERVIEW } from './seeds/g35-ss-civil-war-overview';
+import { SEED_G35_SS_STATE_GOVERNMENTS } from './seeds/g35-ss-state-governments';
+import { SEED_G35_SS_CITIZENSHIP_RIGHTS } from './seeds/g35-ss-citizenship-rights';
+import { SEED_G35_SS_WORLD_CULTURES } from './seeds/g35-ss-world-cultures';
+import { SEED_G35_SS_ECONOMICS_BASICS } from './seeds/g35-ss-economics-basics';
+import { SEED_G35_SS_LAT_LONG_MAPPING } from './seeds/g35-ss-lat-long-mapping';
+import { SEED_G35_SS_CLIMATE_GEOGRAPHY } from './seeds/g35-ss-climate-geography';
 // Test slot — repro plans for debugging issues. Tagged
 // Mathematics → College Intro → Intro Statistics so they're easy to
 // pick from the demo without polluting real subject content. See each
@@ -1504,6 +1516,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_K2_SS_RULES_LAWS,
   SEED_K2_SS_TIMELINE_INTRO,
   SEED_K2_SS_HOLIDAYS_TRADITIONS,
+  // Batch 67 — Grades 3-5 SS cluster.
+  SEED_G35_SS_NATIVE_AMERICAN,
+  SEED_G35_SS_AMERICAN_REVOLUTION,
+  SEED_G35_SS_CONSTITUTION_INTRO,
+  SEED_G35_SS_WESTWARD_EXPANSION,
+  SEED_G35_SS_CIVIL_WAR_OVERVIEW,
+  SEED_G35_SS_STATE_GOVERNMENTS,
+  SEED_G35_SS_CITIZENSHIP_RIGHTS,
+  SEED_G35_SS_WORLD_CULTURES,
+  SEED_G35_SS_ECONOMICS_BASICS,
+  SEED_G35_SS_LAT_LONG_MAPPING,
+  SEED_G35_SS_CLIMATE_GEOGRAPHY,
   // Test slot for debug/repro plans (see import block above).
   SEED_TEST_INCOHERENCE,
 ];
