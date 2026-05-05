@@ -803,11 +803,66 @@ import { SEED_G912_SS_WWII_HOME_FRONT } from './seeds/g912-ss-wwii-home-front';
 import { SEED_G912_SS_EARLY_MODERN_WORLD } from './seeds/g912-ss-early-modern-world';
 import { SEED_G912_SS_MICROECONOMICS_INTRO } from './seeds/g912-ss-microeconomics-intro';
 import { SEED_G912_SS_MACROECONOMICS_INTRO } from './seeds/g912-ss-macroeconomics-intro';
-// Test slot — repro plans for debugging issues. Tagged
-// Mathematics → College Intro → Intro Statistics so they're easy to
-// pick from the demo without polluting real subject content. See each
-// file's header for the bug it triggers + repro steps.
-import { SEED_TEST_INCOHERENCE } from './seeds/test-incoherence';
+// Computer Science batch — taxonomy coverage for MS / HS / IB / College.
+import { SEED_G68_CS_INTRO_CODING } from './seeds/g68-cs-intro-coding';
+import { SEED_G68_CS_SCRATCH_BLOCK } from './seeds/g68-cs-scratch-block';
+import { SEED_G68_CS_WEB_BASICS } from './seeds/g68-cs-web-basics';
+import { SEED_G68_CS_DIGITAL_LITERACY } from './seeds/g68-cs-digital-literacy';
+import { SEED_G910_CS_INTRO_PYTHON } from './seeds/g910-cs-intro-python';
+import { SEED_G910_CS_WEB_DEVELOPMENT } from './seeds/g910-cs-web-development';
+import { SEED_G910_CS_DATA_DATABASES } from './seeds/g910-cs-data-databases';
+import { SEED_G910_CS_CYBERSECURITY } from './seeds/g910-cs-cybersecurity';
+import { SEED_G1112_CS_DATA_STRUCTURES } from './seeds/g1112-cs-data-structures';
+import { SEED_G1112_CS_OOP } from './seeds/g1112-cs-oop';
+import { SEED_G1112_CS_MOBILE_DEVELOPMENT } from './seeds/g1112-cs-mobile-development';
+import { SEED_IB_CS_SYSTEMS_FUNDAMENTALS } from './seeds/ib-cs-systems-fundamentals';
+import { SEED_COLLEGE_CS101 } from './seeds/college-cs101';
+import { SEED_COLLEGE_CS_DATA_STRUCTURES } from './seeds/college-cs-data-structures';
+import { SEED_COLLEGE_CS_ALGORITHMS } from './seeds/college-cs-algorithms';
+import { SEED_COLLEGE_CS_DISCRETE_MATH } from './seeds/college-cs-discrete-math';
+import { SEED_COLLEGE_CS_INTRO_AI } from './seeds/college-cs-intro-ai';
+// Science HS 9-10 + College batch.
+import { SEED_G910_SCI_BIOLOGY_OVERVIEW } from './seeds/g910-sci-biology-overview';
+import { SEED_G910_SCI_CHEMISTRY_OVERVIEW } from './seeds/g910-sci-chemistry-overview';
+import { SEED_G910_SCI_EARTH_SCIENCE } from './seeds/g910-sci-earth-science';
+import { SEED_G910_SCI_PHYSICAL_SCIENCE } from './seeds/g910-sci-physical-science';
+import { SEED_G910_SCI_ANATOMY_PHYSIOLOGY } from './seeds/g910-sci-anatomy-physiology';
+import { SEED_COLLEGE_SCI_GENERAL_CHEMISTRY } from './seeds/college-sci-general-chemistry';
+import { SEED_COLLEGE_SCI_GENERAL_PHYSICS } from './seeds/college-sci-general-physics';
+import { SEED_COLLEGE_SCI_ORGANIC_CHEMISTRY } from './seeds/college-sci-organic-chemistry';
+import { SEED_COLLEGE_SCI_INTRO_BIOLOGY } from './seeds/college-sci-intro-biology';
+import { SEED_COLLEGE_SCI_BIOCHEMISTRY } from './seeds/college-sci-biochemistry';
+// Social Studies HS 11-12 + College batch.
+import { SEED_G1112_SS_US_HISTORY_ADVANCED } from './seeds/g1112-ss-us-history-advanced';
+import { SEED_G1112_SS_EUROPEAN_HISTORY } from './seeds/g1112-ss-european-history';
+import { SEED_G1112_SS_PSYCHOLOGY } from './seeds/g1112-ss-psychology';
+import { SEED_G1112_SS_SOCIOLOGY } from './seeds/g1112-ss-sociology';
+import { SEED_G1112_SS_PHILOSOPHY } from './seeds/g1112-ss-philosophy';
+import { SEED_COLLEGE_SS_WESTERN_CIVILIZATION } from './seeds/college-ss-western-civilization';
+import { SEED_COLLEGE_SS_AMERICAN_GOVERNMENT } from './seeds/college-ss-american-government';
+import { SEED_COLLEGE_SS_INTRO_PSYCHOLOGY } from './seeds/college-ss-intro-psychology';
+import { SEED_COLLEGE_SS_INTRO_ECONOMICS } from './seeds/college-ss-intro-economics';
+import { SEED_COLLEGE_SS_INTRO_SOCIOLOGY } from './seeds/college-ss-intro-sociology';
+// World Languages batch.
+import { SEED_G35_LANG_SPANISH_BEGINNER } from './seeds/g35-lang-spanish-beginner';
+import { SEED_G35_LANG_FRENCH_BEGINNER } from './seeds/g35-lang-french-beginner';
+import { SEED_G35_LANG_MANDARIN_BEGINNER } from './seeds/g35-lang-mandarin-beginner';
+import { SEED_G68_LANG_SPANISH_1 } from './seeds/g68-lang-spanish-1';
+import { SEED_G68_LANG_SPANISH_2 } from './seeds/g68-lang-spanish-2';
+import { SEED_G68_LANG_FRENCH_1 } from './seeds/g68-lang-french-1';
+import { SEED_G68_LANG_FRENCH_2 } from './seeds/g68-lang-french-2';
+import { SEED_G68_LANG_MANDARIN_1 } from './seeds/g68-lang-mandarin-1';
+import { SEED_G910_LANG_SPANISH_1_3 } from './seeds/g910-lang-spanish-1-3';
+import { SEED_G910_LANG_FRENCH_1_3 } from './seeds/g910-lang-french-1-3';
+import { SEED_G910_LANG_MANDARIN_1_2 } from './seeds/g910-lang-mandarin-1-2';
+import { SEED_G910_LANG_GERMAN_1_2 } from './seeds/g910-lang-german-1-2';
+import { SEED_G910_LANG_JAPANESE_1_2 } from './seeds/g910-lang-japanese-1-2';
+import { SEED_G1112_LANG_SPANISH_4_PLUS } from './seeds/g1112-lang-spanish-4-plus';
+import { SEED_G1112_LANG_FRENCH_4_PLUS } from './seeds/g1112-lang-french-4-plus';
+import { SEED_G1112_LANG_MANDARIN_3_PLUS } from './seeds/g1112-lang-mandarin-3-plus';
+import { SEED_AP_SPANISH_LITERATURE } from './seeds/ap-spanish-literature';
+import { SEED_IB_SPANISH_LANGUAGE } from './seeds/ib-spanish-language';
+import { SEED_IB_FRENCH_LANGUAGE } from './seeds/ib-french-language';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -1564,8 +1619,66 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G912_SS_EARLY_MODERN_WORLD,
   SEED_G912_SS_MICROECONOMICS_INTRO,
   SEED_G912_SS_MACROECONOMICS_INTRO,
-  // Test slot for debug/repro plans (see import block above).
-  SEED_TEST_INCOHERENCE,
+  // Computer Science batch.
+  SEED_G68_CS_INTRO_CODING,
+  SEED_G68_CS_SCRATCH_BLOCK,
+  SEED_G68_CS_WEB_BASICS,
+  SEED_G68_CS_DIGITAL_LITERACY,
+  SEED_G910_CS_INTRO_PYTHON,
+  SEED_G910_CS_WEB_DEVELOPMENT,
+  SEED_G910_CS_DATA_DATABASES,
+  SEED_G910_CS_CYBERSECURITY,
+  SEED_G1112_CS_DATA_STRUCTURES,
+  SEED_G1112_CS_OOP,
+  SEED_G1112_CS_MOBILE_DEVELOPMENT,
+  SEED_IB_CS_SYSTEMS_FUNDAMENTALS,
+  SEED_COLLEGE_CS101,
+  SEED_COLLEGE_CS_DATA_STRUCTURES,
+  SEED_COLLEGE_CS_ALGORITHMS,
+  SEED_COLLEGE_CS_DISCRETE_MATH,
+  SEED_COLLEGE_CS_INTRO_AI,
+  // Science HS 9-10 + College batch.
+  SEED_G910_SCI_BIOLOGY_OVERVIEW,
+  SEED_G910_SCI_CHEMISTRY_OVERVIEW,
+  SEED_G910_SCI_EARTH_SCIENCE,
+  SEED_G910_SCI_PHYSICAL_SCIENCE,
+  SEED_G910_SCI_ANATOMY_PHYSIOLOGY,
+  SEED_COLLEGE_SCI_GENERAL_CHEMISTRY,
+  SEED_COLLEGE_SCI_GENERAL_PHYSICS,
+  SEED_COLLEGE_SCI_ORGANIC_CHEMISTRY,
+  SEED_COLLEGE_SCI_INTRO_BIOLOGY,
+  SEED_COLLEGE_SCI_BIOCHEMISTRY,
+  // Social Studies HS 11-12 + College batch.
+  SEED_G1112_SS_US_HISTORY_ADVANCED,
+  SEED_G1112_SS_EUROPEAN_HISTORY,
+  SEED_G1112_SS_PSYCHOLOGY,
+  SEED_G1112_SS_SOCIOLOGY,
+  SEED_G1112_SS_PHILOSOPHY,
+  SEED_COLLEGE_SS_WESTERN_CIVILIZATION,
+  SEED_COLLEGE_SS_AMERICAN_GOVERNMENT,
+  SEED_COLLEGE_SS_INTRO_PSYCHOLOGY,
+  SEED_COLLEGE_SS_INTRO_ECONOMICS,
+  SEED_COLLEGE_SS_INTRO_SOCIOLOGY,
+  // World Languages batch.
+  SEED_G35_LANG_SPANISH_BEGINNER,
+  SEED_G35_LANG_FRENCH_BEGINNER,
+  SEED_G35_LANG_MANDARIN_BEGINNER,
+  SEED_G68_LANG_SPANISH_1,
+  SEED_G68_LANG_SPANISH_2,
+  SEED_G68_LANG_FRENCH_1,
+  SEED_G68_LANG_FRENCH_2,
+  SEED_G68_LANG_MANDARIN_1,
+  SEED_G910_LANG_SPANISH_1_3,
+  SEED_G910_LANG_FRENCH_1_3,
+  SEED_G910_LANG_MANDARIN_1_2,
+  SEED_G910_LANG_GERMAN_1_2,
+  SEED_G910_LANG_JAPANESE_1_2,
+  SEED_G1112_LANG_SPANISH_4_PLUS,
+  SEED_G1112_LANG_FRENCH_4_PLUS,
+  SEED_G1112_LANG_MANDARIN_3_PLUS,
+  SEED_AP_SPANISH_LITERATURE,
+  SEED_IB_SPANISH_LANGUAGE,
+  SEED_IB_FRENCH_LANGUAGE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
@@ -1653,7 +1766,8 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'algebra-2': ['algebra-2', 'polynomials', 'rational-functions', 'exponential-functions', 'logarithms'],
   'pre-algebra': ['pre-algebra', 'integers', 'number-system', 'number-theory'],
   'fractions-decimals': ['fractions', 'decimals', 'percent', 'percents', 'percentages'],
-  'multiplication-division': ['multiplication', 'division'],
+  'multiplication-division': ['multiplication', 'division', 'operations'],
+  'addition-subtraction': ['addition', 'subtraction', 'operations'],
   'counting': ['counting', 'numbers', 'number-system', 'place-value'],
   'place-value': ['place-value', 'numbers', 'number-system'],
   'geometry-basics': ['angles', 'circles', 'measurement', 'volume'],
@@ -1695,6 +1809,11 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'environmental-science': ['environmental-science'],
   'matter-materials': ['matter', 'chemistry'],
   'physical-science': ['physical-science', 'physics', 'chemistry'],
+  'astronomy': ['astronomy', 'space', 'earth-and-space'],
+  'biology-advanced': ['biology', 'genetics', 'evolution', 'ecology'],
+  'chemistry-advanced': ['chemistry'],
+  'human-body': ['human-body', 'biology'],
+  'anatomy-physiology': ['anatomy', 'human-body', 'biology'],
   // ── ELA — gradeband bucket tags surface across the relevant taxonomy topics ──
   'phonics-reading': ['phonics', 'reading', 'reading-foundations', 'k2-ela'],
   'sight-words': ['k2-ela', 'phonics', 'reading-foundations'],
@@ -1764,6 +1883,10 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'act-reading': ['act'],
   'act-english': ['act'],
   'act-science': ['act'],
+  'act-math-full': ['act'],
+  'act-reading-full': ['act'],
+  'act-english-full': ['act'],
+  'act-science-full': ['act'],
   'gre-quant': ['gre-quant'],
   'gre-verbal': ['gre-verbal'],
   'gmat-quant': ['gmat-quant'],
@@ -1776,9 +1899,40 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'ap-music-theory': ['music-theory'],
   'ap-art-history': ['art-history'],
   // Computer science
-  'ap-cs-a': ['computer-science'],
-  'ap-cs-principles': ['computer-science'],
+  'ap-cs-a': ['computer-science', 'ap-cs-a'],
+  'ap-cs-principles': ['computer-science', 'ap-cs-principles'],
+  // ── Civics / government cross-references ──
+  'civics-government': ['civics', 'government'],
 };
+
+/** Math/ELA/Science-side topic ids that actually belong to the test-prep
+ *  plan universe. Plans for these topics are tagged subject='test-prep',
+ *  so the picker query (with subject='math' / 'ela' / 'science') needs
+ *  to cross-cut into test-prep when the topic is one of these. */
+const TEST_PREP_TOPIC_IDS = new Set<string>([
+  // Math-side
+  'sat-math-no-calc',
+  'sat-math-calc',
+  'act-math',
+  // ELA-side
+  'sat-reading',
+  'sat-writing',
+  'act-reading',
+  'act-english',
+  // Science-side
+  'act-science',
+]);
+
+function isTestPrepAliasedTopic(filterTopic: string): boolean {
+  // The math/ela/science test-prep topic aliases all expand to
+  // test-prep-tagged plan topics like 'sat-math', 'act', 'sat-reading'.
+  // Keep this list in sync with the alias map above.
+  const a = TOPIC_ALIASES[filterTopic];
+  if (!a) return false;
+  return a.some((t) => t === 'sat-math' || t === 'act' || t === 'sat-math-full' ||
+                       t === 'sat-reading' || t === 'sat-writing' ||
+                       t === 'sat-reading-full' || t === 'sat-writing-full');
+}
 
 /** Returns true if the plan's topic matches the filter topic — directly
  *  or via the alias map. If filter.topic is empty, returns true. */
@@ -1816,7 +1970,16 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
         p.topic === 'test-prep' ||
         (!!filter.topic && topicMatches(filter.topic, p.topic));
     } else {
-      subjectOk = subjectMatches(filter.subject, p.subject);
+      // Picker filters like Math › SAT/ACT › ACT Math, or ELA › SAT/ACT
+      // › SAT Reading, ask for a non-test-prep subject but a topic that
+      // belongs to the test-prep universe. The plans for those topics
+      // are tagged subject='test-prep'. Without this extension, those
+      // cells stay empty even when matching plans exist.
+      const isTestPrepTopic =
+        !!filter.topic && (TEST_PREP_TOPIC_IDS.has(filter.topic) || isTestPrepAliasedTopic(filter.topic));
+      subjectOk =
+        subjectMatches(filter.subject, p.subject) ||
+        (isTestPrepTopic && p.subject === 'test-prep' && topicMatches(filter.topic, p.topic));
     }
     return (
       subjectOk &&
@@ -1845,10 +2008,18 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
         ];
         if (filter.topic) or.push({ topic: filter.topic });
         query.$or = or;
-      } else if (aliases.length === 1) {
-        query.subject = aliases[0];
       } else {
-        query.subject = { $in: aliases };
+        // Cross-cut: if topic belongs to test-prep universe, also
+        // include plans tagged subject='test-prep' for that topic.
+        const isTestPrepTopic =
+          !!filter.topic && (TEST_PREP_TOPIC_IDS.has(filter.topic) || isTestPrepAliasedTopic(filter.topic));
+        if (isTestPrepTopic) {
+          query.subject = { $in: Array.from(new Set([...aliases, 'test-prep'])) };
+        } else if (aliases.length === 1) {
+          query.subject = aliases[0];
+        } else {
+          query.subject = { $in: aliases };
+        }
       }
     }
     if (filter.grade) {

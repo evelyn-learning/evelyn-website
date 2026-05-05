@@ -1,0 +1,85 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_G68_LANG_MANDARIN_1: LessonPlan = {
+  id: 'evelyn.lang.6-8.mandarin-1.v1',
+  title: 'Mandarin I — characters basics & word order',
+  curriculum: 'CCSS',
+  grade: '7',
+  subject: 'languages',
+  topic: 'mandarin-1',
+  locale: 'en',
+  los: [
+    { id: 'lang68.mn1.characters', description: 'Recognize basic Chinese characters and form simple SVO sentences.', standard: 'ACTFL-Novice-Mid' },
+  ],
+  prerequisites: ['lang35.mandarin.beginner'],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame characters as combinations of meaningful parts.',
+      script: 'Chinese characters look intimidating until you learn that most are built from RADICALS — meaningful parts. The character 妈 (mā, mom) = 女 (woman) + 马 (horse, for sound). Knowing radicals turns memorization into pattern recognition.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-mandarin1',
+      kind: 'concept',
+      goal: 'Radicals, sentence order, basic vocabulary.',
+      keyIdeas: [
+        'RADICALS: structural pieces of characters. ~200 common ones. 木 = tree, 水 = water, 心 = heart, 口 = mouth.',
+        'CHARACTER STRUCTURE: many characters are RADICAL + PHONETIC. The radical hints at meaning; the phonetic hints at pronunciation.',
+        'WORD ORDER: subject + verb + object (like English). 我吃苹果 (wǒ chī píngguǒ) = I eat apples.',
+        'PRONOUNS: 我 wǒ (I), 你 nǐ (you), 他/她 tā (he/she), 我们 wǒmen (we), 你们 nǐmen (you-all), 他们 tāmen (they).',
+        'YES/NO QUESTIONS: add 吗 ma at end. 你好 (you good) → 你好吗 (are you well?).',
+        'NEGATION: 不 bù before most verbs (changes to bú before 4th tone). 我不吃 = I don\'t eat.',
+        'MEASURE WORDS: numbers can\'t directly attach to nouns. Need a measure word. 一本书 (yī BĚN shū) = one [volume] book. General measure word 个 ge works for many things.',
+      ],
+      vocabulary: [
+        { term: '我 wǒ', definition: 'I.' },
+        { term: '吃 chī', definition: 'to eat.' },
+        { term: '是 shì', definition: 'to be (used for identity).' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-build',
+      kind: 'worked_example',
+      problem: 'Translate: "I am a student." (student = 学生 xuésheng)',
+      steps: [
+        'I = 我 wǒ',
+        'am = 是 shì',
+        'a student = 学生 xuésheng. No "a" article needed.',
+        'Sentence: 我是学生. wǒ shì xuésheng.',
+        'Word for word: I be student.',
+      ],
+      answer: '我是学生 / wǒ shì xuésheng',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'How would you turn "你好" (you good) into a yes/no question?',
+      expectedAnswer: '你好吗 (nǐ hǎo ma) — add 吗 to make it a question',
+      responseFormat: 'free',
+      hints: [
+        'There\'s a one-syllable particle that converts statements to yes/no questions.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'Radicals = meaningful parts of characters.',
+        'Word order: subject-verb-object.',
+        '吗 ma turns statement → yes/no question.',
+        '不 bù negates most verbs.',
+        'Measure words required between number and noun.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

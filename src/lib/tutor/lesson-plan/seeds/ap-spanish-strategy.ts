@@ -11,7 +11,7 @@ export const SEED_AP_SPANISH_STRATEGY: LessonPlan = {
   title: 'AP Spanish Language exam strategy',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
+  subject: 'languages',
   topic: 'ap-spanish-lang',
   locale: 'en',
   los: [

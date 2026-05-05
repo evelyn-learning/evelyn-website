@@ -11,8 +11,8 @@ export const SEED_AP_CSA_ARRAYS_LOOPS: LessonPlan = {
   title: 'Arrays and loops in Java',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'computer-science',
+  subject: 'cs',
+  topic: 'ap-cs-a',
   locale: 'en',
   los: [
     {

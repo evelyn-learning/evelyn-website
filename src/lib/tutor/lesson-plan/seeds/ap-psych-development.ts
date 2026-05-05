@@ -12,8 +12,8 @@ export const SEED_AP_PSYCH_DEVELOPMENT: LessonPlan = {
   title: 'Developmental psychology: Piaget, Erikson, attachment',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'psychology',
+  subject: 'social-studies',
+  topic: 'ap-psychology',
   locale: 'en',
   los: [
     {

@@ -11,8 +11,8 @@ export const SEED_AP_PSYCH_COGNITION: LessonPlan = {
   title: 'Cognition: thinking, problem-solving, language',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'psychology',
+  subject: 'social-studies',
+  topic: 'ap-psychology',
   locale: 'en',
   los: [
     {

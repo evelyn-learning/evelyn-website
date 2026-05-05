@@ -1,0 +1,86 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_G68_LANG_FRENCH_2: LessonPlan = {
+  id: 'evelyn.lang.6-8.french-2.v1',
+  title: 'French II — present tense regular -er verbs',
+  curriculum: 'CCSS',
+  grade: '8',
+  subject: 'languages',
+  topic: 'french-2',
+  locale: 'en',
+  los: [
+    { id: 'lang68.fr2.present-er', description: 'Conjugate regular -er verbs in present tense.', standard: 'ACTFL-Novice-High' },
+  ],
+  prerequisites: ['lang68.fr1.articles'],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame -er conjugation as a pattern that handles 80% of French verbs.',
+      script: 'Most French verbs end in -er, and the present tense pattern is identical for all of them. Learn the six endings ONCE and you can conjugate hundreds of verbs. The reward for memorizing this single pattern is huge.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-er',
+      kind: 'concept',
+      goal: 'Subject pronouns + -er endings + spelling-pronunciation gap.',
+      keyIdeas: [
+        'PRONOUNS: je (I), tu (you sg), il/elle (he/she), nous (we), vous (you pl/formal), ils/elles (they m/f).',
+        'REGULAR -ER ENDINGS: drop -er, add -e, -es, -e, -ons, -ez, -ent.',
+        'PARLER (to speak): je parle, tu parles, il parle, nous parlons, vous parlez, ils parlent.',
+        'PRONUNCIATION TRAP: parle, parles, parlent all sound IDENTICAL — final s/nt are silent. Only nous (parlons) and vous (parlez) sound clearly different.',
+        'COMMON -ER VERBS: parler (speak), aimer (like/love), regarder (watch), écouter (listen), travailler (work), manger (eat), habiter (live).',
+        'NEGATION: ne ___ pas around the verb. "Je NE parle PAS allemand" = I don\'t speak German.',
+      ],
+      vocabulary: [
+        { term: 'parler', definition: 'to speak.' },
+        { term: 'aimer', definition: 'to like / love.' },
+        { term: 'regarder', definition: 'to watch / look at.' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-conjugate',
+      kind: 'worked_example',
+      problem: 'Conjugate aimer (to like) for all six persons.',
+      steps: [
+        'aimer → aim- + endings',
+        'j\'aime (je elides before vowel)',
+        'tu aimes',
+        'il/elle aime',
+        'nous aimons',
+        'vous aimez',
+        'ils/elles aiment',
+      ],
+      answer: 'j\'aime, tu aimes, il aime, nous aimons, vous aimez, ils aiment',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'Translate: "She doesn\'t watch TV." (regarder = to watch, la télé = TV)',
+      expectedAnswer: 'Elle ne regarde pas la télé.',
+      responseFormat: 'free',
+      hints: [
+        'Negation = ne ___ pas around verb.',
+        'Conjugate regarder for elle.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        '-ER endings: -e, -es, -e, -ons, -ez, -ent.',
+        '-e, -es, -ent sound the same — silent endings.',
+        'Negation: ne ___ pas.',
+        'je elides to j\' before vowels.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

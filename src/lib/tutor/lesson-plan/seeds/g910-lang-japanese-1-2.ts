@@ -1,0 +1,86 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_G910_LANG_JAPANESE_1_2: LessonPlan = {
+  id: 'evelyn.lang.9-10.japanese-1-2.v1',
+  title: 'Japanese I-II — hiragana, particles, SOV',
+  curriculum: 'CCSS',
+  grade: '10',
+  subject: 'languages',
+  topic: 'japanese-1-2',
+  locale: 'en',
+  los: [
+    { id: 'lang910.jp.particles', description: 'Recognize hiragana, use particles は wa, を o, に ni, で de, and apply SOV word order.', standard: 'ACTFL-Intermediate-Low' },
+  ],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame Japanese as PARTICLE-DRIVEN with verb at the end.',
+      script: 'Japanese has three writing systems and word order that puts the verb LAST. The trick to making it click: tiny PARTICLES after each word tell you its role. Subject? は wa. Direct object? を o. Place? で de. Once you know the particles, sentences make sense even when verbs are at the end.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-japanese-basics',
+      kind: 'concept',
+      goal: 'Hiragana + particles + word order.',
+      keyIdeas: [
+        'WRITING: hiragana (phonetic, native), katakana (phonetic, foreign words), kanji (Chinese characters, content words). Start with hiragana — 46 symbols.',
+        'WORD ORDER: subject + object + verb (SOV). "I sushi eat" (私はすしを食べます).',
+        'PARTICLE は wa: marks topic (often subject). 私は = "as for me". WRITTEN as ha but pronounced wa when used as particle.',
+        'PARTICLE を o: marks direct object. すしを食べる (eat sushi).',
+        'PARTICLE に ni: destination, time, indirect object. 学校に行く (go TO school). 三時に (at three o\'clock).',
+        'PARTICLE で de: location of action. 学校で勉強する (study AT school).',
+        'POLITE FORM: verb stem + ます (masu). 食べます (taberu → tabemasu). Negative: ません. Past: ました.',
+        'No grammatical gender. No singular/plural in most cases. Context fills in.',
+      ],
+      vocabulary: [
+        { term: 'は (wa)', definition: 'topic particle (often subject).' },
+        { term: 'を (o)', definition: 'direct-object particle.' },
+        { term: 'で (de)', definition: 'location-of-action particle.' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-build',
+      kind: 'worked_example',
+      problem: 'Translate: "I eat sushi at school." (school = 学校 gakkou, eat = 食べる taberu, sushi = すし sushi)',
+      steps: [
+        'Subject "I" = 私 watashi + は wa.',
+        'Location "at school" = 学校 + で de (action location).',
+        'Object "sushi" = すし + を o.',
+        'Verb "eat" (polite) = 食べます tabemasu.',
+        'SOV order: 私は学校ですしを食べます。',
+      ],
+      answer: '私は学校ですしを食べます。/ Watashi wa gakkou de sushi o tabemasu.',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'Which particle: "I go ___ school"? (に or で)',
+      expectedAnswer: 'に ni — destination of motion (go to)',
+      responseFormat: 'free',
+      hints: [
+        'で marks WHERE an action happens.',
+        'に marks destination / direction.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'Word order: SOV (verb last).',
+        'Particles do the work: は wa, を o, に ni, で de.',
+        'Polite -ます ending for verbs.',
+        'Start with hiragana (46 symbols); kanji adds content.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

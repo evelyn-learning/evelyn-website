@@ -12,8 +12,8 @@ export const SEED_AP_CSP_ALGORITHMS_ABSTRACTION: LessonPlan = {
   title: 'Algorithms and abstraction',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'computer-science',
+  subject: 'cs',
+  topic: 'ap-cs-principles',
   locale: 'en',
   los: [
     {

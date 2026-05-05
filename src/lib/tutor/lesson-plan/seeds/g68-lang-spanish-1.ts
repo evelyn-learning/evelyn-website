@@ -1,0 +1,85 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_G68_LANG_SPANISH_1: LessonPlan = {
+  id: 'evelyn.lang.6-8.spanish-1.v1',
+  title: 'Spanish I — present tense, regular -ar verbs',
+  curriculum: 'CCSS',
+  grade: '7',
+  subject: 'languages',
+  topic: 'spanish-1',
+  locale: 'en',
+  los: [
+    { id: 'lang68.sp1.regular-ar', description: 'Conjugate regular -ar verbs in present tense and form simple sentences.', standard: 'ACTFL-Novice-Mid' },
+  ],
+  prerequisites: ['lang35.spanish.beginner'],
+  followUps: ['lang68.sp2'],
+  estimatedMinutes: 14,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame conjugation as endings that match the subject.',
+      script: 'In English you say "I walk, you walk, she walks" — only "she" changes. Spanish changes the ending for EVERY person. Sounds annoying but it has a payoff: the ending tells you the subject, so you often skip the pronoun. "Hablo" already means "I speak" — no "yo" needed.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-ar-conjugation',
+      kind: 'concept',
+      goal: 'Subject pronouns + regular -ar conjugation.',
+      keyIdeas: [
+        'SUBJECT PRONOUNS: yo (I), tú (you informal), él/ella/usted (he/she/you formal), nosotros (we), vosotros (you-all, Spain), ellos/ellas/ustedes (they / you-all).',
+        'REGULAR -AR VERBS: drop -ar, add: -o, -as, -a, -amos, -áis, -an.',
+        'EXAMPLE hablar (to speak): hablo, hablas, habla, hablamos, habláis, hablan.',
+        'PRONOUN OPTIONAL: Hablo español = I speak Spanish (yo implied).',
+        'COMMON -AR VERBS: hablar (speak), trabajar (work), estudiar (study), caminar (walk), comprar (buy), tomar (take/drink).',
+        'NEGATION: put "no" before the verb. "No hablo francés" = I don\'t speak French.',
+      ],
+      vocabulary: [
+        { term: 'hablar', definition: 'to speak.' },
+        { term: 'estudiar', definition: 'to study.' },
+        { term: 'trabajar', definition: 'to work.' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-conjugate',
+      kind: 'worked_example',
+      problem: 'Conjugate "estudiar" (to study) for all six persons.',
+      steps: [
+        'estudiar → drop -ar → estudi-',
+        'yo estudio',
+        'tú estudias',
+        'él/ella/usted estudia',
+        'nosotros estudiamos',
+        'vosotros estudiáis',
+        'ellos/ellas/ustedes estudian',
+      ],
+      answer: 'estudio, estudias, estudia, estudiamos, estudiáis, estudian',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'Translate: "We work in the library." (work = trabajar)',
+      expectedAnswer: 'Trabajamos en la biblioteca.',
+      responseFormat: 'free',
+      hints: [
+        'Conjugation for "we" with -ar verbs ends in -amos.',
+        'Pronoun nosotros optional.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        '-AR endings: -o, -as, -a, -amos, -áis, -an.',
+        'Pronoun optional — ending tells you the subject.',
+        'Negation: no before verb.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

@@ -1,0 +1,85 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_G910_LANG_GERMAN_1_2: LessonPlan = {
+  id: 'evelyn.lang.9-10.german-1-2.v1',
+  title: 'German I-II — articles and four cases',
+  curriculum: 'CCSS',
+  grade: '10',
+  subject: 'languages',
+  topic: 'german-1-2',
+  locale: 'en',
+  los: [
+    { id: 'lang910.de.cases', description: 'Use nominative, accusative, dative, and genitive cases with the right article forms.', standard: 'ACTFL-Intermediate-Low' },
+  ],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame German cases as the role-of-the-noun system.',
+      script: 'German has four CASES that mark a noun\'s role in a sentence: subject, direct object, indirect object, possessor. The article (der/die/das, etc.) changes form based on the case. It feels like a lot of memorization, but the upside is huge: word order is more flexible because case (not position) tells you who did what.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-cases',
+      kind: 'concept',
+      goal: 'Four cases + definite article forms.',
+      keyIdeas: [
+        'NOMINATIVE (subject): der, die, das, die. "Der Mann lacht" (the man laughs).',
+        'ACCUSATIVE (direct object): den, die, das, die. Only masculine changes. "Ich sehe DEN Mann" (I see THE man).',
+        'DATIVE (indirect object / after certain prepositions): dem, der, dem, den (+n on plural noun). "Ich gebe DEM Mann das Buch" (I give the man the book).',
+        'GENITIVE (possession; formal): des, der, des, der. "Das Auto DES Mannes" (the man\'s car).',
+        'Common ACCUSATIVE prepositions: durch, für, gegen, ohne, um.',
+        'Common DATIVE prepositions: aus, bei, mit, nach, seit, von, zu.',
+        'TWO-WAY prepositions (acc when motion, dat when location): in, an, auf, hinter, neben, über, unter, vor, zwischen.',
+        'GENDER: every noun has gender (m/f/n). Memorize WITH article: der Tisch (table, m), die Lampe (lamp, f), das Buch (book, n).',
+      ],
+      vocabulary: [
+        { term: 'nominative', definition: 'case for the subject of the sentence.' },
+        { term: 'accusative', definition: 'case for the direct object of a transitive verb.' },
+        { term: 'dative', definition: 'case for the indirect object and after certain prepositions.' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-decline',
+      kind: 'worked_example',
+      problem: 'Translate: "The teacher gives the student the book." (teacher = der Lehrer, student = der Schüler, book = das Buch)',
+      steps: [
+        'Teacher = subject = NOMINATIVE: der Lehrer.',
+        'Student = indirect object (recipient) = DATIVE: dem Schüler.',
+        'Book = direct object = ACCUSATIVE: das Buch (das doesn\'t change in acc for neuter).',
+        'Result: "Der Lehrer gibt dem Schüler das Buch."',
+      ],
+      answer: 'Der Lehrer gibt dem Schüler das Buch.',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'Pick the article: "Ich kaufe ___ Tisch." (Tisch = der, table; you are buying it.)',
+      expectedAnswer: 'den — kaufen takes accusative; masculine acc is "den"',
+      responseFormat: 'free',
+      hints: [
+        'Direct object → accusative.',
+        'Masculine acc article changes from der to den.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'Four cases: nominative, accusative, dative, genitive.',
+        'Articles change with case (especially masculine).',
+        'Memorize nouns WITH gender + article.',
+        'Many prepositions force a specific case; some choose by motion vs location.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

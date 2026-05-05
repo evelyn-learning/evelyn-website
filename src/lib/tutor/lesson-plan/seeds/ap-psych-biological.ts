@@ -11,8 +11,8 @@ export const SEED_AP_PSYCH_BIOLOGICAL: LessonPlan = {
   title: 'Biological bases of behavior: neurons and brain regions',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'psychology',
+  subject: 'social-studies',
+  topic: 'ap-psychology',
   locale: 'en',
   los: [
     {

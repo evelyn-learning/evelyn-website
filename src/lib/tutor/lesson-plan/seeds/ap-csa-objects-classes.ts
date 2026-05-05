@@ -12,8 +12,8 @@ export const SEED_AP_CSA_OBJECTS_CLASSES: LessonPlan = {
   title: 'Objects and classes (Java)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'computer-science',
+  subject: 'cs',
+  topic: 'ap-cs-a',
   locale: 'en',
   los: [
     {

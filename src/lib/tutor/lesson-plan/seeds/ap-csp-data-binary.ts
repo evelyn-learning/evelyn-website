@@ -12,8 +12,8 @@ export const SEED_AP_CSP_DATA_BINARY: LessonPlan = {
   title: 'How computers store data: binary, text, images',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'computer-science',
+  subject: 'cs',
+  topic: 'ap-cs-principles',
   locale: 'en',
   los: [
     {

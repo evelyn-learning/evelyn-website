@@ -12,8 +12,8 @@ export const SEED_AP_PSYCH_SOCIAL: LessonPlan = {
   title: 'Social psychology: conformity, obedience, attribution',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'sci',
-  topic: 'psychology',
+  subject: 'social-studies',
+  topic: 'ap-psychology',
   locale: 'en',
   los: [
     {

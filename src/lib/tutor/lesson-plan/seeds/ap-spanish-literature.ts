@@ -1,0 +1,85 @@
+import type { LessonPlan } from '../types';
+
+export const SEED_AP_SPANISH_LITERATURE: LessonPlan = {
+  id: 'evelyn.ap.spanish-lit.v1',
+  title: 'AP Spanish Literature — close-reading a Borges story',
+  curriculum: 'CCSS',
+  grade: '12',
+  subject: 'languages',
+  topic: 'ap-spanish-lit',
+  locale: 'en',
+  los: [
+    { id: 'ap.sp.lit', description: 'Apply close-reading techniques to a short Spanish-language literary text.', standard: 'AP-SP-LIT' },
+  ],
+  prerequisites: ['lang1112.sp.subjunctive'],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Frame AP Spanish Lit as analysis, not translation.',
+      script: 'AP Spanish Lit isn\'t about reading more vocabulary. It\'s about LITERARY analysis — themes, narrators, symbolism, historical context — performed in Spanish. The exam tests your ability to discuss what a text DOES, not just what it says. Reading Borges, García Márquez, Lorca means thinking about literature, in Spanish.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-close-reading',
+      kind: 'concept',
+      goal: 'Close-reading framework + AP-relevant authors.',
+      keyIdeas: [
+        'AP READING LIST canonical authors: Cervantes, Lorca, García Márquez, Borges, Allende, Cortázar, Neruda, Sor Juana, Quiroga.',
+        'CLOSE-READING checklist: NARRATOR (who tells the story?), POINT OF VIEW (1st, 3rd, omniscient?), TIME (linear, fragmented?), STYLE (sparse, baroque?), THEMES (recurring ideas), SYMBOLS (objects loaded with meaning), HISTORICAL CONTEXT.',
+        'ESSAY structure for AP free-response: thesis + textual evidence + analysis + conclusion. Quote in Spanish; analyze in Spanish.',
+        'COMMON TECHNIQUES: realismo mágico (magical realism — Allende, García Márquez), metafiction (Borges plays with the narrator), surrealism (Lorca\'s deeper imagery).',
+        'BORGES SPECIFICS: short, philosophical, often plays with infinity, mirrors, labyrinths, libraries. Not always a clear plot — the IDEAS are the action.',
+      ],
+      vocabulary: [
+        { term: 'realismo mágico', definition: 'literary mode mixing realistic and supernatural elements as if both were natural.' },
+        { term: 'metafiction', definition: 'fiction that draws attention to its own status as fiction.' },
+        { term: 'narrador', definition: 'narrator — the voice telling the story; key analytical question is whose voice and how reliable.' },
+      ],
+      estimatedMinutes: 5,
+    },
+    {
+      id: 'worked-borges',
+      kind: 'worked_example',
+      problem: 'In Borges\'s "La biblioteca de Babel", what does the infinite library symbolize?',
+      steps: [
+        'The library contains every possible book — every random sequence of letters.',
+        'Most books are gibberish; a vanishingly small fraction contain meaning.',
+        'INTERPRETATION 1: the universe — all possible information exists; meaning is rare and precious.',
+        'INTERPRETATION 2: language itself — finite alphabet generates infinite combinations; meaning emerges from selection.',
+        'INTERPRETATION 3: the search for truth — an infinite library of possibilities makes finding the right book practically impossible; an allegory for theology, philosophy, science.',
+        'A close-reading essay would marshal SPECIFIC quotes for each interpretation, in Spanish.',
+      ],
+      answer: 'Infinite library = universe / language / search for meaning — multiple supportable readings.',
+      estimatedMinutes: 4,
+    },
+    {
+      id: 'try-1',
+      kind: 'try_yourself',
+      problem: 'In a García Márquez story, what\'s a likely first analytical question to ask about a sudden magical event (like rain that lasts four years)?',
+      expectedAnswer: 'how does the narrator and characters react? In magical realism, the matter-of-fact response is the genre signal — analyze how this affects the reader\'s sense of reality',
+      responseFormat: 'free',
+      hints: [
+        'In magical realism, the supernatural is treated as ordinary.',
+        'The reaction (or non-reaction) of characters carries thematic weight.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'AP Spanish Lit = analysis IN Spanish.',
+        'Close-reading checklist: narrator, POV, time, style, themes, symbols, context.',
+        'Realismo mágico: supernatural treated as natural.',
+        'Borges: ideas are the action.',
+        'Quote in Spanish; analyze in Spanish.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
