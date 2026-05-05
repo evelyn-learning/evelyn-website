@@ -28,6 +28,7 @@ import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
+import PlanSearchBar, { type PlanSearchResult } from './components/PlanSearchBar';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
@@ -480,6 +481,63 @@ function TutorPage() {
     setSelectedTopicId('');
     setSelectedLessonPlanId('');
     setAvailableLessonPlans([]);
+  }, []);
+
+  // Search-bar plan pick: derive subject + level band + topic from the
+  // chosen plan's metadata so the structured pickers stay in sync (they
+  // still drive the rest of the page) and the lesson is ready to start.
+  // Falls back gracefully when a band can't be inferred — the rest of
+  // the dropdowns just stay empty and the user can fix manually.
+  const handleSearchSelect = useCallback((plan: PlanSearchResult) => {
+    // Subject mapping — plan.subject uses short codes ('sci', 'ss',
+    // 'ela', 'math', 'cs') OR long forms; UI uses long. Normalise.
+    const subjectMap: Record<string, string> = {
+      sci: 'science',
+      science: 'science',
+      ss: 'social-studies',
+      'social-studies': 'social-studies',
+      ela: 'ela',
+      math: 'math',
+      cs: 'cs',
+      languages: 'languages',
+      'test-prep': 'test-prep',
+    };
+    const uiSubject = subjectMap[plan.subject] ?? plan.subject;
+    // Grade → level band. Plan grades are single ('k', '3', '11') or
+    // multi ('k-2', '11-12'). Map to the closest UI level.
+    const gradeToBand = (g: string): string => {
+      const norm = g.trim().toLowerCase();
+      if (norm.includes('-')) return norm; // already a band
+      if (norm === 'k' || norm === '1' || norm === '2') return 'k-2';
+      if (['3', '4', '5'].includes(norm)) return '3-5';
+      if (['6', '7', '8'].includes(norm)) return '6-8';
+      if (['9', '10'].includes(norm)) return '9-10';
+      if (['11', '12'].includes(norm)) return '11-12';
+      // Curriculum-based fallbacks (AP / SAT-ACT / IITJEE / GRE etc).
+      const c = plan.curriculum.toUpperCase();
+      if (c.includes('AP') || c.includes('IB-DP') || c === 'IB-DP') return 'ap';
+      if (c === 'GCSE' || c === 'A-LEVEL') return '11-12';
+      if (norm === 'graduate') return 'graduate';
+      return '11-12';
+    };
+    const uiLevel = gradeToBand(plan.grade);
+    setSelectedSubject(uiSubject);
+    setSelectedLevel(uiLevel);
+    setSelectedTopicId(plan.topic ?? '');
+    setSelectedLessonPlanId(plan.id);
+    // Pre-fill the available-plans state so the dropdown shows the pick
+    // immediately, even before the (subject,level,topic) effect re-fetches.
+    setAvailableLessonPlans([{
+      id: plan.id,
+      title: plan.title,
+      topic: plan.topic,
+      los: plan.los,
+      estimatedMinutes: plan.estimatedMinutes,
+    }]);
+    // Scroll the Start button into view so it's clear what to do next.
+    setTimeout(() => {
+      document.getElementById('tutor-start-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   }, []);
 
   // Fetch available lesson plans when (subject, level, topic) is set.
@@ -997,6 +1055,28 @@ function TutorPage() {
 
           {/* Setup form */}
           <div className="bg-white rounded-xl shadow-lg p-6 space-y-5">
+            {/* Quick-start search — fastest path to a session. Type
+                what you want ("AP Calc derivatives", "GCSE quadratics",
+                "phonics") and press Enter. Searches the entire
+                catalog of 700+ lesson plans by title, topic, and
+                learning objective. Selecting a plan auto-fills the
+                structured pickers below. Cmd-K from anywhere on page. */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ⚡ Quick start
+              </label>
+              <PlanSearchBar onSelect={handleSearchSelect} />
+              <p className="mt-2 text-xs text-gray-500">
+                Or scroll down to browse by subject and level.
+              </p>
+            </div>
+
+            {/* Visual divider between fast-path and structured browse. */}
+            <div className="relative my-4" aria-hidden>
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">or browse</span></div>
+            </div>
+
             {/* Status header — shows the user exactly which steps remain
                 so they don't feel like they're walking down an unknown
                 tunnel of dropdowns. Subject → Level → Topic → Start. */}
@@ -1147,6 +1227,7 @@ function TutorPage() {
 
             {/* Start button */}
             <button
+              id="tutor-start-btn"
               onClick={handleStartSession}
               disabled={!canStartSession}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white text-lg font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"

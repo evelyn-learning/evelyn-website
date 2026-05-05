@@ -16,14 +16,38 @@ import { listLessonPlans, upsertLessonPlan } from '@/lib/tutor/lesson-plan/store
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
+  const q = url.searchParams.get('q')?.trim().toLowerCase();
   const filter = {
-    subject: url.searchParams.get('subject') ?? undefined,
-    grade: url.searchParams.get('grade') ?? undefined,
-    curriculum: url.searchParams.get('curriculum') ?? undefined,
-    topic: url.searchParams.get('topic') ?? undefined,
+    // When `q` (search) is present, do NOT scope by subject/grade/topic
+    // server-side — search the full catalog. Otherwise apply the
+    // structured filters from the legacy dropdown flow.
+    subject: q ? undefined : (url.searchParams.get('subject') ?? undefined),
+    grade: q ? undefined : (url.searchParams.get('grade') ?? undefined),
+    curriculum: q ? undefined : (url.searchParams.get('curriculum') ?? undefined),
+    topic: q ? undefined : (url.searchParams.get('topic') ?? undefined),
     locale: url.searchParams.get('locale') ?? undefined,
   };
-  const plans = await listLessonPlans(filter);
+  let plans = await listLessonPlans(filter);
+  if (q) {
+    // Match against title, plan id, topic, learning-objective descriptions.
+    // Tokenise the query so multi-word searches ("ap calc derivatives")
+    // match plans that contain ALL tokens in any of the searched fields.
+    const tokens = q.split(/\s+/).filter(Boolean);
+    plans = plans.filter((p) => {
+      const haystack = [
+        p.title,
+        p.id,
+        p.topic ?? '',
+        p.subject,
+        p.grade,
+        p.curriculum,
+        ...p.los.map((lo) => lo.description),
+      ].join(' ').toLowerCase();
+      return tokens.every((t) => haystack.includes(t));
+    });
+    // Cap search results — UI shouldn't render thousands.
+    plans = plans.slice(0, 50);
+  }
   // Return a slim view for listing — full plan available via /[id].
   const items = plans.map((p) => ({
     id: p.id,

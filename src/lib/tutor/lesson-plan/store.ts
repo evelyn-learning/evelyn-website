@@ -1635,6 +1635,161 @@ function subjectMatches(filter: string | undefined, planSubject: string): boolea
   return aliases.includes(planSubject);
 }
 
+/** Topic aliases — map UI taxonomy topic IDs to the set of plan-tag
+ *  topic IDs that should match. Plans across many seed batches use
+ *  different but related tags ('algebra', 'algebra-1', 'equations',
+ *  'expressions' all live under the UI's 'algebra-1' topic).
+ *
+ *  Without this expansion, hundreds of plans were silently filtered
+ *  out because their plan.topic didn't equal the picker's selected
+ *  taxonomy topic ID.
+ *
+ *  Pattern: keys are taxonomy topic IDs from src/lib/tutor/topic-taxonomy.ts;
+ *  values list the plan.topic strings that should match. The taxonomy
+ *  ID itself is implicit — we always include it. */
+const TOPIC_ALIASES: Record<string, string[]> = {
+  // ── Math ──
+  'algebra-1': ['algebra', 'algebra-1', 'equations', 'expressions', 'inequalities'],
+  'algebra-2': ['algebra-2', 'polynomials', 'rational-functions', 'exponential-functions', 'logarithms'],
+  'pre-algebra': ['pre-algebra', 'integers', 'number-system', 'number-theory'],
+  'fractions-decimals': ['fractions', 'decimals', 'percent', 'percents', 'percentages'],
+  'multiplication-division': ['multiplication', 'division'],
+  'counting': ['counting', 'numbers', 'number-system', 'place-value'],
+  'place-value': ['place-value', 'numbers', 'number-system'],
+  'geometry-basics': ['angles', 'circles', 'measurement', 'volume'],
+  'geometry': ['geometry', 'angles', 'circles', 'congruence', 'similarity', 'transformations', 'volume'],
+  'geometry-angles': ['geometry', 'angles', 'circles', 'volume'],
+  'ratios-proportions': ['ratios', 'proportions', 'percent', 'percents'],
+  'expressions-equations': ['expressions', 'equations', 'inequalities'],
+  'statistics-probability': ['statistics', 'probability', 'data'],
+  'measurement-time': ['measurement', 'data'],
+  'measurement-data': ['measurement', 'data', 'statistics'],
+  'word-problems': ['word-problems'],
+  'pre-calculus': ['precalculus', 'trigonometry', 'trig-identities', 'sequences'],
+  'trigonometry': ['trigonometry', 'trig-identities'],
+  'intro-calculus': ['calculus', 'precalculus'],
+  'sequences-series': ['sequences'],
+  'logarithms-exponentials': ['logarithms', 'exponential-functions', 'exponents'],
+  'matrices': ['matrices'],
+  'linear-functions': ['linear-functions', 'functions'],
+  'quadratic-equations': ['quadratics'],
+  'systems-of-equations': ['equations'],
+  'polynomials': ['polynomials'],
+  'intro-statistics': ['intro-statistics', 'statistics', 'probability'],
+  'calculus-1': ['calculus'],
+  'calculus-2': ['calculus'],
+  // ── Science ──
+  'living-things': ['cells-and-life', 'life-science', 'animals-habitats'],
+  'cell-biology': ['cell-biology', 'cells-and-life', 'biology'],
+  'biology': ['biology', 'genetics', 'cell-biology'],
+  'chemistry-basics': ['chemistry', 'matter'],
+  'chemistry': ['chemistry'],
+  'physics-basics': ['physics', 'forces-and-motion', 'waves', 'energy'],
+  'physics': ['physics', 'physics-mechanics', 'waves', 'energy', 'forces-and-motion'],
+  'forces-motion': ['forces-and-motion', 'physics', 'physics-mechanics'],
+  'earth-science': ['earth-science', 'earth-and-space', 'earth-systems'],
+  'earth-space-science': ['earth-and-space', 'earth-science', 'earth-systems'],
+  'earth-space': ['earth-and-space', 'earth-science', 'earth-systems'],
+  'genetics': ['genetics', 'biology'],
+  'ecology': ['ecology', 'biology'],
+  'environmental-science': ['environmental-science'],
+  'matter-materials': ['matter', 'chemistry'],
+  'physical-science': ['physical-science', 'physics', 'chemistry'],
+  // ── ELA — gradeband bucket tags surface across the relevant taxonomy topics ──
+  'phonics-reading': ['phonics', 'reading', 'reading-foundations', 'k2-ela'],
+  'sight-words': ['k2-ela', 'phonics', 'reading-foundations'],
+  'basic-writing': ['k2-ela', 'writing'],
+  'vocabulary-building': ['k2-ela', 'vocabulary'],
+  'listening-comprehension': ['k2-ela', 'speaking-listening'],
+  'reading-comprehension': ['reading-comprehension', 'reading', 'g35-ela'],
+  'grammar-punctuation': ['g35-ela', 'grammar'],
+  'paragraph-writing': ['g35-ela', 'writing'],
+  'vocabulary': ['vocabulary', 'g35-ela', 'g68-ela'],
+  'spelling': ['spelling', 'g35-ela'],
+  'book-reports': ['g35-ela', 'reading-comprehension'],
+  'literary-analysis': ['literary-analysis', 'literary-devices', 'g68-ela', 'g912-ela'],
+  'essay-writing': ['g68-ela', 'g912-ela', 'argument-writing', 'writing'],
+  'grammar-mechanics': ['grammar', 'g68-ela'],
+  'vocabulary-context': ['vocabulary', 'g68-ela'],
+  'poetry': ['poetry', 'g68-ela', 'g912-ela'],
+  'narrative-writing': ['g68-ela', 'g35-ela', 'writing'],
+  'research-skills': ['research', 'g68-ela'],
+  'literature-fiction': ['literature', 'g912-ela', 'reading-comprehension'],
+  'literature-nonfiction': ['literature', 'g912-ela', 'reading-comprehension'],
+  'persuasive-writing': ['argument-writing', 'rhetoric', 'g912-ela'],
+  'research-papers': ['research', 'g912-ela'],
+  'rhetoric-argument': ['rhetoric', 'argument-writing', 'g912-ela'],
+  'vocabulary-sat': ['vocabulary', 'g912-ela'],
+  'american-literature': ['literature', 'g912-ela'],
+  'british-literature': ['literature', 'g912-ela', 'drama'],
+  'world-literature': ['literature', 'g912-ela'],
+  'advanced-composition': ['g912-ela', 'writing'],
+  'critical-analysis': ['g912-ela', 'literary-analysis'],
+  'college-essays': ['g912-ela'],
+  // ── Social Studies — gradeband bucket tags ──
+  'communities': ['communities', 'community', 'k2-ss'],
+  'maps-globes': ['k2-ss', 'us-geography', 'geography'],
+  'us-regions': ['us-geography', 'g35-ss', 'geography'],
+  'native-american-cultures': ['g35-ss'],
+  'colonial-america': ['us-history', 'g35-ss', 'g68-ss'],
+  'american-revolution': ['us-history', 'g35-ss', 'g68-ss'],
+  'us-constitution': ['government', 'civics', 'us-history', 'g35-ss', 'g68-ss', 'g912-ss'],
+  'westward-expansion': ['us-history', 'g35-ss', 'g68-ss'],
+  'civil-war': ['us-history', 'g35-ss', 'g68-ss', 'g912-ss'],
+  'reconstruction': ['us-history', 'g68-ss', 'g912-ss'],
+  'progressive-era': ['us-history', 'g68-ss', 'g912-ss'],
+  'world-war-1': ['world-history', 'us-history', 'g68-ss', 'g912-ss'],
+  'world-war-2': ['world-history', 'us-history', 'g68-ss', 'g912-ss'],
+  'cold-war': ['world-history', 'us-history', 'g68-ss', 'g912-ss'],
+  'civil-rights-movement': ['us-history', 'g68-ss', 'g912-ss'],
+  'great-depression': ['us-history', 'g68-ss', 'g912-ss'],
+  'industrial-revolution': ['world-history', 'us-history', 'g68-ss'],
+  'ancient-civilizations': ['world-history', 'g68-ss'],
+  'medieval-europe': ['world-history', 'g68-ss'],
+  'renaissance': ['world-history', 'g68-ss'],
+  'world-religions': ['culture', 'world-history', 'g68-ss'],
+  'world-geography': ['geography', 'us-geography', 'human-geography'],
+  'us-government': ['government', 'civics', 'g35-ss', 'g68-ss', 'g912-ss'],
+  'state-governments': ['government', 'civics', 'g35-ss'],
+  'citizenship': ['civics', 'g35-ss'],
+  'economics': ['economics', 'g35-ss', 'g68-ss', 'g912-ss'],
+  'micro-economics': ['economics', 'g912-ss'],
+  'macro-economics': ['economics', 'g912-ss'],
+  // ── Test prep namespaces ──
+  'sat-math-no-calc': ['sat-math', 'sat-math-full'],
+  'sat-math-calc': ['sat-math', 'sat-math-full'],
+  'sat-reading': ['sat-reading', 'sat-reading-full'],
+  'sat-writing': ['sat-writing', 'sat-writing-full'],
+  'act-math': ['act'],
+  'act-reading': ['act'],
+  'act-english': ['act'],
+  'act-science': ['act'],
+  'gre-quant': ['gre-quant'],
+  'gre-verbal': ['gre-verbal'],
+  'gmat-quant': ['gmat-quant'],
+  'gmat-verbal': ['gmat-verbal'],
+  'jee-main': ['jee-main', 'jee-physics', 'physics-mechanics'],
+  'jee-advanced': ['jee-main', 'jee-physics'],
+  'gcse-math-higher': ['gcse-math'],
+  'ib-math-analysis': ['ibdp-aa', 'calculus', 'precalculus'],
+  // Music / arts
+  'ap-music-theory': ['music-theory'],
+  'ap-art-history': ['art-history'],
+  // Computer science
+  'ap-cs-a': ['computer-science'],
+  'ap-cs-principles': ['computer-science'],
+};
+
+/** Returns true if the plan's topic matches the filter topic — directly
+ *  or via the alias map. If filter.topic is empty, returns true. */
+function topicMatches(filterTopic: string | undefined, planTopic: string | undefined): boolean {
+  if (!filterTopic) return true;
+  if (!planTopic) return false;
+  if (planTopic === filterTopic) return true;
+  const aliases = TOPIC_ALIASES[filterTopic];
+  return !!aliases && aliases.includes(planTopic);
+}
+
 function gradeMatches(filterGrade: string | undefined, planGrade: string): boolean {
   if (!filterGrade) return true;
   const filterSet = gradesInBand(filterGrade);
@@ -1659,7 +1814,7 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
       subjectOk =
         p.subject === 'test-prep' ||
         p.topic === 'test-prep' ||
-        (!!filter.topic && p.topic === filter.topic);
+        (!!filter.topic && topicMatches(filter.topic, p.topic));
     } else {
       subjectOk = subjectMatches(filter.subject, p.subject);
     }
@@ -1667,7 +1822,7 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
       subjectOk &&
       gradeMatches(filter.grade, p.grade) &&
       (!filter.curriculum || p.curriculum === filter.curriculum) &&
-      (!filter.topic || p.topic === filter.topic) &&
+      topicMatches(filter.topic, p.topic) &&
       (!filter.locale || p.locale === filter.locale)
     );
   };
@@ -1704,7 +1859,17 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
       else query.grade = { $in: grades.flatMap((g) => [g, g.toUpperCase()]) };
     }
     if (filter.curriculum) query.curriculum = filter.curriculum;
-    if (filter.topic) query.topic = filter.topic;
+    if (filter.topic) {
+      // Apply topic aliases on the DB side too — match plans whose
+      // topic equals the filter or any aliased plan-tag.
+      const aliases = TOPIC_ALIASES[filter.topic];
+      if (aliases && aliases.length > 0) {
+        const all = Array.from(new Set([filter.topic, ...aliases]));
+        query.topic = { $in: all };
+      } else {
+        query.topic = filter.topic;
+      }
+    }
     if (filter.locale) query.locale = filter.locale;
     const docs = await LessonPlanModel.find(query).limit(200);
     dbHits = docs.map(toLessonPlan);
