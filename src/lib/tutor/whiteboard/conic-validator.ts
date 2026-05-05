@@ -86,25 +86,66 @@ function extractABSquared(combined: string): { a2: number; b2: number; orientati
 function validateParabola(data: GraphData, combined: string): GraphData {
   const result = { ...data };
 
-  // Detect parabola form: y² = 4px or y = x²
+  // ────────────────────────────────────────────────────────────────
+  // Gate 1 — only auto-correct if the brain ALREADY signaled intent
+  // to show focus or directrix. The 2026-05-01 SAT-math session
+  // (Tutor_Session_sat_math_calc_2026-05-01) drew y = x² - 4x + 3
+  // to teach roots & vertex. Nobody asked for the directrix; the
+  // validator pattern-matched "y = x²" as a substring and auto-
+  // injected "Directrix y = -0.25" (using vertex (0,0) — wrong,
+  // the real vertex is (2, -1) so the real directrix is y = -1.25).
+  // Strict opt-in: validate ONLY when a directrix or focus label is
+  // already present in the input data.
+  const inputLabels = [
+    ...(data.functions || []),
+    ...(data.functionsOfY || []),
+    ...(data.points || []),
+  ].map((it) => (it.label || (it as { latex?: string }).latex || '')).join(' ').toLowerCase();
+  const brainAskedForFocusOrDirectrix =
+    inputLabels.includes('directrix') || inputLabels.includes('focus');
+  if (!brainAskedForFocusOrDirectrix) return data;
+
+  // Detect parabola form. Two recognised forms:
+  //   y² = 4px          (horizontal, vertex at origin)
+  //   y = ax² + bx + c  (vertical, vertex at (h, k) with h = -b/2a)
   let p: number | null = null;
+  let h = 0;
+  let k = 0;
   let form: 'horizontal' | 'vertical' = 'horizontal';
 
-  // y² = 4px → horizontal parabola
-  const hMatch = combined.match(/y[²^2]*\s*=\s*(\d+(?:\.\d+)?)x/);
+  // y² = 4px → horizontal parabola, vertex at origin.
+  const hMatch = combined.match(/y[²^2]*\s*=\s*(\d+(?:\.\d+)?)x(?!\d)/);
   if (hMatch) {
     const coeff = parseFloat(hMatch[1]);
     p = coeff / 4;
     form = 'horizontal';
   }
 
-  // y = x² → vertical parabola (p = 1/4)
-  if (!p && (combined.includes('y = x²') || combined.includes('y=x^2') || combined.includes('y = x^2'))) {
-    p = 0.25;
-    form = 'vertical';
+  // y = ax² + bx + c → vertical parabola. Tolerate a==1 (omitted) or
+  // any positive coefficient. Captures b and c so we can shift the
+  // vertex correctly. Without this, "y = x² - 4x + 3" was treated as
+  // the canonical y = x² with vertex (0, 0).
+  if (!p) {
+    const vMatch = combined.match(
+      /y\s*=\s*(-?\d*(?:\.\d+)?)\s*x[²^]?2?\s*([+\-]\s*\d+(?:\.\d+)?\s*)?x?\s*([+\-]\s*\d+(?:\.\d+)?)?/i,
+    );
+    if (vMatch) {
+      const aRaw = vMatch[1];
+      const a = aRaw === '' || aRaw === '-' ? (aRaw === '-' ? -1 : 1) : parseFloat(aRaw);
+      const bRaw = vMatch[2];
+      const b = bRaw ? parseFloat(bRaw.replace(/\s+/g, '')) : 0;
+      const cRaw = vMatch[3];
+      const c = cRaw ? parseFloat(cRaw.replace(/\s+/g, '')) : 0;
+      if (Number.isFinite(a) && a !== 0) {
+        h = -b / (2 * a);
+        k = c - (b * b) / (4 * a);
+        p = 1 / (4 * a);
+        form = 'vertical';
+      }
+    }
   }
 
-  if (!p) return data;
+  if (p === null) return data;
 
   // Ensure focus and directrix are present and correct
   const points = [...(data.points || [])];
@@ -112,7 +153,7 @@ function validateParabola(data: GraphData, combined: string): GraphData {
   const functionsOfY = [...(data.functionsOfY || [])];
 
   if (form === 'horizontal') {
-    // Focus at (p, 0), directrix at x = -p
+    // Focus at (p, 0), directrix at x = -p (vertex at origin only)
     ensurePoint(points, p, 0, `Focus (${round(p)}, 0)`, '#dc2626');
     ensurePoint(points, 0, 0, 'Vertex (0, 0)', '#16a34a');
 
@@ -128,20 +169,22 @@ function validateParabola(data: GraphData, combined: string): GraphData {
     // Ensure viewport shows directrix
     if (result.xRange[0] > -p - 1) result.xRange = [-p - 2, result.xRange[1]];
   } else {
-    // Focus at (0, p), directrix at y = -p
-    ensurePoint(points, 0, p, `Focus (0, ${round(p)})`, '#dc2626');
-    ensurePoint(points, 0, 0, 'Vertex (0, 0)', '#16a34a');
+    // Vertical parabola y = a(x-h)² + k. Focus at (h, k+p),
+    // directrix at y = k - p.
+    const focusY = k + p;
+    const directrixY = k - p;
+    ensurePoint(points, h, focusY, `Focus (${round(h)}, ${round(focusY)})`, '#dc2626');
+    ensurePoint(points, h, k, `Vertex (${round(h)}, ${round(k)})`, '#16a34a');
 
-    // Directrix: horizontal line at y = -p → goes in functions
     removeByLabel(functions, 'directrix');
     removeByLabel(functionsOfY, 'directrix');
     functions.push({
-      latex: String(-p),
+      latex: String(directrixY),
       color: '#dc2626',
-      label: `Directrix y = ${round(-p)}`,
+      label: `Directrix y = ${round(directrixY)}`,
     });
 
-    if (result.yRange[0] > -p - 1) result.yRange = [-p - 2, result.yRange[1]];
+    if (result.yRange[0] > directrixY - 1) result.yRange = [directrixY - 2, result.yRange[1]];
   }
 
   result.points = points;
