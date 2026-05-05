@@ -14,6 +14,9 @@ import { getGradeProfile, renderGradeProfileBlock } from '@/lib/tutor/pedagogy/g
 import { renderVoiceCadenceBlock } from '@/lib/tutor/pedagogy/voice-cadence';
 import { renderHumorBlock } from '@/lib/tutor/pedagogy/humor';
 import { renderCatalogForPrompt } from '@/lib/tutor/diagrams/catalog/manifest';
+import type { TutorBranding } from './branding/types';
+import { EVELYN_BRANDING } from './branding/evelyn';
+import { renderBrandingBlock } from './branding/render';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -102,6 +105,10 @@ export interface SystemPromptContext {
   subject?: string;
   topic?: string;
   level?: string;
+  /** Deployment branding (D2C / B2B / white-label). Defaults to Evelyn
+   *  when omitted. Pass a different record to swap product identity,
+   *  contact info, scope statement, etc. without touching the engine. */
+  branding?: TutorBranding;
 }
 
 /**
@@ -901,6 +908,15 @@ Every academic response includes a whiteboard tool call — never explain withou
  */
 export function buildSystemPrompt(context: SystemPromptContext): string {
   let prompt = BASE_PROMPT;
+
+  // Branding / metadata block — deployment-swappable. Sits in the
+  // cacheable prefix so it costs ~nothing per turn. The brain answers
+  // student meta-questions ("what are you?", "how is this different
+  // from ChatGPT?", "how do I exit?", "how do I contact you?") from
+  // this block — never improvises. Default = Evelyn D2C; B2B / white-
+  // label callers pass their own TutorBranding record.
+  const branding = context.branding ?? EVELYN_BRANDING;
+  prompt += `\n\n${renderBrandingBlock(branding)}\n`;
 
   // Pedagogy spine — grade-band behavior + voice cadence + humor.
   // Inlined once, cached in the system-prompt preamble. Read this BEFORE
