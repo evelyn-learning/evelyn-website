@@ -909,6 +909,31 @@ import { SEED_COLLEGE_MATH_LINALG_EIGENVALUES } from './seeds/college-math-linal
 import { SEED_COLLEGE_MATH_DISCRETE_GRAPHS } from './seeds/college-math-discrete-graphs';
 import { SEED_COLLEGE_MATH_STATS_HYPOTHESIS_TESTING } from './seeds/college-math-stats-hypothesis-testing';
 import { SEED_COLLEGE_MATH_STATS_REGRESSION } from './seeds/college-math-stats-regression';
+// Coverage wave 3 (2026-05-06) — Science college + ACT + GRE Verbal + MCAT subsections.
+import { SEED_COLLEGE_SCI_GENCHEM_STOICHIOMETRY } from './seeds/college-sci-genchem-stoichiometry';
+import { SEED_COLLEGE_SCI_GENCHEM_EQUILIBRIUM } from './seeds/college-sci-genchem-equilibrium';
+import { SEED_COLLEGE_SCI_GENPHYS_MECHANICS } from './seeds/college-sci-genphys-mechanics';
+import { SEED_COLLEGE_SCI_GENPHYS_EM } from './seeds/college-sci-genphys-em';
+import { SEED_COLLEGE_SCI_ORGCHEM_FUNCTIONAL_GROUPS } from './seeds/college-sci-orgchem-functional-groups';
+import { SEED_COLLEGE_SCI_ORGCHEM_MECHANISMS } from './seeds/college-sci-orgchem-mechanisms';
+import { SEED_COLLEGE_SCI_INTROBIO_CELLS } from './seeds/college-sci-introbio-cells';
+import { SEED_COLLEGE_SCI_INTROBIO_GENETICS } from './seeds/college-sci-introbio-genetics';
+import { SEED_COLLEGE_SCI_BIOCHEM_METABOLISM } from './seeds/college-sci-biochem-metabolism';
+import { SEED_COLLEGE_SCI_BIOCHEM_ENZYMES } from './seeds/college-sci-biochem-enzymes';
+import { SEED_ACT_MATH_PRE_ALGEBRA_ALGEBRA } from './seeds/act-math-pre-algebra-algebra';
+import { SEED_ACT_MATH_GEOMETRY_TRIG } from './seeds/act-math-geometry-trig';
+import { SEED_ACT_ENGLISH_GRAMMAR_RULES } from './seeds/act-english-grammar-rules';
+import { SEED_ACT_ENGLISH_RHETORICAL_SKILLS } from './seeds/act-english-rhetorical-skills';
+import { SEED_ACT_READING_PASSAGE_STRATEGY } from './seeds/act-reading-passage-strategy';
+import { SEED_ACT_READING_QUESTION_TYPES } from './seeds/act-reading-question-types';
+import { SEED_ACT_SCIENCE_DATA_REP } from './seeds/act-science-data-rep';
+import { SEED_ACT_SCIENCE_CONFLICTING_VIEWPOINTS } from './seeds/act-science-conflicting-viewpoints';
+import { SEED_GRE_VERBAL_TEXT_COMPLETION } from './seeds/gre-verbal-text-completion';
+import { SEED_GRE_VERBAL_SENTENCE_EQUIVALENCE } from './seeds/gre-verbal-sentence-equivalence';
+import { SEED_GRE_VERBAL_READING_COMP } from './seeds/gre-verbal-reading-comp';
+import { SEED_MCAT_CHEM_PHYS_DOMAINS } from './seeds/mcat-chem-phys-domains';
+import { SEED_MCAT_BIO_BIOCHEM_DOMAINS } from './seeds/mcat-bio-biochem-domains';
+import { SEED_MCAT_PSYCH_SOC_DOMAINS } from './seeds/mcat-psych-soc-domains';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1770,6 +1795,31 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_COLLEGE_MATH_DISCRETE_GRAPHS,
   SEED_COLLEGE_MATH_STATS_HYPOTHESIS_TESTING,
   SEED_COLLEGE_MATH_STATS_REGRESSION,
+  // Coverage wave 3 (2026-05-06) — Science college + ACT + GRE Verbal + MCAT subsections.
+  SEED_COLLEGE_SCI_GENCHEM_STOICHIOMETRY,
+  SEED_COLLEGE_SCI_GENCHEM_EQUILIBRIUM,
+  SEED_COLLEGE_SCI_GENPHYS_MECHANICS,
+  SEED_COLLEGE_SCI_GENPHYS_EM,
+  SEED_COLLEGE_SCI_ORGCHEM_FUNCTIONAL_GROUPS,
+  SEED_COLLEGE_SCI_ORGCHEM_MECHANISMS,
+  SEED_COLLEGE_SCI_INTROBIO_CELLS,
+  SEED_COLLEGE_SCI_INTROBIO_GENETICS,
+  SEED_COLLEGE_SCI_BIOCHEM_METABOLISM,
+  SEED_COLLEGE_SCI_BIOCHEM_ENZYMES,
+  SEED_ACT_MATH_PRE_ALGEBRA_ALGEBRA,
+  SEED_ACT_MATH_GEOMETRY_TRIG,
+  SEED_ACT_ENGLISH_GRAMMAR_RULES,
+  SEED_ACT_ENGLISH_RHETORICAL_SKILLS,
+  SEED_ACT_READING_PASSAGE_STRATEGY,
+  SEED_ACT_READING_QUESTION_TYPES,
+  SEED_ACT_SCIENCE_DATA_REP,
+  SEED_ACT_SCIENCE_CONFLICTING_VIEWPOINTS,
+  SEED_GRE_VERBAL_TEXT_COMPLETION,
+  SEED_GRE_VERBAL_SENTENCE_EQUIVALENCE,
+  SEED_GRE_VERBAL_READING_COMP,
+  SEED_MCAT_CHEM_PHYS_DOMAINS,
+  SEED_MCAT_BIO_BIOCHEM_DOMAINS,
+  SEED_MCAT_PSYCH_SOC_DOMAINS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
