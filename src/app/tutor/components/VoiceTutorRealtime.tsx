@@ -3662,7 +3662,15 @@ export function VoiceTutorRealtime({
         const hasDigits = /\d/.test(t);
         const hasMathLang = /\b(equals?|sum|product|mean|median|mode|answer|because|therefore|simplif|factor|derivat|integral|root|solv|so\s+(?:it'?s|the))\b/i.test(lower);
         const wordCount = t.split(/\s+/).filter(Boolean).length;
-        const isVerification = !isPureAck && t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6);
+        // Help-request exclusion: utterances asking for guidance / a
+        // breakdown / a hint should NOT count as verification turns,
+        // even if they meet the word-count threshold. Otherwise an
+        // I'm stuck button click ("I'm stuck on this — can you break
+        // it down?", 9 words) classifies as verification AND any
+        // brain affirmation in response false-increments the streak.
+        // Observed 2026-05-06 lines session.
+        const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
+        const isVerification = !isPureAck && !isHelpRequest && t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6);
         lastStudentVerificationRef.current = {
           turn: pacingTurnCounterRef.current,
           segId: segIdNow,

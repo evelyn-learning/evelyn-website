@@ -472,13 +472,35 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
   const bias = state.paceBias ?? 0;
   const cueWantsHarder = !!state.cue && /\b(easy|boring|skip|next|i\s+know|obviously|duh|faster|speed\s+up)\b/i.test(state.cue);
   const cueWantsEasier = !!state.cue && /\b(slow\s+down|slower|too\s+fast)\b/i.test(state.cue);
-  // Cue → strongest signal. Verbal disengagement / pace request.
+  // Cue → strongest signal. Verbal disengagement / pace request. Cue
+  // is naturally edge-triggered: studentCueRef.current is sticky for
+  // ONE turn only (cleared on next utterance arrival), so this hint
+  // can't level-fire across multiple turns.
   if (state.cue) {
     return `boredom cue detected — verbally offer "harder / skip / different topic" immediately`;
   }
+  // Streak-based hints are EDGE-triggered: fire ONCE when count first
+  // hits the threshold value, then go silent. Conversation history
+  // carries the offer forward; the brain doesn't need re-nudging on
+  // every subsequent turn. (Pre-2026-05-06 these used `>=` — observed
+  // session 8 produced 13+ identical "Want another / harder / skip?"
+  // offers in a row because the hint level-fired every turn while
+  // streak stayed above threshold.)
+  //
+  // Edge cases:
+  // - Streak count jumping from below threshold to above (e.g. some
+  //   future regression spikes 2 → 4): silent-ramp at 3 is missed,
+  //   only explicit-offer at 4 fires. Acceptable — losing the silent
+  //   ramp is preferable to looping the offer.
+  // - Segment carries streak count across (Phase 1 retag policy): if
+  //   streak was 4 in segment A and segment B also evaluates with
+  //   count=4, hint would fire AGAIN. In practice, the count keeps
+  //   incrementing on the next correct answer in segment B, so the
+  //   match window is at most ONE turn.
+  //
   // Incorrect-streak: ALWAYS fires regardless of paceBias (struggle is
   // truth, style preference doesn't change whether help is needed).
-  if (state.incorrectStreak > t.inverseStreak) {
+  if (state.incorrectStreak === t.inverseStreak + 1) {
     return `incorrect-streak threshold reached — verbally offer "break this down / try a simpler version" choice`;
   }
   if (state.incorrectStreak === t.inverseStreak) {
@@ -489,10 +511,10 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
   // contradicts the stale bias.
   const correctSuppressed = bias < 0 && !cueWantsHarder;
   if (!correctSuppressed) {
-    if (state.correctStreak >= t.explicitOfferStreak) {
+    if (state.correctStreak === t.explicitOfferStreak) {
       return `explicit-offer threshold reached — verbally offer "another at this level / harder / skip ahead" choice`;
     }
-    if (state.correctStreak >= t.silentRampStreak) {
+    if (state.correctStreak === t.silentRampStreak) {
       return `silent-ramp threshold reached — next generate_problem should pass difficulty="slightly_harder"`;
     }
   }
