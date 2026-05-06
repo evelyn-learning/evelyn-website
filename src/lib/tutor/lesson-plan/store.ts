@@ -967,6 +967,18 @@ import { SEED_G68_MATH_COORDINATE_GRAPHING } from './seeds/g68-math-coordinate-g
 import { SEED_G68_MATH_COORDINATE_SHAPES } from './seeds/g68-math-coordinate-shapes';
 import { SEED_G1112_MATH_SEQUENCES_RECURSIVE } from './seeds/g1112-math-sequences-recursive';
 import { SEED_COLLEGE_MATH_DISCRETE_COMBINATORICS } from './seeds/college-math-discrete-combinatorics';
+// Coverage wave 6 (2026-05-06) — JEE Math + JEE Chemistry depth.
+import { SEED_JEE_MATH_ALGEBRA } from './seeds/jee-math-algebra';
+import { SEED_JEE_MATH_CALCULUS } from './seeds/jee-math-calculus';
+import { SEED_JEE_MATH_VECTORS_3D } from './seeds/jee-math-vectors-3d';
+import { SEED_JEE_MATH_PROBABILITY_PERMUTATIONS } from './seeds/jee-math-probability-permutations';
+import { SEED_JEE_MATH_TRIGONOMETRY } from './seeds/jee-math-trigonometry';
+import { SEED_JEE_MATH_MATRICES_DETERMINANTS } from './seeds/jee-math-matrices-determinants';
+import { SEED_JEE_CHEM_ATOMIC_STRUCTURE } from './seeds/jee-chem-atomic-structure';
+import { SEED_JEE_CHEM_CHEMICAL_BONDING } from './seeds/jee-chem-chemical-bonding';
+import { SEED_JEE_CHEM_EQUILIBRIUM_IONIC } from './seeds/jee-chem-equilibrium-ionic';
+import { SEED_JEE_CHEM_PERIODIC_PROPERTIES } from './seeds/jee-chem-periodic-properties';
+import { SEED_JEE_CHEM_COORDINATION_COMPOUNDS } from './seeds/jee-chem-coordination-compounds';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1886,6 +1898,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G68_MATH_COORDINATE_SHAPES,
   SEED_G1112_MATH_SEQUENCES_RECURSIVE,
   SEED_COLLEGE_MATH_DISCRETE_COMBINATORICS,
+  // Coverage wave 6 (2026-05-06) — JEE Math + JEE Chemistry depth.
+  SEED_JEE_MATH_ALGEBRA,
+  SEED_JEE_MATH_CALCULUS,
+  SEED_JEE_MATH_VECTORS_3D,
+  SEED_JEE_MATH_PROBABILITY_PERMUTATIONS,
+  SEED_JEE_MATH_TRIGONOMETRY,
+  SEED_JEE_MATH_MATRICES_DETERMINANTS,
+  SEED_JEE_CHEM_ATOMIC_STRUCTURE,
+  SEED_JEE_CHEM_CHEMICAL_BONDING,
+  SEED_JEE_CHEM_EQUILIBRIUM_IONIC,
+  SEED_JEE_CHEM_PERIODIC_PROPERTIES,
+  SEED_JEE_CHEM_COORDINATION_COMPOUNDS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
