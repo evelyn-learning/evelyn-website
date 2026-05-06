@@ -934,6 +934,27 @@ import { SEED_GRE_VERBAL_READING_COMP } from './seeds/gre-verbal-reading-comp';
 import { SEED_MCAT_CHEM_PHYS_DOMAINS } from './seeds/mcat-chem-phys-domains';
 import { SEED_MCAT_BIO_BIOCHEM_DOMAINS } from './seeds/mcat-bio-biochem-domains';
 import { SEED_MCAT_PSYCH_SOC_DOMAINS } from './seeds/mcat-psych-soc-domains';
+// Coverage wave 4 (2026-05-06) — Science 6-8/HS/AP, SS 11-12/AP, ELA AP, CS HS.
+import { SEED_G68_SCI_CELL_STRUCTURE } from './seeds/g68-sci-cell-structure';
+import { SEED_G68_SCI_MITOSIS_MEIOSIS } from './seeds/g68-sci-mitosis-meiosis';
+import { SEED_G68_SCI_DNA_GENES } from './seeds/g68-sci-dna-genes';
+import { SEED_G68_SCI_MENDEL_INHERITANCE } from './seeds/g68-sci-mendel-inheritance';
+import { SEED_G68_SCI_FOOD_WEBS } from './seeds/g68-sci-food-webs';
+import { SEED_G68_SCI_BIOMES } from './seeds/g68-sci-biomes';
+import { SEED_G910_SCI_PLATE_TECTONICS } from './seeds/g910-sci-plate-tectonics';
+import { SEED_G910_SCI_ATMOSPHERE_CLIMATE } from './seeds/g910-sci-atmosphere-climate';
+import { SEED_AP_PHYSICS_2_THERMODYNAMICS } from './seeds/ap-physics-2-thermodynamics';
+import { SEED_AP_PHYSICS_2_OPTICS } from './seeds/ap-physics-2-optics';
+import { SEED_AP_PHYSICS_C_MECH_CALCULUS } from './seeds/ap-physics-c-mech-calculus';
+import { SEED_G1112_SS_EUROPEAN_HISTORY_SURVEY } from './seeds/g1112-ss-european-history-survey';
+import { SEED_G1112_SS_PSYCHOLOGY_SCHOOLS } from './seeds/g1112-ss-psychology-schools';
+import { SEED_G1112_SS_PHILOSOPHY_BRANCHES } from './seeds/g1112-ss-philosophy-branches';
+import { SEED_AP_EUROPEAN_HISTORY_RENAISSANCE } from './seeds/ap-european-history-renaissance';
+import { SEED_AP_PSYCHOLOGY_RESEARCH_METHODS } from './seeds/ap-psychology-research-methods';
+import { SEED_AP_ENGLISH_LANG_RHETORIC } from './seeds/ap-english-lang-rhetoric';
+import { SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY } from './seeds/ap-english-lang-synthesis-essay';
+import { SEED_G910_CS_PYTHON_CONTROL_FLOW } from './seeds/g910-cs-python-control-flow';
+import { SEED_G910_CS_PYTHON_FUNCTIONS } from './seeds/g910-cs-python-functions';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1820,6 +1841,27 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_MCAT_CHEM_PHYS_DOMAINS,
   SEED_MCAT_BIO_BIOCHEM_DOMAINS,
   SEED_MCAT_PSYCH_SOC_DOMAINS,
+  // Coverage wave 4 (2026-05-06) — Science 6-8/HS/AP, SS 11-12/AP, ELA AP, CS HS.
+  SEED_G68_SCI_CELL_STRUCTURE,
+  SEED_G68_SCI_MITOSIS_MEIOSIS,
+  SEED_G68_SCI_DNA_GENES,
+  SEED_G68_SCI_MENDEL_INHERITANCE,
+  SEED_G68_SCI_FOOD_WEBS,
+  SEED_G68_SCI_BIOMES,
+  SEED_G910_SCI_PLATE_TECTONICS,
+  SEED_G910_SCI_ATMOSPHERE_CLIMATE,
+  SEED_AP_PHYSICS_2_THERMODYNAMICS,
+  SEED_AP_PHYSICS_2_OPTICS,
+  SEED_AP_PHYSICS_C_MECH_CALCULUS,
+  SEED_G1112_SS_EUROPEAN_HISTORY_SURVEY,
+  SEED_G1112_SS_PSYCHOLOGY_SCHOOLS,
+  SEED_G1112_SS_PHILOSOPHY_BRANCHES,
+  SEED_AP_EUROPEAN_HISTORY_RENAISSANCE,
+  SEED_AP_PSYCHOLOGY_RESEARCH_METHODS,
+  SEED_AP_ENGLISH_LANG_RHETORIC,
+  SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY,
+  SEED_G910_CS_PYTHON_CONTROL_FLOW,
+  SEED_G910_CS_PYTHON_FUNCTIONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
