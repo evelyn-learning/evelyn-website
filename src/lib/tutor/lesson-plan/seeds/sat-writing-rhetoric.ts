@@ -10,9 +10,9 @@ export const SEED_SAT_WRITING_RHETORIC: LessonPlan = {
   id: 'evelyn.sat.writing.rhetoric.v1',
   title: 'SAT Writing — Rhetoric (Synthesis, Transitions, Evidence)',
   curriculum: 'CCSS',
-  grade: '11',
-  subject: 'ela',
-  topic: 'sat-writing-full',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

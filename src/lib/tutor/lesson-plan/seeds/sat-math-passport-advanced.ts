@@ -10,9 +10,9 @@ export const SEED_SAT_MATH_PASSPORT_ADVANCED: LessonPlan = {
   id: 'evelyn.sat.math.passport-advanced.v1',
   title: 'SAT Math — Passport to Advanced Math',
   curriculum: 'CCSS',
-  grade: '11',
-  subject: 'math',
-  topic: 'sat-math-full',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-math',
   locale: 'en',
   los: [
     {

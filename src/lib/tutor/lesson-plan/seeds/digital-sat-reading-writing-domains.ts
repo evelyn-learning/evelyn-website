@@ -14,7 +14,7 @@ export const SEED_DIGITAL_SAT_READING_WRITING_DOMAINS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'sat-reading-full',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

@@ -14,9 +14,9 @@ export const SEED_ACT_MATH: LessonPlan = {
   id: 'evelyn.testprep.act.math.v1',
   title: 'ACT Math: Strategy and Content',
   curriculum: 'ACT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'act',
+  topic: 'act-math',
   locale: 'en',
   los: [
     {

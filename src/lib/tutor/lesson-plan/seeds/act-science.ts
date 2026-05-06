@@ -14,9 +14,9 @@ export const SEED_ACT_SCIENCE: LessonPlan = {
   id: 'evelyn.testprep.act.science.v1',
   title: 'ACT Science: Reasoning Through Data',
   curriculum: 'ACT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'act',
+  topic: 'act-science',
   locale: 'en',
   los: [
     {

@@ -10,9 +10,9 @@ export const SEED_SAT_READING_HISTORY: LessonPlan = {
   id: 'evelyn.sat.reading.history.v1',
   title: 'SAT Reading — History / Social Studies Passages',
   curriculum: 'CCSS',
-  grade: '11',
-  subject: 'ela',
-  topic: 'sat-reading-full',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

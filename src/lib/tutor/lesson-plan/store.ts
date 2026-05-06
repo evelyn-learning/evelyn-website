@@ -1952,18 +1952,15 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'ap-human-geography': ['ap-human-geography', 'ap-human-geo', 'human-geography'],
   'ib-history': ['ib-history'],
   // ── Test prep namespaces ──
-  'sat-math-no-calc': ['sat-math', 'sat-math-full'],
-  'sat-math-calc': ['sat-math', 'sat-math-full'],
-  'sat-reading': ['sat-reading', 'sat-reading-full'],
-  'sat-writing': ['sat-writing', 'sat-writing-full'],
-  'act-math': ['act'],
-  'act-reading': ['act'],
-  'act-english': ['act'],
-  'act-science': ['act'],
-  'act-math-full': ['act'],
-  'act-reading-full': ['act'],
-  'act-english-full': ['act'],
-  'act-science-full': ['act'],
+  // SAT/ACT topic IDs are now canonical under Test Prep › SAT/ACT only;
+  // the math/ela/science subject-level SAT/ACT cells were removed.
+  // Aliases below absorb legacy plan-tag spellings that drifted across batches.
+  'sat-math': ['sat-math', 'sat-math-full', 'sat-math-no-calc', 'sat-math-calc'],
+  'sat-reading-writing': ['sat-reading-writing', 'sat-reading', 'sat-reading-full', 'sat-writing', 'sat-writing-full'],
+  'act-math': ['act-math', 'act'],
+  'act-reading': ['act-reading', 'act'],
+  'act-english': ['act-english', 'act'],
+  'act-science': ['act-science', 'act'],
   'gre-quant': ['gre-quant'],
   'gre-verbal': ['gre-verbal'],
   'gmat-quant': ['gmat-quant'],
@@ -1996,35 +1993,6 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'academic-research': ['academic-research', 'college-ela'],
 };
 
-/** Math/ELA/Science-side topic ids that actually belong to the test-prep
- *  plan universe. Plans for these topics are tagged subject='test-prep',
- *  so the picker query (with subject='math' / 'ela' / 'science') needs
- *  to cross-cut into test-prep when the topic is one of these. */
-const TEST_PREP_TOPIC_IDS = new Set<string>([
-  // Math-side
-  'sat-math-no-calc',
-  'sat-math-calc',
-  'act-math',
-  // ELA-side
-  'sat-reading',
-  'sat-writing',
-  'act-reading',
-  'act-english',
-  // Science-side
-  'act-science',
-]);
-
-function isTestPrepAliasedTopic(filterTopic: string): boolean {
-  // The math/ela/science test-prep topic aliases all expand to
-  // test-prep-tagged plan topics like 'sat-math', 'act', 'sat-reading'.
-  // Keep this list in sync with the alias map above.
-  const a = TOPIC_ALIASES[filterTopic];
-  if (!a) return false;
-  return a.some((t) => t === 'sat-math' || t === 'act' || t === 'sat-math-full' ||
-                       t === 'sat-reading' || t === 'sat-writing' ||
-                       t === 'sat-reading-full' || t === 'sat-writing-full');
-}
-
 /** Returns true if the plan's topic matches the filter topic — directly
  *  or via the alias map. If filter.topic is empty, returns true. */
 function topicMatches(filterTopic: string | undefined, planTopic: string | undefined): boolean {
@@ -2047,11 +2015,14 @@ function gradeMatches(filterGrade: string | undefined, planGrade: string): boole
  *  When filter.subject is 'test-prep', the plan is in-scope if any of:
  *    - plan.subject === 'test-prep' (modern direct tag)
  *    - plan.topic === 'test-prep' (legacy bucket marker)
- *    - plan.topic matches filter.topic (e.g. JEE/SAT/GRE seeds where
- *      plan.subject is the underlying area like 'math' but plan.topic
- *      is the specific exam ID like 'jee-advanced'). Without this
- *      third clause, the picker for IIT JEE / SAT / GRE returns empty
- *      because retagged seeds no longer carry topic='test-prep'. */
+ *    - plan.topic matches filter.topic (e.g. JEE/SAT/GRE seeds whose
+ *      plan.subject is the underlying area but plan.topic is a
+ *      specific exam ID like 'jee-advanced').
+ *
+ *  All standardized-test content (SAT, ACT, JEE, NEET, GRE, GMAT,
+ *  MCAT, NCLEX, AP-strategy) lives under subject='test-prep'. The
+ *  picker no longer surfaces these cells under math/ela/science
+ *  subject-level SAT/ACT — use Test Prep instead. */
 export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<LessonPlan[]> {
   const matches = (p: LessonPlan) => {
     let subjectOk: boolean;
@@ -2061,16 +2032,7 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
         p.topic === 'test-prep' ||
         (!!filter.topic && topicMatches(filter.topic, p.topic));
     } else {
-      // Picker filters like Math › SAT/ACT › ACT Math, or ELA › SAT/ACT
-      // › SAT Reading, ask for a non-test-prep subject but a topic that
-      // belongs to the test-prep universe. The plans for those topics
-      // are tagged subject='test-prep'. Without this extension, those
-      // cells stay empty even when matching plans exist.
-      const isTestPrepTopic =
-        !!filter.topic && (TEST_PREP_TOPIC_IDS.has(filter.topic) || isTestPrepAliasedTopic(filter.topic));
-      subjectOk =
-        subjectMatches(filter.subject, p.subject) ||
-        (isTestPrepTopic && p.subject === 'test-prep' && topicMatches(filter.topic, p.topic));
+      subjectOk = subjectMatches(filter.subject, p.subject);
     }
     return (
       subjectOk &&
@@ -2092,25 +2054,17 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
       if (filter.subject === 'test-prep') {
         // Test-prep universe: subject='test-prep', legacy topic='test-prep',
         // or plan.topic matches the requested filter.topic (modern UI ID
-        // like 'jee-advanced' / 'sat-math-full' / 'gre-quant').
+        // like 'jee-advanced' / 'sat-math' / 'gre-quant').
         const or: Record<string, unknown>[] = [
           { subject: 'test-prep' },
           { topic: 'test-prep' },
         ];
         if (filter.topic) or.push({ topic: filter.topic });
         query.$or = or;
+      } else if (aliases.length === 1) {
+        query.subject = aliases[0];
       } else {
-        // Cross-cut: if topic belongs to test-prep universe, also
-        // include plans tagged subject='test-prep' for that topic.
-        const isTestPrepTopic =
-          !!filter.topic && (TEST_PREP_TOPIC_IDS.has(filter.topic) || isTestPrepAliasedTopic(filter.topic));
-        if (isTestPrepTopic) {
-          query.subject = { $in: Array.from(new Set([...aliases, 'test-prep'])) };
-        } else if (aliases.length === 1) {
-          query.subject = aliases[0];
-        } else {
-          query.subject = { $in: aliases };
-        }
+        query.subject = { $in: aliases };
       }
     }
     if (filter.grade) {

@@ -14,9 +14,9 @@ export const SEED_SAT_WRITING_GRAMMAR: LessonPlan = {
   id: 'evelyn.testprep.sat.writing.grammar.v1',
   title: 'SAT Writing: Grammar Rules',
   curriculum: 'SAT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'sat-writing',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

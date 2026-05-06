@@ -14,7 +14,7 @@ export const SEED_SAT_MATH_HEART_OF_ALGEBRA: LessonPlan = {
   id: 'evelyn.testprep.sat.math.heart-of-algebra.v1',
   title: 'SAT Math: Heart of Algebra',
   curriculum: 'SAT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
   topic: 'sat-math',
   locale: 'en',

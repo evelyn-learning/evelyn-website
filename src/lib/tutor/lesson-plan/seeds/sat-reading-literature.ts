@@ -10,9 +10,9 @@ export const SEED_SAT_READING_LITERATURE: LessonPlan = {
   id: 'evelyn.sat.reading.literature.v1',
   title: 'SAT Reading — Literature Passages',
   curriculum: 'CCSS',
-  grade: '11',
-  subject: 'ela',
-  topic: 'sat-reading-full',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

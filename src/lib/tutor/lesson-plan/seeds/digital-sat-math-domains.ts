@@ -14,7 +14,7 @@ export const SEED_DIGITAL_SAT_MATH_DOMAINS: LessonPlan = {
   curriculum: 'CollegeBoard',
   grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'sat-math-full',
+  topic: 'sat-math',
   locale: 'en',
   los: [
     {

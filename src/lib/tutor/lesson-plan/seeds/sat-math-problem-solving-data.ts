@@ -15,7 +15,7 @@ export const SEED_SAT_MATH_PROBLEM_SOLVING_DATA: LessonPlan = {
   id: 'evelyn.testprep.sat.math.problem-solving-data.v1',
   title: 'SAT Math: Problem Solving and Data Analysis',
   curriculum: 'SAT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
   topic: 'sat-math',
   locale: 'en',

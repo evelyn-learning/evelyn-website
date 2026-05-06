@@ -14,9 +14,9 @@ export const SEED_SAT_READING_EVIDENCE: LessonPlan = {
   id: 'evelyn.testprep.sat.reading.evidence.v1',
   title: 'SAT Reading: Evidence-Based Questions',
   curriculum: 'SAT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'sat-reading',
+  topic: 'sat-reading-writing',
   locale: 'en',
   los: [
     {

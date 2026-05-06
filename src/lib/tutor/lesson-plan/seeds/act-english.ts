@@ -14,9 +14,9 @@ export const SEED_ACT_ENGLISH: LessonPlan = {
   id: 'evelyn.testprep.act.english.v1',
   title: 'ACT English: Grammar and Rhetoric',
   curriculum: 'ACT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'act',
+  topic: 'act-english',
   locale: 'en',
   los: [
     {

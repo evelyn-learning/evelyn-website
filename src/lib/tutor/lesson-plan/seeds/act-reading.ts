@@ -13,9 +13,9 @@ export const SEED_ACT_READING: LessonPlan = {
   id: 'evelyn.testprep.act.reading.v1',
   title: 'ACT Reading: Pacing and Strategy',
   curriculum: 'ACT',
-  grade: '11',
+  grade: 'sat-act',
   subject: 'test-prep',
-  topic: 'act',
+  topic: 'act-reading',
   locale: 'en',
   los: [
     {

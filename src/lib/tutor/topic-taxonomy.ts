@@ -157,11 +157,6 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ib-math-analysis', label: 'IB Math Analysis' },
       { id: 'ib-math-applications', label: 'IB Math Applications' },
     ],
-    'sat-act': [
-      { id: 'sat-math-no-calc', label: 'SAT Math (No Calculator)' },
-      { id: 'sat-math-calc', label: 'SAT Math (Calculator)' },
-      { id: 'act-math', label: 'ACT Math' },
-    ],
     college: [
       { id: 'calculus-1', label: 'Calculus I' },
       { id: 'calculus-2', label: 'Calculus II' },
@@ -226,9 +221,6 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ib-chemistry', label: 'IB Chemistry' },
       { id: 'ib-physics', label: 'IB Physics' },
     ],
-    'sat-act': [
-      { id: 'act-science', label: 'ACT Science' },
-    ],
     college: [
       { id: 'general-chemistry', label: 'General Chemistry' },
       { id: 'general-physics', label: 'General Physics' },
@@ -286,12 +278,6 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ap-english-lang', label: 'AP English Language & Composition' },
       { id: 'ap-english-lit', label: 'AP English Literature & Composition' },
       { id: 'ib-english-a', label: 'IB English A' },
-    ],
-    'sat-act': [
-      { id: 'sat-reading', label: 'SAT Reading' },
-      { id: 'sat-writing', label: 'SAT Writing & Language' },
-      { id: 'act-reading', label: 'ACT Reading' },
-      { id: 'act-english', label: 'ACT English' },
     ],
     college: [
       { id: 'college-writing', label: 'College Writing' },
@@ -439,13 +425,12 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
   'test-prep': {
     'sat-act': [
       { id: 'sat-strategy', label: 'Digital SAT Strategy & Format' },
-      { id: 'sat-math-full', label: 'SAT Math' },
-      { id: 'sat-reading-full', label: 'SAT Reading & Writing' },
-      { id: 'sat-writing-full', label: 'SAT Writing (Section)' },
-      { id: 'act-math-full', label: 'ACT Math' },
-      { id: 'act-science-full', label: 'ACT Science' },
-      { id: 'act-english-full', label: 'ACT English' },
-      { id: 'act-reading-full', label: 'ACT Reading' },
+      { id: 'sat-math', label: 'SAT Math' },
+      { id: 'sat-reading-writing', label: 'SAT Reading & Writing' },
+      { id: 'act-math', label: 'ACT Math' },
+      { id: 'act-english', label: 'ACT English' },
+      { id: 'act-reading', label: 'ACT Reading' },
+      { id: 'act-science', label: 'ACT Science' },
       { id: 'ssat-isee', label: 'SSAT / ISEE' },
     ],
     ap: [

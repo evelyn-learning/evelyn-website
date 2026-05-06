@@ -10,9 +10,9 @@ export const SEED_SAT_MATH_ADDITIONAL_TOPICS: LessonPlan = {
   id: 'evelyn.sat.math.additional-topics.v1',
   title: 'SAT Math — Additional Topics',
   curriculum: 'CCSS',
-  grade: '11',
-  subject: 'math',
-  topic: 'sat-math-full',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-math',
   locale: 'en',
   los: [
     {
