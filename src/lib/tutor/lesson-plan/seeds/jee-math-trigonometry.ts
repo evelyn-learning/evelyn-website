@@ -1,0 +1,62 @@
+/**
+ * JEE Math — Trigonometry: Identities, Equations, Inverse Trig.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_JEE_MATH_TRIGONOMETRY: LessonPlan = {
+  id: 'evelyn.jee.math.trigonometry.v1',
+  title: 'JEE Math — Trigonometry (Identities + Equations + Inverse)',
+  curriculum: 'JEE-MAIN',
+  grade: 'iitjee',
+  subject: 'test-prep',
+  topic: 'jee-math',
+  locale: 'en',
+  los: [{ id: 'jee.math.trigonometry', description: 'Master JEE-style trig: sum/difference identities, multi-angle formulas, solving trig equations, inverse trig functions, properties of triangles.', standard: 'JEE-MATH-TRIG' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Trig is unavoidable on JEE — and pure formula-recall once you memorise the identities.', script: 'Sum-to-product, double-angle, half-angle, inverse trig functions — the JEE trig universe runs on a few dozen identities. Memorise them and most questions become 30-second solves.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Identities, equations, inverse trig, triangle properties.', keyIdeas: [
+      'PYTHAGOREAN identities: sin²θ + cos²θ = 1, 1 + tan²θ = sec²θ, 1 + cot²θ = csc²θ.',
+      'SUM/DIFFERENCE:',
+      '  sin(A ± B) = sin A cos B ± cos A sin B.',
+      '  cos(A ± B) = cos A cos B ∓ sin A sin B.',
+      '  tan(A ± B) = (tan A ± tan B)/(1 ∓ tan A tan B).',
+      'DOUBLE-ANGLE:',
+      '  sin 2θ = 2 sin θ cos θ.',
+      '  cos 2θ = cos²θ − sin²θ = 2cos²θ − 1 = 1 − 2sin²θ.',
+      '  tan 2θ = 2 tan θ/(1 − tan²θ).',
+      'HALF-ANGLE:',
+      '  sin²(θ/2) = (1 − cos θ)/2.',
+      '  cos²(θ/2) = (1 + cos θ)/2.',
+      'PRODUCT-TO-SUM:',
+      '  2 sin A cos B = sin(A+B) + sin(A−B).',
+      '  2 cos A cos B = cos(A−B) + cos(A+B).',
+      '  2 sin A sin B = cos(A−B) − cos(A+B).',
+      'TRIG EQUATIONS — general solutions:',
+      '  sin θ = sin α ⟹ θ = nπ + (−1)ⁿ α.',
+      '  cos θ = cos α ⟹ θ = 2nπ ± α.',
+      '  tan θ = tan α ⟹ θ = nπ + α.',
+      'INVERSE TRIG: principal values for arcsin in [−π/2, π/2], arccos in [0, π], arctan in (−π/2, π/2).',
+      '  arcsin(sin x) = x ONLY when x is in principal range.',
+      'TRIANGLE properties:',
+      '  Law of sines: a/sin A = b/sin B = c/sin C = 2R.',
+      '  Law of cosines: c² = a² + b² − 2ab cos C.',
+      '  Area = (1/2)ab sin C = (abc)/(4R) = rs (r = inradius, s = semi-perimeter).',
+    ], vocabulary: [{ term: 'inverse trig function', definition: 'arcsin, arccos, arctan; return an angle whose trig value matches the input; principal values restricted to specific ranges.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'Solve sin x + cos x = 1 for x in [0, 2π).', steps: [
+      'Convert sum to single trig: sin x + cos x = √2 · sin(x + π/4).',
+      '√2 · sin(x + π/4) = 1 ⟹ sin(x + π/4) = 1/√2.',
+      'sin = 1/√2 at x + π/4 = π/4 or x + π/4 = 3π/4 (within first period).',
+      'Solutions: x = 0 or x = π/2.',
+      'Check both: sin(0) + cos(0) = 0 + 1 = 1 ✓. sin(π/2) + cos(π/2) = 1 + 0 = 1 ✓.',
+    ], answer: 'x = 0 or x = π/2', estimatedMinutes: 5 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Find arcsin(1/2) + arccos(1/2).', expectedAnswer: 'arcsin(1/2) = π/6 (30°). arccos(1/2) = π/3 (60°). Sum = π/2. (General identity: arcsin(x) + arccos(x) = π/2 for any x in [−1, 1].)', responseFormat: 'free', hints: ['Recall the basic angle values.', 'Notice the sum: arcsin + arccos of the same x always equals π/2.'], estimatedMinutes: 2 },
+    { id: 'misconception-arcsin-range', kind: 'misconception_check', question: 'A student computes arcsin(sin(3π/4)) and writes 3π/4. What\'s wrong?', commonErrors: [{ answer: 'arcsin(sin x) = x always', misconception: 'Forgetting that arcsin returns values only in [−π/2, π/2].', correctsTo: 'arcsin\'s PRINCIPAL RANGE is [−π/2, π/2]. 3π/4 is NOT in this range. sin(3π/4) = sin(π − 3π/4) = sin(π/4) = √2/2. arcsin(√2/2) = π/4. So arcsin(sin(3π/4)) = π/4, not 3π/4. Always reduce to the principal range first.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Pythagoras: sin² + cos² = 1.', 'Double angle: sin 2θ = 2 sinθ cosθ; cos 2θ has 3 forms.', 'General solutions: sin = sin α → nπ + (−1)ⁿα.', 'arcsin range: [−π/2, π/2]. arccos: [0, π]. arctan: (−π/2, π/2).', 'Law of sines + cosines for triangles.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

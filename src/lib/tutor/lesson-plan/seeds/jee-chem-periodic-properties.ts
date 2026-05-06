@@ -1,0 +1,62 @@
+/**
+ * JEE Chemistry — Periodic Properties and Trends.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_JEE_CHEM_PERIODIC_PROPERTIES: LessonPlan = {
+  id: 'evelyn.jee.chem.periodic-properties.v1',
+  title: 'JEE Chemistry — Periodic Table and Trends',
+  curriculum: 'JEE-MAIN',
+  grade: 'iitjee',
+  subject: 'test-prep',
+  topic: 'jee-chemistry',
+  locale: 'en',
+  los: [{ id: 'jee.chem.periodic-properties', description: 'Apply periodic trends (atomic radius, IE, EA, electronegativity), s/p/d/f-block features, and important anomalies.', standard: 'JEE-CHEM-PERIODIC' }],
+  prerequisites: ['jee.chem.atomic-structure'],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'JEE often asks "which has higher IE?" or "rank atomic radii" — pure trend recognition with anomalies to remember.', script: 'Atomic radius decreases across a period and increases down a group. IE does the opposite. Add a few exceptions (Cu, Cr, half-filled stability) and you cover most JEE periodic-table questions.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Trends + their reasons + key anomalies.', keyIdeas: [
+      'GROUPS (vertical): same valence configuration, similar properties.',
+      'PERIODS (horizontal): properties change systematically.',
+      'ATOMIC RADIUS:',
+      '  ACROSS period (left → right): DECREASES. (Z effective increases, electrons in same shell pulled in.)',
+      '  DOWN group (top → bottom): INCREASES. (More shells.)',
+      '  Cations < parent atom; anions > parent atom.',
+      'IONIZATION ENERGY (IE) — energy to remove an electron:',
+      '  ACROSS: INCREASES (harder to remove from smaller atom with higher Z eff).',
+      '  DOWN: DECREASES (easier to remove from outer shell far from nucleus).',
+      '  Anomalies:',
+      '    Group 13 < Group 2 (e.g., B < Be): outer p e⁻ in B is easier to remove than s.',
+      '    Group 16 < Group 15 (e.g., O < N): paired p e⁻ in O experience repulsion.',
+      'ELECTRON AFFINITY (EA) — energy released when adding an electron (or required if endothermic):',
+      '  Generally INCREASES across, decreases down.',
+      '  Halogens have highest EA. Noble gases have low/negative EA.',
+      '  Anomaly: F < Cl in EA (F is too small, e-e repulsion).',
+      'ELECTRONEGATIVITY:',
+      '  ACROSS: increases. DOWN: decreases.',
+      '  Most electronegative: F (4.0). Then O, N, Cl.',
+      '  Used to predict bond polarity.',
+      'BLOCKS:',
+      '  s-block: groups 1, 2 — alkali, alkaline earth metals. Low IE, reactive.',
+      '  p-block: groups 13-18 — diverse properties.',
+      '  d-block: transition metals. Variable oxidation states, colored ions, catalysts.',
+      '  f-block: lanthanides + actinides.',
+      'METALLIC CHARACTER: increases down a group, decreases across a period.',
+      'OXIDATION STATES: maximum and minimum. Group 17 typically −1 (or +1, +3, +5, +7 in compounds with O).',
+    ], vocabulary: [{ term: 'effective nuclear charge', definition: 'the net positive charge experienced by an outer electron, after shielding by inner electrons.' }, { term: 'electronegativity', definition: 'an atom\'s tendency to attract bonding electrons; F is most electronegative.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Rank in order of INCREASING ionisation energy: B, C, N, O.', steps: [
+      'Standard trend across period: B < C < N < O (IE increases left to right).',
+      'But check Group 15 vs 16 anomaly: N has half-filled 2p³ (extra stability). Removing an electron from O\'s 2p⁴ (paired electrons) is easier than from N\'s 2p³.',
+      'So actual order: B < C < O < N.',
+      'IE values: B ≈ 800, C ≈ 1086, O ≈ 1314, N ≈ 1402 kJ/mol.',
+    ], answer: 'B < C < O < N', estimatedMinutes: 3 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Why is the atomic radius of Na⁺ smaller than that of neutral Na?', expectedAnswer: 'When Na loses 1 electron to form Na⁺, the entire 3s¹ shell is removed. Na⁺ has the electron configuration of Ne (1s² 2s² 2p⁶) — a different (smaller) shell. The remaining 10 electrons are pulled tighter by 11 protons (no longer 11 electrons), so the radius shrinks dramatically.', responseFormat: 'free', hints: ['Na has 1 electron in 3s. What happens when it loses that?', 'How do remaining electrons feel the nuclear charge?'], estimatedMinutes: 2 },
+    { id: 'misconception-monotonic-trend', kind: 'misconception_check', question: 'A student says "IE always increases across a period." Why is this not quite right?', commonErrors: [{ answer: 'IE increases monotonically', misconception: 'Forgetting Group 13 and Group 16 anomalies.', correctsTo: 'General trend is increasing, but Group 13 (B, Al) is LOWER than Group 2 (Be, Mg) and Group 16 (O, S) is LOWER than Group 15 (N, P) due to electron configuration effects (s vs p energies; half-filled stability). Memorise these two anomalies — they\'re tested every year on JEE.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Atomic radius: ↓ across, ↑ down.', 'IE/EA/EN: ↑ across, ↓ down.', 'Anomalies: Group 13<2 (s vs p); Group 16<15 (paired p).', 'Cations smaller, anions larger than parents.', 'F most electronegative.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
