@@ -102,6 +102,16 @@ export interface BrainTurnInput {
       checkInMinTurns: number;
       checkInCooldown: number;
     };
+    /** Phase 3: session-level depth preference. Stepped by Slow down /
+     *  Speed up button click OR matching verbal cue. Negative = student
+     *  wants more depth / slower teaching. Positive = less depth.
+     *  Clamped -2..+2. When non-zero, the brain receives a separate
+     *  `<pace_preference>` block instructing it to adjust teaching
+     *  depth. Never resets within a session (session-end only). */
+    paceBias?: number;
+    /** Number of turns since paceBias was last set / changed. Surfaces
+     *  as "applied since N turns ago" in the pace_preference block. */
+    paceBiasAppliedSinceTurns?: number;
   };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
@@ -449,24 +459,46 @@ export { buildWhiteboardSummary };
 function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): string | null {
   const t = state.thresholds;
   if (!t) return null;
+  // Q15 conflict resolution. paceBias indicates the student's
+  // explicitly-stated depth preference (set via Slow down / Speed up
+  // button or matching verbal cue). When a hint direction is
+  // ALIGNED with the bias direction, suppress the hint — the student
+  // has already chosen this depth/style. When OPPOSED (e.g. student
+  // asked for less depth but is now struggling), the hint still
+  // fires — truth (struggling / acing) wins over style preference.
+  // Cue-freshness override: a recent verbal cue can override a stale
+  // bias for THIS turn's offer decision (bias state preserved for
+  // subsequent turns).
+  const bias = state.paceBias ?? 0;
+  const cueWantsHarder = !!state.cue && /\b(easy|boring|skip|next|i\s+know|obviously|duh|faster|speed\s+up)\b/i.test(state.cue);
+  const cueWantsEasier = !!state.cue && /\b(slow\s+down|slower|too\s+fast)\b/i.test(state.cue);
   // Cue → strongest signal. Verbal disengagement / pace request.
   if (state.cue) {
     return `boredom cue detected — verbally offer "harder / skip / different topic" immediately`;
   }
-  // Incorrect-streak ladder: explicit offer > silent ramp.
+  // Incorrect-streak: ALWAYS fires regardless of paceBias (struggle is
+  // truth, style preference doesn't change whether help is needed).
   if (state.incorrectStreak > t.inverseStreak) {
     return `incorrect-streak threshold reached — verbally offer "break this down / try a simpler version" choice`;
   }
   if (state.incorrectStreak === t.inverseStreak) {
     return `incorrect-streak threshold reached — next generate_problem should pass difficulty="slightly_easier"`;
   }
-  // Correct-streak ladder: explicit offer > silent ramp.
-  if (state.correctStreak >= t.explicitOfferStreak) {
-    return `explicit-offer threshold reached — verbally offer "another at this level / harder / skip ahead" choice`;
+  // Correct-streak: harder/skip-aligned offers. Suppressed when bias <
+  // 0 (student wants more depth, not faster ramp) UNLESS a recent cue
+  // contradicts the stale bias.
+  const correctSuppressed = bias < 0 && !cueWantsHarder;
+  if (!correctSuppressed) {
+    if (state.correctStreak >= t.explicitOfferStreak) {
+      return `explicit-offer threshold reached — verbally offer "another at this level / harder / skip ahead" choice`;
+    }
+    if (state.correctStreak >= t.silentRampStreak) {
+      return `silent-ramp threshold reached — next generate_problem should pass difficulty="slightly_harder"`;
+    }
   }
-  if (state.correctStreak >= t.silentRampStreak) {
-    return `silent-ramp threshold reached — next generate_problem should pass difficulty="slightly_harder"`;
-  }
+  // bias > 0 + recent cue wanting easier (rare collision case): no
+  // explicit hint. Brain handles via standard binding-choice rule.
+  void cueWantsEasier;
   return null;
 }
 
@@ -510,6 +542,42 @@ function formatStudentStateBlock(
     block: `<student_state>\n${lines.join('\n')}\n</student_state>\n\n`,
     hint,
   };
+}
+
+/**
+ * Render the `<pace_preference>` block (Phase 3). Active only when the
+ * student has clicked Slow down / Speed up OR uttered a matching verbal
+ * cue ("slow down" / "faster" etc). Negative bias = student wants more
+ * depth + smaller chunks + comprehension checks; positive = less depth +
+ * tighter explanations. Block is OMITTED when bias === 0 / undefined to
+ * keep token cost zero on the common case.
+ *
+ * Note this is a session-level preference — does NOT reset on segment
+ * change. Brain should sustain the preference across the entire session
+ * unless the student verbally requests a change in the other direction.
+ */
+function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']): string {
+  if (!state) return '';
+  const bias = state.paceBias ?? 0;
+  if (bias === 0) return '';
+  const sign = bias < 0 ? 'negative' : 'positive';
+  const absMag = Math.abs(bias);
+  const mag = absMag === 1 ? 'mild' : 'strong';
+  const since = state.paceBiasAppliedSinceTurns;
+  const sinceLine = typeof since === 'number' && since >= 0
+    ? `applied since: ${since} turn${since === 1 ? '' : 's'} ago`
+    : '';
+  // Generic guidance — no subject-specific examples. Brain reads + adapts.
+  const guidance = bias < 0
+    ? `student wants MORE depth and slower teaching. Break explanations into smaller chunks. Add a brief comprehension check between steps. Lengthen worked examples. Don't skip restatements that aid retention.`
+    : `student wants LESS depth and faster teaching. Shorten explanations. Skip restating known facts. Cut comprehension checks unless the student is clearly stuck. Move through worked examples briskly.`;
+  return (
+    `<pace_preference>\n` +
+    `bias: ${bias} (${sign}, ${mag})\n` +
+    (sinceLine ? `${sinceLine}\n` : '') +
+    `guidance: ${guidance}\n` +
+    `</pace_preference>\n\n`
+  );
 }
 
 function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
@@ -563,12 +631,17 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (pacingHint) {
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
   }
+  const pacePreferenceBlock = formatPacePreferenceBlock(input.pacingState);
+  if (pacePreferenceBlock) {
+    console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
+  }
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
     studentStateBlock +
+    pacePreferenceBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -683,12 +756,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (pacingHint) {
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
   }
+  const pacePreferenceBlock = formatPacePreferenceBlock(input.pacingState);
+  if (pacePreferenceBlock) {
+    console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
+  }
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
     studentStateBlock +
+    pacePreferenceBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

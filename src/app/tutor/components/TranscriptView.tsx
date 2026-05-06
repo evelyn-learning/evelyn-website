@@ -31,6 +31,12 @@ interface TranscriptViewProps {
    *  the student waiting for TTS to finish before they can speak.
    *  2026-04-30: feature request from a calc session. */
   onQuickAnswer?: (text: string) => void;
+  /** Phase 3: render Skip ahead / I'm stuck contextual chips on the
+   *  latest tutor turn. Co-located with the yes/no/true-false chip
+   *  row. Both inject synthetic student utterances via onQuickAnswer.
+   *  Default false; the host wires `true` when the PACING_V2_BUTTONS
+   *  flag is on. */
+  enablePacingChips?: boolean;
 }
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
@@ -159,7 +165,7 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
@@ -270,6 +276,18 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       studentRespondedAfterLatest = true;
     }
   }
+  // Phase 3: pacing chips (Skip ahead / I'm stuck) gating. Don't show
+  // on the very first tutor turn (the welcome / hook) — there's no
+  // problem to be stuck on or skip from yet, and the chips read as
+  // visual noise. After the welcome message and the student's first
+  // response, the chips become available.
+  // Heuristic: count finalized tutor turns; only show chips when ≥ 2
+  // (welcome + at least one teaching turn).
+  const tutorTurnsFinalized = visibleTranscript.reduce(
+    (n, e) => n + (e.role === 'tutor' && !e.streaming ? 1 : 0),
+    0,
+  );
+  const pacingChipsAllowed = tutorTurnsFinalized >= 2;
 
   const renderEntry = (entry: TranscriptEntry) => {
     const split = entry.role === 'tutor' && !entry.streaming ? splitTrailingQuestion(entry.text) : null;
@@ -349,13 +367,15 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
           {formatTime(entry.timestamp)}
         </p>
 
-        {/* Quick-answer buttons under the LATEST tutor turn when its
-            trailing question is yes/no or true/false. Lets the student
-            answer without waiting for TTS to finish or typing.
-            Tap → sends text via onQuickAnswer (relayed to brain) and
-            the buttons disappear because the next tutor turn becomes
-            the new "latest". */}
-        {onQuickAnswer && quickKind !== 'open' && (
+        {/* Quick-answer + pacing buttons under the LATEST tutor turn.
+            Yes/no/true-false chips appear when the trailing question
+            classifies (existing behavior). Phase 3 adds Skip ahead /
+            I'm stuck chips that always appear on the latest tutor
+            turn when enablePacingChips is on. All chips share the
+            same visual row — single region of "quick actions". They
+            disappear when the next tutor turn starts streaming
+            because that turn becomes the new "latest". */}
+        {onQuickAnswer && entry.id === latestTutorEntryId && !studentRespondedAfterLatest && (quickKind !== 'open' || (enablePacingChips && pacingChipsAllowed)) && (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {(quickKind === 'yes-no'
               ? [
@@ -363,11 +383,13 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   { label: 'No', text: 'No' },
                   { label: 'Not sure', text: 'I\'m not sure' },
                 ]
-              : [
-                  { label: 'True', text: 'True' },
-                  { label: 'False', text: 'False' },
-                  { label: 'Not sure', text: 'I\'m not sure' },
-                ]
+              : quickKind === 'true-false'
+                ? [
+                    { label: 'True', text: 'True' },
+                    { label: 'False', text: 'False' },
+                    { label: 'Not sure', text: 'I\'m not sure' },
+                  ]
+                : []
             ).map((opt) => (
               <button
                 key={opt.label}
@@ -387,6 +409,37 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                 {opt.label}
               </button>
             ))}
+            {/* Phase 3 — pacing chips. Slightly different visual tone
+                (amber/gray) so they read as a separate kind of action
+                vs. the yes/no answers, while sharing the same row.
+                Hidden on the very first tutor turn (the welcome /
+                hook); see pacingChipsAllowed gate above. */}
+            {enablePacingChips && pacingChipsAllowed && (
+              <>
+                <button
+                  key="pacing-stuck"
+                  disabled={!!isProcessing}
+                  onClick={() => onQuickAnswer("I'm stuck on this — can you break it down?")}
+                  className="px-3 py-1 text-xs font-medium bg-white text-amber-700 border border-amber-300 rounded-full hover:bg-amber-50 hover:border-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  I&apos;m stuck
+                </button>
+                <button
+                  key="pacing-skip"
+                  disabled={!!isProcessing}
+                  // Bracketed directive teaches the brain to be
+                  // decisive — actually skip rather than counter-asking
+                  // "skip to what?". TranscriptView strips the
+                  // bracketed segment from the visible chat (see
+                  // mixed-bubble strip), so the student sees only the
+                  // clean leading sentence.
+                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance the lesson now — call advance_lesson to the next on-topic segment, or generate a fresh problem at the same level if no segment remains. Don't ask for clarification, just advance.]")}
+                  className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Skip ahead
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

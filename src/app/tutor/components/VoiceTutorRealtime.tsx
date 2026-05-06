@@ -67,6 +67,12 @@ export interface RealtimeHandle {
     topicsCovered: string[];
     weakTopics: Array<{ topic: string; count: number }>;
   };
+  /** Phase 3: step the session-level depth preference. Negative =
+   *  more depth / slower teaching. Positive = less depth. Clamped
+   *  -2..+2. Wired to ⋯ menu Slow down / Speed up items. Verbal
+   *  cues like "slow down" / "faster" go through the boredom-cue
+   *  regex inside callBrainOnce and call stepPaceBias internally. */
+  stepPaceBias: (delta: -1 | 1) => void;
 }
 
 // --- Multi-language whiteboard intent detection ---
@@ -196,6 +202,10 @@ interface VoiceTutorRealtimeProps {
    *  brain is fetching a response, warm-up is in progress, or TTS is
    *  rendering. Parent can use this to drive a typing indicator. */
   onTutorBusy?: (busy: boolean) => void;
+  /** Phase 3: fires whenever paceBias changes (button click OR matching
+   *  verbal cue). Parent uses this to render an "ack" badge confirming
+   *  the click landed and showing current bias state. */
+  onPaceBiasChange?: (bias: number) => void;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -244,6 +254,7 @@ export function VoiceTutorRealtime({
   ttsProvider = 'realtime',
   onLessonPlanProgress,
   onTutorBusy,
+  onPaceBiasChange,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -577,6 +588,68 @@ export function VoiceTutorRealtime({
     console.log(line);
     pacingTelemetryRef.current.push(line);
   }, []);
+  // Phase 3: paceBias step. Negative = student wants more depth/slower
+  // teaching; positive = less depth/faster. Clamped -2..+2. Caller is
+  // either a button click (Slow down / Speed up) or a matched verbal
+  // cue ("slow down" / "faster" etc — see boredomCueRegex extension
+  // below). Records `<pace_preference>` setting time so the prompt
+  // formatter can compute "applied since N turns ago".
+  const paceBiasSetTurnRef = useRef<number>(0);
+  const onPaceBiasChangeRef = useRef(onPaceBiasChange);
+  useEffect(() => { onPaceBiasChangeRef.current = onPaceBiasChange; }, [onPaceBiasChange]);
+  // Phase 4: persist pacing state to localStorage so it carries over
+  // when the same lesson plan is re-launched. Keyed on plan.id;
+  // session-unmount + paceBias-step both call this. No-op when no
+  // plan is loaded (free-conversation).
+  const persistPacingState = useCallback(() => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      const planId = lessonPlanRef.current?.id;
+      if (!planId) return;
+      const key = `evelyn:pacing-v2:${planId}`;
+      const payload = {
+        paceBias: paceBiasRef.current,
+        correctStreakCount: studentStreakRef.current.count,
+        incorrectStreakCount: studentIncorrectStreakRef.current.count,
+        savedAt: new Date().toISOString(),
+      };
+      window.localStorage.setItem(key, JSON.stringify(payload));
+    } catch (err) {
+      console.warn('[VoiceTutorRealtime] pacing-v2 persistence save failed:', err);
+    }
+  }, []);
+  // Save on unmount (most common session-end path — `key={sessionId}`
+  // remount). Also save on visibilitychange → hidden so tab-close /
+  // tab-switch captures recent state. The save is idempotent and
+  // cheap (small JSON write); double-saves are fine.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') persistPacingState();
+    };
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      persistPacingState();
+    };
+  }, [persistPacingState]);
+  const stepPaceBias = useCallback((delta: -1 | 1, source: 'button' | 'cue', detail?: string) => {
+    const from = paceBiasRef.current;
+    const to = Math.max(-2, Math.min(2, from + delta));
+    if (to === from) {
+      logPacing(`pace-bias-step delta=${delta} from=${from} to=${to} source=${source} (clamped${detail ? `, ${detail}` : ''})`);
+      // Even on clamp, surface the no-op so the parent can flash a
+      // "max reached" hint if it wants. The bias value didn't change
+      // but the user's intent was registered.
+      onPaceBiasChangeRef.current?.(to);
+      return;
+    }
+    paceBiasRef.current = to;
+    paceBiasSetTurnRef.current = pacingTurnCounterRef.current;
+    logPacing(`pace-bias-step delta=${delta} from=${from} to=${to} source=${source}${detail ? ` cue="${detail}"` : ''}`);
+    onPaceBiasChangeRef.current?.(to);
+    persistPacingState();
+  }, [logPacing, persistPacingState]);
 
   // Flag flipped true when the tutor just emitted a show_equation with
   // label: "Final Answer". On the NEXT batch of whiteboard commands that
@@ -3333,12 +3406,56 @@ export function VoiceTutorRealtime({
         setActivePlan(plan);
         setActiveSegmentId(plan.segments[0].id);
         console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${plan.segments[0].id}"`);
+        // Phase 4: per-plan persistence. Look up prior session's
+        // pacing state for this plan in localStorage and pre-populate
+        // refs. Bounded TTL — don't resume state from a session > 30
+        // days old (preferences drift, student may have grown). On
+        // success, surface via [pacing] resumed-from-prior-session
+        // event so it shows in the server log AND fires the badge
+        // ack flash.
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            const key = `evelyn:pacing-v2:${plan.id}`;
+            const raw = window.localStorage.getItem(key);
+            if (raw) {
+              const prior = JSON.parse(raw) as {
+                paceBias?: number;
+                correctStreakCount?: number;
+                incorrectStreakCount?: number;
+                savedAt?: string;
+              };
+              const ageMs = prior.savedAt ? Date.now() - new Date(prior.savedAt).getTime() : Infinity;
+              const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+              if (ageMs <= TTL_MS) {
+                if (typeof prior.paceBias === 'number' && prior.paceBias !== 0) {
+                  paceBiasRef.current = Math.max(-2, Math.min(2, Math.round(prior.paceBias)));
+                  paceBiasSetTurnRef.current = 0;
+                  // Notify parent so the badge updates immediately
+                  // on session start.
+                  onPaceBiasChangeRef.current?.(paceBiasRef.current);
+                }
+                if (typeof prior.correctStreakCount === 'number' && prior.correctStreakCount > 0) {
+                  studentStreakRef.current = { segId: plan.segments[0].id, count: prior.correctStreakCount };
+                }
+                if (typeof prior.incorrectStreakCount === 'number' && prior.incorrectStreakCount > 0) {
+                  studentIncorrectStreakRef.current = { segId: plan.segments[0].id, count: prior.incorrectStreakCount };
+                }
+                logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
+              } else {
+                logPacing(`prior-session-stale ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}" (skipped resume)`);
+                window.localStorage.removeItem(key);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[VoiceTutorRealtime] pacing-v2 persistence load failed:', err);
+        }
       } catch (err) {
         console.error('[VoiceTutorRealtime] lesson plan fetch failed:', err);
       }
     })();
     return () => { cancelled = true; };
-  }, [lessonPlanId]);
+  }, [lessonPlanId, logPacing]);
 
   useEffect(() => {
     // Debounce to avoid false triggers from SMILES normalization on load
@@ -3602,6 +3719,17 @@ export function VoiceTutorRealtime({
           studentCueRef.current = { cue: cueMatch[0], turn: pacingTurnCounterRef.current };
           logPacing(`student-cue cue="${cueMatch[0]}" turn=${pacingTurnCounterRef.current}`);
           onDebugEvent?.('pacing_cue', `cue="${cueMatch[0]}"`);
+          // Phase 3: pace-direction cues additionally step paceBias.
+          // "slow down" / "slower" → -1 (more depth). "faster" / "speed
+          // up" → +1 (less depth). Other cues (skip/easy/boring/etc.)
+          // do NOT step bias — they're concept-level signals, not
+          // depth-of-teaching signals.
+          const cueLower = cueMatch[0].toLowerCase();
+          if (/slow\s+down|slower/.test(cueLower)) {
+            stepPaceBias(-1, 'cue', cueMatch[0]);
+          } else if (/faster|speed\s+up/.test(cueLower)) {
+            stepPaceBias(+1, 'cue', cueMatch[0]);
+          }
         }
       }
       // Mirror current segment id into the catalog so subsequent
@@ -3820,7 +3948,21 @@ export function VoiceTutorRealtime({
               segmentTurns: segmentTurnCountRef.current.segId === currentSegmentIdRef.current
                 ? segmentTurnCountRef.current.count : 0,
               segmentMastered: segmentMasteredFlagRef.current ?? undefined,
-              thresholds: getGradeProfile(level).pacingThresholds,
+              // Phase 4: per-plan thresholds override gradeProfile
+              // defaults when the plan declares its own. Lets a
+              // partner / curriculum author tune ramp + offer +
+              // inverse-streak thresholds per the plan's intended
+              // pacing (test-prep wants more drilling; K-2 wants
+              // earlier ramps; etc.).
+              thresholds: lessonPlanRef.current?.pacingThresholds
+                ?? getGradeProfile(level).pacingThresholds,
+              // Phase 3: session-level depth preference. 0 = neutral
+              // (block omitted by formatter). Set by buttons or verbal
+              // cue. Never resets within a session.
+              paceBias: paceBiasRef.current,
+              paceBiasAppliedSinceTurns: paceBiasRef.current !== 0
+                ? Math.max(0, pacingTurnCounterRef.current - paceBiasSetTurnRef.current)
+                : undefined,
             },
             // Pacing v2 telemetry events buffered since the previous
             // brain call. Drained here. The /api/tutor/brain/stream
@@ -5498,12 +5640,13 @@ export function VoiceTutorRealtime({
             .map(([topic, count]) => ({ topic, count }))
             .sort((a, b) => b.count - a.count),
         }),
+        stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
       };
     }
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime]);
+  }, [handleRef, realtime, stepPaceBias]);
 
   // Build system prompt / instructions on mount
   useEffect(() => {

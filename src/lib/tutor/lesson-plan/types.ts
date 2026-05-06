@@ -192,6 +192,22 @@ export interface LessonPlan {
   schemaVersion: number;
   /** Free-form metadata for partners to attach things we don't model. */
   metadata?: Record<string, unknown>;
+  /** Pacing v2 — Phase 4: per-plan pacing-threshold override. When
+   *  present, OVERRIDES the gradeProfile defaults at request-payload
+   *  assembly time. Lets a partner / curriculum author tune
+   *  silentRamp / explicitOffer / inverseStreak per their pedagogy.
+   *  E.g. test-prep plans may want explicitOfferStreak=6 (more
+   *  drilling before offering a switch); K-2 may want everything at
+   *  2 (shorter attention budget). All five fields are required when
+   *  the object is present — partial overrides are NOT supported, to
+   *  keep the threshold semantics coherent. */
+  pacingThresholds?: {
+    silentRampStreak: number;
+    explicitOfferStreak: number;
+    inverseStreak: number;
+    checkInMinTurns: number;
+    checkInCooldown: number;
+  };
 }
 
 export const LESSON_PLAN_SCHEMA_VERSION = 1;

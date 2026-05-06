@@ -136,6 +136,19 @@ function TutorPage() {
   // floated to the bottom and visibly drifted on every new turn
   // (observed 2026-04-29 geometry session).
   const [pickerAnchorIndex, setPickerAnchorIndex] = useState<number | null>(null);
+  // Pacing v2 — Phase 3: ⋯ menu open state. Holds Harder / Easier /
+  // Slow down / Speed up / Wrap up actions that are too rare to
+  // deserve their own visible button. Default closed.
+  const [pacingMenuOpen, setPacingMenuOpen] = useState(false);
+  // Phase 3: current paceBias value, mirrored from VoiceTutorRealtime
+  // via onPaceBiasChange. Drives the visible badge near the ⋯ menu so
+  // the student can verify their Slow down / Speed up clicks landed
+  // (the actual depth shift only manifests in subsequent brain turns,
+  // so the click otherwise feels inert). Also flashes briefly to ack
+  // each click.
+  const [paceBias, setPaceBias] = useState(0);
+  const [paceBiasFlash, setPaceBiasFlash] = useState(false);
+  const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('voice');
@@ -1371,11 +1384,125 @@ function TutorPage() {
             } lg:flex`}
             style={{ width: isDesktop ? `${splitPercent}%` : '100%' }}
           >
+            {/* Pacing v2 — Phase 3 ⋯ menu. Sits at the top-right of the
+                transcript column. Holds rare-use pacing actions (Harder,
+                Easier, Slow down, Speed up, Wrap up). Hidden when the
+                NEXT_PUBLIC_PACING_V2_BUTTONS flag is off. */}
+            {(() => {
+              const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
+              const flagOn = v === undefined || v === null || v === ''
+                ? true
+                : !['false', '0', 'off', 'no'].includes(String(v).trim().toLowerCase());
+              if (!flagOn) return null;
+              const menuAction = (text: string) => {
+                if (realtimeHandleRef.current) {
+                  realtimeHandleRef.current.stopSpeaking();
+                  realtimeHandleRef.current.sendTextMessage(text);
+                }
+                setPacingMenuOpen(false);
+              };
+              const paceBiasAction = (delta: -1 | 1) => {
+                realtimeHandleRef.current?.stepPaceBias(delta);
+                setPacingMenuOpen(false);
+              };
+              return (
+                <div className="relative flex justify-end items-center gap-2 px-2 py-1 border-b border-gray-100">
+                  {/* Phase 3: paceBias badge. Visible whenever bias ≠ 0
+                      so the student knows the Slow down / Speed up
+                      clicks took effect (the actual depth shift only
+                      manifests on subsequent brain turns, so the click
+                      would otherwise feel inert). Briefly flashes on
+                      each step regardless of direction — including
+                      clamp no-ops so the student gets acknowledgement
+                      that the click was registered even when at ±2. */}
+                  {(paceBias !== 0 || paceBiasFlash) && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border transition-all duration-200 ${
+                        paceBiasFlash
+                          ? 'bg-blue-100 border-blue-400 text-blue-800'
+                          : paceBias < 0
+                            ? 'bg-amber-50 border-amber-300 text-amber-800'
+                            : 'bg-green-50 border-green-300 text-green-800'
+                      }`}
+                      aria-label={paceBias < 0 ? 'Pace: slower' : paceBias > 0 ? 'Pace: faster' : 'Pace neutral'}
+                    >
+                      {paceBias < 0 ? `Slower ×${Math.abs(paceBias)}` : paceBias > 0 ? `Faster ×${paceBias}` : 'Pace'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="Pacing options"
+                    onClick={() => setPacingMenuOpen((o) => !o)}
+                    className="px-2 py-1 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded text-base leading-none"
+                  >
+                    ⋯
+                  </button>
+                  {pacingMenuOpen && (
+                    <>
+                      {/* Backdrop catches outside-click to dismiss. */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setPacingMenuOpen(false)}
+                      />
+                      <div className="absolute right-2 top-full mt-1 z-20 w-44 bg-white border border-gray-200 rounded-md shadow-lg py-1 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => menuAction('Give me a harder one.')}
+                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          Harder
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => menuAction('Give me an easier one.')}
+                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          Easier
+                        </button>
+                        <div className="my-1 border-t border-gray-100" />
+                        <button
+                          type="button"
+                          onClick={() => paceBiasAction(-1)}
+                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          Slow down
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => paceBiasAction(+1)}
+                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          Speed up
+                        </button>
+                        <div className="my-1 border-t border-gray-100" />
+                        <button
+                          type="button"
+                          onClick={() => menuAction("I'm done — let's wrap up.")}
+                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          Wrap up
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
             <div className="flex-1 min-h-0 overflow-y-auto">
               <TranscriptView
                 transcript={transcript}
                 isProcessing={isProcessing}
                 pickerAnchorIndex={pickerAnchorIndex}
+                // Pacing v2 — Phase 3: Skip ahead + I'm stuck chips.
+                // Gated by NEXT_PUBLIC_PACING_V2_BUTTONS (default ON
+                // for the combined Phase 1-3 test cycle). Set to
+                // 'false' / '0' / 'off' to hide chips and ⋯ menu.
+                enablePacingChips={(() => {
+                  const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
+                  if (v === undefined || v === null || v === '') return true;
+                  const s = String(v).trim().toLowerCase();
+                  return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
+                })()}
                 onQuickAnswer={(text) => {
                   // Quick-answer button tap: cut off the in-flight TTS
                   // bubble so the student isn't waiting on the prior
@@ -1682,6 +1809,12 @@ function TutorPage() {
                   ttsProvider={ttsProvider}
                   onLessonPlanProgress={setLessonProgress}
                   onTutorBusy={setIsProcessing}
+                  onPaceBiasChange={(bias) => {
+                    setPaceBias(bias);
+                    setPaceBiasFlash(true);
+                    if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
+                    paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
+                  }}
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini
