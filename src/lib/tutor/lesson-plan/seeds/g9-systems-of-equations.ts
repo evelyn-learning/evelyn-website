@@ -15,7 +15,7 @@ export const SEED_G9_SYSTEMS_OF_EQUATIONS: LessonPlan = {
   curriculum: 'CCSS',
   grade: '9',
   subject: 'math',
-  topic: 'algebra',
+  topic: 'systems-of-equations',
   locale: 'en',
   los: [
     {

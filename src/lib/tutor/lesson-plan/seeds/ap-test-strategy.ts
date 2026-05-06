@@ -13,7 +13,7 @@ export const SEED_AP_TEST_STRATEGY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

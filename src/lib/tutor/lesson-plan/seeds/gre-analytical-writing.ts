@@ -13,7 +13,7 @@ export const SEED_GRE_ANALYTICAL_WRITING: LessonPlan = {
   curriculum: 'CCSS',
   grade: '12',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'gre-aw',
   locale: 'en',
   los: [
     {

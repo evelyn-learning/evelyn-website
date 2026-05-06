@@ -863,6 +863,26 @@ import { SEED_G1112_LANG_MANDARIN_3_PLUS } from './seeds/g1112-lang-mandarin-3-p
 import { SEED_AP_SPANISH_LITERATURE } from './seeds/ap-spanish-literature';
 import { SEED_IB_SPANISH_LANGUAGE } from './seeds/ib-spanish-language';
 import { SEED_IB_FRENCH_LANGUAGE } from './seeds/ib-french-language';
+// Coverage batch 2026-05-06 — fills 19 remaining empty taxonomy cells.
+import { SEED_COLLEGE_ELA_COLLEGE_WRITING } from './seeds/college-ela-college-writing';
+import { SEED_COLLEGE_ELA_INTRO_LITERATURE } from './seeds/college-ela-intro-literature';
+import { SEED_COLLEGE_ELA_ACADEMIC_RESEARCH } from './seeds/college-ela-academic-research';
+import { SEED_IB_ENGLISH_A } from './seeds/ib-english-a';
+import { SEED_K2_MATH_SHAPES_PATTERNS } from './seeds/k2-math-shapes-patterns';
+import { SEED_G35_MATH_ORDER_OF_OPERATIONS } from './seeds/g35-math-order-of-operations';
+import { SEED_IB_MATH_APPLICATIONS } from './seeds/ib-math-applications';
+import { SEED_COLLEGE_MATH_LINEAR_ALGEBRA } from './seeds/college-math-linear-algebra';
+import { SEED_COLLEGE_MATH_DISCRETE_MATH } from './seeds/college-math-discrete-math';
+import { SEED_COLLEGE_MATH_INTRO_STATISTICS } from './seeds/college-math-intro-statistics';
+import { SEED_G35_SCI_ECOSYSTEMS } from './seeds/g35-sci-ecosystems';
+import { SEED_G1112_SCI_ASTRONOMY } from './seeds/g1112-sci-astronomy';
+import { SEED_IB_BIOLOGY } from './seeds/ib-biology';
+import { SEED_IB_CHEMISTRY } from './seeds/ib-chemistry';
+import { SEED_IB_PHYSICS } from './seeds/ib-physics';
+import { SEED_G910_SS_GEOGRAPHY } from './seeds/g910-ss-geography';
+import { SEED_IB_HISTORY } from './seeds/ib-history';
+import { SEED_GRE_MATH_SUBJECT } from './seeds/gre-math-subject';
+import { SEED_GRE_PHYSICS_SUBJECT } from './seeds/gre-physics-subject';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1678,6 +1698,26 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_SPANISH_LITERATURE,
   SEED_IB_SPANISH_LANGUAGE,
   SEED_IB_FRENCH_LANGUAGE,
+  // Coverage batch 2026-05-06 — fills 19 remaining empty taxonomy cells.
+  SEED_COLLEGE_ELA_COLLEGE_WRITING,
+  SEED_COLLEGE_ELA_INTRO_LITERATURE,
+  SEED_COLLEGE_ELA_ACADEMIC_RESEARCH,
+  SEED_IB_ENGLISH_A,
+  SEED_K2_MATH_SHAPES_PATTERNS,
+  SEED_G35_MATH_ORDER_OF_OPERATIONS,
+  SEED_IB_MATH_APPLICATIONS,
+  SEED_COLLEGE_MATH_LINEAR_ALGEBRA,
+  SEED_COLLEGE_MATH_DISCRETE_MATH,
+  SEED_COLLEGE_MATH_INTRO_STATISTICS,
+  SEED_G35_SCI_ECOSYSTEMS,
+  SEED_G1112_SCI_ASTRONOMY,
+  SEED_IB_BIOLOGY,
+  SEED_IB_CHEMISTRY,
+  SEED_IB_PHYSICS,
+  SEED_G910_SS_GEOGRAPHY,
+  SEED_IB_HISTORY,
+  SEED_GRE_MATH_SUBJECT,
+  SEED_GRE_PHYSICS_SUBJECT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
@@ -1715,12 +1755,12 @@ export interface LessonPlanFilter {
  *  high-school. */
 function gradesInBand(band: string): string[] {
   const b = band.trim().toLowerCase();
-  if (b === 'k-2') return ['k', '1', '2'];
-  if (b === '3-5') return ['3', '4', '5'];
-  if (b === '6-8') return ['6', '7', '8'];
-  if (b === '9-10') return ['9', '10'];
-  if (b === '11-12') return ['11', '12'];
-  if (b === 'ap') return ['ap', '11', '12', '9-12'];
+  if (b === 'k-2') return ['k', '1', '2', 'k-2'];
+  if (b === '3-5') return ['3', '4', '5', '3-5'];
+  if (b === '6-8') return ['6', '7', '8', '6-8'];
+  if (b === '9-10') return ['9', '10', '9-10', '9-12'];
+  if (b === '11-12') return ['11', '12', '11-12', '9-12'];
+  if (b === 'ap') return ['ap', '11', '12', '9-12', '11-12'];
   if (b === 'sat-act') return ['sat-act', '11', '12'];
   if (b === 'iitjee') return ['iitjee', '11', '12'];
   if (b === 'medical-entrance') return ['medical-entrance', '11', '12'];
@@ -1783,14 +1823,21 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'intro-calculus': ['calculus', 'precalculus'],
   'sequences-series': ['sequences'],
   'logarithms-exponentials': ['logarithms', 'exponential-functions', 'exponents'],
-  'matrices': ['matrices'],
+  'matrices': ['matrices', 'algebra-2'],
   'linear-functions': ['linear-functions', 'functions'],
   'quadratic-equations': ['quadratics'],
-  'systems-of-equations': ['equations'],
+  'systems-of-equations': ['systems-of-equations', 'equations'],
   'polynomials': ['polynomials'],
   'intro-statistics': ['intro-statistics', 'statistics', 'probability'],
   'calculus-1': ['calculus'],
   'calculus-2': ['calculus'],
+  'integers-rational': ['integers', 'integer-operations', 'rational-numbers', 'pre-algebra'],
+  'coordinate-plane': ['coordinate-plane', 'coordinate-geometry'],
+  'order-of-operations': ['order-of-operations', 'operations'],
+  'shapes-patterns': ['shapes-patterns', 'shapes', 'geometry-basics', 'patterns'],
+  'discrete-math': ['discrete-math', 'discrete-math-cs'],
+  'linear-algebra': ['linear-algebra'],
+  'ib-math-applications': ['ib-math-applications', 'ibdp-ai', 'ibdp-aa'],
   // ── Science ──
   'living-things': ['cells-and-life', 'life-science', 'animals-habitats'],
   'cell-biology': ['cell-biology', 'cells-and-life', 'biology'],
@@ -1811,8 +1858,22 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'astronomy': ['astronomy', 'space', 'earth-and-space'],
   'biology-advanced': ['biology', 'genetics', 'evolution', 'ecology'],
   'chemistry-advanced': ['chemistry'],
-  'human-body': ['human-body', 'biology'],
+  'human-body': ['human-body', 'biology', 'life-science'],
   'anatomy-physiology': ['anatomy', 'human-body', 'biology'],
+  'weather-seasons': ['weather-seasons', 'earth-and-space', 'weather'],
+  'animals-habitats': ['animals-habitats', 'life-science', 'habitats'],
+  'life-cycles': ['life-cycles', 'life-science'],
+  'ecosystems': ['ecosystems', 'ecology', 'environmental-science'],
+  'water-cycle': ['water-cycle', 'earth-systems', 'earth-and-space'],
+  'light-sound': ['light-sound', 'waves'],
+  'simple-machines': ['simple-machines', 'forces-and-motion'],
+  'ap-chemistry': ['ap-chemistry', 'chemistry'],
+  'ap-physics-c-mech': ['ap-physics-c-mech', 'physics-mechanics'],
+  'ap-physics-c-em': ['ap-physics-c-em', 'physics'],
+  'ap-environmental': ['ap-environmental', 'environmental-science'],
+  'ib-biology': ['ib-biology'],
+  'ib-chemistry': ['ib-chemistry'],
+  'ib-physics': ['ib-physics'],
   // ── ELA — gradeband bucket tags surface across the relevant taxonomy topics ──
   'phonics-reading': ['phonics', 'reading', 'reading-foundations', 'k2-ela'],
   'sight-words': ['k2-ela', 'phonics', 'reading-foundations'],
@@ -1873,6 +1934,23 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'economics': ['economics', 'g35-ss', 'g68-ss', 'g912-ss'],
   'micro-economics': ['economics', 'g912-ss'],
   'macro-economics': ['economics', 'g912-ss'],
+  'community-helpers': ['community-helpers', 'communities', 'community', 'k2-ss'],
+  'holidays-traditions': ['holidays-traditions', 'k2-ss', 'culture'],
+  'rules-citizenship': ['rules-citizenship', 'k2-ss', 'civics'],
+  'early-american-history': ['early-american-history', 'us-history', 'g35-ss'],
+  'world-cultures': ['world-cultures', 'culture', 'g35-ss'],
+  'government-basics': ['government-basics', 'government', 'civics', 'g35-ss'],
+  'economics-basics': ['economics-basics', 'economics', 'g35-ss'],
+  'native-americans': ['native-americans', 'native-american-cultures', 'g35-ss'],
+  'us-history-to-1877': ['us-history-to-1877', 'us-history', 'g68-ss'],
+  'us-history-1877-present': ['us-history-1877-present', 'us-history', 'g68-ss'],
+  'economics-ms': ['economics-ms', 'economics', 'g68-ss'],
+  'us-history': ['us-history', 'g912-ss', 'g68-ss'],
+  'government-politics': ['government-politics', 'government', 'civics', 'g912-ss'],
+  'geography': ['geography', 'world-geography', 'us-geography', 'human-geography'],
+  'ap-european-history': ['ap-european-history', 'european-history'],
+  'ap-human-geography': ['ap-human-geography', 'ap-human-geo', 'human-geography'],
+  'ib-history': ['ib-history'],
   // ── Test prep namespaces ──
   'sat-math-no-calc': ['sat-math', 'sat-math-full'],
   'sat-math-calc': ['sat-math', 'sat-math-full'],
@@ -1902,6 +1980,20 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'ap-cs-principles': ['computer-science', 'ap-cs-principles'],
   // ── Civics / government cross-references ──
   'civics-government': ['civics', 'government'],
+  // ── Test-prep specific cell aliases (cell-id → plan tags) ──
+  'ap-test-strategy': ['ap-test-strategy'],
+  'ssat-isee': ['ssat-isee'],
+  'jee-chemistry': ['jee-chemistry', 'jee-organic', 'jee-physical-chem', 'jee-inorganic'],
+  'jee-math': ['jee-math', 'jee-coordinate-geometry'],
+  'gre-aw': ['gre-aw', 'gre-analytical-writing'],
+  'nclex-pn': ['nclex-pn'],
+  'gre-math-subject': ['gre-math-subject'],
+  'gre-physics-subject': ['gre-physics-subject'],
+  // ── ELA AP/IB + College ──
+  'ib-english-a': ['ib-english-a'],
+  'college-writing': ['college-writing', 'college-ela'],
+  'intro-literature': ['intro-literature', 'college-ela'],
+  'academic-research': ['academic-research', 'college-ela'],
 };
 
 /** Math/ELA/Science-side topic ids that actually belong to the test-prep

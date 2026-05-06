@@ -10,7 +10,7 @@ export const SEED_G68_SS_WORLD_REGIONS_GEOGRAPHY: LessonPlan = {
   curriculum: 'CCSS',
   grade: '6-8',
   subject: 'ss',
-  topic: 'g68-ss',
+  topic: 'world-geography',
   locale: 'en',
   los: [
     {

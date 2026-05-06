@@ -10,7 +10,7 @@ export const SEED_NCLEX_PN_STRATEGY: LessonPlan = {
   curriculum: 'NCSBN',
   grade: 'nursing',
   subject: 'test-prep',
-  topic: 'test-prep',
+  topic: 'nclex-pn',
   locale: 'en',
   los: [
     {

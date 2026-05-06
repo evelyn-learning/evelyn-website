@@ -10,7 +10,7 @@ export const SEED_JEE_COORDINATE_GEOMETRY: LessonPlan = {
   curriculum: 'NCERT',
   grade: '11',
   subject: 'math',
-  topic: 'test-prep',
+  topic: 'jee-math',
   locale: 'en',
   los: [
     {

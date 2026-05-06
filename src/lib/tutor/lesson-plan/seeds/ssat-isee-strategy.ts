@@ -12,9 +12,9 @@ export const SEED_SSAT_ISEE_STRATEGY: LessonPlan = {
   id: 'evelyn.testprep.ssat-isee.strategy.v1',
   title: 'SSAT / ISEE: independent school admissions strategy',
   curriculum: 'CCSS',
-  grade: '8',
+  grade: 'sat-act',
   subject: 'ela',
-  topic: 'test-prep',
+  topic: 'ssat-isee',
   locale: 'en',
   los: [
     {

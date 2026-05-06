@@ -10,7 +10,7 @@ export const SEED_JEE_ORGANIC_MECHANISMS: LessonPlan = {
   curriculum: 'NCERT',
   grade: '11',
   subject: 'sci',
-  topic: 'test-prep',
+  topic: 'jee-chemistry',
   locale: 'en',
   los: [
     {

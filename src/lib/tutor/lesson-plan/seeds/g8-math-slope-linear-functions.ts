@@ -13,7 +13,7 @@ export const SEED_G8_MATH_SLOPE_LINEAR_FUNCTIONS: LessonPlan = {
   id: 'evelyn.g8.math.slope-linear-functions.v1',
   title: 'Slope and Linear Functions',
   curriculum: 'CCSS',
-  grade: '8',
+  grade: '9',
   subject: 'math',
   topic: 'linear-functions',
   locale: 'en',

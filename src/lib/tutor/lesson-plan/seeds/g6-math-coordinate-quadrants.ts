@@ -13,7 +13,7 @@ export const SEED_G6_MATH_COORDINATE_QUADRANTS: LessonPlan = {
   curriculum: 'CCSS',
   grade: '6',
   subject: 'math',
-  topic: 'geometry',
+  topic: 'coordinate-plane',
   locale: 'en',
   los: [
     {
