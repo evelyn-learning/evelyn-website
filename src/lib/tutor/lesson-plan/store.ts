@@ -863,6 +863,10 @@ import { SEED_G1112_LANG_MANDARIN_3_PLUS } from './seeds/g1112-lang-mandarin-3-p
 import { SEED_AP_SPANISH_LITERATURE } from './seeds/ap-spanish-literature';
 import { SEED_IB_SPANISH_LANGUAGE } from './seeds/ib-spanish-language';
 import { SEED_IB_FRENCH_LANGUAGE } from './seeds/ib-french-language';
+// Pacing v2 test plans — Phase 1 inert validation.
+import { SEED_TEST_PACING_BOREDOM } from './seeds/test-pacing-boredom';
+import { SEED_TEST_PACING_STRUGGLE } from './seeds/test-pacing-struggle';
+import { SEED_TEST_PACING_DEPTH } from './seeds/test-pacing-depth';
 
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
@@ -1679,6 +1683,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_SPANISH_LITERATURE,
   SEED_IB_SPANISH_LANGUAGE,
   SEED_IB_FRENCH_LANGUAGE,
+  // Pacing v2 — Phase 1 inert validation plans.
+  SEED_TEST_PACING_BOREDOM,
+  SEED_TEST_PACING_STRUGGLE,
+  SEED_TEST_PACING_DEPTH,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

@@ -31,6 +31,21 @@ export interface GradeProfile {
   pacingMultiplier: number;
   /** Tolerated humor level — light puns vs. richer parallel-story humor. */
   humorCeiling: 'off' | 'light' | 'medium' | 'heavy';
+  /** Pacing v2 thresholds. Streak counts that gate ramp/offer behavior.
+   *  Phase 1 only reads these for the student_state block context;
+   *  Phase 2 uses them to emit advisory hints. */
+  pacingThresholds: {
+    /** Correct-streak count → silent slightly_harder on next generate_problem. */
+    silentRampStreak: number;
+    /** Correct-streak count → verbal "harder / same / skip" offer. */
+    explicitOfferStreak: number;
+    /** Wrong-streak count → silent slightly_easier on next generate_problem. */
+    inverseStreak: number;
+    /** Segment must have ≥ this many student turns to qualify for boundary check-in. */
+    checkInMinTurns: number;
+    /** Number of segments to skip between consecutive boundary check-ins. */
+    checkInCooldown: number;
+  };
 }
 
 const PROFILES: Record<GradeBand, GradeProfile> = {
@@ -43,6 +58,13 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 3,
     pacingMultiplier: 2.0,
     humorCeiling: 'light',
+    pacingThresholds: {
+      silentRampStreak: 2,
+      explicitOfferStreak: 3,
+      inverseStreak: 2,
+      checkInMinTurns: 2,
+      checkInCooldown: 1,
+    },
   },
   '3-5': {
     band: '3-5',
@@ -53,6 +75,13 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 5,
     pacingMultiplier: 1.5,
     humorCeiling: 'medium',
+    pacingThresholds: {
+      silentRampStreak: 3,
+      explicitOfferStreak: 4,
+      inverseStreak: 2,
+      checkInMinTurns: 3,
+      checkInCooldown: 2,
+    },
   },
   '6-8': {
     band: '6-8',
@@ -63,6 +92,13 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 8,
     pacingMultiplier: 1.2,
     humorCeiling: 'medium',
+    pacingThresholds: {
+      silentRampStreak: 3,
+      explicitOfferStreak: 4,
+      inverseStreak: 2,
+      checkInMinTurns: 3,
+      checkInCooldown: 2,
+    },
   },
   '9-12': {
     band: '9-12',
@@ -73,6 +109,13 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 12,
     pacingMultiplier: 1.0,
     humorCeiling: 'heavy',
+    pacingThresholds: {
+      silentRampStreak: 4,
+      explicitOfferStreak: 6,
+      inverseStreak: 3,
+      checkInMinTurns: 5,
+      checkInCooldown: 3,
+    },
   },
 };
 

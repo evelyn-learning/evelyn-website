@@ -134,6 +134,7 @@ import { validateReactionCoordinate } from '@/lib/tutor/diagrams/reaction-coordi
 import { validateManipulative } from '@/lib/tutor/diagrams/manipulative-validator';
 import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
+import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 
 interface VoiceTutorRealtimeProps {
   subject: string;
@@ -469,6 +470,19 @@ export function VoiceTutorRealtime({
   // Stored as Set of joined integer tokens (e.g., "511|7|73") so a
   // judge claim citing those same numbers can be matched fast.
   const wolframVerifiedNumberSetsRef = useRef<Set<string>>(new Set());
+  // Per-equation token sets. Each Wolfram-verified equation contributes
+  // ONE entry (a Set<string> of its integer tokens). Used by the
+  // wolfram-override path to require that a judge-killed claim's
+  // tokens substantially overlap with A SINGLE verified equation, not
+  // just the flat union across all session-verified equations. The
+  // flat union (wolframVerifiedNumberSetsRef above) is preserved for
+  // single-token claims ("the mean is 73") where per-equation
+  // matching is unnecessary. Observed 2026-05-06 session: brain wrote
+  // "(16+24+32+40+48)/5 = 160/5 = 30" (wrong: actual = 32); judge
+  // KILLed correctly; flat-union override saw 24, 30, 40 overlap with
+  // earlier-session verified equations and downgraded the kill →
+  // brain's wrong answer slipped through.
+  const wolframVerifiedEquationsRef = useRef<Array<Set<string>>>([]);
   // Round-7++++ Fix Issue 8: bridge-phrase rotation. Track the last
   // generate_problem hedged-bridge sentence the brain spoke. When the
   // brain repeats the SAME phrase next turn (Sonnet defaults to "Let
@@ -489,6 +503,80 @@ export function VoiceTutorRealtime({
   const lastFatigueInjectionAtRef = useRef(0);
   const sessionStartMsRef = useRef<number>(Date.now());
   const longSessionCheckFiredRef = useRef(false);
+
+  // Pacing v2 — Phase 1 (inert): student-aware difficulty/depth
+  // modulation signals. These refs accumulate signals from the student's
+  // answer stream. Phase 1 only logs + surfaces them as a counter block
+  // in the brain prompt; Phase 2 will gate advisory hints; Phase 3 will
+  // wire UI buttons + paceBias depth preference. Keyed on
+  // currentSegmentIdRef so segment changes naturally reset the streak.
+  // Reset rules + composite-correctness definition documented in
+  // project_pacing_v2_design.md.
+  const studentStreakRef = useRef<{ segId: string; count: number }>({ segId: '', count: 0 });
+  const studentIncorrectStreakRef = useRef<{ segId: string; count: number }>({ segId: '', count: 0 });
+  const studentCueRef = useRef<{ cue: string; turn: number } | null>(null);
+  // Session-level depth preference. -2..+2. Negative = student wants more
+  // depth/explanation. Positive = student wants less. Stepped by Slow
+  // down / Speed up button clicks (Phase 3) AND matching verbal cues.
+  // Resets only on session unmount.
+  const paceBiasRef = useRef<number>(0);
+  // Set when mark_segment_complete fires AND streak >= 2 at that moment.
+  // Renders a "segment-mastered" hint in next-turn student_state block.
+  // Cleared on segment change (one-shot signal).
+  const segmentMasteredFlagRef = useRef<{ segId: string; streakAtComplete: number } | null>(null);
+  // Per-session monotonic turn counter. Used to gate cue freshness
+  // (sticky for one student turn, dropped on the next) and to compute
+  // "applied since N turns ago" for paceBias. Incremented on every
+  // student utterance arrival path (transcript, typed input, button
+  // injection).
+  const pacingTurnCounterRef = useRef<number>(0);
+  // Per-segment student-turn count. Used by the segment-boundary
+  // check-in eligibility gate (Phase 4 / Q4 (c)). Incremented on every
+  // verification turn within a segment. Resets on segment change.
+  const segmentTurnCountRef = useRef<{ segId: string; count: number }>({ segId: '', count: 0 });
+  // Boredom-cue regex (verbatim per design). Matches case-insensitive,
+  // word-bounded where word-bounded matters. "skip" matches "skip this"
+  // / "let's skip" but not "skipper". Verbal "slow down" / "speed up"
+  // also feed paceBias steps in Phase 3.
+  const boredomCueRegex = /\b(i\s+know\s+this|obviously|skip(\s+this)?|duh|easy|boring|next|too\s+fast|slow\s+down|slower|faster|speed\s+up)\b/i;
+  // Brain-affirmation regex with negation guard. Matches at start of
+  // brain's sentence (post strip). Negation lookahead prevents "Good
+  // thinking, BUT…" or "Correct so far, however…" from incrementing
+  // streak. Used for non-Wolfram subjects (ELA, history, biology).
+  // Broadened post-2026-05-05 session: brain frequently opens correct-
+  // answer affirmations with "Yes — N!" / "Right — N." / "Nice — N!" /
+  // "Great — that's it!" — original list (exactly, that's right, ...)
+  // missed all of these. Generic terms only; negation lookahead unchanged.
+  // 2nd round (post-2026-05-06 session): brain commonly markdown-bolds
+  // the affirmation word ("*Exactly* — six!", "*Yes* — eight!"). The
+  // anchor `^` previously failed on the leading `*`. Allow zero or more
+  // markdown emphasis prefix chars (`*`, `_`, `~`) before the word.
+  const brainAffirmationRegex = /^[*_~`]*(exactly|that'?s right|that is right|correct|perfect|nice work|nice job|nice|good job|good|great|right|yes|yep|yeah|spot[\s-]?on|absolutely|you got it|you'?ve got it|you have got it|you'?re right|bingo)(?!.*\b(but|however|not\s+quite|almost|let\s+me\s+(?:re)?check|wait|actually|hmm|hold on|wrong|incorrect))/i;
+  // Brain-correction regex. Matches phrases that indicate the student
+  // got the answer wrong. Resets correct-streak, increments wrong-streak.
+  const brainCorrectionRegex = /\b(not\s+quite|that's\s+not|that\s+is\s+not|let's\s+(?:re)?check|almost|close\s+but|incorrect)\b/i;
+  // Bridges callBrainOnce student-utterance bookkeeping → end-of-brain-
+  // stream streak update. Captures the student utterance's
+  // classification at turn-start so the post-stream code knows whether
+  // to even consider streak changes. Pure-ack turns ("ok", "yeah")
+  // never update the streak regardless of what the brain says next.
+  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean } | null>(null);
+  // Buffer of [pacing] events fired during the most recent brain turn.
+  // Forwarded server-side on the NEXT brain stream request body so the
+  // /api/tutor/brain/stream route can write them to the server log
+  // (browser console.log doesn't reach serverlog_*.txt reliably). Drained
+  // after each brain stream call.
+  const pacingTelemetryRef = useRef<string[]>([]);
+  // Helper: log a [pacing] line to BOTH the browser console (immediate
+  // diagnostics in DevTools) AND the server-forward buffer (so the next
+  // brain stream call can ship it to serverlog via the route's
+  // pacingTelemetry handler). Caller passes the body without the
+  // "[pacing] " prefix; helper adds it.
+  const logPacing = useCallback((body: string) => {
+    const line = `[pacing] ${body}`;
+    console.log(line);
+    pacingTelemetryRef.current.push(line);
+  }, []);
 
   // Flag flipped true when the tutor just emitted a show_equation with
   // label: "Final Answer". On the NEXT batch of whiteboard commands that
@@ -1855,6 +1943,15 @@ export function VoiceTutorRealtime({
                   // Also store each individual token so single-number
                   // judge claims like "73" can match.
                   for (const t of intTokens) wolframVerifiedNumberSetsRef.current.add(t);
+                  // Round-7++++++ Issue 5 fix: also store the per-equation
+                  // token SET so the override can match against a single
+                  // verified equation rather than the flat session union.
+                  // Without this the flat union accumulates dozens of
+                  // tokens across a long session, and any unrelated brain
+                  // hallucination with 2-3 token overlap gets the kill
+                  // wrongly downgraded (observed 2026-05-06 session: 30
+                  // affirmed for mean of {16,24,32,40,48} which is 32).
+                  wolframVerifiedEquationsRef.current.push(new Set(intTokens));
                 }
               }
               // Numeric-mismatch promotion: previously this branch only
@@ -2005,6 +2102,23 @@ export function VoiceTutorRealtime({
         // Track completed segment for downstream show_segment_card block.
         if (typeof c.segmentId === 'string' && c.segmentId) {
           completedSegmentIdsRef.current.add(c.segmentId);
+        }
+        // Pacing v2 — Phase 1 (inert): segment-mastered booster.
+        // When mark_segment_complete fires AND the student's correct-streak
+        // for this segment was >= 2, set a one-shot "mastered" flag that
+        // the next-turn student_state block surfaces. Strong "this student
+        // didn't just answer one problem right, they finished cleanly"
+        // signal. Cleared on segment change (handled at student-utterance
+        // arrival point above).
+        if (typeof c.segmentId === 'string' && c.segmentId
+            && studentStreakRef.current.segId === c.segmentId
+            && studentStreakRef.current.count >= 2) {
+          segmentMasteredFlagRef.current = {
+            segId: c.segmentId,
+            streakAtComplete: studentStreakRef.current.count,
+          };
+          logPacing(`segment-mastered seg="${c.segmentId}" streakAtComplete=${studentStreakRef.current.count}`);
+          onDebugEvent?.('pacing_segment_mastered', `seg="${c.segmentId}" streak=${studentStreakRef.current.count}`);
         }
         // Push the mastery delta into the session accumulator so it
         // commits at end-of-session. We tag it with the lesson plan's
@@ -2907,6 +3021,11 @@ export function VoiceTutorRealtime({
     }
     studentRequestedVisualRef.current = false;
 
+    // (Pacing v2 streak update moved to callBrainOnce post-stream
+    // finalization — handleResponseDone runs per Realtime audio-transcript
+    // chunk in claude-brain mode, not per brain turn, so it sees partial
+    // text and the affirmation/correction regexes miss reliably.)
+
     // --- Student-answer verification (async, non-blocking) ---
     verifyStudentAnswerIfRejected(tutorText).catch(err =>
       console.error('[VoiceTutorRealtime] verifyStudentAnswerIfRejected threw:', err)
@@ -3399,6 +3518,92 @@ export function VoiceTutorRealtime({
         currentSegmentIdRef.current = '';
         setActiveSegmentId('');
       }
+
+      // Pacing v2 — Phase 1 (inert): student-utterance arrival bookkeeping.
+      // Runs AFTER topic-switch (which may clear segId) so the new segId
+      // is what the streak refs key against on this turn. Handles:
+      //   - turn counter increment
+      //   - segment-change streak reset (lazy: only when we observe new segId)
+      //   - verification-turn classification (digits/math/long substantive
+      //     vs pure ack — pure acks don't drive streak even if brain says
+      //     "exactly!" because the student didn't actually answer anything)
+      //   - boredom-cue regex match (sticky for ONE turn — clears at the
+      //     start of the next student turn before the new match)
+      //   - segment student-turn count for boundary check-in eligibility
+      // None of this changes brain behavior in Phase 1; it just populates
+      // refs that the student_state block will surface and that
+      // handleResponseDone reads to decide whether to update streak.
+      if (!silent && !isBracketed) {
+        pacingTurnCounterRef.current += 1;
+        const segIdNow = currentSegmentIdRef.current;
+        // Clear stale cue from prior turn before evaluating this one
+        studentCueRef.current = null;
+        // Verification-turn classifier — generic, no subject-specific terms
+        const t = transcript.trim();
+        const lower = t.toLowerCase();
+        const isPureAck = /^(ok(ay)?|yes|yeah|yep|yup|sure|got\s+it|alright|fine|cool|nice|go|next|done|ready|hi|hey|hmm|uh\s*huh|mhm|mmm|uh|umm)[!.\s]*$/i.test(t);
+        const hasDigits = /\d/.test(t);
+        const hasMathLang = /\b(equals?|sum|product|mean|median|mode|answer|because|therefore|simplif|factor|derivat|integral|root|solv|so\s+(?:it'?s|the))\b/i.test(lower);
+        const wordCount = t.split(/\s+/).filter(Boolean).length;
+        const isVerification = !isPureAck && t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6);
+        lastStudentVerificationRef.current = {
+          turn: pacingTurnCounterRef.current,
+          segId: segIdNow,
+          isVerification,
+        };
+        // Streak segId-retag policy (revised post-2026-05-05 session
+        // analysis). Streak tracks CONCEPT mastery across consecutive
+        // segments testing the same skill, not within a single segment.
+        // Reset cases:
+        //   (a) topic-switch detected — segIdNow === '' (set above by
+        //       topicSwitchRe handler clearing currentSegmentIdRef);
+        //       this is the only "concept changed" signal at the
+        //       segment-tracking layer.
+        //   (b) brain emits a correction utterance — handled in the
+        //       post-stream streak update (resets correct-streak when
+        //       brainCorrectionRegex matches).
+        // For ordinary segment-change (try-easy-1 → try-easy-2 etc.),
+        // we just retag the segId and keep the count. The original
+        // design Q10 spec called for segment-change reset, but that
+        // makes streak unable to build past 1 in lesson plans where
+        // each segment has 1 try-yourself problem (the common case).
+        // Concept mastery, not segment occupancy, is the signal we
+        // care about.
+        const isTopicSwitchReset = segIdNow === '' && studentStreakRef.current.segId !== '';
+        if (studentStreakRef.current.segId !== segIdNow) {
+          if (isTopicSwitchReset && studentStreakRef.current.count > 0) {
+            logPacing(`streak-correct seg="${studentStreakRef.current.segId}" count=0 (topic-switch reset; was ${studentStreakRef.current.count})`);
+            studentStreakRef.current = { segId: segIdNow, count: 0 };
+          } else {
+            studentStreakRef.current = { segId: segIdNow, count: studentStreakRef.current.count };
+          }
+        }
+        if (studentIncorrectStreakRef.current.segId !== segIdNow) {
+          if (isTopicSwitchReset && studentIncorrectStreakRef.current.count > 0) {
+            logPacing(`streak-incorrect seg="${studentIncorrectStreakRef.current.segId}" count=0 (topic-switch reset; was ${studentIncorrectStreakRef.current.count})`);
+            studentIncorrectStreakRef.current = { segId: segIdNow, count: 0 };
+          } else {
+            studentIncorrectStreakRef.current = { segId: segIdNow, count: studentIncorrectStreakRef.current.count };
+          }
+        }
+        if (segmentTurnCountRef.current.segId !== segIdNow) {
+          segmentTurnCountRef.current = { segId: segIdNow, count: 0 };
+        }
+        if (segmentMasteredFlagRef.current && segmentMasteredFlagRef.current.segId !== segIdNow) {
+          segmentMasteredFlagRef.current = null;
+        }
+        if (isVerification) {
+          segmentTurnCountRef.current = { segId: segIdNow, count: segmentTurnCountRef.current.count + 1 };
+        }
+        // Boredom-cue regex — verbatim match logged for telemetry. Cue
+        // is consumed by the next-turn student_state block formatter.
+        const cueMatch = t.match(boredomCueRegex);
+        if (cueMatch) {
+          studentCueRef.current = { cue: cueMatch[0], turn: pacingTurnCounterRef.current };
+          logPacing(`student-cue cue="${cueMatch[0]}" turn=${pacingTurnCounterRef.current}`);
+          onDebugEvent?.('pacing_cue', `cue="${cueMatch[0]}"`);
+        }
+      }
       // Mirror current segment id into the catalog so subsequent
       // appends are stamped with it AND getSnapshot's filter scopes
       // the brain's view to current-segment items only. Items appended
@@ -3601,8 +3806,32 @@ export function VoiceTutorRealtime({
             activeProblem: currentProblemRef.current?.statement
               ? { statement: currentProblemRef.current.statement }
               : undefined,
+            // Pacing v2: student-state snapshot for the brain prompt.
+            // Block omitted by the formatter when no signal is
+            // interesting. Phase 2 includes thresholds → formatter
+            // emits hint: line when crossed; server-side env-var gate
+            // strips thresholds if PACING_V2_ADVISORIES=false.
+            // Streak refs are now keyed loosely (retag-on-segment-change
+            // without reset) so segId match check is just a sanity guard.
+            pacingState: {
+              correctStreak: studentStreakRef.current.count,
+              incorrectStreak: studentIncorrectStreakRef.current.count,
+              cue: studentCueRef.current?.cue,
+              segmentTurns: segmentTurnCountRef.current.segId === currentSegmentIdRef.current
+                ? segmentTurnCountRef.current.count : 0,
+              segmentMastered: segmentMasteredFlagRef.current ?? undefined,
+              thresholds: getGradeProfile(level).pacingThresholds,
+            },
+            // Pacing v2 telemetry events buffered since the previous
+            // brain call. Drained here. The /api/tutor/brain/stream
+            // route writes each line server-side so they appear in
+            // serverlog_*.txt for grep-based verification (browser
+            // console.log doesn't reach there reliably).
+            pacingTelemetry: pacingTelemetryRef.current.length > 0
+              ? [...pacingTelemetryRef.current] : undefined,
           }),
         });
+        pacingTelemetryRef.current = [];
         if (!res.ok || !res.body) {
           const err = res.body ? await res.text() : '(no body)';
           console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);
@@ -4707,14 +4936,53 @@ export function VoiceTutorRealtime({
                 const killIssues: typeof rawKillIssues = [];
                 for (const issue of rawKillIssues) {
                   const claimNums = (issue.claim.match(/\d+/g) ?? []).filter((n) => n.length > 0);
-                  let overlap = 0;
-                  for (const n of claimNums) {
-                    if (wolframVerifiedNumberSetsRef.current.has(n)) overlap++;
+                  // Round-7++++++ Issue 5 fix: tighter override match.
+                  // Three accept conditions:
+                  //   (a) joined-key exact tuple match — strongest signal
+                  //       that the claim references a specific verified
+                  //       equation.
+                  //   (b) for SHORT claims (≤ 2 unique tokens), any of
+                  //       those tokens being in the flat verified union
+                  //       is sufficient — covers "the mean is 73" /
+                  //       "73 is the answer" against a verified
+                  //       511/7=73 equation.
+                  //   (c) for LONGER claims (≥ 3 unique tokens), require
+                  //       that some SINGLE verified equation's token set
+                  //       overlaps the claim's tokens by ≥ ceil(N/2) AND
+                  //       that overlap is ≥ half of THAT equation's set
+                  //       too (so a verified short equation doesn't
+                  //       accidentally match a long unrelated claim by
+                  //       coincidence). The flat-union test is dropped
+                  //       for longer claims — it accumulates across the
+                  //       session and produces false matches once many
+                  //       integers have been verified.
+                  const uniqClaim = [...new Set(claimNums)];
+                  const joinedKey = uniqClaim.sort().join('|');
+                  const joinedHit = !!joinedKey && wolframVerifiedNumberSetsRef.current.has(joinedKey);
+                  let perEqHit = false;
+                  if (uniqClaim.length <= 2) {
+                    // Short-claim path: any flat-union overlap counts.
+                    for (const n of uniqClaim) {
+                      if (wolframVerifiedNumberSetsRef.current.has(n)) { perEqHit = true; break; }
+                    }
+                  } else {
+                    // Long-claim path: require strong overlap against a
+                    // SINGLE verified equation.
+                    const claimSet = new Set(uniqClaim);
+                    const claimReq = Math.ceil(uniqClaim.length / 2);
+                    for (const eqSet of wolframVerifiedEquationsRef.current) {
+                      let overlap = 0;
+                      for (const t of claimSet) {
+                        if (eqSet.has(t)) overlap++;
+                      }
+                      const eqReq = Math.ceil(eqSet.size / 2);
+                      if (overlap >= claimReq && overlap >= eqReq) {
+                        perEqHit = true;
+                        break;
+                      }
+                    }
                   }
-                  // Also try the joined-key match (e.g., "511|7|73").
-                  const joinedKey = [...new Set(claimNums)].sort().join('|');
-                  const joinedHit = joinedKey && wolframVerifiedNumberSetsRef.current.has(joinedKey);
-                  if (overlap >= 2 || joinedHit) {
+                  if (joinedHit || perEqHit) {
                     wolframOverrideHits.push(issue);
                   } else {
                     killIssues.push(issue);
@@ -4906,6 +5174,72 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+
+      // Pacing v2 — Phase 1 (inert): streak update from brain
+      // affirmation/correction. Runs ONCE per brain turn at end-of-stream
+      // when fullText is finalized (handleResponseDone runs per Realtime
+      // audio-transcript chunk and saw partial text — moved here).
+      // Keyed on ver.segId NOT currentSegmentIdRef.current — the brain
+      // frequently auto-advances mid-turn via advance_lesson, so by the
+      // time we evaluate, currentSegmentIdRef is on the NEXT segment but
+      // the answer was given on the prior segment. Only updates the
+      // streak when the prior student turn was classified as a
+      // verification turn (numeric/math-bearing answer); pure-ack turns
+      // ("ok", "yeah") never trigger streak change even if brain replies
+      // "exactly!". On segment-mastered booster: if mark_segment_complete
+      // already fired this turn, the increment we apply NOW (post-stream)
+      // doesn't reach the booster check. So also re-evaluate the booster
+      // here against the same segId-pinned streak count.
+      try {
+        const ver = lastStudentVerificationRef.current;
+        if (ver && ver.isVerification && fullText.length > 0) {
+          const head = fullText.slice(0, 200);
+          const isAffirm = brainAffirmationRegex.test(head);
+          const isCorrect = brainCorrectionRegex.test(fullText);
+          if (isAffirm && !isCorrect) {
+            // Streak ref keyed on the segment the student ANSWERED on
+            // (ver.segId), not whatever segment the brain advanced to.
+            const priorCount = studentStreakRef.current.segId === ver.segId
+              ? studentStreakRef.current.count : 0;
+            studentStreakRef.current = { segId: ver.segId, count: priorCount + 1 };
+            if (studentIncorrectStreakRef.current.segId === ver.segId
+                && studentIncorrectStreakRef.current.count > 0) {
+              studentIncorrectStreakRef.current = { segId: ver.segId, count: 0 };
+            }
+            logPacing(`streak-correct seg="${ver.segId}" count=${studentStreakRef.current.count}`);
+            onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
+            // Late-fire segment-mastered: if completedSegmentIdsRef
+            // contains ver.segId (i.e. brain emitted mark_segment_complete
+            // earlier in this turn) AND the new streak is >= 2, fire the
+            // booster now. The on-mark_segment_complete site reads the
+            // streak BEFORE the post-stream increment, so it misses this
+            // case.
+            if (completedSegmentIdsRef.current.has(ver.segId)
+                && studentStreakRef.current.count >= 2
+                && (!segmentMasteredFlagRef.current
+                    || segmentMasteredFlagRef.current.segId !== ver.segId)) {
+              segmentMasteredFlagRef.current = {
+                segId: ver.segId,
+                streakAtComplete: studentStreakRef.current.count,
+              };
+              logPacing(`segment-mastered seg="${ver.segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
+              onDebugEvent?.('pacing_segment_mastered', `seg="${ver.segId}" streak=${studentStreakRef.current.count}`);
+            }
+          } else if (isCorrect) {
+            const priorIncCount = studentIncorrectStreakRef.current.segId === ver.segId
+              ? studentIncorrectStreakRef.current.count : 0;
+            studentIncorrectStreakRef.current = { segId: ver.segId, count: priorIncCount + 1 };
+            if (studentStreakRef.current.segId === ver.segId
+                && studentStreakRef.current.count > 0) {
+              studentStreakRef.current = { segId: ver.segId, count: 0 };
+            }
+            logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
+            onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
+          }
+        }
+      } catch (err) {
+        console.error('[pacing] post-stream streak update threw:', err);
+      }
 
       // Round-7+ Fix 9: defensive cleanup of any residual streaming
       // entries from this turn. The for-loop's per-iteration cleanup at

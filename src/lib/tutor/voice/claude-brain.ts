@@ -73,6 +73,36 @@ export interface BrainTurnInput {
    *  anchor's expected answer — five judge KILLs in a row before the
    *  brain regrasped which dataset was active. */
   activeProblem?: { statement: string };
+  /** Pacing v2 student-state snapshot. Surfaces as `<student_state>`
+   *  block when any signal is interesting (streak > 0 OR cue present
+   *  OR segmentMastered set OR segTurns >= 2). Block is OMITTED
+   *  entirely when uninteresting to keep prompt tokens small.
+   *
+   *  Phase 2: when `thresholds` are provided AND a threshold is
+   *  crossed, the formatter appends a `hint:` line that the brain is
+   *  instructed (in the system prompt) to honor as a directive.
+   *  Without thresholds (Phase 1 / advisory flag off), no hint lines
+   *  render — block stays informational.
+   *
+   *  Sourced from VoiceTutorRealtime refs (studentStreakRef,
+   *  studentIncorrectStreakRef, studentCueRef, segmentTurnCountRef,
+   *  segmentMasteredFlagRef) + gradeProfile.pacingThresholds. */
+  pacingState?: {
+    correctStreak: number;
+    incorrectStreak: number;
+    cue?: string;
+    segmentTurns: number;
+    segmentMastered?: { segId: string; streakAtComplete: number };
+    /** Phase 2: per-grade thresholds. When omitted, no hint: line is
+     *  rendered (Phase 1 inert mode, or advisory flag is off). */
+    thresholds?: {
+      silentRampStreak: number;
+      explicitOfferStreak: number;
+      inverseStreak: number;
+      checkInMinTurns: number;
+      checkInCooldown: number;
+    };
+  };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
   /** Optional override (defaults to 1500). */
@@ -407,6 +437,81 @@ export { buildWhiteboardSummary };
  * the same segment (e.g. the original try-yourself + a fresh
  * generate_problem variant, both stamped with the same segmentId).
  */
+/**
+ * Compute the advisory hint (Phase 2) given counters + thresholds.
+ * Returns the hint text WITHOUT the leading "hint: " prefix, or null
+ * when no threshold crossed. Cue hint takes precedence over streak
+ * hints — a verbal cue is the strongest signal. Among streak hints,
+ * incorrect-streak takes precedence over correct-streak (struggling
+ * is truth, ramping easier is more important than ramping harder).
+ * Generic phrasings — no subject-specific terms.
+ */
+function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): string | null {
+  const t = state.thresholds;
+  if (!t) return null;
+  // Cue → strongest signal. Verbal disengagement / pace request.
+  if (state.cue) {
+    return `boredom cue detected — verbally offer "harder / skip / different topic" immediately`;
+  }
+  // Incorrect-streak ladder: explicit offer > silent ramp.
+  if (state.incorrectStreak > t.inverseStreak) {
+    return `incorrect-streak threshold reached — verbally offer "break this down / try a simpler version" choice`;
+  }
+  if (state.incorrectStreak === t.inverseStreak) {
+    return `incorrect-streak threshold reached — next generate_problem should pass difficulty="slightly_easier"`;
+  }
+  // Correct-streak ladder: explicit offer > silent ramp.
+  if (state.correctStreak >= t.explicitOfferStreak) {
+    return `explicit-offer threshold reached — verbally offer "another at this level / harder / skip ahead" choice`;
+  }
+  if (state.correctStreak >= t.silentRampStreak) {
+    return `silent-ramp threshold reached — next generate_problem should pass difficulty="slightly_harder"`;
+  }
+  return null;
+}
+
+/**
+ * Render the `<student_state>` block. Pacing v2 surfaces counters
+ * (streak, incorrect-streak, cue, segment turns, segment-mastered
+ * flag) plus, when thresholds are provided AND a threshold has been
+ * crossed, an advisory `hint:` line the brain treats as a directive
+ * (per the system-prompt rule).
+ *
+ * Block is OMITTED entirely when no signal is interesting (everything
+ * zero, no cue, segment just started). Round-7 architecture flagged
+ * always-on prompt blocks as a token-cost concern; Pacing v2 follows
+ * the same pattern as `<active_problem>` (suppress when null) to
+ * preserve cache hit rate on uneventful turns.
+ *
+ * Returns { block, hint } so callers (the brain stream route) can
+ * also log the hint server-side for telemetry.
+ */
+function formatStudentStateBlock(
+  state: BrainTurnInput['pacingState'],
+): { block: string; hint: string | null } {
+  if (!state) return { block: '', hint: null };
+  const interesting =
+    state.correctStreak > 0
+    || state.incorrectStreak > 0
+    || !!state.cue
+    || !!state.segmentMastered
+    || state.segmentTurns >= 2;
+  if (!interesting) return { block: '', hint: null };
+  const parts: string[] = [];
+  parts.push(`streak=${state.correctStreak >= 0 ? '+' : ''}${state.correctStreak}`);
+  parts.push(`wrong=${state.incorrectStreak}`);
+  parts.push(`segTurns=${state.segmentTurns}`);
+  if (state.cue) parts.push(`cue="${state.cue}"`);
+  if (state.segmentMastered) parts.push(`mastered="${state.segmentMastered.segId}"@${state.segmentMastered.streakAtComplete}`);
+  const hint = computePacingHint(state);
+  const lines = [parts.join(' ')];
+  if (hint) lines.push(`hint: ${hint}`);
+  return {
+    block: `<student_state>\n${lines.join('\n')}\n</student_state>\n\n`,
+    hint,
+  };
+}
+
 function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
   if (!active?.statement) return '';
   return (
@@ -454,11 +559,16 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
+  if (pacingHint) {
+    console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
+  }
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    studentStateBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -569,11 +679,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
+  if (pacingHint) {
+    console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
+  }
   const userContent =
     profileBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    studentStateBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

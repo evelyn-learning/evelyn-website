@@ -58,6 +58,18 @@ interface BrainStreamRequestBody {
    *  text rather than on stale cards still visible in the snapshot. See
    *  BrainTurnInput.activeProblem for the catastrophe this addresses. */
   activeProblem?: BrainTurnInput['activeProblem'];
+  /** Pacing v2 — Phase 1 (inert) student-state snapshot. See
+   *  BrainTurnInput.pacingState for shape; the brain formatter omits
+   *  the block entirely when nothing is interesting. */
+  pacingState?: BrainTurnInput['pacingState'];
+  /** Pacing v2 telemetry — events buffered on the client since the
+   *  previous brain call. Each line is already-formatted ("[pacing]
+   *  streak-correct seg=… count=…"). The route emits each as its own
+   *  console.log so they appear in serverlog_*.txt for grep-based
+   *  verification. Browser console.log doesn't reach the server log
+   *  reliably, so the client mirrors every pacing event into this
+   *  buffer at emit time and we drain it here. */
+  pacingTelemetry?: string[];
 }
 
 /**
@@ -210,6 +222,31 @@ export async function POST(req: NextRequest) {
     return badRequest('whiteboardSnapshot must be an array');
   }
 
+  // Pacing v2 telemetry forwarding: drain the client's buffer to the
+  // server log so grep on serverlog_*.txt finds [pacing] lines.
+  if (body.pacingTelemetry && body.pacingTelemetry.length > 0) {
+    for (const line of body.pacingTelemetry) {
+      // Lines arrive already-prefixed with "[pacing] "; emit verbatim.
+      console.log(line);
+    }
+  }
+
+  // Pacing v2 — Phase 2 advisory gate. PACING_V2_ADVISORIES=false (or
+  // 0) → strip the thresholds field so the brain prompt formatter
+  // can't compute hint: lines (Phase 1-only mode for diagnostic
+  // isolation if Phase 2 misbehaves). Default ON (any other value or
+  // unset).
+  const advisoriesEnabled = (() => {
+    const v = process.env.PACING_V2_ADVISORIES;
+    if (v === undefined || v === null || v === '') return true;
+    const s = String(v).trim().toLowerCase();
+    return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
+  })();
+  if (!advisoriesEnabled && body.pacingState?.thresholds) {
+    console.log(`[pacing] advisories-disabled (PACING_V2_ADVISORIES=${process.env.PACING_V2_ADVISORIES})`);
+    body.pacingState = { ...body.pacingState, thresholds: undefined };
+  }
+
   const encoder = new TextEncoder();
   const studentSnippet = body.studentTranscript.slice(0, 80);
   const startedAt = Date.now();
@@ -261,6 +298,7 @@ export async function POST(req: NextRequest) {
           lessonPlanContext: body.lessonPlanContext,
           studentProfileBlock: body.studentProfileBlock,
           activeProblem: body.activeProblem,
+          pacingState: body.pacingState,
           grade: body.grade,
           tools: WHITEBOARD_TOOLS,
           model: body.model,
