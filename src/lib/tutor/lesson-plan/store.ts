@@ -955,6 +955,18 @@ import { SEED_AP_ENGLISH_LANG_RHETORIC } from './seeds/ap-english-lang-rhetoric'
 import { SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY } from './seeds/ap-english-lang-synthesis-essay';
 import { SEED_G910_CS_PYTHON_CONTROL_FLOW } from './seeds/g910-cs-python-control-flow';
 import { SEED_G910_CS_PYTHON_FUNCTIONS } from './seeds/g910-cs-python-functions';
+// Coverage wave 5 (2026-05-06) — Math sparse cells.
+import { SEED_K2_MATH_PLACE_VALUE_DEEP } from './seeds/k2-math-place-value-deep';
+import { SEED_K2_MATH_SHAPES_2D_3D } from './seeds/k2-math-shapes-2d-3d';
+import { SEED_K2_MATH_PATTERNS_RULES } from './seeds/k2-math-patterns-rules';
+import { SEED_G35_MATH_WORD_PROBLEMS_STRATEGIES } from './seeds/g35-math-word-problems-strategies';
+import { SEED_G35_MATH_WORD_PROBLEMS_FRACTIONS } from './seeds/g35-math-word-problems-fractions';
+import { SEED_G35_MATH_ORDER_OF_OPS_MULTISTEP } from './seeds/g35-math-order-of-ops-multistep';
+import { SEED_G68_MATH_INTEGERS_RATIONALS_DEEP } from './seeds/g68-math-integers-rationals-deep';
+import { SEED_G68_MATH_COORDINATE_GRAPHING } from './seeds/g68-math-coordinate-graphing';
+import { SEED_G68_MATH_COORDINATE_SHAPES } from './seeds/g68-math-coordinate-shapes';
+import { SEED_G1112_MATH_SEQUENCES_RECURSIVE } from './seeds/g1112-math-sequences-recursive';
+import { SEED_COLLEGE_MATH_DISCRETE_COMBINATORICS } from './seeds/college-math-discrete-combinatorics';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1862,6 +1874,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY,
   SEED_G910_CS_PYTHON_CONTROL_FLOW,
   SEED_G910_CS_PYTHON_FUNCTIONS,
+  // Coverage wave 5 (2026-05-06) — Math sparse cells.
+  SEED_K2_MATH_PLACE_VALUE_DEEP,
+  SEED_K2_MATH_SHAPES_2D_3D,
+  SEED_K2_MATH_PATTERNS_RULES,
+  SEED_G35_MATH_WORD_PROBLEMS_STRATEGIES,
+  SEED_G35_MATH_WORD_PROBLEMS_FRACTIONS,
+  SEED_G35_MATH_ORDER_OF_OPS_MULTISTEP,
+  SEED_G68_MATH_INTEGERS_RATIONALS_DEEP,
+  SEED_G68_MATH_COORDINATE_GRAPHING,
+  SEED_G68_MATH_COORDINATE_SHAPES,
+  SEED_G1112_MATH_SEQUENCES_RECURSIVE,
+  SEED_COLLEGE_MATH_DISCRETE_COMBINATORICS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
