@@ -883,6 +883,32 @@ import { SEED_G910_SS_GEOGRAPHY } from './seeds/g910-ss-geography';
 import { SEED_IB_HISTORY } from './seeds/ib-history';
 import { SEED_GRE_MATH_SUBJECT } from './seeds/gre-math-subject';
 import { SEED_GRE_PHYSICS_SUBJECT } from './seeds/gre-physics-subject';
+// Coverage wave 2 (2026-05-06) — sparse-cell backfill, math 9-12 + college.
+import { SEED_G910_MATH_QUADRATIC_COMPLETING_SQUARE } from './seeds/g910-math-quadratic-completing-square';
+import { SEED_G910_MATH_QUADRATIC_FORMULA } from './seeds/g910-math-quadratic-formula';
+import { SEED_G910_MATH_QUADRATIC_VERTEX_FORM } from './seeds/g910-math-quadratic-vertex-form';
+import { SEED_G910_MATH_SYSTEMS_SUBSTITUTION } from './seeds/g910-math-systems-substitution';
+import { SEED_G910_MATH_SYSTEMS_ELIMINATION } from './seeds/g910-math-systems-elimination';
+import { SEED_G910_MATH_SYSTEMS_WORD_PROBLEMS } from './seeds/g910-math-systems-word-problems';
+import { SEED_G910_MATH_LINEAR_SLOPE_INTERCEPT } from './seeds/g910-math-linear-slope-intercept';
+import { SEED_G910_MATH_LINEAR_POINT_SLOPE } from './seeds/g910-math-linear-point-slope';
+import { SEED_G910_MATH_LINEAR_PARALLEL_PERPENDICULAR } from './seeds/g910-math-linear-parallel-perpendicular';
+import { SEED_G910_MATH_POLYNOMIALS_LONG_DIVISION } from './seeds/g910-math-polynomials-long-division';
+import { SEED_G910_MATH_POLYNOMIALS_RATIONAL_ROOTS } from './seeds/g910-math-polynomials-rational-roots';
+import { SEED_G910_MATH_EXPONENT_RULES } from './seeds/g910-math-exponent-rules';
+import { SEED_G1112_MATH_TRIG_RIGHT_TRIANGLE } from './seeds/g1112-math-trig-right-triangle';
+import { SEED_G1112_MATH_TRIG_UNIT_CIRCLE } from './seeds/g1112-math-trig-unit-circle';
+import { SEED_G1112_MATH_TRIG_EQUATIONS } from './seeds/g1112-math-trig-equations';
+import { SEED_G1112_MATH_TRIG_LAWS_SIN_COS } from './seeds/g1112-math-trig-laws-sin-cos';
+import { SEED_G1112_MATH_LOG_EQUATIONS } from './seeds/g1112-math-log-equations';
+import { SEED_G1112_MATH_LOG_PROPERTIES } from './seeds/g1112-math-log-properties';
+import { SEED_G1112_MATH_EXPONENTIAL_GROWTH_DECAY } from './seeds/g1112-math-exponential-growth-decay';
+import { SEED_G1112_MATH_SEQUENCES_SIGMA } from './seeds/g1112-math-sequences-sigma';
+import { SEED_COLLEGE_MATH_LINALG_ROW_REDUCTION } from './seeds/college-math-linalg-row-reduction';
+import { SEED_COLLEGE_MATH_LINALG_EIGENVALUES } from './seeds/college-math-linalg-eigenvalues';
+import { SEED_COLLEGE_MATH_DISCRETE_GRAPHS } from './seeds/college-math-discrete-graphs';
+import { SEED_COLLEGE_MATH_STATS_HYPOTHESIS_TESTING } from './seeds/college-math-stats-hypothesis-testing';
+import { SEED_COLLEGE_MATH_STATS_REGRESSION } from './seeds/college-math-stats-regression';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1718,6 +1744,32 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_IB_HISTORY,
   SEED_GRE_MATH_SUBJECT,
   SEED_GRE_PHYSICS_SUBJECT,
+  // Coverage wave 2 (2026-05-06) — sparse-cell backfill, math 9-12 + college.
+  SEED_G910_MATH_QUADRATIC_COMPLETING_SQUARE,
+  SEED_G910_MATH_QUADRATIC_FORMULA,
+  SEED_G910_MATH_QUADRATIC_VERTEX_FORM,
+  SEED_G910_MATH_SYSTEMS_SUBSTITUTION,
+  SEED_G910_MATH_SYSTEMS_ELIMINATION,
+  SEED_G910_MATH_SYSTEMS_WORD_PROBLEMS,
+  SEED_G910_MATH_LINEAR_SLOPE_INTERCEPT,
+  SEED_G910_MATH_LINEAR_POINT_SLOPE,
+  SEED_G910_MATH_LINEAR_PARALLEL_PERPENDICULAR,
+  SEED_G910_MATH_POLYNOMIALS_LONG_DIVISION,
+  SEED_G910_MATH_POLYNOMIALS_RATIONAL_ROOTS,
+  SEED_G910_MATH_EXPONENT_RULES,
+  SEED_G1112_MATH_TRIG_RIGHT_TRIANGLE,
+  SEED_G1112_MATH_TRIG_UNIT_CIRCLE,
+  SEED_G1112_MATH_TRIG_EQUATIONS,
+  SEED_G1112_MATH_TRIG_LAWS_SIN_COS,
+  SEED_G1112_MATH_LOG_EQUATIONS,
+  SEED_G1112_MATH_LOG_PROPERTIES,
+  SEED_G1112_MATH_EXPONENTIAL_GROWTH_DECAY,
+  SEED_G1112_MATH_SEQUENCES_SIGMA,
+  SEED_COLLEGE_MATH_LINALG_ROW_REDUCTION,
+  SEED_COLLEGE_MATH_LINALG_EIGENVALUES,
+  SEED_COLLEGE_MATH_DISCRETE_GRAPHS,
+  SEED_COLLEGE_MATH_STATS_HYPOTHESIS_TESTING,
+  SEED_COLLEGE_MATH_STATS_REGRESSION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
