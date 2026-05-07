@@ -23,7 +23,11 @@ export const SEED_TEST_K2_MATH_COMPARING_NUMBERS: LessonPlan = {
   id: 'evelyn.test.k2.math.comparing-numbers.v1',
   title: '[TEST] K-2 Math — Comparing Numbers (>, <, =)',
   curriculum: 'CCSS',
-  grade: 'k-2',
+  // 'k' (not 'k-2') so gradeBandFor maps it to the K-2 band. The
+  // 'K-N' range form was a bug surfaced by this very seed: it falls
+  // through gradeBandFor's regex and lands on the 6-8 safe-default,
+  // applying middle-school sentence/humor caps to a kindergartener.
+  grade: 'k',
   subject: 'math',
   topic: 'place-value',
   locale: 'en',

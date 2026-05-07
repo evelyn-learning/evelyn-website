@@ -1025,6 +1025,29 @@ import { SEED_AP_CHINESE_LANG_GRAMMAR } from './seeds/ap-chinese-lang-grammar';
 import { SEED_AP_CHINESE_LANG_CHARACTERS } from './seeds/ap-chinese-lang-characters';
 import { SEED_IB_SPANISH_TEXT_TYPES } from './seeds/ib-spanish-text-types';
 import { SEED_IB_FRENCH_TEXT_TYPES } from './seeds/ib-french-text-types';
+// Coverage wave 11 (2026-05-06) — SAT teaching plans (Math + R&W).
+import { SEED_SAT_MATH_LINEAR_WORD_PROBLEMS } from './seeds/sat-math-linear-word-problems';
+import { SEED_SAT_MATH_SYSTEMS_EQUATIONS } from './seeds/sat-math-systems-equations';
+import { SEED_SAT_MATH_INEQUALITIES } from './seeds/sat-math-inequalities';
+import { SEED_SAT_MATH_PERCENT } from './seeds/sat-math-percent';
+import { SEED_SAT_MATH_RATIOS_RATES } from './seeds/sat-math-ratios-rates';
+import { SEED_SAT_MATH_STATISTICS } from './seeds/sat-math-statistics';
+import { SEED_SAT_MATH_QUADRATICS } from './seeds/sat-math-quadratics';
+import { SEED_SAT_MATH_EXPONENTS } from './seeds/sat-math-exponents';
+import { SEED_SAT_MATH_FUNCTIONS } from './seeds/sat-math-functions';
+import { SEED_SAT_MATH_GEOMETRY } from './seeds/sat-math-geometry';
+import { SEED_SAT_MATH_TRIGONOMETRY } from './seeds/sat-math-trigonometry';
+import { SEED_SAT_MATH_COMPLEX_NUMBERS } from './seeds/sat-math-complex-numbers';
+import { SEED_SAT_MATH_RATIONAL_RADICAL } from './seeds/sat-math-rational-radical';
+import { SEED_SAT_RW_WORDS_IN_CONTEXT } from './seeds/sat-rw-words-in-context';
+import { SEED_SAT_RW_MAIN_IDEA } from './seeds/sat-rw-main-idea';
+import { SEED_SAT_RW_EVIDENCE } from './seeds/sat-rw-evidence';
+import { SEED_SAT_RW_INFERENCE } from './seeds/sat-rw-inference';
+import { SEED_SAT_RW_GRAMMAR_COMMAS } from './seeds/sat-rw-grammar-commas';
+import { SEED_SAT_RW_GRAMMAR_AGREEMENT } from './seeds/sat-rw-grammar-agreement';
+import { SEED_SAT_RW_GRAMMAR_STRUCTURE } from './seeds/sat-rw-grammar-structure';
+import { SEED_SAT_RW_RHETORICAL_SYNTHESIS } from './seeds/sat-rw-rhetorical-synthesis';
+import { SEED_SAT_RW_TRANSITIONS } from './seeds/sat-rw-transitions';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2010,6 +2033,29 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CHINESE_LANG_CHARACTERS,
   SEED_IB_SPANISH_TEXT_TYPES,
   SEED_IB_FRENCH_TEXT_TYPES,
+  // Coverage wave 11 (2026-05-06) — SAT teaching plans (Math + R&W).
+  SEED_SAT_MATH_LINEAR_WORD_PROBLEMS,
+  SEED_SAT_MATH_SYSTEMS_EQUATIONS,
+  SEED_SAT_MATH_INEQUALITIES,
+  SEED_SAT_MATH_PERCENT,
+  SEED_SAT_MATH_RATIOS_RATES,
+  SEED_SAT_MATH_STATISTICS,
+  SEED_SAT_MATH_QUADRATICS,
+  SEED_SAT_MATH_EXPONENTS,
+  SEED_SAT_MATH_FUNCTIONS,
+  SEED_SAT_MATH_GEOMETRY,
+  SEED_SAT_MATH_TRIGONOMETRY,
+  SEED_SAT_MATH_COMPLEX_NUMBERS,
+  SEED_SAT_MATH_RATIONAL_RADICAL,
+  SEED_SAT_RW_WORDS_IN_CONTEXT,
+  SEED_SAT_RW_MAIN_IDEA,
+  SEED_SAT_RW_EVIDENCE,
+  SEED_SAT_RW_INFERENCE,
+  SEED_SAT_RW_GRAMMAR_COMMAS,
+  SEED_SAT_RW_GRAMMAR_AGREEMENT,
+  SEED_SAT_RW_GRAMMAR_STRUCTURE,
+  SEED_SAT_RW_RHETORICAL_SYNTHESIS,
+  SEED_SAT_RW_TRANSITIONS,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,

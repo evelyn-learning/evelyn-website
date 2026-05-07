@@ -1,0 +1,62 @@
+/**
+ * SAT Math — Exponents, Radicals, and Exponential Functions.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_SAT_MATH_EXPONENTS: LessonPlan = {
+  id: 'evelyn.testprep.sat-math.exponents.v1',
+  title: 'SAT Math — Exponents, Radicals, and Exponential Functions',
+  curriculum: 'CCSS',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-math',
+  locale: 'en',
+  los: [{ id: 'satmath.exponents', description: 'Apply exponent rules, simplify radicals, and interpret exponential growth/decay on the SAT.', standard: 'CCSS.MATH.HSF.LE.A.2' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Exponents + radicals = ~3 SAT questions per test. The rules are tight; memorise them.', script: 'Six exponent rules cover everything. Plus radicals = fractional exponents. Today: the rules + the SAT-typical questions.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Six rules, radicals, exponential models.', keyIdeas: [
+      'SIX EXPONENT RULES:',
+      '  1. PRODUCT: xᵃ · xᵇ = xᵃ⁺ᵇ. (Multiply same base → ADD exponents.)',
+      '  2. QUOTIENT: xᵃ / xᵇ = xᵃ⁻ᵇ.',
+      '  3. POWER OF POWER: (xᵃ)ᵇ = xᵃᵇ. (MULTIPLY.)',
+      '  4. POWER OF PRODUCT: (xy)ᵃ = xᵃ · yᵃ.',
+      '  5. ZERO: x⁰ = 1 (x ≠ 0).',
+      '  6. NEGATIVE: x⁻ᵃ = 1/xᵃ.',
+      'FRACTIONAL EXPONENT: x^(1/n) = ⁿ√x. x^(p/q) = (ᵠ√x)ᵖ.',
+      '  Common: x^(1/2) = √x. x^(1/3) = ∛x.',
+      'KEY DISTINCTION:',
+      '  x³ · x⁵ uses PRODUCT → x⁸.',
+      '  (x³)⁵ uses POWER → x¹⁵.',
+      '  Easy to confuse — make sure you identify which.',
+      'NEGATIVE EXPONENT IS NOT NEGATIVE:',
+      '  2⁻³ = 1/2³ = 1/8 (positive, fractional).',
+      '  −2³ = −8 (negative).',
+      '  Different.',
+      'SIMPLIFYING RADICALS:',
+      '  √48 = √(16 × 3) = 4√3.',
+      '  Rationalising: 1/√2 → √2/2.',
+      'EXPONENTIAL FUNCTION: y = a · bˣ.',
+      '  GROWTH if b > 1 (e.g., y = 100 · 1.05ˣ — grows 5% per year).',
+      '  DECAY if 0 < b < 1 (e.g., y = 100 · 0.9ˣ — loses 10% per year).',
+      'IDENTIFYING growth rate from formula:',
+      '  y = a · (1 + r)ˣ → r is growth rate (decimal). 1.05 → 5% growth.',
+      '  y = a · (1 − r)ˣ → r is decay rate. 0.9 → 10% decay.',
+      'SAT TRAP: 1.05ˣ ≠ "5x" or "x⁵." It\'s exponential, not linear.',
+      'COMPOUND interest: A = P(1 + r/n)^(nt). Or for continuous: A = P · eʳᵗ.',
+    ], vocabulary: [{ term: 'fractional exponent', definition: 'an exponent that is a fraction; x^(1/n) = ⁿ√x. x^(p/q) = (ᵠ√x)ᵖ.' }, { term: 'exponential growth', definition: 'a quantity multiplied by a constant factor at each step; modeled as y = a·bˣ with b > 1.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Simplify: (2x⁴y⁻²)³ · (3x²y⁵).', steps: [
+      'Apply power rule to (2x⁴y⁻²)³: 2³ · x¹² · y⁻⁶ = 8x¹²y⁻⁶.',
+      'Multiply by (3x²y⁵): 8 · 3 · x¹²⁺² · y⁻⁶⁺⁵ = 24x¹⁴y⁻¹.',
+      'Convert negative exponent to positive: 24x¹⁴/y.',
+    ], answer: '24x¹⁴/y', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'A bacteria population doubles every 4 hours. Starting with 100 bacteria, how many are there after 12 hours?', expectedAnswer: 'Doubles every 4 hours → multiplier of 2 per 4-hour period. After 12 hours = 3 periods. y = 100 · 2³ = 100 · 8 = 800.', responseFormat: 'numeric', hints: ['Identify period (4 hours).', 'Find number of periods in 12 hours, then multiply.'], estimatedMinutes: 3 },
+    { id: 'misconception-negative-exponent', kind: 'misconception_check', question: 'A student writes 5⁻² = −25. What\'s wrong?', commonErrors: [{ answer: '5⁻² = −25', misconception: 'Confusing negative exponent with negative value.', correctsTo: '5⁻² = 1/5² = 1/25 (a small POSITIVE number). Negative exponent means RECIPROCAL, not "negative." It never makes the value negative — only flips it. The value is between 0 and 1, not large negative.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Multiply same base: ADD exponents. Power: MULTIPLY exponents.', 'x⁻ᵃ = 1/xᵃ (positive value, fraction).', 'Fractional exponent = root.', 'Exponential growth: y = a·(1+r)ˣ. Decay: y = a·(1−r)ˣ.', 'Doubles every k periods: y = a·2^(t/k).'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

@@ -1,0 +1,61 @@
+/**
+ * SAT Math — Statistics: Mean, Median, Standard Deviation, Scatter Plots.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_SAT_MATH_STATISTICS: LessonPlan = {
+  id: 'evelyn.testprep.sat-math.statistics.v1',
+  title: 'SAT Math — Statistics: Center, Spread, and Scatter Plots',
+  curriculum: 'CCSS',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-math',
+  locale: 'en',
+  los: [{ id: 'satmath.statistics', description: 'Compute mean, median, mode, range, standard deviation; interpret scatter plots and lines of best fit.', standard: 'CCSS.MATH.HSS.ID' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Statistics = ~3-4 SAT Math questions per test. Reading-heavy but the math is simple if you know the definitions.', script: 'SAT statistics questions test interpretation more than computation. Mean vs median, what shifts each, reading scatter plots, identifying outliers. Today: the definitions + SAT-typical patterns.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Center, spread, scatter plots, correlation, sampling.', keyIdeas: [
+      'CENTER measures:',
+      '  MEAN (average) = sum / count.',
+      '  MEDIAN = middle value when sorted. With even count: average of two middles.',
+      '  MODE = most frequent value. Can be multiple modes or none.',
+      'KEY DISTINCTION: outliers DRAG the MEAN; the MEDIAN is RESISTANT to outliers.',
+      '  Example: 5 numbers 1, 2, 3, 4, 100. Median = 3. Mean = 22. The 100 dragged the mean, not the median.',
+      'SPREAD measures:',
+      '  RANGE = max − min.',
+      '  STANDARD DEVIATION (SD) = how far data typically is from mean. Larger SD = more spread.',
+      'WHEN data is symmetric: mean ≈ median.',
+      'WHEN data is right-skewed (long right tail): MEAN > MEDIAN.',
+      'WHEN data is left-skewed (long left tail): MEAN < MEDIAN.',
+      'SCATTER PLOTS:',
+      '  X-axis: independent variable. Y-axis: dependent variable.',
+      '  POSITIVE association: as x increases, y increases (slope positive).',
+      '  NEGATIVE association: x up → y down.',
+      '  NO ASSOCIATION: random scatter.',
+      'LINE OF BEST FIT: line minimising distance to all points. Has slope + intercept.',
+      '  Slope = predicted change in y per unit change in x.',
+      '  Y-intercept = predicted y when x = 0.',
+      'OUTLIERS = points far from the rest. Affect mean + slope significantly.',
+      'CORRELATION ≠ CAUSATION. SAT may ask about this.',
+      'SAMPLING:',
+      '  RANDOM sample is needed to generalise to population.',
+      '  BIASED sample (volunteer, convenience) gives misleading results.',
+      'SAT TRAP 1: question asks about "mean" but gives a picture; check if it\'s really median.',
+      'SAT TRAP 2: "Adding a value of [outlier] changes the mean by ___" — recompute mean carefully.',
+    ], vocabulary: [{ term: 'standard deviation', definition: 'a measure of how spread out data is around the mean; larger SD = more variability.' }, { term: 'line of best fit', definition: 'a line minimising total distance to data points on a scatter plot; slope = rate of change.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'A list of 5 numbers has a mean of 8. Adding one more number changes the mean to 9. What was the added number?', steps: [
+      'Original mean = 8 with 5 numbers → sum = 40.',
+      'New mean = 9 with 6 numbers → new sum = 54.',
+      'Added number = 54 − 40 = 14.',
+    ], answer: '14', estimatedMinutes: 3 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'A scatter plot shows hours studied vs test score. Line of best fit: y = 5x + 60. What does the slope mean in context?', expectedAnswer: 'Slope = 5 means: for each ADDITIONAL HOUR studied, the predicted test score INCREASES by 5 POINTS. The y-intercept (60) means: with 0 hours studied, predicted score is 60. (Both predictions, not exact.)', responseFormat: 'free', hints: ['Slope = change in y per unit change in x.', 'Translate to context (hours, points).'], estimatedMinutes: 3 },
+    { id: 'misconception-mean-vs-median', kind: 'misconception_check', question: 'A student says mean and median are basically the same — both measure "average." Why is this wrong?', commonErrors: [{ answer: 'Mean ≈ median always', misconception: 'Conflating two distinct center measures.', correctsTo: 'Mean and median are DIFFERENT center measures. They\'re close ONLY when data is SYMMETRIC. With outliers or skew, they DIVERGE significantly. Example: salaries in a town of 99 people earning $40K and 1 person earning $1M. Median = $40K (typical person). Mean ≈ $50K (dragged by millionaire). The MEDIAN better represents typical experience; the MEAN is sensitive to outliers. SAT loves to test this — when income data is involved, suspect skew.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Mean = sum/count. Median = middle. Mode = most frequent.', 'Median is RESISTANT to outliers; mean is NOT.', 'Right-skewed: mean > median. Left-skewed: mean < median.', 'Scatter plot slope = predicted Δy per unit Δx.', 'Correlation ≠ causation.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

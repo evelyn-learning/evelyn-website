@@ -1,0 +1,62 @@
+/**
+ * SAT R&W — Inference and Implication Questions.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_SAT_RW_INFERENCE: LessonPlan = {
+  id: 'evelyn.testprep.sat-rw.inference.v1',
+  title: 'SAT R&W — Inference and Implication',
+  curriculum: 'CCSS',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-reading-writing',
+  locale: 'en',
+  los: [{ id: 'satrw.inference', description: 'Identify what is implied (not stated) in SAT passages; avoid extreme + unsupported inferences.', standard: 'CCSS.ELA.READ.INFER' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Inference questions ask what\'s IMPLIED but not stated — and the trap is going TOO FAR.', script: 'A passage doesn\'t SAY a claim — but logically supports it. Inference. The right answer is supported but not exact; the wrong ones are either too extreme or contradicted.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Inference signal words, logic of "supported but not stated," common traps.', keyIdeas: [
+      'INFERENCE = drawing a conclusion supported by the text but not explicitly stated.',
+      'SAT signals: "the passage suggests," "implies," "it can be inferred that," "would most likely agree with."',
+      'STRATEGY:',
+      '  Find the relevant section in the passage.',
+      '  Identify what IS stated explicitly.',
+      '  Identify what is LOGICALLY SUPPORTED but not stated.',
+      '  Pick the option that requires NO leap of faith.',
+      'KEY: a valid inference is a CLOSE LOGICAL EXTENSION of stated content.',
+      'COMMON TRAPS:',
+      '  EXTREME LANGUAGE: "always," "never," "completely," "everyone." Rarely matches a nuanced passage.',
+      '  WRONG DIRECTION: opposite of what\'s implied.',
+      '  TOO STRONG: passage suggests possibility, option states certainty.',
+      '  OUT OF SCOPE: option introduces ideas not in the passage.',
+      '  REVERSED CAUSALITY: passage says A causes B; option says B causes A.',
+      'CALIBRATING strength:',
+      '  Passage uses "may," "perhaps," "suggests" → answer should also be tentative.',
+      '  Passage uses "always," "definitely," "consistently" → answer can be stronger.',
+      '  Match THE LANGUAGE of the passage.',
+      'TEST your answer: "Could a reader REASONABLY conclude this from the passage?" If yes → keep. If you have to ADD anything → reject.',
+      'EXAMPLE:',
+      '  Passage: "Despite the team\'s strong record this season, the coach plans to make significant changes during the off-season."',
+      '  Inference: the coach is dissatisfied with current performance OR sees room for improvement.',
+      '  NOT inference: "the team will fail next season" (extreme), "the coach was hired by the owner" (out of scope), "the team will win the championship" (no support).',
+    ], vocabulary: [{ term: 'inference', definition: 'a conclusion supported by but not directly stated in the text.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Passage: "The author argues that while social media has connected millions, the QUALITY of those connections remains shallow." Which can be inferred? (A) Social media is harmful. (B) Real friendships are impossible online. (C) The author distinguishes quantity from quality of relationships. (D) The author opposes all use of social media.', steps: [
+      'What does the passage say? Connections are MANY (quantity) but SHALLOW (quality).',
+      'Inference: the author DISTINGUISHES quantity from quality.',
+      'Evaluate options:',
+      '  (A) "Harmful" — too strong; passage is critical of QUALITY, not declaring harm.',
+      '  (B) "Impossible" — extreme; passage says shallow, not impossible.',
+      '  (C) "Distinguishes quantity from quality" — captures the nuance.',
+      '  (D) "Opposes ALL use" — extreme.',
+      'Answer: (C). Captures the nuanced position.',
+    ], answer: '(C)', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Passage: "Although the new energy policy is expected to reduce emissions, critics worry it will also slow economic growth." Which can be inferred? (A) The policy is universally supported. (B) The policy involves a tradeoff between environmental and economic goals. (C) The policy will fail. (D) Critics are wrong.', expectedAnswer: '(B). The "Although" + "critics worry" signals a TRADEOFF: environmental gain + economic concern. (A) is contradicted ("critics worry"). (C) and (D) are extreme. (B) captures the implied tradeoff without going beyond the text.', responseFormat: 'free', hints: ['Identify the contrast in the passage.', 'Avoid extreme answers.'], estimatedMinutes: 3 },
+    { id: 'misconception-strong-answer', kind: 'misconception_check', question: 'A student picks the strongest, most decisive answer for an inference question. Why does this often hurt their score?', commonErrors: [{ answer: 'Pick strongest', misconception: 'Confusing decisive language with valid inference.', correctsTo: 'SAT inference questions reward NUANCED answers that match the passage\'s language. Extreme language ("always," "never," "complete") rarely matches a thoughtful passage. The CORRECT answer is usually moderate, qualified, hedged. Counterintuitive but true: weaker-sounding answers often win because they DON\'T overstep what the text supports. Match the passage\'s level of certainty.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Inference: supported but not stated.', 'Avoid extremes (always, never, complete).', 'Match the passage\'s level of certainty (tentative passage → tentative answer).', 'Test: could you REASONABLY conclude this without adding anything?', 'Reject options that go beyond the text.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

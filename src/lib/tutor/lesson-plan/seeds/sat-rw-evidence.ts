@@ -1,0 +1,61 @@
+/**
+ * SAT R&W — Command of Evidence (Citing Lines + Quantitative).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_SAT_RW_EVIDENCE: LessonPlan = {
+  id: 'evelyn.testprep.sat-rw.evidence.v1',
+  title: 'SAT R&W — Command of Evidence (Textual + Quantitative)',
+  curriculum: 'CCSS',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-reading-writing',
+  locale: 'en',
+  los: [{ id: 'satrw.evidence', description: 'Identify textual + quantitative evidence supporting claims; identify counter-evidence.', standard: 'CCSS.ELA.READ.EVIDENCE' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'SAT loves evidence questions — and they\'re paired in two ways: text + quantitative.', script: 'Two evidence types: TEXTUAL ("which line best supports the claim?") and QUANTITATIVE ("which data point best illustrates the claim?"). Both reward careful reading. Today: drill both.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Textual evidence, quantitative evidence, common traps.', keyIdeas: [
+      'TEXTUAL evidence questions:',
+      '  "Which choice provides the BEST EVIDENCE for the claim that..."',
+      '  Each option is a specific quote or paraphrase from the passage.',
+      'STRATEGY:',
+      '  Identify the CLAIM first.',
+      '  Find each option in the passage.',
+      '  Match the option that DIRECTLY supports the claim.',
+      '  AVOID options that mention the topic but don\'t support the SPECIFIC claim.',
+      'QUANTITATIVE evidence (Digital SAT addition):',
+      '  Passage paired with a DATA SOURCE: chart, graph, table.',
+      '  Question: "Which data point best supports the claim that..."',
+      '  Strategy: identify the claim, then find the specific data that proves it.',
+      'COMMON TRAPS in textual evidence:',
+      '  ON-TOPIC but doesn\'t support the SPECIFIC claim. (Mentions same topic but a different aspect.)',
+      '  TOO BROAD — supports a general theme but not the specific claim.',
+      '  CONTRADICTS the claim (extreme distractor).',
+      '  CITES OUTSIDE the passage range — irrelevant.',
+      'COMMON TRAPS in quantitative evidence:',
+      '  Picking data that\'s impressive but doesn\'t match the CLAIM.',
+      '  Misreading axes, units, or comparison groups.',
+      '  Using wrong year/group/category.',
+      'STRATEGY for both: STATE THE CLAIM in your own words, then CHECK EACH OPTION against it specifically.',
+      'INFERENCE evidence: question may ask "which choice provides evidence for the inference that..." — same approach, but apply to the inferred conclusion.',
+    ], vocabulary: [{ term: 'command of evidence', definition: 'SAT skill area: identifying which textual or quantitative evidence supports or refutes a specific claim.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Claim: "Coral reefs in the Pacific have suffered greater bleaching events than those in the Atlantic." Which provides the best evidence? (A) "Climate change has affected coral reefs worldwide." (B) "Pacific reefs experienced 4 major bleaching events between 2015-2024 compared to 2 in Atlantic reefs." (C) "Coral reefs are home to 25% of marine species." (D) "Restoration efforts are underway."', steps: [
+      'Identify claim: PACIFIC has GREATER bleaching than ATLANTIC.',
+      'Evaluate each option:',
+      '  (A) Generic — doesn\'t compare Pacific vs Atlantic. NO.',
+      '  (B) Specific comparison: 4 vs 2 bleaching events, Pacific vs Atlantic. EXACTLY supports claim.',
+      '  (C) About marine species — irrelevant to bleaching comparison.',
+      '  (D) About restoration — irrelevant.',
+      'Answer: (B). It\'s the ONLY one with comparative data.',
+    ], answer: '(B)', estimatedMinutes: 3 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Claim: "The new policy reduced traffic congestion in the city center." A graph shows traffic volume Jan 2023 vs Jan 2024 in different city zones. Which data point best supports the claim?', expectedAnswer: 'You need a comparison showing CITY CENTER specifically had REDUCED traffic from before-policy to after-policy. So: city-center zone, Jan 2024 vs Jan 2023, with a DECREASE. Don\'t pick: (a) overall city totals, (b) other zones (suburbs), (c) data showing increase. Quantitative evidence rewards matching DATA TO CLAIM precisely.', responseFormat: 'free', hints: ['Match the data category to the claim category.', 'City center specifically + reduction specifically.'], estimatedMinutes: 3 },
+    { id: 'misconception-on-topic', kind: 'misconception_check', question: 'A student picks an evidence option because it MENTIONS the same topic as the claim. Why is this often wrong?', commonErrors: [{ answer: 'Same topic = supports', misconception: 'Confusing topical relevance with claim support.', correctsTo: 'An option can MENTION the same topic but not actually SUPPORT the specific claim. Example: claim says X causes Y. An option that says "X is important" mentions X but doesn\'t connect X to Y. SAT designs trap options that are ON-TOPIC but DON\'T MAKE THE SPECIFIC LOGICAL CONNECTION the claim asserts. Always: parse the claim into specifics, then check that the evidence makes EXACTLY that connection.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Identify the SPECIFIC claim first.', 'Match the option that directly supports THAT claim.', 'Avoid: on-topic but unsupporting; too broad; contradicts.', 'Quantitative: match data category + direction (increase/decrease).', 'Don\'t pick the most impressive-sounding evidence; pick the most precisely supportive.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

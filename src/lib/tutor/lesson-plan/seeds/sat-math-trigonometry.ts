@@ -1,0 +1,63 @@
+/**
+ * SAT Math — Trigonometry (Right Triangle SOHCAHTOA).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_SAT_MATH_TRIGONOMETRY: LessonPlan = {
+  id: 'evelyn.testprep.sat-math.trigonometry.v1',
+  title: 'SAT Math — Trigonometry (Right Triangle + Identities)',
+  curriculum: 'CCSS',
+  grade: 'sat-act',
+  subject: 'test-prep',
+  topic: 'sat-math',
+  locale: 'en',
+  los: [{ id: 'satmath.trigonometry', description: 'Apply SOHCAHTOA, basic identities, and unit-circle values to SAT trig questions.', standard: 'CCSS.MATH.HSG.SRT.C' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 14,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'SAT trig is mostly RIGHT-TRIANGLE trig — SOHCAHTOA + sin² + cos² = 1.', script: 'Most SAT trig questions are right-triangle SOHCAHTOA. A few use the Pythagorean identity. No calculus, no advanced identities. Drill the basics + you ace these questions.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'SOHCAHTOA, key angles, identities, complementary angles.', keyIdeas: [
+      'IN A RIGHT TRIANGLE with acute angle θ:',
+      '  sin θ = OPPOSITE / HYPOTENUSE.',
+      '  cos θ = ADJACENT / HYPOTENUSE.',
+      '  tan θ = OPPOSITE / ADJACENT.',
+      'Mnemonic: SOH-CAH-TOA.',
+      'IDENTIFY the sides: HYPOTENUSE (opposite right angle, longest), OPPOSITE (across from θ), ADJACENT (next to θ, not hyp).',
+      'PYTHAGOREAN IDENTITY: sin²θ + cos²θ = 1. Always.',
+      '  Useful when given one ratio, asked for another.',
+      'SPECIAL ANGLES (memorise — appear constantly):',
+      '  sin 30° = 1/2, cos 30° = √3/2, tan 30° = 1/√3.',
+      '  sin 45° = √2/2, cos 45° = √2/2, tan 45° = 1.',
+      '  sin 60° = √3/2, cos 60° = 1/2, tan 60° = √3.',
+      '  sin 0° = 0, cos 0° = 1.',
+      '  sin 90° = 1, cos 90° = 0.',
+      'COMPLEMENTARY ANGLE IDENTITY (SAT loves this):',
+      '  sin(90° − θ) = cos θ.',
+      '  cos(90° − θ) = sin θ.',
+      '  sin and cos of complementary angles are equal.',
+      '  Example: sin 30° = cos 60° = 1/2.',
+      'RADIANS vs DEGREES: 180° = π radians.',
+      '  Common: π/6 = 30°, π/4 = 45°, π/3 = 60°, π/2 = 90°, π = 180°.',
+      'SAT typical questions:',
+      '  Given sides, find sin/cos/tan of an angle.',
+      '  Given an angle and one side, find another side.',
+      '  Use complementary identity: "if sin x = a/b, what is cos(90° − x)?"',
+      '  Find unknown angle: θ = sin⁻¹ or cos⁻¹ or tan⁻¹.',
+      'SAT TRAP: confusing sin(angle in degrees) with sin(angle in radians). SAT typically uses degrees unless π is in the angle.',
+    ], vocabulary: [{ term: 'SOHCAHTOA', definition: 'mnemonic: sin = opp/hyp, cos = adj/hyp, tan = opp/adj.' }, { term: 'complementary angles', definition: 'two angles summing to 90°; sin of one = cos of the other.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'In right triangle ABC, angle B = 90°. AB = 6, BC = 8. Find sin A and cos A.', steps: [
+      'Identify hypotenuse: opposite right angle (B). Hyp = AC.',
+      'AC by Pythagoras: AC² = 6² + 8² = 36 + 64 = 100. AC = 10.',
+      'sin A = OPPOSITE side / HYPOTENUSE = BC / AC = 8/10 = 4/5.',
+      'cos A = ADJACENT side / HYPOTENUSE = AB / AC = 6/10 = 3/5.',
+      'Sanity: sin² + cos² = (4/5)² + (3/5)² = 16/25 + 9/25 = 1. ✓',
+    ], answer: 'sin A = 4/5, cos A = 3/5', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'If sin x = 3/5, find cos(90° − x) without computing x.', expectedAnswer: 'Complementary identity: cos(90° − x) = sin x = 3/5.', responseFormat: 'free', hints: ['Use complementary angle identity.', 'cos(90° − x) = sin x. Apply directly.'], estimatedMinutes: 2 },
+    { id: 'misconception-pythagorean-id', kind: 'misconception_check', question: 'A student writes sin θ + cos θ = 1. What\'s the actual identity?', commonErrors: [{ answer: 'sin θ + cos θ = 1', misconception: 'Forgetting the squares in Pythagorean identity.', correctsTo: 'The identity is sin²θ + cos²θ = 1 — both terms SQUARED. sin θ + cos θ alone is generally NOT 1 (e.g., sin 30° + cos 30° = 1/2 + √3/2 ≈ 1.37). The "1" in the identity comes from the Pythagorean theorem applied to a unit-radius right triangle (or unit circle).' }], estimatedMinutes: 2 },
+    { id: 'recap', kind: 'recap', mustRemember: ['SOH-CAH-TOA: sin opp/hyp, cos adj/hyp, tan opp/adj.', 'sin² + cos² = 1 (Pythagorean identity).', 'Special angles: 30, 45, 60, 90 — memorise.', 'sin(90° − θ) = cos θ (complementary).', '180° = π radians.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
