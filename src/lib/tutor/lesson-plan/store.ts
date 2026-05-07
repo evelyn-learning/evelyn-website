@@ -1014,6 +1014,17 @@ import { SEED_IB_CS_DATA_STRUCTURES } from './seeds/ib-cs-data-structures';
 import { SEED_IB_CS_ALGORITHMS } from './seeds/ib-cs-algorithms';
 import { SEED_AP_TEST_STRATEGY_FRQ } from './seeds/ap-test-strategy-frq';
 import { SEED_AP_TEST_STRATEGY_MCQ } from './seeds/ap-test-strategy-mcq';
+// Coverage wave 10 (2026-05-06) — AP Languages.
+import { SEED_AP_SPANISH_LANG_GRAMMAR } from './seeds/ap-spanish-lang-grammar';
+import { SEED_AP_SPANISH_LANG_WRITING } from './seeds/ap-spanish-lang-writing';
+import { SEED_AP_SPANISH_LIT_POETRY } from './seeds/ap-spanish-lit-poetry';
+import { SEED_AP_SPANISH_LIT_PROSE } from './seeds/ap-spanish-lit-prose';
+import { SEED_AP_FRENCH_LANG_GRAMMAR } from './seeds/ap-french-lang-grammar';
+import { SEED_AP_FRENCH_LANG_WRITING } from './seeds/ap-french-lang-writing';
+import { SEED_AP_CHINESE_LANG_GRAMMAR } from './seeds/ap-chinese-lang-grammar';
+import { SEED_AP_CHINESE_LANG_CHARACTERS } from './seeds/ap-chinese-lang-characters';
+import { SEED_IB_SPANISH_TEXT_TYPES } from './seeds/ib-spanish-text-types';
+import { SEED_IB_FRENCH_TEXT_TYPES } from './seeds/ib-french-text-types';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -1988,6 +1999,17 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_IB_CS_ALGORITHMS,
   SEED_AP_TEST_STRATEGY_FRQ,
   SEED_AP_TEST_STRATEGY_MCQ,
+  // Coverage wave 10 (2026-05-06) — AP Languages.
+  SEED_AP_SPANISH_LANG_GRAMMAR,
+  SEED_AP_SPANISH_LANG_WRITING,
+  SEED_AP_SPANISH_LIT_POETRY,
+  SEED_AP_SPANISH_LIT_PROSE,
+  SEED_AP_FRENCH_LANG_GRAMMAR,
+  SEED_AP_FRENCH_LANG_WRITING,
+  SEED_AP_CHINESE_LANG_GRAMMAR,
+  SEED_AP_CHINESE_LANG_CHARACTERS,
+  SEED_IB_SPANISH_TEXT_TYPES,
+  SEED_IB_FRENCH_TEXT_TYPES,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
