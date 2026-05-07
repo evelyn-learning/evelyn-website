@@ -21,6 +21,7 @@ import connectDB from '@/lib/db';
 import { StudentProfileModel, toStudentProfile, type IStudentProfileDoc } from '@/models/StudentProfile';
 import {
   type StudentProfile,
+  type StudentPreferences,
   type MasteryEntry,
   type GapEntry,
   type SessionMemory,
@@ -156,4 +157,31 @@ export function recordGap(
 /** Append a session memory entry. */
 export function appendSessionMemory(profile: StudentProfile, memory: SessionMemory): StudentProfile {
   return { ...profile, recentSessions: [...profile.recentSessions, memory] };
+}
+
+/** Patch the preferences sub-object on a profile and persist. Only keys
+ *  present in `patch` are written; everything else (mastery, gaps,
+ *  recentSessions) is preserved. Used by the settings page and any
+ *  other surface that lets the student/parent change a preference
+ *  without committing a full session.
+ *
+ *  Pass `null` for a key to clear it (revert to grade default). */
+export async function updateStudentPreferences(
+  id: string,
+  patch: Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>,
+): Promise<StudentProfile> {
+  const profile = await getOrCreateStudentProfile(id);
+  const merged: StudentPreferences = { ...profile.preferences };
+  for (const [k, v] of Object.entries(patch)) {
+    const key = k as keyof StudentPreferences;
+    if (v === null || v === undefined) {
+      delete merged[key];
+    } else {
+      // The cast is safe: each key maps to its own type, and the patch
+      // shape constrains values to the matching field type. TS can't
+      // narrow per-key when we iterate Object.entries.
+      (merged as Record<string, unknown>)[key] = v;
+    }
+  }
+  return saveStudentProfile({ ...profile, preferences: merged });
 }

@@ -343,6 +343,26 @@ export class WhiteboardCatalog {
     return this.items.find((i) => i.itemId === itemId);
   }
 
+  /** Resolve a query against page TITLES (not feature names). Used as a
+   *  scroll-handler fallback when the brain emits the page title as the
+   *  scrollTo target (e.g. `target: "Six Kingdoms"` after a recent
+   *  new_page call). Matches any item whose pageTitle normalizes to the
+   *  same token as the query; returns the most recent such item so the
+   *  scroll lands at the page's current bottom. Returns null when no
+   *  page title matches. */
+  resolvePageTitle(raw: string): { pageTitle: string; itemId: string } | null {
+    const q = normalizeToken(raw);
+    if (!q) return null;
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const item = this.items[i];
+      if (!item.pageTitle) continue;
+      if (normalizeToken(item.pageTitle) === q) {
+        return { pageTitle: item.pageTitle, itemId: item.itemId };
+      }
+    }
+    return null;
+  }
+
   clear(): void {
     this.items = [];
     this.nextOrder = 0;

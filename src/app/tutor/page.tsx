@@ -32,6 +32,9 @@ import PlanSearchBar, { type PlanSearchResult } from './components/PlanSearchBar
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
+import { useStudentPreferences } from '@/hooks/useStudentPreferences';
+import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
@@ -149,6 +152,17 @@ function TutorPage() {
   const [paceBias, setPaceBias] = useState(0);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Stage 4: humor preference accessor for the in-session ⋯ menu chip.
+  // localStorage-only here (no studentId on this page yet); the settings
+  // page at /tutor/settings is the place that does DB sync via
+  // ?studentId=. Both write the same localStorage key, so a chip change
+  // is reflected on the settings page next visit and vice versa.
+  const {
+    preferences: studentPreferencesForChip,
+    setPreference: setStudentPreferenceForChip,
+    clearPreference: clearStudentPreferenceForChip,
+  } = useStudentPreferences();
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('voice');
@@ -1482,6 +1496,51 @@ function TutorPage() {
                         >
                           Wrap up
                         </button>
+                        <div className="my-1 border-t border-gray-100" />
+                        <div className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Humor</div>
+                        {(() => {
+                          // Stage 4: in-session humor toggle. Grade-band cap
+                          // hides medium/heavy for K-2 (the resolver clamps
+                          // them anyway, but showing them would let the
+                          // student pick something that silently doesn't
+                          // apply). selectedLevel may be empty in setup
+                          // mode but the menu itself only renders inside a
+                          // running session, so it's reliably populated.
+                          const band = gradeBandFor(selectedLevel || '');
+                          const HUMOR_CHOICES: Array<{ value: StudentPreferences['humorCeiling'] | null; label: string; minBand: 'K-2' | '3-5' | '6-8' | '9-12' }> = [
+                            { value: null, label: 'Default', minBand: 'K-2' },
+                            { value: 'off', label: 'Serious', minBand: 'K-2' },
+                            { value: 'light', label: 'A little funny', minBand: 'K-2' },
+                            { value: 'medium', label: 'Pretty funny', minBand: '3-5' },
+                            { value: 'heavy', label: 'Very funny', minBand: '6-8' },
+                          ];
+                          const BAND_RANK: Record<'K-2' | '3-5' | '6-8' | '9-12', number> = { 'K-2': 0, '3-5': 1, '6-8': 2, '9-12': 3 };
+                          const current = studentPreferencesForChip.humorCeiling ?? null;
+                          return HUMOR_CHOICES
+                            .filter((c) => BAND_RANK[band] >= BAND_RANK[c.minBand])
+                            .map((c) => {
+                              const isSelected = current === c.value;
+                              return (
+                                <button
+                                  key={c.value ?? 'default'}
+                                  type="button"
+                                  onClick={() => {
+                                    if (c.value === null) clearStudentPreferenceForChip('humorCeiling');
+                                    else setStudentPreferenceForChip('humorCeiling', c.value);
+                                    setPacingMenuOpen(false);
+                                  }}
+                                  className={`block w-full text-left px-3 py-1 text-sm ${
+                                    isSelected
+                                      ? 'text-blue-700 bg-blue-50 font-medium'
+                                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                                  }`}
+                                >
+                                  <span className="inline-block w-3">{isSelected ? '✓' : ''}</span>
+                                  {' '}{c.label}
+                                </button>
+                              );
+                            });
+                        })()}
                       </div>
                     </>
                   )}

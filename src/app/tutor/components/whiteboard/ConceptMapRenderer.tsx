@@ -96,13 +96,14 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   sortedLevels.forEach((lv, rowIdx) => {
     const ids = levels.get(lv)!;
     const baseY = 8 + (rowIdx + 0.5) * (84 / rowCount);
-    // Dense levels (> 4 siblings) zigzag alternate nodes into two sub-rows so
-    // their rectangles don't overlap horizontally. The offset is large enough
-    // (~12 normalized units ≈ 43 px) to fully separate adjacent boxes, since
-    // a typical two-word label like "Light Energy" is ~90 px wide.
-    const dense = ids.length > 4;
+    // Dense levels (>= 4 siblings) zigzag alternate nodes into two sub-rows so
+    // their rectangles don't overlap horizontally. The offset is sized to
+    // separate two-line labels (~36 px tall) — 14 normalized units ≈ 50 px.
+    // Threshold lowered from > 4 to >= 4 after 2026-05-06 G3 light-and-sound
+    // session showed exactly 4 wide leaf nodes collided unreadably.
+    const dense = ids.length >= 4;
     ids.forEach((id, colIdx) => {
-      const staggerY = dense ? (colIdx % 2) * 12 : 0;
+      const staggerY = dense ? (colIdx % 2) * 14 : 0;
       // Use 94% of the plot width (vs the old 80%) so each slot is wider.
       const x = 3 + (colIdx + 0.5) * (94 / ids.length);
       pos.set(id, { x, y: baseY + staggerY });
@@ -240,18 +241,40 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           );
         })}
 
-        {/* Nodes */}
+        {/* Nodes. Multi-line labels: brain emits "Title\nSubtitle" expecting
+            stacked rendering. Split on \n, truncate each line to ~18 chars,
+            and render as <tspan>s. This dramatically reduces horizontal
+            overlap on crowded rows (observed 2026-05-06 G3 light-and-sound
+            session: 4 wide leaf nodes collided into unreadable bar). */}
         {nodes.map((n, i) => {
           const p = place(n);
           const color = n.color || cycleColor(i);
-          const label = truncate(n.label, 22);
-          const rectW = Math.max(60, label.length * 7);
-          const rectH = 26;
+          const rawLines = (n.label ?? '').split(/\r?\n/);
+          const lines = rawLines.map((l) => truncate(l.trim(), 18)).filter((l) => l.length > 0);
+          if (lines.length === 0) lines.push('');
+          const longest = Math.max(...lines.map((l) => l.length));
+          const fontSize = 11;
+          const lineH = 13;
+          const rectW = Math.max(60, longest * 7);
+          const rectH = Math.max(26, lines.length * lineH + 10);
+          // First-line baseline: vertically center the block of lines.
+          const firstBaseline = p.y - ((lines.length - 1) * lineH) / 2 + 4;
           return (
             <g key={n.id} {...feat(`node-${featSlug(n.id)}`, { cx: p.x, cy: p.y, w: rectW + 10, h: rectH + 10 })}>
               <rect x={p.x - rectW / 2} y={p.y - rectH / 2} width={rectW} height={rectH} rx={6}
                 fill={withAlpha(color, 0.15)} stroke={color} strokeWidth={1.75} />
-              <text x={p.x} y={p.y + 4} fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={700}>{label}</text>
+              <text
+                x={p.x}
+                y={firstBaseline}
+                fontSize={fontSize}
+                fill={DIAGRAM_COLORS.text}
+                textAnchor="middle"
+                fontWeight={700}
+              >
+                {lines.map((line, idx) => (
+                  <tspan key={idx} x={p.x} dy={idx === 0 ? 0 : lineH}>{line}</tspan>
+                ))}
+              </text>
             </g>
           );
         })}

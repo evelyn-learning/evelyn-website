@@ -255,8 +255,18 @@ export interface HierarchyPyramidFigure {
   title?: string;
 }
 export function solveHierarchyPyramid(params: Record<string, unknown>): HierarchyPyramidFigure {
-  if (!Array.isArray(params.tiers) || params.tiers.length === 0) throw new Error('hierarchy_pyramid: tiers required');
-  const tiers = (params.tiers as Array<Record<string, unknown>>).map((t, i) => {
+  // Accept `tiers` (canonical) or `levels` (the brain reaches for this
+  // word when the schema isn't fresh in its context — observed
+  // 2026-05-06 G5 classification session).
+  const tiersInput = Array.isArray(params.tiers)
+    ? params.tiers
+    : Array.isArray(params.levels)
+    ? params.levels
+    : null;
+  if (!tiersInput || tiersInput.length === 0) {
+    throw new Error('hierarchy_pyramid: tiers required');
+  }
+  const tiers = (tiersInput as Array<Record<string, unknown>>).map((t, i) => {
     if (typeof t.label !== 'string') throw new Error(`hierarchy_pyramid: tiers[${i}].label required`);
     return {
       label: t.label,

@@ -776,14 +776,21 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_labeled_image',
-    description: 'A real photograph or stock illustration with brain-supplied callouts overlaid. Different from the synthesized-diagram tools (cell_diagram, dna, ray_diagram, etc.) — those draw schematic vector art; this shows an actual image. Use for biology (real flower with parts labeled), social studies (a map with regions), chemistry (lab apparatus), or any concept where a real image carries information a diagram can\'t. Callouts are placed at percentage coordinates (0-100) on the image. Provide alt text for accessibility.',
+    description: 'A real photograph or stock illustration. Different from the synthesized-diagram tools (cell_diagram, dna, ray_diagram, etc.) — those draw schematic vector art; this shows an actual image. Use for biology (real flower), social studies (a map), chemistry (lab apparatus), or any concept where a real photo carries information a diagram can\'t. Provide alt text for accessibility.\n\nIMPORTANT — how the image is sourced:\n- STRONGLY PREFER `query`: a short visual-content phrase ("monarch butterfly on flower", "human heart anatomy diagram", "wolves in forest"). The server resolves the query against Unsplash → Pixabay → Pexels and inserts a real, topic-relevant image URL. You DO NOT need to pick a URL.\n- Use `src` (legacy) ONLY when you have a known-good public URL — e.g., a NASA images-assets URL or a partner-supplied diagram. NEVER guess a URL: hallucinated photo IDs may load but show unrelated images.\n- Provide one of `query` OR `src`. If both are present, `query` wins.\n- If no good `query` comes to mind, prefer a synthesized diagram tool (show_diagram, show_cell_diagram, etc.) over guessing.\n- The server drops the call silently when the query returns no relevant image; your spoken narration alone carries the moment.\n\nIMPORTANT — callouts:\n- ONLY provide `callouts` when using `src` with a KNOWN image (e.g., a specific NASA anatomy diagram you can reason about). You can place x/y percent coordinates on a known image; you cannot on a `query`-resolved image because you have not seen it.\n- DO NOT provide `callouts` when using `query`. The server will strip them. Your verbal narration should describe what the picture shows in general terms; do not reference specific positions ("on the left", "at the bottom") since those depend on the resolved image.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        src: { type: 'string', description: 'Public image URL (https). Use Unsplash, Wikimedia, NASA, or other appropriate-license source.' },
+        query: {
+          type: 'string',
+          description: 'Short visual-content phrase the server will search for (e.g. "monarch butterfly on flower", "great wall of china", "human heart anatomy"). Focus on the depicted subject, not the lesson topic. Prefer this over `src`.',
+        },
+        src: {
+          type: 'string',
+          description: 'Legacy: public image URL (https). Use ONLY when you have a known-good URL (e.g., NASA images-assets, partner asset). DO NOT guess Unsplash/Pixabay URLs — use `query` instead.',
+        },
         alt: { type: 'string', description: 'Alt text — required.' },
-        credit: { type: 'string', description: 'Attribution / credit shown below the image.' },
+        credit: { type: 'string', description: 'Attribution / credit shown below the image. Optional when using `query` — the server fills it from the provider\'s metadata.' },
         callouts: {
           type: 'array',
           description: 'Labels to overlay. Each callout has x/y as percentages of the image dimensions.',
@@ -800,7 +807,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
           },
         },
       },
-      required: ['src', 'alt'],
+      required: ['alt'],
     },
   },
   {

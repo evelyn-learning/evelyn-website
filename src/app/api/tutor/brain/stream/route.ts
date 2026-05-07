@@ -29,6 +29,7 @@ import {
   generateProblem,
   type Difficulty,
 } from '@/lib/tutor/voice/problem-generator';
+import { searchImage } from '@/lib/tutor/image-search';
 
 export const runtime = 'nodejs';
 
@@ -251,6 +252,46 @@ export async function POST(req: NextRequest) {
   const studentSnippet = body.studentTranscript.slice(0, 80);
   const startedAt = Date.now();
 
+  // Humor-level diagnostic: scan the received system prompt for the
+  // <humor level="X"> tag the system-prompt builder writes. Lets us
+  // confirm the student's preference / partner cap actually reached
+  // the brain without having to log the entire prompt. One line per
+  // turn — cheap. Tag is "off" when humor is disabled, otherwise one
+  // of light/medium/heavy.
+  const humorMatch = body.systemPrompt.match(/<humor\s+level="(off|light|medium|heavy)"/);
+  if (humorMatch) {
+    console.log(`[humor] active=${humorMatch[1]}`);
+  } else {
+    console.log(`[humor] active=UNKNOWN (no <humor level=...> tag found in system prompt)`);
+  }
+
+  // show_labeled_image URL precheck (Fix B). Wikimedia thumb URLs and
+  // other broken third-party CDNs cause the renderer's onError fallback
+  // to show a text-only panel — student sees no actual image. We HEAD
+  // the URL before forwarding the tool call to the client; if it's
+  // unreachable, drop the SSE event entirely. The brain's agent loop
+  // still gets a tool_result via toolResultProvider, so it doesn't hang.
+  // 1500ms timeout caps worst-case latency on valid URLs.
+  const validateImageUrl = async (url: string, timeoutMs = 1500): Promise<boolean> => {
+    if (!url || typeof url !== 'string') return false;
+    try { new URL(url); } catch { return false; }
+    // Known-bad pattern shortcut: Wikimedia commons thumb URLs are
+    // hotlink-blocked. Skip the network call.
+    if (/^https?:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/thumb\//i.test(url)) {
+      return false;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { method: 'HEAD', signal: ctrl.signal, redirect: 'follow' });
+      return res.ok || (res.status >= 200 && res.status < 400);
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       // Counters for the post-stream telemetry log line. We mirror the
@@ -323,6 +364,79 @@ export async function POST(req: NextRequest) {
             usage.cacheReadTokens = ev.usage.cacheReadTokens;
             usage.cacheCreationTokens = ev.usage.cacheCreationTokens;
           }
+
+          // show_labeled_image: two paths.
+          //  - `query` (preferred): brain says what it wants pictured;
+          //    we resolve to a real URL via Unsplash → Pixabay → Pexels
+          //    and stamp args.src + args.credit on the event.
+          //  - `src` (legacy): brain provides a known-good URL; we HEAD
+          //    it to confirm it's reachable before forwarding.
+          // In either path: a failure drops the tool-call event so the
+          // client never tries to render a broken/missing image. Brain's
+          // agent loop has already been given a tool_result, so this is
+          // purely a display decision.
+          if (ev.type === 'tool-call' && ev.name === 'show_labeled_image') {
+            const query = typeof ev.args?.query === 'string' ? ev.args.query.trim() : '';
+            const existingSrc = typeof ev.args?.src === 'string' ? ev.args.src : '';
+
+            if (query) {
+              try {
+                const found = await searchImage({ query });
+                if (!found) {
+                  console.log(`[show_labeled_image] image-search MISS for query="${query}", dropping tool call`);
+                  if (clientGone) break;
+                  continue;
+                }
+                // Stamp resolved src + credit on the event so the client
+                // renders the real image. Keep the brain's title/alt
+                // intact. If the brain didn't supply credit, use the
+                // provider-supplied one.
+                //
+                // STRIP callouts on the query path: the brain has never
+                // seen the resolved image, so its percent-coordinate
+                // callouts are blind guesses (observed 2026-05-06 G5
+                // earth-systems: "Lava & rocks" labeled in a tree, "Ocean
+                // & water" also in trees, on an Unsplash landscape that
+                // had no lava). The tool description tells the brain to
+                // omit callouts when using query; this strip is a
+                // belt-and-suspenders enforcement.
+                const droppedCallouts = Array.isArray(ev.args?.callouts) ? (ev.args.callouts as unknown[]).length : 0;
+                ev.args = {
+                  ...ev.args,
+                  src: found.url,
+                  credit: typeof ev.args?.credit === 'string' && ev.args.credit
+                    ? ev.args.credit
+                    : found.credit,
+                  alt: typeof ev.args?.alt === 'string' && ev.args.alt
+                    ? ev.args.alt
+                    : found.alt,
+                  callouts: [],
+                };
+                console.log(
+                  `[show_labeled_image] resolved query="${query}" → ${found.source}` +
+                  (droppedCallouts > 0 ? ` (stripped ${droppedCallouts} blind callouts)` : ''),
+                );
+              } catch (err) {
+                console.warn(`[show_labeled_image] image-search threw, dropping:`, (err as Error).message);
+                if (clientGone) break;
+                continue;
+              }
+            } else if (existingSrc) {
+              // Legacy URL path — HEAD the URL to confirm reachability.
+              const ok = await validateImageUrl(existingSrc);
+              if (!ok) {
+                console.log(`[show_labeled_image] URL precheck FAILED, dropping. src="${existingSrc.slice(0, 160)}"`);
+                if (clientGone) break;
+                continue;
+              }
+            } else {
+              // Neither query nor src — invalid call.
+              console.log('[show_labeled_image] no query and no src, dropping');
+              if (clientGone) break;
+              continue;
+            }
+          }
+
           send(ev);
           // Bail early if the client is gone — no point continuing to
           // pull from the brain generator (costs API tokens) when no

@@ -29,8 +29,16 @@ export interface GradeProfile {
   labelMaxWords: number;
   /** Pacing multiplier for comprehension pauses (1.0 baseline). */
   pacingMultiplier: number;
-  /** Tolerated humor level — light puns vs. richer parallel-story humor. */
+  /** Band CAP on humor — the most intense level that's ever appropriate
+   *  for this band. Acts as the ceiling the resolver clamps to when a
+   *  student preference asks for more (e.g., a K-2 student set to "heavy"
+   *  still resolves to "light" because the band caps it). */
   humorCeiling: 'off' | 'light' | 'medium' | 'heavy';
+  /** Band DEFAULT — what an unconfigured student gets in this band before
+   *  any preference is set. Set to 'light' across all bands so humor is a
+   *  conservative-but-warm default; students opt UP to medium/heavy via
+   *  preference, never opt down to find a quieter tutor. */
+  defaultHumorLevel: 'off' | 'light' | 'medium' | 'heavy';
   /** Pacing v2 thresholds. Streak counts that gate ramp/offer behavior.
    *  Phase 1 only reads these for the student_state block context;
    *  Phase 2 uses them to emit advisory hints. */
@@ -58,6 +66,7 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 3,
     pacingMultiplier: 2.0,
     humorCeiling: 'light',
+    defaultHumorLevel: 'light',
     pacingThresholds: {
       silentRampStreak: 2,
       explicitOfferStreak: 3,
@@ -75,6 +84,7 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 5,
     pacingMultiplier: 1.5,
     humorCeiling: 'medium',
+    defaultHumorLevel: 'light',
     pacingThresholds: {
       silentRampStreak: 3,
       explicitOfferStreak: 4,
@@ -92,6 +102,7 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 8,
     pacingMultiplier: 1.2,
     humorCeiling: 'medium',
+    defaultHumorLevel: 'light',
     pacingThresholds: {
       silentRampStreak: 3,
       explicitOfferStreak: 4,
@@ -109,6 +120,7 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
     labelMaxWords: 12,
     pacingMultiplier: 1.0,
     humorCeiling: 'heavy',
+    defaultHumorLevel: 'light',
     pacingThresholds: {
       silentRampStreak: 4,
       explicitOfferStreak: 6,
@@ -157,7 +169,7 @@ export function renderGradeProfileBlock(profile: GradeProfile): string {
     `  · "unrestricted" → formal vocabulary OK`,
     `- Labels on diagrams: ${profile.labelMaxWords} words max.`,
     `- Pacing: this band needs ~${profile.pacingMultiplier}× the baseline pause after each tool call (the engine inserts the pause; you don't have to think about it).`,
-    `- Humor ceiling: ${profile.humorCeiling}.`,
+    `- Humor: default = ${profile.defaultHumorLevel}, band cap = ${profile.humorCeiling}. The active level for this session is set in the <humor> block below; this line is for context.`,
     `</grade_profile>`,
   ].join('\n');
 }

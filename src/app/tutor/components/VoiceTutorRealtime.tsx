@@ -14,6 +14,7 @@ import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type
 import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
 import { getSegment } from '@/lib/tutor/lesson-plan/types';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -267,6 +268,12 @@ export function VoiceTutorRealtime({
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Persisted student preferences (humor / pacing / etc). Read from
+  // localStorage synchronously, then synced from /api/tutor/student-profile
+  // when studentId is present. Used to drive the humor block in the
+  // system prompt so the brain reflects the student's chosen level.
+  const { preferences: studentPreferences } = useStudentPreferences({ studentId });
 
   // Audio recording for session replay
   const audioRecordEnabled = sessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false';
@@ -2680,6 +2687,27 @@ export function VoiceTutorRealtime({
         }
         const result = catalogRef.current.resolveTarget(raw);
         if (!result.ok) {
+          // Page-title fallback: the brain often emits a page title as
+          // the scroll target (e.g. `target:"Six Kingdoms"` right after
+          // a new_page call) — that's not a feature name so the regular
+          // resolver misses it. Match against tracked page titles before
+          // rejecting.
+          const pageMatch = catalogRef.current.resolvePageTitle(raw);
+          if (pageMatch) {
+            const located = resolveTargetFromId(pageMatch.itemId);
+            if (located) {
+              pushPageScrollTo(pageMatch.pageTitle, located.pageIndex);
+              console.log(
+                '[VoiceTutor] scrollTo-page-title-match: target="%s" → page "%s" (page %d)',
+                raw, pageMatch.pageTitle, located.pageIndex,
+              );
+              onDebugEvent?.(
+                'scrollTo_page_title_match',
+                `"${raw}" → page "${pageMatch.pageTitle}"`,
+              );
+              continue;
+            }
+          }
           const hint = result.candidates.length > 0
             ? ` Valid targets: ${result.candidates.slice(0, 14).map((c) => `"${c.target}" on ${c.on}`).join(', ')}.`
             : '';
@@ -3722,7 +3750,21 @@ export function VoiceTutorRealtime({
         }
         // Boredom-cue regex — verbatim match logged for telemetry. Cue
         // is consumed by the next-turn student_state block formatter.
-        const cueMatch = t.match(boredomCueRegex);
+        // EXCEPTION: when the student transcript carries an explicit
+        // button marker ([Skip-button-clicked] or [I'm-stuck-button-
+        // clicked]), suppress the cue. The button's instruction body
+        // already tells the brain exactly what to do (advance now / walk
+        // me through Socratically); the boredom-cue hint piles on
+        // "verbally offer harder / skip / different topic", which
+        // contradicts the button's intent and produces multi-choice
+        // verbosity instead of action. Observed 2026-05-06 G5 earth-
+        // systems: clicked Skip → tutor offered three choices instead
+        // of advancing.
+        const hasButtonMarker = /\[(Skip-button-clicked|I'?m-stuck-button-clicked)/i.test(t);
+        const cueMatch = !hasButtonMarker && t.match(boredomCueRegex);
+        if (hasButtonMarker) {
+          logPacing(`student-cue suppressed (explicit button click) turn=${pacingTurnCounterRef.current}`);
+        }
         if (cueMatch) {
           studentCueRef.current = { cue: cueMatch[0], turn: pacingTurnCounterRef.current };
           logPacing(`student-cue cue="${cueMatch[0]}" turn=${pacingTurnCounterRef.current}`);
@@ -5678,6 +5720,7 @@ export function VoiceTutorRealtime({
           subject,
           topic,
           level,
+          studentPreferences,
         });
 
         // Read optional voice personality from env
@@ -5720,7 +5763,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     };
 
     buildInstructions();
-  }, [subject, topic, level, studentName, sessionGoal]);
+    // studentPreferences included so a settings change between sessions
+    // (or via the in-session chip in Stage 4) rebuilds the system prompt
+    // with the new humor level. Object identity is stable until the user
+    // mutates a field, so this doesn't cause spurious rebuilds.
+  }, [subject, topic, level, studentName, sessionGoal, studentPreferences]);
 
   // Kick the ephemeral-token fetch immediately on mount so it runs in parallel
   // with buildInstructions — that alone saves ~500–1500 ms, and it is safe to

@@ -70,7 +70,8 @@ export interface SessionMemory {
 
 /** Per-student preferences. */
 export interface StudentPreferences {
-  /** Override for grade-profile humor ceiling. */
+  /** Student/parent-set preference for humor level. The resolver treats
+   *  this as the requested level, then min-clamps with any partner cap. */
   humorCeiling?: 'off' | 'light' | 'medium' | 'heavy';
   /** Pacing override: faster / slower than the grade default. */
   pacing?: 'slower' | 'default' | 'faster';
@@ -78,6 +79,26 @@ export interface StudentPreferences {
   modality?: 'visual' | 'equation' | 'mixed';
   /** Tone preference. */
   tone?: 'warm' | 'peer' | 'professional';
+}
+
+/** Partner-level (B2B) policy that constrains what students under a
+ *  partner can opt into. Currently a stub — no UI surface, no admin
+ *  panel; the field exists so the humor resolver can clamp preferences
+ *  to a partner cap without us having to refactor the API later when a
+ *  partner asks for the capability.
+ *
+ *  Semantics: each *Max field is a CAP, not an override. A student whose
+ *  preference is *below* the cap keeps their preference; a preference
+ *  *above* the cap clamps down to the cap. This matches how content-
+ *  rating systems work — districts set a ceiling, families can be more
+ *  conservative. */
+export interface PartnerPolicy {
+  /** Partner id this policy belongs to. */
+  partnerId: string;
+  /** Max humor level any student under this partner may experience.
+   *  Resolver: min(studentPreference, humorCeilingMax). Undefined = no
+   *  cap (full band default applies). */
+  humorCeilingMax?: 'off' | 'light' | 'medium' | 'heavy';
 }
 
 export interface StudentProfile {

@@ -12,7 +12,9 @@ import type { SessionState, SessionGoal } from '../types';
 import { formatPronunciationPrompt } from '@/data/tutor/pronunciation';
 import { getGradeProfile, renderGradeProfileBlock } from '@/lib/tutor/pedagogy/grade-profile';
 import { renderVoiceCadenceBlock } from '@/lib/tutor/pedagogy/voice-cadence';
-import { renderHumorBlock } from '@/lib/tutor/pedagogy/humor';
+import { renderAnalogiesBlock } from '@/lib/tutor/pedagogy/analogies';
+import { renderHumorBlock, resolveHumorCeiling, type HumorLevel } from '@/lib/tutor/pedagogy/humor';
+import type { StudentPreferences, PartnerPolicy } from '@/lib/tutor/student-profile/types';
 import { renderCatalogForPrompt } from '@/lib/tutor/diagrams/catalog/manifest';
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
@@ -109,6 +111,19 @@ export interface SystemPromptContext {
    *  when omitted. Pass a different record to swap product identity,
    *  contact info, scope statement, etc. without touching the engine. */
   branding?: TutorBranding;
+
+  /** Persisted per-student preferences. Currently the resolver only reads
+   *  `humorCeiling`; other fields (pacing/modality/tone) are reserved
+   *  for future stages. Optional — when omitted, the grade-band default
+   *  is used. */
+  studentPreferences?: StudentPreferences;
+  /** In-session humor override set via the chip / overflow menu. Wins
+   *  over the persisted preference, still respects the partner cap. */
+  sessionHumorOverride?: HumorLevel;
+  /** Partner-level policy (B2B). Stub today — no admin UI populates it
+   *  yet — but the resolver accepts it so when partners need humor caps
+   *  the API doesn't change. */
+  partnerPolicy?: PartnerPolicy;
 }
 
 /**
@@ -946,7 +961,12 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // Pedagogy spine — grade-band behavior + voice cadence + humor.
   // Inlined once, cached in the system-prompt preamble. Read this BEFORE
   // anything else; it modulates every other rule below.
-  prompt += `\n\n${renderPedagogyBlock(context.level)}\n`;
+  prompt += `\n\n${renderPedagogyBlock({
+    level: context.level,
+    studentPreferences: context.studentPreferences,
+    sessionHumorOverride: context.sessionHumorOverride,
+    partnerPolicy: context.partnerPolicy,
+  })}\n`;
 
   // Diagram catalog — every kind the brain may pick for show_diagram,
   // along with its param schema. Filtered by subject + grade band so the
@@ -1060,23 +1080,46 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   return prompt;
 }
 
-/** Compose grade profile + voice cadence + humor into one prompt block.
- *  Kept here (not in the pedagogy/ module) so the system prompt builder
- *  controls the order and the framing intro. */
-function renderPedagogyBlock(level: string | undefined): string {
-  const profile = getGradeProfile(level);
+/** Compose grade profile + voice cadence + analogies + humor into one
+ *  prompt block. Kept here (not in the pedagogy/ module) so the system
+ *  prompt builder controls the order and the framing intro.
+ *
+ *  Order matters: <analogies> appears BEFORE <humor> because the humor
+ *  block references it ("analogies are governed by the block above").
+ *
+ *  Humor level resolution: session override → student preference →
+ *  grade-band default, then min-clamped against partner cap. See
+ *  resolveHumorCeiling for the precedence rules. */
+interface RenderPedagogyArgs {
+  level: string | undefined;
+  studentPreferences?: StudentPreferences;
+  sessionHumorOverride?: HumorLevel;
+  partnerPolicy?: PartnerPolicy;
+}
+
+function renderPedagogyBlock(args: RenderPedagogyArgs): string {
+  const profile = getGradeProfile(args.level);
+  const { ceiling: humorLevel } = resolveHumorCeiling({
+    gradeDefault: profile.defaultHumorLevel,
+    preference: args.studentPreferences?.humorCeiling,
+    partnerCap: args.partnerPolicy?.humorCeilingMax,
+    sessionOverride: args.sessionHumorOverride,
+  });
   return [
     `## Pedagogy spine — read before every turn`,
     ``,
-    `Three things modulate everything else: the student's grade band, how`,
-    `you SOUND when speaking, and how you can use humor / stories. The blocks`,
-    `below tell you what's appropriate for THIS session. The other rules in`,
-    `this prompt assume you've already adjusted for these.`,
+    `Four things modulate everything else: the student's grade band, how`,
+    `you SOUND when speaking, the analogies / framing you may use, and how`,
+    `playful you may be. The blocks below tell you what's appropriate for`,
+    `THIS session. The other rules in this prompt assume you've already`,
+    `adjusted for these.`,
     ``,
     renderGradeProfileBlock(profile),
     ``,
     renderVoiceCadenceBlock(),
     ``,
-    renderHumorBlock(profile.humorCeiling),
+    renderAnalogiesBlock(profile),
+    ``,
+    renderHumorBlock(humorLevel),
   ].join('\n');
 }

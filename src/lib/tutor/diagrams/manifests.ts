@@ -552,6 +552,16 @@ function buildTableManifest(cmd: { headers?: string[]; rows?: string[][] }): Fea
         labels: [
           `cell ${i + 1} ${j + 1}`, `cell-r${i + 1}-c${j + 1}`,
           `row ${i + 1} column ${j + 1}`, `row ${i + 1} col ${j + 1}`,
+          // Natural-language phrasings the brain reaches for after
+          // reading the boardSnapshot (which surfaces the description
+          // text "cell at row N column M: …"). Without these the brain
+          // echoes back the description and the matcher misses (observed
+          // 2026-05-06 G5 classification session: target="cell at row 1
+          // column 1" silently dropped).
+          `cell at row ${i + 1} column ${j + 1}`,
+          `cell at row ${i + 1} col ${j + 1}`,
+          `the cell at row ${i + 1} column ${j + 1}`,
+          `the cell at row ${i + 1} col ${j + 1}`,
           ...(preview ? [preview, `the ${preview}`] : []),
         ],
         scribbleable: true,

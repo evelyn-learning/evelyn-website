@@ -85,6 +85,15 @@ export function buildCycleDiagramManifest(props: CycleDiagramProps): FeatureMani
       `${s.label} step`,
       `step ${s.label}`,
       labelLower,
+      // Echo-of-description phrasings the brain emits after reading the
+      // boardSnapshot. Description text is `cycle stage "X"` so the brain
+      // echoes that verbatim as the scribble target. Without these,
+      // tutor_scribble silently drops (observed 2026-05-06 G3 life-cycles
+      // session: 4 consecutive scribble drops on cycle stages).
+      `cycle stage "${s.label}"`,
+      `cycle stage ${s.label}`,
+      `the cycle stage "${s.label}"`,
+      `the cycle stage ${s.label}`,
     ]);
     for (const syn of domainSyns) {
       stageLabels.add(syn);

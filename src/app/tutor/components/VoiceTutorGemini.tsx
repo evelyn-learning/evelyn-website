@@ -15,6 +15,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut } from 'lucide-react';
 import { useGeminiLive } from '../hooks/useGeminiLive';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
@@ -63,6 +64,11 @@ export function VoiceTutorGemini({
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+
+  // Persisted student preferences (humor / pacing / etc), localStorage-
+  // backed in the Gemini variant since this component doesn't currently
+  // accept a studentId prop. When auth wires through, pass studentId.
+  const { preferences: studentPreferences } = useStudentPreferences();
 
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
@@ -215,6 +221,7 @@ export function VoiceTutorGemini({
           currentState: 'greeting',
           subject,
           topic,
+          studentPreferences,
         });
 
         if (cancelled) return;
