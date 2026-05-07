@@ -1,0 +1,60 @@
+/**
+ * NEET Biology — Plant Physiology (Photosynthesis + Respiration).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_BIO_PLANT_PHYSIOLOGY: LessonPlan = {
+  id: 'evelyn.neet.biology.plant-physiology.v1',
+  title: 'NEET Biology — Plant Physiology: Photosynthesis and Respiration',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-biology',
+  locale: 'en',
+  los: [{ id: 'neet.bio.plant-physiology', description: 'Apply photosynthesis (light + dark reactions, C3/C4/CAM) and respiration pathways with NEET-level detail.', standard: 'NEET-BIO-PLANT-PHYS' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Photosynthesis + respiration = ~5-7 NEET questions per year. Memorise the cycles + locations + products.', script: 'Light reactions in thylakoid. Calvin cycle in stroma. Glycolysis in cytoplasm. TCA in mitochondrial matrix. ETC in inner mitochondrial membrane. NEET wants you to know what happens WHERE and what comes IN/OUT.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Light + dark reactions, C3/C4/CAM, glycolysis/TCA/ETC.', keyIdeas: [
+      'PHOTOSYNTHESIS overall: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂.',
+      'OCCURS in chloroplasts. Two stages: light-dependent (in thylakoid membrane) + light-independent / Calvin cycle (in stroma).',
+      'LIGHT REACTIONS:',
+      '  Photosystem II → splits water (photolysis): 2H₂O → 4H⁺ + 4e⁻ + O₂. (Source of all atmospheric O₂.)',
+      '  Electrons flow through ETC → pump H⁺ into thylakoid lumen.',
+      '  ATP synthase uses H⁺ gradient → ATP.',
+      '  Photosystem I → re-energises electrons; reduce NADP⁺ to NADPH.',
+      '  Output: ATP, NADPH, O₂.',
+      'CALVIN CYCLE (stroma):',
+      '  CO₂ fixation by RuBisCO → 6 PGA molecules (3-carbon).',
+      '  Reduction phase uses NADPH + ATP → G3P (glyceraldehyde 3-phosphate).',
+      '  Some G3P forms glucose; rest regenerates RuBP.',
+      '  Output: glucose. Inputs: CO₂, ATP, NADPH.',
+      'C3 PLANTS (most): RuBisCO fixes CO₂ directly into 3-carbon PGA. Photorespiration is a problem in hot/dry conditions.',
+      'C4 PLANTS (e.g., sugarcane, maize): use PEP carboxylase first to fix CO₂ into oxaloacetate (4-carbon). Releases CO₂ to RuBisCO in bundle sheath cells (Kranz anatomy). More efficient in heat.',
+      'CAM PLANTS (succulents like cactus): fix CO₂ at NIGHT into malate (stored in vacuoles). Release for Calvin cycle in DAY. Adaptation to extreme aridity.',
+      'CELLULAR RESPIRATION (4 stages):',
+      '  GLYCOLYSIS (cytoplasm): glucose → 2 pyruvate. Net 2 ATP + 2 NADH. Anaerobic-capable.',
+      '  PYRUVATE OXIDATION (mitochondrial matrix): pyruvate → acetyl-CoA + CO₂ + NADH (per pyruvate).',
+      '  KREBS / TCA CYCLE (matrix): acetyl-CoA → 3 NADH + 1 FADH₂ + 1 GTP + 2 CO₂ (per cycle). Per glucose: 2 cycles.',
+      '  ETC + OXIDATIVE PHOSPHORYLATION (inner mito membrane): NADH/FADH₂ donate electrons; H⁺ pumped; ATP synthase.',
+      '  Total ATP per glucose: ~30-32 (modern accounting; older textbooks say 36-38).',
+      'FERMENTATION (anaerobic): glycolysis only (2 ATP). Pyruvate → lactate (animals/some bacteria) OR ethanol + CO₂ (yeast).',
+      'PHOTORESPIRATION: RuBisCO can use O₂ instead of CO₂; wasteful. C4 plants minimise this by concentrating CO₂.',
+    ], vocabulary: [{ term: 'RuBisCO', definition: 'Ribulose-1,5-bisphosphate carboxylase/oxygenase; enzyme catalyzing CO₂ fixation in Calvin cycle.' }, { term: 'photolysis', definition: 'splitting of water by photosystem II during light reactions; produces O₂.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'How many ATP, NADH, and FADH₂ are produced per glucose in glycolysis + Krebs (NOT counting ETC)?', steps: [
+      'Glycolysis: 2 ATP + 2 NADH (per glucose).',
+      'Pyruvate oxidation: 2 NADH (one per pyruvate, 2 pyruvates per glucose).',
+      'Krebs cycle (per acetyl-CoA): 3 NADH + 1 FADH₂ + 1 ATP (or GTP). Per glucose: 6 NADH + 2 FADH₂ + 2 ATP.',
+      'TOTAL: ATP = 2 + 2 = 4. NADH = 2 + 2 + 6 = 10. FADH₂ = 2.',
+      'These reduced cofactors then power the ETC for additional ATP (~26 ATP from ETC). Total ~30-32 ATP per glucose.',
+    ], answer: '4 ATP, 10 NADH, 2 FADH₂', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'C4 plants are more efficient than C3 plants in tropical climates. Why?', expectedAnswer: 'C4 plants use PEP carboxylase (high CO₂ affinity) in MESOPHYLL cells to fix CO₂ into 4-carbon malate. Malate is transported to BUNDLE SHEATH cells, where it releases CO₂ for the Calvin cycle near RuBisCO. This concentrates CO₂ around RuBisCO — minimising photorespiration (where RuBisCO wastefully fixes O₂). In hot conditions, C3 plants close stomata to conserve water → CO₂ drops, photorespiration spikes → less efficient. C4 anatomy avoids this. Examples: sugarcane, maize, sorghum.', responseFormat: 'free', hints: ['What problem does RuBisCO have in hot conditions?', 'How do C4 plants spatially separate CO₂ fixation?'], estimatedMinutes: 4 },
+    { id: 'misconception-photosynthesis-night', kind: 'misconception_check', question: 'A student says photosynthesis stops at night because the Calvin cycle needs light. What\'s wrong?', commonErrors: [{ answer: 'Calvin cycle needs light', misconception: 'Conflating "needs ATP/NADPH from light reactions" with "needs light directly."', correctsTo: 'The Calvin cycle is called LIGHT-INDEPENDENT because it doesn\'t directly use light photons. It DOES depend on ATP and NADPH (which come from light reactions). At night, light reactions stop → ATP/NADPH supply runs out → Calvin cycle pauses (in C3/C4 plants). Calvin cycle can run briefly in the dark on stored ATP/NADPH but quickly halts. CAM plants do something different: they FIX CO₂ at night into malate but run Calvin cycle in DAY using the stored CO₂.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Light reactions: thylakoid; produces ATP, NADPH, O₂.', 'Calvin cycle: stroma; uses ATP/NADPH; produces glucose.', 'C3 → C4 → CAM: increasing efficiency in hot/dry conditions.', 'Glycolysis: 2 ATP/2 NADH. TCA: 6 NADH/2 FADH₂/2 GTP per glucose.', 'Total respiration: ~30-32 ATP per glucose.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

@@ -1,0 +1,63 @@
+/**
+ * NEET Chemistry — Physical Chemistry: Mole, Stoichiometry, Solutions.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_CHEM_PHYSICAL_DEEP: LessonPlan = {
+  id: 'evelyn.neet.chemistry.physical-deep.v1',
+  title: 'NEET Chemistry — Mole Concept and Stoichiometry',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-chemistry',
+  locale: 'en',
+  los: [{ id: 'neet.chem.physical-mole', description: 'Apply mole concept, stoichiometry, limiting reagents, percent yield, and concentration formulas (molarity, molality, mole fraction).', standard: 'NEET-CHEM-PHYSICAL' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'The mole is the most-used concept in NEET Chemistry — every numerical question touches it.', script: 'Convert mass ↔ moles ↔ molecules ↔ volume of gas. Compute concentrations. Identify limiting reagents. The mole is the bookkeeping currency of chemistry — and NEET asks 8-10 numerical questions hinging on it per paper.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Mole, Avogadro, stoichiometry, limiting reagent, concentrations.', keyIdeas: [
+      'MOLE = 6.022 × 10²³ entities (Avogadro\'s number, NA).',
+      'MOLAR MASS (g/mol): mass of 1 mole. For elements = atomic mass in grams. For compounds = sum.',
+      'MASS-MOLE: moles = mass / molar mass.',
+      'GAS at STP (273 K, 1 atm): 1 mole occupies 22.4 L. (Or 22.7 L at 273 K, 100 kPa per modern convention.)',
+      'NUMBER OF PARTICLES = moles × NA.',
+      'STOICHIOMETRY workflow:',
+      '  Balance equation.',
+      '  Convert given to MOLES.',
+      '  Use MOLE RATIO from balanced equation.',
+      '  Convert moles to whatever the question asks (mass, volume, particles).',
+      'LIMITING REAGENT: reactant that runs out first; determines max product.',
+      '  Convert each reactant\'s amount to moles.',
+      '  Divide each by its stoichiometric coefficient.',
+      '  Smallest quotient = limiting reagent.',
+      '  Use limiting reagent\'s mole count + ratio to compute product.',
+      'PERCENT YIELD = (actual yield / theoretical yield) × 100.',
+      'CONCENTRATION units:',
+      '  MOLARITY M = mol solute / L solution.',
+      '  MOLALITY m = mol solute / kg SOLVENT.',
+      '  MOLE FRACTION x_A = n_A / n_total.',
+      '  PERCENT BY MASS = (mass solute / mass solution) × 100.',
+      '  PERCENT BY VOLUME (for liquid mixtures) = (V solute / V solution) × 100.',
+      'NEET COMMON tricks:',
+      '  EQUIVALENT weight + normality (for acid-base + redox titrations).',
+      '  Eq. wt = mol. wt. / n-factor (n-factor = H⁺ for acids, OH⁻ for bases, electrons for redox).',
+      '  Normality N = M × n-factor.',
+      'EMPIRICAL formula: simplest whole-number ratio. Find by converting % composition to moles, then divide by smallest.',
+      'MOLECULAR FORMULA: actual ratio. Empirical × n, where n = (mol. mass / empirical formula mass).',
+    ], vocabulary: [{ term: 'mole', definition: '6.022 × 10²³ entities (atoms, molecules, ions); a counting unit for chemistry.' }, { term: 'molarity', definition: 'mol solute per L solution; the most common concentration unit.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'Calculate the molarity of a solution prepared by dissolving 10 g of NaOH in water to make 250 mL of solution.', steps: [
+      'Molar mass of NaOH: 23 + 16 + 1 = 40 g/mol.',
+      'Moles of NaOH = 10 / 40 = 0.25 mol.',
+      'Volume = 250 mL = 0.25 L.',
+      'Molarity = mol / L = 0.25 / 0.25 = 1.0 M.',
+    ], answer: '1.0 M', estimatedMinutes: 3 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'A compound has 40% C, 6.7% H, 53.3% O by mass. Empirical formula?', expectedAnswer: 'Assume 100 g sample: 40 g C, 6.7 g H, 53.3 g O. Convert to moles: C = 40/12 = 3.33; H = 6.7/1 = 6.7; O = 53.3/16 = 3.33. Divide by smallest (3.33): C = 1, H = 2, O = 1. Empirical formula: CH₂O (the formula of formaldehyde or simplest sugar unit).', responseFormat: 'free', hints: ['Convert each percentage to moles using molar masses.', 'Divide all by the smallest mole count to find the ratio.'], estimatedMinutes: 4 },
+    { id: 'misconception-molarity-molality', kind: 'misconception_check', question: 'A student treats molality and molarity interchangeably. Why does this fail at high concentrations?', commonErrors: [{ answer: 'Molality = molarity', misconception: 'Treating mass and volume of solution interchangeably.', correctsTo: 'Molarity = mol / L SOLUTION (volume). Molality = mol / kg SOLVENT (mass of solvent only). At dilute concentrations and ~room temperature, the two are NUMERICALLY similar (1L ≈ 1 kg for water solutions). At high concentrations or non-water solvents, they DIVERGE significantly. Molality is preferred when dealing with colligative properties (boiling point elevation, freezing point depression) because it doesn\'t depend on temperature (volume changes with T; mass doesn\'t).' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Mole = 6.022×10²³. mol = mass/molar mass.', 'Stoichiometry: balance, mole ratio, convert.', 'Limiting reagent: smallest mol/coefficient.', 'M = mol/L solution; m = mol/kg solvent.', 'Empirical: simplest ratio. Molecular = empirical × n.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

@@ -1,0 +1,62 @@
+/**
+ * NEET Physics — Waves and Optics.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_PHYSICS_WAVES_OPTICS: LessonPlan = {
+  id: 'evelyn.neet.physics.waves-optics.v1',
+  title: 'NEET Physics — Waves, Sound, and Optics',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-physics',
+  locale: 'en',
+  los: [{ id: 'neet.physics.waves-optics', description: 'Apply wave equations, superposition, sound (Doppler), reflection/refraction, lenses + mirrors, interference + diffraction.', standard: 'NEET-PHYS-WAVES-OPTICS' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Waves + optics together = ~8 NEET questions per year. Formula-heavy and high-yield.', script: 'Sound waves, water waves, light waves — same equation, similar behaviour. NEET expects fluency in wave equations, Doppler, lens + mirror formulas, and interference patterns. Today the workhorse formulas.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Wave equation, sound + Doppler, mirrors/lenses, interference + diffraction.', keyIdeas: [
+      'WAVE EQUATION: y(x, t) = A sin(ωt − kx + φ).',
+      '  ω = 2πf (angular frequency). k = 2π/λ (wave number).',
+      '  Wave speed v = fλ = ω/k.',
+      'TRANSVERSE: oscillation perpendicular to propagation (light, water).',
+      'LONGITUDINAL: oscillation parallel (sound, P-waves).',
+      'SPEED of sound: ~343 m/s in air (20°C). In water ~1500. In steel ~5000.',
+      '  Increases with temperature, not with frequency.',
+      'INTENSITY: I ∝ A². I = P/A (power per area).',
+      'DOPPLER EFFECT (sound):',
+      '  f\' = f · (v + v_observer)/(v − v_source).',
+      '  v_observer positive if observer MOVES TOWARD source.',
+      '  v_source positive if source MOVES TOWARD observer.',
+      '  Frequency increases as source/observer approach; decreases as recede.',
+      'INTERFERENCE: superposition of waves.',
+      '  CONSTRUCTIVE: in phase, amplitude adds. Path diff = nλ.',
+      '  DESTRUCTIVE: out of phase, cancellation. Path diff = (n+1/2)λ.',
+      'YOUNG\'S DOUBLE SLIT: bright fringes at d sin θ = nλ. On distant screen, fringe spacing y = nλL/d.',
+      'DIFFRACTION: spreading through openings. Single slit: dark at a sin θ = nλ.',
+      'REFLECTION: angle in = angle reflected (from normal).',
+      'REFRACTION (Snell\'s): n₁ sin θ₁ = n₂ sin θ₂.',
+      'TOTAL INTERNAL REFLECTION: at θ ≥ critical angle when going dense → less dense. sin θ_c = n₂/n₁.',
+      'MIRROR/LENS formula: 1/v = 1/u + 1/f (sign conventions vary; NEET uses Cartesian: distances measured from pole, with direction of incidence positive).',
+      '  CONCAVE mirror / CONVEX lens: f > 0 (converging).',
+      '  CONVEX mirror / CONCAVE lens: f < 0 (diverging).',
+      'MAGNIFICATION: m = h\'/h = -v/u for mirrors; m = v/u for lenses (sign conventions specific).',
+      'POWER of a lens: P = 1/f (in metres) → diopters.',
+      'POLARISATION: only transverse waves can be polarised. Light from unpolarised source → polariser passes only one direction.',
+    ], vocabulary: [{ term: 'Doppler effect', definition: 'change in observed frequency due to relative motion between source and observer.' }, { term: 'critical angle', definition: 'incidence angle in dense medium beyond which total internal reflection occurs.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'A police siren emits 1000 Hz. The car drives at 30 m/s toward a stationary observer. Speed of sound = 340 m/s. What frequency does the observer hear?', steps: [
+      'Doppler with stationary observer (v_obs = 0) and source moving TOWARD observer (v_source = +30 m/s).',
+      'f\' = f · v / (v − v_source) = 1000 × 340/(340 − 30) = 1000 × 340/310 = 1096.8 Hz.',
+      'Observer hears HIGHER frequency (~1097 Hz) — pitch sounds higher because source approaches.',
+      'After the car passes, v_source becomes RECEDING (negative). f\' = 1000 × 340/(340 + 30) = 919 Hz. Lower pitch.',
+    ], answer: '~1097 Hz (approaching); ~919 Hz (receding)', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'A converging lens has f = 20 cm. An object is placed 30 cm in front. Find the image distance and magnification.', expectedAnswer: 'Lens formula: 1/f = 1/v − 1/u. Sign convention: u = −30 cm (object left of lens), f = +20 cm (converging). 1/20 = 1/v − 1/(−30) = 1/v + 1/30. 1/v = 1/20 − 1/30 = 3/60 − 2/60 = 1/60. v = 60 cm. Magnification m = v/u = 60/(−30) = −2. Image is 60 cm on the other side, real, inverted, twice as large.', responseFormat: 'free', hints: ['Use 1/f = 1/v − 1/u with proper signs.', 'Sign of u is negative for real object.'], estimatedMinutes: 4 },
+    { id: 'misconception-doppler-direction', kind: 'misconception_check', question: 'A student computes Doppler with v_source = −30 (negative) for a source MOVING TOWARD observer. Why is this wrong?', commonErrors: [{ answer: 'Negative v_source for approaching', misconception: 'Inverting the sign convention.', correctsTo: 'Standard Doppler convention: v_source is POSITIVE when source MOVES TOWARD observer (decreasing distance). NEGATIVE when receding. With f\' = f · v/(v − v_source), positive v_source DECREASES the denominator, INCREASING f\' (higher pitch when approaching, as expected). Always check the result against the qualitative expectation: approaching = higher pitch; receding = lower.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['v = fλ = ω/k for any wave.', 'Doppler: f\' = f(v + v_obs)/(v − v_source).', 'Constructive interference: path diff = nλ. Destructive: (n+1/2)λ.', 'Snell: n₁sinθ₁ = n₂sinθ₂. TIR: sin θ_c = n₂/n₁.', 'Lens: 1/f = 1/v − 1/u; m = v/u.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

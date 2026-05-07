@@ -1,0 +1,62 @@
+/**
+ * NEET Chemistry — Electrochemistry.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_CHEM_ELECTROCHEMISTRY: LessonPlan = {
+  id: 'evelyn.neet.chemistry.electrochemistry.v1',
+  title: 'NEET Chemistry — Electrochemistry (Cells, EMF, Nernst)',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-chemistry',
+  locale: 'en',
+  los: [{ id: 'neet.chem.electrochemistry', description: 'Apply standard electrode potentials, Nernst equation, electrochemical cells, electrolysis, and Faraday\'s laws.', standard: 'NEET-CHEM-ELECTRO' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Electrochemistry connects redox chemistry with electricity — and NEET asks 2-3 questions per year.', script: 'A galvanic cell turns chemistry into electricity. Electrolysis does the reverse. Both rely on REDOX. Today we cover cell potentials, Nernst, and Faraday.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Cells, electrode potentials, Nernst, electrolysis, Faraday.', keyIdeas: [
+      'REDOX: oxidation = LOSE electrons; reduction = GAIN electrons. Mnemonic: OIL RIG.',
+      'OXIDATION at ANODE; REDUCTION at CATHODE. Memorise: ANODE OX (alphabetical: A and O together; C and R).',
+      'GALVANIC (Voltaic) CELL: spontaneous redox → electrical energy. Battery.',
+      '  Two half-cells with different metal/ion combinations connected by a salt bridge + external wire.',
+      'STANDARD ELECTRODE POTENTIAL E°: measured against Standard Hydrogen Electrode (SHE, E° = 0 V).',
+      '  More positive E° = stronger tendency to be REDUCED.',
+      '  E°(F₂/F⁻) = +2.87 V (strongest oxidiser).',
+      '  E°(Li⁺/Li) = −3.04 V (strongest reducer).',
+      'CELL EMF (galvanic): E°cell = E°(cathode) − E°(anode). Spontaneous if E°cell > 0.',
+      'NERNST EQUATION (non-standard conditions):',
+      '  E = E° − (0.0592/n) · log(Q) at 25°C, where n = electrons transferred and Q = reaction quotient.',
+      '  Useful for finding cell EMF when concentrations differ from 1 M.',
+      'Connection to thermodynamics: ΔG° = −nFE°cell. F = Faraday\'s constant ≈ 96485 C/mol.',
+      'Connection to equilibrium: E°cell = (0.0592/n) · log K.',
+      'ELECTROLYSIS: NON-spontaneous redox forced by external voltage.',
+      '  Used to: extract metals from salts, refine, electroplate.',
+      '  Anode: oxidation. Cathode: reduction.',
+      'FARADAY\'S LAWS:',
+      '  1ST: mass deposited ∝ charge passed. m = (Q · M)/(n · F), where Q = current × time, M = molar mass, n = electrons per ion.',
+      '  2ND: equivalent masses of different substances are deposited by the same charge.',
+      'CONDUCTANCE:',
+      '  Specific (κ): 1/resistivity, S/m.',
+      '  Molar conductivity Λm = κ × 1000/c, where c = M.',
+      '  Strong electrolytes: Λm decreases slightly with concentration.',
+      '  Weak electrolytes: Λm increases sharply with dilution (more dissociation).',
+      'KOHLRAUSCH\'S LAW: Λm⁰ (limiting molar conductivity) = sum of ionic conductivities. Used for weak electrolytes (can\'t directly measure their Λm⁰).',
+    ], vocabulary: [{ term: 'standard electrode potential', definition: 'E° measured against the standard hydrogen electrode at 1 M, 1 atm, 25°C; predicts redox direction.' }, { term: 'Faraday\'s constant', definition: 'F = 96,485 C/mol; charge of 1 mole of electrons.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'Find E°cell for a Daniell cell: Zn²⁺(1M) + Cu²⁺(1M). E°(Zn²⁺/Zn) = −0.76 V, E°(Cu²⁺/Cu) = +0.34 V.', steps: [
+      'More positive E° gets reduced → Cu²⁺ is reduced (cathode).',
+      'Zn is oxidised → Zn → Zn²⁺ (anode).',
+      'E°cell = E°(cathode) − E°(anode) = 0.34 − (−0.76) = 1.10 V.',
+      'Positive ⟹ spontaneous (Daniell cell delivers ~1.1 V).',
+      'Cell notation: Zn | Zn²⁺(1M) || Cu²⁺(1M) | Cu.',
+    ], answer: 'E°cell = +1.10 V (spontaneous)', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'How long does it take to deposit 5 g of copper at the cathode by passing 2 A current through CuSO₄ solution? (M(Cu) = 63.5, F = 96485 C/mol, n = 2 for Cu²⁺.)', expectedAnswer: 'Faraday: m = (Q·M)/(n·F). Solve for Q: Q = (m·n·F)/M = (5)(2)(96485)/63.5 = 15195 C. Time = Q/I = 15195/2 = 7598 s ≈ 2.11 hours.', responseFormat: 'free', hints: ['Use Faraday\'s 1st law: m = QM/(nF).', 'Solve for Q (charge), then divide by current.'], estimatedMinutes: 4 },
+    { id: 'misconception-cathode-anode', kind: 'misconception_check', question: 'A student says the cathode in a galvanic cell is the negative terminal. What\'s right?', commonErrors: [{ answer: 'Cathode is negative in galvanic', misconception: 'Generalising from electrolytic cell convention to galvanic cells.', correctsTo: 'In a GALVANIC cell, cathode (where reduction happens) is POSITIVE — electrons flow INTO it from the external circuit. Anode is NEGATIVE. In an ELECTROLYTIC cell, the convention reverses (driven by external voltage): cathode connects to negative terminal of battery, but is still where REDUCTION happens. Always: REDUCTION at CATHODE, OXIDATION at ANODE — regardless of cell type. Polarity (+/−) depends on cell type.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Oxidation: lose e⁻ at anode. Reduction: gain e⁻ at cathode.', 'E°cell = E°(cathode) − E°(anode). >0 → spontaneous.', 'Nernst: E = E° − (0.0592/n) log Q.', 'Faraday: m = QM/(nF). Q = It.', 'ΔG° = −nFE°.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

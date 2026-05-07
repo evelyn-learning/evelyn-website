@@ -1,0 +1,62 @@
+/**
+ * NEET Biology — Biotechnology: Principles and Applications.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_BIO_BIOTECH_APPLICATIONS: LessonPlan = {
+  id: 'evelyn.neet.biology.biotech-applications.v1',
+  title: 'NEET Biology — Biotechnology: Tools and Applications',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-biology',
+  locale: 'en',
+  los: [{ id: 'neet.bio.biotech', description: 'Apply key biotech tools (restriction enzymes, vectors, PCR) and applications (recombinant DNA, GMOs, gene therapy).', standard: 'NEET-BIO-BIOTECH' }],
+  prerequisites: ['neet.bio.genetics-deep'],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Biotechnology questions on NEET are often direct from NCERT — recall + concepts.', script: 'Restriction enzymes, plasmid vectors, PCR, transgenic crops, recombinant insulin — NEET expects you to know how each tool works and what it produces. Today: the toolkit.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Tools + applications + ethical/safety angle.', keyIdeas: [
+      'CORE TOOLS:',
+      '  RESTRICTION ENZYMES (EcoRI, HindIII, BamHI): cut DNA at specific recognition sequences (4-8 bp). Discovered in bacteria as defense against phages.',
+      '  STICKY ENDS: enzymes like EcoRI leave overhangs (5\'-AATT). Allow piecing DNA back together.',
+      '  DNA LIGASE: seals nicks; joins compatible ends.',
+      '  VECTORS: plasmids (small circular bacterial DNA), bacteriophages (viruses), yeast artificial chromosomes.',
+      '  Vectors must have: ORI (origin of replication), selectable markers (antibiotic resistance), recognition sites.',
+      '  PCR (Polymerase Chain Reaction): amplifies tiny DNA samples millions of times. Steps: DENATURATION (94°C separate strands) → ANNEALING (primers bind ~55°C) → EXTENSION (Taq polymerase ~72°C copies). Repeat 25-35 cycles.',
+      '  Taq polymerase: heat-stable enzyme from Thermus aquaticus; survives denaturation step.',
+      '  GEL ELECTROPHORESIS: separates DNA by size; smaller pieces migrate faster.',
+      'PROCESS of recombinant DNA:',
+      '  Cut foreign DNA + vector with same restriction enzyme → compatible sticky ends.',
+      '  Mix; ligase joins them → recombinant vector.',
+      '  Transform into bacteria → bacteria replicate the recombinant DNA.',
+      '  Select for transformed bacteria (antibiotic resistance).',
+      'APPLICATIONS:',
+      '  RECOMBINANT INSULIN (Humulin, 1982): human insulin gene inserted into E. coli; bacteria produce insulin protein. Replaced animal insulin.',
+      '  GMOs / Bt crops: Bacillus thuringiensis Bt gene inserted into cotton, corn, etc. → plants produce insecticidal toxin. Reduces pesticide use but raises ecological concerns.',
+      '  GOLDEN RICE: genetically engineered to produce beta-carotene (vitamin A precursor). Addresses VAD-induced blindness in poor regions.',
+      '  GENE THERAPY: replacing/repairing defective genes. ADA-SCID was first human trial (1990).',
+      '  CRISPR-Cas9: precise gene editing tool. Revolutionised biotech.',
+      '  TRANSGENIC ANIMALS: e.g., insulin from goats milk; xenotransplantation research.',
+      'BIOSAFETY: GEAC (Genetic Engineering Approval Committee) in India regulates GM organisms.',
+      'ETHICAL ISSUES: GM food labeling, gene patenting (Diamond v. Chakrabarty, US 1980), designer babies (CRISPR ethics).',
+    ], vocabulary: [{ term: 'restriction enzyme', definition: 'a protein cutting DNA at specific sequences; bacterial defense; foundational biotech tool.' }, { term: 'PCR', definition: 'polymerase chain reaction; in-vitro amplification of DNA via cyclic temperature changes.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Trace the steps to produce recombinant human insulin in bacteria.', steps: [
+      '1. ISOLATE the human insulin gene from cells (or synthesise).',
+      '2. CUT both the insulin gene and a plasmid vector with the SAME restriction enzyme (e.g., EcoRI). Both have compatible sticky ends.',
+      '3. MIX the cut gene + cut plasmid + DNA LIGASE → recombinant plasmid.',
+      '4. TRANSFORM into E. coli (heat shock or electroporation).',
+      '5. SELECT transformed bacteria using antibiotic resistance marker on plasmid (only transformed bacteria survive).',
+      '6. CULTURE bacteria → they replicate → produce insulin protein.',
+      '7. EXTRACT and PURIFY insulin from bacterial culture.',
+      'Result: Humulin (1982 — first FDA-approved recombinant pharmaceutical).',
+    ], answer: 'Cut + ligate + transform + select + culture + purify.', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Why does Taq polymerase make PCR practical?', expectedAnswer: 'PCR cycles between high temperatures (94°C for denaturation) and lower temperatures (55°C annealing, 72°C extension). Most enzymes denature at 94°C — they\'re destroyed. Taq polymerase, isolated from THERMUS AQUATICUS (a thermophilic bacterium from hot springs), is HEAT-STABLE. It survives denaturation cycles and continues working. Without Taq, you\'d need to add fresh polymerase every cycle — making PCR impractical. The discovery of Taq enabled PCR\'s adoption (Mullis, Nobel 1993).', responseFormat: 'free', hints: ['Why are temperatures > 90°C a problem for normal enzymes?', 'Where does Taq come from?'], estimatedMinutes: 3 },
+    { id: 'misconception-bt-toxic', kind: 'misconception_check', question: 'A student claims Bt cotton is toxic to humans because it contains a toxin gene. What\'s the correct picture?', commonErrors: [{ answer: 'Bt cotton is toxic to humans', misconception: 'Generalising "toxic" without specifying the target.', correctsTo: 'The Bt toxin (Cry protein) is highly specific — it activates only in the alkaline gut of certain insect larvae (Lepidoptera, Coleoptera). Human guts are acidic; the protein is broken down before it can act. Decades of safety studies have not shown human toxicity. The legitimate concerns about Bt crops are different: pest resistance evolution, gene flow to wild relatives, agricultural monocultures — not direct human toxicity.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Restriction enzymes cut at specific sequences; ligase joins.', 'Vectors need ORI + markers + recognition sites.', 'PCR: denature → anneal → extend; cycles. Taq enables it.', 'Recombinant insulin (1982) replaced animal insulin.', 'Bt crops: insect-specific toxin; safe for humans.', 'CRISPR is the modern gene-editing tool.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

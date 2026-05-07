@@ -979,6 +979,20 @@ import { SEED_JEE_CHEM_CHEMICAL_BONDING } from './seeds/jee-chem-chemical-bondin
 import { SEED_JEE_CHEM_EQUILIBRIUM_IONIC } from './seeds/jee-chem-equilibrium-ionic';
 import { SEED_JEE_CHEM_PERIODIC_PROPERTIES } from './seeds/jee-chem-periodic-properties';
 import { SEED_JEE_CHEM_COORDINATION_COMPOUNDS } from './seeds/jee-chem-coordination-compounds';
+// Coverage wave 7 (2026-05-06) — NEET depth.
+import { SEED_NEET_UG_STRATEGY } from './seeds/neet-ug-strategy';
+import { SEED_NEET_UG_TIME_MANAGEMENT } from './seeds/neet-ug-time-management';
+import { SEED_NEET_BIO_GENETICS_DEEP } from './seeds/neet-bio-genetics-deep';
+import { SEED_NEET_BIO_PLANT_PHYSIOLOGY } from './seeds/neet-bio-plant-physiology';
+import { SEED_NEET_BIO_BIOTECH_APPLICATIONS } from './seeds/neet-bio-biotech-applications';
+import { SEED_NEET_BIO_EVOLUTION } from './seeds/neet-bio-evolution';
+import { SEED_NEET_PHYSICS_WAVES_OPTICS } from './seeds/neet-physics-waves-optics';
+import { SEED_NEET_PHYSICS_MODERN_PHYSICS } from './seeds/neet-physics-modern-physics';
+import { SEED_NEET_PHYSICS_THERMODYNAMICS } from './seeds/neet-physics-thermodynamics';
+import { SEED_NEET_CHEM_PHYSICAL_DEEP } from './seeds/neet-chem-physical-deep';
+import { SEED_NEET_CHEM_THERMODYNAMICS } from './seeds/neet-chem-thermodynamics';
+import { SEED_NEET_CHEM_ELECTROCHEMISTRY } from './seeds/neet-chem-electrochemistry';
+import { SEED_NEET_CHEM_COORDINATION } from './seeds/neet-chem-coordination';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1910,6 +1924,20 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_JEE_CHEM_EQUILIBRIUM_IONIC,
   SEED_JEE_CHEM_PERIODIC_PROPERTIES,
   SEED_JEE_CHEM_COORDINATION_COMPOUNDS,
+  // Coverage wave 7 (2026-05-06) — NEET depth.
+  SEED_NEET_UG_STRATEGY,
+  SEED_NEET_UG_TIME_MANAGEMENT,
+  SEED_NEET_BIO_GENETICS_DEEP,
+  SEED_NEET_BIO_PLANT_PHYSIOLOGY,
+  SEED_NEET_BIO_BIOTECH_APPLICATIONS,
+  SEED_NEET_BIO_EVOLUTION,
+  SEED_NEET_PHYSICS_WAVES_OPTICS,
+  SEED_NEET_PHYSICS_MODERN_PHYSICS,
+  SEED_NEET_PHYSICS_THERMODYNAMICS,
+  SEED_NEET_CHEM_PHYSICAL_DEEP,
+  SEED_NEET_CHEM_THERMODYNAMICS,
+  SEED_NEET_CHEM_ELECTROCHEMISTRY,
+  SEED_NEET_CHEM_COORDINATION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

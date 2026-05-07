@@ -1,0 +1,60 @@
+/**
+ * NEET Chemistry — Chemical Thermodynamics.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_NEET_CHEM_THERMODYNAMICS: LessonPlan = {
+  id: 'evelyn.neet.chemistry.thermodynamics.v1',
+  title: 'NEET Chemistry — Thermodynamics: Enthalpy, Entropy, Gibbs Free Energy',
+  curriculum: 'NEET',
+  grade: 'medical-entrance',
+  subject: 'test-prep',
+  topic: 'neet-chemistry',
+  locale: 'en',
+  los: [{ id: 'neet.chem.thermodynamics', description: 'Apply enthalpy of reactions, Hess\'s law, entropy, and Gibbs free energy to predict spontaneity.', standard: 'NEET-CHEM-THERMO' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Thermodynamics tells you whether a reaction WILL happen — independent of how fast.', script: 'ΔH (energy released/absorbed), ΔS (disorder change), ΔG (whether spontaneous). NEET asks 3-4 thermo questions per year and rewards memorisation of the relationships.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Enthalpy, entropy, Gibbs energy, spontaneity, Hess\'s law.', keyIdeas: [
+      'ENTHALPY (H): heat content at constant pressure. ΔH = q_p (heat absorbed at constant P).',
+      '  ΔH < 0: EXOTHERMIC (heat released).',
+      '  ΔH > 0: ENDOTHERMIC (heat absorbed).',
+      'STANDARD enthalpy ΔH° at 25°C, 1 atm.',
+      'TYPES of ΔH:',
+      '  ΔH_combustion: complete combustion of 1 mol substance.',
+      '  ΔH_formation: formation of 1 mol from elements in standard states.',
+      '  ΔH_neutralization: 1 mol H⁺ + 1 mol OH⁻ → H₂O. For strong acid + strong base = −57.3 kJ/mol.',
+      '  ΔH_solution: dissolution of 1 mol in solvent.',
+      'HESS\'S LAW: ΔH for a reaction is path-independent. Add/subtract reactions and their ΔH values stoichiometrically.',
+      'BOND ENERGY: energy to break 1 mol of bonds. ΔH(rxn) = ΔH(bonds broken) − ΔH(bonds formed).',
+      'ENTROPY (S): measure of disorder. Higher S = more disorder.',
+      '  ΔS > 0: increase in disorder. Examples: melting, dissolution, gas formation.',
+      '  ΔS < 0: decrease. Examples: condensation, solidification, fewer gas molecules.',
+      'For an ideal gas: ΔS depends on volume + temperature changes.',
+      'GIBBS FREE ENERGY: G = H − TS. ΔG = ΔH − TΔS.',
+      '  ΔG < 0: SPONTANEOUS. ΔG = 0: EQUILIBRIUM. ΔG > 0: NON-SPONTANEOUS.',
+      'PREDICTING spontaneity from sign of ΔH and ΔS:',
+      '  ΔH < 0, ΔS > 0: ALWAYS spontaneous. Both favor.',
+      '  ΔH > 0, ΔS < 0: NEVER spontaneous. Both oppose.',
+      '  ΔH < 0, ΔS < 0: spontaneous at LOW T (TΔS small).',
+      '  ΔH > 0, ΔS > 0: spontaneous at HIGH T (TΔS large).',
+      'ΔG° AND EQUILIBRIUM: ΔG° = −RT ln K. K > 1 ⟺ ΔG° < 0.',
+      '2ND LAW: ΔS_universe = ΔS_system + ΔS_surroundings ≥ 0 for any spontaneous process.',
+      '3RD LAW: entropy of perfect crystal at 0 K = 0. (Reference for absolute entropies.)',
+    ], vocabulary: [{ term: 'Hess\'s law', definition: 'ΔH for a reaction equals the algebraic sum of ΔH for any sequence of reactions giving the same overall change.' }, { term: 'Gibbs free energy', definition: 'G = H − TS; ΔG sign predicts spontaneity at a given temperature.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'For the reaction N₂(g) + 3H₂(g) → 2NH₃(g): ΔH = −92 kJ, ΔS = −198 J/K. Predict spontaneity at 25°C and at 500°C.', steps: [
+      '25°C = 298 K. ΔG = ΔH − TΔS = −92 − (298)(−0.198) = −92 + 59 = −33 kJ. Spontaneous.',
+      '500°C = 773 K. ΔG = −92 − (773)(−0.198) = −92 + 153 = +61 kJ. NOT spontaneous.',
+      'Interpretation: at 25°C, exothermic ΔH wins; reaction is spontaneous. At 500°C, the unfavorable ΔS (negative — fewer moles of gas) becomes dominant; reaction reverses.',
+      'Industrial Haber process is run at HIGH T anyway because (a) catalyst kinetics need T, (b) high pressure shifts equilibrium back toward NH₃ via Le Chatelier.',
+    ], answer: '25°C: ΔG = −33 kJ (spontaneous). 500°C: ΔG = +61 kJ (not spontaneous).', estimatedMinutes: 5 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Ice melts at 0°C (273 K). What can you say about ΔG, ΔH, and ΔS?', expectedAnswer: 'At 0°C, ice and water coexist in equilibrium → ΔG = 0. Melting is ENDOTHERMIC: ΔH > 0 (heat needed to break crystal lattice). Disorder increases (solid → liquid): ΔS > 0. At T < 0°C, ΔG > 0 (TΔS < ΔH; melting NOT spontaneous, so freezing is). At T > 0°C, ΔG < 0 (melting spontaneous).', responseFormat: 'free', hints: ['Phase change at the melting point means ΔG = 0.', 'Disorder of solid vs liquid?'], estimatedMinutes: 3 },
+    { id: 'misconception-spontaneous-fast', kind: 'misconception_check', question: 'A student says "if ΔG < 0, the reaction must happen quickly." Why is this wrong?', commonErrors: [{ answer: 'ΔG < 0 means fast', misconception: 'Conflating thermodynamics with kinetics.', correctsTo: 'Thermodynamics (ΔG) tells you IF a reaction will happen (spontaneously favored), not HOW FAST. Kinetics (activation energy, catalysts) determines the rate. Diamond → graphite has ΔG < 0 (graphite more stable thermodynamically) — but the reaction is so slow at room T it\'s essentially never observed. Fuels + O₂ have very negative ΔG, but a paper doesn\'t spontaneously combust because activation energy is high. Spontaneous ≠ fast.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['ΔG = ΔH − TΔS; sign predicts spontaneity.', 'Hess: ΔH path-independent.', 'ΔS > 0: more disorder (gas formation, dissolution).', 'ΔG° = −RT ln K.', 'Spontaneous ≠ fast — kinetics is separate.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
