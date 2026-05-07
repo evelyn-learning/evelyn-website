@@ -1002,6 +1002,18 @@ import { SEED_IB_BIOLOGY_GENETICS } from './seeds/ib-biology-genetics';
 import { SEED_IB_CHEMISTRY_BONDING } from './seeds/ib-chemistry-bonding';
 import { SEED_IB_PHYSICS_MECHANICS } from './seeds/ib-physics-mechanics';
 import { SEED_IB_PHYSICS_EM } from './seeds/ib-physics-em';
+// Coverage wave 9 (2026-05-06) — AP ELA/SS/CS + Test Prep.
+import { SEED_IB_ENGLISH_A_PAPER1 } from './seeds/ib-english-a-paper1';
+import { SEED_IB_ENGLISH_A_PAPER2 } from './seeds/ib-english-a-paper2';
+import { SEED_AP_US_HISTORY_PERIOD6_7 } from './seeds/ap-us-history-period6-7';
+import { SEED_AP_US_HISTORY_CIVIL_RIGHTS } from './seeds/ap-us-history-civil-rights';
+import { SEED_AP_WORLD_HISTORY_TRADE_EMPIRES } from './seeds/ap-world-history-trade-empires';
+import { SEED_IB_HISTORY_PAPER1_SKILLS } from './seeds/ib-history-paper1-skills';
+import { SEED_IB_HISTORY_PAPER2_ESSAY } from './seeds/ib-history-paper2-essay';
+import { SEED_IB_CS_DATA_STRUCTURES } from './seeds/ib-cs-data-structures';
+import { SEED_IB_CS_ALGORITHMS } from './seeds/ib-cs-algorithms';
+import { SEED_AP_TEST_STRATEGY_FRQ } from './seeds/ap-test-strategy-frq';
+import { SEED_AP_TEST_STRATEGY_MCQ } from './seeds/ap-test-strategy-mcq';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -1964,6 +1976,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_IB_CHEMISTRY_BONDING,
   SEED_IB_PHYSICS_MECHANICS,
   SEED_IB_PHYSICS_EM,
+  // Coverage wave 9 (2026-05-06) — AP ELA/SS/CS + Test Prep.
+  SEED_IB_ENGLISH_A_PAPER1,
+  SEED_IB_ENGLISH_A_PAPER2,
+  SEED_AP_US_HISTORY_PERIOD6_7,
+  SEED_AP_US_HISTORY_CIVIL_RIGHTS,
+  SEED_AP_WORLD_HISTORY_TRADE_EMPIRES,
+  SEED_IB_HISTORY_PAPER1_SKILLS,
+  SEED_IB_HISTORY_PAPER2_ESSAY,
+  SEED_IB_CS_DATA_STRUCTURES,
+  SEED_IB_CS_ALGORITHMS,
+  SEED_AP_TEST_STRATEGY_FRQ,
+  SEED_AP_TEST_STRATEGY_MCQ,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
