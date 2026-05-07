@@ -6215,6 +6215,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
       {isPaused ? (
         <>
+          {/* Pause/Resume button hidden — kept here in case we want to bring it back.
           <button
             onClick={handleResume}
             className="w-10 h-10 rounded-full bg-green-500 text-white hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center flex-shrink-0"
@@ -6222,10 +6223,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             <Play className="w-5 h-5 ml-0.5" />
           </button>
           <span className="text-sm font-medium text-amber-600">Paused</span>
+          */}
         </>
       ) : (
         <>
-          {/* Pause button */}
+          {/* Pause button hidden — kept here in case we want to bring it back.
           {realtime.isConnected && (
             <button
               onClick={handlePause}
@@ -6235,6 +6237,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               <Pause className="w-4 h-4" />
             </button>
           )}
+          */}
 
           {/* Main mic button */}
           <button
