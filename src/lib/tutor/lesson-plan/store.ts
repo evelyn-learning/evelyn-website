@@ -2309,8 +2309,15 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'gre-verbal': ['gre-verbal'],
   'gmat-quant': ['gmat-quant'],
   'gmat-verbal': ['gmat-verbal'],
-  'jee-main': ['jee-main', 'jee-physics', 'physics-mechanics'],
-  'jee-advanced': ['jee-main', 'jee-physics'],
+  // JEE Main + JEE Advanced are full-exam topics covering all three
+  // subjects (Physics + Chemistry + Math). Their picker cells aggregate
+  // every JEE-tagged plan so students see the complete content.
+  'jee-main': ['jee-main', 'jee-physics', 'jee-chemistry', 'jee-math',
+               'jee-organic', 'jee-physical-chem', 'jee-inorganic',
+               'jee-coordinate-geometry', 'physics-mechanics'],
+  'jee-advanced': ['jee-main', 'jee-physics', 'jee-chemistry', 'jee-math',
+                   'jee-organic', 'jee-physical-chem', 'jee-inorganic',
+                   'jee-coordinate-geometry'],
   'gcse-math-higher': ['gcse-math'],
   'ib-math-analysis': ['ibdp-aa', 'calculus', 'precalculus'],
   // Music / arts
