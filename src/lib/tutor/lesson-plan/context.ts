@@ -68,16 +68,44 @@ export function getSegmentTruth(seg: Segment | undefined): SegmentTruth | null {
   return null;
 }
 
+/** djb2-style cheap hash. Mirrors simpleHash in
+ *  voice/problem-generator.ts so the consumed-hashes set can be
+ *  populated from either side. Inlined here to keep the lesson-plan
+ *  module dependency-free. */
+function consumedHash(s: string): string {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+  return (h >>> 0).toString(36);
+}
+
 /** Resolve an `advance_lesson` directive to the next segment id, or
  *  null when the directive can't be honored (already at start/end, or
- *  unknown id). */
+ *  unknown id).
+ *
+ *  When `opts.consumedHashes` is provided, segments whose authored
+ *  problem text hashes into that set are AUTO-SKIPPED on `next` /
+ *  `previous` advances — the student already saw that problem (e.g.
+ *  via a generate_problem fetch that returned the segment's authored
+ *  text as a Layer-4 plan-authored fallback). Re-rendering the same
+ *  problem via natural-flow advance feels broken to the student. The
+ *  consumed-hashes filter does NOT apply to explicit-segment-id
+ *  advances — if the brain insists on a specific id, honor it. */
 export function resolveAdvanceTarget(
   plan: LessonPlan,
   currentSegmentId: string,
   to: string,
+  opts?: { consumedHashes?: ReadonlySet<string> },
 ): string | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isOffTopic = (s: any): boolean => s?.offTopic === true;
+  const consumed = opts?.consumedHashes;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isConsumed = (s: any): boolean => {
+    if (!consumed || consumed.size === 0) return false;
+    const truth = getSegmentTruth(s);
+    if (!truth?.problemText) return false;
+    return consumed.has(consumedHash(truth.problemText));
+  };
   if (to === 'next') {
     const idx = plan.segments.findIndex((s) => s.id === currentSegmentId);
     if (idx < 0) return null;
@@ -86,7 +114,10 @@ export function resolveAdvanceTarget(
     // Auto-skip past them; if no on-topic segment remains, return null
     // (treated as end-of-plan by the orchestrator).
     for (let j = idx + 1; j < plan.segments.length; j++) {
-      if (!isOffTopic(plan.segments[j])) return plan.segments[j].id;
+      const s = plan.segments[j];
+      if (isOffTopic(s)) continue;
+      if (isConsumed(s)) continue;
+      return s.id;
     }
     return null;
   }
@@ -94,13 +125,17 @@ export function resolveAdvanceTarget(
     const idx = plan.segments.findIndex((s) => s.id === currentSegmentId);
     if (idx <= 0) return null;
     for (let j = idx - 1; j >= 0; j--) {
-      if (!isOffTopic(plan.segments[j])) return plan.segments[j].id;
+      const s = plan.segments[j];
+      if (isOffTopic(s)) continue;
+      if (isConsumed(s)) continue;
+      return s.id;
     }
     return null;
   }
   // Branch by explicit segment id — refuse if the explicit target is
   // off-topic. Brain should never explicitly request an off-topic
-  // segment; if it does, treat as unresolvable.
+  // segment; if it does, treat as unresolvable. Consumed-hashes filter
+  // is intentionally NOT applied to explicit-id advances.
   const target = plan.segments.find((s) => s.id === to);
   if (!target || isOffTopic(target)) return null;
   return target.id;

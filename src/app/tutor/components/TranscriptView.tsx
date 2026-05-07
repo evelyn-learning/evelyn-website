@@ -443,7 +443,16 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   // bracketed segment from the visible chat (see
                   // mixed-bubble strip), so the student sees only the
                   // clean leading sentence.
-                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance the lesson now — call advance_lesson to the next on-topic segment, or generate a fresh problem at the same level if no segment remains. Don't ask for clarification, just advance.]")}
+                  //
+                  // Anti-self-affirmation guard added 2026-05-07: brain
+                  // was observed treating a Skip click as if the student
+                  // had answered the prior question — emitted "Neutrons
+                  // — exactly right!" and continued teaching instead of
+                  // advancing. The student saw their Skip click next to
+                  // a fabricated affirmation. The directive below is
+                  // explicit that Skip is NOT an answer and the brain
+                  // MUST NOT affirm or fabricate one.
+                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance the lesson now — call advance_lesson to the next on-topic segment, or generate a fresh problem at the same level if no segment remains. The student did NOT answer your prior question — Skip is a navigation action, not an answer. Do NOT say 'Exactly', 'Right', 'Correct', or any affirmation word. Do NOT fabricate the expected answer as if the student had given it. Do NOT ask for clarification, just advance.]")}
                   className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Skip ahead

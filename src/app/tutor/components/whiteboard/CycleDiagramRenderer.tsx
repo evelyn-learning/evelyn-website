@@ -211,13 +211,26 @@ export default function CycleDiagramRenderer({
               {s.description && (() => {
                 // Push description outside the ring, along the radial outward direction.
                 const a = angleFor(i);
-                const lx = cx + (radius + nodeR + 4) * Math.cos(a);
+                let lx = cx + (radius + nodeR + 4) * Math.cos(a);
                 const ly = cy + (radius + nodeR + 4) * Math.sin(a);
                 const anchor = Math.cos(a) > 0.3 ? 'start' : Math.cos(a) < -0.3 ? 'end' : 'middle';
                 // Approximate the text bbox for the feature attribute — good
                 // enough for a scribble underline / highlight to land on it.
                 const textW = Math.max(60, s.description.length * 5);
                 const textH = 14;
+                // Clamp lx so end-anchored (left-side) and start-anchored
+                // (right-side) descriptions stay within the viewBox.
+                // Without this, a long description on the leftmost stage
+                // (anchor="end") extends past the SVG's left edge and the
+                // first character gets clipped — observed 2026-05-07 G5
+                // carbon-cycle test session: "Decomposers and water store
+                // carbon" rendered as "ecomposers and water store carbon".
+                const safeInset = 4;
+                if (anchor === 'end') {
+                  lx = Math.max(lx, textW + safeInset);
+                } else if (anchor === 'start') {
+                  lx = Math.min(lx, VIEWBOX_W - textW - safeInset);
+                }
                 const descCx = anchor === 'start' ? lx + textW / 2 : anchor === 'end' ? lx - textW / 2 : lx;
                 return (
                   <text

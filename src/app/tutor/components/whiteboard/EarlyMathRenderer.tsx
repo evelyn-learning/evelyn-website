@@ -58,6 +58,15 @@ interface EarlyMathRendererProps {
 // ─── Dispatch ─────────────────────────────────────────────────────────────────
 
 export default function EarlyMathRenderer({ spec }: EarlyMathRendererProps) {
+  // place_value renders its own SVG with content-aware height — its
+  // tower height varies a lot (one rod is short, three flats is tall),
+  // and the shared 280-height viewBox left huge empty space below the
+  // blocks (observed 2026-05-07 K-2 test: "Pile 1: 8 blocks" had
+  // ~210px of dead space above the "= 8" total). The other kinds keep
+  // the shared SVG since their content fills the box reliably.
+  if (spec.kind === 'place_value') {
+    return <PlaceValueRenderer spec={spec} />;
+  }
   return (
     <div className="early-math-renderer">
       {spec.title && (
@@ -65,7 +74,6 @@ export default function EarlyMathRenderer({ spec }: EarlyMathRendererProps) {
       )}
       <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto" style={{ maxWidth: SVG_W }}>
         <rect width={SVG_W} height={SVG_H} fill="#fafbfc" rx={4} />
-        {spec.kind === 'place_value' && renderPlaceValue(spec)}
         {spec.kind === 'ten_frame' && renderTenFrame(spec)}
         {spec.kind === 'array' && renderArray(spec)}
         {spec.kind === 'skip_count' && renderSkipCount(spec)}
@@ -77,71 +85,213 @@ export default function EarlyMathRenderer({ spec }: EarlyMathRendererProps) {
 
 // ─── place_value ──────────────────────────────────────────────────────────────
 
-function renderPlaceValue(spec: Extract<EarlyMathSpec, { kind: 'place_value' }>) {
+/**
+ * place_value gets its own component+SVG so the viewBox can size to the
+ * tallest column. Three columns side-by-side; blocks are centered
+ * within each column under the header. Total ("= N") sits a small gap
+ * below the tallest tower.
+ */
+function PlaceValueRenderer({ spec }: { spec: Extract<EarlyMathSpec, { kind: 'place_value' }> }) {
   const hundreds = spec.hundreds ?? 0;
   const tens = spec.tens ?? 0;
   const ones = spec.ones ?? 0;
   const total = hundreds * 100 + tens * 10 + ones;
 
-  // Three columns: hundreds (10×10 squares), tens (1×10 rod), ones (1×1 unit)
-  const COLS = [
-    { x: 30, w: 130, label: 'hundreds', count: hundreds, kind: 'flat' as const },
-    { x: 175, w: 90, label: 'tens', count: tens, kind: 'rod' as const },
-    { x: 280, w: 170, label: 'ones', count: ones, kind: 'unit' as const },
-  ];
+  // Block cell pixel size. Chosen so a single rod (1×10) fits comfortably
+  // and a flat (10×10) doesn't dominate the card.
+  const CELL = 12;
+  // Column geometry. Each column is centered around its own x_center;
+  // headers are anchored at x_center; blocks are centered horizontally
+  // within the column based on the actual block-cluster width.
+  const TOP_HEADER_Y = 30;        // header text baseline
+  const BLOCK_TOP_Y = 50;         // first row of blocks
+  const COL_WIDTHS = [150, 110, 180];
+  const COL_GAP = 10;
+  const TOTAL_W = COL_WIDTHS.reduce((s, w) => s + w, 0) + COL_GAP * (COL_WIDTHS.length - 1);
+  const PAD_X = 20;
+  const SVG_W_PV = TOTAL_W + PAD_X * 2;
+  // Column x_left positions
+  let cursor = PAD_X;
+  const COL_X_LEFT = COL_WIDTHS.map((w) => {
+    const x = cursor;
+    cursor += w + COL_GAP;
+    return x;
+  });
+  const colCenter = (i: number) => COL_X_LEFT[i] + COL_WIDTHS[i] / 2;
+
+  // ── Compute block-cluster dimensions per column so we can both
+  //    center horizontally AND know how tall the tallest tower is ──
+  // Hundreds: each flat is 10×10 cells; stacked vertically (1 col).
+  const flatWidthCells = 10;
+  const flatHeightCells = 10;
+  const flatGap = 8;
+  const hundredsClusterW = flatWidthCells * CELL;
+  const hundredsClusterH = hundreds === 0
+    ? 0
+    : hundreds * flatHeightCells * CELL + (hundreds - 1) * flatGap;
+
+  // Tens: vertical rods, each 1 col × 10 rows. Lay out in a row of up
+  // to MAX_RODS_PER_ROW rods, then wrap. Each rod is 1 cell wide.
+  const MAX_RODS_PER_ROW = 4;
+  const rodGapX = 6;
+  const rodGapY = 6;
+  const rodHeightCells = 10;
+  const tensRows = tens === 0 ? 0 : Math.ceil(tens / MAX_RODS_PER_ROW);
+  const tensInLastRow = tens === 0 ? 0 : Math.min(MAX_RODS_PER_ROW, tens - (tensRows - 1) * MAX_RODS_PER_ROW);
+  // Cluster width is determined by the widest row (full row OR last row, whichever is bigger).
+  const tensRowWidthCells = (n: number) => n * 1 + (n - 1) * (rodGapX / CELL); // approximate
+  const tensWidestRowCount = tensRows > 1 ? MAX_RODS_PER_ROW : tensInLastRow;
+  const tensClusterW = tens === 0 ? 0 : tensWidestRowCount * CELL + (tensWidestRowCount - 1) * rodGapX;
+  const tensClusterH = tens === 0
+    ? 0
+    : tensRows * rodHeightCells * CELL + (tensRows - 1) * rodGapY;
+  // (tensRowWidthCells helper above is informational; unused in the
+  // final layout because each row computes its own cluster width.)
+  void tensRowWidthCells;
+
+  // Ones: small unit blocks; row-wrap with gap.
+  const unitGap = 4;
+  const onesPerRow = Math.max(1, Math.floor(COL_WIDTHS[2] / (CELL + unitGap)));
+  const onesRows = ones === 0 ? 0 : Math.ceil(ones / onesPerRow);
+  const onesClusterH = ones === 0
+    ? 0
+    : onesRows * CELL + (onesRows - 1) * unitGap;
+  // (clusterW for a row varies by row — last row may be partial — so
+  // we recompute per-row inside the render loop. Tens + ones do the
+  // same; hundreds is always one flat per row, so its cluster width is
+  // already a constant.)
+  void tensClusterW;
+  void hundredsClusterW;
+
+  // Tallest tower across all columns.
+  const maxTowerH = Math.max(hundredsClusterH, tensClusterH, onesClusterH, 0);
+  // Place "= total" with a gap below the tallest tower.
+  const TOTAL_Y_GAP = 28;
+  const TOTAL_FONT = 22;
+  const totalY = BLOCK_TOP_Y + maxTowerH + TOTAL_Y_GAP + TOTAL_FONT;
+  const SVG_H_PV = totalY + 16; // bottom padding
 
   return (
-    <g>
-      {COLS.map((c) => (
-        <g key={c.label}>
-          <text x={c.x + c.w / 2} y={25} fontSize={FONT} textAnchor="middle" fill="#475569" fontWeight={600}>
-            {c.label} ({c.count})
-          </text>
-          {Array.from({ length: c.count }).map((_, i) => renderBlock(c.kind, c.x, 40, i, c.w))}
-        </g>
-      ))}
-      {spec.showCount !== false && (
-        <text x={SVG_W / 2} y={SVG_H - 16} fontSize={20} textAnchor="middle" fill="#0f172a" fontWeight={700}>
-          = {total}
-        </text>
+    <div className="early-math-renderer">
+      {spec.title && (
+        <div className="text-center text-sm font-semibold text-gray-700 mb-1">{spec.title}</div>
       )}
-    </g>
-  );
-}
-
-function renderBlock(kind: 'flat' | 'rod' | 'unit', cx: number, cy: number, i: number, colWidth: number): React.ReactElement {
-  const cellSize = 10;
-  if (kind === 'flat') {
-    // A 10×10 square per "hundred". Stack vertically.
-    const oy = cy + i * (10 * cellSize + 8);
-    return (
-      <g key={i}>
-        {Array.from({ length: 10 }).map((_, r) =>
-          Array.from({ length: 10 }).map((__, col) => (
-            <rect key={`${r}-${col}`} x={cx + col * cellSize} y={oy + r * cellSize} width={cellSize} height={cellSize} fill="#fbbf24" stroke="#92400e" strokeWidth={0.5} />
-          )),
+      <svg
+        viewBox={`0 0 ${SVG_W_PV} ${SVG_H_PV}`}
+        className="w-full h-auto"
+        style={{ maxWidth: SVG_W_PV }}
+      >
+        <rect width={SVG_W_PV} height={SVG_H_PV} fill="#fafbfc" rx={4} />
+        {/* Headers, one per column */}
+        {(['hundreds', 'tens', 'ones'] as const).map((label, i) => {
+          const counts = [hundreds, tens, ones];
+          return (
+            <text
+              key={label}
+              x={colCenter(i)}
+              y={TOP_HEADER_Y}
+              fontSize={FONT}
+              textAnchor="middle"
+              fill="#475569"
+              fontWeight={600}
+            >
+              {label} ({counts[i]})
+            </text>
+          );
+        })}
+        {/* Hundreds — vertical stack of 10×10 flats, centered in column */}
+        {hundreds > 0 && Array.from({ length: hundreds }).map((_, k) => {
+          const flatW = flatWidthCells * CELL;
+          const flatX0 = colCenter(0) - flatW / 2;
+          const oy = BLOCK_TOP_Y + k * (flatHeightCells * CELL + flatGap);
+          return (
+            <g key={`flat-${k}`}>
+              {Array.from({ length: flatHeightCells }).map((_, r) =>
+                Array.from({ length: flatWidthCells }).map((__, col) => (
+                  <rect
+                    key={`${r}-${col}`}
+                    x={flatX0 + col * CELL}
+                    y={oy + r * CELL}
+                    width={CELL}
+                    height={CELL}
+                    fill="#fbbf24"
+                    stroke="#92400e"
+                    strokeWidth={0.5}
+                  />
+                ))
+              )}
+            </g>
+          );
+        })}
+        {/* Tens — vertical rods, wrapping in rows of 4 */}
+        {tens > 0 && Array.from({ length: tens }).map((_, k) => {
+          const rowIdx = Math.floor(k / MAX_RODS_PER_ROW);
+          const colIdx = k % MAX_RODS_PER_ROW;
+          // For the last (possibly partial) row, recenter the row's rods
+          // within the column so they don't all left-justify when count
+          // isn't a multiple of MAX_RODS_PER_ROW.
+          const rowCount = rowIdx < tensRows - 1 ? MAX_RODS_PER_ROW : tensInLastRow;
+          const rowClusterW = rowCount * CELL + (rowCount - 1) * rodGapX;
+          const rowX0 = colCenter(1) - rowClusterW / 2;
+          const ox = rowX0 + colIdx * (CELL + rodGapX);
+          const oy = BLOCK_TOP_Y + rowIdx * (rodHeightCells * CELL + rodGapY);
+          return (
+            <g key={`rod-${k}`}>
+              {Array.from({ length: rodHeightCells }).map((_, r) => (
+                <rect
+                  key={r}
+                  x={ox}
+                  y={oy + r * CELL}
+                  width={CELL}
+                  height={CELL}
+                  fill="#60a5fa"
+                  stroke="#1e3a8a"
+                  strokeWidth={0.5}
+                />
+              ))}
+            </g>
+          );
+        })}
+        {/* Ones — unit blocks, row-wrapping, recentered per row */}
+        {ones > 0 && Array.from({ length: ones }).map((_, k) => {
+          const rowIdx = Math.floor(k / onesPerRow);
+          const colIdx = k % onesPerRow;
+          const rowCount = rowIdx < onesRows - 1
+            ? onesPerRow
+            : (ones - rowIdx * onesPerRow);
+          const rowClusterW = rowCount * CELL + (rowCount - 1) * unitGap;
+          const rowX0 = colCenter(2) - rowClusterW / 2;
+          const ox = rowX0 + colIdx * (CELL + unitGap);
+          const oy = BLOCK_TOP_Y + rowIdx * (CELL + unitGap);
+          return (
+            <rect
+              key={`unit-${k}`}
+              x={ox}
+              y={oy}
+              width={CELL}
+              height={CELL}
+              fill="#34d399"
+              stroke="#065f46"
+              strokeWidth={0.5}
+            />
+          );
+        })}
+        {/* Total label, just below the tallest tower */}
+        {spec.showCount !== false && (
+          <text
+            x={SVG_W_PV / 2}
+            y={totalY}
+            fontSize={TOTAL_FONT}
+            textAnchor="middle"
+            fill="#0f172a"
+            fontWeight={700}
+          >
+            = {total}
+          </text>
         )}
-      </g>
-    );
-  }
-  if (kind === 'rod') {
-    // 1×10 vertical rod per "ten".
-    const cellsPerRow = 4;
-    const ox = cx + (i % cellsPerRow) * (cellSize + 8);
-    const oy = cy + Math.floor(i / cellsPerRow) * (10 * cellSize + 6);
-    return (
-      <g key={i}>
-        {Array.from({ length: 10 }).map((_, r) => (
-          <rect key={r} x={ox} y={oy + r * cellSize} width={cellSize} height={cellSize} fill="#60a5fa" stroke="#1e3a8a" strokeWidth={0.5} />
-        ))}
-      </g>
-    );
-  }
-  // Unit: 1 cell per "one". Lay out in a 5-wide grid.
-  const perRow = Math.max(1, Math.floor(colWidth / (cellSize + 4)));
-  const ox = cx + (i % perRow) * (cellSize + 4);
-  const oy = cy + Math.floor(i / perRow) * (cellSize + 4);
-  return <rect key={i} x={ox} y={oy} width={cellSize} height={cellSize} fill="#34d399" stroke="#065f46" strokeWidth={0.5} />;
+      </svg>
+    </div>
+  );
 }
 
 // ─── ten_frame ────────────────────────────────────────────────────────────────

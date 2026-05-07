@@ -95,6 +95,13 @@ export interface CatalogSnapshotEntry {
    *  that survive will all have the same segmentId — but we still
    *  surface the field for downstream debugging / telemetry. */
   segmentId?: string;
+  /** True when the item's pageTitle equals the catalog's currentPageTitle
+   *  at snapshot time — i.e., the item is on the page the student is
+   *  looking at right now. False/undefined means the item is on a
+   *  previous page; the brain must scroll to it (tutor_scroll_whiteboard)
+   *  before narrating about it. Always undefined when no current page
+   *  has been registered (free-conversation sessions / pre-newPage). */
+  isOnCurrentPage?: boolean;
   /** Per-feature short descriptions surfaced to the brain so it can preserve
    *  exact coordinates / labels across turns. Without these, the brain sees
    *  only "[1] showGeometry — Circle: Center O(-2,3), Radius 5 (5 features)"
@@ -199,12 +206,34 @@ export class WhiteboardCatalog {
    *  no plan / free-conversation session (filter is a no-op then). */
   private currentSegmentId = '';
 
+  /** Currently-visible page title — the page the student is looking at
+   *  RIGHT NOW. Set by the orchestrator on every newPage processed.
+   *  Used to flag CatalogSnapshotEntry.isOnCurrentPage so the brain
+   *  knows whether an item it wants to reference is actually visible
+   *  (vs. on a previous page that requires a tutor_scroll_whiteboard
+   *  before narrating about it). Observed 2026-05-07 G5 carbon-cycle
+   *  test: brain said "take a look at the cycle on the board" while
+   *  the student was on a fresh empty page — cycle was on the prior
+   *  page, brain didn't know it had moved. */
+  private currentPageTitle = '';
+
   /** Update the current-segment marker. Subsequent append()s stamp
    *  this segmentId on their items. The orchestrator calls this on
    *  every brain turn to mirror lessonPlanRef + currentSegmentIdRef
    *  state into the catalog. Idempotent. */
   setCurrentSegment(segmentId: string): void {
     this.currentSegmentId = segmentId || '';
+  }
+
+  /** Update the current-visible-page marker. The orchestrator calls
+   *  this whenever a newPage command processes (the brain explicitly
+   *  switched pages). Idempotent. */
+  setCurrentPage(pageTitle: string | undefined): void {
+    this.currentPageTitle = (pageTitle ?? '').trim();
+  }
+
+  getCurrentPageTitle(): string {
+    return this.currentPageTitle;
   }
 
   append(input: {
@@ -308,6 +337,8 @@ export class WhiteboardCatalog {
     const items = filterSeg
       ? this.items.filter((it) => !it.segmentId || it.segmentId === filterSeg)
       : this.items;
+    const currentPage = this.currentPageTitle;
+    const haveCurrentPage = currentPage.length > 0;
     return items.map((it) => ({
       itemId: it.itemId,
       action: it.action,
@@ -315,6 +346,9 @@ export class WhiteboardCatalog {
       pageTitle: it.pageTitle,
       featureCount: it.features.length,
       segmentId: it.segmentId,
+      isOnCurrentPage: haveCurrentPage
+        ? (it.pageTitle ?? '').trim() === currentPage
+        : undefined,
       // Pull a compact list of per-feature descriptions. Skip the synthetic
       // whole-item region (kind === 'region') — its description is just the
       // title we already surface above. The remaining descriptions carry

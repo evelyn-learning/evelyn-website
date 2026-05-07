@@ -135,6 +135,20 @@ const PROFILES: Record<GradeBand, GradeProfile> = {
 export function gradeBandFor(grade: string): GradeBand {
   const g = grade.trim().toUpperCase();
   if (g === 'K' || g === 'KG' || g === 'KINDERGARTEN') return 'K-2';
+  // K-N range form ("K-1", "K-2"). Without this branch, "K-2" falls
+  // through to the parseInt path, which yields NaN and lands on the
+  // 6-8 safe-default — wrong band, wrong humor cap, wrong sentence
+  // length. The upper digit is bounded by K-2 today (K through grade
+  // 2); higher upper bounds still resolve via the existing rules
+  // since we just check the upper bound.
+  const kRangeMatch = g.match(/^K\s*-\s*(\d+)$/);
+  if (kRangeMatch) {
+    const upper = parseInt(kRangeMatch[1], 10);
+    if (!Number.isFinite(upper) || upper <= 2) return 'K-2';
+    if (upper <= 5) return '3-5';
+    if (upper <= 8) return '6-8';
+    return '9-12';
+  }
   // Range form like "9-10" — take the lower bound.
   const rangeMatch = g.match(/^(\d+)\s*-\s*(\d+)$/);
   const n = rangeMatch ? parseInt(rangeMatch[1], 10) : parseInt(g, 10);

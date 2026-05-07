@@ -1158,20 +1158,49 @@ export function VoiceTutorRealtime({
     const rejected: Array<{ action: string; reason: string }> = [];
 
     const visualActionsThisTurn = visualActionsThisTurnRef.current;
+    // Per-turn dedup signature. Key on action + a stable content hash
+    // so two DIFFERENT figures of the same kind in one turn both
+    // render (e.g., showEarlyMath{place_value, ones:8} for "Pile 1"
+    // and showEarlyMath{place_value, tens:1, ones:2} for "Pile 2"
+    // are clearly distinct). The original action-name-only key was
+    // dropping legitimate side-by-side primitives. The exact-content
+    // case (brain re-emitting an identical figure twice in one turn,
+    // the original failure mode this dedup catches) still fires
+    // because the JSON of two literally-identical calls hashes the
+    // same.
+    const cmdSignature = (cmd: unknown): string => {
+      try {
+        // JSON.stringify with sorted keys would be more robust against
+        // ordering, but the brain emits keys in stable order per call
+        // and the cost of sorting outweighs the benefit here.
+        return JSON.stringify(cmd);
+      } catch {
+        return '';
+      }
+    };
     commands = commands.filter((cmd) => {
       const action = String((cmd as { action?: string }).action ?? '');
       if (!isStructuralVisual(action)) return true;
-      if (!visualActionsThisTurn.has(action)) {
-        visualActionsThisTurn.add(action);
-        console.log('[VoiceTutor] visual-emit first this turn: %s', action);
+      const sig = `${action}::${cmdSignature(cmd)}`;
+      if (!visualActionsThisTurn.has(sig)) {
+        visualActionsThisTurn.add(sig);
+        // Action-only marker too, so logs read the same as before for
+        // grep-based diagnostics — first-emit per action still logs.
+        if (!visualActionsThisTurn.has(action)) {
+          visualActionsThisTurn.add(action);
+          console.log('[VoiceTutor] visual-emit first this turn: %s', action);
+        } else {
+          console.log('[VoiceTutor] visual-emit additional this turn: %s (different params)', action);
+        }
         return true;
       }
       const reason =
-        `You already emitted ${action} on this turn and that is already on the whiteboard. `
-        + `This second call to ${action} was dropped so the student doesn't see two duplicate figures. `
-        + `Use tutor_scroll_whiteboard({ target: ... }) to bring the existing one back into view if needed.`;
-      console.warn('[VoiceTutor] dedup-drop: %s — already emitted this turn', action);
-      onDebugEvent?.('visual_dedup_drop', `${action} (duplicate)`);
+        `You already emitted ${action} with these exact params on this turn. `
+        + `This duplicate call was dropped so the student doesn't see two identical figures. `
+        + `Use tutor_scroll_whiteboard({ target: ... }) to bring the existing one back into view if needed, `
+        + `or call ${action} again with DIFFERENT params if you want to render a related-but-distinct figure.`;
+      console.warn('[VoiceTutor] dedup-drop: %s — same params already emitted this turn', action);
+      onDebugEvent?.('visual_dedup_drop', `${action} (duplicate params)`);
       rejected.push({ action, reason });
       return false;
     });
@@ -1227,6 +1256,50 @@ export function VoiceTutorRealtime({
       });
       if (commands.length !== beforeCount) {
         console.log('[VoiceTutorRealtime] Continuation guard removed', beforeCount - commands.length, 'newPage marker(s)');
+      }
+    }
+
+    // Duplicate-title guard: strip a newPage whose title matches the
+    // MOST-RECENT existing page title (case-insensitive, trimmed). The
+    // brain occasionally re-emits new_page("Human Impact") on every
+    // turn while it's still teaching that section, which produces a
+    // sequence of empty duplicate pages and makes the student scroll
+    // through stacked blanks (observed 2026-05-07 G5 carbon-cycle test
+    // session: 4-5 consecutive new_page("Human Impact") + same image).
+    // Scoped to most-recent only — if the brain genuinely wants a fresh
+    // page that recycles a much-older title, don't fight it.
+    if (commands.some((c) => c.action === 'newPage')) {
+      const norm = (s: string | undefined): string => (s ?? '').trim().toLowerCase();
+      // Most-recent committed page title (from history).
+      let mostRecentTitle: string | undefined;
+      for (let i = whiteboardCommandsRef.current.length - 1; i >= 0; i--) {
+        const c = whiteboardCommandsRef.current[i];
+        if (c.action === 'newPage') {
+          mostRecentTitle = (c as { title?: string }).title;
+          break;
+        }
+      }
+      const beforeCount = commands.length;
+      const filtered: WhiteboardCommand[] = [];
+      for (const cmd of commands) {
+        if (cmd.action === 'newPage') {
+          const t = norm((cmd as { title?: string }).title);
+          if (t && t === norm(mostRecentTitle)) {
+            console.log('[VoiceTutorRealtime] Duplicate-title newPage stripped:', t);
+            onDebugEvent?.('duplicate_newpage_strip', `title="${t}"`);
+            // The follow-up show_* commands land on the existing page.
+            continue;
+          }
+          // Update the running cursor as we walk this batch so a batch
+          // that itself contains multiple identical-title newPages also
+          // collapses (rare, but defensive).
+          mostRecentTitle = (cmd as { title?: string }).title;
+        }
+        filtered.push(cmd);
+      }
+      if (filtered.length !== beforeCount) {
+        commands = filtered;
+        console.log('[VoiceTutorRealtime] Duplicate-title guard removed', beforeCount - filtered.length, 'newPage marker(s)');
       }
     }
 
@@ -2121,6 +2194,11 @@ export function VoiceTutorRealtime({
           currentTopicRef.current = title;
           if (!topicsCoveredRef.current.includes(title)) topicsCoveredRef.current.push(title);
         }
+        // Mirror current-page state into the catalog so getSnapshot
+        // can flag isOnCurrentPage on each entry. Brain reads the
+        // flag to decide whether to scroll or re-render before
+        // referencing an item.
+        catalogRef.current.setCurrentPage(title || undefined);
       }
 
       // Lesson-plan navigation. The brain emits advance_lesson when it
@@ -2134,7 +2212,17 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const to = (cmd as any).to as string | undefined;
         if (plan && to) {
-          const next = resolveAdvanceTarget(plan, currentSegmentIdRef.current, to);
+          // Pass shownProblemHashesRef so resolveAdvanceTarget skips
+          // try-yourself / misconception / extension segments whose
+          // authored problem text the student already saw earlier in
+          // the session — typically because generate_problem returned
+          // that segment's text as a Layer-4 plan-authored fallback.
+          // Without this, Skip / advance_lesson re-renders a problem
+          // the student just worked through, which feels like a stall
+          // (observed 2026-05-07 K-2 test session: 3 Skip clicks
+          // needed to get past content the student had already done).
+          const consumedHashes = new Set(shownProblemHashesRef.current);
+          const next = resolveAdvanceTarget(plan, currentSegmentIdRef.current, to, { consumedHashes });
           if (next) {
             console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
             currentSegmentIdRef.current = next;
@@ -5080,6 +5168,27 @@ export function VoiceTutorRealtime({
         if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attemptText && attemptText.trim().length > 0) {
           try {
             const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot(segmentSnapshotOpts));
+            // Diagnostic: log the boardSummary head so the judge's view
+            // of the whiteboard is visible in serverlog_*.txt next to the
+            // KILL decision. Helps debug false-empty kills where the
+            // catalog snapshot doesn't reflect tools the brain just
+            // emitted (timing race, segment-filter exclusion, etc.).
+            console.log(`[judge] boardSummary chars=${boardSummary.length} head="${boardSummary.slice(0, 120).replace(/\n/g, ' ⏎ ')}"`);
+            // Defensive short-circuit: if the snapshot reads empty but
+            // the brain just successfully emitted at least one show_*
+            // tool in THIS attempt, skip the judge call. The judge can
+            // never know more than the catalog; if the catalog is empty
+            // when render tools just fired, it's a snapshot-timing race
+            // (or segment-filter exclusion), not a real chat-board
+            // mismatch. Killing on this would loop until
+            // MAX_VALIDATOR_RETRIES with no real fix possible (observed
+            // 2026-05-07 K-2 comparing-numbers test session).
+            const showToolsEmitted = toolNamesThisAttempt.filter((n) => n.startsWith('show_')).length;
+            if (boardSummary === '(whiteboard is empty)' && showToolsEmitted > 0) {
+              console.warn(`[judge] skip — boardSummary reports empty but ${showToolsEmitted} show_* tool(s) just emitted (snapshot race or segment-filter exclusion). Letting speech through.`);
+              onDebugEvent?.('judge_skip_empty_snapshot', `tools=${showToolsEmitted}`);
+              // Pass through — no judge fetch, treat as grounded.
+            } else {
             // Focus = the most recently rendered problem statement.
             // Without focus, the judge passes any speech that's grounded
             // against ANY card on the board — exactly the failure mode
@@ -5292,6 +5401,7 @@ export function VoiceTutorRealtime({
             } else {
               console.warn('[brain-orchestrator] judge call failed:', judgeRes.status);
             }
+            } // close: empty-snapshot short-circuit guard's else branch
           } catch (err) {
             // Fail-open on network errors — don't block the conversation
             // on a flaky judge call. The error is logged for observability.
@@ -5338,11 +5448,24 @@ export function VoiceTutorRealtime({
           { role: 'user', content: runTranscript },
           { role: 'assistant', content: attemptText || '(emitted only tool calls)' },
         ];
+        // Speech-delivery hint: the prior attempt's spoken text was
+        // either delivered in full (no judge KILL → no kill bridge) or
+        // cut off mid-stream (judge KILL fired). The brain needs to
+        // know which one happened so it doesn't re-narrate text the
+        // student already heard. Without this distinction, structural
+        // retries cause the brain to re-state its full hook + question,
+        // and aggregatedFullText accumulates BOTH versions — the
+        // student hears the same content twice (sometimes with
+        // contradicting numbers if the judge KILLed a stat that the
+        // brain then "corrected" in re-narration).
+        const speechDeliveryNote = attemptKilled
+          ? `Your spoken text from the prior attempt was CUT OFF by a kill bridge, so the student heard only a partial version. Re-deliver the spoken portion in full so they get a complete narration. If you asked a question, re-ask it and wait; do not answer it yourself or skip ahead.`
+          : `Your spoken text from the prior attempt was DELIVERED IN FULL to the student. Do NOT repeat the same narration — the student already heard it. In this turn, focus on emitting the corrected tool call(s) and speak only a brief connector (≤ one short sentence) if speech is needed at all. If you asked a question on the prior attempt and the student hasn't answered yet, just wait; do not re-ask.`;
         runTranscript =
           `[validator feedback — not from the student] Your last turn emitted ` +
           `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
           `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
-          `Re-deliver the spoken portion in full — the student likely heard the prior attempt only partially because a kill bridge cut it off. If you asked a question, re-ask and wait; do not answer it yourself or skip ahead.`;
+          speechDeliveryNote;
         // Remove the killed attempt's streaming entry from the chat
         // before the next attempt creates a fresh one. Without this,
         // the user would see the killed text remain alongside the new
