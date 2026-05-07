@@ -1,0 +1,62 @@
+/**
+ * IB English A — Paper 2 Comparative Essay Strategy.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_IB_ENGLISH_A_PAPER2: LessonPlan = {
+  id: 'evelyn.ibdp.english-a.paper2.v1',
+  title: 'IB English A — Paper 2: Comparative Essay',
+  curriculum: 'IB-DP',
+  grade: '11-12',
+  subject: 'ela',
+  topic: 'ib-english-a',
+  locale: 'en',
+  los: [{ id: 'ibdp.english-a.paper2', description: 'Construct a comparative essay on two studied works that organises by argument, not text-by-text.', standard: 'IB-DP-ENG-A-P2' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Paper 2 tests whether you can WEAVE TWO WORKS into a single argument — the students who score 7+ never write "In Text A... Then in Text B..."', script: 'Paper 2: 1h45. Choose ONE prompt from a list, respond using TWO works you\'ve studied. Top scorers organise by ARGUMENT axis, not text-by-text. Today: that comparative shape.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Format, prompt selection, comparative structure, evidence integration.', keyIdeas: [
+      'PAPER 2 FORMAT: 1h45. Choose 1 of ~5 prompts. Write a comparative essay using 2 (sometimes 3) literary works you\'ve studied.',
+      'PROMPT SELECTION: read all 5 first. Pick the one your CHOSEN works fit BEST. Don\'t force a misfit prompt.',
+      'TIME ALLOCATION:',
+      '  15 min: read all prompts + plan thesis + outline.',
+      '  85 min: write.',
+      '  5 min: review.',
+      'COMPARATIVE STRUCTURE — by argument axis (NOT by text):',
+      '  WEAK: "In The Handmaid\'s Tale, Atwood... [4 paras]. In 1984, Orwell... [4 paras]." Reads as bookkeeping.',
+      '  STRONG: "Both Atwood and Orwell critique authoritarian control through restricted language; but where Atwood uses NAMING (renamings, forbidden words) to expose female erasure, Orwell uses VOCABULARY contraction (Newspeak) to engineer thought itself." [Each body paragraph compares both works on one analytical axis.]',
+      'BODY PARAGRAPH structure (each = one argument axis):',
+      '  Topic sentence: state the comparative claim.',
+      '  Evidence from work A + analysis.',
+      '  Evidence from work B + analysis.',
+      '  Synthesis: what does the comparison reveal that either alone wouldn\'t?',
+      'TYPICAL ESSAY FRAME:',
+      '  Intro: brief context + thesis naming both works + the axis of comparison + a differentiating move.',
+      '  Body 1: similarity 1 with both works compared.',
+      '  Body 2: similarity 2 OR difference 1.',
+      '  Body 3: difference 2 OR deeper comparative insight.',
+      '  Conclusion: synthesise; offer broader implication.',
+      'CONTEXT must do analytical work, not preamble. "Atwood, writing in the post-Reagan US Christian-right ascendency, sharpens the religious framing of Gilead" earns marks; "Atwood was born in 1939" doesn\'t.',
+      'CRITERIA (10 marks each):',
+      '  A: Knowledge, understanding, interpretation.',
+      '  B: Analysis, evaluation.',
+      '  C: Focus, organisation, development.',
+      '  D: Language.',
+    ], vocabulary: [{ term: 'argument axis', definition: 'a single analytical line of comparison along which both works are addressed in a paragraph.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'Prompt: "Compare how two works you have studied use SETTING to develop a central idea." Sketch a thesis using "Beloved" and "The Remains of the Day."', steps: [
+      'Both novels use restricted, haunted spaces — the central thematic idea: unresolved historical guilt.',
+      'Beloved: house at 124 — site of slavery memory and ghost-trauma.',
+      'Remains of the Day: Darlington Hall — site of British complicity with Nazi sympathy and emotional repression.',
+      'Comparative thesis: "Both novels confine their narrators to spaces that externalise unresolved historical guilt — Sethe\'s house at 124 and Stevens\'s Darlington Hall. But where Morrison weaponises setting AGAINST the present (the past intrudes physically as the ghost), Ishiguro uses setting to INSULATE his narrator from the past, allowing repression rather than reckoning."',
+      'This thesis: names the SAME thing both works do (haunted setting → guilt) AND the differentiating move (intrusion vs insulation). Both are testable in body paragraphs.',
+    ], answer: 'Thesis names common axis + differentiating move; structure follows by argument, not text.', estimatedMinutes: 5 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Why is "compare two works" a different task from "summarise both works"?', expectedAnswer: 'Comparison requires INTEGRATION — finding axes where both works speak to a shared theme, then noting similarities + meaningful differences. Summary just describes each separately. Top-band Paper 2 essays use COMPARISON LANGUAGE: "both," "similarly," "by contrast," "where work A...". Summary essays use "first... then..." structure. Compare the LANGUAGE of your essay; if it sounds like a list of features, you\'re summarising. If it sounds like one argument with two sources of evidence, you\'re comparing.', responseFormat: 'free', hints: ['Comparison links works on shared axes.', 'Summary describes works in turn.'], estimatedMinutes: 3 },
+    { id: 'misconception-text-by-text', kind: 'misconception_check', question: 'A student writes 4 paragraphs on Atwood, then 4 on Orwell. Why does this cap at band 4?', commonErrors: [{ answer: 'Text-by-text structure', misconception: 'Confusing covering both works with comparing them.', correctsTo: 'IB Paper 2 explicitly tests COMPARISON. Text-by-text structure shows you read both works but doesn\'t demonstrate INTEGRATION — the very skill being assessed. The fix: each body paragraph must address BOTH works on a single comparative axis. If you\'re tempted to write a paragraph entirely about one work, you\'re drifting toward summary.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Pick the prompt your works FIT best.', 'Organise by argument axis, NOT text-by-text.', 'Each body paragraph: claim → evidence A + analysis → evidence B + analysis → synthesis.', 'Context as evidence, not preamble.', 'Comparative language: "both", "where", "by contrast".'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

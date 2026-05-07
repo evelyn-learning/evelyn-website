@@ -1,0 +1,62 @@
+/**
+ * AP World History — Trade Networks and Empires.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_AP_WORLD_HISTORY_TRADE_EMPIRES: LessonPlan = {
+  id: 'evelyn.ap.world-history.trade-empires.v1',
+  title: 'AP World History — Trade Networks and Land-Based Empires (600-1450)',
+  curriculum: 'AP',
+  grade: '11',
+  subject: 'social-studies',
+  topic: 'ap-world-history',
+  locale: 'en',
+  los: [{ id: 'ap.world-history.trade-empires', description: 'Analyse Silk Road, Indian Ocean, trans-Saharan trade networks; rise + fall of land-based empires (Tang, Song, Mongol, Mali).', standard: 'AP-WORLD-PERIOD-2' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Trade networks moved goods, ideas, religions, and diseases across continents long before "globalisation."', script: 'Silk Road, Indian Ocean, trans-Saharan, Black Sea — these networks connected China to Mediterranean, sub-Saharan Africa to North Africa. Today: how each operated and what it carried.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Major trade networks, key empires, exchange of ideas/goods/disease.', keyIdeas: [
+      'SILK ROAD (overland Eurasia, peaks 200 BCE - 1450 CE):',
+      '  Connected China → Central Asia → Persia → Mediterranean.',
+      '  Silk, paper, gunpowder, porcelain (China) → silver, glass, horses (West).',
+      '  Carried Buddhism into China. Spread Black Death (mid-14th century).',
+      '  Mongol "Pax Mongolica" (1200s-1300s) revived the route by securing it.',
+      'INDIAN OCEAN TRADE (peaks 800-1500 CE):',
+      '  Monsoon-dependent maritime trade: East Africa ↔ Arabian Peninsula ↔ India ↔ SE Asia ↔ China.',
+      '  Goods: spices (cloves, nutmeg, pepper), textiles, ivory, gold, slaves.',
+      '  Carried Islam to E. Africa (Swahili coast), India, Indonesia (Aceh, Java).',
+      '  Major ports: Calicut, Malacca, Kilwa, Aden, Hormuz, Quanzhou.',
+      'TRANS-SAHARAN TRADE (peaks 800-1500):',
+      '  Camel caravans across Sahara. Connected West Africa (Ghana, Mali, Songhai) → North Africa (Morocco, Egypt).',
+      '  Goods: gold + slaves (south to north); salt + textiles + manuscripts (north to south).',
+      '  Brought Islam to West Africa. Mansa Musa\'s pilgrimage to Mecca (1324) — devastated Egyptian economy with the gold he distributed.',
+      'KEY EMPIRES:',
+      '  TANG China (618-907): Silk Road peak; Buddhism spreads; civil service exams; "golden age" poetry/art.',
+      '  SONG China (960-1279): commercial revolution. Paper money, gunpowder, magnetic compass, printing press improvements. Foot binding emerges (elite women).',
+      '  MONGOL Empire (1206-1368): Genghis Khan + successors. Largest contiguous land empire. Pax Mongolica revives Silk Road. Devastated Baghdad (1258), ended Abbasid caliphate. Weakened by Black Death + succession disputes.',
+      '  ABBASID Caliphate (750-1258): Baghdad center of Islamic Golden Age — algebra (al-Khwarizmi), medicine (Avicenna), translation of Greek texts.',
+      '  MALI (1235-1670): Sundiata Keita founded. Mansa Musa (r. 1312-1337) most famous. Timbuktu became major learning center.',
+      '  AZTEC (1428-1521): Tenochtitlan. Tribute system. Religion required human sacrifices. Conquered by Cortés (1521).',
+      '  INCA (~1438-1533): Andes. Quipu (knot records). Roads + storehouses. Conquered by Pizarro (1533).',
+      'BLACK DEATH (1347-1353): bubonic plague along Silk Road + Indian Ocean trade routes. Killed ~30-50% of European population. Massive demographic + social impact.',
+      'CULTURAL DIFFUSION via trade: Buddhism east; Islam south + east; Hinduism + Buddhism to SE Asia; Christianity along trade routes (less central this period).',
+      'TECHNOLOGY transfers: paper, printing, gunpowder, magnetic compass, lateen sails, astrolabe — all diffused via these networks.',
+    ], vocabulary: [{ term: 'Pax Mongolica', definition: 'period of stability + reduced banditry across the Mongol Empire (1250s-1350s) that revived Silk Road trade.' }, { term: 'monsoon', definition: 'seasonally reversing winds in the Indian Ocean enabling predictable maritime trade routes.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'How did Indian Ocean trade differ from the Silk Road?', steps: [
+      'GEOGRAPHY: Silk Road overland, Indian Ocean maritime.',
+      'VOLUME: Indian Ocean carried much GREATER VOLUMES (ships > camels). Spices became major commodity.',
+      'CONNECTIVITY: Indian Ocean linked Africa, Middle East, India, SE Asia, China — ECONOMICALLY DIVERSE regions. Silk Road mostly connected China and Persia/Mediterranean — fewer hubs.',
+      'TRAVELERS: Silk Road enabled long-distance travelers (Marco Polo). Indian Ocean similarly had travelers (Ibn Battuta visited Swahili coast, India, Indonesia, China).',
+      'RELIGIONS: Silk Road carried Buddhism east. Indian Ocean carried Islam south + east + Hinduism/Buddhism to SE Asia.',
+      'CONNECTING FEATURE: both relied on intermediary cities (caravan stops vs ports) where merchants exchanged goods.',
+    ], answer: 'Indian Ocean: maritime, higher volume, more diverse connections. Silk Road: overland, smaller volume, key luxury goods.', estimatedMinutes: 5 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'How did the Mongol Empire BOTH disrupt and benefit Eurasian connectivity?', expectedAnswer: 'DISRUPT: invasions destroyed cities (Baghdad 1258), killed millions, disrupted local economies + ended Abbasid caliphate. BENEFIT: once consolidated, Pax Mongolica created the SAFEST sustained period for Silk Road trade. Marco Polo, Ibn Battuta traveled freely. Standardised laws + currency (yarligh). Tax breaks for merchants. Information + technology + DISEASE (Black Death) spread along revived routes. APWH essays should hold both: violent conquest AND infrastructure-by-byproduct.', responseFormat: 'free', hints: ['What did invasions destroy?', 'What did consolidated rule provide?'], estimatedMinutes: 3 },
+    { id: 'misconception-globalization-modern', kind: 'misconception_check', question: 'A student says "globalization started in the 19th century." Why is this off?', commonErrors: [{ answer: 'Globalization is modern', misconception: 'Treating modern globalization as unprecedented.', correctsTo: 'Long-distance trade networks ESPECIALLY the Silk Road and Indian Ocean were extensive by 200 BCE and connected most of Eurasia + Africa by ~1000 CE. Goods, ideas, religions, diseases moved continent-to-continent. The Black Death of 1347 spread through trade networks already centuries old. What changed in the 19th century was VOLUME, SPEED (steamships, telegraph), and DOMINATION by industrial European powers — not the existence of global trade. APWH explicitly tests this awareness.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Three main networks: Silk Road, Indian Ocean, trans-Saharan.', 'Silk Road carried Buddhism, Indian Ocean carried Islam, trans-Saharan carried Islam to West Africa.', 'Mongol Pax Mongolica revived but Black Death also moved.', 'Tang/Song China, Abbasid, Mali, Aztec, Inca were major empires of this period.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

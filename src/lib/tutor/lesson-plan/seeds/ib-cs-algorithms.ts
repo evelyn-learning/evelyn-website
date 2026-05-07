@@ -1,0 +1,62 @@
+/**
+ * IB Computer Science — Algorithms (Sorting + Searching).
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_IB_CS_ALGORITHMS: LessonPlan = {
+  id: 'evelyn.ibdp.cs.algorithms.v1',
+  title: 'IB Computer Science — Algorithms: Sorting and Searching',
+  curriculum: 'IB-DP',
+  grade: '11-12',
+  subject: 'cs',
+  topic: 'ib-cs',
+  locale: 'en',
+  los: [{ id: 'ibdp.cs.algorithms', description: 'Apply binary search, bubble/selection/insertion sort, mergesort/quicksort with complexity analysis.', standard: 'IB-DP-CS' }],
+  prerequisites: ['ibdp.cs.data-structures'],
+  followUps: [],
+  estimatedMinutes: 16,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Sorting is the most-studied algorithm class — and the foundation of binary search, set operations, and database queries.', script: 'Sort 1 million items: bubble sort needs ~10¹² operations. Mergesort: ~2 × 10⁷. The right algorithm is 100,000× faster. IB CS expects you to know the major sorting algorithms + their complexities.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Search algorithms, sort algorithms, complexity comparison.', keyIdeas: [
+      'LINEAR SEARCH: check each element. O(n).',
+      'BINARY SEARCH: requires SORTED array.',
+      '  Compare middle. If target < middle, search left half. Else right.',
+      '  O(log n).',
+      '  Recursive or iterative.',
+      'SORTING ALGORITHMS (memorise complexity):',
+      '  BUBBLE SORT: repeatedly compare adjacent + swap if out of order. O(n²).',
+      '  SELECTION SORT: find smallest, swap to front, recurse on remainder. O(n²).',
+      '  INSERTION SORT: build sorted left half by inserting each element in correct position. O(n²) worst, O(n) best (already sorted).',
+      '  MERGESORT: divide array in half, recursively sort, MERGE sorted halves. O(n log n) always. Stable. Needs O(n) extra space.',
+      '  QUICKSORT: pick pivot, partition (smaller left, larger right), recurse. O(n log n) average, O(n²) worst (bad pivot). In-place. Common in practice.',
+      '  HEAP SORT: build max heap, extract max repeatedly. O(n log n) always. In-place.',
+      'COMPARISON:',
+      '  For small n (~50): insertion sort can beat the others.',
+      '  For large n: O(n log n) algorithms (merge, quick, heap) dominate.',
+      '  Quicksort is usually fastest in practice (cache-friendly + simple inner loop).',
+      'STABLE SORTS: preserve relative order of equal keys. Mergesort is stable; quicksort is not (unless adapted).',
+      'BIG O complexity hierarchy:',
+      '  O(1) — constant.',
+      '  O(log n) — logarithmic (binary search, balanced trees).',
+      '  O(n) — linear (linear search, single loop).',
+      '  O(n log n) — efficient sorting.',
+      '  O(n²) — quadratic (bubble, selection, naive sort).',
+      '  O(2ⁿ) — exponential (naive recursion, brute-force subset enumeration).',
+      'TRACE algorithms by hand on small inputs (size 5-10) — IB tests this directly.',
+      'RECURSION: function calls itself with smaller input. Base case + recursive case. Examples: factorial, Fibonacci, mergesort, tree traversal.',
+    ], vocabulary: [{ term: 'binary search', definition: 'O(log n) search for a target in a SORTED array by repeatedly halving the search range.' }, { term: 'mergesort', definition: 'O(n log n) divide-and-conquer sort: split, recursively sort halves, merge.' }], estimatedMinutes: 5 },
+    { id: 'worked', kind: 'worked_example', problem: 'Trace binary search for target = 7 in sorted array [1, 3, 5, 7, 9, 11, 13]. Show each step.', steps: [
+      'Initial: low = 0, high = 6 (last index).',
+      'Step 1: mid = (0+6)/2 = 3. arr[3] = 7. FOUND! Return index 3.',
+      'Total: 1 comparison. (Lucky case — found at first mid.)',
+      'For comparison, linear search would compare 1, 3, 5, 7 — finding it at index 3 in 4 comparisons.',
+      'For larger arrays, binary search wins dramatically: 10⁶ elements need at most 20 comparisons (log₂10⁶ ≈ 20) vs up to 10⁶ for linear.',
+    ], answer: 'Found in 1 step at index 3 (binary search needs ≤ log₂(n) comparisons).', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Trace bubble sort on [4, 2, 1, 3]. Show each pass.', expectedAnswer: 'Pass 1 (compare adjacent, swap if needed):\n  [4,2,1,3] → swap 4,2 → [2,4,1,3] → swap 4,1 → [2,1,4,3] → swap 4,3 → [2,1,3,4]\nPass 2: [2,1,3,4] → swap 2,1 → [1,2,3,4] → no more swaps needed → DONE.\nTotal: 2 passes. Final: [1,2,3,4].', responseFormat: 'free', hints: ['Each pass compares adjacent pairs and swaps if out of order.', 'Pass i bubbles the i-th largest to position n-i.'], estimatedMinutes: 4 },
+    { id: 'misconception-bigo-vs-time', kind: 'misconception_check', question: 'A student says "O(n²) is always slower than O(n log n)." Why might this be wrong for small inputs?', commonErrors: [{ answer: 'O(n²) always slower', misconception: 'Treating Big O as absolute rather than asymptotic.', correctsTo: 'Big O describes ASYMPTOTIC behaviour (large n). For small n (< 50), the constant factors matter MORE than the asymptotic class. Insertion sort (O(n²)) often beats mergesort (O(n log n)) for small arrays because mergesort has higher overhead (function calls, array allocation). Real implementations (TimSort in Python, Java, etc.) use insertion sort for small subarrays AND mergesort/quicksort for large. Big O is a rule of thumb for asymptotic analysis, not absolute speed.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Linear O(n), Binary O(log n) (sorted only).', 'Bubble/Selection/Insertion: O(n²).', 'Merge/Quick/Heap sort: O(n log n).', 'Big O is asymptotic — small n can favor "slower" algorithms.', 'Trace algorithms by hand on small inputs for IB exam.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};

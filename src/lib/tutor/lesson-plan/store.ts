@@ -1002,6 +1002,14 @@ import { SEED_IB_BIOLOGY_GENETICS } from './seeds/ib-biology-genetics';
 import { SEED_IB_CHEMISTRY_BONDING } from './seeds/ib-chemistry-bonding';
 import { SEED_IB_PHYSICS_MECHANICS } from './seeds/ib-physics-mechanics';
 import { SEED_IB_PHYSICS_EM } from './seeds/ib-physics-em';
+// QA harness — test-* plans for systematic browser exercising of tutor
+// surfaces. Not production content. Safe to remove together; ids and
+// titles are prefixed with `test-` / `[TEST]` for easy identification.
+import { SEED_TEST_K2_MATH_COMPARING_NUMBERS } from './seeds/test-k2-math-comparing-numbers';
+import { SEED_TEST_G5_SCI_CARBON_CYCLE } from './seeds/test-g5-sci-carbon-cycle';
+import { SEED_TEST_G7_MATH_DIRECT_INVERSE_VARIATION } from './seeds/test-g7-math-direct-inverse-variation';
+import { SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE } from './seeds/test-hs-bio-sex-linked-pedigree';
+import { SEED_TEST_G7_SS_APOLLO_MISSIONS } from './seeds/test-g7-ss-apollo-missions';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1956,6 +1964,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_IB_CHEMISTRY_BONDING,
   SEED_IB_PHYSICS_MECHANICS,
   SEED_IB_PHYSICS_EM,
+  // QA harness — test-* plans (see import block at top of file).
+  SEED_TEST_K2_MATH_COMPARING_NUMBERS,
+  SEED_TEST_G5_SCI_CARBON_CYCLE,
+  SEED_TEST_G7_MATH_DIRECT_INVERSE_VARIATION,
+  SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE,
+  SEED_TEST_G7_SS_APOLLO_MISSIONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

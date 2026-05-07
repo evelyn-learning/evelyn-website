@@ -1,0 +1,62 @@
+/**
+ * AP US History — Civil Rights Movement.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_AP_US_HISTORY_CIVIL_RIGHTS: LessonPlan = {
+  id: 'evelyn.ap.us-history.civil-rights.v1',
+  title: 'AP US History — Civil Rights Movement (1945-1968)',
+  curriculum: 'AP',
+  grade: '11',
+  subject: 'social-studies',
+  topic: 'ap-us-history',
+  locale: 'en',
+  los: [{ id: 'ap.us-history.civil-rights', description: 'Trace the civil rights movement from Brown v. Board (1954) through the Civil Rights Act (1964) and Voting Rights Act (1965), with attention to strategy, leaders, opposition.', standard: 'AP-USH-P8' }],
+  prerequisites: [],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'The 1954-1968 civil rights movement transformed law, but the LIVED transformation took longer.', script: 'Brown desegregated schools (1954). Montgomery Bus Boycott (1955). Selma march (1965). Civil Rights Act (1964). Voting Rights Act (1965). Each was a battle. Today: the major moments + the strategic choices + the resistance.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'Key events, leaders, strategies, opposition, legislation.', keyIdeas: [
+      'PRE-1945 background: Plessy v. Ferguson (1896) — "separate but equal." NAACP founded 1909. Marian Anderson Lincoln Memorial concert (1939). Smith v. Allwright (1944) — invalidated white-only primaries.',
+      'BROWN v. BOARD (1954): Supreme Court strikes down "separate but equal" in education. Marshall (later Justice Marshall) argued.',
+      'EMMETT TILL murder (1955): galvanises movement. Open-casket funeral, Look magazine photos, all-white jury acquits.',
+      'MONTGOMERY BUS BOYCOTT (1955-56): Rosa Parks arrested for refusing to give up seat. MLK emerges as leader. SCLC founded.',
+      'LITTLE ROCK NINE (1957): Eisenhower sends federal troops to enforce school integration.',
+      'SIT-INS (1960, Greensboro): students sit at segregated lunch counters. SNCC formed.',
+      'FREEDOM RIDES (1961): integrated buses tested interstate transport. Violent attacks. JFK\'s administration intervenes.',
+      'BIRMINGHAM CAMPAIGN (1963): Bull Connor uses fire hoses + dogs on protesters (including children). National TV coverage shifts white moderate opinion.',
+      'MARCH ON WASHINGTON (1963): MLK\'s "I Have a Dream" speech. 250,000+ attendees.',
+      'JFK assassination → LBJ pushes through CIVIL RIGHTS ACT (1964): outlawed discrimination in public accommodations, employment, voting.',
+      'FREEDOM SUMMER (1964): voter registration drive in Mississippi. Three workers killed (Goodman, Schwerner, Chaney).',
+      'SELMA-TO-MONTGOMERY MARCH (1965): "Bloody Sunday" footage. LBJ pushes VOTING RIGHTS ACT (1965).',
+      'STRATEGIES — the movement debated:',
+      '  Nonviolent civil disobedience (MLK, SCLC, SNCC initially): moral suasion, federal intervention.',
+      '  Black Power / Self-defense (Malcolm X, Black Panthers, late SNCC): rejection of integration, more militant.',
+      '  Legal strategy (NAACP, LDF): test cases through courts.',
+      'OPPOSITION:',
+      '  Southern resistance: Massive Resistance to school integration, KKK violence, Citizens\' Councils.',
+      '  J. Edgar Hoover\'s FBI surveillance of King (COINTELPRO).',
+      '  Northern white backlash: 1968 election won by Nixon on "law and order" platform.',
+      'KEY LIMITATIONS:',
+      '  De jure segregation ended; de facto persisted (housing, schools).',
+      '  Economic gaps remained.',
+      '  Northern racism less codified but real.',
+      'EVOLUTION post-1965: King turns to economic justice + Vietnam (Memphis sanitation strike, 1968). Assassinated April 1968.',
+    ], vocabulary: [{ term: 'de jure segregation', definition: 'segregation enforced by law (Jim Crow); ended by Civil Rights Act 1964.' }, { term: 'de facto segregation', definition: 'segregation in practice without legal mandate; persists in housing, schools, neighbourhoods.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'Why was the Birmingham campaign (1963) a turning point?', steps: [
+      'Strategically: Birmingham was deliberately chosen for its harsh segregationist police chief Bull Connor — predicting a violent response that would horrify the nation.',
+      'Tactically: protesters included CHILDREN, knowing media would document violence against children.',
+      'Bull Connor responded with fire hoses + police dogs. National TV broadcast images.',
+      'White moderate opinion (previously sympathetic but cautious) shifted.',
+      'JFK forced to declare civil rights a "moral issue." Speech announcing what would become Civil Rights Act (June 1963).',
+      'Birmingham revealed the calculus: segregationist resistance, when broadcast, undermined its own legitimacy.',
+    ], answer: 'Strategic provocation + media coverage shifted opinion + JFK forced to act.', estimatedMinutes: 4 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'Compare the strategies of MLK and Malcolm X.', expectedAnswer: 'MLK: NONVIOLENT civil disobedience. Goal: integration into existing American system. Methods: marches, boycotts, sit-ins. Used Christian moral framing. Attempted to win white moderate support and federal intervention. Malcolm X (early): SEPARATIST. Goal: black self-determination, often rejecting integration. Methods: rhetoric of self-defense and racial pride. Critical of MLK\'s methods. (Late, post-Mecca trip): more open to coalition-building, less explicitly separatist. BOTH WERE COMMITTED to ending oppression, but disagreed on goals (integration vs autonomy) and methods (nonviolence vs self-defense).', responseFormat: 'free', hints: ['Different goals: integration vs separation.', 'Different methods: nonviolence vs self-defense.'], estimatedMinutes: 3 },
+    { id: 'misconception-mlk-only', kind: 'misconception_check', question: 'A student frames the civil rights movement as "MLK\'s movement." Why does this oversimplify?', commonErrors: [{ answer: 'MLK = the movement', misconception: 'Reducing collective action to individual leaders.', correctsTo: 'MLK was a major leader but the movement involved THOUSANDS of organisers + millions of participants. SNCC (Ella Baker, John Lewis, Stokely Carmichael), NAACP (Marshall, Wilkins), CORE (Farmer), and countless local leaders. Women — Rosa Parks, Fannie Lou Hamer, Septima Clark — did much of the local organising. Centring MLK alone erases the movement\'s breadth + the strategic debates within it. Better framing: MLK was ONE prominent voice in a multi-organisational, multi-strategy movement.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['Brown (1954) → Civil Rights Act (1964) → Voting Rights Act (1965).', 'Strategies: nonviolent direct action + legal cases + Black Power.', 'Birmingham + Selma media coverage shifted public opinion.', 'De jure segregation ended; de facto persisted.', 'Movement was collective, not just MLK.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
