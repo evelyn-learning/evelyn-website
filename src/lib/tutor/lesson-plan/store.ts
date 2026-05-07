@@ -993,6 +993,15 @@ import { SEED_NEET_CHEM_PHYSICAL_DEEP } from './seeds/neet-chem-physical-deep';
 import { SEED_NEET_CHEM_THERMODYNAMICS } from './seeds/neet-chem-thermodynamics';
 import { SEED_NEET_CHEM_ELECTROCHEMISTRY } from './seeds/neet-chem-electrochemistry';
 import { SEED_NEET_CHEM_COORDINATION } from './seeds/neet-chem-coordination';
+// Coverage wave 8 (2026-05-06) — AP Science backfill.
+import { SEED_AP_PHYSICS_C_MECH_ROTATION } from './seeds/ap-physics-c-mech-rotation';
+import { SEED_AP_PHYSICS_C_MECH_ENERGY_MOMENTUM } from './seeds/ap-physics-c-mech-energy-momentum';
+import { SEED_AP_PHYSICS_2_ELECTROSTATICS } from './seeds/ap-physics-2-electrostatics';
+import { SEED_IB_BIOLOGY_CELL_BIO } from './seeds/ib-biology-cell-bio';
+import { SEED_IB_BIOLOGY_GENETICS } from './seeds/ib-biology-genetics';
+import { SEED_IB_CHEMISTRY_BONDING } from './seeds/ib-chemistry-bonding';
+import { SEED_IB_PHYSICS_MECHANICS } from './seeds/ib-physics-mechanics';
+import { SEED_IB_PHYSICS_EM } from './seeds/ib-physics-em';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1938,6 +1947,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_NEET_CHEM_THERMODYNAMICS,
   SEED_NEET_CHEM_ELECTROCHEMISTRY,
   SEED_NEET_CHEM_COORDINATION,
+  // Coverage wave 8 (2026-05-06) — AP Science backfill.
+  SEED_AP_PHYSICS_C_MECH_ROTATION,
+  SEED_AP_PHYSICS_C_MECH_ENERGY_MOMENTUM,
+  SEED_AP_PHYSICS_2_ELECTROSTATICS,
+  SEED_IB_BIOLOGY_CELL_BIO,
+  SEED_IB_BIOLOGY_GENETICS,
+  SEED_IB_CHEMISTRY_BONDING,
+  SEED_IB_PHYSICS_MECHANICS,
+  SEED_IB_PHYSICS_EM,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
