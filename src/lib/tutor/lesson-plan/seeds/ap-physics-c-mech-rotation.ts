@@ -1,0 +1,61 @@
+/**
+ * AP Physics C: Mechanics — Rotational Dynamics.
+ */
+
+import type { LessonPlan } from '../types';
+
+export const SEED_AP_PHYSICS_C_MECH_ROTATION: LessonPlan = {
+  id: 'evelyn.ap.physics-c.mech.rotation.v1',
+  title: 'AP Physics C: Mechanics — Rotational Dynamics',
+  curriculum: 'AP',
+  grade: '11',
+  subject: 'science',
+  topic: 'ap-physics-c-mech',
+  locale: 'en',
+  los: [{ id: 'ap.physics-c.mech.rotation', description: 'Apply moment of inertia, torque, angular momentum, and rolling motion using calculus.', standard: 'AP-PHYS-C-MECH' }],
+  prerequisites: ['ap.physics-c.mech.calculus'],
+  followUps: [],
+  estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Rotational mechanics mirrors translational, with moment of inertia replacing mass.', script: 'Linear F = ma → rotational τ = Iα. Linear KE = (1/2)mv² → rotational KE = (1/2)Iω². Linear momentum p = mv → angular L = Iω. The analogies make rotation feel familiar — once you know I.', estimatedMinutes: 1 },
+    { id: 'concept', kind: 'concept', goal: 'I via integral, parallel axis, torque, ang momentum, rolling.', keyIdeas: [
+      'ANGULAR variables: position θ, velocity ω = dθ/dt, acceleration α = dω/dt.',
+      'Linear-rotational analogues:',
+      '  v = rω (linear speed of point at radius r).',
+      '  a_t = rα (tangential acceleration). a_c = v²/r = rω² (centripetal).',
+      'MOMENT OF INERTIA: I = ∫ r² dm.',
+      '  Common shapes (memorise):',
+      '  Point mass: I = mr².',
+      '  Solid disk/cylinder (about axis): I = (1/2)MR².',
+      '  Solid sphere (about diameter): I = (2/5)MR².',
+      '  Hollow sphere: I = (2/3)MR².',
+      '  Rod (about end): I = (1/3)ML². (About center: (1/12)ML².)',
+      'PARALLEL AXIS THEOREM: I = I_cm + Md², where d is distance from CM to new axis.',
+      'TORQUE τ = r × F. Magnitude rF sin θ. Vector — direction by right-hand rule.',
+      'NEWTON\'S 2ND LAW for rotation: τ_net = Iα.',
+      'ROTATIONAL KE: K = (1/2)Iω². Same as translational with I,ω instead of m,v.',
+      'ANGULAR MOMENTUM: L = Iω. Conserved when no net external torque.',
+      '  Spinning skater pulls arms in: I decreases → ω increases (L conserved).',
+      '  Earth-Moon system: angular momentum conserved.',
+      'ROLLING WITHOUT SLIPPING: v_cm = Rω, a_cm = Rα.',
+      '  Total KE = (1/2)Mv² + (1/2)Iω² (translational + rotational).',
+      '  For ball rolling down incline, ratio of rotational to total KE is the same regardless of mass/radius — depends only on I/MR² ratio.',
+      'WORK-ENERGY for rotation: W = ∫τ dθ.',
+      'POWER for rotation: P = τω.',
+    ], vocabulary: [{ term: 'moment of inertia', definition: 'I = ∫r² dm; rotational analog of mass; depends on mass distribution and axis.' }, { term: 'parallel axis theorem', definition: 'I about any axis = I_cm + Md² where d is distance from CM.' }], estimatedMinutes: 6 },
+    { id: 'worked', kind: 'worked_example', problem: 'A solid sphere (M, R) rolls down an incline of height h without slipping. Find its speed at the bottom.', steps: [
+      'Use energy conservation: PE_top = total KE_bottom.',
+      'Total KE = (1/2)Mv² + (1/2)Iω².',
+      'For solid sphere: I = (2/5)MR². Rolling: v = Rω so ω = v/R.',
+      '(1/2)Iω² = (1/2)(2/5)MR² · (v/R)² = (1/5)Mv².',
+      'Total KE = (1/2)Mv² + (1/5)Mv² = (7/10)Mv².',
+      'Mgh = (7/10)Mv² → v = √(10gh/7).',
+      'Compare: solid block sliding down without friction: v = √(2gh). Rolling sphere is slower because some energy goes into rotation.',
+    ], answer: 'v = √(10gh/7)', estimatedMinutes: 5 },
+    { id: 'try-1', kind: 'try_yourself', problem: 'A spinning skater with moment of inertia I₀ and angular velocity ω₀ pulls in arms, reducing I to I₀/3. Find new angular velocity.', expectedAnswer: 'No external torque → angular momentum conserved. L = Iω = I₀ω₀ = (I₀/3)ω_new. Solving: ω_new = 3ω₀. (Spins 3× faster.)', responseFormat: 'free', hints: ['L is conserved when no external torque.', 'L = Iω. Solve for new ω.'], estimatedMinutes: 3 },
+    { id: 'misconception-i-mass', kind: 'misconception_check', question: 'A student uses I = MR² for a solid sphere instead of (2/5)MR². How big an error?', commonErrors: [{ answer: 'I = MR²', misconception: 'Treating moment of inertia as constant across shapes.', correctsTo: 'I depends on MASS DISTRIBUTION. For a SOLID sphere, mass is spread inside, so I = (2/5)MR². For a HOLLOW sphere (mass at surface), I = (2/3)MR². For a point mass at radius R, I = MR². The factor (2/5 vs 2/3 vs 1) reflects how far mass is from the rotation axis. Always identify the shape and recall its specific I formula. Errors here can be > 50% off.' }], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: ['τ = Iα; KE = (1/2)Iω²; L = Iω.', 'Memorise I for disk (1/2 MR²), solid sphere (2/5 MR²), hollow sphere (2/3 MR²), rod about end (1/3 ML²).', 'Parallel axis: I_axis = I_cm + Md².', 'Rolling: v = Rω, total KE = trans + rot.', 'L conserved when no external τ.'], estimatedMinutes: 1 },
+  ],
+  source: { author: 'Evelyn Learning', org: 'Evelyn', license: 'proprietary' },
+  schemaVersion: 1,
+};
