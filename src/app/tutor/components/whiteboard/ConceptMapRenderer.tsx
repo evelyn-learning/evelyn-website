@@ -596,9 +596,14 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     edge: ConceptEdge,
     lx: number, ly: number, lw: number, lh: number,
   ): boolean => {
-    // Node bboxes (with 2px outward padding).
+    // Node bboxes (with 2px outward padding). R10 follow-up: include the
+    // edge's own source AND target — for short hub→child edges, baseT
+    // values close to 1.0 placed labels right on top of the target box
+    // (observed Map 5: "approximated by" sitting on "Riemann Sum
+    // Approximation"). The slide-along-t fallback now pushes those
+    // labels back toward the edge midpoint instead of letting them
+    // overlap the target.
     for (const n of nodes) {
-      if (n.id === edge.from || n.id === edge.to) continue;
       const np = place(n);
       const dims = dimsById.get(n.id)!;
       if (rectsOverlap(lx, ly, lw, lh, np.x, np.y, dims.rectW + 4, dims.rectH + 4)) return true;
@@ -737,7 +742,18 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
                 y: startPt.y + (endPt.y - startPt.y) * tVal,
               };
             };
-            const candidates = [baseT, baseT + 0.10, baseT - 0.06, baseT + 0.20, baseT - 0.12, baseT + 0.30, baseT - 0.18];
+            // R10 follow-up: symmetric slide range out to ±0.42 in 0.06
+            // increments. The prior asymmetric list ([baseT+0.10, -0.06,
+            // +0.20, -0.12, +0.30, -0.18]) bottomed at -0.18 from baseT,
+            // which wasn't enough for high-baseT labels (e.g. baseT=0.86
+            // on a short hub→child edge — needed at least -0.30 to clear
+            // the target box once the target was added to the collision
+            // check).
+            const candidates: number[] = [baseT];
+            for (let step = 0.06; step <= 0.42; step += 0.06) {
+              candidates.push(baseT - step);
+              candidates.push(baseT + step);
+            }
             let resolved = tryT(baseT);
             let resolvedClear = !labelCollides(e, resolved.x, resolved.y, labelW, labelH);
             let chosenT = baseT;
