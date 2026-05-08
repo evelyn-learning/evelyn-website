@@ -103,7 +103,13 @@ export interface ConceptMapProps {
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
-function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x: number; y: number }> {
+function autoLayout(
+  nodes: ConceptNode[],
+  edges: ConceptEdge[],
+  dimsById: Map<string, { rectW: number; rectH: number }>,
+  plotW: number,
+  plotH: number,
+): Map<string, { x: number; y: number }> {
   // Layout strategy: each connected component (or each level-0 root) gets its
   // OWN horizontal swim lane, sized proportionally to the component's widest
   // level. Within a lane, nodes are stacked top-to-bottom by level. This
@@ -178,37 +184,8 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   const sortedLevels = [...allLevels].sort((a, b) => a - b);
   const levelRowIdx = new Map(sortedLevels.map((lv, i) => [lv, i]));
 
-  // R8: fixed row heights stacked from a top anchor, NOT proportional
-  // weights. Proportional weights distribute slack across rows, which
-  // stretches vertical gaps when there are few rows — observed 2026-05-08
-  // "Definite Integrals — Big Picture": with weights [0.4, 1.0, 0.4] across
-  // 3 rows, gaps were 36% / 35% of plot, leaving Antiderivative dangling
-  // far below row 1. Fixed heights keep the same gap regardless of how
-  // much extra plot space is available; bottom slack stays unused as
-  // natural margin.
-  const TOP_ANCHOR_NORM = 8;
-  const SINGLE_ROW_NORM = 18;
-  const MULTI_ROW_NORM = 32;
-  const rowHeights = sortedLevels.map((lv) => {
-    let totalInRow = 0;
-    for (const g of groups.values()) totalInRow += (g.get(lv)?.length ?? 0);
-    return totalInRow <= 1 ? SINGLE_ROW_NORM : MULTI_ROW_NORM;
-  });
-  const totalContentNorm = rowHeights.reduce((s, h) => s + h, 0);
-  // If content overflows the plot, scale to fit; otherwise keep the natural
-  // sizes and let the bottom margin be whatever remains.
-  const availableNorm = 100 - TOP_ANCHOR_NORM;
-  const scale = totalContentNorm > availableNorm ? availableNorm / totalContentNorm : 1;
-  const rowYBaselines: number[] = [];
-  let cursor = TOP_ANCHOR_NORM;
-  for (let i = 0; i < rowHeights.length; i++) {
-    const h = rowHeights[i] * scale;
-    rowYBaselines.push(cursor + h / 2);
-    cursor += h;
-  }
-
-  // Horizontal: each group's slot width is proportional to its widest level.
-  // A {diff,rates} group (max 1 node per level) gets a narrow slot; a
+  // Horizontal slot widths: each group's slice is proportional to its widest
+  // level. A {diff,rates} group (max 1 node per level) gets a narrow slot; a
   // {integ,accum,ex1,ex2,ex3} group (max 3 in level 2) gets a wider slot.
   const groupKeys = [...groups.keys()].sort((a, b) => a - b);
   const groupWeights: number[] = groupKeys.map((k) => {
@@ -218,30 +195,124 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   const totalWeight = groupWeights.reduce((s, w) => s + w, 0) || 1;
   const TOTAL_WIDTH = 94;
   const START_X = 3;
+  const sliceWidths: number[] = [];
+  const groupStartX: number[] = [];
+  let runningX = START_X;
+  groupKeys.forEach((_k, gIdx) => {
+    const sw = (groupWeights[gIdx] / totalWeight) * TOTAL_WIDTH;
+    sliceWidths.push(sw);
+    groupStartX.push(runningX);
+    runningX += sw;
+  });
 
-  let cursorX = START_X;
+  // Per (group, level): pre-compute slot x positions and detect actual
+  // pixel-rect overlap between adjacent siblings. R9 follow-up: the prior
+  // ">= 5 siblings" zigzag heuristic missed the common case of 3 wide
+  // 2-line-labelled siblings overlapping at level 2 of an unbalanced
+  // multi-root forest (concept-two-sides). When wrapped labels produce
+  // boxes wider than their allocated slot, adjacent boxes literally overlap
+  // each other's borders. Detect that explicitly and zigzag in response.
+  const slotInfo = new Map<string, { positions: number[]; stagger: boolean }>();
+  const rowStaggers = new Map<number, boolean>();
+  const MIN_GAP_PX = 12;
+  const MIN_GAP_NORM = (MIN_GAP_PX / plotW) * 100;
   groupKeys.forEach((gKey, gIdx) => {
-    const sliceWidth = (groupWeights[gIdx] / totalWeight) * TOTAL_WIDTH;
+    const g = groups.get(gKey)!;
+    const sliceWidth = sliceWidths[gIdx];
+    const sx = groupStartX[gIdx];
+    sortedLevels.forEach((lv) => {
+      const ids = g.get(lv);
+      if (!ids || ids.length === 0) return;
+      const positions = ids.map((_, colIdx) => sx + (colIdx + 0.5) * (sliceWidth / ids.length));
+      let pixelOverlap = false;
+      for (let k = 0; k < ids.length - 1; k++) {
+        const dimsL = dimsById.get(ids[k]);
+        const dimsR = dimsById.get(ids[k + 1]);
+        const halfL = (((dimsL?.rectW ?? 60)) / plotW) * 100 / 2;
+        const halfR = (((dimsR?.rectW ?? 60)) / plotW) * 100 / 2;
+        const right = positions[k] + halfL;
+        const left = positions[k + 1] - halfR;
+        if (right + MIN_GAP_NORM > left) {
+          pixelOverlap = true;
+          break;
+        }
+      }
+      const stagger = ids.length >= 5 || pixelOverlap;
+      slotInfo.set(`${gKey}|${lv}`, { positions, stagger });
+      const rowIdx = levelRowIdx.get(lv)!;
+      if (stagger) rowStaggers.set(rowIdx, true);
+    });
+  });
+
+  // R9 follow-up: per-row heights from actual node dimensions. The previous
+  // SINGLE_ROW_NORM=18 / MULTI_ROW_NORM=32 constants didn't honor wrapped
+  // 2-line label heights, so deep linear chains compressed: in a 4-level
+  // chain with several 2-line labels, arrow labels (16px) were jammed
+  // against the boxes above and below. Each row now allocates
+  //   max(rectH in row) + LABEL_HEIGHT + 2 * EDGE_PADDING
+  // pixels, plus stagger-clearance when any sibling cluster in the row
+  // zigzags. That guarantees ≥32px of gap between adjacent rows' box
+  // edges — enough for an edge label to render with 8px breathing room
+  // top and bottom.
+  const TOP_ANCHOR_NORM = 8;
+  const LABEL_HEIGHT_PX = 16;
+  const EDGE_PADDING_PX = 8;
+  const STAGGER_GAP_PX = 6;
+  const rowMaxRectH: number[] = sortedLevels.map((lv) => {
+    let maxRectH = 26;
+    for (const g of groups.values()) {
+      const ids = g.get(lv);
+      if (!ids) continue;
+      for (const id of ids) {
+        const d = dimsById.get(id);
+        if (d && d.rectH > maxRectH) maxRectH = d.rectH;
+      }
+    }
+    return maxRectH;
+  });
+  const rowHeightsNorm = sortedLevels.map((_lv, rowIdx) => {
+    const maxRectH = rowMaxRectH[rowIdx];
+    let rowPx = maxRectH + LABEL_HEIGHT_PX + 2 * EDGE_PADDING_PX;
+    if (rowStaggers.get(rowIdx)) rowPx += maxRectH + STAGGER_GAP_PX;
+    return (rowPx / plotH) * 100;
+  });
+  const totalContentNorm = rowHeightsNorm.reduce((s, v) => s + v, 0);
+  const availableNorm = 100 - TOP_ANCHOR_NORM;
+  const scale = totalContentNorm > availableNorm ? availableNorm / totalContentNorm : 1;
+  const rowYBaselines: number[] = [];
+  let cursor = TOP_ANCHOR_NORM;
+  for (let i = 0; i < rowHeightsNorm.length; i++) {
+    const norm = rowHeightsNorm[i] * scale;
+    rowYBaselines.push(cursor + norm / 2);
+    cursor += norm;
+  }
+
+  // Place nodes. Staggered rows alternate even/odd cols up/down by half the
+  // stagger amount so the row stays visually centered on baseY. Stagger
+  // amount is sized to clear maxRectH + STAGGER_GAP_PX, so the upper
+  // sub-row's box bottom and the lower sub-row's box top never collide.
+  groupKeys.forEach((gKey) => {
     const g = groups.get(gKey)!;
     sortedLevels.forEach((lv) => {
       const ids = g.get(lv);
       if (!ids || ids.length === 0) return;
+      const info = slotInfo.get(`${gKey}|${lv}`)!;
       const rowIdx = levelRowIdx.get(lv)!;
       const baseY = rowYBaselines[rowIdx];
-      // Dense rows (>= 5 siblings WITHIN a group) zigzag alternate nodes
-      // into two sub-rows so two-line labels don't collide horizontally.
-      // Threshold moved 4 → 5 (R6 follow-up): with the min-max wrapLabel
-      // producing narrower 2-line boxes, 4 nodes per row fit flat without
-      // collision; the 4-node zigzag was creating visible alternating-height
-      // staircase chaos for no real benefit.
-      const dense = ids.length >= 5;
+      let halfStaggerNorm = 0;
+      if (info.stagger) {
+        const halfStaggerPx = (rowMaxRectH[rowIdx] + STAGGER_GAP_PX) / 2;
+        halfStaggerNorm = (halfStaggerPx / plotH) * 100 * scale;
+      }
       ids.forEach((id, colIdx) => {
-        const staggerY = dense ? (colIdx % 2) * 14 : 0;
-        const x = cursorX + (colIdx + 0.5) * (sliceWidth / ids.length);
-        pos.set(id, { x, y: baseY + staggerY });
+        const x = info.positions[colIdx];
+        let y = baseY;
+        if (info.stagger) {
+          y = colIdx % 2 === 0 ? baseY - halfStaggerNorm : baseY + halfStaggerNorm;
+        }
+        pos.set(id, { x, y });
       });
     });
-    cursorX += sliceWidth;
   });
   return pos;
 }
@@ -322,25 +393,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   const w = VIEWBOX_W - pad.left - pad.right;
   const h = VIEWBOX_H - pad.top - pad.bottom;
 
-  const explicitLayout = nodes.every((n) => typeof n.x === 'number' && typeof n.y === 'number');
-  const positions = explicitLayout ? null : autoLayout(nodes, edges);
-
-  const place = (n: ConceptNode) => {
-    let nx = 50, ny = 50;
-    if (explicitLayout) { nx = n.x!; ny = n.y!; }
-    else {
-      const p = positions!.get(n.id);
-      if (p) { nx = p.x; ny = p.y; }
-    }
-    return { x: pad.left + (nx / 100) * w, y: pad.top + (ny / 100) * h };
-  };
-
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-
-  // Pre-compute per-node render dimensions so edges can do collision checks
-  // against actual node boxes (Issue 3) and route around them (Issue 5).
-  // Node label wrapping (Issue 1) lives here so wrapped multi-line widths
-  // are reflected in box sizes everywhere downstream.
+  // Pre-compute per-node render dimensions so autoLayout can reason about
+  // actual box widths/heights (sibling overlap, per-row heights) and edges
+  // can do collision checks against real node bboxes downstream.
   const NODE_FONT_SIZE = 11;
   const NODE_LINE_H = 13;
   const NODE_MAX_CHARS = 18;
@@ -355,6 +410,21 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     const rectH = Math.max(26, lines.length * NODE_LINE_H + 10);
     dimsById.set(n.id, { lines, rectW, rectH });
   });
+
+  const explicitLayout = nodes.every((n) => typeof n.x === 'number' && typeof n.y === 'number');
+  const positions = explicitLayout ? null : autoLayout(nodes, edges, dimsById, w, h);
+
+  const place = (n: ConceptNode) => {
+    let nx = 50, ny = 50;
+    if (explicitLayout) { nx = n.x!; ny = n.y!; }
+    else {
+      const p = positions!.get(n.id);
+      if (p) { nx = p.x; ny = p.y; }
+    }
+    return { x: pad.left + (nx / 100) * w, y: pad.top + (ny / 100) * h };
+  };
+
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
   // Issue 2: spread edge labels per source node, not by global emit order.
   // When N edges fan out from the same hub, their labels space evenly
@@ -611,12 +681,47 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
             };
             const candidates = [baseT, baseT + 0.10, baseT - 0.06, baseT + 0.20, baseT - 0.12, baseT + 0.30, baseT - 0.18];
             let resolved = tryT(baseT);
+            let resolvedClear = !labelCollides(e, resolved.x, resolved.y, labelW, labelH);
+            let chosenT = baseT;
             for (const tv of candidates) {
               if (tv < 0.18 || tv > 0.82) continue;
               const p = tryT(tv);
               if (!labelCollides(e, p.x, p.y, labelW, labelH)) {
                 resolved = p;
+                resolvedClear = true;
+                chosenT = tv;
                 break;
+              }
+            }
+            // R10 follow-up: when no t along the edge is clear (e.g. a long
+            // crossing edge whose entire visible portion runs through a
+            // cluster of other edge labels — concept-diamond's "ultimately
+            // gives" label vs. the "produces" / "uses" labels at the
+            // antiderivative hub), step the label off the edge along its
+            // perpendicular. The connector rect+text becomes a tag floating
+            // beside the edge instead of stacking on top of neighbors.
+            if (!resolvedClear) {
+              let tx: number, ty: number;
+              if (ctrl) {
+                const u = 1 - chosenT;
+                tx = 2 * u * (ctrl.x - startPt.x) + 2 * chosenT * (endPt.x - ctrl.x);
+                ty = 2 * u * (ctrl.y - startPt.y) + 2 * chosenT * (endPt.y - ctrl.y);
+              } else {
+                tx = endPt.x - startPt.x;
+                ty = endPt.y - startPt.y;
+              }
+              const tlen = Math.sqrt(tx * tx + ty * ty) || 1;
+              const perpX = -ty / tlen;
+              const perpY = tx / tlen;
+              const baseAt = tryT(chosenT);
+              const offsetMags = [labelH, -labelH, 2 * labelH, -2 * labelH, 3 * labelH, -3 * labelH];
+              for (const mag of offsetMags) {
+                const cand = { x: baseAt.x + perpX * mag, y: baseAt.y + perpY * mag };
+                if (!labelCollides(e, cand.x, cand.y, labelW, labelH)) {
+                  resolved = cand;
+                  resolvedClear = true;
+                  break;
+                }
               }
             }
             lx = resolved.x;
