@@ -43,6 +43,33 @@ function looksLikeMath(inner: string): boolean {
   return false;
 }
 
+// Pre-pass: auto-wrap Unicode math symbols with limits in $...$ so they
+// render through KaTeX. Seeds and brain narration commonly write
+// "∫_0^4 x² dx" without any math delimiters; without this pass the
+// underscore/caret render as literal characters (observed 2026-05-08
+// AP Calc BC riemann-sums session — the worked-example card showed
+// "∫_0^4" with literal `_` and `^` instead of stacked limits). Handles
+// ∫ ∑ ∏ with either _<lo>^<hi> or ^<hi>_<lo> ordering. Token shapes
+// supported: alphanumeric run, {brace group}, (paren group). Plain
+// symbols without limits are NOT wrapped — they render fine as Unicode
+// and wrapping a bare ∫ in math mode forces a font swap that looks
+// inconsistent with the surrounding prose.
+const MATH_SYMBOL_TO_CMD: Record<string, string> = { '∫': '\\int', '∑': '\\sum', '∏': '\\prod' };
+const LIMIT_TOKEN = '\\{[^}]*\\}|\\([^)]*\\)|[A-Za-z0-9]+';
+const SYMBOL_WITH_LIMITS_RE = new RegExp(
+  `([∫∑∏])(?:_(${LIMIT_TOKEN})\\^(${LIMIT_TOKEN})|\\^(${LIMIT_TOKEN})_(${LIMIT_TOKEN}))`,
+  'g',
+);
+function autoWrapUnicodeMath(text: string): string {
+  if (!text) return text;
+  return text.replace(SYMBOL_WITH_LIMITS_RE, (_match, sym, lowerA, upperA, upperB, lowerB) => {
+    const cmd = MATH_SYMBOL_TO_CMD[sym] ?? sym;
+    const lo = lowerA ?? lowerB;
+    const hi = upperA ?? upperB;
+    return `$${cmd}_{${lo}}^{${hi}}$`;
+  });
+}
+
 // Split a string into alternating plain-text and math segments.
 // Math is anything between matched single $...$ that doesn't include whitespace-only
 // content, doesn't span across a newline, and passes the looksLikeMath check.
@@ -114,7 +141,7 @@ function Math({ latex }: { latex: string }) {
 }
 
 export function InlineMathText({ text, className = '' }: InlineMathTextProps) {
-  const parts = segment(text);
+  const parts = segment(autoWrapUnicodeMath(text));
   return (
     <span className={`whitespace-pre-wrap ${className}`}>
       {parts.map((p, i) =>

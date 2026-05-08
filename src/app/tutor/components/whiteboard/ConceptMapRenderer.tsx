@@ -51,8 +51,16 @@ const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
 function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x: number; y: number }> {
-  // BFS from the first node (or the one declared level 0) if edges exist,
-  // else just grid-pack. Coordinates returned in 0–100 normalized space.
+  // Layout strategy: each connected component (or each level-0 root) gets its
+  // OWN horizontal swim lane, sized proportionally to the component's widest
+  // level. Within a lane, nodes are stacked top-to-bottom by level. This
+  // prevents subtrees of different roots from interleaving (observed
+  // 2026-05-08 AP Calc BC integration session: brain emitted two level-0
+  // roots "Differentiation" and "Integration" with separate descendant
+  // chains; the previous single-root BFS placed `accum` (under integ) on
+  // the far left of row 2 and `rates` (under diff) in the center, so
+  // diff→rates and integ→accum edges crossed through the middle nodes).
+  // Coordinates returned in 0–100 normalized space.
   const pos = new Map<string, { x: number; y: number }>();
   if (nodes.length === 0) return pos;
 
@@ -64,50 +72,91 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
     adj.get(e.to)?.push(e.from);
   }
 
-  // Figure out per-node level via BFS.
+  // Per-node BFS-derived level + group index. Roots are seeded from
+  // explicit `level: 0` nodes first (preserves brain intent when multiple
+  // roots are declared), then any remaining unvisited node opens a new
+  // group so disconnected components each get their own swim lane.
+  const visited = new Set<string>();
+  const rootGroup = new Map<string, number>();
   const level = new Map<string, number>();
-  const explicit = nodes.find((n) => typeof n.level === 'number' && n.level === 0);
-  const root = (explicit || nodes[0]).id;
-  const queue: string[] = [root];
-  level.set(root, 0);
-  while (queue.length) {
-    const id = queue.shift()!;
-    const lv = level.get(id)!;
-    for (const nb of adj.get(id) || []) {
-      if (!level.has(nb)) {
-        level.set(nb, lv + 1);
-        queue.push(nb);
+  const startBFS = (rootId: string, groupIdx: number) => {
+    const queue: string[] = [rootId];
+    visited.add(rootId);
+    rootGroup.set(rootId, groupIdx);
+    level.set(rootId, 0);
+    while (queue.length) {
+      const id = queue.shift()!;
+      const lv = level.get(id)!;
+      for (const nb of adj.get(id) || []) {
+        if (!visited.has(nb)) {
+          visited.add(nb);
+          rootGroup.set(nb, groupIdx);
+          level.set(nb, lv + 1);
+          queue.push(nb);
+        }
       }
     }
-  }
-  // Any disconnected nodes: park at last level.
-  const maxLv = Math.max(0, ...Array.from(level.values()));
+  };
+  let groupIdx = 0;
   for (const n of nodes) {
-    if (!level.has(n.id)) level.set(n.id, maxLv + 1);
+    if (n.level === 0 && !visited.has(n.id)) startBFS(n.id, groupIdx++);
   }
-  const levels = new Map<number, string[]>();
   for (const n of nodes) {
+    if (!visited.has(n.id)) startBFS(n.id, groupIdx++);
+  }
+
+  // Build per-group level map. Explicit `n.level` overrides BFS level so the
+  // brain can pin a node to a specific row (e.g. all level-0 roots stay in
+  // row 0 even if their group's internal BFS would have placed them deeper).
+  const groups = new Map<number, Map<number, string[]>>();
+  for (const n of nodes) {
+    const g = rootGroup.get(n.id) ?? 0;
     const lv = n.level ?? level.get(n.id) ?? 0;
-    if (!levels.has(lv)) levels.set(lv, []);
-    levels.get(lv)!.push(n.id);
+    if (!groups.has(g)) groups.set(g, new Map());
+    const gMap = groups.get(g)!;
+    if (!gMap.has(lv)) gMap.set(lv, []);
+    gMap.get(lv)!.push(n.id);
   }
-  const sortedLevels = Array.from(levels.keys()).sort((a, b) => a - b);
-  const rowCount = sortedLevels.length;
-  sortedLevels.forEach((lv, rowIdx) => {
-    const ids = levels.get(lv)!;
-    const baseY = 8 + (rowIdx + 0.5) * (84 / rowCount);
-    // Dense levels (>= 4 siblings) zigzag alternate nodes into two sub-rows so
-    // their rectangles don't overlap horizontally. The offset is sized to
-    // separate two-line labels (~36 px tall) — 14 normalized units ≈ 50 px.
-    // Threshold lowered from > 4 to >= 4 after 2026-05-06 G3 light-and-sound
-    // session showed exactly 4 wide leaf nodes collided unreadably.
-    const dense = ids.length >= 4;
-    ids.forEach((id, colIdx) => {
-      const staggerY = dense ? (colIdx % 2) * 14 : 0;
-      // Use 94% of the plot width (vs the old 80%) so each slot is wider.
-      const x = 3 + (colIdx + 0.5) * (94 / ids.length);
-      pos.set(id, { x, y: baseY + staggerY });
+
+  // Vertical: rows shared across all groups so level-0 nodes from any group
+  // sit on the same y. Rows are the union of every group's levels.
+  const allLevels = new Set<number>();
+  for (const g of groups.values()) for (const lv of g.keys()) allLevels.add(lv);
+  const sortedLevels = [...allLevels].sort((a, b) => a - b);
+  const levelRowIdx = new Map(sortedLevels.map((lv, i) => [lv, i]));
+  const rowCount = Math.max(1, sortedLevels.length);
+
+  // Horizontal: each group's slot width is proportional to its widest level.
+  // A {diff,rates} group (max 1 node per level) gets a narrow slot; a
+  // {integ,accum,ex1,ex2,ex3} group (max 3 in level 2) gets a wider slot.
+  const groupKeys = [...groups.keys()].sort((a, b) => a - b);
+  const groupWeights: number[] = groupKeys.map((k) => {
+    const g = groups.get(k)!;
+    return Math.max(1, ...[...g.values()].map((ids) => ids.length));
+  });
+  const totalWeight = groupWeights.reduce((s, w) => s + w, 0) || 1;
+  const TOTAL_WIDTH = 94;
+  const START_X = 3;
+
+  let cursorX = START_X;
+  groupKeys.forEach((gKey, gIdx) => {
+    const sliceWidth = (groupWeights[gIdx] / totalWeight) * TOTAL_WIDTH;
+    const g = groups.get(gKey)!;
+    sortedLevels.forEach((lv) => {
+      const ids = g.get(lv);
+      if (!ids || ids.length === 0) return;
+      const rowIdx = levelRowIdx.get(lv)!;
+      const baseY = 8 + (rowIdx + 0.5) * (84 / rowCount);
+      // Dense rows (>= 4 siblings WITHIN a group) zigzag alternate nodes
+      // into two sub-rows so two-line labels don't collide horizontally.
+      const dense = ids.length >= 4;
+      ids.forEach((id, colIdx) => {
+        const staggerY = dense ? (colIdx % 2) * 14 : 0;
+        const x = cursorX + (colIdx + 0.5) * (sliceWidth / ids.length);
+        pos.set(id, { x, y: baseY + staggerY });
+      });
     });
+    cursorX += sliceWidth;
   });
   return pos;
 }
