@@ -155,28 +155,34 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   const sortedLevels = [...allLevels].sort((a, b) => a - b);
   const levelRowIdx = new Map(sortedLevels.map((lv, i) => [lv, i]));
 
-  // Per-row weights: rows with a single node (across all groups) get less
-  // vertical space than dense multi-node rows. R5 follow-up: weight reduced
-  // 0.6 → 0.4 so a lone row-0 hub sits even closer to the top instead of
-  // leaving a visible band above it.
-  const rowWeights = sortedLevels.map((lv) => {
+  // R8: fixed row heights stacked from a top anchor, NOT proportional
+  // weights. Proportional weights distribute slack across rows, which
+  // stretches vertical gaps when there are few rows — observed 2026-05-08
+  // "Definite Integrals — Big Picture": with weights [0.4, 1.0, 0.4] across
+  // 3 rows, gaps were 36% / 35% of plot, leaving Antiderivative dangling
+  // far below row 1. Fixed heights keep the same gap regardless of how
+  // much extra plot space is available; bottom slack stays unused as
+  // natural margin.
+  const TOP_ANCHOR_NORM = 8;
+  const SINGLE_ROW_NORM = 18;
+  const MULTI_ROW_NORM = 32;
+  const rowHeights = sortedLevels.map((lv) => {
     let totalInRow = 0;
     for (const g of groups.values()) totalInRow += (g.get(lv)?.length ?? 0);
-    return totalInRow <= 1 ? 0.4 : 1.0;
+    return totalInRow <= 1 ? SINGLE_ROW_NORM : MULTI_ROW_NORM;
   });
-  const totalRowWeight = rowWeights.reduce((s, w) => s + w, 0) || 1;
-  // Cumulative y-start (0..totalRowWeight) for each row, used to compute baseY.
-  const rowCumStart: number[] = [];
-  let acc = 0;
-  for (let i = 0; i < rowWeights.length; i++) {
-    rowCumStart.push(acc);
-    acc += rowWeights[i];
+  const totalContentNorm = rowHeights.reduce((s, h) => s + h, 0);
+  // If content overflows the plot, scale to fit; otherwise keep the natural
+  // sizes and let the bottom margin be whatever remains.
+  const availableNorm = 100 - TOP_ANCHOR_NORM;
+  const scale = totalContentNorm > availableNorm ? availableNorm / totalContentNorm : 1;
+  const rowYBaselines: number[] = [];
+  let cursor = TOP_ANCHOR_NORM;
+  for (let i = 0; i < rowHeights.length; i++) {
+    const h = rowHeights[i] * scale;
+    rowYBaselines.push(cursor + h / 2);
+    cursor += h;
   }
-  // Vertical band: full 0..100% of the plot height (R5 follow-up — was
-  // 4..96; the residual 4% top inset compounded with pad.top to leave a
-  // visible empty band above the first row).
-  const Y_START = 0;
-  const Y_RANGE = 100;
 
   // Horizontal: each group's slot width is proportional to its widest level.
   // A {diff,rates} group (max 1 node per level) gets a narrow slot; a
@@ -198,8 +204,7 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
       const ids = g.get(lv);
       if (!ids || ids.length === 0) return;
       const rowIdx = levelRowIdx.get(lv)!;
-      const yMid = rowCumStart[rowIdx] + rowWeights[rowIdx] / 2;
-      const baseY = Y_START + (yMid / totalRowWeight) * Y_RANGE;
+      const baseY = rowYBaselines[rowIdx];
       // Dense rows (>= 5 siblings WITHIN a group) zigzag alternate nodes
       // into two sub-rows so two-line labels don't collide horizontally.
       // Threshold moved 4 → 5 (R6 follow-up): with the min-max wrapLabel
@@ -525,13 +530,14 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           const labelW = e.label ? e.label.length * 7.0 + 18 : 0;
           const labelH = 16;
 
-          // Issue 2 + R2 follow-up: per-source-relative position along the
+          // Issue 2 + R9 follow-up: per-source-relative position along the
           // edge so labels from a hub fan around the source rather than
-          // converging near targets. Spread step widened from 0.06 → 0.18
-          // so two labels from a 2-edge hub (e.g. Calculus → Diff/Integ)
-          // don't end up at near-identical y-coords. Range [0.22, 0.76].
+          // converging near targets. baseT shifted from 0.22 → 0.32 so
+          // labels migrate toward the edge midpoint / target end instead
+          // of clustering near the hub. Range [0.32, 0.86] for the four
+          // local indices.
           const localIdx = localSourceIdx.get(i) ?? 0;
-          const baseT = 0.22 + (localIdx % 4) * 0.18;
+          const baseT = 0.32 + (localIdx % 4) * 0.18;
 
           // Issue 3: try the per-source position first; if it would collide
           // with another node, walk t outward until clear (or fall back to
