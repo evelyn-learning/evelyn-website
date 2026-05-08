@@ -709,6 +709,13 @@ import { SEED_AP_STATS_U8_FRQ_PRACTICE } from './seeds/ap-stats-u8-frq-practice'
 import { SEED_AP_STATS_U9_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { SEED_AP_STATS_U9_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 import { SEED_AP_STATS_U9_FRQ_PRACTICE } from './seeds/ap-stats-u9-frq-practice';
+// AP Environmental Science — new format (CED-aligned).
+import { SEED_AP_ENVSCI_U1_ECOSYSTEMS_BIOMES } from './seeds/ap-envsci-u1-ecosystems-biomes';
+import { SEED_AP_ENVSCI_U1_CARBON_WATER_CYCLES } from './seeds/ap-envsci-u1-carbon-water-cycles';
+import { SEED_AP_ENVSCI_U1_NITROGEN_PHOSPHORUS_CYCLES } from './seeds/ap-envsci-u1-nitrogen-phosphorus-cycles';
+import { SEED_AP_ENVSCI_U1_PRODUCTIVITY_ENERGY_FLOW } from './seeds/ap-envsci-u1-productivity-energy-flow';
+import { SEED_AP_ENVSCI_U1_FOOD_WEBS } from './seeds/ap-envsci-u1-food-webs';
+import { SEED_AP_ENVSCI_U1_FRQ_PRACTICE } from './seeds/ap-envsci-u1-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1848,6 +1855,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U9_SLOPE_CI,
   SEED_AP_STATS_U9_SLOPE_TEST,
   SEED_AP_STATS_U9_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U1_ECOSYSTEMS_BIOMES,
+  SEED_AP_ENVSCI_U1_CARBON_WATER_CYCLES,
+  SEED_AP_ENVSCI_U1_NITROGEN_PHOSPHORUS_CYCLES,
+  SEED_AP_ENVSCI_U1_PRODUCTIVITY_ENERGY_FLOW,
+  SEED_AP_ENVSCI_U1_FOOD_WEBS,
+  SEED_AP_ENVSCI_U1_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
