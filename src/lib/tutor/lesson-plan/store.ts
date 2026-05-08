@@ -624,6 +624,11 @@ import { SEED_AP_CALCBC_U2_TRANSCENDENTAL_DERIVATIVES } from './seeds/ap-calcbc-
 import { SEED_AP_CALCBC_U2_PRODUCT_RULE } from './seeds/ap-calcbc-u2-product-rule';
 import { SEED_AP_CALCBC_U2_QUOTIENT_RULE } from './seeds/ap-calcbc-u2-quotient-rule';
 import { SEED_AP_CALCBC_U2_FRQ_PRACTICE } from './seeds/ap-calcbc-u2-frq-practice';
+import { SEED_AP_CALCBC_U3_CHAIN_RULE } from './seeds/ap-calcbc-u3-chain-rule';
+import { SEED_AP_CALCBC_U3_IMPLICIT_DIFFERENTIATION } from './seeds/ap-calcbc-u3-implicit-differentiation';
+import { SEED_AP_CALCBC_U3_DERIVATIVES_INVERSE } from './seeds/ap-calcbc-u3-derivatives-inverse';
+import { SEED_AP_CALCBC_U3_HIGHER_ORDER_DERIVATIVES } from './seeds/ap-calcbc-u3-higher-order-derivatives';
+import { SEED_AP_CALCBC_U3_FRQ_PRACTICE } from './seeds/ap-calcbc-u3-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1682,6 +1687,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U2_PRODUCT_RULE,
   SEED_AP_CALCBC_U2_QUOTIENT_RULE,
   SEED_AP_CALCBC_U2_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U3_CHAIN_RULE,
+  SEED_AP_CALCBC_U3_IMPLICIT_DIFFERENTIATION,
+  SEED_AP_CALCBC_U3_DERIVATIVES_INVERSE,
+  SEED_AP_CALCBC_U3_HIGHER_ORDER_DERIVATIVES,
+  SEED_AP_CALCBC_U3_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
