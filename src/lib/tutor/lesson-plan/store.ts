@@ -664,6 +664,12 @@ import { SEED_AP_CALCBC_U8_VOLUMES_CROSS_SECTIONS } from './seeds/ap-calcbc-u8-v
 import { SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION } from './seeds/ap-calcbc-u8-volumes-revolution';
 import { SEED_AP_CALCBC_U8_ARC_LENGTH } from './seeds/ap-calcbc-u8-arc-length';
 import { SEED_AP_CALCBC_U8_FRQ_PRACTICE } from './seeds/ap-calcbc-u8-frq-practice';
+import { SEED_AP_CALCBC_U9_PARAMETRIC } from './seeds/ap-calcbc-u9-parametric';
+import { SEED_AP_CALCBC_U9_PARAMETRIC_ARC_LENGTH } from './seeds/ap-calcbc-u9-parametric-arc-length';
+import { SEED_AP_CALCBC_U9_VECTOR_VALUED } from './seeds/ap-calcbc-u9-vector-valued';
+import { SEED_AP_CALCBC_U9_POLAR_COORDINATES } from './seeds/ap-calcbc-u9-polar-coordinates';
+import { SEED_AP_CALCBC_U9_POLAR_AREA } from './seeds/ap-calcbc-u9-polar-area';
+import { SEED_AP_CALCBC_U9_FRQ_PRACTICE } from './seeds/ap-calcbc-u9-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1762,6 +1768,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION,
   SEED_AP_CALCBC_U8_ARC_LENGTH,
   SEED_AP_CALCBC_U8_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U9_PARAMETRIC,
+  SEED_AP_CALCBC_U9_PARAMETRIC_ARC_LENGTH,
+  SEED_AP_CALCBC_U9_VECTOR_VALUED,
+  SEED_AP_CALCBC_U9_POLAR_COORDINATES,
+  SEED_AP_CALCBC_U9_POLAR_AREA,
+  SEED_AP_CALCBC_U9_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
