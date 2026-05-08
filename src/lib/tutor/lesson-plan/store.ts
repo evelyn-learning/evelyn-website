@@ -658,6 +658,12 @@ import { SEED_AP_CALCBC_U7_SEPARATION_OF_VARIABLES } from './seeds/ap-calcbc-u7-
 import { SEED_AP_CALCBC_U7_EXPONENTIAL_MODELS } from './seeds/ap-calcbc-u7-exponential-models';
 import { SEED_AP_CALCBC_U7_LOGISTIC_MODELS } from './seeds/ap-calcbc-u7-logistic-models';
 import { SEED_AP_CALCBC_U7_FRQ_PRACTICE } from './seeds/ap-calcbc-u7-frq-practice';
+import { SEED_AP_CALCBC_U8_APPLICATIONS } from './seeds/ap-calcbc-u8-applications';
+import { SEED_AP_CALCBC_U8_AREA_BETWEEN_CURVES } from './seeds/ap-calcbc-u8-area-between-curves';
+import { SEED_AP_CALCBC_U8_VOLUMES_CROSS_SECTIONS } from './seeds/ap-calcbc-u8-volumes-cross-sections';
+import { SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION } from './seeds/ap-calcbc-u8-volumes-revolution';
+import { SEED_AP_CALCBC_U8_ARC_LENGTH } from './seeds/ap-calcbc-u8-arc-length';
+import { SEED_AP_CALCBC_U8_FRQ_PRACTICE } from './seeds/ap-calcbc-u8-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1750,6 +1756,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U7_EXPONENTIAL_MODELS,
   SEED_AP_CALCBC_U7_LOGISTIC_MODELS,
   SEED_AP_CALCBC_U7_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U8_APPLICATIONS,
+  SEED_AP_CALCBC_U8_AREA_BETWEEN_CURVES,
+  SEED_AP_CALCBC_U8_VOLUMES_CROSS_SECTIONS,
+  SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION,
+  SEED_AP_CALCBC_U8_ARC_LENGTH,
+  SEED_AP_CALCBC_U8_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
