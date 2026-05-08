@@ -709,7 +709,6 @@ import { SEED_AP_STATS_U8_FRQ_PRACTICE } from './seeds/ap-stats-u8-frq-practice'
 import { SEED_AP_STATS_U9_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { SEED_AP_STATS_U9_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 import { SEED_AP_STATS_U9_FRQ_PRACTICE } from './seeds/ap-stats-u9-frq-practice';
-import { SEED_TEST_STATS_DIAGRAMS_TOUR } from './seeds/test-stats-diagrams-tour';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1210,6 +1209,7 @@ import { SEED_TEST_G5_SCI_CARBON_CYCLE } from './seeds/test-g5-sci-carbon-cycle'
 import { SEED_TEST_G7_MATH_DIRECT_INVERSE_VARIATION } from './seeds/test-g7-math-direct-inverse-variation';
 import { SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE } from './seeds/test-hs-bio-sex-linked-pedigree';
 import { SEED_TEST_G7_SS_APOLLO_MISSIONS } from './seeds/test-g7-ss-apollo-missions';
+import { SEED_TEST_RENDERER_SMOKE_CALC } from './seeds/test-renderer-smoke-calc';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -1848,7 +1848,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U9_SLOPE_CI,
   SEED_AP_STATS_U9_SLOPE_TEST,
   SEED_AP_STATS_U9_FRQ_PRACTICE,
-  SEED_TEST_STATS_DIAGRAMS_TOUR,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
@@ -2362,6 +2361,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_G7_MATH_DIRECT_INVERSE_VARIATION,
   SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE,
   SEED_TEST_G7_SS_APOLLO_MISSIONS,
+  SEED_TEST_RENDERER_SMOKE_CALC,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
