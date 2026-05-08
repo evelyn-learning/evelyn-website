@@ -667,6 +667,14 @@ import { SEED_AP_CALCBC_U10_TAYLOR_POLYNOMIAL } from './seeds/ap-calcbc-u10-tayl
 import { SEED_AP_CALCBC_U10_POWER_SERIES } from './seeds/ap-calcbc-u10-power-series';
 import { SEED_AP_CALCBC_U10_MACLAURIN_SERIES } from './seeds/ap-calcbc-u10-maclaurin-series';
 import { SEED_AP_CALCBC_U10_FRQ_PRACTICE } from './seeds/ap-calcbc-u10-frq-practice';
+// AP Statistics — new format (CED-aligned).
+import { SEED_AP_STATS_U1_CATEGORICAL_DATA } from './seeds/ap-stats-u1-categorical-data';
+import { SEED_AP_STATS_U1_QUANTITATIVE_GRAPHS } from './seeds/ap-stats-u1-quantitative-graphs';
+import { SEED_AP_STATS_U1_DISTRIBUTION_SHAPE } from './seeds/ap-stats-u1-distribution-shape';
+import { SEED_AP_STATS_U1_SUMMARY_STATISTICS } from './seeds/ap-stats-u1-summary-statistics';
+import { SEED_AP_STATS_U1_COMPARING_DISTRIBUTIONS } from './seeds/ap-stats-u1-comparing-distributions';
+import { SEED_AP_STATS_U1_NORMAL_DISTRIBUTION } from './seeds/ap-stats-u1-normal-distribution';
+import { SEED_AP_STATS_U1_FRQ_PRACTICE } from './seeds/ap-stats-u1-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1764,6 +1772,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U10_POWER_SERIES,
   SEED_AP_CALCBC_U10_MACLAURIN_SERIES,
   SEED_AP_CALCBC_U10_FRQ_PRACTICE,
+  SEED_AP_STATS_U1_CATEGORICAL_DATA,
+  SEED_AP_STATS_U1_QUANTITATIVE_GRAPHS,
+  SEED_AP_STATS_U1_DISTRIBUTION_SHAPE,
+  SEED_AP_STATS_U1_SUMMARY_STATISTICS,
+  SEED_AP_STATS_U1_COMPARING_DISTRIBUTIONS,
+  SEED_AP_STATS_U1_NORMAL_DISTRIBUTION,
+  SEED_AP_STATS_U1_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
