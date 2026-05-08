@@ -103,13 +103,26 @@ export interface ConceptMapProps {
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
+interface AutoLayoutResult {
+  positions: Map<string, { x: number; y: number }>;
+  /**
+   * Sum of natural (unscaled) row heights in pixels. The render component
+   * uses this to grow the SVG viewBox vertically when content exceeds the
+   * default plot height — letting deep chains render at full row spacing
+   * instead of getting crunched until edge labels cover the arrows
+   * (observed in 7-level chains where after-scale gap was ~13px and label
+   * rect was 16px so labels overlapped both adjacent boxes).
+   */
+  naturalContentPx: number;
+}
+
 function autoLayout(
   nodes: ConceptNode[],
   edges: ConceptEdge[],
   dimsById: Map<string, { rectW: number; rectH: number }>,
   plotW: number,
   plotH: number,
-): Map<string, { x: number; y: number }> {
+): AutoLayoutResult {
   // Layout strategy: each connected component (or each level-0 root) gets its
   // OWN horizontal swim lane, sized proportionally to the component's widest
   // level. Within a lane, nodes are stacked top-to-bottom by level. This
@@ -121,7 +134,7 @@ function autoLayout(
   // diff→rates and integ→accum edges crossed through the middle nodes).
   // Coordinates returned in 0–100 normalized space.
   const pos = new Map<string, { x: number; y: number }>();
-  if (nodes.length === 0) return pos;
+  if (nodes.length === 0) return { positions: pos, naturalContentPx: 0 };
 
   // Build adjacency (undirected for layout purposes).
   const adj = new Map<string, string[]>();
@@ -256,7 +269,12 @@ function autoLayout(
   // top and bottom.
   const TOP_ANCHOR_NORM = 8;
   const LABEL_HEIGHT_PX = 16;
-  const EDGE_PADDING_PX = 8;
+  // EDGE_PADDING_PX bumped 8 → 14 so each side of an edge label has 12px
+  // of visible arrow line (was 6px). The 7px arrow marker now renders
+  // entirely in the stub instead of getting hidden under the box border —
+  // observed in the 4-level Differentiation Chain where every arrowhead
+  // was invisible after R9 because the stub matched marker height.
+  const EDGE_PADDING_PX = 14;
   const STAGGER_GAP_PX = 6;
   const rowMaxRectH: number[] = sortedLevels.map((lv) => {
     let maxRectH = 26;
@@ -270,14 +288,21 @@ function autoLayout(
     }
     return maxRectH;
   });
-  const rowHeightsNorm = sortedLevels.map((_lv, rowIdx) => {
+  const rowHeightsPx: number[] = sortedLevels.map((_lv, rowIdx) => {
     const maxRectH = rowMaxRectH[rowIdx];
     let rowPx = maxRectH + LABEL_HEIGHT_PX + 2 * EDGE_PADDING_PX;
     if (rowStaggers.get(rowIdx)) rowPx += maxRectH + STAGGER_GAP_PX;
-    return (rowPx / plotH) * 100;
+    return rowPx;
   });
+  const naturalContentPx = rowHeightsPx.reduce((s, v) => s + v, 0);
+  const rowHeightsNorm = rowHeightsPx.map((px) => (px / plotH) * 100);
   const totalContentNorm = rowHeightsNorm.reduce((s, v) => s + v, 0);
   const availableNorm = 100 - TOP_ANCHOR_NORM;
+  // When the caller has sized plotH to fit naturally (see render component's
+  // dynamic viewBox logic) scale is 1 and rows render at their full
+  // requested height. Scale only kicks in if the caller fixed plotH below
+  // what the content needs, in which case rows compress proportionally —
+  // a graceful-degradation fallback for content that exceeds MAX_VIEWBOX_H.
   const scale = totalContentNorm > availableNorm ? availableNorm / totalContentNorm : 1;
   const rowYBaselines: number[] = [];
   let cursor = TOP_ANCHOR_NORM;
@@ -314,7 +339,7 @@ function autoLayout(
       });
     });
   });
-  return pos;
+  return { positions: pos, naturalContentPx };
 }
 
 /**
@@ -391,7 +416,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // immediately under the HTML title instead of leaving a wide empty band.
   const pad = { top: 12, bottom: notes ? 28 : 16, left: 14, right: 14 };
   const w = VIEWBOX_W - pad.left - pad.right;
-  const h = VIEWBOX_H - pad.top - pad.bottom;
+  const defaultH = VIEWBOX_H - pad.top - pad.bottom;
 
   // Pre-compute per-node render dimensions so autoLayout can reason about
   // actual box widths/heights (sibling overlap, per-row heights) and edges
@@ -412,7 +437,34 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   });
 
   const explicitLayout = nodes.every((n) => typeof n.x === 'number' && typeof n.y === 'number');
-  const positions = explicitLayout ? null : autoLayout(nodes, edges, dimsById, w, h);
+
+  // R10 follow-up: dynamic viewBox height for tall content (deep linear
+  // chains, multi-component forests). The default 360-unit viewBox holds
+  // ~5 rows comfortably; deeper chains were getting scaled down until the
+  // edge-label rect (16px) was wider than the row gap and visually
+  // covered the boxes above and below it. Now we ask autoLayout how much
+  // room it really wants and grow the viewBox height to match — capped
+  // at MAX_VIEWBOX_H so a 50-level brain emit still degrades gracefully
+  // instead of producing a 4000px-tall SVG. With width:100% and the
+  // existing maxHeight cap on the rendered SVG, growing the viewBox
+  // squishes the diagram horizontally on screen but preserves correct
+  // proportions internally (rows + edges + labels all render at full
+  // requested size in viewBox coordinates).
+  const MAX_VIEWBOX_H = 800;
+  const TOP_ANCHOR_PX_FOR_FIT = (8 / 100) * defaultH;
+  let probeResult = explicitLayout ? null : autoLayout(nodes, edges, dimsById, w, defaultH);
+  let h = defaultH;
+  let viewBoxH = VIEWBOX_H;
+  if (probeResult) {
+    const requiredPlotH = TOP_ANCHOR_PX_FOR_FIT + probeResult.naturalContentPx;
+    if (requiredPlotH > defaultH) {
+      const cappedPlotH = Math.min(MAX_VIEWBOX_H - pad.top - pad.bottom, requiredPlotH);
+      h = cappedPlotH;
+      viewBoxH = pad.top + h + pad.bottom;
+      probeResult = autoLayout(nodes, edges, dimsById, w, h);
+    }
+  }
+  const positions = probeResult ? probeResult.positions : null;
 
   const place = (n: ConceptNode) => {
     let nx = 50, ny = 50;
@@ -520,7 +572,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // Bow direction = the perpendicular side that's farther from the viewBox
   // center (so long edges arc outward, away from densely-populated rows).
   const VIEWBOX_CENTER_X = VIEWBOX_W / 2;
-  const VIEWBOX_CENTER_Y = VIEWBOX_H / 2;
+  const VIEWBOX_CENTER_Y = viewBoxH / 2;
   const ROW_HEIGHT_PX = h / Math.max(1, new Set(nodes.map((n) => n.level)).size || 1);
 
   // Issue 3 + R2 follow-up: label-vs-node AND label-vs-label collision
@@ -563,7 +615,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
       {title && (
         <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 6, color: DIAGRAM_COLORS.text }}>{title}</div>
       )}
-      <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
+      <svg viewBox={`0 0 ${VIEWBOX_W} ${viewBoxH}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: viewBoxH > VIEWBOX_H ? 600 : 400 }}>
         <ArrowMarkers idPrefix="cm-arrow" />
 
         {edges.map((e, i) => {
@@ -648,14 +700,20 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           const labelW = e.label ? e.label.length * 7.0 + 18 : 0;
           const labelH = 16;
 
-          // Issue 2 + R9 follow-up: per-source-relative position along the
-          // edge so labels from a hub fan around the source rather than
-          // converging near targets. baseT shifted from 0.22 → 0.32 so
-          // labels migrate toward the edge midpoint / target end instead
-          // of clustering near the hub. Range [0.32, 0.86] for the four
-          // local indices.
+          // Issue 2 + R10 follow-up: per-source-relative position evenly
+          // distributed across all of the source's outgoing edges. The prior
+          // `localIdx % 4` formula wrapped after the 4th sibling, so a hub
+          // with 5+ children (Map 2 — Definite Integral with 5 outgoing
+          // edges) had two labels claiming baseT=0.32 and the second one
+          // had to fall back to t-slide / perpendicular offset, often
+          // landing on or behind an unrelated node. Now baseT spreads
+          // proportionally so each of N siblings gets a unique slot in
+          // [0.32, 0.86].
           const localIdx = localSourceIdx.get(i) ?? 0;
-          const baseT = 0.32 + (localIdx % 4) * 0.18;
+          const sourceEdgeCount = (edgesBySource.get(e.from) ?? []).length;
+          const baseT = sourceEdgeCount <= 1
+            ? 0.55
+            : 0.32 + (localIdx / (sourceEdgeCount - 1)) * 0.54;
 
           // Issue 3: try the per-source position first; if it would collide
           // with another node, walk t outward until clear (or fall back to
@@ -714,7 +772,19 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
               const perpX = -ty / tlen;
               const perpY = tx / tlen;
               const baseAt = tryT(chosenT);
-              const offsetMags = [labelH, -labelH, 2 * labelH, -2 * labelH, 3 * labelH, -3 * labelH];
+              // R10 follow-up: perpendicular sweep range scales with
+              // labelW/2 so wide labels can clear wide unrelated boxes.
+              // Previously capped at 3*labelH = 48px; for a 151px-wide
+              // "geometrically means" label colliding with a 119px-wide
+              // "Fundamental Theorem" box, 48px wasn't enough to escape.
+              // Now sweeps both directions in 0.5*labelH steps up to
+              // max(3*labelH, labelW * 0.7).
+              const maxMag = Math.max(3 * labelH, labelW * 0.7);
+              const offsetMags: number[] = [];
+              for (let mag = labelH; mag <= maxMag; mag += labelH * 0.5) {
+                offsetMags.push(mag);
+                offsetMags.push(-mag);
+              }
               for (const mag of offsetMags) {
                 const cand = { x: baseAt.x + perpX * mag, y: baseAt.y + perpY * mag };
                 if (!labelCollides(e, cand.x, cand.y, labelW, labelH)) {
@@ -740,8 +810,13 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
               {e.label && (
                 <g>
+                  {/* R10 follow-up: semi-transparent rect with no border —
+                      the underlying arrow line shows through subtly so
+                      tight-gap deep chains don't appear armless, and any
+                      unavoidable overlap with an unrelated node looks like
+                      a label tag rather than a competing box. */}
                   <rect x={lx - labelW / 2} y={ly - labelH / 2} width={labelW} height={labelH} rx={3}
-                    fill="white" stroke={DIAGRAM_COLORS.border} strokeWidth={0.5} />
+                    fill="rgba(255,255,255,0.78)" />
                   <text x={lx} y={ly + 3} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
                 </g>
               )}
