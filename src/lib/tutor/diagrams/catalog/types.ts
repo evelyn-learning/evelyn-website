@@ -88,7 +88,10 @@ export type DiagramKindId =
   // Phase 11 — statistics (AP Statistics)
   | 'histogram'
   | 'normal_curve'
-  | 'scatterplot_regression';
+  | 'scatterplot_regression'
+  // Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro)
+  | 'population_pyramid'
+  | 'climate_diagram';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

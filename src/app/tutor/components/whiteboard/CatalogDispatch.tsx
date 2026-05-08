@@ -71,6 +71,8 @@ import { TaylorOverlayRenderer } from './TaylorOverlayRenderer';
 import { HistogramRenderer } from './HistogramRenderer';
 import { NormalCurveRenderer } from './NormalCurveRenderer';
 import { ScatterRegressionRenderer } from './ScatterRegressionRenderer';
+import { PopulationPyramidRenderer } from './PopulationPyramidRenderer';
+import { ClimateDiagramRenderer } from './ClimateDiagramRenderer';
 
 interface Props {
   kind: string;
@@ -156,6 +158,9 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'histogram':                  return <HistogramRenderer figure={figure} />;
     case 'normal_curve':               return <NormalCurveRenderer figure={figure} />;
     case 'scatterplot_regression':     return <ScatterRegressionRenderer figure={figure} />;
+    // Phase 12 — environmental / demographic
+    case 'population_pyramid':         return <PopulationPyramidRenderer figure={figure} />;
+    case 'climate_diagram':            return <ClimateDiagramRenderer figure={figure} />;
 
     default:
       return (

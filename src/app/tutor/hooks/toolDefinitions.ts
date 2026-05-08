@@ -417,6 +417,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'riemann_sum', 'slope_field', 'parametric_curve', 'polar_graph', 'taylor_polynomial_overlay',
             // Phase 11 — statistics (AP Statistics)
             'histogram', 'normal_curve', 'scatterplot_regression',
+            // Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro)
+            'population_pyramid', 'climate_diagram',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

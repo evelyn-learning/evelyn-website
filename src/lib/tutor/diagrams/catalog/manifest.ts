@@ -69,6 +69,11 @@ import {
   solveScatterRegression,
 } from './kinds/math-statistics';
 
+import {
+  solvePopulationPyramid,
+  solveClimateDiagram,
+} from './kinds/environmental';
+
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
  *  subject + grade band) so it knows what's available. */
@@ -159,6 +164,10 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'histogram', displayName: 'Histogram', whenToUse: 'Show frequency (or relative frequency) distribution of a quantitative variable as touching bars over equal-width or unequal-width intervals. Distinct from bar_chart: bars TOUCH and bins are explicit intervals.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'bins:[[lower,upper,count]…] (tuple form preferred to save tokens), xMin?,xMax?,yMax?:numbers (auto from bins if omitted), xLabel?:string, yLabel?:string (default "Frequency" or "Relative frequency"), title?:string, showCounts?:boolean (default true; show count atop each bar), mean?:number (vertical red line), median?:number (vertical green line), mode?:count|relative (default count)' },
   { kind: 'normal_curve', displayName: 'Normal Curve', whenToUse: 'Plot the normal distribution N(μ, σ) bell curve with optional shaded probability region (e.g. P(X > x) or P(a ≤ X ≤ b)) and labeled markers (e.g., z-scores, ±1/2/3 SDs).', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'mean:number (μ), sd:number (σ, > 0), xMin?:number (default μ−4σ), xMax?:number (default μ+4σ), shadeRegion?:{from?:number, to?:number} (omit either for ±∞), markValues?:[{x:number, label?:string}] (or [[x,label]] tuples), showSDLines?:boolean (default false; auto-draws ±1/2/3σ ticks), shadeArea?:number (pre-computed P, displayed in corner), title?:string, xLabel?:string' },
   { kind: 'scatterplot_regression', displayName: 'Scatterplot with Regression', whenToUse: 'Plot bivariate quantitative data with the LSRL overlaid. Optionally show residual segments, an equation label, and r/r² values. Highlight a single point.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'points:[[x,y]…] (tuple form preferred; ~10–40 points), regression?:{slope:number, intercept:number} (LSRL — omit to plot points only), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), equationLabel?:string e.g. "ŷ = 2.1 + 1.3x", rValue?:number, rSquared?:number, highlightPoint?:{x,y,label?}, showResiduals?:boolean (default false; draws dashed lines from points to LSRL), xLabel?:string, yLabel?:string, title?:string' },
+
+  // ── Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro) ──
+  { kind: 'population_pyramid', displayName: 'Population Pyramid', whenToUse: 'Show age-sex distribution as a horizontal pyramid: males extend left, females extend right. Wide base = expanding population (high TFR); narrow base = declining; column = stable. Used in AP Env Sci U3, AP Human Geo, AP Macro.', subjects: ['biology', 'social', 'general'], grades: { from: 9, to: 12 }, paramSchema: 'ageGroups:[[ageLabel,male,female]…] (tuple form preferred; e.g. ["0-4", 5.2, 5.0]; oldest age last in array), mode?:percent|count (default percent), maxValue?:number (auto from data), xLabel?:string, ageGroupLabel?:string (default "Age"), title?:string' },
+  { kind: 'climate_diagram', displayName: 'Climate Diagram (Walter-Lieth)', whenToUse: 'Show one location\'s monthly temperature (line) and precipitation (bars) for a year. Identifies biome characteristics (rainfall pattern, seasonality). Used in AP Env Sci U1 biomes, U4 climate.', subjects: ['earth', 'biology', 'general'], grades: { from: 9, to: 12 }, paramSchema: 'months:[[label,temp,precip]…] (tuple form; exactly 12 months Jan-Dec; temp in °C or °F, precip in mm or in), tempUnit?:°C|°F (default °C), precipUnit?:mm|in (default mm), location?:string e.g. "Singapore", title?:string, meanAnnualTemp?:number (auto-computed if omitted), totalAnnualPrecip?:number (auto-computed if omitted)' },
 ];
 
 /** Solver dispatch table. */
@@ -239,6 +248,9 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   histogram: solveHistogram,
   normal_curve: solveNormalCurve,
   scatterplot_regression: solveScatterRegression,
+  // Phase 12 — environmental / demographic
+  population_pyramid: solvePopulationPyramid,
+  climate_diagram: solveClimateDiagram,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

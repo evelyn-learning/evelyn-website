@@ -742,6 +742,7 @@ import { SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE } from './seeds/ap-psych-u1-nervous-
 import { SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP } from './seeds/ap-psych-u1-consciousness-sleep';
 import { SEED_AP_PSYCH_U1_SENSATION_PERCEPTION } from './seeds/ap-psych-u1-sensation-perception';
 import { SEED_AP_PSYCH_U1_FRQ_PRACTICE } from './seeds/ap-psych-u1-frq-practice';
+import { SEED_TEST_ENVSCI_DIAGRAMS_TOUR } from './seeds/test-envsci-diagrams-tour';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1912,6 +1913,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP,
   SEED_AP_PSYCH_U1_SENSATION_PERCEPTION,
   SEED_AP_PSYCH_U1_FRQ_PRACTICE,
+  SEED_TEST_ENVSCI_DIAGRAMS_TOUR,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
