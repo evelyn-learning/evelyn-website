@@ -629,6 +629,12 @@ import { SEED_AP_CALCBC_U3_IMPLICIT_DIFFERENTIATION } from './seeds/ap-calcbc-u3
 import { SEED_AP_CALCBC_U3_DERIVATIVES_INVERSE } from './seeds/ap-calcbc-u3-derivatives-inverse';
 import { SEED_AP_CALCBC_U3_HIGHER_ORDER_DERIVATIVES } from './seeds/ap-calcbc-u3-higher-order-derivatives';
 import { SEED_AP_CALCBC_U3_FRQ_PRACTICE } from './seeds/ap-calcbc-u3-frq-practice';
+import { SEED_AP_CALCBC_U4_DERIVATIVE_CONTEXT } from './seeds/ap-calcbc-u4-derivative-context';
+import { SEED_AP_CALCBC_U4_MOTION } from './seeds/ap-calcbc-u4-motion';
+import { SEED_AP_CALCBC_U4_RELATED_RATES } from './seeds/ap-calcbc-u4-related-rates';
+import { SEED_AP_CALCBC_U4_LINEARIZATION } from './seeds/ap-calcbc-u4-linearization';
+import { SEED_AP_CALCBC_U4_LHOPITAL } from './seeds/ap-calcbc-u4-lhopital';
+import { SEED_AP_CALCBC_U4_FRQ_PRACTICE } from './seeds/ap-calcbc-u4-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1692,6 +1698,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U3_DERIVATIVES_INVERSE,
   SEED_AP_CALCBC_U3_HIGHER_ORDER_DERIVATIVES,
   SEED_AP_CALCBC_U3_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U4_DERIVATIVE_CONTEXT,
+  SEED_AP_CALCBC_U4_MOTION,
+  SEED_AP_CALCBC_U4_RELATED_RATES,
+  SEED_AP_CALCBC_U4_LINEARIZATION,
+  SEED_AP_CALCBC_U4_LHOPITAL,
+  SEED_AP_CALCBC_U4_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
