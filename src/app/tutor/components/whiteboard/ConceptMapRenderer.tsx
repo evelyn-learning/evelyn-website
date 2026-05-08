@@ -596,17 +596,23 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     edge: ConceptEdge,
     lx: number, ly: number, lw: number, lh: number,
   ): boolean => {
-    // Node bboxes (with 2px outward padding). R10 follow-up: include the
-    // edge's own source AND target — for short hub→child edges, baseT
-    // values close to 1.0 placed labels right on top of the target box
-    // (observed Map 5: "approximated by" sitting on "Riemann Sum
-    // Approximation"). The slide-along-t fallback now pushes those
-    // labels back toward the edge midpoint instead of letting them
-    // overlap the target.
+    // Node bboxes. R10 follow-up: include the edge's own source AND target
+    // (Map 5: "approximated by" sat on "Riemann Sum Approximation" before
+    // this), but use 0 padding for source/target — letting the label
+    // touch their edges without overlapping. R11 follow-up: a +4px source
+    // /target buffer was making short horizontal hub→child edges (Map 1
+    // FTC→Antiderivatives) push their label perpendicular by an extra
+    // ±labelH step, landing well below the target box. With 0 padding,
+    // a -16px perpendicular puts the label edge flush with the target's
+    // bottom edge, which reads as "the label belongs to this edge"
+    // instead of as a stray label between rows.
     for (const n of nodes) {
       const np = place(n);
       const dims = dimsById.get(n.id)!;
-      if (rectsOverlap(lx, ly, lw, lh, np.x, np.y, dims.rectW + 4, dims.rectH + 4)) return true;
+      const isEdgeEnd = (n.id === edge.from || n.id === edge.to);
+      const padW = isEdgeEnd ? 0 : 4;
+      const padH = isEdgeEnd ? 0 : 4;
+      if (rectsOverlap(lx, ly, lw, lh, np.x, np.y, dims.rectW + padW, dims.rectH + padH)) return true;
     }
     // Other labels already placed this render.
     for (const r of placedLabelRects) {
@@ -788,16 +794,19 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
               const perpX = -ty / tlen;
               const perpY = tx / tlen;
               const baseAt = tryT(chosenT);
-              // R10 follow-up: perpendicular sweep range scales with
-              // labelW/2 so wide labels can clear wide unrelated boxes.
-              // Previously capped at 3*labelH = 48px; for a 151px-wide
-              // "geometrically means" label colliding with a 119px-wide
-              // "Fundamental Theorem" box, 48px wasn't enough to escape.
-              // Now sweeps both directions in 0.5*labelH steps up to
-              // max(3*labelH, labelW * 0.7).
+              // R11 follow-up: start perpendicular sweep at labelH*0.5 = 8
+              // so a label can sit flush against the edge (top/bottom edge
+              // touching the line) when that's the closest clear spot —
+              // for the FTC→Antiderivatives case in Map 1, an 8px offset
+              // places the label rect right next to the edge with the
+              // arrow line just visible above it, far better than the
+              // 24+ px offsets the prior `mag = labelH` start required.
+              // maxMag continues to scale with labelW so wide labels
+              // ("geometrically means" — 151px) can still escape wide
+              // unrelated boxes ("Fundamental Theorem" — 119px).
               const maxMag = Math.max(3 * labelH, labelW * 0.7);
               const offsetMags: number[] = [];
-              for (let mag = labelH; mag <= maxMag; mag += labelH * 0.5) {
+              for (let mag = labelH * 0.5; mag <= maxMag; mag += labelH * 0.5) {
                 offsetMags.push(mag);
                 offsetMags.push(-mag);
               }
