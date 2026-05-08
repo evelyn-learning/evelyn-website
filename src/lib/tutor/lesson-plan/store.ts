@@ -725,6 +725,11 @@ import { SEED_AP_ENVSCI_U3_CARRYING_CAPACITY_GROWTH } from './seeds/ap-envsci-u3
 import { SEED_AP_ENVSCI_U3_AGE_STRUCTURE_FERTILITY } from './seeds/ap-envsci-u3-age-structure-fertility';
 import { SEED_AP_ENVSCI_U3_DEMOGRAPHIC_TRANSITION } from './seeds/ap-envsci-u3-demographic-transition';
 import { SEED_AP_ENVSCI_U3_FRQ_PRACTICE } from './seeds/ap-envsci-u3-frq-practice';
+import { SEED_AP_ENVSCI_U4_PLATE_TECTONICS_SOIL } from './seeds/ap-envsci-u4-plate-tectonics-soil';
+import { SEED_AP_ENVSCI_U4_ATMOSPHERE_WIND } from './seeds/ap-envsci-u4-atmosphere-wind';
+import { SEED_AP_ENVSCI_U4_WATERSHEDS_SOLAR } from './seeds/ap-envsci-u4-watersheds-solar';
+import { SEED_AP_ENVSCI_U4_CLIMATE_ENSO } from './seeds/ap-envsci-u4-climate-enso';
+import { SEED_AP_ENVSCI_U4_FRQ_PRACTICE } from './seeds/ap-envsci-u4-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1879,6 +1884,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U3_AGE_STRUCTURE_FERTILITY,
   SEED_AP_ENVSCI_U3_DEMOGRAPHIC_TRANSITION,
   SEED_AP_ENVSCI_U3_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U4_PLATE_TECTONICS_SOIL,
+  SEED_AP_ENVSCI_U4_ATMOSPHERE_WIND,
+  SEED_AP_ENVSCI_U4_WATERSHEDS_SOLAR,
+  SEED_AP_ENVSCI_U4_CLIMATE_ENSO,
+  SEED_AP_ENVSCI_U4_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
