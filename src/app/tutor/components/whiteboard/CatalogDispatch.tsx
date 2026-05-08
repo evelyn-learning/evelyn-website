@@ -68,6 +68,9 @@ import { SlopeFieldRenderer } from './SlopeFieldRenderer';
 import { ParametricCurveRenderer } from './ParametricCurveRenderer';
 import { PolarGraphRenderer } from './PolarGraphRenderer';
 import { TaylorOverlayRenderer } from './TaylorOverlayRenderer';
+import { HistogramRenderer } from './HistogramRenderer';
+import { NormalCurveRenderer } from './NormalCurveRenderer';
+import { ScatterRegressionRenderer } from './ScatterRegressionRenderer';
 
 interface Props {
   kind: string;
@@ -149,6 +152,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'parametric_curve':           return <ParametricCurveRenderer figure={figure} />;
     case 'polar_graph':                return <PolarGraphRenderer figure={figure} />;
     case 'taylor_polynomial_overlay':  return <TaylorOverlayRenderer figure={figure} />;
+    // Phase 11 — statistics (AP Statistics)
+    case 'histogram':                  return <HistogramRenderer figure={figure} />;
+    case 'normal_curve':               return <NormalCurveRenderer figure={figure} />;
+    case 'scatterplot_regression':     return <ScatterRegressionRenderer figure={figure} />;
 
     default:
       return (

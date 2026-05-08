@@ -63,6 +63,12 @@ import {
   solveTaylorPolynomialOverlay,
 } from './kinds/math-calculus';
 
+import {
+  solveHistogram,
+  solveNormalCurve,
+  solveScatterRegression,
+} from './kinds/math-statistics';
+
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
  *  subject + grade band) so it knows what's available. */
@@ -148,6 +154,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'parametric_curve', displayName: 'Parametric Curve', whenToUse: 'Plot a 2D parametric curve (x(t), y(t)). Optional highlighted point and tangent vector at one t.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'curve:[[x,y,t?]…] (tuple form preferred; ~30 points; if t is on every point, solver sorts by t to defang ordering hallucinations), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), highlightT?:{t?,x,y,label?}, tangentAtT?:{x,y,dx,dy,length?}, exprLabel?:string e.g. "x = cos t, y = sin t", title?' },
   { kind: 'polar_graph', displayName: 'Polar Graph', whenToUse: 'Plot r = f(θ) in polar coordinates. Optional shaded region (a subset of the curve) for area integrals.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'curve:[[theta,r]…] (tuple form preferred; solver derives x,y; ~50 points), shadeRegion?:[[theta,r]…] (subset of curve to shade), highlightPoint?:{theta,r,label?}, rMax?:number (auto-fit if omitted), showAxes?:boolean (default true), exprLabel?:string e.g. "r = 1 + cos θ", title?' },
   { kind: 'taylor_polynomial_overlay', displayName: 'Taylor Polynomial Overlay', whenToUse: 'Show a function f(x) and one or more Taylor polynomial approximations T_n(x) about a center c.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'baseCurve:[[x,y]…] (~30 samples; tuple form preferred), approximations:[{degree:number, curve:[[x,y]…], color?}] (one entry per Taylor polynomial), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), center?:number (default 0), exprLabel?:string e.g. "f(x) = sin x", title?' },
+
+  // ── Phase 11 — statistics (AP Statistics) ──────────────────────────────
+  { kind: 'histogram', displayName: 'Histogram', whenToUse: 'Show frequency (or relative frequency) distribution of a quantitative variable as touching bars over equal-width or unequal-width intervals. Distinct from bar_chart: bars TOUCH and bins are explicit intervals.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'bins:[[lower,upper,count]…] (tuple form preferred to save tokens), xMin?,xMax?,yMax?:numbers (auto from bins if omitted), xLabel?:string, yLabel?:string (default "Frequency" or "Relative frequency"), title?:string, showCounts?:boolean (default true; show count atop each bar), mean?:number (vertical red line), median?:number (vertical green line), mode?:count|relative (default count)' },
+  { kind: 'normal_curve', displayName: 'Normal Curve', whenToUse: 'Plot the normal distribution N(μ, σ) bell curve with optional shaded probability region (e.g. P(X > x) or P(a ≤ X ≤ b)) and labeled markers (e.g., z-scores, ±1/2/3 SDs).', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'mean:number (μ), sd:number (σ, > 0), xMin?:number (default μ−4σ), xMax?:number (default μ+4σ), shadeRegion?:{from?:number, to?:number} (omit either for ±∞), markValues?:[{x:number, label?:string}] (or [[x,label]] tuples), showSDLines?:boolean (default false; auto-draws ±1/2/3σ ticks), shadeArea?:number (pre-computed P, displayed in corner), title?:string, xLabel?:string' },
+  { kind: 'scatterplot_regression', displayName: 'Scatterplot with Regression', whenToUse: 'Plot bivariate quantitative data with the LSRL overlaid. Optionally show residual segments, an equation label, and r/r² values. Highlight a single point.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'points:[[x,y]…] (tuple form preferred; ~10–40 points), regression?:{slope:number, intercept:number} (LSRL — omit to plot points only), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), equationLabel?:string e.g. "ŷ = 2.1 + 1.3x", rValue?:number, rSquared?:number, highlightPoint?:{x,y,label?}, showResiduals?:boolean (default false; draws dashed lines from points to LSRL), xLabel?:string, yLabel?:string, title?:string' },
 ];
 
 /** Solver dispatch table. */
@@ -224,6 +235,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   parametric_curve: solveParametricCurve,
   polar_graph: solvePolarGraph,
   taylor_polynomial_overlay: solveTaylorPolynomialOverlay,
+  // Phase 11 — statistics
+  histogram: solveHistogram,
+  normal_curve: solveNormalCurve,
+  scatterplot_regression: solveScatterRegression,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

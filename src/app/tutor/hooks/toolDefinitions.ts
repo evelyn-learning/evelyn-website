@@ -415,6 +415,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'money_market', 'loanable_funds', 'phillips_curve', 'foreign_exchange_market',
             // Phase 10 — calculus (AP Calc BC)
             'riemann_sum', 'slope_field', 'parametric_curve', 'polar_graph', 'taylor_polynomial_overlay',
+            // Phase 11 — statistics (AP Statistics)
+            'histogram', 'normal_curve', 'scatterplot_regression',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

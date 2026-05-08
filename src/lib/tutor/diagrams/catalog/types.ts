@@ -84,7 +84,11 @@ export type DiagramKindId =
   | 'slope_field'
   | 'parametric_curve'
   | 'polar_graph'
-  | 'taylor_polynomial_overlay';
+  | 'taylor_polynomial_overlay'
+  // Phase 11 — statistics (AP Statistics)
+  | 'histogram'
+  | 'normal_curve'
+  | 'scatterplot_regression';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {
