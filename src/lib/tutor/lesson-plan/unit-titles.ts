@@ -21,8 +21,19 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '5': 'Long-Run Consequences of Stabilization Policies',
     '6': 'Open Economy — International Trade and Finance',
   },
+  'ap-calculus-bc': {
+    '1': 'Limits and Continuity',
+    '2': 'Differentiation: Definition and Fundamental Properties',
+    '3': 'Differentiation: Composite, Implicit, and Inverse Functions',
+    '4': 'Contextual Applications of Differentiation',
+    '5': 'Analytical Applications of Differentiation',
+    '6': 'Integration and Accumulation of Change',
+    '7': 'Differential Equations',
+    '8': 'Applications of Integration',
+    '9': 'Parametric Equations, Polar Coordinates, and Vector-Valued Functions',
+    '10': 'Infinite Sequences and Series',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
-  //   'ap-calculus-bc': { '1': 'Limits and Continuity', ... }
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.
 };

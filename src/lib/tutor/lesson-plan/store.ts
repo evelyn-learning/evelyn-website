@@ -601,6 +601,21 @@ import { SEED_AP_MACRO_U6_FX_DETERMINANTS } from './seeds/ap-macro-u6-fx-determi
 import { SEED_AP_MACRO_U6_FX_EFFECTS } from './seeds/ap-macro-u6-fx-effects';
 import { SEED_AP_MACRO_U6_TRADE_CAPITAL_FLOWS } from './seeds/ap-macro-u6-trade-capital-flows';
 import { SEED_AP_MACRO_U6_FRQ_PRACTICE } from './seeds/ap-macro-u6-frq-practice';
+// AP Calc BC — Initiative course 2 of 6. Unit 1 (Limits and Continuity).
+import { SEED_AP_CALCBC_U1_INTRODUCING_CALCULUS } from './seeds/ap-calcbc-u1-introducing-calculus';
+import { SEED_AP_CALCBC_U1_DEFINING_LIMITS } from './seeds/ap-calcbc-u1-defining-limits';
+import { SEED_AP_CALCBC_U1_LIMITS_GRAPHS_TABLES } from './seeds/ap-calcbc-u1-limits-graphs-tables';
+import { SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_PROPERTIES } from './seeds/ap-calcbc-u1-limits-algebraic-properties';
+import { SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_MANIPULATION } from './seeds/ap-calcbc-u1-limits-algebraic-manipulation';
+import { SEED_AP_CALCBC_U1_LIMITS_STRATEGY } from './seeds/ap-calcbc-u1-limits-strategy';
+import { SEED_AP_CALCBC_U1_SQUEEZE_THEOREM } from './seeds/ap-calcbc-u1-squeeze-theorem';
+import { SEED_AP_CALCBC_U1_DISCONTINUITY_TYPES } from './seeds/ap-calcbc-u1-discontinuity-types';
+import { SEED_AP_CALCBC_U1_CONTINUITY } from './seeds/ap-calcbc-u1-continuity';
+import { SEED_AP_CALCBC_U1_REMOVING_DISCONTINUITIES } from './seeds/ap-calcbc-u1-removing-discontinuities';
+import { SEED_AP_CALCBC_U1_INFINITE_LIMITS_ASYMPTOTES } from './seeds/ap-calcbc-u1-infinite-limits-asymptotes';
+import { SEED_AP_CALCBC_U1_LIMITS_AT_INFINITY } from './seeds/ap-calcbc-u1-limits-at-infinity';
+import { SEED_AP_CALCBC_U1_IVT } from './seeds/ap-calcbc-u1-ivt';
+import { SEED_AP_CALCBC_U1_FRQ_PRACTICE } from './seeds/ap-calcbc-u1-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1637,6 +1652,20 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U6_FX_EFFECTS,
   SEED_AP_MACRO_U6_TRADE_CAPITAL_FLOWS,
   SEED_AP_MACRO_U6_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U1_INTRODUCING_CALCULUS,
+  SEED_AP_CALCBC_U1_DEFINING_LIMITS,
+  SEED_AP_CALCBC_U1_LIMITS_GRAPHS_TABLES,
+  SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_PROPERTIES,
+  SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_MANIPULATION,
+  SEED_AP_CALCBC_U1_LIMITS_STRATEGY,
+  SEED_AP_CALCBC_U1_SQUEEZE_THEOREM,
+  SEED_AP_CALCBC_U1_DISCONTINUITY_TYPES,
+  SEED_AP_CALCBC_U1_CONTINUITY,
+  SEED_AP_CALCBC_U1_REMOVING_DISCONTINUITIES,
+  SEED_AP_CALCBC_U1_INFINITE_LIMITS_ASYMPTOTES,
+  SEED_AP_CALCBC_U1_LIMITS_AT_INFINITY,
+  SEED_AP_CALCBC_U1_IVT,
+  SEED_AP_CALCBC_U1_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

@@ -45,6 +45,24 @@ const COURSE_CONFIGS: Record<string, { books: BookEntry[] }> = {
       },
     ],
   },
+  calcbc: {
+    books: [
+      {
+        // catalog has dupes 200, 10278; the 5-digit folderId is the one
+        // that exists in Dropbox /Books/book NNNN/ (same pattern as the
+        // Macro books which also used 6-digit ids).
+        slug: 'larson-calc-ap-ed',
+        folderId: '10278',
+        label: 'Larson / Hostetler / Edwards — Calculus AP ED',
+      },
+      {
+        // catalog has 105 / 128 / 10265; 10265 is the 5-digit Dropbox-resolvable id.
+        slug: 'hughes-hallett-calc',
+        folderId: '10265',
+        label: 'Hughes-Hallett et al. — Calculus',
+      },
+    ],
+  },
 };
 
 /**
