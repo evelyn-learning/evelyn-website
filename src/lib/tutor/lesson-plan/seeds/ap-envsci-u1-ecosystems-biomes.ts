@@ -1,0 +1,71 @@
+/**
+ * AP Environmental Science — CED Unit 1.1+1.2+1.3: Introduction to
+ * Ecosystems and Biomes.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_ENVSCI_U1_ECOSYSTEMS_BIOMES: LessonPlan = {
+  id: 'evelyn.ap.envsci.ecosystems-biomes.v1', title: 'U1.1 Ecosystems and Biomes',
+  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-environmental-science', locale: 'en',
+  los: [{ id: 'apenvsci.ecosystems-biomes', description: 'Define ecosystem and identify abiotic vs. biotic factors. Recognize major terrestrial biomes (tundra, taiga, temperate deciduous, temperate grassland, desert, savanna, tropical rainforest) by their characteristic climate and vegetation. Recognize major aquatic biomes (freshwater lakes/streams/wetlands; marine pelagic/benthic/coral reef/estuary).', standard: 'AP-ENVSCI-1.1-1.3' }],
+  prerequisites: [], followUps: ['apenvsci.biogeochemical-cycles-c-h2o'], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame the unit and biome diversity.', script: "Earth\'s surface hosts incredibly different communities — the same kind of forest doesn\'t exist in the Arctic and the Amazon. The patterns aren\'t random: CLIMATE drives them. Today: how ecosystems are structured and how the major biomes differ.", estimatedMinutes: 2 },
+    { id: 'concept-ecosystem', kind: 'concept', goal: 'Define ecosystem + abiotic/biotic factors.',
+      keyIdeas: [
+        'ECOSYSTEM: a community of organisms (BIOTIC) interacting with their physical environment (ABIOTIC) within a defined area.',
+        'BIOTIC FACTORS: living components — plants, animals, fungi, bacteria. Trophic interactions (who eats whom), competition, symbiosis.',
+        'ABIOTIC FACTORS: non-living components — temperature, water, sunlight, soil, nutrients, salinity, pH, wind.',
+        'ECOSYSTEM SERVICES: benefits humans receive from ecosystems. Categories: PROVISIONING (food, water, timber), REGULATING (climate regulation, water purification, pollination), CULTURAL (recreation, spiritual), SUPPORTING (nutrient cycling, soil formation).',
+        'BIOME: a large-scale ecosystem type characterized by similar CLIMATE (temperature + precipitation) and dominant VEGETATION. Biomes occur in similar latitudes worldwide.',
+        'TERRESTRIAL BIOMES (memorize 7):',
+        '  • TUNDRA: cold (-10°C average), low precipitation, permafrost. Lichens, mosses, low shrubs. Short growing season.',
+        '  • TAIGA / BOREAL FOREST: cold winters, cool summers. Coniferous forest (pine, spruce, fir). Largest terrestrial biome by area.',
+        '  • TEMPERATE DECIDUOUS FOREST: moderate temperatures, distinct seasons. Broadleaf trees that drop leaves. Eastern US.',
+        '  • TEMPERATE GRASSLAND: hot summers, cold winters; moderate rain. Prairies, steppes. Fertile soil → much of it converted to agriculture.',
+        '  • DESERT: low precipitation (< 25 cm/yr). Hot or cold (cold deserts exist!). Cacti, drought-resistant plants.',
+        '  • SAVANNA: tropical grassland with scattered trees. Wet/dry season. African plains.',
+        '  • TROPICAL RAINFOREST: high temperature + high precipitation year-round. Highest biodiversity on Earth. Equatorial.',
+        'CLIMATE DIAGRAM (rule of thumb): biome is determined PRIMARILY by temperature and precipitation patterns. Latitude and altitude both affect climate.',
+        'AQUATIC BIOMES: split into FRESHWATER (lakes, rivers, wetlands) vs MARINE (oceans, estuaries, coral reefs).',
+        '  • ESTUARIES: where freshwater meets saltwater. Highly productive (nutrient-rich), critical nurseries for fish.',
+        '  • CORAL REEFS: shallow tropical seas. Symbiotic algae (zooxanthellae) live in coral tissue. Vulnerable to bleaching when ocean warms.',
+        '  • OPEN OCEAN (PELAGIC): low productivity per unit area but vast — dominated by phytoplankton.',
+        '  • WETLANDS (freshwater): swamps, marshes, bogs. High productivity, flood control, water purification.',
+      ],
+      vocabulary: [
+        { term: 'biome', definition: 'large-scale ecosystem type defined by climate + vegetation.' },
+        { term: 'ecosystem services', definition: 'benefits humans get from ecosystems (provisioning, regulating, cultural, supporting).' },
+        { term: 'estuary', definition: 'where rivers meet ocean; highly productive nursery habitat.' },
+      ],
+      estimatedMinutes: 7 },
+    { id: 'worked-classify', kind: 'worked_example',
+      problem: 'You\'re told an ecosystem has cold winters (-15°C avg), hot summers (25°C), about 50 cm/year precipitation, and is dominated by grasses with few trees. Identify the biome.',
+      steps: [
+        'STEP 1 — Cold winters + hot summers indicates a continental climate.',
+        'STEP 2 — Moderate precipitation (50 cm/yr) is too dry for forest, too wet for desert.',
+        'STEP 3 — Dominant grasses + few trees → TEMPERATE GRASSLAND (e.g., North American prairie, Eurasian steppe).',
+      ],
+      answer: 'Temperate grassland.', estimatedMinutes: 3 },
+    { id: 'try-biotic-abiotic', kind: 'try_yourself',
+      problem: 'For a coral reef, identify two abiotic and two biotic factors.',
+      expectedAnswer: 'ABIOTIC: water temperature, salinity, light penetration, water depth, dissolved oxygen, pH, ocean currents. BIOTIC: coral polyps, zooxanthellae (symbiotic algae), reef fish, sea urchins, predator fish (sharks).',
+      responseFormat: 'free', hints: ['Abiotic = non-living physical/chemical. Biotic = living.'], estimatedMinutes: 2 },
+    { id: 'try-biome-id', kind: 'try_yourself',
+      problem: 'You read about a biome with: average temperatures around 25°C year-round, > 200 cm/year of rainfall, dense canopy with multiple layers, and the world\'s highest biodiversity. Which biome is this? Where on Earth would you find it?',
+      expectedAnswer: 'TROPICAL RAINFOREST. Found near the equator (within ~10° latitude). Examples: Amazon basin, Congo basin, Indonesian rainforests.',
+      responseFormat: 'free', hints: ['High temp + high precipitation + canopy layers.'], estimatedMinutes: 2 },
+    { id: 'try-services', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A wetland near a city is being considered for drainage to build housing. Identify three ecosystem services the wetland provides and classify each (provisioning / regulating / cultural / supporting). Then explain why the loss might harm humans.',
+      expectedAnswer: 'Examples: \n(1) FLOOD CONTROL — wetlands absorb stormwater (REGULATING). Loss → more flood damage downstream. \n(2) WATER PURIFICATION — wetland plants and microbes remove pollutants and nutrients (REGULATING). Loss → degraded drinking water, eutrophication. \n(3) HABITAT for migratory birds, fish nurseries (SUPPORTING). Loss → biodiversity decline, fisheries collapse. \n(4) RECREATION (birdwatching, fishing) (CULTURAL). Loss → lost recreation/income. \nDrainage replaces a self-maintaining service-provider with a one-time housing gain plus ongoing public costs (flood damage, water treatment, lost biodiversity).',
+      responseFormat: 'frq', hints: ['Pick three categories; explain the human-relevant service each provides.'], estimatedMinutes: 5 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Ecosystem = biotic + abiotic in a defined area.',
+      'Biomes are climate-defined. 7 terrestrial: tundra, taiga, temperate deciduous, temperate grassland, desert, savanna, tropical rainforest.',
+      'Aquatic biomes: estuaries and wetlands are highly productive and disproportionately important.',
+      'Ecosystem services: provisioning, regulating, cultural, supporting.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '1', cedTopic: '1.1-1.3', cedTitle: 'Ecosystems and Biomes', sources: [{ type: 'concept', book: 'miller-spoolman', chapter: '3-7', note: 'Standard biomes intro.' }] },
+};
