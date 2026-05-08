@@ -5237,12 +5237,22 @@ export function VoiceTutorRealtime({
             .filter((e) => e.role === 'student')
             .slice(-1)[0]?.text || '';
           const skipMarkerPresent = /\[Skip-button-clicked/i.test(lastStudentMsgForSkip);
-          const advancedThisAttempt = toolNamesThisAttempt.some(
+          // Use totalToolNamesSeen (cross-attempt), NOT toolNamesThisAttempt.
+          // The brain only needs to advance ONCE per turn — if attempt 0
+          // already emitted advance_lesson and a later attempt is retrying
+          // a different rejection (e.g. show_diagram solver failure → retry
+          // with show_table), that retry won't re-emit advance_lesson and
+          // shouldn't be KILL'd for it. Observed 2026-05-07 AP Macro
+          // session: attempt 0 fired advance_lesson + show_diagram; the
+          // diagram failed solver pre-check → retry; attempt 1 fired
+          // show_table only; per-attempt check false-fired Skip KILL,
+          // producing a double "moving on" preamble in the chat.
+          const advancedThisTurn = totalToolNamesSeen.some(
             (n) => n === 'advance_lesson' || n === 'generate_problem',
           );
-          if (skipMarkerPresent && !advancedThisAttempt) {
-            const emittedToolsList = toolNamesThisAttempt.length > 0
-              ? toolNamesThisAttempt.join(', ')
+          if (skipMarkerPresent && !advancedThisTurn) {
+            const emittedToolsList = totalToolNamesSeen.length > 0
+              ? totalToolNamesSeen.join(', ')
               : '(none)';
             const reason =
               `The student clicked the Skip-ahead button — this is a NAVIGATION action requiring the lesson pointer to MOVE. ` +
@@ -5254,7 +5264,7 @@ export function VoiceTutorRealtime({
             clearTimeout(gateTimer);
             closeGate();
             await speakKillBridge();
-            console.warn('[brain-orchestrator] Skip-button KILL: student clicked Skip but brain emitted no advance_lesson / generate_problem.');
+            console.warn('[brain-orchestrator] Skip-button KILL: student clicked Skip but brain emitted no advance_lesson / generate_problem this turn.');
             onDebugEvent?.('skip_button_no_advance', `tools=[${emittedToolsList}]`);
           }
         }

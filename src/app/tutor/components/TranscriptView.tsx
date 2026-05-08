@@ -97,17 +97,27 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
   // ". " or "! " or "? " before lastQ. The chosen boundary is the
   // start of the question sentence.
   let qStart = 0;
-  // Scan backward for a sentence terminator. Allow a small run of
-  // closing punctuation (quotes, parens, brackets — straight or curly)
-  // BETWEEN the terminator and the next sentence boundary, since
-  // narration often ends a quoted span with `." Which...` (period
-  // inside the quote). Then require either whitespace or an immediate
-  // uppercase letter (the brain sometimes drops the post-period space:
-  // "...equals 1.Now, on that circle..."). The lookahead `[^.!?]*$`
-  // ensures this is the LAST boundary before the trailing question.
-  const boundary = trimmed.slice(0, lastQ).match(/[.!?][)\]'"’”]*(?:\s+|(?=[A-Z]))(?=[^.!?]*$)/);
-  if (boundary) {
-    qStart = boundary.index! + boundary[0].length;
+  // Scan for sentence terminators. Allow a small run of closing
+  // punctuation (quotes, parens, brackets — straight or curly) BETWEEN
+  // the terminator and the next sentence boundary, since narration often
+  // ends a quoted span with `." Which...` (period inside the quote).
+  // Then require the next non-space char to be uppercase — `\s+(?=[A-Z])`
+  // for a space-delimited boundary or `(?=[A-Z])` for the no-space case
+  // ("...equals 1.Now, on that circle..."). Critically, do NOT accept
+  // `\s+` alone — that wrongly treats the period in "U.S. economy" as a
+  // sentence boundary (observed 2026-05-07 AP Macro session: the chat
+  // bolded only the word "economy?" because qStart landed after `U.S. `).
+  // Negative lookbehind `(?<!\b[A-Z])` skips single-uppercase abbreviation
+  // periods like the `U.` and `S.` in `U.S.` — those were also being
+  // accepted as boundaries when they happened to satisfy the
+  // uppercase-after rule. Use matchAll + take-last instead of a
+  // `(?=[^.!?]*$)` lookahead so intermediate abbreviation periods don't
+  // disqualify a real earlier boundary.
+  const boundaryRe = /(?<!\b[A-Z])[.!?][)\]'"’”]*(?:\s+(?=[A-Z])|(?=[A-Z]))/g;
+  const boundaries = [...trimmed.slice(0, lastQ).matchAll(boundaryRe)];
+  const lastBoundary = boundaries[boundaries.length - 1];
+  if (lastBoundary) {
+    qStart = lastBoundary.index! + lastBoundary[0].length;
   }
   const body = trimmed.slice(0, qStart).trimEnd();
   const question = trimmed.slice(qStart, lastQ + 1).trim() + (tail ? ' ' + tail : '');
