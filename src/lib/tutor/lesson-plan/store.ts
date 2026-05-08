@@ -693,6 +693,11 @@ import { SEED_AP_STATS_U4_COMBINING_RV } from './seeds/ap-stats-u4-combining-rv'
 import { SEED_AP_STATS_U4_BINOMIAL_DISTRIBUTION } from './seeds/ap-stats-u4-binomial-distribution';
 import { SEED_AP_STATS_U4_GEOMETRIC_DISTRIBUTION } from './seeds/ap-stats-u4-geometric-distribution';
 import { SEED_AP_STATS_U4_FRQ_PRACTICE } from './seeds/ap-stats-u4-frq-practice';
+import { SEED_AP_STATS_U5_SAMPLING_DISTRIBUTION_CONCEPT } from './seeds/ap-stats-u5-sampling-distribution-concept';
+import { SEED_AP_STATS_U5_CENTRAL_LIMIT_THEOREM } from './seeds/ap-stats-u5-central-limit-theorem';
+import { SEED_AP_STATS_U5_PROPORTIONS_SAMPLING_DIST } from './seeds/ap-stats-u5-proportions-sampling-dist';
+import { SEED_AP_STATS_U5_MEANS_SAMPLING_DIST } from './seeds/ap-stats-u5-means-sampling-dist';
+import { SEED_AP_STATS_U5_FRQ_PRACTICE } from './seeds/ap-stats-u5-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1815,6 +1820,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U4_BINOMIAL_DISTRIBUTION,
   SEED_AP_STATS_U4_GEOMETRIC_DISTRIBUTION,
   SEED_AP_STATS_U4_FRQ_PRACTICE,
+  SEED_AP_STATS_U5_SAMPLING_DISTRIBUTION_CONCEPT,
+  SEED_AP_STATS_U5_CENTRAL_LIMIT_THEOREM,
+  SEED_AP_STATS_U5_PROPORTIONS_SAMPLING_DIST,
+  SEED_AP_STATS_U5_MEANS_SAMPLING_DIST,
+  SEED_AP_STATS_U5_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
