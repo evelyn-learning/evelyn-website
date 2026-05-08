@@ -1,0 +1,73 @@
+/**
+ * AP Statistics — CED Unit 9.1+9.2+9.3: Confidence Interval for the
+ * Slope of a Regression Model.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U9_SLOPE_CI: LessonPlan = {
+  id: 'evelyn.ap.stats.slope-ci.v1', title: 'U9.1 Confidence Interval for Slope',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.slope-ci', description: 'Construct and interpret a t-CI for the slope β of a population regression model y = α + βx + ε. Identify standard error of slope from regression output. Verify LINER conditions.', standard: 'AP-STATS-9.1-9.3' }],
+  prerequisites: ['apstats.residuals'], followUps: ['apstats.slope-test'], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame slope inference.', script: "From a sample we get a sample regression slope b. The TRUE population slope β is what we really want — and our b is an estimate of β with sampling error. Today: a CI for β.", estimatedMinutes: 2 },
+    { id: 'concept-slope-ci', kind: 'concept', goal: 'Cover formula, conditions, interpretation.',
+      keyIdeas: [
+        'POPULATION REGRESSION MODEL: y = α + β·x + ε, where ε is random error with mean 0 and constant SD σ.',
+        'SAMPLE: gives estimates a (intercept) and b (slope) of α and β. b is unbiased for β.',
+        't-CI FOR SLOPE β: b ± t* · SE(b).',
+        '  • SE(b) = standard error of the slope, comes from regression output.',
+        '  • Formula: SE(b) = s / (s_x · √(n − 1)), where s = SD of residuals = √(Σresid²/(n − 2)).',
+        '  • df = n − 2 (one less degree of freedom than just for residuals).',
+        'INTERPRETATION: "We are C% confident that the true slope (β) of the regression of [y] on [x] is between [lower] and [upper] [units of y per unit of x]."',
+        'CONDITIONS — LINER (memorize this):',
+        '  • L (LINEAR): scatterplot of x vs y is linear; residual plot has no clear pattern.',
+        '  • I (INDEPENDENT): observations independent; 10% rule.',
+        '  • N (NORMAL): for each x, the residuals are approximately normal. Often check by histogram of residuals.',
+        '  • E (EQUAL VARIANCE): residual plot shows similar spread across all x (no fan shape).',
+        '  • R (RANDOM): sample is random.',
+        'AP COMPUTER OUTPUT format you must read:',
+        '  • Predictor | Coef | SE Coef | T | P',
+        '  • Constant: a | SE(a) | t-value | p',
+        '  • x: b | SE(b) | t-value | p',
+        '  • s = √(MSE), R-Sq, R-Sq(adj).',
+        'INTERPRETATION OF CI containing 0: "0 is in the interval" → no convincing evidence the slope is non-zero (no clear linear association at this confidence level).',
+      ],
+      vocabulary: [
+        { term: 'population slope β', definition: 'true slope of the population regression model.' },
+        { term: 'standard error of slope', definition: 'SE(b); read from regression output.' },
+      ],
+      estimatedMinutes: 5 },
+    { id: 'worked-slope-ci', kind: 'worked_example',
+      problem: 'A regression of weight (y, kg) on height (x, cm) for 25 adults gives output: \n  Predictor | Coef | SE Coef | T | P\n  Constant: -85.2 | 12.5 | -6.82 | 0.000\n  Height: 0.92 | 0.08 | 11.50 | 0.000\nConstruct a 95% CI for the slope β.',
+      steps: [
+        'STEP 1 — n = 25, df = 25 − 2 = 23.',
+        'STEP 2 — From output: b = 0.92. SE(b) = 0.08.',
+        'STEP 3 — t* for 95% with df = 23 ≈ 2.069.',
+        'STEP 4 — ME = 2.069(0.08) ≈ 0.166.',
+        'STEP 5 — CI: 0.92 ± 0.166 = (0.754, 1.086).',
+        'STEP 6 — Interpret: "We are 95% confident that the true slope of the regression of weight on height is between 0.754 and 1.086 kg per cm of height. Each additional cm of height is associated with a true increase in mean weight of between 0.75 and 1.09 kg."',
+      ],
+      answer: '95% CI: (0.754, 1.086) kg/cm.', estimatedMinutes: 4 },
+    { id: 'try-slope', kind: 'try_yourself',
+      problem: 'A regression of test score (y) on study hours (x) for 16 students gives b = 4.2, SE(b) = 0.9. Construct a 90% CI for β.',
+      expectedAnswer: 'n = 16, df = 14. t* for 90% with df = 14 ≈ 1.761. ME = 1.761(0.9) ≈ 1.585. CI: 4.2 ± 1.585 = (2.615, 5.785). \nInterpret: "We are 90% confident that the true slope is between 2.615 and 5.785 points per hour of study."',
+      responseFormat: 'numeric', hints: ['df = n − 2; pull SE(b) directly.'], estimatedMinutes: 3 },
+    { id: 'try-conditions', kind: 'try_yourself',
+      problem: 'For a regression CI on slope, state the LINER conditions and how you\'d check each.',
+      expectedAnswer: 'L (Linear): scatterplot of x vs y is linear; residual plot shows random scatter (no curved pattern). \nI (Independent): observations independent (one observation doesn\'t affect another); apply 10% rule if sampling. \nN (Normal): residuals at each x are approximately normal; check histogram of residuals overall (proxy). \nE (Equal SD): residual plot shows constant spread across all x — no fan/funnel shape. \nR (Random): sample is from a random sampling or random assignment process.',
+      responseFormat: 'free', hints: ['LINER conditions; map each to a check.'], estimatedMinutes: 3 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A regression of GPA on SAT score for 30 students has output: \n  Predictor | Coef | SE Coef | T | P\n  Constant: 1.20 | 0.42 | 2.86 | 0.008\n  SAT: 0.0018 | 0.0004 | 4.50 | 0.000\n  s = 0.32, R-Sq = 41.7%. \n(a) Construct a 99% CI for β. (b) Interpret. (c) Does the CI suggest there is convincing evidence that GPA increases with SAT score?',
+      expectedAnswer: '(a) df = 30 − 2 = 28. t* for 99% with df = 28 ≈ 2.763. b = 0.0018, SE(b) = 0.0004. ME = 2.763(0.0004) ≈ 0.001105. CI: 0.0018 ± 0.001105 = (0.000695, 0.002905). (3)\n(b) "We are 99% confident that the true slope of the regression of GPA on SAT is between 0.000695 and 0.002905 GPA points per SAT point. Each additional SAT point is associated with a true mean increase in GPA of between 0.0007 and 0.003 points." (1.5)\n(c) The CI is ENTIRELY ABOVE 0 (does not include 0). Yes, there IS convincing evidence at the 99% level that GPA INCREASES with SAT score (β > 0). (1.5)\nTotal: 6 points.',
+      responseFormat: 'frq', hints: ['Read SE(b); df = n−2; check if 0 in CI.'], estimatedMinutes: 5 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Slope CI: b ± t*·SE(b). df = n − 2.',
+      'Read SE(b) directly from regression output.',
+      'LINER: Linear, Independent, Normal, Equal SD, Random.',
+      'Interpret slope CI in units of y per unit of x.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '9', cedTopic: '9.1-9.3', cedTitle: 'CI for Slope', sources: [{ type: 'concept', book: 'tps5e', chapter: '12', note: 'Standard slope CI.' }] },
+};

@@ -713,6 +713,9 @@ import { SEED_AP_STATS_U8_GOODNESS_OF_FIT } from './seeds/ap-stats-u8-goodness-o
 import { SEED_AP_STATS_U8_TWOWAY } from './seeds/ap-stats-u8-twoway';
 import { SEED_AP_STATS_U8_CHOOSING_PROCEDURES } from './seeds/ap-stats-u8-choosing-procedures';
 import { SEED_AP_STATS_U8_FRQ_PRACTICE } from './seeds/ap-stats-u8-frq-practice';
+import { SEED_AP_STATS_U9_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
+import { SEED_AP_STATS_U9_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
+import { SEED_AP_STATS_U9_FRQ_PRACTICE } from './seeds/ap-stats-u9-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1855,6 +1858,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U8_TWOWAY,
   SEED_AP_STATS_U8_CHOOSING_PROCEDURES,
   SEED_AP_STATS_U8_FRQ_PRACTICE,
+  SEED_AP_STATS_U9_SLOPE_CI,
+  SEED_AP_STATS_U9_SLOPE_TEST,
+  SEED_AP_STATS_U9_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
