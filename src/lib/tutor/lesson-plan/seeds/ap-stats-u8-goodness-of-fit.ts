@@ -1,0 +1,67 @@
+/**
+ * AP Statistics — CED Unit 8.1+8.2+8.3: Chi-Square Goodness-of-Fit Test.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U8_GOODNESS_OF_FIT: LessonPlan = {
+  id: 'evelyn.ap.stats.chi-square-goodness-of-fit.v1', title: 'U8.1 Chi-Square Goodness of Fit',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.chi-square-goodness-of-fit', description: 'Set up and carry out a chi-square goodness-of-fit test for one categorical variable. Compute χ² = Σ (O − E)²/E. Find p-value from chi-square distribution with df = k − 1. Conclude in context.', standard: 'AP-STATS-8.1-8.3' }],
+  prerequisites: [], followUps: ['apstats.chi-square-twoway'], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame chi-square goodness-of-fit.', script: "We have one categorical variable and a CLAIMED distribution (e.g., \"40% red, 30% blue, 30% green\"). Does the observed data fit the claim? The CHI-SQUARE GOODNESS-OF-FIT TEST answers this.", estimatedMinutes: 2 },
+    { id: 'concept-gof', kind: 'concept', goal: 'Cover hypotheses, expected counts, statistic, p-value.',
+      keyIdeas: [
+        'WHEN: ONE categorical variable, comparing observed counts to a HYPOTHESIZED distribution.',
+        'HYPOTHESES:',
+        '  • H_0: the population distribution is as stated (specify proportions: e.g., p_1 = 0.40, p_2 = 0.30, p_3 = 0.30).',
+        '  • H_a: at least one proportion differs from the stated.',
+        'EXPECTED COUNTS: E_i = n · p_i. Where n is total sample size.',
+        'TEST STATISTIC: χ² = Σ (O_i − E_i)² / E_i. Sum over all categories.',
+        '  • O_i = observed count in category i.',
+        '  • E_i = expected count under H_0.',
+        '  • Larger χ² → stronger evidence against H_0.',
+        'DEGREES OF FREEDOM: df = k − 1 (where k = number of categories).',
+        'P-VALUE: P(χ² ≥ χ²_obs) using chi-square distribution with df = k − 1. Always RIGHT-TAIL test.',
+        'CONDITIONS:',
+        '  • RANDOM: random sample.',
+        '  • LARGE COUNTS (a.k.a. "expected counts" condition): all E_i ≥ 5.',
+        '  • 10%: n ≤ 0.10·N (independence).',
+        'CHI-SQUARE DISTRIBUTION: skewed RIGHT, only takes non-negative values, peak near df. Approaches normal as df grows.',
+        'AP CALCULATOR: χ²GOF-Test (with observed and expected lists). Outputs χ², p-value, df.',
+      ],
+      vocabulary: [
+        { term: 'goodness-of-fit', definition: 'tests whether observed counts in categories match a claimed distribution.' },
+        { term: 'expected count', definition: 'E_i = n·p_i — what we\'d expect if H_0 were true.' },
+      ],
+      estimatedMinutes: 6 },
+    { id: 'worked-gof', kind: 'worked_example',
+      problem: 'A bag of M&Ms is claimed to have these color proportions: brown 13%, yellow 14%, red 13%, blue 24%, orange 20%, green 16%. A random sample of 200 M&Ms gives observed counts: brown 32, yellow 28, red 24, blue 50, orange 38, green 28. At α = 0.05, test whether the actual proportions match the claim.',
+      steps: [
+        'STEP 1 — H_0: distribution is as claimed (p_brown = 0.13, p_yellow = 0.14, p_red = 0.13, p_blue = 0.24, p_orange = 0.20, p_green = 0.16). H_a: at least one differs.',
+        'STEP 2 — Expected: E = n·p. brown 200(0.13)=26; yellow 28; red 26; blue 48; orange 40; green 32. All ≥ 5 ✓.',
+        'STEP 3 — Conditions: Random ✓; Large Counts ✓; 10% (assume large M&M production) ✓.',
+        'STEP 4 — χ² = (32−26)²/26 + (28−28)²/28 + (24−26)²/26 + (50−48)²/48 + (38−40)²/40 + (28−32)²/32 \n  = 36/26 + 0 + 4/26 + 4/48 + 4/40 + 16/32 \n  = 1.385 + 0 + 0.154 + 0.083 + 0.100 + 0.500 ≈ 2.222.',
+        'STEP 5 — df = 6 − 1 = 5. p-value = P(χ²_5 ≥ 2.222). From chi-square table: χ² = 2.222 falls below χ²_0.10 = 9.236 → p-value > 0.10. Calculator: ≈ 0.818.',
+        'STEP 6 — 0.818 > 0.05 → fail to reject H_0.',
+        'STEP 7 — Conclusion: "Because p ≈ 0.82 > α = 0.05, we fail to reject H_0. There is NOT convincing statistical evidence that the actual color distribution differs from the claim."',
+      ],
+      answer: 'χ² ≈ 2.22, df = 5, p ≈ 0.82; fail to reject H_0.', estimatedMinutes: 6 },
+    { id: 'try-gof', kind: 'try_yourself',
+      problem: 'A die is rolled 600 times. Observed counts (faces 1-6): 95, 110, 90, 105, 100, 100. At α = 0.05, test whether the die is fair.',
+      expectedAnswer: 'H_0: each p_i = 1/6 (fair die). H_a: at least one differs. Expected: E = 600(1/6) = 100 for each face. \nχ² = (95−100)²/100 + (110−100)²/100 + (90−100)²/100 + (105−100)²/100 + (100−100)²/100 + (100−100)²/100 \n= 25/100 + 100/100 + 100/100 + 25/100 + 0 + 0 = 0.25 + 1 + 1 + 0.25 = 2.5. \ndf = 5. p-value = P(χ²_5 ≥ 2.5) ≈ 0.776. \n0.776 > 0.05 → fail to reject H_0. \nConclusion: "Because p ≈ 0.78 > α = 0.05, we fail to reject H_0. There is NOT convincing evidence that the die is unfair."',
+      responseFormat: 'frq', hints: ['Equal proportions; expected uniform.'], estimatedMinutes: 6 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A genetic theory predicts offspring phenotype ratios of 9:3:3:1 (purple-tall, purple-dwarf, white-tall, white-dwarf). Of 320 offspring observed: 160 purple-tall, 70 purple-dwarf, 65 white-tall, 25 white-dwarf. Test the theory at α = 0.05.',
+      expectedAnswer: 'Total ratio parts = 9 + 3 + 3 + 1 = 16. Expected proportions: 9/16 = 0.5625, 3/16 = 0.1875, 3/16 = 0.1875, 1/16 = 0.0625. \nH_0: distribution follows 9:3:3:1. H_a: distribution differs. \nExpected: 320(9/16) = 180; 320(3/16) = 60; 60; 20. \nConditions: Random offspring sampling (assume) ✓; Large Counts: 180, 60, 60, 20 — all ≥ 5 ✓. \nχ² = (160−180)²/180 + (70−60)²/60 + (65−60)²/60 + (25−20)²/20 \n= 400/180 + 100/60 + 25/60 + 25/20 \n= 2.222 + 1.667 + 0.417 + 1.250 = 5.556. (3.5)\ndf = 4 − 1 = 3. p-value = P(χ²_3 ≥ 5.556) ≈ 0.135. \n0.135 > 0.05 → fail to reject H_0. (1.5)\nConclusion: "Because p ≈ 0.14 > α = 0.05, we fail to reject H_0. There is NOT convincing evidence that the offspring proportions differ from the predicted 9:3:3:1." (1.5)\nTotal: 6.5 points.',
+      responseFormat: 'frq', hints: ['Convert ratios to proportions; compute expecteds; chi-square.'], estimatedMinutes: 6 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'GOF: ONE categorical variable; compares observed to claimed distribution.',
+      'χ² = Σ(O − E)²/E. df = k − 1.',
+      'Conditions: Random, Large Counts (E_i ≥ 5), 10%.',
+      'Always right-tail; large χ² → reject H_0.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '8', cedTopic: '8.1-8.3', cedTitle: 'Chi-Square Goodness of Fit', sources: [{ type: 'concept', book: 'tps5e', chapter: '11', note: 'Standard GOF test.' }] },
+};
