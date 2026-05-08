@@ -686,6 +686,13 @@ import { SEED_AP_STATS_U3_SAMPLING_BIAS } from './seeds/ap-stats-u3-sampling-bia
 import { SEED_AP_STATS_U3_EXPERIMENTAL_DESIGN } from './seeds/ap-stats-u3-experimental-design';
 import { SEED_AP_STATS_U3_INFERENCE_EXPERIMENTS } from './seeds/ap-stats-u3-inference-experiments';
 import { SEED_AP_STATS_U3_FRQ_PRACTICE } from './seeds/ap-stats-u3-frq-practice';
+import { SEED_AP_STATS_U4_PROBABILITY_BASICS } from './seeds/ap-stats-u4-probability-basics';
+import { SEED_AP_STATS_U4_CONDITIONAL_INDEPENDENCE } from './seeds/ap-stats-u4-conditional-independence';
+import { SEED_AP_STATS_U4_RANDOM_VARIABLES } from './seeds/ap-stats-u4-random-variables';
+import { SEED_AP_STATS_U4_COMBINING_RV } from './seeds/ap-stats-u4-combining-rv';
+import { SEED_AP_STATS_U4_BINOMIAL_DISTRIBUTION } from './seeds/ap-stats-u4-binomial-distribution';
+import { SEED_AP_STATS_U4_GEOMETRIC_DISTRIBUTION } from './seeds/ap-stats-u4-geometric-distribution';
+import { SEED_AP_STATS_U4_FRQ_PRACTICE } from './seeds/ap-stats-u4-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1801,6 +1808,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U3_EXPERIMENTAL_DESIGN,
   SEED_AP_STATS_U3_INFERENCE_EXPERIMENTS,
   SEED_AP_STATS_U3_FRQ_PRACTICE,
+  SEED_AP_STATS_U4_PROBABILITY_BASICS,
+  SEED_AP_STATS_U4_CONDITIONAL_INDEPENDENCE,
+  SEED_AP_STATS_U4_RANDOM_VARIABLES,
+  SEED_AP_STATS_U4_COMBINING_RV,
+  SEED_AP_STATS_U4_BINOMIAL_DISTRIBUTION,
+  SEED_AP_STATS_U4_GEOMETRIC_DISTRIBUTION,
+  SEED_AP_STATS_U4_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
