@@ -1,0 +1,70 @@
+/**
+ * AP Statistics — CED Unit 7.9+7.10: Two-Sample t-Test for Difference of
+ * Means; Matched-Pairs t-Test.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U7_TWO_MEAN_TEST: LessonPlan = {
+  id: 'evelyn.ap.stats.two-mean-test.v1', title: 'U7.9 Two-Sample t-Test',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.two-mean-test', description: 'Set up hypotheses and carry out a two-sample t-test for difference of means. Distinguish from matched-pairs t-test on differences. Conclude in context.', standard: 'AP-STATS-7.9-7.10' }],
+  prerequisites: ['apstats.two-mean-ci'], followUps: [], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame two-mean test.', script: "Test whether two population means differ. AP exam frequently tests this. Critical decision: are the samples INDEPENDENT or PAIRED? They use different formulas.", estimatedMinutes: 2 },
+    { id: 'concept-twomean-test', kind: 'concept', goal: 'Cover hypotheses, t-statistic, paired vs independent.',
+      keyIdeas: [
+        'TWO-SAMPLE t-TEST (independent) hypotheses:',
+        '  • H_0: μ_1 = μ_2 (or μ_1 − μ_2 = 0).',
+        '  • H_a: μ_1 ≠ μ_2 (or one-sided).',
+        'TEST STATISTIC: t = (x̄_1 − x̄_2) / √(s²_1/n_1 + s²_2/n_2).',
+        '  • df: conservative = min(n_1 − 1, n_2 − 1) by hand; calculator gives Welch.',
+        'CONDITIONS: Random; Normal/Large in BOTH samples; 10% (each); Independence.',
+        'MATCHED-PAIRS t-TEST: when data are paired (before/after, twin pairs, etc.), do a ONE-SAMPLE t-test on the DIFFERENCES.',
+        '  • H_0: μ_d = 0 (no difference).',
+        '  • H_a: μ_d ≠ 0 (or one-sided).',
+        '  • t = (d̄ − 0)/(s_d/√n). df = n − 1 (where n = number of pairs).',
+        '  • Conditions: random sample of pairs; differences approximately normal (or n ≥ 30).',
+        'KEY DECISION: paired or independent?',
+        '  • PAIRED: each subject contributes BOTH measurements (e.g., before/after on same person), or natural pairing (twins, left/right).',
+        '  • INDEPENDENT: two completely separate groups, no natural pairing.',
+        'COMMON ERROR: applying two-sample formula to paired data — gives wrong (too large) SE because it doesn\'t account for within-subject correlation.',
+        'AP CALCULATOR: 2-SampTTest for independent; T-Test on the differences for paired.',
+      ],
+      vocabulary: [
+        { term: 'matched-pairs t-test', definition: 'one-sample t-test applied to differences within pairs.' },
+      ],
+      estimatedMinutes: 5 },
+    { id: 'worked-independent', kind: 'worked_example',
+      problem: 'Two random samples of starting salaries: Engineering: n = 25, x̄ = $72k, s = $8k. Business: n = 30, x̄ = $65k, s = $10k. Both data plots roughly symmetric. At α = 0.05, test whether engineering salaries are higher.',
+      steps: [
+        'STEP 1 — H_0: μ_E = μ_B; H_a: μ_E > μ_B (one-sided).',
+        'STEP 2 — Conditions: Random ✓; Normal/Large: data symmetric, both samples reasonable ✓; 10% ✓; Independence ✓.',
+        'STEP 3 — SE = √(8²/25 + 10²/30) = √(2.56 + 3.333) = √5.893 ≈ 2.428.',
+        'STEP 4 — t = (72 − 65)/2.428 ≈ 2.883. df conservative = min(24, 29) = 24.',
+        'STEP 5 — p-value = P(T_{24} ≥ 2.883) ≈ 0.00417. (Calculator with Welch df gives similar small p.)',
+        'STEP 6 — 0.00417 < 0.05 → REJECT H_0.',
+        'STEP 7 — Conclusion: "Because p = 0.0042 < α = 0.05, we reject H_0. There IS convincing statistical evidence that mean starting salaries are higher for engineering than business graduates."',
+      ],
+      answer: 't ≈ 2.88, df = 24 (conservative), p ≈ 0.004; reject H_0.', estimatedMinutes: 5 },
+    { id: 'try-paired', kind: 'try_yourself',
+      problem: '15 students each take a math pretest and posttest. Differences (post − pre): mean d̄ = 6.4, s_d = 8.2. Test at α = 0.05 whether posttest scores are higher.',
+      expectedAnswer: 'PAIRED. H_0: μ_d = 0; H_a: μ_d > 0 (post > pre means d̄ > 0). \nConditions: random sample of pairs ✓; Normal/Large of differences (assume) ✓. \nt = (6.4 − 0)/(8.2/√15) = 6.4/2.117 ≈ 3.024. df = 14. \np-value = P(T_{14} ≥ 3.024) ≈ 0.00457. \n0.00457 < 0.05 → REJECT H_0. \nConclusion: "Because p = 0.0046 < α = 0.05, we reject H_0. There IS convincing statistical evidence that the mean post-test score is higher than the mean pre-test score."',
+      responseFormat: 'frq', hints: ['Paired → one-sample t on differences.'], estimatedMinutes: 5 },
+    { id: 'try-which-test', kind: 'try_yourself',
+      problem: 'For each scenario, identify whether to use a two-sample t-test or a matched-pairs t-test: \n(a) 30 students randomly split into two groups; group A uses Method 1, group B uses Method 2; compare final scores. \n(b) 30 students each take a test, then study with Method 1, then take a similar test; compare pre vs post. \n(c) 50 husbands and 50 wives randomly chosen and each rates job satisfaction. \n(d) 50 married couples randomly chosen; husband and wife each rate job satisfaction.',
+      expectedAnswer: '(a) Two-sample t-test (independent groups). (b) Matched pairs (each student is their own pair). (c) Two-sample (random men + random women, no pairing). (d) Matched pairs (each couple = one pair of measurements). \nKey: in (d) the data are PAIRED by couple even though "men" and "women" sound separate.',
+      responseFormat: 'free', hints: ['Pairing requires natural correspondence: same subject, twin, couple.'], estimatedMinutes: 4 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A pediatrician compares heights of two random samples of 8-year-olds. Boys: n = 40, x̄ = 50.2 in, s = 2.5 in. Girls: n = 35, x̄ = 49.8 in, s = 2.8 in. Both data symmetric. (a) Test whether mean heights differ at α = 0.05. (b) Type II error in context.',
+      expectedAnswer: '(a) H_0: μ_B = μ_G; H_a: μ_B ≠ μ_G. Independent samples; both n ≥ 30 → CLT ✓; assume Random ✓; 10% ✓. \nDiff = 50.2 − 49.8 = 0.4. SE = √(2.5²/40 + 2.8²/35) = √(0.156 + 0.224) = √0.380 ≈ 0.617. \nt = 0.4/0.617 ≈ 0.648. df conservative = 34. \np-value = 2·P(T_{34} ≥ 0.648) ≈ 2·0.260 ≈ 0.521. \n0.521 > 0.05 → fail to reject H_0. \nConclusion: "Because p = 0.52 > α = 0.05, we fail to reject H_0. There is NOT convincing statistical evidence that mean heights of 8-year-old boys and girls differ in this population." (5)\n(b) Type II: failing to reject H_0 when H_0 is FALSE. Concluding that mean heights don\'t differ when actually they DO. The pediatrician would miss a real difference. (1.5)\nTotal: 6.5 points.',
+      responseFormat: 'frq', hints: ['Independent test; Type II is missing a real difference.'], estimatedMinutes: 6 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Two-sample t-test (independent): t = (x̄_1 − x̄_2)/√(s²_1/n_1 + s²_2/n_2).',
+      'Matched-pairs: one-sample t-test on differences. df = n − 1.',
+      'PAIRING is the critical decision; pick test based on study design.',
+      'Conditions: Random, Normal/Large (each), 10%, Independence (between samples or pairs).',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '7', cedTopic: '7.9-7.10', cedTitle: 'Two-Sample t-Test', sources: [{ type: 'concept', book: 'tps5e', chapter: '10', note: 'Standard 2-sample/paired t-test.' }] },
+};

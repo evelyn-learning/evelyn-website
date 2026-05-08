@@ -1,0 +1,66 @@
+/**
+ * AP Statistics — CED Unit 7.5+7.6: One-Sample t-Test for a Mean.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U7_ONE_MEAN_TEST: LessonPlan = {
+  id: 'evelyn.ap.stats.one-mean-test.v1', title: 'U7.5 One-Sample t-Test for a Mean',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.one-mean-test', description: 'Set up hypotheses for a population mean. Verify conditions. Compute t-statistic and p-value. Conclude in context.', standard: 'AP-STATS-7.5-7.6' }],
+  prerequisites: ['apstats.one-mean-ci'], followUps: ['apstats.two-mean-ci'], estimatedMinutes: 20,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame t-test.', script: "When testing a claim about a mean and σ is unknown (almost always), use a t-TEST. Same four-step process as the proportion test, with t-statistic instead of z.", estimatedMinutes: 2 },
+    { id: 'concept-ttest', kind: 'concept', goal: 'Cover hypotheses, t-statistic, p-value.',
+      keyIdeas: [
+        'HYPOTHESES (about population mean μ):',
+        '  • H_0: μ = μ_0.',
+        '  • H_a: μ < μ_0, μ > μ_0, or μ ≠ μ_0.',
+        'TEST STATISTIC: t = (x̄ − μ_0) / (s/√n).',
+        '  • df = n − 1.',
+        'P-VALUE: from t-distribution with df = n − 1.',
+        '  • Right-tail: P(T_{df} ≥ t_obs).',
+        '  • Left-tail: P(T_{df} ≤ t_obs).',
+        '  • Two-tail: 2·P(T_{df} ≥ |t_obs|).',
+        'CONDITIONS (same as t-CI):',
+        '  • RANDOM.',
+        '  • NORMAL/LARGE.',
+        '  • 10%.',
+        'CONCLUSION TEMPLATE: "Because p = [#] is [≤ / >] α = [#], we [reject / fail to reject] H_0. There [is / is not] convincing statistical evidence that the [mean of population in context] [direction stated in H_a]."',
+        'AP CALCULATOR: T-Test (input statistics or data).',
+        'WHEN to use t-test vs z-test:',
+        '  • t-test (s unknown): basically always for means in AP.',
+        '  • z-test (σ known): rare in practice.',
+      ],
+      vocabulary: [
+        { term: 't-statistic', definition: 't = (x̄ − μ_0)/(s/√n) with df = n − 1.' },
+      ],
+      estimatedMinutes: 5 },
+    { id: 'worked-ttest', kind: 'worked_example',
+      problem: 'A nutrition label claims the mean fat content is 8 g per serving. A SRS of 25 servings has x̄ = 8.6 g, s = 1.4 g. Histogram is roughly symmetric. At α = 0.05, test whether the actual fat content differs from the claim.',
+      steps: [
+        'STEP 1 — H_0: μ = 8. H_a: μ ≠ 8 (two-sided since "differs").',
+        'STEP 2 — Conditions: Random ✓; Normal/Large: n = 25 < 30, but histogram roughly symmetric ✓; 10% ✓.',
+        'STEP 3 — t = (8.6 − 8)/(1.4/√25) = 0.6/0.28 ≈ 2.143.',
+        'STEP 4 — df = 24. p-value = 2·P(T_{24} ≥ 2.143). From t-table: between 0.025 and 0.05 (two-tail). Calculator: ≈ 0.0424.',
+        'STEP 5 — 0.0424 < 0.05 → REJECT H_0.',
+        'STEP 6 — Conclusion: "Because p = 0.0424 < α = 0.05, we reject H_0. There IS convincing statistical evidence that the mean fat content differs from 8 g per serving."',
+      ],
+      answer: 't ≈ 2.143, df = 24, p ≈ 0.042 < 0.05; reject H_0.', estimatedMinutes: 5 },
+    { id: 'try-onesided', kind: 'try_yourself',
+      problem: 'A teacher claims her students average at least 80 on the SAT. A SRS of 16 students has x̄ = 76, s = 12. The data look approximately normal. At α = 0.05, test whether the true mean is below 80.',
+      expectedAnswer: 'H_0: μ = 80. H_a: μ < 80. Conditions: Random ✓; Normal/Large (data approx normal, n = 16) ✓; 10% ✓. \nt = (76 − 80)/(12/√16) = -4/3 ≈ -1.333. df = 15. p-value = P(T_{15} ≤ -1.333). From t-table: between 0.10 and 0.15 (one-tail). Calculator: ≈ 0.1014. \n0.1014 > 0.05 → fail to reject H_0. \nConclusion: "Because p = 0.10 > α = 0.05, we fail to reject H_0. There is NOT convincing statistical evidence that the true mean SAT is below 80."',
+      responseFormat: 'frq', hints: ['One-sided H_a; df = 15; compare p to α.'], estimatedMinutes: 5 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A new exercise program claims to reduce average resting heart rate. Before-after measurements on 30 randomly chosen subjects: mean DECREASE = 4.2 bpm, s of decreases = 7 bpm. (a) Hypotheses (in terms of mean decrease μ_d). (b) Test at α = 0.05. (c) Type I error in context.',
+      expectedAnswer: '(a) Let μ_d = true mean decrease in resting heart rate (after − before would be negative; here we use before − after positive for "decrease"). H_0: μ_d = 0 (no change). H_a: μ_d > 0 (program reduces heart rate, so before − after > 0). (1.5)\n(b) Conditions: Random sample ✓ (assume); Normal/Large: n = 30 (borderline). At n = 30 CLT can be invoked, OK. 10% ✓. \nt = (4.2 − 0)/(7/√30) = 4.2/1.278 ≈ 3.286. df = 29. p-value = P(T_{29} ≥ 3.286) ≈ 0.00131. \n0.00131 < 0.05 → REJECT H_0. \nConclusion: "Because p = 0.0013 < α = 0.05, we reject H_0. There IS convincing statistical evidence that the program reduces the mean resting heart rate." (3.5)\n(c) Type I error: REJECTING H_0 when actually μ_d = 0 (program does NOT reduce heart rate). Wrongly concluding the program works when it doesn\'t — could lead to subjects investing in an ineffective program. (1.5)\nTotal: 6.5 points.',
+      responseFormat: 'frq', hints: ['Setup; check conditions; t-stat; conclude; Type I.'], estimatedMinutes: 6 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      't = (x̄ − μ_0)/(s/√n); df = n − 1.',
+      'Use t-distribution (heavier tails than normal).',
+      'Conditions: Random, Normal/Large, 10%.',
+      'Conclusion in context with α; never accept H_0.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '7', cedTopic: '7.5-7.6', cedTitle: 'One-Sample t-Test', sources: [{ type: 'concept', book: 'tps5e', chapter: '9', note: 'Standard 1-sample t-test.' }] },
+};

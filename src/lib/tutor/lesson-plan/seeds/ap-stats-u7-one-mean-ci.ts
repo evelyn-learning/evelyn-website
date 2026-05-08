@@ -1,0 +1,68 @@
+/**
+ * AP Statistics — CED Unit 7.1+7.3+7.4: One-Sample t-Confidence Interval.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U7_ONE_MEAN_CI: LessonPlan = {
+  id: 'evelyn.ap.stats.one-mean-ci.v1', title: 'U7.1 One-Sample t-CI for a Mean',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.one-mean-ci', description: 'Use the t-distribution to construct CIs for a population mean when σ is unknown. Verify conditions including the Normal/Large condition. Interpret the CI and confidence level.', standard: 'AP-STATS-7.1-7.4' }],
+  prerequisites: ['apstats.means-sampling-dist'], followUps: ['apstats.one-mean-test'], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame t-distribution.', script: "When we estimate a mean from a sample, σ is usually UNKNOWN. We use the SAMPLE SD s instead. This adds extra uncertainty, so we use the t-DISTRIBUTION (slightly wider tails than normal) instead of z.", estimatedMinutes: 2 },
+    { id: 'concept-tci', kind: 'concept', goal: 'Cover t-distribution + one-mean t-interval.',
+      keyIdeas: [
+        't-DISTRIBUTION: bell-shaped, symmetric around 0, but with HEAVIER TAILS than the standard normal. Approaches normal as df → ∞.',
+        'DEGREES OF FREEDOM (df): df = n − 1 for one-sample mean.',
+        'WHY t INSTEAD OF z: when σ is unknown and we use s, the test statistic (x̄ − μ)/(s/√n) has a t-distribution, not a normal distribution.',
+        'ONE-SAMPLE t-CI: x̄ ± t* · (s/√n).',
+        '  • t* from t-table at confidence level C with df = n − 1.',
+        '  • Standard error: s/√n.',
+        '  • Margin of error: t* · s/√n.',
+        'CONDITIONS:',
+        '  • RANDOM: SRS or random assignment.',
+        '  • NORMAL/LARGE: population normal OR n ≥ 30 OR sample plot is "approximately normal" (no strong skew, no outliers).',
+        '  • 10%: n ≤ 0.10·N (independence).',
+        'INTERPRETING WITH NORMAL/LARGE: when n is small, you must check the SAMPLE for normality (a stemplot, dotplot, or normal probability plot — look for symmetry, no outliers).',
+        'INTERPRETATION: "We are C% confident that the true mean [parameter in context] is between [lower] and [upper]."',
+        'AP CALCULATOR: T-Interval (with statistics or with data); df, t*, s/√n all derived.',
+        'COMPARISON to z-CI: t* > z* for the same confidence level (heavier tails). So a t-CI is WIDER than a z-CI (with same data) — penalty for not knowing σ.',
+      ],
+      vocabulary: [
+        { term: 't-distribution', definition: 'distribution of (x̄ − μ)/(s/√n) when sampling from normal population; heavier tails than normal.' },
+        { term: 'degrees of freedom', definition: 'df = n − 1 for one-sample t.' },
+      ],
+      estimatedMinutes: 6 },
+    { id: 'worked-tci', kind: 'worked_example',
+      problem: 'A sample of 20 batteries: x̄ = 850 hours, s = 60 hours. Construct a 95% CI for the mean lifetime, assuming the population is approximately normal.',
+      steps: [
+        'STEP 1 — n = 20, df = 19. Conditions: assume Random ✓; Normal/Large: stated population is approximately normal ✓; 10%: assume large pop ✓.',
+        'STEP 2 — t* for 95% with df = 19: from t-table ≈ 2.093.',
+        'STEP 3 — SE = s/√n = 60/√20 ≈ 13.42.',
+        'STEP 4 — ME = 2.093(13.42) ≈ 28.08.',
+        'STEP 5 — CI: 850 ± 28.08 = (821.92, 878.08).',
+        'STEP 6 — Interpret: "We are 95% confident that the mean lifetime of these batteries is between 822 and 878 hours."',
+      ],
+      answer: '95% CI ≈ (821.9, 878.1) hours.', estimatedMinutes: 5 },
+    { id: 'try-tci', kind: 'try_yourself',
+      problem: 'A sample of 12 measurements: x̄ = 105.5, s = 8.2. The data plot is roughly symmetric with no outliers. Construct a 90% CI for the population mean.',
+      expectedAnswer: 'n = 12, df = 11. Conditions: Random (assume) ✓; Normal/Large: data plot symmetric, no outliers — OK to use t ✓; 10%: assume large pop ✓. \nt* for 90% with df = 11 ≈ 1.796. SE = 8.2/√12 ≈ 2.367. ME = 1.796(2.367) ≈ 4.252. CI: 105.5 ± 4.252 = (101.25, 109.75). \nInterpret: "We are 90% confident that the population mean is between 101.25 and 109.75."',
+      responseFormat: 'frq', hints: ['t-table for df = 11; SE = s/√n.'], estimatedMinutes: 4 },
+    { id: 'try-conditions', kind: 'try_yourself',
+      problem: 'A SRS of 8 reaction times has mean x̄ = 0.45 sec, s = 0.08 sec. The dotplot shows ONE clear outlier at 0.28 sec. (a) Are conditions met for a t-CI? (b) What might you do?',
+      expectedAnswer: '(a) Random ✓. 10% ✓. Normal/Large: n = 8 < 30, AND the dotplot has an outlier → NOT met. The t-CI requires absence of strong skew/outliers when n is small. (b) Options: (i) Investigate the outlier — error or genuine? If error, remove and re-check. (ii) Take a larger sample (n ≥ 30) so CLT applies regardless of shape. (iii) Use a non-parametric method (beyond AP scope). DO NOT just blindly compute the t-CI.',
+      responseFormat: 'free', hints: ['Small n + outlier = problem; must address.'], estimatedMinutes: 3 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A SRS of 36 students measures their commute time (minutes): x̄ = 28, s = 12. The histogram is right-skewed. (a) Are t-procedures appropriate? Justify. (b) Construct a 95% CI for the mean commute time. (c) Interpret.',
+      expectedAnswer: '(a) Random ✓; 10% (assume student pop > 360) ✓. Normal/Large: population is right-skewed BUT n = 36 ≥ 30 → CLT makes sampling distribution of x̄ approximately normal regardless. t-procedures are OK. (1.5)\n(b) df = 35. t* for 95% with df = 35 ≈ 2.030. SE = 12/√36 = 2. ME = 2.030(2) = 4.06. CI: 28 ± 4.06 = (23.94, 32.06) minutes. (3)\n(c) "We are 95% confident that the true mean commute time for students is between 23.94 and 32.06 minutes." (1.5)\nTotal: 6 points.',
+      responseFormat: 'frq', hints: ['n ≥ 30 saves us; standard t-CI.'], estimatedMinutes: 4 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      't-CI: x̄ ± t*·(s/√n). df = n − 1.',
+      't has heavier tails than normal; CI is wider than z-CI.',
+      'Conditions: Random, Normal/Large (population normal OR n ≥ 30 OR sample plot normalish), 10%.',
+      'For small n + outliers/skew: t-CI is unreliable.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '7', cedTopic: '7.1-7.4', cedTitle: 'One-Sample t-CI', sources: [{ type: 'concept', book: 'tps5e', chapter: '8', note: 'Standard 1-sample t-interval.' }] },
+};
