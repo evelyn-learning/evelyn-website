@@ -156,13 +156,13 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   const levelRowIdx = new Map(sortedLevels.map((lv, i) => [lv, i]));
 
   // Per-row weights: rows with a single node (across all groups) get less
-  // vertical space than dense multi-node rows. Pulls the lone "Antiderivative
-  // F(x)" type leaf closer to its parent and reclaims the empty band below
-  // it.
+  // vertical space than dense multi-node rows. R5 follow-up: weight reduced
+  // 0.6 → 0.4 so a lone row-0 hub sits even closer to the top instead of
+  // leaving a visible band above it.
   const rowWeights = sortedLevels.map((lv) => {
     let totalInRow = 0;
     for (const g of groups.values()) totalInRow += (g.get(lv)?.length ?? 0);
-    return totalInRow <= 1 ? 0.6 : 1.0;
+    return totalInRow <= 1 ? 0.4 : 1.0;
   });
   const totalRowWeight = rowWeights.reduce((s, w) => s + w, 0) || 1;
   // Cumulative y-start (0..totalRowWeight) for each row, used to compute baseY.
@@ -172,9 +172,11 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
     rowCumStart.push(acc);
     acc += rowWeights[i];
   }
-  // Vertical band: 4..96% of the plot height (was 8..92% — Issue 6 reclaim).
-  const Y_START = 4;
-  const Y_RANGE = 92;
+  // Vertical band: full 0..100% of the plot height (R5 follow-up — was
+  // 4..96; the residual 4% top inset compounded with pad.top to leave a
+  // visible empty band above the first row).
+  const Y_START = 0;
+  const Y_RANGE = 100;
 
   // Horizontal: each group's slot width is proportional to its widest level.
   // A {diff,rates} group (max 1 node per level) gets a narrow slot; a
@@ -198,9 +200,13 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
       const rowIdx = levelRowIdx.get(lv)!;
       const yMid = rowCumStart[rowIdx] + rowWeights[rowIdx] / 2;
       const baseY = Y_START + (yMid / totalRowWeight) * Y_RANGE;
-      // Dense rows (>= 4 siblings WITHIN a group) zigzag alternate nodes
+      // Dense rows (>= 5 siblings WITHIN a group) zigzag alternate nodes
       // into two sub-rows so two-line labels don't collide horizontally.
-      const dense = ids.length >= 4;
+      // Threshold moved 4 → 5 (R6 follow-up): with the min-max wrapLabel
+      // producing narrower 2-line boxes, 4 nodes per row fit flat without
+      // collision; the 4-node zigzag was creating visible alternating-height
+      // staircase chaos for no real benefit.
+      const dense = ids.length >= 5;
       ids.forEach((id, colIdx) => {
         const staggerY = dense ? (colIdx % 2) * 14 : 0;
         const x = cursorX + (colIdx + 0.5) * (sliceWidth / ids.length);
@@ -282,9 +288,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No concept nodes.</div>;
   }
 
-  // Issue 6: tighter top padding when title present so the first row sits
-  // closer to the header instead of leaving a wide empty band.
-  const pad = { top: title ? 24 : 18, bottom: notes ? 28 : 16, left: 14, right: 14 };
+  // Issue 6 + R5 follow-up: minimal top padding so the first row sits
+  // immediately under the HTML title instead of leaving a wide empty band.
+  const pad = { top: 12, bottom: notes ? 28 : 16, left: 14, right: 14 };
   const w = VIEWBOX_W - pad.left - pad.right;
   const h = VIEWBOX_H - pad.top - pad.bottom;
 
@@ -369,14 +375,18 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     });
   });
 
-  // R3: detect actual segment crossings between edge pairs and force-curve
-  // both halves of every crossing pair. The original "long edge" trigger
-  // (y-span > 1.5 row heights) catches DI→FT but NOT diagonal 1-row-span
-  // crossings like Diff→FT and Integ→Antideriv that go in opposite x
-  // directions across the same y-band. Standard CCW segment-intersection
-  // test; skip pairs sharing an endpoint (they meet at a node, that's not
-  // a real "crossing").
+  // R3 + R7 follow-up: detect segment crossings between edge pairs and
+  // force-curve both halves with EXPLICIT OPPOSITE bow signs so they route
+  // around opposite sides of the intersection. The previous "bow toward
+  // farther viewBox edge" heuristic was symmetric for crossing pairs —
+  // both edges could pick perpendiculars on the same side and stay tangled.
+  // For each crossing pair, the edge with smaller midpoint x gets sign -1
+  // (bow with +perp = (-dy, dx)/len negated → leftward), the other +1
+  // (rightward). Edges in multiple crossing pairs keep the first sign set;
+  // worst case they remain partially tangled, but the typical case (one
+  // crossing pair) cleanly separates.
   const forceCurve = new Set<number>();
+  const crossingBowSign = new Map<number, 1 | -1>();
   const ccw = (Ax: number, Ay: number, Bx: number, By: number, Cx: number, Cy: number) =>
     (Cy - Ay) * (Bx - Ax) > (By - Ay) * (Cx - Ax);
   for (let i = 0; i < edges.length; i++) {
@@ -396,6 +406,12 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
       if (cross) {
         forceCurve.add(i);
         forceCurve.add(j);
+        const midA = (paA.x + pbA.x) / 2;
+        const midB = (paB.x + pbB.x) / 2;
+        const aSign: 1 | -1 = midA <= midB ? -1 : 1;
+        const bSign: 1 | -1 = midA <= midB ? 1 : -1;
+        if (!crossingBowSign.has(i)) crossingBowSign.set(i, aSign);
+        if (!crossingBowSign.has(j)) crossingBowSign.set(j, bSign);
       }
     }
   }
@@ -477,11 +493,23 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
             const px = -dy / len;
             const py = dx / len;
             const bow = 28;
-            const cand1 = { x: midX + px * bow, y: midY + py * bow };
-            const cand2 = { x: midX - px * bow, y: midY - py * bow };
-            const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
-            const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
-            const ctrl = d1 > d2 ? cand1 : cand2;
+            const sign = crossingBowSign.get(i);
+            let ctrl: { x: number; y: number };
+            if (sign !== undefined) {
+              // Crossing pair: explicit opposite-side bow guarantees the
+              // two crossing edges route around opposite sides of the
+              // intersection point and don't tangle.
+              ctrl = { x: midX + px * sign * bow, y: midY + py * sign * bow };
+            } else {
+              // Non-crossing curved edge: pick the perpendicular farther
+              // from viewBox center so the curve arcs outward through
+              // empty space rather than through dense rows.
+              const cand1 = { x: midX + px * bow, y: midY + py * bow };
+              const cand2 = { x: midX - px * bow, y: midY - py * bow };
+              const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
+              const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
+              ctrl = d1 > d2 ? cand1 : cand2;
+            }
             pathD = `M ${pa.x} ${pa.y} Q ${ctrl.x} ${ctrl.y} ${x2} ${y2}`;
             // Approximate the quadratic Bézier midpoint at t=0.5:
             // P(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2.
@@ -513,10 +541,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           if (e.label) {
             const tryT = (tVal: number): { x: number; y: number } => {
               if (longEdge) {
-                // Re-evaluate quadratic Bézier at tVal.
-                // Need ctrl point — recompute from captured locals.
-                // Already have pathD's ctrl in scope via labelMidX/Y derivation;
-                // recompute here for clarity.
+                // Re-evaluate quadratic Bézier at tVal using the SAME ctrl
+                // derivation as the path render above (crossing-pair sign
+                // takes precedence; otherwise farther-from-center).
                 const dx = x2 - pa.x;
                 const dy = y2 - pa.y;
                 const len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -525,11 +552,17 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
                 const bow = 28;
                 const midX = (pa.x + x2) / 2;
                 const midY = (pa.y + y2) / 2;
-                const cand1 = { x: midX + px * bow, y: midY + py * bow };
-                const cand2 = { x: midX - px * bow, y: midY - py * bow };
-                const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
-                const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
-                const c = d1 > d2 ? cand1 : cand2;
+                const sign = crossingBowSign.get(i);
+                let c: { x: number; y: number };
+                if (sign !== undefined) {
+                  c = { x: midX + px * sign * bow, y: midY + py * sign * bow };
+                } else {
+                  const cand1 = { x: midX + px * bow, y: midY + py * bow };
+                  const cand2 = { x: midX - px * bow, y: midY - py * bow };
+                  const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
+                  const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
+                  c = d1 > d2 ? cand1 : cand2;
+                }
                 const u = 1 - tVal;
                 return {
                   x: u * u * pa.x + 2 * u * tVal * c.x + tVal * tVal * x2,
