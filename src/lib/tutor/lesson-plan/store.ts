@@ -675,6 +675,12 @@ import { SEED_AP_STATS_U1_SUMMARY_STATISTICS } from './seeds/ap-stats-u1-summary
 import { SEED_AP_STATS_U1_COMPARING_DISTRIBUTIONS } from './seeds/ap-stats-u1-comparing-distributions';
 import { SEED_AP_STATS_U1_NORMAL_DISTRIBUTION } from './seeds/ap-stats-u1-normal-distribution';
 import { SEED_AP_STATS_U1_FRQ_PRACTICE } from './seeds/ap-stats-u1-frq-practice';
+import { SEED_AP_STATS_U2_TWO_CATEGORICAL } from './seeds/ap-stats-u2-two-categorical';
+import { SEED_AP_STATS_U2_SCATTERPLOTS } from './seeds/ap-stats-u2-scatterplots';
+import { SEED_AP_STATS_U2_CORRELATION } from './seeds/ap-stats-u2-correlation';
+import { SEED_AP_STATS_U2_LINEAR_REGRESSION } from './seeds/ap-stats-u2-linear-regression';
+import { SEED_AP_STATS_U2_RESIDUALS } from './seeds/ap-stats-u2-residuals';
+import { SEED_AP_STATS_U2_FRQ_PRACTICE } from './seeds/ap-stats-u2-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1779,6 +1785,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U1_COMPARING_DISTRIBUTIONS,
   SEED_AP_STATS_U1_NORMAL_DISTRIBUTION,
   SEED_AP_STATS_U1_FRQ_PRACTICE,
+  SEED_AP_STATS_U2_TWO_CATEGORICAL,
+  SEED_AP_STATS_U2_SCATTERPLOTS,
+  SEED_AP_STATS_U2_CORRELATION,
+  SEED_AP_STATS_U2_LINEAR_REGRESSION,
+  SEED_AP_STATS_U2_RESIDUALS,
+  SEED_AP_STATS_U2_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
