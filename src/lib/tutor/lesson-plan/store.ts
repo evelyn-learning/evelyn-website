@@ -616,6 +616,14 @@ import { SEED_AP_CALCBC_U1_INFINITE_LIMITS_ASYMPTOTES } from './seeds/ap-calcbc-
 import { SEED_AP_CALCBC_U1_LIMITS_AT_INFINITY } from './seeds/ap-calcbc-u1-limits-at-infinity';
 import { SEED_AP_CALCBC_U1_IVT } from './seeds/ap-calcbc-u1-ivt';
 import { SEED_AP_CALCBC_U1_FRQ_PRACTICE } from './seeds/ap-calcbc-u1-frq-practice';
+import { SEED_AP_CALCBC_U2_DERIVATIVE_DEFINITION } from './seeds/ap-calcbc-u2-derivative-definition';
+import { SEED_AP_CALCBC_U2_ESTIMATING_DERIVATIVES } from './seeds/ap-calcbc-u2-estimating-derivatives';
+import { SEED_AP_CALCBC_U2_DIFFERENTIABILITY_CONTINUITY } from './seeds/ap-calcbc-u2-differentiability-continuity';
+import { SEED_AP_CALCBC_U2_POWER_RULE_LINEARITY } from './seeds/ap-calcbc-u2-power-rule-linearity';
+import { SEED_AP_CALCBC_U2_TRANSCENDENTAL_DERIVATIVES } from './seeds/ap-calcbc-u2-transcendental-derivatives';
+import { SEED_AP_CALCBC_U2_PRODUCT_RULE } from './seeds/ap-calcbc-u2-product-rule';
+import { SEED_AP_CALCBC_U2_QUOTIENT_RULE } from './seeds/ap-calcbc-u2-quotient-rule';
+import { SEED_AP_CALCBC_U2_FRQ_PRACTICE } from './seeds/ap-calcbc-u2-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1666,6 +1674,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U1_LIMITS_AT_INFINITY,
   SEED_AP_CALCBC_U1_IVT,
   SEED_AP_CALCBC_U1_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U2_DERIVATIVE_DEFINITION,
+  SEED_AP_CALCBC_U2_ESTIMATING_DERIVATIVES,
+  SEED_AP_CALCBC_U2_DIFFERENTIABILITY_CONTINUITY,
+  SEED_AP_CALCBC_U2_POWER_RULE_LINEARITY,
+  SEED_AP_CALCBC_U2_TRANSCENDENTAL_DERIVATIVES,
+  SEED_AP_CALCBC_U2_PRODUCT_RULE,
+  SEED_AP_CALCBC_U2_QUOTIENT_RULE,
+  SEED_AP_CALCBC_U2_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
