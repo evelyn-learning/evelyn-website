@@ -641,6 +641,16 @@ import { SEED_AP_CALCBC_U5_CONCAVITY_SECOND_DERIVATIVE } from './seeds/ap-calcbc
 import { SEED_AP_CALCBC_U5_GRAPHING_F_FP_FPP } from './seeds/ap-calcbc-u5-graphing-f-fp-fpp';
 import { SEED_AP_CALCBC_U5_OPTIMIZATION } from './seeds/ap-calcbc-u5-optimization';
 import { SEED_AP_CALCBC_U5_FRQ_PRACTICE } from './seeds/ap-calcbc-u5-frq-practice';
+import { SEED_AP_CALCBC_U6_RIEMANN_SUMS } from './seeds/ap-calcbc-u6-riemann-sums';
+import { SEED_AP_CALCBC_U6_FTC } from './seeds/ap-calcbc-u6-ftc';
+import { SEED_AP_CALCBC_U6_INTEGRAL_PROPERTIES } from './seeds/ap-calcbc-u6-integral-properties';
+import { SEED_AP_CALCBC_U6_BASIC_ANTIDERIVATIVES } from './seeds/ap-calcbc-u6-basic-antiderivatives';
+import { SEED_AP_CALCBC_U6_U_SUBSTITUTION } from './seeds/ap-calcbc-u6-u-substitution';
+import { SEED_AP_CALCBC_U6_INTEGRATION_BY_PARTS } from './seeds/ap-calcbc-u6-integration-by-parts';
+import { SEED_AP_CALCBC_U6_PARTIAL_FRACTIONS } from './seeds/ap-calcbc-u6-partial-fractions';
+import { SEED_AP_CALCBC_U6_IMPROPER_INTEGRALS } from './seeds/ap-calcbc-u6-improper-integrals';
+import { SEED_AP_CALCBC_U6_INTEGRATION_STRATEGY } from './seeds/ap-calcbc-u6-integration-strategy';
+import { SEED_AP_CALCBC_U6_FRQ_PRACTICE } from './seeds/ap-calcbc-u6-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1716,6 +1726,16 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U5_GRAPHING_F_FP_FPP,
   SEED_AP_CALCBC_U5_OPTIMIZATION,
   SEED_AP_CALCBC_U5_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U6_RIEMANN_SUMS,
+  SEED_AP_CALCBC_U6_FTC,
+  SEED_AP_CALCBC_U6_INTEGRAL_PROPERTIES,
+  SEED_AP_CALCBC_U6_BASIC_ANTIDERIVATIVES,
+  SEED_AP_CALCBC_U6_U_SUBSTITUTION,
+  SEED_AP_CALCBC_U6_INTEGRATION_BY_PARTS,
+  SEED_AP_CALCBC_U6_PARTIAL_FRACTIONS,
+  SEED_AP_CALCBC_U6_IMPROPER_INTEGRALS,
+  SEED_AP_CALCBC_U6_INTEGRATION_STRATEGY,
+  SEED_AP_CALCBC_U6_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

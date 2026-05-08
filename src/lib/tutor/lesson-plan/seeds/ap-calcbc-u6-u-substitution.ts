@@ -1,0 +1,75 @@
+/**
+ * AP Calculus BC — CED Unit 6.9: Integration Using Substitution.
+ */
+
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+
+export const SEED_AP_CALCBC_U6_U_SUBSTITUTION: LessonPlan = {
+  id: 'evelyn.ap.calcbc.u-substitution.v1',
+  title: 'U6.9 Integration by Substitution',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-calculus-bc', locale: 'en',
+  los: [{ id: 'apcalcbc.u-substitution', description: 'Apply u-substitution to evaluate integrals of composite functions: identify the inner function, substitute, integrate, and convert back. Handle definite integrals by changing limits.', standard: 'AP-CALCBC-6.9' }],
+  prerequisites: ['apcalcbc.basic-antiderivatives'],
+  followUps: ['apcalcbc.algebraic-prep-integration'],
+  estimatedMinutes: 24,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame u-sub as the chain rule in reverse.',
+      script: "If chain rule turns d/dx[F(g(x))] into F\\'(g(x))·g\\'(x), then U-SUBSTITUTION turns the integral ∫ F\\'(g(x))·g\\'(x) dx back into F(g(x))+C. The most-used integration technique. AP exam questions test it constantly.",
+      estimatedMinutes: 2 },
+    { id: 'concept-u-sub', kind: 'concept', goal: 'Cover the u-substitution procedure + when to use it.',
+      keyIdeas: [
+        'CORE IDEA. If you can write the integral as ∫ f(g(x))·g\'(x) dx, substitute u = g(x), du = g\'(x) dx. The integral becomes ∫ f(u) du, often easier.',
+        'PROCEDURE: (1) IDENTIFY u = an inner function whose derivative also appears in the integral. (2) COMPUTE du = u\'(x) dx, then solve for the dx-equivalent. (3) SUBSTITUTE: replace inner function with u and dx with du/u\'. (4) INTEGRATE in u. (5) BACK-SUBSTITUTE: replace u with g(x).',
+        'FOR DEFINITE INTEGRALS: also CHANGE THE LIMITS. If u = g(x) and bounds are x = a to x = b, new bounds in u are u = g(a) to u = g(b). Then no need to back-substitute.',
+        'COMMON SHAPES THAT INVITE U-SUB:',
+        '- ∫ x · f(x²+1) dx → u = x²+1, du = 2x dx.',
+        '- ∫ sin(x²) · 2x dx → u = x².',
+        '- ∫ e^(3x) dx → u = 3x, du = 3 dx → ∫ e^u (1/3) du = (1/3)e^u + C = (1/3)e^(3x) + C.',
+        '- ∫ tan(x) dx = ∫ sin(x)/cos(x) dx → u = cos(x), du = -sin(x) dx → ∫ -1/u du = -ln|u| + C = -ln|cos(x)| + C = ln|sec(x)| + C.',
+        'SPOT THE SHAPE: look for "function inside" composed with a derivative-like factor outside (the chain rule signature).',
+        'IF FACTOR DOESN\'T QUITE MATCH — multiply by a constant inside and outside to balance. E.g. ∫ x·e^(x²) dx: u = x², du = 2x dx, so x dx = du/2. Integral = ∫ e^u (1/2) du = (1/2)e^u + C = (1/2)e^(x²) + C.',
+      ],
+      vocabulary: [{ term: 'u-substitution', definition: 'integration technique: replace inner function with u, then transform integral into a simpler form.' }],
+      estimatedMinutes: 5 },
+    { id: 'worked-basic-u-sub', kind: 'worked_example',
+      problem: 'Compute ∫ 2x · e^(x²) dx.',
+      steps: [
+        'STEP 1 — IDENTIFY u. Inner function with its derivative present: u = x², du = 2x dx.',
+        'STEP 2 — SUBSTITUTE. ∫ 2x · e^(x²) dx = ∫ e^u du.',
+        'STEP 3 — INTEGRATE. ∫ e^u du = e^u + C.',
+        'STEP 4 — BACK-SUBSTITUTE. e^(x²) + C.',
+      ],
+      answer: 'e^(x²) + C', estimatedMinutes: 3 },
+    { id: 'worked-trig-u-sub', kind: 'worked_example',
+      problem: 'Compute ∫ sin(3x + 1) dx.',
+      steps: [
+        'STEP 1 — u = 3x + 1, du = 3 dx, so dx = du/3.',
+        'STEP 2 — Substitute: ∫ sin(u) · (1/3) du = (1/3)·∫ sin(u) du.',
+        'STEP 3 — Integrate: (1/3)·(-cos(u)) + C = -(1/3) cos(u) + C.',
+        'STEP 4 — Back-substitute: -(1/3) cos(3x + 1) + C.',
+      ],
+      answer: '-(1/3) cos(3x + 1) + C', estimatedMinutes: 3 },
+    { id: 'try-u-sub', kind: 'try_yourself',
+      problem: 'Compute. (a) ∫ x²(x³ + 1)⁵ dx. (b) ∫ 2x/(x² + 5) dx. (c) ∫ cos(x)·e^(sin x) dx.',
+      expectedAnswer: '(a) u = x³ + 1, du = 3x² dx, x² dx = du/3. ∫ u⁵ (1/3) du = (1/3)·u⁶/6 = u⁶/18 + C = (x³+1)⁶/18 + C. (b) u = x² + 5, du = 2x dx. ∫ 1/u du = ln|u| + C = ln(x² + 5) + C (positive since x²+5 > 0). (c) u = sin x, du = cos x dx. ∫ e^u du = e^u + C = e^(sin x) + C.',
+      responseFormat: 'numeric', hints: ['Identify inner function whose derivative appears in the integrand.'], estimatedMinutes: 5 },
+    { id: 'try-definite', kind: 'try_yourself',
+      problem: 'Compute ∫_0^2 x · √(x² + 1) dx by changing limits.',
+      expectedAnswer: 'u = x² + 1, du = 2x dx, x dx = du/2. New limits: x = 0 → u = 1; x = 2 → u = 5. Integral becomes ∫_1^5 √u · (1/2) du = (1/2) · ∫_1^5 u^(1/2) du = (1/2) · [(2/3)u^(3/2)]_1^5 = (1/3)·(5^(3/2) − 1) = (1/3)·(5√5 − 1).',
+      responseFormat: 'numeric', hints: ['Change limits from x to u; integrate; evaluate at new limits.'], estimatedMinutes: 4 },
+    { id: 'try-tan-integral', kind: 'try_yourself',
+      problem: 'AP-style synthesis. Compute ∫ tan(x) dx using u-substitution.',
+      expectedAnswer: 'tan(x) = sin(x)/cos(x). Let u = cos(x); du = -sin(x) dx, so sin(x) dx = -du. ∫ sin(x)/cos(x) dx = ∫ -du/u = -ln|u| + C = -ln|cos(x)| + C. Equivalently: ln|sec(x)| + C (using -ln|cos| = ln|1/cos| = ln|sec|).',
+      responseFormat: 'numeric', hints: ['Convert tan to sin/cos. Let u = cos(x).'], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'u-sub: identify inner u; compute du; substitute; integrate; back-sub.',
+      'For definite integrals: change limits to u-values, no need to back-substitute.',
+      'Chain rule signature: f(g(x))·g\'(x) — perfect u-sub setup.',
+      '∫ tan(x) dx = -ln|cos x| + C = ln|sec x| + C.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '6', cedTopic: '6.9', cedTitle: 'Integration by Substitution',
+    sources: [{ type: 'concept', book: 'larson-calc-ap-ed', chapter: '4', note: 'Standard u-substitution.' }] },
+};

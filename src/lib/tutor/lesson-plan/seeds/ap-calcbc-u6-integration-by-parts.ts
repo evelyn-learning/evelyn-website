@@ -1,0 +1,82 @@
+/**
+ * AP Calculus BC — CED Unit 6.11: Integration by Parts (BC only).
+ */
+
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+
+export const SEED_AP_CALCBC_U6_INTEGRATION_BY_PARTS: LessonPlan = {
+  id: 'evelyn.ap.calcbc.integration-by-parts.v1',
+  title: 'U6.11 Integration by Parts',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-calculus-bc', locale: 'en',
+  los: [{ id: 'apcalcbc.integration-by-parts', description: 'Apply integration by parts formula ∫ u dv = uv − ∫ v du, including the LIATE heuristic for choosing u.', standard: 'AP-CALCBC-6.11' }],
+  prerequisites: ['apcalcbc.u-substitution'],
+  followUps: ['apcalcbc.partial-fractions'],
+  estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame integration by parts as the product rule in reverse.',
+      script: "When u-sub doesn't work, integration BY PARTS often does. Derived from the product rule: ∫ u dv = uv - ∫ v du. The art is picking u and dv. AP exam questions test this on integrals like ∫ x e^x dx, ∫ x sin x dx, ∫ ln x dx.",
+      estimatedMinutes: 2 },
+    { id: 'concept-by-parts', kind: 'concept', goal: 'State the formula + LIATE heuristic + standard examples.',
+      keyIdeas: [
+        'INTEGRATION BY PARTS FORMULA: ∫ u dv = uv − ∫ v du.',
+        'DERIVATION (sketch). Product rule: d/dx(uv) = u\'v + uv\'. Integrate both sides: uv = ∫ u\'v dx + ∫ uv\' dx. Rearrange: ∫ uv\' dx = uv − ∫ u\'v dx. With u = u(x), v = v(x), dv = v\' dx, du = u\' dx: ∫ u dv = uv − ∫ v du. ✓',
+        'CHOOSING u: use LIATE mnemonic (priority for u from highest to lowest):',
+        'L — Logarithmic (ln x)',
+        'I — Inverse trig (arctan, arcsin, etc.)',
+        'A — Algebraic (polynomials)',
+        'T — Trig (sin x, cos x)',
+        'E — Exponential (e^x)',
+        'PICK U as the function HIGHEST in LIATE that appears. dv = the rest.',
+        'EXAMPLES.',
+        '- ∫ x e^x dx: A (polynomial) before E (exponential). u = x, dv = e^x dx. du = dx, v = e^x. ∫ u dv = uv − ∫ v du = xe^x − ∫ e^x dx = xe^x − e^x + C.',
+        '- ∫ x sin x dx: A before T. u = x, dv = sin x dx. du = dx, v = -cos x. ∫ u dv = -x cos x + ∫ cos x dx = -x cos x + sin x + C.',
+        '- ∫ ln x dx: L is highest. u = ln x, dv = dx. du = (1/x) dx, v = x. ∫ ln x dx = x ln x − ∫ x · (1/x) dx = x ln x − x + C.',
+        'TABULAR INTEGRATION (when applying repeatedly): organize derivatives of u and antiderivatives of dv in a table; alternate signs.',
+        'CIRCULAR INTEGRATION: ∫ e^x sin x dx requires applying parts TWICE; ends up with the original integral plus other terms; SOLVE for the integral algebraically.',
+      ],
+      vocabulary: [
+        { term: 'integration by parts', definition: '∫ u dv = uv − ∫ v du; the product rule reversed.' },
+        { term: 'LIATE', definition: 'mnemonic for choosing u: Logarithmic > Inverse trig > Algebraic > Trig > Exponential.' },
+      ],
+      estimatedMinutes: 5 },
+    { id: 'worked-by-parts', kind: 'worked_example',
+      problem: 'Compute ∫ x e^x dx.',
+      steps: [
+        'STEP 1 — LIATE: Algebraic (x) > Exponential (e^x). u = x, dv = e^x dx.',
+        'STEP 2 — du = dx, v = ∫ e^x dx = e^x.',
+        'STEP 3 — Apply formula: ∫ x e^x dx = uv − ∫ v du = x · e^x − ∫ e^x · 1 dx = x e^x − e^x + C.',
+        'STEP 4 — Factor: e^x(x − 1) + C.',
+      ],
+      answer: 'e^x(x − 1) + C', estimatedMinutes: 3 },
+    { id: 'worked-ln-x', kind: 'worked_example',
+      problem: 'Compute ∫ ln x dx.',
+      steps: [
+        'STEP 1 — LIATE: Log (ln x) is highest. u = ln x, dv = dx.',
+        'STEP 2 — du = (1/x) dx, v = x.',
+        'STEP 3 — ∫ ln x dx = x ln x − ∫ x · (1/x) dx = x ln x − ∫ 1 dx = x ln x − x + C.',
+      ],
+      answer: 'x ln x − x + C', estimatedMinutes: 3 },
+    { id: 'try-by-parts-1', kind: 'try_yourself',
+      problem: 'Compute. (a) ∫ x cos x dx. (b) ∫ x e^(2x) dx. (c) ∫ x ln x dx.',
+      expectedAnswer: '(a) u=x, dv=cos x dx. du=dx, v=sin x. = x sin x − ∫ sin x dx = x sin x + cos x + C. (b) u=x, dv=e^(2x) dx. du=dx, v=(1/2)e^(2x). = (x/2)e^(2x) − ∫ (1/2)e^(2x) dx = (x/2)e^(2x) − (1/4)e^(2x) + C. (c) LIATE: log first. u=ln x, dv=x dx. du=(1/x) dx, v=x²/2. = (x²/2) ln x − ∫ (x²/2)(1/x) dx = (x²/2) ln x − (x²/4) + C.',
+      responseFormat: 'numeric', hints: ['LIATE: pick u; compute du, v; apply formula.'], estimatedMinutes: 5 },
+    { id: 'try-twice', kind: 'try_yourself',
+      problem: 'Compute ∫ x² e^x dx (parts twice).',
+      expectedAnswer: 'First: u=x², dv=e^x dx. du=2x dx, v=e^x. = x² e^x − ∫ 2x e^x dx. Second (apply parts to ∫ 2x e^x dx): u=2x, dv=e^x dx. du=2 dx, v=e^x. ∫ 2x e^x dx = 2x e^x − ∫ 2 e^x dx = 2x e^x − 2 e^x + C. Combine: x² e^x − (2x e^x − 2 e^x) + C = x² e^x − 2x e^x + 2 e^x + C = e^x(x² − 2x + 2) + C.',
+      responseFormat: 'numeric', hints: ['Apply parts twice; combine.'], estimatedMinutes: 4 },
+    { id: 'try-circular', kind: 'try_yourself',
+      problem: 'AP-style synthesis. Compute ∫ e^x sin x dx using parts TWICE and solving algebraically for the integral.',
+      expectedAnswer: 'Let I = ∫ e^x sin x dx. Apply parts (LIATE: T > E, but either choice works). u = sin x, dv = e^x dx. du = cos x dx, v = e^x. I = e^x sin x − ∫ e^x cos x dx. \nApply parts to ∫ e^x cos x dx. u = cos x, dv = e^x dx. du = -sin x dx, v = e^x. ∫ e^x cos x dx = e^x cos x − ∫ e^x · (-sin x) dx = e^x cos x + ∫ e^x sin x dx = e^x cos x + I. \nSubstitute back: I = e^x sin x − (e^x cos x + I) = e^x sin x − e^x cos x − I. \nSOLVE FOR I: 2I = e^x sin x − e^x cos x → I = (e^x/2)(sin x − cos x) + C. \nStrong answers: identify the circular pattern, apply parts twice, ALGEBRAICALLY solve for I.',
+      responseFormat: 'frq', hints: ['Apply parts twice; the original integral reappears; solve algebraically.'], estimatedMinutes: 4 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      '∫ u dv = uv − ∫ v du (product rule reversed).',
+      'LIATE: Log > Inverse trig > Algebraic > Trig > Exponential. Pick u from highest.',
+      'Apply repeatedly when needed. Circular integrals: solve algebraically.',
+      '∫ ln x dx = x ln x − x + C. Memorize.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '6', cedTopic: '6.11', cedTitle: 'Integration by Parts (BC)',
+    sources: [{ type: 'concept', book: 'larson-calc-ap-ed', chapter: '7', note: 'Standard integration by parts.' }] },
+};
