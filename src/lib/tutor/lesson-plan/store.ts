@@ -561,6 +561,14 @@ import { SEED_AP_MACRO_U1_COMPARATIVE_ADVANTAGE } from './seeds/ap-macro-u1-comp
 import { SEED_AP_MACRO_U1_COST_BENEFIT } from './seeds/ap-macro-u1-cost-benefit';
 import { SEED_AP_MACRO_U1_MARGINAL_ANALYSIS } from './seeds/ap-macro-u1-marginal-analysis';
 import { SEED_AP_MACRO_U1_FRQ_PRACTICE } from './seeds/ap-macro-u1-frq-practice';
+import { SEED_AP_MACRO_U2_CIRCULAR_FLOW_GDP } from './seeds/ap-macro-u2-circular-flow-gdp';
+import { SEED_AP_MACRO_U2_GDP_LIMITATIONS } from './seeds/ap-macro-u2-gdp-limitations';
+import { SEED_AP_MACRO_U2_UNEMPLOYMENT } from './seeds/ap-macro-u2-unemployment';
+import { SEED_AP_MACRO_U2_PRICE_INDICES_INFLATION } from './seeds/ap-macro-u2-price-indices-inflation';
+import { SEED_AP_MACRO_U2_COSTS_OF_INFLATION } from './seeds/ap-macro-u2-costs-of-inflation';
+import { SEED_AP_MACRO_U2_REAL_VS_NOMINAL_GDP } from './seeds/ap-macro-u2-real-vs-nominal-gdp';
+import { SEED_AP_MACRO_U2_BUSINESS_CYCLE } from './seeds/ap-macro-u2-business-cycle';
+import { SEED_AP_MACRO_U2_FRQ_PRACTICE } from './seeds/ap-macro-u2-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1561,6 +1569,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U1_COST_BENEFIT,
   SEED_AP_MACRO_U1_MARGINAL_ANALYSIS,
   SEED_AP_MACRO_U1_FRQ_PRACTICE,
+  SEED_AP_MACRO_U2_CIRCULAR_FLOW_GDP,
+  SEED_AP_MACRO_U2_GDP_LIMITATIONS,
+  SEED_AP_MACRO_U2_UNEMPLOYMENT,
+  SEED_AP_MACRO_U2_PRICE_INDICES_INFLATION,
+  SEED_AP_MACRO_U2_COSTS_OF_INFLATION,
+  SEED_AP_MACRO_U2_REAL_VS_NOMINAL_GDP,
+  SEED_AP_MACRO_U2_BUSINESS_CYCLE,
+  SEED_AP_MACRO_U2_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

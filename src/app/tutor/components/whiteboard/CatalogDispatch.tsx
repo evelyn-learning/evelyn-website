@@ -57,6 +57,7 @@ import {
   CatalogHierarchyPyramidRenderer,
 } from './CatalogAdvancedRenderers';
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
+import { BusinessCycleRenderer } from './BusinessCycleRenderer';
 
 interface Props {
   kind: string;
@@ -126,6 +127,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'hierarchy_pyramid':        return <CatalogHierarchyPyramidRenderer figure={figure} />;
     // Phase 9 — economics (AP Plans Initiative)
     case 'production_possibilities': return <ProductionPossibilitiesRenderer figure={figure} />;
+    case 'business_cycle':           return <BusinessCycleRenderer figure={figure} />;
 
     default:
       return (

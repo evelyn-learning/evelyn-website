@@ -7,6 +7,62 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+// ── business_cycle ──────────────────────────────────────────────────────
+
+export interface BusinessCyclePhaseMarker {
+  /** 0..1, position along the cycle horizontally (left to right). */
+  t: number;
+  label: string;
+  showLine?: boolean;
+}
+
+export interface BusinessCycleFigure {
+  cycles: number;
+  amplitude: number;
+  trendSlope: number;
+  showTrend: boolean;
+  showOutputGap: boolean;
+  labels: 'all' | 'minimal' | 'none';
+  markers?: BusinessCyclePhaseMarker[];
+  title?: string;
+}
+
+export function solveBusinessCycle(params: Record<string, unknown>): BusinessCycleFigure {
+  const cycles = typeof params.cycles === 'number' && params.cycles > 0 ? params.cycles : 1.5;
+  const amplitude = typeof params.amplitude === 'number' && params.amplitude > 0 ? params.amplitude : 0.18;
+  const trendSlope = typeof params.trendSlope === 'number' ? params.trendSlope : 0.4;
+  const showTrend = params.showTrend !== false;
+  const showOutputGap = params.showOutputGap === true;
+  const lbl = params.labels;
+  const labels: 'all' | 'minimal' | 'none' = lbl === 'minimal' || lbl === 'none' ? lbl : 'all';
+
+  let markers: BusinessCyclePhaseMarker[] | undefined;
+  if (Array.isArray(params.markers)) {
+    markers = (params.markers as unknown[]).map((m, i) => {
+      const mm = m as Record<string, unknown>;
+      if (typeof mm.t !== 'number' || typeof mm.label !== 'string') {
+        throw new Error(`business_cycle: markers[${i}] must have numeric t and string label`);
+      }
+      return {
+        t: Math.max(0, Math.min(1, mm.t)),
+        label: mm.label,
+        showLine: mm.showLine !== false,
+      };
+    });
+  }
+
+  return {
+    cycles,
+    amplitude,
+    trendSlope,
+    showTrend,
+    showOutputGap,
+    labels,
+    markers,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── production_possibilities ────────────────────────────────────────────
 
 export interface PPCPoint {

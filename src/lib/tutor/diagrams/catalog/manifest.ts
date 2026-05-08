@@ -45,7 +45,7 @@ import {
   solveHierarchyPyramid,
 } from './kinds/advanced-math-ela-social';
 
-import { solveProductionPossibilities } from './kinds/economics';
+import { solveProductionPossibilities, solveBusinessCycle } from './kinds/economics';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -119,6 +119,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 9 — economics (AP Plans Initiative) ──────────────────────────
   { kind: 'production_possibilities', displayName: 'Production Possibilities Curve', whenToUse: 'Show the trade-off between two goods given fixed resources; supports points inside/on/outside the curve and an optional growth/contraction shift.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'xAxis:{label,max}, yAxis:{label,max}, curve?:bowed-out|linear (default bowed-out), points?:[{x,y,label?,position?:inside|on|outside,color?}], shift?:{direction:out|in,factor?,label?}, title?' },
+  { kind: 'business_cycle', displayName: 'Business Cycle', whenToUse: 'Show the canonical expansion/peak/contraction/trough cycle of real GDP around a long-run trend, with optional output-gap shading and phase markers.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'cycles?:number (default 1.5), amplitude?:0..1 (default 0.18), trendSlope?:number (default 0.4), showTrend?:boolean (default true), showOutputGap?:boolean (default false), labels?:all|minimal|none (default all), markers?:[{t:0..1,label,showLine?}], title?' },
 ];
 
 /** Solver dispatch table. */
@@ -183,6 +184,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   hierarchy_pyramid: solveHierarchyPyramid,
   // Phase 9 — economics
   production_possibilities: solveProductionPossibilities,
+  business_cycle: solveBusinessCycle,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
