@@ -7,6 +7,124 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+// ── money_market ────────────────────────────────────────────────────────
+
+export interface MoneyMarketShift {
+  curve: 'Ms' | 'Md';
+  direction: 'left' | 'right';
+  magnitude: number;
+  label?: string;
+}
+
+export interface MoneyMarketFigure {
+  /** x-position of vertical Money Supply curve. 0..100. */
+  moneySupplyQuantity: number;
+  /** Initial equilibrium nominal interest rate (where Md intersects Ms). 0..100. */
+  initialInterestRate: number;
+  shift?: MoneyMarketShift;
+  finalInterestRate?: number;
+  finalMoneyQuantity?: number;
+  title?: string;
+}
+
+export function solveMoneyMarket(params: Record<string, unknown>): MoneyMarketFigure {
+  const Q = typeof params.moneySupplyQuantity === 'number' ? params.moneySupplyQuantity : 50;
+  const i0 = typeof params.initialInterestRate === 'number' ? params.initialInterestRate : 50;
+
+  let shift: MoneyMarketShift | undefined;
+  let finalI: number | undefined;
+  let finalQ: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'Ms' || s.curve === 'Md') && (s.direction === 'left' || s.direction === 'right')) {
+      shift = {
+        curve: s.curve,
+        direction: s.direction,
+        magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 10,
+        label: typeof s.label === 'string' ? s.label : undefined,
+      };
+      const delta = shift.direction === 'right' ? shift.magnitude : -shift.magnitude;
+      if (shift.curve === 'Ms') {
+        // Ms shift right → quantity rises, interest rate falls (along Md slope of -1).
+        finalQ = Q + delta;
+        finalI = i0 - delta;
+      } else {
+        // Md shift right → at fixed Ms, interest rate rises; quantity unchanged.
+        finalQ = Q;
+        finalI = i0 + delta;
+      }
+    }
+  }
+
+  return {
+    moneySupplyQuantity: Q,
+    initialInterestRate: i0,
+    shift,
+    finalInterestRate: finalI,
+    finalMoneyQuantity: finalQ,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+// ── loanable_funds ──────────────────────────────────────────────────────
+
+export interface LoanableFundsShift {
+  curve: 'S' | 'D';
+  direction: 'left' | 'right';
+  magnitude: number;
+  label?: string;
+}
+
+export interface LoanableFundsFigure {
+  /** Initial equilibrium quantity of loanable funds. 0..100. */
+  initialQuantity: number;
+  /** Initial equilibrium real interest rate. 0..100. */
+  initialRealRate: number;
+  shift?: LoanableFundsShift;
+  finalQuantity?: number;
+  finalRealRate?: number;
+  title?: string;
+}
+
+export function solveLoanableFunds(params: Record<string, unknown>): LoanableFundsFigure {
+  const Q0 = typeof params.initialQuantity === 'number' ? params.initialQuantity : 50;
+  const r0 = typeof params.initialRealRate === 'number' ? params.initialRealRate : 50;
+
+  let shift: LoanableFundsShift | undefined;
+  let finalQ: number | undefined;
+  let finalR: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'S' || s.curve === 'D') && (s.direction === 'left' || s.direction === 'right')) {
+      shift = {
+        curve: s.curve,
+        direction: s.direction,
+        magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 10,
+        label: typeof s.label === 'string' ? s.label : undefined,
+      };
+      const delta = shift.direction === 'right' ? shift.magnitude : -shift.magnitude;
+      if (shift.curve === 'S') {
+        // Saving shift right (more saving): rate falls, quantity rises. Both by delta/2.
+        finalQ = Q0 + delta / 2;
+        finalR = r0 - delta / 2;
+      } else {
+        // Demand shift right (more borrowing): rate rises, quantity rises. Both by delta/2.
+        finalQ = Q0 + delta / 2;
+        finalR = r0 + delta / 2;
+      }
+    }
+  }
+
+  return {
+    initialQuantity: Q0,
+    initialRealRate: r0,
+    shift,
+    finalQuantity: finalQ,
+    finalRealRate: finalR,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── aggregate_demand_supply ─────────────────────────────────────────────
 
 export interface AdAsShift {

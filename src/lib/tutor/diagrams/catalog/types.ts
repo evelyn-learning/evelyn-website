@@ -74,7 +74,9 @@ export type DiagramKindId =
   // Phase 9 — economics (AP Plans Initiative; see project_ap_plans_initiative.md)
   | 'production_possibilities'
   | 'business_cycle'
-  | 'aggregate_demand_supply';
+  | 'aggregate_demand_supply'
+  | 'money_market'
+  | 'loanable_funds';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

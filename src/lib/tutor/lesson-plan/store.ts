@@ -579,6 +579,14 @@ import { SEED_AP_MACRO_U3_LONG_RUN_SELF_ADJUST } from './seeds/ap-macro-u3-long-
 import { SEED_AP_MACRO_U3_FISCAL_POLICY } from './seeds/ap-macro-u3-fiscal-policy';
 import { SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS } from './seeds/ap-macro-u3-automatic-stabilizers';
 import { SEED_AP_MACRO_U3_FRQ_PRACTICE } from './seeds/ap-macro-u3-frq-practice';
+import { SEED_AP_MACRO_U4_FINANCIAL_ASSETS } from './seeds/ap-macro-u4-financial-assets';
+import { SEED_AP_MACRO_U4_NOMINAL_REAL_RATES } from './seeds/ap-macro-u4-nominal-real-rates';
+import { SEED_AP_MACRO_U4_FUNCTIONS_OF_MONEY } from './seeds/ap-macro-u4-functions-of-money';
+import { SEED_AP_MACRO_U4_BANKING_MONEY_CREATION } from './seeds/ap-macro-u4-banking-money-creation';
+import { SEED_AP_MACRO_U4_MONEY_MARKET } from './seeds/ap-macro-u4-money-market';
+import { SEED_AP_MACRO_U4_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
+import { SEED_AP_MACRO_U4_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
+import { SEED_AP_MACRO_U4_FRQ_PRACTICE } from './seeds/ap-macro-u4-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1597,6 +1605,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U3_FISCAL_POLICY,
   SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS,
   SEED_AP_MACRO_U3_FRQ_PRACTICE,
+  SEED_AP_MACRO_U4_FINANCIAL_ASSETS,
+  SEED_AP_MACRO_U4_NOMINAL_REAL_RATES,
+  SEED_AP_MACRO_U4_FUNCTIONS_OF_MONEY,
+  SEED_AP_MACRO_U4_BANKING_MONEY_CREATION,
+  SEED_AP_MACRO_U4_MONEY_MARKET,
+  SEED_AP_MACRO_U4_MONETARY_POLICY,
+  SEED_AP_MACRO_U4_LOANABLE_FUNDS,
+  SEED_AP_MACRO_U4_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

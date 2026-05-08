@@ -59,6 +59,8 @@ import {
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 import { BusinessCycleRenderer } from './BusinessCycleRenderer';
 import { AdAsRenderer } from './AdAsRenderer';
+import { MoneyMarketRenderer } from './MoneyMarketRenderer';
+import { LoanableFundsRenderer } from './LoanableFundsRenderer';
 
 interface Props {
   kind: string;
@@ -130,6 +132,8 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'production_possibilities': return <ProductionPossibilitiesRenderer figure={figure} />;
     case 'business_cycle':           return <BusinessCycleRenderer figure={figure} />;
     case 'aggregate_demand_supply':  return <AdAsRenderer figure={figure} />;
+    case 'money_market':             return <MoneyMarketRenderer figure={figure} />;
+    case 'loanable_funds':           return <LoanableFundsRenderer figure={figure} />;
 
     default:
       return (

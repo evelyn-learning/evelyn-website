@@ -45,7 +45,13 @@ import {
   solveHierarchyPyramid,
 } from './kinds/advanced-math-ela-social';
 
-import { solveProductionPossibilities, solveBusinessCycle, solveAggregateDemandSupply } from './kinds/economics';
+import {
+  solveProductionPossibilities,
+  solveBusinessCycle,
+  solveAggregateDemandSupply,
+  solveMoneyMarket,
+  solveLoanableFunds,
+} from './kinds/economics';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -121,6 +127,8 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'production_possibilities', displayName: 'Production Possibilities Curve', whenToUse: 'Show the trade-off between two goods given fixed resources; supports points inside/on/outside the curve and an optional growth/contraction shift.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'xAxis:{label,max}, yAxis:{label,max}, curve?:bowed-out|linear (default bowed-out), points?:[{x,y,label?,position?:inside|on|outside,color?}], shift?:{direction:out|in,factor?,label?}, title?' },
   { kind: 'business_cycle', displayName: 'Business Cycle', whenToUse: 'Show the canonical expansion/peak/contraction/trough cycle of real GDP around a long-run trend, with optional output-gap shading and phase markers.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'cycles?:number (default 1.5), amplitude?:0..1 (default 0.18), trendSlope?:number (default 0.4), showTrend?:boolean (default true), showOutputGap?:boolean (default false), labels?:all|minimal|none (default all), markers?:[{t:0..1,label,showLine?}], title?' },
   { kind: 'aggregate_demand_supply', displayName: 'AD-AS Model', whenToUse: 'Show the macroeconomic equilibrium of aggregate demand, short-run aggregate supply, and long-run aggregate supply; supports a single shift in AD/SRAS/LRAS with the new equilibrium computed automatically. Axis units are 0..100 (use 50 for "balanced" baseline).', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'potentialGdp?:number 0..100 (default 50), initialEquilibriumGdp?:number 0..100, initialPriceLevel?:number 0..100, showLras?:boolean (default true), shift?:{curve:AD|SRAS|LRAS, direction:left|right, magnitude?:number (default 10), label?}, labels?:{eqInitial?,eqFinal?,ad?,sras?,lras?}, title?' },
+  { kind: 'money_market', displayName: 'Money Market', whenToUse: 'Show the money market with vertical money supply (Ms) and downward-sloping money demand (Md), nominal interest rate on the y-axis. Supports a single shift in Ms or Md with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'moneySupplyQuantity?:number 0..100, initialInterestRate?:number 0..100, shift?:{curve:Ms|Md, direction:left|right, magnitude?:number (default 10), label?}, title?' },
+  { kind: 'loanable_funds', displayName: 'Loanable Funds Market', whenToUse: 'Show the loanable funds market with upward-sloping supply of saving and downward-sloping demand for investment (incl. government borrowing), real interest rate on the y-axis. Supports a single shift in S or D with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'initialQuantity?:number 0..100, initialRealRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
 ];
 
 /** Solver dispatch table. */
@@ -187,6 +195,8 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   production_possibilities: solveProductionPossibilities,
   business_cycle: solveBusinessCycle,
   aggregate_demand_supply: solveAggregateDemandSupply,
+  money_market: solveMoneyMarket,
+  loanable_funds: solveLoanableFunds,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
