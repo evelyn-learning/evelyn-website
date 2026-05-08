@@ -20,6 +20,29 @@ import { DIAGRAM_VIEWBOX, feat, featSlug, type FeatureManifestEntry } from '@/li
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
+// Find where a ray from a rectangle's center toward (toX, toY) exits the
+// rectangle. Used to clip edge endpoints so arrows touch the node box edge
+// instead of plunging to the box's geometric center (which puts the arrow
+// shaft and arrowhead INSIDE the box). Treats the box as an axis-aligned
+// rectangle of the given width/height — the rounded corners are close
+// enough to a sharp rect for visual purposes.
+function clipLineToRect(
+  cx: number, cy: number, w: number, h: number,
+  toX: number, toY: number,
+): { x: number; y: number } {
+  const dx = toX - cx;
+  const dy = toY - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const halfW = w / 2;
+  const halfH = h / 2;
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+  const tX = adx > 0 ? halfW / adx : Infinity;
+  const tY = ady > 0 ? halfH / ady : Infinity;
+  const t = Math.min(tX, tY);
+  return { x: cx + dx * t, y: cy + dy * t };
+}
+
 // Wrap a label that exceeds softMax onto two lines, picking the split that
 // minimizes max(leftLen, rightLen) across all space positions. Does NOT
 // truncate afterward — the box widens to fit the longer half. Replaces the
@@ -486,9 +509,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           // Issue 5 + R3: curve long edges away from viewBox center.
           // Triggers: y-span > 1.5 row heights OR detected segment crossing.
           const longEdge = Math.abs(pb.y - pa.y) > ROW_HEIGHT_PX * 1.5 || forceCurve.has(i);
-          let pathD: string;
-          let labelMidX: number;
-          let labelMidY: number;
+          let ctrl: { x: number; y: number } | null = null;
           if (longEdge) {
             const midX = (pa.x + x2) / 2;
             const midY = (pa.y + y2) / 2;
@@ -499,7 +520,6 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
             const py = dx / len;
             const bow = 28;
             const sign = crossingBowSign.get(i);
-            let ctrl: { x: number; y: number };
             if (sign !== undefined) {
               // Crossing pair: explicit opposite-side bow guarantees the
               // two crossing edges route around opposite sides of the
@@ -515,15 +535,43 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
               const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
               ctrl = d1 > d2 ? cand1 : cand2;
             }
-            pathD = `M ${pa.x} ${pa.y} Q ${ctrl.x} ${ctrl.y} ${x2} ${y2}`;
+          }
+
+          // Clip endpoints to source / target box perimeters so arrows
+          // just touch the box edges instead of running into the box
+          // centers (which would put the shaft and arrowhead inside the
+          // node visually). Direction reference: for straight lines, use
+          // the opposite endpoint; for curves, use the control point so
+          // the clip respects the curve's tangent at each endpoint.
+          const sd = dimsById.get(e.from)!;
+          const td = dimsById.get(e.to)!;
+          const PERIM_PAD = 2;
+          const startRefX = ctrl ? ctrl.x : x2;
+          const startRefY = ctrl ? ctrl.y : y2;
+          const endRefX = ctrl ? ctrl.x : pa.x;
+          const endRefY = ctrl ? ctrl.y : pa.y;
+          const startPt = clipLineToRect(
+            pa.x, pa.y, sd.rectW + PERIM_PAD * 2, sd.rectH + PERIM_PAD * 2,
+            startRefX, startRefY,
+          );
+          const endPt = clipLineToRect(
+            x2, y2, td.rectW + PERIM_PAD * 2, td.rectH + PERIM_PAD * 2,
+            endRefX, endRefY,
+          );
+
+          let pathD: string;
+          let labelMidX: number;
+          let labelMidY: number;
+          if (ctrl) {
+            pathD = `M ${startPt.x} ${startPt.y} Q ${ctrl.x} ${ctrl.y} ${endPt.x} ${endPt.y}`;
             // Approximate the quadratic Bézier midpoint at t=0.5:
-            // P(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2.
-            labelMidX = 0.25 * pa.x + 0.5 * ctrl.x + 0.25 * x2;
-            labelMidY = 0.25 * pa.y + 0.5 * ctrl.y + 0.25 * y2;
+            // P(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2 with the clipped endpoints.
+            labelMidX = 0.25 * startPt.x + 0.5 * ctrl.x + 0.25 * endPt.x;
+            labelMidY = 0.25 * startPt.y + 0.5 * ctrl.y + 0.25 * endPt.y;
           } else {
-            pathD = `M ${pa.x} ${pa.y} L ${x2} ${y2}`;
-            labelMidX = (pa.x + x2) / 2;
-            labelMidY = (pa.y + y2) / 2;
+            pathD = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
+            labelMidX = (startPt.x + endPt.x) / 2;
+            labelMidY = (startPt.y + endPt.y) / 2;
           }
 
           // Issue 8: roomier label rect so KaTeX/sans labels don't clip.
@@ -546,36 +594,20 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           let ly = labelMidY;
           if (e.label) {
             const tryT = (tVal: number): { x: number; y: number } => {
-              if (longEdge) {
-                // Re-evaluate quadratic Bézier at tVal using the SAME ctrl
-                // derivation as the path render above (crossing-pair sign
-                // takes precedence; otherwise farther-from-center).
-                const dx = x2 - pa.x;
-                const dy = y2 - pa.y;
-                const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                const px = -dy / len;
-                const py = dx / len;
-                const bow = 28;
-                const midX = (pa.x + x2) / 2;
-                const midY = (pa.y + y2) / 2;
-                const sign = crossingBowSign.get(i);
-                let c: { x: number; y: number };
-                if (sign !== undefined) {
-                  c = { x: midX + px * sign * bow, y: midY + py * sign * bow };
-                } else {
-                  const cand1 = { x: midX + px * bow, y: midY + py * bow };
-                  const cand2 = { x: midX - px * bow, y: midY - py * bow };
-                  const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
-                  const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
-                  c = d1 > d2 ? cand1 : cand2;
-                }
+              if (ctrl) {
+                // Re-evaluate quadratic Bézier at tVal using the clipped
+                // endpoints (so labels position along the visible portion
+                // of the curve, not its theoretical full length).
                 const u = 1 - tVal;
                 return {
-                  x: u * u * pa.x + 2 * u * tVal * c.x + tVal * tVal * x2,
-                  y: u * u * pa.y + 2 * u * tVal * c.y + tVal * tVal * y2,
+                  x: u * u * startPt.x + 2 * u * tVal * ctrl.x + tVal * tVal * endPt.x,
+                  y: u * u * startPt.y + 2 * u * tVal * ctrl.y + tVal * tVal * endPt.y,
                 };
               }
-              return { x: pa.x + (x2 - pa.x) * tVal, y: pa.y + (y2 - pa.y) * tVal };
+              return {
+                x: startPt.x + (endPt.x - startPt.x) * tVal,
+                y: startPt.y + (endPt.y - startPt.y) * tVal,
+              };
             };
             const candidates = [baseT, baseT + 0.10, baseT - 0.06, baseT + 0.20, baseT - 0.12, baseT + 0.30, baseT - 0.18];
             let resolved = tryT(baseT);
@@ -595,10 +627,10 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
             placedLabelRects.push({ x: lx, y: ly, w: labelW, h: labelH });
           }
 
-          const eminX = Math.min(pa.x, x2); const emaxX = Math.max(pa.x, x2);
-          const eminY = Math.min(pa.y, y2); const emaxY = Math.max(pa.y, y2);
+          const eminX = Math.min(startPt.x, endPt.x); const emaxX = Math.max(startPt.x, endPt.x);
+          const eminY = Math.min(startPt.y, endPt.y); const emaxY = Math.max(startPt.y, endPt.y);
           return (
-            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (pa.x + x2) / 2, cy: (pa.y + y2) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
+            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (startPt.x + endPt.x) / 2, cy: (startPt.y + endPt.y) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
               <path d={pathD} fill="none" stroke={color} strokeWidth={1.25}
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
               {e.label && (
