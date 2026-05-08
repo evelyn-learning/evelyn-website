@@ -20,6 +20,36 @@ import { DIAGRAM_VIEWBOX, truncate, feat, featSlug, type FeatureManifestEntry } 
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
+// Wrap a label that exceeds maxChars onto two lines at the closest-to-middle
+// space; if it has no space, fall back to truncating. Replaces the previous
+// `truncate(line, 18)` rule that was too aggressive for AP-level concept
+// names like "Fundamental Theorem", "Limits of Integration", or
+// "Antiderivative F(x)" — they were all clipped to "...". Two-line wrap keeps
+// box widths compact while showing the full label.
+function wrapLabel(line: string, maxChars: number): string[] {
+  const trimmed = line.trim();
+  if (trimmed.length <= maxChars) return [trimmed];
+  const mid = Math.floor(trimmed.length / 2);
+  let bestSpace = -1;
+  let bestDist = Infinity;
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] === ' ') {
+      const dist = Math.abs(i - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestSpace = i;
+      }
+    }
+  }
+  if (bestSpace < 0) return [truncate(trimmed, maxChars)];
+  const left = trimmed.slice(0, bestSpace).trim();
+  const right = trimmed.slice(bestSpace + 1).trim();
+  return [
+    left.length > maxChars ? truncate(left, maxChars) : left,
+    right.length > maxChars ? truncate(right, maxChars) : right,
+  ];
+}
+
 export interface ConceptNode {
   id: string;
   label: string;
@@ -124,7 +154,27 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
   for (const g of groups.values()) for (const lv of g.keys()) allLevels.add(lv);
   const sortedLevels = [...allLevels].sort((a, b) => a - b);
   const levelRowIdx = new Map(sortedLevels.map((lv, i) => [lv, i]));
-  const rowCount = Math.max(1, sortedLevels.length);
+
+  // Per-row weights: rows with a single node (across all groups) get less
+  // vertical space than dense multi-node rows. Pulls the lone "Antiderivative
+  // F(x)" type leaf closer to its parent and reclaims the empty band below
+  // it.
+  const rowWeights = sortedLevels.map((lv) => {
+    let totalInRow = 0;
+    for (const g of groups.values()) totalInRow += (g.get(lv)?.length ?? 0);
+    return totalInRow <= 1 ? 0.6 : 1.0;
+  });
+  const totalRowWeight = rowWeights.reduce((s, w) => s + w, 0) || 1;
+  // Cumulative y-start (0..totalRowWeight) for each row, used to compute baseY.
+  const rowCumStart: number[] = [];
+  let acc = 0;
+  for (let i = 0; i < rowWeights.length; i++) {
+    rowCumStart.push(acc);
+    acc += rowWeights[i];
+  }
+  // Vertical band: 4..96% of the plot height (was 8..92% — Issue 6 reclaim).
+  const Y_START = 4;
+  const Y_RANGE = 92;
 
   // Horizontal: each group's slot width is proportional to its widest level.
   // A {diff,rates} group (max 1 node per level) gets a narrow slot; a
@@ -146,7 +196,8 @@ function autoLayout(nodes: ConceptNode[], edges: ConceptEdge[]): Map<string, { x
       const ids = g.get(lv);
       if (!ids || ids.length === 0) return;
       const rowIdx = levelRowIdx.get(lv)!;
-      const baseY = 8 + (rowIdx + 0.5) * (84 / rowCount);
+      const yMid = rowCumStart[rowIdx] + rowWeights[rowIdx] / 2;
+      const baseY = Y_START + (yMid / totalRowWeight) * Y_RANGE;
       // Dense rows (>= 4 siblings WITHIN a group) zigzag alternate nodes
       // into two sub-rows so two-line labels don't collide horizontally.
       const dense = ids.length >= 4;
@@ -231,7 +282,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     return <div style={{ padding: 24, color: DIAGRAM_COLORS.muted, fontStyle: 'italic' }}>No concept nodes.</div>;
   }
 
-  const pad = { top: title ? 36 : 18, bottom: notes ? 28 : 16, left: 14, right: 14 };
+  // Issue 6: tighter top padding when title present so the first row sits
+  // closer to the header instead of leaving a wide empty band.
+  const pad = { top: title ? 24 : 18, bottom: notes ? 28 : 16, left: 14, right: 14 };
   const w = VIEWBOX_W - pad.left - pad.right;
   const h = VIEWBOX_H - pad.top - pad.bottom;
 
@@ -250,6 +303,104 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
 
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
+  // Pre-compute per-node render dimensions so edges can do collision checks
+  // against actual node boxes (Issue 3) and route around them (Issue 5).
+  // Node label wrapping (Issue 1) lives here so wrapped multi-line widths
+  // are reflected in box sizes everywhere downstream.
+  const NODE_FONT_SIZE = 11;
+  const NODE_LINE_H = 13;
+  const NODE_MAX_CHARS = 18;
+  type NodeDims = { lines: string[]; rectW: number; rectH: number };
+  const dimsById = new Map<string, NodeDims>();
+  nodes.forEach((n) => {
+    const rawLines = (n.label ?? '').split(/\r?\n/);
+    const lines = rawLines.flatMap((l) => wrapLabel(l, NODE_MAX_CHARS)).filter((l) => l.length > 0);
+    if (lines.length === 0) lines.push('');
+    const longest = Math.max(...lines.map((l) => l.length));
+    const rectW = Math.max(60, longest * 7);
+    const rectH = Math.max(26, lines.length * NODE_LINE_H + 10);
+    dimsById.set(n.id, { lines, rectW, rectH });
+  });
+
+  // Issue 2: spread edge labels per source node, not by global emit order.
+  // When N edges fan out from the same hub, their labels space evenly
+  // around the hub instead of converging near the targets.
+  const edgesBySource = new Map<string, number[]>();
+  edges.forEach((e, i) => {
+    const arr = edgesBySource.get(e.from) ?? [];
+    arr.push(i);
+    edgesBySource.set(e.from, arr);
+  });
+  const localSourceIdx = new Map<number, number>();
+  edgesBySource.forEach((indices) => {
+    indices.forEach((globalIdx, localIdx) => localSourceIdx.set(globalIdx, localIdx));
+  });
+
+  // Issue 4: distribute incoming-edge entry points around target node so
+  // arrowheads from multiple sources don't stack on the same pixel. For
+  // each target with ≥2 incoming edges, sort by approach angle and offset
+  // each entry point along the perpendicular to its source-target line.
+  const incomingByTarget = new Map<string, Array<{ edgeIdx: number; angle: number }>>();
+  edges.forEach((e, i) => {
+    const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
+    if (!a || !b) return;
+    const pa = place(a); const pb = place(b);
+    const angle = Math.atan2(pa.y - pb.y, pa.x - pb.x);
+    const arr = incomingByTarget.get(e.to) ?? [];
+    arr.push({ edgeIdx: i, angle });
+    incomingByTarget.set(e.to, arr);
+  });
+  const entryOffset = new Map<number, { dx: number; dy: number }>();
+  incomingByTarget.forEach((arr) => {
+    if (arr.length <= 1) return;
+    arr.sort((x, y) => x.angle - y.angle);
+    arr.forEach((item, i) => {
+      const offset = (i - (arr.length - 1) / 2) * 8;
+      const e = edges[item.edgeIdx];
+      const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
+      if (!a || !b) return;
+      const pa = place(a); const pb = place(b);
+      const dx = pa.x - pb.x;
+      const dy = pa.y - pb.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      entryOffset.set(item.edgeIdx, { dx: (-dy / len) * offset, dy: (dx / len) * offset });
+    });
+  });
+
+  // Issue 5: curve edges that span 2+ rows so they don't slice through
+  // intermediate-row nodes. Determine row span by comparing positions: any
+  // edge whose absolute y-delta is more than ~1.5 rows is treated as long.
+  // Bow direction = the perpendicular side that's farther from the viewBox
+  // center (so long edges arc outward, away from densely-populated rows).
+  const VIEWBOX_CENTER_X = VIEWBOX_W / 2;
+  const VIEWBOX_CENTER_Y = VIEWBOX_H / 2;
+  const ROW_HEIGHT_PX = h / Math.max(1, new Set(nodes.map((n) => n.level)).size || 1);
+
+  // Issue 3: label-vs-node collision avoidance. After computing initial
+  // (mx, my), check every unrelated node's bbox; if the label rect would
+  // overlap, slide the label along the edge in 0.05 t-increments until
+  // clear (search t in [0.18, 0.78]).
+  const labelCollidesWithNodes = (
+    edge: ConceptEdge,
+    lx: number, ly: number, lw: number, lh: number,
+  ): boolean => {
+    for (const n of nodes) {
+      if (n.id === edge.from || n.id === edge.to) continue;
+      const np = place(n);
+      const dims = dimsById.get(n.id)!;
+      const nLeft = np.x - dims.rectW / 2 - 2;
+      const nRight = np.x + dims.rectW / 2 + 2;
+      const nTop = np.y - dims.rectH / 2 - 2;
+      const nBot = np.y + dims.rectH / 2 + 2;
+      const lLeft = lx - lw / 2;
+      const lRight = lx + lw / 2;
+      const lTop = ly - lh / 2;
+      const lBot = ly + lh / 2;
+      if (lRight > nLeft && lLeft < nRight && lBot > nTop && lTop < nBot) return true;
+    }
+    return false;
+  };
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -258,32 +409,114 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
       <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         <ArrowMarkers idPrefix="cm-arrow" />
 
-        {/* Edges. When several edges radiate from the same node their
-            midpoints cluster — stagger each label's position along the edge
-            so the background rects don't all stack on top of each other. */}
         {edges.map((e, i) => {
           const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
           if (!a || !b) return null;
           const pa = place(a); const pb = place(b);
           const color = e.color || DIAGRAM_COLORS.muted;
-          const t = 0.3 + ((i * 7) % 5) * 0.09; // spread over [0.30, 0.66]
-          const mx = pa.x + (pb.x - pa.x) * t;
-          const my = pa.y + (pb.y - pa.y) * t;
-          // Size the background rect to fit the actual label at fontSize 10
-          // (≈ 6.2 px per char + 10 px padding). The previous estimate was
-          // too narrow and clipped the text.
-          const labelW = e.label ? e.label.length * 6.4 + 14 : 0;
-          const eminX = Math.min(pa.x, pb.x); const emaxX = Math.max(pa.x, pb.x);
-          const eminY = Math.min(pa.y, pb.y); const emaxY = Math.max(pa.y, pb.y);
+          // Issue 4: shift edge endpoint by perpendicular offset.
+          const off = entryOffset.get(i) ?? { dx: 0, dy: 0 };
+          const x2 = pb.x + off.dx;
+          const y2 = pb.y + off.dy;
+
+          // Issue 5: curve long edges away from viewBox center.
+          const longEdge = Math.abs(pb.y - pa.y) > ROW_HEIGHT_PX * 1.5;
+          let pathD: string;
+          let labelMidX: number;
+          let labelMidY: number;
+          if (longEdge) {
+            const midX = (pa.x + x2) / 2;
+            const midY = (pa.y + y2) / 2;
+            const dx = x2 - pa.x;
+            const dy = y2 - pa.y;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const px = -dy / len;
+            const py = dx / len;
+            const bow = 28;
+            const cand1 = { x: midX + px * bow, y: midY + py * bow };
+            const cand2 = { x: midX - px * bow, y: midY - py * bow };
+            const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
+            const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
+            const ctrl = d1 > d2 ? cand1 : cand2;
+            pathD = `M ${pa.x} ${pa.y} Q ${ctrl.x} ${ctrl.y} ${x2} ${y2}`;
+            // Approximate the quadratic Bézier midpoint at t=0.5:
+            // P(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2.
+            labelMidX = 0.25 * pa.x + 0.5 * ctrl.x + 0.25 * x2;
+            labelMidY = 0.25 * pa.y + 0.5 * ctrl.y + 0.25 * y2;
+          } else {
+            pathD = `M ${pa.x} ${pa.y} L ${x2} ${y2}`;
+            labelMidX = (pa.x + x2) / 2;
+            labelMidY = (pa.y + y2) / 2;
+          }
+
+          // Issue 8: roomier label rect so KaTeX/sans labels don't clip.
+          const labelW = e.label ? e.label.length * 7.0 + 18 : 0;
+          const labelH = 16;
+
+          // Issue 2: per-source-relative position along the edge so labels
+          // from a hub fan around the source rather than converging near
+          // targets. Range [0.22, 0.40].
+          const localIdx = localSourceIdx.get(i) ?? 0;
+          const baseT = 0.22 + (localIdx % 4) * 0.06;
+
+          // Issue 3: try the per-source position first; if it would collide
+          // with another node, walk t outward until clear (or fall back to
+          // baseT if no clear slot found).
+          let lx = labelMidX;
+          let ly = labelMidY;
+          if (e.label) {
+            const tryT = (tVal: number): { x: number; y: number } => {
+              if (longEdge) {
+                // Re-evaluate quadratic Bézier at tVal.
+                // Need ctrl point — recompute from captured locals.
+                // Already have pathD's ctrl in scope via labelMidX/Y derivation;
+                // recompute here for clarity.
+                const dx = x2 - pa.x;
+                const dy = y2 - pa.y;
+                const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                const px = -dy / len;
+                const py = dx / len;
+                const bow = 28;
+                const midX = (pa.x + x2) / 2;
+                const midY = (pa.y + y2) / 2;
+                const cand1 = { x: midX + px * bow, y: midY + py * bow };
+                const cand2 = { x: midX - px * bow, y: midY - py * bow };
+                const d1 = (cand1.x - VIEWBOX_CENTER_X) ** 2 + (cand1.y - VIEWBOX_CENTER_Y) ** 2;
+                const d2 = (cand2.x - VIEWBOX_CENTER_X) ** 2 + (cand2.y - VIEWBOX_CENTER_Y) ** 2;
+                const c = d1 > d2 ? cand1 : cand2;
+                const u = 1 - tVal;
+                return {
+                  x: u * u * pa.x + 2 * u * tVal * c.x + tVal * tVal * x2,
+                  y: u * u * pa.y + 2 * u * tVal * c.y + tVal * tVal * y2,
+                };
+              }
+              return { x: pa.x + (x2 - pa.x) * tVal, y: pa.y + (y2 - pa.y) * tVal };
+            };
+            const candidates = [baseT, baseT + 0.08, baseT - 0.05, baseT + 0.16, baseT + 0.24, baseT + 0.32, baseT + 0.40];
+            let resolved = tryT(baseT);
+            for (const tv of candidates) {
+              if (tv < 0.18 || tv > 0.78) continue;
+              const p = tryT(tv);
+              if (!labelCollidesWithNodes(e, p.x, p.y, labelW, labelH)) {
+                resolved = p;
+                break;
+              }
+            }
+            lx = resolved.x;
+            ly = resolved.y;
+          }
+
+          const eminX = Math.min(pa.x, x2); const emaxX = Math.max(pa.x, x2);
+          const eminY = Math.min(pa.y, y2); const emaxY = Math.max(pa.y, y2);
           return (
-            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (pa.x + pb.x) / 2, cy: (pa.y + pb.y) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
-              <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke={color} strokeWidth={1.25}
+            <g key={`edge${i}`} {...feat(`edge-${featSlug(e.from)}-to-${featSlug(e.to)}`, { cx: (pa.x + x2) / 2, cy: (pa.y + y2) / 2, w: Math.max(30, emaxX - eminX + 20), h: Math.max(30, emaxY - eminY + 20) })}>
+              <path d={pathD} fill="none" stroke={color} strokeWidth={1.25}
                 markerEnd={e.directed ? `url(#${arrowMarkerId(color, 'cm-arrow')})` : undefined} />
               {e.label && (
                 <g>
-                  <rect x={mx - labelW / 2} y={my - 8} width={labelW} height={14} rx={3}
+                  <rect x={lx - labelW / 2} y={ly - labelH / 2} width={labelW} height={labelH} rx={3}
                     fill="white" stroke={DIAGRAM_COLORS.border} strokeWidth={0.5} />
-                  <text x={mx} y={my + 2} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
+                  <text x={lx} y={ly + 3} fontSize={10} fill={DIAGRAM_COLORS.text} textAnchor="middle">{e.label}</text>
                 </g>
               )}
             </g>
@@ -291,23 +524,14 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
         })}
 
         {/* Nodes. Multi-line labels: brain emits "Title\nSubtitle" expecting
-            stacked rendering. Split on \n, truncate each line to ~18 chars,
-            and render as <tspan>s. This dramatically reduces horizontal
-            overlap on crowded rows (observed 2026-05-06 G3 light-and-sound
-            session: 4 wide leaf nodes collided into unreadable bar). */}
+            stacked rendering. wrapLabel handles long single-line labels by
+            splitting at the closest-to-middle space (Issue 1). */}
         {nodes.map((n, i) => {
           const p = place(n);
           const color = n.color || cycleColor(i);
-          const rawLines = (n.label ?? '').split(/\r?\n/);
-          const lines = rawLines.map((l) => truncate(l.trim(), 18)).filter((l) => l.length > 0);
-          if (lines.length === 0) lines.push('');
-          const longest = Math.max(...lines.map((l) => l.length));
-          const fontSize = 11;
-          const lineH = 13;
-          const rectW = Math.max(60, longest * 7);
-          const rectH = Math.max(26, lines.length * lineH + 10);
-          // First-line baseline: vertically center the block of lines.
-          const firstBaseline = p.y - ((lines.length - 1) * lineH) / 2 + 4;
+          const dims = dimsById.get(n.id)!;
+          const { lines, rectW, rectH } = dims;
+          const firstBaseline = p.y - ((lines.length - 1) * NODE_LINE_H) / 2 + 4;
           return (
             <g key={n.id} {...feat(`node-${featSlug(n.id)}`, { cx: p.x, cy: p.y, w: rectW + 10, h: rectH + 10 })}>
               <rect x={p.x - rectW / 2} y={p.y - rectH / 2} width={rectW} height={rectH} rx={6}
@@ -315,13 +539,13 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
               <text
                 x={p.x}
                 y={firstBaseline}
-                fontSize={fontSize}
+                fontSize={NODE_FONT_SIZE}
                 fill={DIAGRAM_COLORS.text}
                 textAnchor="middle"
                 fontWeight={700}
               >
                 {lines.map((line, idx) => (
-                  <tspan key={idx} x={p.x} dy={idx === 0 ? 0 : lineH}>{line}</tspan>
+                  <tspan key={idx} x={p.x} dy={idx === 0 ? 0 : NODE_LINE_H}>{line}</tspan>
                 ))}
               </text>
             </g>
