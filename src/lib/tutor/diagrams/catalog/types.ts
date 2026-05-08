@@ -70,7 +70,9 @@ export type DiagramKindId =
   | 't_chart'
   | 'kwl_chart'
   | 'frayer_model'
-  | 'hierarchy_pyramid';
+  | 'hierarchy_pyramid'
+  // Phase 9 — economics (AP Plans Initiative; see project_ap_plans_initiative.md)
+  | 'production_possibilities';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

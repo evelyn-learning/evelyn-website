@@ -56,6 +56,7 @@ import {
   CatalogOrganizerRenderer,
   CatalogHierarchyPyramidRenderer,
 } from './CatalogAdvancedRenderers';
+import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 
 interface Props {
   kind: string;
@@ -123,6 +124,8 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'kwl_chart':
     case 'frayer_model':             return <CatalogOrganizerRenderer figure={figure} />;
     case 'hierarchy_pyramid':        return <CatalogHierarchyPyramidRenderer figure={figure} />;
+    // Phase 9 — economics (AP Plans Initiative)
+    case 'production_possibilities': return <ProductionPossibilitiesRenderer figure={figure} />;
 
     default:
       return (

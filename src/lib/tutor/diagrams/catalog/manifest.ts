@@ -45,6 +45,8 @@ import {
   solveHierarchyPyramid,
 } from './kinds/advanced-math-ela-social';
 
+import { solveProductionPossibilities } from './kinds/economics';
+
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
  *  subject + grade band) so it knows what's available. */
@@ -62,7 +64,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 2 — physics ──────────────────────────────────────────────────
   { kind: 'balance_scale', displayName: 'Balance Scale (physics)', whenToUse: 'Show physical balance with items of differing weights; solver computes tilt direction.', subjects: ['physics'], grades: { from: 3, to: 9 }, paramSchema: 'left:[{label,weight?,color?}], right:[{label,weight?,color?}], title?, caption?' },
   { kind: 'lever', displayName: 'Lever', whenToUse: 'Show a class-1 lever with effort and load on either side of a fulcrum.', subjects: ['physics'], grades: { from: 6, to: 12 }, paramSchema: 'effort:number, load:number, effortDistance:number, loadDistance:number, title?' },
-  { kind: 'pulley_system', displayName: 'Pulley System', whenToUse: 'Show a block-and-tackle with fixed/movable pulleys; solver computes mechanical advantage.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'fixedCount?:int, movableCount?:int, weightLabel?:string, weight?:number, title?' },
+  { kind: 'pulley_system', displayName: 'Pulley System', whenToUse: 'Mode "block-tackle" (default): block-and-tackle with fixed/movable pulleys; solver computes mechanical advantage. Mode "atwood": two masses hanging on opposite ends of a rope over a single fixed pulley. Mode "table-pulley": one block on a horizontal table, second block hanging off the edge over a pulley. Mode "incline-pulley": one block on a ramp + rope over a pulley at the top + second block hanging on the far side.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'mode?:block-tackle|atwood|table-pulley|incline-pulley. block-tackle: fixedCount?:int, movableCount?:int, weightLabel?:string, weight?:number. atwood / table-pulley / incline-pulley: leftSide?:{label,weight?}, rightSide?:{label,weight?} (or loads:[{label|mass,weight?},…]). incline-pulley adds inclineAngle?:number (degrees, default 30). title?' },
   { kind: 'inclined_plane', displayName: 'Inclined Plane', whenToUse: 'Show a block on a ramp; solver places block on the slope at the specified angle.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'angle:number, mass?:number, showForces?:boolean, showFriction?:boolean, title?' },
   { kind: 'spring_mass', displayName: 'Spring-Mass System', whenToUse: 'Show a mass on a spring at displacement; orientation vertical or horizontal.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'displacement:number, orientation?:vertical|horizontal, mass?:number, k?:number, showEquilibrium?:boolean, title?' },
   { kind: 'pendulum', displayName: 'Pendulum', whenToUse: 'Show a pendulum at a given angle from vertical.', subjects: ['physics'], grades: { from: 7, to: 12 }, paramSchema: 'length?:number, angleDegrees?:number, showVelocity?:boolean, title?' },
@@ -114,6 +116,9 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'kwl_chart', displayName: 'KWL Chart', whenToUse: 'Know / Want to know / Learned chart.', subjects: ['general'], grades: { from: 2, to: 12 }, paramSchema: 'know:[string], want:[string], learned:[string], title?' },
   { kind: 'frayer_model', displayName: 'Frayer Model', whenToUse: 'Define a term via definition / characteristics / examples / non-examples.', subjects: ['general'], grades: { from: 4, to: 12 }, paramSchema: 'term:string, definition?, characteristics?:[string], examples?:[string], nonExamples?:[string], title?' },
   { kind: 'hierarchy_pyramid', displayName: 'Hierarchy Pyramid', whenToUse: 'Show ordered tiers (food pyramid, Maslow, Bloom\'s).', subjects: ['general'], grades: { from: 4, to: 12 }, paramSchema: 'tiers:[{label,description?,color?}], baseFirst?:boolean, title?' },
+
+  // ── Phase 9 — economics (AP Plans Initiative) ──────────────────────────
+  { kind: 'production_possibilities', displayName: 'Production Possibilities Curve', whenToUse: 'Show the trade-off between two goods given fixed resources; supports points inside/on/outside the curve and an optional growth/contraction shift.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'xAxis:{label,max}, yAxis:{label,max}, curve?:bowed-out|linear (default bowed-out), points?:[{x,y,label?,position?:inside|on|outside,color?}], shift?:{direction:out|in,factor?,label?}, title?' },
 ];
 
 /** Solver dispatch table. */
@@ -176,6 +181,8 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   kwl_chart: (p) => solveOrganizer('kwl_chart', p),
   frayer_model: (p) => solveOrganizer('frayer_model', p),
   hierarchy_pyramid: solveHierarchyPyramid,
+  // Phase 9 — economics
+  production_possibilities: solveProductionPossibilities,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

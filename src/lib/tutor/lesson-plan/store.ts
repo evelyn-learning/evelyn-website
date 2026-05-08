@@ -552,6 +552,15 @@ import { SEED_AP_MICRO_MARKET_STRUCTURES } from './seeds/ap-micro-market-structu
 import { SEED_AP_MICRO_FACTOR_MARKETS } from './seeds/ap-micro-factor-markets';
 import { SEED_AP_MACRO_FISCAL_POLICY } from './seeds/ap-macro-fiscal-policy';
 import { SEED_AP_MACRO_BUSINESS_CYCLE } from './seeds/ap-macro-business-cycle';
+// AP Plans Initiative — new AP Macro plans (will supersede the 4 above as the
+// initiative ships unit-by-unit). See project_ap_plans_initiative.md.
+import { SEED_AP_MACRO_U1_SCARCITY } from './seeds/ap-macro-u1-scarcity';
+import { SEED_AP_MACRO_U1_RESOURCE_ALLOCATION } from './seeds/ap-macro-u1-resource-allocation';
+import { SEED_AP_MACRO_U1_PPC } from './seeds/ap-macro-u1-ppc';
+import { SEED_AP_MACRO_U1_COMPARATIVE_ADVANTAGE } from './seeds/ap-macro-u1-comparative-advantage';
+import { SEED_AP_MACRO_U1_COST_BENEFIT } from './seeds/ap-macro-u1-cost-benefit';
+import { SEED_AP_MACRO_U1_MARGINAL_ANALYSIS } from './seeds/ap-macro-u1-marginal-analysis';
+import { SEED_AP_MACRO_U1_FRQ_PRACTICE } from './seeds/ap-macro-u1-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1545,6 +1554,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MICRO_FACTOR_MARKETS,
   SEED_AP_MACRO_FISCAL_POLICY,
   SEED_AP_MACRO_BUSINESS_CYCLE,
+  SEED_AP_MACRO_U1_SCARCITY,
+  SEED_AP_MACRO_U1_RESOURCE_ALLOCATION,
+  SEED_AP_MACRO_U1_PPC,
+  SEED_AP_MACRO_U1_COMPARATIVE_ADVANTAGE,
+  SEED_AP_MACRO_U1_COST_BENEFIT,
+  SEED_AP_MACRO_U1_MARGINAL_ANALYSIS,
+  SEED_AP_MACRO_U1_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
