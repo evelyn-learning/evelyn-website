@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS: LessonPlan = {
   id: 'evelyn.ap.macro.automatic-stabilizers.v1',
-  title: 'Automatic Stabilizers',
+  title: 'U3.9 Automatic Stabilizers',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_SRAS: LessonPlan = {
   id: 'evelyn.ap.macro.short-run-aggregate-supply.v1',
-  title: 'Short-Run Aggregate Supply',
+  title: 'U3.3 Short-Run Aggregate Supply',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

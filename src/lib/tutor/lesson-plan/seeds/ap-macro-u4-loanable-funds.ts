@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_LOANABLE_FUNDS: LessonPlan = {
   id: 'evelyn.ap.macro.loanable-funds-market.v1',
-  title: 'The Loanable Funds Market',
+  title: 'U4.7 The Loanable Funds Market',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

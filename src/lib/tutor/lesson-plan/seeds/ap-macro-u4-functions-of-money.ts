@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_FUNCTIONS_OF_MONEY: LessonPlan = {
   id: 'evelyn.ap.macro.functions-of-money.v1',
-  title: 'Definition, Measurement, and Functions of Money',
+  title: 'U4.3 Definition, Measurement, and Functions of Money',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

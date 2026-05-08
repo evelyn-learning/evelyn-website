@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_CHANGES_SHORT_RUN: LessonPlan = {
   id: 'evelyn.ap.macro.changes-ad-as-short-run.v1',
-  title: 'Changes in the AD-AS Model in the Short Run',
+  title: 'U3.6 Changes in the AD-AS Model in the Short Run',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

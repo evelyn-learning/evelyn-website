@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_FX_MARKET: LessonPlan = {
   id: 'evelyn.ap.macro.fx-market.v1',
-  title: 'The Foreign Exchange Market',
+  title: 'U6.3 The Foreign Exchange Market',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

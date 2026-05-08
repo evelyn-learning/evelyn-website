@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_FISCAL_POLICY: LessonPlan = {
   id: 'evelyn.ap.macro.fiscal-policy.v1',
-  title: 'Fiscal Policy',
+  title: 'U3.8 Fiscal Policy',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_REAL_VS_NOMINAL_GDP: LessonPlan = {
   id: 'evelyn.ap.macro.real-vs-nominal-gdp.v1',
-  title: 'Real vs. Nominal GDP',
+  title: 'U2.6 Real vs. Nominal GDP',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

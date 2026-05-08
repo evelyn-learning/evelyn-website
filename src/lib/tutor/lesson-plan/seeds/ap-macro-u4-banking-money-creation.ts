@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_BANKING_MONEY_CREATION: LessonPlan = {
   id: 'evelyn.ap.macro.banking-money-creation.v1',
-  title: 'Banking and the Expansion of the Money Supply',
+  title: 'U4.4 Banking and the Expansion of the Money Supply',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

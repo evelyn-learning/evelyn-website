@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_FX_EFFECTS: LessonPlan = {
   id: 'evelyn.ap.macro.fx-effects-on-economy.v1',
-  title: 'Effects of Exchange Rate Changes',
+  title: 'U6.5 Effects of Exchange Rate Changes',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

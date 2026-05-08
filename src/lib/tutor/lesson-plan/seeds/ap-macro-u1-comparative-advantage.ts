@@ -18,7 +18,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U1_COMPARATIVE_ADVANTAGE: LessonPlan = {
   id: 'evelyn.ap.macro.comparative-advantage.v1',
-  title: 'Comparative Advantage and Gains from Trade',
+  title: 'U1.4 Comparative Advantage and Gains from Trade',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

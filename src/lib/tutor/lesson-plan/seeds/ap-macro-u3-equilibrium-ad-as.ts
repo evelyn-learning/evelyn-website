@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_EQUILIBRIUM_AD_AS: LessonPlan = {
   id: 'evelyn.ap.macro.equilibrium-ad-as.v1',
-  title: 'Equilibrium in the AD-AS Model',
+  title: 'U3.5 Equilibrium in the AD-AS Model',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

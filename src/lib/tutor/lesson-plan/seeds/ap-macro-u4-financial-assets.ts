@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_FINANCIAL_ASSETS: LessonPlan = {
   id: 'evelyn.ap.macro.financial-assets.v1',
-  title: 'Financial Assets',
+  title: 'U4.1 Financial Assets',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

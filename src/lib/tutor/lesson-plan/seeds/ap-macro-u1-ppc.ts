@@ -20,7 +20,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U1_PPC: LessonPlan = {
   id: 'evelyn.ap.macro.ppc.v1',
-  title: 'Production Possibilities Curve',
+  title: 'U1.3 Production Possibilities Curve',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

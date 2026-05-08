@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH: LessonPlan = {
   id: 'evelyn.ap.macro.public-policy-growth.v1',
-  title: 'Public Policy and Economic Growth',
+  title: 'U5.6 Public Policy and Economic Growth',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

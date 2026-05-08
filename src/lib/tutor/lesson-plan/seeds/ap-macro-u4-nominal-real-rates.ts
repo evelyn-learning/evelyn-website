@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_NOMINAL_REAL_RATES: LessonPlan = {
   id: 'evelyn.ap.macro.nominal-vs-real-interest-rates.v1',
-  title: 'Nominal vs Real Interest Rates',
+  title: 'U4.2 Nominal vs Real Interest Rates',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_FRQ_PRACTICE: LessonPlan = {
   id: 'evelyn.ap.macro.u5-frq-practice.v1',
-  title: 'Unit 5 FRQ Practice',
+  title: 'U5 FRQ Practice',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

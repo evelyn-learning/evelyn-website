@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_LONG_RUN_SELF_ADJUST: LessonPlan = {
   id: 'evelyn.ap.macro.long-run-self-adjustment.v1',
-  title: 'Long-Run Self-Adjustment',
+  title: 'U3.7 Long-Run Self-Adjustment',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

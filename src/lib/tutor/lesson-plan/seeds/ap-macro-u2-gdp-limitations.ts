@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_GDP_LIMITATIONS: LessonPlan = {
   id: 'evelyn.ap.macro.gdp-limitations.v1',
-  title: 'Limitations of GDP',
+  title: 'U2.2 Limitations of GDP',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

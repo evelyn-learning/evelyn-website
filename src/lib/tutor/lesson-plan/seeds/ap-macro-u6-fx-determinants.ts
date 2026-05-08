@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_FX_DETERMINANTS: LessonPlan = {
   id: 'evelyn.ap.macro.fx-determinants.v1',
-  title: 'Determinants of Exchange Rates',
+  title: 'U6.4 Determinants of Exchange Rates',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_LRAS: LessonPlan = {
   id: 'evelyn.ap.macro.long-run-aggregate-supply.v1',
-  title: 'Long-Run Aggregate Supply',
+  title: 'U3.4 Long-Run Aggregate Supply',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

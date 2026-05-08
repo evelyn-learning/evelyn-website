@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U1_MARGINAL_ANALYSIS: LessonPlan = {
   id: 'evelyn.ap.macro.marginal-analysis-consumer.v1',
-  title: 'Marginal Analysis and Consumer Choice',
+  title: 'U1.6 Marginal Analysis and Consumer Choice',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

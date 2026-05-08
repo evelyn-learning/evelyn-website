@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_MULTIPLIERS: LessonPlan = {
   id: 'evelyn.ap.macro.multipliers.v1',
-  title: 'Multipliers',
+  title: 'U3.2 Multipliers',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

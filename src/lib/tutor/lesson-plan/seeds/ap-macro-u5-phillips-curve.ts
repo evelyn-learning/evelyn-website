@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_PHILLIPS_CURVE: LessonPlan = {
   id: 'evelyn.ap.macro.phillips-curve.v1',
-  title: 'The Phillips Curve',
+  title: 'U5.1 The Phillips Curve',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

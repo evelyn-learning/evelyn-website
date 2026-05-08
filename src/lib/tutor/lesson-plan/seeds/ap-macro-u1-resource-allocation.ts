@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U1_RESOURCE_ALLOCATION: LessonPlan = {
   id: 'evelyn.ap.macro.resource-allocation.v1',
-  title: 'Resource Allocation and Economic Systems',
+  title: 'U1.2 Resource Allocation and Economic Systems',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

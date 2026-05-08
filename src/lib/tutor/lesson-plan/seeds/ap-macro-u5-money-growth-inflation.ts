@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION: LessonPlan = {
   id: 'evelyn.ap.macro.money-growth-inflation.v1',
-  title: 'Money Growth and Inflation',
+  title: 'U5.2 Money Growth and Inflation',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

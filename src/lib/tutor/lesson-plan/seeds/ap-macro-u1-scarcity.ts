@@ -15,7 +15,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U1_SCARCITY: LessonPlan = {
   id: 'evelyn.ap.macro.scarcity.v1',
-  title: 'Scarcity, Choice, and Trade-offs',
+  title: 'U1.1 Scarcity, Choice, and Trade-offs',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

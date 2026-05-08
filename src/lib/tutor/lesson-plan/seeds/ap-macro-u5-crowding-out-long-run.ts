@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN: LessonPlan = {
   id: 'evelyn.ap.macro.crowding-out-long-run.v1',
-  title: 'Crowding Out (Long-Run Focus)',
+  title: 'U5.4 Crowding Out (Long-Run Focus)',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

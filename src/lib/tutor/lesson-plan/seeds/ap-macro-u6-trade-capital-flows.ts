@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_TRADE_CAPITAL_FLOWS: LessonPlan = {
   id: 'evelyn.ap.macro.trade-capital-flows.v1',
-  title: 'Trade and Capital Flow Relationships',
+  title: 'U6.6 Trade and Capital Flow Relationships',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

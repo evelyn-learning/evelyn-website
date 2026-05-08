@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_AGGREGATE_DEMAND: LessonPlan = {
   id: 'evelyn.ap.macro.aggregate-demand.v1',
-  title: 'Aggregate Demand',
+  title: 'U3.1 Aggregate Demand',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_ECONOMIC_GROWTH: LessonPlan = {
   id: 'evelyn.ap.macro.economic-growth.v1',
-  title: 'Economic Growth',
+  title: 'U5.5 Economic Growth',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

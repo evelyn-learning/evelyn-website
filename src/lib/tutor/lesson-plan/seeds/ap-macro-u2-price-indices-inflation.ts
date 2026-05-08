@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_PRICE_INDICES_INFLATION: LessonPlan = {
   id: 'evelyn.ap.macro.price-indices-inflation.v1',
-  title: 'Price Indices and Inflation',
+  title: 'U2.4 Price Indices and Inflation',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

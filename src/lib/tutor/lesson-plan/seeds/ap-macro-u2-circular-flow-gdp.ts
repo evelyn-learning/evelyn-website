@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_CIRCULAR_FLOW_GDP: LessonPlan = {
   id: 'evelyn.ap.macro.circular-flow-gdp.v1',
-  title: 'The Circular Flow and GDP',
+  title: 'U2.1 The Circular Flow and GDP',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

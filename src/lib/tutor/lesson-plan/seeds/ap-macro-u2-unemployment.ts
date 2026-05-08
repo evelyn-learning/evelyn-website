@@ -13,7 +13,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_UNEMPLOYMENT: LessonPlan = {
   id: 'evelyn.ap.macro.unemployment.v1',
-  title: 'Unemployment',
+  title: 'U2.3 Unemployment',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

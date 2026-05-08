@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_BALANCE_OF_PAYMENTS: LessonPlan = {
   id: 'evelyn.ap.macro.balance-of-payments.v1',
-  title: 'Balance of Payments',
+  title: 'U6.1 Balance of Payments',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

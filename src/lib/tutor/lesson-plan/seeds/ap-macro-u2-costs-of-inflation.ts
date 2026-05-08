@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_COSTS_OF_INFLATION: LessonPlan = {
   id: 'evelyn.ap.macro.costs-of-inflation.v1',
-  title: 'Costs of Inflation',
+  title: 'U2.5 Costs of Inflation',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

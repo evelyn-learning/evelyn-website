@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_MONETARY_POLICY: LessonPlan = {
   id: 'evelyn.ap.macro.monetary-policy.v1',
-  title: 'Monetary Policy',
+  title: 'U4.6 Monetary Policy',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

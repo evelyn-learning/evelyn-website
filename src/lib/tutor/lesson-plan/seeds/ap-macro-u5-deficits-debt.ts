@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_DEFICITS_DEBT: LessonPlan = {
   id: 'evelyn.ap.macro.deficits-debt.v1',
-  title: 'Government Deficits and the National Debt',
+  title: 'U5.3 Government Deficits and the National Debt',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',

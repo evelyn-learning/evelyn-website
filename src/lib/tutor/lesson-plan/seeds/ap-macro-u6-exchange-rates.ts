@@ -10,7 +10,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U6_EXCHANGE_RATES: LessonPlan = {
   id: 'evelyn.ap.macro.exchange-rates.v1',
-  title: 'Exchange Rates',
+  title: 'U6.2 Exchange Rates',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
