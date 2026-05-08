@@ -61,6 +61,7 @@ import { BusinessCycleRenderer } from './BusinessCycleRenderer';
 import { AdAsRenderer } from './AdAsRenderer';
 import { MoneyMarketRenderer } from './MoneyMarketRenderer';
 import { LoanableFundsRenderer } from './LoanableFundsRenderer';
+import { PhillipsCurveRenderer } from './PhillipsCurveRenderer';
 
 interface Props {
   kind: string;
@@ -134,6 +135,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'aggregate_demand_supply':  return <AdAsRenderer figure={figure} />;
     case 'money_market':             return <MoneyMarketRenderer figure={figure} />;
     case 'loanable_funds':           return <LoanableFundsRenderer figure={figure} />;
+    case 'phillips_curve':           return <PhillipsCurveRenderer figure={figure} />;
 
     default:
       return (

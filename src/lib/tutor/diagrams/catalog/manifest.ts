@@ -51,6 +51,7 @@ import {
   solveAggregateDemandSupply,
   solveMoneyMarket,
   solveLoanableFunds,
+  solvePhillipsCurve,
 } from './kinds/economics';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
@@ -129,6 +130,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'aggregate_demand_supply', displayName: 'AD-AS Model', whenToUse: 'Show the macroeconomic equilibrium of aggregate demand, short-run aggregate supply, and long-run aggregate supply; supports a single shift in AD/SRAS/LRAS with the new equilibrium computed automatically. Axis units are 0..100 (use 50 for "balanced" baseline).', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'potentialGdp?:number 0..100 (default 50), initialEquilibriumGdp?:number 0..100, initialPriceLevel?:number 0..100, showLras?:boolean (default true), shift?:{curve:AD|SRAS|LRAS, direction:left|right, magnitude?:number (default 10), label?}, labels?:{eqInitial?,eqFinal?,ad?,sras?,lras?}, title?' },
   { kind: 'money_market', displayName: 'Money Market', whenToUse: 'Show the money market with vertical money supply (Ms) and downward-sloping money demand (Md), nominal interest rate on the y-axis. Supports a single shift in Ms or Md with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'moneySupplyQuantity?:number 0..100, initialInterestRate?:number 0..100, shift?:{curve:Ms|Md, direction:left|right, magnitude?:number (default 10), label?}, title?' },
   { kind: 'loanable_funds', displayName: 'Loanable Funds Market', whenToUse: 'Show the loanable funds market with upward-sloping supply of saving and downward-sloping demand for investment (incl. government borrowing), real interest rate on the y-axis. Supports a single shift in S or D with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'initialQuantity?:number 0..100, initialRealRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
+  { kind: 'phillips_curve', displayName: 'Phillips Curve', whenToUse: 'Show the short-run Phillips Curve (downward-sloping inflation-unemployment tradeoff) and long-run Phillips Curve (vertical at NAIRU). Supports SRPC up/down shifts (inflation expectations / supply shocks) or LRPC left/right shifts (NAIRU changes).', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'nairu?:number 0..100, initialUnemployment?:number 0..100, initialInflation?:number 0..100, showLrpc?:boolean (default true), shift?:{curve:SRPC|LRPC, direction:up|down|left|right, magnitude?:number (default 10), label?}, title?' },
 ];
 
 /** Solver dispatch table. */
@@ -197,6 +199,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   aggregate_demand_supply: solveAggregateDemandSupply,
   money_market: solveMoneyMarket,
   loanable_funds: solveLoanableFunds,
+  phillips_curve: solvePhillipsCurve,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

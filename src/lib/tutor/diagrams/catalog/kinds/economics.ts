@@ -7,6 +7,78 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+// ── phillips_curve ──────────────────────────────────────────────────────
+
+export interface PhillipsCurveShift {
+  curve: 'SRPC' | 'LRPC';
+  direction: 'up' | 'down' | 'left' | 'right';
+  magnitude: number;
+  label?: string;
+}
+
+export interface PhillipsCurveFigure {
+  /** Natural rate of unemployment — x-position of LRPC. 0..100. */
+  nairu: number;
+  /** Short-run unemployment — x where SRPC currently sits. */
+  initialUnemployment: number;
+  /** Short-run inflation — y at the initial point. */
+  initialInflation: number;
+  showLrpc: boolean;
+  shift?: PhillipsCurveShift;
+  finalUnemployment?: number;
+  finalInflation?: number;
+  title?: string;
+}
+
+export function solvePhillipsCurve(params: Record<string, unknown>): PhillipsCurveFigure {
+  const nairu = typeof params.nairu === 'number' ? params.nairu : 50;
+  const u0 = typeof params.initialUnemployment === 'number' ? params.initialUnemployment : nairu;
+  const pi0 = typeof params.initialInflation === 'number' ? params.initialInflation : 50;
+  const showLrpc = params.showLrpc !== false;
+
+  let shift: PhillipsCurveShift | undefined;
+  let finalU: number | undefined;
+  let finalPi: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'SRPC' || s.curve === 'LRPC')) {
+      const dir = s.direction;
+      if (dir === 'up' || dir === 'down' || dir === 'left' || dir === 'right') {
+        shift = {
+          curve: s.curve,
+          direction: dir,
+          magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 10,
+          label: typeof s.label === 'string' ? s.label : undefined,
+        };
+        const delta = (dir === 'up' || dir === 'right') ? shift.magnitude : -shift.magnitude;
+        if (shift.curve === 'SRPC') {
+          // SRPC shift up/right = at the same UR, inflation is higher (rising
+          // inflation expectations, cost-push shock). New equilibrium along SRPC
+          // determined by where economy actually settles, not the curve alone.
+          // For visualization, mark new point at same UR with inflation + delta.
+          finalU = u0;
+          finalPi = pi0 + delta;
+        } else {
+          // LRPC shift = NAIRU itself shifts. Final point reflects new NAIRU.
+          finalU = nairu + delta;
+          finalPi = pi0;
+        }
+      }
+    }
+  }
+
+  return {
+    nairu,
+    initialUnemployment: u0,
+    initialInflation: pi0,
+    showLrpc,
+    shift,
+    finalUnemployment: finalU,
+    finalInflation: finalPi,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── money_market ────────────────────────────────────────────────────────
 
 export interface MoneyMarketShift {

@@ -587,6 +587,13 @@ import { SEED_AP_MACRO_U4_MONEY_MARKET } from './seeds/ap-macro-u4-money-market'
 import { SEED_AP_MACRO_U4_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
 import { SEED_AP_MACRO_U4_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
 import { SEED_AP_MACRO_U4_FRQ_PRACTICE } from './seeds/ap-macro-u4-frq-practice';
+import { SEED_AP_MACRO_U5_PHILLIPS_CURVE } from './seeds/ap-macro-u5-phillips-curve';
+import { SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION } from './seeds/ap-macro-u5-money-growth-inflation';
+import { SEED_AP_MACRO_U5_DEFICITS_DEBT } from './seeds/ap-macro-u5-deficits-debt';
+import { SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN } from './seeds/ap-macro-u5-crowding-out-long-run';
+import { SEED_AP_MACRO_U5_ECONOMIC_GROWTH } from './seeds/ap-macro-u5-economic-growth';
+import { SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH } from './seeds/ap-macro-u5-public-policy-growth';
+import { SEED_AP_MACRO_U5_FRQ_PRACTICE } from './seeds/ap-macro-u5-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1613,6 +1620,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U4_MONETARY_POLICY,
   SEED_AP_MACRO_U4_LOANABLE_FUNDS,
   SEED_AP_MACRO_U4_FRQ_PRACTICE,
+  SEED_AP_MACRO_U5_PHILLIPS_CURVE,
+  SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION,
+  SEED_AP_MACRO_U5_DEFICITS_DEBT,
+  SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN,
+  SEED_AP_MACRO_U5_ECONOMIC_GROWTH,
+  SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH,
+  SEED_AP_MACRO_U5_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
