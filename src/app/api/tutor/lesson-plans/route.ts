@@ -60,6 +60,16 @@ export async function GET(req: NextRequest) {
     estimatedMinutes: p.estimatedMinutes,
     los: p.los.map((lo) => ({ id: lo.id, description: lo.description })),
     segmentCount: p.segments.length,
+    // Metadata exposed for UI grouping (e.g. unit-grouped <optgroup> in the
+    // setup picker). Keep just the fields the UI uses to avoid bloating the
+    // response — full metadata still lives on the per-plan endpoint.
+    metadata: p.metadata
+      ? {
+          cedUnit: (p.metadata as Record<string, unknown>).cedUnit,
+          cedTopic: (p.metadata as Record<string, unknown>).cedTopic,
+          cedTitle: (p.metadata as Record<string, unknown>).cedTitle,
+        }
+      : undefined,
   }));
   return NextResponse.json({ items });
 }

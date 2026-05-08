@@ -30,6 +30,7 @@ import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
 import PlanSearchBar, { type PlanSearchResult } from './components/PlanSearchBar';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
+import { unitLabel } from '@/lib/tutor/lesson-plan/unit-titles';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
@@ -127,7 +128,17 @@ function TutorPage() {
   // Lesson-plan selection. Optional — when set, the brain runs in
   // plan-driven mode (treats segments as a teaching script) instead of
   // free-conversation mode.
-  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{ id: string; title: string; topic?: string; los: Array<{ id: string; description: string }>; estimatedMinutes: number }>>([]);
+  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{
+    id: string;
+    title: string;
+    topic?: string;
+    los: Array<{ id: string; description: string }>;
+    estimatedMinutes: number;
+    /** Slim metadata exposed by /api/tutor/lesson-plans for UI grouping
+     *  (UNIT headers in the picker dropdown). Full metadata lives on the
+     *  per-plan endpoint. */
+    metadata?: { cedUnit?: unknown; cedTopic?: unknown; cedTitle?: unknown };
+  }>>([]);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
   // Sticky-dismiss for the in-session lesson nudge. Once the student
   // hides it, don't pop it back up later in the same session.
@@ -1239,11 +1250,60 @@ function TutorPage() {
                   className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-base"
                 >
                   <option value="">— Just chat (no plan) —</option>
-                  {availableLessonPlans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} · {p.estimatedMinutes} min
-                    </option>
-                  ))}
+                  {(() => {
+                    // Group plans by CED unit when metadata.cedUnit is present.
+                    // Falls back to a flat list when no plans have unit metadata
+                    // (preserves current behavior for non-AP courses until they
+                    // ship unit-grouping). See unit-titles.ts for the grouping
+                    // helper that powers labels and keys uniformly.
+                    const groups = new Map<string, typeof availableLessonPlans>();
+                    let anyGrouped = false;
+                    for (const p of availableLessonPlans) {
+                      const md = p.metadata;
+                      const cedUnit = md && typeof md.cedUnit === 'string' ? md.cedUnit : '';
+                      const key = cedUnit || '__flat__';
+                      if (cedUnit) anyGrouped = true;
+                      const list = groups.get(key) ?? [];
+                      list.push(p);
+                      groups.set(key, list);
+                    }
+                    if (!anyGrouped) {
+                      return availableLessonPlans.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.title} · {p.estimatedMinutes} min
+                        </option>
+                      ));
+                    }
+                    // Render each group as <optgroup> with a UNIT header label.
+                    // Sort group keys numerically so UNIT 1 → 2 → … → 10 order.
+                    const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
+                      if (a === '__flat__') return 1;
+                      if (b === '__flat__') return -1;
+                      const an = parseFloat(a);
+                      const bn = parseFloat(b);
+                      if (Number.isFinite(an) && Number.isFinite(bn)) return an - bn;
+                      return a.localeCompare(b);
+                    });
+                    return sortedKeys.map((groupKey) => {
+                      const groupPlans = groups.get(groupKey) ?? [];
+                      const sample = groupPlans[0];
+                      // Use shared unit-titles helper so AP Calc BC, AP
+                      // Stats, etc. ship the same grouping the moment they
+                      // add a UNIT_TITLES entry — no per-page changes.
+                      const label = groupKey === '__flat__'
+                        ? 'Other'
+                        : (sample ? unitLabel(sample) : `UNIT ${groupKey}`);
+                      return (
+                        <optgroup key={groupKey} label={label}>
+                          {groupPlans.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.title} · {p.estimatedMinutes} min
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    });
+                  })()}
                 </select>
               </div>
             )}
