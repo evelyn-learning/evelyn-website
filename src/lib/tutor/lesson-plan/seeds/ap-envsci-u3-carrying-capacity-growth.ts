@@ -1,0 +1,71 @@
+/**
+ * AP Environmental Science — CED Unit 3.4+3.5: Carrying Capacity and
+ * Population Growth.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_ENVSCI_U3_CARRYING_CAPACITY_GROWTH: LessonPlan = {
+  id: 'evelyn.ap.envsci.carrying-capacity-growth.v1', title: 'U3.2 Carrying Capacity and Population Growth',
+  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-environmental-science', locale: 'en',
+  los: [{ id: 'apenvsci.carrying-capacity-growth', description: 'Define carrying capacity (K). Distinguish exponential vs logistic growth. Identify density-dependent vs density-independent limiting factors. Compute population growth rate.', standard: 'AP-ENVSCI-3.4-3.5' }],
+  prerequisites: ['apenvsci.survivorship-r-k'], followUps: ['apenvsci.age-structure-fertility'], estimatedMinutes: 22,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame the J vs S curve.', script: "A small population in unlimited resources GROWS EXPONENTIALLY (J-curve). But resources aren\'t unlimited — and growth eventually slows as the population approaches CARRYING CAPACITY (S-curve). Today: math of population growth and what limits it.", estimatedMinutes: 2 },
+    { id: 'concept-growth', kind: 'concept', goal: 'Cover exponential, logistic, K, limiting factors.',
+      keyIdeas: [
+        'CARRYING CAPACITY (K): the maximum population size an environment can sustain indefinitely given available resources.',
+        'EXPONENTIAL GROWTH (J-curve): when resources are unlimited (or much greater than population), population grows at a CONSTANT PER-CAPITA RATE. Each generation produces a multiplicative number of new individuals. dN/dt = rN. Plot is a J shape — slow at first, then accelerating.',
+        'LOGISTIC GROWTH (S-curve): real populations approach K. Growth slows as population nears capacity. dN/dt = rN(1 − N/K). Plot is S-shaped — slow start, fast middle, slowing at K.',
+        'PER-CAPITA GROWTH RATE r:',
+        '  • r = (births − deaths)/population, often expressed as % per year.',
+        '  • If r > 0: population grows. r < 0: population declines.',
+        '  • In humans, r is given as % per year (e.g., world r ≈ 1.0% in 2024).',
+        'RULE OF 70: doubling time (years) ≈ 70 / r (where r is % per year). E.g., r = 2% → doubles in ~35 years. r = 7% → doubles in ~10 years. Useful for quick estimates.',
+        'POPULATION-LIMITING FACTORS — two categories:',
+        '  • DENSITY-DEPENDENT factors: their effect SCALES with population density. Examples: food availability, disease (more contagious in dense populations), competition for territory, predation, accumulating waste.',
+        '  • DENSITY-INDEPENDENT factors: their effect is INDEPENDENT of population density. Examples: floods, fires, hurricanes, volcanic eruptions, prolonged drought, extreme cold.',
+        'OVERSHOOT and CRASH: in unstable environments, populations may exceed K (overshoot) and then crash. Common pattern when K decreases (e.g., grass dies in drought) or population growth has lag.',
+        'BIOTIC POTENTIAL: maximum reproductive rate under ideal conditions. Usually never realized — environment limits.',
+        'AGE OF FIRST REPRODUCTION (AFR), CLUTCH SIZE, INTERBIRTH INTERVAL all affect r.',
+      ],
+      vocabulary: [
+        { term: 'carrying capacity', definition: 'K — maximum sustainable population given resources.' },
+        { term: 'exponential growth', definition: 'J-curve; constant per-capita rate; unlimited resources.' },
+        { term: 'logistic growth', definition: 'S-curve; growth slows as N approaches K.' },
+        { term: 'density-dependent', definition: 'limiting factor whose effect scales with population density.' },
+      ],
+      estimatedMinutes: 6 },
+    { id: 'worked-doubling', kind: 'worked_example',
+      problem: 'A bacterial culture grows at r = 35% per hour. (a) Use the rule of 70 to estimate doubling time. (b) If you start with 1000 cells, predict the population in 4 hours.',
+      steps: [
+        'STEP 1 — Doubling time = 70 / 35 = 2 hours.',
+        'STEP 2 — In 4 hours: 4 / 2 = 2 doublings.',
+        'STEP 3 — 1000 → 2000 → 4000. Population ≈ 4000 cells.',
+      ],
+      answer: 'Doubling time ≈ 2 hours; ~4000 cells after 4 hours.', estimatedMinutes: 3 },
+    { id: 'try-density-dep', kind: 'try_yourself',
+      problem: 'For each, identify whether it is a DENSITY-DEPENDENT or DENSITY-INDEPENDENT limiting factor: (a) lack of food in dense rabbit population, (b) unusually cold winter, (c) disease spreads faster among packed-together fish, (d) wildfire wipes out a forest.',
+      expectedAnswer: '(a) Density-dependent (more rabbits = more competition for food). (b) Density-independent (cold weather affects all rabbits equally regardless of density). (c) Density-dependent (denser populations transmit disease faster). (d) Density-independent (fire kills regardless of population density).',
+      responseFormat: 'free', hints: ['Does the effect scale with population density?'], estimatedMinutes: 2 },
+    { id: 'try-growth-rate', kind: 'try_yourself',
+      problem: 'A small island has a deer population of 500. In one year, 100 deer are born and 60 deer die (0 immigration/emigration). (a) Compute r (per-capita growth rate). (b) If r remains constant, what\'s the doubling time?',
+      expectedAnswer: '(a) Births − Deaths = 100 − 60 = 40 net additions. r = 40/500 = 0.08 = 8% per year. \n(b) Doubling time = 70/8 = 8.75 years.',
+      responseFormat: 'numeric', hints: ['r = (B − D)/N. Then rule of 70.'], estimatedMinutes: 3 },
+    { id: 'try-logistic', kind: 'try_yourself',
+      problem: 'A pond has carrying capacity K = 500 fish. Currently N = 250. The intrinsic growth rate r = 0.20 per year. (a) Compute current dN/dt using logistic equation. (b) What if N = 100 instead? (c) What if N = 500 (at K)?',
+      expectedAnswer: '(a) dN/dt = rN(1 − N/K) = 0.20(250)(1 − 250/500) = 0.20(250)(0.5) = 25 fish/year. \n(b) N = 100: dN/dt = 0.20(100)(1 − 100/500) = 0.20(100)(0.8) = 16 fish/year. \n(c) N = K = 500: dN/dt = 0.20(500)(1 − 500/500) = 0.20(500)(0) = 0. Growth stops at K. \nNote: growth is FASTEST at N = K/2 (here, N = 250). This is the inflection point of the S-curve.',
+      responseFormat: 'numeric', hints: ['Logistic: dN/dt = rN(1 − N/K).'], estimatedMinutes: 4 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A new island forms from a volcanic eruption. Birds colonize it from neighboring islands. (a) Predict the shape of the population growth curve over the next 50 years. (b) Identify two density-dependent and two density-independent factors that might limit it. (c) What might cause an "overshoot and crash" in this population?',
+      expectedAnswer: '(a) S-curve (logistic). Initially few birds, lots of resources → exponential-like growth. As resources are used and population approaches K, growth slows and levels off at carrying capacity. (1.5)\n(b) Density-dependent: competition for food (insects, fruit), competition for nest sites, predation pressure, disease spread, parasitism. \nDensity-independent: storms (hurricanes can wipe out a colony regardless of density), volcanic eruptions, prolonged drought, extreme cold. (2)\n(c) Overshoot and crash scenario: if r is high (rapid reproduction) and there\'s a lag in resource depletion or in birds noticing depletion, population can EXCEED K temporarily → resources crash → mass starvation → population crashes BELOW K → cycle may repeat. Also: invasive new predator could rapidly reduce K. Also: climate shift. (2)\nTotal: 5.5 points.',
+      responseFormat: 'frq', hints: ['Predict shape; categorize factors; identify overshoot mechanism.'], estimatedMinutes: 5 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Exponential (J): unlimited resources, constant r. Logistic (S): approaches K.',
+      'r = (B − D)/N; doubling time ≈ 70/r%.',
+      'Density-dependent (food, disease, competition); density-independent (weather, fire).',
+      'Overshoot and crash possible when populations exceed K.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '3', cedTopic: '3.4-3.5', cedTitle: 'Carrying Capacity and Growth', sources: [{ type: 'concept', book: 'miller-spoolman', chapter: '5', note: 'Standard population growth.' }] },
+};

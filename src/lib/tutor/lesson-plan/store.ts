@@ -720,6 +720,11 @@ import { SEED_AP_ENVSCI_U2_BIODIVERSITY_ISLAND_BIOGEO } from './seeds/ap-envsci-
 import { SEED_AP_ENVSCI_U2_TOLERANCE_ADAPTATIONS } from './seeds/ap-envsci-u2-tolerance-adaptations';
 import { SEED_AP_ENVSCI_U2_DISRUPTIONS_SUCCESSION } from './seeds/ap-envsci-u2-disruptions-succession';
 import { SEED_AP_ENVSCI_U2_FRQ_PRACTICE } from './seeds/ap-envsci-u2-frq-practice';
+import { SEED_AP_ENVSCI_U3_SURVIVORSHIP_R_K } from './seeds/ap-envsci-u3-survivorship-r-k';
+import { SEED_AP_ENVSCI_U3_CARRYING_CAPACITY_GROWTH } from './seeds/ap-envsci-u3-carrying-capacity-growth';
+import { SEED_AP_ENVSCI_U3_AGE_STRUCTURE_FERTILITY } from './seeds/ap-envsci-u3-age-structure-fertility';
+import { SEED_AP_ENVSCI_U3_DEMOGRAPHIC_TRANSITION } from './seeds/ap-envsci-u3-demographic-transition';
+import { SEED_AP_ENVSCI_U3_FRQ_PRACTICE } from './seeds/ap-envsci-u3-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1869,6 +1874,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U2_TOLERANCE_ADAPTATIONS,
   SEED_AP_ENVSCI_U2_DISRUPTIONS_SUCCESSION,
   SEED_AP_ENVSCI_U2_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U3_SURVIVORSHIP_R_K,
+  SEED_AP_ENVSCI_U3_CARRYING_CAPACITY_GROWTH,
+  SEED_AP_ENVSCI_U3_AGE_STRUCTURE_FERTILITY,
+  SEED_AP_ENVSCI_U3_DEMOGRAPHIC_TRANSITION,
+  SEED_AP_ENVSCI_U3_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
