@@ -569,6 +569,16 @@ import { SEED_AP_MACRO_U2_COSTS_OF_INFLATION } from './seeds/ap-macro-u2-costs-o
 import { SEED_AP_MACRO_U2_REAL_VS_NOMINAL_GDP } from './seeds/ap-macro-u2-real-vs-nominal-gdp';
 import { SEED_AP_MACRO_U2_BUSINESS_CYCLE } from './seeds/ap-macro-u2-business-cycle';
 import { SEED_AP_MACRO_U2_FRQ_PRACTICE } from './seeds/ap-macro-u2-frq-practice';
+import { SEED_AP_MACRO_U3_AGGREGATE_DEMAND } from './seeds/ap-macro-u3-aggregate-demand';
+import { SEED_AP_MACRO_U3_MULTIPLIERS } from './seeds/ap-macro-u3-multipliers';
+import { SEED_AP_MACRO_U3_SRAS } from './seeds/ap-macro-u3-sras';
+import { SEED_AP_MACRO_U3_LRAS } from './seeds/ap-macro-u3-lras';
+import { SEED_AP_MACRO_U3_EQUILIBRIUM_AD_AS } from './seeds/ap-macro-u3-equilibrium-ad-as';
+import { SEED_AP_MACRO_U3_CHANGES_SHORT_RUN } from './seeds/ap-macro-u3-changes-short-run';
+import { SEED_AP_MACRO_U3_LONG_RUN_SELF_ADJUST } from './seeds/ap-macro-u3-long-run-self-adjust';
+import { SEED_AP_MACRO_U3_FISCAL_POLICY } from './seeds/ap-macro-u3-fiscal-policy';
+import { SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS } from './seeds/ap-macro-u3-automatic-stabilizers';
+import { SEED_AP_MACRO_U3_FRQ_PRACTICE } from './seeds/ap-macro-u3-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1577,6 +1587,16 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U2_REAL_VS_NOMINAL_GDP,
   SEED_AP_MACRO_U2_BUSINESS_CYCLE,
   SEED_AP_MACRO_U2_FRQ_PRACTICE,
+  SEED_AP_MACRO_U3_AGGREGATE_DEMAND,
+  SEED_AP_MACRO_U3_MULTIPLIERS,
+  SEED_AP_MACRO_U3_SRAS,
+  SEED_AP_MACRO_U3_LRAS,
+  SEED_AP_MACRO_U3_EQUILIBRIUM_AD_AS,
+  SEED_AP_MACRO_U3_CHANGES_SHORT_RUN,
+  SEED_AP_MACRO_U3_LONG_RUN_SELF_ADJUST,
+  SEED_AP_MACRO_U3_FISCAL_POLICY,
+  SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS,
+  SEED_AP_MACRO_U3_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

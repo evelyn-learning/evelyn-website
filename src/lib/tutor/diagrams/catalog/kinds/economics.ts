@@ -7,6 +7,107 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+// ── aggregate_demand_supply ─────────────────────────────────────────────
+
+export interface AdAsShift {
+  curve: 'AD' | 'SRAS' | 'LRAS';
+  direction: 'left' | 'right';
+  magnitude: number;          // axis units; default 10
+  label?: string;
+}
+
+export interface AdAsLabels {
+  eqInitial?: string;
+  eqFinal?: string;
+  ad?: string;
+  sras?: string;
+  lras?: string;
+}
+
+export interface AdAsFigure {
+  /** x-position of LRAS (vertical line). 0..100 axis units. */
+  potentialGdp: number;
+  /** Initial equilibrium real GDP. */
+  initialEquilibriumGdp: number;
+  /** Initial equilibrium price level. */
+  initialPriceLevel: number;
+  showLras: boolean;
+  shift?: AdAsShift;
+  /** Computed by the solver if shift is present. */
+  finalEquilibriumGdp?: number;
+  finalEquilibriumPriceLevel?: number;
+  labels: Required<AdAsLabels>;
+  title?: string;
+}
+
+/** Solve for the new equilibrium given a shift in AD or SRAS.
+ *  Curve assumptions: AD slope = -1, SRAS slope = +1, both per axis-unit. */
+function solveShiftedEquilibrium(
+  Y0: number,
+  P0: number,
+  shift: AdAsShift,
+): { Y: number; P: number } {
+  const delta = shift.direction === 'right' ? shift.magnitude : -shift.magnitude;
+  if (shift.curve === 'AD') {
+    // AD shift right → both Y and P rise by delta/2.
+    return { Y: Y0 + delta / 2, P: P0 + delta / 2 };
+  }
+  if (shift.curve === 'SRAS') {
+    // SRAS shift right → Y rises by delta/2, P falls by delta/2.
+    return { Y: Y0 + delta / 2, P: P0 - delta / 2 };
+  }
+  // LRAS shift: shifts the vertical line. Does NOT change current AD/SRAS
+  // intersection in the short run; affects long-run self-adjustment.
+  return { Y: Y0, P: P0 };
+}
+
+export function solveAggregateDemandSupply(params: Record<string, unknown>): AdAsFigure {
+  const potentialGdp = typeof params.potentialGdp === 'number' ? params.potentialGdp : 50;
+  const Y0 = typeof params.initialEquilibriumGdp === 'number' ? params.initialEquilibriumGdp : potentialGdp;
+  const P0 = typeof params.initialPriceLevel === 'number' ? params.initialPriceLevel : 50;
+  const showLras = params.showLras !== false;
+
+  let shift: AdAsShift | undefined;
+  let finalY: number | undefined;
+  let finalP: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'AD' || s.curve === 'SRAS' || s.curve === 'LRAS') &&
+        (s.direction === 'left' || s.direction === 'right')) {
+      shift = {
+        curve: s.curve,
+        direction: s.direction,
+        magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 10,
+        label: typeof s.label === 'string' ? s.label : undefined,
+      };
+      const eq = solveShiftedEquilibrium(Y0, P0, shift);
+      finalY = eq.Y;
+      finalP = eq.P;
+    }
+  }
+
+  const lblIn = (params.labels ?? {}) as Record<string, unknown>;
+  const labels: Required<AdAsLabels> = {
+    eqInitial: typeof lblIn.eqInitial === 'string' ? lblIn.eqInitial : 'E₀',
+    eqFinal: typeof lblIn.eqFinal === 'string' ? lblIn.eqFinal : 'E₁',
+    ad: typeof lblIn.ad === 'string' ? lblIn.ad : 'AD',
+    sras: typeof lblIn.sras === 'string' ? lblIn.sras : 'SRAS',
+    lras: typeof lblIn.lras === 'string' ? lblIn.lras : 'LRAS',
+  };
+
+  return {
+    potentialGdp,
+    initialEquilibriumGdp: Y0,
+    initialPriceLevel: P0,
+    showLras,
+    shift,
+    finalEquilibriumGdp: finalY,
+    finalEquilibriumPriceLevel: finalP,
+    labels,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── business_cycle ──────────────────────────────────────────────────────
 
 export interface BusinessCyclePhaseMarker {

@@ -58,6 +58,7 @@ import {
 } from './CatalogAdvancedRenderers';
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 import { BusinessCycleRenderer } from './BusinessCycleRenderer';
+import { AdAsRenderer } from './AdAsRenderer';
 
 interface Props {
   kind: string;
@@ -128,6 +129,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 9 — economics (AP Plans Initiative)
     case 'production_possibilities': return <ProductionPossibilitiesRenderer figure={figure} />;
     case 'business_cycle':           return <BusinessCycleRenderer figure={figure} />;
+    case 'aggregate_demand_supply':  return <AdAsRenderer figure={figure} />;
 
     default:
       return (
