@@ -29,7 +29,7 @@ export const SEED_AP_MACRO_U4_FRQ_PRACTICE: LessonPlan = {
     'apmacro.financial-assets',
     'apmacro.nominal-vs-real-interest-rates',
     'apmacro.functions-of-money',
-    'apmacro.banking-money-creation-v2',
+    'apmacro.banking-money-creation',
     'apmacro.money-market',
     'apmacro.monetary-policy',
     'apmacro.loanable-funds-market',

@@ -11,7 +11,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U3_FISCAL_POLICY: LessonPlan = {
-  id: 'evelyn.ap.macro.fiscal-policy-v2.v1',
+  id: 'evelyn.ap.macro.fiscal-policy.v1',
   title: 'Fiscal Policy',
   curriculum: 'AP',
   grade: '12',
@@ -20,7 +20,7 @@ export const SEED_AP_MACRO_U3_FISCAL_POLICY: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apmacro.fiscal-policy-v2',
+      id: 'apmacro.fiscal-policy',
       description:
         'Apply expansionary and contractionary fiscal policy in the AD-AS model, compute the resulting AD shift using the spending and tax multipliers, identify crowding out, distinguish budget deficit from national debt, and articulate the time-lag limitations.',
       standard: 'AP-MACRO-3.8',

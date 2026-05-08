@@ -425,8 +425,8 @@ import { SEED_AP_HUMAN_GEO_URBAN } from './seeds/ap-human-geo-urban';
 import { SEED_AP_HUMAN_GEO_POLITICAL } from './seeds/ap-human-geo-political';
 import { SEED_AP_MICRO_PPC } from './seeds/ap-micro-ppc';
 import { SEED_AP_MICRO_EXTERNALITIES } from './seeds/ap-micro-externalities';
-import { SEED_AP_MACRO_AD_AS } from './seeds/ap-macro-ad-as';
-import { SEED_AP_MACRO_MONEY_BANKING } from './seeds/ap-macro-money-banking';
+// AP Macro old plans deleted in cleanup commit — superseded by Units 2/3/4 plans
+// in the AP Plans Initiative. Was: SEED_AP_MACRO_AD_AS, SEED_AP_MACRO_MONEY_BANKING.
 // Batch 37 — AP ES, music, art history, professional tests, more world/lit.
 import { SEED_AP_ENV_SCI_ECOSYSTEMS } from './seeds/ap-env-sci-ecosystems';
 import { SEED_AP_ENV_SCI_CLIMATE_CHANGE } from './seeds/ap-env-sci-climate-change';
@@ -550,10 +550,10 @@ import { SEED_AP_BIO_IMMUNE } from './seeds/ap-bio-immune';
 import { SEED_AP_MICRO_ELASTICITY } from './seeds/ap-micro-elasticity';
 import { SEED_AP_MICRO_MARKET_STRUCTURES } from './seeds/ap-micro-market-structures';
 import { SEED_AP_MICRO_FACTOR_MARKETS } from './seeds/ap-micro-factor-markets';
-import { SEED_AP_MACRO_FISCAL_POLICY } from './seeds/ap-macro-fiscal-policy';
-import { SEED_AP_MACRO_BUSINESS_CYCLE } from './seeds/ap-macro-business-cycle';
-// AP Plans Initiative — new AP Macro plans (will supersede the 4 above as the
-// initiative ships unit-by-unit). See project_ap_plans_initiative.md.
+// AP Macro old plans deleted in cleanup commit — superseded by Units 2/3 plans.
+// Was: SEED_AP_MACRO_FISCAL_POLICY, SEED_AP_MACRO_BUSINESS_CYCLE.
+// AP Plans Initiative — AP Macro plans (47 across 6 units; AP Macro complete).
+// See project_ap_plans_initiative.md.
 import { SEED_AP_MACRO_U1_SCARCITY } from './seeds/ap-macro-u1-scarcity';
 import { SEED_AP_MACRO_U1_RESOURCE_ALLOCATION } from './seeds/ap-macro-u1-resource-allocation';
 import { SEED_AP_MACRO_U1_PPC } from './seeds/ap-macro-u1-ppc';
@@ -1541,8 +1541,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_HUMAN_GEO_POLITICAL,
   SEED_AP_MICRO_PPC,
   SEED_AP_MICRO_EXTERNALITIES,
-  SEED_AP_MACRO_AD_AS,
-  SEED_AP_MACRO_MONEY_BANKING,
   // Batch 37 — AP ES, music, art history, prof tests, more world/lit.
   SEED_AP_ENV_SCI_ECOSYSTEMS,
   SEED_AP_ENV_SCI_CLIMATE_CHANGE,
@@ -1592,8 +1590,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MICRO_ELASTICITY,
   SEED_AP_MICRO_MARKET_STRUCTURES,
   SEED_AP_MICRO_FACTOR_MARKETS,
-  SEED_AP_MACRO_FISCAL_POLICY,
-  SEED_AP_MACRO_BUSINESS_CYCLE,
   SEED_AP_MACRO_U1_SCARCITY,
   SEED_AP_MACRO_U1_RESOURCE_ALLOCATION,
   SEED_AP_MACRO_U1_PPC,

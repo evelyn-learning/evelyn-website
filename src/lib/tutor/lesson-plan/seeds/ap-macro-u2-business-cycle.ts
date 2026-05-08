@@ -12,7 +12,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U2_BUSINESS_CYCLE: LessonPlan = {
-  id: 'evelyn.ap.macro.business-cycle-v2.v1',
+  id: 'evelyn.ap.macro.business-cycle.v1',
   title: 'The Business Cycle',
   curriculum: 'AP',
   grade: '12',

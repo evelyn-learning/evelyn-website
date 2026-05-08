@@ -11,7 +11,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U4_BANKING_MONEY_CREATION: LessonPlan = {
-  id: 'evelyn.ap.macro.banking-money-creation-v2.v1',
+  id: 'evelyn.ap.macro.banking-money-creation.v1',
   title: 'Banking and the Expansion of the Money Supply',
   curriculum: 'AP',
   grade: '12',
@@ -20,7 +20,7 @@ export const SEED_AP_MACRO_U4_BANKING_MONEY_CREATION: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apmacro.banking-money-creation-v2',
+      id: 'apmacro.banking-money-creation',
       description:
         'Apply fractional-reserve banking to compute the money multiplier (1/RR) and the maximum increase in the money supply from a given deposit, analyze a T-account showing assets and liabilities, and identify what shrinks the multiplier in real economies.',
       standard: 'AP-MACRO-4.4',

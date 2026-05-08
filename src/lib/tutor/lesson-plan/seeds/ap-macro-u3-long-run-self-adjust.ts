@@ -27,7 +27,7 @@ export const SEED_AP_MACRO_U3_LONG_RUN_SELF_ADJUST: LessonPlan = {
     },
   ],
   prerequisites: ['apmacro.changes-ad-as-short-run'],
-  followUps: ['apmacro.fiscal-policy-v2'],
+  followUps: ['apmacro.fiscal-policy'],
   estimatedMinutes: 22,
   segments: [
     {

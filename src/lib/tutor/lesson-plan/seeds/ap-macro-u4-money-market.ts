@@ -25,7 +25,7 @@ export const SEED_AP_MACRO_U4_MONEY_MARKET: LessonPlan = {
       standard: 'AP-MACRO-4.5',
     },
   ],
-  prerequisites: ['apmacro.banking-money-creation-v2'],
+  prerequisites: ['apmacro.banking-money-creation'],
   followUps: ['apmacro.monetary-policy'],
   estimatedMinutes: 22,
   segments: [

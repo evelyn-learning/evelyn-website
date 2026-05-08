@@ -33,7 +33,7 @@ export const SEED_AP_MACRO_U3_FRQ_PRACTICE: LessonPlan = {
     'apmacro.equilibrium-ad-as',
     'apmacro.changes-ad-as-short-run',
     'apmacro.long-run-self-adjustment',
-    'apmacro.fiscal-policy-v2',
+    'apmacro.fiscal-policy',
     'apmacro.automatic-stabilizers',
   ],
   followUps: [],

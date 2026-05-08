@@ -26,7 +26,7 @@ export const SEED_AP_MACRO_U3_AUTOMATIC_STABILIZERS: LessonPlan = {
       standard: 'AP-MACRO-3.9',
     },
   ],
-  prerequisites: ['apmacro.fiscal-policy-v2'],
+  prerequisites: ['apmacro.fiscal-policy'],
   followUps: [],
   estimatedMinutes: 18,
   segments: [

@@ -26,7 +26,7 @@ export const SEED_AP_MACRO_U5_DEFICITS_DEBT: LessonPlan = {
       standard: 'AP-MACRO-5.3',
     },
   ],
-  prerequisites: ['apmacro.money-growth-inflation', 'apmacro.fiscal-policy-v2'],
+  prerequisites: ['apmacro.money-growth-inflation', 'apmacro.fiscal-policy'],
   followUps: ['apmacro.crowding-out-long-run'],
   estimatedMinutes: 22,
   segments: [
