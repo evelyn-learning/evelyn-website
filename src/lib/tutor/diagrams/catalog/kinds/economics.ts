@@ -7,6 +7,73 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+// ── foreign_exchange_market ─────────────────────────────────────────────
+
+export interface FxMarketShift {
+  curve: 'S' | 'D';
+  direction: 'left' | 'right';
+  magnitude: number;
+  label?: string;
+}
+
+export interface FxMarketFigure {
+  /** Currency being graphed, e.g. "USD" or "EUR". Affects axis labels only. */
+  currency: string;
+  /** Quote currency for the exchange rate (the y-axis unit). E.g. for USD graphed
+   *  in terms of EUR per USD, currency='USD' and quoteCurrency='EUR'. */
+  quoteCurrency: string;
+  initialQuantity: number;        // 0..100
+  initialExchangeRate: number;    // 0..100
+  shift?: FxMarketShift;
+  finalQuantity?: number;
+  finalExchangeRate?: number;
+  title?: string;
+}
+
+export function solveForeignExchangeMarket(params: Record<string, unknown>): FxMarketFigure {
+  const currency = typeof params.currency === 'string' ? params.currency : 'USD';
+  const quoteCurrency = typeof params.quoteCurrency === 'string' ? params.quoteCurrency : 'EUR';
+  const Q0 = typeof params.initialQuantity === 'number' ? params.initialQuantity : 50;
+  const e0 = typeof params.initialExchangeRate === 'number' ? params.initialExchangeRate : 50;
+
+  let shift: FxMarketShift | undefined;
+  let finalQ: number | undefined;
+  let finalE: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'S' || s.curve === 'D') && (s.direction === 'left' || s.direction === 'right')) {
+      shift = {
+        curve: s.curve,
+        direction: s.direction,
+        magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 10,
+        label: typeof s.label === 'string' ? s.label : undefined,
+      };
+      const delta = shift.direction === 'right' ? shift.magnitude : -shift.magnitude;
+      // S slope = +1, D slope = -1, both through (Q0, e0).
+      // S right: Q rises, e falls (currency depreciates).
+      // D right: Q rises, e rises (currency appreciates).
+      if (shift.curve === 'S') {
+        finalQ = Q0 + delta / 2;
+        finalE = e0 - delta / 2;
+      } else {
+        finalQ = Q0 + delta / 2;
+        finalE = e0 + delta / 2;
+      }
+    }
+  }
+
+  return {
+    currency,
+    quoteCurrency,
+    initialQuantity: Q0,
+    initialExchangeRate: e0,
+    shift,
+    finalQuantity: finalQ,
+    finalExchangeRate: finalE,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
 // ── phillips_curve ──────────────────────────────────────────────────────
 
 export interface PhillipsCurveShift {

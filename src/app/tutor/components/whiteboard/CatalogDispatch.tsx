@@ -62,6 +62,7 @@ import { AdAsRenderer } from './AdAsRenderer';
 import { MoneyMarketRenderer } from './MoneyMarketRenderer';
 import { LoanableFundsRenderer } from './LoanableFundsRenderer';
 import { PhillipsCurveRenderer } from './PhillipsCurveRenderer';
+import { ForeignExchangeRenderer } from './ForeignExchangeRenderer';
 
 interface Props {
   kind: string;
@@ -136,6 +137,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'money_market':             return <MoneyMarketRenderer figure={figure} />;
     case 'loanable_funds':           return <LoanableFundsRenderer figure={figure} />;
     case 'phillips_curve':           return <PhillipsCurveRenderer figure={figure} />;
+    case 'foreign_exchange_market':  return <ForeignExchangeRenderer figure={figure} />;
 
     default:
       return (

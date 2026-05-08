@@ -52,6 +52,7 @@ import {
   solveMoneyMarket,
   solveLoanableFunds,
   solvePhillipsCurve,
+  solveForeignExchangeMarket,
 } from './kinds/economics';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
@@ -131,6 +132,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'money_market', displayName: 'Money Market', whenToUse: 'Show the money market with vertical money supply (Ms) and downward-sloping money demand (Md), nominal interest rate on the y-axis. Supports a single shift in Ms or Md with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'moneySupplyQuantity?:number 0..100, initialInterestRate?:number 0..100, shift?:{curve:Ms|Md, direction:left|right, magnitude?:number (default 10), label?}, title?' },
   { kind: 'loanable_funds', displayName: 'Loanable Funds Market', whenToUse: 'Show the loanable funds market with upward-sloping supply of saving and downward-sloping demand for investment (incl. government borrowing), real interest rate on the y-axis. Supports a single shift in S or D with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'initialQuantity?:number 0..100, initialRealRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
   { kind: 'phillips_curve', displayName: 'Phillips Curve', whenToUse: 'Show the short-run Phillips Curve (downward-sloping inflation-unemployment tradeoff) and long-run Phillips Curve (vertical at NAIRU). Supports SRPC up/down shifts (inflation expectations / supply shocks) or LRPC left/right shifts (NAIRU changes).', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'nairu?:number 0..100, initialUnemployment?:number 0..100, initialInflation?:number 0..100, showLrpc?:boolean (default true), shift?:{curve:SRPC|LRPC, direction:up|down|left|right, magnitude?:number (default 10), label?}, title?' },
+  { kind: 'foreign_exchange_market', displayName: 'Foreign Exchange Market', whenToUse: 'Show the FX market for one currency: upward-sloping S, downward-sloping D, exchange rate on y-axis. Supports a single shift in S or D with the new equilibrium computed automatically. Currency labels (e.g. USD vs EUR) shown on axes.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'currency?:string (default "USD"), quoteCurrency?:string (default "EUR"), initialQuantity?:number 0..100, initialExchangeRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
 ];
 
 /** Solver dispatch table. */
@@ -200,6 +202,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   money_market: solveMoneyMarket,
   loanable_funds: solveLoanableFunds,
   phillips_curve: solvePhillipsCurve,
+  foreign_exchange_market: solveForeignExchangeMarket,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

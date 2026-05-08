@@ -77,7 +77,8 @@ export type DiagramKindId =
   | 'aggregate_demand_supply'
   | 'money_market'
   | 'loanable_funds'
-  | 'phillips_curve';
+  | 'phillips_curve'
+  | 'foreign_exchange_market';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

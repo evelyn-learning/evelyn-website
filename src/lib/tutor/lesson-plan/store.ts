@@ -594,6 +594,13 @@ import { SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN } from './seeds/ap-macro-u5-crow
 import { SEED_AP_MACRO_U5_ECONOMIC_GROWTH } from './seeds/ap-macro-u5-economic-growth';
 import { SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH } from './seeds/ap-macro-u5-public-policy-growth';
 import { SEED_AP_MACRO_U5_FRQ_PRACTICE } from './seeds/ap-macro-u5-frq-practice';
+import { SEED_AP_MACRO_U6_BALANCE_OF_PAYMENTS } from './seeds/ap-macro-u6-balance-of-payments';
+import { SEED_AP_MACRO_U6_EXCHANGE_RATES } from './seeds/ap-macro-u6-exchange-rates';
+import { SEED_AP_MACRO_U6_FX_MARKET } from './seeds/ap-macro-u6-fx-market';
+import { SEED_AP_MACRO_U6_FX_DETERMINANTS } from './seeds/ap-macro-u6-fx-determinants';
+import { SEED_AP_MACRO_U6_FX_EFFECTS } from './seeds/ap-macro-u6-fx-effects';
+import { SEED_AP_MACRO_U6_TRADE_CAPITAL_FLOWS } from './seeds/ap-macro-u6-trade-capital-flows';
+import { SEED_AP_MACRO_U6_FRQ_PRACTICE } from './seeds/ap-macro-u6-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1627,6 +1634,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U5_ECONOMIC_GROWTH,
   SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH,
   SEED_AP_MACRO_U5_FRQ_PRACTICE,
+  SEED_AP_MACRO_U6_BALANCE_OF_PAYMENTS,
+  SEED_AP_MACRO_U6_EXCHANGE_RATES,
+  SEED_AP_MACRO_U6_FX_MARKET,
+  SEED_AP_MACRO_U6_FX_DETERMINANTS,
+  SEED_AP_MACRO_U6_FX_EFFECTS,
+  SEED_AP_MACRO_U6_TRADE_CAPITAL_FLOWS,
+  SEED_AP_MACRO_U6_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
