@@ -21,18 +21,26 @@ interface RiemannRect { x: number; width: number; height: number }
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
+/** Accept either {x,y} or [x,y] / [x,y,t]. Tuples cut tool-call tokens
+ *  roughly in half, which matters because the brain is on a tight
+ *  output-token budget. */
 function asXYArray(v: unknown, label: string): XY[] {
   if (!Array.isArray(v) || v.length === 0) {
-    throw new Error(`${label} must be a non-empty array of {x, y} points`);
+    throw new Error(`${label} must be a non-empty array of {x, y} or [x, y]`);
   }
-  return v.map((p, i) => {
-    if (!p || typeof p !== 'object') throw new Error(`${label}[${i}] is not an object`);
+  return v.map((p, i): XY => {
+    if (Array.isArray(p)) {
+      if (!isFiniteNumber(p[0]) || !isFiniteNumber(p[1])) {
+        throw new Error(`${label}[${i}] tuple needs finite [x, y]`);
+      }
+      return { x: p[0], y: p[1] };
+    }
+    if (!p || typeof p !== 'object') throw new Error(`${label}[${i}] must be {x,y} or [x,y]`);
     const pp = p as Record<string, unknown>;
     if (!isFiniteNumber(pp.x) || !isFiniteNumber(pp.y)) {
       throw new Error(`${label}[${i}] needs finite numeric x and y`);
     }
-    const out: XY = { x: pp.x, y: pp.y };
-    return out;
+    return { x: pp.x, y: pp.y };
   });
 }
 function autoBounds(pts: { x: number; y: number }[]): { xMin: number; xMax: number; yMin: number; yMax: number } {
@@ -63,8 +71,16 @@ export interface RiemannSumFigure {
 export function solveRiemannSum(params: Record<string, unknown>): RiemannSumFigure {
   const curve = asXYArray(params.curve, 'curve');
   if (!Array.isArray(params.rectangles)) throw new Error('rectangles must be an array');
-  const rectangles: RiemannRect[] = (params.rectangles as unknown[]).map((r, i) => {
-    if (!r || typeof r !== 'object') throw new Error(`rectangles[${i}] is not an object`);
+  const rectangles: RiemannRect[] = (params.rectangles as unknown[]).map((r, i): RiemannRect => {
+    // Tuple form: [x, width, height]
+    if (Array.isArray(r)) {
+      if (!isFiniteNumber(r[0]) || !isFiniteNumber(r[1]) || !isFiniteNumber(r[2])) {
+        throw new Error(`rectangles[${i}] tuple needs finite [x, width, height]`);
+      }
+      if (r[1] <= 0) throw new Error(`rectangles[${i}][1] (width) must be > 0`);
+      return { x: r[0], width: r[1], height: r[2] };
+    }
+    if (!r || typeof r !== 'object') throw new Error(`rectangles[${i}] must be {x,width,height} or [x,width,height]`);
     const rr = r as Record<string, unknown>;
     if (!isFiniteNumber(rr.x) || !isFiniteNumber(rr.width) || !isFiniteNumber(rr.height)) {
       throw new Error(`rectangles[${i}] needs finite x, width, height`);
@@ -109,9 +125,16 @@ export interface SlopeFieldFigure {
 }
 
 export function solveSlopeField(params: Record<string, unknown>): SlopeFieldFigure {
-  if (!Array.isArray(params.samples)) throw new Error('samples must be an array of {x,y,slope}');
-  const samples: SlopeSample[] = (params.samples as unknown[]).map((s, i) => {
-    if (!s || typeof s !== 'object') throw new Error(`samples[${i}] is not an object`);
+  if (!Array.isArray(params.samples)) throw new Error('samples must be an array of {x,y,slope} or [x,y,slope]');
+  const samples: SlopeSample[] = (params.samples as unknown[]).map((s, i): SlopeSample => {
+    // Tuple form: [x, y, slope]
+    if (Array.isArray(s)) {
+      if (!isFiniteNumber(s[0]) || !isFiniteNumber(s[1])) {
+        throw new Error(`samples[${i}] tuple needs finite [x, y, slope]`);
+      }
+      return { x: s[0], y: s[1], slope: isFiniteNumber(s[2]) ? s[2] : NaN };
+    }
+    if (!s || typeof s !== 'object') throw new Error(`samples[${i}] must be {x,y,slope} or [x,y,slope]`);
     const ss = s as Record<string, unknown>;
     if (!isFiniteNumber(ss.x) || !isFiniteNumber(ss.y)) {
       throw new Error(`samples[${i}] needs finite x and y`);
@@ -158,9 +181,16 @@ export interface ParametricCurveFigure {
 }
 
 export function solveParametricCurve(params: Record<string, unknown>): ParametricCurveFigure {
-  if (!Array.isArray(params.curve)) throw new Error('curve must be an array of {x,y,t?}');
-  const curve: XYT[] = (params.curve as unknown[]).map((p, i) => {
-    if (!p || typeof p !== 'object') throw new Error(`curve[${i}] is not an object`);
+  if (!Array.isArray(params.curve)) throw new Error('curve must be an array of {x,y,t?} or [x,y,t?]');
+  const curve: XYT[] = (params.curve as unknown[]).map((p, i): XYT => {
+    // Tuple form: [x, y] or [x, y, t]
+    if (Array.isArray(p)) {
+      if (!isFiniteNumber(p[0]) || !isFiniteNumber(p[1])) {
+        throw new Error(`curve[${i}] tuple needs finite [x, y, t?]`);
+      }
+      return { x: p[0], y: p[1], t: isFiniteNumber(p[2]) ? p[2] : undefined };
+    }
+    if (!p || typeof p !== 'object') throw new Error(`curve[${i}] must be {x,y,t?} or [x,y,t?]`);
     const pp = p as Record<string, unknown>;
     if (!isFiniteNumber(pp.x) || !isFiniteNumber(pp.y)) {
       throw new Error(`curve[${i}] needs finite x and y`);
@@ -168,6 +198,14 @@ export function solveParametricCurve(params: Record<string, unknown>): Parametri
     return { x: pp.x, y: pp.y, t: isFiniteNumber(pp.t) ? pp.t : undefined };
   });
   if (curve.length < 2) throw new Error('curve needs at least 2 points');
+
+  // Defang brain hallucinations that insert points out of t-order: when
+  // every point carries a t value, sort by t. (If the brain wanted a
+  // reversed trace it can use descending t values; the resulting visual
+  // shape is the same.)
+  if (curve.every((p) => isFiniteNumber(p.t))) {
+    curve.sort((a, b) => (a.t as number) - (b.t as number));
+  }
 
   const auto = autoBounds(curve);
   const padX = (auto.xMax - auto.xMin) * 0.1 || 1;
@@ -219,10 +257,17 @@ export interface PolarGraphFigure {
 
 function asPolarArray(v: unknown, label: string): PolarPoint[] {
   if (!Array.isArray(v) || v.length === 0) {
-    throw new Error(`${label} must be a non-empty array of {theta, r, x?, y?}`);
+    throw new Error(`${label} must be a non-empty array of {theta, r} or [theta, r]`);
   }
-  return v.map((p, i) => {
-    if (!p || typeof p !== 'object') throw new Error(`${label}[${i}] is not an object`);
+  return v.map((p, i): PolarPoint => {
+    // Tuple form: [theta, r]
+    if (Array.isArray(p)) {
+      if (!isFiniteNumber(p[0]) || !isFiniteNumber(p[1])) {
+        throw new Error(`${label}[${i}] tuple needs finite [theta, r]`);
+      }
+      return { theta: p[0], r: p[1], x: p[1] * Math.cos(p[0]), y: p[1] * Math.sin(p[0]) };
+    }
+    if (!p || typeof p !== 'object') throw new Error(`${label}[${i}] must be {theta,r} or [theta,r]`);
     const pp = p as Record<string, unknown>;
     if (!isFiniteNumber(pp.theta) || !isFiniteNumber(pp.r)) {
       throw new Error(`${label}[${i}] needs finite theta and r`);
