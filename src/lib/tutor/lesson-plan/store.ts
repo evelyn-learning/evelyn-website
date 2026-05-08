@@ -735,6 +735,13 @@ import { SEED_AP_ENVSCI_U5_FORESTRY_MINING } from './seeds/ap-envsci-u5-forestry
 import { SEED_AP_ENVSCI_U5_URBANIZATION_WATER } from './seeds/ap-envsci-u5-urbanization-water';
 import { SEED_AP_ENVSCI_U5_COMMONS_FISHING_FOOTPRINT } from './seeds/ap-envsci-u5-commons-fishing-footprint';
 import { SEED_AP_ENVSCI_U5_FRQ_PRACTICE } from './seeds/ap-envsci-u5-frq-practice';
+// AP Psychology — new format (CED-aligned).
+import { SEED_AP_PSYCH_U1_NEURONS_NEUROTRANSMITTERS } from './seeds/ap-psych-u1-neurons-neurotransmitters';
+import { SEED_AP_PSYCH_U1_BRAIN_STRUCTURES } from './seeds/ap-psych-u1-brain-structures';
+import { SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE } from './seeds/ap-psych-u1-nervous-endocrine';
+import { SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP } from './seeds/ap-psych-u1-consciousness-sleep';
+import { SEED_AP_PSYCH_U1_SENSATION_PERCEPTION } from './seeds/ap-psych-u1-sensation-perception';
+import { SEED_AP_PSYCH_U1_FRQ_PRACTICE } from './seeds/ap-psych-u1-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1899,6 +1906,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U5_URBANIZATION_WATER,
   SEED_AP_ENVSCI_U5_COMMONS_FISHING_FOOTPRINT,
   SEED_AP_ENVSCI_U5_FRQ_PRACTICE,
+  SEED_AP_PSYCH_U1_NEURONS_NEUROTRANSMITTERS,
+  SEED_AP_PSYCH_U1_BRAIN_STRUCTURES,
+  SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE,
+  SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP,
+  SEED_AP_PSYCH_U1_SENSATION_PERCEPTION,
+  SEED_AP_PSYCH_U1_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
