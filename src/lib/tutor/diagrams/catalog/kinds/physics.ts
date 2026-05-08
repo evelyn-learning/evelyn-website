@@ -75,16 +75,53 @@ export function solveLever(params: Record<string, unknown>): LeverFigure {
 }
 
 // ── pulley_system ─────────────────────────────────────────────────────────
+export type PulleyMode = 'block-tackle' | 'atwood' | 'table-pulley' | 'incline-pulley';
+export interface AtwoodSide {
+  label: string;
+  weight?: string;
+}
 export interface PulleyFigure {
+  mode: PulleyMode;
   fixedCount: number;
   movableCount: number;
   weightLabel: string;
   weight?: number;
   mechanicalAdvantage: number;
   effort?: number;
+  /** For atwood / table-pulley / incline-pulley modes: the two connected bodies. */
+  leftSide?: AtwoodSide;
+  rightSide?: AtwoodSide;
+  /** For incline-pulley: angle of the ramp in degrees. */
+  inclineAngle?: number;
   title?: string;
 }
 export function solvePulleySystem(params: Record<string, unknown>): PulleyFigure {
+  const rawMode = typeof params.mode === 'string' ? params.mode : 'block-tackle';
+  const mode: PulleyMode =
+    rawMode === 'atwood' || rawMode === 'table-pulley' || rawMode === 'incline-pulley'
+      ? rawMode
+      : 'block-tackle';
+
+  if (mode === 'atwood' || mode === 'table-pulley' || mode === 'incline-pulley') {
+    const sides = parseAtwoodSides(params, mode);
+    let inclineAngle: number | undefined;
+    if (mode === 'incline-pulley') {
+      const a = num(params.inclineAngle ?? params.angle ?? 30, 'pulley.inclineAngle');
+      inclineAngle = a > 0 && a < 90 ? a : 30;
+    }
+    return {
+      mode,
+      fixedCount: 1,
+      movableCount: 0,
+      weightLabel: '',
+      mechanicalAdvantage: 1,
+      leftSide: sides.left,
+      rightSide: sides.right,
+      inclineAngle,
+      title: typeof params.title === 'string' ? params.title : undefined,
+    };
+  }
+
   const fixedCount = Math.max(0, Math.floor(num(params.fixedCount ?? 1, 'pulley.fixedCount')));
   const movableCount = Math.max(0, Math.floor(num(params.movableCount ?? 0, 'pulley.movableCount')));
   if (fixedCount + movableCount === 0) throw new Error('pulley_system: at least one pulley required');
@@ -95,8 +132,60 @@ export function solvePulleySystem(params: Record<string, unknown>): PulleyFigure
   const mechanicalAdvantage = 1 + 2 * movableCount;
   const effort = weight !== undefined ? weight / mechanicalAdvantage : undefined;
   return {
+    mode: 'block-tackle',
     fixedCount, movableCount, weightLabel, weight, mechanicalAdvantage, effort,
     title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+function parseAtwoodSides(
+  params: Record<string, unknown>,
+  mode: PulleyMode,
+): { left: AtwoodSide; right: AtwoodSide } {
+  // Accept many shapes: explicit `leftSide`/`rightSide`, a `loads` array, or
+  // semantic synonyms the brain reaches for (`tableBlock`/`hangingBlock`,
+  // `inclineBlock`/`hangingBlock`, `topBlock`/`bottomBlock`). Without these
+  // fallbacks the brain's improvised param shapes silently render as default
+  // labels (observed 2026-05-07).
+  const fromObj = (v: unknown, fallbackLabel: string): AtwoodSide => {
+    if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      const label = typeof o.label === 'string' && o.label
+        ? o.label
+        : typeof o.mass === 'string' && o.mass
+          ? o.mass
+          : fallbackLabel;
+      const weight = typeof o.weight === 'string' && o.weight ? o.weight : undefined;
+      return { label, weight };
+    }
+    return { label: fallbackLabel };
+  };
+  if (Array.isArray(params.loads) && params.loads.length >= 1) {
+    const left = fromObj(params.loads[0], 'm₁');
+    const right = fromObj(params.loads[1] ?? params.loads[0], 'm₂');
+    return { left, right };
+  }
+  // Mode-specific synonyms — left side maps to "the supported body" (table,
+  // incline), right side maps to the hanging body.
+  if (mode === 'table-pulley') {
+    const left = params.leftSide ?? params.tableBlock ?? params.topBlock;
+    const right = params.rightSide ?? params.hangingBlock ?? params.bottomBlock;
+    return {
+      left: fromObj(left, 'A'),
+      right: fromObj(right, 'B'),
+    };
+  }
+  if (mode === 'incline-pulley') {
+    const left = params.leftSide ?? params.inclineBlock ?? params.rampBlock ?? params.topBlock;
+    const right = params.rightSide ?? params.hangingBlock ?? params.bottomBlock;
+    return {
+      left: fromObj(left, 'm₁'),
+      right: fromObj(right, 'm₂'),
+    };
+  }
+  return {
+    left: fromObj(params.leftSide, 'm₁'),
+    right: fromObj(params.rightSide, 'm₂'),
   };
 }
 

@@ -291,6 +291,34 @@ export default function FreeBodyDiagramRenderer({
   forces,
   notes,
 }: FreeBodyDiagramProps) {
+  // Defensive guard for inclined-plane FBDs: when the brain emits BOTH the full
+  // weight W (direction "down") AND its decomposed components (W_parallel /
+  // W_perp via "down-slope" / "into-surface"), drop the redundant full-weight
+  // arrow. Otherwise we draw 5 force vectors, double-count gravity, and the
+  // labels collide near the slope's bottom-left vertex (observed 2026-05-07
+  // session). Components win — they're the more pedagogically useful form
+  // when both are present.
+  if (surface?.type === 'inclined' && Array.isArray(forces)) {
+    const isWeightComponent = (f: FbdForce): boolean => {
+      const n = (f.name || '').toLowerCase();
+      const dir = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
+      return (
+        (dir === 'down-slope' || dir === 'into-surface') &&
+        /^(w|mg|f[_ ]?g|gravity|weight)/.test(n)
+      );
+    };
+    const hasComponents = forces.some(isWeightComponent);
+    if (hasComponents) {
+      forces = forces.filter((f) => {
+        const n = (f.name || '').toLowerCase().trim();
+        const dir = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
+        const isFullWeight =
+          dir === 'down' && /^(w|mg|f[_ ]?g|gravity|weight)$/.test(n);
+        return !isFullWeight;
+      });
+    }
+  }
+
   const surfaceAngle = surface.angle ?? 0;
   const shape: FbdObjectShape = object.shape ?? 'box';
   const BLOCK_HALF = 28;         // box renders as 56×56, half-side used for lift math
@@ -483,7 +511,15 @@ export default function FreeBodyDiagramRenderer({
     forces.map((f, i) => {
       const angle = angles[i];
       const rad = (angle * Math.PI) / 180;
-      const len = DEFAULT_ARROW_LEN * (f.scale ?? 1);
+      // "into-surface" on a slope draws the arrow toward the hypotenuse. With
+      // the default 90px length the tip overshoots the slope graphic and the
+      // label crashes into the θ angle annotation at the base-left vertex
+      // (observed 2026-05-07 inclined-plane FBDs). Shorten so the arrow
+      // stays in the air-gap between the box and the slope surface.
+      const dirToken = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
+      const isIntoIncline = surface.type === 'inclined' && dirToken === 'into-surface';
+      const baseLen = isIntoIncline ? 50 : DEFAULT_ARROW_LEN;
+      const len = baseLen * (f.scale ?? 1);
       const dirX = Math.cos(rad);
       const dirY = -Math.sin(rad); // SVG y is flipped
       // Start the arrow at the body edge, not the center.

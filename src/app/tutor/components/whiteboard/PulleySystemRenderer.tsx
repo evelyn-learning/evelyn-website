@@ -1,13 +1,43 @@
 'use client';
 
 import React from 'react';
-import type { PulleyFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
+import type { PulleyFigure, AtwoodSide } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
 export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
-  const { fixedCount, movableCount, weightLabel, mechanicalAdvantage, effort, weight, title } = figure;
   const W = 480;
   const H = 380;
   const ceilingY = 40;
+  const { mode, title } = figure;
+
+  if (mode === 'atwood' || mode === 'table-pulley' || mode === 'incline-pulley') {
+    return (
+      <div className="pulley-renderer w-full flex flex-col items-center">
+        {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
+          <pattern id="pulley-hatch" width={10} height={10} patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="10" y2="10" stroke="#9ca3af" strokeWidth="1" />
+          </pattern>
+          {mode === 'atwood' && (
+            <AtwoodScene W={W} H={H} ceilingY={ceilingY} left={figure.leftSide} right={figure.rightSide} />
+          )}
+          {mode === 'table-pulley' && (
+            <TablePulleyScene W={W} H={H} ceilingY={ceilingY} left={figure.leftSide} right={figure.rightSide} />
+          )}
+          {mode === 'incline-pulley' && (
+            <InclinePulleyScene
+              W={W}
+              H={H}
+              angle={figure.inclineAngle ?? 30}
+              left={figure.leftSide}
+              right={figure.rightSide}
+            />
+          )}
+        </svg>
+      </div>
+    );
+  }
+
+  const { fixedCount, movableCount, weightLabel, mechanicalAdvantage, effort, weight } = figure;
   const fixedSpacing = 50;
   const fixedStartX = (W - fixedCount * fixedSpacing) / 2 + fixedSpacing / 2;
   const movableY = ceilingY + 180;
@@ -52,5 +82,260 @@ export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
         </text>
       </svg>
     </div>
+  );
+}
+
+function MassBlock({
+  cx, cy, label, weight, width = 64, height = 50,
+}: { cx: number; cy: number; label: string; weight?: string; width?: number; height?: number }) {
+  return (
+    <g>
+      <rect x={cx - width / 2} y={cy - height / 2} width={width} height={height} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} rx={4} />
+      <text x={cx} y={cy + 5} fontSize={14} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>
+        {label}
+      </text>
+      {weight && (
+        <text x={cx} y={cy + height / 2 + 16} fontSize={12} textAnchor="middle" fill="#374151">
+          {weight}
+        </text>
+      )}
+    </g>
+  );
+}
+
+function PulleyWheel({ cx, cy, r = 16 }: { cx: number; cy: number; r?: number }) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill="#e5e7eb" stroke="#374151" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={3} fill="#374151" />
+    </g>
+  );
+}
+
+function AtwoodScene({
+  W, H: _H, ceilingY, left, right,
+}: { W: number; H: number; ceilingY: number; left?: AtwoodSide; right?: AtwoodSide }) {
+  // A real Atwood machine has the rope wrapping over the pulley and the two
+  // masses hanging directly below the pulley's contact points. Use a wide
+  // pulley so the masses don't visually overlap.
+  const pulleyCx = W / 2;
+  const pulleyCy = ceilingY + 30;
+  const pulleyR = 36;
+  const massY = pulleyCy + 200;
+  const leftMassCx = pulleyCx - pulleyR;
+  const rightMassCx = pulleyCx + pulleyR;
+  const ll = left ?? { label: 'm₁' };
+  const rr = right ?? { label: 'm₂' };
+  return (
+    <g>
+      {/* Ceiling */}
+      <line x1={20} y1={ceilingY} x2={W - 20} y2={ceilingY} stroke="#6b7280" strokeWidth={3} />
+      <rect x={20} y={ceilingY - 14} width={W - 40} height={14} fill="url(#pulley-hatch)" />
+      {/* Pulley support bracket */}
+      <line x1={pulleyCx} y1={ceilingY} x2={pulleyCx} y2={pulleyCy - pulleyR} stroke="#374151" strokeWidth={2} />
+      {/* Pulley wheel */}
+      <PulleyWheel cx={pulleyCx} cy={pulleyCy} r={pulleyR} />
+      {/* Rope: drape over the top half of the pulley, then drop straight down
+          on each side from the contact points (9 o'clock and 3 o'clock). */}
+      <path
+        d={`M ${leftMassCx} ${massY - 22} L ${leftMassCx} ${pulleyCy} A ${pulleyR} ${pulleyR} 0 0 1 ${rightMassCx} ${pulleyCy} L ${rightMassCx} ${massY - 22}`}
+        fill="none"
+        stroke="#1f2937"
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+      />
+      {/* Masses, slightly narrower than the pulley diameter so they don't
+          collide visually. */}
+      <MassBlock cx={leftMassCx} cy={massY} label={ll.label} weight={ll.weight} width={56} height={44} />
+      <MassBlock cx={rightMassCx} cy={massY} label={rr.label} weight={rr.weight} width={56} height={44} />
+    </g>
+  );
+}
+
+function InclinePulleyScene({
+  W, H, angle, left, right,
+}: { W: number; H: number; angle: number; left?: AtwoodSide; right?: AtwoodSide }) {
+  // Layout: ramp on the left rising left→right, pulley at the ramp's top-right
+  // vertex, rope goes from incline block UP the ramp to the pulley, around the
+  // pulley, then DOWN to a hanging block on the right.
+  const baseY = H - 60;
+  const baseXStart = 50;
+  const baseXEnd = W - 130;          // leave room on the right for the hanging mass
+  const run = baseXEnd - baseXStart;
+  const rad = (angle * Math.PI) / 180;
+  const rise = Math.min(run * Math.tan(rad), 200);
+  const topX = baseXEnd;
+  const topY = baseY - rise;
+  // Pulley sits at the top vertex, lifted slightly above the corner.
+  const pulleyR = 14;
+  const pulleyCx = topX + pulleyR;
+  const pulleyCy = topY - pulleyR;
+  // Block on incline at ~50% up the slope.
+  const t = 0.45;
+  const slopeX = baseXStart + run * t;
+  const slopeY = baseY - rise * t;
+  const blockHalf = 22;
+  const clearance = blockHalf + 4;
+  const blockCx = slopeX - Math.sin(rad) * clearance;
+  const blockCy = slopeY - Math.cos(rad) * clearance;
+  // Hanging block centered below the pulley.
+  const hangCx = pulleyCx + pulleyR;
+  const hangCy = Math.min(pulleyCy + 130, H - 30);
+  // Rope on the incline goes from the upper-right corner of the block tangent
+  // to the pulley's leftmost point. For a clean schematic we just draw a
+  // straight line from the block edge along the slope direction up to the
+  // pulley's 9-o'clock contact point.
+  const blockTopRightX = blockCx + Math.cos(rad) * blockHalf;
+  const blockTopRightY = blockCy - Math.sin(rad) * blockHalf;
+  const ll = left ?? { label: 'm₁' };
+  const rr = right ?? { label: 'm₂' };
+  return (
+    <g>
+      {/* Floor under everything (purely visual reference) */}
+      <line x1={20} y1={baseY} x2={W - 20} y2={baseY} stroke="#9ca3af" strokeWidth={1.5} strokeDasharray="4,3" />
+      {/* Ramp triangle */}
+      <polygon
+        points={`${baseXStart},${baseY} ${baseXEnd},${baseY} ${topX},${topY}`}
+        fill="#f1f5f9"
+        stroke="#64748b"
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      {/* Slope hatching */}
+      <SlopeHatchingLocal x1={baseXStart} y1={baseY} x2={topX} y2={topY} />
+      {/* Angle arc + label */}
+      <path
+        d={`M ${baseXStart + 26} ${baseY} A 26 26 0 0 0 ${baseXStart + 26 * Math.cos(rad)} ${baseY - 26 * Math.sin(rad)}`}
+        fill="none"
+        stroke="#475569"
+        strokeWidth={1.5}
+      />
+      <text x={baseXStart + 32} y={baseY - 6} fontSize={12} fill="#475569" fontStyle="italic">
+        θ = {Math.round(angle)}°
+      </text>
+      {/* Pulley wheel + tiny support to the wall on the right */}
+      <line x1={pulleyCx} y1={pulleyCy - pulleyR} x2={pulleyCx} y2={topY - 18} stroke="#374151" strokeWidth={2} />
+      <line x1={pulleyCx - 6} y1={topY - 18} x2={pulleyCx + 6} y2={topY - 18} stroke="#374151" strokeWidth={2} />
+      <PulleyWheel cx={pulleyCx} cy={pulleyCy} r={pulleyR} />
+      {/* Rope segment 1: from incline block up the slope to the pulley's
+          9-o'clock contact point. */}
+      <line
+        x1={blockTopRightX}
+        y1={blockTopRightY}
+        x2={pulleyCx - pulleyR}
+        y2={pulleyCy}
+        stroke="#1f2937"
+        strokeWidth={1.8}
+      />
+      {/* Arc over the pulley + drop to hanging block */}
+      <path
+        d={`M ${pulleyCx - pulleyR} ${pulleyCy} A ${pulleyR} ${pulleyR} 0 0 1 ${pulleyCx + pulleyR} ${pulleyCy} L ${hangCx} ${hangCy - 22}`}
+        fill="none"
+        stroke="#1f2937"
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+      />
+      {/* Block on incline (rotated to match slope) */}
+      <g transform={`rotate(${-angle} ${blockCx} ${blockCy})`}>
+        <rect
+          x={blockCx - blockHalf}
+          y={blockCy - blockHalf}
+          width={blockHalf * 2}
+          height={blockHalf * 2}
+          fill="#dbeafe"
+          stroke="#3b82f6"
+          strokeWidth={2}
+          rx={4}
+        />
+        <text x={blockCx} y={blockCy + 4} fontSize={13} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>
+          {ll.label}
+        </text>
+      </g>
+      {ll.weight && (
+        <text x={blockCx} y={blockCy + blockHalf + 22} fontSize={12} textAnchor="middle" fill="#374151">
+          {ll.weight}
+        </text>
+      )}
+      {/* Hanging block */}
+      <MassBlock cx={hangCx} cy={hangCy} label={rr.label} weight={rr.weight} width={56} height={44} />
+    </g>
+  );
+}
+
+// Slope hatching local to the incline-pulley scene (perpendicular ticks below
+// the hypotenuse). Duplicated from the FBD renderer to keep this file
+// self-contained.
+function SlopeHatchingLocal({
+  x1, y1, x2, y2, length = 8, spacing = 14,
+}: { x1: number; y1: number; x2: number; y2: number; length?: number; spacing?: number }) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const perpX = uy;
+  const perpY = -ux;
+  const lines: React.ReactElement[] = [];
+  for (let d = 0; d <= len; d += spacing) {
+    const sx = x1 + ux * d;
+    const sy = y1 + uy * d;
+    lines.push(
+      <line
+        key={d}
+        x1={sx}
+        y1={sy}
+        x2={sx - perpX * length}
+        y2={sy - perpY * length}
+        stroke="#94a3b8"
+        strokeWidth={1}
+      />,
+    );
+  }
+  return <g>{lines}</g>;
+}
+
+function TablePulleyScene({
+  W, H, ceilingY, left, right,
+}: { W: number; H: number; ceilingY: number; left?: AtwoodSide; right?: AtwoodSide }) {
+  // Block A on a horizontal table, rope runs right along the table top, wraps
+  // over a small pulley at the table edge, then drops vertically to a hanging
+  // mass.
+  const tableY = ceilingY + 110;
+  const tableLeft = 60;
+  const tableRight = W - 130;
+  const pulleyR = 12;
+  const pulleyCx = tableRight + pulleyR;
+  const pulleyCy = tableY;
+  const tableBlockCx = tableLeft + 100;
+  const blockHalf = 22;
+  const ropeY = tableY - blockHalf;          // rope sits at the level of the block's center-of-rope-attach
+  const hangingMassCx = pulleyCx + pulleyR;
+  const hangingMassY = Math.min(tableY + 130, H - 30);
+  const ll = left ?? { label: 'A' };
+  const rr = right ?? { label: 'B' };
+  return (
+    <g>
+      {/* Table top */}
+      <line x1={tableLeft} y1={tableY} x2={tableRight} y2={tableY} stroke="#6b7280" strokeWidth={3} />
+      <rect x={tableLeft} y={tableY} width={tableRight - tableLeft} height={10} fill="url(#pulley-hatch)" />
+      {/* Table legs */}
+      <line x1={tableLeft + 10} y1={tableY + 10} x2={tableLeft + 10} y2={H - 30} stroke="#6b7280" strokeWidth={2} />
+      <line x1={tableRight - 10} y1={tableY + 10} x2={tableRight - 10} y2={H - 30} stroke="#6b7280" strokeWidth={2} />
+      {/* Pulley */}
+      <PulleyWheel cx={pulleyCx} cy={pulleyCy} r={pulleyR} />
+      {/* Rope: horizontal from block edge → wrap quarter-arc around pulley →
+          vertical drop to hanging block. One continuous path. */}
+      <path
+        d={`M ${tableBlockCx + blockHalf} ${ropeY} L ${pulleyCx} ${ropeY} A ${pulleyR} ${pulleyR} 0 0 1 ${hangingMassCx} ${pulleyCy} L ${hangingMassCx} ${hangingMassY - 22}`}
+        fill="none"
+        stroke="#1f2937"
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+      />
+      {/* Block on table */}
+      <MassBlock cx={tableBlockCx} cy={tableY - blockHalf} label={ll.label} weight={ll.weight} width={blockHalf * 2} height={blockHalf * 2} />
+      {/* Hanging block */}
+      <MassBlock cx={hangingMassCx} cy={hangingMassY} label={rr.label} weight={rr.weight} width={56} height={44} />
+    </g>
   );
 }
