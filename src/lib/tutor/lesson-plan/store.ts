@@ -289,7 +289,6 @@ import { SEED_G9_ELA_ACTIVE_PASSIVE } from './seeds/g9-ela-active-passive';
 import { SEED_G6_ELA_ACTIVE_LISTENING } from './seeds/g6-ela-active-listening-discussion';
 import { SEED_G5_ELA_POETRY_INTRO } from './seeds/g5-ela-poetry-intro';
 import { SEED_G11_ELA_POETRY_ANALYSIS } from './seeds/g11-ela-poetry-analysis';
-import { SEED_AP_STATS_HYPOTHESIS_TESTING } from './seeds/ap-stats-hypothesis-testing';
 import { SEED_G4_MATH_ANGLE_MEASUREMENT } from './seeds/g4-math-angle-measurement';
 import { SEED_G3_MATH_ROUNDING } from './seeds/g3-math-rounding';
 import { SEED_G6_MATH_COORDINATE_QUADRANTS } from './seeds/g6-math-coordinate-quadrants';
@@ -356,8 +355,6 @@ import { SEED_G5_SCI_WATER_CYCLE } from './seeds/g5-sci-water-cycle';
 // Batch 34 — High-impact AP completion + foundational fillers.
 import { SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP } from './seeds/ap-bio-cellular-respiration-deep';
 import { SEED_AP_BIO_HARDY_WEINBERG } from './seeds/ap-bio-hardy-weinberg';
-import { SEED_AP_STATS_CHI_SQUARE } from './seeds/ap-stats-chi-square';
-import { SEED_AP_STATS_REGRESSION_INFERENCE } from './seeds/ap-stats-regression-inference';
 import { SEED_AP_USH_COLONIAL_PURITANS } from './seeds/ap-ush-colonial-puritans';
 import { SEED_AP_USH_JACKSONIAN } from './seeds/ap-ush-jacksonian';
 import { SEED_AP_USH_1920S } from './seeds/ap-ush-1920s-jazz-age';
@@ -405,7 +402,6 @@ import { SEED_AP_CSP_DATA_BINARY } from './seeds/ap-csp-data-binary';
 import { SEED_AP_CSP_ALGORITHMS_ABSTRACTION } from './seeds/ap-csp-algorithms-abstraction';
 import { SEED_AP_CSA_OBJECTS_CLASSES } from './seeds/ap-csa-objects-classes';
 import { SEED_AP_CSA_ARRAYS_LOOPS } from './seeds/ap-csa-arrays-loops';
-import { SEED_AP_STATS_TWO_SAMPLE_TESTS } from './seeds/ap-stats-two-sample-tests';
 import { SEED_AP_PHYSICS2_CIRCUITS } from './seeds/ap-physics2-circuits';
 import { SEED_AP_PHYSICS2_MAGNETISM } from './seeds/ap-physics2-magnetism';
 import { SEED_AP_PHYSICS2_MODERN } from './seeds/ap-physics2-modern';
@@ -524,9 +520,6 @@ import { SEED_AP_GOV_CIVIL_LIBERTIES } from './seeds/ap-gov-civil-liberties';
 import { SEED_AP_GOV_CONGRESS } from './seeds/ap-gov-congress';
 import { SEED_AP_GOV_PRESIDENCY } from './seeds/ap-gov-presidency';
 // Batch 42 — AP Stats expansion (probability, sampling distributions, one-sample inference).
-import { SEED_AP_STATS_PROBABILITY } from './seeds/ap-stats-probability';
-import { SEED_AP_STATS_SAMPLING_DISTRIBUTIONS } from './seeds/ap-stats-sampling-distributions';
-import { SEED_AP_STATS_ONE_SAMPLE_INFERENCE } from './seeds/ap-stats-one-sample-inference';
 // Batch 43 — AP Lit/Lang depth (Modernism, Romanticism, poetry analysis, rhetorical analysis).
 import { SEED_AP_LIT_MODERNISM } from './seeds/ap-lit-modernism';
 import { SEED_AP_LIT_ROMANTICISM } from './seeds/ap-lit-romanticism';
@@ -1516,7 +1509,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G6_ELA_ACTIVE_LISTENING,
   SEED_G5_ELA_POETRY_INTRO,
   SEED_G11_ELA_POETRY_ANALYSIS,
-  SEED_AP_STATS_HYPOTHESIS_TESTING,
   SEED_G4_MATH_ANGLE_MEASUREMENT,
   SEED_G3_MATH_ROUNDING,
   SEED_G6_MATH_COORDINATE_QUADRANTS,
@@ -1583,8 +1575,6 @@ export const SEED_PLANS: LessonPlan[] = [
   // Batch 34 — High-impact AP completion + foundational fillers.
   SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP,
   SEED_AP_BIO_HARDY_WEINBERG,
-  SEED_AP_STATS_CHI_SQUARE,
-  SEED_AP_STATS_REGRESSION_INFERENCE,
   SEED_AP_USH_COLONIAL_PURITANS,
   SEED_AP_USH_JACKSONIAN,
   SEED_AP_USH_1920S,
@@ -1632,7 +1622,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CSP_ALGORITHMS_ABSTRACTION,
   SEED_AP_CSA_OBJECTS_CLASSES,
   SEED_AP_CSA_ARRAYS_LOOPS,
-  SEED_AP_STATS_TWO_SAMPLE_TESTS,
   SEED_AP_PHYSICS2_CIRCUITS,
   SEED_AP_PHYSICS2_MAGNETISM,
   SEED_AP_PHYSICS2_MODERN,
@@ -1678,9 +1667,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_GOV_CIVIL_LIBERTIES,
   SEED_AP_GOV_CONGRESS,
   SEED_AP_GOV_PRESIDENCY,
-  SEED_AP_STATS_PROBABILITY,
-  SEED_AP_STATS_SAMPLING_DISTRIBUTIONS,
-  SEED_AP_STATS_ONE_SAMPLE_INFERENCE,
   SEED_AP_LIT_MODERNISM,
   SEED_AP_LIT_ROMANTICISM,
   SEED_AP_LIT_POETRY_ANALYSIS,
