@@ -667,6 +667,7 @@ import { SEED_AP_CALCBC_U10_TAYLOR_POLYNOMIAL } from './seeds/ap-calcbc-u10-tayl
 import { SEED_AP_CALCBC_U10_POWER_SERIES } from './seeds/ap-calcbc-u10-power-series';
 import { SEED_AP_CALCBC_U10_MACLAURIN_SERIES } from './seeds/ap-calcbc-u10-maclaurin-series';
 import { SEED_AP_CALCBC_U10_FRQ_PRACTICE } from './seeds/ap-calcbc-u10-frq-practice';
+import { SEED_TEST_CALC_DIAGRAMS_TOUR } from './seeds/test-calc-diagrams-tour';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1764,6 +1765,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U10_POWER_SERIES,
   SEED_AP_CALCBC_U10_MACLAURIN_SERIES,
   SEED_AP_CALCBC_U10_FRQ_PRACTICE,
+  SEED_TEST_CALC_DIAGRAMS_TOUR,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

@@ -410,6 +410,11 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'sentence_diagram', 'argument_structure', 'historical_timeline',
             'government_branches',
             'comparison_table', 't_chart', 'kwl_chart', 'frayer_model', 'hierarchy_pyramid',
+            // Phase 9 — economics
+            'production_possibilities', 'business_cycle', 'aggregate_demand_supply',
+            'money_market', 'loanable_funds', 'phillips_curve', 'foreign_exchange_market',
+            // Phase 10 — calculus (AP Calc BC)
+            'riemann_sum', 'slope_field', 'parametric_curve', 'polar_graph', 'taylor_polynomial_overlay',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

@@ -55,6 +55,14 @@ import {
   solveForeignExchangeMarket,
 } from './kinds/economics';
 
+import {
+  solveRiemannSum,
+  solveSlopeField,
+  solveParametricCurve,
+  solvePolarGraph,
+  solveTaylorPolynomialOverlay,
+} from './kinds/math-calculus';
+
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
  *  subject + grade band) so it knows what's available. */
@@ -133,6 +141,13 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'loanable_funds', displayName: 'Loanable Funds Market', whenToUse: 'Show the loanable funds market with upward-sloping supply of saving and downward-sloping demand for investment (incl. government borrowing), real interest rate on the y-axis. Supports a single shift in S or D with the new equilibrium computed automatically.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'initialQuantity?:number 0..100, initialRealRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
   { kind: 'phillips_curve', displayName: 'Phillips Curve', whenToUse: 'Show the short-run Phillips Curve (downward-sloping inflation-unemployment tradeoff) and long-run Phillips Curve (vertical at NAIRU). Supports SRPC up/down shifts (inflation expectations / supply shocks) or LRPC left/right shifts (NAIRU changes).', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'nairu?:number 0..100, initialUnemployment?:number 0..100, initialInflation?:number 0..100, showLrpc?:boolean (default true), shift?:{curve:SRPC|LRPC, direction:up|down|left|right, magnitude?:number (default 10), label?}, title?' },
   { kind: 'foreign_exchange_market', displayName: 'Foreign Exchange Market', whenToUse: 'Show the FX market for one currency: upward-sloping S, downward-sloping D, exchange rate on y-axis. Supports a single shift in S or D with the new equilibrium computed automatically. Currency labels (e.g. USD vs EUR) shown on axes.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'currency?:string (default "USD"), quoteCurrency?:string (default "EUR"), initialQuantity?:number 0..100, initialExchangeRate?:number 0..100, shift?:{curve:S|D, direction:left|right, magnitude?:number (default 10), label?}, title?' },
+
+  // ── Phase 10 — calculus (AP Calc BC) ───────────────────────────────────
+  { kind: 'riemann_sum', displayName: 'Riemann Sum', whenToUse: 'Show ∫_a^b f(x) dx approximated by rectangles (or trapezoids). Brain pre-samples the curve and pre-computes each rectangle\'s left edge, width, and height.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'curve:[{x,y}] (≥20 dense samples), rectangles:[{x,width,height}], xMin,xMax,yMin,yMax:numbers, method?:left|right|midpoint|trapezoidal (default left), n?:number, exprLabel?:string e.g. "f(x) = x²", approxArea?:number, exactArea?:number, title?' },
+  { kind: 'slope_field', displayName: 'Slope Field', whenToUse: 'Show dy/dx = f(x, y) as a grid of small line segments (slope vectors) at lattice points; supports an optional integral curve overlay and a highlighted point. Brain pre-computes the slope at each grid point.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'samples:[{x,y,slope}] (typically a 9×9 to 13×13 grid), xMin,xMax,yMin,yMax:numbers, solutionCurve?:[{x,y}] integral curve through some initial condition, highlightPoint?:{x,y}, exprLabel?:string e.g. "dy/dx = x + y", title?' },
+  { kind: 'parametric_curve', displayName: 'Parametric Curve', whenToUse: 'Plot a 2D parametric curve (x(t), y(t)) over t ∈ [t_min, t_max]. Brain pre-samples (x, y) along the curve. Supports an optional highlighted point and a tangent vector at one t.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'curve:[{x,y,t?}] (≥30 dense samples), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), highlightT?:{t?,x,y,label?}, tangentAtT?:{x,y,dx,dy,length?}, exprLabel?:string e.g. "x = cos t, y = sin t", title?' },
+  { kind: 'polar_graph', displayName: 'Polar Graph', whenToUse: 'Plot r = f(θ) in polar coordinates. Brain pre-samples (θ, r, x, y) — x and y can be omitted and the solver will derive them. Supports an optional shaded region (a subset of the curve) for area integrals.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'curve:[{theta,r,x?,y?}] (≥60 dense samples), shadeRegion?:[{theta,r,x?,y?}] (subset of curve to shade for area), highlightPoint?:{theta,r,x?,y?,label?}, rMax?:number (auto-fit if omitted), showAxes?:boolean (default true), exprLabel?:string e.g. "r = 1 + cos θ", title?' },
+  { kind: 'taylor_polynomial_overlay', displayName: 'Taylor Polynomial Overlay', whenToUse: 'Show a function f(x) and one or more Taylor polynomial approximations T_n(x) about a center c. Brain pre-samples each curve.', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'baseCurve:[{x,y}] (≥40 dense samples of f), approximations:[{degree:number, curve:[{x,y}], color?}] (one entry per Taylor polynomial), xMin?,xMax?,yMin?,yMax?:numbers (auto-fit if omitted), center?:number (default 0), exprLabel?:string e.g. "f(x) = sin x", title?' },
 ];
 
 /** Solver dispatch table. */
@@ -203,6 +218,12 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   loanable_funds: solveLoanableFunds,
   phillips_curve: solvePhillipsCurve,
   foreign_exchange_market: solveForeignExchangeMarket,
+  // Phase 10 — calculus
+  riemann_sum: solveRiemannSum,
+  slope_field: solveSlopeField,
+  parametric_curve: solveParametricCurve,
+  polar_graph: solvePolarGraph,
+  taylor_polynomial_overlay: solveTaylorPolynomialOverlay,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

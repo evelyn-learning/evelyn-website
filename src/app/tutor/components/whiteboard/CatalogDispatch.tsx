@@ -63,6 +63,11 @@ import { MoneyMarketRenderer } from './MoneyMarketRenderer';
 import { LoanableFundsRenderer } from './LoanableFundsRenderer';
 import { PhillipsCurveRenderer } from './PhillipsCurveRenderer';
 import { ForeignExchangeRenderer } from './ForeignExchangeRenderer';
+import { RiemannSumRenderer } from './RiemannSumRenderer';
+import { SlopeFieldRenderer } from './SlopeFieldRenderer';
+import { ParametricCurveRenderer } from './ParametricCurveRenderer';
+import { PolarGraphRenderer } from './PolarGraphRenderer';
+import { TaylorOverlayRenderer } from './TaylorOverlayRenderer';
 
 interface Props {
   kind: string;
@@ -138,6 +143,12 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'loanable_funds':           return <LoanableFundsRenderer figure={figure} />;
     case 'phillips_curve':           return <PhillipsCurveRenderer figure={figure} />;
     case 'foreign_exchange_market':  return <ForeignExchangeRenderer figure={figure} />;
+    // Phase 10 — calculus (AP Calc BC)
+    case 'riemann_sum':                return <RiemannSumRenderer figure={figure} />;
+    case 'slope_field':                return <SlopeFieldRenderer figure={figure} />;
+    case 'parametric_curve':           return <ParametricCurveRenderer figure={figure} />;
+    case 'polar_graph':                return <PolarGraphRenderer figure={figure} />;
+    case 'taylor_polynomial_overlay':  return <TaylorOverlayRenderer figure={figure} />;
 
     default:
       return (
