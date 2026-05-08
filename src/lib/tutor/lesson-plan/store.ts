@@ -730,6 +730,11 @@ import { SEED_AP_ENVSCI_U4_ATMOSPHERE_WIND } from './seeds/ap-envsci-u4-atmosphe
 import { SEED_AP_ENVSCI_U4_WATERSHEDS_SOLAR } from './seeds/ap-envsci-u4-watersheds-solar';
 import { SEED_AP_ENVSCI_U4_CLIMATE_ENSO } from './seeds/ap-envsci-u4-climate-enso';
 import { SEED_AP_ENVSCI_U4_FRQ_PRACTICE } from './seeds/ap-envsci-u4-frq-practice';
+import { SEED_AP_ENVSCI_U5_AGRICULTURE } from './seeds/ap-envsci-u5-agriculture';
+import { SEED_AP_ENVSCI_U5_FORESTRY_MINING } from './seeds/ap-envsci-u5-forestry-mining';
+import { SEED_AP_ENVSCI_U5_URBANIZATION_WATER } from './seeds/ap-envsci-u5-urbanization-water';
+import { SEED_AP_ENVSCI_U5_COMMONS_FISHING_FOOTPRINT } from './seeds/ap-envsci-u5-commons-fishing-footprint';
+import { SEED_AP_ENVSCI_U5_FRQ_PRACTICE } from './seeds/ap-envsci-u5-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1889,6 +1894,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U4_WATERSHEDS_SOLAR,
   SEED_AP_ENVSCI_U4_CLIMATE_ENSO,
   SEED_AP_ENVSCI_U4_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U5_AGRICULTURE,
+  SEED_AP_ENVSCI_U5_FORESTRY_MINING,
+  SEED_AP_ENVSCI_U5_URBANIZATION_WATER,
+  SEED_AP_ENVSCI_U5_COMMONS_FISHING_FOOTPRINT,
+  SEED_AP_ENVSCI_U5_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
