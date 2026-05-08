@@ -16,38 +16,38 @@
 
 import React from 'react';
 import { DIAGRAM_COLORS, cycleColor, withAlpha } from '@/lib/tutor/diagrams/theme';
-import { DIAGRAM_VIEWBOX, truncate, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX, feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 
-// Wrap a label that exceeds maxChars onto two lines at the closest-to-middle
-// space; if it has no space, fall back to truncating. Replaces the previous
-// `truncate(line, 18)` rule that was too aggressive for AP-level concept
-// names like "Fundamental Theorem", "Limits of Integration", or
-// "Antiderivative F(x)" — they were all clipped to "...". Two-line wrap keeps
-// box widths compact while showing the full label.
-function wrapLabel(line: string, maxChars: number): string[] {
+// Wrap a label that exceeds softMax onto two lines, picking the split that
+// minimizes max(leftLen, rightLen) across all space positions. Does NOT
+// truncate afterward — the box widens to fit the longer half. Replaces the
+// previous `truncate(line, 18)` rule that was too aggressive for AP-level
+// concept names like "Fundamental Theorem of Calculus" (still got "..." on
+// the second line because the post-split right side was truncated to 18
+// chars). softMax is a soft preference; long single-word labels or long
+// half-strings render as-is.
+function wrapLabel(line: string, softMax: number): string[] {
   const trimmed = line.trim();
-  if (trimmed.length <= maxChars) return [trimmed];
-  const mid = Math.floor(trimmed.length / 2);
-  let bestSpace = -1;
-  let bestDist = Infinity;
-  for (let i = 0; i < trimmed.length; i++) {
-    if (trimmed[i] === ' ') {
-      const dist = Math.abs(i - mid);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestSpace = i;
-      }
+  if (trimmed.length <= softMax) return [trimmed];
+  const spaces: number[] = [];
+  for (let i = 0; i < trimmed.length; i++) if (trimmed[i] === ' ') spaces.push(i);
+  if (spaces.length === 0) return [trimmed];
+  let bestSplit = spaces[0];
+  let bestMax = Math.max(bestSplit, trimmed.length - bestSplit - 1);
+  for (const sp of spaces) {
+    const leftLen = sp;
+    const rightLen = trimmed.length - sp - 1;
+    const m = Math.max(leftLen, rightLen);
+    if (m < bestMax) {
+      bestMax = m;
+      bestSplit = sp;
     }
   }
-  if (bestSpace < 0) return [truncate(trimmed, maxChars)];
-  const left = trimmed.slice(0, bestSpace).trim();
-  const right = trimmed.slice(bestSpace + 1).trim();
-  return [
-    left.length > maxChars ? truncate(left, maxChars) : left,
-    right.length > maxChars ? truncate(right, maxChars) : right,
-  ];
+  const left = trimmed.slice(0, bestSplit).trim();
+  const right = trimmed.slice(bestSplit + 1).trim();
+  return [left, right];
 }
 
 export interface ConceptNode {
@@ -340,6 +340,8 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // arrowheads from multiple sources don't stack on the same pixel. For
   // each target with ≥2 incoming edges, sort by approach angle and offset
   // each entry point along the perpendicular to its source-target line.
+  // Step size widened from 8 → 14 (R4 follow-up — 8 was too tight when
+  // sources approached at near-symmetric angles).
   const incomingByTarget = new Map<string, Array<{ edgeIdx: number; angle: number }>>();
   edges.forEach((e, i) => {
     const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
@@ -355,7 +357,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     if (arr.length <= 1) return;
     arr.sort((x, y) => x.angle - y.angle);
     arr.forEach((item, i) => {
-      const offset = (i - (arr.length - 1) / 2) * 8;
+      const offset = (i - (arr.length - 1) / 2) * 14;
       const e = edges[item.edgeIdx];
       const a = nodeMap.get(e.from); const b = nodeMap.get(e.to);
       if (!a || !b) return;
@@ -367,6 +369,37 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     });
   });
 
+  // R3: detect actual segment crossings between edge pairs and force-curve
+  // both halves of every crossing pair. The original "long edge" trigger
+  // (y-span > 1.5 row heights) catches DI→FT but NOT diagonal 1-row-span
+  // crossings like Diff→FT and Integ→Antideriv that go in opposite x
+  // directions across the same y-band. Standard CCW segment-intersection
+  // test; skip pairs sharing an endpoint (they meet at a node, that's not
+  // a real "crossing").
+  const forceCurve = new Set<number>();
+  const ccw = (Ax: number, Ay: number, Bx: number, By: number, Cx: number, Cy: number) =>
+    (Cy - Ay) * (Bx - Ax) > (By - Ay) * (Cx - Ax);
+  for (let i = 0; i < edges.length; i++) {
+    const eA = edges[i];
+    const aA = nodeMap.get(eA.from); const bA = nodeMap.get(eA.to);
+    if (!aA || !bA) continue;
+    const paA = place(aA); const pbA = place(bA);
+    for (let j = i + 1; j < edges.length; j++) {
+      const eB = edges[j];
+      if (eA.from === eB.from || eA.from === eB.to || eA.to === eB.from || eA.to === eB.to) continue;
+      const aB = nodeMap.get(eB.from); const bB = nodeMap.get(eB.to);
+      if (!aB || !bB) continue;
+      const paB = place(aB); const pbB = place(bB);
+      const cross =
+        ccw(paA.x, paA.y, paB.x, paB.y, pbB.x, pbB.y) !== ccw(pbA.x, pbA.y, paB.x, paB.y, pbB.x, pbB.y) &&
+        ccw(paA.x, paA.y, pbA.x, pbA.y, paB.x, paB.y) !== ccw(paA.x, paA.y, pbA.x, pbA.y, pbB.x, pbB.y);
+      if (cross) {
+        forceCurve.add(i);
+        forceCurve.add(j);
+      }
+    }
+  }
+
   // Issue 5: curve edges that span 2+ rows so they don't slice through
   // intermediate-row nodes. Determine row span by comparing positions: any
   // edge whose absolute y-delta is more than ~1.5 rows is treated as long.
@@ -376,27 +409,37 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   const VIEWBOX_CENTER_Y = VIEWBOX_H / 2;
   const ROW_HEIGHT_PX = h / Math.max(1, new Set(nodes.map((n) => n.level)).size || 1);
 
-  // Issue 3: label-vs-node collision avoidance. After computing initial
-  // (mx, my), check every unrelated node's bbox; if the label rect would
-  // overlap, slide the label along the edge in 0.05 t-increments until
-  // clear (search t in [0.18, 0.78]).
-  const labelCollidesWithNodes = (
+  // Issue 3 + R2 follow-up: label-vs-node AND label-vs-label collision
+  // avoidance. After computing initial (mx, my), check every unrelated
+  // node's bbox AND every previously-placed label's rect; slide along
+  // the edge until clear. Earlier edges (lower index) get priority; later
+  // edges accommodate.
+  const placedLabelRects: Array<{ x: number; y: number; w: number; h: number }> = [];
+  const rectsOverlap = (
+    ax: number, ay: number, aw: number, ah: number,
+    bx: number, by: number, bw: number, bh: number,
+  ): boolean => {
+    return (
+      ax + aw / 2 > bx - bw / 2 &&
+      ax - aw / 2 < bx + bw / 2 &&
+      ay + ah / 2 > by - bh / 2 &&
+      ay - ah / 2 < by + bh / 2
+    );
+  };
+  const labelCollides = (
     edge: ConceptEdge,
     lx: number, ly: number, lw: number, lh: number,
   ): boolean => {
+    // Node bboxes (with 2px outward padding).
     for (const n of nodes) {
       if (n.id === edge.from || n.id === edge.to) continue;
       const np = place(n);
       const dims = dimsById.get(n.id)!;
-      const nLeft = np.x - dims.rectW / 2 - 2;
-      const nRight = np.x + dims.rectW / 2 + 2;
-      const nTop = np.y - dims.rectH / 2 - 2;
-      const nBot = np.y + dims.rectH / 2 + 2;
-      const lLeft = lx - lw / 2;
-      const lRight = lx + lw / 2;
-      const lTop = ly - lh / 2;
-      const lBot = ly + lh / 2;
-      if (lRight > nLeft && lLeft < nRight && lBot > nTop && lTop < nBot) return true;
+      if (rectsOverlap(lx, ly, lw, lh, np.x, np.y, dims.rectW + 4, dims.rectH + 4)) return true;
+    }
+    // Other labels already placed this render.
+    for (const r of placedLabelRects) {
+      if (rectsOverlap(lx, ly, lw, lh, r.x, r.y, r.w + 4, r.h + 4)) return true;
     }
     return false;
   };
@@ -419,8 +462,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           const x2 = pb.x + off.dx;
           const y2 = pb.y + off.dy;
 
-          // Issue 5: curve long edges away from viewBox center.
-          const longEdge = Math.abs(pb.y - pa.y) > ROW_HEIGHT_PX * 1.5;
+          // Issue 5 + R3: curve long edges away from viewBox center.
+          // Triggers: y-span > 1.5 row heights OR detected segment crossing.
+          const longEdge = Math.abs(pb.y - pa.y) > ROW_HEIGHT_PX * 1.5 || forceCurve.has(i);
           let pathD: string;
           let labelMidX: number;
           let labelMidY: number;
@@ -453,11 +497,13 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
           const labelW = e.label ? e.label.length * 7.0 + 18 : 0;
           const labelH = 16;
 
-          // Issue 2: per-source-relative position along the edge so labels
-          // from a hub fan around the source rather than converging near
-          // targets. Range [0.22, 0.40].
+          // Issue 2 + R2 follow-up: per-source-relative position along the
+          // edge so labels from a hub fan around the source rather than
+          // converging near targets. Spread step widened from 0.06 → 0.18
+          // so two labels from a 2-edge hub (e.g. Calculus → Diff/Integ)
+          // don't end up at near-identical y-coords. Range [0.22, 0.76].
           const localIdx = localSourceIdx.get(i) ?? 0;
-          const baseT = 0.22 + (localIdx % 4) * 0.06;
+          const baseT = 0.22 + (localIdx % 4) * 0.18;
 
           // Issue 3: try the per-source position first; if it would collide
           // with another node, walk t outward until clear (or fall back to
@@ -492,18 +538,22 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
               }
               return { x: pa.x + (x2 - pa.x) * tVal, y: pa.y + (y2 - pa.y) * tVal };
             };
-            const candidates = [baseT, baseT + 0.08, baseT - 0.05, baseT + 0.16, baseT + 0.24, baseT + 0.32, baseT + 0.40];
+            const candidates = [baseT, baseT + 0.10, baseT - 0.06, baseT + 0.20, baseT - 0.12, baseT + 0.30, baseT - 0.18];
             let resolved = tryT(baseT);
             for (const tv of candidates) {
-              if (tv < 0.18 || tv > 0.78) continue;
+              if (tv < 0.18 || tv > 0.82) continue;
               const p = tryT(tv);
-              if (!labelCollidesWithNodes(e, p.x, p.y, labelW, labelH)) {
+              if (!labelCollides(e, p.x, p.y, labelW, labelH)) {
                 resolved = p;
                 break;
               }
             }
             lx = resolved.x;
             ly = resolved.y;
+            // Track this label's rect so subsequent edges avoid it. Always
+            // record (even if no clear position found) so collisions remain
+            // bounded and we don't pile labels at the fallback baseT spot.
+            placedLabelRects.push({ x: lx, y: ly, w: labelW, h: labelH });
           }
 
           const eminX = Math.min(pa.x, x2); const emaxX = Math.max(pa.x, x2);
