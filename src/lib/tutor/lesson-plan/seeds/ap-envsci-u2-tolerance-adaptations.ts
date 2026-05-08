@@ -1,0 +1,71 @@
+/**
+ * AP Environmental Science — CED Unit 2.4 + 2.6: Ecological Tolerance and
+ * Adaptations.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_ENVSCI_U2_TOLERANCE_ADAPTATIONS: LessonPlan = {
+  id: 'evelyn.ap.envsci.tolerance-adaptations.v1', title: 'U2.2 Ecological Tolerance and Adaptations',
+  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-environmental-science', locale: 'en',
+  los: [{ id: 'apenvsci.tolerance-adaptations', description: 'Define ecological tolerance and the range over which a species can survive and reproduce. Apply Liebig\'s Law of the Minimum and Shelford\'s Law of Tolerance. Distinguish behavioral, structural, and physiological adaptations.', standard: 'AP-ENVSCI-2.4+2.6' }],
+  prerequisites: ['apenvsci.biodiversity-island-biogeo'], followUps: ['apenvsci.disruptions-succession'], estimatedMinutes: 18,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame the tolerance curve.', script: "Every species has a RANGE of conditions it can survive. Outside that range — too hot, too cold, too dry — it can\'t. The ranges differ across species, and that\'s what determines geography.", estimatedMinutes: 2 },
+    { id: 'concept-tolerance', kind: 'concept', goal: 'Cover tolerance + adaptations.',
+      keyIdeas: [
+        'ECOLOGICAL TOLERANCE: the range of conditions (temperature, salinity, pH, moisture, etc.) under which a species can SURVIVE and REPRODUCE.',
+        'TOLERANCE CURVE: a bell-shaped distribution showing performance vs. environmental variable. Has:',
+        '  • OPTIMAL ZONE: conditions where the species thrives, reproduces.',
+        '  • ZONE OF PHYSIOLOGICAL STRESS: organism survives but doesn\'t thrive — slow growth, reduced reproduction.',
+        '  • ZONE OF INTOLERANCE: organism can\'t survive.',
+        'LIEBIG\'S LAW OF THE MINIMUM: growth is limited by whatever resource is in SHORTEST SUPPLY (the most limiting factor). Adding more of an abundant nutrient won\'t help if a different one is limiting. Iconic image: a barrel\'s capacity is limited by its SHORTEST stave.',
+        'SHELFORD\'S LAW OF TOLERANCE: organisms have BOTH a MINIMUM and a MAXIMUM tolerance for any environmental factor. Extremes BELOW or ABOVE the optimal range cause harm. (Liebig only addressed shortage; Shelford generalized to both ends.)',
+        'GENERALIST vs SPECIALIST:',
+        '  • GENERALIST: broad tolerance for many conditions; many food sources. Examples: raccoons, coyotes, humans, cockroaches. Can survive habitat change.',
+        '  • SPECIALIST: narrow tolerance; specific food/habitat. Examples: koalas (eucalyptus only), pandas (bamboo), polar bears (sea ice). Vulnerable to environmental change.',
+        'ADAPTATIONS — heritable traits that increase fitness in a given environment. Three categories:',
+        '  • STRUCTURAL (anatomical): physical features. Cactus spines for water storage and defense; thick fur in arctic mammals; webbed feet in ducks; long necks in giraffes.',
+        '  • BEHAVIORAL: actions/responses. Migration of birds; hibernation; nocturnality in deserts; pack hunting in wolves.',
+        '  • PHYSIOLOGICAL: internal/biochemical. Antifreeze proteins in arctic fish; venom production; bacterial heat tolerance (extremophiles); detoxification enzymes.',
+        'NICHE: the role/position a species occupies in its ecosystem. Specifies habitat, food, resource use, time of activity. Closely related species can coexist by occupying DIFFERENT niches (resource partitioning).',
+      ],
+      vocabulary: [
+        { term: 'tolerance range', definition: 'span of environmental conditions a species can survive.' },
+        { term: 'limiting factor', definition: 'the resource in shortest supply that constrains growth.' },
+        { term: 'specialist', definition: 'narrow tolerance / specific habitat or food.' },
+        { term: 'generalist', definition: 'broad tolerance / many habitats and food sources.' },
+      ],
+      estimatedMinutes: 5 },
+    { id: 'worked-limiting', kind: 'worked_example',
+      problem: 'A farmer fertilizes his crop with phosphorus, but yields don\'t improve. Soil tests show abundant N, P, K but very low water. What\'s the limiting factor? What law does this illustrate?',
+      steps: [
+        'STEP 1 — Identify what the plant needs and what it has: N (abundant), P (abundant), K (abundant), water (low).',
+        'STEP 2 — Plant performance is constrained by the SCARCEST input. Adding more abundant inputs doesn\'t help.',
+        'STEP 3 — LIMITING FACTOR: water.',
+        'STEP 4 — LIEBIG\'S LAW OF THE MINIMUM: growth is constrained by the resource in shortest supply, regardless of the others.',
+        'STEP 5 — Action: the farmer should irrigate, not fertilize.',
+      ],
+      answer: 'Water is the limiting factor; Liebig\'s Law of the Minimum.', estimatedMinutes: 3 },
+    { id: 'try-adaptation-classify', kind: 'try_yourself',
+      problem: 'Classify each adaptation as STRUCTURAL, BEHAVIORAL, or PHYSIOLOGICAL: \n(a) A bear hibernating through winter. \n(b) Antifreeze proteins in Arctic cod blood. \n(c) The thick blubber of a whale. \n(d) Cactus stems that store water. \n(e) Schooling behavior in fish.',
+      expectedAnswer: '(a) Behavioral. (b) Physiological (biochemical). (c) Structural. (d) Structural. (e) Behavioral.',
+      responseFormat: 'free', hints: ['Action = behavioral. Physical feature = structural. Internal chemistry = physiological.'], estimatedMinutes: 2 },
+    { id: 'try-specialist', kind: 'try_yourself',
+      problem: 'Why are SPECIALISTS more vulnerable to extinction than GENERALISTS in the face of climate change? Use the koala or polar bear as an example.',
+      expectedAnswer: 'Specialists have NARROW tolerance and depend on SPECIFIC resources. \n• KOALA: eats almost exclusively eucalyptus leaves. As climate shifts and Australian eucalypt forests change, koalas can\'t switch food sources. They starve. \n• POLAR BEAR: hunts seals on Arctic SEA ICE. As sea ice melts, polar bears can\'t reach prey. They starve or drown swimming long distances. \nGeneralists (raccoons, coyotes, rats) eat many foods, use many habitats, and shift behavior easily — they thrive in disrupted environments. Specialization is a high-fitness strategy in stable environments but a high-risk strategy in changing ones.',
+      responseFormat: 'free', hints: ['Narrow tolerance = vulnerability to change.'], estimatedMinutes: 3 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. The temperature in a particular fish\'s pond historically averaged 18°C in summer. Climate change has pushed it to 24°C. The fish\'s tolerance curve shows: optimal zone 15-20°C, stress zone 12-15°C and 20-24°C, intolerance zone <12°C and >24°C. (a) Where does the fish now sit on the curve? (b) Predict short- and long-term consequences. (c) Suggest two adaptive responses (evolutionary OR behavioral).',
+      expectedAnswer: '(a) The pond is now AT THE EDGE of intolerance (24°C is the upper limit; population at boundary). Currently in stress zone. (1)\n(b) SHORT-TERM: stress, reduced growth, reduced reproduction, increased disease. Likely population decline. \nLONG-TERM: if temperatures continue rising, intolerance is exceeded → LOCAL EXTINCTION (extirpation). Population crashes. (2)\n(c) Adaptive responses:\n(i) EVOLUTIONARY (slow): natural selection favors individuals with shifted tolerance — those who handle warmer temps better. Over many generations, the population adapts. Risk: fish reproductive cycles too slow vs climate change rate. \n(ii) BEHAVIORAL (fast): seek cooler microhabitats — deeper water, shaded inflows, springs. Move upstream to cooler water. \n(iii) RANGE SHIFT: migration to cooler ponds/regions. Northward in northern hemisphere. \n(iv) Possible HUMAN INTERVENTION: assisted migration (relocation), habitat protection. \nWithout fast adaptation or movement, the fish goes extinct locally. (2.5)\nTotal: 5.5 points.',
+      responseFormat: 'frq', hints: ['Reading the curve; consequence framing; adaptive options.'], estimatedMinutes: 5 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Tolerance curve: optimal | stress | intolerance zones.',
+      'Liebig\'s Law: the MINIMUM resource limits growth.',
+      'Shelford\'s Law: too much also harms.',
+      'Adaptations: structural / behavioral / physiological.',
+      'Specialists vulnerable; generalists resilient to environmental change.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '2', cedTopic: '2.4+2.6', cedTitle: 'Tolerance and Adaptations', sources: [{ type: 'concept', book: 'miller-spoolman', chapter: '4', note: 'Standard tolerance + adaptation.' }] },
+};

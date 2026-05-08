@@ -716,6 +716,10 @@ import { SEED_AP_ENVSCI_U1_NITROGEN_PHOSPHORUS_CYCLES } from './seeds/ap-envsci-
 import { SEED_AP_ENVSCI_U1_PRODUCTIVITY_ENERGY_FLOW } from './seeds/ap-envsci-u1-productivity-energy-flow';
 import { SEED_AP_ENVSCI_U1_FOOD_WEBS } from './seeds/ap-envsci-u1-food-webs';
 import { SEED_AP_ENVSCI_U1_FRQ_PRACTICE } from './seeds/ap-envsci-u1-frq-practice';
+import { SEED_AP_ENVSCI_U2_BIODIVERSITY_ISLAND_BIOGEO } from './seeds/ap-envsci-u2-biodiversity-island-biogeo';
+import { SEED_AP_ENVSCI_U2_TOLERANCE_ADAPTATIONS } from './seeds/ap-envsci-u2-tolerance-adaptations';
+import { SEED_AP_ENVSCI_U2_DISRUPTIONS_SUCCESSION } from './seeds/ap-envsci-u2-disruptions-succession';
+import { SEED_AP_ENVSCI_U2_FRQ_PRACTICE } from './seeds/ap-envsci-u2-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1861,6 +1865,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U1_PRODUCTIVITY_ENERGY_FLOW,
   SEED_AP_ENVSCI_U1_FOOD_WEBS,
   SEED_AP_ENVSCI_U1_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U2_BIODIVERSITY_ISLAND_BIOGEO,
+  SEED_AP_ENVSCI_U2_TOLERANCE_ADAPTATIONS,
+  SEED_AP_ENVSCI_U2_DISRUPTIONS_SUCCESSION,
+  SEED_AP_ENVSCI_U2_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,

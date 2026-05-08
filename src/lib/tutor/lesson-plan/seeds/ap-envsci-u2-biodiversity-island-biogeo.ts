@@ -1,0 +1,71 @@
+/**
+ * AP Environmental Science — CED Unit 2.1+2.3: Biodiversity and Island
+ * Biogeography.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_ENVSCI_U2_BIODIVERSITY_ISLAND_BIOGEO: LessonPlan = {
+  id: 'evelyn.ap.envsci.biodiversity-island-biogeo.v1', title: 'U2.1 Biodiversity and Island Biogeography',
+  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-environmental-science', locale: 'en',
+  los: [{ id: 'apenvsci.biodiversity-island-biogeo', description: 'Distinguish species, genetic, and ecosystem diversity. Apply the species-area relationship and island biogeography theory: larger and closer islands support more species. Understand habitat fragmentation as creating "habitat islands."', standard: 'AP-ENVSCI-2.1+2.3' }],
+  prerequisites: [], followUps: ['apenvsci.tolerance-adaptations'], estimatedMinutes: 20,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame biodiversity as multi-scale.', script: "Biodiversity isn\'t just \"how many species.\" It\'s diversity at THREE LEVELS — species, genetic (within a species), and ecosystem. And — surprising fact — habitat SIZE and ISOLATION predict how much biodiversity a place can sustain.", estimatedMinutes: 2 },
+    { id: 'concept-bio', kind: 'concept', goal: 'Cover three levels + island biogeography.',
+      keyIdeas: [
+        'BIODIVERSITY at three levels:',
+        '  • SPECIES DIVERSITY: number and abundance of different species in a community.',
+        '  • GENETIC DIVERSITY: variation in genes within a species. Higher → better resilience to disease, climate change, environmental shifts.',
+        '  • ECOSYSTEM DIVERSITY: variety of ecosystems in a region. Tropical rainforest vs adjacent savanna vs riverine forest provides multiple habitats.',
+        'WHY BIODIVERSITY MATTERS:',
+        '  • RESILIENCE: diverse ecosystems recover better from disturbance.',
+        '  • SERVICES: pollination, pest control, water purification depend on species variety.',
+        '  • POTENTIAL: undiscovered medicines, food crops, materials.',
+        '  • INTRINSIC: ethical/cultural value of nature.',
+        'ISLAND BIOGEOGRAPHY (MacArthur & Wilson 1967): species richness on an island reflects a balance between IMMIGRATION (new species arriving) and EXTINCTION (species dying out).',
+        'TWO KEY VARIABLES:',
+        '  • SIZE — larger islands support more species (more habitat, larger populations, less random extinction).',
+        '  • DISTANCE FROM MAINLAND — closer islands receive more immigrants → more species.',
+        'SPECIES-AREA RELATIONSHIP: S = c·A^z, where S = species count, A = area, z ≈ 0.20–0.30 typically. Doubling area roughly increases species count by ~15-20%.',
+        'PRACTICAL CONSEQUENCE — habitat fragmentation creates "HABITAT ISLANDS." A forest fragmented by roads/farms behaves like an island archipelago. Smaller, more isolated patches → fewer species sustained, especially large mammals and slow-dispersing organisms.',
+        'EDGE EFFECTS: small fragments have proportionately more EDGE relative to interior. Edges experience different conditions (more sun, wind, predators, invasives) — interior species suffer.',
+        'CONSERVATION IMPLICATION: protected areas should be LARGE, CONNECTED (corridors between fragments), and have SUFFICIENT INTERIOR.',
+      ],
+      vocabulary: [
+        { term: 'biodiversity', definition: 'variety of life — measured at species, genetic, and ecosystem levels.' },
+        { term: 'island biogeography', definition: 'theory predicting island species count from size and isolation.' },
+        { term: 'edge effect', definition: 'altered conditions at habitat boundaries; reduces interior-species habitat.' },
+      ],
+      estimatedMinutes: 6 },
+    { id: 'worked-island', kind: 'worked_example',
+      problem: 'Island A has area 100 km² and is 50 km from mainland. Island B has area 200 km² and is 50 km from mainland. Island C has area 100 km² and is 200 km from mainland. Predict which has the MOST species.',
+      steps: [
+        'STEP 1 — Compare A vs B: same distance, B is bigger → B > A.',
+        'STEP 2 — Compare A vs C: same area, A is closer → A > C.',
+        'STEP 3 — Order: B > A > C. Island B (largest, close) has the most species.',
+        'STEP 4 — General principle: large + close = species-rich; small + far = species-poor.',
+      ],
+      answer: 'B (largest, closest combo). Order: B > A > C.', estimatedMinutes: 3 },
+    { id: 'try-fragmentation', kind: 'try_yourself',
+      problem: 'A forest of 10,000 hectares is fragmented by roads and farms into ten 1,000-hectare patches. Use species-area thinking to predict the impact on biodiversity.',
+      expectedAnswer: 'TOTAL area is preserved (10,000 hectares), but species count is NOT preserved. Species-area: S ∝ A^z (z ≈ 0.25). The original 10,000-hectare forest had S₀ ∝ 10,000^0.25 ≈ 10. Each 1,000-ha fragment supports S₁ ∝ 1,000^0.25 ≈ 5.6. \nSpecies in each fragment: ~56% of original. Cumulative across fragments depends on overlap — likely each fragment retains a similar species set with some unique to particular fragments. Estimated TOTAL biodiversity loss: 20-50% even though total area is unchanged. Plus EDGE effects in each smaller patch reduce interior habitat further.',
+      responseFormat: 'free', hints: ['Apply S ∝ A^z to a single fragment vs the whole.'], estimatedMinutes: 4 },
+    { id: 'try-genetic', kind: 'try_yourself',
+      problem: 'Cheetahs have very low genetic diversity (estimated ~99% genetic similarity due to a population bottleneck ~10,000 years ago). Why is this a problem?',
+      expectedAnswer: 'Low genetic diversity reduces:\n• ADAPTABILITY — fewer alleles means less raw material for adapting to new diseases, climate shifts, or environmental changes. \n• DISEASE RESISTANCE — a single pathogen could wipe out the species (no individuals carry resistance variants). \n• REPRODUCTIVE FITNESS — increased inbreeding effects, including reduced fertility, congenital defects, and offspring viability. \n• LONG-TERM SURVIVAL — reduced ability to evolve under selection pressure. Cheetahs are at high extinction risk despite still having moderate population numbers.',
+      responseFormat: 'free', hints: ['Genetic diversity buffers against future environmental change.'], estimatedMinutes: 3 },
+    { id: 'try-synthesis', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A national park is currently a single 50,000-hectare block. A highway is proposed cutting it into two 25,000-hectare halves. (a) Using island biogeography, predict the biodiversity impact. (b) Suggest a design feature that would mitigate the damage. (c) Explain how habitat corridors help.',
+      expectedAnswer: '(a) Each half supports fewer species than the original whole (species-area: S ∝ A^z). The two halves act as "habitat islands" with limited migration between them. Long-term: large mammals and slow-dispersing species (especially carnivores requiring big territories) likely lost. Edge effects on the new highway boundary reduce interior habitat further. Total biodiversity drops 15-30% over decades. (3)\n(b) WILDLIFE OVERPASSES or UNDERPASSES (corridors over/under the highway). These reconnect the two halves so animals can move between them. Banff and Yellowstone have successfully implemented these. (1.5)\n(c) Habitat corridors:\n• Allow individual movement between fragments — restores GENE FLOW. \n• Recolonization possible after local extinctions in one fragment. \n• Effective territories larger; species needing big ranges (wolves, mountain lions) survive. \n• Reduces inbreeding effects. \n• Combined effect: behaves more like the ORIGINAL contiguous habitat than two isolated fragments. (2.5)\nTotal: 7 points.',
+      responseFormat: 'frq', hints: ['Fragmentation effect; mitigation; corridor benefits.'], estimatedMinutes: 5 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'Three levels: species, genetic, ecosystem diversity.',
+      'Island biogeography: bigger + closer → more species.',
+      'Habitat fragmentation behaves like islands — size matters.',
+      'Edge effects reduce interior habitat in small fragments.',
+      'Conservation: large patches + corridors > many small isolated patches.',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '2', cedTopic: '2.1+2.3', cedTitle: 'Biodiversity and Island Biogeography', sources: [{ type: 'concept', book: 'miller-spoolman', chapter: '4', note: 'Standard biodiversity + island biogeography.' }] },
+};
