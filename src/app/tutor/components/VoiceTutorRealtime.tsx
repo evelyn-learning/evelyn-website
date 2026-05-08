@@ -4123,6 +4123,7 @@ export function VoiceTutorRealtime({
         const decoder = new TextDecoder();
         let buf = '';
         const toolNamesThisAttempt: string[] = [];
+        const toolArgsThisAttempt: Array<Record<string, unknown>> = [];
         const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
         let attemptText = '';
         // Once a tool call in this attempt is rejected, the attempt is
@@ -4552,6 +4553,7 @@ export function VoiceTutorRealtime({
                   let name = ev.name as string;
                   let args = (ev.args as Record<string, unknown>) || {};
                   toolNamesThisAttempt.push(name);
+                  toolArgsThisAttempt.push(args);
                   totalToolNamesSeen.push(name);
                   // Mark brain-emitted new_page on event ARRIVAL (before
                   // any downstream stripping by the same-context guard).
@@ -4622,10 +4624,70 @@ export function VoiceTutorRealtime({
                       const seg = getSegment(plan, segId);
                       const truth = getSegmentTruth(seg);
                       if (truth?.problemText && truth.kind === 'worked_example') {
-                        console.log(`[brain-orchestrator] auto-substitute show_worked_example → show_segment_card for segment "${segId}" (authored worked_example truth exists; brain's invented walkthrough would override authored content)`);
-                        onDebugEvent?.('show_worked_example_substituted', `→ show_segment_card("${segId}")`);
-                        name = 'show_segment_card';
-                        args = { segmentId: segId };
+                        // Divergence-KILL guard, mirroring the show_problem
+                        // pattern (see ~50 lines below). Silent-substitute
+                        // alone swaps the BOARD to the authored card but
+                        // leaves the brain's spoken walkthrough untouched —
+                        // observed 2026-05-07 AP Macro session: brain
+                        // emitted show_worked_example with a Sofia/$120
+                        // scenario for the authored Maya/$50 worked-budget
+                        // segment. Substitute swapped the card to Maya;
+                        // brain spoke "Sofia has $120…" → catastrophic
+                        // chat-board mismatch.
+                        // Detection: compare the set of numbers in the
+                        // brain's example.problem.statement against the
+                        // authored problemText. If both sides have numbers
+                        // and the Jaccard similarity is below 0.5, the
+                        // brain has invented a structurally different
+                        // scenario and must re-narrate.
+                        const ex = (args as { example?: { problem?: { statement?: unknown } } }).example;
+                        const brainStatement = typeof ex?.problem?.statement === 'string' ? ex.problem.statement : '';
+                        const numRe = /-?\d+(?:\.\d+)?/g;
+                        const brainNums = new Set(brainStatement.match(numRe) || []);
+                        const authoredNums = new Set(truth.problemText.match(numRe) || []);
+                        let divergent = false;
+                        if (brainNums.size > 0 && authoredNums.size > 0) {
+                          let intersect = 0;
+                          brainNums.forEach((n) => { if (authoredNums.has(n)) intersect += 1; });
+                          const denom = Math.max(brainNums.size, authoredNums.size);
+                          if (intersect / denom < 0.5) divergent = true;
+                        }
+                        // new_page-in-turn bypass: a topic-switch
+                        // (e.g. student asks "show me another example")
+                        // legitimately renders a fresh, off-segment worked
+                        // example. The brain signals this by emitting
+                        // new_page in the same turn. Mirrors the
+                        // show_problem bypass pattern.
+                        const newPageInTurn = brainEmittedNewPageThisTurnRef.current;
+                        if (divergent && newPageInTurn) {
+                          console.log(`[brain-orchestrator] show_worked_example divergence on "${segId}" — but new_page in turn (fresh context); bypassing substitute. brain="${[...brainNums].slice(0, 4).join(',')}" authored="${[...authoredNums].slice(0, 4).join(',')}"`);
+                          onDebugEvent?.('show_worked_example_divergence_bypass', `new_page-in-turn; brain="${[...brainNums].slice(0, 3).join(',')}" authored="${[...authoredNums].slice(0, 3).join(',')}"`);
+                          // Fall through — dispatch the brain's free-form
+                          // worked example as-is. Do NOT substitute (the
+                          // authored card is the wrong one for this turn).
+                        } else if (divergent) {
+                          console.warn(`[brain-orchestrator] show_worked_example payload diverges from authored worked_example for segment "${segId}". brain numbers="${[...brainNums].slice(0, 5).join(',')}", authored numbers="${[...authoredNums].slice(0, 5).join(',')}". Killing attempt for retry.`);
+                          onDebugEvent?.('show_worked_example_divergence', `segId="${segId}" brain="${[...brainNums].slice(0, 3).join(',')}" authored="${[...authoredNums].slice(0, 3).join(',')}"`);
+                          rejectionsThisAttempt.push({
+                            action: 'show_worked_example',
+                            reason: `Your show_worked_example payload describes a DIFFERENT scenario than the authored worked_example for segment "${segId}". Your example uses numbers [${[...brainNums].slice(0, 6).join(', ')}], but the authored problem uses [${[...authoredNums].slice(0, 6).join(', ')}]. The student would hear you walk through your invented example while seeing the authored card on the whiteboard — a chat-board mismatch. You have TWO recovery paths depending on intent: (A) IF you intended to walk through the AUTHORED worked example for the current segment: call show_segment_card({ segmentId: "${segId}" }) and narrate the authored steps verbatim. The authored problem is: "${truth.problemText.slice(0, 200)}". (B) IF you intended a TOPIC SWITCH (a NEW worked example unrelated to the current segment, e.g. student asked "show me another example"): emit BOTH new_page AND show_worked_example in the same response — the runtime treats new_page-in-turn as a fresh-context signal and lets your free-form worked example render. Make sure your spoken narration matches the example you're rendering. Pick path (A) or (B) based on what the student actually asked for.`,
+                          });
+                          if (!attemptKilled) {
+                            attemptKilled = true;
+                            clearTimeout(gateTimer);
+                            closeGate();
+                            await speakKillBridge();
+                          }
+                          continue;
+                        } else {
+                          // Numbers match (or weren't extractable) → the
+                          // brain's payload roughly matches authored, so
+                          // silent-substitute is safe.
+                          console.log(`[brain-orchestrator] auto-substitute show_worked_example → show_segment_card for segment "${segId}" (authored worked_example truth exists; brain's invented walkthrough would override authored content)`);
+                          onDebugEvent?.('show_worked_example_substituted', `→ show_segment_card("${segId}")`);
+                          name = 'show_segment_card';
+                          args = { segmentId: segId };
+                        }
                       }
                     }
                   }
@@ -5157,6 +5219,46 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
         }
 
+        // Skip-button compliance check. When the student message
+        // contains the synthetic [Skip-button-clicked] marker, the
+        // system prompt (system-prompt-builder.ts:412) REQUIRES the
+        // brain to call advance_lesson (or generate_problem if no
+        // segment remains). Observed 2026-05-07 AP Macro session: brain
+        // received Skip on try-textbook and emitted new_page +
+        // show_segment_card("try-textbook") — the SAME segment, no
+        // advance. The render was deduped (same card on board) and the
+        // brain narrated "Here's your next problem" while the board sat
+        // unchanged. The generic dedup-rejection feedback didn't tell
+        // the brain "Skip needs advance" — it just retried with
+        // show_problem carrying the identical statement. Detect this
+        // structural omission directly.
+        if (!attemptKilled) {
+          const lastStudentMsgForSkip = transcriptRef.current
+            .filter((e) => e.role === 'student')
+            .slice(-1)[0]?.text || '';
+          const skipMarkerPresent = /\[Skip-button-clicked/i.test(lastStudentMsgForSkip);
+          const advancedThisAttempt = toolNamesThisAttempt.some(
+            (n) => n === 'advance_lesson' || n === 'generate_problem',
+          );
+          if (skipMarkerPresent && !advancedThisAttempt) {
+            const emittedToolsList = toolNamesThisAttempt.length > 0
+              ? toolNamesThisAttempt.join(', ')
+              : '(none)';
+            const reason =
+              `The student clicked the Skip-ahead button — this is a NAVIGATION action requiring the lesson pointer to MOVE. ` +
+              `You emitted [${emittedToolsList}] but no advance_lesson and no generate_problem, so the lesson pointer stayed on the current segment and the student saw the same problem they tried to leave. ` +
+              `Re-emit your response and INCLUDE either advance_lesson({to: "next"}) (preferred — moves to the next on-topic segment) or generate_problem (if you've reached the end of the lesson plan and need a fresh problem at the current level). ` +
+              `Skip is NOT an answer to your prior question — do not affirm, do not state the expected answer, do not re-render the same segment card the student just skipped past. Acknowledge briefly ("got it, moving on") and advance.`;
+            rejectionsThisAttempt.push({ action: 'skip_button_no_advance', reason });
+            attemptKilled = true;
+            clearTimeout(gateTimer);
+            closeGate();
+            await speakKillBridge();
+            console.warn('[brain-orchestrator] Skip-button KILL: student clicked Skip but brain emitted no advance_lesson / generate_problem.');
+            onDebugEvent?.('skip_button_no_advance', `tools=[${emittedToolsList}]`);
+          }
+        }
+
         // Judge LLM groundedness check (Lever B1). Only fires when the
         // attempt produced spoken text AND wasn't already killed by a
         // structural rejection (no point judging speech we're about to
@@ -5184,9 +5286,40 @@ export function VoiceTutorRealtime({
             // MAX_VALIDATOR_RETRIES with no real fix possible (observed
             // 2026-05-07 K-2 comparing-numbers test session).
             const showToolsEmitted = toolNamesThisAttempt.filter((n) => n.startsWith('show_')).length;
-            if (boardSummary === '(whiteboard is empty)' && showToolsEmitted > 0) {
-              console.warn(`[judge] skip — boardSummary reports empty but ${showToolsEmitted} show_* tool(s) just emitted (snapshot race or segment-filter exclusion). Letting speech through.`);
-              onDebugEvent?.('judge_skip_empty_snapshot', `tools=${showToolsEmitted}`);
+            // Two snapshot-race cases produce false KILLs:
+            //   (a) boardSummary === empty but show_* tools just emitted —
+            //       catalog hasn't registered yet (original case).
+            //   (b) boardSummary is NON-empty but stale (contains prior-turn
+            //       content) and the just-emitted show_* tools haven't
+            //       propagated yet. Brain narrates the new content and the
+            //       judge contradicts it against the old snapshot — observed
+            //       2026-05-07 incline-pulley session, three KILLs in a row
+            //       hit MAX_VALIDATOR_RETRIES and the final reply never
+            //       reached the chat. Detect (b) by checking whether ANY
+            //       title/identifier the brain just emitted appears in the
+            //       summary; if not, the summary is stale.
+            const titlesEmitted = toolArgsThisAttempt
+              .map((args) => {
+                if (!args || typeof args !== 'object') return '';
+                const a = args as Record<string, unknown>;
+                const t = a.title;
+                return typeof t === 'string' ? t : '';
+              })
+              .filter((s) => s.length > 0);
+            const summaryReflectsNewTools =
+              titlesEmitted.length === 0
+                ? true
+                : titlesEmitted.some((t) => boardSummary.includes(t));
+            const isSnapshotRace =
+              showToolsEmitted > 0 &&
+              (boardSummary === '(whiteboard is empty)' || !summaryReflectsNewTools);
+            if (isSnapshotRace) {
+              const reason =
+                boardSummary === '(whiteboard is empty)'
+                  ? 'empty snapshot'
+                  : `stale snapshot — ${titlesEmitted.length} new tool title(s) not yet in summary`;
+              console.warn(`[judge] skip — ${reason}; ${showToolsEmitted} show_* tool(s) just emitted. Letting speech through.`);
+              onDebugEvent?.('judge_skip_empty_snapshot', `tools=${showToolsEmitted}; ${reason}`);
               // Pass through — no judge fetch, treat as grounded.
             } else {
             // Focus = the most recently rendered problem statement.

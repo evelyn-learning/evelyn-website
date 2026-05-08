@@ -12,6 +12,13 @@
  *   "Solve for x: $2^{x+1} - 3 \\cdot 2^{x+2} = 0$"
  *   renders "Solve for x: " as text and the math in KaTeX.
  *
+ * Currency vs. math: a $...$ pair is treated as math ONLY if the inner
+ * content contains a LaTeX-style indicator (\, ^, _, {, }) or is a short
+ * (≤4 char) whitespace-free identifier like $x$ or $T$. Without that, the
+ * $ is treated as literal text — so prose containing currency like
+ * "Maya has $50 and a $15 movie" renders correctly instead of being parsed
+ * as a math segment "50 and a 15 movie".
+ *
  * Unmatched $ is treated as literal text (so a raw "$5" shows as dollar-five).
  */
 
@@ -24,9 +31,21 @@ interface InlineMathTextProps {
   className?: string;
 }
 
+// Reject candidate math segments that look like prose with currency.
+// Real math contains at least one LaTeX-only signal (backslash command,
+// caret/underscore for sup/subscript, or braces). Short identifier-like
+// strings ($x$, $T$, $y_1$ — handled by the brace/underscore rule) also
+// pass. Anything else (e.g. "50 and one Saturday afternoon. She wants to
+// (a) see a 15") fails and the surrounding $ stay literal.
+function looksLikeMath(inner: string): boolean {
+  if (/[\\^_{}]/.test(inner)) return true;
+  if (inner.length <= 4 && !/\s/.test(inner)) return true;
+  return false;
+}
+
 // Split a string into alternating plain-text and math segments.
 // Math is anything between matched single $...$ that doesn't include whitespace-only
-// content and doesn't span across a newline.
+// content, doesn't span across a newline, and passes the looksLikeMath check.
 function segment(text: string): Array<{ kind: 'text' | 'math'; body: string }> {
   if (!text) return [];
   const out: Array<{ kind: 'text' | 'math'; body: string }> = [];
@@ -50,10 +69,19 @@ function segment(text: string): Array<{ kind: 'text' | 'math'; body: string }> {
       break;
     }
     const inner = text.slice(dollar + 1, close);
-    // Skip empty or whitespace-only "$$" pairs; treat as literal text
+    // Skip empty / whitespace-only / multi-line pairs; treat as literal text
     if (!inner.trim() || inner.includes('\n')) {
       out.push({ kind: 'text', body: text.slice(i, close + 1) });
       i = close + 1;
+      continue;
+    }
+    // Currency guard: if the inner doesn't look like math, treat the
+    // opening $ as a literal character and resume scanning AFTER it (do
+    // NOT consume the closing $, which may pair legitimately with a
+    // later $ later in the string).
+    if (!looksLikeMath(inner)) {
+      out.push({ kind: 'text', body: text.slice(i, dollar + 1) });
+      i = dollar + 1;
       continue;
     }
     if (dollar > i) out.push({ kind: 'text', body: text.slice(i, dollar) });
