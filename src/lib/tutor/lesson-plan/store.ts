@@ -289,8 +289,6 @@ import { SEED_G9_ELA_ACTIVE_PASSIVE } from './seeds/g9-ela-active-passive';
 import { SEED_G6_ELA_ACTIVE_LISTENING } from './seeds/g6-ela-active-listening-discussion';
 import { SEED_G5_ELA_POETRY_INTRO } from './seeds/g5-ela-poetry-intro';
 import { SEED_G11_ELA_POETRY_ANALYSIS } from './seeds/g11-ela-poetry-analysis';
-import { SEED_AP_CALC_FUNDAMENTAL_THEOREM } from './seeds/ap-calc-fundamental-theorem';
-import { SEED_AP_CALC_RELATED_RATES } from './seeds/ap-calc-related-rates';
 import { SEED_AP_STATS_HYPOTHESIS_TESTING } from './seeds/ap-stats-hypothesis-testing';
 import { SEED_G4_MATH_ANGLE_MEASUREMENT } from './seeds/g4-math-angle-measurement';
 import { SEED_G3_MATH_ROUNDING } from './seeds/g3-math-rounding';
@@ -356,9 +354,6 @@ import { SEED_G8_MATH_BIVARIATE_DATA } from './seeds/g8-math-bivariate-data';
 import { SEED_SAT_ACT_ESSAY_STRATEGY } from './seeds/sat-act-essay-strategy';
 import { SEED_G5_SCI_WATER_CYCLE } from './seeds/g5-sci-water-cycle';
 // Batch 34 — High-impact AP completion + foundational fillers.
-import { SEED_AP_CALC_OPTIMIZATION } from './seeds/ap-calc-optimization';
-import { SEED_AP_CALC_LHOPITAL } from './seeds/ap-calc-lhopital';
-import { SEED_AP_CALC_VOLUMES_REVOLUTION } from './seeds/ap-calc-volumes-revolution';
 import { SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP } from './seeds/ap-bio-cellular-respiration-deep';
 import { SEED_AP_BIO_HARDY_WEINBERG } from './seeds/ap-bio-hardy-weinberg';
 import { SEED_AP_STATS_CHI_SQUARE } from './seeds/ap-stats-chi-square';
@@ -390,10 +385,6 @@ import { SEED_GMAT_QUANT_STRATEGY } from './seeds/gmat-quant-strategy';
 import { SEED_GMAT_VERBAL_STRATEGY } from './seeds/gmat-verbal-strategy';
 import { SEED_SSAT_ISEE_STRATEGY } from './seeds/ssat-isee-strategy';
 import { SEED_AP_TEST_STRATEGY } from './seeds/ap-test-strategy';
-import { SEED_AP_CALC_BC_PARAMETRIC } from './seeds/ap-calc-bc-parametric';
-import { SEED_AP_CALC_BC_POLAR } from './seeds/ap-calc-bc-polar';
-import { SEED_AP_CALC_BC_SERIES_CONVERGENCE } from './seeds/ap-calc-bc-series-convergence';
-import { SEED_AP_CALC_BC_TAYLOR_SERIES } from './seeds/ap-calc-bc-taylor-series';
 import { SEED_AP_PHYSICS2_FLUIDS } from './seeds/ap-physics2-fluids';
 import { SEED_AP_PHYSICS2_THERMO } from './seeds/ap-physics2-thermo';
 import { SEED_AP_PHYSICS2_ELECTROSTATICS } from './seeds/ap-physics2-electrostatics';
@@ -542,8 +533,6 @@ import { SEED_AP_LIT_ROMANTICISM } from './seeds/ap-lit-romanticism';
 import { SEED_AP_LIT_POETRY_ANALYSIS } from './seeds/ap-lit-poetry-analysis';
 import { SEED_AP_LANG_RHETORICAL_ANALYSIS } from './seeds/ap-lang-rhetorical-analysis';
 // Batch 44 — AP Calc AB + Bio (accumulation, area between curves, enzymes, immune system).
-import { SEED_AP_CALC_ACCUMULATION } from './seeds/ap-calc-accumulation';
-import { SEED_AP_CALC_AREA_BETWEEN_CURVES } from './seeds/ap-calc-area-between-curves';
 import { SEED_AP_BIO_ENZYMES } from './seeds/ap-bio-enzymes';
 import { SEED_AP_BIO_IMMUNE } from './seeds/ap-bio-immune';
 // Batch 45 — AP Micro/Macro depth.
@@ -741,10 +730,6 @@ import { SEED_AP_USH_PERIOD3_INDEPENDENCE } from './seeds/ap-ush-period3-indepen
 import { SEED_AP_USH_PERIOD6_GILDED_AGE } from './seeds/ap-ush-period6-gilded-age';
 import { SEED_AP_USH_PERIOD7_IMPERIALISM_PROGRESSIVE } from './seeds/ap-ush-period7-imperialism-progressive';
 // Batch 55 — AP Calc AB depth: 4 unit-fillers (limits/continuity, chain+implicit, curve sketching, differential equations).
-import { SEED_AP_CALC_LIMITS_CONTINUITY } from './seeds/ap-calc-limits-continuity';
-import { SEED_AP_CALC_CHAIN_IMPLICIT } from './seeds/ap-calc-chain-implicit';
-import { SEED_AP_CALC_CURVE_SKETCHING } from './seeds/ap-calc-curve-sketching';
-import { SEED_AP_CALC_DIFFERENTIAL_EQUATIONS } from './seeds/ap-calc-differential-equations';
 // Batch 56 — AP Bio Unit 6 depth: central dogma + gene regulation/biotech.
 import { SEED_AP_BIO_CENTRAL_DOGMA } from './seeds/ap-bio-central-dogma';
 import { SEED_AP_BIO_GENE_REGULATION_BIOTECH } from './seeds/ap-bio-gene-regulation-biotech';
@@ -1482,8 +1467,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G6_ELA_ACTIVE_LISTENING,
   SEED_G5_ELA_POETRY_INTRO,
   SEED_G11_ELA_POETRY_ANALYSIS,
-  SEED_AP_CALC_FUNDAMENTAL_THEOREM,
-  SEED_AP_CALC_RELATED_RATES,
   SEED_AP_STATS_HYPOTHESIS_TESTING,
   SEED_G4_MATH_ANGLE_MEASUREMENT,
   SEED_G3_MATH_ROUNDING,
@@ -1549,9 +1532,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_SAT_ACT_ESSAY_STRATEGY,
   SEED_G5_SCI_WATER_CYCLE,
   // Batch 34 — High-impact AP completion + foundational fillers.
-  SEED_AP_CALC_OPTIMIZATION,
-  SEED_AP_CALC_LHOPITAL,
-  SEED_AP_CALC_VOLUMES_REVOLUTION,
   SEED_AP_BIO_CELLULAR_RESPIRATION_DEEP,
   SEED_AP_BIO_HARDY_WEINBERG,
   SEED_AP_STATS_CHI_SQUARE,
@@ -1583,10 +1563,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GMAT_VERBAL_STRATEGY,
   SEED_SSAT_ISEE_STRATEGY,
   SEED_AP_TEST_STRATEGY,
-  SEED_AP_CALC_BC_PARAMETRIC,
-  SEED_AP_CALC_BC_POLAR,
-  SEED_AP_CALC_BC_SERIES_CONVERGENCE,
-  SEED_AP_CALC_BC_TAYLOR_SERIES,
   SEED_AP_PHYSICS2_FLUIDS,
   SEED_AP_PHYSICS2_THERMO,
   SEED_AP_PHYSICS2_ELECTROSTATICS,
@@ -1660,8 +1636,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_LIT_ROMANTICISM,
   SEED_AP_LIT_POETRY_ANALYSIS,
   SEED_AP_LANG_RHETORICAL_ANALYSIS,
-  SEED_AP_CALC_ACCUMULATION,
-  SEED_AP_CALC_AREA_BETWEEN_CURVES,
   SEED_AP_BIO_ENZYMES,
   SEED_AP_BIO_IMMUNE,
   SEED_AP_MICRO_ELASTICITY,
@@ -1870,10 +1844,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_USH_PERIOD3_INDEPENDENCE,
   SEED_AP_USH_PERIOD6_GILDED_AGE,
   SEED_AP_USH_PERIOD7_IMPERIALISM_PROGRESSIVE,
-  SEED_AP_CALC_LIMITS_CONTINUITY,
-  SEED_AP_CALC_CHAIN_IMPLICIT,
-  SEED_AP_CALC_CURVE_SKETCHING,
-  SEED_AP_CALC_DIFFERENTIAL_EQUATIONS,
   SEED_AP_BIO_CENTRAL_DOGMA,
   SEED_AP_BIO_GENE_REGULATION_BIOTECH,
   // Batch 57 — GCSE Math Higher (UK).
