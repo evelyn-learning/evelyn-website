@@ -48,7 +48,7 @@ export const SEED_TEST_STATS_DIAGRAMS_TOUR: LessonPlan = {
       id: 'concept-normal-curve',
       kind: 'concept',
       goal: 'Show the standard normal curve with the empirical-rule region (μ ± 2σ) shaded.',
-      teacherNote: 'EMIT EXACTLY ONE show_diagram with kind="normal_curve". Use SAT scores: mean = 1050, sd = 200. Shade the middle 95% region (mean ± 2σ = 650 to 1450) for the empirical rule. Mark the mean and the ±1σ, ±2σ points. params shape: { mean:1050, sd:200, xMin:250, xMax:1850, shadeRegion:{from:650, to:1450}, showSDLines:true, shadeArea:0.95, title:"SAT scores N(1050, 200) — middle 95%", xLabel:"SAT score" }. Do NOT show a follow-up.',
+      teacherNote: 'EMIT EXACTLY ONE show_stats call with type="distribution". Use SAT scores: mean = 1050, sd = 200. Shade the middle 95% region (between 650 and 1450). The probabilityLabel "≈ 95%" is rendered with high contrast (dark text + white halo). Param shape: { type:"distribution", title:"SAT scores N(1050, 200) — middle 95%", xLabel:"SAT score", distribution:{ family:"normal", params:{mean:1050, sd:200}, shade:{type:"between", a:650, b:1450, color:"#3b82f6"}, showMean:true, probabilityLabel:"≈ 95%" } }. Do NOT show a follow-up.',
       keyIdeas: [
         'A normal distribution N(μ, σ) is the bell curve with mean μ and SD σ.',
         'Empirical rule (68-95-99.7): about 95% of values lie within ±2 SDs of the mean.',
@@ -64,7 +64,7 @@ export const SEED_TEST_STATS_DIAGRAMS_TOUR: LessonPlan = {
       id: 'concept-scatterplot-regression',
       kind: 'concept',
       goal: 'Show a scatterplot of study hours vs test score with the LSRL.',
-      teacherNote: 'EMIT EXACTLY ONE show_diagram with kind="scatterplot_regression". Use 12 students: x = study hours, y = test score. Strong positive linear association. USE TUPLE FORMAT [x, y]. LSRL: ŷ = 60 + 4x (approximately), r ≈ 0.85. params shape: { points: [[1,62],[2,70],[2,68],[3,75],[3,72],[4,78],[4,82],[5,80],[5,85],[6,86],[6,89],[7,91]], regression:{slope:4.0, intercept:60}, xMin:0, xMax:8, yMin:55, yMax:95, equationLabel:"ŷ = 60 + 4x", rValue:0.85, rSquared:0.7225, xLabel:"Study hours", yLabel:"Test score", title:"Study hours vs test score (n = 12)", showResiduals:false }. Do NOT show variants.',
+      teacherNote: 'EMIT EXACTLY ONE show_stats call with type="scatter". Use 12 students: x = study hours, y = test score. Strong positive linear association. With showTrendLine:true the LSRL, r, and r² are auto-computed from the points. Param shape: { type:"scatter", title:"Study hours vs test score (n = 12)", xLabel:"Study hours", yLabel:"Test score", points:[{x:1,y:62},{x:2,y:70},{x:2,y:68},{x:3,y:75},{x:3,y:72},{x:4,y:78},{x:4,y:82},{x:5,y:80},{x:5,y:85},{x:6,y:86},{x:6,y:89},{x:7,y:91}], showTrendLine:true }. Do NOT show variants. (Optional: pass equationLabel, regression, rValue, rSquared, highlightPoint, showResiduals if you want to override or annotate.)',
       keyIdeas: [
         'A scatterplot displays bivariate quantitative data.',
         'The LSRL minimizes sum of squared residuals.',

@@ -1848,7 +1848,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
       return <MatrixRenderer title={command.title} rows={command.rows} brackets={command.brackets} augmented={command.augmented} rowLabels={command.rowLabels} colLabels={command.colLabels} rowOperations={command.rowOperations} resultMatrix={command.resultMatrix} operatorSymbol={command.operatorSymbol} />;
 
     case 'showStats':
-      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} distribution={command.distribution} />;
+      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} distribution={command.distribution} points={command.points} regression={command.regression} showTrendLine={command.showTrendLine} rValue={command.rValue} rSquared={command.rSquared} equationLabel={command.equationLabel} highlightPoint={command.highlightPoint} showResiduals={command.showResiduals} />;
 
     case 'showTimeline':
       return <TimelineRenderer title={command.title} events={command.events} orientation={command.orientation} />;

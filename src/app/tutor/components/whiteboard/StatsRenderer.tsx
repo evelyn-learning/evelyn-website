@@ -37,13 +37,29 @@ interface PieSlice {
 
 interface StatsRendererProps {
   title?: string;
-  type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution';
+  type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution' | 'scatter' | 'scatterplot' | 'scatterplot_regression';
   /** Raw numeric data for histogram / dot plot */
   data?: number[];
   /** Bin width for histogram (defaults to auto-computed) */
   binWidth?: number;
   xLabel?: string;
   yLabel?: string;
+  /** Scatterplot configuration (type='scatter' / 'scatterplot' / 'scatterplot_regression') */
+  points?: Array<{ x: number; y: number; label?: string }>;
+  /** Pre-computed regression coefficients; if absent and showTrendLine is true, LSRL is computed from points. */
+  regression?: { slope: number; intercept: number };
+  /** Draw the LSRL through the points. Defaults to true for scatter*; can be disabled. */
+  showTrendLine?: boolean;
+  /** Optional Pearson r — displayed in the corner. */
+  rValue?: number;
+  /** Optional r² — displayed in the corner. */
+  rSquared?: number;
+  /** Optional equation label like "ŷ = 2.1 + 1.3x" */
+  equationLabel?: string;
+  /** Highlight a single point. */
+  highlightPoint?: { x: number; y: number; label?: string };
+  /** Show vertical residual segments from each point to the LSRL. */
+  showResiduals?: boolean;
   /** Box plot configuration */
   boxplot?: {
     datasets: BoxPlotDataset[];
@@ -730,15 +746,19 @@ function DistributionChart({
         <g {...feat('mean', { cx: toX(mean), cy: MARGIN.top + CHART_H / 2, w: 12, h: CHART_H }, { width: WIDTH, height: HEIGHT })} />
       )}
 
-      {/* Probability label in the shaded region */}
+      {/* Probability label in the shaded region — dark text with white halo
+          so it stays legible against the light shade fill */}
       {probabilityLabel && shadeLabelX !== null && (
         <text
           x={toX(shadeLabelX)}
           y={MARGIN.top + CHART_H / 2}
           textAnchor="middle"
-          fontSize={13}
-          fontWeight={600}
-          fill={shadeColor}
+          fontSize={14}
+          fontWeight={700}
+          fill="#1e293b"
+          stroke="#ffffff"
+          strokeWidth={3.5}
+          paintOrder="stroke"
         >
           {probabilityLabel}
         </text>
@@ -985,6 +1005,210 @@ export function buildStatsManifest(props: StatsRendererProps): FeatureManifestEn
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Scatter (with optional regression line + residuals)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function Scatter({
+  points,
+  regression,
+  showTrendLine = true,
+  rValue,
+  rSquared,
+  equationLabel,
+  highlightPoint,
+  showResiduals,
+  xLabel,
+  yLabel,
+}: StatsRendererProps) {
+  if (!points || points.length === 0) {
+    return (
+      <text x={WIDTH / 2} y={HEIGHT / 2} textAnchor="middle" fontSize={14} fill="#ef4444">
+        Scatter requires `points: [{`{x, y}`}, ...]`
+      </text>
+    );
+  }
+
+  // Compute LSRL from points if not provided.
+  let reg = regression;
+  if (!reg && showTrendLine !== false && points.length >= 2) {
+    const n = points.length;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const p of points) { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; }
+    const denom = n * sxx - sx * sx;
+    if (denom !== 0) {
+      const slope = (n * sxy - sx * sy) / denom;
+      const intercept = (sy - slope * sx) / n;
+      reg = { slope, intercept };
+    }
+  }
+
+  // Compute r if not provided (for display).
+  let rDisplay = rValue;
+  let r2Display = rSquared;
+  if (rDisplay === undefined && reg && points.length >= 2) {
+    const n = points.length;
+    let sx = 0, sy = 0;
+    for (const p of points) { sx += p.x; sy += p.y; }
+    const mx = sx / n, my = sy / n;
+    let num = 0, dxx = 0, dyy = 0;
+    for (const p of points) {
+      const ax = p.x - mx, ay = p.y - my;
+      num += ax * ay; dxx += ax * ax; dyy += ay * ay;
+    }
+    const den = Math.sqrt(dxx * dyy);
+    if (den > 0) rDisplay = num / den;
+  }
+  if (r2Display === undefined && rDisplay !== undefined) r2Display = rDisplay * rDisplay;
+
+  // Viewport.
+  let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+  for (const p of points) {
+    if (p.x < xMin) xMin = p.x;
+    if (p.x > xMax) xMax = p.x;
+    if (p.y < yMin) yMin = p.y;
+    if (p.y > yMax) yMax = p.y;
+  }
+  const padX = (xMax - xMin) * 0.08 || 1;
+  const padY = (yMax - yMin) * 0.10 || 1;
+  xMin -= padX; xMax += padX;
+  yMin -= padY; yMax += padY;
+
+  const toX = (v: number) => MARGIN.left + ((v - xMin) / (xMax - xMin)) * CHART_W;
+  const toY = (v: number) => MARGIN.top + CHART_H - ((v - yMin) / (yMax - yMin)) * CHART_H;
+
+  const xRange = niceRange(xMin, xMax, 6);
+  const yRange = niceRange(yMin, yMax, 6);
+
+  return (
+    <g>
+      {/* gridlines */}
+      {xRange.ticks.map((t) => (
+        <line key={`gx-${t}`} x1={toX(t)} y1={MARGIN.top} x2={toX(t)} y2={MARGIN.top + CHART_H} stroke="#e5e7eb" strokeWidth={1} />
+      ))}
+      {yRange.ticks.map((t) => (
+        <line key={`gy-${t}`} x1={MARGIN.left} y1={toY(t)} x2={MARGIN.left + CHART_W} y2={toY(t)} stroke="#e5e7eb" strokeWidth={1} />
+      ))}
+
+      {/* clip path so line and residuals stay in the plot area */}
+      <defs>
+        <clipPath id={`scatter-clip-${featSlug('scatter')}`}>
+          <rect x={MARGIN.left} y={MARGIN.top} width={CHART_W} height={CHART_H} />
+        </clipPath>
+      </defs>
+
+      {/* residual segments (under points, above gridlines) */}
+      {showResiduals && reg && (
+        <g clipPath={`url(#scatter-clip-${featSlug('scatter')})`}>
+          {points.map((p, i) => {
+            const yHat = reg!.intercept + reg!.slope * p.x;
+            return (
+              <line
+                key={`res-${i}`}
+                x1={toX(p.x)}
+                y1={toY(p.y)}
+                x2={toX(p.x)}
+                y2={toY(yHat)}
+                stroke="#9ca3af"
+                strokeWidth={1.2}
+                strokeDasharray="2 2"
+              />
+            );
+          })}
+        </g>
+      )}
+
+      {/* regression line */}
+      {reg && (
+        <g clipPath={`url(#scatter-clip-${featSlug('scatter')})`}>
+          <line
+            x1={toX(xMin)}
+            y1={toY(reg.intercept + reg.slope * xMin)}
+            x2={toX(xMax)}
+            y2={toY(reg.intercept + reg.slope * xMax)}
+            stroke="#dc2626"
+            strokeWidth={2.4}
+          />
+        </g>
+      )}
+
+      {/* points */}
+      {points.map((p, i) => {
+        const isH =
+          highlightPoint &&
+          Math.abs(p.x - highlightPoint.x) < 1e-9 &&
+          Math.abs(p.y - highlightPoint.y) < 1e-9;
+        return (
+          <circle
+            key={`pt-${i}`}
+            cx={toX(p.x)}
+            cy={toY(p.y)}
+            r={isH ? 5.5 : 3.5}
+            fill={isH ? '#16a34a' : '#2563eb'}
+            stroke="#fff"
+            strokeWidth={1.2}
+          />
+        );
+      })}
+      {highlightPoint && (
+        <text
+          x={toX(highlightPoint.x) + 8}
+          y={toY(highlightPoint.y) - 6}
+          fontSize={11}
+          fill="#16a34a"
+          fontWeight={600}
+        >
+          {highlightPoint.label ?? `(${fmt(highlightPoint.x)}, ${fmt(highlightPoint.y)})`}
+        </text>
+      )}
+
+      {/* axes */}
+      <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={MARGIN.top + CHART_H} stroke="#374151" strokeWidth={1.5} />
+      <line x1={MARGIN.left} y1={MARGIN.top + CHART_H} x2={MARGIN.left + CHART_W} y2={MARGIN.top + CHART_H} stroke="#374151" strokeWidth={1.5} />
+
+      {/* tick labels */}
+      {xRange.ticks.map((t) => (
+        <g key={`xt-${t}`}>
+          <line x1={toX(t)} y1={MARGIN.top + CHART_H} x2={toX(t)} y2={MARGIN.top + CHART_H + 4} stroke="#374151" strokeWidth={1} />
+          <text x={toX(t)} y={MARGIN.top + CHART_H + 18} fontSize={11} textAnchor="middle" fill="#374151">{fmt(t)}</text>
+        </g>
+      ))}
+      {yRange.ticks.map((t) => (
+        <g key={`yt-${t}`}>
+          <line x1={MARGIN.left - 4} y1={toY(t)} x2={MARGIN.left} y2={toY(t)} stroke="#374151" strokeWidth={1} />
+          <text x={MARGIN.left - 6} y={toY(t) + 4} fontSize={11} textAnchor="end" fill="#374151">{fmt(t)}</text>
+        </g>
+      ))}
+
+      {/* equation + r corner labels */}
+      {equationLabel && (
+        <text x={MARGIN.left + 8} y={MARGIN.top + 14} fontSize={13} fontWeight={600} fill="#dc2626">
+          {equationLabel}
+        </text>
+      )}
+      {(rDisplay !== undefined || r2Display !== undefined) && (
+        <text x={WIDTH - MARGIN.right - 4} y={MARGIN.top + 14} fontSize={11} textAnchor="end" fill="#374151">
+          {rDisplay !== undefined && <tspan>r = {Number(rDisplay.toFixed(3))}</tspan>}
+          {rDisplay !== undefined && r2Display !== undefined && <tspan>  </tspan>}
+          {r2Display !== undefined && <tspan>r² = {Number(r2Display.toFixed(3))}</tspan>}
+        </text>
+      )}
+
+      {/* axis titles */}
+      {xLabel && (
+        <text x={MARGIN.left + CHART_W / 2} y={HEIGHT - 6} textAnchor="middle" fontSize={12} fill="#374151" fontWeight={500}>
+          {xLabel}
+        </text>
+      )}
+      {yLabel && (
+        <text x={14} y={MARGIN.top + CHART_H / 2} textAnchor="middle" fontSize={12} fill="#374151" fontWeight={500} transform={`rotate(-90, 14, ${MARGIN.top + CHART_H / 2})`}>
+          {yLabel}
+        </text>
+      )}
+    </g>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Main component
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1011,6 +1235,11 @@ export function StatsRenderer(props: StatsRendererProps) {
       break;
     case 'distribution':
       chart = <DistributionChart {...props} />;
+      break;
+    case 'scatter':
+    case 'scatterplot':
+    case 'scatterplot_regression':
+      chart = <Scatter {...props} />;
       break;
     default:
       chart = (

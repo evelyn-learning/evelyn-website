@@ -71,23 +71,46 @@ export function HistogramRenderer({ figure }: { figure: HistogramFigure }) {
           );
         })}
 
-        {/* mean / median markers */}
-        {mean !== undefined && mean >= xMin && mean <= xMax && (
-          <>
-            <line x1={xAt(mean)} y1={PAD_T} x2={xAt(mean)} y2={PAD_T + plotH} stroke={COLOR_MEAN} strokeWidth={2} strokeDasharray="6 4" />
-            <text x={xAt(mean)} y={PAD_T + 12} fontSize={11} fill={COLOR_MEAN} fontWeight={600} textAnchor="middle">
-              x̄ = {Number(mean.toFixed(2))}
-            </text>
-          </>
-        )}
-        {median !== undefined && median >= xMin && median <= xMax && (
-          <>
-            <line x1={xAt(median)} y1={PAD_T} x2={xAt(median)} y2={PAD_T + plotH} stroke={COLOR_MEDIAN} strokeWidth={2} strokeDasharray="2 3" />
-            <text x={xAt(median)} y={PAD_T + 26} fontSize={11} fill={COLOR_MEDIAN} fontWeight={600} textAnchor="middle">
-              med = {Number(median.toFixed(2))}
-            </text>
-          </>
-        )}
+        {/* mean / median markers — when both present and close, push labels
+            apart by anchoring in opposite directions so they don't overlap */}
+        {(() => {
+          const meanX = mean !== undefined && mean >= xMin && mean <= xMax ? xAt(mean) : null;
+          const medianX = median !== undefined && median >= xMin && median <= xMax ? xAt(median) : null;
+          const close = meanX !== null && medianX !== null && Math.abs(meanX - medianX) < 70;
+          let meanAnchor: 'start' | 'middle' | 'end' = 'middle';
+          let meanLabelX = meanX ?? 0;
+          let medianAnchor: 'start' | 'middle' | 'end' = 'middle';
+          let medianLabelX = medianX ?? 0;
+          if (close && meanX !== null && medianX !== null) {
+            if ((mean as number) <= (median as number)) {
+              meanAnchor = 'end'; meanLabelX = meanX - 5;
+              medianAnchor = 'start'; medianLabelX = medianX + 5;
+            } else {
+              meanAnchor = 'start'; meanLabelX = meanX + 5;
+              medianAnchor = 'end'; medianLabelX = medianX - 5;
+            }
+          }
+          return (
+            <>
+              {meanX !== null && (
+                <>
+                  <line x1={meanX} y1={PAD_T} x2={meanX} y2={PAD_T + plotH} stroke={COLOR_MEAN} strokeWidth={2} strokeDasharray="6 4" />
+                  <text x={meanLabelX} y={PAD_T + 12} fontSize={11} fill={COLOR_MEAN} fontWeight={600} textAnchor={meanAnchor}>
+                    x̄ = {Number((mean as number).toFixed(2))}
+                  </text>
+                </>
+              )}
+              {medianX !== null && (
+                <>
+                  <line x1={medianX} y1={PAD_T} x2={medianX} y2={PAD_T + plotH} stroke={COLOR_MEDIAN} strokeWidth={2} strokeDasharray="2 3" />
+                  <text x={medianLabelX} y={PAD_T + (close ? 12 : 26)} fontSize={11} fill={COLOR_MEDIAN} fontWeight={600} textAnchor={medianAnchor}>
+                    med = {Number((median as number).toFixed(2))}
+                  </text>
+                </>
+              )}
+            </>
+          );
+        })()}
 
         {/* axes */}
         <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
