@@ -748,6 +748,11 @@ import { SEED_AP_ENVSCI_U6_NUCLEAR_BIOMASS } from './seeds/ap-envsci-u6-nuclear-
 import { SEED_AP_ENVSCI_U6_RENEWABLES } from './seeds/ap-envsci-u6-renewables';
 import { SEED_AP_ENVSCI_U6_ENERGY_CONSERVATION } from './seeds/ap-envsci-u6-energy-conservation';
 import { SEED_AP_ENVSCI_U6_FRQ_PRACTICE } from './seeds/ap-envsci-u6-frq-practice';
+import { SEED_AP_ENVSCI_U7_AIR_POLLUTION_SOURCES } from './seeds/ap-envsci-u7-air-pollution-sources';
+import { SEED_AP_ENVSCI_U7_SMOG_INVERSION } from './seeds/ap-envsci-u7-smog-inversion';
+import { SEED_AP_ENVSCI_U7_ACID_RAIN } from './seeds/ap-envsci-u7-acid-rain';
+import { SEED_AP_ENVSCI_U7_AIR_QUALITY_MITIGATION } from './seeds/ap-envsci-u7-air-quality-mitigation';
+import { SEED_AP_ENVSCI_U7_FRQ_PRACTICE } from './seeds/ap-envsci-u7-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1924,6 +1929,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U6_RENEWABLES,
   SEED_AP_ENVSCI_U6_ENERGY_CONSERVATION,
   SEED_AP_ENVSCI_U6_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U7_AIR_POLLUTION_SOURCES,
+  SEED_AP_ENVSCI_U7_SMOG_INVERSION,
+  SEED_AP_ENVSCI_U7_ACID_RAIN,
+  SEED_AP_ENVSCI_U7_AIR_QUALITY_MITIGATION,
+  SEED_AP_ENVSCI_U7_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
