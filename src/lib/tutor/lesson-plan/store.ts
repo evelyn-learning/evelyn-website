@@ -670,6 +670,14 @@ import { SEED_AP_CALCBC_U9_VECTOR_VALUED } from './seeds/ap-calcbc-u9-vector-val
 import { SEED_AP_CALCBC_U9_POLAR_COORDINATES } from './seeds/ap-calcbc-u9-polar-coordinates';
 import { SEED_AP_CALCBC_U9_POLAR_AREA } from './seeds/ap-calcbc-u9-polar-area';
 import { SEED_AP_CALCBC_U9_FRQ_PRACTICE } from './seeds/ap-calcbc-u9-frq-practice';
+import { SEED_AP_CALCBC_U10_SERIES_CONVERGENCE } from './seeds/ap-calcbc-u10-series-convergence';
+import { SEED_AP_CALCBC_U10_CONVERGENCE_TESTS } from './seeds/ap-calcbc-u10-convergence-tests';
+import { SEED_AP_CALCBC_U10_ALTERNATING_SERIES } from './seeds/ap-calcbc-u10-alternating-series';
+import { SEED_AP_CALCBC_U10_RATIO_TEST } from './seeds/ap-calcbc-u10-ratio-test';
+import { SEED_AP_CALCBC_U10_TAYLOR_POLYNOMIAL } from './seeds/ap-calcbc-u10-taylor-polynomial';
+import { SEED_AP_CALCBC_U10_POWER_SERIES } from './seeds/ap-calcbc-u10-power-series';
+import { SEED_AP_CALCBC_U10_MACLAURIN_SERIES } from './seeds/ap-calcbc-u10-maclaurin-series';
+import { SEED_AP_CALCBC_U10_FRQ_PRACTICE } from './seeds/ap-calcbc-u10-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1774,6 +1782,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U9_POLAR_COORDINATES,
   SEED_AP_CALCBC_U9_POLAR_AREA,
   SEED_AP_CALCBC_U9_FRQ_PRACTICE,
+  SEED_AP_CALCBC_U10_SERIES_CONVERGENCE,
+  SEED_AP_CALCBC_U10_CONVERGENCE_TESTS,
+  SEED_AP_CALCBC_U10_ALTERNATING_SERIES,
+  SEED_AP_CALCBC_U10_RATIO_TEST,
+  SEED_AP_CALCBC_U10_TAYLOR_POLYNOMIAL,
+  SEED_AP_CALCBC_U10_POWER_SERIES,
+  SEED_AP_CALCBC_U10_MACLAURIN_SERIES,
+  SEED_AP_CALCBC_U10_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
