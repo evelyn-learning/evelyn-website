@@ -681,6 +681,11 @@ import { SEED_AP_STATS_U2_CORRELATION } from './seeds/ap-stats-u2-correlation';
 import { SEED_AP_STATS_U2_LINEAR_REGRESSION } from './seeds/ap-stats-u2-linear-regression';
 import { SEED_AP_STATS_U2_RESIDUALS } from './seeds/ap-stats-u2-residuals';
 import { SEED_AP_STATS_U2_FRQ_PRACTICE } from './seeds/ap-stats-u2-frq-practice';
+import { SEED_AP_STATS_U3_SAMPLING_METHODS } from './seeds/ap-stats-u3-sampling-methods';
+import { SEED_AP_STATS_U3_SAMPLING_BIAS } from './seeds/ap-stats-u3-sampling-bias';
+import { SEED_AP_STATS_U3_EXPERIMENTAL_DESIGN } from './seeds/ap-stats-u3-experimental-design';
+import { SEED_AP_STATS_U3_INFERENCE_EXPERIMENTS } from './seeds/ap-stats-u3-inference-experiments';
+import { SEED_AP_STATS_U3_FRQ_PRACTICE } from './seeds/ap-stats-u3-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1791,6 +1796,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U2_LINEAR_REGRESSION,
   SEED_AP_STATS_U2_RESIDUALS,
   SEED_AP_STATS_U2_FRQ_PRACTICE,
+  SEED_AP_STATS_U3_SAMPLING_METHODS,
+  SEED_AP_STATS_U3_SAMPLING_BIAS,
+  SEED_AP_STATS_U3_EXPERIMENTAL_DESIGN,
+  SEED_AP_STATS_U3_INFERENCE_EXPERIMENTS,
+  SEED_AP_STATS_U3_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
