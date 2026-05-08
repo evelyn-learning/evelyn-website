@@ -19,8 +19,8 @@ Both paths share the same dev server and the same UI.
 
 1. **Env vars.** Confirm `.env.local` has:
    ```
-   GOOGLE_CLASSROOM_CLIENT_ID=1039298465093-t4r7qk8o7nfu8j9bc57ukqg47qv5sh13.apps.googleusercontent.com
-   GOOGLE_CLASSROOM_CLIENT_SECRET=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
+   GOOGLE_CLASSROOM_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+   GOOGLE_CLASSROOM_CLIENT_SECRET=<your-client-secret>
    GOOGLE_CLASSROOM_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
    TOKEN_ENCRYPTION_KEY=<64-hex-chars>
    MOCK_GOOGLE_CLASSROOM=false
@@ -214,8 +214,8 @@ The localhost URI stays in the list — one OAuth client supports multiple redir
 
 ```
 # Google Classroom Integration (read-only OAuth — plagiarism detector)
-GOOGLE_CLASSROOM_CLIENT_ID=1039298465093-t4r7qk8o7nfu8j9bc57ukqg47qv5sh13.apps.googleusercontent.com
-GOOGLE_CLASSROOM_CLIENT_SECRET=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
+GOOGLE_CLASSROOM_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+GOOGLE_CLASSROOM_CLIENT_SECRET=<your-client-secret>
 GOOGLE_CLASSROOM_CALLBACK_URL=https://www.evelynlearning.com/api/auth/google/callback
 TOKEN_ENCRYPTION_KEY=<run `npm run gen:token-key` and paste the output — DO NOT reuse the dev key>
 MOCK_GOOGLE_CLASSROOM=false
