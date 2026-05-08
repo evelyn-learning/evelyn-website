@@ -1,0 +1,70 @@
+/**
+ * AP Statistics — CED Unit 6.4+6.5+6.6: Significance Test for One
+ * Proportion.
+ */
+import type { LessonPlan } from '../types';
+import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
+export const SEED_AP_STATS_U6_ONE_PROP_TEST: LessonPlan = {
+  id: 'evelyn.ap.stats.one-prop-test.v1', title: 'U6.4 One-Proportion z-Test',
+  curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-statistics', locale: 'en',
+  los: [{ id: 'apstats.one-prop-test', description: 'Set up null and alternative hypotheses. Verify conditions. Compute z-statistic and p-value. Make a conclusion in context. Interpret p-values correctly.', standard: 'AP-STATS-6.4-6.6' }],
+  prerequisites: ['apstats.one-prop-ci'], followUps: ['apstats.test-errors'], estimatedMinutes: 24,
+  segments: [
+    { id: 'hook', kind: 'hook', goal: 'Frame significance testing.', script: "A SIGNIFICANCE TEST asks: is our sample evidence STRONG ENOUGH to reject a default claim? Today: the four-step PHANTOMS framework that AP graders look for.", estimatedMinutes: 2 },
+    { id: 'concept-test', kind: 'concept', goal: 'Cover hypotheses, test statistic, p-value, conclusion.',
+      keyIdeas: [
+        'HYPOTHESES (in terms of population parameter p):',
+        '  • H_0 (null): p = p_0 (status quo, default).',
+        '  • H_a (alternative): p < p_0 (left-tail), p > p_0 (right-tail), or p ≠ p_0 (two-tail).',
+        'CHOICE OF H_a comes from the question — what would convince us the claim is wrong? Always BEFORE seeing data.',
+        'TEST STATISTIC: z = (p̂ − p_0) / √(p_0(1−p_0)/n). Use p_0 (the null) in the SE — NOT p̂.',
+        'P-VALUE: probability of obtaining a test statistic at least as extreme as observed, ASSUMING H_0 IS TRUE.',
+        '  • Right-tail H_a: p-value = P(Z ≥ z_obs).',
+        '  • Left-tail: P(Z ≤ z_obs).',
+        '  • Two-tail: 2 · P(Z ≥ |z_obs|).',
+        'DECISION at significance level α (commonly 0.05):',
+        '  • If p-value ≤ α: REJECT H_0. Conclude there is convincing statistical evidence for H_a.',
+        '  • If p-value > α: FAIL TO REJECT H_0. There is NOT convincing statistical evidence for H_a.',
+        'CRITICAL: never "ACCEPT H_0." Failure to reject is not proof H_0 is true.',
+        'AP CONCLUSION TEMPLATE: "Because the p-value of [#] is [≤ / >] α = [#], we [reject / fail to reject] H_0. There [is / is not] convincing statistical evidence that [H_a in context]."',
+        'CONDITIONS (same as for CI but use p_0 in Large Counts since H_0 is assumed):',
+        '  • RANDOM: SRS.',
+        '  • LARGE COUNTS: n·p_0 ≥ 10 AND n·(1−p_0) ≥ 10.',
+        '  • 10%: n ≤ 0.10·N.',
+        'COMMON MISINTERPRETATION of p-value: it is NOT the probability that H_0 is true. It is the probability of seeing data this extreme IF H_0 is true.',
+      ],
+      vocabulary: [
+        { term: 'null hypothesis H_0', definition: 'the default claim being tested; usually p = p_0.' },
+        { term: 'p-value', definition: 'probability of seeing data this extreme (or more) given H_0.' },
+      ],
+      estimatedMinutes: 7 },
+    { id: 'worked-test', kind: 'worked_example',
+      problem: 'A coach claims 70% of his free throws go in. In 50 attempts, he makes 30. At α = 0.05, is there convincing evidence the coach is overstating?',
+      steps: [
+        'STEP 1 — p̂ = 30/50 = 0.60. n = 50. p_0 = 0.70.',
+        'STEP 2 — H_0: p = 0.70. H_a: p < 0.70 (overstating, so true rate is less).',
+        'STEP 3 — Conditions: Random (assume independent attempts). Large Counts: 50(0.7) = 35 ≥ 10 ✓; 50(0.3) = 15 ≥ 10 ✓.',
+        'STEP 4 — Test statistic: z = (0.60 − 0.70) / √(0.70·0.30/50) = -0.10 / √0.0042 = -0.10 / 0.0648 ≈ -1.543.',
+        'STEP 5 — p-value (left-tail): P(Z ≤ -1.543) ≈ 0.0614.',
+        'STEP 6 — Compare: 0.0614 > α = 0.05. Fail to reject H_0.',
+        'STEP 7 — Conclusion: "Because the p-value of 0.0614 is greater than α = 0.05, we fail to reject H_0. There is NOT convincing statistical evidence that the coach\'s true free-throw success rate is less than 70%."',
+      ],
+      answer: 'z ≈ -1.54; p ≈ 0.061. Fail to reject H_0.', estimatedMinutes: 6 },
+    { id: 'try-test', kind: 'try_yourself',
+      problem: 'A factory claims 90% of widgets pass inspection. A random sample of 200 widgets has 170 passing. At α = 0.05, test whether the true proportion is less than 90%.',
+      expectedAnswer: 'p̂ = 170/200 = 0.85. p_0 = 0.90. \nH_0: p = 0.90. H_a: p < 0.90. \nConditions: Random ✓. 200(0.9) = 180 ≥ 10 ✓; 200(0.1) = 20 ≥ 10 ✓. \nz = (0.85 − 0.90)/√(0.9·0.1/200) = -0.05/√0.00045 = -0.05/0.0212 ≈ -2.36. \np-value = P(Z ≤ -2.36) ≈ 0.00913. \nDecision: 0.00913 < 0.05 → REJECT H_0. \nConclusion: "Because p = 0.00913 < α = 0.05, we reject H_0. There IS convincing statistical evidence that the true pass rate is less than 90%."',
+      responseFormat: 'frq', hints: ['Set up; test stat with p_0 in SE; p-value; decide; conclude in context.'], estimatedMinutes: 6 },
+    { id: 'try-pvalue-meaning', kind: 'try_yourself',
+      problem: 'AP-style synthesis. A test gives a p-value of 0.03. Which interpretation is correct? \n(A) There is a 3% probability that H_0 is true. \n(B) If H_0 is true, the probability of seeing data as extreme as this (or more) is 3%. \n(C) There is a 3% probability the alternative is true.',
+      expectedAnswer: '(B) is the correct interpretation. The p-value is the probability of the OBSERVED DATA (or more extreme) UNDER the assumption that H_0 is true. (A) and (C) confuse the conditional direction. (A) would only make sense in Bayesian probability with a prior on H_0; AP uses frequentist interpretation where parameters are fixed (not random).',
+      responseFormat: 'free', hints: ['p-value is conditional on H_0 being true.'], estimatedMinutes: 3 },
+    { id: 'recap', kind: 'recap', mustRemember: [
+      'H_0: p = p_0; H_a: <, >, or ≠.',
+      'z = (p̂ − p_0)/√(p_0(1−p_0)/n) — use p_0 (null) in SE.',
+      'Conditions: Random, Large Counts with p_0, 10%.',
+      'Conclusion in context with α; never "accept H_0."',
+    ], estimatedMinutes: 1 },
+  ],
+  source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
+  metadata: { cedUnit: '6', cedTopic: '6.4-6.6', cedTitle: 'One-Proportion z-Test', sources: [{ type: 'concept', book: 'tps5e', chapter: '9', note: 'Standard 1-prop z-test.' }] },
+};

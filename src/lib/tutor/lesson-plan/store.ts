@@ -698,6 +698,12 @@ import { SEED_AP_STATS_U5_CENTRAL_LIMIT_THEOREM } from './seeds/ap-stats-u5-cent
 import { SEED_AP_STATS_U5_PROPORTIONS_SAMPLING_DIST } from './seeds/ap-stats-u5-proportions-sampling-dist';
 import { SEED_AP_STATS_U5_MEANS_SAMPLING_DIST } from './seeds/ap-stats-u5-means-sampling-dist';
 import { SEED_AP_STATS_U5_FRQ_PRACTICE } from './seeds/ap-stats-u5-frq-practice';
+import { SEED_AP_STATS_U6_ONE_PROP_CI } from './seeds/ap-stats-u6-one-prop-ci';
+import { SEED_AP_STATS_U6_ONE_PROP_TEST } from './seeds/ap-stats-u6-one-prop-test';
+import { SEED_AP_STATS_U6_TEST_ERRORS } from './seeds/ap-stats-u6-test-errors';
+import { SEED_AP_STATS_U6_TWO_PROP_CI } from './seeds/ap-stats-u6-two-prop-ci';
+import { SEED_AP_STATS_U6_TWO_PROP_TEST } from './seeds/ap-stats-u6-two-prop-test';
+import { SEED_AP_STATS_U6_FRQ_PRACTICE } from './seeds/ap-stats-u6-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1825,6 +1831,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_STATS_U5_PROPORTIONS_SAMPLING_DIST,
   SEED_AP_STATS_U5_MEANS_SAMPLING_DIST,
   SEED_AP_STATS_U5_FRQ_PRACTICE,
+  SEED_AP_STATS_U6_ONE_PROP_CI,
+  SEED_AP_STATS_U6_ONE_PROP_TEST,
+  SEED_AP_STATS_U6_TEST_ERRORS,
+  SEED_AP_STATS_U6_TWO_PROP_CI,
+  SEED_AP_STATS_U6_TWO_PROP_TEST,
+  SEED_AP_STATS_U6_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
