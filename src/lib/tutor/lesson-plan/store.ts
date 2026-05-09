@@ -769,6 +769,12 @@ import { SEED_AP_PSYCH_U2_MEMORY_FORGETTING } from './seeds/ap-psych-u2-memory-f
 import { SEED_AP_PSYCH_U2_THINKING_LANGUAGE } from './seeds/ap-psych-u2-thinking-language';
 import { SEED_AP_PSYCH_U2_INTELLIGENCE } from './seeds/ap-psych-u2-intelligence';
 import { SEED_AP_PSYCH_U2_FRQ_PRACTICE } from './seeds/ap-psych-u2-frq-practice';
+import { SEED_AP_PSYCH_U3_COGNITIVE_DEVELOPMENT } from './seeds/ap-psych-u3-cognitive-development';
+import { SEED_AP_PSYCH_U3_SOCIAL_EMOTIONAL_MORAL } from './seeds/ap-psych-u3-social-emotional-moral';
+import { SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING } from './seeds/ap-psych-u3-classical-conditioning';
+import { SEED_AP_PSYCH_U3_OPERANT_CONDITIONING } from './seeds/ap-psych-u3-operant-conditioning';
+import { SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING } from './seeds/ap-psych-u3-observational-learning';
+import { SEED_AP_PSYCH_U3_FRQ_PRACTICE } from './seeds/ap-psych-u3-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1966,6 +1972,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PSYCH_U2_THINKING_LANGUAGE,
   SEED_AP_PSYCH_U2_INTELLIGENCE,
   SEED_AP_PSYCH_U2_FRQ_PRACTICE,
+  SEED_AP_PSYCH_U3_COGNITIVE_DEVELOPMENT,
+  SEED_AP_PSYCH_U3_SOCIAL_EMOTIONAL_MORAL,
+  SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING,
+  SEED_AP_PSYCH_U3_OPERANT_CONDITIONING,
+  SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING,
+  SEED_AP_PSYCH_U3_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
