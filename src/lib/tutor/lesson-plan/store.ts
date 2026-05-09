@@ -758,6 +758,11 @@ import { SEED_AP_ENVSCI_U8_EUTROPHICATION_THERMAL } from './seeds/ap-envsci-u8-e
 import { SEED_AP_ENVSCI_U8_TOXICS_POPS_BIOMAG } from './seeds/ap-envsci-u8-toxics-pops-biomag';
 import { SEED_AP_ENVSCI_U8_SOLID_WASTE } from './seeds/ap-envsci-u8-solid-waste';
 import { SEED_AP_ENVSCI_U8_FRQ_PRACTICE } from './seeds/ap-envsci-u8-frq-practice';
+import { SEED_AP_ENVSCI_U9_OZONE } from './seeds/ap-envsci-u9-ozone';
+import { SEED_AP_ENVSCI_U9_GREENHOUSE_CLIMATE } from './seeds/ap-envsci-u9-greenhouse-climate';
+import { SEED_AP_ENVSCI_U9_OCEAN_CHANGES } from './seeds/ap-envsci-u9-ocean-changes';
+import { SEED_AP_ENVSCI_U9_BIODIVERSITY_THREATS } from './seeds/ap-envsci-u9-biodiversity-threats';
+import { SEED_AP_ENVSCI_U9_FRQ_PRACTICE } from './seeds/ap-envsci-u9-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1944,6 +1949,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U8_TOXICS_POPS_BIOMAG,
   SEED_AP_ENVSCI_U8_SOLID_WASTE,
   SEED_AP_ENVSCI_U8_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U9_OZONE,
+  SEED_AP_ENVSCI_U9_GREENHOUSE_CLIMATE,
+  SEED_AP_ENVSCI_U9_OCEAN_CHANGES,
+  SEED_AP_ENVSCI_U9_BIODIVERSITY_THREATS,
+  SEED_AP_ENVSCI_U9_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
