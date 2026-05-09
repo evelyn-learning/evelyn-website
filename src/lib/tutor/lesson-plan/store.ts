@@ -753,6 +753,11 @@ import { SEED_AP_ENVSCI_U7_SMOG_INVERSION } from './seeds/ap-envsci-u7-smog-inve
 import { SEED_AP_ENVSCI_U7_ACID_RAIN } from './seeds/ap-envsci-u7-acid-rain';
 import { SEED_AP_ENVSCI_U7_AIR_QUALITY_MITIGATION } from './seeds/ap-envsci-u7-air-quality-mitigation';
 import { SEED_AP_ENVSCI_U7_FRQ_PRACTICE } from './seeds/ap-envsci-u7-frq-practice';
+import { SEED_AP_ENVSCI_U8_WATER_POLLUTION_SOURCES } from './seeds/ap-envsci-u8-water-pollution-sources';
+import { SEED_AP_ENVSCI_U8_EUTROPHICATION_THERMAL } from './seeds/ap-envsci-u8-eutrophication-thermal';
+import { SEED_AP_ENVSCI_U8_TOXICS_POPS_BIOMAG } from './seeds/ap-envsci-u8-toxics-pops-biomag';
+import { SEED_AP_ENVSCI_U8_SOLID_WASTE } from './seeds/ap-envsci-u8-solid-waste';
+import { SEED_AP_ENVSCI_U8_FRQ_PRACTICE } from './seeds/ap-envsci-u8-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1934,6 +1939,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U7_ACID_RAIN,
   SEED_AP_ENVSCI_U7_AIR_QUALITY_MITIGATION,
   SEED_AP_ENVSCI_U7_FRQ_PRACTICE,
+  SEED_AP_ENVSCI_U8_WATER_POLLUTION_SOURCES,
+  SEED_AP_ENVSCI_U8_EUTROPHICATION_THERMAL,
+  SEED_AP_ENVSCI_U8_TOXICS_POPS_BIOMAG,
+  SEED_AP_ENVSCI_U8_SOLID_WASTE,
+  SEED_AP_ENVSCI_U8_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
