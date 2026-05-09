@@ -763,6 +763,12 @@ import { SEED_AP_ENVSCI_U9_GREENHOUSE_CLIMATE } from './seeds/ap-envsci-u9-green
 import { SEED_AP_ENVSCI_U9_OCEAN_CHANGES } from './seeds/ap-envsci-u9-ocean-changes';
 import { SEED_AP_ENVSCI_U9_BIODIVERSITY_THREATS } from './seeds/ap-envsci-u9-biodiversity-threats';
 import { SEED_AP_ENVSCI_U9_FRQ_PRACTICE } from './seeds/ap-envsci-u9-frq-practice';
+import { SEED_AP_PSYCH_U2_MEMORY_MODELS } from './seeds/ap-psych-u2-memory-models';
+import { SEED_AP_PSYCH_U2_MEMORY_STORAGE_RETRIEVAL } from './seeds/ap-psych-u2-memory-storage-retrieval';
+import { SEED_AP_PSYCH_U2_MEMORY_FORGETTING } from './seeds/ap-psych-u2-memory-forgetting';
+import { SEED_AP_PSYCH_U2_THINKING_LANGUAGE } from './seeds/ap-psych-u2-thinking-language';
+import { SEED_AP_PSYCH_U2_INTELLIGENCE } from './seeds/ap-psych-u2-intelligence';
+import { SEED_AP_PSYCH_U2_FRQ_PRACTICE } from './seeds/ap-psych-u2-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1954,6 +1960,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENVSCI_U9_OCEAN_CHANGES,
   SEED_AP_ENVSCI_U9_BIODIVERSITY_THREATS,
   SEED_AP_ENVSCI_U9_FRQ_PRACTICE,
+  SEED_AP_PSYCH_U2_MEMORY_MODELS,
+  SEED_AP_PSYCH_U2_MEMORY_STORAGE_RETRIEVAL,
+  SEED_AP_PSYCH_U2_MEMORY_FORGETTING,
+  SEED_AP_PSYCH_U2_THINKING_LANGUAGE,
+  SEED_AP_PSYCH_U2_INTELLIGENCE,
+  SEED_AP_PSYCH_U2_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
