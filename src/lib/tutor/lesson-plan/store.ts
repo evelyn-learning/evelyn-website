@@ -800,7 +800,6 @@ import { SEED_AP_LATIN_STRATEGY } from './seeds/ap-latin-strategy';
 import { SEED_AP_MANDARIN_STRATEGY } from './seeds/ap-mandarin-strategy';
 import { SEED_AP_ITALIAN_STRATEGY } from './seeds/ap-italian-strategy';
 import { SEED_AP_SEMINAR_STRATEGY } from './seeds/ap-seminar-strategy';
-import { SEED_AP_RESEARCH_STRATEGY } from './seeds/ap-research-strategy';
 // Batch 48 — SAT depth (math passport + additional, reading lit/history/science, writing rhetoric).
 import { SEED_SAT_MATH_PASSPORT_ADVANCED } from './seeds/sat-math-passport-advanced';
 import { SEED_SAT_MATH_ADDITIONAL_TOPICS } from './seeds/sat-math-additional-topics';
@@ -2014,7 +2013,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MANDARIN_STRATEGY,
   SEED_AP_ITALIAN_STRATEGY,
   SEED_AP_SEMINAR_STRATEGY,
-  SEED_AP_RESEARCH_STRATEGY,
   SEED_SAT_MATH_PASSPORT_ADVANCED,
   SEED_SAT_MATH_ADDITIONAL_TOPICS,
   SEED_SAT_READING_LITERATURE,
