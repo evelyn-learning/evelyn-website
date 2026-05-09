@@ -19,8 +19,8 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { applyCrossSessionPromotion } from '../src/lib/tutor/student-profile/store';
-import type { StudentProfile, GapEntry } from '../src/lib/tutor/student-profile/types';
+import { applyCrossSessionPromotion, resolveSettledGaps } from '../src/lib/tutor/student-profile/store';
+import type { StudentProfile, GapEntry, MasteryEntry } from '../src/lib/tutor/student-profile/types';
 
 let passed = 0;
 let failed = 0;
@@ -47,6 +47,16 @@ function makeProfile(gaps: GapEntry[] = []): StudentProfile {
     createdAt: '2026-05-09T00:00:00.000Z',
     updatedAt: '2026-05-09T00:00:00.000Z',
     schemaVersion: 1,
+  };
+}
+
+function makeMastery(overrides: Partial<MasteryEntry> = {}): MasteryEntry {
+  return {
+    loId: 'lo-1',
+    score: 0.5,
+    exposures: 1,
+    lastTouchedAt: '2026-05-09T00:00:00.000Z',
+    ...overrides,
   };
 }
 
@@ -198,6 +208,108 @@ test('first-fire single session (sessionIds.length=0 then 1) → stays candidate
   const result = applyCrossSessionPromotion(profile, [{ loId: 'lo-1', delta: 0.2 }], 's2');
   assert.strictEqual(result.gaps[0].status, 'candidate', 'should not promote with only 1 session');
   assert.deepStrictEqual(result.gaps[0].sessionIds, ['s2']);
+});
+
+console.log('\nresolveSettledGaps\n');
+
+test('no mastery entry for the loId → no resolution', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result, profile, 'profile reference should be unchanged');
+});
+
+test('score >= 0.8 + exposures >= 3 → resolves', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.85, exposures: 4 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result.gaps[0].status, 'resolved');
+});
+
+test('boundary: score === 0.8 AND exposures === 3 (both inclusive) → resolves', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.8, exposures: 3 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result.gaps[0].status, 'resolved', 'thresholds are inclusive (>=)');
+});
+
+test('score below threshold (0.79) → no resolution even with high exposures', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.79, exposures: 10 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result, profile);
+});
+
+test('exposures below threshold (2) → no resolution even with high score', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.95, exposures: 2 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result, profile, 'one-shot 0.95 is noisy; require sustained');
+});
+
+test('candidate gap can also resolve (not only confirmed)', () => {
+  const gap = makeGap({ status: 'candidate' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.85, exposures: 4 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result.gaps[0].status, 'resolved');
+});
+
+test('legacy "open" status can resolve', () => {
+  const gap = makeGap({ status: 'open' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.9, exposures: 5 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result.gaps[0].status, 'resolved');
+});
+
+test('already-resolved gap → no-op (idempotent)', () => {
+  const gap = makeGap({ status: 'resolved' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.9, exposures: 5 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result, profile, 'already resolved should not be re-touched');
+});
+
+test('prerequisite gap → never resolved (no LO mastery to key on)', () => {
+  const gap = makeGap({
+    kind: 'prerequisite',
+    loId: undefined,
+    conceptLabel: 'multiplication facts',
+    status: 'confirmed',
+  });
+  const profile = makeProfile([gap]);
+  // Even with mastery present on some LO, prereq gap should not be touched
+  profile.mastery['lo-1'] = makeMastery({ score: 0.95, exposures: 10 });
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result, profile, 'prereq gap stays — needs concept registry to resolve');
+});
+
+test('multiple gaps, multiple mastery entries: only matching+settled resolve', () => {
+  const g1 = makeGap({ id: 'g1', loId: 'lo-1', status: 'confirmed' });
+  const g2 = makeGap({ id: 'g2', loId: 'lo-2', status: 'confirmed' });
+  const g3 = makeGap({ id: 'g3', loId: 'lo-3', status: 'candidate' });
+  const profile = makeProfile([g1, g2, g3]);
+  profile.mastery['lo-1'] = makeMastery({ loId: 'lo-1', score: 0.9, exposures: 5 }); // resolves
+  profile.mastery['lo-2'] = makeMastery({ loId: 'lo-2', score: 0.6, exposures: 5 }); // score too low
+  profile.mastery['lo-3'] = makeMastery({ loId: 'lo-3', score: 0.95, exposures: 1 }); // exposures too low
+  const result = resolveSettledGaps(profile);
+  assert.strictEqual(result.gaps.find((g) => g.id === 'g1')!.status, 'resolved');
+  assert.strictEqual(result.gaps.find((g) => g.id === 'g2')!.status, 'confirmed');
+  assert.strictEqual(result.gaps.find((g) => g.id === 'g3')!.status, 'candidate');
+});
+
+test('lastSeenAt updated on resolution (telemetry)', () => {
+  const gap = makeGap({ status: 'confirmed' });
+  const profile = makeProfile([gap]);
+  profile.mastery['lo-1'] = makeMastery({ score: 0.85, exposures: 4 });
+  const before = gap.lastSeenAt;
+  const result = resolveSettledGaps(profile);
+  assert.notStrictEqual(result.gaps[0].lastSeenAt, before, 'lastSeenAt should bump');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

@@ -15,6 +15,7 @@ import {
   applyMasteryDeltas,
   recordGap,
   applyCrossSessionPromotion,
+  resolveSettledGaps,
   appendSessionMemory,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
@@ -78,6 +79,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {
     profile = applyMasteryDeltas(profile, body.masteryDeltas);
   }
+  // Resolve any LO gap whose mastery has settled into strong/sustained
+  // (score >= 0.8, exposures >= 3). Runs after applyMasteryDeltas so
+  // this session's deltas count toward resolution. Runs BEFORE recordGap
+  // so a gap that's about to be re-fired this session has its
+  // re-open-from-resolved path handled correctly: resolveSettledGaps
+  // marks it resolved based on historical mastery, then recordGap's
+  // matchResolved path re-opens it as candidate when the brain logs the
+  // fresh misconception. The contradiction resolves toward the fresh
+  // evidence, which is the right behavior.
+  profile = resolveSettledGaps(profile);
   if (Array.isArray(body.gaps)) {
     for (const g of body.gaps) {
       const observation = g.observation ?? g.description ?? '';

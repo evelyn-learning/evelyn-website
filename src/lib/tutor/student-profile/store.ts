@@ -47,6 +47,15 @@ const STUDENT_QUOTES_CAP = 4;
  *  with scaffolding), tighten toward 0.2 or 0.0. If false-negative rate
  *  is high (clear struggles at 0.6 not promoting), loosen toward 0.7. */
 const CROSS_SESSION_PROMOTION_DELTA_THRESHOLD = 0.5;
+/** Cumulative mastery score above which `resolveSettledGaps` will
+ *  auto-resolve an open LO gap. Aligned with render.ts SCORE_LABEL where
+ *  ≥ 0.8 reads as "strong." Inclusive (>= so 0.8 exactly resolves). */
+const GAP_RESOLVE_SCORE_THRESHOLD = 0.8;
+/** Minimum exposures required for resolution. Single-shot 0.8 from one
+ *  attempt could be a lucky answer; require sustained performance.
+ *  Aligned with applyMasteryDeltas confidence band: ≥ 3 exposures
+ *  reads as "medium" or higher. Inclusive. */
+const GAP_RESOLVE_EXPOSURES_THRESHOLD = 3;
 
 function clamp01(n: number): number { return Math.max(0, Math.min(1, n)); }
 function computeConfidence(signals: GapSignalCode[]): number {
@@ -366,6 +375,52 @@ export function applyCrossSessionPromotion(
     } : g));
   }
   return gaps === profile.gaps ? profile : { ...profile, gaps };
+}
+
+/** Mastery-based gap resolution. Walks active LO gaps and marks any
+ *  whose underlying mastery score has reached strong/sustained levels
+ *  (`score >= GAP_RESOLVE_SCORE_THRESHOLD` AND `exposures >=
+ *  GAP_RESOLVE_EXPOSURES_THRESHOLD`) as `'resolved'`. Symmetric with
+ *  `applyCrossSessionPromotion` in shape, opposite in direction:
+ *
+ *    | mastery signal                                   | action |
+ *    |--------------------------------------------------|--------|
+ *    | masteryDelta < 0.5 on LO with open gap           | bump sessionIds (cross-session promotion fallback) |
+ *    | score >= 0.8 + exposures >= 3 on LO with gap     | mark resolved (this function) |
+ *
+ *  Why score+exposures together: a single 0.8 from one attempt could
+ *  be a lucky right answer; sustained performance across multiple
+ *  exposures is the signal we trust. Mirrors the confidence band
+ *  semantics in `applyMasteryDeltas`.
+ *
+ *  Resolved gaps stop appearing in `<student_profile>` (render.ts
+ *  filter) and stop being read by the brain in future sessions —
+ *  closing the loop so a tutor doesn't keep harping on weakness the
+ *  student has demonstrably outgrown.
+ *
+ *  Re-occurrence handling: if a resolved gap's misconception re-fires
+ *  later (brain calls `record_gap` on it), `recordGap` has a
+ *  re-open-from-resolved path that transitions it back to candidate.
+ *  So resolution is reversible.
+ *
+ *  Scope: LO gaps only. Prerequisite gaps key on free-form
+ *  `conceptLabel` and have no native mastery score; their resolution
+ *  awaits the concept registry + canonicalization (deferred). */
+export function resolveSettledGaps(profile: StudentProfile): StudentProfile {
+  const now = new Date().toISOString();
+  let mutated = false;
+  const gaps = profile.gaps.map((g) => {
+    if (g.kind !== 'lo') return g;
+    if (!g.loId) return g;
+    if (g.status === 'resolved') return g;
+    const m = profile.mastery[g.loId];
+    if (!m) return g;
+    if (m.score < GAP_RESOLVE_SCORE_THRESHOLD) return g;
+    if (m.exposures < GAP_RESOLVE_EXPOSURES_THRESHOLD) return g;
+    mutated = true;
+    return { ...g, status: 'resolved' as const, lastSeenAt: now };
+  });
+  return mutated ? { ...profile, gaps } : profile;
 }
 
 /** Append a session memory entry. */
