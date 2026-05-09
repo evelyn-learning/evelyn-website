@@ -387,9 +387,6 @@ import { SEED_AP_PHYSICS2_FLUIDS } from './seeds/ap-physics2-fluids';
 import { SEED_AP_PHYSICS2_THERMO } from './seeds/ap-physics2-thermo';
 import { SEED_AP_PHYSICS2_ELECTROSTATICS } from './seeds/ap-physics2-electrostatics';
 import { SEED_AP_PHYSICS2_OPTICS } from './seeds/ap-physics2-optics';
-import { SEED_AP_PSYCH_LEARNING } from './seeds/ap-psych-learning';
-import { SEED_AP_PSYCH_MEMORY } from './seeds/ap-psych-memory';
-import { SEED_AP_PSYCH_DEVELOPMENT } from './seeds/ap-psych-development';
 import { SEED_AP_HUMAN_GEO_POPULATION } from './seeds/ap-human-geo-population';
 import { SEED_AP_HUMAN_GEO_AGRICULTURE } from './seeds/ap-human-geo-agriculture';
 import { SEED_AP_GOV_FEDERALISM } from './seeds/ap-gov-federalism';
@@ -406,9 +403,6 @@ import { SEED_AP_CSA_ARRAYS_LOOPS } from './seeds/ap-csa-arrays-loops';
 import { SEED_AP_PHYSICS2_CIRCUITS } from './seeds/ap-physics2-circuits';
 import { SEED_AP_PHYSICS2_MAGNETISM } from './seeds/ap-physics2-magnetism';
 import { SEED_AP_PHYSICS2_MODERN } from './seeds/ap-physics2-modern';
-import { SEED_AP_PSYCH_COGNITION } from './seeds/ap-psych-cognition';
-import { SEED_AP_PSYCH_SOCIAL } from './seeds/ap-psych-social';
-import { SEED_AP_PSYCH_BIOLOGICAL } from './seeds/ap-psych-biological';
 import { SEED_AP_HUMAN_GEO_URBAN } from './seeds/ap-human-geo-urban';
 import { SEED_AP_HUMAN_GEO_POLITICAL } from './seeds/ap-human-geo-political';
 import { SEED_AP_MICRO_PPC } from './seeds/ap-micro-ppc';
@@ -1182,7 +1176,6 @@ import { SEED_G1112_SS_EUROPEAN_HISTORY_SURVEY } from './seeds/g1112-ss-european
 import { SEED_G1112_SS_PSYCHOLOGY_SCHOOLS } from './seeds/g1112-ss-psychology-schools';
 import { SEED_G1112_SS_PHILOSOPHY_BRANCHES } from './seeds/g1112-ss-philosophy-branches';
 import { SEED_AP_EUROPEAN_HISTORY_RENAISSANCE } from './seeds/ap-european-history-renaissance';
-import { SEED_AP_PSYCHOLOGY_RESEARCH_METHODS } from './seeds/ap-psychology-research-methods';
 import { SEED_AP_ENGLISH_LANG_RHETORIC } from './seeds/ap-english-lang-rhetoric';
 import { SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY } from './seeds/ap-english-lang-synthesis-essay';
 import { SEED_G910_CS_PYTHON_CONTROL_FLOW } from './seeds/g910-cs-python-control-flow';
@@ -1688,9 +1681,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PHYSICS2_THERMO,
   SEED_AP_PHYSICS2_ELECTROSTATICS,
   SEED_AP_PHYSICS2_OPTICS,
-  SEED_AP_PSYCH_LEARNING,
-  SEED_AP_PSYCH_MEMORY,
-  SEED_AP_PSYCH_DEVELOPMENT,
   SEED_AP_HUMAN_GEO_POPULATION,
   SEED_AP_HUMAN_GEO_AGRICULTURE,
   SEED_AP_GOV_FEDERALISM,
@@ -1707,9 +1697,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PHYSICS2_CIRCUITS,
   SEED_AP_PHYSICS2_MAGNETISM,
   SEED_AP_PHYSICS2_MODERN,
-  SEED_AP_PSYCH_COGNITION,
-  SEED_AP_PSYCH_SOCIAL,
-  SEED_AP_PSYCH_BIOLOGICAL,
   SEED_AP_HUMAN_GEO_URBAN,
   SEED_AP_HUMAN_GEO_POLITICAL,
   SEED_AP_MICRO_PPC,
@@ -2414,7 +2401,6 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_G1112_SS_PSYCHOLOGY_SCHOOLS,
   SEED_G1112_SS_PHILOSOPHY_BRANCHES,
   SEED_AP_EUROPEAN_HISTORY_RENAISSANCE,
-  SEED_AP_PSYCHOLOGY_RESEARCH_METHODS,
   SEED_AP_ENGLISH_LANG_RHETORIC,
   SEED_AP_ENGLISH_LANG_SYNTHESIS_ESSAY,
   SEED_G910_CS_PYTHON_CONTROL_FLOW,
