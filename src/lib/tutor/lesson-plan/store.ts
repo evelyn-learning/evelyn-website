@@ -14,6 +14,7 @@ import type { LessonPlan } from './types';
 import { parseLessonPlan } from './parser';
 
 import { SEED_G6_FRACTIONS_ADD_UNLIKE } from './seeds/g6-fractions-add-unlike';
+import { SEED_TEST_GAPS_FRACTIONS } from './seeds/test-gaps-fractions';
 import { SEED_K_COUNTING_TO_10 } from './seeds/k-counting-to-10';
 import { SEED_G2_PLACE_VALUE } from './seeds/g2-place-value';
 import { SEED_G4_MULTIPLICATION_AS_ARRAYS } from './seeds/g4-multiplication-as-arrays';
@@ -775,6 +776,18 @@ import { SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING } from './seeds/ap-psych-u3-cla
 import { SEED_AP_PSYCH_U3_OPERANT_CONDITIONING } from './seeds/ap-psych-u3-operant-conditioning';
 import { SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING } from './seeds/ap-psych-u3-observational-learning';
 import { SEED_AP_PSYCH_U3_FRQ_PRACTICE } from './seeds/ap-psych-u3-frq-practice';
+import { SEED_AP_PSYCH_U4_ATTRIBUTION_ATTITUDES } from './seeds/ap-psych-u4-attribution-attitudes';
+import { SEED_AP_PSYCH_U4_SOCIAL_INFLUENCE } from './seeds/ap-psych-u4-social-influence';
+import { SEED_AP_PSYCH_U4_PREJUDICE_STEREOTYPES } from './seeds/ap-psych-u4-prejudice-stereotypes';
+import { SEED_AP_PSYCH_U4_PERSONALITY_THEORIES } from './seeds/ap-psych-u4-personality-theories';
+import { SEED_AP_PSYCH_U4_PERSONALITY_ASSESSMENT } from './seeds/ap-psych-u4-personality-assessment';
+import { SEED_AP_PSYCH_U4_FRQ_PRACTICE } from './seeds/ap-psych-u4-frq-practice';
+import { SEED_AP_PSYCH_U5_STRESS_HEALTH } from './seeds/ap-psych-u5-stress-health';
+import { SEED_AP_PSYCH_U5_ANXIETY_DISORDERS } from './seeds/ap-psych-u5-anxiety-disorders';
+import { SEED_AP_PSYCH_U5_MOOD_DISORDERS } from './seeds/ap-psych-u5-mood-disorders';
+import { SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY } from './seeds/ap-psych-u5-schizo-personality';
+import { SEED_AP_PSYCH_U5_THERAPY } from './seeds/ap-psych-u5-therapy';
+import { SEED_AP_PSYCH_U5_FRQ_PRACTICE } from './seeds/ap-psych-u5-frq-practice';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1279,6 +1292,8 @@ import { SEED_TEST_RENDERER_SMOKE_CALC } from './seeds/test-renderer-smoke-calc'
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
+  // TEST plan — gap-detection probe. Find by id `evelyn.test.gaps.fractions.v1`.
+  SEED_TEST_GAPS_FRACTIONS,
   // Batch 1 — math foundations through middle school.
   SEED_K_COUNTING_TO_10,
   SEED_G2_PLACE_VALUE,
@@ -1978,6 +1993,18 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PSYCH_U3_OPERANT_CONDITIONING,
   SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING,
   SEED_AP_PSYCH_U3_FRQ_PRACTICE,
+  SEED_AP_PSYCH_U4_ATTRIBUTION_ATTITUDES,
+  SEED_AP_PSYCH_U4_SOCIAL_INFLUENCE,
+  SEED_AP_PSYCH_U4_PREJUDICE_STEREOTYPES,
+  SEED_AP_PSYCH_U4_PERSONALITY_THEORIES,
+  SEED_AP_PSYCH_U4_PERSONALITY_ASSESSMENT,
+  SEED_AP_PSYCH_U4_FRQ_PRACTICE,
+  SEED_AP_PSYCH_U5_STRESS_HEALTH,
+  SEED_AP_PSYCH_U5_ANXIETY_DISORDERS,
+  SEED_AP_PSYCH_U5_MOOD_DISORDERS,
+  SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY,
+  SEED_AP_PSYCH_U5_THERAPY,
+  SEED_AP_PSYCH_U5_FRQ_PRACTICE,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
