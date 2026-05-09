@@ -5,6 +5,7 @@
  */
 
 import type { StudentProfile, MasteryEntry, GapEntry } from './types';
+import { isGapStale } from './store';
 
 const RECENT_GAPS_SHOWN = 5;
 const RECENT_SESSIONS_SHOWN = 3;
@@ -46,9 +47,17 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
 
   // Active gaps — surfaces 'candidate' (single observation, low confidence),
   // 'confirmed' (promoted), and legacy 'open' entries. 'resolved' suppressed.
+  // Stale entries (candidate > 21d, confirmed/open > 90d since lastSeenAt)
+  // are also hidden via isGapStale — lazy TTL decay so the brain stops
+  // referencing weakness the student has likely outgrown without us
+  // having to mutate the underlying data.
   // Most-recently-seen first.
+  const now = Date.now();
   const activeGaps: GapEntry[] = profile.gaps
-    .filter((g) => g.status === 'candidate' || g.status === 'confirmed' || g.status === 'open')
+    .filter((g) =>
+      (g.status === 'candidate' || g.status === 'confirmed' || g.status === 'open')
+      && !isGapStale(g, now),
+    )
     .sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt))
     .slice(0, RECENT_GAPS_SHOWN);
   if (activeGaps.length) {

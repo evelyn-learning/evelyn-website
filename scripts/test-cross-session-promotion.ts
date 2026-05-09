@@ -19,7 +19,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { applyCrossSessionPromotion, resolveSettledGaps } from '../src/lib/tutor/student-profile/store';
+import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale } from '../src/lib/tutor/student-profile/store';
 import type { StudentProfile, GapEntry, MasteryEntry } from '../src/lib/tutor/student-profile/types';
 
 let passed = 0;
@@ -310,6 +310,84 @@ test('lastSeenAt updated on resolution (telemetry)', () => {
   const before = gap.lastSeenAt;
   const result = resolveSettledGaps(profile);
   assert.notStrictEqual(result.gaps[0].lastSeenAt, before, 'lastSeenAt should bump');
+});
+
+console.log('\nisGapStale (lazy decay TTL)\n');
+
+const NOW = new Date('2026-05-09T00:00:00.000Z').getTime();
+const daysAgo = (n: number) => new Date(NOW - n * 86_400_000).toISOString();
+
+test('candidate 10 days old → not stale (under 21)', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: daysAgo(10) });
+  assert.strictEqual(isGapStale(gap, NOW), false);
+});
+
+test('candidate exactly 21 days old → not stale (strict greater-than)', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: daysAgo(21) });
+  assert.strictEqual(isGapStale(gap, NOW), false, '21.0 days is NOT stale; ageDays > 21 required');
+});
+
+test('candidate 22 days old → stale', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: daysAgo(22) });
+  assert.strictEqual(isGapStale(gap, NOW), true);
+});
+
+test('confirmed 60 days old → not stale (under 90)', () => {
+  const gap = makeGap({ status: 'confirmed', lastSeenAt: daysAgo(60) });
+  assert.strictEqual(isGapStale(gap, NOW), false);
+});
+
+test('confirmed 91 days old → stale', () => {
+  const gap = makeGap({ status: 'confirmed', lastSeenAt: daysAgo(91) });
+  assert.strictEqual(isGapStale(gap, NOW), true);
+});
+
+test('legacy "open" status uses confirmed TTL (60 days → not stale)', () => {
+  const gap = makeGap({ status: 'open', lastSeenAt: daysAgo(60) });
+  assert.strictEqual(isGapStale(gap, NOW), false);
+});
+
+test('legacy "open" status: 100 days → stale', () => {
+  const gap = makeGap({ status: 'open', lastSeenAt: daysAgo(100) });
+  assert.strictEqual(isGapStale(gap, NOW), true);
+});
+
+test('resolved gap → never stale (independent semantics)', () => {
+  const gap = makeGap({ status: 'resolved', lastSeenAt: daysAgo(365) });
+  assert.strictEqual(isGapStale(gap, NOW), false, 'resolved is independently filtered, not subject to decay');
+});
+
+test('candidate just barely past threshold (21.5 days) → stale', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: new Date(NOW - 21.5 * 86_400_000).toISOString() });
+  assert.strictEqual(isGapStale(gap, NOW), true);
+});
+
+test('confirmed just barely past threshold (90.5 days) → stale', () => {
+  const gap = makeGap({ status: 'confirmed', lastSeenAt: new Date(NOW - 90.5 * 86_400_000).toISOString() });
+  assert.strictEqual(isGapStale(gap, NOW), true);
+});
+
+test('malformed lastSeenAt ("not-a-date") → not stale (defensive)', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: 'not-a-date' });
+  assert.strictEqual(isGapStale(gap, NOW), false, 'unparseable timestamp should not silently hide gap');
+});
+
+test('empty lastSeenAt → not stale (defensive)', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: '' });
+  assert.strictEqual(isGapStale(gap, NOW), false);
+});
+
+test('future lastSeenAt (clock skew) → not stale (negative age guarded)', () => {
+  const gap = makeGap({ status: 'candidate', lastSeenAt: daysAgo(-5) });
+  assert.strictEqual(isGapStale(gap, NOW), false);
+});
+
+test('default `now` parameter (no second arg) → uses current time', () => {
+  // Make a gap 100 days ago in real time. With no `now` passed, the
+  // function uses Date.now(). 100 days > 90 → stale (for confirmed).
+  const realDaysAgo = new Date(Date.now() - 100 * 86_400_000).toISOString();
+  const gap = makeGap({ status: 'confirmed', lastSeenAt: realDaysAgo });
+  assert.strictEqual(isGapStale(gap), true, 'should default to Date.now()');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

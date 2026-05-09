@@ -56,6 +56,20 @@ const GAP_RESOLVE_SCORE_THRESHOLD = 0.8;
  *  Aligned with applyMasteryDeltas confidence band: ≥ 3 exposures
  *  reads as "medium" or higher. Inclusive. */
 const GAP_RESOLVE_EXPOSURES_THRESHOLD = 3;
+/** Lazy-decay TTL for candidate gaps. Past this age (since lastSeenAt,
+ *  with no re-trigger), candidates are treated as stale by `isGapStale`
+ *  and hidden from the rendered <student_profile> block. Underlying
+ *  data is preserved so thresholds can be retuned from telemetry without
+ *  losing history. 21 days = ~3 weeks: long enough for the student to
+ *  re-encounter the LO, short enough to clear single-bad-day false
+ *  positives. Strict greater-than (a 21-day-old gap is NOT stale yet). */
+const GAP_DECAY_CANDIDATE_DAYS = 21;
+/** TTL for confirmed gaps. Longer because confirmed signals are stronger
+ *  and warrant more patience for the student to demonstrate growth.
+ *  90 days = roughly one school quarter. Legacy 'open' status uses the
+ *  same TTL as confirmed. */
+const GAP_DECAY_CONFIRMED_DAYS = 90;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 function clamp01(n: number): number { return Math.max(0, Math.min(1, n)); }
 function computeConfidence(signals: GapSignalCode[]): number {
@@ -421,6 +435,43 @@ export function resolveSettledGaps(profile: StudentProfile): StudentProfile {
     return { ...g, status: 'resolved' as const, lastSeenAt: now };
   });
   return mutated ? { ...profile, gaps } : profile;
+}
+
+/** Lazy decay check: returns true if a gap's `lastSeenAt` is older than
+ *  its status-specific TTL. Used by the renderer to hide stale gaps
+ *  from the <student_profile> block WITHOUT mutating the underlying data.
+ *
+ *  Status-specific TTLs:
+ *    - 'candidate' → GAP_DECAY_CANDIDATE_DAYS (21d). Single-observation
+ *      gaps that haven't re-triggered in three weeks are likely
+ *      false-positives or one-bad-day events.
+ *    - 'confirmed' → GAP_DECAY_CONFIRMED_DAYS (90d). Strong signals
+ *      warrant more patience for the student to grow out of the gap.
+ *    - 'open' (legacy) → treated like 'confirmed'.
+ *    - 'resolved' → never stale. Resolved status is independently
+ *      filtered by render; staleness doesn't apply.
+ *
+ *  Why lazy (read-time filter) instead of active mutation:
+ *    - Preserves telemetry — real decay rates remain queryable from raw data.
+ *    - Reversible — change a constant, no migration.
+ *    - No scheduled job needed.
+ *    - Hard-delete cleanup of very old data (e.g. > 1 year) can land
+ *      later as a separate cleanup script without affecting this logic.
+ *
+ *  Defensive: returns false for unparseable lastSeenAt strings so a
+ *  malformed entry doesn't get silently hidden. Future timestamps
+ *  (negative age) likewise return false.
+ *
+ *  `now` parameter is for testability; defaults to current time. */
+export function isGapStale(gap: GapEntry, now: number = Date.now()): boolean {
+  if (gap.status === 'resolved') return false;
+  const lastSeen = Date.parse(gap.lastSeenAt);
+  if (Number.isNaN(lastSeen)) return false;
+  const ageDays = (now - lastSeen) / MS_PER_DAY;
+  if (ageDays < 0) return false; // future timestamp; defensive
+  if (gap.status === 'candidate') return ageDays > GAP_DECAY_CANDIDATE_DAYS;
+  // 'confirmed' and legacy 'open'
+  return ageDays > GAP_DECAY_CONFIRMED_DAYS;
 }
 
 /** Append a session memory entry. */
