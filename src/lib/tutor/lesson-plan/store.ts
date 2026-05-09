@@ -15,6 +15,7 @@ import { parseLessonPlan } from './parser';
 
 import { SEED_G6_FRACTIONS_ADD_UNLIKE } from './seeds/g6-fractions-add-unlike';
 import { SEED_TEST_GAPS_FRACTIONS } from './seeds/test-gaps-fractions';
+import { SEED_TEST_GAPS_FRACTIONS_V2 } from './seeds/test-gaps-fractions-v2';
 import { SEED_K_COUNTING_TO_10 } from './seeds/k-counting-to-10';
 import { SEED_G2_PLACE_VALUE } from './seeds/g2-place-value';
 import { SEED_G4_MULTIPLICATION_AS_ARRAYS } from './seeds/g4-multiplication-as-arrays';
@@ -1293,6 +1294,9 @@ import { SEED_TEST_RENDERER_SMOKE_CALC } from './seeds/test-renderer-smoke-calc'
 export const SEED_PLANS: LessonPlan[] = [
   // TEST plan — gap-detection probe. Find by id `evelyn.test.gaps.fractions.v1`.
   SEED_TEST_GAPS_FRACTIONS,
+  // TEST plan B — same LO, different problem. For testing the
+  // orchestrator-side cross-session promotion fallback.
+  SEED_TEST_GAPS_FRACTIONS_V2,
   // Batch 1 — math foundations through middle school.
   SEED_K_COUNTING_TO_10,
   SEED_G2_PLACE_VALUE,

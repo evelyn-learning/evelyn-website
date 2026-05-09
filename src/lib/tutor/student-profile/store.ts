@@ -39,6 +39,14 @@ const CONFIDENCE_PROMOTE_THRESHOLD = 0.75;
 const SIGNAL_CONFIDENCE_DENOMINATOR = 4;
 /** Cap on accumulated student quotes per gap (keeps the entry small). */
 const STUDENT_QUOTES_CAP = 4;
+/** Mastery-delta threshold below which `applyCrossSessionPromotion`
+ *  treats a segment-completion as evidence the student re-demonstrated
+ *  an existing gap. Strict less-than: a delta of exactly 0.5 does NOT
+ *  trigger. Tunable from telemetry — if false-positive rate is high
+ *  (segments at 0.4 promoting gaps for students who actually recovered
+ *  with scaffolding), tighten toward 0.2 or 0.0. If false-negative rate
+ *  is high (clear struggles at 0.6 not promoting), loosen toward 0.7. */
+const CROSS_SESSION_PROMOTION_DELTA_THRESHOLD = 0.5;
 
 function clamp01(n: number): number { return Math.max(0, Math.min(1, n)); }
 function computeConfidence(signals: GapSignalCode[]): number {
@@ -292,6 +300,68 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
     lastSeenAt: now,
   };
   return { ...profile, gaps: [...profile.gaps, newGap] };
+}
+
+/** Cross-session promotion fallback. When the brain marks a segment as
+ *  sub-mastery (`masteryDelta < CROSS_SESSION_PROMOTION_DELTA_THRESHOLD`)
+ *  on an LO that already has an open gap, this function bumps that
+ *  gap's `sessionIds` with the current sessionId and promotes
+ *  candidate → confirmed if sessionIds.length now reaches 2.
+ *
+ *  Why this exists. The brain can be unreliable about firing record_gap
+ *  on cross-session re-occurrence — when a session is explicitly
+ *  designed to revisit a known gap, the brain may interpret the student's
+ *  predicted misconception as "expected state, not new evidence" and skip
+ *  the tool call. The store layer's promotion rule (sessionIds.length ≥ 2)
+ *  then never activates. This fallback closes that loop deterministically:
+ *  if the orchestrator's mark_segment_complete reports sub-mastery on an
+ *  LO with an existing open gap, that's a strong-enough signal to count
+ *  as a re-occurrence — no LLM judgment required.
+ *
+ *  Safety:
+ *    - Dedupes against the gap's existing sessionIds (a brain re-fire
+ *      and this fallback won't double-count the same session).
+ *    - Only operates on existing gaps (kind='lo', status in active
+ *      states). Never creates new gaps.
+ *    - Doesn't touch confidence or evidence — only sessionIds and
+ *      lastSeenAt. The promotion rule does the rest.
+ *    - Skips entries with no loId or non-numeric delta. */
+export function applyCrossSessionPromotion(
+  profile: StudentProfile,
+  masteryDeltas: Array<{ loId: string; delta: number }>,
+  sessionId: string,
+): StudentProfile {
+  if (!masteryDeltas.length || !sessionId) return profile;
+  const now = new Date().toISOString();
+  let gaps = profile.gaps;
+  for (const { loId, delta } of masteryDeltas) {
+    if (!loId) continue;
+    if (typeof delta !== 'number') continue;
+    if (delta >= CROSS_SESSION_PROMOTION_DELTA_THRESHOLD) continue;
+    const idx = gaps.findIndex((g) =>
+      g.kind === 'lo'
+      && !!g.loId
+      && g.loId === loId
+      && (g.status === 'candidate' || g.status === 'confirmed' || g.status === 'open')
+      && !(g.sessionIds ?? []).includes(sessionId),
+    );
+    if (idx < 0) continue;
+    const existing = gaps[idx];
+    const newSessionIds = [...(existing.sessionIds ?? []), sessionId];
+    const promotable = existing.status === 'candidate' || existing.status === 'open';
+    const shouldPromote = promotable && newSessionIds.length >= 2;
+    const nextStatus: GapEntry['status'] = shouldPromote
+      ? 'confirmed'
+      : existing.status === 'open' ? 'confirmed' // migrate legacy 'open' on touch
+      : existing.status;
+    gaps = gaps.map((g, i) => (i === idx ? {
+      ...existing,
+      sessionIds: newSessionIds,
+      lastSeenAt: now,
+      status: nextStatus,
+    } : g));
+  }
+  return gaps === profile.gaps ? profile : { ...profile, gaps };
 }
 
 /** Append a session memory entry. */

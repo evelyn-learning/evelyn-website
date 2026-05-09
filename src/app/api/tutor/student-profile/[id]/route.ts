@@ -14,6 +14,7 @@ import {
   saveStudentProfile,
   applyMasteryDeltas,
   recordGap,
+  applyCrossSessionPromotion,
   appendSessionMemory,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
@@ -95,6 +96,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         sessionId: body.sessionId,
       });
     }
+  }
+  // Cross-session promotion fallback. Runs AFTER recordGap so a
+  // brain-fired re-occurrence (which already includes this sessionId)
+  // doesn't double-count — the dedup guard inside applyCrossSessionPromotion
+  // skips any gap whose sessionIds already contains body.sessionId.
+  if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {
+    profile = applyCrossSessionPromotion(profile, body.masteryDeltas, body.sessionId);
   }
 
   let notesError: string | undefined;
