@@ -336,7 +336,11 @@ export function applyCrossSessionPromotion(
   let gaps = profile.gaps;
   for (const { loId, delta } of masteryDeltas) {
     if (!loId) continue;
-    if (typeof delta !== 'number') continue;
+    // typeof check catches non-numbers; isFinite filters NaN / ±Infinity
+    // (NaN < 0.5 is false in JS, so without this guard NaN would slip through
+    // the >= threshold check and trigger a spurious promotion — caught by
+    // scripts/test-cross-session-promotion.ts).
+    if (typeof delta !== 'number' || !Number.isFinite(delta)) continue;
     if (delta >= CROSS_SESSION_PROMOTION_DELTA_THRESHOLD) continue;
     const idx = gaps.findIndex((g) =>
       g.kind === 'lo'
