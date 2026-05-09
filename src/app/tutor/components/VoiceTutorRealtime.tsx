@@ -383,7 +383,21 @@ export function VoiceTutorRealtime({
   const sessionAccumRef = useRef<{
     losTouched: Set<string>;
     masteryDeltas: Array<{ loId: string; delta: number }>;
-    gaps: Array<{ loId: string; description: string }>;
+    /** Rich gap entries collected mid-session, committed at session-end.
+     *  Both record_gap (kind='lo') and flag_prerequisite_gap (kind='prerequisite')
+     *  land here. `signals` is already the merged set of brain-emitted
+     *  (signalsObserved) + orchestrator-stamped objective signals
+     *  (INCORRECT_STREAK_2_PLUS, STUCK_CUE, SLOW_SEGMENT) at the moment
+     *  of the tool call. The store layer computes confidence + handles
+     *  candidate→confirmed promotion at commit time. */
+    gaps: Array<{
+      kind: 'lo' | 'prerequisite';
+      loId?: string;
+      conceptLabel?: string;
+      observation: string;
+      studentQuotes: string[];
+      signals: string[];
+    }>;
   }>({ losTouched: new Set(), masteryDeltas: [], gaps: [] });
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
@@ -2300,13 +2314,52 @@ export function VoiceTutorRealtime({
         }
         continue;
       }
-      if (cmd.action === 'recordGap') {
+      if (cmd.action === 'recordGap' || cmd.action === 'flagPrerequisiteGap') {
+        // Orchestrator-stamped objective signals — derived from refs that
+        // mirror the same state the brain sees in <student_state>.
+        // SLOW_SEGMENT threshold (6) is a v1 heuristic; can move to a
+        // grade-keyed constant later without schema change.
+        const objectiveSignals: string[] = [];
+        if (studentIncorrectStreakRef.current.count >= 2) {
+          objectiveSignals.push('INCORRECT_STREAK_2_PLUS');
+        }
+        const cue = studentCueRef.current?.cue;
+        if (cue && /\b(stuck|skip|don't know|dont know|i don't get|help me|can't do)\b/i.test(cue)) {
+          objectiveSignals.push('STUCK_CUE');
+        }
+        if (segmentTurnCountRef.current.count >= 6) {
+          objectiveSignals.push('SLOW_SEGMENT');
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
-        if (c.loId && c.description) {
-          sessionAccumRef.current.gaps.push({ loId: c.loId, description: c.description });
-          sessionAccumRef.current.losTouched.add(c.loId);
-          console.log(`[VoiceTutorRealtime] gap recorded: [${c.loId}] ${c.description}`);
+        const observation: string = typeof c.observation === 'string' ? c.observation : '';
+        const studentQuotes: string[] = Array.isArray(c.studentQuotes) ? c.studentQuotes : [];
+        const brainSignals: string[] = Array.isArray(c.signalsObserved) ? c.signalsObserved : [];
+        // Union — preserves order, dedupes.
+        const signals = Array.from(new Set([...brainSignals, ...objectiveSignals]));
+        if (cmd.action === 'recordGap') {
+          if (c.loId && observation) {
+            sessionAccumRef.current.gaps.push({
+              kind: 'lo',
+              loId: c.loId,
+              observation,
+              studentQuotes,
+              signals,
+            });
+            sessionAccumRef.current.losTouched.add(c.loId);
+            console.log(`[VoiceTutorRealtime] gap recorded: kind=lo loId="${c.loId}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
+          }
+        } else {
+          if (c.conceptLabel && observation) {
+            sessionAccumRef.current.gaps.push({
+              kind: 'prerequisite',
+              conceptLabel: c.conceptLabel,
+              observation,
+              studentQuotes,
+              signals,
+            });
+            console.log(`[VoiceTutorRealtime] gap recorded: kind=prerequisite concept="${c.conceptLabel}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
+          }
         }
         continue;
       }
@@ -2870,15 +2923,16 @@ export function VoiceTutorRealtime({
     processed = withAutoScrolls;
 
     // Drop non-visual bookkeeping commands before they reach the renderer.
-    // advanceLesson + markSegmentComplete + recordGap are state side-effects
-    // already applied above (segment id advance, mastery deltas, gaps).
-    // Without this filter the canvas tries to render them and shows
-    // "Unknown command type" cards.
+    // advanceLesson + markSegmentComplete + recordGap + flagPrerequisiteGap
+    // are state side-effects already applied above (segment id advance,
+    // mastery deltas, gap accumulator). Without this filter the canvas
+    // tries to render them and shows "Unknown command type" cards.
     processed = processed.filter(
       (c) =>
         c.action !== 'advanceLesson' &&
         c.action !== 'markSegmentComplete' &&
-        c.action !== 'recordGap',
+        c.action !== 'recordGap' &&
+        c.action !== 'flagPrerequisiteGap',
     );
 
     onWhiteboardCommand(processed);

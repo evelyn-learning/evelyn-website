@@ -24,10 +24,26 @@ import {
   type StudentPreferences,
   type MasteryEntry,
   type GapEntry,
+  type GapEvidence,
+  type GapSignalCode,
   type SessionMemory,
   STUDENT_PROFILE_SCHEMA_VERSION,
   RECENT_SESSIONS_CAP,
 } from './types';
+
+/** Promotion threshold: candidate → confirmed when single-session
+ *  confidence reaches this. Cross-session promotion fires when the
+ *  same gap re-triggers in 2+ distinct sessions regardless of confidence. */
+const CONFIDENCE_PROMOTE_THRESHOLD = 0.75;
+/** Confidence formula divisor — 4 signals = full confidence. */
+const SIGNAL_CONFIDENCE_DENOMINATOR = 4;
+/** Cap on accumulated student quotes per gap (keeps the entry small). */
+const STUDENT_QUOTES_CAP = 4;
+
+function clamp01(n: number): number { return Math.max(0, Math.min(1, n)); }
+function computeConfidence(signals: GapSignalCode[]): number {
+  return clamp01(signals.length / SIGNAL_CONFIDENCE_DENOMINATOR);
+}
 
 /** Ephemeral fallback when DB is unavailable (demo / unauthenticated). */
 const ephemeralStore = new Map<string, StudentProfile>();
@@ -127,27 +143,151 @@ export function applyMasteryDeltas(
   return { ...profile, mastery };
 }
 
-/** Append a gap entry. If a gap with the same loId+description already
- *  exists, update its lastSeenAt instead of duplicating. */
-export function recordGap(
-  profile: StudentProfile,
-  gap: Omit<GapEntry, 'id' | 'firstSeenAt' | 'lastSeenAt' | 'status'> & { status?: GapEntry['status'] },
-): StudentProfile {
-  const now = new Date().toISOString();
-  const existing = profile.gaps.find(
-    (g) => g.loId === gap.loId && g.description === gap.description && g.status === 'open',
-  );
-  if (existing) {
-    return {
-      ...profile,
-      gaps: profile.gaps.map((g) => (g === existing ? { ...g, lastSeenAt: now } : g)),
-    };
+/** Input shape for recordGap — already merged signals (brain-emitted +
+ *  orchestrator-stamped) and a sessionId for cross-session promotion
+ *  bookkeeping. */
+export interface RecordGapInput {
+  kind: 'lo' | 'prerequisite';
+  /** Required when kind='lo'. */
+  loId?: string;
+  /** Required when kind='prerequisite'. Free-form English. */
+  conceptLabel?: string;
+  observation: string;
+  studentQuotes: string[];
+  signals: GapSignalCode[];
+  /** Session in which this gap was triggered. Used for cross-session
+   *  promotion (a candidate fired in 2+ distinct sessions promotes to
+   *  confirmed regardless of single-session confidence). */
+  sessionId: string;
+}
+
+/** Match an existing GapEntry by identity (kind + key) regardless of status,
+ *  excluding 'resolved' which goes through the re-open path. */
+function activeMatch(g: GapEntry, input: RecordGapInput): boolean {
+  if (g.status === 'resolved') return false;
+  if (input.kind === 'lo') {
+    return g.kind === 'lo' && !!g.loId && g.loId === input.loId;
   }
+  // prerequisite — case-insensitive label match. Pre-normalizer canonicalization,
+  // labels are free-form, so equality alone won't catch synonyms ("factoring
+  // quadratics" vs "factor quadratics"). The async normalizer will canonicalize
+  // labels into conceptId; once that lands, dedup widens to conceptId match.
+  const a = (g.conceptLabel ?? '').trim().toLowerCase();
+  const b = (input.conceptLabel ?? '').trim().toLowerCase();
+  return g.kind === 'prerequisite' && a === b && a !== '';
+}
+
+function resolvedMatch(g: GapEntry, input: RecordGapInput): boolean {
+  if (g.status !== 'resolved') return false;
+  if (input.kind === 'lo') {
+    return g.kind === 'lo' && !!g.loId && g.loId === input.loId;
+  }
+  const a = (g.conceptLabel ?? '').trim().toLowerCase();
+  const b = (input.conceptLabel ?? '').trim().toLowerCase();
+  return g.kind === 'prerequisite' && a === b && a !== '';
+}
+
+/** Record (or update) a learning gap. Two-tier promotion model:
+ *    - new gap → status='candidate' unless single-session confidence
+ *      already ≥ CONFIDENCE_PROMOTE_THRESHOLD (multiple stacked signals
+ *      in one session), in which case → 'confirmed' immediately.
+ *    - existing candidate → promote to 'confirmed' when either
+ *      (a) merged confidence ≥ threshold, or
+ *      (b) sessionIds.length ≥ 2 (re-triggered across distinct sessions).
+ *    - existing 'open' (legacy schema) → migrated to 'confirmed' on re-trigger.
+ *    - existing 'resolved' → re-opened (the gap came back).
+ *  Mutation is pure — caller is responsible for saveStudentProfile. */
+export function recordGap(profile: StudentProfile, input: RecordGapInput): StudentProfile {
+  const now = new Date().toISOString();
+
+  // Active match — update in place, merge signals/quotes/sessions, evaluate promotion.
+  const idx = profile.gaps.findIndex((g) => activeMatch(g, input));
+  if (idx >= 0) {
+    const existing = profile.gaps[idx];
+    const mergedSignals: GapSignalCode[] = Array.from(new Set([
+      ...((existing.evidence?.signals ?? []) as GapSignalCode[]),
+      ...input.signals,
+    ]));
+    const mergedQuotes = Array.from(new Set([
+      ...(existing.evidence?.studentQuotes ?? []),
+      ...input.studentQuotes,
+    ])).slice(-STUDENT_QUOTES_CAP);
+    const mergedSessionIds = Array.from(new Set([
+      ...(existing.sessionIds ?? []),
+      input.sessionId,
+    ]));
+    const confidence = Math.max(
+      existing.confidence ?? 0,
+      computeConfidence(mergedSignals),
+    );
+    const promotable = existing.status === 'candidate' || existing.status === 'open';
+    const shouldPromote = promotable
+      && (confidence >= CONFIDENCE_PROMOTE_THRESHOLD || mergedSessionIds.length >= 2);
+    const nextStatus: GapEntry['status'] = shouldPromote
+      ? 'confirmed'
+      : existing.status === 'open' ? 'confirmed' // migrate legacy entries
+      : existing.status;
+    const evidence: GapEvidence = {
+      signals: mergedSignals,
+      observation: input.observation, // most recent wins
+      studentQuotes: mergedQuotes,
+    };
+    const updated: GapEntry = {
+      ...existing,
+      kind: input.kind,
+      loId: input.kind === 'lo' ? input.loId : existing.loId,
+      conceptLabel: input.kind === 'prerequisite' ? input.conceptLabel : existing.conceptLabel,
+      lastSeenAt: now,
+      sessionIds: mergedSessionIds,
+      confidence,
+      evidence,
+      status: nextStatus,
+    };
+    return { ...profile, gaps: profile.gaps.map((g, i) => (i === idx ? updated : g)) };
+  }
+
+  // Resolved match — re-open as a fresh candidate (preserve id + firstSeenAt).
+  const reopenIdx = profile.gaps.findIndex((g) => resolvedMatch(g, input));
+  if (reopenIdx >= 0) {
+    const existing = profile.gaps[reopenIdx];
+    const signals = [...input.signals];
+    const confidence = computeConfidence(signals);
+    const status: GapEntry['status'] = confidence >= CONFIDENCE_PROMOTE_THRESHOLD ? 'confirmed' : 'candidate';
+    const reopened: GapEntry = {
+      ...existing,
+      kind: input.kind,
+      loId: input.kind === 'lo' ? input.loId : undefined,
+      conceptLabel: input.kind === 'prerequisite' ? input.conceptLabel : undefined,
+      lastSeenAt: now,
+      sessionIds: [input.sessionId],
+      confidence,
+      evidence: {
+        signals,
+        observation: input.observation,
+        studentQuotes: [...input.studentQuotes],
+      },
+      status,
+    };
+    return { ...profile, gaps: profile.gaps.map((g, i) => (i === reopenIdx ? reopened : g)) };
+  }
+
+  // No match — create new candidate (or confirmed if signals strong enough on first fire).
+  const signals = [...input.signals];
+  const confidence = computeConfidence(signals);
+  const status: GapEntry['status'] = confidence >= CONFIDENCE_PROMOTE_THRESHOLD ? 'confirmed' : 'candidate';
   const newGap: GapEntry = {
     id: `gap_${Math.random().toString(36).slice(2, 10)}`,
-    loId: gap.loId,
-    description: gap.description,
-    status: gap.status ?? 'open',
+    kind: input.kind,
+    loId: input.kind === 'lo' ? input.loId : undefined,
+    conceptLabel: input.kind === 'prerequisite' ? input.conceptLabel : undefined,
+    status,
+    confidence,
+    evidence: {
+      signals,
+      observation: input.observation,
+      studentQuotes: [...input.studentQuotes],
+    },
+    sessionIds: [input.sessionId],
     firstSeenAt: now,
     lastSeenAt: now,
   };

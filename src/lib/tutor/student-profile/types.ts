@@ -28,24 +28,106 @@ export interface MasteryEntry {
   confidence?: ConfidenceBand;
 }
 
+/** Diagnostic signal codes that contribute to a gap's evidence.
+ *
+ *  Some are BRAIN-EMITTED (subjective): the brain observed a
+ *  misconception, the student verbalized confusion, the student got it
+ *  wrong even after a hint, no recovery within the segment.
+ *
+ *  Others are ORCHESTRATOR-STAMPED (objective): derived from session
+ *  metrics the orchestrator already tracks (incorrectStreak, cue,
+ *  segmentTurns) — stamped at the moment of the tool call so the brain
+ *  doesn't have to re-derive them.
+ *
+ *  A gap's `confidence` is computed deterministically as
+ *  clamp(signals.length / 4, 0, 1). Threshold tuning therefore needs no
+ *  schema change — only a constant in the orchestrator's stamp logic. */
+export type GapSignalCode =
+  // Brain-emitted (subjective)
+  | 'MISCONCEPTION_DETECTED'
+  | 'STUDENT_VERBALIZED_CONFUSION'
+  | 'INCORRECT_AFTER_HINT'
+  | 'NO_RECOVERY'
+  // Orchestrator-stamped (objective)
+  | 'INCORRECT_STREAK_2_PLUS'
+  | 'STUCK_CUE'
+  | 'SLOW_SEGMENT';
+
+/** Structured evidence backing a GapEntry. The brain emits everything
+ *  except the orchestrator-stamped signals, which are merged into
+ *  `signals[]` at tool-call time. */
+export interface GapEvidence {
+  /** Union of brain-emitted + orchestrator-stamped codes. Order is not
+   *  semantically meaningful. Drives `confidence`. */
+  signals: GapSignalCode[];
+  /** Brain's one-line account of what the student got wrong and (when
+   *  inferable) why. Drives the weak-areas UI label and pre-session
+   *  priming in future sessions. ~1–2 sentences. */
+  observation: string;
+  /** Verbatim student utterance(s) the brain considers most diagnostic.
+   *  Used for "you previously said X" re-grounding in later sessions.
+   *  At most 2 quotes, ≤30 words each. May be empty. */
+  studentQuotes: string[];
+}
+
 /** A recorded learning gap — something the brain noticed during a
- *  session that bears on future planning. */
+ *  session that bears on future planning.
+ *
+ *  Two kinds (discriminator: `kind`):
+ *    - 'lo': gap on a learning objective in the CURRENTLY-active lesson
+ *      plan. `loId` is set to the per-plan LO id.
+ *    - 'prerequisite': gap on a foundational concept the active plan
+ *      doesn't directly teach but builds on (e.g. factoring weakness
+ *      surfacing in an AP Calc session). `conceptLabel` carries a free-
+ *      form label the brain emitted; the async normalizer canonicalizes
+ *      this to `conceptId` once the registry has coverage.
+ *
+ *  Status lifecycle: 'candidate' → 'confirmed' → 'resolved'.
+ *    - 'candidate': single observation, decays in 21 days if not
+ *      re-triggered.
+ *    - 'confirmed': passed promotion (confidence ≥ 0.75 in one session
+ *      OR fired in 2+ distinct sessions). Surfaces in weak-areas UI.
+ *    - 'resolved': student demonstrated mastery later — closed.
+ *    - 'open': legacy value from before the candidate/confirmed split;
+ *      treated as 'confirmed' for surfacing purposes. Kept for
+ *      backward compatibility with existing rows. */
 export interface GapEntry {
-  /** Stable id (uuid) so the same gap doesn't get duplicated across
-   *  sessions when the brain re-detects it. */
+  /** Stable id so the same gap doesn't get duplicated across sessions
+   *  when the brain re-detects it. */
   id: string;
-  /** LO this gap relates to. */
-  loId: string;
-  /** Free-form description, ideally citing what the student said /
-   *  did that revealed the gap. */
-  description: string;
+  /** Discriminator. Optional only for backward compatibility with
+   *  legacy entries (which were all in-plan LO gaps). New writes always
+   *  set this. */
+  kind?: 'lo' | 'prerequisite';
+  /** Present when kind='lo'. Per-plan LO id, matches LessonPlan.los[].id.
+   *  Optional only for prerequisite-kind gaps and legacy schema-rescue
+   *  reads — required at write-time when kind='lo'. */
+  loId?: string;
+  /** Present when kind='prerequisite'. Free-form English label the brain
+   *  emitted (e.g. "factoring quadratics"). Canonicalized async by the
+   *  concept-label normalizer. */
+  conceptLabel?: string;
+  /** Populated by the normalizer once a canonical concept exists in the
+   *  registry. Empty until the registry has coverage for this label. */
+  conceptId?: string;
+  /** Lifecycle state. See lifecycle note above. 'open' is legacy. */
+  status: 'candidate' | 'confirmed' | 'resolved' | 'open';
+  /** Deterministic: clamp(evidence.signals.length / 4, 0, 1). Recomputed
+   *  whenever signals change (re-trigger from a later session). */
+  confidence?: number;
+  /** Structured evidence — see GapEvidence. Optional only for legacy
+   *  entries that pre-date this field; new writes always populate. */
+  evidence?: GapEvidence;
+  /** Distinct sessions in which this gap was triggered. Cross-session
+   *  promotion fires when this length reaches 2. */
+  sessionIds?: string[];
   /** When the gap was first observed. ISO. */
   firstSeenAt: string;
   /** When it was most recently re-observed. ISO. */
   lastSeenAt: string;
-  /** "open" — still relevant; "resolved" — student demonstrated
-   *  mastery in a later session. */
-  status: 'open' | 'resolved';
+  /** Legacy single-string description. Kept readable on old entries;
+   *  new writes populate `evidence.observation` instead. */
+  description?: string;
 }
 
 /** Per-session note carried forward into future sessions. */

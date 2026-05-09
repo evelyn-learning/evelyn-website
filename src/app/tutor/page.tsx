@@ -120,6 +120,13 @@ function TutorPage() {
   // comparison. Default 'realtime' (out-of-band response, highest quality).
   const ttsParam = searchParams.get('tts');
   const ttsProvider: 'realtime' | 'openai-mini' = ttsParam === 'mini' ? 'openai-mini' : 'realtime';
+  // /tutor?studentId=X passes a stable identity to the realtime component
+  // so cross-session memory (mastery, gaps, recent sessions) commits at
+  // session-end via /api/tutor/student-profile/[id]. Without this, the
+  // commit guard `if (!studentId) return;` short-circuits — gaps still
+  // get captured in the brain layer but never persist. The settings page
+  // at /tutor/settings already uses this same param shape.
+  const studentIdParam = searchParams.get('studentId') || undefined;
 
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -1909,6 +1916,7 @@ function TutorPage() {
                   topic={selectedTopicId}
                   level={selectedLevel}
                   studentName={studentName || undefined}
+                  studentId={studentIdParam}
                   sessionId={sessionId}
                   sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
                   sessionGoal={sessionGoal}

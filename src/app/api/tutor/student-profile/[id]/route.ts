@@ -16,6 +16,7 @@ import {
   recordGap,
   appendSessionMemory,
 } from '@/lib/tutor/student-profile/store';
+import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
 import { generateSessionNotes, type SessionNotesInput } from '@/lib/tutor/student-profile/notes';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
@@ -39,7 +40,20 @@ interface CommitBody {
   lessonPlanId?: string;
   losTouched?: string[];
   masteryDeltas?: Array<{ loId: string; delta: number }>;
-  gaps?: Array<{ loId: string; description: string }>;
+  /** Rich gap entries from the orchestrator. `signals` is already merged
+   *  (brain-emitted signalsObserved + orchestrator-stamped objective signals
+   *  like INCORRECT_STREAK_2_PLUS). The store layer computes confidence
+   *  and runs candidate→confirmed promotion at write time. */
+  gaps?: Array<{
+    kind: 'lo' | 'prerequisite';
+    loId?: string;
+    conceptLabel?: string;
+    observation: string;
+    studentQuotes?: string[];
+    signals?: string[];
+    /** Legacy field — old clients may still post this. Mapped to observation. */
+    description?: string;
+  }>;
   /** Full transcript for the notes generator. */
   transcript?: Array<{ role: 'student' | 'tutor'; text: string }>;
   /** When false, skip notes generation (faster commit). Defaults to true. */
@@ -65,7 +79,21 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   }
   if (Array.isArray(body.gaps)) {
     for (const g of body.gaps) {
-      profile = recordGap(profile, { loId: g.loId, description: g.description });
+      const observation = g.observation ?? g.description ?? '';
+      if (!observation) continue; // skip malformed entries
+      // Default kind for legacy callers that only sent loId+description.
+      const kind: 'lo' | 'prerequisite' = g.kind ?? 'lo';
+      if (kind === 'lo' && !g.loId) continue;
+      if (kind === 'prerequisite' && !g.conceptLabel) continue;
+      profile = recordGap(profile, {
+        kind,
+        loId: g.loId,
+        conceptLabel: g.conceptLabel,
+        observation,
+        studentQuotes: g.studentQuotes ?? [],
+        signals: (g.signals ?? []) as GapSignalCode[],
+        sessionId: body.sessionId,
+      });
     }
   }
 

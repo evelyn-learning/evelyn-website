@@ -44,15 +44,28 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
     }
   }
 
-  // Open gaps — most-recently-seen first.
-  const openGaps: GapEntry[] = profile.gaps
-    .filter((g) => g.status === 'open')
+  // Active gaps — surfaces 'candidate' (single observation, low confidence),
+  // 'confirmed' (promoted), and legacy 'open' entries. 'resolved' suppressed.
+  // Most-recently-seen first.
+  const activeGaps: GapEntry[] = profile.gaps
+    .filter((g) => g.status === 'candidate' || g.status === 'confirmed' || g.status === 'open')
     .sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt))
     .slice(0, RECENT_GAPS_SHOWN);
-  if (openGaps.length) {
+  if (activeGaps.length) {
     lines.push(``, `open learning gaps (address opportunistically when relevant):`);
-    for (const g of openGaps) {
-      lines.push(`  - [${g.loId}] ${g.description}`);
+    for (const g of activeGaps) {
+      const obs = g.evidence?.observation ?? g.description ?? '(no detail)';
+      const tag = g.kind === 'prerequisite'
+        ? `prereq: "${g.conceptLabel ?? '(?)'}"`
+        : `[${g.loId ?? '(?)'}]`;
+      const meta = g.confidence !== undefined
+        ? ` (${g.status}, conf=${g.confidence.toFixed(2)})`
+        : '';
+      lines.push(`  - ${tag} ${obs}${meta}`);
+      const quotes = g.evidence?.studentQuotes ?? [];
+      if (quotes.length) {
+        lines.push(`      student previously said: ${quotes.map((q) => `"${q}"`).join(' / ')}`);
+      }
     }
   }
 
@@ -70,7 +83,7 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
     }
   }
 
-  lines.push(``, `When relevant, REFER BACK to past sessions ("last time you struggled with X, let's start there"). Don't dump the profile back at the student verbatim — read it, internalize it, act on it.`);
+  lines.push(``, `When this session's topic touches an open gap above, OPEN with a concrete callback to it — don't wait until the student fails. If the gap entry includes a "student previously said:" line, weave that EXACT phrase into your opening so the student feels heard ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple. Read the rest of the profile, internalize, and let it shape your pacing and scaffolding without narrating it.`);
   lines.push(`</student_profile>`);
   return lines.join('\n');
 }

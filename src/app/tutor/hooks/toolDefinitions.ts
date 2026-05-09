@@ -16,6 +16,11 @@ export interface ToolParameter {
   items?: ToolParameter | { type: string; properties?: Record<string, ToolParameter>; required?: string[] };
   properties?: Record<string, ToolParameter>;
   required?: string[];
+  /** JSON Schema bounds — passed through to Anthropic's input_schema and
+   *  enforced server-side. Useful for arrays where structured cardinality
+   *  matters (e.g. signalsObserved minItems=1, studentQuotes maxItems=2). */
+  minItems?: number;
+  maxItems?: number;
 }
 
 export interface ToolDefinition {
@@ -1784,14 +1789,56 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'record_gap',
-    description: 'Record a learning gap you noticed in the student. Call this when you spot a misconception, a missing prerequisite, or an LO they\'re struggling with that should be revisited later. The gap is persisted on the student profile and shows up in future sessions\' <student_profile> block. Be specific: cite what the student said or did. Don\'t over-record — one gap per genuinely distinct issue per session.',
+    description: 'Record a learning gap on a learning objective from THIS lesson plan. Fires silently — the student does not hear or see this. Populates the student\'s persistent profile, feeds back into future sessions, and surfaces between sessions as a "weak areas" practice section. Fire when the student\'s error reveals a genuine misconception or missing piece — not a slip, mishearing, or one-off calculation error they self-corrected. FIRE WHEN: (a) the student gets a problem wrong and the wrong reasoning shows real misunderstanding of the LO, (b) the student verbally states they don\'t understand a concept tied to the current LO, (c) the student couldn\'t recover after a hint, (d) the student made the same kind of error twice within the segment. DO NOT FIRE ON: a single wrong answer the student self-corrected; misheard / mistyped responses; questions about the wording of the problem; mid-thought hesitation that resolves on its own. Per session, fire at most once per (loId, distinct issue) pair. **CROSS-SESSION RE-FIRE:** if a gap already exists in `<student_profile>` for this LO and the student re-demonstrates the same misconception in THIS session, DO fire `record_gap` again — re-firing across sessions is how the system promotes a candidate gap to "confirmed" status (the store layer merges signals and increments the session count). Re-firing is encouraged, not duplicate. Use `flag_prerequisite_gap` instead when the missing piece is a foundational concept this plan does NOT itself teach.',
     parameters: {
       type: 'object',
       properties: {
-        loId: { type: 'string', description: 'LO id this gap relates to. Use a known curriculum id (e.g. "ccss.math.5.nf.a.1") when possible; free-form ids OK if no standard match.' },
-        description: { type: 'string', description: 'Specific note: what the student said or did that revealed the gap. 1-2 sentences.' },
+        loId: { type: 'string', description: 'LO id from the active plan\'s <lesson_plan> block — must match LessonPlan.los[].id exactly.' },
+        observation: { type: 'string', description: 'Your one- to two-sentence account of what the student got wrong and (when inferable) why. Drives the weak-areas UI label and pre-session priming next time.' },
+        studentQuotes: {
+          type: 'array',
+          items: { type: 'string' },
+          maxItems: 2,
+          description: 'Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Pulled from this session\'s transcript. Used for "you previously said X" re-grounding next session. Optional — omit if no clean quote exists.',
+        },
+        signalsObserved: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['MISCONCEPTION_DETECTED', 'STUDENT_VERBALIZED_CONFUSION', 'INCORRECT_AFTER_HINT', 'NO_RECOVERY'],
+          },
+          minItems: 1,
+          description: 'At least one structured signal you observed. MISCONCEPTION_DETECTED = student\'s reasoning revealed a wrong mental model; STUDENT_VERBALIZED_CONFUSION = student said they don\'t understand a concept; INCORRECT_AFTER_HINT = wrong answer after you provided a hint; NO_RECOVERY = repeated attempts in segment with no progress. Combined with orchestrator-stamped objective signals at write time; total signal count drives the gap\'s confidence score.',
+        },
       },
-      required: ['loId', 'description'],
+      required: ['loId', 'observation', 'signalsObserved'],
+    },
+  },
+  {
+    name: 'flag_prerequisite_gap',
+    description: 'Record a gap on a foundational concept the student lacks but the active plan does NOT directly teach. Fires silently. Use when the student\'s error or confusion is rooted in something that\'s a prerequisite to (or upstream of) the current LO, but isn\'t one of this plan\'s LOs. STRUCTURAL SHAPES (subject-agnostic): the student in an advanced session struggles with a procedure introduced in an earlier grade; an arithmetic / reading / vocabulary weakness blocks the conceptual step the current LO targets; the student demonstrates absence of a fact-fluency the current LO assumes. The `conceptLabel` is free-form English, 3–6 words, the way a teacher would describe the missing concept. Same trigger discipline as `record_gap` (genuine misconception, not a slip — see its FIRE WHEN / DO NOT FIRE ON conditions). Same per-session dedup: fire at most once per concept_label.',
+    parameters: {
+      type: 'object',
+      properties: {
+        conceptLabel: { type: 'string', description: '3–6 word teacher-style English label for the missing foundational concept. Describe the concept the way a teacher would, not the symptom. Free-form — no controlled vocabulary.' },
+        observation: { type: 'string', description: 'Your one- to two-sentence account of what the student got wrong and (when inferable) why this surfaces a prerequisite weakness rather than a current-LO gap.' },
+        studentQuotes: {
+          type: 'array',
+          items: { type: 'string' },
+          maxItems: 2,
+          description: 'Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Optional.',
+        },
+        signalsObserved: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['MISCONCEPTION_DETECTED', 'STUDENT_VERBALIZED_CONFUSION', 'INCORRECT_AFTER_HINT', 'NO_RECOVERY'],
+          },
+          minItems: 1,
+          description: 'At least one structured signal you observed (same enum as record_gap). Drives confidence.',
+        },
+      },
+      required: ['conceptLabel', 'observation', 'signalsObserved'],
     },
   },
   {
@@ -2522,10 +2569,34 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     };
   }
   if (funcName === 'record_gap') {
+    const observation = typeof funcArgs.observation === 'string'
+      ? funcArgs.observation
+      : typeof funcArgs.description === 'string'
+        ? funcArgs.description // legacy callers
+        : '';
     return {
       action: 'recordGap',
       loId: String(funcArgs.loId ?? ''),
-      description: String(funcArgs.description ?? ''),
+      observation,
+      studentQuotes: Array.isArray(funcArgs.studentQuotes)
+        ? funcArgs.studentQuotes.filter((q: unknown): q is string => typeof q === 'string').slice(0, 2)
+        : [],
+      signalsObserved: Array.isArray(funcArgs.signalsObserved)
+        ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
+        : [],
+    };
+  }
+  if (funcName === 'flag_prerequisite_gap') {
+    return {
+      action: 'flagPrerequisiteGap',
+      conceptLabel: String(funcArgs.conceptLabel ?? ''),
+      observation: typeof funcArgs.observation === 'string' ? funcArgs.observation : '',
+      studentQuotes: Array.isArray(funcArgs.studentQuotes)
+        ? funcArgs.studentQuotes.filter((q: unknown): q is string => typeof q === 'string').slice(0, 2)
+        : [],
+      signalsObserved: Array.isArray(funcArgs.signalsObserved)
+        ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
+        : [],
     };
   }
   // generate_problem is NOT a whiteboard command — it's a server-side
