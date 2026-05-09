@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_COGNITIVE_DEVELOPMENT: LessonPlan = {
   id: 'evelyn.ap.psych.cognitive-development.v1', title: 'U3.1 Cognitive Development (Piaget and Vygotsky)',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.cognitive-development', description: 'Identify Piaget\'s four stages of cognitive development and key milestones. Compare with Vygotsky\'s sociocultural theory (ZPD, scaffolding). Recognize physical and motor development milestones.', standard: 'AP-PSYCH-3-COGNITIVE' }],
   prerequisites: [], followUps: ['appsych.social-emotional-moral'], estimatedMinutes: 22,
   segments: [

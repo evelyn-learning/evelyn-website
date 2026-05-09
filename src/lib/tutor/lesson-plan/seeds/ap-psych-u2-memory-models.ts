@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_MODELS: LessonPlan = {
   id: 'evelyn.ap.psych.memory-models.v1', title: 'U2.1 Memory Models and Encoding',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-models', description: 'Identify the Atkinson-Shiffrin three-stage model and Baddeley\'s working memory. Distinguish encoding strategies (semantic, acoustic, visual; deep vs shallow processing).', standard: 'AP-PSYCH-2.3-2.4' }],
   prerequisites: [], followUps: ['appsych.memory-storage-retrieval'], estimatedMinutes: 22,
   segments: [

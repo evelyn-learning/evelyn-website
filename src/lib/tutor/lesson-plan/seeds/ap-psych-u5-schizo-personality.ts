@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY: LessonPlan = {
   id: 'evelyn.ap.psych.schizo-personality.v1', title: 'U5.4 Schizophrenia and Personality Disorders',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.schizo-personality', description: 'Identify schizophrenia symptoms and theories. Distinguish dissociative disorders. Identify personality disorders (especially antisocial, borderline). Recognize neurodevelopmental disorders.', standard: 'AP-PSYCH-5-SCHIZO' }],
   prerequisites: ['appsych.mood-disorders'], followUps: ['appsych.therapy'], estimatedMinutes: 18,
   segments: [

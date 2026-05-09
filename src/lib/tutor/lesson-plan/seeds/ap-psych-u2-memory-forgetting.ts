@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_FORGETTING: LessonPlan = {
   id: 'evelyn.ap.psych.memory-forgetting.v1', title: 'U2.3 Forgetting and Memory Distortion',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-forgetting', description: 'Identify causes of forgetting (encoding failure, decay, interference, retrieval failure). Describe constructive memory and the misinformation effect. Distinguish forms of amnesia.', standard: 'AP-PSYCH-2.7' }],
   prerequisites: ['appsych.memory-storage-retrieval'], followUps: ['appsych.thinking-language'], estimatedMinutes: 18,
   segments: [

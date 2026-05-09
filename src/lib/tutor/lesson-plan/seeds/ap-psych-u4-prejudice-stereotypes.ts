@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PREJUDICE_STEREOTYPES: LessonPlan = {
   id: 'evelyn.ap.psych.prejudice-stereotypes.v1', title: 'U4.3 Prejudice and Stereotypes',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.prejudice-stereotypes', description: 'Distinguish prejudice (attitude), stereotype (belief), and discrimination (behavior). Identify ingroup/outgroup dynamics, stereotype threat, and prejudice reduction strategies.', standard: 'AP-PSYCH-4-PREJUDICE' }],
   prerequisites: ['appsych.social-influence'], followUps: ['appsych.personality-classical'], estimatedMinutes: 18,
   segments: [

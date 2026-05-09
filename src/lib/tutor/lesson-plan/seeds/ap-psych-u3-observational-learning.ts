@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING: LessonPlan = {
   id: 'evelyn.ap.psych.observational-learning.v1', title: 'U3.5 Observational and Cognitive Learning',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.observational-learning', description: 'Identify Bandura\'s observational learning. Recognize cognitive aspects of learning (latent learning, insight). Identify mirror neurons.', standard: 'AP-PSYCH-3-OBSERVATIONAL' }],
   prerequisites: ['appsych.operant-conditioning'], followUps: [], estimatedMinutes: 18,
   segments: [

@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U4_DATA_ANALYSIS: LessonPlan = {
   id: 'evelyn.ap.research.data-analysis.v1', title: 'R4 Data Analysis and Discussion',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.data-analysis', description: 'Apply appropriate analytic techniques to quantitative and qualitative data. Interpret findings in light of research question and literature. Address limitations and alternative explanations.', standard: 'AP-RESEARCH-ACCURACY' }],
   prerequisites: ['apresearch.methodology'], followUps: ['apresearch.ethics-citations'], estimatedMinutes: 20,
   segments: [

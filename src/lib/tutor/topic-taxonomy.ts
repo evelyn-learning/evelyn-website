@@ -335,6 +335,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ap-microeconomics', label: 'AP Microeconomics' },
       { id: 'ap-psychology', label: 'AP Psychology' },
       { id: 'ap-human-geography', label: 'AP Human Geography' },
+      { id: 'ap-research', label: 'AP Research (Capstone)' },
       { id: 'ib-history', label: 'IB History' },
     ],
     college: [

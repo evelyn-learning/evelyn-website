@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_ATTRIBUTION_ATTITUDES: LessonPlan = {
   id: 'evelyn.ap.psych.attribution-attitudes.v1', title: 'U4.1 Attribution and Attitudes',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.attribution-attitudes', description: 'Distinguish dispositional vs situational attributions. Identify fundamental attribution error, self-serving bias, just-world hypothesis. Understand attitudes and cognitive dissonance theory.', standard: 'AP-PSYCH-4-ATTRIBUTION' }],
   prerequisites: [], followUps: ['appsych.social-influence'], estimatedMinutes: 20,
   segments: [

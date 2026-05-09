@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_BRAIN_STRUCTURES: LessonPlan = {
   id: 'evelyn.ap.psych.brain-structures.v1', title: 'U1.2 Brain Structures and Hemispheric Specialization',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.brain-structures', description: 'Identify major brain structures (hindbrain, midbrain, forebrain) and their functions. Identify the four cortical lobes. Distinguish left vs. right hemisphere specialization. Understand brain plasticity and lesion studies.', standard: 'AP-PSYCH-1.3-1.4' }],
   prerequisites: ['appsych.neurons-neurotransmitters'], followUps: ['appsych.nervous-endocrine'], estimatedMinutes: 22,
   segments: [

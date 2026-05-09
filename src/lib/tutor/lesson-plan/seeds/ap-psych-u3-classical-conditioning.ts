@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING: LessonPlan = {
   id: 'evelyn.ap.psych.classical-conditioning.v1', title: 'U3.3 Classical Conditioning (Pavlov)',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.classical-conditioning', description: 'Identify the components of classical conditioning (UCS, UCR, CS, CR). Trace acquisition, extinction, spontaneous recovery, generalization, discrimination. Apply to phobias and Watson\'s "Little Albert."', standard: 'AP-PSYCH-3-CLASSICAL' }],
   prerequisites: ['appsych.social-emotional-moral'], followUps: ['appsych.operant-conditioning'], estimatedMinutes: 22,
   segments: [

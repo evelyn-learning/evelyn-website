@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U6_PRESENTATION: LessonPlan = {
   id: 'evelyn.ap.research.presentation.v1', title: 'R6 Academic Paper, Presentation, and Defense',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.presentation', description: 'Structure the academic paper (~5000 words). Prepare and deliver the oral presentation. Anticipate and respond to questions in oral defense.', standard: 'AP-RESEARCH-COMMUNICATION' }],
   prerequisites: ['apresearch.ethics-citations'], followUps: [], estimatedMinutes: 22,
   segments: [

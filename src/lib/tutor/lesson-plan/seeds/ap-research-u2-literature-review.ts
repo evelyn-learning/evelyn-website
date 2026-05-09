@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U2_LITERATURE_REVIEW: LessonPlan = {
   id: 'evelyn.ap.research.literature-review.v1', title: 'R2 Literature Review',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.literature-review', description: 'Search systematically for relevant sources. Evaluate source credibility (CRAAP). Synthesize sources into a coherent literature review. Identify the gap your research will address.', standard: 'AP-RESEARCH-RIGOR' }],
   prerequisites: ['apresearch.research-question'], followUps: ['apresearch.methodology'], estimatedMinutes: 22,
   segments: [

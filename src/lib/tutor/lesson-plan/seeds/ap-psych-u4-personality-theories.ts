@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PERSONALITY_THEORIES: LessonPlan = {
   id: 'evelyn.ap.psych.personality-theories.v1', title: 'U4.4 Personality Theories',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.personality-theories', description: 'Compare four major personality theories: psychodynamic (Freud), humanistic (Maslow, Rogers), trait (Big Five), and social-cognitive (Bandura, Rotter).', standard: 'AP-PSYCH-4-PERSONALITY' }],
   prerequisites: ['appsych.prejudice-stereotypes'], followUps: ['appsych.personality-assessment'], estimatedMinutes: 24,
   segments: [

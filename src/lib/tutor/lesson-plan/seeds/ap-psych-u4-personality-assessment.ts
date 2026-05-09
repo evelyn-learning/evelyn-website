@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PERSONALITY_ASSESSMENT: LessonPlan = {
   id: 'evelyn.ap.psych.personality-assessment.v1', title: 'U4.5 Personality Assessment',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.personality-assessment', description: 'Distinguish projective vs objective personality tests. Identify MMPI, Rorschach, TAT, and Big Five inventories. Discuss validity, reliability, and uses.', standard: 'AP-PSYCH-4-ASSESSMENT' }],
   prerequisites: ['appsych.personality-theories'], followUps: [], estimatedMinutes: 16,
   segments: [

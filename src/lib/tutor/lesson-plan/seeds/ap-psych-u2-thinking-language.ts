@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_THINKING_LANGUAGE: LessonPlan = {
   id: 'evelyn.ap.psych.thinking-language.v1', title: 'U2.4 Thinking, Problem Solving, and Language',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.thinking-language', description: 'Identify problem-solving strategies (algorithms, heuristics). Recognize cognitive biases (representativeness, availability, anchoring, confirmation bias). Trace language acquisition stages and the linguistic relativity hypothesis.', standard: 'AP-PSYCH-2.2' }],
   prerequisites: ['appsych.memory-forgetting'], followUps: ['appsych.intelligence'], estimatedMinutes: 22,
   segments: [

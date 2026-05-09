@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_SOCIAL_INFLUENCE: LessonPlan = {
   id: 'evelyn.ap.psych.social-influence.v1', title: 'U4.2 Social Influence',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.social-influence', description: 'Identify conformity (Asch), obedience (Milgram), and bystander effect (Darley & Latané). Distinguish normative vs informational social influence. Recognize group polarization, groupthink, deindividuation, social facilitation/loafing.', standard: 'AP-PSYCH-4-INFLUENCE' }],
   prerequisites: ['appsych.attribution-attitudes'], followUps: ['appsych.prejudice-stereotypes'], estimatedMinutes: 22,
   segments: [

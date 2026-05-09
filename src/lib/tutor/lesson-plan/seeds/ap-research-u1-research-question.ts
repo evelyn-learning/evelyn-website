@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U1_RESEARCH_QUESTION: LessonPlan = {
   id: 'evelyn.ap.research.research-question.v1', title: 'R1 Formulating a Research Question',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.research-question', description: 'Formulate an answerable, focused, original research question. Identify gaps in existing literature. Distinguish researchable from non-researchable questions.', standard: 'AP-RESEARCH-QUEST' }],
   prerequisites: [], followUps: ['apresearch.literature-review'], estimatedMinutes: 22,
   segments: [

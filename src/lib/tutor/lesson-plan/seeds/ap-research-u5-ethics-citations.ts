@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U5_ETHICS_CITATIONS: LessonPlan = {
   id: 'evelyn.ap.research.ethics-citations.v1', title: 'R5 Research Ethics and Citations',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.ethics-citations', description: 'Apply principles of research ethics: informed consent, confidentiality, IRB review, vulnerable populations. Cite sources properly using APA, MLA, or Chicago. Avoid plagiarism.', standard: 'AP-RESEARCH-ETHICS' }],
   prerequisites: ['apresearch.data-analysis'], followUps: ['apresearch.presentation'], estimatedMinutes: 18,
   segments: [

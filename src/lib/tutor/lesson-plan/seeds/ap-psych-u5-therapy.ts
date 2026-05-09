@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_THERAPY: LessonPlan = {
   id: 'evelyn.ap.psych.therapy.v1', title: 'U5.5 Therapy and Treatment',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.therapy', description: 'Distinguish psychotherapy types (psychodynamic, humanistic, behavioral, cognitive, CBT, group/family). Identify biomedical treatments (drugs, ECT, TMS). Understand evidence-based practice and treatment evaluation.', standard: 'AP-PSYCH-5-THERAPY' }],
   prerequisites: ['appsych.schizo-personality'], followUps: [], estimatedMinutes: 22,
   segments: [

@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_RESEARCH_U3_METHODOLOGY: LessonPlan = {
   id: 'evelyn.ap.research.methodology.v1', title: 'R3 Research Methodology',
-  curriculum: 'AP', grade: '12', subject: 'social', topic: 'ap-research', locale: 'en',
+  curriculum: 'AP', grade: '12', subject: 'ss', topic: 'ap-research', locale: 'en',
   los: [{ id: 'apresearch.methodology', description: 'Distinguish quantitative vs qualitative methods. Identify experimental, correlational, observational, survey, and case-study designs. Choose appropriate methodology for a research question.', standard: 'AP-RESEARCH-RIGOR-METHOD' }],
   prerequisites: ['apresearch.literature-review'], followUps: ['apresearch.data-analysis'], estimatedMinutes: 22,
   segments: [

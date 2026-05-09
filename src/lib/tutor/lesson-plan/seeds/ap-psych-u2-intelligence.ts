@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_INTELLIGENCE: LessonPlan = {
   id: 'evelyn.ap.psych.intelligence.v1', title: 'U2.5 Intelligence',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.intelligence', description: 'Distinguish theories of intelligence (Spearman g, Sternberg, Gardner, emotional intelligence). Identify intelligence test history and properties (validity, reliability, standardization). Discuss heritability and group differences.', standard: 'AP-PSYCH-2.8-2.10' }],
   prerequisites: ['appsych.thinking-language'], followUps: [], estimatedMinutes: 20,
   segments: [

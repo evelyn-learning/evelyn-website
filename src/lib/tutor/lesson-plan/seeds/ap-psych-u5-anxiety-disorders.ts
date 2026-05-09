@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_ANXIETY_DISORDERS: LessonPlan = {
   id: 'evelyn.ap.psych.anxiety-disorders.v1', title: 'U5.2 Anxiety, OCD, PTSD',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.anxiety-disorders', description: 'Distinguish generalized anxiety disorder, panic disorder, phobias, OCD, PTSD. Identify diagnostic criteria, prevalence, and theoretical explanations.', standard: 'AP-PSYCH-5-ANXIETY' }],
   prerequisites: ['appsych.stress-health'], followUps: ['appsych.mood-disorders'], estimatedMinutes: 18,
   segments: [

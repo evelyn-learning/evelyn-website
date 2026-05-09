@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP: LessonPlan = {
   id: 'evelyn.ap.psych.consciousness-sleep.v1', title: 'U1.4 Consciousness, Sleep, and Drugs',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.consciousness-sleep', description: 'Identify sleep stages and their characteristics. Compare sleep theories. Identify drug categories and their behavioral effects.', standard: 'AP-PSYCH-1.6-1.7' }],
   prerequisites: ['appsych.nervous-endocrine'], followUps: ['appsych.sensation-perception'], estimatedMinutes: 22,
   segments: [

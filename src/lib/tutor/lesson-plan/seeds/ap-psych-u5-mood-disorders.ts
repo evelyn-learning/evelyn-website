@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_MOOD_DISORDERS: LessonPlan = {
   id: 'evelyn.ap.psych.mood-disorders.v1', title: 'U5.3 Mood Disorders',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.mood-disorders', description: 'Distinguish major depressive disorder, persistent depressive disorder, bipolar I and II. Identify biological, cognitive, and social explanations. Recognize suicide risk and treatment.', standard: 'AP-PSYCH-5-MOOD' }],
   prerequisites: ['appsych.anxiety-disorders'], followUps: ['appsych.schizo-personality'], estimatedMinutes: 18,
   segments: [

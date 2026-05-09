@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_NEURONS_NEUROTRANSMITTERS: LessonPlan = {
   id: 'evelyn.ap.psych.neurons-neurotransmitters.v1', title: 'U1.1 Neurons and Neurotransmitters',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.neurons-neurotransmitters', description: 'Identify the parts of a neuron and trace the action potential. Distinguish neurotransmitters and their behavioral effects. Recognize how drugs (agonists vs antagonists) interact with neurotransmitter systems.', standard: 'AP-PSYCH-1.1-1.2' }],
   prerequisites: [], followUps: ['appsych.brain-structures'], estimatedMinutes: 22,
   segments: [

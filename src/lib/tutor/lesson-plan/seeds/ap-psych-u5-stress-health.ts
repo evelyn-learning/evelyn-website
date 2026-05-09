@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_STRESS_HEALTH: LessonPlan = {
   id: 'evelyn.ap.psych.stress-health.v1', title: 'U5.1 Stress and Health',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.stress-health', description: 'Distinguish stressors and stress response. Identify Selye\'s GAS model. Understand the link between stress and health (cardiovascular, immune, mental). Identify coping strategies.', standard: 'AP-PSYCH-5-STRESS' }],
   prerequisites: [], followUps: ['appsych.anxiety-disorders'], estimatedMinutes: 18,
   segments: [

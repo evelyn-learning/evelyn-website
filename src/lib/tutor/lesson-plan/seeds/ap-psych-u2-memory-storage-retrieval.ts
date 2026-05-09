@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_STORAGE_RETRIEVAL: LessonPlan = {
   id: 'evelyn.ap.psych.memory-storage-retrieval.v1', title: 'U2.2 Memory Storage and Retrieval',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-storage-retrieval', description: 'Distinguish types of long-term memory (declarative vs procedural; semantic vs episodic). Identify retrieval cues, context-dependent and state-dependent memory, and the role of brain structures.', standard: 'AP-PSYCH-2.5-2.6' }],
   prerequisites: ['appsych.memory-models'], followUps: ['appsych.memory-forgetting'], estimatedMinutes: 18,
   segments: [

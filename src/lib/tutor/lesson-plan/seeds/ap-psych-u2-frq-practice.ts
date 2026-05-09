@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_FRQ_PRACTICE: LessonPlan = {
   id: 'evelyn.ap.psych.u2-frq-practice.v1', title: 'U2 FRQ Practice',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.u2-frq-practice', description: 'Apply Unit 2 cognition concepts to AP-style FRQs.', standard: 'AP-PSYCH-2-FRQ' }],
   prerequisites: ['appsych.intelligence'], followUps: [], estimatedMinutes: 26,
   segments: [

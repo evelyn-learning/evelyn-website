@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE: LessonPlan = {
   id: 'evelyn.ap.psych.nervous-endocrine.v1', title: 'U1.3 Nervous System, Endocrine, and Genetics',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.nervous-endocrine', description: 'Distinguish CNS from PNS; somatic from autonomic; sympathetic from parasympathetic. Identify endocrine glands and major hormones. Distinguish heritability and the nature/nurture interaction.', standard: 'AP-PSYCH-1.5' }],
   prerequisites: ['appsych.brain-structures'], followUps: ['appsych.consciousness-sleep'], estimatedMinutes: 18,
   segments: [

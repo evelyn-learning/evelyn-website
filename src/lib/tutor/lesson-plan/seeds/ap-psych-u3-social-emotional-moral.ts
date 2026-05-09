@@ -6,7 +6,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_SOCIAL_EMOTIONAL_MORAL: LessonPlan = {
   id: 'evelyn.ap.psych.social-emotional-moral.v1', title: 'U3.2 Social, Emotional, and Moral Development',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.social-emotional-moral', description: 'Identify Erikson\'s 8 psychosocial stages. Distinguish attachment styles (secure, avoidant, ambivalent, disorganized). Trace Kohlberg\'s 3 levels of moral reasoning.', standard: 'AP-PSYCH-3-SOCIAL' }],
   prerequisites: ['appsych.cognitive-development'], followUps: ['appsych.classical-conditioning'], estimatedMinutes: 22,
   segments: [

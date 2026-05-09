@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_OPERANT_CONDITIONING: LessonPlan = {
   id: 'evelyn.ap.psych.operant-conditioning.v1', title: 'U3.4 Operant Conditioning (Skinner)',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.operant-conditioning', description: 'Distinguish positive vs negative reinforcement and punishment. Identify reinforcement schedules (fixed/variable, ratio/interval). Understand shaping and the role of consequences.', standard: 'AP-PSYCH-3-OPERANT' }],
   prerequisites: ['appsych.classical-conditioning'], followUps: ['appsych.observational-learning'], estimatedMinutes: 22,
   segments: [

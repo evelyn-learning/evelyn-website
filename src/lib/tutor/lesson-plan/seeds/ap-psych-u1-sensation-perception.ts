@@ -5,7 +5,7 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_SENSATION_PERCEPTION: LessonPlan = {
   id: 'evelyn.ap.psych.sensation-perception.v1', title: 'U1.5 Sensation and Perception',
-  curriculum: 'AP', grade: '11', subject: 'science', topic: 'ap-psychology', locale: 'en',
+  curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.sensation-perception', description: 'Distinguish sensation from perception. Identify thresholds and sensory adaptation. Trace visual and auditory pathways. Apply Gestalt principles, depth cues, and explanations of perceptual illusions.', standard: 'AP-PSYCH-1.8-1.10' }],
   prerequisites: ['appsych.consciousness-sleep'], followUps: [], estimatedMinutes: 22,
   segments: [
