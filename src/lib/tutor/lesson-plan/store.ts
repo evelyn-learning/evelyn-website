@@ -782,6 +782,13 @@ import { SEED_AP_PSYCH_U5_MOOD_DISORDERS } from './seeds/ap-psych-u5-mood-disord
 import { SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY } from './seeds/ap-psych-u5-schizo-personality';
 import { SEED_AP_PSYCH_U5_THERAPY } from './seeds/ap-psych-u5-therapy';
 import { SEED_AP_PSYCH_U5_FRQ_PRACTICE } from './seeds/ap-psych-u5-frq-practice';
+// AP Research — new format (process-driven).
+import { SEED_AP_RESEARCH_U1_RESEARCH_QUESTION } from './seeds/ap-research-u1-research-question';
+import { SEED_AP_RESEARCH_U2_LITERATURE_REVIEW } from './seeds/ap-research-u2-literature-review';
+import { SEED_AP_RESEARCH_U3_METHODOLOGY } from './seeds/ap-research-u3-methodology';
+import { SEED_AP_RESEARCH_U4_DATA_ANALYSIS } from './seeds/ap-research-u4-data-analysis';
+import { SEED_AP_RESEARCH_U5_ETHICS_CITATIONS } from './seeds/ap-research-u5-ethics-citations';
+import { SEED_AP_RESEARCH_U6_PRESENTATION } from './seeds/ap-research-u6-presentation';
 // Batch 46 — AP USH/World depth.
 import { SEED_AP_USH_WWII } from './seeds/ap-ush-wwii';
 import { SEED_AP_USH_MODERN_ERA } from './seeds/ap-ush-modern-era';
@@ -1992,6 +1999,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY,
   SEED_AP_PSYCH_U5_THERAPY,
   SEED_AP_PSYCH_U5_FRQ_PRACTICE,
+  SEED_AP_RESEARCH_U1_RESEARCH_QUESTION,
+  SEED_AP_RESEARCH_U2_LITERATURE_REVIEW,
+  SEED_AP_RESEARCH_U3_METHODOLOGY,
+  SEED_AP_RESEARCH_U4_DATA_ANALYSIS,
+  SEED_AP_RESEARCH_U5_ETHICS_CITATIONS,
+  SEED_AP_RESEARCH_U6_PRESENTATION,
   SEED_AP_USH_WWII,
   SEED_AP_USH_MODERN_ERA,
   SEED_AP_WORLD_COLD_WAR,
