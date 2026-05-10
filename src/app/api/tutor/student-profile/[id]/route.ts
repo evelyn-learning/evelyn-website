@@ -4,8 +4,9 @@
  *
  * The POST body contains the accumulated session events (mastery
  * deltas, gaps recorded, LOs touched, transcript, lesson plan id).
- * The route applies them to the persisted profile, generates notes
- * asynchronously (response returns the notes), and saves the result.
+ * The route applies them to the persisted profile, generates the
+ * session summary (returned in the response and stamped on the new
+ * SessionMemory entry), and saves the result.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,7 +21,7 @@ import {
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
-import { generateSessionNotes, type SessionNotesInput } from '@/lib/tutor/student-profile/notes';
+import { generateSessionSummary, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -56,9 +57,10 @@ interface CommitBody {
     /** Legacy field — old clients may still post this. Mapped to observation. */
     description?: string;
   }>;
-  /** Full transcript for the notes generator. */
+  /** Full transcript for the summary generator. */
   transcript?: Array<{ role: 'student' | 'tutor'; text: string }>;
-  /** When false, skip notes generation (faster commit). Defaults to true. */
+  /** When false, skip summary generation (faster commit). Defaults to true.
+   *  Field name kept for backwards compatibility with older clients. */
   generateNotes?: boolean;
 }
 
@@ -116,12 +118,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     profile = applyCrossSessionPromotion(profile, body.masteryDeltas, body.sessionId);
   }
 
-  let notesError: string | undefined;
-  let notes: Awaited<ReturnType<typeof generateSessionNotes>> | undefined;
+  let summaryError: string | undefined;
+  let summary: string | undefined;
   if (body.generateNotes !== false && Array.isArray(body.transcript) && body.transcript.length > 0) {
     try {
       const lessonPlan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
-      const notesInput: SessionNotesInput = {
+      const summaryInput: SessionSummaryInput = {
         transcript: body.transcript,
         lessonPlan,
         subject: body.subject,
@@ -129,10 +131,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         grade: body.grade,
         losTouched: body.losTouched,
       };
-      notes = await generateSessionNotes(notesInput);
+      summary = await generateSessionSummary(summaryInput);
     } catch (err) {
-      notesError = (err as Error).message;
-      console.error('[student-profile] notes generation failed:', err);
+      summaryError = (err as Error).message;
+      console.error('[student-profile] summary generation failed:', err);
     }
   }
 
@@ -144,7 +146,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     grade: body.grade,
     lessonPlanId: body.lessonPlanId,
     losTouched: body.losTouched ?? [],
-    summary: notes?.summary,
+    summary,
     durationMinutes: body.durationMinutes,
     masteryDeltas: body.masteryDeltas,
   });
@@ -154,7 +156,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   return NextResponse.json({
     profile: saved,
-    notes,
-    notesError,
+    summary,
+    summaryError,
   });
 }

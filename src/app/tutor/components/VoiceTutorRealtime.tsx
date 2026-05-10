@@ -347,8 +347,8 @@ export function VoiceTutorRealtime({
         return;
       }
       const data = await res.json();
-      if (data.notes) {
-        console.log('[VoiceTutorRealtime] session notes generated:', data.notes.summary);
+      if (data.summary) {
+        console.log('[VoiceTutorRealtime] session summary generated:', data.summary);
       }
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
