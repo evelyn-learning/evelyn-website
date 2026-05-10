@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "course": "ap-macroeconomics",
+  "generatedAt": "2026-05-10T00:37:11.853Z",
+  "searchQueriesByConcept": {
+    "ap-macro-1.1": [
+      {
+        "query": "AP Macroeconomics scarcity opportunity cost trade-offs Unit 1 AP Daily",
+        "channel": "Advanced Placement",
+        "reason": "Fallback search in case the AP Daily 1.1 URL changes or is re-uploaded under a slightly different title."
+      },
+      {
+        "query": "scarcity opportunity cost trade-offs AP Macroeconomics ACDC",
+        "channel": "Jacob Clifford",
+        "reason": "Broader search to surface any additional or updated Jacob Clifford scarcity videos if the Topic 1.1 standalone video is ever revised or replaced."
+      },
+      {
+        "query": "scarcity and opportunity cost AP Macroeconomics Khan Academy",
+        "channel": "Khan Academy",
+        "reason": "Khan Academy's AP Macro series is a strong third-priority fallback that covers scarcity and opportunity cost clearly if neither top-priority video suits the app's needs."
+      }
+    ],
+    "ap-macro-1.2": [
+      {
+        "query": "AP Daily AP Macroeconomics resource allocation economic systems factors of production",
+        "channel": "Advanced Placement",
+        "reason": "The College Board's AP Daily series is the gold standard; this query targets the official video for this exact AP Macro 1.2 topic if one exists under the macro CED."
+      },
+      {
+        "query": "Jacob Clifford economic systems command market mixed economy ACDC",
+        "channel": "Jacob Clifford",
+        "reason": "Jacob Clifford's ACDC Econ channel has a dedicated 'Economic Systems' video (VIDEO 1.6 in his review packet) covering command, market, and mixed economies aligned to this CED topic."
+      },
+      {
+        "query": "Khan Academy factors of production three economic questions command market economy",
+        "channel": "Khan Academy",
+        "reason": "Khan Academy's macroeconomics playlist covers factors of production and economic systems as foundational Unit 1 content, making it a strong fallback option."
+      }
+    ],
+    "ap-macro-1.3": [
+      {
+        "query": "AP Daily Micro 1.3 Macro 1.2 Production Possibilities Curve Advanced Placement",
+        "channel": "Advanced Placement",
+        "reason": "Confirms whether GHirhn_P2vg lives on the official College Board 'Advanced Placement' channel and surfaces any companion AP Daily video specifically for the Macro 1.3 numbering if the CED was renumbered."
+      },
+      {
+        "query": "Shifting Production Possibilities Curve AP Macroeconomics Jacob Clifford",
+        "channel": "Jacob Clifford (ACDC Leadership)",
+        "reason": "Jacob Clifford's dedicated PPC-shifts video (FwPiWz1a1Tw) zeroes in on outward/inward/biased shifts and economic growth drivers—ideal if the curator wants a second Clifford video focused solely on shifts."
+      },
+      {
+        "query": "Production Possibilities Curve AP Macroeconomics Khan Academy opportunity cost",
+        "channel": "Khan Academy",
+        "reason": "Surfaces Khan Academy's confirmed AP Macro PPC video (9zZY6RfN6iA) as a fallback option that covers opportunity cost computation and curve interpretation with step-by-step worked examples."
+      }
+    ],
+    "ap-macro-1.4": [
+      {
+        "query": "AP Daily Macro 1.4 comparative advantage gains from trade Advanced Placement",
+        "channel": "Advanced Placement",
+        "reason": "Targets the official AP Daily video keyed to the current 2025 CED topic number (1.4) in case College Board published a dedicated updated lesson."
+      },
+      {
+        "query": "Jacob Clifford comparative advantage opportunity cost terms of trade AP Macro",
+        "channel": "Jacob Clifford",
+        "reason": "Broad Clifford search to surface any newer or alternate versions of his comparative advantage lesson that may better match the 2025 CED numbering."
+      },
+      {
+        "query": "Khan Academy opportunity cost comparative advantage AP Macroeconomics output table",
+        "channel": "Khan Academy",
+        "reason": "Targets Khan Academy's CED-aligned lesson on computing opportunity cost from a production/output table, which is a core skill in this topic."
+      }
+    ],
+    "ap-macro-1.5": [
+      {
+        "query": "AP Daily cost benefit analysis marginal benefit marginal cost unit 1",
+        "channel": "Advanced Placement",
+        "reason": "The official College Board AP Daily series produces topic-aligned videos for nearly every CED entry; this query targets the 1.5 Cost-Benefit Analysis episode."
+      },
+      {
+        "query": "AP Macro cost benefit analysis sunk cost marginal benefit marginal cost",
+        "channel": "Jacob Clifford",
+        "reason": "Clifford may have a macro-specific version or a sunk-cost explainer that pairs with the 1.5 video already proposed."
+      },
+      {
+        "query": "marginal benefit marginal cost sunk cost AP economics",
+        "channel": "Khan Academy",
+        "reason": "Khan Academy's economics playlist covers MB=MC optimal decisions and sunk costs and would serve as a strong fallback if AP Daily and Clifford videos are unavailable."
+      }
+    ],
+    "ap-macro-1.6": [
+      {
+        "query": "AP Daily marginal utility consumer choice unit 1 topic 1.6 microeconomics",
+        "channel": "Advanced Placement (College Board)",
+        "reason": "Targets the official AP Daily video for Topic 1.6 — the gold-standard source — whose specific video ID could not be confirmed via search and should be verified directly on the Advanced Placement YouTube channel."
+      },
+      {
+        "query": "marginal utility diminishing marginal utility equimarginal principle AP Macro",
+        "channel": "Marginal Revolution University",
+        "reason": "MRU has standalone videos on diminishing marginal utility and consumer choice that may serve as a strong fourth-priority backup if the AP Daily video is not available."
+      },
+      {
+        "query": "utility maximization MU per dollar consumer choice Crash Course Economics",
+        "channel": "CrashCourse",
+        "reason": "Crash Course Economics covers consumer choice in a broad episode that could supplement the above videos for students who benefit from a narrative, example-driven introduction to utility concepts."
+      }
+    ],
+    "ap-macro-2.1": [],
+    "ap-macro-2.2": [],
+    "ap-macro-2.3": [],
+    "ap-macro-2.4": [],
+    "ap-macro-2.5": [],
+    "ap-macro-2.6": [],
+    "ap-macro-2.7": [],
+    "ap-macro-3.1": [],
+    "ap-macro-3.2": [],
+    "ap-macro-3.3": [],
+    "ap-macro-3.4": [],
+    "ap-macro-3.5": [],
+    "ap-macro-3.6": [],
+    "ap-macro-3.7": [],
+    "ap-macro-3.8": [],
+    "ap-macro-3.9": [],
+    "ap-macro-4.1": [],
+    "ap-macro-4.2": [],
+    "ap-macro-4.3": [],
+    "ap-macro-4.4": [],
+    "ap-macro-4.5": [],
+    "ap-macro-4.6": [],
+    "ap-macro-4.7": [],
+    "ap-macro-5.1": [],
+    "ap-macro-5.2": [],
+    "ap-macro-5.3": [],
+    "ap-macro-5.4": [],
+    "ap-macro-5.5": [],
+    "ap-macro-5.6": [],
+    "ap-macro-6.1": [],
+    "ap-macro-6.2": [],
+    "ap-macro-6.3": [],
+    "ap-macro-6.4": [],
+    "ap-macro-6.5": [],
+    "ap-macro-6.6": []
+  },
+  "drafts": [
+    {
+      "id": "9a852314-356a-4d99-8997-a9e68176ea2b",
+      "conceptId": "ap-macro-1.1",
+      "cedTopic": "1.1",
+      "cedTitle": "Scarcity",
+      "video": {
+        "youtubeId": "deUqLLiu_CI",
+        "title": "Thinking Like An Economist- Macro/MicroTopic 1.1",
+        "channel": "Jacob Clifford",
+        "durationSec": 442
+      },
+      "reason": "Jacob Clifford's video is explicitly tagged to AP/college Econ Topic 1.1 and covers scarcity, trade-offs, and opportunity cost in the approachable, student-friendly style that makes his channel the most popular AP Macro resource on YouTube.",
+      "sourceQuality": "high",
+      "clip": null,
+      "errors": [
+        "Transcript unavailable: [YoutubeTranscript] 🚨 Transcript is disabled on this video (deUqLLiu_CI)"
+      ],
+      "generatedAt": "2026-05-10T00:34:45.093Z"
+    },
+    {
+      "id": "0b198969-a755-4184-a68e-fcd7657d497f",
+      "conceptId": "ap-macro-1.1",
+      "cedTopic": "1.1",
+      "cedTitle": "Scarcity",
+      "video": null,
+      "reason": "This is the official College Board AP Daily video mapped directly to CED Topic 1.1, covering the definition of scarcity and how real-world scarcity drives decision-making — an exact match for this learning objective.",
+      "sourceQuality": "unknown",
+      "clip": null,
+      "errors": [
+        "Video FAqv-nZy8Qc failed oEmbed (private/deleted/region-blocked)"
+      ],
+      "generatedAt": "2026-05-10T00:34:43.106Z"
+    },
+    {
+      "id": "5278b877-4fde-48ec-842b-f9762ef00a2e",
+      "conceptId": "ap-macro-1.3",
+      "cedTopic": "1.3",
+      "cedTitle": "Production Possibilities Curve",
+      "video": {
+        "youtubeId": "4UbKAlMTL7c",
+        "title": "Production Possibilities Curve- Macro Topic 1.2 (Micro Topic 1.3)",
+        "channel": "Jacob Clifford",
+        "durationSec": 435
+      },
+      "reason": "Jacob Clifford's primary, purpose-built PPC video covering all key learning objectives—reading points on/inside/outside the curve, computing opportunity cost, bowed-out vs. linear shapes, and shifts—directly aligned to AP Macro Topic 1.2 (matching CED Topic 1.3).",
+      "sourceQuality": "high",
+      "clip": {
+        "startSec": 120,
+        "endSec": 308,
+        "summary": "Explains opportunity cost calculation, bowed-out vs. linear PPC shapes, inefficient/unattainable points, and shifts from economic growth.",
+        "confidence": 0.9
+      },
+      "errors": [],
+      "generatedAt": "2026-05-10T00:35:44.817Z"
+    },
+    {
+      "id": "0f77124c-b435-4688-aa97-21bf078d8554",
+      "conceptId": "ap-macro-1.3",
+      "cedTopic": "1.3",
+      "cedTitle": "Production Possibilities Curve",
+      "video": {
+        "youtubeId": "GHirhn_P2vg",
+        "title": "Micro 1.3/Macro 1.2 Production Possibilities Curve",
+        "channel": "ReviewEcon",
+        "durationSec": 591
+      },
+      "reason": "Explicitly tagged to AP Micro Topic 1.3 and AP Macro Topic 1.2 in its description, making it the most CED-aligned single video for this exact topic; published July 2022, consistent with the AP Daily series rollout.",
+      "sourceQuality": "medium",
+      "clip": {
+        "startSec": 306,
+        "endSec": 510,
+        "summary": "Explains efficient, inefficient, and unattainable points on the PPC, then covers inward/outward shifts and biased technology shifts.",
+        "confidence": 0.95
+      },
+      "errors": [],
+      "generatedAt": "2026-05-10T00:35:44.732Z"
+    },
+    {
+      "id": "a5ba1b1c-416a-4efc-acc0-6501710fc818",
+      "conceptId": "ap-macro-1.4",
+      "cedTopic": "1.4",
+      "cedTitle": "Comparative Advantage and Gains from Trade",
+      "video": {
+        "youtubeId": "XTEb98PY0XA",
+        "title": "Comparative Advantage and Trade - Macro Topic 1.3 (Micro Topic 1.4)",
+        "channel": "Jacob Clifford",
+        "durationSec": 524
+      },
+      "reason": "Jacob Clifford's most-referenced video for this exact topic — officially cited as the video help link in his own AP Macro 1.3 worksheets — walking students through opportunity cost calculation, absolute vs. comparative advantage, specialization, and terms of trade with worked examples.",
+      "sourceQuality": "high",
+      "clip": {
+        "startSec": 99,
+        "endSec": 249,
+        "summary": "Demonstrates computing per-unit opportunity costs, identifying comparative advantage, and determining mutually-beneficial terms of trade using cars and planes example.",
+        "confidence": 0.97
+      },
+      "errors": [],
+      "generatedAt": "2026-05-10T00:36:12.717Z"
+    },
+    {
+      "id": "7fbd75a0-f930-4e0a-b9f2-13e5aa7032fa",
+      "conceptId": "ap-macro-1.4",
+      "cedTopic": "1.4",
+      "cedTitle": "Comparative Advantage and Gains from Trade",
+      "video": null,
+      "reason": "This official AP Daily faculty lecture focuses specifically on Comparative Advantage and Trade for AP Macroeconomics Unit 1, covering all CED-aligned learning objectives from a College Board-endorsed professor.",
+      "sourceQuality": "unknown",
+      "clip": null,
+      "errors": [
+        "Video 7s-njw6KyIE failed oEmbed (private/deleted/region-blocked)"
+      ],
+      "generatedAt": "2026-05-10T00:36:09.004Z"
+    },
+    {
+      "id": "2836eea5-dc0d-4794-b4a3-a090f82ca734",
+      "conceptId": "ap-macro-1.5",
+      "cedTopic": "1.5",
+      "cedTitle": "Cost-Benefit Analysis",
+      "video": {
+        "youtubeId": "_MrbExMADls",
+        "title": "Cost-Benefit Analysis- Micro Topic 1.5",
+        "channel": "Jacob Clifford",
+        "durationSec": 440
+      },
+      "reason": "Directly covers CED Topic 1.5 — explicit vs. implicit costs, the MB=MC optimal decision rule, and cost-benefit reasoning — matching every key idea in this learning objective.",
+      "sourceQuality": "high",
+      "clip": null,
+      "errors": [
+        "Segmenter: Video covers explicit/implicit costs and total utility but does not address marginal benefit, marginal cost, the MB=MC optimal rule, or sunk costs central to CED Topic 1.5."
+      ],
+      "generatedAt": "2026-05-10T00:36:39.264Z"
+    },
+    {
+      "id": "3f909761-3dce-47b3-981d-646834069192",
+      "conceptId": "ap-macro-1.6",
+      "cedTopic": "1.6",
+      "cedTitle": "Marginal Analysis and Consumer Choice",
+      "video": {
+        "youtubeId": "1exopHOl1jo",
+        "title": "Marginal Analysis and Consumer Choice- Micro Topic 1.6",
+        "channel": "Jacob Clifford",
+        "durationSec": 598
+      },
+      "reason": "Jacob Clifford's dedicated 9-minute video for CED Topic 1.6 covers total vs. marginal utility, the law of diminishing marginal utility, and the equimarginal (MU/P) rule with worked table examples — directly paired with his official Topic 1.6 student worksheet, making it the most widely used AP-aligned resource for this exact topic.",
+      "sourceQuality": "high",
+      "clip": null,
+      "errors": [
+        "Segmenter error: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified API usage limits. You will regain access on 2026-06-01 at 00:00 UTC.\"},\"request_id\":\"req_011CasxEEsexhKjumnGvhgyy\"}"
+      ],
+      "generatedAt": "2026-05-10T00:37:04.522Z"
+    },
+    {
+      "id": "63598cf9-6b9d-472d-b929-e2ba9cc201a6",
+      "conceptId": "ap-macro-1.6",
+      "cedTopic": "1.6",
+      "cedTitle": "Marginal Analysis and Consumer Choice",
+      "video": {
+        "youtubeId": "CxAXc9vL2rI",
+        "title": "Marginal utllity free response example | APⓇ Microeconomics | Khan Academy",
+        "channel": "Khan Academy",
+        "durationSec": 496
+      },
+      "reason": "Khan Academy's video is explicitly titled and structured around AP CED Topic 1.6, walking through diminishing marginal utility and the utility-maximizing (MU/P) rule in a clear, step-by-step format that complements Clifford's approach with a second pedagogical perspective.",
+      "sourceQuality": "high",
+      "clip": null,
+      "errors": [
+        "Segmenter error: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified API usage limits. You will regain access on 2026-06-01 at 00:00 UTC.\"},\"request_id\":\"req_011CasxEFoDf29vFEZSpd4ca\"}"
+      ],
+      "generatedAt": "2026-05-10T00:37:04.711Z"
+    }
+  ]
+}

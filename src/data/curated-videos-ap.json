@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "course": "ap-macroeconomics",
+  "segments": [
+    {
+      "id": "8cbee16b-3da2-4a90-bfa7-95ef11d87043",
+      "course": "ap-macroeconomics",
+      "conceptId": "ap-macro-1.2",
+      "conceptTitle": "Resource Allocation and Economic Systems",
+      "youtubeId": "B43YEW2FvDs",
+      "videoTitle": "Economic Systems and Macroeconomics: Crash Course Economics #3",
+      "videoChannel": "CrashCourse",
+      "videoDurationSec": 617,
+      "language": "en-US",
+      "startSec": 55,
+      "endSec": 215,
+      "summary": "Explains the three economic questions, factors of production, and the command-to-free-market spectrum including mixed economies with real-world examples.",
+      "approvedAt": "2026-05-10T01:21:46.256Z"
+    }
+  ]
+}
