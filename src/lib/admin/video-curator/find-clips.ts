@@ -146,7 +146,17 @@ async function proposeVideos(
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: PROPOSER_SYSTEM,
+      // Static across every topic in the run — mark as ephemeral cache
+      // so the second-and-onward call hit the cached prefix at ~10% of
+      // the input rate. Cache TTL is 5 min; the batch issues calls
+      // sequentially well within that window.
+      system: [
+        {
+          type: 'text',
+          text: PROPOSER_SYSTEM,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
       tools: [
         {
           type: 'web_search_20250305',
@@ -210,7 +220,13 @@ Identify the SINGLE best clip (30-240s). Return JSON only.`;
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: SEGMENTER_SYSTEM,
+      system: [
+        {
+          type: 'text',
+          text: SEGMENTER_SYSTEM,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
       messages: [{ role: 'user', content: userMsg }],
     });
     const textBlock = response.content
