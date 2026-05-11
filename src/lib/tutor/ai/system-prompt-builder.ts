@@ -39,6 +39,38 @@ function parseGradeForCatalog(level?: string): 'k' | number | undefined {
   return undefined;
 }
 
+/** Catalog subject tags used by `renderCatalogForPrompt`. */
+type CatalogSubject = 'math' | 'physics' | 'chemistry' | 'biology' | 'earth' | 'cs' | 'ela' | 'social';
+
+/** Map a plan-side `subject` value (free-form across seeds) to a catalog
+ *  subject tag. Returns `undefined` when the plan subject doesn't have a
+ *  single catalog counterpart (e.g. `'sci'` / `'science'` spans physics/
+ *  chemistry/biology/earth; `'arts'` / `'languages'` / `'test-prep'` aren't
+ *  in the catalog enum). When undefined is returned the catalog filter
+ *  drops the subject constraint and narrows by grade only — better to
+ *  show too many kinds than to filter the brain into an empty schema
+ *  list (the original 2026-05-11 AP Macro bug). */
+function toCatalogSubject(planSubject?: string): CatalogSubject | undefined {
+  if (!planSubject) return undefined;
+  switch (planSubject) {
+    case 'math':       return 'math';
+    case 'physics':    return 'physics';
+    case 'chemistry':  return 'chemistry';
+    case 'biology':    return 'biology';
+    case 'earth':      return 'earth';
+    case 'cs':         return 'cs';
+    case 'ela':        return 'ela';
+    case 'social':     return 'social';
+    case 'ss':
+    case 'social-studies':
+      return 'social';
+    default:
+      // 'sci' / 'science' / 'arts' / 'languages' / 'test-prep' / unknown —
+      // no single catalog tag covers these. Fall through to grade-only filter.
+      return undefined;
+  }
+}
+
 /**
  * Generate a context-aware initial greeting prompt based on session goal
  * This is sent as the "user message" to trigger the tutor's greeting
@@ -1031,9 +1063,18 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // The contract is: the kind enum in show_diagram's tool definition is
   // authoritative; this block tells the brain WHICH kinds fit + what
   // params each one accepts.
+  //
+  // Plan-side `subject` values (free-form across seeds: 'ss', 'sci',
+  // 'science', 'social-studies', 'arts', 'languages', 'test-prep', etc.)
+  // don't match the catalog's tag enum directly. Without normalization,
+  // any subject that doesn't equal a catalog tag literally would filter
+  // OUT every non-'general' kind, leaving the brain to guess param
+  // shapes for catalog diagrams (observed 2026-05-11 AP Macro session:
+  // brain invented `shiftDemand: "right"` instead of `shift: { curve:
+  // 'D', direction: 'right' }` because it never saw the schema).
   try {
     const grade = parseGradeForCatalog(context.level);
-    const subject = context.subject as 'math' | 'physics' | 'chemistry' | 'biology' | 'earth' | 'cs' | 'ela' | 'social' | undefined;
+    const subject = toCatalogSubject(context.subject);
     prompt += `\n\n## ${renderCatalogForPrompt({ subject, grade })}\n`;
   } catch { /* catalog unavailable; skip */ }
 
