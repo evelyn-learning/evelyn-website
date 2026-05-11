@@ -19,18 +19,17 @@ import type { TopicNotesBaseline } from './types';
 // ---------------------------------------------------------------------------
 // Baseline imports — registered as they're authored.
 //
-// Phase 1 (AP Macro U4):
-//   import { BASELINE_AP_MACRO_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
-//   import { BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY } from './seeds/ap-macro-u4-functions-of-money';
-//   import { BASELINE_AP_MACRO_BANKING_MONEY_CREATION } from './seeds/ap-macro-u4-banking-money-creation';
-//   import { BASELINE_AP_MACRO_MONEY_MARKET } from './seeds/ap-macro-u4-money-market';
-//   import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
-//   import { BASELINE_AP_MACRO_FINANCIAL_ASSETS } from './seeds/ap-macro-u4-financial-assets';
-//   import { BASELINE_AP_MACRO_NOMINAL_REAL_RATES } from './seeds/ap-macro-u4-nominal-real-rates';
+// Phase 1 (AP Macro U4) — calibration baseline shipped; remaining 6 to
+// follow via scripts/extract-topic-notes-baselines.ts + manual review:
+//   ✓ BASELINE_AP_MACRO_LOANABLE_FUNDS (calibration)
+//   - functions-of-money / banking-money-creation / money-market
+//   - monetary-policy / financial-assets / nominal-vs-real-interest-rates
 // ---------------------------------------------------------------------------
 
+import { BASELINE_AP_MACRO_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
-  // Phase 1 baselines registered here as authored.
+  BASELINE_AP_MACRO_LOANABLE_FUNDS,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
