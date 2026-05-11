@@ -632,6 +632,11 @@ function formatTopicNotesStateBlock(state: BrainTurnInput['topicNotesState']): s
   const eligible = state.completedSegments >= state.warmupSegmentsRequired;
   const r = state.remaining;
   const totalRemaining = r.theory + r.methods + r.pointers;
+  // Telemetry — server log line verifies the eligibility signal reached
+  // the prompt builder. Mirrors the [pacing] hint-rendered pattern.
+  console.log(
+    `[topic-notes] state-rendered eligible=${eligible ? 'yes' : 'no'} completed=${state.completedSegments}/${state.warmupSegmentsRequired} remaining=t${r.theory}/m${r.methods}/p${r.pointers}`,
+  );
   if (!eligible) {
     return (
       `<topic_notes_state>\n` +
@@ -650,7 +655,8 @@ function formatTopicNotesStateBlock(state: BrainTurnInput['topicNotesState']): s
   return (
     `<topic_notes_state>\n` +
     `eligible: YES (warmup cleared) — topic-notes tool calls this turn will land on baseline "${state.baselineId}".\n` +
-    `remaining capacity this session: theory ${r.theory}, methods ${r.methods}, pointers ${r.pointers}. Spend on the highest-value moments, not the first ones.\n` +
+    `remaining capacity this session: theory ${r.theory}, methods ${r.methods}, pointers ${r.pointers}.\n` +
+    `**Default to FIRING this turn if any moment is worth revision** — a vocabulary trap surfaced, the student used a non-canonical method that worked, an explanation deepened a baseline LO. Dedup against baseline + prior overlays is automatic, so over-firing is safe; the orchestrator collapses repeats. The 5/3/5 caps are headroom, not targets — spend them. The cost of leaving gaps in the student's revision artifact is higher than the cost of one too many entries.\n` +
     `</topic_notes_state>\n\n`
   );
 }
