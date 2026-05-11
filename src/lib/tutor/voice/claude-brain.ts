@@ -113,6 +113,23 @@ export interface BrainTurnInput {
      *  as "applied since N turns ago" in the pace_preference block. */
     paceBiasAppliedSinceTurns?: number;
   };
+  /** Topic-notes orchestrator state — warmup status + remaining per-bucket
+   *  capacity for the current session. Surfaces as a compact
+   *  `<topic_notes_state>` block so the brain knows when to fire (warmup
+   *  cleared) vs. wait (warmup not yet cleared, calls would be silent-
+   *  dropped). Without this signal the brain has no way to know whether
+   *  its tool calls would land. Computed in the orchestrator from
+   *  `completedSegmentIdsRef.size` + `sessionAccumRef.topicNotesCount` +
+   *  the rate-limit constants. */
+  topicNotesState?: {
+    /** Active plan id (== topic-notes baselineId). Empty/omitted in
+     *  free-conversation sessions; the formatter renders nothing. */
+    baselineId: string;
+    completedSegments: number;
+    warmupSegmentsRequired: number;
+    /** Per-bucket capacity remaining this session (cap minus attempts). */
+    remaining: { theory: number; methods: number; pointers: number };
+  };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
   /** Optional override (defaults to 1500). */
@@ -602,6 +619,42 @@ function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']): string
   );
 }
 
+/** Compact eligibility + capacity block for the topic-notes tools.
+ *  Renders nothing when no plan / no baselineId. Three states:
+ *    - warmup not cleared: tells brain calls would be silent-dropped.
+ *    - warmup cleared, capacity remaining: tells brain it can fire +
+ *      how many adds remain per bucket.
+ *    - warmup cleared, capacity exhausted: tells brain not to bother.
+ *  Generic structural shape per feedback_generic_prompts.md — no
+ *  subject-specific examples. */
+function formatTopicNotesStateBlock(state: BrainTurnInput['topicNotesState']): string {
+  if (!state || !state.baselineId) return '';
+  const eligible = state.completedSegments >= state.warmupSegmentsRequired;
+  const r = state.remaining;
+  const totalRemaining = r.theory + r.methods + r.pointers;
+  if (!eligible) {
+    return (
+      `<topic_notes_state>\n` +
+      `eligible: NO — warmup ${state.completedSegments}/${state.warmupSegmentsRequired} segments completed.\n` +
+      `Topic-notes tools (expand_topic_notes_theory, add_topic_notes_method, add_topic_notes_pointer) will be silent-dropped if called this turn. Wait until warmup clears.\n` +
+      `</topic_notes_state>\n\n`
+    );
+  }
+  if (totalRemaining === 0) {
+    return (
+      `<topic_notes_state>\n` +
+      `eligible: capacity exhausted this session (theory ${r.theory}, methods ${r.methods}, pointers ${r.pointers} remaining). Don't call topic-notes tools further this session.\n` +
+      `</topic_notes_state>\n\n`
+    );
+  }
+  return (
+    `<topic_notes_state>\n` +
+    `eligible: YES (warmup cleared) — topic-notes tool calls this turn will land on baseline "${state.baselineId}".\n` +
+    `remaining capacity this session: theory ${r.theory}, methods ${r.methods}, pointers ${r.pointers}. Spend on the highest-value moments, not the first ones.\n` +
+    `</topic_notes_state>\n\n`
+  );
+}
+
 function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
   if (!active?.statement) return '';
   return (
@@ -657,6 +710,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (pacePreferenceBlock) {
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
+  const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
     lessonBlock +
@@ -664,6 +718,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     activeProblemBlock +
     studentStateBlock +
     pacePreferenceBlock +
+    topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -782,6 +837,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (pacePreferenceBlock) {
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
+  const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
     lessonBlock +
@@ -789,6 +845,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     activeProblemBlock +
     studentStateBlock +
     pacePreferenceBlock +
+    topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

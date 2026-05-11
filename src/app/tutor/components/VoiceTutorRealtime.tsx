@@ -62,7 +62,12 @@ import type { InteractionType } from '@/hooks/useDemoTracking';
 //   - async fire-and-forget PATCH; failures log-only
 // Dedup against baseline + existing overlays lives in apply-overlay.ts;
 // the orchestrator just routes.
-const TOPIC_NOTES_WARMUP_SEGMENTS = 3;
+// Lowered 3 → 1 for v1 calibration: with the 3-segment gate, short test
+// sessions never cleared warmup before ending, leaving the brain unable
+// to fire even once. 1 lets the brain start adding notes after the
+// student has shown any engagement at all (post-hook segment). Re-tune
+// from telemetry once we see real over-firing patterns.
+const TOPIC_NOTES_WARMUP_SEGMENTS = 1;
 const TOPIC_NOTES_RATE_LIMITS = { theory: 5, methods: 3, pointers: 5 } as const;
 
 async function dispatchTopicNotesOverlay(
@@ -4319,6 +4324,24 @@ export function VoiceTutorRealtime({
             // console.log doesn't reach there reliably).
             pacingTelemetry: pacingTelemetryRef.current.length > 0
               ? [...pacingTelemetryRef.current] : undefined,
+            // Topic-notes orchestrator state — tells the brain whether
+            // tools are eligible (warmup cleared) + remaining capacity
+            // per bucket. Without this signal the brain has no way to
+            // know if its tool calls would land vs. silent-drop. Only
+            // sent when the session is plan-driven (free-conversation
+            // sessions can't anchor overlays anyway).
+            topicNotesState: lessonPlanId
+              ? {
+                  baselineId: lessonPlanId,
+                  completedSegments: completedSegmentIdsRef.current.size,
+                  warmupSegmentsRequired: TOPIC_NOTES_WARMUP_SEGMENTS,
+                  remaining: {
+                    theory: Math.max(0, TOPIC_NOTES_RATE_LIMITS.theory - sessionAccumRef.current.topicNotesCount.theory),
+                    methods: Math.max(0, TOPIC_NOTES_RATE_LIMITS.methods - sessionAccumRef.current.topicNotesCount.methods),
+                    pointers: Math.max(0, TOPIC_NOTES_RATE_LIMITS.pointers - sessionAccumRef.current.topicNotesCount.pointers),
+                  },
+                }
+              : undefined,
           }),
         });
         pacingTelemetryRef.current = [];

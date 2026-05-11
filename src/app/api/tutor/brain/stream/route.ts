@@ -63,6 +63,10 @@ interface BrainStreamRequestBody {
    *  BrainTurnInput.pacingState for shape; the brain formatter omits
    *  the block entirely when nothing is interesting. */
   pacingState?: BrainTurnInput['pacingState'];
+  /** Topic-notes orchestrator state. Surfaces as `<topic_notes_state>`
+   *  block in the brain prompt so the brain knows whether tools are
+   *  eligible (warmup cleared) and how much budget remains per bucket. */
+  topicNotesState?: BrainTurnInput['topicNotesState'];
   /** Pacing v2 telemetry — events buffered on the client since the
    *  previous brain call. Each line is already-formatted ("[pacing]
    *  streak-correct seg=… count=…"). The route emits each as its own
@@ -340,6 +344,7 @@ export async function POST(req: NextRequest) {
           studentProfileBlock: body.studentProfileBlock,
           activeProblem: body.activeProblem,
           pacingState: body.pacingState,
+          topicNotesState: body.topicNotesState,
           grade: body.grade,
           tools: WHITEBOARD_TOOLS,
           model: body.model,
