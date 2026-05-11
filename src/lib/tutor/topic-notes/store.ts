@@ -19,17 +19,36 @@ import type { TopicNotesBaseline } from './types';
 // ---------------------------------------------------------------------------
 // Baseline imports — registered as they're authored.
 //
-// Phase 1 (AP Macro U4) — calibration baseline shipped; remaining 6 to
-// follow via scripts/extract-topic-notes-baselines.ts + manual review:
-//   ✓ BASELINE_AP_MACRO_LOANABLE_FUNDS (calibration)
-//   - functions-of-money / banking-money-creation / money-market
-//   - monetary-policy / financial-assets / nominal-vs-real-interest-rates
+// Phase 1 (AP Macro U4) — all 7 baselines shipped:
+//   ✓ loanable-funds       (hand-authored calibration baseline)
+//   ✓ functions-of-money   (extracted via scripts/extract-topic-notes-baselines.ts)
+//   ✓ banking-money-creation
+//   ✓ financial-assets
+//   ✓ nominal-vs-real-interest-rates
+//   ✓ money-market
+//   ✓ monetary-policy
+//
+// FRQ-practice plans (ap-macro-u4-frq-practice etc.) deferred to Phase 2 —
+// they need a different extractor pass (no concept segments to extract from;
+// they're pure practice → pointers + methods only, no theory).
 // ---------------------------------------------------------------------------
 
 import { BASELINE_AP_MACRO_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
+import { BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY } from './seeds/ap-macro-u4-functions-of-money';
+import { BASELINE_AP_MACRO_BANKING_MONEY_CREATION } from './seeds/ap-macro-u4-banking-money-creation';
+import { BASELINE_AP_MACRO_FINANCIAL_ASSETS } from './seeds/ap-macro-u4-financial-assets';
+import { BASELINE_AP_MACRO_NOMINAL_VS_REAL_INTEREST_RATES } from './seeds/ap-macro-u4-nominal-vs-real-interest-rates';
+import { BASELINE_AP_MACRO_MONEY_MARKET } from './seeds/ap-macro-u4-money-market';
+import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
+  BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
+  BASELINE_AP_MACRO_BANKING_MONEY_CREATION,
+  BASELINE_AP_MACRO_FINANCIAL_ASSETS,
+  BASELINE_AP_MACRO_NOMINAL_VS_REAL_INTEREST_RATES,
+  BASELINE_AP_MACRO_MONEY_MARKET,
+  BASELINE_AP_MACRO_MONETARY_POLICY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
