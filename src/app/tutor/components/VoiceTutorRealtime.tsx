@@ -52,6 +52,49 @@ import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle } from '@/lib/tutor/whiteboard/catalog';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
+// ─── Topic-notes orchestrator guardrails ───
+// Brain may emit expand_topic_notes_theory / add_topic_notes_method /
+// add_topic_notes_pointer at segment boundaries. The orchestrator gates
+// per the Q7+Q8 design in project_topic_notes_initiative.md:
+//   - 3-segment warmup before tools become eligible (silent-drop earlier)
+//   - per-session caps per bucket (silent-drop over-firing)
+//   - active-topic binding (baselineId = current planId; brain doesn't choose)
+//   - async fire-and-forget PATCH; failures log-only
+// Dedup against baseline + existing overlays lives in apply-overlay.ts;
+// the orchestrator just routes.
+const TOPIC_NOTES_WARMUP_SEGMENTS = 3;
+const TOPIC_NOTES_RATE_LIMITS = { theory: 5, methods: 3, pointers: 5 } as const;
+
+async function dispatchTopicNotesOverlay(
+  studentId: string | undefined,
+  baselineId: string,
+  sessionId: string,
+  bucket: 'theory' | 'methods' | 'pointers',
+  input: Record<string, unknown>,
+): Promise<void> {
+  if (!studentId) return; // demo flow without studentId — drop silently
+  try {
+    const res = await fetch(
+      `/api/tutor/topic-notes/${encodeURIComponent(studentId)}/${encodeURIComponent(baselineId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucket, sessionId, input }),
+      },
+    );
+    if (!res.ok) {
+      console.warn('[VoiceTutorRealtime] topic-notes PATCH failed:', res.status);
+      return;
+    }
+    const result = await res.json();
+    console.log(
+      `[VoiceTutorRealtime] topic-notes ${bucket} ${result.status}: overlayId=${result.overlay?.overlayId ?? 'none'}`,
+    );
+  } catch (err) {
+    console.warn('[VoiceTutorRealtime] topic-notes PATCH error:', err);
+  }
+}
+
 export interface RealtimeHandle {
   sendTextMessage: (text: string) => void;
   /** Speak tutor-side text directly through TTS without routing
@@ -335,7 +378,12 @@ export function VoiceTutorRealtime({
       gaps: accum.gaps,
       transcript,
     };
-    sessionAccumRef.current = { losTouched: new Set(), masteryDeltas: [], gaps: [] };
+    sessionAccumRef.current = {
+      losTouched: new Set(),
+      masteryDeltas: [],
+      gaps: [],
+      topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
+    };
     try {
       const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
         method: 'POST',
@@ -398,7 +446,20 @@ export function VoiceTutorRealtime({
       studentQuotes: string[];
       signals: string[];
     }>;
-  }>({ losTouched: new Set(), masteryDeltas: [], gaps: [] });
+    /** Per-session topic-notes ATTEMPT counts, used by the orchestrator
+     *  rate-limit gate. Counts every accepted (post-warmup, pre-rate-cap)
+     *  dispatch to the PATCH endpoint — not the eventual `added` outcome
+     *  reported by the API (`added` vs `reinforced` vs
+     *  `duplicate-of-baseline`). The "actually persisted" delta tracking
+     *  needed for SessionMemory.notesOverlaysAddedThisSession (Step 10)
+     *  will read PATCH responses asynchronously. */
+    topicNotesCount: { theory: number; methods: number; pointers: number };
+  }>({
+    losTouched: new Set(),
+    masteryDeltas: [],
+    gaps: [],
+    topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
+  });
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
   // the first one's audio — observed 2026-04-26 when the user typed two
@@ -2363,6 +2424,92 @@ export function VoiceTutorRealtime({
         }
         continue;
       }
+      // Topic-notes overlay tools — fire silently to the per-student
+      // overlay store. Three guardrails before async dispatch:
+      //   1. Active-topic binding: baselineId == lessonPlanId; no plan → drop.
+      //   2. Warmup: drop until ≥3 segments completed (let student show range).
+      //   3. Per-session rate limit per bucket; over-firing silent-drops.
+      // Dedup against baseline + existing overlays lives in apply-overlay.ts.
+      // sourceGapId pairing (Q11c) deferred — gap IDs are server-issued at
+      // commit time, so the orchestrator can't link to them yet without
+      // extending the gap pipeline. v1 leaves sourceGapId blank.
+      if (
+        cmd.action === 'expandTopicNotesTheory' ||
+        cmd.action === 'addTopicNotesMethod' ||
+        cmd.action === 'addTopicNotesPointer'
+      ) {
+        const baselineId = lessonPlanId;
+        if (!baselineId) {
+          console.log('[VoiceTutorRealtime] topic-notes call dropped — no active plan');
+          continue;
+        }
+        if (completedSegmentIdsRef.current.size < TOPIC_NOTES_WARMUP_SEGMENTS) {
+          console.log(
+            `[VoiceTutorRealtime] topic-notes call dropped — warmup (${completedSegmentIdsRef.current.size}/${TOPIC_NOTES_WARMUP_SEGMENTS} segments completed)`,
+          );
+          continue;
+        }
+        const counts = sessionAccumRef.current.topicNotesCount;
+        let bucket: 'theory' | 'methods' | 'pointers';
+        let limit: number;
+        if (cmd.action === 'expandTopicNotesTheory') {
+          bucket = 'theory';
+          limit = TOPIC_NOTES_RATE_LIMITS.theory;
+        } else if (cmd.action === 'addTopicNotesMethod') {
+          bucket = 'methods';
+          limit = TOPIC_NOTES_RATE_LIMITS.methods;
+        } else {
+          bucket = 'pointers';
+          limit = TOPIC_NOTES_RATE_LIMITS.pointers;
+        }
+        if (counts[bucket] >= limit) {
+          console.log(
+            `[VoiceTutorRealtime] topic-notes call dropped — rate limit (${bucket} at ${counts[bucket]}/${limit})`,
+          );
+          continue;
+        }
+        counts[bucket] += 1;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        let input: Record<string, unknown>;
+        if (cmd.action === 'expandTopicNotesTheory') {
+          input = {
+            loId: c.loId,
+            kind: c.kind,
+            conceptLabel: c.conceptLabel,
+            title: c.title,
+            content: c.content,
+            rationale: c.rationale,
+          };
+        } else if (cmd.action === 'addTopicNotesMethod') {
+          input = {
+            title: c.title,
+            when_to_use: c.when_to_use,
+            steps: c.steps,
+            alternativeTo: c.alternativeTo,
+            relatedLoIds: c.relatedLoIds,
+            rationale: c.rationale,
+          };
+        } else {
+          input = {
+            content: c.content,
+            kind: c.kind,
+            relatedLoIds: c.relatedLoIds,
+            rationale: c.rationale,
+          };
+        }
+        void dispatchTopicNotesOverlay(
+          studentId,
+          baselineId,
+          sessionIdRef.current,
+          bucket,
+          input,
+        );
+        console.log(
+          `[VoiceTutorRealtime] topic-notes ${bucket} dispatched (count ${counts[bucket]}/${limit}): action=${cmd.action}`,
+        );
+        continue;
+      }
       // Problem ↔ original-equation drift check. When the tutor emits a
       // showEquation labeled like "Original Equation" or "Problem" right
       // after a showProblem, the equation latex must match what the problem
@@ -2924,15 +3071,19 @@ export function VoiceTutorRealtime({
 
     // Drop non-visual bookkeeping commands before they reach the renderer.
     // advanceLesson + markSegmentComplete + recordGap + flagPrerequisiteGap
-    // are state side-effects already applied above (segment id advance,
-    // mastery deltas, gap accumulator). Without this filter the canvas
-    // tries to render them and shows "Unknown command type" cards.
+    // + the 3 topic-notes overlays are state side-effects already applied
+    // above (segment id advance, mastery deltas, gap accumulator, overlay
+    // PATCH dispatch). Without this filter the canvas tries to render
+    // them and shows "Unknown command type" cards.
     processed = processed.filter(
       (c) =>
         c.action !== 'advanceLesson' &&
         c.action !== 'markSegmentComplete' &&
         c.action !== 'recordGap' &&
-        c.action !== 'flagPrerequisiteGap',
+        c.action !== 'flagPrerequisiteGap' &&
+        c.action !== 'expandTopicNotesTheory' &&
+        c.action !== 'addTopicNotesMethod' &&
+        c.action !== 'addTopicNotesPointer',
     );
 
     onWhiteboardCommand(processed);
