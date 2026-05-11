@@ -62,6 +62,10 @@ interface CommitBody {
   /** When false, skip summary generation (faster commit). Defaults to true.
    *  Field name kept for backwards compatibility with older clients. */
   generateNotes?: boolean;
+  /** Per-bucket count of topic-notes overlay tool calls the orchestrator
+   *  allowed through this session. Stamped into SessionMemory for
+   *  next-session profile-block priming. Per Q11d. */
+  notesOverlaysAddedThisSession?: { theory: number; methods: number; pointers: number };
 }
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -149,6 +153,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     summary,
     durationMinutes: body.durationMinutes,
     masteryDeltas: body.masteryDeltas,
+    notesOverlaysAddedThisSession: body.notesOverlaysAddedThisSession,
   });
   if (body.grade) profile.grade = body.grade;
 

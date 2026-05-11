@@ -148,6 +148,14 @@ export interface SessionMemory {
   durationMinutes?: number;
   /** Mastery deltas applied during this session. */
   masteryDeltas?: Array<{ loId: string; delta: number }>;
+  /** Per-bucket count of topic-notes overlay tool calls the orchestrator
+   *  ALLOWED through (post-warmup, pre-rate-cap). Some may have landed
+   *  as dedup-suppressed or reinforcement bumps rather than fresh
+   *  entries — the count reflects brain INTENT this session, not
+   *  persisted-overlay deltas. Used by render.ts to prime the brain's
+   *  next-session callback ("we added 2 things to your notes last
+   *  session"). Per Q11d in project_topic_notes_initiative.md. */
+  notesOverlaysAddedThisSession?: { theory: number; methods: number; pointers: number };
 }
 
 /** Per-student preferences. */

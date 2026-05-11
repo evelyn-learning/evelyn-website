@@ -366,6 +366,8 @@ export function VoiceTutorRealtime({
     const transcript = transcriptRef.current
       .filter((t) => t.role === 'student' || t.role === 'tutor')
       .map((t) => ({ role: t.role as 'student' | 'tutor', text: t.text }));
+    const notesCount = accum.topicNotesCount;
+    const totalNotesOverlays = notesCount.theory + notesCount.methods + notesCount.pointers;
     const body = {
       sessionId: sessionIdRef.current,
       endedAt: new Date().toISOString(),
@@ -377,6 +379,9 @@ export function VoiceTutorRealtime({
       masteryDeltas: accum.masteryDeltas,
       gaps: accum.gaps,
       transcript,
+      // Only stamp when at least one overlay tool fired — keeps SessionMemory
+      // entries lean on sessions that didn't touch topic-notes.
+      notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
     };
     sessionAccumRef.current = {
       losTouched: new Set(),

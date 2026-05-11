@@ -88,7 +88,16 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
       const tag = [s.subject, s.topic, s.grade].filter(Boolean).join(' / ');
       const lo = s.losTouched.length ? ` LOs: ${s.losTouched.join(', ')}` : '';
       const summary = s.summary ? ` — ${s.summary}` : '';
-      lines.push(`  - ${s.endedAt.slice(0, 10)} · ${tag}${lo}${summary}`);
+      // Per-bucket topic-notes counts from this session — primes the
+      // brain to make natural callbacks ("we added a tip about X to your
+      // notes last time"). Per Q11d.
+      const n = s.notesOverlaysAddedThisSession;
+      const notesParts: string[] = [];
+      if (n?.theory) notesParts.push(`${n.theory} theory`);
+      if (n?.methods) notesParts.push(`${n.methods} method${n.methods === 1 ? '' : 's'}`);
+      if (n?.pointers) notesParts.push(`${n.pointers} pointer${n.pointers === 1 ? '' : 's'}`);
+      const notesNote = notesParts.length ? ` · added to notes: ${notesParts.join(', ')}` : '';
+      lines.push(`  - ${s.endedAt.slice(0, 10)} · ${tag}${lo}${notesNote}${summary}`);
     }
   }
 
