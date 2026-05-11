@@ -720,6 +720,31 @@ export type WhiteboardCommand =
   | { action: 'recordGap'; loId: string; observation: string; studentQuotes: string[]; signalsObserved: string[] }
   | { action: 'flagPrerequisiteGap'; conceptLabel: string; observation: string; studentQuotes: string[]; signalsObserved: string[] }
   | {
+      action: 'expandTopicNotesTheory';
+      loId: string | null;
+      kind: 'expansion' | 'prereq-refresher' | 'student-add';
+      conceptLabel?: string;
+      title?: string;
+      content: string;
+      rationale?: string;
+    }
+  | {
+      action: 'addTopicNotesMethod';
+      title: string;
+      when_to_use?: string;
+      steps: string[];
+      alternativeTo?: string;
+      relatedLoIds?: string[];
+      rationale?: string;
+    }
+  | {
+      action: 'addTopicNotesPointer';
+      content: string;
+      kind?: string;
+      relatedLoIds?: string[];
+      rationale?: string;
+    }
+  | {
       action: 'showTryYourself';
       problem: string;
       expectedAnswer?: string;

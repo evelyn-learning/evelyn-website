@@ -1842,6 +1842,61 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'expand_topic_notes_theory',
+    description: 'Add a theory-bucket entry to the student\'s persistent topic-notes for the active plan\'s CED topic. Fires SILENTLY — the student does not hear or see this. The new entry surfaces in the student\'s revision notes OUTSIDE this session (one notes doc per CED topic; revisable later). Three kinds: (i) `expansion` — adds depth to a baseline LO entry the student needed extra context on. Set `loId` to an LO id from the active `<lesson_plan>`; orchestrator silent-drops loIds that don\'t exist in the baseline. (ii) `prereq-refresher` — cross-LO refresher on a prerequisite concept that surfaced as weak (typically paired with a same-turn `flag_prerequisite_gap`). Set `loId=null` and `conceptLabel` to the prereq label. (iii) `student-add` — cross-LO addition that doesn\'t anchor to one LO (rare). Set `loId=null`. **FIRE WHEN:** the student demonstrably benefited from explanation that is NOT already in the baseline, AND the explanation is worth remembering for revision. DO NOT FIRE FOR: rote restatement of existing baseline content, transient slips the student self-corrected, generic encouragement, or content that only makes sense in this exact session\'s flow. The first 3 segments of a fresh session are warmup; calls before then are silent-dropped (be patient — let the student show their range first). Per session, the orchestrator caps theory expansions at ~5 per topic and silent-drops over-firing. Content that already exists (in baseline or in your prior overlays) is silent-deduped — re-firing the same idea across sessions just bumps a "reinforced" counter, which is desirable, not a problem.',
+    parameters: {
+      type: 'object',
+      properties: {
+        loId: { type: 'string', description: 'LO id from the active `<lesson_plan>` block when kind=\'expansion\'. Omit or pass null for prereq-refresher / student-add.' },
+        kind: {
+          type: 'string',
+          enum: ['expansion', 'prereq-refresher', 'student-add'],
+          description: '`expansion` = anchored to a baseline LO; `prereq-refresher` = cross-LO prereq lift (set conceptLabel); `student-add` = cross-LO addition.',
+        },
+        conceptLabel: { type: 'string', description: 'Required when kind=\'prereq-refresher\'. 3-6 word teacher-style English label (mirror `flag_prerequisite_gap`\'s shape).' },
+        title: { type: 'string', description: 'Optional headline for the entry. ≤80 chars.' },
+        content: { type: 'string', description: 'Entry body. Markdown allowed (KaTeX for math). ≤500 chars; over-length is truncated.' },
+        rationale: { type: 'string', description: 'Brief reason the brain decided this is notes-worthy. Telemetry only — not shown to student.' },
+      },
+      required: ['kind', 'content', 'rationale'],
+    },
+  },
+  {
+    name: 'add_topic_notes_method',
+    description: 'Add a method-bucket entry (procedural recipe) to the student\'s persistent topic-notes for the active plan\'s CED topic. Fires SILENTLY. The new entry surfaces in the student\'s revision notes outside this session. **FIRE WHEN:** (a) the student solved a problem using a method that is NOT in the baseline (capture their working alternative), OR (b) you demonstrated a method during the segment that the baseline does not have, and the student successfully followed it. **alternativeTo (optional):** the title of a baseline method this complements; the renderer sub-numbers it (e.g. "Method 2a") under that baseline method. DO NOT FIRE FOR: methods already in the baseline (orchestrator dedups by title); one-off shortcuts that won\'t generalize; methods you described abstractly without the student successfully applying them. Per session, the orchestrator caps method adds at ~3 per topic and silent-drops over-firing. 3-segment warmup applies.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Procedural headline, e.g. teacher-style "How to do X" or "Alternative: Y approach". ≤120 chars.' },
+        when_to_use: { type: 'string', description: 'Optional brief condition — when this method is the right choice over the baseline alternatives.' },
+        steps: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 2,
+          description: 'Ordered procedure. ≥2 non-empty steps required (single-step methods aren\'t methods).',
+        },
+        alternativeTo: { type: 'string', description: 'Optional title of a baseline method this complements. Renderer sub-numbers under it (e.g. "Method 2a").' },
+        relatedLoIds: { type: 'array', items: { type: 'string' }, description: 'Optional cross-reference to LOs from the active plan this method touches.' },
+        rationale: { type: 'string', description: 'Brief reason this is notes-worthy. Telemetry only.' },
+      },
+      required: ['title', 'steps', 'rationale'],
+    },
+  },
+  {
+    name: 'add_topic_notes_pointer',
+    description: 'Add a pointer-bucket entry (tactical reminder, gotcha, exam-rubric vocabulary, edge case, common error, exam-strategy tip) to the student\'s persistent topic-notes for the active plan\'s CED topic. Fires SILENTLY. Surfaces in the student\'s revision notes outside this session. **FIRE WHEN:** a moment in the segment exposed a vocabulary trap, edge case, common error, or exam-strategy tip the student is likely to forget without a written reminder. The most additive bucket — pointers accumulate across sessions and become the night-before-exam value of the notes. DO NOT FIRE FOR: general study advice ("review before the exam"); restatement of theory or methods that already exist; mid-flow encouragement; mistakes the student already self-corrected fluently. Keep pointers terse and imperative ("Don\'t confuse X with Y"; "When the question asks Z, say Z back"). Per session, the orchestrator caps pointer adds at ~5 per topic and silent-drops over-firing. 3-segment warmup applies.',
+    parameters: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'Pointer text. Markdown allowed. ≤300 chars; over-length is truncated. Imperative voice preferred.' },
+        kind: { type: 'string', description: 'Optional classification — common values: "gotcha" | "frq-vocab" | "edge-case" | "common-error" | "tip". Free-form; drives renderer styling.' },
+        relatedLoIds: { type: 'array', items: { type: 'string' }, description: 'Optional cross-reference to LOs from the active plan.' },
+        rationale: { type: 'string', description: 'Brief reason this is notes-worthy. Telemetry only.' },
+      },
+      required: ['content', 'rationale'],
+    },
+  },
+  {
     name: 'mark_segment_complete',
     description: 'Record that a lesson-plan segment is finished. Optionally include a mastery delta (-1 to 1) reflecting how well the student handled the segment\'s goal. Used by the session intelligence layer to update the student profile.',
     parameters: {
@@ -2597,6 +2652,47 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       signalsObserved: Array.isArray(funcArgs.signalsObserved)
         ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
         : [],
+    };
+  }
+  if (funcName === 'expand_topic_notes_theory') {
+    const rawKind = funcArgs.kind;
+    const kind: 'expansion' | 'prereq-refresher' | 'student-add' =
+      rawKind === 'prereq-refresher' || rawKind === 'student-add' ? rawKind : 'expansion';
+    const loIdRaw = funcArgs.loId;
+    return {
+      action: 'expandTopicNotesTheory',
+      loId: typeof loIdRaw === 'string' && loIdRaw ? loIdRaw : null,
+      kind,
+      conceptLabel: typeof funcArgs.conceptLabel === 'string' ? funcArgs.conceptLabel : undefined,
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      content: String(funcArgs.content ?? ''),
+      rationale: typeof funcArgs.rationale === 'string' ? funcArgs.rationale : undefined,
+    };
+  }
+  if (funcName === 'add_topic_notes_method') {
+    return {
+      action: 'addTopicNotesMethod',
+      title: String(funcArgs.title ?? ''),
+      when_to_use: typeof funcArgs.when_to_use === 'string' ? funcArgs.when_to_use : undefined,
+      steps: Array.isArray(funcArgs.steps)
+        ? funcArgs.steps.filter((s: unknown): s is string => typeof s === 'string')
+        : [],
+      alternativeTo: typeof funcArgs.alternativeTo === 'string' ? funcArgs.alternativeTo : undefined,
+      relatedLoIds: Array.isArray(funcArgs.relatedLoIds)
+        ? funcArgs.relatedLoIds.filter((s: unknown): s is string => typeof s === 'string')
+        : undefined,
+      rationale: typeof funcArgs.rationale === 'string' ? funcArgs.rationale : undefined,
+    };
+  }
+  if (funcName === 'add_topic_notes_pointer') {
+    return {
+      action: 'addTopicNotesPointer',
+      content: String(funcArgs.content ?? ''),
+      kind: typeof funcArgs.kind === 'string' ? funcArgs.kind : undefined,
+      relatedLoIds: Array.isArray(funcArgs.relatedLoIds)
+        ? funcArgs.relatedLoIds.filter((s: unknown): s is string => typeof s === 'string')
+        : undefined,
+      rationale: typeof funcArgs.rationale === 'string' ? funcArgs.rationale : undefined,
     };
   }
   // generate_problem is NOT a whiteboard command — it's a server-side
