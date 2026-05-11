@@ -712,7 +712,40 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     case 'showSolution':          return buildSolutionManifest(cmd as any);
     case 'showProblem':           return buildProblemManifest(cmd as any);
     case 'showTable':             return buildTableManifest(cmd as any);
+    // Catalog-dispatched diagrams (show_diagram with type=loanable_funds,
+    // money_market, t_chart, etc.) need at least a minimal manifest so
+    // the WhiteboardCatalog registers them and signature-based dedup
+    // works across turns. Without this case, every show_diagram emission
+    // is missing from the catalog → findBySignature returns null → the
+    // brain re-emits identical diagrams every turn. Observed 2026-05-11
+    // AP Macro session: 4 identical show_diagram(loanable_funds) calls
+    // back-to-back, none dedup'd.
+    case 'showDiagram':           return buildDiagramManifest(cmd as any);
     default:                      return null;
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
+}
+
+/** Minimal manifest for catalog-dispatched `show_diagram` commands.
+ *  Returns one synthetic whole-item `region` feature — non-scribbleable,
+ *  filtered out of the brain's per-feature snapshot listing (catalog's
+ *  getSnapshot drops kind==='region'), but enough to make
+ *  WhiteboardCatalog.append register the item so signature-based dedup
+ *  works on the next turn. Per-kind structured manifests (one feature
+ *  per curve / axis / equilibrium etc.) would be a follow-up — out of
+ *  scope for the dedup fix. */
+function buildDiagramManifest(cmd: {
+  type?: string;
+  params?: { title?: string };
+}): FeatureManifestEntry[] {
+  const type = cmd.type || 'diagram';
+  const title = cmd.params?.title;
+  return [
+    {
+      name: `diagram-${type}`,
+      kind: 'region',
+      description: title ?? `${type} diagram`,
+      scribbleable: false,
+    },
+  ];
 }
