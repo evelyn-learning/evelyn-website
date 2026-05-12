@@ -3894,6 +3894,22 @@ export function VoiceTutorRealtime({
     // block can reference it for streaming-entry cleanup (Fix 9).
     // Re-assigned inside the try once we know the turn actually starts.
     let t0 = Date.now();
+    // Defensive per-turn reset of new-page tracking refs. The intended
+    // reset path is handleTranscriptUpdate (line ~1005) for voice and
+    // sendTextMessage for typed input. In practice the timing between
+    // those handlers and this brain call is racy in voice mode (observed
+    // 2026-05-12 AP Macro session: turn 6 emitted new_page → ref true;
+    // turn 7's identical show_diagram should have dedup'd against the
+    // turn 6 catalog entry but did not — newPageThisTurnRef still true
+    // at turn 7's dedup check). Resetting here is idempotent (the brain
+    // sets the ref again at line 2752 if it emits new_page in this turn)
+    // and removes the race. Logged when the reset was necessary so we
+    // can spot frequency from telemetry.
+    if (newPageThisTurnRef.current) {
+      console.warn('[brain-orchestrator] newPageThisTurnRef was still true at brain-call start; defensively resetting to re-enable dedup');
+    }
+    newPageThisTurnRef.current = false;
+    brainEmittedNewPageThisTurnRef.current = false;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
