@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { voiceEngines } from '../../data/engines';
 
-function buildDemoToken(engineId: string) {
+function buildDemoToken() {
   const config = {
     subject: 'cs',
     level: 'ap',
@@ -11,53 +11,25 @@ function buildDemoToken(engineId: string) {
     student_name: 'Alex',
     session_goal: 'practice',
     input_mode: 'voice',
-    engine: engineId === 'premium' ? 'premium' : 'standard',
+    engine: 'claude-brain',
   };
   return btoa(JSON.stringify(config));
 }
 
 export function EngineSelector() {
-  const [selectedEngine, setSelectedEngine] = useState('standard');
-  const engine = voiceEngines.find((e) => e.id === selectedEngine)!;
-  const demoToken = useMemo(() => buildDemoToken(selectedEngine), [selectedEngine]);
+  const engine = voiceEngines[0]!;
+  const demoToken = useMemo(() => buildDemoToken(), []);
 
   return (
     <div>
-      {/* Engine toggle */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-        <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-          {voiceEngines.map((e) => (
-            <button
-              key={e.id}
-              onClick={() => setSelectedEngine(e.id)}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                selectedEngine === e.id
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {e.name}
-            </button>
-          ))}
-        </div>
-        <div className="text-sm text-slate-500">
-          <span className="font-medium text-slate-700">{engine.name}:</span>{' '}
-          {engine.latency} response time &middot; ${engine.costPerMinute.toFixed(2)}/min
-          {engine.id === 'standard' && (
-            <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-              Cost-effective
-            </span>
-          )}
-          {engine.id === 'premium' && (
-            <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-              Lowest latency
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Engine description */}
       <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+          <span className="font-medium text-slate-700">{engine.name}</span>
+          <span>{engine.latency} response time</span>
+          <span>·</span>
+          <span>${engine.costPerMinute.toFixed(2)}/min</span>
+        </div>
         <p className="text-sm text-slate-600">{engine.description}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {engine.features.slice(0, 5).map((f) => (
@@ -82,13 +54,12 @@ export function EngineSelector() {
           <div className="w-14" />
         </div>
         <iframe
-          key={selectedEngine}
           src={`/embed?token=${demoToken}`}
           width="100%"
           height="650"
           allow="microphone; camera; autoplay"
           className="border-0"
-          title={`AI Voice Tutor — ${engine.name} Engine`}
+          title={`AI Voice Tutor — ${engine.name}`}
         />
       </div>
 

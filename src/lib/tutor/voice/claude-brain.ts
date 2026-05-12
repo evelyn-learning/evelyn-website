@@ -19,6 +19,7 @@ import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
 import type { Segment } from '../lesson-plan/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
+import { validateToolCall } from '../whiteboard/validate-tool-call';
 
 export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
@@ -224,6 +225,10 @@ export type BrainStreamEvent =
   | { type: 'sentence'; text: string; pauseAfter?: 'small' | 'medium' | 'large' }
   /** A tool call whose input JSON is fully assembled. Dispatch inline. */
   | { type: 'tool-call'; id: string; name: string; args: Record<string, unknown> }
+  /** A tool call whose payload failed validation (e.g. empty showTable
+   *  rows, blank showMolecule smiles). Not dispatched to the whiteboard
+   *  renderer. Consumers may log it to debugEvents for telemetry. */
+  | { type: 'tool-rejected'; id: string; name: string; args: Record<string, unknown>; reason: string }
   /** Explicit pause directive emitted between sentences. The speakText
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
@@ -761,17 +766,20 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     lastStopReason = response.stop_reason ?? 'unknown';
 
     // Extract text + tool_use blocks from this iteration.
-    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown }> = [];
+    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown; rejectionReason?: string }> = [];
     for (const block of response.content) {
       if (block.type === 'text') {
         accumulatedText += (accumulatedText ? '\n' : '') + block.text;
       } else if (block.type === 'tool_use') {
-        newToolUseBlocks.push({ id: block.id, name: block.name, input: block.input });
-        accumulatedToolCalls.push({
-          id: block.id,
-          name: block.name,
-          args: (block.input ?? {}) as Record<string, unknown>,
-        });
+        const args = (block.input ?? {}) as Record<string, unknown>;
+        const validation = validateToolCall(block.name, args);
+        if (!validation.ok) {
+          console.warn(`[brain] tool-call rejected ${block.name}: ${validation.reason}`);
+          newToolUseBlocks.push({ id: block.id, name: block.name, input: block.input, rejectionReason: validation.reason });
+        } else {
+          newToolUseBlocks.push({ id: block.id, name: block.name, input: block.input });
+          accumulatedToolCalls.push({ id: block.id, name: block.name, args });
+        }
       }
     }
 
@@ -798,7 +806,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
         content: newToolUseBlocks.map((b) => ({
           type: 'tool_result' as const,
           tool_use_id: b.id,
-          content: `${b.name} executed successfully.`,
+          content: b.rejectionReason
+            ? `${b.name} rejected: ${b.rejectionReason}. Do not retry with the same args — emit a corrected call or skip this tool.`
+            : `${b.name} executed successfully.`,
         })),
       },
     ];
@@ -867,7 +877,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
     const sentenceBuffer = new SentenceBuffer();
-    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown }> = [];
+    const newToolUseBlocks: Array<{ id: string; name: string; input: unknown; rejectionReason?: string }> = [];
     // Per-block tool-use accumulator. Anthropic streams the input JSON
     // as `input_json_delta` events; we parse it once on content_block_stop.
     let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
@@ -920,21 +930,35 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             }
           }
           const tc: BrainToolCall = { id: currentToolUse.id, name: currentToolUse.name, args };
-          newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
-          accumulatedToolCalls.push(tc);
-          // Log args in dev so we can diagnose render-vs-brain disagreements
-          // (e.g. "the chord doesn't pass through origin" — is that the
-          // renderer's fault or did the brain emit asymmetric coords?).
-          if (process.env.NODE_ENV !== 'production') {
-            try {
-              const preview = JSON.stringify(tc.args);
-              console.log(
-                `[brain.stream] tool-call ${tc.name} ${preview.length > 1500 ? preview.slice(0, 1500) + '…' : preview}`,
-              );
-            } catch {}
+          const validation = validateToolCall(tc.name, args);
+          if (!validation.ok) {
+            // Drop the tool call: don't yield it (so the renderer never
+            // sees the malformed payload) and don't track it in
+            // accumulatedToolCalls. We still register it in
+            // newToolUseBlocks so the conversation contract with the
+            // model is preserved — the resolved tool_result content
+            // becomes the rejection reason, giving the brain feedback.
+            console.warn(`[brain.stream] tool-call rejected ${tc.name}: ${validation.reason}`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: validation.reason });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: validation.reason };
+            currentToolUse = null;
+          } else {
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
+            accumulatedToolCalls.push(tc);
+            // Log args in dev so we can diagnose render-vs-brain disagreements
+            // (e.g. "the chord doesn't pass through origin" — is that the
+            // renderer's fault or did the brain emit asymmetric coords?).
+            if (process.env.NODE_ENV !== 'production') {
+              try {
+                const preview = JSON.stringify(tc.args);
+                console.log(
+                  `[brain.stream] tool-call ${tc.name} ${preview.length > 1500 ? preview.slice(0, 1500) + '…' : preview}`,
+                );
+              } catch {}
+            }
+            yield { type: 'tool-call', id: tc.id, name: tc.name, args: tc.args };
+            currentToolUse = null;
           }
-          yield { type: 'tool-call', id: tc.id, name: tc.name, args: tc.args };
-          currentToolUse = null;
         }
       }
     }
@@ -959,16 +983,23 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // Resolve tool_result content. Default ack for fire-and-forget
     // tools; data-returning tools (e.g. generate_problem) get the
     // resolver's output so the brain can use the result on the next
-    // iteration.
+    // iteration. Rejected tool calls (validation failures) get the
+    // rejection reason as their result so the model learns and can
+    // retry with valid args.
     const resolvedResults = await Promise.all(
       newToolUseBlocks.map(async (b) => {
-        let content = `${b.name} executed successfully.`;
-        if (input.toolResultProvider) {
-          try {
-            const args = (b.input ?? {}) as Record<string, unknown>;
-            content = await input.toolResultProvider(b.name, args);
-          } catch (err) {
-            console.warn(`[brain.stream] toolResultProvider failed for ${b.name}:`, err);
+        let content: string;
+        if (b.rejectionReason) {
+          content = `${b.name} rejected: ${b.rejectionReason}. Do not retry with the same args — emit a corrected call or skip this tool.`;
+        } else {
+          content = `${b.name} executed successfully.`;
+          if (input.toolResultProvider) {
+            try {
+              const args = (b.input ?? {}) as Record<string, unknown>;
+              content = await input.toolResultProvider(b.name, args);
+            } catch (err) {
+              console.warn(`[brain.stream] toolResultProvider failed for ${b.name}:`, err);
+            }
           }
         }
         return {

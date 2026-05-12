@@ -300,6 +300,19 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   const pacingChipsAllowed = tutorTurnsFinalized >= 2;
 
   const renderEntry = (entry: TranscriptEntry) => {
+    // System-role entries are orchestrator-injected notices (e.g.
+    // "Plan changed → <title>"). They are NOT chat bubbles — render as
+    // a slim centred pill so they're visibly distinct from student
+    // and tutor turns. No avatar, no quick-answer chips.
+    if (entry.role === 'system') {
+      return (
+        <div key={entry.id} className="flex justify-center">
+          <div className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1">
+            {entry.text}
+          </div>
+        </div>
+      );
+    }
     const split = entry.role === 'tutor' && !entry.streaming ? splitTrailingQuestion(entry.text) : null;
     const quickKind = (
       onQuickAnswer && entry.id === latestTutorEntryId && split && !studentRespondedAfterLatest
@@ -462,7 +475,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   // a fabricated affirmation. The directive below is
                   // explicit that Skip is NOT an answer and the brain
                   // MUST NOT affirm or fabricate one.
-                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance the lesson now — call advance_lesson to the next on-topic segment, or generate a fresh problem at the same level if no segment remains. The student did NOT answer your prior question — Skip is a navigation action, not an answer. Do NOT say 'Exactly', 'Right', 'Correct', or any affirmation word. Do NOT fabricate the expected answer as if the student had given it. Do NOT ask for clarification, just advance.]")}
+                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance ONE segment by calling advance_lesson({to: 'next'}) — this moves to the IMMEDIATELY next segment in plan order, which is usually the next beat of the SAME LO (concept → worked_example → try_yourself). Teach the content of THAT next segment. Do NOT skip multiple segments. Do NOT jump to a different LO unless the next segment in plan order is in fact the next LO's first segment. The student did NOT answer your prior question — Skip is a navigation action, not an answer. Do NOT say 'Exactly', 'Right', 'Correct', or any affirmation word. Do NOT fabricate the expected answer as if the student had given it. Do NOT ask for clarification, just advance.]")}
                   className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Skip ahead

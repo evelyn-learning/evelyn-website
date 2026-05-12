@@ -255,6 +255,42 @@ interface VoiceTutorRealtimeProps {
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
   onPaceBiasChange?: (bias: number) => void;
+  /** Fires before a typed student message is forwarded to the brain.
+   *  When set, the parent can intercept (e.g. to detect a freestyle
+   *  study-text paste and kick off plan generation). The promise's
+   *  resolved value indicates whether the parent took action — when
+   *  `setLessonPlanId` is non-null, the child will wait for the new
+   *  lessonPlanId prop to land before forwarding the message, so the
+   *  next brain call sees the generated plan. Generic by design: the
+   *  child doesn't know what the parent did, only that it might have
+   *  swapped the active plan. */
+  onBeforeTypedSubmit?: (text: string) => Promise<{ setLessonPlanId: string | null } | void>;
+  /** Fires when the brain emits propose_plan_swap. Parent is expected
+   *  to resolve a new lesson plan (curated lookup → freestyle fallback,
+   *  all topic-scoped server-side via /api/tutor/swap-plan) and call
+   *  setSelectedLessonPlanId so the new plan loads via the existing
+   *  lessonPlanId prop flow. The child has already logged the event
+   *  and emitted the debug telemetry; the parent's responsibility is
+   *  state + UX (chat notice, progress-strip update). */
+  onProposePlanSwap?: (args: { targetSubTopic: string; reason?: string }) => Promise<void>;
+  /** Fires when the brain emits confirm_plan_los in response to a
+   *  picker segment. Parent calls /api/tutor/expand-plan-los which
+   *  upserts the same plan id with expanded segments; the child's
+   *  existing useEffect picks the changes up on the next render. */
+  onConfirmPlanLos?: (args: { planId: string; pickedLoIds: string[] }) => Promise<void>;
+  /** Fires whenever the set of completed segment ids grows (the brain
+   *  emits mark_segment_complete). Parent uses this to drive a
+   *  truthful progress strip — "completed" means actually-marked-
+   *  complete, not array-position-before-current (which would falsely
+   *  count skipped segments). */
+  onCompletedSegmentsChange?: (ids: ReadonlyArray<string>) => void;
+  /** Total session time in minutes. Drives the long-session check-in,
+   *  pre-rotation prompt, and silent auto-rotation timing — each one
+   *  scales to a fraction of T rather than the legacy 45/55/58
+   *  hardcodes. Floors apply: rotation events are also bounded by
+   *  OpenAI's ~60-min Realtime session cap, so for T>60 the rotation
+   *  still fires before the cap. Defaults to 30 (demo). */
+  sessionMaxMinutes?: number;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -304,6 +340,11 @@ export function VoiceTutorRealtime({
   onLessonPlanProgress,
   onTutorBusy,
   onPaceBiasChange,
+  onBeforeTypedSubmit,
+  onProposePlanSwap,
+  onConfirmPlanLos,
+  onCompletedSegmentsChange,
+  sessionMaxMinutes = 30,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -2310,6 +2351,31 @@ export function VoiceTutorRealtime({
           const next = resolveAdvanceTarget(plan, currentSegmentIdRef.current, to, { consumedHashes });
           if (next) {
             console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+            // Auto-mark "visited" segments: every segment from the
+            // outgoing index (inclusive) up to the target index
+            // (exclusive) is added to completedSegmentIdsRef. This
+            // makes the progress strip show advancement-as-completion
+            // even when the brain skipped past a segment without
+            // explicitly calling mark_segment_complete on it. Without
+            // this, skip-ahead clicks left the strip stuck at 0/4
+            // because the brain only emits mark_segment_complete for
+            // segments it taught (observed 2026-05-12 — 5 consecutive
+            // skip clicks, strip frozen).
+            const outgoingIdx = plan.segments.findIndex((s) => s.id === currentSegmentIdRef.current);
+            const targetIdx = plan.segments.findIndex((s) => s.id === next);
+            if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {
+              let mutated = false;
+              for (let i = outgoingIdx; i < targetIdx; i++) {
+                const segId = plan.segments[i].id;
+                if (!completedSegmentIdsRef.current.has(segId)) {
+                  completedSegmentIdsRef.current.add(segId);
+                  mutated = true;
+                }
+              }
+              if (mutated) {
+                onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+              }
+            }
             currentSegmentIdRef.current = next;
             setActiveSegmentId(next);
             // Mirror into the catalog so subsequent appends stamp the
@@ -2323,8 +2389,33 @@ export function VoiceTutorRealtime({
             // newPage command (uses the resolved segment's title when
             // available) so the page break shows up in the page nav.
             const nextSeg = plan.segments.find((s) => s.id === next);
+            // Compute a sensible page title. For generated freestyle
+            // plans the segment ids are "<loId>-hook" / "-concept" /
+            // "-worked" / "-try" — derive the loId, look up its
+            // description, and use that as the page heading. Falls
+            // back to the segment's goal/problem/id if the id doesn't
+            // match the pattern (curated plans, intro, etc.).
+            let loHeading = '';
+            if (next && plan.los?.length) {
+              for (const lo of plan.los) {
+                if (next.startsWith(`${lo.id}-`) || next === lo.id) {
+                  // Kind suffix (Hook / Concept / Worked / Try) helps the
+                  // student see which beat of the LO is on screen.
+                  const KIND_MAP: Record<string, string> = {
+                    hook: 'Hook',
+                    concept: 'Concept',
+                    worked: 'Worked Example',
+                    try: 'Try Yourself',
+                  };
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const kindLabel = KIND_MAP[(nextSeg as any)?.kind === 'worked_example' ? 'worked' : (nextSeg as any)?.kind === 'try_yourself' ? 'try' : (nextSeg as any)?.kind ?? ''];
+                  loHeading = kindLabel ? `${lo.description} — ${kindLabel}` : lo.description;
+                  break;
+                }
+              }
+            }
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newPageTitle = (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
+            const newPageTitle = loHeading || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newPageCmd: any = {
               action: 'newPage',
@@ -2354,7 +2445,13 @@ export function VoiceTutorRealtime({
         console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
         // Track completed segment for downstream show_segment_card block.
         if (typeof c.segmentId === 'string' && c.segmentId) {
+          const before = completedSegmentIdsRef.current.size;
           completedSegmentIdsRef.current.add(c.segmentId);
+          if (completedSegmentIdsRef.current.size > before) {
+            // Notify parent of the new completion set (truthful basis
+            // for the progress strip's per-LO count).
+            onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+          }
         }
         // Pacing v2 — Phase 1 (inert): segment-mastered booster.
         // When mark_segment_complete fires AND the student's correct-streak
@@ -2383,6 +2480,72 @@ export function VoiceTutorRealtime({
           sessionAccumRef.current.masteryDeltas.push({ loId, delta: c.masteryDelta });
           sessionAccumRef.current.losTouched.add(loId);
         }
+        continue;
+      }
+      if (cmd.action === 'confirmPlanLos') {
+        // Student picked their X LOs from a picker segment. Hand off to
+        // the parent so it can call /api/tutor/expand-plan-los and the
+        // existing useEffect reloads the plan with expanded segments.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        const pickedLoIds: string[] = Array.isArray(c.pickedLoIds) ? c.pickedLoIds : [];
+        const planId = lessonPlanRef.current?.id;
+        if (!planId) {
+          console.warn('[VoiceTutorRealtime] confirmPlanLos but no active plan, ignoring');
+          continue;
+        }
+        if (pickedLoIds.length === 0) {
+          console.warn('[VoiceTutorRealtime] confirmPlanLos with empty pickedLoIds, ignoring');
+          continue;
+        }
+        if (!onConfirmPlanLos) {
+          console.warn('[VoiceTutorRealtime] confirmPlanLos fired but no onConfirmPlanLos handler — ignoring');
+          continue;
+        }
+        void (async () => {
+          try {
+            await onConfirmPlanLos({ planId, pickedLoIds });
+          } catch (err) {
+            console.warn('[VoiceTutorRealtime] onConfirmPlanLos threw:', err);
+          }
+        })();
+        console.log(`[VoiceTutorRealtime] confirm_plan_los planId=${planId} picked=[${pickedLoIds.join(',')}]`);
+        onDebugEvent?.('confirm_plan_los', `planId=${planId} picked=[${pickedLoIds.join(',')}]`);
+        continue;
+      }
+      if (cmd.action === 'proposePlanSwap') {
+        // Mid-session plan swap. The brain has asked the orchestrator to
+        // route the session to a different lesson plan within the same
+        // configured subject + topic. Fire the swap-plan endpoint
+        // server-side: it does the catalog lookup (and falls back to
+        // generation) constrained to the session's topic, so the brain
+        // can't escape scope. On success, invoke the parent's callback
+        // so it can setSelectedLessonPlanId and inject the chat notice.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = cmd as any;
+        const targetSubTopic: string = typeof c.targetSubTopic === 'string' ? c.targetSubTopic : '';
+        const reason: string | undefined = typeof c.reason === 'string' ? c.reason : undefined;
+        if (!targetSubTopic) {
+          console.warn('[VoiceTutorRealtime] proposePlanSwap missing targetSubTopic, dropping');
+          continue;
+        }
+        if (!onProposePlanSwap) {
+          console.warn('[VoiceTutorRealtime] proposePlanSwap fired but no onProposePlanSwap handler wired — ignoring');
+          continue;
+        }
+        // Don't block the current dispatch loop. Fire-and-forget; the
+        // parent handler resolves the swap async. By the time the
+        // brain's NEXT turn runs, the new plan is loaded via the
+        // existing useEffect and lessonPlanContext reflects it.
+        void (async () => {
+          try {
+            await onProposePlanSwap({ targetSubTopic, reason });
+          } catch (err) {
+            console.warn('[VoiceTutorRealtime] onProposePlanSwap threw:', err);
+          }
+        })();
+        console.log(`[VoiceTutorRealtime] propose_plan_swap target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
+        onDebugEvent?.('propose_plan_swap', `target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
         continue;
       }
       if (cmd.action === 'recordGap' || cmd.action === 'flagPrerequisiteGap') {
@@ -3089,6 +3252,8 @@ export function VoiceTutorRealtime({
       (c) =>
         c.action !== 'advanceLesson' &&
         c.action !== 'markSegmentComplete' &&
+        c.action !== 'proposePlanSwap' &&
+        c.action !== 'confirmPlanLos' &&
         c.action !== 'recordGap' &&
         c.action !== 'flagPrerequisiteGap' &&
         c.action !== 'expandTopicNotesTheory' &&
@@ -3592,40 +3757,48 @@ export function VoiceTutorRealtime({
       console.log('[VoiceTutorRealtime] Weakness +1 on topic:', topic, '→', prev + 1);
     }
 
-    // --- Long-session check-in (fires once around 45 min mark) ---
+    // --- Time-based session lifecycle ---
+    // Three checkpoints scaled to T (sessionMaxMinutes):
+    //   check-in     at 0.75 * T   — "want a recap / break / keep going?"
+    //   rotation     at min(0.92*T, 55)  — OpenAI Realtime caps at ~60 min
+    //                                       so for T>60 we still rotate before
+    //                                       OpenAI cold-restarts the session.
+    //   auto-rotate  at min(0.97*T, 58)  — silent fallback if student ignores
+    //                                       the rotation banner.
+    // Both rotation events are floored against OpenAI's hard limit; the
+    // check-in is purely T-relative (no need to floor).
     const sessionMinutes = (Date.now() - sessionStartMsRef.current) / 60000;
-    if (sessionMinutes >= 45 && !longSessionCheckFiredRef.current && injectContextRef.current) {
+    const T = sessionMaxMinutes;
+    const checkInThreshold = 0.75 * T;
+    const rotationThreshold = Math.min(0.92 * T, 55);
+    const autoRotationThreshold = Math.min(0.97 * T, 58);
+    if (sessionMinutes >= checkInThreshold && !longSessionCheckFiredRef.current && injectContextRef.current) {
       longSessionCheckFiredRef.current = true;
-      console.log('[VoiceTutorRealtime] 45-min check-in triggered');
-      onDebugEvent?.('long_session_checkin', `Session hit ${sessionMinutes.toFixed(1)} min`);
+      console.log(`[VoiceTutorRealtime] long-session check-in triggered at ${sessionMinutes.toFixed(1)} min (threshold ${checkInThreshold.toFixed(1)})`);
+      onDebugEvent?.('long_session_checkin', `Session hit ${sessionMinutes.toFixed(1)} min (T=${T})`);
       injectContextRef.current(
-        'SESSION LENGTH CHECK: The student has been studying for 45+ minutes. ' +
+        `SESSION LENGTH CHECK: The student has been studying for ${Math.floor(sessionMinutes)}+ minutes (of a ${T}-minute session). ` +
         'Proactively offer a brief recap and a choice: "We\'ve been at this for a while — want me to recap what we covered, ' +
         'take a quick 2-minute break, or keep going?" Respect whatever they choose. Long uninterrupted sessions lead to fatigue ' +
         'and low retention, so a natural pause here is valuable.'
       );
     }
 
-    // --- 55-min pre-emptive session rotation ---
-    // OpenAI Realtime caps sessions around 60 min. At 55, surface a UI
-    // prompt so the user can choose to continue or wrap up; if they choose
-    // continue, we rotate into a fresh session with context pre-injected.
-    if (sessionMinutes >= 55 && !sessionRotationFiredRef.current) {
+    // Pre-emptive session rotation — surfaces a UI prompt so the user
+    // can choose to continue (rotates the underlying realtime session)
+    // or wrap up. See thresholds comment above.
+    if (sessionMinutes >= rotationThreshold && !sessionRotationFiredRef.current) {
       sessionRotationFiredRef.current = true;
-      console.log('[VoiceTutorRealtime] 55-min rotation prompt shown');
-      onDebugEvent?.('session_rotation_prompt', `Session at ${sessionMinutes.toFixed(1)} min`);
+      console.log(`[VoiceTutorRealtime] rotation prompt shown at ${sessionMinutes.toFixed(1)} min (threshold ${rotationThreshold.toFixed(1)})`);
+      onDebugEvent?.('session_rotation_prompt', `Session at ${sessionMinutes.toFixed(1)} min (T=${T})`);
       setSessionRotationPrompt(true);
     }
 
-    // --- 58-min silent auto-rotation fallback ---
-    // If the student ignored the banner, rotate silently before OpenAI's
-    // hard cap at ~60 min. Keeps the tutor from cold-restarting with a
-    // re-greeting. Fires once, only if the banner is still up (i.e. the
-    // student didn't click either button).
-    if (sessionMinutes >= 58 && sessionRotationPrompt && !autoRotationFiredRef.current) {
+    // Silent auto-rotation fallback.
+    if (sessionMinutes >= autoRotationThreshold && sessionRotationPrompt && !autoRotationFiredRef.current) {
       autoRotationFiredRef.current = true;
-      console.warn('[VoiceTutorRealtime] 58-min silent auto-rotation — user ignored banner');
-      onDebugEvent?.('session_auto_rotation', `Silent rotation at ${sessionMinutes.toFixed(1)} min`);
+      console.warn(`[VoiceTutorRealtime] silent auto-rotation at ${sessionMinutes.toFixed(1)} min (threshold ${autoRotationThreshold.toFixed(1)}) — user ignored banner`);
+      onDebugEvent?.('session_auto_rotation', `Silent rotation at ${sessionMinutes.toFixed(1)} min (T=${T})`);
       // Reuse the "Continue" handler path via ref (defined after this callback).
       continueRotationRef.current?.().catch(err =>
         console.error('[VoiceTutorRealtime] Auto-rotation failed:', err)
@@ -3715,7 +3888,17 @@ export function VoiceTutorRealtime({
   // Load the active lesson plan (when lessonPlanId is set) at mount.
   // The plan is held in lessonPlanRef so the brain-call assembler always
   // sees the latest segment id without re-rendering.
+  //
+  // Plan-swap reset: any state keyed on segment ids carries over from
+  // the old plan into the new one if not cleared explicitly. The most
+  // important one is completedSegmentIdsRef — generated freestyle plans
+  // reuse ids like "lo1-hook" / "lo1-concept" across instances, so a
+  // stale id in the set would falsely mark a new plan's segment as
+  // already-done. Reset it (and any peer set) whenever lessonPlanId
+  // changes.
   useEffect(() => {
+    completedSegmentIdsRef.current = new Set();
+    onCompletedSegmentsChange?.([]);
     if (!lessonPlanId) {
       lessonPlanRef.current = null;
       currentSegmentIdRef.current = '';
@@ -6696,7 +6879,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           the row with the mic + status. */}
       <form
         className="order-last w-full md:order-none md:flex-1 md:w-auto flex items-center gap-2 min-w-0"
-        onSubmit={(e: FormEvent) => {
+        onSubmit={async (e: FormEvent) => {
           e.preventDefault();
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
           const rawText = input?.value?.trim();
@@ -6725,6 +6908,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               brainBusyRef.current = false;
               queuedTranscriptsRef.current = [];
             }
+            // Clear the input box immediately so the student sees their
+            // typed text leave the field as soon as they hit send. Without
+            // this, the box still shows the paste through the entire
+            // ~5s plan-from-text wait below, which looks like a hang.
+            input.value = '';
             // Add to transcript
             const entry: TranscriptEntry = {
               id: `user-${Date.now()}`,
@@ -6735,6 +6923,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             transcriptRef.current = [...transcriptRef.current, entry];
             onTranscriptUpdate(transcriptRef.current);
             onTrackInteraction?.('message', text, undefined, 'student');
+            // Signal "tutor is preparing" so the chat shows the typing
+            // dots while plan-from-text runs. Without this, the wait
+            // looks like nothing is happening.
+            onTutorBusy?.(true);
             // Fresh student message → fresh tutor turn. Same reset as the
             // voice-finalization path.
             visualActionsThisTurnRef.current = new Set();
@@ -6745,6 +6937,36 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // inclined plane…" trigger a fresh whiteboard page. Before
             // this hook, typed messages bypassed detection entirely.
             runStudentTurnDetection(text, 'typed');
+            // Freestyle-text interception: if a parent handler is
+            // wired, let it inspect this message before forwarding.
+            // The parent currently uses this to fire plan-from-text
+            // generation in the background — non-blocking, so the
+            // student doesn't wait. If a future caller wants to
+            // synchronously swap the active plan it can return
+            // { setLessonPlanId }, and we'll wait (bounded) for the
+            // child's plan-load effect to reflect the new id.
+            if (onBeforeTypedSubmit) {
+              try {
+                const result = await onBeforeTypedSubmit(text);
+                if (result && result.setLessonPlanId) {
+                  const targetId = result.setLessonPlanId;
+                  const deadlineAt = Date.now() + 4000;
+                  while (Date.now() < deadlineAt) {
+                    if (lessonPlanRef.current?.id === targetId) break;
+                    await new Promise((r) => setTimeout(r, 50));
+                  }
+                  if (lessonPlanRef.current?.id !== targetId) {
+                    console.warn(
+                      `[VoiceTutor] onBeforeTypedSubmit set plan ${targetId} but lessonPlanRef did not load in time; proceeding anyway`,
+                    );
+                  } else {
+                    console.log(`[VoiceTutor] generated plan ${targetId} loaded; forwarding typed turn`);
+                  }
+                }
+              } catch (err) {
+                console.warn('[VoiceTutor] onBeforeTypedSubmit threw — proceeding without plan:', err);
+              }
+            }
             // Cut off any in-flight tutor TTS before dispatching the typed
             // turn — otherwise the student waits for the prior bubble to
             // finish before their message reaches the brain. Mirrors the
@@ -6760,9 +6982,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // full text.
             realtime.clearSpeechQueue();
             realtime.interrupt();
-            // Send to AI
+            // Send to AI. input.value was already cleared at the top of
+            // this handler before the plan-from-text await so the box
+            // empties immediately on submit, not at end of flow.
             realtime.sendTextMessage(text);
-            input.value = '';
           }
         }}
       >

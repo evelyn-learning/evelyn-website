@@ -790,7 +790,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_labeled_image',
-    description: 'A real photograph or stock illustration. Different from the synthesized-diagram tools (cell_diagram, dna, ray_diagram, etc.) — those draw schematic vector art; this shows an actual image. Use for biology (real flower), social studies (a map), chemistry (lab apparatus), or any concept where a real photo carries information a diagram can\'t. Provide alt text for accessibility.\n\nIMPORTANT — how the image is sourced:\n- STRONGLY PREFER `query`: a short visual-content phrase ("monarch butterfly on flower", "human heart anatomy diagram", "wolves in forest"). The server resolves the query against Unsplash → Pixabay → Pexels and inserts a real, topic-relevant image URL. You DO NOT need to pick a URL.\n- Use `src` (legacy) ONLY when you have a known-good public URL — e.g., a NASA images-assets URL or a partner-supplied diagram. NEVER guess a URL: hallucinated photo IDs may load but show unrelated images.\n- Provide one of `query` OR `src`. If both are present, `query` wins.\n- If no good `query` comes to mind, prefer a synthesized diagram tool (show_diagram, show_cell_diagram, etc.) over guessing.\n- The server drops the call silently when the query returns no relevant image; your spoken narration alone carries the moment.\n\nIMPORTANT — callouts:\n- ONLY provide `callouts` when using `src` with a KNOWN image (e.g., a specific NASA anatomy diagram you can reason about). You can place x/y percent coordinates on a known image; you cannot on a `query`-resolved image because you have not seen it.\n- DO NOT provide `callouts` when using `query`. The server will strip them. Your verbal narration should describe what the picture shows in general terms; do not reference specific positions ("on the left", "at the bottom") since those depend on the resolved image.',
+    description: 'A real photograph. Different from the synthesized-diagram tools (cell_diagram, dna, ray_diagram, etc.) — those draw schematic vector art; this shows an actual photograph. Use ONLY for concepts where a real photo carries information a diagram can\'t (e.g., a real flower, a place, a piece of lab apparatus, a historical artifact, an animal in its habitat).\n\nDO NOT use for diagrams, schematic illustrations, anatomical figures, molecular structures, microscopic structures, or anything that would normally be DRAWN rather than PHOTOGRAPHED. Stock-photo search providers return literal-keyword matches for queries like "phospholipid bilayer diagram" or "cell membrane anatomy" — the top result is usually a random photo of a person whose alt text happened to contain the keyword. For those cases use show_diagram, show_svg_diagram, or one of the synthesized-diagram tools. If the desired visual is conceptual / schematic rather than photographic, DO NOT call show_labeled_image at all.\n\nIMPORTANT — how the image is sourced:\n- STRONGLY PREFER `query`: a short visual-content phrase describing the PHOTOGRAPHED subject ("monarch butterfly on flower", "great wall of china", "wolves in forest"). The server resolves the query against Unsplash → Pixabay → Pexels.\n- Use `src` (legacy) ONLY when you have a known-good public URL — e.g., a NASA images-assets URL or a partner-supplied photo. NEVER guess a URL: hallucinated photo IDs may load but show unrelated images.\n- Provide one of `query` OR `src`. If both are present, `query` wins.\n- The server rejects queries that contain diagram-shaped words ("diagram", "schematic", "labeled", "anatomy", "structure of", "bilayer", etc.). If your query needs those words you wanted a diagram tool, not this one.\n- The server drops the call silently when the query returns no relevant image; your spoken narration alone carries the moment.\n\nIMPORTANT — callouts:\n- ONLY provide `callouts` when using `src` with a KNOWN image (e.g., a specific NASA photo you can reason about). You can place x/y percent coordinates on a known image; you cannot on a `query`-resolved image because you have not seen it.\n- DO NOT provide `callouts` when using `query`. The server will strip them. Your verbal narration should describe what the picture shows in general terms; do not reference specific positions ("on the left", "at the bottom") since those depend on the resolved image.',
     parameters: {
       type: 'object',
       properties: {
@@ -1788,6 +1788,34 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'confirm_plan_los',
+    description: 'Commit the student\'s pick from a picker segment. Fire this ONLY when the active plan\'s current segment is a picker (its `goal` field describes presenting a list and capturing a pick) AND the student has clearly named which LOs they want. Pass the picked LO ids in the order the student gave them. The orchestrator will expand those LOs into full teaching segments and the next turn will start from the first expanded segment. Do NOT fire this for any other purpose — it is specific to the picker hand-off.',
+    parameters: {
+      type: 'object',
+      properties: {
+        pickedLoIds: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          description: 'Ordered list of LO ids the student picked (from the picker segment\'s keyIdeas — the "lo-1", "lo-2", etc. prefixes).',
+        },
+      },
+      required: ['pickedLoIds'],
+    },
+  },
+  {
+    name: 'propose_plan_swap',
+    description: 'Switch to a different lesson plan WITHIN the session\'s configured subject + topic. Use this when the student asks to study a different sub-topic / LO / chapter inside the same topic AND there is reason to believe a better-fitting plan exists (curated catalog or generated from earlier freestyle text). The orchestrator handles the lookup: it first searches the curated catalog for a plan matching the new sub-topic, and falls back to generating one from the student\'s message if no curated match exists. Do NOT use propose_plan_swap for off-topic requests (different subject) — refer to Rule 7. Do NOT use it for in-plan navigation — that\'s advance_lesson. Fires silently from the student\'s POV; the orchestrator will inject a "Plan changed → <title>" notice into the chat and update the progress strip. After firing, continue speaking normally — the new plan\'s first segment becomes active on the NEXT turn.',
+    parameters: {
+      type: 'object',
+      properties: {
+        targetSubTopic: { type: 'string', description: 'Short plain-English label (3-8 words) for the sub-topic / LO the student wants to switch to. Used by the orchestrator to search the catalog and (if needed) seed plan generation.' },
+        reason: { type: 'string', description: 'Brief telemetry note: what the student said or what segment was completed that motivated the swap.' },
+      },
+      required: ['targetSubTopic'],
+    },
+  },
+  {
     name: 'record_gap',
     description: 'Record a learning gap on a learning objective from THIS lesson plan. Fires silently — the student does not hear or see this. Populates the student\'s persistent profile, feeds back into future sessions, and surfaces between sessions as a "weak areas" practice section. Fire when the student\'s error reveals a genuine misconception or missing piece — not a slip, mishearing, or one-off calculation error they self-corrected. FIRE WHEN: (a) the student gets a problem wrong and the wrong reasoning shows real misunderstanding of the LO, (b) the student verbally states they don\'t understand a concept tied to the current LO, (c) the student couldn\'t recover after a hint, (d) the student made the same kind of error twice within the segment. DO NOT FIRE ON: a single wrong answer the student self-corrected; misheard / mistyped responses; questions about the wording of the problem; mid-thought hesitation that resolves on its own. Per session, fire at most once per (loId, distinct issue) pair. **CROSS-SESSION RE-FIRE:** if a gap already exists in `<student_profile>` for this LO and the student re-demonstrates the same misconception in THIS session, DO fire `record_gap` again — re-firing across sessions is how the system promotes a candidate gap to "confirmed" status (the store layer merges signals and increments the session count). Re-firing is encouraged, not duplicate. Use `flag_prerequisite_gap` instead when the missing piece is a foundational concept this plan does NOT itself teach.',
     parameters: {
@@ -2614,6 +2642,24 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'advance_lesson') {
     return { action: 'advanceLesson', to: String(funcArgs.to ?? 'next'), reason: funcArgs.reason };
+  }
+  if (funcName === 'propose_plan_swap') {
+    const targetSubTopic = typeof funcArgs.targetSubTopic === 'string' ? funcArgs.targetSubTopic.trim() : '';
+    if (!targetSubTopic) return null;
+    return {
+      action: 'proposePlanSwap',
+      targetSubTopic,
+      reason: typeof funcArgs.reason === 'string' ? funcArgs.reason : undefined,
+    };
+  }
+  if (funcName === 'confirm_plan_los') {
+    const raw = funcArgs.pickedLoIds;
+    if (!Array.isArray(raw)) return null;
+    const pickedLoIds = raw
+      .map((v) => (typeof v === 'string' ? v.trim() : ''))
+      .filter((v): v is string => v.length > 0);
+    if (pickedLoIds.length === 0) return null;
+    return { action: 'confirmPlanLos', pickedLoIds };
   }
   if (funcName === 'mark_segment_complete') {
     return {

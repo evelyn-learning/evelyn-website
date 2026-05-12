@@ -10,55 +10,33 @@ export interface VoiceEngine {
   bestFor: string;
 }
 
+// We now ship a single engine — the claude-brain orchestrator. The earlier
+// Standard / Premium tier split has been retired: every embed and demo
+// surface routes to the same engine. Token `engine` fields from existing
+// partners are still accepted for backwards compatibility but no longer
+// influence routing (see src/app/tutor-portal/embed/page.tsx).
 export const voiceEngines: VoiceEngine[] = [
   {
-    id: 'standard',
-    name: 'Standard',
+    id: 'claude-brain',
+    name: 'Voice Tutor',
     description:
-      'Turn-by-turn voice pipeline with high-quality speech recognition, AI reasoning, and natural speech synthesis. Optimized for cost-effective tutoring at scale.',
-    latency: '~1.5s',
-    costPerMinute: 0.06,
-    ourCostPerMinute: 0.015,
-    features: [
-      'High-accuracy speech recognition',
-      'Advanced AI reasoning',
-      'Natural speech synthesis with 4 voice options',
-      'Full whiteboard support (all 19 visual types)',
-      '50+ languages supported',
-      'Homework photo upload',
-      'Session transcript with timestamps',
-    ],
-    limitations: [
-      'Higher response latency (~1.5s between turns)',
-      'Does not support mid-sentence interruptions',
-    ],
-    bestFor:
-      'Cost-sensitive deployments, large student populations, structured tutoring sessions',
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    description:
-      'Ultra-low-latency voice engine with seamless turn-taking, natural interruptions, and conversational fluency. Feels like talking to a real person.',
+      'Conversational voice tutor with a structured pedagogy engine. Low-latency turn-taking, full whiteboard (equations, diagrams, tables, problems, concept maps), multi-language support, and per-student adaptive pacing.',
     latency: '<400ms',
     costPerMinute: 0.25,
     ourCostPerMinute: 0.35,
     features: [
-      'Sub-400ms response latency',
-      'Natural interruptions and overlapping speech',
-      'Intelligent voice activity detection',
-      '8 distinct voice options with emotional expressiveness',
-      'Full whiteboard support (all 19 visual types)',
+      'Sub-400ms response latency with natural interruptions',
+      'Structured pedagogy engine (Socratic-first, adaptive pacing)',
+      'Full whiteboard support (equations, diagrams, tables, problems, concept maps)',
       '50+ languages supported',
       'Homework photo upload',
+      'Per-student learning gaps + topic notes (when student_id is supplied)',
       'Session transcript with timestamps',
       'Seamless code-switching between languages',
     ],
-    limitations: [
-      'Higher per-minute cost',
-    ],
+    limitations: [],
     bestFor:
-      'Premium tutoring experiences, competitive exam prep, students who prefer natural conversation',
+      'All deployments — retail, whitelabel, API integrations, and demos.',
   },
 ];
 

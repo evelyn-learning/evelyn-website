@@ -7,9 +7,10 @@
  * Skips setup/summary — goes straight to the tutoring session.
  * Applies partner branding (colors, logo, product name).
  *
- * Engine mapping:
- *   standard → classic (Deepgram STT + Claude + Deepgram TTS)
- *   premium  → realtime-validated (OpenAI Realtime API)
+ * Engine: all embeds run on claude-brain. The legacy `engine` token
+ * field (standard / premium) is accepted for backwards compatibility
+ * but does not change routing — every session goes through the brain
+ * orchestrator with realtime voice.
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
@@ -21,14 +22,13 @@ import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { TranscriptView } from '@/app/tutor/components/TranscriptView';
 import { SessionControls } from '@/app/tutor/components/SessionControls';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard';
-import { VoiceTutor } from '@/app/tutor/components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
-import type { SessionGoal, TranscriptEntry, VoiceId } from '@/lib/tutor/types';
+import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 
 type InputMode = 'text' | 'voice';
-type InternalEngine = 'classic' | 'realtime-validated';
+type InternalEngine = 'claude-brain';
 
 interface EmbedConfig {
   partner_id: string;
@@ -90,9 +90,11 @@ function parseToken(tokenParam: string | null): EmbedConfig | null {
   }
 }
 
-function mapEngine(engine?: string): InternalEngine {
-  if (engine === 'premium') return 'realtime-validated';
-  return 'classic'; // default to standard
+function mapEngine(_engine?: string): InternalEngine {
+  // All embeds run on claude-brain. The token's `engine` field is
+  // ignored for routing — only kept on the type for backwards
+  // compatibility with existing partner JWTs.
+  return 'claude-brain';
 }
 
 function EmbedSession() {
@@ -127,8 +129,16 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const inputMode: InputMode = config.input_mode || 'voice';
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   const openAIVoice: OpenAIVoice = (config.voice as OpenAIVoice) || 'coral';
-  const classicVoice: VoiceId = 'male-1';
-  const maxDuration = config.max_duration_minutes || 30;
+  // Clamp partner-supplied session length to [1, 120] min. The hard
+  // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
+  // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
+  // costs and bad pedagogy from arbitrary partner-supplied values.
+  const maxDuration = Math.max(
+    1,
+    Math.min(120, typeof config.max_duration_minutes === 'number' && Number.isFinite(config.max_duration_minutes)
+      ? Math.floor(config.max_duration_minutes)
+      : 30),
+  );
   const branding = config.branding;
 
   // Apply branding color as CSS variable
@@ -264,7 +274,6 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     if (usage.totalTokens === 0) return;
     setTokenUsage((prev) => [...prev, { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, inputAudioTokens: usage.inputAudioTokens, outputAudioTokens: usage.outputAudioTokens, inputTextTokens: usage.inputTextTokens, outputTextTokens: usage.outputTextTokens, operation: 'realtime-response', timestamp: new Date() }]);
   }, []);
-  const handleVoiceConversationHistoryUpdate = useCallback((history: ConversationMessage[]) => setConversationHistory(history), []);
 
   // Upload homework and extract problems
   const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
@@ -302,8 +311,9 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         ? `I uploaded a homework problem. Here's what it says:\n\n${data.extractedProblem}\n\nCan you help me understand it and work through it?`
         : 'Here is my homework problem. Can you help me understand it and work through it?';
 
-      // For realtime-validated voice mode, send through WebSocket
-      if (inputMode === 'voice' && voiceEngine === 'realtime-validated' && realtimeHandleRef.current && data.extractedProblem) {
+      // Voice mode: send the extracted problem through the realtime handle
+      // so the tutor draws the setup and starts working through it.
+      if (inputMode === 'voice' && realtimeHandleRef.current && data.extractedProblem) {
         const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: '[Uploaded homework image]' };
         setTranscript((prev) => [...prev, userEntry]);
 
@@ -484,43 +494,25 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       {/* Input area */}
       <div className="flex-shrink-0 bg-white px-2 py-1">
         {inputMode === 'voice' && topic ? (
-          voiceEngine === 'realtime-validated' ? (
-            <VoiceTutorRealtime
-              subject={subject}
-              topic={topic}
-              level={level}
-              studentName={studentName || undefined}
-              sessionId={sessionId}
-              sessionGoal={sessionGoal}
-              voice={openAIVoice}
-              onTranscriptUpdate={handleVoiceTranscriptUpdate}
-              onWhiteboardCommand={handleVoiceWhiteboardCommand}
-              onUsageUpdate={handleRealtimeUsage}
-              onDebugEvent={() => {}}
-              onError={(err) => setError(err.message)}
-              onEndSession={handleEndSession}
-              onTrackInteraction={() => {}}
-              handleRef={realtimeHandleRef}
-              validateToolCalls
-            />
-          ) : (
-            <VoiceTutor
-              subject={subject}
-              topic={topic}
-              level={level}
-              studentName={studentName || undefined}
-              sessionGoal={sessionGoal}
-              voiceId={classicVoice}
-              externalConversationHistory={conversationHistory}
-              externalTranscript={transcript}
-              onTranscriptUpdate={handleVoiceTranscriptUpdate}
-              onWhiteboardCommand={handleVoiceWhiteboardCommand}
-              onConversationHistoryUpdate={handleVoiceConversationHistoryUpdate}
-              onError={(err) => setError(err.message)}
-              onEndSession={handleEndSession}
-              onTrackInteraction={() => {}}
-            />
-          )
+          <VoiceTutorRealtime
+            subject={subject}
+            topic={topic}
+            level={level}
+            studentName={studentName || undefined}
+            sessionId={sessionId}
+            sessionGoal={sessionGoal}
+            voice={openAIVoice}
+            onTranscriptUpdate={handleVoiceTranscriptUpdate}
+            onWhiteboardCommand={handleVoiceWhiteboardCommand}
+            onUsageUpdate={handleRealtimeUsage}
+            onDebugEvent={() => {}}
+            onError={(err) => setError(err.message)}
+            onEndSession={handleEndSession}
+            onTrackInteraction={() => {}}
+            handleRef={realtimeHandleRef}
+            claudeBrainMode
+            sessionMaxMinutes={maxDuration}
+          />
         ) : (
           <form onSubmit={handleSubmit} className="mx-auto flex gap-3">
             <input

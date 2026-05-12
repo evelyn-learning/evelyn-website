@@ -6,12 +6,22 @@ import type { FlowchartFigure, FlowchartNode, StateMachineFigure, BinaryTreeFigu
 // ── Flowchart ─────────────────────────────────────────────────────────────
 export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFigure }) {
   const { nodes, edges, title } = figure;
+  // Widen the viewBox so back-edges have room to curve around the right
+  // of the box column without overlapping. The box column stays at
+  // x=300 (centered in the main 600px area); back-edge routing extends
+  // into the gutter from x=400 to x=560.
   const W = 600;
+  const NODE_W = 200;
+  const NODE_H = 44;
   const ROW_H = 90;
   const H = 60 + nodes.length * ROW_H;
-  // Naive vertical layout — preserves authoring order, edges drawn between.
+  const boxCenterX = 300;
   const positions = new Map<string, { x: number; y: number }>();
-  nodes.forEach((n, i) => positions.set(n.id, { x: W / 2, y: 60 + i * ROW_H }));
+  nodes.forEach((n, i) => positions.set(n.id, { x: boxCenterX, y: 60 + i * ROW_H }));
+  // Gutter x for back-edge curves: outside the right edge of the boxes
+  // (boxes span x=[200, 400]); 470 leaves room for the label without
+  // overlapping the box right edge.
+  const BACK_EDGE_X = 470;
   return (
     <div className="flowchart-renderer w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
@@ -19,9 +29,36 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
         {edges.map((e, i) => {
           const a = positions.get(e.from)!;
           const b = positions.get(e.to)!;
+          const isBackEdge = b.y < a.y;
+          if (isBackEdge) {
+            // Route around the right side: leave from source-right,
+            // travel down/up the gutter, enter target from the right.
+            const sourceRightX = a.x + NODE_W / 2;
+            const targetRightX = b.x + NODE_W / 2;
+            // Pull-out + return path. Use straight orthogonal segments
+            // joined with rounded corners via a single path.
+            const d = `
+              M ${sourceRightX} ${a.y}
+              L ${BACK_EDGE_X} ${a.y}
+              L ${BACK_EDGE_X} ${b.y}
+              L ${targetRightX} ${b.y}
+            `;
+            return (
+              <g key={i}>
+                <path d={d} fill="none" stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
+                {e.label && (
+                  // Place label vertically centered along the gutter
+                  // segment; nudged a few px right of the gutter line
+                  // so the text doesn't overlap the path itself.
+                  <text x={BACK_EDGE_X + 6} y={(a.y + b.y) / 2 + 4} fontSize={11} fill="#dc2626" fontWeight={600}>{e.label}</text>
+                )}
+              </g>
+            );
+          }
+          // Forward edge (target below source) — straight vertical line.
           return (
             <g key={i}>
-              <line x1={a.x} y1={a.y + 22} x2={b.x} y2={b.y - 22} stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
+              <line x1={a.x} y1={a.y + NODE_H / 2} x2={b.x} y2={b.y - NODE_H / 2} stroke="#374151" strokeWidth={1.5} markerEnd="url(#fc-arr)" />
               {e.label && (
                 <text x={(a.x + b.x) / 2 + 10} y={(a.y + b.y) / 2 + 4} fontSize={11} fill="#dc2626" fontWeight={600}>{e.label}</text>
               )}

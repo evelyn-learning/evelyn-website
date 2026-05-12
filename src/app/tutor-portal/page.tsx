@@ -70,7 +70,7 @@ function HowItWorks() {
       step: '1',
       title: 'Generate a Session Token',
       description: 'Your backend creates a signed JWT with the student\'s subject, level, and your branding.',
-      code: '{ "student_id": "stu_123", "subject": "math", "level": "11-12", "engine": "standard" }',
+      code: '{ "student_id": "stu_123", "subject": "math", "level": "11-12" }',
     },
     {
       step: '2',
@@ -113,54 +113,44 @@ function HowItWorks() {
 }
 
 function EngineComparison() {
+  const engine = voiceEngines[0]!;
   return (
     <section className="bg-white py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold text-slate-900">Two Voice Engine Tiers</h2>
-          <p className="mt-3 text-slate-600">Choose the right balance of cost and performance for your market.</p>
+          <h2 className="text-3xl font-bold text-slate-900">The Voice Engine</h2>
+          <p className="mt-3 text-slate-600">A single tier that powers every deployment — retail, whitelabel, and API.</p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          {voiceEngines.map((engine) => (
-            <div
-              key={engine.id}
-              className={`rounded-2xl border-2 p-8 ${
-                engine.id === 'premium'
-                  ? 'border-blue-200 bg-blue-50/50'
-                  : 'border-slate-200 bg-white'
-              }`}
-            >
-              <div className="mb-1 flex items-center gap-3">
-                <h3 className="text-2xl font-bold text-slate-900">{engine.name}</h3>
-                {engine.id === 'premium' && (
-                  <span className="rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-white">
-                    Lowest Latency
-                  </span>
-                )}
-              </div>
-              <p className="mb-4 text-sm text-slate-600">{engine.description}</p>
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-900">
-                  ${engine.costPerMinute.toFixed(2)}
-                </span>
-                <span className="text-sm text-slate-500">/minute</span>
-              </div>
-              <div className="mb-4 flex items-center gap-2 text-sm">
-                <span className="font-medium text-slate-700">Response time:</span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-mono">
-                  {engine.latency}
-                </span>
-              </div>
-              <ul className="space-y-2">
-                {engine.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-0.5 text-blue-600">&#10003;</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+        <div className="mx-auto max-w-3xl">
+          <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/50 p-8">
+            <div className="mb-1 flex items-center gap-3">
+              <h3 className="text-2xl font-bold text-slate-900">{engine.name}</h3>
+              <span className="rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-white">
+                Low Latency
+              </span>
             </div>
-          ))}
+            <p className="mb-4 text-sm text-slate-600">{engine.description}</p>
+            <div className="mb-6 flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-slate-900">
+                ${engine.costPerMinute.toFixed(2)}
+              </span>
+              <span className="text-sm text-slate-500">/minute</span>
+            </div>
+            <div className="mb-4 flex items-center gap-2 text-sm">
+              <span className="font-medium text-slate-700">Response time:</span>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-mono">
+                {engine.latency}
+              </span>
+            </div>
+            <ul className="space-y-2">
+              {engine.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
+                  <span className="mt-0.5 text-blue-600">&#10003;</span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

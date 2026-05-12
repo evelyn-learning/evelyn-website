@@ -112,10 +112,10 @@ function TutorPage() {
     onView();
   }, [onView]);
 
-  // Allow query param override for engine: /tutor?engine=classic
+  // Engine selection is strictly env-controlled (NEXT_PUBLIC_TUTOR_VOICE_ENGINE).
+  // The previous ?engine=<x> URL override was removed so demo / retail / whitelabel
+  // surfaces all run on the same engine the deployment was built for.
   const searchParams = useSearchParams();
-  const engineParam = searchParams.get('engine') as VoiceEngine | null;
-  const VALID_ENGINES: VoiceEngine[] = ['classic', 'realtime', 'realtime-validated', 'claude-brain', 'gemini-live'];
   // /tutor?tts=mini switches relay-mode TTS to gpt-4o-mini-tts for cost
   // comparison. Default 'realtime' (out-of-band response, highest quality).
   const ttsParam = searchParams.get('tts');
@@ -186,7 +186,7 @@ function TutorPage() {
   const [inputMode, setInputMode] = useState<InputMode>('voice');
   // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
-  const baseVoiceEngine: VoiceEngine = (engineParam && VALID_ENGINES.includes(engineParam)) ? engineParam : ENV_VOICE_ENGINE;
+  const baseVoiceEngine: VoiceEngine = ENV_VOICE_ENGINE;
   // Lesson plans only work in claude-brain mode (the brain orchestrator
   // is what consumes lessonPlanContext). Force the engine when one is
   // selected so the user doesn't have to know about engine flags.
@@ -200,6 +200,16 @@ function TutorPage() {
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
   // Lesson-plan progress state — fed by VoiceTutorRealtime via onLessonPlanProgress.
   const [lessonProgress, setLessonProgress] = useState<{ plan: LessonPlanType | null; currentSegmentId: string }>({ plan: null, currentSegmentId: '' });
+  // Real (mark_segment_complete–derived) completion set for the progress
+  // strip. Array form so React's referential comparison treats each
+  // update as a re-render trigger.
+  const [completedSegmentIds, setCompletedSegmentIds] = useState<ReadonlyArray<string>>([]);
+  // Plan id we're expecting to land after an expand-plan-los call. When
+  // the plan reload completes, we auto-fire a synthetic prompt so the
+  // brain starts teaching the first LO without the student needing to
+  // say "ok, begin" first. Otherwise the session stalls after the
+  // picker confirmation.
+  const pendingAutoStartPlanIdRef = useRef<string | null>(null);
   // Source-of-truth event log for whiteboard commands. Each entry is captured
   // at the moment a command is emitted so we keep accurate timestamps and a
   // best-effort link to the surrounding transcript message. This avoids the
@@ -687,6 +697,33 @@ function TutorPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const realtimeHandleRef = useRef<RealtimeHandle | null>(null);
 
+  // Auto-start watcher: when handleConfirmPlanLos arms
+  // pendingAutoStartPlanIdRef with a plan id, wait for that plan's
+  // segments to land in lessonProgress (it propagates from the child
+  // after the lessonPlanId → fetch effect completes), then fire a
+  // synthetic system prompt so the brain begins teaching the first LO
+  // immediately. Without this the brain ends its "Let's jump in" turn
+  // and the session stalls because brain turns are gated on student
+  // input. The bracketed prefix is stripped from the chat-bubble
+  // renderer per the existing convention (see VoiceTutorRealtime
+  // typed-input form comment).
+  useEffect(() => {
+    const target = pendingAutoStartPlanIdRef.current;
+    if (!target) return;
+    if (lessonProgress.plan?.id !== target) return;
+    // Plan now reflects the expanded version. Fire once and clear.
+    pendingAutoStartPlanIdRef.current = null;
+    const handle = realtimeHandleRef.current;
+    if (!handle) {
+      console.warn('[auto-start] no realtime handle; cannot trigger brain turn');
+      return;
+    }
+    console.log(`[auto-start] firing synthetic start prompt for plan ${target}`);
+    handle.sendTextMessage(
+      '[orchestrator: the lesson plan has just been expanded with the picked LOs. Begin teaching immediately — call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12), then start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
+    );
+  }, [lessonProgress.plan?.id]);
+
   // Send message to tutor API
   const sendMessage = useCallback(
     async (message: string) => {
@@ -923,6 +960,228 @@ function TutorPage() {
       return next;
     });
   }, [transcript]);
+
+  // Freestyle-text interception: when a typed student message looks like
+  // pasted study material (long text or structured list), kick off
+  // on-the-fly lesson-plan generation and BOUNDED-await it.
+  //
+  // Why bounded-await (not pure fire-and-forget):
+  //  - If the brain's turn 1 runs before the plan loads, the brain
+  //    freestyles a generic ack and never sees the picker segment —
+  //    the student then gets two turns of "which one do you want?"
+  //    instead of the structured LO list (observed 2026-05-12 ~4.7s
+  //    brain race vs 4.9s plan-gen).
+  //  - Hard-await defeats the original goal (30s waits were
+  //    unacceptable). 6s ceiling matches typical Stage-1 latency
+  //    (~3-4s for Haiku) with safety margin; falls back to freestyle
+  //    past that.
+  //
+  // No-op when a plan is already active — we don't override a
+  // student-selected plan mid-session.
+  const handleBeforeTypedSubmit = useCallback(
+    async (text: string): Promise<{ setLessonPlanId: string | null } | void> => {
+      if (selectedLessonPlanId || lessonProgress.plan) return;
+      const { detectFreestyleText } = await import('@/lib/tutor/lesson-plan/freestyle-trigger');
+      const trigger = detectFreestyleText(text);
+      if (!trigger.shouldGeneratePlan) return;
+      const subject = selectedSubject;
+      const grade = selectedLevel;
+      const topic = selectedTopicId;
+      const startedAt = Date.now();
+      // Race the plan-from-text fetch against a timeout. Whichever
+      // wins decides whether the brain's turn 1 has picker context.
+      const PLAN_WAIT_MS = 6000;
+      const fetchPlan = (async () => {
+        try {
+          const res = await fetch('/api/tutor/plan-from-text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, subject, grade, topic, sessionMinutes: 30 }),
+          });
+          if (!res.ok) {
+            console.warn('[freestyle] plan-from-text non-ok:', res.status);
+            return null;
+          }
+          return await res.json();
+        } catch (err) {
+          console.warn('[freestyle] plan-from-text threw:', err);
+          return null;
+        }
+      })();
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), PLAN_WAIT_MS));
+      const data = await Promise.race([fetchPlan, timeout]);
+      const elapsed = Date.now() - startedAt;
+      if (!data) {
+        // Timed out OR fetch failed. Let the fetch keep running in the
+        // background so the plan still lands eventually (next turn will
+        // pick it up). Brain turn 1 happens freestyle.
+        console.log(`[freestyle] plan not ready in ${elapsed}ms (deadline ${PLAN_WAIT_MS}ms) — proceeding without plan; background fetch will land for next turn`);
+        void fetchPlan.then((late) => {
+          const lateId = late?.plan?.id;
+          if (typeof lateId === 'string' && lateId) {
+            setSelectedLessonPlanId((prev) => {
+              if (prev) return prev;
+              console.log(`[freestyle] late-landing plan ${lateId} applied (took ${Date.now() - startedAt}ms total)`);
+              return lateId;
+            });
+          }
+        });
+        return;
+      }
+      const planId = data?.plan?.id;
+      if (typeof planId !== 'string' || !planId) {
+        console.warn('[freestyle] plan-from-text response missing plan id');
+        return;
+      }
+      console.log(
+        `[freestyle] plan ${planId} ready in ${elapsed}ms (mode=${data.mode}, segments=${data.plan.segments?.length})`,
+      );
+      // Set the plan synchronously so the child's useEffect picks it
+      // up. Returning { setLessonPlanId } tells the child to wait for
+      // lessonPlanRef to load before forwarding the typed turn — so the
+      // brain's first turn sees the picker segment.
+      setSelectedLessonPlanId(planId);
+      return { setLessonPlanId: planId };
+    },
+    [selectedLessonPlanId, lessonProgress.plan, selectedSubject, selectedLevel, selectedTopicId],
+  );
+
+  // Picker-segment commit. Two-call expansion to minimise the wait
+  // between "Let's get into it!" and the first teaching turn:
+  //
+  //   Call A (priority, awaited): expand ONLY the first picked LO —
+  //     ~3-4s of Haiku time for 4 segments. Plan reloads with
+  //     intro + first LO ready. Brain auto-starts teaching it.
+  //
+  //   Call B (full, background): expand ALL picked LOs — ~15s. By
+  //     the time the brain finishes LO 1 (minutes of teaching), the
+  //     full plan has landed silently. Brain advances to LO 2 with
+  //     segments already in place.
+  //
+  // The plan id is preserved across both calls; each upsert replaces
+  // the prior plan doc. The metadata.pendingExpansion field tells
+  // the orchestrator the partial-state shape if needed.
+  const handleConfirmPlanLos = useCallback(
+    async ({ planId, pickedLoIds }: { planId: string; pickedLoIds: string[] }): Promise<void> => {
+      if (pickedLoIds.length === 0) return;
+      const priorityLoIds = [pickedLoIds[0]];
+      try {
+        // Call A — priority. Awaited so we can trigger auto-start the
+        // moment the first LO's segments are ready.
+        const resA = await fetch('/api/tutor/expand-plan-los', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId, pickedLoIds, priorityLoIds }),
+        });
+        if (!resA.ok) {
+          console.warn('[plan-pick] priority call non-ok:', resA.status);
+          return;
+        }
+        const dataA = await resA.json();
+        setSelectedLessonPlanId('');
+        setTimeout(() => setSelectedLessonPlanId(planId), 10);
+        pendingAutoStartPlanIdRef.current = planId;
+        const noticeText = `Plan ready — starting first item (${dataA.pendingExpansion?.length ?? 0} more loading)`;
+        const notice: TranscriptEntry = {
+          id: `system-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'system',
+          text: noticeText,
+        };
+        setTranscript((prev) => [...prev, notice]);
+        console.log(
+          `[plan-pick] priority expand ok plan=${planId} expanded=${dataA.expandedCount} pending=${dataA.pendingExpansion?.length ?? 0} ms=${dataA.timing?.totalMs}`,
+        );
+
+        // Call B — full set, fire-and-forget. Plan reloads silently
+        // when this completes; existing useEffect in VoiceTutorRealtime
+        // picks up the new segments without disrupting the brain's
+        // current teaching state (currentSegmentId still points at the
+        // LO-1 segment the brain is in).
+        if (pickedLoIds.length > priorityLoIds.length) {
+          void (async () => {
+            try {
+              const resB = await fetch('/api/tutor/expand-plan-los', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planId, pickedLoIds }),
+              });
+              if (!resB.ok) {
+                console.warn('[plan-pick] background full-expand non-ok:', resB.status);
+                return;
+              }
+              const dataB = await resB.json();
+              console.log(
+                `[plan-pick] background full-expand ok plan=${planId} expanded=${dataB.expandedCount} ms=${dataB.timing?.totalMs}`,
+              );
+              // Force a re-fetch of the plan so the child picks up the
+              // newly-expanded later-LO segments. Same trick as call A.
+              setSelectedLessonPlanId('');
+              setTimeout(() => setSelectedLessonPlanId(planId), 10);
+            } catch (err) {
+              console.warn('[plan-pick] background full-expand threw:', err);
+            }
+          })();
+        }
+      } catch (err) {
+        console.warn('[plan-pick] priority call threw:', err);
+      }
+    },
+    [],
+  );
+
+  // Mid-session plan swap. The brain emits propose_plan_swap when the
+  // student asks for a different sub-topic inside the same configured
+  // subject + topic (Rule 7). Server-side /api/tutor/swap-plan does
+  // the topic-scoped curated lookup + freestyle fallback. We just
+  // route the resolved plan id into selectedLessonPlanId so the existing
+  // useEffect in VoiceTutorRealtime loads it on the next render.
+  const handleProposePlanSwap = useCallback(
+    async ({ targetSubTopic, reason }: { targetSubTopic: string; reason?: string }): Promise<void> => {
+      try {
+        const res = await fetch('/api/tutor/swap-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetSubTopic,
+            subject: selectedSubject,
+            grade: selectedLevel,
+            topic: selectedTopicId,
+            reason,
+          }),
+        });
+        if (!res.ok) {
+          console.warn('[plan-swap] non-ok:', res.status);
+          return;
+        }
+        const data = await res.json();
+        const newPlanId = data?.plan?.id;
+        if (typeof newPlanId !== 'string' || !newPlanId) {
+          console.warn('[plan-swap] response missing plan id');
+          return;
+        }
+        // Inject a one-line system notice into the chat so the student
+        // sees the rails change. Uses the same TranscriptEntry shape as
+        // student/tutor turns with a distinct role so the renderer can
+        // style it differently.
+        const newPlanTitle: string = typeof data?.plan?.title === 'string' ? data.plan.title : 'New plan';
+        const notice: TranscriptEntry = {
+          id: `system-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'system',
+          text: `Plan changed → ${newPlanTitle}`,
+        };
+        setTranscript((prev) => [...prev, notice]);
+        console.log(
+          `[plan-swap] applied new plan ${newPlanId} (source=${data.source}, title="${newPlanTitle}")`,
+        );
+        setSelectedLessonPlanId(newPlanId);
+      } catch (err) {
+        console.warn('[plan-swap] failed:', err);
+      }
+    },
+    [selectedSubject, selectedLevel, selectedTopicId],
+  );
 
   // Handle token usage from OpenAI Realtime responses
   const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number }) => {
@@ -1364,9 +1623,35 @@ function TutorPage() {
                   <h1 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                     {lessonProgress.plan.title}
                   </h1>
-                  <p className="text-xs text-gray-500 truncate hidden sm:block">
-                    {topicDisplayName} · grade {lessonProgress.plan.grade}
-                  </p>
+                  {(() => {
+                    // Current-LO subtitle: shows which LO the brain is
+                    // currently in, derived from the conventional
+                    // "<loId>-<kind>" segment id. Falls back to the
+                    // topic + grade subtitle when no LO can be resolved
+                    // (intro / picker / curated plan with non-loId
+                    // segment ids).
+                    const segId = lessonProgress.currentSegmentId || '';
+                    const matchedLo = lessonProgress.plan?.los?.find(
+                      (lo) => segId.startsWith(`${lo.id}-`) || segId === lo.id,
+                    );
+                    if (matchedLo) {
+                      const idx = lessonProgress.plan.los.findIndex((lo) => lo.id === matchedLo.id);
+                      return (
+                        <p
+                          className="text-xs text-blue-700 truncate"
+                          title={matchedLo.description}
+                        >
+                          <span className="font-medium">LO {idx + 1}:</span>{' '}
+                          {matchedLo.description}
+                        </p>
+                      );
+                    }
+                    return (
+                      <p className="text-xs text-gray-500 truncate hidden sm:block">
+                        {topicDisplayName} · grade {lessonProgress.plan.grade}
+                      </p>
+                    );
+                  })()}
                 </>
               ) : (
                 <>
@@ -1385,11 +1670,17 @@ function TutorPage() {
                 </>
               )}
             </div>
-            {/* Lesson-plan progress strip — sits inline with the title so
-                it doesn't claim its own row. Hidden when no plan is active. */}
+            {/* Lesson-plan progress strip — sits inline with the title on
+                desktop; wraps to its own row on mobile so chips/LO pills
+                aren't crushed by the title and timer. Hidden when no plan
+                is active. */}
             {lessonProgress.plan && (
-              <div className="hidden md:block flex-1 min-w-0 overflow-x-auto">
-                <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} />
+              <div className="w-full md:w-auto md:flex-1 min-w-0 overflow-x-auto">
+                <LessonPlanProgress
+                  plan={lessonProgress.plan}
+                  currentSegmentId={lessonProgress.currentSegmentId}
+                  completedSegmentIds={completedSegmentIds}
+                />
               </div>
             )}
           </div>
@@ -1942,6 +2233,11 @@ function TutorPage() {
                     if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
                     paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
                   }}
+                  onBeforeTypedSubmit={handleBeforeTypedSubmit}
+                  onProposePlanSwap={handleProposePlanSwap}
+                  onConfirmPlanLos={handleConfirmPlanLos}
+                  onCompletedSegmentsChange={setCompletedSegmentIds}
+                  sessionMaxMinutes={30}
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini

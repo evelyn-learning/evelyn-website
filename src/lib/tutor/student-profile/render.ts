@@ -79,11 +79,15 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
   }
 
   // Recent sessions — for "last week we did X" continuity.
+  // CRITICAL: these are HISTORICAL sessions, NOT the active session.
+  // The active session's subject + topic are stamped in the system
+  // prompt's "Current Session Context" block. Do not let an entry
+  // below override that ground truth.
   const recent = profile.recentSessions
     .slice(-RECENT_SESSIONS_SHOWN)
     .reverse();
   if (recent.length) {
-    lines.push(``, `recent sessions:`);
+    lines.push(``, `prior sessions (HISTORICAL — not the current session):`);
     for (const s of recent) {
       const tag = [s.subject, s.topic, s.grade].filter(Boolean).join(' / ');
       const lo = s.losTouched.length ? ` LOs: ${s.losTouched.join(', ')}` : '';

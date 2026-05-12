@@ -110,27 +110,27 @@ function makeToolResultProvider(
       const segIdx = ctx.segmentIndex;
       const curIdx = segIdx.findIndex((s) => s.id === ctx.currentSegmentId);
       const isOffTopic = (s: { offTopic?: boolean }) => s.offTopic === true;
-      let resolvable = false;
+      let resolvedSegmentId: string | null = null;
       if (to === 'next') {
         // Skip off-topic segments. Mirrors resolveAdvanceTarget client-
         // side. If no on-topic segment remains after the current one,
-        // treat as end-of-plan (resolvable = false).
+        // treat as end-of-plan (resolvedSegmentId stays null).
         if (curIdx >= 0) {
           for (let j = curIdx + 1; j < segIdx.length; j++) {
-            if (!isOffTopic(segIdx[j])) { resolvable = true; break; }
+            if (!isOffTopic(segIdx[j])) { resolvedSegmentId = segIdx[j].id; break; }
           }
         }
       } else if (to === 'previous') {
         if (curIdx > 0) {
           for (let j = curIdx - 1; j >= 0; j--) {
-            if (!isOffTopic(segIdx[j])) { resolvable = true; break; }
+            if (!isOffTopic(segIdx[j])) { resolvedSegmentId = segIdx[j].id; break; }
           }
         }
       } else {
         const target = segIdx.find((s) => s.id === to);
-        resolvable = !!target && !isOffTopic(target);
+        if (target && !isOffTopic(target)) resolvedSegmentId = target.id;
       }
-      if (!resolvable) {
+      if (!resolvedSegmentId) {
         return JSON.stringify({
           error: 'advance_lesson_failed',
           message: to === 'next'
@@ -140,7 +140,31 @@ function makeToolResultProvider(
           segmentIndex: segIdx,
         });
       }
-      return `advance_lesson executed successfully (to=${to}).`;
+      // Ground the brain in the segment it ACTUALLY landed on. Without
+      // this, the brain receives a bare "success" and may teach whatever
+      // it thought "next" meant rather than what the orchestrator
+      // resolved (observed 2026-05-12 bio session: Skip Ahead resolved
+      // to lo-3-worked but brain taught LO-4 passive/active transport).
+      const resolvedSeg = segIdx.find((s) => s.id === resolvedSegmentId);
+      // Derive loId from the conventional "<loId>-<kind>" id pattern.
+      // Falls back to null for curated plans / intro / picker ids.
+      let loId: string | null = null;
+      let loDescription: string | null = null;
+      for (const lo of ctx.plan.los ?? []) {
+        if (resolvedSegmentId.startsWith(`${lo.id}-`) || resolvedSegmentId === lo.id) {
+          loId = lo.id;
+          loDescription = lo.description;
+          break;
+        }
+      }
+      return JSON.stringify({
+        ok: true,
+        advancedTo: resolvedSegmentId,
+        segmentKind: resolvedSeg?.kind ?? null,
+        loId,
+        loDescription,
+        instruction: `You are now at segment "${resolvedSegmentId}" (kind: ${resolvedSeg?.kind ?? 'unknown'}${loDescription ? `, LO: "${loDescription}"` : ''}). Teach the content of THIS segment. Do not skip ahead further on your own — the next advance must come from another advance_lesson call or natural completion.`,
+      });
     }
     if (name !== 'generate_problem') {
       return `${name} executed successfully.`;
@@ -383,6 +407,23 @@ export async function POST(req: NextRequest) {
           if (ev.type === 'tool-call' && ev.name === 'show_labeled_image') {
             const query = typeof ev.args?.query === 'string' ? ev.args.query.trim() : '';
             const existingSrc = typeof ev.args?.src === 'string' ? ev.args.src : '';
+
+            // Reject diagram-shaped queries. Stock-photo providers return
+            // literal-keyword photo hits for things like "phospholipid
+            // bilayer diagram labeled" — the top result is a person
+            // holding a phone whose alt text mentions "labeled". The
+            // brain should reach for show_diagram / show_svg_diagram /
+            // a synthesized-diagram tool for these instead. Generic
+            // pattern — no subject anchors; just structural words that
+            // signal "I want a diagram, not a photograph".
+            if (query) {
+              const diagramShaped = /\b(diagram|schematic|labeled|labelled|anatomy|structure(?: of)?|cross[-\s]?section|bilayer|molecule|molecular|chemical structure|microscope view|cell wall|organelle|pathway|cycle|model of)\b/i.test(query);
+              if (diagramShaped) {
+                console.log(`[show_labeled_image] diagram-shaped query rejected: "${query}" — brain should use show_diagram / show_svg_diagram instead`);
+                if (clientGone) break;
+                continue;
+              }
+            }
 
             if (query) {
               try {
