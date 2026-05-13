@@ -560,7 +560,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_timeline',
-    description: 'Horizontal timeline of dated events. Numeric / parseable date strings auto-space by year (supports BCE via negative years or "500 BCE"); unparseable strings fall back to even spacing. `category` color-groups events.',
+    description: '⚠️ DEPRECATED — prefer `show_diagram(type: "historical_timeline", params: { events: [{date, label, description?, color?}], title? })`. The catalog version registers each event as a scribbleable feature so tutor_scribble can mark a specific event. This legacy tool stays for backward-compat only — do NOT pick it for new emissions. Horizontal timeline of dated events. Numeric / parseable date strings auto-space by year (supports BCE via negative years or "500 BCE"); unparseable strings fall back to even spacing. `category` color-groups events.',
     parameters: {
       type: 'object',
       properties: {
@@ -1442,7 +1442,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_cycle_diagram',
-    description: 'Display stages of a cyclic process arranged around a circle, with arrows flowing back to the start. USE THIS for water cycle, carbon cycle, rock cycle, nitrogen cycle, cell cycle, PDCA, product loops, etc.',
+    description: '⚠️ DEPRECATED — prefer `show_diagram(type: "water_cycle" | "life_cycle" | "rock_cycle", params: { stages: [{label, description?, color?}], title? })`. The catalog version registers each stage as a scribbleable feature with semantic slug aliases (e.g. "stage-precipitation"). This legacy tool stays for backward-compat only — do NOT pick it for new emissions. Display stages of a cyclic process arranged around a circle.',
     parameters: {
       type: 'object',
       properties: {
@@ -1640,7 +1640,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_orbital_diagram',
-    description: 'Electron configuration box-and-arrow notation following Aufbau, Pauli, Hund. Pass `element` ("N", "Fe") to derive the configuration, or provide an explicit `configuration` array. USE THIS for electron-configuration lessons.',
+    description: '⚠️ DEPRECATED — prefer `show_diagram(type: "orbital_diagram", params: { element, title? })`. The catalog version registers each shell row as a scribbleable feature so tutor_scribble can mark a specific shell ("2p", "3d", etc.). This legacy tool stays for backward-compat only — do NOT pick it for new emissions. Electron configuration box-and-arrow notation following Aufbau, Pauli, Hund.',
     parameters: {
       type: 'object',
       properties: {
@@ -1673,7 +1673,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_punnett',
-    description: 'Punnett-square cross. Pass both parent genotypes as allele-pair strings (monohybrid "Pp", dihybrid "RrYy"); the renderer derives gamete headers and offspring cells. Use this (not show_table) for any monohybrid, dihybrid, test cross, incomplete-dominance, or codominance example.',
+    description: '⚠️ DEPRECATED — prefer `show_diagram(type: "punnett_square", params: { parentA, parentB, title? })`. The catalog version registers each cell + gamete + parent label as a scribbleable feature so tutor_scribble can mark a specific cell ("BB", "Bb", "bb"). This legacy tool stays for backward-compat only — do NOT pick it for new emissions. Punnett-square cross. The catalog version supports monohybrid only; for dihybrid (RrYy × Rryy) keep using this legacy tool.',
     parameters: {
       type: 'object',
       properties: {
