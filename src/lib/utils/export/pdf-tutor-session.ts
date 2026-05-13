@@ -1208,7 +1208,7 @@ function drawGeometryVisual(
 async function drawWhiteboardVisual(
   pdf: jsPDF, rawCmd: WhiteboardCommandData,
   x: number, y: number, width: number,
-  scribbles?: Array<{ shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string }>,
+  scribbles?: Array<{ shape: 'tick' | 'highlight' | 'circle' | 'underline' | 'arrow' | 'box'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string }>,
 ): Promise<number> {
   // Normalize: DB format nests command properties under 'data' (e.g., { action: 'showEquation', data: { latex: '...' } }),
   // while live format has them flat (e.g., { action: 'showEquation', latex: '...' }). Flatten for consistent access.
@@ -1263,18 +1263,11 @@ async function drawWhiteboardVisual(
   }
 
   if (cmd.action === 'handwrite' && cmd.text) {
-    // Phase 1' (whiteboard markup): handwrites are page-level positioned
-    // overlays in the live WB, but in PDF flow we render them inline as
-    // a teacher-margin-note styled block — italic cursive-fallback font,
-    // amber color, with a small indent indicating its margin/anchor
-    // context. Loses exact positioning vs. live but preserves content
-    // and visual distinction from `annotate` / `highlight` cards.
+    // Post-redesign (2026-05-13): handwrites are strip entries — a
+    // simple colored bullet + line of text. No box, no border, no
+    // anchor hint. Matches the live AnnotationStrip styling.
     const text = String(cmd.text);
-    const anchor = cmd.near
-      ? `↳ near "${cmd.near}"`
-      : `↳ margin "${(cmd.margin as string) || 'right'}"`;
-    const colorHex = (typeof cmd.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(cmd.color)) ? cmd.color : '#b45309';
-    // Parse hex → RGB tuple for jsPDF.
+    const colorHex = (typeof cmd.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(cmd.color)) ? cmd.color : '#a16207';
     const parsedColor = ((): [number, number, number] => {
       const h = colorHex.replace('#', '');
       const n = h.length === 3
@@ -1282,26 +1275,18 @@ async function drawWhiteboardVisual(
         : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
       return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
     })();
-    const boxPad = 3;
-    pdf.setFont('helvetica', 'italic');
-    pdf.setFontSize(11);
-    const sanitized = sanitizeForPDF(text);
-    const wrapped = pdf.splitTextToSize(sanitized, width - boxPad * 2 - 12);
-    const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
-    const boxH = wrappedLines * 5.2 + boxPad * 2 + 4.5;
-    // Soft cream background to evoke a teacher's sticky note feel.
-    pdf.setFillColor(254, 252, 232);
-    pdf.setDrawColor(...parsedColor);
-    pdf.setLineWidth(0.4);
-    pdf.roundedRect(x, y, width, boxH, 1.5, 1.5, 'FD');
-    pdf.setTextColor(...parsedColor);
-    pdf.text(wrapped, x + boxPad + 6, y + boxPad + 4);
-    // Anchor hint in a smaller, muted line below the text.
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.setTextColor(120, 113, 108);
-    pdf.text(anchor, x + boxPad + 6, y + boxPad + 4 + wrappedLines * 5.2 + 2);
-    return y + boxH + 2;
+    pdf.setFontSize(10);
+    const sanitized = sanitizeForPDF(text);
+    const wrapped = pdf.splitTextToSize(sanitized, width - 6);
+    const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
+    // Color dot.
+    pdf.setFillColor(...parsedColor);
+    pdf.circle(x + 1.8, y + 2.4, 1.1, 'F');
+    pdf.setTextColor(...parsedColor);
+    pdf.text(wrapped, x + 5.5, y + 3);
+    const lineH = wrappedLines * 4.4 + 2;
+    return y + lineH;
   }
 
   if (cmd.action === 'showTable' && cmd.headers) {
@@ -1616,7 +1601,7 @@ export async function exportTutorSessionPDF(
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
   //     older scribbles emitted before targetId was available, OR when
   //     the tutor didn't use targetId
-  type ScribbleShape = { shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string };
+  type ScribbleShape = { shape: 'tick' | 'highlight' | 'circle' | 'underline' | 'arrow' | 'box'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string };
   const scribblesByTargetId = new Map<string, ScribbleShape[]>();
   const scribblesByIndex = new Map<number, ScribbleShape[]>();
   const dedupedCommands = dedupedAll.filter((cmd) => {
@@ -1624,7 +1609,9 @@ export async function exportTutorSessionPDF(
     if (action === 'scribble') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const s = cmd as any;
-      if (!['circle','underline','arrow','box','highlight'].includes(s.shape)) return false;
+      // Post-redesign vocabulary is `tick` + `highlight`. Legacy
+      // shapes are accepted and will remap to `tick` in the renderer.
+      if (!['tick','highlight','circle','underline','arrow','box'].includes(s.shape)) return false;
       const shape: ScribbleShape = {
         shape: s.shape,
         region: s.region,
@@ -1845,6 +1832,38 @@ export async function exportTutorSessionPDF(
             drawWrappedText(String(prob.statement), margin + 8, textAreaWidth - 4, { size: 8, color: [55, 65, 81] });
           }
         }
+      }
+
+      // Post-redesign annotation strip mirror: for any scribble on this
+      // item that carries a label, emit a single colored-bullet line.
+      // Labels no longer paint on the diagram itself (the SVG bake only
+      // draws the tick / highlight), so without this mirror the PDF
+      // would lose the brain's verbal annotations.
+      const labelledScribbles = itemScribbles.filter((s) => s.label && s.label.trim());
+      if (labelledScribbles.length > 0) {
+        addPageIfNeeded(labelledScribbles.length * 5 + 2);
+        for (const s of labelledScribbles) {
+          const colorHex = (s.color && /^#[0-9a-fA-F]{3,8}$/.test(s.color)) ? s.color : '#3b82f6';
+          const parsed = ((): [number, number, number] => {
+            const h = colorHex.replace('#', '');
+            const n = h.length === 3
+              ? [h[0] + h[0], h[1] + h[1], h[2] + h[2]]
+              : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
+            return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
+          })();
+          pdf.setFillColor(...parsed);
+          pdf.circle(margin + 5.8, y + 1.6, 1.0, 'F');
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(...parsed);
+          const featureName = s.targetFeature || 'feature';
+          const line = `${featureName} → ${s.label}`;
+          const wrapped = pdf.splitTextToSize(sanitizeForPDF(line), contentWidth - 18);
+          pdf.text(wrapped, margin + 9.5, y + 2.4);
+          const lines = Array.isArray(wrapped) ? wrapped.length : 1;
+          y += lines * 4.4 + 1;
+        }
+        y += 1;
       }
 
       y += 3;

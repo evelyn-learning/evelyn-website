@@ -309,108 +309,37 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
       for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
     };
 
-    switch (s.shape) {
-      case 'circle': {
-        // Mirrors the live overlay's oval logic (WhiteboardCanvas.tsx
-        // case 'circle'): wide targets get a wide oval, narrow ones a
-        // small circle. Both visually enclose the feature. Line-like
-        // targets (aspect ratio > 3 — segments / vectors / hypotenuses)
-        // still get a tighter cap so a long angled bbox doesn't ate
-        // the whole figure.
-        const aspectRatio = Math.max(rw, rh) / Math.max(0.0001, Math.min(rw, rh));
-        const isLineLike = aspectRatio > 3;
-        const lineRadiusCap = Math.min(vw, vh) * 0.08;
-        const rxRaw = Math.max(vw * 0.015, rw / 2 + 4);
-        const ryRaw = Math.max(vh * 0.015, rh / 2 + 4);
-        const ovalPadding = 1.12;
-        const ellipse = document.createElementNS(SVG_NS, 'ellipse');
-        setAttrs(ellipse, {
-          cx, cy,
-          rx: isLineLike ? Math.min(rxRaw, lineRadiusCap) : rxRaw * ovalPadding,
-          ry: isLineLike ? Math.min(ryRaw, lineRadiusCap) : ryRaw * ovalPadding,
-          fill: 'none', stroke: color,
-          'stroke-width': Math.max(2, vw / 200),
-        });
-        group.appendChild(ellipse);
-        break;
-      }
-      case 'underline': {
-        const line = document.createElementNS(SVG_NS, 'line');
-        setAttrs(line, {
-          x1: rx, y1: ry + rh,
-          x2: rx + rw, y2: ry + rh,
-          stroke: color,
-          'stroke-width': Math.max(2.5, vw / 170),
-          'stroke-linecap': 'round',
-        });
-        group.appendChild(line);
-        break;
-      }
-      case 'box': {
-        const rect = document.createElementNS(SVG_NS, 'rect');
-        setAttrs(rect, {
-          x: rx - 2, y: ry - 2, width: rw + 4, height: rh + 4,
-          fill: 'none', stroke: color,
-          'stroke-width': Math.max(2, vw / 200),
-        });
-        group.appendChild(rect);
-        break;
-      }
-      case 'highlight': {
-        const rect = document.createElementNS(SVG_NS, 'rect');
-        setAttrs(rect, {
-          x: rx, y: ry, width: rw, height: rh,
-          fill: color, 'fill-opacity': '0.25', stroke: 'none',
-        });
-        group.appendChild(rect);
-        break;
-      }
-      case 'arrow': {
-        const tailX = Math.max(0, rx - vw * 0.08);
-        const tailY = Math.max(0, ry - vh * 0.08);
-        const markerId = `pdf-html-arrow-${i}`;
-        const defs = document.createElementNS(SVG_NS, 'defs');
-        const marker = document.createElementNS(SVG_NS, 'marker');
-        setAttrs(marker, {
-          id: markerId, viewBox: '0 0 10 10',
-          refX: '8', refY: '5',
-          markerWidth: '4', markerHeight: '4',
-          orient: 'auto-start-reverse',
-        });
-        const markerPath = document.createElementNS(SVG_NS, 'path');
-        setAttrs(markerPath, { d: 'M0,0 L10,5 L0,10 Z', fill: color });
-        marker.appendChild(markerPath);
-        defs.appendChild(marker);
-        group.appendChild(defs);
-        const line = document.createElementNS(SVG_NS, 'line');
-        setAttrs(line, {
-          x1: tailX, y1: tailY, x2: cx, y2: cy,
-          stroke: color,
-          'stroke-width': Math.max(2, vw / 200),
-          'marker-end': `url(#${markerId})`,
-        });
-        group.appendChild(line);
-        break;
-      }
-    }
-
-    if (s.label) {
-      const text = document.createElementNS(SVG_NS, 'text');
-      const labelY = Math.max(vh * 0.05, ry - 4);
-      setAttrs(text, {
-        x: cx, y: labelY,
-        'font-size': Math.max(10, vw / 50),
-        fill: color,
-        'text-anchor': 'middle',
-        'font-weight': '700',
-        'paint-order': 'stroke',
-        stroke: 'white',
-        'stroke-width': Math.max(1.5, vw / 250),
+    // Post-redesign (2026-05-13): only `highlight` and `tick` paint
+    // on the diagram. Legacy shapes (circle/underline/box/arrow) map
+    // to `tick`. Labels move to the per-page annotation strip — they
+    // don't render on the diagram itself anymore.
+    if (s.shape === 'highlight') {
+      const rect = document.createElementNS(SVG_NS, 'rect');
+      setAttrs(rect, {
+        x: rx, y: ry, width: rw, height: rh,
+        fill: color, 'fill-opacity': '0.25', stroke: 'none',
+      });
+      group.appendChild(rect);
+    } else {
+      const tickSize = Math.max(10, Math.min(vw, vh) * 0.04);
+      const tx = rx + rw + tickSize * 0.4;
+      const ty = ry + rh / 2;
+      const half = tickSize / 2;
+      const tickPath = document.createElementNS(SVG_NS, 'path');
+      setAttrs(tickPath, {
+        d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
+        fill: 'none',
+        stroke: color,
+        'stroke-width': Math.max(2, tickSize * 0.18),
+        'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
       });
-      text.textContent = s.label;
-      group.appendChild(text);
+      group.appendChild(tickPath);
     }
+    // Labels deliberately not drawn on the diagram — moved to the
+    // per-page annotation strip below the rendered items.
+    void i;
+    void cx;
 
     overlay.appendChild(group);
   });
@@ -534,7 +463,11 @@ export async function drawCapturedSvg(pdf: any, svgString: string, x: number, y:
  * is visually identical to the session.
  */
 export interface ScribbleInput {
-  shape: 'circle' | 'underline' | 'arrow' | 'box' | 'highlight';
+  // Post-redesign vocabulary is `tick` + `highlight`. Legacy shapes
+  // (circle/underline/arrow/box) are accepted-but-remapped to `tick`
+  // by both the live overlay and PDF capture for back-compat with
+  // old session state and cached brain calls.
+  shape: 'tick' | 'highlight' | 'circle' | 'underline' | 'arrow' | 'box';
   targetFeature?: string;
   color?: string;
   label?: string;
@@ -602,114 +535,35 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
         for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
       };
 
-      switch (s.shape) {
-        case 'circle': {
-          // Mirrors the live overlay's oval logic — wide targets get
-          // a wide oval, narrow ones a small circle. Line-like targets
-          // (aspect > 3) keep the tight radius cap.
-          const aspectRatio = Math.max(rw, rh) / Math.max(0.0001, Math.min(rw, rh));
-          const isLineLike = aspectRatio > 3;
-          const lineRadiusCap = Math.min(vw, vh) * 0.08;
-          const rxRaw = Math.max(4, rw / 2);
-          const ryRaw = Math.max(3, rh / 2);
-          const ovalPadding = 1.12;
-          const ellipse = doc.createElementNS(SVG_NS, 'ellipse');
-          addAttrs(ellipse, {
-            cx, cy,
-            rx: isLineLike ? Math.min(rxRaw, lineRadiusCap) : rxRaw * ovalPadding,
-            ry: isLineLike ? Math.min(ryRaw, lineRadiusCap) : ryRaw * ovalPadding,
-            fill: 'none',
-            stroke: color,
-            'stroke-width': Math.max(2, vw / 200),
-          });
-          group.appendChild(ellipse);
-          break;
-        }
-        case 'underline': {
-          const line = doc.createElementNS(SVG_NS, 'line');
-          addAttrs(line, {
-            x1: rx, y1: ry + rh,
-            x2: rx + rw, y2: ry + rh,
-            stroke: color,
-            'stroke-width': Math.max(2.5, vw / 170),
-            'stroke-linecap': 'round',
-          });
-          group.appendChild(line);
-          break;
-        }
-        case 'box': {
-          const rect = doc.createElementNS(SVG_NS, 'rect');
-          addAttrs(rect, {
-            x: rx, y: ry, width: rw, height: rh,
-            fill: 'none', stroke: color,
-            'stroke-width': Math.max(2, vw / 200),
-          });
-          group.appendChild(rect);
-          break;
-        }
-        case 'highlight': {
-          const rect = doc.createElementNS(SVG_NS, 'rect');
-          addAttrs(rect, {
-            x: rx, y: ry, width: rw, height: rh,
-            fill: color, 'fill-opacity': '0.25', stroke: 'none',
-          });
-          group.appendChild(rect);
-          break;
-        }
-        case 'arrow': {
-          const tailX = Math.max(0, rx - vw * 0.08);
-          const tailY = Math.max(0, ry - vh * 0.08);
-          const markerId = `pdf-scribble-arrow-${i}`;
-          const defs = doc.createElementNS(SVG_NS, 'defs');
-          const marker = doc.createElementNS(SVG_NS, 'marker');
-          addAttrs(marker, {
-            id: markerId, viewBox: '0 0 10 10',
-            refX: '8', refY: '5',
-            markerWidth: '4', markerHeight: '4',
-            orient: 'auto-start-reverse',
-          });
-          const markerPath = doc.createElementNS(SVG_NS, 'path');
-          addAttrs(markerPath, { d: 'M0,0 L10,5 L0,10 Z', fill: color });
-          marker.appendChild(markerPath);
-          defs.appendChild(marker);
-          group.appendChild(defs);
-          const line = doc.createElementNS(SVG_NS, 'line');
-          addAttrs(line, {
-            x1: tailX, y1: tailY,
-            x2: cx, y2: cy,
-            stroke: color,
-            'stroke-width': Math.max(2, vw / 200),
-            'marker-end': `url(#${markerId})`,
-          });
-          group.appendChild(line);
-          break;
-        }
-      }
-
-      if (s.label) {
-        // Stagger labels so multiple annotations on the same item don't
-        // collide at the same y. Alternating above/below with widening
-        // gaps matches the live overlay's behavior.
-        const staggerSign = i % 2 === 0 ? -1 : 1;
-        const staggerBand = Math.floor(i / 2) * vh * 0.03;
-        const labelY = staggerSign < 0
-          ? Math.max(vh * 0.05, ry - 4 - staggerBand)
-          : Math.min(vh * 0.97, ry + rh + (vw / 50) + staggerBand);
-        const text = doc.createElementNS(SVG_NS, 'text');
-        addAttrs(text, {
-          x: cx, y: labelY,
-          'font-size': Math.max(10, vw / 50),
-          fill: color,
-          'text-anchor': 'middle',
-          'font-weight': '700',
-          'paint-order': 'stroke',
-          stroke: 'white',
-          'stroke-width': Math.max(1.5, vw / 250),
+      // Post-redesign vocabulary: only `highlight` paints a fill; every
+      // other shape (including legacy `circle`/`underline`/`box`/`arrow`)
+      // maps to a small tick just past the feature's right edge.
+      if (s.shape === 'highlight') {
+        const rect = doc.createElementNS(SVG_NS, 'rect');
+        addAttrs(rect, {
+          x: rx, y: ry, width: rw, height: rh,
+          fill: color, 'fill-opacity': '0.25', stroke: 'none',
+        });
+        group.appendChild(rect);
+      } else {
+        const tickSize = Math.max(10, Math.min(vw, vh) * 0.04);
+        const tx = rx + rw + tickSize * 0.4;
+        const ty = ry + rh / 2;
+        const half = tickSize / 2;
+        const tickPath = doc.createElementNS(SVG_NS, 'path');
+        addAttrs(tickPath, {
+          d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
+          fill: 'none',
+          stroke: color,
+          'stroke-width': Math.max(2, tickSize * 0.18),
+          'stroke-linecap': 'round',
           'stroke-linejoin': 'round',
         });
-        text.textContent = s.label;
-        group.appendChild(text);
+        group.appendChild(tickPath);
       }
+      // Labels intentionally not drawn on the diagram — moved to the
+      // per-page annotation strip mirror further down the PDF page.
+      void cx;
 
       svg.appendChild(group);
     }
