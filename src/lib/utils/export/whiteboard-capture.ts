@@ -325,14 +325,22 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
       const tx = rx + rw - tickSize * 0.55;
       const ty = ry + rh / 2;
       const half = tickSize / 2;
+      const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+      const inner = Math.max(3, tickSize * 0.25);
+      // White halo underneath for any-background readability —
+      // matches the live overlay's dual-stroke approach.
+      const halo = document.createElementNS(SVG_NS, 'path');
+      setAttrs(halo, {
+        d, fill: 'none', stroke: '#ffffff',
+        'stroke-width': inner + Math.max(2, tickSize * 0.14),
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
+      });
+      group.appendChild(halo);
       const tickPath = document.createElementNS(SVG_NS, 'path');
       setAttrs(tickPath, {
-        d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
-        fill: 'none',
-        stroke: color,
-        'stroke-width': Math.max(3, tickSize * 0.25),
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
+        d, fill: 'none', stroke: color,
+        'stroke-width': inner,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round',
       });
       group.appendChild(tickPath);
     }
@@ -550,14 +558,20 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
         const tx = rx + rw - tickSize * 0.55;
         const ty = ry + rh / 2;
         const half = tickSize / 2;
+        const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+        const inner = Math.max(3, tickSize * 0.25);
+        const halo = doc.createElementNS(SVG_NS, 'path');
+        addAttrs(halo, {
+          d, fill: 'none', stroke: '#ffffff',
+          'stroke-width': inner + Math.max(2, tickSize * 0.14),
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
+        });
+        group.appendChild(halo);
         const tickPath = doc.createElementNS(SVG_NS, 'path');
         addAttrs(tickPath, {
-          d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
-          fill: 'none',
-          stroke: color,
-          'stroke-width': Math.max(3, tickSize * 0.25),
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
+          d, fill: 'none', stroke: color,
+          'stroke-width': inner,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
         });
         group.appendChild(tickPath);
       }

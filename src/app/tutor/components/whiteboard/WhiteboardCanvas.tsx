@@ -1305,15 +1305,34 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           // Two-segment ✓ path: short stroke from upper-left of the
           // ascender down to the cusp, then long stroke up to upper-right.
           const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+          const inner = Math.max(3, tickSize * 0.25);
+          // White halo underneath so the colored tick reads on ANY
+          // background fill (yellow Na cell, green frayer cell, etc.).
+          // 2026-05-13 user feedback (image #62): red tick on yellow
+          // Na cell faded into the fill and covered the symbol.
+          // Dual-stroke pattern: render a slightly-fatter WHITE path
+          // first, then the colored path on top — gives the colored
+          // stroke a thin white outline that pops against anything.
           mark = (
-            <path
-              d={d}
-              fill="none"
-              stroke={color}
-              strokeWidth={Math.max(3, tickSize * 0.25)}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <g>
+              <path
+                d={d}
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth={inner + Math.max(2, tickSize * 0.14)}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={0.95}
+              />
+              <path
+                d={d}
+                fill="none"
+                stroke={color}
+                strokeWidth={inner}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
           );
         }
 
