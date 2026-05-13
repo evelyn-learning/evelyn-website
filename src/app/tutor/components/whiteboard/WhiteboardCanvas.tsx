@@ -526,11 +526,15 @@ export function WhiteboardCanvas({
   // lazy, and we guard against pages.length === 0 below.
   const safeCurrentPage = pages[Math.min(currentIndex, Math.max(0, pages.length - 1))] ?? { commands: [] };
   const renderableCommands = useMemo(
-    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo'),
+    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
     [safeCurrentPage.commands],
   );
   const scribbles = useMemo(
     () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'scribble' }> => c.action === 'scribble'),
+    [safeCurrentPage.commands],
+  );
+  const handwrites = useMemo(
+    () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'handwrite' }> => c.action === 'handwrite'),
     [safeCurrentPage.commands],
   );
 
@@ -663,7 +667,22 @@ export function WhiteboardCanvas({
         className="flex-1 lg:overflow-y-auto lg:overflow-x-hidden p-4"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div key={currentIndex} className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}>
+        <div
+          key={currentIndex}
+          style={{
+            position: 'relative',
+            // Reserve a top band for margin: "top" handwrites when present.
+            // Without this, the margin-top stamp shares the title row with
+            // anchored "above" handwrites on column headers, and they
+            // overlap (observed across sessions 14-18). With ~36px of
+            // dedicated top padding, the margin stamp lives in the
+            // reserved band and anchored handwrites push down to start
+            // below it — clean separation. Padding is conditional so
+            // pages without margin-top handwrites stay flush to the top.
+            paddingTop: handwrites.some((h) => h.margin === 'top') ? 36 : undefined,
+          }}
+          className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
+        >
         {renderableCommands.length === 1 ? (
           <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
             <CommandRenderer command={renderableCommands[0]} />
@@ -704,6 +723,12 @@ export function WhiteboardCanvas({
             <div className="wb-skeleton h-4 bg-gray-200 rounded w-1/2" />
             <p className="text-xs text-gray-400 italic">✏️ Tutor is preparing something…</p>
           </div>
+        )}
+        {/* Phase 1' (whiteboard markup): handwrite layer sits at the page
+            level above all items so margin-slot notes don't tie to any
+            single item, and anchored notes float over their target. */}
+        {handwrites.length > 0 && (
+          <HandwriteOverlays handwrites={handwrites} itemRefs={itemRefsRef} />
         )}
         </div>
       </div>
@@ -1441,6 +1466,244 @@ function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq
   return null;
 }
 
+/**
+ * Page-level handwrite overlay. Phase 1' of the whiteboard markup
+ * initiative. Renders tutor_handwrite commands as positioned text in
+ * handwriting font, anchored either to a feature on the page (via the
+ * already-resolved targetItemIndex + targetFeature) OR at a named
+ * margin slot of the page container.
+ *
+ * Anchored handwrites use getBoundingClientRect on the resolved feature
+ * (same DOM-query path as ScribbleOverlays HTML mode) and position the
+ * text adjacent on the requested side. Margin handwrites position at
+ * fixed insets of the page container.
+ *
+ * Distinct from ScribbleOverlays (which marks an EXISTING feature with
+ * a circle/underline/box) and from `annotate` (a boxed text card with
+ * bg color). Handwrites are free-form notes in cursive font — the
+ * teacher's pen marks.
+ */
+type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
+
+// Caveat + Kalam are loaded via next/font/google in app/layout.tsx and
+// exposed as CSS variables. Caveat is the primary teacher-handwriting
+// look; Kalam falls back if Caveat fails to load (Kalam is more print-
+// leaning so it stays legible). System cursive at the end as last resort.
+const HANDWRITE_FONT_STACK = 'var(--font-caveat), var(--font-kalam), "Caveat", "Kalam", cursive';
+const HANDWRITE_DEFAULT_COLOR = '#b45309';
+
+function HandwriteOverlays({
+  handwrites,
+  itemRefs,
+}: {
+  handwrites: HandwriteCmd[];
+  itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+}) {
+  // Per-handwrite resolved position (in CSS pixels relative to the
+  // page-container's bounding box). Recomputed on layout flux.
+  type Position = { left: number; top: number; maxWidth?: number };
+  const [positions, setPositions] = useState<Record<number, Position>>({});
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current?.parentElement;
+    if (!container) return;
+
+    const measure = () => {
+      const containerRect = container.getBoundingClientRect();
+      if (containerRect.width <= 0 || containerRect.height <= 0) return;
+      const next: Record<number, Position> = {};
+      const MARGIN_INSET = 12; // px from the page edge
+
+      // Query the entire page container for data-feature elements once,
+      // then look up each anchored handwrite's target inside that result.
+      // Avoids the brittle dependency on itemRefs.current[index] which can
+      // be null mid-page-transition. Mirrors ScribbleOverlays' HTML-mode
+      // resolution at line ~1085 (parent.querySelectorAll('[data-feature]')).
+      // Observed 2026-05-13 session: handwrites with resolved targetFeature
+      // but no live paint — the itemRefs.current[i] was null when measure()
+      // ran, so featureEl lookup never tried. Container-wide query bypasses
+      // the timing issue.
+      for (let i = 0; i < handwrites.length; i++) {
+        const h = handwrites[i];
+        // ── Anchored handwrite ─────────────────────────────────
+        if (h.near && h.targetFeature) {
+          const safe = h.targetFeature.replace(/"/g, '\\"');
+          // Use the page container as scope (broader than per-item),
+          // exclude our own overlay subtree.
+          let featureEl: HTMLElement | null = null;
+          const all = container.querySelectorAll(`[data-feature="${safe}"]`);
+          for (const candidate of Array.from(all)) {
+            // Skip elements inside the handwrite overlay itself (we emit
+            // data-feature="handwrite" on our own divs).
+            if (containerRef.current && containerRef.current.contains(candidate)) continue;
+            featureEl = candidate as HTMLElement;
+            break;
+          }
+          if (!featureEl) {
+            console.warn('[Handwrite] no featureEl with [data-feature="%s"] in page (near="%s") — will retry', h.targetFeature, h.near);
+            continue;
+          }
+          const fr = featureEl.getBoundingClientRect();
+          if (fr.width <= 0 || fr.height <= 0) continue;
+          const pos = h.position ?? 'right';
+          // Note: previous auto-flip (above → below near top of page)
+          // was reverted — it just moved the overlap from the title
+          // row into the first data row. With sticky-note styling
+          // (background + border + shadow) the handwrite reads cleanly
+          // as a stamp regardless of where it lands, so we trust the
+          // brain's positioning choice.
+          // Position the handwriting adjacent to the feature on the
+          // requested side. Coordinates are relative to the page
+          // container's top-left corner.
+          let left = fr.left - containerRect.left;
+          let top = fr.top - containerRect.top;
+          let maxWidth: number | undefined;
+          if (pos === 'right') {
+            left = fr.right - containerRect.left + 8;
+            top = fr.top - containerRect.top + fr.height / 2 - 14;
+            maxWidth = Math.max(60, containerRect.width - (fr.right - containerRect.left) - 24);
+          } else if (pos === 'left') {
+            // Right-edge anchor; flow right-to-left isn't trivial, so
+            // place left of feature with a max-width that won't push
+            // past the page edge.
+            const availableWidth = fr.left - containerRect.left - 12;
+            maxWidth = Math.max(60, availableWidth);
+            left = Math.max(8, fr.left - containerRect.left - maxWidth - 8);
+            top = fr.top - containerRect.top + fr.height / 2 - 14;
+          } else if (pos === 'above') {
+            left = fr.left - containerRect.left;
+            top = Math.max(2, fr.top - containerRect.top - 26);
+            maxWidth = Math.max(80, fr.width);
+          } else if (pos === 'below') {
+            left = fr.left - containerRect.left;
+            top = fr.bottom - containerRect.top + 4;
+            maxWidth = Math.max(80, fr.width);
+          }
+          next[i] = { left, top, maxWidth };
+          continue;
+        }
+        // ── Margin handwrite ───────────────────────────────────
+        if (h.margin) {
+          const W = containerRect.width;
+          const H = containerRect.height;
+          // Fixed slots at the page edges. Width is bounded so long
+          // notes wrap onto multiple lines rather than overflow.
+          if (h.margin === 'top') {
+            next[i] = { left: MARGIN_INSET, top: MARGIN_INSET, maxWidth: W - MARGIN_INSET * 2 };
+          } else if (h.margin === 'bottom') {
+            next[i] = { left: MARGIN_INSET, top: H - 40, maxWidth: W - MARGIN_INSET * 2 };
+          } else if (h.margin === 'right') {
+            const slotW = Math.min(220, W * 0.35);
+            next[i] = { left: W - slotW - MARGIN_INSET, top: MARGIN_INSET + 8, maxWidth: slotW };
+          } else if (h.margin === 'left') {
+            const slotW = Math.min(220, W * 0.35);
+            next[i] = { left: MARGIN_INSET, top: MARGIN_INSET + 8, maxWidth: slotW };
+          }
+        }
+      }
+      setPositions((prev) => {
+        const keys = Object.keys(next).map(Number);
+        const prevKeys = Object.keys(prev).map(Number);
+        if (keys.length !== prevKeys.length) return next;
+        for (const k of keys) {
+          if (!prev[k] || prev[k].left !== next[k].left || prev[k].top !== next[k].top || prev[k].maxWidth !== next[k].maxWidth) return next;
+        }
+        return prev;
+      });
+    };
+
+    measure();
+    // Belt + suspenders + parachute. The DOM-find path for anchored
+    // handwrites is brittle when the comparison_table mounts on the
+    // same tick as the handwrite arrives. Layer multiple retry triggers:
+    //   1. ResizeObserver: catches container/page size changes.
+    //   2. MutationObserver: catches DOM additions inside the page.
+    //   3. requestAnimationFrame x 3: catches the case where the
+    //      feature element is added between measures and observers
+    //      missed it (e.g., React commits mid-frame; observer fires
+    //      before the element's getBoundingClientRect is valid).
+    // Observed 2026-05-13 session: "great answer!" anchored to col-1
+    // rendered in PDF but not on live WB even with MutationObserver
+    // (4aa592f). Adding the rAF retry chain closes the timing gap.
+    const ro = new ResizeObserver(measure);
+    ro.observe(container);
+    const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(measure) : null;
+    mo?.observe(container, { childList: true, subtree: true });
+    const raf1 = requestAnimationFrame(() => {
+      measure();
+      const raf2 = requestAnimationFrame(() => {
+        measure();
+        requestAnimationFrame(measure);
+      });
+      // store raf2 so the cleanup can cancel — but TS doesn't let us
+      // change the closure variable from the outer scope cleanly, so
+      // we'll rely on the component-unmount path catching the chain.
+      void raf2;
+    });
+    return () => {
+      ro.disconnect();
+      mo?.disconnect();
+      cancelAnimationFrame(raf1);
+    };
+  }, [handwrites, itemRefs]);
+
+  return (
+    <div
+      ref={containerRef}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        overflow: 'visible',
+      }}
+    >
+      {handwrites.map((h, i) => {
+        const pos = positions[i];
+        if (!pos) return null;
+        const color = h.color || HANDWRITE_DEFAULT_COLOR;
+        const text = h.text.length > 80 ? `${h.text.slice(0, 77)}…` : h.text;
+        return (
+          <div
+            key={`handwrite-${i}`}
+            data-feature="handwrite"
+            data-handwrite-target={h.targetFeature || ''}
+            style={{
+              position: 'absolute',
+              left: pos.left,
+              top: pos.top,
+              maxWidth: pos.maxWidth,
+              color,
+              // Sticky-note styling: soft cream background + subtle
+              // border + light shadow turn the handwrite into a stamp
+              // that reads cleanly even when it overlaps underlying
+              // table cells, headers, or titles. Without this, an
+              // anchored handwrite ("great answer!") landing on a data
+              // cell ("Makes food (energy)") produced illegible
+              // text-on-text overlap (observed 2026-05-13 session).
+              backgroundColor: 'rgba(254, 252, 232, 0.94)',
+              border: `1px solid ${color}40`,
+              borderRadius: 3,
+              padding: '1px 6px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+              fontFamily: HANDWRITE_FONT_STACK,
+              fontSize: 22,
+              lineHeight: 1.15,
+              fontWeight: 600,
+              whiteSpace: pos.maxWidth ? 'normal' : 'nowrap',
+              pointerEvents: 'none',
+              zIndex: 5,
+            }}
+          >
+            {text}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 interface CommandRendererProps {
   command: WhiteboardCommand;
 }
@@ -2140,6 +2403,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'clear':
     case 'newPage':
     case 'goToPage':
+    case 'handwrite':
       return null;
 
     default:

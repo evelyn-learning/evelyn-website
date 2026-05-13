@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Poppins, Caveat, Kalam } from "next/font/google";
 import "./globals.css";
 import {
   GoogleTagManager,
@@ -19,6 +19,26 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-poppins",
+  display: "swap",
+});
+
+// Handwriting fonts for the tutor's whiteboard handwrite overlays
+// (Phase 1' of the whiteboard markup initiative). Caveat is the primary
+// — clean teacher-style handwriting between print and cursive. Kalam is
+// the fallback — slightly more print-leaning for legibility at small
+// sizes. Both load via next/font with swap so the page renders without
+// blocking on the font.
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-caveat",
+  display: "swap",
+});
+
+const kalam = Kalam({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-kalam",
   display: "swap",
 });
 
@@ -127,7 +147,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${poppins.variable} ${caveat.variable} ${kalam.variable}`} suppressHydrationWarning>
       <head>
         <EducationalOrganizationJsonLd />
         <WebSiteJsonLd />

@@ -1262,6 +1262,48 @@ async function drawWhiteboardVisual(
     return drawGraphVisual(pdf, graphData, x, y, width);
   }
 
+  if (cmd.action === 'handwrite' && cmd.text) {
+    // Phase 1' (whiteboard markup): handwrites are page-level positioned
+    // overlays in the live WB, but in PDF flow we render them inline as
+    // a teacher-margin-note styled block — italic cursive-fallback font,
+    // amber color, with a small indent indicating its margin/anchor
+    // context. Loses exact positioning vs. live but preserves content
+    // and visual distinction from `annotate` / `highlight` cards.
+    const text = String(cmd.text);
+    const anchor = cmd.near
+      ? `↳ near "${cmd.near}"`
+      : `↳ margin "${(cmd.margin as string) || 'right'}"`;
+    const colorHex = (typeof cmd.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(cmd.color)) ? cmd.color : '#b45309';
+    // Parse hex → RGB tuple for jsPDF.
+    const parsedColor = ((): [number, number, number] => {
+      const h = colorHex.replace('#', '');
+      const n = h.length === 3
+        ? [h[0] + h[0], h[1] + h[1], h[2] + h[2]]
+        : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
+      return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
+    })();
+    const boxPad = 3;
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(11);
+    const sanitized = sanitizeForPDF(text);
+    const wrapped = pdf.splitTextToSize(sanitized, width - boxPad * 2 - 12);
+    const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
+    const boxH = wrappedLines * 5.2 + boxPad * 2 + 4.5;
+    // Soft cream background to evoke a teacher's sticky note feel.
+    pdf.setFillColor(254, 252, 232);
+    pdf.setDrawColor(...parsedColor);
+    pdf.setLineWidth(0.4);
+    pdf.roundedRect(x, y, width, boxH, 1.5, 1.5, 'FD');
+    pdf.setTextColor(...parsedColor);
+    pdf.text(wrapped, x + boxPad + 6, y + boxPad + 4);
+    // Anchor hint in a smaller, muted line below the text.
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(120, 113, 108);
+    pdf.text(anchor, x + boxPad + 6, y + boxPad + 4 + wrappedLines * 5.2 + 2);
+    return y + boxH + 2;
+  }
+
   if (cmd.action === 'showTable' && cmd.headers) {
     return drawTableVisual(
       pdf, cmd.headers as string[], (cmd.rows || []) as string[][],
@@ -1436,6 +1478,7 @@ function estimateCommandHeight(rawCmd: WhiteboardCommandData): number {
   }
   if (action === 'showEquation') return 35;
   if (action === 'showProblem') return 30;
+  if (action === 'handwrite') return 18;
   if (action === 'showTable') return 60;
   if (action === 'showCode') return 50;
   // Generic safe default — covers everything else with room to spare.
@@ -1464,6 +1507,8 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Vector: ${cmd.label || 'unlabeled'}`;
     case 'annotate':
       return `Note: ${cmd.text || ''}`;
+    case 'handwrite':
+      return `Handwrite: ${cmd.text || ''}`;
     case 'showProblem': {
       const prob = (cmd.problem || {}) as Record<string, unknown>;
       return `Problem: ${prob.title || prob.statement || 'untitled'}`;
@@ -1841,9 +1886,23 @@ export async function exportTutorSessionPDF(
       drawWrappedText(`[${msg.pedagogicalIntent}]`, margin + 4, textAreaWidth, { size: 7, style: 'italic', color: [156, 163, 175] });
     }
 
-    // Inline whiteboard visuals for commands attached to this message
+    // Inline whiteboard visuals for commands attached to this message.
+    // Filter out state-side-effect commands (advance_lesson, mark_segment_
+    // complete, record_gap, topic-notes overlays) — these are bookkeeping
+    // tools that have no whiteboard render. The live orchestrator filters
+    // them at VoiceTutorRealtime.tsx:3455 before reaching the renderer,
+    // but the PDF reads commands straight from the DB and so needs its
+    // own filter — without it, captureCommandRaster mounts CommandRenderer
+    // for these and the default case prints "Unknown command type" in
+    // the PDF (observed 2026-05-13 session).
+    const META_PDF_BOOKKEEPING = new Set([
+      'advanceLesson', 'markSegmentComplete', 'proposePlanSwap',
+      'confirmPlanLos', 'recordGap', 'flagPrerequisiteGap',
+      'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
+    ]);
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {
+        if (META_PDF_BOOKKEEPING.has(String(cmd.action))) continue;
         // Reserve enough room for the *actual* command type — graphs/
         // diagrams/circles need ~85mm, equations ~30mm. The prior
         // hard-coded 20mm reservation let the 2026-04-29 geometry

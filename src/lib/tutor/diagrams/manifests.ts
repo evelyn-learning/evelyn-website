@@ -725,9 +725,39 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     // AP Macro session: 4 identical show_diagram(loanable_funds) calls
     // back-to-back, none dedup'd.
     case 'showDiagram':           return buildDiagramManifest(cmd as any);
+    case 'handwrite':             return buildHandwriteManifest(cmd as any);
     default:                      return null;
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
+}
+
+/** Manifest for `tutor_handwrite` commands. Each handwrite registers as a
+ *  single addressable feature so the brain can see it in subsequent
+ *  boardSnapshots (and scribble against it). The feature inside is named
+ *  "handwrite" with content-aware aliases so brain target strings like
+ *  `the note "key idea"` or just `"key idea"` resolve. Phase 1' of the
+ *  whiteboard markup initiative.
+ */
+function buildHandwriteManifest(cmd: { text?: string; near?: string; margin?: string }): FeatureManifestEntry[] {
+  const text = String(cmd.text ?? '').trim();
+  const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+  const anchor = cmd.near ? `near "${cmd.near}"` : `margin "${cmd.margin || 'right'}"`;
+  return [
+    {
+      name: 'handwrite',
+      kind: 'label',
+      description: preview ? `handwritten note "${preview}" (${anchor})` : `handwritten note (${anchor})`,
+      labels: [
+        'handwrite', 'the handwrite', 'the note', 'handwriting',
+        ...(preview ? [
+          preview, `the ${preview}`, `"${preview}"`,
+          `the note "${preview}"`, `the handwrite "${preview}"`,
+          `the "${preview}" note`,
+        ] : []),
+      ],
+      scribbleable: true,
+    },
+  ];
 }
 
 /** Manifest dispatcher for catalog-dispatched `show_diagram` commands.

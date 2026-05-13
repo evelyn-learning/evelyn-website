@@ -698,6 +698,45 @@ export type WhiteboardCommand =
       /** Resolver output — title of the page (when titled). */
       pageTitle?: string;
     }
+  | {
+      // Free-form handwriting overlay — text rendered in handwriting font,
+      // anchored either NEAR an existing feature on the board or at a
+      // named MARGIN slot of the current page. Distinct from `annotate`
+      // (a boxed text card with bg color) and `tutor_scribble` (a circle/
+      // underline/box marking an existing feature). Phase 1' of the
+      // whiteboard markup initiative (audit 2026-05-13).
+      action: 'handwrite';
+      /** Text to write. Capped at 80 chars; renderer truncates with "…". */
+      text: string;
+      /**
+       * Anchor mode: feature name to write near. Same resolution as
+       * tutor_scribble's `target`. Mutually exclusive with `margin`.
+       */
+      near?: string;
+      /**
+       * Offset from anchor when `near` is set. Default "right".
+       * Ignored when `margin` is set.
+       */
+      position?: 'above' | 'below' | 'right' | 'left';
+      /**
+       * Page-level margin slot. Mutually exclusive with `near`.
+       * Positioned at fixed insets of the current page container.
+       */
+      margin?: 'top' | 'right' | 'bottom' | 'left';
+      /** CSS color. Defaults to dark amber ("#b45309"). */
+      color?: string;
+      // ── Resolver output (populated by VoiceTutorRealtime, not the tutor) ──
+      /** Resolved id of the item owning the anchor feature, when `near` is set. */
+      targetId?: string;
+      /** Resolved canonical data-feature name for the anchor. */
+      targetFeature?: string;
+      /** 1-indexed item position within the page. */
+      targetItemIndex?: number;
+      /** 0-indexed page holding the anchor. */
+      targetPageIndex?: number;
+      /** Title of the page holding the anchor, when titled. */
+      targetPageTitle?: string;
+    }
   | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }
   | { action: 'showGraph'; type: GraphType; data: GraphData }
   | { action: 'showDiagram'; type: string; params: Record<string, unknown> }

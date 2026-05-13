@@ -1774,6 +1774,21 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['target'],
     },
   },
+  {
+    name: 'tutor_handwrite',
+    description: 'Write free-form text on the whiteboard in handwriting font, like a teacher\'s margin note. Use for quick reminders ("key idea: …"), capturing student wording verbatim ("you said: \"X\""), inline definitions, or short causation notes ("because particles are spread out → high compressibility"). Distinct from `annotate` (a boxed text card) and `tutor_scribble` (which marks an EXISTING feature with a circle/underline/box).\n\nProvide exactly ONE of `near` (anchor to an existing feature on the board — same resolution as tutor_scribble\'s target) OR `margin` (place at a fixed page-edge slot). Text is capped at 80 characters; longer text truncates with an ellipsis.\n\nUse sparingly — 1-2 handwrites per turn at most. Each handwrite stays on the page until a new_page or clear fires. The board accumulates marks like a teacher\'s whiteboard, so over-handwriting clutters the canvas fast.',
+    parameters: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'The text to write. Keep short — ≤80 characters. Plain text only; LaTeX / markdown does not render.' },
+        near: { type: 'string', description: 'Feature name to write next to (same shape as tutor_scribble\'s `target`). Mutually exclusive with `margin`. The handwriting positions adjacent to the named feature on the side indicated by `position`.' },
+        position: { type: 'string', enum: ['above', 'below', 'right', 'left'], description: 'Where to place the handwriting relative to the anchored feature. Defaults to "right". Only valid with `near`.' },
+        margin: { type: 'string', enum: ['top', 'right', 'bottom', 'left'], description: 'Page-edge slot for the handwriting when it doesn\'t anchor to a specific feature. Mutually exclusive with `near`. Use for general margin notes ("key idea", "remember:").' },
+        color: { type: 'string', description: 'CSS color. Defaults to dark amber ("#b45309"). Use green for affirmation, red for warnings.' },
+      },
+      required: ['text'],
+    },
+  },
   // ─── Lesson-plan control (only meaningful when <lesson_plan> is present) ──
   {
     name: 'advance_lesson',
@@ -2639,6 +2654,45 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     const target = typeof funcArgs.target === 'string' ? funcArgs.target.trim() : '';
     if (!target) return null;
     return { action: 'scrollTo', target };
+  }
+  if (funcName === 'tutor_handwrite') {
+    const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';
+    if (!text) return null;
+    const near = typeof funcArgs.near === 'string' && funcArgs.near.trim() ? funcArgs.near.trim() : undefined;
+    const margin = typeof funcArgs.margin === 'string' ? funcArgs.margin : undefined;
+    // Exactly one of near OR margin; mutually exclusive. If both or
+    // neither, default to margin "right" so the call still produces a
+    // visible mark rather than silent-dropping.
+    if (near && margin) {
+      // Brain provided both — prefer the explicit anchor.
+      return {
+        action: 'handwrite',
+        text,
+        near,
+        position: ['above', 'below', 'right', 'left'].includes(String(funcArgs.position))
+          ? funcArgs.position as 'above' | 'below' | 'right' | 'left'
+          : 'right',
+        color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
+      };
+    }
+    if (near) {
+      return {
+        action: 'handwrite',
+        text,
+        near,
+        position: ['above', 'below', 'right', 'left'].includes(String(funcArgs.position))
+          ? funcArgs.position as 'above' | 'below' | 'right' | 'left'
+          : 'right',
+        color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
+      };
+    }
+    const validMargin = ['top', 'right', 'bottom', 'left'].includes(String(margin)) ? margin as 'top' | 'right' | 'bottom' | 'left' : 'right';
+    return {
+      action: 'handwrite',
+      text,
+      margin: validMargin,
+      color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
+    };
   }
   if (funcName === 'advance_lesson') {
     return { action: 'advanceLesson', to: String(funcArgs.to ?? 'next'), reason: funcArgs.reason };
