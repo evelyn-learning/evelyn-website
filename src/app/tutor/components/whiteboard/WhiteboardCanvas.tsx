@@ -1215,9 +1215,28 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
     const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(measure) : null;
     mo?.observe(parent, { childList: true, subtree: true });
 
+    // Belt + suspenders: rAF retry chain catches the case where the
+    // feature DOM is present at first measure but its bbox isn't yet
+    // laid out (e.g., HTML-mode parent has width/height < 1 → measure
+    // early-returns without setting targetViewBox, and `measured`
+    // stays false so scribbles never render). MutationObserver should
+    // catch this on subsequent commits, but observed 2026-05-13 (4)
+    // Phase 2a session showed scribbles registered in catalog AND
+    // no '[Scribble] resolve-miss' warnings, yet no visible paint —
+    // suggesting state never made it past the initial 0×0 measure.
+    // Same pattern HandwriteOverlays uses (commit 4b1968a).
+    const raf1 = requestAnimationFrame(() => {
+      measure();
+      requestAnimationFrame(() => {
+        measure();
+        requestAnimationFrame(measure);
+      });
+    });
+
     return () => {
       ro?.disconnect();
       mo?.disconnect();
+      cancelAnimationFrame(raf1);
     };
   }, [scribbles]);
 
