@@ -196,6 +196,14 @@ export function buildCycleStagesManifest(figure: CycleStagesFigure): FeatureMani
         ...(label ? [
           label, `the ${label}`, `"${label}"`,
           `${label} stage`, `the ${label} stage`,
+          // Verbose form the brain emits when echoing the
+          // boardSnapshot's description ("stage 1: \"Evaporation\"").
+          // Without these the catalog returns no_match and the
+          // scribble silent-drops — observed 2026-05-13 session #16
+          // image #59: brain emitted target="stage 1: \"Evaporation\""
+          // twice, both rejected.
+          `stage ${i + 1}: "${label}"`, `stage ${i + 1}: ${label}`,
+          `stage-${i + 1}: "${label}"`,
         ] : []),
         ...(slug ? [`stage-${slug}`] : []),
       ],

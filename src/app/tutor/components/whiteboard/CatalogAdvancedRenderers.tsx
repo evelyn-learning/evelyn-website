@@ -377,13 +377,14 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
         {events.map((e, i) => {
           const x = xOf(e.year);
           const dy = altOffsets[i % altOffsets.length];
-          const labelY = baseY + dy;
+          // Clamp labelY so the BOX (52px tall, centered on labelY)
+          // stays inside the SVG viewBox. Without this the bottom-alt
+          // events at dy=+100 (labelY=300) push the box to y=326,
+          // clipped by the H=320 viewBox (observed 2026-05-13 session
+          // #16: Mars Rover event box bottom cut off).
+          const labelYRaw = baseY + dy;
+          const labelY = Math.max(BOX_H / 2 + 4, Math.min(H - BOX_H / 2 - 4, labelYRaw));
           const color = e.color || '#3b82f6';
-          // Clamp the box to fit inside the canvas. The CIRCLE stays
-          // anchored at `x` (the event's timeline position); only the
-          // BOX shifts horizontally if it would otherwise spill past
-          // either canvas edge. The dashed line keeps the visual
-          // connection between circle and box.
           const boxXNatural = x - BOX_W / 2;
           const boxX = Math.max(4, Math.min(W - BOX_W - 4, boxXNatural));
           const boxCenterX = boxX + BOX_W / 2;
