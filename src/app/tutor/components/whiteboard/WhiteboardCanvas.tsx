@@ -1470,63 +1470,99 @@ function AnnotationStrip({
         // Hand-written feel: Caveat + Kalam (already loaded for the
         // app via next/font in layout.tsx) match the original
         // sticky-note handwrite styling, just without the card chrome.
-        // 18px because cursive fonts read less dense than sans-serif —
-        // 14px Caveat looks cramped next to surrounding sans-serif.
+        // 22px because cursive fonts read less dense than sans-serif —
+        // 18px Caveat was still cramped next to surrounding sans-serif
+        // (2026-05-13 session #11 feedback).
         fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
-        fontSize: 18,
+        fontSize: 22,
         lineHeight: 1.3,
       }}>
         {labelledScribbles.map((s, i) => {
           const color = s.color || SCRIBBLE_DEFAULT_COLOR;
           const name = featureDisplayName(s, containerRef.current?.parentElement ?? null);
           return (
-            <div
-              key={`s-${i}`}
-              className="flex items-center gap-2"
-              style={{ color }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  display: 'inline-block',
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: color,
-                  flexShrink: 0,
-                }}
-              />
-              <span>
-                <span style={{ fontWeight: 600 }}>{name}</span>
-                <span style={{ opacity: 0.85 }}> → {s.label}</span>
-              </span>
-            </div>
+            <StripEntry
+              key={`s-${i}-${s.targetFeature ?? s.target ?? 'na'}`}
+              color={color}
+              boldText={name}
+              tailText={` → ${s.label}`}
+              tailOpacity={0.85}
+            />
           );
         })}
         {handwrites.map((h, i) => {
           const color = h.color || HANDWRITE_DEFAULT_COLOR;
           return (
-            <div
-              key={`h-${i}`}
-              className="flex items-center gap-2"
-              style={{ color }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  display: 'inline-block',
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: color,
-                  flexShrink: 0,
-                }}
-              />
-              <span>{h.text}</span>
-            </div>
+            <StripEntry
+              key={`h-${i}-${h.text.slice(0, 24)}`}
+              color={color}
+              boldText=""
+              tailText={h.text}
+              tailOpacity={1}
+            />
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Single strip entry. Renders the color dot immediately, then types
+ *  the text left-to-right at ~30ms/char to simulate hand-writing.
+ *  Stable key in the parent ensures each entry's animation fires only
+ *  once on mount — subsequent re-renders preserve the typewriter state.
+ *
+ *  2026-05-13 session #11 feedback: entries appeared instantly, breaking
+ *  the "tutor is writing this" illusion. The reveal animation gives
+ *  the strip a sense of being annotated in real time, matching the
+ *  Caveat font + ✓-tick "live tutor" framing. */
+function StripEntry({
+  color,
+  boldText,
+  tailText,
+  tailOpacity,
+}: {
+  color: string;
+  boldText: string;
+  tailText: string;
+  tailOpacity: number;
+}) {
+  const full = boldText + tailText;
+  const [revealed, setRevealed] = useState(0);
+  useEffect(() => {
+    if (!full) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      n += 1;
+      setRevealed(n);
+      if (n >= full.length) window.clearInterval(id);
+    }, 30);
+    return () => window.clearInterval(id);
+    // Mount-only animation. We intentionally do NOT depend on `full`
+    // because the parent's stable React key already guarantees a fresh
+    // mount when the entry is new and an unchanged identity when it
+    // isn't — so the deps array stays empty.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const boldShown = revealed >= boldText.length ? boldText : full.slice(0, revealed);
+  const tailShown = revealed > boldText.length ? full.slice(boldText.length, revealed) : '';
+  return (
+    <div className="flex items-center gap-2" style={{ color }}>
+      <span
+        aria-hidden="true"
+        style={{
+          display: 'inline-block',
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          backgroundColor: color,
+          flexShrink: 0,
+        }}
+      />
+      <span>
+        {boldText && <span style={{ fontWeight: 600 }}>{boldShown}</span>}
+        {tailShown && <span style={{ opacity: tailOpacity }}>{tailShown}</span>}
+      </span>
     </div>
   );
 }
