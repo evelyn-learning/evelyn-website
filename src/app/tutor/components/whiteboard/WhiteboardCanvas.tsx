@@ -673,7 +673,11 @@ export function WhiteboardCanvas({
           className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
         >
         {renderableCommands.length === 1 ? (
-          <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
+          <div
+            className="relative wb-item-enter"
+            ref={(el) => { itemRefsRef.current[0] = el; }}
+            data-wb-item-index={1}
+          >
             <CommandRenderer command={renderableCommands[0]} />
             <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
           </div>
@@ -692,7 +696,11 @@ export function WhiteboardCanvas({
                       <div className="flex-1 border-t border-dashed border-gray-200" />
                     </div>
                   )}
-                  <div className="relative" ref={(el) => { itemRefsRef.current[i] = el; }}>
+                  <div
+                    className="relative"
+                    ref={(el) => { itemRefsRef.current[i] = el; }}
+                    data-wb-item-index={i + 1}
+                  >
                     <CommandRenderer command={cmd} />
                     <ScribbleOverlays scribbles={overlays} />
                   </div>
@@ -1426,20 +1434,35 @@ const HANDWRITE_DEFAULT_COLOR = '#a16207';
 /** Friendly display name for the strip composition rule
  *  "{feature display name} → {label}". Prefers the feature's first
  *  human label, falls back to the canonical data-feature value if
- *  no labels are registered. */
-function featureDisplayName(scribble: ScribbleCmd, container: HTMLElement | null): string {
-  // First label preference: an explicit `_displayName` stamp from the
-  // orchestrator if it ever populates one. Otherwise look up the
-  // feature element's `data-feature-label` (some renderers carry one),
-  // and as a final fallback use the canonical name itself.
+ *  no labels are registered.
+ *
+ *  Critical: scopes the DOM lookup to the SCRIBBLE'S TARGET ITEM
+ *  (`[data-wb-item-index="N"]`) so that when multiple items on the
+ *  same page share a structural feature name (e.g. two
+ *  hierarchy_pyramids both have `data-feature="tier-1"`), we read
+ *  the friendly label from the RIGHT one. Without this scope the
+ *  query returned the first matching DOM element in document order
+ *  — the older/upper item won, so the strip displayed labels from
+ *  the wrong figure (observed 2026-05-13 session #14 image #46:
+ *  scribble targeted Producers in the energy pyramid, but the strip
+ *  rendered "All Living Things → ..." from the classification
+ *  pyramid that happened to appear earlier on the same page). */
+function featureDisplayName(scribble: ScribbleCmd, pageContainer: HTMLElement | null): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const displayHint = (scribble as any)._displayName as string | undefined;
   if (displayHint && displayHint.trim()) return displayHint.trim();
   const tf = scribble.targetFeature;
   if (!tf) return scribble.target || 'feature';
-  if (container) {
+  if (pageContainer) {
     const safe = tf.replace(/"/g, '\\"');
-    const el = container.querySelector(`[data-feature="${safe}"]`);
+    const itemIdx = scribble.targetItemIndex;
+    // Narrow the search to the item the scribble actually targets.
+    // Fall back to the whole page if the scope can't be found (very
+    // first render before refs settle, or item index not stamped).
+    const scope = typeof itemIdx === 'number'
+      ? (pageContainer.querySelector(`[data-wb-item-index="${itemIdx}"]`) ?? pageContainer)
+      : pageContainer;
+    const el = scope.querySelector(`[data-feature="${safe}"]`);
     const labelAttr = el?.getAttribute('data-feature-label');
     if (labelAttr && labelAttr.trim()) return labelAttr.trim();
   }

@@ -314,19 +314,43 @@ export function CatalogArgumentStructureRenderer({ figure }: { figure: ArgumentF
 }
 
 // ── Historical timeline ───────────────────────────────────────────────────
+/** Wrap a label into ≤2 short lines for the timeline event card. Tries
+ *  to break on the last space within `maxCharsPerLine`; if a single
+ *  word exceeds that cap, lets it overflow rather than splitting mid-
+ *  word. Returns 1 or 2 strings — never 3+. Anything past 2 lines is
+ *  truncated with an ellipsis on the second line. */
+function wrapTimelineLabel(label: string, maxCharsPerLine = 18): [string, string?] {
+  const trimmed = label.trim();
+  if (trimmed.length <= maxCharsPerLine) return [trimmed];
+  const words = trimmed.split(/\s+/);
+  let line1 = '';
+  let i = 0;
+  for (; i < words.length; i++) {
+    const next = line1 ? `${line1} ${words[i]}` : words[i];
+    if (next.length > maxCharsPerLine && line1) break;
+    line1 = next;
+  }
+  const rest = words.slice(i).join(' ');
+  if (!rest) return [line1];
+  const line2 = rest.length > maxCharsPerLine ? rest.slice(0, maxCharsPerLine - 1) + '…' : rest;
+  return [line1, line2];
+}
+
 export function CatalogHistoricalTimelineRenderer({ figure }: { figure: HistoricalTimelineFigure }) {
   const { events, title } = figure;
   const N = historicalTimelineFeatureNames;
   const W = 760;
   const H = 320;
   const PAD = 40;
+  const BOX_W = 156;
+  const BOX_H = 52; // taller to fit 2 lines of label
   const minY = events[0].year;
   const maxY = events[events.length - 1].year;
   const span = maxY - minY || 1;
   const usableW = W - PAD * 2;
   const xOf = (y: number) => PAD + ((y - minY) / span) * usableW;
   const baseY = 200;
-  const altOffsets = [-100, 60, -60, 100, -80, 80];
+  const altOffsets = [-100, 70, -70, 100, -80, 80];
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
@@ -355,21 +379,33 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
           const dy = altOffsets[i % altOffsets.length];
           const labelY = baseY + dy;
           const color = e.color || '#3b82f6';
+          // Clamp the box to fit inside the canvas. The CIRCLE stays
+          // anchored at `x` (the event's timeline position); only the
+          // BOX shifts horizontally if it would otherwise spill past
+          // either canvas edge. The dashed line keeps the visual
+          // connection between circle and box.
+          const boxXNatural = x - BOX_W / 2;
+          const boxX = Math.max(4, Math.min(W - BOX_W - 4, boxXNatural));
+          const boxCenterX = boxX + BOX_W / 2;
+          const [labelLine1, labelLine2] = wrapTimelineLabel(e.label);
           return (
             <g
               key={i}
               data-feature={N.event(i)}
               data-feature-label={`${e.date} ${e.label}`}
-              data-feature-cx={x / W}
+              data-feature-cx={(boxX + BOX_W / 2) / W}
               data-feature-cy={labelY / H}
-              data-feature-w={140 / W}
-              data-feature-h={36 / H}
+              data-feature-w={BOX_W / W}
+              data-feature-h={BOX_H / H}
             >
-              <line x1={x} y1={baseY} x2={x} y2={labelY} stroke={color} strokeWidth={1.5} strokeDasharray="3 2" />
+              <line x1={x} y1={baseY} x2={boxCenterX} y2={labelY} stroke={color} strokeWidth={1.5} strokeDasharray="3 2" />
               <circle cx={x} cy={baseY} r={6} fill={color} stroke="#fff" strokeWidth={2} />
-              <rect x={x - 70} y={labelY - 18} width={140} height={36} rx={4} fill={color + '22'} stroke={color} strokeWidth={1.5} />
-              <text x={x} y={labelY - 4} fontSize={11} textAnchor="middle" fill="#1f2937" fontWeight={700}>{e.date}</text>
-              <text x={x} y={labelY + 12} fontSize={11} textAnchor="middle" fill="#374151">{e.label.slice(0, 22)}</text>
+              <rect x={boxX} y={labelY - BOX_H / 2} width={BOX_W} height={BOX_H} rx={4} fill={color + '22'} stroke={color} strokeWidth={1.5} />
+              <text x={boxCenterX} y={labelY - BOX_H / 2 + 14} fontSize={11} textAnchor="middle" fill="#1f2937" fontWeight={700}>{e.date}</text>
+              <text x={boxCenterX} y={labelY - BOX_H / 2 + 30} fontSize={11} textAnchor="middle" fill="#374151">{labelLine1}</text>
+              {labelLine2 && (
+                <text x={boxCenterX} y={labelY - BOX_H / 2 + 44} fontSize={11} textAnchor="middle" fill="#374151">{labelLine2}</text>
+              )}
             </g>
           );
         })}

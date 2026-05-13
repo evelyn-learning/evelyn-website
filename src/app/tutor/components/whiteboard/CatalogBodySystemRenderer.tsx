@@ -9,7 +9,15 @@ export function CatalogBodySystemRenderer({ figure }: { figure: BodySystemFigure
   return (
     <div className="body-system-renderer w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <div className="text-sm text-gray-600 mb-3 capitalize">{system} system</div>
+      {/* Subtitle is intentionally suppressed when the title already
+          mentions the system — observed 2026-05-13 session #14 image #49:
+          title "The Digestive System" + subtitle "Digestive System" read
+          as duplicate labels stacked above each other. Heuristic: hide
+          the auto subtitle when the title (case-insensitive) contains
+          the system name. */}
+      {(!title || !title.toLowerCase().includes(system.toLowerCase())) && (
+        <div className="text-sm text-gray-600 mb-3 capitalize">{system} system</div>
+      )}
       <div data-feature={N.system} data-feature-label={`${system} system`} className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-[640px]">
         {parts.map((p, i) => (
           <div
