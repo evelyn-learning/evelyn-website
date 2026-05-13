@@ -679,7 +679,28 @@ export function WhiteboardCanvas({
             // reserved band and anchored handwrites push down to start
             // below it — clean separation. Padding is conditional so
             // pages without margin-top handwrites stay flush to the top.
-            paddingTop: handwrites.some((h) => h.margin === 'top') ? 36 : undefined,
+            //
+            // ALSO: anchored handwrites whose `near` resolves to a
+            // central-pin feature (the frayer term pill is the canonical
+            // case) are escaped to a top-margin slot by HandwriteOverlays.
+            // Without the same top-padding push, the escaped sticky-note
+            // lands on top of the diagram's first row (observed
+            // 2026-05-13 session #8: "Remember the 3 C's!" sat on top
+            // of the frayer's DEFINITION header). Detect this case by
+            // checking if any handwrite anchors to a feature named
+            // "term" with position "above" — that's the frayer-term
+            // central-pin pattern we explicitly escape.
+            //
+            // Mirror padding for margin: "bottom" handwrites — without
+            // it a tall page (e.g., two stacked KWL charts) lands the
+            // bottom stamp on top of the second chart's bottom row
+            // (observed session #8: "We will fill in L by the end!"
+            // overlapped the K column of the second KWL).
+            paddingTop: handwrites.some(
+              (h) => h.margin === 'top'
+                || (h.targetFeature === 'term' && (h.position === 'above' || h.position === 'below')),
+            ) ? 36 : undefined,
+            paddingBottom: handwrites.some((h) => h.margin === 'bottom') ? 44 : undefined,
           }}
           className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
         >

@@ -380,25 +380,44 @@ export function CatalogOrganizerRenderer({ figure }: { figure: OrganizerFigure }
 
 function TChart({ figure }: { figure: OrganizerFigure }) {
   const N = tChartFeatureNames;
+  const rows = Math.max(figure.leftItems?.length || 0, figure.rightItems?.length || 0);
+  // Rendered as CSS-grid divs (not <table>) so the LEFT and RIGHT
+  // columns are actual DOM elements that can carry data-feature
+  // markers for tutor_scribble. The previous <table> form had no
+  // column-spanning element, so target="left-column" resolved
+  // through the catalog but missed the DOM (observed 2026-05-13
+  // session #7: 60+ "[Scribble] resolve-miss: data-feature=
+  // 'left-column' not in HTML DOM" warnings as brain repeatedly
+  // tried to highlight the Rights column).
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
-      <table data-feature={N.chart} className="border-collapse w-full max-w-[640px]">
-        <thead>
-          <tr>
-            <th data-feature={N.leftHeader} className="px-3 py-2 border-2 border-gray-700 bg-blue-50 font-bold text-blue-900 w-1/2">{figure.leftHeader}</th>
-            <th data-feature={N.rightHeader} className="px-3 py-2 border-2 border-gray-700 bg-amber-50 font-bold text-amber-900 w-1/2">{figure.rightHeader}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: Math.max(figure.leftItems?.length || 0, figure.rightItems?.length || 0) }).map((_, i) => (
-            <tr key={i}>
-              <td data-feature={N.leftItem(i)} className="px-3 py-2 border border-gray-400">{figure.leftItems?.[i] || ''}</td>
-              <td data-feature={N.rightItem(i)} className="px-3 py-2 border border-gray-400">{figure.rightItems?.[i] || ''}</td>
-            </tr>
+      <div data-feature={N.chart} className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700">
+        <div data-feature={N.leftColumn} className="flex flex-col border-r-2 border-gray-700">
+          <div data-feature={N.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center">{figure.leftHeader}</div>
+          {Array.from({ length: rows }).map((_, i) => (
+            <div
+              key={i}
+              data-feature={N.leftItem(i)}
+              className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
+            >
+              {figure.leftItems?.[i] || ''}
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+        <div data-feature={N.rightColumn} className="flex flex-col">
+          <div data-feature={N.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center">{figure.rightHeader}</div>
+          {Array.from({ length: rows }).map((_, i) => (
+            <div
+              key={i}
+              data-feature={N.rightItem(i)}
+              className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
+            >
+              {figure.rightItems?.[i] || ''}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
