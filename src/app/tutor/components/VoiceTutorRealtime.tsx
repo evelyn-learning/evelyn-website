@@ -3322,54 +3322,25 @@ export function VoiceTutorRealtime({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     processed = processed.filter((c) => !(c as any)._scribbleRejected);
 
-    // Resolve every handwrite's `near` (when present) against the session
-    // catalog — same mechanism as tutor_scribble. Stamps targetId /
-    // targetFeature / targetItemIndex onto the command so the renderer
-    // can position the handwriting adjacent to the anchor feature.
-    // Margin-only handwrites have no `near` and skip resolution.
-    //
-    // On `near` resolution failure: FALLBACK to margin "right" so the
-    // handwrite still renders. Previously we silent-dropped, which
-    // produced an asymmetry between PDF (which renders handwrite text
-    // inline regardless of resolution) and live WB (which needs the
-    // targetItemIndex/targetFeature for positioning) — user saw
-    // markings in PDF that never appeared on the live board (observed
-    // 2026-05-13). With the margin fallback, the brain's intent is
-    // preserved as a margin note even when the anchor target is wrong;
-    // PDF and live now match. Still push to unrealizedMarkRef so the
-    // brain learns next turn that the anchor missed.
+    // Post-redesign (2026-05-13): tutor_handwrite is now a pure
+    // text-into-strip command — no more `near` / `position` / `margin`
+    // resolution, no more central-pin escape, no more PDF vs live
+    // asymmetry. The schema dropped these fields, but a stale brain
+    // may continue emitting them for a few sessions until the system-
+    // prompt cache turns over. Silently strip any legacy fields so the
+    // strip renderer sees only `{ action, text, color }`.
     for (const cmd of processed) {
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdAny = cmd as any;
-      const near = typeof cmdAny.near === 'string' ? cmdAny.near.trim() : '';
-      if (!near) continue; // margin-only handwrites need no resolution
-      const result = catalogRef.current.resolveTarget(near);
-      if (!result.ok) {
-        console.warn('[VoiceTutor] handwrite near-resolve failed → margin fallback: near="%s" (%s)', near, result.reason);
-        onDebugEvent?.('handwrite_near_miss_margin_fallback', `"${near}" (${result.reason})`);
-        unrealizedMarkRef.current.push(near);
-        // Convert to margin-only: drop the `near` + `position`, set
-        // margin="right". The handwrite renders in the right margin
-        // slot — visible, in handwriting font, color preserved.
-        delete cmdAny.near;
-        delete cmdAny.position;
-        cmdAny.margin = 'right';
-        continue;
-      }
-      cmdAny.targetId = result.itemId;
-      cmdAny.targetFeature = result.canonical;
-      const located = resolveTargetFromId(result.itemId);
-      if (located) {
-        cmdAny.targetItemIndex = located.itemIndex;
-        cmdAny.targetPageIndex = located.pageIndex;
-        if (located.pageTitle) cmdAny.targetPageTitle = located.pageTitle;
-      }
-      console.log(
-        '[VoiceTutor] handwrite-resolved: near="%s" → %s/%s (item %d, page %d)',
-        near, result.itemId, result.canonical,
-        located?.itemIndex ?? -1, located?.pageIndex ?? -1,
-      );
+      if ('near' in cmdAny) delete cmdAny.near;
+      if ('position' in cmdAny) delete cmdAny.position;
+      if ('margin' in cmdAny) delete cmdAny.margin;
+      if ('targetId' in cmdAny) delete cmdAny.targetId;
+      if ('targetFeature' in cmdAny) delete cmdAny.targetFeature;
+      if ('targetItemIndex' in cmdAny) delete cmdAny.targetItemIndex;
+      if ('targetPageIndex' in cmdAny) delete cmdAny.targetPageIndex;
+      if ('targetPageTitle' in cmdAny) delete cmdAny.targetPageTitle;
     }
 
     // Auto-inject scrollTo before any scribble that doesn't have one.
