@@ -1293,6 +1293,7 @@ import { SEED_TEST_G5_COMPARISON_TABLE } from './seeds/test-g5-comparison-table'
 import { SEED_TEST_G5_HANDWRITE } from './seeds/test-g5-handwrite';
 import { SEED_TEST_G5_PHASE2A_ORGANIZERS } from './seeds/test-g5-phase2a-organizers';
 import { SEED_TEST_G5_PHASE2B_ORGANIZERS } from './seeds/test-g5-phase2b-organizers';
+import { SEED_TEST_G10_PHASE3_CHEMBIO } from './seeds/test-g10-phase3-chembio';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -2528,6 +2529,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_G5_HANDWRITE,
   SEED_TEST_G5_PHASE2A_ORGANIZERS,
   SEED_TEST_G5_PHASE2B_ORGANIZERS,
+  SEED_TEST_G10_PHASE3_CHEMBIO,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
