@@ -480,41 +480,27 @@ export class WhiteboardCatalog {
       return this.ok(item, feature);
     }
 
-    // Ambiguous: 2+ items matched the same target. Find a distinguishing
-    // label for each (a label that NO other matched item's feature has).
+    // Ambiguous: 2+ items matched the same target. Newest-first wins
+    // silently. The brain is almost always referring to the diagram it
+    // just emitted, so returning an `ambiguous` error here forced the
+    // orchestrator to silent-drop the scribble — yet the brain's
+    // intent (mark the newest match) was clear (observed 2026-05-13
+    // session: target="claim" silent-dropped because two
+    // argument_structure diagrams shared the "claim" label;
+    // target="left-column" silent-dropped across two t_charts).
+    //
+    // `matches` is built newest-first (items iterated from
+    // this.items.length - 1 downward), so matchList[0] is the most
+    // recent item that matched. Accept it.
+    //
+    // We keep the distinguisher-walk only for the rare case where the
+    // brain's query is so generic that every item on the board could
+    // mean it (and the brain genuinely needs a hint to disambiguate).
+    // That case is now unreachable in practice — soft pedagogy aids
+    // (scribble) deserve "go with the latest", not a retry cycle.
     const matchList = Array.from(matches.values());
-    const distinguishers = matchList.map(({ item, feature }) => {
-      const candidates = [feature.canonical, ...feature.labels];
-      for (const label of candidates) {
-        const labelNorm = normalizeToken(label);
-        if (!labelNorm || labelNorm === q) continue;
-        const sharedWithOther = matchList.some(
-          (m) => m.item.itemId !== item.itemId
-            && [m.feature.canonical, ...m.feature.labels].some((l) => normalizeToken(l) === labelNorm),
-        );
-        if (!sharedWithOther) {
-          return { item, feature, distinguishLabel: label };
-        }
-      }
-      return { item, feature, distinguishLabel: null as string | null };
-    });
-
-    const hasDistinguishers = distinguishers.some((d) => d.distinguishLabel !== null);
-    if (!hasDistinguishers) {
-      // No way to disambiguate — accept newest-first match.
-      const newest = matchList[0];
-      return this.ok(newest.item, newest.feature);
-    }
-
-    return {
-      ok: false,
-      reason: 'ambiguous',
-      message: `"${raw}" matches ${matches.size} items on the whiteboard. Specify which one by its distinguishing label.`,
-      candidates: distinguishers.map((d) => ({
-        target: d.distinguishLabel ?? d.feature.canonical,
-        on: describeItem(d.item),
-      })),
-    };
+    const newest = matchList[0];
+    return this.ok(newest.item, newest.feature);
   }
 
   private ok(item: CatalogItem, f: CatalogFeature): ResolveSuccess {

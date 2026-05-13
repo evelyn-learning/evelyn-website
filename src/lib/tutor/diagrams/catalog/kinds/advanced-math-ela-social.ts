@@ -594,7 +594,16 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
         description: preview ? `${quad} ${i + 1}: "${preview}"` : `${quad} ${i + 1}`,
         labels: [
           `${quad} ${i + 1}`, `${quad}-${i + 1}`,
-          ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
+          // Verbose form the brain frequently emits — observed 2026-05-13:
+          //   target: "characteristic 1: \"Free and fair elections\""
+          //   target: "example 3: \"U.S. Presidential Election\""
+          // Without these labels the catalog returns no_match and the
+          // scribble silent-drops despite the brain having a valid intent.
+          ...(preview ? [
+            preview, `the ${preview}`, `"${preview}"`,
+            `${quad} ${i + 1}: "${preview}"`, `${quad} ${i + 1}: ${preview}`,
+            `${quad}-${i + 1}: "${preview}"`,
+          ] : []),
         ],
         scribbleable: true,
       });
@@ -659,7 +668,13 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       name: N.evidenceItem(i),
       kind: 'label',
       description: preview ? `evidence ${i + 1}: "${preview}"` : `evidence ${i + 1}`,
-      labels: [`evidence ${i + 1}`, `evidence-${i + 1}`, ...(preview ? [preview, `"${preview}"`] : [])],
+      labels: [
+        `evidence ${i + 1}`, `evidence-${i + 1}`,
+        ...(preview ? [
+          preview, `"${preview}"`,
+          `evidence ${i + 1}: "${preview}"`, `evidence ${i + 1}: ${preview}`,
+        ] : []),
+      ],
       scribbleable: true,
     });
   });
@@ -670,7 +685,13 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       name: N.reasoningItem(i),
       kind: 'label',
       description: preview ? `reasoning ${i + 1}: "${preview}"` : `reasoning ${i + 1}`,
-      labels: [`reasoning ${i + 1}`, `reasoning-${i + 1}`, ...(preview ? [preview, `"${preview}"`] : [])],
+      labels: [
+        `reasoning ${i + 1}`, `reasoning-${i + 1}`,
+        ...(preview ? [
+          preview, `"${preview}"`,
+          `reasoning ${i + 1}: "${preview}"`, `reasoning ${i + 1}: ${preview}`,
+        ] : []),
+      ],
       scribbleable: true,
     });
   });

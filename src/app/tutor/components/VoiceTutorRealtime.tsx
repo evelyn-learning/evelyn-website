@@ -3271,6 +3271,46 @@ export function VoiceTutorRealtime({
         cmdAny.targetPageIndex = located.pageIndex;
         if (located.pageTitle) cmdAny.targetPageTitle = located.pageTitle;
       }
+      // Cross-turn dedup: if an identical scribble (same target item +
+      // feature + shape + color + label) is already on the board,
+      // silently drop the re-emission. The brain often re-narrates a
+      // visual and re-emits the same scribble call — without dedup
+      // each turn adds another mark, the label-staggerer alternates
+      // positions, and you see two "key traits!" labels stacked on
+      // the same highlight (observed 2026-05-13 Phase 2a session #5
+      // on the frayer characteristics quadrant).
+      //
+      // Signature mirrors show_* dedup: stable across turns, scoped
+      // to a single render target. itemId is part of the key so the
+      // same scribble re-emitted on a fresh diagram (e.g., a redrawn
+      // t_chart with different content) still lands.
+      const sig = JSON.stringify({
+        itemId: result.itemId,
+        feature: result.canonical,
+        shape: cmdAny.shape,
+        color: cmdAny.color ?? null,
+        label: cmdAny.label ?? null,
+      });
+      const isDuplicate = whiteboardCommandsRef.current.some((priorCmd) => {
+        if (priorCmd.action !== 'scribble') return false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const p = priorCmd as any;
+        if (!p.targetId || !p.targetFeature) return false;
+        const priorSig = JSON.stringify({
+          itemId: p.targetId,
+          feature: p.targetFeature,
+          shape: p.shape,
+          color: p.color ?? null,
+          label: p.label ?? null,
+        });
+        return priorSig === sig;
+      });
+      if (isDuplicate) {
+        cmdAny._scribbleRejected = true;
+        console.warn('[VoiceTutor] scribble-dedup: same target+shape+color+label already on board, silent drop');
+        onDebugEvent?.('scribble_dedup_silent', `${result.itemId}/${result.canonical} ${cmdAny.shape}`);
+        continue;
+      }
       console.log(
         '[VoiceTutor] scribble-resolved: target="%s" → %s/%s (item %d, page %d)',
         raw, result.itemId, result.canonical,
