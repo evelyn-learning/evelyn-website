@@ -12,7 +12,8 @@
  *      SVG path generator + the AnnotationStrip component. Old
  *      HandwriteOverlays is gone.
  *   4. The PDF capture source uses the same tick anchor formula
- *      (just past the feature's right edge, vertically centered).
+ *      (just inside the feature's right edge, vertically centered,
+ *      with bold stroke — sized for visibility, 2026-05-13 tweak).
  *
  * Run with:
  *   TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register \
@@ -139,7 +140,7 @@ expect(!wbSource.includes("h.margin === 'bottom'"), 'paddingBottom heuristic for
 // The path's first move is `M ${tx - half} ${ty}` (start at left of
 // the tick), followed by an L to the cusp and an L to the upper-right.
 expect(wbSource.includes('M ${tx - half} ${ty}'), 'WhiteboardCanvas contains the tick SVG path generator');
-expect(wbSource.includes('r.x + r.w + tickSize'), 'tick anchor is past the feature\'s right edge');
+expect(wbSource.includes('r.x + r.w - tickSize'), 'tick anchor is inside the feature\'s right edge (inward placement)');
 expect(wbSource.includes('r.y + r.h / 2'), 'tick anchor is vertically centered');
 
 // Highlight branch still present.
@@ -156,8 +157,8 @@ const captureSource = readFileSync(
 // PDF mirror of the tick formula — same anchor math, written in plain
 // strings since the PDF builds DOM nodes via createElementNS.
 expect(
-    captureSource.includes('rx + rw + tickSize * 0.4'),
-    'PDF capture tick anchor matches live (rx + rw + tickSize * 0.4)',
+    captureSource.includes('rx + rw - tickSize * 0.55'),
+    'PDF capture tick anchor matches live (rx + rw - tickSize * 0.55)',
 );
 expect(
     captureSource.includes('ry + rh / 2'),

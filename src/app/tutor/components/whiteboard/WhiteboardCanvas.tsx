@@ -1283,12 +1283,15 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
             />
           );
         } else {
-          // Tick anchor: just past the right edge of the feature's bbox,
-          // vertically centered. A small ✓ icon — minimal visual mark
-          // that doesn't obscure content. Size scales with the viewBox
-          // so the tick stays proportional across tiny and wide items.
-          const tickSize = Math.max(10, Math.min(vbW, vbH) * 0.04);
-          const tx = r.x + r.w + tickSize * 0.4;
+          // Tick anchor: just INSIDE the right edge of the feature's bbox,
+          // vertically centered. A bold ✓ icon — visible without being
+          // intrusive. Size scales with the viewBox so the tick stays
+          // proportional across tiny and wide items.
+          // 2026-05-13 user feedback: outside-right and small was barely
+          // visible. Now positioned inward with ~50% larger size and
+          // thicker stroke.
+          const tickSize = Math.max(16, Math.min(vbW, vbH) * 0.06);
+          const tx = r.x + r.w - tickSize * 0.55;
           const ty = r.y + r.h / 2;
           const half = tickSize / 2;
           // Two-segment ✓ path: short stroke from upper-left of the
@@ -1299,7 +1302,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
               d={d}
               fill="none"
               stroke={color}
-              strokeWidth={Math.max(2, tickSize * 0.18)}
+              strokeWidth={Math.max(3, tickSize * 0.25)}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -1463,14 +1466,23 @@ function AnnotationStrip({
       className="mt-4 pt-2 border-t border-dashed border-gray-200"
       style={{ pointerEvents: 'none' }}
     >
-      <div className="space-y-1">
+      <div className="space-y-1" style={{
+        // Hand-written feel: Caveat + Kalam (already loaded for the
+        // app via next/font in layout.tsx) match the original
+        // sticky-note handwrite styling, just without the card chrome.
+        // 18px because cursive fonts read less dense than sans-serif —
+        // 14px Caveat looks cramped next to surrounding sans-serif.
+        fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
+        fontSize: 18,
+        lineHeight: 1.3,
+      }}>
         {labelledScribbles.map((s, i) => {
           const color = s.color || SCRIBBLE_DEFAULT_COLOR;
           const name = featureDisplayName(s, containerRef.current?.parentElement ?? null);
           return (
             <div
               key={`s-${i}`}
-              className="text-sm flex items-center gap-2"
+              className="flex items-center gap-2"
               style={{ color }}
             >
               <span
@@ -1486,7 +1498,7 @@ function AnnotationStrip({
               />
               <span>
                 <span style={{ fontWeight: 600 }}>{name}</span>
-                <span style={{ opacity: 0.8 }}> → {s.label}</span>
+                <span style={{ opacity: 0.85 }}> → {s.label}</span>
               </span>
             </div>
           );
@@ -1496,7 +1508,7 @@ function AnnotationStrip({
           return (
             <div
               key={`h-${i}`}
-              className="text-sm flex items-center gap-2"
+              className="flex items-center gap-2"
               style={{ color }}
             >
               <span

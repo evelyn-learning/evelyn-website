@@ -217,30 +217,30 @@ export function CatalogArgumentStructureRenderer({ figure }: { figure: ArgumentF
   return (
     <div data-feature={N.argument} className="w-full flex flex-col items-center gap-3">
       {title && <div className="text-base font-semibold text-gray-800">{title}</div>}
-      <div data-feature={N.claim} className="px-5 py-3 rounded-lg bg-blue-50 border-2 border-blue-400 max-w-[600px] w-full">
+      <div data-feature={N.claim} data-feature-label="Claim" className="px-5 py-3 rounded-lg bg-blue-50 border-2 border-blue-400 max-w-[600px] w-full">
         <div className="text-xs font-bold uppercase text-blue-700 mb-1">Claim</div>
         <div className="text-base text-blue-900">{claim}</div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-[640px] w-full">
-        <div data-feature={N.evidence} className="p-3 rounded-lg bg-green-50 border border-green-300">
+        <div data-feature={N.evidence} data-feature-label="Evidence" className="p-3 rounded-lg bg-green-50 border border-green-300">
           <div className="text-xs font-bold uppercase text-green-700 mb-1">Evidence</div>
           <ul className="text-sm text-green-900 list-disc list-inside space-y-1">
-            {evidence.map((e, i) => <li key={i} data-feature={N.evidenceItem(i)}>{e}</li>)}
+            {evidence.map((e, i) => <li key={i} data-feature={N.evidenceItem(i)} data-feature-label={e}>{e}</li>)}
           </ul>
         </div>
-        <div data-feature={N.reasoning} className="p-3 rounded-lg bg-amber-50 border border-amber-300">
+        <div data-feature={N.reasoning} data-feature-label="Reasoning" className="p-3 rounded-lg bg-amber-50 border border-amber-300">
           <div className="text-xs font-bold uppercase text-amber-700 mb-1">Reasoning</div>
           <ul className="text-sm text-amber-900 list-disc list-inside space-y-1">
-            {reasoning.map((r, i) => <li key={i} data-feature={N.reasoningItem(i)}>{r}</li>)}
+            {reasoning.map((r, i) => <li key={i} data-feature={N.reasoningItem(i)} data-feature-label={r}>{r}</li>)}
           </ul>
         </div>
       </div>
       {counter && (
-        <div data-feature={N.counter} className="p-3 rounded-lg bg-rose-50 border border-rose-300 max-w-[600px] w-full">
+        <div data-feature={N.counter} data-feature-label="Counterargument" className="p-3 rounded-lg bg-rose-50 border border-rose-300 max-w-[600px] w-full">
           <div className="text-xs font-bold uppercase text-rose-700 mb-1">Counterargument</div>
           <div className="text-sm text-rose-900">{counter}</div>
           {rebuttal && (
-            <div data-feature={N.rebuttal} className="mt-2">
+            <div data-feature={N.rebuttal} data-feature-label="Rebuttal" className="mt-2">
               <div className="text-xs font-bold uppercase text-rose-700 mb-1">Rebuttal</div>
               <div className="text-sm text-rose-900">{rebuttal}</div>
             </div>
@@ -296,21 +296,21 @@ export function CatalogGovernmentBranchesRenderer({ figure }: { figure: Governme
   return (
     <div data-feature={N.branches} className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <div data-feature={N.country} className="text-sm text-gray-600 mb-3">{country}</div>
+      <div data-feature={N.country} data-feature-label={country} className="text-sm text-gray-600 mb-3">{country}</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[760px] w-full">
         {branches.map((b, i) => {
           const color = PALETTE[i % PALETTE.length];
           return (
-            <div key={i} data-feature={N.branch(i)} className="p-3 rounded-lg border-2" style={{ background: color + '11', borderColor: color }}>
+            <div key={i} data-feature={N.branch(i)} data-feature-label={b.name} className="p-3 rounded-lg border-2" style={{ background: color + '11', borderColor: color }}>
               <div className="font-bold mb-1" style={{ color }}>{b.name}</div>
               {b.bodies && b.bodies.length > 0 && (
-                <div data-feature={N.branchBodies(i)} className="text-xs text-gray-700 mb-1">
+                <div data-feature={N.branchBodies(i)} data-feature-label={`${b.name} bodies`} className="text-xs text-gray-700 mb-1">
                   <span className="font-semibold">Bodies: </span>
                   {b.bodies.join(', ')}
                 </div>
               )}
               {b.powers && b.powers.length > 0 && (
-                <ul data-feature={N.branchPowers(i)} className="text-sm list-disc list-inside text-gray-800">
+                <ul data-feature={N.branchPowers(i)} data-feature-label={`${b.name} powers`} className="text-sm list-disc list-inside text-gray-800">
                   {b.powers.map((p, j) => <li key={j}>{p}</li>)}
                 </ul>
               )}
@@ -343,6 +343,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
               <th
                 key={i}
                 data-feature={N.col(i)}
+                data-feature-label={it}
                 className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900"
               >
                 {it}
@@ -352,12 +353,13 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
         </thead>
         <tbody>
           {attributes.map((attr, ri) => (
-            <tr key={ri} data-feature={N.row(ri)}>
+            <tr key={ri} data-feature={N.row(ri)} data-feature-label={attr}>
               <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left">{attr}</th>
               {cells[ri].map((c, ci) => (
                 <td
                   key={ci}
                   data-feature={N.cell(ri, ci)}
+                  data-feature-label={`${items[ci]} / ${attr}`}
                   className="px-3 py-2 border border-gray-300"
                 >
                   {c}
@@ -393,24 +395,26 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
       <div data-feature={N.chart} className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700">
-        <div data-feature={N.leftColumn} className="flex flex-col border-r-2 border-gray-700">
-          <div data-feature={N.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center">{figure.leftHeader}</div>
+        <div data-feature={N.leftColumn} data-feature-label={figure.leftHeader || 'Left column'} className="flex flex-col border-r-2 border-gray-700">
+          <div data-feature={N.leftHeader} data-feature-label={figure.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center">{figure.leftHeader}</div>
           {Array.from({ length: rows }).map((_, i) => (
             <div
               key={i}
               data-feature={N.leftItem(i)}
+              data-feature-label={figure.leftItems?.[i] || ''}
               className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
             >
               {figure.leftItems?.[i] || ''}
             </div>
           ))}
         </div>
-        <div data-feature={N.rightColumn} className="flex flex-col">
-          <div data-feature={N.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center">{figure.rightHeader}</div>
+        <div data-feature={N.rightColumn} data-feature-label={figure.rightHeader || 'Right column'} className="flex flex-col">
+          <div data-feature={N.rightHeader} data-feature-label={figure.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center">{figure.rightHeader}</div>
           {Array.from({ length: rows }).map((_, i) => (
             <div
               key={i}
               data-feature={N.rightItem(i)}
+              data-feature-label={figure.rightItems?.[i] || ''}
               className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
             >
               {figure.rightItems?.[i] || ''}
@@ -428,19 +432,19 @@ function KWLChart({ figure }: { figure: OrganizerFigure }) {
   // and each list-item needs k-item-N / w-item-N / l-item-N. Loop iterates
   // [K, W, L] in order so column index 0=K, 1=W, 2=L.
   const columns = [
-    { h: 'K — Know', items: figure.know, bg: 'bg-blue-50', fg: 'text-blue-900', border: 'border-blue-400', col: N.kColumn, item: N.kItem },
-    { h: 'W — Want to know', items: figure.want, bg: 'bg-amber-50', fg: 'text-amber-900', border: 'border-amber-400', col: N.wColumn, item: N.wItem },
-    { h: 'L — Learned', items: figure.learned, bg: 'bg-green-50', fg: 'text-green-900', border: 'border-green-400', col: N.lColumn, item: N.lItem },
+    { h: 'K — Know', label: 'Know', items: figure.know, bg: 'bg-blue-50', fg: 'text-blue-900', border: 'border-blue-400', col: N.kColumn, item: N.kItem },
+    { h: 'W — Want to know', label: 'Want to know', items: figure.want, bg: 'bg-amber-50', fg: 'text-amber-900', border: 'border-amber-400', col: N.wColumn, item: N.wItem },
+    { h: 'L — Learned', label: 'Learned', items: figure.learned, bg: 'bg-green-50', fg: 'text-green-900', border: 'border-green-400', col: N.lColumn, item: N.lItem },
   ];
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
       <div data-feature={N.chart} className="grid grid-cols-3 gap-2 max-w-[760px] w-full">
         {columns.map((col, i) => (
-          <div key={i} data-feature={col.col} className={`p-3 border-2 rounded ${col.bg} ${col.border}`}>
+          <div key={i} data-feature={col.col} data-feature-label={col.label} className={`p-3 border-2 rounded ${col.bg} ${col.border}`}>
             <div className={`font-bold ${col.fg} mb-2`}>{col.h}</div>
             <ul className="list-disc list-inside text-sm space-y-1">
-              {(col.items || []).map((it, j) => <li key={j} data-feature={col.item(j)}>{it}</li>)}
+              {(col.items || []).map((it, j) => <li key={j} data-feature={col.item(j)} data-feature-label={it}>{it}</li>)}
             </ul>
           </div>
         ))}
@@ -455,30 +459,30 @@ function FrayerModel({ figure }: { figure: OrganizerFigure }) {
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
       <div data-feature={N.frayer} className="relative grid grid-cols-2 gap-0 max-w-[600px] w-full border-2 border-gray-700">
-        <div data-feature={N.definition} className="p-3 border-r-2 border-b-2 border-gray-700 bg-blue-50">
+        <div data-feature={N.definition} data-feature-label="Definition" className="p-3 border-r-2 border-b-2 border-gray-700 bg-blue-50">
           <div className="font-bold text-blue-900 text-xs uppercase mb-1">Definition</div>
           <div className="text-sm">{figure.definition || '—'}</div>
         </div>
-        <div data-feature={N.characteristics} className="p-3 border-b-2 border-gray-700 bg-green-50">
+        <div data-feature={N.characteristics} data-feature-label="Characteristics" className="p-3 border-b-2 border-gray-700 bg-green-50">
           <div className="font-bold text-green-900 text-xs uppercase mb-1">Characteristics</div>
           <ul className="text-sm list-disc list-inside space-y-1">
-            {(figure.characteristics || []).map((c, i) => <li key={i} data-feature={N.characteristicItem(i)}>{c}</li>)}
+            {(figure.characteristics || []).map((c, i) => <li key={i} data-feature={N.characteristicItem(i)} data-feature-label={c}>{c}</li>)}
           </ul>
         </div>
-        <div data-feature={N.examples} className="p-3 border-r-2 border-gray-700 bg-amber-50">
+        <div data-feature={N.examples} data-feature-label="Examples" className="p-3 border-r-2 border-gray-700 bg-amber-50">
           <div className="font-bold text-amber-900 text-xs uppercase mb-1">Examples</div>
           <ul className="text-sm list-disc list-inside space-y-1">
-            {(figure.examples || []).map((c, i) => <li key={i} data-feature={N.exampleItem(i)}>{c}</li>)}
+            {(figure.examples || []).map((c, i) => <li key={i} data-feature={N.exampleItem(i)} data-feature-label={c}>{c}</li>)}
           </ul>
         </div>
-        <div data-feature={N.nonExamples} className="p-3 bg-rose-50">
+        <div data-feature={N.nonExamples} data-feature-label="Non-examples" className="p-3 bg-rose-50">
           <div className="font-bold text-rose-900 text-xs uppercase mb-1">Non-Examples</div>
           <ul className="text-sm list-disc list-inside space-y-1">
-            {(figure.nonExamples || []).map((c, i) => <li key={i} data-feature={N.nonExampleItem(i)}>{c}</li>)}
+            {(figure.nonExamples || []).map((c, i) => <li key={i} data-feature={N.nonExampleItem(i)} data-feature-label={c}>{c}</li>)}
           </ul>
         </div>
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div data-feature={N.term} className="bg-white border-2 border-gray-700 rounded-full px-4 py-1 font-bold text-gray-900">{figure.term}</div>
+          <div data-feature={N.term} data-feature-label={figure.term} className="bg-white border-2 border-gray-700 rounded-full px-4 py-1 font-bold text-gray-900">{figure.term}</div>
         </div>
       </div>
     </div>

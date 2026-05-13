@@ -321,8 +321,8 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
       });
       group.appendChild(rect);
     } else {
-      const tickSize = Math.max(10, Math.min(vw, vh) * 0.04);
-      const tx = rx + rw + tickSize * 0.4;
+      const tickSize = Math.max(16, Math.min(vw, vh) * 0.06);
+      const tx = rx + rw - tickSize * 0.55;
       const ty = ry + rh / 2;
       const half = tickSize / 2;
       const tickPath = document.createElementNS(SVG_NS, 'path');
@@ -330,7 +330,7 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
         d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
         fill: 'none',
         stroke: color,
-        'stroke-width': Math.max(2, tickSize * 0.18),
+        'stroke-width': Math.max(3, tickSize * 0.25),
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
       });
@@ -546,8 +546,8 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
         });
         group.appendChild(rect);
       } else {
-        const tickSize = Math.max(10, Math.min(vw, vh) * 0.04);
-        const tx = rx + rw + tickSize * 0.4;
+        const tickSize = Math.max(16, Math.min(vw, vh) * 0.06);
+        const tx = rx + rw - tickSize * 0.55;
         const ty = ry + rh / 2;
         const half = tickSize / 2;
         const tickPath = doc.createElementNS(SVG_NS, 'path');
@@ -555,7 +555,7 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
           d: `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`,
           fill: 'none',
           stroke: color,
-          'stroke-width': Math.max(2, tickSize * 0.18),
+          'stroke-width': Math.max(3, tickSize * 0.25),
           'stroke-linecap': 'round',
           'stroke-linejoin': 'round',
         });

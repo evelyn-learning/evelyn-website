@@ -77,10 +77,8 @@ function toCatalogSubject(planSubject?: string): CatalogSubject | undefined {
  */
 export function getInitialGreetingPrompt(
   sessionGoal: SessionGoal,
-  topicName?: string
+  _topicName?: string
 ): string {
-  const topic = topicName || 'this topic';
-
   const prompts: Record<SessionGoal, string> = {
     'practice': `Hi!`,
     'homework-help': `Hi!`,
