@@ -2972,7 +2972,26 @@ export function VoiceTutorRealtime({
     // stable for the entire session. Meta-commands (newPage / clear /
     // goToPage / scribble / scrollTo) do NOT get IDs — they're addressers
     // or structural markers, not addressable items themselves.
-    const META_ACTIONS = new Set(['newPage', 'clear', 'goToPage', 'scribble', 'scrollTo']);
+    // Bookkeeping actions are state side-effects applied EARLIER in this
+    // function (segment advance, mastery deltas, topic-notes PATCH, gap
+    // accumulator) and are stripped from the render pipeline before
+    // onWhiteboardCommand at line ~3467. They must NOT increment
+    // nextCommandOrderRef either — otherwise the order counter drifts
+    // ahead of whiteboardCommandsRef.current and resolveTargetFromId's
+    // `o` walk can't find later items by their entry.order. Symptom:
+    // tutor_scribble emitted in a turn that also has advance_lesson +
+    // mark_segment_complete + add_topic_notes_pointer resolved through
+    // the catalog but had targetItemIndex=undefined → page-filter
+    // dropped them → no paint on the board. Observed 2026-05-13 Phase
+    // 2a session (the gov_branches "Legislative" circle that vanished
+    // despite catalog success).
+    const META_ACTIONS = new Set([
+      'newPage', 'clear', 'goToPage', 'scribble', 'scrollTo',
+      'advanceLesson', 'markSegmentComplete',
+      'proposePlanSwap', 'confirmPlanLos',
+      'recordGap', 'flagPrerequisiteGap',
+      'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
+    ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
     // full history up to and including the current batch.

@@ -1351,25 +1351,29 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         let mark: React.ReactNode;
         switch (s.shape) {
           case 'circle': {
-            // Cap the ellipse radii so a circle around a long/angled
-            // target (segment, vector, hypotenuse) doesn't blow up
-            // into a giant oval encompassing the whole figure. Observed
-            // 2026-04-29 geometry session: brain emitted scribble
-            // shape:circle around the hypotenuse → ellipse rx/ry
-            // computed from the bounding box of the angled segment ate
-            // the entire triangle. Cap each radius to a moderate
-            // fraction of the smaller viewBox dimension so the mark
-            // stays a recognizable circle around the target's centroid.
-            const radiusCap = Math.min(vbW, vbH) * 0.08;
-            const rxRaw = Math.max(vbW * 0.015, r.w / 2);
-            const ryRaw = Math.max(vbH * 0.015, r.h / 2);
+            // Oval that hugs the feature's natural aspect ratio. The
+            // earlier radius-cap approach collapsed a wide table-cell
+            // target into a tiny circle visually disconnected from the
+            // box. Instead, scale rx/ry from the target's half-width
+            // and half-height with a small padding (12%), so a wide
+            // box gets a wide oval and a narrow item gets a small
+            // circle — both visibly enclose the target.
+            //
+            // Line-like targets (aspect ratio > 3 — segments, vectors,
+            // hypotenuses) still need a tighter ellipse around the
+            // centroid: the bounding box of an angled segment is huge
+            // but the meaningful point is the centroid. For these we
+            // cap radii to a moderate fraction of the smaller viewBox
+            // dimension (2026-04-29 geometry session regression: the
+            // hypotenuse mark ate the entire triangle).
             const aspectRatio = Math.max(r.w, r.h) / Math.max(0.0001, Math.min(r.w, r.h));
             const isLineLike = aspectRatio > 3;
-            // Line-like targets get a tighter radius — a small circle
-            // around the centroid points at the feature without
-            // visually swallowing the rest of the diagram.
-            const rx = isLineLike ? Math.min(rxRaw, radiusCap) : Math.min(rxRaw, radiusCap * 1.3);
-            const ry = isLineLike ? Math.min(ryRaw, radiusCap) : Math.min(ryRaw, radiusCap * 1.3);
+            const lineRadiusCap = Math.min(vbW, vbH) * 0.08;
+            const rxRaw = Math.max(vbW * 0.015, r.w / 2);
+            const ryRaw = Math.max(vbH * 0.015, r.h / 2);
+            const ovalPadding = 1.12;
+            const rx = isLineLike ? Math.min(rxRaw, lineRadiusCap) : rxRaw * ovalPadding;
+            const ry = isLineLike ? Math.min(ryRaw, lineRadiusCap) : ryRaw * ovalPadding;
             mark = (
               <ellipse
                 cx={cx} cy={cy}
