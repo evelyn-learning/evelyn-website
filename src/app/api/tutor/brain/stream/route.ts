@@ -59,6 +59,16 @@ interface BrainStreamRequestBody {
    *  text rather than on stale cards still visible in the snapshot. See
    *  BrainTurnInput.activeProblem for the catastrophe this addresses. */
   activeProblem?: BrainTurnInput['activeProblem'];
+  /** Whiteboard markup Phase 1 (audit 2026-05-13): failed tutor_scribble
+   *  targets from the prior turn that the orchestrator silently dropped.
+   *  Surfaces to the brain as `<unrealized_marks>` advisory. See
+   *  BrainTurnInput.unrealizedMarks. */
+  unrealizedMarks?: BrainTurnInput['unrealizedMarks'];
+  /** Whiteboard markup Phase 1: show_* tool calls collapsed by
+   *  cross-turn dedup last turn. Surfaces as `<deduplicated_renders>`
+   *  advisory so the brain knows its re-emission did not land. See
+   *  BrainTurnInput.deduplicatedShows. */
+  deduplicatedShows?: BrainTurnInput['deduplicatedShows'];
   /** Pacing v2 — Phase 1 (inert) student-state snapshot. See
    *  BrainTurnInput.pacingState for shape; the brain formatter omits
    *  the block entirely when nothing is interesting. */
@@ -367,6 +377,8 @@ export async function POST(req: NextRequest) {
           lessonPlanContext: body.lessonPlanContext,
           studentProfileBlock: body.studentProfileBlock,
           activeProblem: body.activeProblem,
+          unrealizedMarks: body.unrealizedMarks,
+          deduplicatedShows: body.deduplicatedShows,
           pacingState: body.pacingState,
           topicNotesState: body.topicNotesState,
           grade: body.grade,

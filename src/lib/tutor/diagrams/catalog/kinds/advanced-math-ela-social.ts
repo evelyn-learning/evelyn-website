@@ -1,5 +1,7 @@
 /** Phases 6+7+8 — advanced math, ELA, social studies, organizers. */
 
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
 // ── unit_circle (Phase 6) ─────────────────────────────────────────────────
 export interface UnitCircleFigure {
   angleDegrees: number;
@@ -201,6 +203,159 @@ export function solveComparisonTable(params: Record<string, unknown>): Compariso
     throw new Error(`comparison_table: cells has ${cells.length} rows but must have ${attributes.length} (one row per attribute — attributes are row labels). Shape required: cells[attributeIndex][itemIndex].`);
   }
   return { items, attributes, cells, title: typeof params.title === 'string' ? params.title : undefined };
+}
+
+/**
+ * Shared naming helper for comparison_table sub-features. The manifest
+ * builder and the renderer both call these so feature names and
+ * data-feature-id attrs cannot drift. Keep 1-indexed (matches the legacy
+ * showTable convention at manifests.ts:492-571).
+ */
+export const comparisonTableFeatureNames = {
+  table: 'table',
+  headerRow: 'header-row',
+  col: (i: number): string => `col-${i + 1}`,
+  row: (i: number): string => `row-${i + 1}`,
+  cell: (ri: number, ci: number): string => `cell-r${ri + 1}-c${ci + 1}`,
+};
+
+/**
+ * Rich manifest for show_diagram(comparison_table). Phase 1 of the
+ * whiteboard markup initiative (2026-05-13 audit). Replaces the
+ * impoverished single-region catch-all from buildDiagramManifest.
+ *
+ * Granularity per Q4 grilling decision: structural rows/cols + content
+ * aliases on rows/cols only; cells stay structural-index addressable.
+ * Rows/cols use FeatureKind 'area' so they pass the snapshot filter
+ * (which strips kind 'region') — the brain sees them and can verify
+ * before promising a mark.
+ */
+export function buildComparisonTableManifest(figure: ComparisonTableFigure): FeatureManifestEntry[] {
+  const N = comparisonTableFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.table,
+      kind: 'region',
+      description: figure.title ? `comparison table: ${figure.title}` : 'comparison table',
+      labels: ['table', 'the table', 'comparison table', 'the comparison table', 'the grid'],
+      scribbleable: true,
+    },
+    {
+      name: N.headerRow,
+      kind: 'region',
+      description: 'the header row (item names)',
+      labels: ['header row', 'the header row', 'headers', 'the headers', 'the top row', 'item headers'],
+      scribbleable: true,
+    },
+  ];
+  figure.items.forEach((item, ci) => {
+    const text = String(item ?? '').trim();
+    features.push({
+      name: N.col(ci),
+      kind: 'area',
+      description: `column ${ci + 1}${text ? ` ("${text}")` : ''}`,
+      labels: [
+        `column ${ci + 1}`, `col ${ci + 1}`, `col-${ci + 1}`,
+        // Quoted + parenthetical variants — the brain often reaches for
+        // forms like `column 2 ("Liquid")` or `"Liquid" column` when it
+        // echoes back the snapshot's description text verbatim. Without
+        // these the catalog resolves none of them.
+        ...(text ? [
+          `${text} column`, `the ${text} column`, text, `the ${text}`,
+          `column ${ci + 1} (${text})`, `column ${ci + 1} ("${text}")`,
+          `col ${ci + 1} (${text})`, `col ${ci + 1} ("${text}")`,
+          `"${text}" column`, `"${text}"`,
+        ] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  figure.attributes.forEach((attr, ri) => {
+    const text = String(attr ?? '').trim();
+    features.push({
+      name: N.row(ri),
+      kind: 'area',
+      description: `row ${ri + 1}${text ? ` ("${text}")` : ''}`,
+      labels: [
+        `row ${ri + 1}`, `row-${ri + 1}`,
+        ...(text ? [
+          `${text} row`, `the ${text} row`, text, `the ${text}`,
+          `row ${ri + 1} (${text})`, `row ${ri + 1} ("${text}")`,
+          `"${text}" row`, `"${text}"`,
+        ] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  figure.cells.forEach((row, ri) => {
+    row.forEach((cellValue, ci) => {
+      const cellText = String(cellValue ?? '').trim();
+      const preview = cellText.length > 60 ? `${cellText.slice(0, 57)}...` : cellText;
+      const attr = String(figure.attributes[ri] ?? '').trim();
+      const item = String(figure.items[ci] ?? '').trim();
+      // Intersection aliases for the brain's natural addressing of
+      // a cell as a (row, column) pair — e.g. "Compressibility / Solid"
+      // or "Solid's Volume". Observed 2026-05-13 session: brain emitted
+      // tutor_scribble target="Compressibility / Solid" which silent-
+      // dropped because none of the structural labels matched. These
+      // intersection forms are how the brain naturally reaches when
+      // confirming a student's row-name + column-name answer.
+      const intersectionLabels = attr && item ? [
+        `${attr} ${item}`, `${item} ${attr}`,
+        `${attr} for ${item}`, `${attr} of ${item}`, `${item}'s ${attr}`,
+        `${attr}/${item}`, `${attr} / ${item}`,
+        `${item}/${attr}`, `${item} / ${attr}`,
+        `${attr}-${item}`, `${item}-${attr}`,
+        `${attr} × ${item}`, `${item} × ${attr}`,
+        `the ${item} ${attr}`, `the ${attr} ${item}`,
+        `the ${item}'s ${attr}`,
+        `${attr} row ${item} column`,
+        `${attr} row, ${item} column`,
+        `${item} column ${attr} row`,
+        `${item} column, ${attr} row`,
+        `row ${ri + 1} column ${ci + 1} (${attr} / ${item})`,
+        // Description-echo variants: when the boardSnapshot surfaces
+        // the cell description like `cell at row 3 ("Compressibility")
+        // × column 3 ("Gas")`, the brain copies that string verbatim
+        // as the scribble target. Add these forms as labels so the
+        // echo resolves. Observed 2026-05-13 (8) session.
+        `cell at row ${ri + 1} ("${attr}") × column ${ci + 1} ("${item}")`,
+        `cell at row ${ri + 1} (${attr}) × column ${ci + 1} (${item})`,
+        `row ${ri + 1} ("${attr}") × column ${ci + 1} ("${item}")`,
+        `row ${ri + 1} (${attr}) × column ${ci + 1} (${item})`,
+        `the cell at row ${ri + 1} ("${attr}") × column ${ci + 1} ("${item}")`,
+      ] : [];
+      // Description carries the RENDERED cell content so the brain's
+      // boardSnapshot shows exactly what is on the board. Without this
+      // the brain cannot read its own rendered output and re-emits
+      // show_diagram to "fill in" content it can't see.
+      features.push({
+        name: N.cell(ri, ci),
+        kind: 'label',
+        description: preview
+          ? attr && item
+            ? `cell at row ${ri + 1} ("${attr}") × column ${ci + 1} ("${item}"): "${preview}"`
+            : `cell at row ${ri + 1} column ${ci + 1}: "${preview}"`
+          : `cell at row ${ri + 1} column ${ci + 1}`,
+        labels: [
+          `cell ${ri + 1} ${ci + 1}`, `cell-r${ri + 1}-c${ci + 1}`,
+          `row ${ri + 1} column ${ci + 1}`, `row ${ri + 1} col ${ci + 1}`,
+          `cell at row ${ri + 1} column ${ci + 1}`,
+          `cell at row ${ri + 1} col ${ci + 1}`,
+          `the cell at row ${ri + 1} column ${ci + 1}`,
+          ...intersectionLabels,
+          // Content-aware aliases — brain can address by what the cell
+          // SAYS, e.g., target: "Fixed shape" → cell-r1-c1.
+          ...(preview ? [
+            preview, `the ${preview}`, `"${preview}"`, `the "${preview}" cell`,
+            `${preview} cell`, `cell saying ${preview}`,
+          ] : []),
+        ],
+        scribbleable: true,
+      });
+    });
+  });
+  return features;
 }
 
 // ── t_chart / kwl_chart / frayer_model (Phase 8 — organizers) ─────────────

@@ -44,6 +44,10 @@ import { buildNumberLineManifest } from '@/app/tutor/components/whiteboard/Numbe
 import { buildFractionBarManifest } from '@/app/tutor/components/whiteboard/FractionBarRenderer';
 import { buildGeometryManifest } from '@/app/tutor/components/whiteboard/GeometryRenderer';
 import { solveGeometry } from '@/lib/tutor/diagrams/geometry-solver';
+import {
+  buildComparisonTableManifest,
+  solveComparisonTable,
+} from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -726,20 +730,44 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
   /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
-/** Minimal manifest for catalog-dispatched `show_diagram` commands.
- *  Returns one synthetic whole-item `region` feature — non-scribbleable,
- *  filtered out of the brain's per-feature snapshot listing (catalog's
- *  getSnapshot drops kind==='region'), but enough to make
- *  WhiteboardCatalog.append register the item so signature-based dedup
- *  works on the next turn. Per-kind structured manifests (one feature
- *  per curve / axis / equilibrium etc.) would be a follow-up — out of
- *  scope for the dedup fix. */
+/** Manifest dispatcher for catalog-dispatched `show_diagram` commands.
+ *
+ *  Phase 1 (whiteboard markup initiative, 2026-05-13 audit) routes
+ *  organizer-shaped kinds through per-kind rich manifest builders so the
+ *  brain can address rows / cols / cells / stages by name and
+ *  tutor_scribble lands. Add cases as Phase 2 ships more kinds.
+ *
+ *  Unmigrated kinds fall through to the impoverished catch-all: one
+ *  synthetic whole-item `region` feature (non-scribbleable, filtered out
+ *  of the snapshot per-feature listing) — enough to register the item in
+ *  WhiteboardCatalog so signature-based cross-turn dedup still works,
+ *  but the brain has no per-feature targets. */
 function buildDiagramManifest(cmd: {
   type?: string;
-  params?: { title?: string };
+  params?: Record<string, unknown> & { title?: string };
 }): FeatureManifestEntry[] {
   const type = cmd.type || 'diagram';
-  const title = cmd.params?.title;
+  const params = cmd.params ?? {};
+
+  switch (type) {
+    case 'comparison_table': {
+      // Solve first so the manifest sees the normalized figure shape
+      // (items/attributes/cells). On a malformed payload, fall through
+      // to the catch-all so we still register the item for dedup —
+      // the renderer's own error surface handles user feedback.
+      try {
+        const figure = solveComparisonTable(params);
+        return buildComparisonTableManifest(figure);
+      } catch {
+        // fall through to catch-all
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  const title = typeof params.title === 'string' ? params.title : undefined;
   return [
     {
       name: `diagram-${type}`,

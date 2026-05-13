@@ -61,6 +61,35 @@ export interface BrainTurnInput {
    *  persistent student id. The brain reads it for past mastery, open
    *  gaps, and recent-session continuity. */
   studentProfileBlock?: string;
+  /** Targets the brain passed to tutor_scribble last turn that the
+   *  runtime silently dropped (no_match / whole-item alias / iframe).
+   *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
+   *  promised marks did not land — and can adjust narration on this
+   *  turn if it references those features again. One-turn lifetime:
+   *  the orchestrator pushes here at silent-drop in turn N, the next
+   *  brain call in turn N+1 reads + clears. Cheaper than judge-side
+   *  detection and compatible with the Round-7+ silent-drop guardrail
+   *  (next-turn advisory, not same-turn rejection — no audio cascade).
+   *  Whiteboard markup initiative, Phase 1 (audit 2026-05-13). */
+  unrealizedMarks?: string[];
+  /** show_* tool calls the orchestrator collapsed via cross-turn dedup
+   *  last turn (signature already in WhiteboardCatalog → no re-render
+   *  needed). Without this signal, the brain assumes its re-render
+   *  landed and speaks AS IF the new version is on the board — when
+   *  in fact the original is still showing. Catastrophe observed
+   *  2026-05-13 G5 comparison_table session: brain emitted a second
+   *  comparison_table with reworded cells, structuralAxesFor dedup
+   *  fired (correct — axes match), brain then quizzed the student
+   *  against ITS unrendered version's cell strings ("Slide past each
+   *  other") while the rendered table had different strings ("Flows
+   *  freely"). Student gave the correct answer for the visible table
+   *  and was told they were wrong.
+   *
+   *  Surfaces as `<deduplicated_renders>` advisory. Brain reads it
+   *  and routes through tutor_scroll_whiteboard / tutor_scribble
+   *  against the existing item, accepts the existing rendered content
+   *  as canonical, and stops verbalizing "let me get the chart up". */
+  deduplicatedShows?: string[];
   /** Statement of the problem the student is currently working on
    *  (most-recently-rendered showProblem / show_segment_card / generated
    *  problem). Surfaces as a dedicated `<active_problem>` block above the
@@ -666,6 +695,50 @@ function formatTopicNotesStateBlock(state: BrainTurnInput['topicNotesState']): s
   );
 }
 
+/**
+ * Render the `<unrealized_marks>` advisory block. Empty string when
+ * the runtime did not silent-drop any scribble last turn. Surfaces the
+ * failed target string(s) so the brain learns its narration was not
+ * matched by a visual mark — and adjusts on this turn if it references
+ * the same feature again. NOT a tool-result rejection (which would
+ * trigger the Round-7+ retry cascade); informational only.
+ */
+function formatUnrealizedMarksBlock(marks?: string[]): string {
+  if (!marks || marks.length === 0) return '';
+  const list = marks.map((t) => `- target="${t}"`).join('\n');
+  return (
+    `<unrealized_marks>\n` +
+    `Last turn, the following tutor_scribble calls did NOT land on any feature on the whiteboard:\n` +
+    `${list}\n\n` +
+    `Do NOT re-emit the same scribble — the target was not addressable. If you need to reference one of these features again this turn, either: (a) consult the boardSnapshot for the actual feature name and use that verbatim, (b) speak about the feature without claiming a visual mark, or (c) re-render the underlying item with more structural detail so the part you want to mark exists as a feature.\n` +
+    `</unrealized_marks>\n\n`
+  );
+}
+
+/**
+ * Render the `<deduplicated_renders>` advisory block. Empty string when
+ * the runtime did not dedup any show_* calls last turn. Tells the brain
+ * its re-render attempts were collapsed — the original is still
+ * canonical on the board. Without this, the brain teaches against its
+ * mental (unrendered) version of the figure's content and quizzes the
+ * student on values they never saw.
+ */
+function formatDeduplicatedShowsBlock(shows?: string[]): string {
+  if (!shows || shows.length === 0) return '';
+  const list = shows.map((s) => `- ${s}`).join('\n');
+  return (
+    `<deduplicated_renders>\n` +
+    `Last turn, the following show_* tool calls were DEDUPLICATED (not re-rendered) because their structural axes already match an existing item on the whiteboard:\n` +
+    `${list}\n\n` +
+    `What is currently rendered on the board is the ORIGINAL item, NOT the version you just tried to emit. Do NOT:\n` +
+    `- Narrate "let me get the chart up" / "let me show you the table" — the chart IS already up.\n` +
+    `- Quiz the student against the cell content YOU just emitted — only the ORIGINAL item's cell content is visible to them.\n` +
+    `- Re-emit the same show_* with reworded content — the dedup will fire again.\n\n` +
+    `Instead: read the current cell content from the boardSnapshot, then use tutor_scroll_whiteboard / tutor_scribble to direct attention to existing cells, OR call show_* with genuinely different structural axes (different items / attributes / claim / etc.) if a new figure is warranted.\n` +
+    `</deduplicated_renders>\n\n`
+  );
+}
+
 function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
   if (!active?.statement) return '';
   return (
@@ -713,6 +786,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
+  const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
   if (pacingHint) {
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
@@ -727,6 +802,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    unrealizedMarksBlock +
+    deduplicatedShowsBlock +
     studentStateBlock +
     pacePreferenceBlock +
     topicNotesBlock +
@@ -845,6 +922,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     : '';
   const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
+  const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
   if (pacingHint) {
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
@@ -859,6 +938,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    unrealizedMarksBlock +
+    deduplicatedShowsBlock +
     studentStateBlock +
     pacePreferenceBlock +
     topicNotesBlock +

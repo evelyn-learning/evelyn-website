@@ -13,6 +13,7 @@ import type {
   OrganizerFigure,
   HierarchyPyramidFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+import { comparisonTableFeatureNames } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 // ── Unit circle ───────────────────────────────────────────────────────────
 export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure }) {
@@ -315,21 +316,44 @@ export function CatalogGovernmentBranchesRenderer({ figure }: { figure: Governme
 // ── Comparison table ──────────────────────────────────────────────────────
 export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonTableFigure }) {
   const { items, attributes, cells, title } = figure;
+  const N = comparisonTableFeatureNames;
+  // data-feature values come from the SHARED naming helper that
+  // buildComparisonTableManifest also calls — manifest names and DOM
+  // attrs cannot drift by construction. Attribute name is `data-feature`
+  // (matches the project-wide convention; WhiteboardCanvas overlay
+  // queries `[data-feature="..."]` at line ~1083). See
+  // src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social.ts.
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <table className="border-collapse text-sm">
+      <table data-feature={N.table} className="border-collapse text-sm">
         <thead>
-          <tr>
+          <tr data-feature={N.headerRow}>
             <th className="px-3 py-2 border border-gray-400 bg-gray-100"></th>
-            {items.map((it, i) => <th key={i} className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900">{it}</th>)}
+            {items.map((it, i) => (
+              <th
+                key={i}
+                data-feature={N.col(i)}
+                className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900"
+              >
+                {it}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {attributes.map((attr, ri) => (
-            <tr key={ri}>
+            <tr key={ri} data-feature={N.row(ri)}>
               <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left">{attr}</th>
-              {cells[ri].map((c, ci) => <td key={ci} className="px-3 py-2 border border-gray-300">{c}</td>)}
+              {cells[ri].map((c, ci) => (
+                <td
+                  key={ci}
+                  data-feature={N.cell(ri, ci)}
+                  className="px-3 py-2 border border-gray-300"
+                >
+                  {c}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

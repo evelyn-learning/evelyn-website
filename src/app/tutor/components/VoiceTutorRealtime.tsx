@@ -639,6 +639,37 @@ export function VoiceTutorRealtime({
   const lastBridgePhraseRef = useRef<string>('');
   const lastDisclaimerPhraseRef = useRef<string>('');
 
+  // Whiteboard markup initiative — Phase 1 (audit 2026-05-13).
+  // Targets the brain passed to tutor_scribble that the runtime silently
+  // dropped (no_match / whole-item alias / iframe). One-turn lifetime:
+  // pushed at each silent-drop branch below, drained into the next
+  // brain stream request as `<unrealized_marks>` advisory, then cleared.
+  // Compatible with Round-7+ silent-drop: surfaces NEXT turn, not same
+  // turn — no audio cascade. Brain reads the advisory and adjusts
+  // narration so it stops promising marks that won't land.
+  const unrealizedMarkRef = useRef<string[]>([]);
+  // show_* tool calls collapsed by cross-turn dedup (structuralAxesFor
+  // axes match an existing catalog item). The brain otherwise has no
+  // way to know its re-render was suppressed and proceeds to teach
+  // against the cell content from the second (unrendered) emission —
+  // catastrophe observed 2026-05-13 G5 comparison_table session where
+  // student typed the correct cell from the visible table and brain
+  // corrected to a cell from its unrendered re-render. Same pattern as
+  // unrealizedMarkRef: drained into the next brain stream request as
+  // `<deduplicated_renders>` advisory, cleared after dispatch.
+  const deduplicatedShowsRef = useRef<string[]>([]);
+  // Deferred auto-newPage from a prior segment advance. The advance_lesson
+  // handler used to emit a fresh newPage UNCONDITIONALLY on every segment
+  // transition (line ~2440-2455), which leaves a blank page when the next
+  // segment's teaching content is structurally identical to the prior
+  // segment's (organizer dedup fires, no fresh content lands). Now we
+  // store the would-be newPage here and only fire it on the next batch
+  // IF at least one teaching command in that batch will actually render
+  // (not dedup). If every teaching command dedups, the page stays
+  // deferred — preventing the empty-page-after-advance bug observed
+  // 2026-05-13 (10) session.
+  const pendingAdvanceNewPageRef = useRef<{ title: string; segmentId: string } | null>(null);
+
   // Engagement / fatigue tracking. We track the last N student reply lengths
   // and fire a diagnostic prompt when replies collapse to short monosyllables
   // ("ok", "k", "yea") — a reliable signal the student has disengaged or is
@@ -2417,22 +2448,18 @@ export function VoiceTutorRealtime({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newPageTitle = loHeading || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newPageCmd: any = {
-              action: 'newPage',
-              title: typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '',
-            };
-            // Append the newPage to the running command stream so the
-            // canvas page-grouping picks it up. Done OUTSIDE this
-            // dispatch loop via the live commands array setter that
-            // the canvas listens to.
-            try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onWhiteboardCommand?.([newPageCmd as any]);
-              console.log(`[VoiceTutorRealtime] auto-newPage on segment advance → "${next}" ("${newPageCmd.title}")`);
-              onDebugEvent?.('auto_newpage_on_advance', `${next}: ${newPageCmd.title}`);
-            } catch (err) {
-              console.warn('[VoiceTutorRealtime] auto-newPage emission failed:', err);
-            }
+            const pageTitleStr = typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '';
+            // Defer the auto-newPage until the next batch — fire it only
+            // if that batch contains a teaching command that will
+            // actually render (not get dedup'd). See
+            // pendingAdvanceNewPageRef declaration for rationale.
+            // Observed 2026-05-13 (10) session: brain advanced hook →
+            // concept-comparison, auto-newPage created page 2, next
+            // turn's show_diagram dedup'd against page 1's chart, leaving
+            // page 2 blank.
+            pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
+            console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
+            onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
           }
@@ -2836,7 +2863,32 @@ export function VoiceTutorRealtime({
       ]);
       const firstTeachingCmd = processed.find((c) => teachingActions.has(String(c.action)));
       const alreadyHasNewPage = processed[0]?.action === 'newPage';
-      if (firstTeachingCmd && !alreadyHasNewPage) {
+      // Whiteboard markup Phase 1 hotfix 5: when the first teaching
+      // command is an organizer-kind show_diagram and its signature
+      // already exists in the catalog, the dedup gate will drop it.
+      // Injecting a synthetic newPage in front of a guaranteed-dedup
+      // leaves an empty page behind (observed 2026-05-13 (6) session:
+      // student saw a blank "page 2" after the brain re-emitted
+      // comparison_table). Suppress injection in that case.
+      const isOrganizerKindForAuto = firstTeachingCmd
+        && String(firstTeachingCmd.action) === 'showDiagram'
+        && typeof (firstTeachingCmd as { type?: string }).type === 'string'
+        && new Set([
+          'comparison_table', 't_chart', 'frayer_model',
+          'hierarchy_pyramid', 'argument_structure', 'government_branches',
+          'body_system', 'life_cycle', 'water_cycle', 'rock_cycle',
+        ]).has((firstTeachingCmd as { type?: string }).type as string);
+      const wouldDedupOnExistingOrganizer = isOrganizerKindForAuto
+        && !!catalogRef.current.findBySignature(
+          buildShowSignature(String(firstTeachingCmd!.action), firstTeachingCmd),
+        );
+      if (firstTeachingCmd && !alreadyHasNewPage && wouldDedupOnExistingOrganizer) {
+        console.log(
+          '[VoiceTutorRealtime] Suppressed auto-newPage — first teaching command is an organizer-kind show_diagram that will dedup against existing item; injecting newPage would leave a blank page',
+        );
+        onDebugEvent?.('auto_new_page_suppressed_organizer_dedup', String((firstTeachingCmd as { type?: string }).type ?? ''));
+      }
+      if (firstTeachingCmd && !alreadyHasNewPage && !wouldDedupOnExistingOrganizer) {
         const nextTitle =
           ('label' in firstTeachingCmd && typeof (firstTeachingCmd as { label?: string }).label === 'string' && (firstTeachingCmd as { label?: string }).label)
           || ('title' in firstTeachingCmd && typeof (firstTeachingCmd as { title?: string }).title === 'string' && (firstTeachingCmd as { title?: string }).title)
@@ -2852,6 +2904,50 @@ export function VoiceTutorRealtime({
       // Either way, clear both flags so this fires at most once per event.
       recentlyFinishedProblemRef.current = null;
       topicShiftPendingRef.current = null;
+    }
+
+    // Flush a deferred auto-newPage from a prior segment advance — but
+    // only if this batch has at least one teaching command that will
+    // actually render (i.e. signature does not match an existing catalog
+    // item). If every teaching command would dedup, keep the newPage
+    // deferred for a future batch — the brain may emit fresh content
+    // later. See pendingAdvanceNewPageRef declaration.
+    if (pendingAdvanceNewPageRef.current) {
+      const teachingActionSet = new Set([
+        'showEquation', 'showDiagram', 'showGraph', 'showTable', 'showProblem',
+        'showSolution', 'showSvgDiagram', 'showGeometry', 'showCode',
+        'showDerivation', 'showRayDiagram', 'showSpringMass', 'showWave',
+        'showFoodWeb', 'showMotionDiagram', 'showProjectileMotion',
+        'showSimpleMachine', 'showPendulum', 'showVector', 'showCoordinatePlane',
+        'showScatterPlot', 'showCycleDiagram', 'showConceptMap',
+        'showOrbitalDiagram', 'showPedigree', 'showCellDiagram', 'showDna',
+        'showFreeBodyDiagram', 'showEnergyBars', 'showCollision',
+        'showReactionCoordinate', 'showPunnett', 'showLewis', 'showPeriodicTable',
+        'showAnnotatedPassage', 'showCallStack', 'showFlowchart',
+        'showManipulative', 'showNumberLine', 'showFractionBar', 'showTree',
+        'showTimeline', 'showMap', 'showVennDiagram', 'showStats',
+        'showUnitCircle', 'showCircuit', 'showMolecule', 'showSegmentCard',
+        'showWorkedExample',
+      ]);
+      const hasFreshTeaching = processed.some((cmd) => {
+        const a = String(cmd.action);
+        if (!teachingActionSet.has(a)) return false;
+        try {
+          const sig = buildShowSignature(a, cmd);
+          return !catalogRef.current.findBySignature(sig);
+        } catch {
+          return true; // signature failure shouldn't suppress legitimate page
+        }
+      });
+      if (hasFreshTeaching) {
+        const deferred = pendingAdvanceNewPageRef.current;
+        processed = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand, ...processed];
+        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${deferred.title}")`);
+        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title}`);
+        pendingAdvanceNewPageRef.current = null;
+      } else {
+        console.log('[VoiceTutorRealtime] auto-newPage on segment advance STILL deferred — no fresh teaching content this batch');
+      }
     }
 
     // Detect Final Answer in this batch so the NEXT batch gets an auto-
@@ -2933,12 +3029,44 @@ export function VoiceTutorRealtime({
       // chat-history advice to use scroll was drowned out.
       const signature = buildShowSignature(action, cmd);
       const existing = catalogRef.current.findBySignature(signature);
+      // Diagnostic: log every show_* call's dedup decision so we can
+      // see WHY a dedup didn't fire (signature mismatch vs newPage bypass
+      // vs no existing). Pruning candidate — keep until comparison_table
+      // dedup is verified rock-solid across sessions, then drop.
+      if (action !== 'newPage' && !META_ACTIONS.has(action)) {
+        console.log(
+          '[VoiceTutor] dedup-check: action=%s, sig=%s, existing=%s, newPageThisBatch=%s, newPageThisTurnRef=%s, catalogSize=%d',
+          action,
+          signature.length > 100 ? signature.slice(0, 100) + '…' : signature,
+          existing ? existing.itemId : '(none)',
+          newPageThisBatch,
+          newPageThisTurnRef.current,
+          catalogRef.current.getItems().length,
+        );
+      }
       // Skip dedup when there's a newPage in the same batch OR earlier
       // in the same brain turn — brain explicitly wants this content on
       // a fresh page, even if it matches something on a prior page. The
       // turn-scoped guard catches the common pattern where new_page and
       // show_problem are emitted as separate tool calls in one turn.
-      if (existing && !newPageThisBatch && !newPageThisTurnRef.current) {
+      // EXCEPTION (2026-05-13): organizer-shaped show_diagram kinds
+      // (comparison_table, t_chart, frayer_model, etc. — see
+      // structuralAxesFor) ALWAYS dedup against an existing
+      // structurally-identical item, regardless of newPage state. These
+      // kinds re-emit with reworded cells frequently and the brain has
+      // no legitimate reason to want a duplicate on a fresh page —
+      // observed session: brain emitted comparison_table 2× with same
+      // axes, both rendered, scribble target resolved ambiguously.
+      const cmdForAxes = cmd as { type?: string; params?: unknown };
+      const isOrganizerKind = action === 'showDiagram'
+        && typeof cmdForAxes.type === 'string'
+        && new Set([
+          'comparison_table', 't_chart', 'frayer_model',
+          'hierarchy_pyramid', 'argument_structure', 'government_branches',
+          'body_system', 'life_cycle', 'water_cycle', 'rock_cycle',
+        ]).has(cmdForAxes.type);
+      const dedupAllowedDespiteNewPage = isOrganizerKind;
+      if (existing && (dedupAllowedDespiteNewPage || (!newPageThisBatch && !newPageThisTurnRef.current))) {
         const inputIdx = commands.indexOf(cmd);
         if (inputIdx >= 0) {
           duplicates[inputIdx] = {
@@ -2955,6 +3083,20 @@ export function VoiceTutorRealtime({
         cmdWithId._duplicateOf = existing.itemId;
         console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
         onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        // Whiteboard markup Phase 1: record the dedup so the brain
+        // learns next turn that its re-emission was suppressed. Include
+        // the show_diagram type when present so the advisory reads
+        // naturally for the brain ("show_diagram(comparison_table) →
+        // existing showDiagram-1"). One-turn lifetime: drained into
+        // the next brain stream request and cleared after dispatch.
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const diagType = (cmd as any).type;
+          const label = typeof diagType === 'string' && diagType.length > 0
+            ? `${action}(${diagType}) → existing ${existing.itemId}`
+            : `${action} → existing ${existing.itemId}`;
+          deduplicatedShowsRef.current.push(label);
+        }
         continue;
       }
 
@@ -3034,6 +3176,8 @@ export function VoiceTutorRealtime({
       if (!raw) {
         // Round-7+ Fix: silently drop empty-target scribble. Soft
         // pedagogy aid; not worth a retry cascade.
+        // Phase 1 (2026-05-13): no advisory for empty target — brain
+        // can't act on an empty string anyway.
         console.warn('[VoiceTutor] scribble-reject (silent drop): empty target');
         onDebugEvent?.('scribble_reject_empty_silent', '(no target)');
         cmdAny._scribbleRejected = true;
@@ -3052,6 +3196,11 @@ export function VoiceTutorRealtime({
         // doesn't break the lesson, and the brain's spoken narration
         // is independently usable. Drop the bad scribble silently and
         // let the speech land cleanly without a retry cascade.
+        //
+        // Phase 1 (2026-05-13): also record the failed target so the
+        // brain learns next turn via `<unrealized_marks>` advisory.
+        // NOT a same-turn rejection — fires NEXT turn only.
+        unrealizedMarkRef.current.push(raw);
         console.warn('[VoiceTutor] scribble-reject (silent drop): target="%s" (%s)', raw, result.reason);
         onDebugEvent?.('scribble_reject_no_match_silent', `"${raw}" (${result.reason})`);
         cmdAny._scribbleRejected = true;
@@ -3069,7 +3218,11 @@ export function VoiceTutorRealtime({
         // tutor_scribble is a soft pedagogy aid; failing to scribble
         // doesn't break the lesson, and surfacing as a rejection
         // triggers a retry cascade with overlapping audio.
+        // Phase 1: record so brain learns next turn (whole-item alias is
+        // a real signal — brain promised a sub-feature mark but only
+        // pointed at the wrapper).
         const isWholeItemAlias = result.canonical === result.itemId;
+        unrealizedMarkRef.current.push(raw);
         console.warn('[VoiceTutor] scribble-reject (silent drop): target="%s" → %s (%s)', raw, isWholeItemAlias ? 'whole-item alias' : 'iframe', result.action);
         onDebugEvent?.(isWholeItemAlias ? 'scribble_reject_whole_item_silent' : 'scribble_reject_iframe_silent', `"${raw}" → ${result.action}`);
         cmdAny._scribbleRejected = true;
@@ -4486,6 +4639,20 @@ export function VoiceTutorRealtime({
             activeProblem: currentProblemRef.current?.statement
               ? { statement: currentProblemRef.current.statement }
               : undefined,
+            // Whiteboard markup Phase 1 (2026-05-13 audit): drain the
+            // unrealized-marks buffer accumulated during the prior turn's
+            // tutor_scribble silent-drops. Surfaces to the brain as the
+            // `<unrealized_marks>` advisory so it learns its scribble
+            // narration did not produce a visual mark — and adjusts on
+            // this turn. NOT a tool-result rejection (no audio cascade).
+            // Cleared immediately after we snapshot the array so the
+            // next turn starts empty.
+            unrealizedMarks: unrealizedMarkRef.current.length > 0
+              ? [...unrealizedMarkRef.current] : undefined,
+            // Whiteboard markup Phase 1: dedup-blindness fix. Sibling
+            // of unrealizedMarks — see deduplicatedShowsRef declaration.
+            deduplicatedShows: deduplicatedShowsRef.current.length > 0
+              ? [...deduplicatedShowsRef.current] : undefined,
             // Pacing v2: student-state snapshot for the brain prompt.
             // Block omitted by the formatter when no signal is
             // interesting. Phase 2 includes thresholds → formatter
@@ -4544,6 +4711,13 @@ export function VoiceTutorRealtime({
           }),
         });
         pacingTelemetryRef.current = [];
+        // Whiteboard markup Phase 1: drain the unrealized-marks +
+        // deduplicated-shows buffers immediately after the fetch is
+        // dispatched (body already serialized into the request).
+        // One-turn lifetime per the grilling decision — surfaced once,
+        // then cleared. Mirrors the pacingTelemetryRef clear pattern.
+        unrealizedMarkRef.current = [];
+        deduplicatedShowsRef.current = [];
         if (!res.ok || !res.body) {
           const err = res.body ? await res.text() : '(no body)';
           console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);

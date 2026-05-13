@@ -311,11 +311,25 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
 
     switch (s.shape) {
       case 'circle': {
+        // Match the live overlay's radius-cap + aspect-ratio logic
+        // (WhiteboardCanvas.tsx:1244-1271). Without the cap, wide cells
+        // (e.g. a comparison_table cell ~150×30 CSS px) produce a 4:1
+        // elongated oval; the live overlay caps both radii to
+        // min(vw, vh) * 0.08 so the mark stays near-circular at the
+        // target's centroid. Observed 2026-05-13 session: scribble on
+        // "Gas" column header looked like a perfect circle in the live
+        // WB but a pronounced oval in the exported PDF.
+        const radiusCap = Math.min(vw, vh) * 0.08;
+        const rxRaw = Math.max(vw * 0.015, rw / 2 + 4);
+        const ryRaw = Math.max(vh * 0.015, rh / 2 + 4);
+        const aspectRatio = Math.max(rw, rh) / Math.max(0.0001, Math.min(rw, rh));
+        const isLineLike = aspectRatio > 3;
+        const cap = isLineLike ? radiusCap : radiusCap * 1.3;
         const ellipse = document.createElementNS(SVG_NS, 'ellipse');
         setAttrs(ellipse, {
           cx, cy,
-          rx: Math.max(vw * 0.015, rw / 2 + 4),
-          ry: Math.max(vh * 0.015, rh / 2 + 4),
+          rx: Math.min(rxRaw, cap),
+          ry: Math.min(ryRaw, cap),
           fill: 'none', stroke: color,
           'stroke-width': Math.max(2, vw / 200),
         });
@@ -592,11 +606,21 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
 
       switch (s.shape) {
         case 'circle': {
+          // Same cap as injectHtmlScribbleOverlay + WhiteboardCanvas
+          // live overlay: prevents wide bbox targets from producing
+          // pronounced ovals. See injectHtmlScribbleOverlay's 'circle'
+          // case for rationale (2026-05-13 PDF-vs-live divergence).
+          const radiusCap = Math.min(vw, vh) * 0.08;
+          const rxRaw = Math.max(4, rw / 2);
+          const ryRaw = Math.max(3, rh / 2);
+          const aspectRatio = Math.max(rw, rh) / Math.max(0.0001, Math.min(rw, rh));
+          const isLineLike = aspectRatio > 3;
+          const cap = isLineLike ? radiusCap : radiusCap * 1.3;
           const ellipse = doc.createElementNS(SVG_NS, 'ellipse');
           addAttrs(ellipse, {
             cx, cy,
-            rx: Math.max(4, rw / 2),
-            ry: Math.max(3, rh / 2),
+            rx: Math.min(rxRaw, cap),
+            ry: Math.min(ryRaw, cap),
             fill: 'none',
             stroke: color,
             'stroke-width': Math.max(2, vw / 200),
