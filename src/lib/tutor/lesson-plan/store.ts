@@ -1289,6 +1289,7 @@ import { SEED_TEST_G7_MATH_DIRECT_INVERSE_VARIATION } from './seeds/test-g7-math
 import { SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE } from './seeds/test-hs-bio-sex-linked-pedigree';
 import { SEED_TEST_G7_SS_APOLLO_MISSIONS } from './seeds/test-g7-ss-apollo-missions';
 import { SEED_TEST_RENDERER_SMOKE_CALC } from './seeds/test-renderer-smoke-calc';
+import { SEED_TEST_G5_COMPARISON_TABLE } from './seeds/test-g5-comparison-table';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -2520,6 +2521,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_HS_BIO_SEX_LINKED_PEDIGREE,
   SEED_TEST_G7_SS_APOLLO_MISSIONS,
   SEED_TEST_RENDERER_SMOKE_CALC,
+  SEED_TEST_G5_COMPARISON_TABLE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

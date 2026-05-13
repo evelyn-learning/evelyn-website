@@ -741,12 +741,109 @@ function wholeItemLabelsFor(action: string, title?: string): string[] {
 }
 
 /**
+ * Per-kind structural-signature rules for "organizer" renderers where the
+ * brain re-emits the SAME diagram on a follow-up turn with slightly
+ * different wording for the content cells (e.g., comparison_table emitted
+ * twice with cells=[["Fixed shape", …]] then [["Fixed", …]]).
+ *
+ * The generic JSON-canonicalization path treats those as DIFFERENT items
+ * because the cell strings differ. The cross-turn dedup at
+ * VoiceTutorRealtime.handleWhiteboardCommand misses, the same figure
+ * renders twice, and the student sees stacked near-duplicates.
+ *
+ * For these kinds the structural identity lives in the AXES (headers /
+ * items / attributes / term / claim / stage labels), not the content
+ * cells. Returning a signature built from axes only collapses those
+ * near-duplicates correctly.
+ *
+ * Confirmed re-emission cases (audit 2026-05-13):
+ *   - showTable: headers structural, rows content (legacy F-13).
+ *   - showDiagram(comparison_table): items + attributes structural,
+ *     cells content (today's confirmed bug).
+ *   - showDiagram(t_chart): left/rightHeader structural, items content.
+ *   - showDiagram(frayer_model): term structural, definition/examples/
+ *     nonExamples content.
+ *   - showDiagram(hierarchy_pyramid): tier LABELS structural,
+ *     descriptions content.
+ *   - showDiagram(argument_structure): claim structural, evidence/
+ *     reasoning content.
+ *   - showDiagram(government_branches): country + branch NAMES
+ *     structural, bodies/powers content.
+ *   - showDiagram(body_system): system + part LABELS structural,
+ *     descriptions content.
+ *   - showDiagram(life_cycle | water_cycle | rock_cycle): stage LABELS
+ *     structural, descriptions content.
+ *
+ * Add a kind to this dispatcher when you see the brain re-emit the SAME
+ * figure with reworded cells on a follow-up turn and dedup misses.
+ *
+ * Kinds intentionally NOT here:
+ *   - kwl_chart, sentence_diagram: content IS the structural identity.
+ *   - population_pyramid, production_possibilities, business_cycle and
+ *     other numeric kinds: re-emit with different numbers is a genuinely
+ *     different plot.
+ *   - historical_timeline: events list may grow turn-to-turn (brain
+ *     adding events as discussion progresses) — collapsing too eagerly
+ *     would hide the new events.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function structuralAxesFor(action: string, cmd: any): { tag: string; axes: unknown } | null {
+  // Header / label normalization: lower-cased + whitespace-collapsed so
+  // "Particle Motion" vs "Particle motion" vs "Particle  Motion" all
+  // collapse to the same structural identity. Brain re-emissions
+  // frequently drift on header casing alone.
+  const normLabel = (s: unknown): string =>
+    typeof s === 'string' ? s.trim().toLowerCase().replace(/\s+/g, ' ') : '';
+  const normList = (xs: unknown): string[] =>
+    Array.isArray(xs) ? xs.map(normLabel) : [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const labelsOf = (xs: unknown, key: string): string[] =>
+    Array.isArray(xs)
+      ? xs.map((x) => (x && typeof x === 'object' ? normLabel((x as any)[key]) : normLabel(x)))
+      : [];
+
+  if (action === 'showTable') {
+    return { tag: 'showTable', axes: { headers: normList(cmd?.headers) } };
+  }
+  if (action === 'showDiagram' && cmd && typeof cmd === 'object') {
+    const type = typeof cmd.type === 'string' ? cmd.type : '';
+    const params: Record<string, unknown> = cmd.params && typeof cmd.params === 'object' ? cmd.params : {};
+    switch (type) {
+      case 'comparison_table':
+        return { tag: 'showDiagram:comparison_table', axes: { items: normList(params.items), attributes: normList(params.attributes) } };
+      case 't_chart':
+        return { tag: 'showDiagram:t_chart', axes: { leftHeader: normLabel(params.leftHeader), rightHeader: normLabel(params.rightHeader) } };
+      case 'frayer_model':
+        return { tag: 'showDiagram:frayer_model', axes: { term: normLabel(params.term) } };
+      case 'hierarchy_pyramid':
+        return { tag: 'showDiagram:hierarchy_pyramid', axes: { tierLabels: labelsOf(params.tiers, 'label') } };
+      case 'argument_structure':
+        return { tag: 'showDiagram:argument_structure', axes: { claim: normLabel(params.claim) } };
+      case 'government_branches':
+        return { tag: 'showDiagram:government_branches', axes: { country: normLabel(params.country), branchNames: labelsOf(params.branches, 'name') } };
+      case 'body_system':
+        return { tag: 'showDiagram:body_system', axes: { system: normLabel(params.system), partLabels: labelsOf(params.parts, 'label') } };
+      case 'life_cycle':
+      case 'water_cycle':
+      case 'rock_cycle':
+        return { tag: `showDiagram:${type}`, axes: { stageLabels: labelsOf(params.stages, 'label') } };
+      default:
+        return null;
+    }
+  }
+  return null;
+}
+
+/**
  * Stable hash of a show_* tool's args. Used for duplicate detection — two
  * calls with the same canonicalized JSON are treated as the same item.
  *
  * Strips bookkeeping fields (id, action, _internal markers, computed
  * targetId/targetFeature stamps) before hashing so signatures collide on
  * the user-meaningful payload only. Keys are sorted for determinism.
+ *
+ * For "organizer" kinds (see `structuralAxesFor`) the signature collapses
+ * to structural axes only so reworded content cells still dedup.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildShowSignature(action: string, cmd: any): string {
@@ -788,6 +885,18 @@ export function buildShowSignature(action: string, cmd: any): string {
     }
     return out;
   };
+  // Kind-aware structural identity (organizer renderers — see
+  // `structuralAxesFor`). When a rule applies, the axes alone determine
+  // the signature so reworded content cells still dedup.
+  const structural = structuralAxesFor(action, cmd);
+  if (structural) {
+    try {
+      return `${action}|${structural.tag}|${JSON.stringify(canon(structural.axes))}`;
+    } catch {
+      return `${action}|${structural.tag}|<unhashable>`;
+    }
+  }
+
   try {
     return `${action}|${JSON.stringify(canon(cmd))}`;
   } catch {

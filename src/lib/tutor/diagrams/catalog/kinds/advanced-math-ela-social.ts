@@ -190,15 +190,15 @@ export function solveComparisonTable(params: Record<string, unknown>): Compariso
   if (!Array.isArray(params.attributes) || params.attributes.length === 0) throw new Error('comparison_table: attributes required');
   const items = (params.items as unknown[]).map(String);
   const attributes = (params.attributes as unknown[]).map(String);
-  if (!Array.isArray(params.cells)) throw new Error('comparison_table: cells must be a matrix');
+  if (!Array.isArray(params.cells)) throw new Error('comparison_table: cells must be a 2D array shaped [attributes.length][items.length] (outer = rows = attributes, inner = columns = items).');
   const cells = (params.cells as unknown[][]).map((row, r) => {
     if (!Array.isArray(row) || row.length !== items.length) {
-      throw new Error(`comparison_table: cells[${r}] must have ${items.length} entries`);
+      throw new Error(`comparison_table: cells[${r}] has ${Array.isArray(row) ? row.length : 'n/a'} entries but must have ${items.length} (one per item — items are column headers). Shape required: cells[attributeIndex][itemIndex], so each inner row has items.length entries.`);
     }
     return (row as unknown[]).map(String);
   });
   if (cells.length !== attributes.length) {
-    throw new Error(`comparison_table: cells must have ${attributes.length} rows (one per attribute)`);
+    throw new Error(`comparison_table: cells has ${cells.length} rows but must have ${attributes.length} (one row per attribute — attributes are row labels). Shape required: cells[attributeIndex][itemIndex].`);
   }
   return { items, attributes, cells, title: typeof params.title === 'string' ? params.title : undefined };
 }

@@ -6215,6 +6215,14 @@ export function VoiceTutorRealtime({
           ];
         }
         onTranscriptUpdate([...transcriptRef.current]);
+        // Mirror the Realtime path (line ~1150): record the finalized tutor
+        // turn in the DemoInteraction stream. handleTranscriptUpdate's
+        // assistant branch returns early in claudeBrainMode (line ~1116), so
+        // without this call the interactions collection never sees tutor
+        // messages — and the admin-side PDF export (which rebuilds transcripts
+        // from interactions, not TutorSession.transcript) renders 0 tutor
+        // messages even though Mongo has them.
+        onTrackInteraction?.('message', finalText, undefined, 'tutor');
       } else if (totalToolNamesSeen.length > 0) {
         const placeholderEntry: TranscriptEntry = {
           id: `tutor-${Date.now()}`,
@@ -6252,7 +6260,7 @@ export function VoiceTutorRealtime({
       }
       setStreamingEntryActive(false);
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
