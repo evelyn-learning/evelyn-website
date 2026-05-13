@@ -156,6 +156,110 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
   return { events, title: typeof params.title === 'string' ? params.title : undefined };
 }
 
+// ── sentence_diagram manifest (Phase 2b — SVG organizer) ──────────────────
+export const sentenceDiagramFeatureNames = {
+  diagram: 'diagram',
+  subject: 'subject',
+  verb: 'verb',
+  object: 'object',
+  modifier: (i: number): string => `modifier-${i + 1}`,
+};
+
+export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): FeatureManifestEntry[] {
+  const N = sentenceDiagramFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: figure.title ? `sentence diagram: ${figure.title}` : 'sentence diagram',
+      labels: ['diagram', 'the diagram', 'sentence diagram', 'the sentence'],
+      scribbleable: true,
+    },
+    {
+      name: N.subject,
+      kind: 'label',
+      description: `subject: "${figure.subject}"`,
+      labels: ['subject', 'the subject', figure.subject, `"${figure.subject}"`],
+      scribbleable: true,
+    },
+    {
+      name: N.verb,
+      kind: 'label',
+      description: `verb: "${figure.verb}"`,
+      labels: ['verb', 'the verb', 'predicate', 'the predicate', figure.verb, `"${figure.verb}"`],
+      scribbleable: true,
+    },
+  ];
+  if (figure.object) {
+    features.push({
+      name: N.object,
+      kind: 'label',
+      description: `object: "${figure.object}"`,
+      labels: ['object', 'the object', 'direct object', figure.object, `"${figure.object}"`],
+      scribbleable: true,
+    });
+  }
+  (figure.modifiers ?? []).forEach((m, i) => {
+    features.push({
+      name: N.modifier(i),
+      kind: 'label',
+      description: `modifier ${i + 1}: "${m.word}" (on ${m.attachTo})`,
+      labels: [
+        `modifier ${i + 1}`, `modifier-${i + 1}`,
+        m.word, `the ${m.word}`, `"${m.word}"`,
+        `${m.attachTo} modifier`,
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── historical_timeline manifest (Phase 2b — SVG organizer) ───────────────
+export const historicalTimelineFeatureNames = {
+  timeline: 'timeline',
+  axis: 'axis',
+  event: (i: number): string => `event-${i + 1}`,
+};
+
+export function buildHistoricalTimelineManifest(figure: HistoricalTimelineFigure): FeatureManifestEntry[] {
+  const N = historicalTimelineFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.timeline,
+      kind: 'region',
+      description: figure.title ? `timeline: ${figure.title}` : 'timeline',
+      labels: ['timeline', 'the timeline', 'the diagram'],
+      scribbleable: true,
+    },
+    {
+      name: N.axis,
+      kind: 'label',
+      description: 'timeline axis',
+      labels: ['axis', 'the axis', 'the line', 'the timeline axis'],
+      scribbleable: true,
+    },
+  ];
+  figure.events.forEach((e, i) => {
+    const label = String(e.label ?? '').trim();
+    features.push({
+      name: N.event(i),
+      kind: 'area',
+      description: label ? `event ${i + 1} (${e.date}): "${label}"` : `event ${i + 1} (${e.date})`,
+      labels: [
+        `event ${i + 1}`, `event-${i + 1}`,
+        e.date, `the ${e.date} event`,
+        ...(label ? [
+          label, `the ${label}`, `"${label}"`,
+          `event ${i + 1}: "${label}"`,
+        ] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
 // ── government_branches (Phase 7) ─────────────────────────────────────────
 export interface GovernmentBranchesFigure {
   country: string;
@@ -864,4 +968,43 @@ export function solveHierarchyPyramid(params: Record<string, unknown>): Hierarch
     baseFirst: params.baseFirst !== false,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+// ── hierarchy_pyramid manifest (Phase 2b — SVG organizer) ─────────────────
+export const hierarchyPyramidFeatureNames = {
+  pyramid: 'pyramid',
+  tier: (i: number): string => `tier-${i + 1}`,
+};
+
+/** Manifest mirrors the renderer's `ordered` array exactly so `tier-1`
+ *  always refers to the tier the renderer drew FIRST (top of the SVG).
+ *  Renderer: `ordered = baseFirst ? tiers : tiers.reverse()`. */
+export function buildHierarchyPyramidManifest(figure: HierarchyPyramidFigure): FeatureManifestEntry[] {
+  const N = hierarchyPyramidFeatureNames;
+  const ordered = figure.baseFirst ? [...figure.tiers] : [...figure.tiers].reverse();
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.pyramid,
+      kind: 'region',
+      description: figure.title ? `pyramid: ${figure.title}` : 'pyramid',
+      labels: ['pyramid', 'the pyramid', 'the hierarchy', 'the diagram'],
+      scribbleable: true,
+    },
+  ];
+  ordered.forEach((t, i) => {
+    const label = String(t.label ?? '').trim();
+    const ordinal = i === 0 ? 'top' : i === ordered.length - 1 ? 'bottom' : `${i + 1}-th from top`;
+    features.push({
+      name: N.tier(i),
+      kind: 'area',
+      description: label ? `tier ${i + 1} (${ordinal}): "${label}"` : `tier ${i + 1} (${ordinal})`,
+      labels: [
+        `tier ${i + 1}`, `tier-${i + 1}`,
+        `${ordinal} tier`, `the ${ordinal} tier`,
+        ...(label ? [label, `the ${label}`, `"${label}"`, `${label} tier`] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
 }

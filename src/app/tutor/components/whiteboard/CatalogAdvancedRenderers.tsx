@@ -20,6 +20,9 @@ import {
   frayerModelFeatureNames,
   argumentStructureFeatureNames,
   governmentBranchesFeatureNames,
+  sentenceDiagramFeatureNames,
+  historicalTimelineFeatureNames,
+  hierarchyPyramidFeatureNames,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 // ── Unit circle ───────────────────────────────────────────────────────────
@@ -173,24 +176,73 @@ export function CatalogInequalityGraphRenderer({ figure }: { figure: InequalityG
 // ── Sentence diagram ──────────────────────────────────────────────────────
 export function CatalogSentenceDiagramRenderer({ figure }: { figure: SentenceDiagramFigure }) {
   const { subject, verb, object, modifiers, title } = figure;
+  const N = sentenceDiagramFeatureNames;
   const W = 720;
   const H = modifiers && modifiers.length > 0 ? 240 : 160;
   const baseY = 80;
   const subjEnd = 240;
   const verbEnd = object ? 480 : 600;
+  // Per-cell bbox (subject, verb, object) is the slot between separators,
+  // ~30px tall straddling the baseline. Modifier bbox is the diagonal
+  // tail end ~22px tall × 60px wide.
+  const cellH = 36;
+  const subjCx = ((40 + subjEnd) / 2) / W;
+  const verbCx = ((subjEnd + verbEnd) / 2) / W;
+  const objCx = ((verbEnd + (W - 40)) / 2) / W;
+  const subjW = (subjEnd - 40) / W;
+  const verbW = (verbEnd - subjEnd) / W;
+  const objW = ((W - 40) - verbEnd) / W;
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[720px]">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[720px]"
+        data-feature={N.diagram}
+        data-feature-label={title || 'sentence diagram'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
         {/* Base line */}
         <line x1={40} y1={baseY} x2={W - 40} y2={baseY} stroke="#1f2937" strokeWidth={2} />
         {/* Subject | Verb separator */}
         <line x1={subjEnd} y1={baseY - 30} x2={subjEnd} y2={baseY + 30} stroke="#1f2937" strokeWidth={2} />
         {/* Verb | Object separator */}
         {object && <line x1={verbEnd} y1={baseY - 20} x2={verbEnd} y2={baseY} stroke="#1f2937" strokeWidth={2} />}
-        <text x={(40 + subjEnd) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{subject}</text>
-        <text x={(subjEnd + verbEnd) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{verb}</text>
-        {object && <text x={(verbEnd + (W - 40)) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{object}</text>}
+        <g
+          data-feature={N.subject}
+          data-feature-label={subject}
+          data-feature-cx={subjCx}
+          data-feature-cy={(baseY - cellH / 2 + 10) / H}
+          data-feature-w={subjW}
+          data-feature-h={cellH / H}
+        >
+          <text x={(40 + subjEnd) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{subject}</text>
+        </g>
+        <g
+          data-feature={N.verb}
+          data-feature-label={verb}
+          data-feature-cx={verbCx}
+          data-feature-cy={(baseY - cellH / 2 + 10) / H}
+          data-feature-w={verbW}
+          data-feature-h={cellH / H}
+        >
+          <text x={(subjEnd + verbEnd) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{verb}</text>
+        </g>
+        {object && (
+          <g
+            data-feature={N.object}
+            data-feature-label={object}
+            data-feature-cx={objCx}
+            data-feature-cy={(baseY - cellH / 2 + 10) / H}
+            data-feature-w={objW}
+            data-feature-h={cellH / H}
+          >
+            <text x={(verbEnd + (W - 40)) / 2} y={baseY - 10} fontSize={16} textAnchor="middle" fill="#1f2937" fontWeight={600}>{object}</text>
+          </g>
+        )}
         {/* Modifiers as diagonal hangs */}
         {modifiers?.map((m, i) => {
           let baseX: number;
@@ -198,10 +250,20 @@ export function CatalogSentenceDiagramRenderer({ figure }: { figure: SentenceDia
           else if (m.attachTo === 'verb') baseX = (subjEnd + verbEnd) / 2;
           else baseX = (verbEnd + (W - 40)) / 2;
           const dx = i % 2 === 0 ? -30 : 30;
+          const tailX = baseX + dx;
+          const tailY = baseY + 76;
           return (
-            <g key={i}>
-              <line x1={baseX} y1={baseY} x2={baseX + dx} y2={baseY + 60} stroke="#6b7280" strokeWidth={1.5} />
-              <text x={baseX + dx} y={baseY + 76} fontSize={13} textAnchor="middle" fill="#6b7280" fontStyle="italic">{m.word}</text>
+            <g
+              key={i}
+              data-feature={N.modifier(i)}
+              data-feature-label={m.word}
+              data-feature-cx={tailX / W}
+              data-feature-cy={tailY / H}
+              data-feature-w={80 / W}
+              data-feature-h={24 / H}
+            >
+              <line x1={baseX} y1={baseY} x2={tailX} y2={baseY + 60} stroke="#6b7280" strokeWidth={1.5} />
+              <text x={tailX} y={tailY} fontSize={13} textAnchor="middle" fill="#6b7280" fontStyle="italic">{m.word}</text>
             </g>
           );
         })}
@@ -254,7 +316,9 @@ export function CatalogArgumentStructureRenderer({ figure }: { figure: ArgumentF
 // ── Historical timeline ───────────────────────────────────────────────────
 export function CatalogHistoricalTimelineRenderer({ figure }: { figure: HistoricalTimelineFigure }) {
   const { events, title } = figure;
+  const N = historicalTimelineFeatureNames;
   const W = 760;
+  const H = 320;
   const PAD = 40;
   const minY = events[0].year;
   const maxY = events[events.length - 1].year;
@@ -266,15 +330,41 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <svg viewBox={`0 0 ${W} 320`} className="w-full max-w-[820px]">
-        <line x1={PAD} y1={baseY} x2={W - PAD} y2={baseY} stroke="#1f2937" strokeWidth={2} />
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[820px]"
+        data-feature={N.timeline}
+        data-feature-label={title || 'timeline'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        <g
+          data-feature={N.axis}
+          data-feature-label="timeline axis"
+          data-feature-cx={0.5}
+          data-feature-cy={baseY / H}
+          data-feature-w={(W - PAD * 2) / W}
+          data-feature-h={0.05}
+        >
+          <line x1={PAD} y1={baseY} x2={W - PAD} y2={baseY} stroke="#1f2937" strokeWidth={2} />
+        </g>
         {events.map((e, i) => {
           const x = xOf(e.year);
           const dy = altOffsets[i % altOffsets.length];
           const labelY = baseY + dy;
           const color = e.color || '#3b82f6';
           return (
-            <g key={i}>
+            <g
+              key={i}
+              data-feature={N.event(i)}
+              data-feature-label={`${e.date} ${e.label}`}
+              data-feature-cx={x / W}
+              data-feature-cy={labelY / H}
+              data-feature-w={140 / W}
+              data-feature-h={36 / H}
+            >
               <line x1={x} y1={baseY} x2={x} y2={labelY} stroke={color} strokeWidth={1.5} strokeDasharray="3 2" />
               <circle cx={x} cy={baseY} r={6} fill={color} stroke="#fff" strokeWidth={2} />
               <rect x={x - 70} y={labelY - 18} width={140} height={36} rx={4} fill={color + '22'} stroke={color} strokeWidth={1.5} />
@@ -507,6 +597,7 @@ function FrayerModel({ figure }: { figure: OrganizerFigure }) {
 export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyPyramidFigure }) {
   const { tiers, baseFirst, title } = figure;
   const ordered = baseFirst ? [...tiers] : [...tiers].reverse();
+  const N = hierarchyPyramidFeatureNames;
   const W = 480;
   const TIER_H = 56;
   const H = ordered.length * TIER_H + 60;
@@ -514,7 +605,16 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[520px]"
+        data-feature={N.pyramid}
+        data-feature-label={title || 'pyramid'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
         {ordered.map((t, i) => {
           // Wider at the bottom (large index in ordered) when baseFirst.
           const fromTop = i;
@@ -523,8 +623,18 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
           const x = (W - w) / 2;
           const y = 30 + fromTop * TIER_H;
           const color = t.color || PALETTE[i % PALETTE.length];
+          const cxFrac = (x + w / 2) / W;
+          const cyFrac = (y + (TIER_H - 4) / 2) / H;
           return (
-            <g key={i}>
+            <g
+              key={i}
+              data-feature={N.tier(i)}
+              data-feature-label={t.label}
+              data-feature-cx={cxFrac}
+              data-feature-cy={cyFrac}
+              data-feature-w={w / W}
+              data-feature-h={(TIER_H - 4) / H}
+            >
               <rect x={x} y={y} width={w} height={TIER_H - 4} fill={color} stroke="#1f2937" strokeWidth={1.5} />
               <text x={x + w / 2} y={y + TIER_H / 2 + 4} fontSize={13} textAnchor="middle" fill="#fff" fontWeight={700}>
                 {t.label}

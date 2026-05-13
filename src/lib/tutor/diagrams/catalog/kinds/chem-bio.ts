@@ -1,5 +1,7 @@
 /** Phase 3 — chemistry + biology solvers. */
 
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
 // ── electron_configuration ────────────────────────────────────────────────
 const SUBSHELL_CAPACITY: Record<string, number> = { s: 2, p: 6, d: 10, f: 14 };
 const FILL_ORDER = ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d', '5p', '6s', '4f', '5d', '6p', '7s', '5f', '6d', '7p'];
@@ -155,4 +157,86 @@ export function solveBodySystem(params: Record<string, unknown>): BodySystemFigu
       })
     : [];
   return { system, parts, title: typeof params.title === 'string' ? params.title : undefined };
+}
+
+// ── cycle_stages manifest (Phase 2b — life_cycle / water_cycle / rock_cycle)
+export const cycleStagesFeatureNames = {
+  cycle: 'cycle',
+  stage: (i: number): string => `stage-${i + 1}`,
+};
+
+/** Slug helper for semantic stage aliases. The brain often refers to a
+ *  water_cycle stage as `stage-precipitation` rather than `stage-3`; we
+ *  add the semantic form as an extra label so both resolve. */
+function stageSlug(label: string): string {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+export function buildCycleStagesManifest(figure: CycleStagesFigure): FeatureManifestEntry[] {
+  const N = cycleStagesFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.cycle,
+      kind: 'region',
+      description: figure.title ? `cycle: ${figure.title}` : 'cycle',
+      labels: ['cycle', 'the cycle', 'the diagram'],
+      scribbleable: true,
+    },
+  ];
+  figure.stages.forEach((s, i) => {
+    const label = String(s.label ?? '').trim();
+    const slug = stageSlug(label);
+    features.push({
+      name: N.stage(i),
+      kind: 'area',
+      description: label ? `stage ${i + 1}: "${label}"` : `stage ${i + 1}`,
+      labels: [
+        `stage ${i + 1}`, `stage-${i + 1}`,
+        ...(label ? [
+          label, `the ${label}`, `"${label}"`,
+          `${label} stage`, `the ${label} stage`,
+        ] : []),
+        ...(slug ? [`stage-${slug}`] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── body_system manifest (Phase 2b — HTML-mode organizer) ─────────────────
+export const bodySystemFeatureNames = {
+  system: 'system',
+  part: (i: number): string => `part-${i + 1}`,
+};
+
+export function buildBodySystemManifest(figure: BodySystemFigure): FeatureManifestEntry[] {
+  const N = bodySystemFeatureNames;
+  const sys = String(figure.system ?? '').trim();
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.system,
+      kind: 'region',
+      description: sys ? `body system: ${sys}` : 'body system',
+      labels: [
+        'system', 'the system', 'the diagram',
+        ...(sys ? [`${sys} system`, `the ${sys} system`, sys] : []),
+      ],
+      scribbleable: true,
+    },
+  ];
+  figure.parts.forEach((p, i) => {
+    const label = String(p.label ?? '').trim();
+    features.push({
+      name: N.part(i),
+      kind: 'label',
+      description: label ? `part ${i + 1}: "${label}"` : `part ${i + 1}`,
+      labels: [
+        `part ${i + 1}`, `part-${i + 1}`,
+        ...(label ? [label, `the ${label}`, `"${label}"`] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
 }

@@ -52,10 +52,22 @@ import {
   buildFrayerModelManifest,
   buildArgumentStructureManifest,
   buildGovernmentBranchesManifest,
+  buildSentenceDiagramManifest,
+  buildHistoricalTimelineManifest,
+  buildHierarchyPyramidManifest,
   solveOrganizer,
   solveArgumentStructure,
   solveGovernmentBranches,
+  solveSentenceDiagram,
+  solveHistoricalTimeline,
+  solveHierarchyPyramid,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+import {
+  buildCycleStagesManifest,
+  buildBodySystemManifest,
+  solveCycleStages,
+  solveBodySystem,
+} from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -834,6 +846,44 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solveGovernmentBranches(params);
         return buildGovernmentBranchesManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 2b — SVG-coordinate organizers + body_system (HTML grid).
+    case 'sentence_diagram': {
+      try {
+        const figure = solveSentenceDiagram(params);
+        return buildSentenceDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'historical_timeline': {
+      try {
+        const figure = solveHistoricalTimeline(params);
+        return buildHistoricalTimelineManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'hierarchy_pyramid': {
+      try {
+        const figure = solveHierarchyPyramid(params);
+        return buildHierarchyPyramidManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'body_system': {
+      try {
+        const figure = solveBodySystem(params);
+        return buildBodySystemManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'life_cycle':
+    case 'water_cycle':
+    case 'rock_cycle': {
+      try {
+        const figure = solveCycleStages(params);
+        return buildCycleStagesManifest(figure);
       } catch { /* fall through */ }
       break;
     }
