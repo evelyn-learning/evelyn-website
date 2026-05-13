@@ -10,9 +10,10 @@
  *   - Each organizer renders correctly with data-feature attrs.
  *   - tutor_scribble target strings against organizer features
  *     (col-N, branch-N, claim, term, k-column, etc.) resolve and
- *     land visually.
- *   - tutor_handwrite anchored to organizer features renders
- *     adjacent to the anchor.
+ *     paint a tick or highlight.
+ *   - tutor_scribble labels appear in the page's annotation strip
+ *     as "{feature} → {label}".
+ *   - tutor_handwrite appears in the strip as a self-contained line.
  *
  * Organizers covered (in segment order):
  *   1. frayer_model       — concept-frayer
@@ -24,20 +25,17 @@
  * How to run:
  *   1. http://localhost:3001/tutor → Social Studies → 5 → Civics
  *   2. Pick "[TEST] G5 Civics — Phase 2a Organizer Coverage".
- *   3. Hard-refresh (Cmd+Shift+R) before starting if dev-server
- *      was running across the Phase 2a commit.
+ *   3. Hard-refresh (Cmd+Shift+R) before starting.
  *   4. Each concept segment renders one organizer + a scribble +
- *      a handwrite. Watch live WB to confirm both land.
+ *      a handwrite. Watch live WB to confirm tick + strip entries.
  *
  * Pass criteria (per session):
  *   - 5 organizers render (one per concept segment).
- *   - At least 5 tutor_scribble calls land visually (1 per kind).
- *   - At least 5 tutor_handwrite calls land visually (1 per kind).
+ *   - 5 ticks / highlights paint (1 per kind).
+ *   - 10 strip entries land (1 scribble-label + 1 handwrite per kind).
  *   - No `[VoiceTutor] scribble-reject` warnings for the directed
  *     targets.
- *   - No `[VoiceTutor] handwrite near-resolve failed` for the
- *     directed near values.
- *   - PDF export contains all 5 organizers + their markings.
+ *   - PDF export contains all 5 organizers + ticks + strip lines.
  */
 
 import type { LessonPlan } from '../types';
@@ -85,9 +83,9 @@ export const SEED_TEST_G5_PHASE2A_ORGANIZERS: LessonPlan = {
         'nonExamples: ["Monarchy", "Dictatorship"], ' +
         'title: "Defining Democracy" }\n\n' +
         '2. After the frayer renders, emit ONE tutor_scribble:\n' +
-        '   { target: "characteristics", shape: "highlight", color: "#16a34a", label: "key traits!" }\n\n' +
-        '3. Emit ONE tutor_handwrite anchored to the term:\n' +
-        '   { text: "Remember the 3 C\'s!", near: "term", position: "above" }\n\n' +
+        '   { target: "characteristics", shape: "highlight", color: "#16a34a", label: "key traits" }\n\n' +
+        '3. Emit ONE tutor_handwrite — a self-contained line for the strip:\n' +
+        '   { text: "Remember: democracy stands on the three Cs." }\n\n' +
         '4. Briefly read the definition, then advance.',
       keyIdeas: [
         'Democracy = people choose leaders by voting.',
@@ -115,9 +113,9 @@ export const SEED_TEST_G5_PHASE2A_ORGANIZERS: LessonPlan = {
         '{ name: "Judicial", bodies: ["Supreme Court"], powers: ["Interprets laws", "Reviews cases"] }' +
         '], title: "Three Branches of US Government" }\n\n' +
         '2. After it renders, emit ONE tutor_scribble:\n' +
-        '   { target: "Legislative", shape: "circle", color: "#3b82f6", label: "makes laws!" }\n\n' +
-        '3. Emit ONE tutor_handwrite anchored to the Executive branch:\n' +
-        '   { text: "President = top of executive", near: "Executive", position: "below" }\n\n' +
+        '   { target: "Legislative", color: "#3b82f6", label: "makes laws" }\n\n' +
+        '3. Emit ONE tutor_handwrite — a self-contained line for the strip:\n' +
+        '   { text: "The President leads the Executive branch." }\n\n' +
         '4. Briefly explain the separation of powers, then advance.',
       keyIdeas: [
         'Three branches: Executive (carries out laws), Legislative (makes laws), Judicial (interprets laws).',
@@ -142,8 +140,8 @@ export const SEED_TEST_G5_PHASE2A_ORGANIZERS: LessonPlan = {
         'title: "Citizen Rights vs Responsibilities" }\n\n' +
         '2. After it renders, emit ONE tutor_scribble:\n' +
         '   { target: "left-column", shape: "highlight", color: "#22c55e", label: "what citizens GET" }\n\n' +
-        '3. Emit ONE tutor_handwrite anchored to the right column:\n' +
-        '   { text: "what citizens MUST DO", near: "right-column", position: "above" }\n\n' +
+        '3. Emit ONE tutor_handwrite — a self-contained line for the strip:\n' +
+        '   { text: "Responsibilities are what citizens MUST DO." }\n\n' +
         '4. Briefly explain the give-and-take, then advance.',
       keyIdeas: [
         'Citizens have rights (what they get) AND responsibilities (what they must do).',
@@ -166,9 +164,9 @@ export const SEED_TEST_G5_PHASE2A_ORGANIZERS: LessonPlan = {
         'learned: [], ' +
         'title: "What We Know About Voting" }\n\n' +
         '2. After it renders, emit ONE tutor_scribble:\n' +
-        '   { target: "w-column", shape: "box", color: "#f59e0b", label: "today\'s focus" }\n\n' +
-        '3. Emit ONE tutor_handwrite as a margin note:\n' +
-        '   { text: "We will fill in L by the end!", margin: "bottom" }\n\n' +
+        '   { target: "w-column", shape: "highlight", color: "#f59e0b", label: "today\'s focus" }\n\n' +
+        '3. Emit ONE tutor_handwrite — a self-contained line for the strip:\n' +
+        '   { text: "We will fill in the Learned column by the end." }\n\n' +
         '4. Briefly frame the day\'s learning around the W column, then advance.',
       keyIdeas: [
         'KWL charts capture: what we Know, what we Want to know, what we Learned.',
@@ -193,9 +191,9 @@ export const SEED_TEST_G5_PHASE2A_ORGANIZERS: LessonPlan = {
         'rebuttal: "Citizens can still cast blank ballots; the requirement is participation, not a specific vote.", ' +
         'title: "Should Voting Be Mandatory?" }\n\n' +
         '2. After it renders, emit ONE tutor_scribble:\n' +
-        '   { target: "claim", shape: "underline", color: "#3b82f6", label: "central claim" }\n\n' +
-        '3. Emit ONE tutor_handwrite anchored to the evidence section:\n' +
-        '   { text: "facts that back it up", near: "evidence", position: "right" }\n\n' +
+        '   { target: "claim", color: "#3b82f6", label: "central claim" }\n\n' +
+        '3. Emit ONE tutor_handwrite — a self-contained line for the strip:\n' +
+        '   { text: "Evidence = facts that back up the claim." }\n\n' +
         '4. Briefly walk through the structure (claim → evidence → reasoning), then advance.',
       keyIdeas: [
         'A strong argument needs a claim, evidence, and reasoning.',
