@@ -686,12 +686,29 @@ export function WhiteboardCanvas({
         {renderableCommands.length === 1 ? (
           <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
             <CommandRenderer command={renderableCommands[0]} />
-            <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
+            {(() => {
+              const filtered = scribbles.filter((s) => s.targetItemIndex === 1);
+              if (typeof window !== 'undefined' && (scribbles.length > 0 || filtered.length > 0)) {
+                console.warn(
+                  '[Scribble] page-filter (single-item): total=%d, kept=%d, targetIndices=[%s]',
+                  scribbles.length, filtered.length,
+                  scribbles.map((s) => s.targetItemIndex ?? 'undef').join(','),
+                );
+              }
+              return <ScribbleOverlays scribbles={filtered} />;
+            })()}
           </div>
         ) : (
           <div className="space-y-1">
             {renderableCommands.map((cmd, i) => {
               const overlays = scribbles.filter((s) => s.targetItemIndex === i + 1);
+              if (typeof window !== 'undefined' && i === 0 && (scribbles.length > 0 || overlays.length > 0)) {
+                console.warn(
+                  '[Scribble] page-filter (multi-item, %d items): total=%d, targetIndices=[%s]',
+                  renderableCommands.length, scribbles.length,
+                  scribbles.map((s) => s.targetItemIndex ?? 'undef').join(','),
+                );
+              }
               return (
                 <div key={i} className="wb-item-enter">
                   {i > 0 && (
@@ -1282,12 +1299,12 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   // Diagnostic: log render state per scribble so we can see whether the
   // problem is "measured=false, never painted" vs "measured=true, painted
   // but invisible" vs "resolvedByFeature empty for the asked feature."
-  // Logs only when there's a scribble pending — the no-op render path
-  // (scribbles=[]) is skipped above.
+  // Uses console.warn (not log) so it pipes through to the dev-server
+  // stdout — browser console.log isn't forwarded by Next.js.
   if (typeof window !== 'undefined') {
     for (const s of scribbles) {
       const haveResolved = s.targetFeature ? !!resolvedByFeature[s.targetFeature] : false;
-      console.log(
+      console.warn(
         '[Scribble] render-state: target=%s, feature=%s, measured=%s, resolved=%s, shape=%s',
         (s as { target?: string }).target ?? '?',
         s.targetFeature ?? '(none)',
