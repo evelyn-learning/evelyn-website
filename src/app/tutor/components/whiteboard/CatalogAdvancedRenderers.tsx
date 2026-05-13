@@ -482,7 +482,21 @@ function FrayerModel({ figure }: { figure: OrganizerFigure }) {
           </ul>
         </div>
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div data-feature={N.term} data-feature-label={figure.term} className="bg-white border-2 border-gray-700 rounded-full px-4 py-1 font-bold text-gray-900">{figure.term}</div>
+          {/* Term pill is intentionally TRANSPARENT (no bg / border)
+              so the rendered content beneath remains visible. The
+              prior solid-white pill covered cell text in the bottom
+              of the characteristics quadrant (observed 2026-05-13
+              session #12 image #36 — "Provides services" was clipped
+              by the "Government" pill). Bold text + light text-shadow
+              gives enough separation against any quadrant color. */}
+          <div
+            data-feature={N.term}
+            data-feature-label={figure.term}
+            className="px-4 py-1 font-bold text-gray-900"
+            style={{ textShadow: '0 0 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)' }}
+          >
+            {figure.term}
+          </div>
         </div>
       </div>
     </div>

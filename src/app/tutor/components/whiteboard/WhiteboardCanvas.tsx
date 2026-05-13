@@ -1529,19 +1529,28 @@ function StripEntry({
 }) {
   const full = boldText + tailText;
   const [revealed, setRevealed] = useState(0);
+  // Live ref to the current full string. Featuredisplayname's DOM
+  // lookup falls back to the canonical name on the FIRST render
+  // (parent ref not yet populated) and extends to the friendly name
+  // on the SECOND render. The interval was capturing the first
+  // render's full.length in its closure and stopping early, so the
+  // reveal froze mid-word once the friendly name landed (observed
+  // 2026-05-13 session #12 image #38: "Schools funded by the city → y"
+  // — exactly 30 chars, matching the canonical-name length).
+  // Reading from a ref inside the interval lets the stop condition
+  // track the CURRENT full as it grows.
+  const fullRef = useRef(full);
+  fullRef.current = full;
   useEffect(() => {
-    if (!full) return;
     let n = 0;
     const id = window.setInterval(() => {
       n += 1;
       setRevealed(n);
-      if (n >= full.length) window.clearInterval(id);
+      if (n >= fullRef.current.length) window.clearInterval(id);
     }, 30);
     return () => window.clearInterval(id);
-    // Mount-only animation. We intentionally do NOT depend on `full`
-    // because the parent's stable React key already guarantees a fresh
-    // mount when the entry is new and an unchanged identity when it
-    // isn't — so the deps array stays empty.
+    // Mount-only animation. Stable parent key ensures fresh mount
+    // for new entries and identity preservation for existing ones.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const boldShown = revealed >= boldText.length ? boldText : full.slice(0, revealed);
