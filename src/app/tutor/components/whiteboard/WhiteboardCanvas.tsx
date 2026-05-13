@@ -686,29 +686,12 @@ export function WhiteboardCanvas({
         {renderableCommands.length === 1 ? (
           <div className="relative wb-item-enter" ref={(el) => { itemRefsRef.current[0] = el; }}>
             <CommandRenderer command={renderableCommands[0]} />
-            {(() => {
-              const filtered = scribbles.filter((s) => s.targetItemIndex === 1);
-              if (typeof window !== 'undefined' && (scribbles.length > 0 || filtered.length > 0)) {
-                console.warn(
-                  '[Scribble] page-filter (single-item): total=%d, kept=%d, targetIndices=[%s]',
-                  scribbles.length, filtered.length,
-                  scribbles.map((s) => s.targetItemIndex ?? 'undef').join(','),
-                );
-              }
-              return <ScribbleOverlays scribbles={filtered} />;
-            })()}
+            <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
           </div>
         ) : (
           <div className="space-y-1">
             {renderableCommands.map((cmd, i) => {
               const overlays = scribbles.filter((s) => s.targetItemIndex === i + 1);
-              if (typeof window !== 'undefined' && i === 0 && (scribbles.length > 0 || overlays.length > 0)) {
-                console.warn(
-                  '[Scribble] page-filter (multi-item, %d items): total=%d, targetIndices=[%s]',
-                  renderableCommands.length, scribbles.length,
-                  scribbles.map((s) => s.targetItemIndex ?? 'undef').join(','),
-                );
-              }
               return (
                 <div key={i} className="wb-item-enter">
                   {i > 0 && (
@@ -1117,25 +1100,6 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         const candidates = Array.from(parent.querySelectorAll('[data-feature]'))
           .filter((el) => !overlay || !overlay.contains(el));
         if (candidates.length > 0) mode = 'html';
-        if (mode === 'html' && parentBB.width <= 0) {
-          // Diagnostic for the "scribble resolved in catalog but never paints"
-          // class of bug — when parentBB is 0×0 at measure time, the HTML
-          // mode loop is gated off entirely, no resolvedByFeature entries
-          // are set, and `measured` stays false. The rAF retry chain at
-          // the bottom of the effect catches most cases but not all
-          // (observed 2026-05-13 session 4 + post-fix re-run). Log so we
-          // can confirm vs other failure modes.
-          const featuresAsked = scribbles
-            .map((s) => s.targetFeature)
-            .filter((f): f is string => Boolean(f));
-          if (featuresAsked.length > 0) {
-            console.warn(
-              '[Scribble] HTML-mode gated off — parentBB=%dx%d, will retry. features=[%s]',
-              Math.round(parentBB.width), Math.round(parentBB.height),
-              featuresAsked.join(','),
-            );
-          }
-        }
         if (mode === 'html' && parentBB.width > 0 && parentBB.height > 0) {
           for (const s of scribbles) {
             if (!s.targetFeature || seen.has(s.targetFeature)) continue;
@@ -1147,18 +1111,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
               continue;
             }
             const elRect = el.getBoundingClientRect();
-            if (elRect.width <= 0 || elRect.height <= 0) {
-              // Silent-skip path: el exists but layout hasn't given it a
-              // non-zero bbox yet (mid-animation, grid not finished, etc.).
-              // Warn so we can see this in dev logs — previously this was
-              // a silent skip and the "no paint despite catalog success"
-              // bug had no log signature.
-              console.warn(
-                '[Scribble] elRect zero-sized for "%s" — el.tag=%s, elRect=%dx%d',
-                s.targetFeature, el.tagName, Math.round(elRect.width), Math.round(elRect.height),
-              );
-              continue;
-            }
+            if (elRect.width <= 0 || elRect.height <= 0) continue;
             next[s.targetFeature] = {
               x: Math.max(0, (elRect.left - parentBB.left) / parentBB.width),
               y: Math.max(0, (elRect.top - parentBB.top) / parentBB.height),
@@ -1296,24 +1249,6 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   // the MARKS until measurement succeeds. When the target SVG doesn't
   // exist (non-SVG item, HTML renderer), the overlay stays empty.
   const measured = !!(targetViewBox && svgRect);
-  // Diagnostic: log render state per scribble so we can see whether the
-  // problem is "measured=false, never painted" vs "measured=true, painted
-  // but invisible" vs "resolvedByFeature empty for the asked feature."
-  // Uses console.warn (not log) so it pipes through to the dev-server
-  // stdout — browser console.log isn't forwarded by Next.js.
-  if (typeof window !== 'undefined') {
-    for (const s of scribbles) {
-      const haveResolved = s.targetFeature ? !!resolvedByFeature[s.targetFeature] : false;
-      console.warn(
-        '[Scribble] render-state: target=%s, feature=%s, measured=%s, resolved=%s, shape=%s',
-        (s as { target?: string }).target ?? '?',
-        s.targetFeature ?? '(none)',
-        measured ? 'Y' : 'N',
-        haveResolved ? 'Y' : 'N',
-        s.shape,
-      );
-    }
-  }
   const vbW = targetViewBox?.w ?? 100;
   const vbH = targetViewBox?.h ?? 100;
   const viewBoxAttr = `0 0 ${vbW} ${vbH}`;
