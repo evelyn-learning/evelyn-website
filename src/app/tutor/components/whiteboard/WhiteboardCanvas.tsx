@@ -1570,12 +1570,36 @@ function HandwriteOverlays({
           const fr = featureEl.getBoundingClientRect();
           if (fr.width <= 0 || fr.height <= 0) continue;
           const pos = h.position ?? 'right';
-          // Note: previous auto-flip (above → below near top of page)
-          // was reverted — it just moved the overlap from the title
-          // row into the first data row. With sticky-note styling
-          // (background + border + shadow) the handwrite reads cleanly
-          // as a stamp regardless of where it lands, so we trust the
-          // brain's positioning choice.
+          // Central-pin escape: features that are small AND centered
+          // inside their item (the frayer term pill is the canonical
+          // example — absolute inset-0 + flex center on a ~100×25 px
+          // chip in a ~600×360 px grid) sit ON TOP of other features.
+          // Anchoring "above" or "below" to them lands the handwrite
+          // INSIDE the surrounding cells, overlapping their text
+          // (observed 2026-05-13 session: "Remember the 3 C's!"
+          // anchored to frayer term landed across the characteristics
+          // / non-examples cells). Escape to a page-level margin so
+          // the note lives at the page edge instead.
+          {
+            const featCenterX = fr.left + fr.width / 2;
+            const featCenterY = fr.top + fr.height / 2;
+            const cCenterX = containerRect.left + containerRect.width / 2;
+            const cCenterY = containerRect.top + containerRect.height / 2;
+            const xOffFrac = Math.abs(featCenterX - cCenterX) / containerRect.width;
+            const yOffFrac = Math.abs(featCenterY - cCenterY) / containerRect.height;
+            const areaFrac = (fr.width * fr.height) / (containerRect.width * containerRect.height);
+            const isCentralPin = xOffFrac < 0.15 && yOffFrac < 0.20 && areaFrac < 0.06;
+            if (isCentralPin && (pos === 'above' || pos === 'below')) {
+              const W = containerRect.width;
+              const H = containerRect.height;
+              if (pos === 'above') {
+                next[i] = { left: MARGIN_INSET, top: MARGIN_INSET, maxWidth: W - MARGIN_INSET * 2 };
+              } else {
+                next[i] = { left: MARGIN_INSET, top: H - 40, maxWidth: W - MARGIN_INSET * 2 };
+              }
+              continue;
+            }
+          }
           // Position the handwriting adjacent to the feature on the
           // requested side. Coordinates are relative to the page
           // container's top-left corner.
