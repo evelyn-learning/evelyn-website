@@ -1,17 +1,23 @@
 'use client';
 
 import React from 'react';
-import type { ElectronConfigurationFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
+import { electronConfigurationFeatureNames, type ElectronConfigurationFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 export function CatalogElectronConfigurationRenderer({ figure }: { figure: ElectronConfigurationFigure }) {
   const { element, Z, config, title } = figure;
-  const notation = config.map((c) => `${c.subshell}${superscript(c.electrons)}`).join(' ');
+  const N = electronConfigurationFeatureNames;
   return (
     <div className="electron-config-renderer w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <div className="px-6 py-4 rounded-lg bg-blue-50 border border-blue-200">
-        <div className="text-sm text-gray-600 mb-2">{element} (Z = {Z})</div>
-        <div className="text-2xl font-mono text-gray-900">{notation}</div>
+      <div data-feature={N.notation} data-feature-label={title || `${element} configuration`} className="px-6 py-4 rounded-lg bg-blue-50 border border-blue-200">
+        <div data-feature={N.element} data-feature-label={`${element} (Z=${Z})`} className="text-sm text-gray-600 mb-2">{element} (Z = {Z})</div>
+        <div className="text-2xl font-mono text-gray-900 inline-flex gap-2 flex-wrap">
+          {config.map((c, i) => (
+            <span key={i} data-feature={N.subshell(i)} data-feature-label={`${c.subshell} (${c.electrons}e⁻)`}>
+              {c.subshell}{superscript(c.electrons)}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

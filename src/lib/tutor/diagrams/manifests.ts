@@ -65,8 +65,19 @@ import {
 import {
   buildCycleStagesManifest,
   buildBodySystemManifest,
+  buildElectronConfigurationManifest,
+  // Aliased: the legacy `showOrbitalDiagram` tool (NOT the catalog-
+  // dispatched `show_diagram(orbital_diagram)`) already imports a
+  // function with the same name from a different renderer.
+  buildOrbitalDiagramManifest as buildCatalogOrbitalDiagramManifest,
+  buildPeriodicTableHighlightManifest,
+  buildPunnettSquareManifest,
   solveCycleStages,
   solveBodySystem,
+  solveElectronConfiguration,
+  solveOrbitalDiagram,
+  solvePeriodicTableHighlight,
+  solvePunnettSquare,
 } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 /**
@@ -884,6 +895,35 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solveCycleStages(params);
         return buildCycleStagesManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 3 — chem/bio remaining kinds.
+    case 'electron_configuration': {
+      try {
+        const figure = solveElectronConfiguration(params);
+        return buildElectronConfigurationManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'orbital_diagram': {
+      try {
+        const figure = solveOrbitalDiagram(params);
+        return buildCatalogOrbitalDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'periodic_table_highlight': {
+      try {
+        const figure = solvePeriodicTableHighlight(params);
+        return buildPeriodicTableHighlightManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'punnett_square': {
+      try {
+        const figure = solvePunnettSquare(params);
+        return buildPunnettSquareManifest(figure);
       } catch { /* fall through */ }
       break;
     }

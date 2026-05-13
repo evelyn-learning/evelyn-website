@@ -117,6 +117,218 @@ function sortAlleles(pair: string): string {
   return pair;
 }
 
+// ── Phase 3 manifests — electron_configuration / orbital_diagram /
+//    periodic_table_highlight / punnett_square ──────────────────────────────
+
+export const electronConfigurationFeatureNames = {
+  notation: 'notation',
+  element: 'element',
+  subshell: (i: number): string => `subshell-${i + 1}`,
+};
+
+export function buildElectronConfigurationManifest(figure: ElectronConfigurationFigure): FeatureManifestEntry[] {
+  const N = electronConfigurationFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.notation,
+      kind: 'region',
+      description: `electron configuration for ${figure.element} (Z=${figure.Z})`,
+      labels: ['notation', 'the notation', 'the configuration', 'the diagram'],
+      displayName: figure.title || `${figure.element} configuration`,
+      scribbleable: true,
+    },
+    {
+      name: N.element,
+      kind: 'label',
+      description: `element label: "${figure.element}" (Z=${figure.Z})`,
+      labels: ['element', 'the element', figure.element, `Z=${figure.Z}`, `Z = ${figure.Z}`],
+      displayName: `${figure.element} (Z=${figure.Z})`,
+      scribbleable: true,
+    },
+  ];
+  figure.config.forEach((c, i) => {
+    const entryStr = `${c.subshell}${c.electrons}`;
+    features.push({
+      name: N.subshell(i),
+      kind: 'label',
+      description: `subshell ${c.subshell} with ${c.electrons} electron${c.electrons === 1 ? '' : 's'}`,
+      labels: [
+        `subshell ${i + 1}`, `subshell-${i + 1}`,
+        c.subshell, `the ${c.subshell}`, `"${c.subshell}"`,
+        entryStr, `${c.subshell}^${c.electrons}`,
+      ],
+      displayName: `${c.subshell} (${c.electrons}e⁻)`,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+export const orbitalDiagramFeatureNames = {
+  orbital: 'orbital-diagram',
+  element: 'element',
+  shell: (i: number): string => `shell-${i + 1}`,
+};
+
+export function buildOrbitalDiagramManifest(figure: OrbitalDiagramFigure): FeatureManifestEntry[] {
+  const N = orbitalDiagramFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.orbital,
+      kind: 'region',
+      description: `orbital diagram for ${figure.element} (Z=${figure.Z})`,
+      labels: ['orbital diagram', 'the orbital diagram', 'the diagram', 'orbitals'],
+      displayName: figure.title || `${figure.element} orbital diagram`,
+      scribbleable: true,
+    },
+    {
+      name: N.element,
+      kind: 'label',
+      description: `element: "${figure.element}" (Z=${figure.Z})`,
+      labels: ['element', 'the element', figure.element, `Z=${figure.Z}`],
+      displayName: `${figure.element} (Z=${figure.Z})`,
+      scribbleable: true,
+    },
+  ];
+  figure.shells.forEach((sh, i) => {
+    features.push({
+      name: N.shell(i),
+      kind: 'area',
+      description: `${sh.subshell} shell (${sh.orbitals.length} orbital${sh.orbitals.length === 1 ? '' : 's'})`,
+      labels: [
+        `shell ${i + 1}`, `shell-${i + 1}`, `shell-${sh.subshell}`,
+        sh.subshell, `the ${sh.subshell}`, `${sh.subshell} shell`, `the ${sh.subshell} shell`,
+        `${sh.subshell} orbital`, `${sh.subshell} orbitals`,
+      ],
+      displayName: `${sh.subshell} shell`,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+export const periodicTableHighlightFeatureNames = {
+  table: 'table',
+  element: (sym: string): string => `element-${sym}`,
+};
+
+export function buildPeriodicTableHighlightManifest(figure: PeriodicTableHighlightFigure): FeatureManifestEntry[] {
+  const N = periodicTableHighlightFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.table,
+      kind: 'region',
+      description: figure.title ? `periodic table: ${figure.title}` : 'periodic table',
+      labels: ['table', 'the table', 'periodic table', 'the periodic table', 'the diagram'],
+      displayName: figure.title || 'periodic table',
+      scribbleable: true,
+    },
+  ];
+  // Only register MANIFEST entries for highlighted elements — the brain
+  // would have no reason to scribble an unhighlighted cell, and 100+
+  // unused feature names would bloat the catalog hint list.
+  figure.highlights.forEach((h) => {
+    const sym = h.element;
+    const niceLabel = h.label ? `${sym} (${h.label})` : sym;
+    features.push({
+      name: N.element(sym),
+      kind: 'label',
+      description: h.label ? `${sym}: ${h.label}` : `element ${sym}`,
+      labels: [
+        sym, `the ${sym}`, `element ${sym}`, `"${sym}"`,
+        ...(h.label ? [h.label, `the ${h.label}`, `"${h.label}"`] : []),
+      ],
+      displayName: niceLabel,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+export const punnettSquareFeatureNames = {
+  punnett: 'punnett',
+  parentA: 'parent-a',
+  parentB: 'parent-b',
+  aGamete: (i: number): string => `a-gamete-${i + 1}`,
+  bGamete: (i: number): string => `b-gamete-${i + 1}`,
+  cell: (r: number, c: number): string => `cell-r${r + 1}-c${c + 1}`,
+};
+
+export function buildPunnettSquareManifest(figure: PunnettSquareFigure): FeatureManifestEntry[] {
+  const N = punnettSquareFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.punnett,
+      kind: 'region',
+      description: figure.title ? `Punnett square: ${figure.title}` : `Punnett square ${figure.parentA} × ${figure.parentB}`,
+      labels: ['punnett', 'the punnett', 'punnett square', 'the punnett square', 'the diagram', 'the square'],
+      displayName: figure.title || `${figure.parentA} × ${figure.parentB}`,
+      scribbleable: true,
+    },
+    {
+      name: N.parentA,
+      kind: 'label',
+      description: `Parent A: "${figure.parentA}"`,
+      labels: ['parent A', 'parent-a', 'parent a', figure.parentA, `parent ${figure.parentA}`, 'top parent', 'first parent'],
+      displayName: `Parent ${figure.parentA}`,
+      scribbleable: true,
+    },
+    {
+      name: N.parentB,
+      kind: 'label',
+      description: `Parent B: "${figure.parentB}"`,
+      labels: ['parent B', 'parent-b', 'parent b', figure.parentB, `parent ${figure.parentB}`, 'side parent', 'second parent'],
+      displayName: `Parent ${figure.parentB}`,
+      scribbleable: true,
+    },
+  ];
+  figure.alleles.aGametes.forEach((g, i) => {
+    features.push({
+      name: N.aGamete(i),
+      kind: 'label',
+      description: `Parent A gamete ${i + 1}: "${g}"`,
+      labels: [
+        `A gamete ${i + 1}`, `a-gamete-${i + 1}`,
+        `parent A's ${g}`, `parent A ${g}`, g, `"${g}" from parent A`,
+      ],
+      displayName: `A gamete ${g}`,
+      scribbleable: true,
+    });
+  });
+  figure.alleles.bGametes.forEach((g, i) => {
+    features.push({
+      name: N.bGamete(i),
+      kind: 'label',
+      description: `Parent B gamete ${i + 1}: "${g}"`,
+      labels: [
+        `B gamete ${i + 1}`, `b-gamete-${i + 1}`,
+        `parent B's ${g}`, `parent B ${g}`, g, `"${g}" from parent B`,
+      ],
+      displayName: `B gamete ${g}`,
+      scribbleable: true,
+    });
+  });
+  figure.cells.forEach((row, r) => {
+    row.forEach((genotype, c) => {
+      features.push({
+        name: N.cell(r, c),
+        kind: 'label',
+        description: `offspring cell (row ${r + 1}, col ${c + 1}): "${genotype}"`,
+        labels: [
+          `cell ${r + 1} ${c + 1}`, `cell-r${r + 1}-c${c + 1}`,
+          `row ${r + 1} column ${c + 1}`,
+          `row ${r + 1} col ${c + 1}`,
+          genotype, `the ${genotype}`, `"${genotype}"`,
+          `${genotype} offspring`, `${genotype} genotype`,
+        ],
+        displayName: genotype,
+        scribbleable: true,
+      });
+    });
+  });
+  return features;
+}
+
 // ── life_cycle / water_cycle / rock_cycle ─────────────────────────────────
 export interface CycleStagesFigure {
   stages: Array<{ label: string; description?: string; color?: string }>;
