@@ -1529,30 +1529,32 @@ function StripEntry({
 }) {
   const full = boldText + tailText;
   const [revealed, setRevealed] = useState(0);
-  // Live ref to the current full string. Featuredisplayname's DOM
-  // lookup falls back to the canonical name on the FIRST render
-  // (parent ref not yet populated) and extends to the friendly name
-  // on the SECOND render. The interval was capturing the first
-  // render's full.length in its closure and stopping early, so the
-  // reveal froze mid-word once the friendly name landed (observed
-  // 2026-05-13 session #12 image #38: "Schools funded by the city → y"
-  // — exactly 30 chars, matching the canonical-name length).
-  // Reading from a ref inside the interval lets the stop condition
-  // track the CURRENT full as it grows.
+  // Live refs for current full + position. featureDisplayName's DOM
+  // lookup falls back to canonical on the FIRST render (parent ref
+  // not yet populated) and extends to the friendly name when the
+  // parent re-renders with refs populated. The interval may have
+  // ALREADY CLEARED at the canonical length by the time the friendly
+  // name arrives — the previous closure-only ref fix tracked the
+  // length but didn't restart the interval after it stopped (observed
+  // 2026-05-13 session #14 image #42: "chased → the acti" = 17 chars
+  // = length of "verb → the action" before "verb"→"chased" extension).
+  //
+  // Now: dep on `full`. When full extends after the interval cleared,
+  // the effect re-runs, sees nRef < new full.length, and resumes
+  // from the current position. nRef is a ref so re-entries don't
+  // restart at 0.
   const fullRef = useRef(full);
   fullRef.current = full;
+  const nRef = useRef(0);
   useEffect(() => {
-    let n = 0;
+    if (nRef.current >= full.length) return;
     const id = window.setInterval(() => {
-      n += 1;
-      setRevealed(n);
-      if (n >= fullRef.current.length) window.clearInterval(id);
+      nRef.current += 1;
+      setRevealed(nRef.current);
+      if (nRef.current >= fullRef.current.length) window.clearInterval(id);
     }, 30);
     return () => window.clearInterval(id);
-    // Mount-only animation. Stable parent key ensures fresh mount
-    // for new entries and identity preservation for existing ones.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [full]);
   const boldShown = revealed >= boldText.length ? boldText : full.slice(0, revealed);
   const tailShown = revealed > boldText.length ? full.slice(boldText.length, revealed) : '';
   return (
