@@ -358,6 +358,415 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
   return features;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Phase 2a organizer manifests — t_chart, kwl_chart, frayer_model,
+// argument_structure, government_branches. Each follows the
+// comparison_table pattern: shared naming helper + manifest builder.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── t_chart ───────────────────────────────────────────────────────
+export const tChartFeatureNames = {
+  chart: 'chart',
+  leftHeader: 'left-header',
+  rightHeader: 'right-header',
+  leftColumn: 'left-column',
+  rightColumn: 'right-column',
+  leftItem: (i: number): string => `left-item-${i + 1}`,
+  rightItem: (i: number): string => `right-item-${i + 1}`,
+};
+
+export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEntry[] {
+  const N = tChartFeatureNames;
+  const lh = String(figure.leftHeader ?? '').trim();
+  const rh = String(figure.rightHeader ?? '').trim();
+  const leftItems = figure.leftItems ?? [];
+  const rightItems = figure.rightItems ?? [];
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.chart,
+      kind: 'region',
+      description: figure.title ? `t-chart: ${figure.title}` : 't-chart',
+      labels: ['chart', 'the chart', 't-chart', 'the t-chart', 'the t chart'],
+      scribbleable: true,
+    },
+    {
+      name: N.leftHeader,
+      kind: 'label',
+      description: lh ? `left header "${lh}"` : 'left header',
+      labels: ['left header', 'the left header', ...(lh ? [lh, `the ${lh}`, `"${lh}"`, `${lh} header`] : [])],
+      scribbleable: true,
+    },
+    {
+      name: N.rightHeader,
+      kind: 'label',
+      description: rh ? `right header "${rh}"` : 'right header',
+      labels: ['right header', 'the right header', ...(rh ? [rh, `the ${rh}`, `"${rh}"`, `${rh} header`] : [])],
+      scribbleable: true,
+    },
+    {
+      name: N.leftColumn,
+      kind: 'area',
+      description: lh ? `left column ("${lh}")` : 'left column',
+      labels: ['left column', 'the left column', 'left side', 'the left side', ...(lh ? [`${lh} column`, `the ${lh} column`, `${lh} side`] : [])],
+      scribbleable: true,
+    },
+    {
+      name: N.rightColumn,
+      kind: 'area',
+      description: rh ? `right column ("${rh}")` : 'right column',
+      labels: ['right column', 'the right column', 'right side', 'the right side', ...(rh ? [`${rh} column`, `the ${rh} column`, `${rh} side`] : [])],
+      scribbleable: true,
+    },
+  ];
+  leftItems.forEach((item, i) => {
+    const text = String(item ?? '').trim();
+    const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    features.push({
+      name: N.leftItem(i),
+      kind: 'label',
+      description: preview ? `left item ${i + 1}: "${preview}"` : `left item ${i + 1}`,
+      labels: [
+        `left item ${i + 1}`, `left-item-${i + 1}`,
+        ...(lh ? [`${lh} item ${i + 1}`] : []),
+        ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  rightItems.forEach((item, i) => {
+    const text = String(item ?? '').trim();
+    const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    features.push({
+      name: N.rightItem(i),
+      kind: 'label',
+      description: preview ? `right item ${i + 1}: "${preview}"` : `right item ${i + 1}`,
+      labels: [
+        `right item ${i + 1}`, `right-item-${i + 1}`,
+        ...(rh ? [`${rh} item ${i + 1}`] : []),
+        ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
+      ],
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── kwl_chart ─────────────────────────────────────────────────────
+export const kwlChartFeatureNames = {
+  chart: 'chart',
+  kColumn: 'k-column',
+  wColumn: 'w-column',
+  lColumn: 'l-column',
+  kItem: (i: number): string => `k-item-${i + 1}`,
+  wItem: (i: number): string => `w-item-${i + 1}`,
+  lItem: (i: number): string => `l-item-${i + 1}`,
+};
+
+export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestEntry[] {
+  const N = kwlChartFeatureNames;
+  const know = figure.know ?? [];
+  const want = figure.want ?? [];
+  const learned = figure.learned ?? [];
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.chart,
+      kind: 'region',
+      description: figure.title ? `KWL chart: ${figure.title}` : 'KWL chart',
+      labels: ['chart', 'the chart', 'KWL chart', 'the KWL chart', 'kwl chart'],
+      scribbleable: true,
+    },
+    {
+      name: N.kColumn,
+      kind: 'area',
+      description: 'K column (what you know)',
+      labels: ['K column', 'the K column', 'know column', 'the know column', 'what you know', 'what we know', 'K', 'the K', 'know', 'the know'],
+      scribbleable: true,
+    },
+    {
+      name: N.wColumn,
+      kind: 'area',
+      description: 'W column (what you want to know)',
+      labels: ['W column', 'the W column', 'want column', 'the want column', 'want to know', 'what we want to know', 'W', 'the W', 'want', 'the want'],
+      scribbleable: true,
+    },
+    {
+      name: N.lColumn,
+      kind: 'area',
+      description: 'L column (what you learned)',
+      labels: ['L column', 'the L column', 'learned column', 'the learned column', 'what we learned', 'L', 'the L', 'learned', 'the learned'],
+      scribbleable: true,
+    },
+  ];
+  const addItems = (items: string[], makeName: (i: number) => string, side: string) => {
+    items.forEach((item, i) => {
+      const text = String(item ?? '').trim();
+      const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+      features.push({
+        name: makeName(i),
+        kind: 'label',
+        description: preview ? `${side} item ${i + 1}: "${preview}"` : `${side} item ${i + 1}`,
+        labels: [
+          `${side} item ${i + 1}`, `${side}-item-${i + 1}`,
+          ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
+        ],
+        scribbleable: true,
+      });
+    });
+  };
+  addItems(know, N.kItem, 'K');
+  addItems(want, N.wItem, 'W');
+  addItems(learned, N.lItem, 'L');
+  return features;
+}
+
+// ── frayer_model ──────────────────────────────────────────────────
+export const frayerModelFeatureNames = {
+  frayer: 'frayer',
+  term: 'term',
+  definition: 'definition',
+  characteristics: 'characteristics',
+  examples: 'examples',
+  nonExamples: 'non-examples',
+  characteristicItem: (i: number): string => `characteristic-item-${i + 1}`,
+  exampleItem: (i: number): string => `example-item-${i + 1}`,
+  nonExampleItem: (i: number): string => `non-example-item-${i + 1}`,
+};
+
+export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManifestEntry[] {
+  const N = frayerModelFeatureNames;
+  const term = String(figure.term ?? '').trim();
+  const def = String(figure.definition ?? '').trim();
+  const defPreview = def.length > 80 ? `${def.slice(0, 77)}...` : def;
+  const chars = figure.characteristics ?? [];
+  const examples = figure.examples ?? [];
+  const nonExamples = figure.nonExamples ?? [];
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.frayer,
+      kind: 'region',
+      description: term ? `Frayer model for "${term}"` : 'Frayer model',
+      labels: ['frayer', 'the frayer', 'frayer model', 'the frayer model', 'the diagram'],
+      scribbleable: true,
+    },
+    {
+      name: N.term,
+      kind: 'label',
+      description: term ? `term "${term}" (center)` : 'term (center)',
+      labels: ['term', 'the term', 'the center', 'center', ...(term ? [term, `"${term}"`, `the ${term}`, `the word ${term}`] : [])],
+      scribbleable: true,
+    },
+    {
+      name: N.definition,
+      kind: 'area',
+      description: defPreview ? `definition quadrant: "${defPreview}"` : 'definition quadrant',
+      labels: ['definition', 'the definition', 'the definition quadrant', 'definition box'],
+      scribbleable: true,
+    },
+    {
+      name: N.characteristics,
+      kind: 'area',
+      description: 'characteristics quadrant',
+      labels: ['characteristics', 'the characteristics', 'characteristics quadrant', 'characteristics box', 'features', 'traits'],
+      scribbleable: true,
+    },
+    {
+      name: N.examples,
+      kind: 'area',
+      description: 'examples quadrant',
+      labels: ['examples', 'the examples', 'examples quadrant', 'examples box'],
+      scribbleable: true,
+    },
+    {
+      name: N.nonExamples,
+      kind: 'area',
+      description: 'non-examples quadrant',
+      labels: ['non-examples', 'the non-examples', 'non-examples quadrant', 'non-examples box', 'nonexamples', 'not examples'],
+      scribbleable: true,
+    },
+  ];
+  const addQuadrantItems = (items: string[], makeName: (i: number) => string, quad: string) => {
+    items.forEach((item, i) => {
+      const text = String(item ?? '').trim();
+      const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+      features.push({
+        name: makeName(i),
+        kind: 'label',
+        description: preview ? `${quad} ${i + 1}: "${preview}"` : `${quad} ${i + 1}`,
+        labels: [
+          `${quad} ${i + 1}`, `${quad}-${i + 1}`,
+          ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
+        ],
+        scribbleable: true,
+      });
+    });
+  };
+  addQuadrantItems(chars, N.characteristicItem, 'characteristic');
+  addQuadrantItems(examples, N.exampleItem, 'example');
+  addQuadrantItems(nonExamples, N.nonExampleItem, 'non-example');
+  return features;
+}
+
+// ── argument_structure ────────────────────────────────────────────
+export const argumentStructureFeatureNames = {
+  argument: 'argument',
+  claim: 'claim',
+  evidence: 'evidence',
+  reasoning: 'reasoning',
+  counter: 'counter',
+  rebuttal: 'rebuttal',
+  evidenceItem: (i: number): string => `evidence-item-${i + 1}`,
+  reasoningItem: (i: number): string => `reasoning-item-${i + 1}`,
+};
+
+export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureManifestEntry[] {
+  const N = argumentStructureFeatureNames;
+  const claim = String(figure.claim ?? '').trim();
+  const claimPreview = claim.length > 80 ? `${claim.slice(0, 77)}...` : claim;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.argument,
+      kind: 'region',
+      description: figure.title ? `argument structure: ${figure.title}` : 'argument structure',
+      labels: ['argument', 'the argument', 'argument structure', 'the diagram'],
+      scribbleable: true,
+    },
+    {
+      name: N.claim,
+      kind: 'label',
+      description: claimPreview ? `claim: "${claimPreview}"` : 'claim',
+      labels: ['claim', 'the claim', 'main claim', 'thesis', 'the thesis', ...(claimPreview ? [claimPreview, `"${claimPreview}"`] : [])],
+      scribbleable: true,
+    },
+    {
+      name: N.evidence,
+      kind: 'area',
+      description: `evidence section (${figure.evidence.length} ${figure.evidence.length === 1 ? 'item' : 'items'})`,
+      labels: ['evidence', 'the evidence', 'evidence section', 'evidence box'],
+      scribbleable: true,
+    },
+    {
+      name: N.reasoning,
+      kind: 'area',
+      description: `reasoning section (${figure.reasoning.length} ${figure.reasoning.length === 1 ? 'item' : 'items'})`,
+      labels: ['reasoning', 'the reasoning', 'reasoning section', 'reasoning box', 'warrant', 'the warrant'],
+      scribbleable: true,
+    },
+  ];
+  figure.evidence.forEach((item, i) => {
+    const text = String(item ?? '').trim();
+    const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    features.push({
+      name: N.evidenceItem(i),
+      kind: 'label',
+      description: preview ? `evidence ${i + 1}: "${preview}"` : `evidence ${i + 1}`,
+      labels: [`evidence ${i + 1}`, `evidence-${i + 1}`, ...(preview ? [preview, `"${preview}"`] : [])],
+      scribbleable: true,
+    });
+  });
+  figure.reasoning.forEach((item, i) => {
+    const text = String(item ?? '').trim();
+    const preview = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    features.push({
+      name: N.reasoningItem(i),
+      kind: 'label',
+      description: preview ? `reasoning ${i + 1}: "${preview}"` : `reasoning ${i + 1}`,
+      labels: [`reasoning ${i + 1}`, `reasoning-${i + 1}`, ...(preview ? [preview, `"${preview}"`] : [])],
+      scribbleable: true,
+    });
+  });
+  if (figure.counter) {
+    const c = String(figure.counter).trim();
+    const preview = c.length > 80 ? `${c.slice(0, 77)}...` : c;
+    features.push({
+      name: N.counter,
+      kind: 'area',
+      description: `counterargument: "${preview}"`,
+      labels: ['counter', 'the counter', 'counterargument', 'the counterargument', 'opposing view'],
+      scribbleable: true,
+    });
+  }
+  if (figure.rebuttal) {
+    const r = String(figure.rebuttal).trim();
+    const preview = r.length > 80 ? `${r.slice(0, 77)}...` : r;
+    features.push({
+      name: N.rebuttal,
+      kind: 'area',
+      description: `rebuttal: "${preview}"`,
+      labels: ['rebuttal', 'the rebuttal', 'the response'],
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── government_branches ───────────────────────────────────────────
+export const governmentBranchesFeatureNames = {
+  branches: 'branches',
+  country: 'country',
+  branch: (i: number): string => `branch-${i + 1}`,
+  branchBodies: (i: number): string => `branch-${i + 1}-bodies`,
+  branchPowers: (i: number): string => `branch-${i + 1}-powers`,
+};
+
+export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure): FeatureManifestEntry[] {
+  const N = governmentBranchesFeatureNames;
+  const country = String(figure.country ?? '').trim();
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.branches,
+      kind: 'region',
+      description: figure.title ? `branches of government: ${figure.title}` : 'branches of government',
+      labels: ['branches', 'the branches', 'the diagram', 'branches of government'],
+      scribbleable: true,
+    },
+    {
+      name: N.country,
+      kind: 'label',
+      description: country ? `country: "${country}"` : 'country',
+      labels: ['country', 'the country', ...(country ? [country, `the ${country}`] : [])],
+      scribbleable: true,
+    },
+  ];
+  figure.branches.forEach((branch, i) => {
+    const name = String(branch.name ?? '').trim();
+    features.push({
+      name: N.branch(i),
+      kind: 'area',
+      description: name ? `branch ${i + 1}: "${name}"` : `branch ${i + 1}`,
+      labels: [
+        `branch ${i + 1}`, `branch-${i + 1}`,
+        ...(name ? [name, `the ${name}`, `${name} branch`, `the ${name} branch`, `"${name}"`] : []),
+      ],
+      scribbleable: true,
+    });
+    if (branch.bodies && branch.bodies.length > 0) {
+      features.push({
+        name: N.branchBodies(i),
+        kind: 'label',
+        description: `${name || `branch ${i + 1}`} bodies: ${branch.bodies.join(', ')}`,
+        labels: [
+          `${name} bodies`, `branch ${i + 1} bodies`,
+          ...(name ? [`the ${name} bodies`] : []),
+        ],
+        scribbleable: true,
+      });
+    }
+    if (branch.powers && branch.powers.length > 0) {
+      features.push({
+        name: N.branchPowers(i),
+        kind: 'label',
+        description: `${name || `branch ${i + 1}`} powers (${branch.powers.length})`,
+        labels: [
+          `${name} powers`, `branch ${i + 1} powers`,
+          ...(name ? [`the ${name} powers`, `${name} responsibilities`] : []),
+        ],
+        scribbleable: true,
+      });
+    }
+  });
+  return features;
+}
+
 // ── t_chart / kwl_chart / frayer_model (Phase 8 — organizers) ─────────────
 export interface OrganizerFigure {
   kind: 't_chart' | 'kwl_chart' | 'frayer_model';

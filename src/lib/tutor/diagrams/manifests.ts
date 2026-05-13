@@ -47,6 +47,14 @@ import { solveGeometry } from '@/lib/tutor/diagrams/geometry-solver';
 import {
   buildComparisonTableManifest,
   solveComparisonTable,
+  buildTChartManifest,
+  buildKwlChartManifest,
+  buildFrayerModelManifest,
+  buildArgumentStructureManifest,
+  buildGovernmentBranchesManifest,
+  solveOrganizer,
+  solveArgumentStructure,
+  solveGovernmentBranches,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 /**
@@ -791,6 +799,44 @@ function buildDiagramManifest(cmd: {
       } catch {
         // fall through to catch-all
       }
+      break;
+    }
+    // Phase 2a — organizer kinds. Each solves → builds the rich
+    // manifest. On solver failure fall through to the catch-all
+    // single-region feature so the catalog still registers the item.
+    case 't_chart': {
+      try {
+        const figure = solveOrganizer('t_chart', params);
+        return buildTChartManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'kwl_chart': {
+      try {
+        const figure = solveOrganizer('kwl_chart', params);
+        return buildKwlChartManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'frayer_model': {
+      try {
+        const figure = solveOrganizer('frayer_model', params);
+        return buildFrayerModelManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'argument_structure': {
+      try {
+        const figure = solveArgumentStructure(params);
+        return buildArgumentStructureManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'government_branches': {
+      try {
+        const figure = solveGovernmentBranches(params);
+        return buildGovernmentBranchesManifest(figure);
+      } catch { /* fall through */ }
       break;
     }
     default:

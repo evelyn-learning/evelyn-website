@@ -119,7 +119,7 @@ const rendererSource = readFileSync(
   'utf8',
 );
 expect(
-  rendererSource.includes("import { comparisonTableFeatureNames }"),
+  rendererSource.includes('comparisonTableFeatureNames'),
   'CatalogAdvancedRenderers.tsx must import comparisonTableFeatureNames',
 );
 expect(rendererSource.includes('data-feature={N.table}'), 'renderer must set data-feature-id on outer <table>');
