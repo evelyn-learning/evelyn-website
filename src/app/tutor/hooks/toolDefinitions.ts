@@ -1738,16 +1738,16 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'tutor_scribble',
-    description: 'Point at / circle / underline / highlight a feature already on the whiteboard. Overlay only — does NOT redraw. Use when you want to draw the student\'s attention to a specific part of a diagram.\n\nHOW TO ADDRESS:\n  Pass a single `target` string naming the feature. The client resolves it deterministically against the catalog of features every show_* tool registered — you do NOT pass an item id, item index, page, or coordinates. Use the exact feature name from the `features` array you received in the show_*\'s tool_result (e.g. "point-a", "object", "mass-1", "force-weight", "stage-precipitation"). Natural-language variants also work ("A", "vertex A", "the object"). If the feature can\'t be resolved, the tool_result returns the current feature catalog — retry with one of those names.\n\nDo not use this for new content or for unlabeled spots. If you need to mark something that was never drawn, render it first with a show_* tool.',
+    description: 'Draw the student\'s attention to a feature already on the whiteboard. Overlay only — does NOT redraw. Default behavior: places a small ✓ tick mark just past the feature\'s right edge. Use sparingly — one or two per turn.\n\nHOW TO ADDRESS:\n  Pass a single `target` string naming the feature. The client resolves it deterministically against the catalog of features every show_* tool registered — you do NOT pass an item id, item index, page, or coordinates. Use the exact feature name from the `features` array you received in the show_*\'s tool_result (e.g. "point-a", "object", "mass-1", "force-weight", "stage-precipitation"). Natural-language variants also work ("A", "vertex A", "the object"). If the feature can\'t be resolved, the tool_result returns the current feature catalog — retry with one of those names.\n\nIf you provide a `label`, it appears in the page\'s annotation strip below the rendered items as "{feature} → {label}" — NOT on the diagram itself. Keep labels short.\n\nDo not use this for new content or for unlabeled spots. If you need to mark something that was never drawn, render it first with a show_* tool.',
     parameters: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'The feature to mark. Use a name from the `features` array in a prior show_* tool_result (e.g. "point-a", "object", "mass-1"). Natural-language variants like "vertex A" also resolve — the client maps them to the canonical name.' },
-        shape: { type: 'string', enum: ['circle', 'underline', 'arrow', 'box', 'highlight'], description: 'circle = ring around the feature; underline = line beneath it; arrow = arrow pointing at it; box = rectangle around it; highlight = semi-transparent fill.' },
-        color: { type: 'string', description: 'CSS color. Defaults to amber (#f59e0b).' },
-        label: { type: 'string', description: 'Optional short text (≤3 words) drawn near the mark — e.g. "here" or "this step".' },
+        shape: { type: 'string', enum: ['tick', 'highlight'], description: 'tick = small ✓ next to the feature (default); highlight = semi-transparent fill over the feature\'s region. Defaults to "tick" when omitted.' },
+        color: { type: 'string', description: 'CSS color. Defaults to blue (#3b82f6).' },
+        label: { type: 'string', description: 'Optional short text that appears in the page\'s annotation strip below the diagram as "{feature} → {label}". Keep short.' },
       },
-      required: ['target', 'shape'],
+      required: ['target'],
     },
   },
 
@@ -1776,15 +1776,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'tutor_handwrite',
-    description: 'Write free-form text on the whiteboard in handwriting font, like a teacher\'s margin note. Use for quick reminders ("key idea: …"), capturing student wording verbatim ("you said: \"X\""), inline definitions, or short causation notes ("because particles are spread out → high compressibility"). Distinct from `annotate` (a boxed text card) and `tutor_scribble` (which marks an EXISTING feature with a circle/underline/box).\n\nProvide exactly ONE of `near` (anchor to an existing feature on the board — same resolution as tutor_scribble\'s target) OR `margin` (place at a fixed page-edge slot). Text is capped at 80 characters; longer text truncates with an ellipsis.\n\nUse sparingly — 1-2 handwrites per turn at most. Each handwrite stays on the page until a new_page or clear fires. The board accumulates marks like a teacher\'s whiteboard, so over-handwriting clutters the canvas fast.',
+    description: 'Add a self-contained commentary line to the current page\'s annotation strip — the running list of teacher notes that sits below the rendered items. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). The note has no spatial anchor — it lands in the strip in the order it was emitted. Use sparingly — 1-2 handwrites per turn at most. Strip resets on each new_page.',
     parameters: {
       type: 'object',
       properties: {
-        text: { type: 'string', description: 'The text to write. Keep short — ≤80 characters. Plain text only; LaTeX / markdown does not render.' },
-        near: { type: 'string', description: 'Feature name to write next to (same shape as tutor_scribble\'s `target`). Mutually exclusive with `margin`. The handwriting positions adjacent to the named feature on the side indicated by `position`.' },
-        position: { type: 'string', enum: ['above', 'below', 'right', 'left'], description: 'Where to place the handwriting relative to the anchored feature. Defaults to "right". Only valid with `near`.' },
-        margin: { type: 'string', enum: ['top', 'right', 'bottom', 'left'], description: 'Page-edge slot for the handwriting when it doesn\'t anchor to a specific feature. Mutually exclusive with `near`. Use for general margin notes ("key idea", "remember:").' },
-        color: { type: 'string', description: 'CSS color. Defaults to dark amber ("#b45309"). Use green for affirmation, red for warnings.' },
+        text: { type: 'string', description: 'The full self-contained text to add to the page\'s annotation strip. Plain text only; LaTeX / markdown does not render.' },
+        color: { type: 'string', description: 'CSS color for the strip entry. Defaults to amber ("#a16207"). Use green for affirmation, red for warnings.' },
       },
       required: ['text'],
     },
@@ -2639,12 +2636,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   if (funcName === 'tutor_scribble') {
     const target = typeof funcArgs.target === 'string' && funcArgs.target.trim() ? funcArgs.target.trim() : undefined;
     if (!target) return null;
-    const shape = typeof funcArgs.shape === 'string' ? funcArgs.shape : 'circle';
-    if (!['circle', 'underline', 'arrow', 'box', 'highlight'].includes(shape)) return null;
+    // Post-redesign vocabulary: only 'tick' + 'highlight'. Legacy shapes
+    // (circle/underline/box/arrow) silently remap to 'tick' so in-flight
+    // sessions and old lesson plans keep working without validator
+    // rejection. Default when shape is omitted is 'tick'.
+    const rawShape = typeof funcArgs.shape === 'string' ? funcArgs.shape : 'tick';
+    const shape: 'tick' | 'highlight' = rawShape === 'highlight' ? 'highlight' : 'tick';
     return {
       action: 'scribble',
       target,
-      shape: shape as 'circle' | 'underline' | 'arrow' | 'box' | 'highlight',
+      shape,
       color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
       label: typeof funcArgs.label === 'string' ? funcArgs.label : undefined,
     };
@@ -2658,39 +2659,13 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   if (funcName === 'tutor_handwrite') {
     const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';
     if (!text) return null;
-    const near = typeof funcArgs.near === 'string' && funcArgs.near.trim() ? funcArgs.near.trim() : undefined;
-    const margin = typeof funcArgs.margin === 'string' ? funcArgs.margin : undefined;
-    // Exactly one of near OR margin; mutually exclusive. If both or
-    // neither, default to margin "right" so the call still produces a
-    // visible mark rather than silent-dropping.
-    if (near && margin) {
-      // Brain provided both — prefer the explicit anchor.
-      return {
-        action: 'handwrite',
-        text,
-        near,
-        position: ['above', 'below', 'right', 'left'].includes(String(funcArgs.position))
-          ? funcArgs.position as 'above' | 'below' | 'right' | 'left'
-          : 'right',
-        color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
-      };
-    }
-    if (near) {
-      return {
-        action: 'handwrite',
-        text,
-        near,
-        position: ['above', 'below', 'right', 'left'].includes(String(funcArgs.position))
-          ? funcArgs.position as 'above' | 'below' | 'right' | 'left'
-          : 'right',
-        color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
-      };
-    }
-    const validMargin = ['top', 'right', 'bottom', 'left'].includes(String(margin)) ? margin as 'top' | 'right' | 'bottom' | 'left' : 'right';
+    // Post-redesign: handwrite is a pure text-into-strip command. The
+    // `near` / `position` / `margin` fields are accepted-but-ignored so
+    // in-flight brain calls during system-prompt cache turnover don't
+    // crash. The orchestrator strips these silently before rendering.
     return {
       action: 'handwrite',
       text,
-      margin: validMargin,
       color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
     };
   }

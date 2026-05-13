@@ -669,39 +669,7 @@ export function WhiteboardCanvas({
       >
         <div
           key={currentIndex}
-          style={{
-            position: 'relative',
-            // Reserve a top band for margin: "top" handwrites when present.
-            // Without this, the margin-top stamp shares the title row with
-            // anchored "above" handwrites on column headers, and they
-            // overlap (observed across sessions 14-18). With ~36px of
-            // dedicated top padding, the margin stamp lives in the
-            // reserved band and anchored handwrites push down to start
-            // below it — clean separation. Padding is conditional so
-            // pages without margin-top handwrites stay flush to the top.
-            //
-            // ALSO: anchored handwrites whose `near` resolves to a
-            // central-pin feature (the frayer term pill is the canonical
-            // case) are escaped to a top-margin slot by HandwriteOverlays.
-            // Without the same top-padding push, the escaped sticky-note
-            // lands on top of the diagram's first row (observed
-            // 2026-05-13 session #8: "Remember the 3 C's!" sat on top
-            // of the frayer's DEFINITION header). Detect this case by
-            // checking if any handwrite anchors to a feature named
-            // "term" with position "above" — that's the frayer-term
-            // central-pin pattern we explicitly escape.
-            //
-            // Mirror padding for margin: "bottom" handwrites — without
-            // it a tall page (e.g., two stacked KWL charts) lands the
-            // bottom stamp on top of the second chart's bottom row
-            // (observed session #8: "We will fill in L by the end!"
-            // overlapped the K column of the second KWL).
-            paddingTop: handwrites.some(
-              (h) => h.margin === 'top'
-                || (h.targetFeature === 'term' && (h.position === 'above' || h.position === 'below')),
-            ) ? 36 : undefined,
-            paddingBottom: handwrites.some((h) => h.margin === 'bottom') ? 44 : undefined,
-          }}
+          style={{ position: 'relative' }}
           className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
         >
         {renderableCommands.length === 1 ? (
@@ -745,12 +713,13 @@ export function WhiteboardCanvas({
             <p className="text-xs text-gray-400 italic">✏️ Tutor is preparing something…</p>
           </div>
         )}
-        {/* Phase 1' (whiteboard markup): handwrite layer sits at the page
-            level above all items so margin-slot notes don't tie to any
-            single item, and anchored notes float over their target. */}
-        {handwrites.length > 0 && (
-          <HandwriteOverlays handwrites={handwrites} itemRefs={itemRefsRef} />
-        )}
+        {/* Annotation strip: per-page running list of teacher notes built
+            from tutor_scribble labels + tutor_handwrite text. Replaces
+            the old position-based on-diagram annotations — gives a
+            stable home for words and frees the brain from spatial
+            reasoning entirely. Resets on page nav (each page has its
+            own commands). */}
+        <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />
         </div>
       </div>
       {/* Scroll-down hint: visible when multi-item page has overflow */}
@@ -1009,10 +978,14 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
  */
 /**
  * Overlay layer rendered on top of a whiteboard item to show the tutor's
- * point / circle / underline / arrow / highlight annotations (from the
- * tutor_scribble tool). Each scribble persists until the page is cleared
- * or a newPage fires — a teacher would leave their marks on the board
- * while explaining.
+ * tick / highlight annotations (from the tutor_scribble tool). Each
+ * scribble persists until the page is cleared or a newPage fires.
+ *
+ * Post-redesign (2026-05-13): shape vocab collapsed to `tick` (small ✓
+ * just past the feature's right edge) + `highlight` (semi-transparent
+ * fill over the feature's bbox). Legacy shapes circle / underline /
+ * box / arrow silently render as `tick`. Labels no longer paint on
+ * the diagram — they move to the per-page AnnotationStrip below.
  */
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
 type ResolvedRegion = { x: number; y: number; w: number; h: number };
@@ -1287,7 +1260,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
       preserveAspectRatio={parAttr}
     >
       {measured && scribbles.map((s, i) => {
-        const color = s.color || '#f59e0b';
+        const color = s.color || '#3b82f6';
         // Region: feature-resolved (via catalog + data-feature lookup) or
         // small-centered default when the target SVG hasn't laid out yet.
         const resolved = s.targetFeature ? resolvedByFeature[s.targetFeature] : undefined;
@@ -1295,128 +1268,45 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         // Map 0–1 fractions into the target viewBox's pixel space so
         // positions match features baked into the target SVG itself.
         const r = { x: source.x * vbW, y: source.y * vbH, w: source.w * vbW, h: source.h * vbH };
-        const cx = r.x + r.w / 2;
-        const cy = r.y + r.h / 2;
 
-        // Scale stroke/font constants to viewBox pixel space — same rules
-        // the PDF overlay uses so live and PDF match visually.
-        const strokeThin = Math.max(1.5, vbW / 500);
-        const strokeMed = Math.max(2, vbW / 200);
-        const fontSizePx = Math.max(10, vbW / 50);
+        // Post-redesign vocabulary: only `tick` and `highlight`. Legacy
+        // shapes (circle/underline/box/arrow) silently render as a tick
+        // so old session state + cached brain calls keep working.
+        const isHighlight = s.shape === 'highlight';
 
         let mark: React.ReactNode;
-        switch (s.shape) {
-          case 'circle': {
-            // Oval that hugs the feature's natural aspect ratio. The
-            // earlier radius-cap approach collapsed a wide table-cell
-            // target into a tiny circle visually disconnected from the
-            // box. Instead, scale rx/ry from the target's half-width
-            // and half-height with a small padding (12%), so a wide
-            // box gets a wide oval and a narrow item gets a small
-            // circle — both visibly enclose the target.
-            //
-            // Line-like targets (aspect ratio > 3 — segments, vectors,
-            // hypotenuses) still need a tighter ellipse around the
-            // centroid: the bounding box of an angled segment is huge
-            // but the meaningful point is the centroid. For these we
-            // cap radii to a moderate fraction of the smaller viewBox
-            // dimension (2026-04-29 geometry session regression: the
-            // hypotenuse mark ate the entire triangle).
-            const aspectRatio = Math.max(r.w, r.h) / Math.max(0.0001, Math.min(r.w, r.h));
-            const isLineLike = aspectRatio > 3;
-            const lineRadiusCap = Math.min(vbW, vbH) * 0.08;
-            const rxRaw = Math.max(vbW * 0.015, r.w / 2);
-            const ryRaw = Math.max(vbH * 0.015, r.h / 2);
-            const ovalPadding = 1.12;
-            const rx = isLineLike ? Math.min(rxRaw, lineRadiusCap) : rxRaw * ovalPadding;
-            const ry = isLineLike ? Math.min(ryRaw, lineRadiusCap) : ryRaw * ovalPadding;
-            mark = (
-              <ellipse
-                cx={cx} cy={cy}
-                rx={rx} ry={ry}
-                fill="none" stroke={color} strokeWidth={strokeMed}
-              />
-            );
-            break;
-          }
-          case 'underline':
-            mark = (
-              <line
-                x1={r.x} y1={r.y + r.h}
-                x2={r.x + r.w} y2={r.y + r.h}
-                stroke={color} strokeWidth={Math.max(2.5, vbW / 170)}
-                strokeLinecap="round"
-              />
-            );
-            break;
-          case 'box':
-            mark = (
-              <rect
-                x={r.x} y={r.y} width={r.w} height={r.h}
-                fill="none" stroke={color} strokeWidth={strokeMed}
-              />
-            );
-            break;
-          case 'highlight':
-            mark = (
-              <rect
-                x={r.x} y={r.y} width={r.w} height={r.h}
-                fill={color} fillOpacity="0.25" stroke="none"
-              />
-            );
-            break;
-          case 'arrow': {
-            // Arrow coming in from top-left toward the region's centre.
-            const tailX = Math.max(0, r.x - vbW * 0.08);
-            const tailY = Math.max(0, r.y - vbH * 0.08);
-            const headX = cx;
-            const headY = cy;
-            const markerId = `scribble-arrow-${i}`;
-            mark = (
-              <g>
-                <defs>
-                  <marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-                    <path d="M0,0 L10,5 L0,10 Z" fill={color} />
-                  </marker>
-                </defs>
-                <line
-                  x1={tailX} y1={tailY} x2={headX} y2={headY}
-                  stroke={color} strokeWidth={strokeMed}
-                  markerEnd={`url(#${markerId})`}
-                />
-              </g>
-            );
-            break;
-          }
+        if (isHighlight) {
+          mark = (
+            <rect
+              x={r.x} y={r.y} width={r.w} height={r.h}
+              fill={color} fillOpacity="0.25" stroke="none"
+            />
+          );
+        } else {
+          // Tick anchor: just past the right edge of the feature's bbox,
+          // vertically centered. A small ✓ icon — minimal visual mark
+          // that doesn't obscure content. Size scales with the viewBox
+          // so the tick stays proportional across tiny and wide items.
+          const tickSize = Math.max(10, Math.min(vbW, vbH) * 0.04);
+          const tx = r.x + r.w + tickSize * 0.4;
+          const ty = r.y + r.h / 2;
+          const half = tickSize / 2;
+          // Two-segment ✓ path: short stroke from upper-left of the
+          // ascender down to the cusp, then long stroke up to upper-right.
+          const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+          mark = (
+            <path
+              d={d}
+              fill="none"
+              stroke={color}
+              strokeWidth={Math.max(2, tickSize * 0.18)}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          );
         }
 
-        // Stagger label y so multiple labels on the same item don't pile
-        // up at the same horizontal line. Alternates above / below the
-        // region, cycling through a few offsets (scaled to viewBox).
-        const staggerSign = i % 2 === 0 ? -1 : 1;
-        const staggerBand = Math.floor(i / 2) * vbH * 0.03;
-        const labelY = staggerSign < 0
-          ? Math.max(vbH * 0.04, r.y - fontSizePx * 0.4 - staggerBand)
-          : Math.min(vbH * 0.97, r.y + r.h + fontSizePx + staggerBand);
-        return (
-          <g key={i}>
-            {mark}
-            {s.label && (
-              <text
-                x={cx} y={labelY}
-                fontSize={fontSizePx} fill={color} textAnchor="middle"
-                fontWeight="700"
-                // White halo for readability on busy backgrounds.
-                paintOrder="stroke"
-                stroke="white"
-                strokeWidth={strokeThin}
-                strokeLinejoin="round"
-              >
-                {s.label}
-              </text>
-            )}
-          </g>
-        );
+        return <g key={i}>{mark}</g>;
       })}
     </svg>
   );
@@ -1511,263 +1401,120 @@ function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq
 }
 
 /**
- * Page-level handwrite overlay. Phase 1' of the whiteboard markup
- * initiative. Renders tutor_handwrite commands as positioned text in
- * handwriting font, anchored either to a feature on the page (via the
- * already-resolved targetItemIndex + targetFeature) OR at a named
- * margin slot of the page container.
+ * Per-page annotation strip. Sits inside the page wrapper at the bottom
+ * of the rendered items. Holds the running list of teacher notes built
+ * from:
+ *   - tutor_scribble commands that carry a `label` — entry is
+ *     `{feature display name} → {label}` in the scribble's color.
+ *   - tutor_handwrite commands — entry is the full text in the
+ *     handwrite's color.
  *
- * Anchored handwrites use getBoundingClientRect on the resolved feature
- * (same DOM-query path as ScribbleOverlays HTML mode) and position the
- * text adjacent on the requested side. Margin handwrites position at
- * fixed insets of the page container.
- *
- * Distinct from ScribbleOverlays (which marks an EXISTING feature with
- * a circle/underline/box) and from `annotate` (a boxed text card with
- * bg color). Handwrites are free-form notes in cursive font — the
- * teacher's pen marks.
+ * Replaces the position-based on-diagram annotation layer
+ * (HandwriteOverlays + label-on-scribble) shipped through 2026-05-13.
+ * The brain no longer positions anything; the strip is the home for
+ * all words. Strip resets on page nav because each page has its own
+ * commands. Empty strip renders nothing — no reserved space.
  */
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 
-// Caveat + Kalam are loaded via next/font/google in app/layout.tsx and
-// exposed as CSS variables. Caveat is the primary teacher-handwriting
-// look; Kalam falls back if Caveat fails to load (Kalam is more print-
-// leaning so it stays legible). System cursive at the end as last resort.
-const HANDWRITE_FONT_STACK = 'var(--font-caveat), var(--font-kalam), "Caveat", "Kalam", cursive';
-const HANDWRITE_DEFAULT_COLOR = '#b45309';
+const SCRIBBLE_DEFAULT_COLOR = '#3b82f6';
+const HANDWRITE_DEFAULT_COLOR = '#a16207';
 
-function HandwriteOverlays({
+/** Friendly display name for the strip composition rule
+ *  "{feature display name} → {label}". Prefers the feature's first
+ *  human label, falls back to the canonical data-feature value if
+ *  no labels are registered. */
+function featureDisplayName(scribble: ScribbleCmd, container: HTMLElement | null): string {
+  // First label preference: an explicit `_displayName` stamp from the
+  // orchestrator if it ever populates one. Otherwise look up the
+  // feature element's `data-feature-label` (some renderers carry one),
+  // and as a final fallback use the canonical name itself.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const displayHint = (scribble as any)._displayName as string | undefined;
+  if (displayHint && displayHint.trim()) return displayHint.trim();
+  const tf = scribble.targetFeature;
+  if (!tf) return scribble.target || 'feature';
+  if (container) {
+    const safe = tf.replace(/"/g, '\\"');
+    const el = container.querySelector(`[data-feature="${safe}"]`);
+    const labelAttr = el?.getAttribute('data-feature-label');
+    if (labelAttr && labelAttr.trim()) return labelAttr.trim();
+  }
+  return tf;
+}
+
+function AnnotationStrip({
+  scribbles,
   handwrites,
-  itemRefs,
 }: {
+  scribbles: ScribbleCmd[];
   handwrites: HandwriteCmd[];
-  itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
 }) {
-  // Per-handwrite resolved position (in CSS pixels relative to the
-  // page-container's bounding box). Recomputed on layout flux.
-  type Position = { left: number; top: number; maxWidth?: number };
-  const [positions, setPositions] = useState<Record<number, Position>>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useLayoutEffect(() => {
-    const container = containerRef.current?.parentElement;
-    if (!container) return;
-
-    const measure = () => {
-      const containerRect = container.getBoundingClientRect();
-      if (containerRect.width <= 0 || containerRect.height <= 0) return;
-      const next: Record<number, Position> = {};
-      const MARGIN_INSET = 12; // px from the page edge
-
-      // Query the entire page container for data-feature elements once,
-      // then look up each anchored handwrite's target inside that result.
-      // Avoids the brittle dependency on itemRefs.current[index] which can
-      // be null mid-page-transition. Mirrors ScribbleOverlays' HTML-mode
-      // resolution at line ~1085 (parent.querySelectorAll('[data-feature]')).
-      // Observed 2026-05-13 session: handwrites with resolved targetFeature
-      // but no live paint — the itemRefs.current[i] was null when measure()
-      // ran, so featureEl lookup never tried. Container-wide query bypasses
-      // the timing issue.
-      for (let i = 0; i < handwrites.length; i++) {
-        const h = handwrites[i];
-        // ── Anchored handwrite ─────────────────────────────────
-        if (h.near && h.targetFeature) {
-          const safe = h.targetFeature.replace(/"/g, '\\"');
-          // Use the page container as scope (broader than per-item),
-          // exclude our own overlay subtree.
-          let featureEl: HTMLElement | null = null;
-          const all = container.querySelectorAll(`[data-feature="${safe}"]`);
-          for (const candidate of Array.from(all)) {
-            // Skip elements inside the handwrite overlay itself (we emit
-            // data-feature="handwrite" on our own divs).
-            if (containerRef.current && containerRef.current.contains(candidate)) continue;
-            featureEl = candidate as HTMLElement;
-            break;
-          }
-          if (!featureEl) {
-            console.warn('[Handwrite] no featureEl with [data-feature="%s"] in page (near="%s") — will retry', h.targetFeature, h.near);
-            continue;
-          }
-          const fr = featureEl.getBoundingClientRect();
-          if (fr.width <= 0 || fr.height <= 0) continue;
-          const pos = h.position ?? 'right';
-          // Central-pin escape: features that are small AND centered
-          // inside their item (the frayer term pill is the canonical
-          // example — absolute inset-0 + flex center on a ~100×25 px
-          // chip in a ~600×360 px grid) sit ON TOP of other features.
-          // Anchoring "above" or "below" to them lands the handwrite
-          // INSIDE the surrounding cells, overlapping their text
-          // (observed 2026-05-13 session: "Remember the 3 C's!"
-          // anchored to frayer term landed across the characteristics
-          // / non-examples cells). Escape to a page-level margin so
-          // the note lives at the page edge instead.
-          {
-            const featCenterX = fr.left + fr.width / 2;
-            const featCenterY = fr.top + fr.height / 2;
-            const cCenterX = containerRect.left + containerRect.width / 2;
-            const cCenterY = containerRect.top + containerRect.height / 2;
-            const xOffFrac = Math.abs(featCenterX - cCenterX) / containerRect.width;
-            const yOffFrac = Math.abs(featCenterY - cCenterY) / containerRect.height;
-            const areaFrac = (fr.width * fr.height) / (containerRect.width * containerRect.height);
-            const isCentralPin = xOffFrac < 0.15 && yOffFrac < 0.20 && areaFrac < 0.06;
-            if (isCentralPin && (pos === 'above' || pos === 'below')) {
-              const W = containerRect.width;
-              const H = containerRect.height;
-              if (pos === 'above') {
-                next[i] = { left: MARGIN_INSET, top: MARGIN_INSET, maxWidth: W - MARGIN_INSET * 2 };
-              } else {
-                next[i] = { left: MARGIN_INSET, top: H - 40, maxWidth: W - MARGIN_INSET * 2 };
-              }
-              continue;
-            }
-          }
-          // Position the handwriting adjacent to the feature on the
-          // requested side. Coordinates are relative to the page
-          // container's top-left corner.
-          let left = fr.left - containerRect.left;
-          let top = fr.top - containerRect.top;
-          let maxWidth: number | undefined;
-          if (pos === 'right') {
-            left = fr.right - containerRect.left + 8;
-            top = fr.top - containerRect.top + fr.height / 2 - 14;
-            maxWidth = Math.max(60, containerRect.width - (fr.right - containerRect.left) - 24);
-          } else if (pos === 'left') {
-            // Right-edge anchor; flow right-to-left isn't trivial, so
-            // place left of feature with a max-width that won't push
-            // past the page edge.
-            const availableWidth = fr.left - containerRect.left - 12;
-            maxWidth = Math.max(60, availableWidth);
-            left = Math.max(8, fr.left - containerRect.left - maxWidth - 8);
-            top = fr.top - containerRect.top + fr.height / 2 - 14;
-          } else if (pos === 'above') {
-            left = fr.left - containerRect.left;
-            top = Math.max(2, fr.top - containerRect.top - 26);
-            maxWidth = Math.max(80, fr.width);
-          } else if (pos === 'below') {
-            left = fr.left - containerRect.left;
-            top = fr.bottom - containerRect.top + 4;
-            maxWidth = Math.max(80, fr.width);
-          }
-          next[i] = { left, top, maxWidth };
-          continue;
-        }
-        // ── Margin handwrite ───────────────────────────────────
-        if (h.margin) {
-          const W = containerRect.width;
-          const H = containerRect.height;
-          // Fixed slots at the page edges. Width is bounded so long
-          // notes wrap onto multiple lines rather than overflow.
-          if (h.margin === 'top') {
-            next[i] = { left: MARGIN_INSET, top: MARGIN_INSET, maxWidth: W - MARGIN_INSET * 2 };
-          } else if (h.margin === 'bottom') {
-            next[i] = { left: MARGIN_INSET, top: H - 40, maxWidth: W - MARGIN_INSET * 2 };
-          } else if (h.margin === 'right') {
-            const slotW = Math.min(220, W * 0.35);
-            next[i] = { left: W - slotW - MARGIN_INSET, top: MARGIN_INSET + 8, maxWidth: slotW };
-          } else if (h.margin === 'left') {
-            const slotW = Math.min(220, W * 0.35);
-            next[i] = { left: MARGIN_INSET, top: MARGIN_INSET + 8, maxWidth: slotW };
-          }
-        }
-      }
-      setPositions((prev) => {
-        const keys = Object.keys(next).map(Number);
-        const prevKeys = Object.keys(prev).map(Number);
-        if (keys.length !== prevKeys.length) return next;
-        for (const k of keys) {
-          if (!prev[k] || prev[k].left !== next[k].left || prev[k].top !== next[k].top || prev[k].maxWidth !== next[k].maxWidth) return next;
-        }
-        return prev;
-      });
-    };
-
-    measure();
-    // Belt + suspenders + parachute. The DOM-find path for anchored
-    // handwrites is brittle when the comparison_table mounts on the
-    // same tick as the handwrite arrives. Layer multiple retry triggers:
-    //   1. ResizeObserver: catches container/page size changes.
-    //   2. MutationObserver: catches DOM additions inside the page.
-    //   3. requestAnimationFrame x 3: catches the case where the
-    //      feature element is added between measures and observers
-    //      missed it (e.g., React commits mid-frame; observer fires
-    //      before the element's getBoundingClientRect is valid).
-    // Observed 2026-05-13 session: "great answer!" anchored to col-1
-    // rendered in PDF but not on live WB even with MutationObserver
-    // (4aa592f). Adding the rAF retry chain closes the timing gap.
-    const ro = new ResizeObserver(measure);
-    ro.observe(container);
-    const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(measure) : null;
-    mo?.observe(container, { childList: true, subtree: true });
-    const raf1 = requestAnimationFrame(() => {
-      measure();
-      const raf2 = requestAnimationFrame(() => {
-        measure();
-        requestAnimationFrame(measure);
-      });
-      // store raf2 so the cleanup can cancel — but TS doesn't let us
-      // change the closure variable from the outer scope cleanly, so
-      // we'll rely on the component-unmount path catching the chain.
-      void raf2;
-    });
-    return () => {
-      ro.disconnect();
-      mo?.disconnect();
-      cancelAnimationFrame(raf1);
-    };
-  }, [handwrites, itemRefs]);
-
+  // Filter scribbles to only those carrying a label — unlabelled
+  // scribbles draw a tick on the diagram and contribute nothing here
+  // (locked decision #7).
+  const labelledScribbles = scribbles.filter((s) => !!(s.label && s.label.trim()));
+  if (labelledScribbles.length === 0 && handwrites.length === 0) return null;
   return (
     <div
       ref={containerRef}
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        pointerEvents: 'none',
-        overflow: 'visible',
-      }}
+      aria-label="annotation strip"
+      className="mt-4 pt-2 border-t border-dashed border-gray-200"
+      style={{ pointerEvents: 'none' }}
     >
-      {handwrites.map((h, i) => {
-        const pos = positions[i];
-        if (!pos) return null;
-        const color = h.color || HANDWRITE_DEFAULT_COLOR;
-        const text = h.text.length > 80 ? `${h.text.slice(0, 77)}…` : h.text;
-        return (
-          <div
-            key={`handwrite-${i}`}
-            data-feature="handwrite"
-            data-handwrite-target={h.targetFeature || ''}
-            style={{
-              position: 'absolute',
-              left: pos.left,
-              top: pos.top,
-              maxWidth: pos.maxWidth,
-              color,
-              // Sticky-note styling: soft cream background + subtle
-              // border + light shadow turn the handwrite into a stamp
-              // that reads cleanly even when it overlaps underlying
-              // table cells, headers, or titles. Without this, an
-              // anchored handwrite ("great answer!") landing on a data
-              // cell ("Makes food (energy)") produced illegible
-              // text-on-text overlap (observed 2026-05-13 session).
-              backgroundColor: 'rgba(254, 252, 232, 0.94)',
-              border: `1px solid ${color}40`,
-              borderRadius: 3,
-              padding: '1px 6px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-              fontFamily: HANDWRITE_FONT_STACK,
-              fontSize: 22,
-              lineHeight: 1.15,
-              fontWeight: 600,
-              whiteSpace: pos.maxWidth ? 'normal' : 'nowrap',
-              pointerEvents: 'none',
-              zIndex: 5,
-            }}
-          >
-            {text}
-          </div>
-        );
-      })}
+      <div className="space-y-1">
+        {labelledScribbles.map((s, i) => {
+          const color = s.color || SCRIBBLE_DEFAULT_COLOR;
+          const name = featureDisplayName(s, containerRef.current?.parentElement ?? null);
+          return (
+            <div
+              key={`s-${i}`}
+              className="text-sm flex items-center gap-2"
+              style={{ color }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  flexShrink: 0,
+                }}
+              />
+              <span>
+                <span style={{ fontWeight: 600 }}>{name}</span>
+                <span style={{ opacity: 0.8 }}> → {s.label}</span>
+              </span>
+            </div>
+          );
+        })}
+        {handwrites.map((h, i) => {
+          const color = h.color || HANDWRITE_DEFAULT_COLOR;
+          return (
+            <div
+              key={`h-${i}`}
+              className="text-sm flex items-center gap-2"
+              style={{ color }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  flexShrink: 0,
+                }}
+              />
+              <span>{h.text}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
