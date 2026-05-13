@@ -8,9 +8,15 @@
 
 ## Scope for this session
 
-Scribble + handwrite code-level work is **closed** (commits 95e2743 → cff62bf → d5325ad on main). Don't touch scribble/handwrite rendering, manifests, or catalog resolution unless a clear bug surfaces.
+Scribble + handwrite core code is **closed**. Commits on main:
+- `95e2743` counter-drift + oval
+- `cff62bf` central-pin escape
+- `d5325ad` cross-turn dedup + verbose labels + newest-wins
+- `21b1ca7` t_chart column DOM + paddingTop/Bottom for escaped/bottom handwrites
 
-**Focus exclusively on brain / judge / orchestrator / prompt issues** listed in the compendium. Pick them in priority order.
+Two new code-level scribble/handwrite issues surfaced 2026-05-13 session #8 (see compendium "Additional issues" section) — they're optional pickup if you have bandwidth, but **prioritize brain / judge / orchestrator issues**.
+
+Pick issues in priority order from the compendium.
 
 ## Issues in priority order
 
@@ -74,6 +80,20 @@ The verbose-scribble-target variant of this issue was fixed for frayer + argumen
 Brain emits gov_branches `branches: [Exec, Leg, Jud]`, judge kills audio mid-narration, brain retries with `branches: [Leg, Exec, Jud]`. Content-based dedup signature doesn't catch the reorder → two near-identical diagrams on consecutive pages.
 
 **Fix**: in `structuralAxesFor` (or wherever the dedup signature for `government_branches` is computed), canonicalize the branches array by sorting on `name` before hashing.
+
+### P4 — Brain emits same organizer kind TWICE in one turn
+
+Observed session #8 Image #21: brain emitted `show_diagram(kwl_chart)` twice in the same turn with different content. Both rendered (different content signature). Result: two stacked KWL charts on the same page.
+
+The existing `isOrganizerKind` dedup at `VoiceTutorRealtime.tsx:~3061` only fires cross-batch. Same-turn duplicate emissions of the same organizer kind aren't collapsed.
+
+**Fix**: extend the dedup check — within a SINGLE turn, two show_diagrams of the same organizer kind dedup to the first one.
+
+## Optional scribble/handwrite polish (low priority)
+
+- **Scribble label clamp** — when label staggers ON TOP of the diagram title (Image #19, #22), flip to below the target instead of clamping to vbH * 0.04. `WhiteboardCanvas.tsx` case `'circle'` near line ~1394.
+- **Underline shape feels like a CSS border** — user suggested adding a `check`/`tick` shape, or making the underline path zig-zag for a hand-drawn feel. PDF capture mirror at `whiteboard-capture.ts:~615`.
+- **Handwrite `position: "right"` lands inside neighbor feature** — Image #22's "facts that back it up" handwrite was anchored to evidence with position:right and landed inside reasoning (side-by-side layout). Heuristic: check if proposed position rect overlaps a sibling `[data-feature]` element; if yes, fall back to margin-right.
 
 ## Constraints / do-NOT-regress list
 
