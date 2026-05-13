@@ -37,6 +37,9 @@ export interface CatalogFeature {
   description?: string;
   /** Every string that should resolve to this feature. Normalized at match time. */
   labels: string[];
+  /** Friendly display name for the strip / hints. Falls through from the
+   *  manifest builder if set; else the catalog leaves it undefined. */
+  displayName?: string;
   /** 0–1 fractions of the target item's viewBox. Optional — overlay reads DOM when missing. */
   bbox?: { cx: number; cy: number; w: number; h: number };
   /**
@@ -120,6 +123,10 @@ export interface ResolveSuccess {
   scribbleable: boolean;
   /** Item action (e.g. "showGraph") — handlers use this in redirect messages. */
   action: string;
+  /** Friendly display name from the manifest. Orchestrator stamps it
+   *  onto the scribble cmd so the strip can read it instantly without
+   *  racing a DOM lookup against the first render. */
+  displayName?: string;
 }
 
 export interface ResolveFailure {
@@ -251,6 +258,7 @@ export class WhiteboardCatalog {
       bbox: f.bbox,
       labels: canonicalizeLabels(f),
       scribbleable: f.scribbleable !== false,
+      displayName: f.displayName,
     }));
     // Synthesize a whole-item feature so the tutor can scrollTo using the
     // item's title or a pretty-printed action ("the energy bar chart").
@@ -512,6 +520,7 @@ export class WhiteboardCatalog {
       bbox: f.bbox,
       scribbleable: f.scribbleable,
       action: item.action,
+      displayName: f.displayName,
     };
   }
 

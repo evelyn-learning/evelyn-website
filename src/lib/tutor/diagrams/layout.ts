@@ -57,6 +57,16 @@ export interface FeatureManifestEntry {
    */
   labels?: string[];
   /**
+   * Human-friendly name for the annotation strip and other display
+   * surfaces. Shipped through resolveTarget → orchestrator → scribble
+   * `_displayName` so the strip doesn't have to do a DOM lookup
+   * (which races with the first render). For content-bearing features
+   * (e.g. t_chart left-item-1) this is the content text ("Vote");
+   * for structural features (e.g. left-column) it's the human label
+   * ("Rights").
+   */
+  displayName?: string;
+  /**
    * Whether tutor_scribble can mark this feature. Defaults to true for
    * SVG/HTML elements we own. Iframe-backed renderers (Desmos, Ketcher)
    * register their whole-item feature with scribbleable: false — the

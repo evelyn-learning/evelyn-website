@@ -180,6 +180,7 @@ export function buildCycleStagesManifest(figure: CycleStagesFigure): FeatureMani
       kind: 'region',
       description: figure.title ? `cycle: ${figure.title}` : 'cycle',
       labels: ['cycle', 'the cycle', 'the diagram'],
+      displayName: figure.title || 'cycle',
       scribbleable: true,
     },
   ];
@@ -198,6 +199,7 @@ export function buildCycleStagesManifest(figure: CycleStagesFigure): FeatureMani
         ] : []),
         ...(slug ? [`stage-${slug}`] : []),
       ],
+      displayName: label || `stage ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -222,6 +224,7 @@ export function buildBodySystemManifest(figure: BodySystemFigure): FeatureManife
         'system', 'the system', 'the diagram',
         ...(sys ? [`${sys} system`, `the ${sys} system`, sys] : []),
       ],
+      displayName: sys ? `${sys} system` : 'body system',
       scribbleable: true,
     },
   ];
@@ -235,6 +238,7 @@ export function buildBodySystemManifest(figure: BodySystemFigure): FeatureManife
         `part ${i + 1}`, `part-${i + 1}`,
         ...(label ? [label, `the ${label}`, `"${label}"`] : []),
       ],
+      displayName: label || `part ${i + 1}`,
       scribbleable: true,
     });
   });

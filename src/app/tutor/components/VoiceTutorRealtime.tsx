@@ -3265,6 +3265,12 @@ export function VoiceTutorRealtime({
       // place the mark without any further guessing.
       cmdAny.targetId = result.itemId;
       cmdAny.targetFeature = result.canonical;
+      // Friendly display name straight from the manifest. The strip
+      // reads this and skips the DOM lookup entirely — no canonical-
+      // first phase, no typewriter intermediate state.
+      if (result.displayName) {
+        cmdAny._displayName = result.displayName;
+      }
       const located = resolveTargetFromId(result.itemId);
       if (located) {
         cmdAny.targetItemIndex = located.itemIndex;

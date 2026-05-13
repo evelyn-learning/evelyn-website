@@ -173,6 +173,7 @@ export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): Fea
       kind: 'region',
       description: figure.title ? `sentence diagram: ${figure.title}` : 'sentence diagram',
       labels: ['diagram', 'the diagram', 'sentence diagram', 'the sentence'],
+      displayName: figure.title || 'sentence diagram',
       scribbleable: true,
     },
     {
@@ -180,6 +181,7 @@ export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): Fea
       kind: 'label',
       description: `subject: "${figure.subject}"`,
       labels: ['subject', 'the subject', figure.subject, `"${figure.subject}"`],
+      displayName: figure.subject,
       scribbleable: true,
     },
     {
@@ -187,6 +189,7 @@ export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): Fea
       kind: 'label',
       description: `verb: "${figure.verb}"`,
       labels: ['verb', 'the verb', 'predicate', 'the predicate', figure.verb, `"${figure.verb}"`],
+      displayName: figure.verb,
       scribbleable: true,
     },
   ];
@@ -196,6 +199,7 @@ export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): Fea
       kind: 'label',
       description: `object: "${figure.object}"`,
       labels: ['object', 'the object', 'direct object', figure.object, `"${figure.object}"`],
+      displayName: figure.object,
       scribbleable: true,
     });
   }
@@ -209,6 +213,7 @@ export function buildSentenceDiagramManifest(figure: SentenceDiagramFigure): Fea
         m.word, `the ${m.word}`, `"${m.word}"`,
         `${m.attachTo} modifier`,
       ],
+      displayName: m.word,
       scribbleable: true,
     });
   });
@@ -230,6 +235,7 @@ export function buildHistoricalTimelineManifest(figure: HistoricalTimelineFigure
       kind: 'region',
       description: figure.title ? `timeline: ${figure.title}` : 'timeline',
       labels: ['timeline', 'the timeline', 'the diagram'],
+      displayName: figure.title || 'timeline',
       scribbleable: true,
     },
     {
@@ -237,6 +243,7 @@ export function buildHistoricalTimelineManifest(figure: HistoricalTimelineFigure
       kind: 'label',
       description: 'timeline axis',
       labels: ['axis', 'the axis', 'the line', 'the timeline axis'],
+      displayName: 'timeline axis',
       scribbleable: true,
     },
   ];
@@ -254,6 +261,7 @@ export function buildHistoricalTimelineManifest(figure: HistoricalTimelineFigure
           `event ${i + 1}: "${label}"`,
         ] : []),
       ],
+      displayName: label ? `${e.date} ${label}` : `event ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -342,6 +350,7 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
       kind: 'region',
       description: figure.title ? `comparison table: ${figure.title}` : 'comparison table',
       labels: ['table', 'the table', 'comparison table', 'the comparison table', 'the grid'],
+      displayName: figure.title || 'comparison table',
       scribbleable: true,
     },
     {
@@ -349,6 +358,7 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
       kind: 'region',
       description: 'the header row (item names)',
       labels: ['header row', 'the header row', 'headers', 'the headers', 'the top row', 'item headers'],
+      displayName: 'header row',
       scribbleable: true,
     },
   ];
@@ -360,10 +370,6 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
       description: `column ${ci + 1}${text ? ` ("${text}")` : ''}`,
       labels: [
         `column ${ci + 1}`, `col ${ci + 1}`, `col-${ci + 1}`,
-        // Quoted + parenthetical variants — the brain often reaches for
-        // forms like `column 2 ("Liquid")` or `"Liquid" column` when it
-        // echoes back the snapshot's description text verbatim. Without
-        // these the catalog resolves none of them.
         ...(text ? [
           `${text} column`, `the ${text} column`, text, `the ${text}`,
           `column ${ci + 1} (${text})`, `column ${ci + 1} ("${text}")`,
@@ -371,6 +377,7 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
           `"${text}" column`, `"${text}"`,
         ] : []),
       ],
+      displayName: text || `column ${ci + 1}`,
       scribbleable: true,
     });
   });
@@ -388,6 +395,7 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
           `"${text}" row`, `"${text}"`,
         ] : []),
       ],
+      displayName: text || `row ${ri + 1}`,
       scribbleable: true,
     });
   });
@@ -448,13 +456,12 @@ export function buildComparisonTableManifest(figure: ComparisonTableFigure): Fea
           `cell at row ${ri + 1} col ${ci + 1}`,
           `the cell at row ${ri + 1} column ${ci + 1}`,
           ...intersectionLabels,
-          // Content-aware aliases — brain can address by what the cell
-          // SAYS, e.g., target: "Fixed shape" → cell-r1-c1.
           ...(preview ? [
             preview, `the ${preview}`, `"${preview}"`, `the "${preview}" cell`,
             `${preview} cell`, `cell saying ${preview}`,
           ] : []),
         ],
+        displayName: preview || (item && attr ? `${item} / ${attr}` : `cell ${ri + 1},${ci + 1}`),
         scribbleable: true,
       });
     });
@@ -491,6 +498,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
       kind: 'region',
       description: figure.title ? `t-chart: ${figure.title}` : 't-chart',
       labels: ['chart', 'the chart', 't-chart', 'the t-chart', 'the t chart'],
+      displayName: figure.title || 't-chart',
       scribbleable: true,
     },
     {
@@ -498,6 +506,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
       kind: 'label',
       description: lh ? `left header "${lh}"` : 'left header',
       labels: ['left header', 'the left header', ...(lh ? [lh, `the ${lh}`, `"${lh}"`, `${lh} header`] : [])],
+      displayName: lh || 'left header',
       scribbleable: true,
     },
     {
@@ -505,6 +514,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
       kind: 'label',
       description: rh ? `right header "${rh}"` : 'right header',
       labels: ['right header', 'the right header', ...(rh ? [rh, `the ${rh}`, `"${rh}"`, `${rh} header`] : [])],
+      displayName: rh || 'right header',
       scribbleable: true,
     },
     {
@@ -512,6 +522,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
       kind: 'area',
       description: lh ? `left column ("${lh}")` : 'left column',
       labels: ['left column', 'the left column', 'left side', 'the left side', ...(lh ? [`${lh} column`, `the ${lh} column`, `${lh} side`] : [])],
+      displayName: lh || 'left column',
       scribbleable: true,
     },
     {
@@ -519,6 +530,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
       kind: 'area',
       description: rh ? `right column ("${rh}")` : 'right column',
       labels: ['right column', 'the right column', 'right side', 'the right side', ...(rh ? [`${rh} column`, `the ${rh} column`, `${rh} side`] : [])],
+      displayName: rh || 'right column',
       scribbleable: true,
     },
   ];
@@ -534,6 +546,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
         ...(lh ? [`${lh} item ${i + 1}`] : []),
         ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
       ],
+      displayName: preview || `left item ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -549,6 +562,7 @@ export function buildTChartManifest(figure: OrganizerFigure): FeatureManifestEnt
         ...(rh ? [`${rh} item ${i + 1}`] : []),
         ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
       ],
+      displayName: preview || `right item ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -577,6 +591,7 @@ export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestE
       kind: 'region',
       description: figure.title ? `KWL chart: ${figure.title}` : 'KWL chart',
       labels: ['chart', 'the chart', 'KWL chart', 'the KWL chart', 'kwl chart'],
+      displayName: figure.title || 'KWL chart',
       scribbleable: true,
     },
     {
@@ -584,6 +599,7 @@ export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestE
       kind: 'area',
       description: 'K column (what you know)',
       labels: ['K column', 'the K column', 'know column', 'the know column', 'what you know', 'what we know', 'K', 'the K', 'know', 'the know'],
+      displayName: 'Know',
       scribbleable: true,
     },
     {
@@ -591,6 +607,7 @@ export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestE
       kind: 'area',
       description: 'W column (what you want to know)',
       labels: ['W column', 'the W column', 'want column', 'the want column', 'want to know', 'what we want to know', 'W', 'the W', 'want', 'the want'],
+      displayName: 'Want to know',
       scribbleable: true,
     },
     {
@@ -598,6 +615,7 @@ export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestE
       kind: 'area',
       description: 'L column (what you learned)',
       labels: ['L column', 'the L column', 'learned column', 'the learned column', 'what we learned', 'L', 'the L', 'learned', 'the learned'],
+      displayName: 'Learned',
       scribbleable: true,
     },
   ];
@@ -613,6 +631,7 @@ export function buildKwlChartManifest(figure: OrganizerFigure): FeatureManifestE
           `${side} item ${i + 1}`, `${side}-item-${i + 1}`,
           ...(preview ? [preview, `the ${preview}`, `"${preview}"`] : []),
         ],
+        displayName: preview || `${side} item ${i + 1}`,
         scribbleable: true,
       });
     });
@@ -650,6 +669,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'region',
       description: term ? `Frayer model for "${term}"` : 'Frayer model',
       labels: ['frayer', 'the frayer', 'frayer model', 'the frayer model', 'the diagram'],
+      displayName: term ? `Frayer for "${term}"` : 'Frayer model',
       scribbleable: true,
     },
     {
@@ -657,6 +677,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'label',
       description: term ? `term "${term}" (center)` : 'term (center)',
       labels: ['term', 'the term', 'the center', 'center', ...(term ? [term, `"${term}"`, `the ${term}`, `the word ${term}`] : [])],
+      displayName: term || 'term',
       scribbleable: true,
     },
     {
@@ -664,6 +685,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'area',
       description: defPreview ? `definition quadrant: "${defPreview}"` : 'definition quadrant',
       labels: ['definition', 'the definition', 'the definition quadrant', 'definition box'],
+      displayName: 'Definition',
       scribbleable: true,
     },
     {
@@ -671,6 +693,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'area',
       description: 'characteristics quadrant',
       labels: ['characteristics', 'the characteristics', 'characteristics quadrant', 'characteristics box', 'features', 'traits'],
+      displayName: 'Characteristics',
       scribbleable: true,
     },
     {
@@ -678,6 +701,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'area',
       description: 'examples quadrant',
       labels: ['examples', 'the examples', 'examples quadrant', 'examples box'],
+      displayName: 'Examples',
       scribbleable: true,
     },
     {
@@ -685,6 +709,7 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
       kind: 'area',
       description: 'non-examples quadrant',
       labels: ['non-examples', 'the non-examples', 'non-examples quadrant', 'non-examples box', 'nonexamples', 'not examples'],
+      displayName: 'Non-examples',
       scribbleable: true,
     },
   ];
@@ -698,17 +723,13 @@ export function buildFrayerModelManifest(figure: OrganizerFigure): FeatureManife
         description: preview ? `${quad} ${i + 1}: "${preview}"` : `${quad} ${i + 1}`,
         labels: [
           `${quad} ${i + 1}`, `${quad}-${i + 1}`,
-          // Verbose form the brain frequently emits — observed 2026-05-13:
-          //   target: "characteristic 1: \"Free and fair elections\""
-          //   target: "example 3: \"U.S. Presidential Election\""
-          // Without these labels the catalog returns no_match and the
-          // scribble silent-drops despite the brain having a valid intent.
           ...(preview ? [
             preview, `the ${preview}`, `"${preview}"`,
             `${quad} ${i + 1}: "${preview}"`, `${quad} ${i + 1}: ${preview}`,
             `${quad}-${i + 1}: "${preview}"`,
           ] : []),
         ],
+        displayName: preview || `${quad} ${i + 1}`,
         scribbleable: true,
       });
     });
@@ -741,6 +762,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'region',
       description: figure.title ? `argument structure: ${figure.title}` : 'argument structure',
       labels: ['argument', 'the argument', 'argument structure', 'the diagram'],
+      displayName: figure.title || 'argument',
       scribbleable: true,
     },
     {
@@ -748,6 +770,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'label',
       description: claimPreview ? `claim: "${claimPreview}"` : 'claim',
       labels: ['claim', 'the claim', 'main claim', 'thesis', 'the thesis', ...(claimPreview ? [claimPreview, `"${claimPreview}"`] : [])],
+      displayName: 'Claim',
       scribbleable: true,
     },
     {
@@ -755,6 +778,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'area',
       description: `evidence section (${figure.evidence.length} ${figure.evidence.length === 1 ? 'item' : 'items'})`,
       labels: ['evidence', 'the evidence', 'evidence section', 'evidence box'],
+      displayName: 'Evidence',
       scribbleable: true,
     },
     {
@@ -762,6 +786,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'area',
       description: `reasoning section (${figure.reasoning.length} ${figure.reasoning.length === 1 ? 'item' : 'items'})`,
       labels: ['reasoning', 'the reasoning', 'reasoning section', 'reasoning box', 'warrant', 'the warrant'],
+      displayName: 'Reasoning',
       scribbleable: true,
     },
   ];
@@ -779,6 +804,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
           `evidence ${i + 1}: "${preview}"`, `evidence ${i + 1}: ${preview}`,
         ] : []),
       ],
+      displayName: preview || `evidence ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -796,6 +822,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
           `reasoning ${i + 1}: "${preview}"`, `reasoning ${i + 1}: ${preview}`,
         ] : []),
       ],
+      displayName: preview || `reasoning ${i + 1}`,
       scribbleable: true,
     });
   });
@@ -807,6 +834,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'area',
       description: `counterargument: "${preview}"`,
       labels: ['counter', 'the counter', 'counterargument', 'the counterargument', 'opposing view'],
+      displayName: 'Counterargument',
       scribbleable: true,
     });
   }
@@ -818,6 +846,7 @@ export function buildArgumentStructureManifest(figure: ArgumentFigure): FeatureM
       kind: 'area',
       description: `rebuttal: "${preview}"`,
       labels: ['rebuttal', 'the rebuttal', 'the response'],
+      displayName: 'Rebuttal',
       scribbleable: true,
     });
   }
@@ -842,6 +871,7 @@ export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure
       kind: 'region',
       description: figure.title ? `branches of government: ${figure.title}` : 'branches of government',
       labels: ['branches', 'the branches', 'the diagram', 'branches of government'],
+      displayName: figure.title || 'branches of government',
       scribbleable: true,
     },
     {
@@ -849,6 +879,7 @@ export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure
       kind: 'label',
       description: country ? `country: "${country}"` : 'country',
       labels: ['country', 'the country', ...(country ? [country, `the ${country}`] : [])],
+      displayName: country || 'country',
       scribbleable: true,
     },
   ];
@@ -862,6 +893,7 @@ export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure
         `branch ${i + 1}`, `branch-${i + 1}`,
         ...(name ? [name, `the ${name}`, `${name} branch`, `the ${name} branch`, `"${name}"`] : []),
       ],
+      displayName: name || `branch ${i + 1}`,
       scribbleable: true,
     });
     if (branch.bodies && branch.bodies.length > 0) {
@@ -873,6 +905,7 @@ export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure
           `${name} bodies`, `branch ${i + 1} bodies`,
           ...(name ? [`the ${name} bodies`] : []),
         ],
+        displayName: `${name || `branch ${i + 1}`} bodies`,
         scribbleable: true,
       });
     }
@@ -885,6 +918,7 @@ export function buildGovernmentBranchesManifest(figure: GovernmentBranchesFigure
           `${name} powers`, `branch ${i + 1} powers`,
           ...(name ? [`the ${name} powers`, `${name} responsibilities`] : []),
         ],
+        displayName: `${name || `branch ${i + 1}`} powers`,
         scribbleable: true,
       });
     }
@@ -988,6 +1022,7 @@ export function buildHierarchyPyramidManifest(figure: HierarchyPyramidFigure): F
       kind: 'region',
       description: figure.title ? `pyramid: ${figure.title}` : 'pyramid',
       labels: ['pyramid', 'the pyramid', 'the hierarchy', 'the diagram'],
+      displayName: figure.title || 'pyramid',
       scribbleable: true,
     },
   ];
@@ -1003,6 +1038,7 @@ export function buildHierarchyPyramidManifest(figure: HierarchyPyramidFigure): F
         `${ordinal} tier`, `the ${ordinal} tier`,
         ...(label ? [label, `the ${label}`, `"${label}"`, `${label} tier`] : []),
       ],
+      displayName: label || `tier ${i + 1}`,
       scribbleable: true,
     });
   });

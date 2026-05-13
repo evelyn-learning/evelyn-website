@@ -653,9 +653,15 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
       >
         {ordered.map((t, i) => {
           // Wider at the bottom (large index in ordered) when baseFirst.
+          // Min width bumped 80 → 150 so multi-word tier labels
+          // ("Apex Predators", "Primary Consumers") don't clip on the
+          // narrowest tier (observed 2026-05-13 session #15 image #51:
+          // "Apex Predator" became "pex Predator" in an 80px-wide rect).
+          // Step per tier dropped 70 → 50 so the pyramid silhouette
+          // stays visually distinct without the top getting absurdly wide.
           const fromTop = i;
           const tierFromBottom = ordered.length - 1 - fromTop;
-          const w = 80 + tierFromBottom * 70;
+          const w = 150 + tierFromBottom * 50;
           const x = (W - w) / 2;
           const y = 30 + fromTop * TIER_H;
           const color = t.color || PALETTE[i % PALETTE.length];
