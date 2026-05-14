@@ -1259,11 +1259,13 @@ export const hierarchyPyramidFeatureNames = {
 };
 
 /** Manifest mirrors the renderer's `ordered` array exactly so `tier-1`
- *  always refers to the tier the renderer drew FIRST (top of the SVG).
- *  Renderer: `ordered = baseFirst ? tiers : tiers.reverse()`. */
+ *  always refers to the topmost tier of the rendered SVG.
+ *  Renderer: `ordered = baseFirst ? tiers.reverse() : tiers` (flipped
+ *  2026-05-14 to match the docstring — baseFirst=true means tiers[0]
+ *  is the BASE, rendered at the bottom). */
 export function buildHierarchyPyramidManifest(figure: HierarchyPyramidFigure): FeatureManifestEntry[] {
   const N = hierarchyPyramidFeatureNames;
-  const ordered = figure.baseFirst ? [...figure.tiers] : [...figure.tiers].reverse();
+  const ordered = figure.baseFirst ? [...figure.tiers].reverse() : [...figure.tiers];
   const features: FeatureManifestEntry[] = [
     {
       name: N.pyramid,

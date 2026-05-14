@@ -2817,6 +2817,48 @@ export function VoiceTutorRealtime({
       }
     }
 
+    // Within-batch same-type dual-emit dedup. When the brain emits
+    // show_diagram with the SAME `type` twice in one batch (intro-then-
+    // refine pattern observed 2026-05-13 session #8: KWL chart emitted
+    // 2× with different know/want content; both rendered stacked),
+    // keep only the LAST emission. Walks processed once to find the
+    // latest index for each (action, type) signature; earlier
+    // emissions of the same signature drop. Pure cosmetic dedup —
+    // doesn't surface to the brain as a rejection, since the brain's
+    // intent is "the second one is the refinement of the first".
+    // Companion to the cross-batch B2 dedup higher up (which injects
+    // new_page when the duplicate is in a DIFFERENT batch).
+    {
+      const lastIdxBySigKey = new Map<string, number>();
+      for (let i = processed.length - 1; i >= 0; i--) {
+        const cmd = processed[i];
+        const action = String(cmd.action);
+        if (action !== 'showDiagram') continue;
+        const t = (cmd as { type?: string }).type;
+        if (typeof t !== 'string' || t.length === 0) continue;
+        const key = `${action}|${t}`;
+        if (!lastIdxBySigKey.has(key)) lastIdxBySigKey.set(key, i);
+      }
+      const droppedIdx = new Set<number>();
+      processed.forEach((cmd, i) => {
+        const action = String(cmd.action);
+        if (action !== 'showDiagram') return;
+        const t = (cmd as { type?: string }).type;
+        if (typeof t !== 'string') return;
+        const key = `${action}|${t}`;
+        const lastIdx = lastIdxBySigKey.get(key);
+        if (lastIdx !== undefined && i !== lastIdx) droppedIdx.add(i);
+      });
+      if (droppedIdx.size > 0) {
+        const droppedSummaries = Array.from(droppedIdx)
+          .map((i) => `[${i}] show_diagram(${(processed[i] as { type?: string }).type ?? '?'})`)
+          .join(', ');
+        console.log('[VoiceTutorRealtime] within-batch same-type dedup: dropping', droppedSummaries);
+        onDebugEvent?.('within_batch_dual_emit_dedup', `dropped ${droppedIdx.size}: ${droppedSummaries}`);
+        processed = processed.filter((_, i) => !droppedIdx.has(i));
+      }
+    }
+
     // Auto-newPage triggers. Two reasons we'd prepend one:
     //   A) "Just-solved" — the previous batch ended with a Final Answer,
     //      and this batch is starting new teaching content.

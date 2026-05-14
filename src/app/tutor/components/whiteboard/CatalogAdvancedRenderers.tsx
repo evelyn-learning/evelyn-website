@@ -762,7 +762,21 @@ function FrayerModel({ figure }: { figure: OrganizerFigure }) {
 // ── Hierarchy pyramid ─────────────────────────────────────────────────────
 export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyPyramidFigure }) {
   const { tiers, baseFirst, title } = figure;
-  const ordered = baseFirst ? [...tiers] : [...tiers].reverse();
+  // baseFirst semantics (per the HierarchyPyramidFigure docstring):
+  //   true  — tiers[0] is the BASE of the pyramid (rendered at the
+  //           bottom, widest). Standard for food pyramids, Maslow,
+  //           Bloom's. This is the default.
+  //   false — tiers[0] is the APEX (top, narrowest). Inverted use case.
+  //
+  // The renderer iterates `ordered` top-to-bottom (i=0 is topmost). To
+  // get baseFirst=true behavior — tiers[0] at the bottom — we reverse
+  // the tiers so iteration walks last → first. (Previously the
+  // reverse/no-reverse was inverted relative to the docstring;
+  // observed 2026-05-13 session #15 image #46: brain emitted
+  // {tiers: [Producers, ..., Apex], baseFirst: true} expecting
+  // Producers at the BOTTOM of a food pyramid — renderer put Producers
+  // at the TOP instead.)
+  const ordered = baseFirst ? [...tiers].reverse() : [...tiers];
   const N = hierarchyPyramidFeatureNames;
   const W = 480;
   const TIER_H = 56;
@@ -782,16 +796,15 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
         data-feature-h={1}
       >
         {ordered.map((t, i) => {
-          // Wider at the bottom (large index in ordered) when baseFirst.
-          // Min width bumped 80 → 150 so multi-word tier labels
-          // ("Apex Predators", "Primary Consumers") don't clip on the
-          // narrowest tier (observed 2026-05-13 session #15 image #51:
-          // "Apex Predator" became "pex Predator" in an 80px-wide rect).
-          // Step per tier dropped 70 → 50 so the pyramid silhouette
-          // stays visually distinct without the top getting absurdly wide.
+          // Pyramid silhouette: narrow at top, wide at bottom.
+          // Width grows with `fromTop` so i=0 (top) is narrowest and
+          // i=last (bottom) is widest. (Previously used tierFromBottom
+          // which made TOP widest — an inverted pyramid.) Min width
+          // 150 keeps multi-word tier labels readable on the narrowest
+          // tier; step 50 keeps the pyramid silhouette visually
+          // distinct without the bottom getting absurdly wide.
           const fromTop = i;
-          const tierFromBottom = ordered.length - 1 - fromTop;
-          const w = 150 + tierFromBottom * 50;
+          const w = 150 + fromTop * 50;
           const x = (W - w) / 2;
           const y = 30 + fromTop * TIER_H;
           const color = t.color || PALETTE[i % PALETTE.length];
