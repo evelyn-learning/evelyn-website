@@ -2846,6 +2846,67 @@ export function VoiceTutorRealtime({
     // narrating "Sure, here's the final tree…".
     const redrawIntentRegex = /\b(?:redraw|draw|show|render|display)\b.{0,60}\b(?:this|that|it|tree|diagram|graph|chart|figure|picture|image|again|once more)\b/i;
     const redrawRequested = redrawIntentRegex.test(lastStudentText);
+    // B3 — segment-transition auto-newPage. When a batch contains
+    // `advance_lesson` + a teaching show_* command + no `new_page`
+    // BEFORE the show, the brain has transitioned segments but is
+    // about to render on the previous segment's page. Symptoms:
+    // judge sees stale snapshot from previous segment → KILL → retry
+    // adds a duplicate diagram. Observed 2026-05-13 Phase 4 eclipse
+    // segment: brain emitted [advance_lesson(concept-eclipse),
+    // mark_segment_complete(concept-earth-layers),
+    // show_diagram(eclipse_diagram)] in one turn. Two eclipse
+    // diagrams ended up on the resulting page. Auto-inject new_page
+    // so the show_* lands cleanly on a fresh page. Independent of
+    // the justSolved / topicShift / redraw triggers — segment
+    // advance is its OWN signal that a page break is appropriate.
+    const advanceLessonIdx = processed.findIndex((c) => c.action === 'advanceLesson');
+    const firstTeachingIdx = processed.findIndex((c) => {
+      const a = String(c.action);
+      return a !== 'newPage' && a !== 'showSegmentCard' && /^show[A-Z]/.test(a);
+    });
+    const newPageIdx = processed.findIndex((c) => c.action === 'newPage');
+    const segmentAdvanceWithShow =
+      advanceLessonIdx >= 0 &&
+      firstTeachingIdx >= 0 &&
+      (newPageIdx < 0 || newPageIdx > firstTeachingIdx);
+    // B2 — within-page same-type dual-emit. Brain's intro-then-refine
+    // pattern: turn 1 emits show_diagram(type=X) with generic content,
+    // turn 2 emits show_diagram(type=X) with refined content. Both
+    // land on the same page (no new_page between). Different
+    // signatures → exact-signature dedup doesn't fire. Observed
+    // 2026-05-13 Phase 5 binary_tree (intro tree root=8 then test-
+    // seed root=5) and Phase 4 plate_tectonics (generic Plate A/B
+    // then Indian × Eurasian). Fix: inject new_page so the new
+    // emission lands on a fresh page (newest wins per page). Pure
+    // exact-duplicate emissions (same signature) continue to drop via
+    // the existing dedup at line 3113 — no new_page injected for them
+    // (would leave an empty page).
+    const sameTypeButDifferentParamsOnPage = (() => {
+      const firstCmd = firstTeachingIdx >= 0 ? processed[firstTeachingIdx] : null;
+      if (!firstCmd || String(firstCmd.action) !== 'showDiagram') return false;
+      const newType = (firstCmd as { type?: string }).type;
+      if (typeof newType !== 'string' || newType.length === 0) return false;
+      // If exact signature matches existing → exact dedup will drop
+      // the new emission anyway; don't inject new_page.
+      const sig = buildShowSignature(String(firstCmd.action), firstCmd);
+      if (catalogRef.current.findBySignature(sig)) return false;
+      // Walk whiteboardCommandsRef backwards. Stop at the most recent
+      // newPage; anything between that newPage and now is "on current
+      // page". A same-type show_diagram in that window is the
+      // intro-then-refine case.
+      const prior = whiteboardCommandsRef.current;
+      for (let i = prior.length - 1; i >= 0; i--) {
+        const c = prior[i];
+        if (c.action === 'newPage') break;
+        if (
+          c.action === 'showDiagram' &&
+          (c as { type?: string }).type === newType
+        ) {
+          return true;
+        }
+      }
+      return false;
+    })();
     // Tutor-side same-context check also suppresses auto-newPage —
     // but not when the student explicitly requested a redraw.
     const tutorCtxAuto = (justSolvedPending || topicShiftPending) && processed.length > 0
@@ -2857,14 +2918,21 @@ export function VoiceTutorRealtime({
       : { same: false, signals: [] as Array<'A' | 'B' | 'C' | 'D'>, decisive: false, reason: '' };
     const tutorCtxAutoStrip = tutorCtxAuto.same
       && decidePageStrip({ tutorContext: tutorCtxAuto, studentText: lastStudentText }).stripNewPage;
-    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawRequested) && processed.length > 0;
-    if (autoNewPageTrigger && !redrawRequested && continuationGuardActive) {
+    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawRequested || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage) && processed.length > 0;
+    // segmentAdvanceWithShow, redrawRequested, and same-type-different-
+    // params all bypass the continuation guard and tutor-context
+    // strip — each is its own explicit signal that a page break is
+    // appropriate (segment transitioned, student asked to redraw, or
+    // brain is dual-emitting the same diagram kind with refined
+    // content).
+    const bypassSuppression = redrawRequested || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage;
+    if (autoNewPageTrigger && !bypassSuppression && continuationGuardActive) {
       console.log('[VoiceTutorRealtime] Suppressed auto-newPage — student said a continuation:', lastStudentText.slice(0, 60));
       onDebugEvent?.('auto_new_page_suppressed_continuation', `"${lastStudentText.slice(0, 40)}…"`);
       // Clear both flags so this path doesn't fire again next batch.
       recentlyFinishedProblemRef.current = null;
       topicShiftPendingRef.current = null;
-    } else if (autoNewPageTrigger && !redrawRequested && tutorCtxAutoStrip) {
+    } else if (autoNewPageTrigger && !bypassSuppression && tutorCtxAutoStrip) {
       console.log('[VoiceTutorRealtime] Suppressed auto-newPage — tutor same-context:', tutorCtxAuto.reason);
       onDebugEvent?.('auto_new_page_suppressed_tutor_context', tutorCtxAuto.reason);
       recentlyFinishedProblemRef.current = null;
@@ -2934,13 +3002,24 @@ export function VoiceTutorRealtime({
           || (redrawRequested ? 'Redraw' : 'Next');
         const synthetic: WhiteboardCommand = { action: 'newPage', title: String(nextTitle) };
         processed = [synthetic, ...processed];
-        const reason = redrawRequested
+        const reason = segmentAdvanceWithShow
+          ? `Segment transition (advance_lesson + show_* in same batch, no new_page) → "${nextTitle}"`
+          : sameTypeButDifferentParamsOnPage
+          ? `Same-type show_diagram dual-emit on current page (intro-then-refine) → "${nextTitle}"`
+          : redrawRequested
           ? `Student redraw request "${lastStudentText.slice(0, 40)}…" → "${nextTitle}"`
           : justSolvedPending
           ? `After Final Answer "${justSolvedPending}" → "${nextTitle}"`
           : `After topic shift (dist=${topicShiftPending?.fromDistance.toFixed(3)}) → "${nextTitle}"`;
         console.log('[VoiceTutorRealtime] Auto-newPage injected:', reason);
-        onDebugEvent?.(redrawRequested ? 'auto_new_page_redraw' : 'auto_new_page', reason);
+        const event = segmentAdvanceWithShow
+          ? 'auto_new_page_segment_advance'
+          : sameTypeButDifferentParamsOnPage
+          ? 'auto_new_page_dual_emit_dedup'
+          : redrawRequested
+          ? 'auto_new_page_redraw'
+          : 'auto_new_page';
+        onDebugEvent?.(event, reason);
       }
       // Either way, clear both flags so this fires at most once per event.
       recentlyFinishedProblemRef.current = null;
