@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { ParametricCurveFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  parametricCurveFeatureNames,
+  type ParametricCurveFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_CURVE = '#7c3aed';
@@ -10,6 +14,7 @@ const COLOR_TAN = '#dc2626';
 
 export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFigure }) {
   const { curve, xMin, xMax, yMin, yMax, highlightT, tangentAtT, exprLabel, title } = figure;
+  const N = parametricCurveFeatureNames;
 
   const W = 520;
   const H = 440;
@@ -30,9 +35,7 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
   const yStep = (yMax - yMin) / 4;
   for (let i = 0; i <= 4; i += 1) yTicks.push(yMin + yStep * i);
 
-  const path = curve
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`)
-    .join(' ');
+  const path = smoothPath(curve, xAt, yAt);
 
   // Direction-of-travel arrow at midpoint.
   const midIdx = Math.floor(curve.length / 2);
@@ -59,7 +62,11 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
   }
 
   return (
-    <div className="parametric-curve-renderer w-full flex flex-col items-center">
+    <div
+      className="parametric-curve-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'parametric curve'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         <defs>
@@ -89,7 +96,15 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
         <rect x={PAD_L} y={PAD_T} width={plotW} height={plotH} fill="none" stroke={COLOR_AXIS} strokeWidth={1.5} />
 
         {/* curve */}
-        <path d={path} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5} />
+        <path
+          d={path} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5}
+          data-feature={N.curve}
+          data-feature-label={exprLabel || 'curve'}
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        />
 
         {/* direction arrow */}
         {midA && midB && midA !== midB && (
@@ -106,21 +121,35 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
 
         {/* tangent vector */}
         {tanLine && (
-          <>
+          <g
+            data-feature={N.tangent}
+            data-feature-label="tangent vector"
+            data-feature-cx={((tanLine.x1 + tanLine.x2) / 2) / W}
+            data-feature-cy={((tanLine.y1 + tanLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={tanLine.x1} y1={tanLine.y1} x2={tanLine.x2} y2={tanLine.y2}
               stroke={COLOR_TAN} strokeWidth={2} markerEnd="url(#arrowhead-tan)" />
             <text x={tanLine.x2 + 4} y={tanLine.y2 - 4} fontSize={11} fill={COLOR_TAN}>tangent</text>
-          </>
+          </g>
         )}
 
         {/* highlight point */}
         {highlightT && (
-          <>
+          <g
+            data-feature={N.highlightT}
+            data-feature-label={highlightT.label || (highlightT.t !== undefined ? `t = ${highlightT.t}` : 'highlight point')}
+            data-feature-cx={xAt(highlightT.x) / W}
+            data-feature-cy={yAt(highlightT.y) / H}
+            data-feature-w={36 / W}
+            data-feature-h={32 / H}
+          >
             <circle cx={xAt(highlightT.x)} cy={yAt(highlightT.y)} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
             <text x={xAt(highlightT.x) + 8} y={yAt(highlightT.y) - 8} fontSize={11} fill={COLOR_HL} fontWeight={600}>
               {highlightT.label ?? (highlightT.t !== undefined ? `t = ${Number(highlightT.t.toFixed(3))}` : '')}
             </text>
-          </>
+          </g>
         )}
 
         {/* tick labels */}
@@ -137,7 +166,16 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
 
         {/* labels */}
         {exprLabel && (
-          <text x={PAD_L + 8} y={PAD_T + 14} fontSize={13} fontWeight={600} fill={COLOR_CURVE}>
+          <text
+            x={PAD_L + 8} y={PAD_T + 14}
+            fontSize={13} fontWeight={600} fill={COLOR_CURVE}
+            data-feature={N.exprLabel}
+            data-feature-label={exprLabel}
+            data-feature-cx={(PAD_L + 60) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={160 / W}
+            data-feature-h={18 / H}
+          >
             {exprLabel}
           </text>
         )}

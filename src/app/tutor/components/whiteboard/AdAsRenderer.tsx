@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { AdAsFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  adAsFeatureNames,
+  type AdAsFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const COLOR_AD = '#2563eb';
 const COLOR_AD_NEW = '#60a5fa';
@@ -24,6 +27,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
     labels,
     title,
   } = figure;
+  const N = adAsFeatureNames;
 
   const W = 580;
   const H = 420;
@@ -83,7 +87,11 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
   }
 
   return (
-    <div className="ad-as-renderer w-full flex flex-col items-center">
+    <div
+      className="ad-as-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'AD/AS'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Axes */}
@@ -92,55 +100,110 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
 
         {/* LRAS — vertical line at potential GDP */}
         {showLras && (
-          <>
+          <g
+            data-feature={N.lras}
+            data-feature-label={labels.lras}
+            data-feature-cx={xAt(potentialGdp) / W}
+            data-feature-cy={(PAD_T + plotH / 2) / H}
+            data-feature-w={28 / W}
+            data-feature-h={plotH / H}
+          >
             <line x1={xAt(potentialGdp)} y1={PAD_T} x2={xAt(potentialGdp)} y2={PAD_T + plotH} stroke={COLOR_LRAS} strokeWidth={2} />
             <text x={xAt(potentialGdp)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
               {labels.lras}
             </text>
-          </>
+          </g>
         )}
         {showLras && lrasShifted !== null && lrasShifted >= 0 && lrasShifted <= AXIS_MAX && (
-          <>
+          <g
+            data-feature={N.lrasShifted}
+            data-feature-label={`${labels.lras}'`}
+            data-feature-cx={xAt(lrasShifted) / W}
+            data-feature-cy={(PAD_T + plotH / 2) / H}
+            data-feature-w={28 / W}
+            data-feature-h={plotH / H}
+          >
             <line x1={xAt(lrasShifted)} y1={PAD_T} x2={xAt(lrasShifted)} y2={PAD_T + plotH} stroke={COLOR_LRAS} strokeWidth={2} strokeDasharray="6 4" />
             <text x={xAt(lrasShifted)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
               {labels.lras}&apos;
             </text>
-          </>
+          </g>
         )}
 
         {/* AD initial */}
-        <line x1={adLine.x1} y1={adLine.y1} x2={adLine.x2} y2={adLine.y2} stroke={COLOR_AD} strokeWidth={2.5} />
-        <text x={adLine.x2 + 4} y={adLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD}>
-          {labels.ad}
-        </text>
+        <g
+          data-feature={N.ad}
+          data-feature-label={labels.ad}
+          data-feature-cx={((adLine.x1 + adLine.x2) / 2) / W}
+          data-feature-cy={((adLine.y1 + adLine.y2) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        >
+          <line x1={adLine.x1} y1={adLine.y1} x2={adLine.x2} y2={adLine.y2} stroke={COLOR_AD} strokeWidth={2.5} />
+          <text x={adLine.x2 + 4} y={adLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD}>
+            {labels.ad}
+          </text>
+        </g>
         {adShiftedLine && (
-          <>
+          <g
+            data-feature={N.adShifted}
+            data-feature-label={`${labels.ad}'`}
+            data-feature-cx={((adShiftedLine.x1 + adShiftedLine.x2) / 2) / W}
+            data-feature-cy={((adShiftedLine.y1 + adShiftedLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={adShiftedLine.x1} y1={adShiftedLine.y1} x2={adShiftedLine.x2} y2={adShiftedLine.y2} stroke={COLOR_AD_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={adShiftedLine.x2 + 4} y={adShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD_NEW}>
               {labels.ad}&apos;
             </text>
-          </>
+          </g>
         )}
 
         {/* SRAS initial */}
-        <line x1={srasLine.x1} y1={srasLine.y1} x2={srasLine.x2} y2={srasLine.y2} stroke={COLOR_SRAS} strokeWidth={2.5} />
-        <text x={srasLine.x2 + 4} y={srasLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS}>
-          {labels.sras}
-        </text>
+        <g
+          data-feature={N.sras}
+          data-feature-label={labels.sras}
+          data-feature-cx={((srasLine.x1 + srasLine.x2) / 2) / W}
+          data-feature-cy={((srasLine.y1 + srasLine.y2) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        >
+          <line x1={srasLine.x1} y1={srasLine.y1} x2={srasLine.x2} y2={srasLine.y2} stroke={COLOR_SRAS} strokeWidth={2.5} />
+          <text x={srasLine.x2 + 4} y={srasLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS}>
+            {labels.sras}
+          </text>
+        </g>
         {srasShiftedLine && (
-          <>
+          <g
+            data-feature={N.srasShifted}
+            data-feature-label={`${labels.sras}'`}
+            data-feature-cx={((srasShiftedLine.x1 + srasShiftedLine.x2) / 2) / W}
+            data-feature-cy={((srasShiftedLine.y1 + srasShiftedLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={srasShiftedLine.x1} y1={srasShiftedLine.y1} x2={srasShiftedLine.x2} y2={srasShiftedLine.y2} stroke={COLOR_SRAS_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={srasShiftedLine.x2 + 4} y={srasShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS_NEW}>
               {labels.sras}&apos;
             </text>
-          </>
+          </g>
         )}
 
         {/* Initial equilibrium */}
-        <circle cx={xAt(Y0)} cy={yAt(P0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
-        <text x={xAt(Y0) + 8} y={yAt(P0) - 6} fontSize={13} fontWeight={700} fill={COLOR_EQ}>
-          {labels.eqInitial}
-        </text>
+        <g
+          data-feature={N.eqInitial}
+          data-feature-label={labels.eqInitial}
+          data-feature-cx={xAt(Y0) / W}
+          data-feature-cy={yAt(P0) / H}
+          data-feature-w={40 / W}
+          data-feature-h={40 / H}
+        >
+          <circle cx={xAt(Y0)} cy={yAt(P0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
+          <text x={xAt(Y0) + 8} y={yAt(P0) - 6} fontSize={13} fontWeight={700} fill={COLOR_EQ}>
+            {labels.eqInitial}
+          </text>
+        </g>
         {/* Reference lines from initial equilibrium */}
         <line x1={xAt(Y0)} y1={yAt(P0)} x2={xAt(Y0)} y2={PAD_T + plotH} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
         <line x1={xAt(Y0)} y1={yAt(P0)} x2={PAD_L} y2={yAt(P0)} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
@@ -149,7 +212,14 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
 
         {/* Final equilibrium if shift */}
         {Y1 !== undefined && P1 !== undefined && (
-          <>
+          <g
+            data-feature={N.eqFinal}
+            data-feature-label={labels.eqFinal}
+            data-feature-cx={xAt(Y1) / W}
+            data-feature-cy={yAt(P1) / H}
+            data-feature-w={40 / W}
+            data-feature-h={40 / H}
+          >
             <circle cx={xAt(Y1)} cy={yAt(P1)} r={5} fill={COLOR_EQ_NEW} stroke="#fff" strokeWidth={2} />
             <text x={xAt(Y1) + 8} y={yAt(P1) - 6} fontSize={13} fontWeight={700} fill="#a16207">
               {labels.eqFinal}
@@ -158,7 +228,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
             <line x1={xAt(Y1)} y1={yAt(P1)} x2={PAD_L} y2={yAt(P1)} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
             <text x={xAt(Y1)} y={PAD_T + plotH + 14} fontSize={11} fill="#a16207" textAnchor="middle">Y₁</text>
             <text x={PAD_L - 6} y={yAt(P1) + 4} fontSize={11} fill="#a16207" textAnchor="end">P₁</text>
-          </>
+          </g>
         )}
 
         {/* Axis labels */}

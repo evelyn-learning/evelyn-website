@@ -78,6 +78,254 @@ export function solveInequalityGraph(params: Record<string, unknown>): Inequalit
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Phase 6 manifests (whiteboard markup initiative) — unit_circle,
+// transformation, inequality_graph.
+// ═══════════════════════════════════════════════════════════════════
+
+function _slug(label: string): string {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// ── unit_circle manifest ──────────────────────────────────────────
+export const unitCircleFeatureNames = {
+  circle: 'unit-circle',
+  angle: 'angle-ray',
+  endpoint: 'endpoint',
+  cosLine: 'cos-line',
+  sinLine: 'sin-line',
+  thetaLabel: 'theta-label',
+};
+
+export function buildUnitCircleManifest(figure: UnitCircleFigure): FeatureManifestEntry[] {
+  const N = unitCircleFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.circle,
+      kind: 'region',
+      description: 'unit circle',
+      labels: ['unit circle', 'the unit circle', 'the circle', 'the diagram'],
+      displayName: figure.title || 'unit circle',
+      scribbleable: true,
+    },
+    {
+      name: N.angle,
+      kind: 'label',
+      description: `radius/ray at θ = ${figure.angleDegrees}°`,
+      labels: [
+        'angle', 'the angle', 'the ray', 'ray', 'the radius', 'radius',
+        `${figure.angleDegrees}°`, `${figure.angleDegrees} degrees`,
+        `θ = ${figure.angleDegrees}°`,
+        'the angle ray',
+        // Verbose description-format (brain copies from description).
+        `radius/ray at θ = ${figure.angleDegrees}°`,
+      ],
+      displayName: `${figure.angleDegrees}°`,
+      scribbleable: true,
+    },
+    {
+      name: N.endpoint,
+      kind: 'label',
+      description: 'endpoint on the unit circle (cos θ, sin θ)',
+      labels: [
+        'endpoint', 'the endpoint', 'the point', 'point', 'point on the circle',
+        '(cos θ, sin θ)', '(cos, sin)',
+        'endpoint on the unit circle',
+        'endpoint on the unit circle (cos θ, sin θ)',
+      ],
+      displayName: 'endpoint',
+      scribbleable: true,
+    },
+    {
+      name: N.thetaLabel,
+      kind: 'label',
+      description: `θ = ${figure.angleDegrees}°${figure.showRadians ? ' (with radians)' : ''}`,
+      labels: [
+        'theta', 'θ', 'theta label', 'the theta label',
+        'angle label', 'the angle label',
+        `θ = ${figure.angleDegrees}°`,
+        `θ = ${figure.angleDegrees}° (with radians)`,
+      ],
+      displayName: `θ = ${figure.angleDegrees}°`,
+      scribbleable: true,
+    },
+  ];
+  if (figure.showSinCos) {
+    features.push({
+      name: N.cosLine,
+      kind: 'label',
+      description: 'horizontal cos component',
+      labels: [
+        'cos', 'cosine', 'cos line', 'the cos', 'the cosine',
+        'horizontal component', 'x component', 'adjacent', 'cos θ',
+        'horizontal cos component',
+      ],
+      displayName: 'cos',
+      scribbleable: true,
+    });
+    features.push({
+      name: N.sinLine,
+      kind: 'label',
+      description: 'vertical sin component',
+      labels: [
+        'sin', 'sine', 'sin line', 'the sin', 'the sine',
+        'vertical component', 'y component', 'opposite', 'sin θ',
+        'vertical sin component',
+      ],
+      displayName: 'sin',
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── transformation manifest ───────────────────────────────────────
+export const transformationFeatureNames = {
+  diagram: 'transformation',
+  preimage: 'preimage',
+  image: 'image',
+  transformLabel: 'transform-label',
+};
+
+export function buildTransformationManifest(figure: TransformationFigure): FeatureManifestEntry[] {
+  const N = transformationFeatureNames;
+  const t = figure.transform.type;
+  let transformText: string = t;
+  if (t === 'translate') transformText = `translate (${figure.transform.tx ?? 0}, ${figure.transform.ty ?? 0})`;
+  else if (t === 'rotate') transformText = `rotate ${figure.transform.angleDeg ?? 0}°`;
+  else if (t === 'reflect') transformText = `reflect over ${figure.transform.axis ?? 'x'}-axis`;
+  else if (t === 'scale') transformText = `scale (${figure.transform.sx ?? 1}, ${figure.transform.sy ?? 1})`;
+  return [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: `${t} transformation`,
+      labels: ['transformation', 'the transformation', 'the diagram', `${t}`, `the ${t}`],
+      displayName: figure.title || `${t} transformation`,
+      scribbleable: true,
+    },
+    {
+      name: N.preimage,
+      kind: 'area',
+      description: `pre-image (original ${figure.shape.type}, blue)`,
+      labels: [
+        'pre-image', 'the pre-image', 'preimage', 'the preimage',
+        'original', 'the original', 'original shape', 'the original shape',
+        'blue shape', 'the blue shape',
+        figure.shape.type, `the ${figure.shape.type}`,
+        `original ${figure.shape.type}`, `the original ${figure.shape.type}`,
+        `pre-image (original ${figure.shape.type}, blue)`,
+        `pre-image (original ${figure.shape.type})`,
+      ],
+      displayName: 'pre-image',
+      scribbleable: true,
+    },
+    {
+      name: N.image,
+      kind: 'area',
+      description: `image (transformed ${figure.shape.type}, red)`,
+      labels: [
+        'image', 'the image', 'transformed', 'the transformed', 'transformed shape', 'the transformed shape',
+        'red shape', 'the red shape',
+        `transformed ${figure.shape.type}`,
+        `image (transformed ${figure.shape.type}, red)`,
+        `image (transformed ${figure.shape.type})`,
+      ],
+      displayName: 'image',
+      scribbleable: true,
+    },
+    {
+      name: N.transformLabel,
+      kind: 'label',
+      description: `transform label: "${transformText}"`,
+      labels: [
+        'label', 'the label', 'transform', 'the transform',
+        'transform label', 'the transform label',
+        transformText, `"${transformText}"`,
+        t, `the ${t}`,
+        `transform label: "${transformText}"`,
+      ],
+      displayName: transformText,
+      scribbleable: true,
+    },
+  ];
+}
+
+// ── inequality_graph manifest ─────────────────────────────────────
+export const inequalityGraphFeatureNames = {
+  numberLine: 'number-line',
+  ray: 'ray',
+  endpoint: 'endpoint',
+  inequalityLabel: 'inequality-label',
+};
+
+export function buildInequalityGraphManifest(figure: InequalityGraphFigure): FeatureManifestEntry[] {
+  const N = inequalityGraphFeatureNames;
+  const inequalityText = `${figure.variable} ${figure.operator} ${figure.value}`;
+  const closed = figure.operator === '<=' || figure.operator === '>=';
+  return [
+    {
+      name: N.numberLine,
+      kind: 'region',
+      description: 'number line',
+      labels: ['number line', 'the number line', 'the diagram', 'the line'],
+      displayName: figure.title || 'number line',
+      scribbleable: true,
+    },
+    {
+      name: N.ray,
+      kind: 'label',
+      description: `solution ray (${inequalityText})`,
+      labels: [
+        'ray', 'the ray', 'solution', 'the solution', 'solution ray', 'the solution ray',
+        'red ray', 'the red ray', 'highlighted ray', 'the highlighted ray',
+        `solution ray (${inequalityText})`,
+      ],
+      displayName: 'solution ray',
+      scribbleable: true,
+    },
+    {
+      name: N.endpoint,
+      kind: 'label',
+      description: `endpoint at ${figure.value} (${closed ? 'closed/filled' : 'open/hollow'})`,
+      labels: [
+        'endpoint', 'the endpoint', 'point', 'the point',
+        `endpoint at ${figure.value}`, `the ${figure.value} endpoint`,
+        // Verbose description-format (brain copies from description).
+        `endpoint at ${figure.value} (${closed ? 'closed/filled' : 'open/hollow'})`,
+        `endpoint at ${figure.value} (${closed ? 'closed' : 'open'})`,
+        `endpoint at ${figure.value} (${closed ? 'filled' : 'hollow'})`,
+        ...(closed
+          ? [
+              'closed endpoint', 'the closed endpoint',
+              'closed circle', 'filled circle', 'the filled circle', 'solid circle',
+              'closed dot', 'the closed dot', 'filled dot', 'the filled dot',
+            ]
+          : [
+              'open endpoint', 'the open endpoint',
+              'open circle', 'hollow circle', 'the hollow circle',
+              'open dot', 'the open dot', 'hollow dot',
+            ]),
+      ],
+      displayName: `endpoint at ${figure.value}`,
+      scribbleable: true,
+    },
+    {
+      name: N.inequalityLabel,
+      kind: 'label',
+      description: `inequality label: "${inequalityText}"`,
+      labels: [
+        'label', 'the label', 'inequality', 'the inequality',
+        'inequality label', 'the inequality label',
+        inequalityText, `"${inequalityText}"`,
+        `inequality label: "${inequalityText}"`,
+      ],
+      displayName: inequalityText,
+      scribbleable: true,
+    },
+  ];
+}
+
 // ── sentence_diagram (Phase 7) ────────────────────────────────────────────
 export interface SentenceDiagramFigure {
   subject: string;

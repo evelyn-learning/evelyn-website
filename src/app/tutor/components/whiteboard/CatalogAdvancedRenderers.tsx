@@ -23,11 +23,15 @@ import {
   sentenceDiagramFeatureNames,
   historicalTimelineFeatureNames,
   hierarchyPyramidFeatureNames,
+  unitCircleFeatureNames,
+  transformationFeatureNames,
+  inequalityGraphFeatureNames,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 // ── Unit circle ───────────────────────────────────────────────────────────
 export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure }) {
   const { angleDegrees, showSinCos, showRadians, title } = figure;
+  const N = unitCircleFeatureNames;
   const W = 380;
   const H = 380;
   const cx = W / 2;
@@ -37,17 +41,48 @@ export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure
   const px = cx + r * Math.cos(rad);
   const py = cy - r * Math.sin(rad);
   return (
-    <div className="w-full flex flex-col items-center">
+    <div
+      className="w-full flex flex-col items-center"
+      data-feature={N.circle}
+      data-feature-label={title || 'unit circle'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[420px]">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1f2937" strokeWidth={2} />
         <line x1={cx - r - 20} y1={cy} x2={cx + r + 20} y2={cy} stroke="#9ca3af" strokeWidth={1} />
         <line x1={cx} y1={cy - r - 20} x2={cx} y2={cy + r + 20} stroke="#9ca3af" strokeWidth={1} />
-        <line x1={cx} y1={cy} x2={px} y2={py} stroke="#dc2626" strokeWidth={2.5} />
+        <line
+          x1={cx} y1={cy} x2={px} y2={py}
+          stroke="#dc2626" strokeWidth={2.5}
+          data-feature={N.angle}
+          data-feature-label={`${angleDegrees}°`}
+          data-feature-cx={((cx + px) / 2) / W}
+          data-feature-cy={((cy + py) / 2) / H}
+          data-feature-w={Math.abs(px - cx) / W + 20 / W}
+          data-feature-h={Math.abs(py - cy) / H + 20 / H}
+        />
         {showSinCos && (
           <g>
-            <line x1={px} y1={py} x2={px} y2={cy} stroke="#16a34a" strokeWidth={1.5} strokeDasharray="4 3" />
-            <line x1={cx} y1={py} x2={px} y2={py} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 3" />
+            <line
+              x1={px} y1={py} x2={px} y2={cy}
+              stroke="#16a34a" strokeWidth={1.5} strokeDasharray="4 3"
+              data-feature={N.sinLine}
+              data-feature-label="sin"
+              data-feature-cx={px / W}
+              data-feature-cy={((cy + py) / 2) / H}
+              data-feature-w={20 / W}
+              data-feature-h={Math.abs(cy - py) / H}
+            />
+            <line
+              x1={cx} y1={py} x2={px} y2={py}
+              stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 3"
+              data-feature={N.cosLine}
+              data-feature-label="cos"
+              data-feature-cx={((cx + px) / 2) / W}
+              data-feature-cy={py / H}
+              data-feature-w={Math.abs(px - cx) / W}
+              data-feature-h={20 / H}
+            />
             <text x={(cx + px) / 2} y={py - 6} fontSize={12} fill="#3b82f6" fontWeight={700} textAnchor="middle">
               cos = {Math.cos(rad).toFixed(2)}
             </text>
@@ -56,8 +91,26 @@ export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure
             </text>
           </g>
         )}
-        <circle cx={px} cy={py} r={5} fill="#dc2626" />
-        <text x={cx} y={H - 14} fontSize={13} textAnchor="middle" fill="#374151" fontWeight={600}>
+        <circle
+          cx={px} cy={py} r={5}
+          fill="#dc2626"
+          data-feature={N.endpoint}
+          data-feature-label="endpoint"
+          data-feature-cx={px / W}
+          data-feature-cy={py / H}
+          data-feature-w={24 / W}
+          data-feature-h={24 / H}
+        />
+        <text
+          x={cx} y={H - 14}
+          fontSize={13} textAnchor="middle" fill="#374151" fontWeight={600}
+          data-feature={N.thetaLabel}
+          data-feature-label={`θ = ${angleDegrees}°`}
+          data-feature-cx={cx / W}
+          data-feature-cy={(H - 18) / H}
+          data-feature-w={160 / W}
+          data-feature-h={20 / H}
+        >
           θ = {angleDegrees}°{showRadians ? ` = ${(rad).toFixed(3)} rad` : ''}
         </text>
       </svg>
@@ -68,6 +121,7 @@ export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure
 // ── Transformation ────────────────────────────────────────────────────────
 export function CatalogTransformationRenderer({ figure }: { figure: TransformationFigure }) {
   const { shape, transform, title } = figure;
+  const N = transformationFeatureNames;
   const W = 480;
   const H = 380;
   const cx = W / 2;
@@ -95,19 +149,68 @@ export function CatalogTransformationRenderer({ figure }: { figure: Transformati
   });
   const path = (verts: Array<{ x: number; y: number }>) =>
     `M ${verts.map((v) => `${px(v.x)} ${py(v.y)}`).join(' L ')} Z`;
+  // Compute bboxes for pre-image and image (in svg-coord fractions) so
+  // the scribble tick lands ON the shape, not at the diagram corner.
+  const bboxFrac = (verts: Array<{ x: number; y: number }>) => {
+    const xs = verts.map((v) => px(v.x));
+    const ys = verts.map((v) => py(v.y));
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return {
+      cx: ((minX + maxX) / 2) / W,
+      cy: ((minY + maxY) / 2) / H,
+      w: (maxX - minX + 12) / W,
+      h: (maxY - minY + 12) / H,
+    };
+  };
+  const preBox = bboxFrac(shape.vertices);
+  const imgBox = bboxFrac(transformed);
   return (
-    <div className="w-full flex flex-col items-center">
+    <div
+      className="w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || `${transform.type} transformation`}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         <line x1={0} y1={cy} x2={W} y2={cy} stroke="#e5e7eb" strokeWidth={1} />
         <line x1={cx} y1={0} x2={cx} y2={H} stroke="#e5e7eb" strokeWidth={1} />
         {/* Pre-image */}
-        <path d={path(shape.vertices)} fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth={2} />
+        <path
+          d={path(shape.vertices)}
+          fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth={2}
+          data-feature={N.preimage}
+          data-feature-label="pre-image"
+          data-feature-cx={preBox.cx}
+          data-feature-cy={preBox.cy}
+          data-feature-w={preBox.w}
+          data-feature-h={preBox.h}
+        />
         {/* Image */}
-        <path d={path(transformed)} fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" strokeWidth={2} />
+        <path
+          d={path(transformed)}
+          fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" strokeWidth={2}
+          data-feature={N.image}
+          data-feature-label="image"
+          data-feature-cx={imgBox.cx}
+          data-feature-cy={imgBox.cy}
+          data-feature-w={imgBox.w}
+          data-feature-h={imgBox.h}
+        />
         <text x={W - 14} y={20} fontSize={12} textAnchor="end" fill="#3b82f6" fontWeight={700}>pre-image</text>
         <text x={W - 14} y={36} fontSize={12} textAnchor="end" fill="#dc2626" fontWeight={700}>image</text>
-        <text x={cx} y={H - 14} fontSize={13} textAnchor="middle" fill="#374151" fontWeight={600}>
+        <text
+          x={cx} y={H - 14}
+          fontSize={13} textAnchor="middle" fill="#374151" fontWeight={600}
+          data-feature={N.transformLabel}
+          data-feature-label={transform.type}
+          data-feature-cx={cx / W}
+          data-feature-cy={(H - 18) / H}
+          data-feature-w={240 / W}
+          data-feature-h={20 / H}
+        >
           {transform.type}
           {transform.type === 'translate' && ` (${transform.tx ?? 0}, ${transform.ty ?? 0})`}
           {transform.type === 'rotate' && ` ${transform.angleDeg}°`}
@@ -122,6 +225,7 @@ export function CatalogTransformationRenderer({ figure }: { figure: Transformati
 // ── Inequality graph ──────────────────────────────────────────────────────
 export function CatalogInequalityGraphRenderer({ figure }: { figure: InequalityGraphFigure }) {
   const { variable, operator, value, title } = figure;
+  const N = inequalityGraphFeatureNames;
   const W = 600;
   const H = 140;
   const cy = H / 2;
@@ -137,8 +241,13 @@ export function CatalogInequalityGraphRenderer({ figure }: { figure: InequalityG
   const direction = operator === '<' || operator === '<=' ? -1 : 1;
   const ticks: number[] = [];
   for (let v = Math.floor(center + min); v <= Math.ceil(center + max); v++) ticks.push(v);
+  const rayEndX = direction > 0 ? W - PAD + 12 : PAD - 12;
   return (
-    <div className="w-full flex flex-col items-center">
+    <div
+      className="w-full flex flex-col items-center"
+      data-feature={N.numberLine}
+      data-feature-label={title || 'number line'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         <line x1={PAD - 12} y1={cy} x2={W - PAD + 12} y2={cy} stroke="#1f2937" strokeWidth={2} />
@@ -156,16 +265,36 @@ export function CatalogInequalityGraphRenderer({ figure }: { figure: InequalityG
         })}
         {/* Ray */}
         <line
-          x1={valueX}
-          y1={cy}
-          x2={direction > 0 ? W - PAD + 12 : PAD - 12}
-          y2={cy}
-          stroke="#dc2626"
-          strokeWidth={4}
+          x1={valueX} y1={cy} x2={rayEndX} y2={cy}
+          stroke="#dc2626" strokeWidth={4}
+          data-feature={N.ray}
+          data-feature-label="solution ray"
+          data-feature-cx={((valueX + rayEndX) / 2) / W}
+          data-feature-cy={cy / H}
+          data-feature-w={Math.abs(rayEndX - valueX) / W}
+          data-feature-h={20 / H}
         />
         {/* Endpoint */}
-        <circle cx={valueX} cy={cy} r={7} fill={includeEq ? '#dc2626' : '#fff'} stroke="#dc2626" strokeWidth={2.5} />
-        <text x={W / 2} y={H - 14} fontSize={14} textAnchor="middle" fill="#374151" fontWeight={600}>
+        <circle
+          cx={valueX} cy={cy} r={7}
+          fill={includeEq ? '#dc2626' : '#fff'} stroke="#dc2626" strokeWidth={2.5}
+          data-feature={N.endpoint}
+          data-feature-label={`endpoint at ${value}`}
+          data-feature-cx={valueX / W}
+          data-feature-cy={cy / H}
+          data-feature-w={24 / W}
+          data-feature-h={24 / H}
+        />
+        <text
+          x={W / 2} y={H - 14}
+          fontSize={14} textAnchor="middle" fill="#374151" fontWeight={600}
+          data-feature={N.inequalityLabel}
+          data-feature-label={`${variable} ${operator} ${value}`}
+          data-feature-cx={(W / 2) / W}
+          data-feature-cy={(H - 18) / H}
+          data-feature-w={160 / W}
+          data-feature-h={20 / H}
+        >
           {variable} {operator} {value}
         </text>
       </svg>

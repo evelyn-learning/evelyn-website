@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { MoneyMarketFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  moneyMarketFeatureNames,
+  type MoneyMarketFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const COLOR_MS = '#1f2937';
 const COLOR_MS_NEW = '#6b7280';
@@ -20,6 +23,7 @@ export function MoneyMarketRenderer({ figure }: { figure: MoneyMarketFigure }) {
     finalMoneyQuantity: Q1,
     title,
   } = figure;
+  const N = moneyMarketFeatureNames;
 
   const W = 540;
   const H = 400;
@@ -74,7 +78,11 @@ export function MoneyMarketRenderer({ figure }: { figure: MoneyMarketFigure }) {
   }
 
   return (
-    <div className="money-market-renderer w-full flex flex-col items-center">
+    <div
+      className="money-market-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'money market'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* Axes */}
@@ -82,35 +90,76 @@ export function MoneyMarketRenderer({ figure }: { figure: MoneyMarketFigure }) {
         <line x1={PAD_L} y1={PAD_T + plotH} x2={PAD_L + plotW} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
 
         {/* Ms (vertical) */}
-        <line x1={xAt(Q0)} y1={PAD_T} x2={xAt(Q0)} y2={PAD_T + plotH} stroke={COLOR_MS} strokeWidth={2.5} />
-        <text x={xAt(Q0)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_MS} textAnchor="middle">
-          Ms
-        </text>
+        <g
+          data-feature={N.ms}
+          data-feature-label="Ms"
+          data-feature-cx={xAt(Q0) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={28 / W}
+          data-feature-h={plotH / H}
+        >
+          <line x1={xAt(Q0)} y1={PAD_T} x2={xAt(Q0)} y2={PAD_T + plotH} stroke={COLOR_MS} strokeWidth={2.5} />
+          <text x={xAt(Q0)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_MS} textAnchor="middle">
+            Ms
+          </text>
+        </g>
         {msShiftedQ !== null && msShiftedQ >= 0 && msShiftedQ <= AXIS_MAX && (
-          <>
+          <g
+            data-feature={N.msShifted}
+            data-feature-label="Ms'"
+            data-feature-cx={xAt(msShiftedQ) / W}
+            data-feature-cy={(PAD_T + plotH / 2) / H}
+            data-feature-w={28 / W}
+            data-feature-h={plotH / H}
+          >
             <line x1={xAt(msShiftedQ)} y1={PAD_T} x2={xAt(msShiftedQ)} y2={PAD_T + plotH} stroke={COLOR_MS_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={xAt(msShiftedQ)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_MS_NEW} textAnchor="middle">
               Ms&apos;
             </text>
-          </>
+          </g>
         )}
 
         {/* Md */}
-        <line x1={mdLine.x1} y1={mdLine.y1} x2={mdLine.x2} y2={mdLine.y2} stroke={COLOR_MD} strokeWidth={2.5} />
-        <text x={mdLine.x2 + 4} y={mdLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_MD}>
-          Md
-        </text>
+        <g
+          data-feature={N.md}
+          data-feature-label="Md"
+          data-feature-cx={((mdLine.x1 + mdLine.x2) / 2) / W}
+          data-feature-cy={((mdLine.y1 + mdLine.y2) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        >
+          <line x1={mdLine.x1} y1={mdLine.y1} x2={mdLine.x2} y2={mdLine.y2} stroke={COLOR_MD} strokeWidth={2.5} />
+          <text x={mdLine.x2 + 4} y={mdLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_MD}>
+            Md
+          </text>
+        </g>
         {mdShiftedLine && (
-          <>
+          <g
+            data-feature={N.mdShifted}
+            data-feature-label="Md'"
+            data-feature-cx={((mdShiftedLine.x1 + mdShiftedLine.x2) / 2) / W}
+            data-feature-cy={((mdShiftedLine.y1 + mdShiftedLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={mdShiftedLine.x1} y1={mdShiftedLine.y1} x2={mdShiftedLine.x2} y2={mdShiftedLine.y2} stroke={COLOR_MD_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={mdShiftedLine.x2 + 4} y={mdShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_MD_NEW}>
               Md&apos;
             </text>
-          </>
+          </g>
         )}
 
         {/* Initial equilibrium */}
-        <circle cx={xAt(Q0)} cy={yAt(i0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
+        <g
+          data-feature={N.eqInitial}
+          data-feature-label="initial equilibrium"
+          data-feature-cx={xAt(Q0) / W}
+          data-feature-cy={yAt(i0) / H}
+          data-feature-w={40 / W}
+          data-feature-h={40 / H}
+        >
+          <circle cx={xAt(Q0)} cy={yAt(i0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
+        </g>
         <line x1={xAt(Q0)} y1={yAt(i0)} x2={xAt(Q0)} y2={PAD_T + plotH} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
         <line x1={xAt(Q0)} y1={yAt(i0)} x2={PAD_L} y2={yAt(i0)} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
         <text x={xAt(Q0)} y={PAD_T + plotH + 14} fontSize={11} fill={COLOR_EQ} textAnchor="middle">Q₀</text>
@@ -118,13 +167,20 @@ export function MoneyMarketRenderer({ figure }: { figure: MoneyMarketFigure }) {
 
         {/* Final equilibrium */}
         {i1 !== undefined && Q1 !== undefined && (
-          <>
+          <g
+            data-feature={N.eqFinal}
+            data-feature-label="final equilibrium"
+            data-feature-cx={xAt(Q1) / W}
+            data-feature-cy={yAt(i1) / H}
+            data-feature-w={40 / W}
+            data-feature-h={40 / H}
+          >
             <circle cx={xAt(Q1)} cy={yAt(i1)} r={5} fill={COLOR_EQ_NEW} stroke="#fff" strokeWidth={2} />
             <line x1={xAt(Q1)} y1={yAt(i1)} x2={xAt(Q1)} y2={PAD_T + plotH} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
             <line x1={xAt(Q1)} y1={yAt(i1)} x2={PAD_L} y2={yAt(i1)} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
             <text x={xAt(Q1)} y={PAD_T + plotH + 14} fontSize={11} fill="#a16207" textAnchor="middle">Q₁</text>
             <text x={PAD_L - 6} y={yAt(i1) + 4} fontSize={11} fill="#a16207" textAnchor="end">i₁</text>
-          </>
+          </g>
         )}
 
         {/* Axis labels */}

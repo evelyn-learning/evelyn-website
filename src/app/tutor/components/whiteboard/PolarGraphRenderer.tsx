@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { PolarGraphFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  polarGraphFeatureNames,
+  type PolarGraphFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_GRID = '#e5e7eb';
@@ -11,6 +15,7 @@ const COLOR_HL = '#dc2626';
 
 export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
   const { curve, shadeRegion, highlightPoint, rMax, showAxes, exprLabel, title } = figure;
+  const N = polarGraphFeatureNames;
 
   const W = 480;
   const H = 480;
@@ -21,16 +26,19 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
   const xAt = (x: number) => cx + (x / rMax) * plotR;
   const yAt = (y: number) => cy - (y / rMax) * plotR;
 
-  const curvePath = curve
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`)
-    .join(' ');
+  const curvePath = smoothPath(curve, xAt, yAt);
 
-  // Shade region: closed polygon from origin → curve points → origin.
+  // Shade region: closed polygon from origin → smooth curve → origin.
+  // Use smoothPath for the curve portion so the wedge edge matches the
+  // main curve's smoothness, then close to the origin.
   let shadePath = '';
   if (shadeRegion && shadeRegion.length > 1) {
-    shadePath = `M${cx},${cy} ` + shadeRegion
-      .map((p) => `L${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`)
-      .join(' ') + ' Z';
+    const curvePart = smoothPath(shadeRegion, xAt, yAt);
+    // smoothPath starts with `M<x0>,<y0>` — for the wedge, we want to
+    // start at the origin, line to the first curve point, follow the
+    // smooth curve, then close back to the origin.
+    const first = shadeRegion[0];
+    shadePath = `M${cx.toFixed(2)},${cy.toFixed(2)} L${xAt(first.x).toFixed(2)},${yAt(first.y).toFixed(2)} ${curvePart.replace(/^M[^ ]+ /, '')} Z`;
   }
 
   // Concentric grid circles at r = rMax/4, rMax/2, 3*rMax/4, rMax.
@@ -40,7 +48,11 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
   const radialAngles = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
 
   return (
-    <div className="polar-graph-renderer w-full flex flex-col items-center">
+    <div
+      className="polar-graph-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'polar graph'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         {/* concentric circles */}
@@ -63,19 +75,44 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
         )}
 
         {/* shaded region */}
-        {shadePath && <path d={shadePath} fill={COLOR_SHADE} fillOpacity={0.55} stroke="none" />}
+        {shadePath && (
+          <path
+            d={shadePath} fill={COLOR_SHADE} fillOpacity={0.55} stroke="none"
+            data-feature={N.shadeRegion}
+            data-feature-label="shaded region"
+            data-feature-cx={cx / W}
+            data-feature-cy={cy / H}
+            data-feature-w={(plotR * 0.8) / W}
+            data-feature-h={(plotR * 0.8) / H}
+          />
+        )}
 
         {/* curve */}
-        <path d={curvePath} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5} />
+        <path
+          d={curvePath} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5}
+          data-feature={N.curve}
+          data-feature-label={exprLabel || 'r(θ)'}
+          data-feature-cx={cx / W}
+          data-feature-cy={cy / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        />
 
         {/* highlight point */}
         {highlightPoint && (
-          <>
+          <g
+            data-feature={N.highlightPoint}
+            data-feature-label={highlightPoint.label || 'highlight point'}
+            data-feature-cx={xAt(highlightPoint.x) / W}
+            data-feature-cy={yAt(highlightPoint.y) / H}
+            data-feature-w={36 / W}
+            data-feature-h={32 / H}
+          >
             <circle cx={xAt(highlightPoint.x)} cy={yAt(highlightPoint.y)} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
             <text x={xAt(highlightPoint.x) + 8} y={yAt(highlightPoint.y) - 8} fontSize={11} fill={COLOR_HL} fontWeight={600}>
               {highlightPoint.label ?? `(r=${Number(highlightPoint.r.toFixed(2))}, θ=${Number(highlightPoint.theta.toFixed(2))})`}
             </text>
-          </>
+          </g>
         )}
 
         {/* polar tick labels along positive x-axis */}
@@ -97,7 +134,16 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
 
         {/* expression label */}
         {exprLabel && (
-          <text x={20} y={26} fontSize={13} fontWeight={600} fill={COLOR_CURVE}>
+          <text
+            x={20} y={26}
+            fontSize={13} fontWeight={600} fill={COLOR_CURVE}
+            data-feature={N.exprLabel}
+            data-feature-label={exprLabel}
+            data-feature-cx={80 / W}
+            data-feature-cy={24 / H}
+            data-feature-w={160 / W}
+            data-feature-h={18 / H}
+          >
             {exprLabel}
           </text>
         )}

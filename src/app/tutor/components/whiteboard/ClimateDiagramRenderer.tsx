@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { ClimateDiagramFigure } from '@/lib/tutor/diagrams/catalog/kinds/environmental';
+import {
+  climateDiagramFeatureNames,
+  type ClimateDiagramFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/environmental';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_TEMP = '#dc2626';
@@ -10,6 +14,7 @@ const COLOR_GRID = '#e5e7eb';
 
 export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigure }) {
   const { months, tempUnit, precipUnit, location, title, meanAnnualTemp, totalAnnualPrecip } = figure;
+  const N = climateDiagramFeatureNames;
 
   const W = 580;
   const H = 380;
@@ -38,10 +43,13 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
   const colW = plotW / months.length;
   const colCenter = (i: number) => PAD_L + colW * (i + 0.5);
 
-  // Temperature line points
-  const tempPath = months
-    .map((m, i) => `${i === 0 ? 'M' : 'L'}${colCenter(i).toFixed(2)},${tempY(m.temp).toFixed(2)}`)
-    .join(' ');
+  // Temperature line — use smoothPath for a clean curve across 12 months
+  // (straight-line interpolation looks jagged on annual climate data).
+  const tempPath = smoothPath(
+    months.map((m, i) => ({ x: i, y: m.temp })),
+    (x) => colCenter(x),
+    (y) => tempY(y),
+  );
 
   // Y-axis ticks
   const tempTicks: number[] = [];
@@ -53,7 +61,11 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
   for (let i = 0; i <= 4; i += 1) precipTicks.push(precipStep * i);
 
   return (
-    <div className="climate-diagram-renderer w-full flex flex-col items-center">
+    <div
+      className="climate-diagram-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || (location ? `climate diagram (${location})` : 'climate diagram')}
+    >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {(title || location) && (
           <text x={W / 2} y={20} fontSize={14} fontWeight={700} textAnchor="middle" fill="#111827">
@@ -71,25 +83,36 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
           <line key={`gy-${i}`} x1={PAD_L} y1={tempY(t)} x2={PAD_L + plotW} y2={tempY(t)} stroke={COLOR_GRID} strokeWidth={1} />
         ))}
 
-        {/* precipitation bars */}
-        {months.map((m, i) => {
-          const x = colCenter(i) - colW * 0.32;
-          const y = precipY(m.precip);
-          const yBase = precipY(0);
-          return (
-            <rect
-              key={`bar-${i}`}
-              x={x}
-              y={y}
-              width={colW * 0.64}
-              height={Math.max(0, yBase - y)}
-              fill={COLOR_PRECIP}
-              fillOpacity={0.55}
-              stroke={COLOR_PRECIP}
-              strokeWidth={1}
-            />
-          );
-        })}
+        {/* precipitation bars — wrapped so "precipitation bars" collective resolves. */}
+        <g
+          data-feature={N.precipBars}
+          data-feature-label="precipitation bars"
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={plotH / H}
+        >
+          {months.map((m, i) => {
+            const x = colCenter(i) - colW * 0.32;
+            const y = precipY(m.precip);
+            const yBase = precipY(0);
+            const bw = colW * 0.64;
+            const bh = Math.max(0, yBase - y);
+            return (
+              <rect
+                key={`bar-${i}`}
+                x={x} y={y} width={bw} height={bh}
+                fill={COLOR_PRECIP} fillOpacity={0.55} stroke={COLOR_PRECIP} strokeWidth={1}
+                data-feature={N.month(m.label)}
+                data-feature-label={m.label}
+                data-feature-cx={(x + bw / 2) / W}
+                data-feature-cy={(y + bh / 2) / H}
+                data-feature-w={bw / W}
+                data-feature-h={Math.max(bh, 20) / H}
+              />
+            );
+          })}
+        </g>
 
         {/* zero temperature line if it falls inside range */}
         {tMin < 0 && tMax > 0 && (
@@ -105,16 +128,20 @@ export function ClimateDiagramRenderer({ figure }: { figure: ClimateDiagramFigur
         )}
 
         {/* temperature line */}
-        <path d={tempPath} fill="none" stroke={COLOR_TEMP} strokeWidth={2.5} />
+        <path
+          d={tempPath} fill="none" stroke={COLOR_TEMP} strokeWidth={2.5}
+          data-feature={N.tempLine}
+          data-feature-label="temperature line"
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={tempY((tMin + tMax) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        />
         {months.map((m, i) => (
           <circle
             key={`pt-${i}`}
-            cx={colCenter(i)}
-            cy={tempY(m.temp)}
-            r={3.5}
-            fill={COLOR_TEMP}
-            stroke="#fff"
-            strokeWidth={1.4}
+            cx={colCenter(i)} cy={tempY(m.temp)} r={3.5}
+            fill={COLOR_TEMP} stroke="#fff" strokeWidth={1.4}
           />
         ))}
 

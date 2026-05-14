@@ -1,4 +1,10 @@
-/** Phase 5 — CS solvers. */
+/** Phase 5 — CS solvers + manifests (whiteboard markup initiative). */
+
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
+function slug(label: string): string {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
 
 // ── flowchart_simple ──────────────────────────────────────────────────────
 export interface FlowchartNode {
@@ -158,4 +164,295 @@ export function solveLogicGate(params: Record<string, unknown>): LogicGateFigure
     output,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 5 manifests (whiteboard markup initiative). Each builder is
+// colocated with its solver.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── flowchart_simple ──────────────────────────────────────────────
+export const flowchartSimpleFeatureNames = {
+  chart: 'flowchart',
+  node: (id: string): string => `node-${slug(id)}`,
+  edge: (from: string, to: string): string => `edge-${slug(from)}-${slug(to)}`,
+};
+
+export function buildFlowchartSimpleManifest(figure: FlowchartFigure): FeatureManifestEntry[] {
+  const N = flowchartSimpleFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.chart,
+      kind: 'region',
+      description: 'flowchart diagram',
+      labels: ['flowchart', 'the flowchart', 'the diagram'],
+      displayName: figure.title || 'flowchart',
+      scribbleable: true,
+    },
+  ];
+  for (const node of figure.nodes) {
+    features.push({
+      name: N.node(node.id),
+      kind: node.type === 'decision' ? 'area' : 'label',
+      description: `${node.type} node: "${node.text}"`,
+      labels: [
+        node.text, `the ${node.text}`, `"${node.text}"`,
+        `${node.type} node`, `the ${node.type} node`,
+        // Verbose description-format variants — brain commonly emits
+        // these copied from the manifest description field.
+        `${node.type} node: "${node.text}"`,
+        `the ${node.type} node "${node.text}"`,
+        `${node.type} "${node.text}"`,
+        node.id, `node ${node.id}`,
+      ],
+      displayName: node.text,
+      scribbleable: true,
+    });
+  }
+  for (const edge of figure.edges) {
+    const labelText = edge.label || `${edge.from} → ${edge.to}`;
+    features.push({
+      name: N.edge(edge.from, edge.to),
+      kind: 'label',
+      description: `edge ${edge.from} → ${edge.to}${edge.label ? ` (${edge.label})` : ''}`,
+      labels: [
+        ...(edge.label ? [edge.label, `"${edge.label}"`, `the ${edge.label} edge`] : []),
+        `${edge.from} to ${edge.to}`,
+        `edge from ${edge.from} to ${edge.to}`,
+      ],
+      displayName: labelText,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── state_machine ─────────────────────────────────────────────────
+export const stateMachineFeatureNames = {
+  machine: 'state-machine',
+  state: (id: string): string => `state-${slug(id)}`,
+  transition: (from: string, to: string, label: string): string => `transition-${slug(from)}-${slug(to)}-${slug(label)}`,
+};
+
+export function buildStateMachineManifest(figure: StateMachineFigure): FeatureManifestEntry[] {
+  const N = stateMachineFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.machine,
+      kind: 'region',
+      description: 'state machine diagram',
+      labels: ['state machine', 'the state machine', 'the diagram', 'the FSM', 'the automaton'],
+      displayName: figure.title || 'state machine',
+      scribbleable: true,
+    },
+  ];
+  for (const state of figure.states) {
+    const label = state.label || state.id;
+    const tags: string[] = [];
+    if (state.isStart) tags.push('start state');
+    if (state.isAccept) tags.push('accept state');
+    features.push({
+      name: N.state(state.id),
+      kind: 'label',
+      description: `state "${label}"${tags.length ? ` (${tags.join(', ')})` : ''}`,
+      labels: [
+        label, `the ${label}`, `"${label}"`,
+        `state ${label}`, `the ${label} state`,
+        `state "${label}"`,
+        state.id, `state ${state.id}`,
+        ...(state.isStart ? [
+          'start state', 'the start state', 'initial state',
+          `state "${label}" (start state)`,
+          `${label} (start state)`,
+        ] : []),
+        ...(state.isAccept ? [
+          'accept state', 'the accept state', 'final state', 'the final state',
+          `state "${label}" (accept state)`,
+          `state "${label}" (final state)`,
+          `${label} (accept state)`,
+          `${label} (final state)`,
+        ] : []),
+      ],
+      displayName: label,
+      scribbleable: true,
+    });
+  }
+  for (const t of figure.transitions) {
+    features.push({
+      name: N.transition(t.from, t.to, t.label),
+      kind: 'label',
+      description: `transition ${t.from} → ${t.to} on "${t.label}"`,
+      labels: [
+        t.label, `"${t.label}"`, `the ${t.label} transition`,
+        `${t.from} to ${t.to}`,
+        `transition from ${t.from} to ${t.to}`,
+        ...(t.from === t.to ? [`${t.from} self-loop`, 'self loop', 'self-loop'] : []),
+      ],
+      displayName: t.label,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── binary_tree ───────────────────────────────────────────────────
+export const binaryTreeFeatureNames = {
+  tree: 'binary-tree',
+  // path: '' = root, 'L' = root.left, 'LR' = root.left.right, etc.
+  node: (path: string): string => path === '' ? 'node-root' : `node-${path.toLowerCase()}`,
+};
+
+export function buildBinaryTreeManifest(figure: BinaryTreeFigure): FeatureManifestEntry[] {
+  const N = binaryTreeFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.tree,
+      kind: 'region',
+      description: 'binary tree diagram',
+      labels: ['binary tree', 'the binary tree', 'the tree', 'the diagram'],
+      displayName: figure.title || 'binary tree',
+      scribbleable: true,
+    },
+  ];
+  function walk(n: BinaryTreeNode, path: string, depth: number) {
+    const isRoot = path === '';
+    const isLeaf = !n.left && !n.right;
+    const tags: string[] = [];
+    if (isRoot) tags.push('root');
+    if (isLeaf) tags.push('leaf');
+    features.push({
+      name: N.node(path),
+      kind: 'label',
+      description: `node "${n.value}"${tags.length ? ` (${tags.join(', ')})` : ''} at depth ${depth}`,
+      labels: [
+        n.value, `the ${n.value}`, `"${n.value}"`,
+        `node ${n.value}`, `the node ${n.value}`,
+        `node "${n.value}"`,
+        ...(isRoot ? [
+          'root', 'the root', 'root node',
+          `node "${n.value}" (root)`,
+          `${n.value} (root)`,
+        ] : []),
+        ...(isLeaf ? [
+          `leaf ${n.value}`, `the ${n.value} leaf`,
+          `node "${n.value}" (leaf)`,
+          `${n.value} (leaf)`,
+        ] : []),
+        ...(isRoot && isLeaf ? [
+          `node "${n.value}" (root, leaf)`,
+        ] : []),
+      ],
+      displayName: n.value,
+      scribbleable: true,
+    });
+    if (n.left) walk(n.left, path + 'L', depth + 1);
+    if (n.right) walk(n.right, path + 'R', depth + 1);
+  }
+  walk(figure.root, '', 0);
+  return features;
+}
+
+// ── truth_table ───────────────────────────────────────────────────
+export const truthTableFeatureNames = {
+  table: 'truth-table',
+  inputCol: (name: string): string => `input-${slug(name)}`,
+  outputCol: (label: string): string => `output-${slug(label)}`,
+  cell: (r: number, c: number): string => `cell-r${r}-c${c}`,
+  row: (r: number): string => `row-${r}`,
+};
+
+export function buildTruthTableManifest(figure: TruthTableFigure): FeatureManifestEntry[] {
+  const N = truthTableFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.table,
+      kind: 'region',
+      description: 'truth table',
+      labels: ['table', 'the table', 'truth table', 'the truth table'],
+      displayName: figure.title || 'truth table',
+      scribbleable: true,
+    },
+  ];
+  for (const name of figure.inputs) {
+    features.push({
+      name: N.inputCol(name),
+      kind: 'label',
+      description: `input column "${name}"`,
+      labels: [name, `the ${name}`, `"${name}"`, `${name} column`, `input ${name}`],
+      displayName: name,
+      scribbleable: true,
+    });
+  }
+  for (const col of figure.outputColumns) {
+    features.push({
+      name: N.outputCol(col.label),
+      kind: 'label',
+      description: `output column "${col.label}"`,
+      labels: [col.label, `"${col.label}"`, `the ${col.label} column`, `output ${col.label}`],
+      displayName: col.label,
+      scribbleable: true,
+    });
+  }
+  // Per-row hit targets so brain can scribble "row 3" / "the third row".
+  figure.rows.forEach((_, r) => {
+    const ordinal = r + 1;
+    features.push({
+      name: N.row(r),
+      kind: 'label',
+      description: `row ${ordinal}`,
+      labels: [`row ${ordinal}`, `the ${ordinal}th row`, `row${ordinal}`, `r${r}`],
+      displayName: `row ${ordinal}`,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── logic_gate ────────────────────────────────────────────────────
+export const logicGateFeatureNames = {
+  gate: 'logic-gate',
+  body: 'gate-body',
+  input: (label: string): string => `input-${slug(label)}`,
+  output: 'output',
+};
+
+export function buildLogicGateManifest(figure: LogicGateFigure): FeatureManifestEntry[] {
+  const N = logicGateFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.gate,
+      kind: 'region',
+      description: `${figure.gate} logic gate`,
+      labels: ['gate', 'the gate', 'the diagram', `${figure.gate} gate`, `the ${figure.gate} gate`],
+      displayName: figure.title || `${figure.gate} gate`,
+      scribbleable: true,
+    },
+    {
+      name: N.body,
+      kind: 'label',
+      description: `${figure.gate} gate body`,
+      labels: [figure.gate, `"${figure.gate}"`, `${figure.gate} gate body`, 'gate body', 'the gate body'],
+      displayName: `${figure.gate}`,
+      scribbleable: true,
+    },
+  ];
+  for (const label of figure.inputs) {
+    features.push({
+      name: N.input(label),
+      kind: 'label',
+      description: `input "${label}"`,
+      labels: [label, `the ${label}`, `"${label}"`, `input ${label}`, `${label} input`],
+      displayName: label,
+      scribbleable: true,
+    });
+  }
+  features.push({
+    name: N.output,
+    kind: 'label',
+    description: `output "${figure.output}"`,
+    labels: [figure.output, `the ${figure.output}`, `"${figure.output}"`, 'output', 'the output', 'output line', `${figure.output} output`],
+    displayName: figure.output,
+    scribbleable: true,
+  });
+  return features;
 }

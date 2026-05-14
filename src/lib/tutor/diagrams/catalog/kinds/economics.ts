@@ -7,6 +7,8 @@
  * phillips_curve) will be added here as their plans need them.
  */
 
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
 // ── foreign_exchange_market ─────────────────────────────────────────────
 
 export interface FxMarketShift {
@@ -408,6 +410,24 @@ export function solveBusinessCycle(params: Record<string, unknown>): BusinessCyc
       };
     });
   }
+  // Auto-detect peaks and troughs when brain doesn't pass markers AND
+  // labels aren't suppressed. Previously this happened only in the
+  // renderer, which meant the manifest never saw the markers — brain
+  // couldn't scribble "Peak" / "Trough" because they had no feature.
+  if (!markers && labels !== 'none') {
+    const trendAt = (t: number) => 0.5 + (t - 0.5) * (trendSlope * 0.5);
+    const cycleAt = (t: number) => trendAt(t) + amplitude * Math.sin(t * cycles * 2 * Math.PI - Math.PI / 2);
+    const segments = 200;
+    const auto: BusinessCyclePhaseMarker[] = [];
+    for (let i = 1; i < segments; i++) {
+      const t = i / segments;
+      const dPrev = cycleAt(t) - cycleAt((i - 1) / segments);
+      const dNext = cycleAt((i + 1) / segments) - cycleAt(t);
+      if (dPrev > 0 && dNext < 0) auto.push({ t, label: 'Peak', showLine: true });
+      if (dPrev < 0 && dNext > 0) auto.push({ t, label: 'Trough', showLine: true });
+    }
+    markers = auto;
+  }
 
   return {
     cycles,
@@ -465,14 +485,28 @@ function curveYAt(x: number, xMax: number, yMax: number, curve: 'bowed-out' | 'l
   return yMax * Math.sqrt(1 - t * t);
 }
 
+/** Classify a point geometrically against the actual curve. The
+ *  brain's optional `p.position` is treated as a HINT (preferred when
+ *  it agrees with geometry, e.g. labeling a near-curve point as "on"
+ *  within the tolerance), but the geometry wins when they disagree.
+ *
+ *  Previously this trusted brain's claim outright, which produced the
+ *  2026-05-14 PPC live-test bug: brain labeled points at (20,75),
+ *  (55,55), (80,20) as `position: "on"` when the actual curve at those
+ *  x-values runs y = 98, 83.5, 60 respectively — all three points sat
+ *  ~25-40 units inside the curve. They rendered green ("on curve") on
+ *  a quarter-ellipse where they were clearly inside. */
 function classifyPoint(p: PPCPoint, xMax: number, yMax: number, curve: 'bowed-out' | 'linear'): 'inside' | 'on' | 'outside' {
-  if (p.position) return p.position;
   if (p.x < 0 || p.y < 0) return 'inside';
   if (p.x > xMax || p.y > yMax) return 'outside';
   const yOn = curveYAt(p.x, xMax, yMax, curve);
   const tol = ON_CURVE_TOLERANCE * yMax;
-  if (Math.abs(p.y - yOn) <= tol) return 'on';
-  return p.y < yOn ? 'inside' : 'outside';
+  const geometric: 'inside' | 'on' | 'outside' =
+    Math.abs(p.y - yOn) <= tol ? 'on' : (p.y < yOn ? 'inside' : 'outside');
+  // Accept the brain's hint only when it matches geometry — geometry
+  // is the ground truth on a structured-diagram renderer.
+  if (p.position && p.position === geometric) return p.position;
+  return geometric;
 }
 
 export function solveProductionPossibilities(params: Record<string, unknown>): PPCFigure {
@@ -505,9 +539,22 @@ export function solveProductionPossibilities(params: Record<string, unknown>): P
     };
   });
 
-  // Auto-classify any points missing explicit position.
+  // When brain claims `position: "on"`, SNAP the point's y to the
+  // actual curve at that x. Brain controls placement intent (which x
+  // along the curve) but geometry enforces consistency (the point
+  // really IS on the curve). Without this, brain's narrative ("A is
+  // efficient, on the curve") visually contradicts the rendered dot
+  // sitting well inside the curve (2026-05-14 PPC live test).
   for (const p of points) {
-    if (!p.position) p.position = classifyPoint(p, xRaw.max as number, yRaw.max as number, curve);
+    if (p.position === 'on') {
+      p.y = curveYAt(p.x, xRaw.max as number, yRaw.max as number, curve);
+    }
+  }
+  // Then classify every point against the geometry. Brain-supplied
+  // `position` is treated as a hint inside classifyPoint (accepted
+  // when it matches geometry, overridden when it doesn't).
+  for (const p of points) {
+    p.position = classifyPoint(p, xRaw.max as number, yRaw.max as number, curve);
   }
 
   let shift: PPCFigure['shift'];
@@ -528,4 +575,529 @@ export function solveProductionPossibilities(params: Record<string, unknown>): P
     shift,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 9 manifests (whiteboard markup initiative). Common pattern
+// across the 5 market-like kinds (ad_as, money_market, loanable_funds,
+// phillips_curve, fx_market):
+//   - diagram root (region)
+//   - each initial curve (with displayName = its conventional name)
+//   - each shifted curve (when shift present)
+//   - initial equilibrium point (E₀)
+//   - final equilibrium point (E₁) when shift present
+//
+// PPC and business_cycle are structurally different and have their own
+// per-point / per-marker features.
+// ═══════════════════════════════════════════════════════════════════
+
+/** Slugify a string for use in a data-feature id. */
+function _econSlug(label: string): string {
+  return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// ── production_possibilities ──────────────────────────────────────
+export const productionPossibilitiesFeatureNames = {
+  diagram: 'ppc-diagram',
+  curve: 'ppc-curve',
+  shiftedCurve: 'ppc-shifted',
+  point: (label: string | undefined, idx: number): string =>
+    label ? `point-${_econSlug(label)}` : `point-${idx}`,
+};
+
+export function buildProductionPossibilitiesManifest(figure: PPCFigure): FeatureManifestEntry[] {
+  const N = productionPossibilitiesFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'production possibilities curve',
+      labels: ['PPC', 'the PPC', 'production possibilities', 'the production possibilities curve', 'the curve', 'the diagram', 'the graph'],
+      displayName: figure.title || 'PPC',
+      scribbleable: true,
+    },
+    {
+      name: N.curve,
+      kind: 'label',
+      description: `PPC (${figure.curve === 'linear' ? 'constant' : 'increasing'} opportunity cost)`,
+      labels: ['PPC', 'the PPC', 'curve', 'the curve', 'production possibilities curve', 'the production possibilities curve'],
+      displayName: 'PPC',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shift) {
+    features.push({
+      name: N.shiftedCurve,
+      kind: 'label',
+      description: `shifted PPC (${figure.shift.direction === 'out' ? 'economic growth' : 'contraction'})`,
+      labels: [
+        'shifted PPC', 'the shifted PPC', 'new PPC', 'the new PPC',
+        figure.shift.direction === 'out' ? 'growth' : 'contraction',
+        figure.shift.direction === 'out' ? 'the growth' : 'the contraction',
+        figure.shift.label || '', `"${figure.shift.label || ''}"`,
+      ].filter(Boolean),
+      displayName: figure.shift.direction === 'out' ? 'PPC growth' : 'PPC contraction',
+      scribbleable: true,
+    });
+  }
+  figure.points.forEach((p, i) => {
+    const labels = [`point ${p.label || i + 1}`];
+    if (p.label) {
+      labels.push(p.label, `the ${p.label}`, `"${p.label}"`, `point "${p.label}"`);
+      // Short-form: extract the leading letter/word before any space or
+      // parenthesis (e.g. "A (on curve)" → "A"). Brain commonly emits
+      // the short form ("point A") which the verbose label form misses.
+      const shortForm = p.label.split(/[\s(]/)[0].trim();
+      if (shortForm && shortForm !== p.label) {
+        labels.push(shortForm, `the ${shortForm}`, `point ${shortForm}`, `the point ${shortForm}`, `the ${shortForm} point`);
+      }
+    }
+    if (p.position) {
+      labels.push(`${p.position} the curve`, `${p.position}-curve point`);
+      if (p.position === 'inside') labels.push('inefficient point', 'the inefficient point');
+      if (p.position === 'on') labels.push('efficient point', 'on the curve', 'on-curve point');
+      if (p.position === 'outside') labels.push('unattainable point', 'the unattainable point');
+    }
+    features.push({
+      name: N.point(p.label, i),
+      kind: 'label',
+      description: `point ${p.label || i + 1}${p.position ? ` (${p.position} the curve)` : ''} at (${p.x}, ${p.y})`,
+      labels,
+      displayName: p.label ? `point ${p.label}` : `point ${i + 1}`,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── business_cycle ────────────────────────────────────────────────
+export const businessCycleFeatureNames = {
+  diagram: 'business-cycle',
+  cycle: 'cycle-curve',
+  trend: 'trend-line',
+  marker: (label: string, idx: number): string => `marker-${_econSlug(label) || idx}`,
+};
+
+export function buildBusinessCycleManifest(figure: BusinessCycleFigure): FeatureManifestEntry[] {
+  const N = businessCycleFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'business cycle diagram',
+      labels: ['business cycle', 'the business cycle', 'the cycle', 'the diagram', 'the graph'],
+      displayName: figure.title || 'business cycle',
+      scribbleable: true,
+    },
+    {
+      name: N.cycle,
+      kind: 'label',
+      description: 'cycle (real GDP over time)',
+      labels: ['cycle', 'the cycle', 'cycle curve', 'the cycle curve', 'the wave', 'the GDP curve'],
+      displayName: 'cycle',
+      scribbleable: true,
+    },
+  ];
+  if (figure.showTrend) {
+    features.push({
+      name: N.trend,
+      kind: 'label',
+      description: 'long-run trend (potential GDP)',
+      labels: ['trend', 'the trend', 'trend line', 'the trend line', 'long-run trend', 'the long-run trend', 'potential GDP', 'potential output'],
+      displayName: 'trend',
+      scribbleable: true,
+    });
+  }
+  (figure.markers ?? []).forEach((m, i) => {
+    features.push({
+      name: N.marker(m.label, i),
+      kind: 'label',
+      description: `phase marker: "${m.label}"`,
+      labels: [m.label, `the ${m.label}`, `"${m.label}"`, `phase marker: "${m.label}"`],
+      displayName: m.label,
+      scribbleable: true,
+    });
+  });
+  return features;
+}
+
+// ── aggregate_demand_supply ───────────────────────────────────────
+export const adAsFeatureNames = {
+  diagram: 'ad-as-diagram',
+  ad: 'ad-curve',
+  adShifted: 'ad-shifted',
+  sras: 'sras-curve',
+  srasShifted: 'sras-shifted',
+  lras: 'lras-curve',
+  lrasShifted: 'lras-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+};
+
+export function buildAggregateDemandSupplyManifest(figure: AdAsFigure): FeatureManifestEntry[] {
+  const N = adAsFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'aggregate demand / aggregate supply diagram',
+      labels: ['AD/AS', 'AD-AS', 'AD AS', 'the AD/AS diagram', 'the graph', 'the diagram'],
+      displayName: figure.title || 'AD/AS',
+      scribbleable: true,
+    },
+    {
+      name: N.ad,
+      kind: 'label',
+      description: 'aggregate demand curve (AD)',
+      labels: ['AD', figure.labels.ad, `the ${figure.labels.ad}`, 'aggregate demand', 'the aggregate demand curve', 'the AD curve', 'demand'],
+      displayName: figure.labels.ad,
+      scribbleable: true,
+    },
+    {
+      name: N.sras,
+      kind: 'label',
+      description: 'short-run aggregate supply (SRAS)',
+      labels: ['SRAS', figure.labels.sras, `the ${figure.labels.sras}`, 'short-run aggregate supply', 'the SRAS curve', 'short run supply'],
+      displayName: figure.labels.sras,
+      scribbleable: true,
+    },
+  ];
+  if (figure.showLras) {
+    features.push({
+      name: N.lras,
+      kind: 'label',
+      description: 'long-run aggregate supply (LRAS, vertical at potential GDP)',
+      labels: ['LRAS', figure.labels.lras, `the ${figure.labels.lras}`, 'long-run aggregate supply', 'the LRAS curve', 'potential GDP line', 'long run supply'],
+      displayName: figure.labels.lras,
+      scribbleable: true,
+    });
+  }
+  features.push({
+    name: N.eqInitial,
+    kind: 'label',
+    description: `initial equilibrium (${figure.labels.eqInitial})`,
+    labels: [figure.labels.eqInitial, `"${figure.labels.eqInitial}"`, 'initial equilibrium', 'the initial equilibrium', 'E0', 'starting equilibrium'],
+    displayName: figure.labels.eqInitial,
+    scribbleable: true,
+  });
+  if (figure.shift) {
+    const dirText = `${figure.shift.curve} shifts ${figure.shift.direction}`;
+    if (figure.shift.curve === 'AD') {
+      features.push({
+        name: N.adShifted,
+        kind: 'label',
+        description: `shifted AD curve (${dirText})`,
+        labels: ['AD\'', 'AD prime', 'shifted AD', 'new AD', 'the new AD', figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+        displayName: `${figure.labels.ad}'`,
+        scribbleable: true,
+      });
+    } else if (figure.shift.curve === 'SRAS') {
+      features.push({
+        name: N.srasShifted,
+        kind: 'label',
+        description: `shifted SRAS curve (${dirText})`,
+        labels: ['SRAS\'', 'SRAS prime', 'shifted SRAS', 'new SRAS', figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+        displayName: `${figure.labels.sras}'`,
+        scribbleable: true,
+      });
+    } else if (figure.shift.curve === 'LRAS') {
+      features.push({
+        name: N.lrasShifted,
+        kind: 'label',
+        description: `shifted LRAS curve (${dirText})`,
+        labels: ['LRAS\'', 'LRAS prime', 'shifted LRAS', 'new LRAS', figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+        displayName: `${figure.labels.lras}'`,
+        scribbleable: true,
+      });
+    }
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: `final equilibrium (${figure.labels.eqFinal})`,
+      labels: [figure.labels.eqFinal, `"${figure.labels.eqFinal}"`, 'final equilibrium', 'the final equilibrium', 'new equilibrium', 'the new equilibrium', 'E1'],
+      displayName: figure.labels.eqFinal,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── money_market ──────────────────────────────────────────────────
+export const moneyMarketFeatureNames = {
+  diagram: 'money-market',
+  ms: 'ms-curve',
+  msShifted: 'ms-shifted',
+  md: 'md-curve',
+  mdShifted: 'md-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+};
+
+export function buildMoneyMarketManifest(figure: MoneyMarketFigure): FeatureManifestEntry[] {
+  const N = moneyMarketFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'money market diagram',
+      labels: ['money market', 'the money market', 'the diagram', 'the graph'],
+      displayName: figure.title || 'money market',
+      scribbleable: true,
+    },
+    {
+      name: N.ms,
+      kind: 'label',
+      description: 'money supply (Ms, vertical)',
+      labels: ['Ms', 'M_s', 'money supply', 'the money supply', 'the Ms curve', 'supply of money'],
+      displayName: 'Ms',
+      scribbleable: true,
+    },
+    {
+      name: N.md,
+      kind: 'label',
+      description: 'money demand (Md, downward-sloping)',
+      labels: ['Md', 'M_d', 'money demand', 'the money demand', 'the Md curve', 'demand for money'],
+      displayName: 'Md',
+      scribbleable: true,
+    },
+    {
+      name: N.eqInitial,
+      kind: 'label',
+      description: 'initial equilibrium (Q₀, i₀)',
+      labels: ['initial equilibrium', 'the initial equilibrium', 'starting equilibrium', 'E0', '(Q₀, i₀)', 'i₀', 'Q₀'],
+      displayName: 'initial equilibrium',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shift) {
+    const which = figure.shift.curve;
+    features.push({
+      name: which === 'Ms' ? N.msShifted : N.mdShifted,
+      kind: 'label',
+      description: `shifted ${which} curve (${figure.shift.direction})`,
+      labels: [`${which}'`, `${which} prime`, `shifted ${which}`, `new ${which}`, figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+      displayName: `${which}'`,
+      scribbleable: true,
+    });
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: 'final equilibrium (Q₁, i₁)',
+      labels: ['final equilibrium', 'the final equilibrium', 'new equilibrium', 'the new equilibrium', 'E1', '(Q₁, i₁)', 'i₁', 'Q₁'],
+      displayName: 'final equilibrium',
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── loanable_funds ────────────────────────────────────────────────
+export const loanableFundsFeatureNames = {
+  diagram: 'loanable-funds',
+  supply: 'supply-curve',
+  supplyShifted: 'supply-shifted',
+  demand: 'demand-curve',
+  demandShifted: 'demand-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+};
+
+export function buildLoanableFundsManifest(figure: LoanableFundsFigure): FeatureManifestEntry[] {
+  const N = loanableFundsFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'loanable funds market diagram',
+      labels: ['loanable funds', 'the loanable funds market', 'the diagram', 'the graph'],
+      displayName: figure.title || 'loanable funds',
+      scribbleable: true,
+    },
+    {
+      name: N.supply,
+      kind: 'label',
+      description: 'supply of loanable funds (S, upward-sloping)',
+      labels: ['S', 'supply', 'the supply', 'supply curve', 'the supply curve', 'the S curve', 'supply of saving', 'saving'],
+      displayName: 'S',
+      scribbleable: true,
+    },
+    {
+      name: N.demand,
+      kind: 'label',
+      description: 'demand for loanable funds (D, downward-sloping)',
+      labels: ['D', 'demand', 'the demand', 'demand curve', 'the demand curve', 'the D curve', 'demand for investment', 'investment'],
+      displayName: 'D',
+      scribbleable: true,
+    },
+    {
+      name: N.eqInitial,
+      kind: 'label',
+      description: 'initial equilibrium (Q₀, r₀)',
+      labels: ['initial equilibrium', 'the initial equilibrium', 'starting equilibrium', 'E0', '(Q₀, r₀)', 'r₀', 'Q₀'],
+      displayName: 'initial equilibrium',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shift) {
+    const which = figure.shift.curve;
+    features.push({
+      name: which === 'S' ? N.supplyShifted : N.demandShifted,
+      kind: 'label',
+      description: `shifted ${which} curve (${figure.shift.direction})`,
+      labels: [`${which}'`, `${which} prime`, `shifted ${which}`, `new ${which}`, figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+      displayName: `${which}'`,
+      scribbleable: true,
+    });
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: 'final equilibrium (Q₁, r₁)',
+      labels: ['final equilibrium', 'the final equilibrium', 'new equilibrium', 'the new equilibrium', 'E1', '(Q₁, r₁)', 'r₁', 'Q₁'],
+      displayName: 'final equilibrium',
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── phillips_curve ────────────────────────────────────────────────
+export const phillipsCurveFeatureNames = {
+  diagram: 'phillips-curve',
+  srpc: 'srpc-curve',
+  srpcShifted: 'srpc-shifted',
+  lrpc: 'lrpc-curve',
+  lrpcShifted: 'lrpc-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+};
+
+export function buildPhillipsCurveManifest(figure: PhillipsCurveFigure): FeatureManifestEntry[] {
+  const N = phillipsCurveFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'Phillips curve diagram',
+      labels: ['Phillips curve', 'the Phillips curve', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Phillips curve',
+      scribbleable: true,
+    },
+    {
+      name: N.srpc,
+      kind: 'label',
+      description: 'short-run Phillips curve (SRPC, downward-sloping)',
+      labels: ['SRPC', 'short-run Phillips curve', 'the SRPC', 'the short-run Phillips curve', 'short-run curve'],
+      displayName: 'SRPC',
+      scribbleable: true,
+    },
+  ];
+  if (figure.showLrpc) {
+    features.push({
+      name: N.lrpc,
+      kind: 'label',
+      description: 'long-run Phillips curve (LRPC, vertical at NAIRU)',
+      labels: ['LRPC', 'long-run Phillips curve', 'the LRPC', 'the long-run Phillips curve', 'long-run curve', 'NAIRU line'],
+      displayName: 'LRPC',
+      scribbleable: true,
+    });
+  }
+  features.push({
+    name: N.eqInitial,
+    kind: 'label',
+    description: 'initial equilibrium (U₀, π₀)',
+    labels: ['initial equilibrium', 'the initial equilibrium', 'starting equilibrium', 'E0', '(U₀, π₀)', 'π₀', 'U₀'],
+    displayName: 'initial equilibrium',
+    scribbleable: true,
+  });
+  if (figure.shift) {
+    const which = figure.shift.curve;
+    features.push({
+      name: which === 'SRPC' ? N.srpcShifted : N.lrpcShifted,
+      kind: 'label',
+      description: `shifted ${which} (${figure.shift.direction})`,
+      labels: [`${which}'`, `${which} prime`, `shifted ${which}`, `new ${which}`, figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+      displayName: `${which}'`,
+      scribbleable: true,
+    });
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: 'final equilibrium (U₁, π₁)',
+      labels: ['final equilibrium', 'the final equilibrium', 'new equilibrium', 'the new equilibrium', 'E1', '(U₁, π₁)', 'π₁', 'U₁'],
+      displayName: 'final equilibrium',
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── foreign_exchange_market ───────────────────────────────────────
+export const fxMarketFeatureNames = {
+  diagram: 'fx-market',
+  supply: 'supply-curve',
+  supplyShifted: 'supply-shifted',
+  demand: 'demand-curve',
+  demandShifted: 'demand-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+};
+
+export function buildForeignExchangeMarketManifest(figure: FxMarketFigure): FeatureManifestEntry[] {
+  const N = fxMarketFeatureNames;
+  const cur = figure.currency;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: `foreign exchange market for ${cur}`,
+      labels: ['FX market', 'foreign exchange market', 'the FX market', `the ${cur} market`, 'the diagram', 'the graph'],
+      displayName: figure.title || `FX market (${cur})`,
+      scribbleable: true,
+    },
+    {
+      name: N.supply,
+      kind: 'label',
+      description: `supply of ${cur} (S${cur}, upward-sloping)`,
+      labels: [`S${cur}`, `S_${cur}`, `supply of ${cur}`, `the ${cur} supply curve`, 'S', 'supply', 'the supply', 'supply curve'],
+      displayName: `S${cur}`,
+      scribbleable: true,
+    },
+    {
+      name: N.demand,
+      kind: 'label',
+      description: `demand for ${cur} (D${cur}, downward-sloping)`,
+      labels: [`D${cur}`, `D_${cur}`, `demand for ${cur}`, `the ${cur} demand curve`, 'D', 'demand', 'the demand', 'demand curve'],
+      displayName: `D${cur}`,
+      scribbleable: true,
+    },
+    {
+      name: N.eqInitial,
+      kind: 'label',
+      description: 'initial equilibrium (Q₀, e₀)',
+      labels: ['initial equilibrium', 'the initial equilibrium', 'starting equilibrium', 'E0', '(Q₀, e₀)', 'e₀', 'Q₀'],
+      displayName: 'initial equilibrium',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shift) {
+    const which = figure.shift.curve;
+    const fullName = `${which}${cur}`;
+    features.push({
+      name: which === 'S' ? N.supplyShifted : N.demandShifted,
+      kind: 'label',
+      description: `shifted ${fullName} (${figure.shift.direction})`,
+      labels: [`${fullName}'`, `${fullName} prime`, `${which}'`, `shifted ${which}`, `new ${fullName}`, figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+      displayName: `${fullName}'`,
+      scribbleable: true,
+    });
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: 'final equilibrium (Q₁, e₁)',
+      labels: ['final equilibrium', 'the final equilibrium', 'new equilibrium', 'the new equilibrium', 'E1', '(Q₁, e₁)', 'e₁', 'Q₁'],
+      displayName: 'final equilibrium',
+      scribbleable: true,
+    });
+  }
+  return features;
 }

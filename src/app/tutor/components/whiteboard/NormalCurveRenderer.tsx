@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { NormalCurveFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
+import {
+  normalCurveFeatureNames,
+  type NormalCurveFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_CURVE = '#1f2937';
@@ -12,6 +15,7 @@ const COLOR_MARK = '#16a34a';
 
 export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
   const { mean, sd, xMin, xMax, shadeRegion, markValues, showSDLines, shadeArea, title, xLabel } = figure;
+  const FN = normalCurveFeatureNames;
 
   const W = 560;
   const H = 360;
@@ -88,14 +92,36 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
   }
 
   return (
-    <div className="normal-curve-renderer w-full flex flex-col items-center">
+    <div
+      className="normal-curve-renderer w-full flex flex-col items-center"
+      data-feature={FN.diagram}
+      data-feature-label={title || `N(${mean}, ${sd})`}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* shade */}
-        {shadePath && <path d={shadePath} fill={COLOR_SHADE} fillOpacity={0.5} stroke="none" />}
+        {shadePath && (
+          <path
+            d={shadePath} fill={COLOR_SHADE} fillOpacity={0.5} stroke="none"
+            data-feature={FN.shadeRegion}
+            data-feature-label="shaded region"
+            data-feature-cx={xAt(mean) / W}
+            data-feature-cy={(PAD_T + plotH * 0.7) / H}
+            data-feature-w={80 / W}
+            data-feature-h={60 / H}
+          />
+        )}
 
         {/* curve */}
-        <path d={curvePath} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5} />
+        <path
+          d={curvePath} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5}
+          data-feature={FN.curve}
+          data-feature-label="bell curve"
+          data-feature-cx={xAt(mean) / W}
+          data-feature-cy={yAt(peak * 0.5) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        />
 
         {/* mean line */}
         {mean >= xMin && mean <= xMax && (
@@ -107,16 +133,37 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
           </>
         )}
 
-        {/* SD lines */}
-        {sdLines.map((x, i) => (
-          <g key={`sd-${i}`}>
-            <line x1={xAt(x)} y1={yAt(0)} x2={xAt(x)} y2={yAt(pdf(x))} stroke={COLOR_SD} strokeWidth={1} strokeDasharray="2 3" />
+        {/* SD lines — wrapped collectively */}
+        {showSDLines && sdLines.length > 0 && (
+          <g
+            data-feature={FN.sdLines}
+            data-feature-label="SD lines"
+            data-feature-cx={xAt(mean) / W}
+            data-feature-cy={(PAD_T + plotH * 0.7) / H}
+            data-feature-w={plotW / W}
+            data-feature-h={plotH * 0.4 / H}
+          >
+            {sdLines.map((x, i) => (
+              <line
+                key={`sd-${i}`}
+                x1={xAt(x)} y1={yAt(0)} x2={xAt(x)} y2={yAt(pdf(x))}
+                stroke={COLOR_SD} strokeWidth={1} strokeDasharray="2 3"
+              />
+            ))}
           </g>
-        ))}
+        )}
 
         {/* mark values */}
         {markValues.map((m, i) => (
-          <g key={`mk-${i}`}>
+          <g
+            key={`mk-${i}`}
+            data-feature={FN.mark(i)}
+            data-feature-label={m.label || `x = ${m.x}`}
+            data-feature-cx={xAt(m.x) / W}
+            data-feature-cy={(yAt(0) + yAt(pdf(m.x))) / 2 / H}
+            data-feature-w={32 / W}
+            data-feature-h={Math.abs(yAt(0) - yAt(pdf(m.x))) / H}
+          >
             <line x1={xAt(m.x)} y1={yAt(0)} x2={xAt(m.x)} y2={yAt(pdf(m.x))} stroke={COLOR_MARK} strokeWidth={1.5} strokeDasharray="3 3" />
             {m.label && (
               <text x={xAt(m.x)} y={yAt(pdf(m.x)) - 4} fontSize={11} textAnchor="middle" fill={COLOR_MARK} fontWeight={600}>
@@ -128,7 +175,16 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
 
         {/* shade area label */}
         {shadeArea !== undefined && (
-          <text x={W - PAD_R - 4} y={PAD_T + 14} fontSize={12} textAnchor="end" fill={COLOR_SHADE} fontWeight={600}>
+          <text
+            x={W - PAD_R - 4} y={PAD_T + 14}
+            fontSize={12} textAnchor="end" fill={COLOR_SHADE} fontWeight={600}
+            data-feature={FN.shadeArea}
+            data-feature-label={`P = ${shadeArea}`}
+            data-feature-cx={(W - PAD_R - 40) / W}
+            data-feature-cy={(PAD_T + 14) / H}
+            data-feature-w={80 / W}
+            data-feature-h={18 / H}
+          >
             P = {Number(shadeArea.toFixed(4))}
           </text>
         )}

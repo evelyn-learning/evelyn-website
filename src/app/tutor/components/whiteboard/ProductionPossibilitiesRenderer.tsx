@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { PPCFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  productionPossibilitiesFeatureNames,
+  type PPCFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const COLOR_ON = '#16a34a';      // green
 const COLOR_INSIDE = '#dc2626';  // red
@@ -21,12 +24,15 @@ function colorFor(position: 'inside' | 'on' | 'outside' | undefined): string {
 
 export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure }) {
   const { xAxis, yAxis, curve, points, shift, title } = figure;
+  const N = productionPossibilitiesFeatureNames;
   const W = 560;
-  const H = 420;
+  // PAD_B extended from 64 → 100 to leave room for the legend strip
+  // BELOW the x-axis label. Total H bumped from 420 → 460.
+  const H = 460;
   const PAD_L = 70;
   const PAD_R = 28;
   const PAD_T = 36;
-  const PAD_B = 64;
+  const PAD_B = 100;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
 
@@ -78,7 +84,11 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
   for (let v = 0; v <= yMaxView + 1e-9; v += yStep) yTicks.push(Number(v.toFixed(6)));
 
   return (
-    <div className="ppc-renderer w-full flex flex-col items-center">
+    <div
+      className="ppc-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'PPC'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Grid lines */}
@@ -131,7 +141,7 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
         {/* Axis labels */}
         <text
           x={PAD_L + plotW / 2}
-          y={H - 18}
+          y={PAD_T + plotH + 38}
           fontSize={13}
           fontWeight={600}
           textAnchor="middle"
@@ -153,7 +163,14 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
 
         {/* Shifted PPC (drawn first, behind main) */}
         {shiftPath && (
-          <>
+          <g
+            data-feature={N.shiftedCurve}
+            data-feature-label={shift?.direction === 'out' ? 'PPC growth' : 'PPC contraction'}
+            data-feature-cx={xToPx((shift!.direction === 'out' ? xAxis.max * shift!.factor : xAxis.max / shift!.factor) * 0.7) / W}
+            data-feature-cy={yToPx((shift!.direction === 'out' ? yAxis.max * shift!.factor : yAxis.max / shift!.factor) * 0.7) / H}
+            data-feature-w={80 / W}
+            data-feature-h={28 / H}
+          >
             <path d={shiftPath} stroke={COLOR_SHIFT} strokeWidth={2} fill="none" strokeDasharray="6 4" />
             {shift?.label && (
               <text
@@ -167,21 +184,30 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
                 {shift.label}
               </text>
             )}
-          </>
+          </g>
         )}
 
         {/* Main PPC */}
-        <path d={mainPath} stroke={COLOR_CURVE} strokeWidth={2.5} fill="none" />
-        <text
-          x={xToPx(xAxis.max * 0.7)}
-          y={yToPx(yAxis.max * 0.7) - 8}
-          fontSize={12}
-          fill={COLOR_CURVE}
-          fontWeight={600}
-          textAnchor="middle"
+        <g
+          data-feature={N.curve}
+          data-feature-label="PPC"
+          data-feature-cx={xToPx(xAxis.max * 0.55) / W}
+          data-feature-cy={yToPx(yAxis.max * 0.55) / H}
+          data-feature-w={120 / W}
+          data-feature-h={80 / H}
         >
-          PPC
-        </text>
+          <path d={mainPath} stroke={COLOR_CURVE} strokeWidth={2.5} fill="none" />
+          <text
+            x={xToPx(xAxis.max * 0.7)}
+            y={yToPx(yAxis.max * 0.7) - 8}
+            fontSize={12}
+            fill={COLOR_CURVE}
+            fontWeight={600}
+            textAnchor="middle"
+          >
+            PPC
+          </text>
+        </g>
 
         {/* Points */}
         {points.map((p, i) => {
@@ -189,7 +215,15 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
           const cy = yToPx(p.y);
           const fill = p.color || colorFor(p.position);
           return (
-            <g key={`pt-${i}`}>
+            <g
+              key={`pt-${i}`}
+              data-feature={N.point(p.label, i)}
+              data-feature-label={p.label ? `point ${p.label}` : `point ${i + 1}`}
+              data-feature-cx={cx / W}
+              data-feature-cy={cy / H}
+              data-feature-w={40 / W}
+              data-feature-h={32 / H}
+            >
               <circle cx={cx} cy={cy} r={6} fill={fill} stroke="#fff" strokeWidth={2} />
               {p.label && (
                 <text
@@ -206,15 +240,17 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
           );
         })}
 
-        {/* Legend */}
-        <g transform={`translate(${PAD_L + plotW - 140}, ${PAD_T + 8})`}>
-          <rect x={0} y={0} width={134} height={62} fill="#fff" stroke="#e5e7eb" strokeWidth={1} rx={4} />
-          <circle cx={12} cy={14} r={5} fill={COLOR_ON} />
-          <text x={22} y={18} fontSize={11} fill="#374151">on curve (efficient)</text>
-          <circle cx={12} cy={32} r={5} fill={COLOR_INSIDE} />
-          <text x={22} y={36} fontSize={11} fill="#374151">inside (inefficient)</text>
-          <circle cx={12} cy={50} r={5} fill={COLOR_OUTSIDE} />
-          <text x={22} y={54} fontSize={11} fill="#374151">outside (unattainable)</text>
+        {/* Legend — placed BELOW the plot AND the x-axis title so it
+            never overlaps a high-y point (e.g. an "outside" point near
+            the top-right of the curve). Previously top-right inside
+            the plot, which obscured points like (80, 80). */}
+        <g transform={`translate(${PAD_L + 20}, ${PAD_T + plotH + 60})`}>
+          <circle cx={6} cy={10} r={5} fill={COLOR_ON} />
+          <text x={16} y={14} fontSize={11} fill="#374151">on curve (efficient)</text>
+          <circle cx={146} cy={10} r={5} fill={COLOR_INSIDE} />
+          <text x={156} y={14} fontSize={11} fill="#374151">inside (inefficient)</text>
+          <circle cx={282} cy={10} r={5} fill={COLOR_OUTSIDE} />
+          <text x={292} y={14} fontSize={11} fill="#374151">outside (unattainable)</text>
         </g>
       </svg>
     </div>

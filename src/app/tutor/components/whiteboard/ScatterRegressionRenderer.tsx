@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { ScatterRegressionFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
+import {
+  scatterRegressionFeatureNames,
+  type ScatterRegressionFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_POINT = '#2563eb';
@@ -15,6 +18,7 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
     equationLabel, rValue, rSquared, highlightPoint, showResiduals,
     xLabel, yLabel, title,
   } = figure;
+  const N = scatterRegressionFeatureNames;
 
   const W = 560;
   const H = 420;
@@ -46,7 +50,11 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
   }
 
   return (
-    <div className="scatter-regression-renderer w-full flex flex-col items-center">
+    <div
+      className="scatter-regression-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'scatterplot'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         <defs>
@@ -65,19 +73,23 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
 
         {/* residual segments (under points) */}
         {showResiduals && regression && (
-          <g clipPath="url(#scatter-reg-clip)">
+          <g
+            clipPath="url(#scatter-reg-clip)"
+            data-feature={N.residuals}
+            data-feature-label="residuals"
+            data-feature-cx={(PAD_L + plotW / 2) / W}
+            data-feature-cy={(PAD_T + plotH / 2) / H}
+            data-feature-w={plotW / W}
+            data-feature-h={plotH / H}
+          >
             {points.map((p, i) => {
               const yHat = regression.intercept + regression.slope * p.x;
               return (
                 <line
                   key={`res-${i}`}
-                  x1={xAt(p.x)}
-                  y1={yAt(p.y)}
-                  x2={xAt(p.x)}
-                  y2={yAt(yHat)}
-                  stroke={COLOR_RESID}
-                  strokeWidth={1.2}
-                  strokeDasharray="2 2"
+                  x1={xAt(p.x)} y1={yAt(p.y)}
+                  x2={xAt(p.x)} y2={yAt(yHat)}
+                  stroke={COLOR_RESID} strokeWidth={1.2} strokeDasharray="2 2"
                 />
               );
             })}
@@ -86,48 +98,65 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
 
         {/* regression line */}
         {regression && (
-          <g clipPath="url(#scatter-reg-clip)">
+          <g
+            clipPath="url(#scatter-reg-clip)"
+            data-feature={N.regression}
+            data-feature-label="LSRL"
+            data-feature-cx={((xAt(lineX1) + xAt(lineX2)) / 2) / W}
+            data-feature-cy={((yAt(lineY1) + yAt(lineY2)) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line
-              x1={xAt(lineX1)}
-              y1={yAt(lineY1)}
-              x2={xAt(lineX2)}
-              y2={yAt(lineY2)}
-              stroke={COLOR_LINE}
-              strokeWidth={2.4}
+              x1={xAt(lineX1)} y1={yAt(lineY1)}
+              x2={xAt(lineX2)} y2={yAt(lineY2)}
+              stroke={COLOR_LINE} strokeWidth={2.4}
             />
           </g>
         )}
 
-        {/* points */}
-        {points.map((p, i) => {
-          const isHighlight =
-            highlightPoint &&
-            Math.abs(p.x - highlightPoint.x) < 1e-9 &&
-            Math.abs(p.y - highlightPoint.y) < 1e-9;
-          return (
-            <circle
-              key={`pt-${i}`}
-              cx={xAt(p.x)}
-              cy={yAt(p.y)}
-              r={isHighlight ? 5.5 : 3.5}
-              fill={isHighlight ? COLOR_HL : COLOR_POINT}
-              stroke="#fff"
-              strokeWidth={1.2}
-            />
-          );
-        })}
+        {/* points — wrapped so "data points" collective resolves. */}
+        <g
+          data-feature={N.points}
+          data-feature-label="data points"
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={plotH / H}
+        >
+          {points.map((p, i) => {
+            const isHighlight =
+              highlightPoint &&
+              Math.abs(p.x - highlightPoint.x) < 1e-9 &&
+              Math.abs(p.y - highlightPoint.y) < 1e-9;
+            return (
+              <circle
+                key={`pt-${i}`}
+                cx={xAt(p.x)} cy={yAt(p.y)}
+                r={isHighlight ? 5.5 : 3.5}
+                fill={isHighlight ? COLOR_HL : COLOR_POINT} stroke="#fff" strokeWidth={1.2}
+              />
+            );
+          })}
+        </g>
 
         {/* highlighted point label */}
         {highlightPoint && (
-          <text
-            x={xAt(highlightPoint.x) + 8}
-            y={yAt(highlightPoint.y) - 6}
-            fontSize={11}
-            fill={COLOR_HL}
-            fontWeight={600}
+          <g
+            data-feature={N.highlightPoint}
+            data-feature-label={highlightPoint.label || `(${highlightPoint.x}, ${highlightPoint.y})`}
+            data-feature-cx={xAt(highlightPoint.x) / W}
+            data-feature-cy={yAt(highlightPoint.y) / H}
+            data-feature-w={32 / W}
+            data-feature-h={32 / H}
           >
-            {highlightPoint.label ?? `(${Number(highlightPoint.x.toFixed(2))}, ${Number(highlightPoint.y.toFixed(2))})`}
-          </text>
+            <text
+              x={xAt(highlightPoint.x) + 8} y={yAt(highlightPoint.y) - 6}
+              fontSize={11} fill={COLOR_HL} fontWeight={600}
+            >
+              {highlightPoint.label ?? `(${Number(highlightPoint.x.toFixed(2))}, ${Number(highlightPoint.y.toFixed(2))})`}
+            </text>
+          </g>
         )}
 
         {/* axes */}
@@ -154,12 +183,30 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
 
         {/* equation + r */}
         {equationLabel && (
-          <text x={PAD_L + 8} y={PAD_T + 14} fontSize={13} fontWeight={600} fill={COLOR_LINE}>
+          <text
+            x={PAD_L + 8} y={PAD_T + 14}
+            fontSize={13} fontWeight={600} fill={COLOR_LINE}
+            data-feature={N.equation}
+            data-feature-label={equationLabel}
+            data-feature-cx={(PAD_L + 80) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={180 / W}
+            data-feature-h={18 / H}
+          >
             {equationLabel}
           </text>
         )}
         {(rValue !== undefined || rSquared !== undefined) && (
-          <text x={W - PAD_R - 4} y={PAD_T + 14} fontSize={11} textAnchor="end" fill="#374151">
+          <text
+            x={W - PAD_R - 4} y={PAD_T + 14}
+            fontSize={11} textAnchor="end" fill="#374151"
+            data-feature={rValue !== undefined ? N.rValue : N.rSquared}
+            data-feature-label={rValue !== undefined ? `r = ${rValue}` : `r² = ${rSquared}`}
+            data-feature-cx={(W - PAD_R - 50) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={120 / W}
+            data-feature-h={18 / H}
+          >
             {rValue !== undefined && <tspan>r = {Number(rValue.toFixed(3))}</tspan>}
             {rValue !== undefined && rSquared !== undefined && <tspan>  </tspan>}
             {rSquared !== undefined && <tspan>r² = {Number(rSquared.toFixed(3))}</tspan>}

@@ -11,6 +11,8 @@
  * and supplies defaults. Renderer just draws.
  */
 
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
 interface HistogramBin { lower: number; upper: number; count: number }
 
 function isFiniteNumber(v: unknown): v is number {
@@ -220,4 +222,288 @@ export function solveScatterRegression(params: Record<string, unknown>): Scatter
     yLabel: typeof params.yLabel === 'string' ? params.yLabel : undefined,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 11 manifests (whiteboard markup initiative).
+// ═══════════════════════════════════════════════════════════════════
+
+// ── histogram ────────────────────────────────────────────────────
+export const histogramFeatureNames = {
+  diagram: 'histogram',
+  bars: 'bars',
+  bin: (i: number): string => `bin-${i}`,
+  mean: 'mean-line',
+  median: 'median-line',
+};
+
+export function buildHistogramManifest(figure: HistogramFigure): FeatureManifestEntry[] {
+  const N = histogramFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'histogram diagram',
+      labels: ['histogram', 'the histogram', 'the diagram', 'the graph', 'the distribution'],
+      displayName: figure.title || 'histogram',
+      scribbleable: true,
+    },
+    {
+      name: N.bars,
+      kind: 'region',
+      description: `${figure.bins.length} histogram bars`,
+      labels: ['bars', 'the bars', 'histogram bars', 'the histogram bars', 'bins', 'the bins', 'all bins', 'all bars'],
+      displayName: 'bars',
+      scribbleable: true,
+    },
+  ];
+  figure.bins.forEach((b, i) => {
+    const desc = `bin ${i + 1}: [${b.lower}, ${b.upper}) count=${b.count}`;
+    features.push({
+      name: N.bin(i),
+      kind: 'label',
+      description: desc,
+      labels: [
+        `bin ${i + 1}`, `the ${i + 1}th bin`, `bar ${i + 1}`, `the ${i + 1}th bar`,
+        `[${b.lower}, ${b.upper})`, `the [${b.lower}, ${b.upper}) bin`,
+        `bin from ${b.lower} to ${b.upper}`, `the bar from ${b.lower} to ${b.upper}`,
+        desc,
+      ],
+      displayName: `bin [${b.lower}, ${b.upper})`,
+      scribbleable: true,
+    });
+  });
+  if (figure.mean !== undefined) {
+    features.push({
+      name: N.mean,
+      kind: 'label',
+      description: `mean line at x = ${figure.mean}`,
+      labels: [
+        'mean', 'the mean', 'mean line', 'the mean line', 'average', 'the average',
+        `mean = ${figure.mean}`, `x̄ = ${figure.mean}`,
+        // Verbose description-format (brain copies from description).
+        `mean line at x = ${figure.mean}`,
+        `the mean line at x = ${figure.mean}`,
+      ],
+      displayName: `mean = ${figure.mean}`,
+      scribbleable: true,
+    });
+  }
+  if (figure.median !== undefined) {
+    features.push({
+      name: N.median,
+      kind: 'label',
+      description: `median line at x = ${figure.median}`,
+      labels: [
+        'median', 'the median', 'median line', 'the median line',
+        `median = ${figure.median}`,
+        `median line at x = ${figure.median}`,
+        `the median line at x = ${figure.median}`,
+      ],
+      displayName: `median = ${figure.median}`,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── normal_curve ─────────────────────────────────────────────────
+export const normalCurveFeatureNames = {
+  diagram: 'normal-curve',
+  curve: 'bell-curve',
+  shadeRegion: 'shaded-region',
+  mark: (idx: number): string => `mark-${idx}`,
+  sdLines: 'sd-lines',
+  shadeArea: 'shade-area',
+};
+
+export function buildNormalCurveManifest(figure: NormalCurveFigure): FeatureManifestEntry[] {
+  const N = normalCurveFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: `normal distribution N(μ=${figure.mean}, σ=${figure.sd})`,
+      labels: ['normal curve', 'the normal curve', 'the bell curve', 'the diagram', 'the graph', 'the distribution', `N(${figure.mean}, ${figure.sd})`],
+      displayName: figure.title || `N(${figure.mean}, ${figure.sd})`,
+      scribbleable: true,
+    },
+    {
+      name: N.curve,
+      kind: 'label',
+      description: 'bell curve',
+      labels: ['curve', 'the curve', 'bell curve', 'the bell curve', 'pdf', 'density', 'the density'],
+      displayName: 'bell curve',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shadeRegion) {
+    const { from, to } = figure.shadeRegion;
+    let desc = 'shaded probability region';
+    if (from !== undefined && to !== undefined) desc = `shaded region P(${from} ≤ X ≤ ${to})`;
+    else if (to !== undefined) desc = `shaded region P(X ≤ ${to})`;
+    else if (from !== undefined) desc = `shaded region P(X ≥ ${from})`;
+    features.push({
+      name: N.shadeRegion,
+      kind: 'area',
+      description: desc,
+      labels: [
+        'shaded region', 'the shaded region', 'shaded area', 'the shaded area',
+        'the area', 'the probability', 'probability region', 'the probability region',
+        'shading', 'the shading',
+        desc,
+      ],
+      displayName: 'shaded region',
+      scribbleable: true,
+    });
+  }
+  figure.markValues.forEach((mv, i) => {
+    const desc = mv.label ? `mark at x = ${mv.x} (${mv.label})` : `mark at x = ${mv.x}`;
+    const labels = [
+      `x = ${mv.x}`, `at x = ${mv.x}`,
+      `mark ${i + 1}`, `the ${i + 1}th mark`,
+      // Verbose description-format (brain copies from description).
+      desc,
+      `mark at x = ${mv.x}`,
+    ];
+    if (mv.label) labels.push(mv.label, `the ${mv.label}`, `"${mv.label}"`);
+    features.push({
+      name: N.mark(i),
+      kind: 'label',
+      description: desc,
+      labels,
+      displayName: mv.label || `x = ${mv.x}`,
+      scribbleable: true,
+    });
+  });
+  if (figure.showSDLines) {
+    features.push({
+      name: N.sdLines,
+      kind: 'region',
+      description: '±1σ, ±2σ, ±3σ standard-deviation lines',
+      labels: ['SD lines', 'the SD lines', 'standard deviation lines', 'sigma lines', 'σ lines', 'empirical rule lines', 'the empirical rule lines'],
+      displayName: 'SD lines',
+      scribbleable: true,
+    });
+  }
+  if (figure.shadeArea !== undefined) {
+    features.push({
+      name: N.shadeArea,
+      kind: 'label',
+      description: `probability value: ${figure.shadeArea}`,
+      labels: ['probability', 'the probability', 'P', 'the P value', 'shade area', `P = ${figure.shadeArea}`],
+      displayName: `P = ${figure.shadeArea}`,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── scatterplot_regression ───────────────────────────────────────
+export const scatterRegressionFeatureNames = {
+  diagram: 'scatterplot-regression',
+  points: 'data-points',
+  regression: 'regression-line',
+  equation: 'equation-label',
+  rValue: 'r-value',
+  rSquared: 'r-squared',
+  highlightPoint: 'highlight-point',
+  residuals: 'residuals',
+};
+
+export function buildScatterRegressionManifest(figure: ScatterRegressionFigure): FeatureManifestEntry[] {
+  const N = scatterRegressionFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'scatterplot with regression',
+      labels: ['scatterplot', 'the scatterplot', 'scatter plot', 'the diagram', 'the graph'],
+      displayName: figure.title || 'scatterplot',
+      scribbleable: true,
+    },
+    {
+      name: N.points,
+      kind: 'region',
+      description: `${figure.points.length} data points`,
+      labels: ['points', 'the points', 'data points', 'the data points', 'the data', 'data', 'all points', 'the dots'],
+      displayName: 'data points',
+      scribbleable: true,
+    },
+  ];
+  if (figure.regression) {
+    features.push({
+      name: N.regression,
+      kind: 'label',
+      description: `LSRL: ŷ = ${figure.regression.intercept.toFixed(3)} + ${figure.regression.slope.toFixed(3)}x`,
+      labels: [
+        'LSRL', 'the LSRL', 'regression line', 'the regression line',
+        'line of best fit', 'the line of best fit', 'best fit line', 'the best fit line',
+        'least squares line', 'the least squares line',
+        'trend line', 'the trend line',
+      ],
+      displayName: 'LSRL',
+      scribbleable: true,
+    });
+  }
+  if (figure.equationLabel) {
+    features.push({
+      name: N.equation,
+      kind: 'label',
+      description: `equation: ${figure.equationLabel}`,
+      labels: [figure.equationLabel, `"${figure.equationLabel}"`, 'equation', 'the equation', 'equation label', 'the equation label', 'the formula'],
+      displayName: figure.equationLabel,
+      scribbleable: true,
+    });
+  }
+  if (figure.rValue !== undefined) {
+    features.push({
+      name: N.rValue,
+      kind: 'label',
+      description: `correlation coefficient r = ${figure.rValue}`,
+      labels: ['r', 'the r value', 'r value', 'correlation', 'correlation coefficient', 'the correlation', `r = ${figure.rValue}`],
+      displayName: `r = ${figure.rValue}`,
+      scribbleable: true,
+    });
+  }
+  if (figure.rSquared !== undefined) {
+    features.push({
+      name: N.rSquared,
+      kind: 'label',
+      description: `r² = ${figure.rSquared}`,
+      labels: ['r²', 'r squared', 'r-squared', 'the r squared', 'coefficient of determination', `r² = ${figure.rSquared}`, `r^2 = ${figure.rSquared}`],
+      displayName: `r² = ${figure.rSquared}`,
+      scribbleable: true,
+    });
+  }
+  if (figure.highlightPoint) {
+    const desc = figure.highlightPoint.label
+      ? `highlight point (${figure.highlightPoint.x}, ${figure.highlightPoint.y}) "${figure.highlightPoint.label}"`
+      : `highlight point (${figure.highlightPoint.x}, ${figure.highlightPoint.y})`;
+    features.push({
+      name: N.highlightPoint,
+      kind: 'label',
+      description: desc,
+      labels: [
+        'highlight point', 'the highlight point', 'highlighted point', 'the highlighted point', 'the point',
+        `(${figure.highlightPoint.x}, ${figure.highlightPoint.y})`,
+        ...(figure.highlightPoint.label ? [figure.highlightPoint.label, `"${figure.highlightPoint.label}"`] : []),
+        // Verbose description-format (brain copies from description).
+        desc,
+      ],
+      displayName: figure.highlightPoint.label || `(${figure.highlightPoint.x}, ${figure.highlightPoint.y})`,
+      scribbleable: true,
+    });
+  }
+  if (figure.showResiduals) {
+    features.push({
+      name: N.residuals,
+      kind: 'region',
+      description: 'residual segments (vertical distances from points to LSRL)',
+      labels: ['residuals', 'the residuals', 'residual segments', 'residual lines', 'error lines', 'the error lines', 'vertical distances'],
+      displayName: 'residuals',
+      scribbleable: true,
+    });
+  }
+  return features;
 }

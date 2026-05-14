@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { TaylorPolynomialOverlayFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  taylorPolynomialFeatureNames,
+  type TaylorPolynomialOverlayFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_BASE = '#1f2937';
@@ -10,6 +14,7 @@ const APPROX_PALETTE = ['#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '
 
 export function TaylorOverlayRenderer({ figure }: { figure: TaylorPolynomialOverlayFigure }) {
   const { baseCurve, approximations, xMin, xMax, yMin, yMax, center, exprLabel, title } = figure;
+  const N = taylorPolynomialFeatureNames;
 
   const W = 560;
   const H = 420;
@@ -37,16 +42,17 @@ export function TaylorOverlayRenderer({ figure }: { figure: TaylorPolynomialOver
     };
   }
   function pathFor(curve: { x: number; y: number }[]): string {
-    return curve
-      .map(clamp)
-      .map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`)
-      .join(' ');
+    return smoothPath(curve.map(clamp), xAt, yAt);
   }
 
   const basePath = pathFor(baseCurve);
 
   return (
-    <div className="taylor-overlay-renderer w-full flex flex-col items-center">
+    <div
+      className="taylor-overlay-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'Taylor overlay'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* gridlines */}
@@ -72,10 +78,24 @@ export function TaylorOverlayRenderer({ figure }: { figure: TaylorPolynomialOver
               stroke={a.color ?? APPROX_PALETTE[i % APPROX_PALETTE.length]}
               strokeWidth={2}
               strokeDasharray="6 4"
+              data-feature={N.approximation(a.degree)}
+              data-feature-label={`T${a.degree}(x)`}
+              data-feature-cx={(PAD_L + plotW / 2) / W}
+              data-feature-cy={(PAD_T + plotH / 2) / H}
+              data-feature-w={40 / W}
+              data-feature-h={24 / H}
             />
           ))}
           {/* base curve */}
-          <path d={basePath} fill="none" stroke={COLOR_BASE} strokeWidth={2.6} />
+          <path
+            d={basePath} fill="none" stroke={COLOR_BASE} strokeWidth={2.6}
+            data-feature={N.baseCurve}
+            data-feature-label={exprLabel || 'f(x)'}
+            data-feature-cx={(PAD_L + plotW / 2) / W}
+            data-feature-cy={(PAD_T + plotH / 3) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          />
         </g>
 
         {/* axes */}
@@ -111,7 +131,16 @@ export function TaylorOverlayRenderer({ figure }: { figure: TaylorPolynomialOver
 
         {/* labels */}
         {exprLabel && (
-          <text x={PAD_L + 8} y={PAD_T + 14} fontSize={13} fontWeight={600} fill={COLOR_BASE}>
+          <text
+            x={PAD_L + 8} y={PAD_T + 14}
+            fontSize={13} fontWeight={600} fill={COLOR_BASE}
+            data-feature={N.exprLabel}
+            data-feature-label={exprLabel}
+            data-feature-cx={(PAD_L + 60) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={160 / W}
+            data-feature-h={18 / H}
+          >
             {exprLabel}
           </text>
         )}

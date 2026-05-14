@@ -448,7 +448,33 @@ export class WhiteboardCatalog {
     // Phase 1: collect ONE matching feature per item (newest-first, first
     // matching feature within the item wins). Multiple items in this
     // map = ambiguous match.
+    //
+    // Phase 1a (exact case-insensitive label match) runs FIRST so that a
+    // query with a normalize-stripped distinguisher (apostrophe, prime,
+    // dash) still routes to the right feature. Example: query="Ms'"
+    // normalizes to "ms" and so does the unshifted Ms label "Ms" —
+    // both would match in normalized form, with first-registered (Ms)
+    // winning. The exact-match phase routes "Ms'" to the shifted
+    // feature whose label literally is "Ms'".
     const matches = new Map<string, { item: CatalogItem; feature: CatalogFeature }>();
+    const rawLower = String(raw ?? '').trim().toLowerCase();
+    if (rawLower) {
+      for (let i = this.items.length - 1; i >= 0; i--) {
+        const item = this.items[i];
+        if (matches.has(item.itemId)) continue;
+        for (const f of item.features) {
+          if (
+            f.canonical.toLowerCase() === rawLower ||
+            f.labels.some((l) => l.toLowerCase() === rawLower)
+          ) {
+            matches.set(item.itemId, { item, feature: f });
+            break;
+          }
+        }
+      }
+    }
+    // Phase 1b: fall back to normalized matching for items that didn't
+    // exact-match (the common case).
     for (let i = this.items.length - 1; i >= 0; i--) {
       const item = this.items[i];
       if (matches.has(item.itemId)) continue;

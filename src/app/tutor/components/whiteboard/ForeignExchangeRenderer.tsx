@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { FxMarketFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  fxMarketFeatureNames,
+  type FxMarketFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const COLOR_S = '#dc2626';
 const COLOR_S_NEW = '#fca5a5';
@@ -22,6 +25,7 @@ export function ForeignExchangeRenderer({ figure }: { figure: FxMarketFigure }) 
     finalExchangeRate: e1,
     title,
   } = figure;
+  const N = fxMarketFeatureNames;
 
   const W = 540;
   const H = 400;
@@ -70,44 +74,96 @@ export function ForeignExchangeRenderer({ figure }: { figure: FxMarketFigure }) 
   }
 
   return (
-    <div className="fx-market-renderer w-full flex flex-col items-center">
+    <div
+      className="fx-market-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || `FX market (${currency})`}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
         <line x1={PAD_L} y1={PAD_T + plotH} x2={PAD_L + plotW} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
 
-        <line x1={sLine.x1} y1={sLine.y1} x2={sLine.x2} y2={sLine.y2} stroke={COLOR_S} strokeWidth={2.5} />
-        <text x={sLine.x2 + 4} y={sLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_S}>S{currency}</text>
+        <g
+          data-feature={N.supply}
+          data-feature-label={`S${currency}`}
+          data-feature-cx={((sLine.x1 + sLine.x2) / 2) / W}
+          data-feature-cy={((sLine.y1 + sLine.y2) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        >
+          <line x1={sLine.x1} y1={sLine.y1} x2={sLine.x2} y2={sLine.y2} stroke={COLOR_S} strokeWidth={2.5} />
+          <text x={sLine.x2 + 4} y={sLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_S}>S{currency}</text>
+        </g>
         {sShiftedLine && (
-          <>
+          <g
+            data-feature={N.supplyShifted}
+            data-feature-label={`S${currency}'`}
+            data-feature-cx={((sShiftedLine.x1 + sShiftedLine.x2) / 2) / W}
+            data-feature-cy={((sShiftedLine.y1 + sShiftedLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={sShiftedLine.x1} y1={sShiftedLine.y1} x2={sShiftedLine.x2} y2={sShiftedLine.y2} stroke={COLOR_S_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={sShiftedLine.x2 + 4} y={sShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_S_NEW}>S{currency}&apos;</text>
-          </>
+          </g>
         )}
 
-        <line x1={dLine.x1} y1={dLine.y1} x2={dLine.x2} y2={dLine.y2} stroke={COLOR_D} strokeWidth={2.5} />
-        <text x={dLine.x2 + 4} y={dLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_D}>D{currency}</text>
+        <g
+          data-feature={N.demand}
+          data-feature-label={`D${currency}`}
+          data-feature-cx={((dLine.x1 + dLine.x2) / 2) / W}
+          data-feature-cy={((dLine.y1 + dLine.y2) / 2) / H}
+          data-feature-w={40 / W}
+          data-feature-h={24 / H}
+        >
+          <line x1={dLine.x1} y1={dLine.y1} x2={dLine.x2} y2={dLine.y2} stroke={COLOR_D} strokeWidth={2.5} />
+          <text x={dLine.x2 + 4} y={dLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_D}>D{currency}</text>
+        </g>
         {dShiftedLine && (
-          <>
+          <g
+            data-feature={N.demandShifted}
+            data-feature-label={`D${currency}'`}
+            data-feature-cx={((dShiftedLine.x1 + dShiftedLine.x2) / 2) / W}
+            data-feature-cy={((dShiftedLine.y1 + dShiftedLine.y2) / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          >
             <line x1={dShiftedLine.x1} y1={dShiftedLine.y1} x2={dShiftedLine.x2} y2={dShiftedLine.y2} stroke={COLOR_D_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
             <text x={dShiftedLine.x2 + 4} y={dShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_D_NEW}>D{currency}&apos;</text>
-          </>
+          </g>
         )}
 
-        <circle cx={xAt(Q0)} cy={yAt(e0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
+        <g
+          data-feature={N.eqInitial}
+          data-feature-label="initial equilibrium"
+          data-feature-cx={xAt(Q0) / W}
+          data-feature-cy={yAt(e0) / H}
+          data-feature-w={40 / W}
+          data-feature-h={40 / H}
+        >
+          <circle cx={xAt(Q0)} cy={yAt(e0)} r={5} fill={COLOR_EQ} stroke="#fff" strokeWidth={2} />
+        </g>
         <line x1={xAt(Q0)} y1={yAt(e0)} x2={xAt(Q0)} y2={PAD_T + plotH} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
         <line x1={xAt(Q0)} y1={yAt(e0)} x2={PAD_L} y2={yAt(e0)} stroke={COLOR_EQ} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
         <text x={xAt(Q0)} y={PAD_T + plotH + 14} fontSize={11} fill={COLOR_EQ} textAnchor="middle">Q₀</text>
         <text x={PAD_L - 6} y={yAt(e0) + 4} fontSize={11} fill={COLOR_EQ} textAnchor="end">e₀</text>
 
         {Q1 !== undefined && e1 !== undefined && (
-          <>
+          <g
+            data-feature={N.eqFinal}
+            data-feature-label="final equilibrium"
+            data-feature-cx={xAt(Q1) / W}
+            data-feature-cy={yAt(e1) / H}
+            data-feature-w={40 / W}
+            data-feature-h={40 / H}
+          >
             <circle cx={xAt(Q1)} cy={yAt(e1)} r={5} fill={COLOR_EQ_NEW} stroke="#fff" strokeWidth={2} />
             <line x1={xAt(Q1)} y1={yAt(e1)} x2={xAt(Q1)} y2={PAD_T + plotH} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
             <line x1={xAt(Q1)} y1={yAt(e1)} x2={PAD_L} y2={yAt(e1)} stroke="#a16207" strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
             <text x={xAt(Q1)} y={PAD_T + plotH + 14} fontSize={11} fill="#a16207" textAnchor="middle">Q₁</text>
             <text x={PAD_L - 6} y={yAt(e1) + 4} fontSize={11} fill="#a16207" textAnchor="end">e₁</text>
-          </>
+          </g>
         )}
 
         <text x={PAD_L + plotW / 2} y={H - 26} fontSize={13} fontWeight={600} textAnchor="middle" fill="#374151">

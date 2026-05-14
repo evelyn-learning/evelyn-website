@@ -255,7 +255,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_unit_circle',
-    description: 'Display the unit circle with angle markers, reference triangles, and trig coordinates.',
+    description: '⚠️ DEPRECATED — prefer show_diagram(type: "unit_circle", params: { angleDegrees, showSinCos?, showRadians?, title? }) for the catalog-dispatched unit circle with full scribble + handwrite support. Display the unit circle with angle markers, reference triangles, and trig coordinates.',
     parameters: {
       type: 'object',
       properties: {
@@ -1109,7 +1109,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_flowchart',
-    description: 'Flowchart for algorithms or branching procedures. Node shapes: start/end (pills), process (rectangle), decision (diamond), io (parallelogram). Edges connect nodes by id; decision-node outgoing edges should be labeled (e.g. "yes" / "no"). Provide explicit x,y coordinates for any flowchart with branching or loops; without coordinates the layout is a straight top-down chain.',
+    description: '⚠️ DEPRECATED — prefer show_diagram(type: "flowchart_simple", params: { nodes, edges, title? }) for the catalog-dispatched flowchart with full scribble + handwrite support. Flowchart for algorithms or branching procedures. Node shapes: start/end (pills), process (rectangle), decision (diamond), io (parallelogram). Edges connect nodes by id; decision-node outgoing edges should be labeled (e.g. "yes" / "no"). Provide explicit x,y coordinates for any flowchart with branching or loops; without coordinates the layout is a straight top-down chain.',
     parameters: {
       type: 'object',
       properties: {

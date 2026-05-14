@@ -12,6 +12,8 @@
  * server.
  */
 
+import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+
 interface XY { x: number; y: number }
 interface XYT extends XY { t?: number }
 interface PolarPoint { theta: number; r: number; x: number; y: number }
@@ -355,4 +357,368 @@ export function solveTaylorPolynomialOverlay(params: Record<string, unknown>): T
     exprLabel: typeof params.exprLabel === 'string' ? params.exprLabel : undefined,
     title: typeof params.title === 'string' ? params.title : undefined,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 10 manifests (whiteboard markup initiative).
+// ═══════════════════════════════════════════════════════════════════
+
+// ── riemann_sum ──────────────────────────────────────────────────
+export const riemannSumFeatureNames = {
+  diagram: 'riemann-sum',
+  curve: 'curve',
+  rectangles: 'rectangles',
+  rectangle: (i: number): string => `rectangle-${i}`,
+  exprLabel: 'expr-label',
+  approxArea: 'approx-area',
+  exactArea: 'exact-area',
+};
+
+export function buildRiemannSumManifest(figure: RiemannSumFigure): FeatureManifestEntry[] {
+  const N = riemannSumFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: `Riemann sum (${figure.method}, n=${figure.n})`,
+      labels: ['Riemann sum', 'the Riemann sum', 'the diagram', 'the graph', 'the integral', 'the approximation'],
+      displayName: figure.title || 'Riemann sum',
+      scribbleable: true,
+    },
+    {
+      name: N.curve,
+      kind: 'label',
+      description: figure.exprLabel ? `function curve: ${figure.exprLabel}` : 'function curve',
+      labels: [
+        'curve', 'the curve', 'function', 'the function', 'graph', 'the graph',
+        'f(x)', 'the f(x) curve',
+        ...(figure.exprLabel ? [figure.exprLabel, `the ${figure.exprLabel}`] : []),
+      ],
+      displayName: figure.exprLabel || 'f(x)',
+      scribbleable: true,
+    },
+    {
+      name: N.rectangles,
+      kind: 'region',
+      description: `${figure.method} Riemann rectangles (n=${figure.n})`,
+      labels: [
+        'rectangles', 'the rectangles', 'the bars', 'bars',
+        'Riemann rectangles', 'the Riemann rectangles',
+        `${figure.method} rectangles`, `${figure.method} sum`,
+      ],
+      displayName: `${figure.method} rectangles`,
+      scribbleable: true,
+    },
+  ];
+  figure.rectangles.forEach((r, i) => {
+    const desc = `rectangle ${i + 1} at x = ${r.x.toFixed(2)} (width ${r.width.toFixed(2)}, height ${r.height.toFixed(2)})`;
+    features.push({
+      name: N.rectangle(i),
+      kind: 'label',
+      description: desc,
+      labels: [
+        `rectangle ${i + 1}`, `the ${i + 1}th rectangle`, `bar ${i + 1}`, `the ${i + 1}th bar`,
+        // Verbose description-format (brain copies from description).
+        desc,
+      ],
+      displayName: `rectangle ${i + 1}`,
+      scribbleable: true,
+    });
+  });
+  if (figure.exprLabel) {
+    features.push({
+      name: N.exprLabel,
+      kind: 'label',
+      description: `function expression label: ${figure.exprLabel}`,
+      labels: [figure.exprLabel, `"${figure.exprLabel}"`, 'expression', 'the expression', 'function expression', 'expr label', 'the formula'],
+      displayName: figure.exprLabel,
+      scribbleable: true,
+    });
+  }
+  if (figure.approxArea !== undefined) {
+    features.push({
+      name: N.approxArea,
+      kind: 'label',
+      description: `approximation: ${figure.approxArea}`,
+      labels: ['approximation', 'the approximation', 'approx area', 'the approximation value', `S = ${figure.approxArea}`, `${figure.approxArea}`],
+      displayName: `S ≈ ${figure.approxArea}`,
+      scribbleable: true,
+    });
+  }
+  if (figure.exactArea !== undefined) {
+    features.push({
+      name: N.exactArea,
+      kind: 'label',
+      description: `exact area: ${figure.exactArea}`,
+      labels: ['exact area', 'the exact area', 'true value', 'the true value', 'integral value', `∫ = ${figure.exactArea}`, `${figure.exactArea}`],
+      displayName: `∫ = ${figure.exactArea}`,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── slope_field ──────────────────────────────────────────────────
+export const slopeFieldFeatureNames = {
+  diagram: 'slope-field',
+  field: 'slope-segments',
+  solutionCurve: 'solution-curve',
+  highlightPoint: 'highlight-point',
+  exprLabel: 'expr-label',
+};
+
+export function buildSlopeFieldManifest(figure: SlopeFieldFigure): FeatureManifestEntry[] {
+  const N = slopeFieldFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: figure.exprLabel ? `slope field for ${figure.exprLabel}` : 'slope field',
+      labels: ['slope field', 'the slope field', 'the diagram', 'the field', 'direction field', 'the direction field'],
+      displayName: figure.title || 'slope field',
+      scribbleable: true,
+    },
+    {
+      name: N.field,
+      kind: 'region',
+      description: `slope segments (${figure.samples.length} samples)`,
+      labels: ['slope segments', 'the slope segments', 'the segments', 'the slopes', 'tangent slopes', 'the tangent slopes'],
+      displayName: 'slope segments',
+      scribbleable: true,
+    },
+  ];
+  if (figure.solutionCurve) {
+    features.push({
+      name: N.solutionCurve,
+      kind: 'label',
+      description: 'integral curve (particular solution)',
+      labels: [
+        'solution', 'the solution', 'solution curve', 'the solution curve',
+        'integral curve', 'the integral curve', 'particular solution',
+        'red curve', 'the red curve',
+        // Verbose description-format (brain copies from description).
+        'integral curve (particular solution)',
+      ],
+      displayName: 'solution curve',
+      scribbleable: true,
+    });
+  }
+  if (figure.highlightPoint) {
+    features.push({
+      name: N.highlightPoint,
+      kind: 'label',
+      description: `highlight point (${figure.highlightPoint.x}, ${figure.highlightPoint.y})`,
+      labels: [
+        'highlight point', 'the highlight point', 'highlighted point', 'the highlighted point',
+        'initial condition', 'the initial condition', 'the point',
+        `(${figure.highlightPoint.x}, ${figure.highlightPoint.y})`,
+      ],
+      displayName: `(${figure.highlightPoint.x}, ${figure.highlightPoint.y})`,
+      scribbleable: true,
+    });
+  }
+  if (figure.exprLabel) {
+    features.push({
+      name: N.exprLabel,
+      kind: 'label',
+      description: `expression label: ${figure.exprLabel}`,
+      labels: [figure.exprLabel, `"${figure.exprLabel}"`, 'expression', 'the expression', 'expr label', 'the formula', 'the ODE'],
+      displayName: figure.exprLabel,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── parametric_curve ─────────────────────────────────────────────
+export const parametricCurveFeatureNames = {
+  diagram: 'parametric-curve',
+  curve: 'curve',
+  highlightT: 'highlight-point',
+  tangent: 'tangent-vector',
+  exprLabel: 'expr-label',
+};
+
+export function buildParametricCurveManifest(figure: ParametricCurveFigure): FeatureManifestEntry[] {
+  const N = parametricCurveFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: figure.exprLabel ? `parametric curve: ${figure.exprLabel}` : 'parametric curve',
+      labels: ['parametric curve', 'the parametric curve', 'the curve', 'the diagram', 'the graph'],
+      displayName: figure.title || 'parametric curve',
+      scribbleable: true,
+    },
+    {
+      name: N.curve,
+      kind: 'label',
+      description: 'parametric curve trace',
+      labels: ['curve', 'the curve', 'the trace', 'the path', 'parametric trace'],
+      displayName: figure.exprLabel || 'curve',
+      scribbleable: true,
+    },
+  ];
+  if (figure.highlightT) {
+    const tStr = figure.highlightT.t !== undefined ? ` (t=${figure.highlightT.t})` : '';
+    features.push({
+      name: N.highlightT,
+      kind: 'label',
+      description: `highlight point at (${figure.highlightT.x}, ${figure.highlightT.y})${tStr}`,
+      labels: [
+        'highlight point', 'the highlight point', 'highlighted point', 'the highlighted point', 'the point',
+        ...(figure.highlightT.t !== undefined ? [`t = ${figure.highlightT.t}`, `at t = ${figure.highlightT.t}`] : []),
+        ...(figure.highlightT.label ? [figure.highlightT.label, `"${figure.highlightT.label}"`] : []),
+      ],
+      displayName: figure.highlightT.label || (figure.highlightT.t !== undefined ? `t = ${figure.highlightT.t}` : 'highlight point'),
+      scribbleable: true,
+    });
+  }
+  if (figure.tangentAtT) {
+    features.push({
+      name: N.tangent,
+      kind: 'label',
+      description: `tangent vector (dx=${figure.tangentAtT.dx}, dy=${figure.tangentAtT.dy})`,
+      labels: ['tangent', 'the tangent', 'tangent vector', 'the tangent vector', 'derivative vector', 'the velocity vector', 'velocity'],
+      displayName: 'tangent vector',
+      scribbleable: true,
+    });
+  }
+  if (figure.exprLabel) {
+    features.push({
+      name: N.exprLabel,
+      kind: 'label',
+      description: `expression label: ${figure.exprLabel}`,
+      labels: [figure.exprLabel, `"${figure.exprLabel}"`, 'expression', 'the expression', 'expr label'],
+      displayName: figure.exprLabel,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── polar_graph ──────────────────────────────────────────────────
+export const polarGraphFeatureNames = {
+  diagram: 'polar-graph',
+  curve: 'curve',
+  shadeRegion: 'shaded-region',
+  highlightPoint: 'highlight-point',
+  exprLabel: 'expr-label',
+};
+
+export function buildPolarGraphManifest(figure: PolarGraphFigure): FeatureManifestEntry[] {
+  const N = polarGraphFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: figure.exprLabel ? `polar graph: ${figure.exprLabel}` : 'polar graph',
+      labels: ['polar graph', 'the polar graph', 'the diagram', 'the curve', 'the graph'],
+      displayName: figure.title || 'polar graph',
+      scribbleable: true,
+    },
+    {
+      name: N.curve,
+      kind: 'label',
+      description: 'polar curve r(θ)',
+      labels: ['curve', 'the curve', 'polar curve', 'the polar curve', 'r(θ)', 'r(theta)'],
+      displayName: figure.exprLabel || 'r(θ)',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shadeRegion) {
+    features.push({
+      name: N.shadeRegion,
+      kind: 'area',
+      description: 'shaded region (area integral)',
+      labels: ['shaded region', 'the shaded region', 'shaded area', 'the shaded area', 'shading', 'the shading', 'area', 'the area', 'the region'],
+      displayName: 'shaded region',
+      scribbleable: true,
+    });
+  }
+  if (figure.highlightPoint) {
+    features.push({
+      name: N.highlightPoint,
+      kind: 'label',
+      description: `highlight point at (r=${figure.highlightPoint.r}, θ=${figure.highlightPoint.theta})`,
+      labels: [
+        'highlight point', 'the highlight point', 'highlighted point', 'the highlighted point', 'the point',
+        `(${figure.highlightPoint.r}, ${figure.highlightPoint.theta})`,
+        ...(figure.highlightPoint.label ? [figure.highlightPoint.label, `"${figure.highlightPoint.label}"`] : []),
+      ],
+      displayName: figure.highlightPoint.label || 'highlight point',
+      scribbleable: true,
+    });
+  }
+  if (figure.exprLabel) {
+    features.push({
+      name: N.exprLabel,
+      kind: 'label',
+      description: `expression label: ${figure.exprLabel}`,
+      labels: [figure.exprLabel, `"${figure.exprLabel}"`, 'expression', 'the expression', 'expr label', 'the formula'],
+      displayName: figure.exprLabel,
+      scribbleable: true,
+    });
+  }
+  return features;
+}
+
+// ── taylor_polynomial_overlay ────────────────────────────────────
+export const taylorPolynomialFeatureNames = {
+  diagram: 'taylor-overlay',
+  baseCurve: 'base-curve',
+  approximation: (degree: number): string => `t-${degree}`,
+  exprLabel: 'expr-label',
+};
+
+export function buildTaylorPolynomialOverlayManifest(figure: TaylorPolynomialOverlayFigure): FeatureManifestEntry[] {
+  const N = taylorPolynomialFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: figure.exprLabel ? `Taylor overlay for ${figure.exprLabel}` : 'Taylor polynomial overlay',
+      labels: ['Taylor overlay', 'the Taylor overlay', 'Taylor polynomial overlay', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Taylor overlay',
+      scribbleable: true,
+    },
+    {
+      name: N.baseCurve,
+      kind: 'label',
+      description: figure.exprLabel ? `base function: ${figure.exprLabel}` : 'base function f(x)',
+      labels: [
+        'base curve', 'the base curve', 'base function', 'the base function',
+        'f(x)', 'the f(x) curve', 'the function', 'function',
+        ...(figure.exprLabel ? [figure.exprLabel, `the ${figure.exprLabel}`] : []),
+      ],
+      displayName: figure.exprLabel || 'f(x)',
+      scribbleable: true,
+    },
+  ];
+  figure.approximations.forEach((a) => {
+    features.push({
+      name: N.approximation(a.degree),
+      kind: 'label',
+      description: `Taylor polynomial T_${a.degree}(x)`,
+      labels: [
+        `T${a.degree}`, `T_${a.degree}`, `T_${a.degree}(x)`, `T${a.degree}(x)`,
+        `degree ${a.degree}`, `degree-${a.degree}`, `${a.degree}th-degree Taylor`,
+        `Taylor T_${a.degree}`, `the T_${a.degree} approximation`,
+        `n=${a.degree}`,
+      ],
+      displayName: `T${a.degree}(x)`,
+      scribbleable: true,
+    });
+  });
+  if (figure.exprLabel) {
+    features.push({
+      name: N.exprLabel,
+      kind: 'label',
+      description: `expression label: ${figure.exprLabel}`,
+      labels: [figure.exprLabel, `"${figure.exprLabel}"`, 'expression', 'the expression', 'expr label', 'the formula'],
+      displayName: figure.exprLabel,
+      scribbleable: true,
+    });
+  }
+  return features;
 }

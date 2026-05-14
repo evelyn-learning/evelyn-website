@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { SlopeFieldFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  slopeFieldFeatureNames,
+  type SlopeFieldFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_VEC = '#475569';
@@ -10,6 +14,7 @@ const COLOR_HL = '#16a34a';
 
 export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
   const { samples, xMin, xMax, yMin, yMax, solutionCurve, highlightPoint, exprLabel, title } = figure;
+  const N = slopeFieldFeatureNames;
 
   const W = 520;
   const H = 440;
@@ -39,11 +44,15 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
   for (let i = 0; i <= 4; i += 1) yTicks.push(yMin + yStep * i);
 
   const solPath = solutionCurve && solutionCurve.length > 1
-    ? solutionCurve.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`).join(' ')
+    ? smoothPath(solutionCurve, xAt, yAt)
     : '';
 
   return (
-    <div className="slope-field-renderer w-full flex flex-col items-center">
+    <div
+      className="slope-field-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'slope field'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* gridlines */}
@@ -62,40 +71,62 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
         )}
         <rect x={PAD_L} y={PAD_T} width={plotW} height={plotH} fill="none" stroke={COLOR_AXIS} strokeWidth={1.5} />
 
-        {/* slope segments */}
-        {samples.map((s, i) => {
-          if (!Number.isFinite(s.slope)) return null;
-          // Convert slope (data units) to screen vector. dx,dy in data units, then scale to segLenPx.
-          const xScale = plotW / (xMax - xMin);
-          const yScale = plotH / (yMax - yMin);
-          // direction vector in screen space: (1, -slope) scaled by data->screen
-          const vxScreen = xScale; // dx_data = 1 → vx_screen = xScale
-          const vyScreen = -s.slope * yScale; // dy_data = slope → vy_screen = -slope*yScale
-          const mag = Math.hypot(vxScreen, vyScreen) || 1;
-          const ux = (vxScreen / mag) * segLenPx;
-          const uy = (vyScreen / mag) * segLenPx;
-          const cx = xAt(s.x);
-          const cy = yAt(s.y);
-          return (
-            <line
-              key={i}
-              x1={cx - ux / 2}
-              y1={cy - uy / 2}
-              x2={cx + ux / 2}
-              y2={cy + uy / 2}
-              stroke={COLOR_VEC}
-              strokeWidth={1.5}
-              strokeLinecap="round"
-            />
-          );
-        })}
+        {/* slope segments — wrapped so scribbling "slope segments" hits the field. */}
+        <g
+          data-feature={N.field}
+          data-feature-label="slope segments"
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={plotH / H}
+        >
+          {samples.map((s, i) => {
+            if (!Number.isFinite(s.slope)) return null;
+            const xScale = plotW / (xMax - xMin);
+            const yScale = plotH / (yMax - yMin);
+            const vxScreen = xScale;
+            const vyScreen = -s.slope * yScale;
+            const mag = Math.hypot(vxScreen, vyScreen) || 1;
+            const ux = (vxScreen / mag) * segLenPx;
+            const uy = (vyScreen / mag) * segLenPx;
+            const cx = xAt(s.x);
+            const cy = yAt(s.y);
+            return (
+              <line
+                key={i}
+                x1={cx - ux / 2} y1={cy - uy / 2}
+                x2={cx + ux / 2} y2={cy + uy / 2}
+                stroke={COLOR_VEC} strokeWidth={1.5} strokeLinecap="round"
+              />
+            );
+          })}
+        </g>
 
         {/* solution curve */}
-        {solPath && <path d={solPath} fill="none" stroke={COLOR_SOL} strokeWidth={2.5} />}
+        {solPath && (
+          <path
+            d={solPath} fill="none" stroke={COLOR_SOL} strokeWidth={2.5}
+            data-feature={N.solutionCurve}
+            data-feature-label="solution curve"
+            data-feature-cx={(PAD_L + plotW / 2) / W}
+            data-feature-cy={(PAD_T + plotH / 2) / H}
+            data-feature-w={40 / W}
+            data-feature-h={24 / H}
+          />
+        )}
 
         {/* highlight */}
         {highlightPoint && (
-          <circle cx={xAt(highlightPoint.x)} cy={yAt(highlightPoint.y)} r={4.5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
+          <circle
+            cx={xAt(highlightPoint.x)} cy={yAt(highlightPoint.y)} r={4.5}
+            fill={COLOR_HL} stroke="#fff" strokeWidth={2}
+            data-feature={N.highlightPoint}
+            data-feature-label={`(${highlightPoint.x}, ${highlightPoint.y})`}
+            data-feature-cx={xAt(highlightPoint.x) / W}
+            data-feature-cy={yAt(highlightPoint.y) / H}
+            data-feature-w={32 / W}
+            data-feature-h={32 / H}
+          />
         )}
 
         {/* tick labels */}
@@ -112,7 +143,16 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
 
         {/* labels */}
         {exprLabel && (
-          <text x={PAD_L + 8} y={PAD_T + 14} fontSize={13} fontWeight={600} fill={COLOR_SOL}>
+          <text
+            x={PAD_L + 8} y={PAD_T + 14}
+            fontSize={13} fontWeight={600} fill={COLOR_SOL}
+            data-feature={N.exprLabel}
+            data-feature-label={exprLabel}
+            data-feature-cx={(PAD_L + 60) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={140 / W}
+            data-feature-h={18 / H}
+          >
             {exprLabel}
           </text>
         )}

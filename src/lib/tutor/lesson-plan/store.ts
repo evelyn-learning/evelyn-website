@@ -1294,6 +1294,13 @@ import { SEED_TEST_G5_HANDWRITE } from './seeds/test-g5-handwrite';
 import { SEED_TEST_G5_PHASE2A_ORGANIZERS } from './seeds/test-g5-phase2a-organizers';
 import { SEED_TEST_G5_PHASE2B_ORGANIZERS } from './seeds/test-g5-phase2b-organizers';
 import { SEED_TEST_G10_PHASE3_CHEMBIO } from './seeds/test-g10-phase3-chembio';
+import { SEED_TEST_G5_PHASE4_EARTH_SPACE } from './seeds/test-g5-phase4-earth-space';
+import { SEED_TEST_G10_PHASE5_CS } from './seeds/test-g10-phase5-cs';
+import { SEED_TEST_G10_PHASE6_ADVANCED_MATH } from './seeds/test-g10-phase6-advanced-math';
+import { SEED_TEST_G11_PHASE9_ECONOMICS } from './seeds/test-g11-phase9-economics';
+import { SEED_TEST_G12_PHASE10_CALCULUS } from './seeds/test-g12-phase10-calculus';
+import { SEED_TEST_G12_PHASE11_STATISTICS } from './seeds/test-g12-phase11-statistics';
+import { SEED_TEST_G11_PHASE12_ENVIRONMENTAL } from './seeds/test-g11-phase12-environmental';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -2530,6 +2537,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_G5_PHASE2A_ORGANIZERS,
   SEED_TEST_G5_PHASE2B_ORGANIZERS,
   SEED_TEST_G10_PHASE3_CHEMBIO,
+  SEED_TEST_G5_PHASE4_EARTH_SPACE,
+  SEED_TEST_G10_PHASE5_CS,
+  SEED_TEST_G10_PHASE6_ADVANCED_MATH,
+  SEED_TEST_G11_PHASE9_ECONOMICS,
+  SEED_TEST_G12_PHASE10_CALCULUS,
+  SEED_TEST_G12_PHASE11_STATISTICS,
+  SEED_TEST_G11_PHASE12_ENVIRONMENTAL,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

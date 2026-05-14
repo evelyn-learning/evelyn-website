@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import type { RiemannSumFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  riemannSumFeatureNames,
+  type RiemannSumFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import { smoothPath } from './_smoothPath';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_CURVE = '#2563eb';
@@ -12,6 +16,7 @@ const COLOR_TRAP_STROKE = '#b45309';
 
 export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
   const { curve, rectangles, xMin, xMax, yMin, yMax, method, n, exprLabel, approxArea, exactArea, title } = figure;
+  const N = riemannSumFeatureNames;
 
   const W = 560;
   const H = 380;
@@ -28,9 +33,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
   const yZero = yAt(0);
   const useTrapezoid = method === 'trapezoidal';
 
-  const curvePath = curve
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.x).toFixed(2)},${yAt(p.y).toFixed(2)}`)
-    .join(' ');
+  const curvePath = smoothPath(curve, xAt, yAt);
 
   const xTicks: number[] = [];
   const xStep = (xMax - xMin) / 4;
@@ -39,8 +42,17 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
   const yStep = (yMax - yMin) / 4;
   for (let i = 0; i <= 4; i += 1) yTicks.push(yMin + yStep * i);
 
+  // Bbox helper for the collective "rectangles" region.
+  const rectMinX = rectangles.length ? Math.min(...rectangles.map((r) => xAt(r.x))) : PAD_L;
+  const rectMaxX = rectangles.length ? Math.max(...rectangles.map((r) => xAt(r.x + r.width))) : PAD_L + plotW;
+  const rectMinY = rectangles.length ? Math.min(...rectangles.map((r) => yAt(Math.max(0, r.height)))) : PAD_T;
+  const rectMaxY = yZero;
   return (
-    <div className="riemann-sum-renderer w-full flex flex-col items-center">
+    <div
+      className="riemann-sum-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'Riemann sum'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* gridlines */}
@@ -51,39 +63,74 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
           <line key={`gy-${i}`} x1={PAD_L} y1={yAt(ty)} x2={PAD_L + plotW} y2={yAt(ty)} stroke="#e5e7eb" strokeWidth={1} />
         ))}
 
-        {/* rectangles (or trapezoids) */}
-        {rectangles.map((r, i) => {
-          if (useTrapezoid) {
+        {/* rectangles (or trapezoids) — wrapped in a feature group so
+            scribbling "rectangles" lands on the collective. */}
+        <g
+          data-feature={N.rectangles}
+          data-feature-label={`${method} rectangles`}
+          data-feature-cx={((rectMinX + rectMaxX) / 2) / W}
+          data-feature-cy={((rectMinY + rectMaxY) / 2) / H}
+          data-feature-w={Math.max(40, rectMaxX - rectMinX) / W}
+          data-feature-h={Math.max(40, rectMaxY - rectMinY) / H}
+        >
+          {rectangles.map((r, i) => {
+            if (useTrapezoid) {
+              const xL = xAt(r.x);
+              const xR = xAt(r.x + r.width);
+              const heightLeft = (r as RiemannSumFigure['rectangles'][number] & { heightLeft?: number }).heightLeft;
+              const yL = isFinite(heightLeft as number) ? yAt(heightLeft as number) : yAt(r.height);
+              const yR = yAt(r.height);
+              const yB = yZero;
+              const points = `${xL},${yB} ${xL},${yL} ${xR},${yR} ${xR},${yB}`;
+              return (
+                <polygon
+                  key={i}
+                  points={points}
+                  fill={COLOR_TRAP_FILL} fillOpacity={0.6} stroke={COLOR_TRAP_STROKE} strokeWidth={1.2}
+                  data-feature={N.rectangle(i)}
+                  data-feature-label={`rectangle ${i + 1}`}
+                  data-feature-cx={((xL + xR) / 2) / W}
+                  data-feature-cy={((Math.min(yL, yR) + yB) / 2) / H}
+                  data-feature-w={Math.abs(xR - xL) / W}
+                  data-feature-h={Math.abs(yB - Math.min(yL, yR)) / H}
+                />
+              );
+            }
             const xL = xAt(r.x);
             const xR = xAt(r.x + r.width);
-            const heightLeft = (r as RiemannSumFigure['rectangles'][number] & { heightLeft?: number }).heightLeft;
-            const yL = isFinite(heightLeft as number) ? yAt(heightLeft as number) : yAt(r.height);
-            const yR = yAt(r.height);
-            const yB = yZero;
-            const points = `${xL},${yB} ${xL},${yL} ${xR},${yR} ${xR},${yB}`;
-            return <polygon key={i} points={points} fill={COLOR_TRAP_FILL} fillOpacity={0.6} stroke={COLOR_TRAP_STROKE} strokeWidth={1.2} />;
-          }
-          const xL = xAt(r.x);
-          const xR = xAt(r.x + r.width);
-          const yTop = yAt(Math.max(0, r.height));
-          const yBot = yAt(Math.min(0, r.height));
-          return (
-            <rect
-              key={i}
-              x={Math.min(xL, xR)}
-              y={Math.min(yTop, yBot)}
-              width={Math.abs(xR - xL)}
-              height={Math.abs(yBot - yTop)}
-              fill={COLOR_RECT_FILL}
-              fillOpacity={0.55}
-              stroke={COLOR_RECT_STROKE}
-              strokeWidth={1.2}
-            />
-          );
-        })}
+            const yTop = yAt(Math.max(0, r.height));
+            const yBot = yAt(Math.min(0, r.height));
+            const rx = Math.min(xL, xR);
+            const ry = Math.min(yTop, yBot);
+            const rw = Math.abs(xR - xL);
+            const rh = Math.abs(yBot - yTop);
+            return (
+              <rect
+                key={i}
+                x={rx} y={ry} width={rw} height={rh}
+                fill={COLOR_RECT_FILL} fillOpacity={0.55} stroke={COLOR_RECT_STROKE} strokeWidth={1.2}
+                data-feature={N.rectangle(i)}
+                data-feature-label={`rectangle ${i + 1}`}
+                data-feature-cx={(rx + rw / 2) / W}
+                data-feature-cy={(ry + rh / 2) / H}
+                data-feature-w={rw / W}
+                data-feature-h={rh / H}
+              />
+            );
+          })}
+        </g>
 
         {/* curve */}
-        <path d={curvePath} fill="none" stroke={COLOR_CURVE} strokeWidth={2.5} />
+        <path
+          d={curvePath}
+          fill="none" stroke={COLOR_CURVE} strokeWidth={2.5}
+          data-feature={N.curve}
+          data-feature-label={exprLabel || 'f(x)'}
+          data-feature-cx={0.5}
+          data-feature-cy={((PAD_T + plotH / 3)) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={20 / H}
+        />
 
         {/* axes (drawn over rects) */}
         {yMin <= 0 && yMax >= 0 && (
@@ -112,7 +159,16 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
 
         {/* labels */}
         {exprLabel && (
-          <text x={PAD_L + 8} y={PAD_T + 14} fontSize={13} fontWeight={600} fill={COLOR_CURVE}>
+          <text
+            x={PAD_L + 8} y={PAD_T + 14}
+            fontSize={13} fontWeight={600} fill={COLOR_CURVE}
+            data-feature={N.exprLabel}
+            data-feature-label={exprLabel}
+            data-feature-cx={(PAD_L + 60) / W}
+            data-feature-cy={(PAD_T + 12) / H}
+            data-feature-w={120 / W}
+            data-feature-h={18 / H}
+          >
             {exprLabel}
           </text>
         )}

@@ -61,6 +61,13 @@ import {
   solveSentenceDiagram,
   solveHistoricalTimeline,
   solveHierarchyPyramid,
+  // Phase 6 — advanced math.
+  buildUnitCircleManifest as buildCatalogUnitCircleManifest,
+  buildTransformationManifest,
+  buildInequalityGraphManifest,
+  solveUnitCircle,
+  solveTransformation,
+  solveInequalityGraph,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   buildCycleStagesManifest,
@@ -79,6 +86,76 @@ import {
   solvePeriodicTableHighlight,
   solvePunnettSquare,
 } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
+import {
+  buildPhasesOfMoonManifest,
+  buildSolarSystemManifest,
+  buildEarthLayersManifest,
+  buildEclipseDiagramManifest,
+  buildSeasonsDiagramManifest,
+  buildPlateTectonicsManifest,
+  solvePhasesOfMoon,
+  solveSolarSystem,
+  solveEarthLayers,
+  solveEclipseDiagram,
+  solveSeasonsDiagram,
+  solvePlateTectonics,
+} from '@/lib/tutor/diagrams/catalog/kinds/earth-space';
+import {
+  // Aliased: the legacy `show_flowchart` tool already imports a
+  // function named `buildFlowchartManifest` from a different module.
+  buildFlowchartSimpleManifest as buildCatalogFlowchartSimpleManifest,
+  buildStateMachineManifest,
+  buildBinaryTreeManifest,
+  buildTruthTableManifest as buildCatalogTruthTableManifest,
+  buildLogicGateManifest,
+  solveFlowchartSimple,
+  solveStateMachine,
+  solveBinaryTree,
+  solveTruthTable,
+  solveLogicGate,
+} from '@/lib/tutor/diagrams/catalog/kinds/cs';
+import {
+  buildProductionPossibilitiesManifest,
+  buildBusinessCycleManifest,
+  buildAggregateDemandSupplyManifest,
+  buildMoneyMarketManifest,
+  buildLoanableFundsManifest,
+  buildPhillipsCurveManifest,
+  buildForeignExchangeMarketManifest,
+  solveProductionPossibilities,
+  solveBusinessCycle,
+  solveAggregateDemandSupply,
+  solveMoneyMarket,
+  solveLoanableFunds,
+  solvePhillipsCurve,
+  solveForeignExchangeMarket,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  buildRiemannSumManifest,
+  buildSlopeFieldManifest,
+  buildParametricCurveManifest,
+  buildPolarGraphManifest,
+  buildTaylorPolynomialOverlayManifest,
+  solveRiemannSum,
+  solveSlopeField,
+  solveParametricCurve,
+  solvePolarGraph,
+  solveTaylorPolynomialOverlay,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
+import {
+  buildHistogramManifest,
+  buildNormalCurveManifest,
+  buildScatterRegressionManifest,
+  solveHistogram,
+  solveNormalCurve,
+  solveScatterRegression,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
+import {
+  buildPopulationPyramidManifest,
+  buildClimateDiagramManifest,
+  solvePopulationPyramid,
+  solveClimateDiagram,
+} from '@/lib/tutor/diagrams/catalog/kinds/environmental';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -924,6 +1001,230 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solvePunnettSquare(params);
         return buildPunnettSquareManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 4 — earth & space.
+    case 'phases_of_moon': {
+      try {
+        const figure = solvePhasesOfMoon(params);
+        return buildPhasesOfMoonManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'solar_system': {
+      try {
+        const figure = solveSolarSystem(params);
+        return buildSolarSystemManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'earth_layers': {
+      try {
+        const figure = solveEarthLayers(params);
+        return buildEarthLayersManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'eclipse_diagram': {
+      try {
+        const figure = solveEclipseDiagram(params);
+        return buildEclipseDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'seasons_diagram': {
+      try {
+        const figure = solveSeasonsDiagram(params);
+        return buildSeasonsDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'plate_tectonics': {
+      try {
+        const figure = solvePlateTectonics(params);
+        return buildPlateTectonicsManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 5 — CS.
+    case 'flowchart_simple': {
+      try {
+        const figure = solveFlowchartSimple(params);
+        return buildCatalogFlowchartSimpleManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'state_machine': {
+      try {
+        const figure = solveStateMachine(params);
+        return buildStateMachineManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'binary_tree': {
+      try {
+        const figure = solveBinaryTree(params);
+        return buildBinaryTreeManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'truth_table': {
+      try {
+        const figure = solveTruthTable(params);
+        return buildCatalogTruthTableManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'logic_gate': {
+      try {
+        const figure = solveLogicGate(params);
+        return buildLogicGateManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 6 — advanced math.
+    case 'unit_circle': {
+      try {
+        const figure = solveUnitCircle(params);
+        return buildCatalogUnitCircleManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'transformation': {
+      try {
+        const figure = solveTransformation(params);
+        return buildTransformationManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'inequality_graph': {
+      try {
+        const figure = solveInequalityGraph(params);
+        return buildInequalityGraphManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 9 — economics.
+    case 'production_possibilities': {
+      try {
+        const figure = solveProductionPossibilities(params);
+        return buildProductionPossibilitiesManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'business_cycle': {
+      try {
+        const figure = solveBusinessCycle(params);
+        return buildBusinessCycleManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'aggregate_demand_supply': {
+      try {
+        const figure = solveAggregateDemandSupply(params);
+        return buildAggregateDemandSupplyManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'money_market': {
+      try {
+        const figure = solveMoneyMarket(params);
+        return buildMoneyMarketManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'loanable_funds': {
+      try {
+        const figure = solveLoanableFunds(params);
+        return buildLoanableFundsManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'phillips_curve': {
+      try {
+        const figure = solvePhillipsCurve(params);
+        return buildPhillipsCurveManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'foreign_exchange_market': {
+      try {
+        const figure = solveForeignExchangeMarket(params);
+        return buildForeignExchangeMarketManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 10 — calculus.
+    case 'riemann_sum': {
+      try {
+        const figure = solveRiemannSum(params);
+        return buildRiemannSumManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'slope_field': {
+      try {
+        const figure = solveSlopeField(params);
+        return buildSlopeFieldManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'parametric_curve': {
+      try {
+        const figure = solveParametricCurve(params);
+        return buildParametricCurveManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'polar_graph': {
+      try {
+        const figure = solvePolarGraph(params);
+        return buildPolarGraphManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'taylor_polynomial_overlay': {
+      try {
+        const figure = solveTaylorPolynomialOverlay(params);
+        return buildTaylorPolynomialOverlayManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 11 — statistics.
+    case 'histogram': {
+      try {
+        const figure = solveHistogram(params);
+        return buildHistogramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'normal_curve': {
+      try {
+        const figure = solveNormalCurve(params);
+        return buildNormalCurveManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'scatterplot_regression': {
+      try {
+        const figure = solveScatterRegression(params);
+        return buildScatterRegressionManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 12 — environmental / demographic.
+    case 'population_pyramid': {
+      try {
+        const figure = solvePopulationPyramid(params);
+        return buildPopulationPyramidManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'climate_diagram': {
+      try {
+        const figure = solveClimateDiagram(params);
+        return buildClimateDiagramManifest(figure);
       } catch { /* fall through */ }
       break;
     }

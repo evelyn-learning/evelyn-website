@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { BusinessCycleFigure } from '@/lib/tutor/diagrams/catalog/kinds/economics';
+import {
+  businessCycleFeatureNames,
+  type BusinessCycleFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const COLOR_TREND = '#9ca3af';
 const COLOR_CYCLE = '#1f2937';
@@ -12,6 +15,7 @@ const COLOR_MARKER = '#dc2626';
 
 export function BusinessCycleRenderer({ figure }: { figure: BusinessCycleFigure }) {
   const { cycles, amplitude, trendSlope, showTrend, showOutputGap, labels, markers, title } = figure;
+  const N = businessCycleFeatureNames;
   const W = 640;
   const H = 360;
   const PAD_L = 60;
@@ -35,21 +39,16 @@ export function BusinessCycleRenderer({ figure }: { figure: BusinessCycleFigure 
     trendPath.push(`${i === 0 ? 'M' : 'L'} ${xAt(t).toFixed(2)} ${yAt(trendAt(t)).toFixed(2)}`);
   }
 
-  // Auto-detect peaks and troughs if no markers supplied.
-  const autoMarkers: BusinessCycleFigure['markers'] = [];
-  if (!markers && labels !== 'none') {
-    for (let i = 1; i < segments; i++) {
-      const t = i / segments;
-      const dPrev = cycleAt(t) - cycleAt((i - 1) / segments);
-      const dNext = cycleAt((i + 1) / segments) - cycleAt(t);
-      if (dPrev > 0 && dNext < 0) autoMarkers.push({ t, label: 'Peak' });
-      if (dPrev < 0 && dNext > 0) autoMarkers.push({ t, label: 'Trough' });
-    }
-  }
-  const drawnMarkers = markers ?? autoMarkers;
+  // Markers are populated by the solver (auto-detected if brain didn't
+  // pass them). Renderer just renders what the figure carries.
+  const drawnMarkers = markers ?? [];
 
   return (
-    <div className="business-cycle-renderer w-full flex flex-col items-center">
+    <div
+      className="business-cycle-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'business cycle'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[680px]">
         <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke="#1f2937" strokeWidth={1.5} />
@@ -75,23 +74,47 @@ export function BusinessCycleRenderer({ figure }: { figure: BusinessCycleFigure 
           })}
 
         {showTrend && (
-          <>
+          <g
+            data-feature={N.trend}
+            data-feature-label="trend"
+            data-feature-cx={xAt(0.5) / W}
+            data-feature-cy={yAt(trendAt(0.5)) / H}
+            data-feature-w={plotW / W}
+            data-feature-h={20 / H}
+          >
             <path d={trendPath.join(' ')} stroke={COLOR_TREND} strokeWidth={2} fill="none" strokeDasharray="6 4" />
             {labels !== 'none' && (
               <text x={xAt(0.96)} y={yAt(trendAt(0.96)) - 6} fontSize={11} fill={COLOR_TREND} textAnchor="end" fontStyle="italic">
                 Long-run trend
               </text>
             )}
-          </>
+          </g>
         )}
 
-        <path d={cyclePath.join(' ')} stroke={COLOR_CYCLE} strokeWidth={2.5} fill="none" />
+        <g
+          data-feature={N.cycle}
+          data-feature-label="cycle"
+          data-feature-cx={xAt(0.5) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={plotH / H}
+        >
+          <path d={cyclePath.join(' ')} stroke={COLOR_CYCLE} strokeWidth={2.5} fill="none" />
+        </g>
 
         {drawnMarkers && drawnMarkers.map((m, i) => {
           const x = xAt(m.t);
           const yc = yAt(cycleAt(m.t));
           return (
-            <g key={`mk-${i}`}>
+            <g
+              key={`mk-${i}`}
+              data-feature={N.marker(m.label, i)}
+              data-feature-label={m.label}
+              data-feature-cx={x / W}
+              data-feature-cy={yc / H}
+              data-feature-w={50 / W}
+              data-feature-h={32 / H}
+            >
               {(m.showLine ?? true) && (
                 <line x1={x} y1={yc} x2={x} y2={PAD_T + plotH + 4} stroke={COLOR_MARKER} strokeDasharray="3 3" strokeWidth={1} />
               )}

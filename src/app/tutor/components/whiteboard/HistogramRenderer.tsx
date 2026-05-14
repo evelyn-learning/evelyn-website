@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import type { HistogramFigure } from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
+import {
+  histogramFeatureNames,
+  type HistogramFigure,
+} from '@/lib/tutor/diagrams/catalog/kinds/math-statistics';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_BAR_FILL = '#93c5fd';
@@ -11,6 +14,7 @@ const COLOR_MEDIAN = '#16a34a';
 
 export function HistogramRenderer({ figure }: { figure: HistogramFigure }) {
   const { bins, xMin, xMax, yMax, xLabel, yLabel, title, showCounts, mean, median, mode } = figure;
+  const N = histogramFeatureNames;
 
   const W = 560;
   const H = 380;
@@ -29,7 +33,11 @@ export function HistogramRenderer({ figure }: { figure: HistogramFigure }) {
   for (let v = 0; v <= yMax + 1e-9; v += yStep) yTicks.push(v);
 
   return (
-    <div className="histogram-renderer w-full flex flex-col items-center">
+    <div
+      className="histogram-renderer w-full flex flex-col items-center"
+      data-feature={N.diagram}
+      data-feature-label={title || 'histogram'}
+    >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* horizontal gridlines */}
@@ -37,39 +45,49 @@ export function HistogramRenderer({ figure }: { figure: HistogramFigure }) {
           <line key={`gy-${i}`} x1={PAD_L} y1={yAt(ty)} x2={PAD_L + plotW} y2={yAt(ty)} stroke="#e5e7eb" strokeWidth={1} />
         ))}
 
-        {/* bars (touching) */}
-        {bins.map((b, i) => {
-          const x1 = xAt(b.lower);
-          const x2 = xAt(b.upper);
-          const y1 = yAt(b.count);
-          const yBottom = yAt(0);
-          return (
-            <g key={i}>
-              <rect
-                x={x1}
-                y={y1}
-                width={Math.max(1, x2 - x1)}
-                height={Math.max(0, yBottom - y1)}
-                fill={COLOR_BAR_FILL}
-                fillOpacity={0.7}
-                stroke={COLOR_BAR_STROKE}
-                strokeWidth={1.2}
-              />
-              {showCounts && b.count > 0 && (
-                <text
-                  x={(x1 + x2) / 2}
-                  y={y1 - 4}
-                  fontSize={11}
-                  textAnchor="middle"
-                  fill={COLOR_BAR_STROKE}
-                  fontWeight={600}
-                >
-                  {mode === 'relative' ? Number(b.count.toFixed(3)) : b.count}
-                </text>
-              )}
-            </g>
-          );
-        })}
+        {/* bars (touching) — wrapped so "bars" collective resolves. */}
+        <g
+          data-feature={N.bars}
+          data-feature-label="bars"
+          data-feature-cx={(PAD_L + plotW / 2) / W}
+          data-feature-cy={(PAD_T + plotH / 2) / H}
+          data-feature-w={plotW / W}
+          data-feature-h={plotH / H}
+        >
+          {bins.map((b, i) => {
+            const x1 = xAt(b.lower);
+            const x2 = xAt(b.upper);
+            const y1 = yAt(b.count);
+            const yBottom = yAt(0);
+            const bw = Math.max(1, x2 - x1);
+            const bh = Math.max(0, yBottom - y1);
+            return (
+              <g
+                key={i}
+                data-feature={N.bin(i)}
+                data-feature-label={`bin [${b.lower}, ${b.upper})`}
+                data-feature-cx={(x1 + bw / 2) / W}
+                data-feature-cy={(y1 + bh / 2) / H}
+                data-feature-w={bw / W}
+                data-feature-h={Math.max(bh, 20) / H}
+              >
+                <rect
+                  x={x1} y={y1}
+                  width={bw} height={bh}
+                  fill={COLOR_BAR_FILL} fillOpacity={0.7} stroke={COLOR_BAR_STROKE} strokeWidth={1.2}
+                />
+                {showCounts && b.count > 0 && (
+                  <text
+                    x={(x1 + x2) / 2} y={y1 - 4}
+                    fontSize={11} textAnchor="middle" fill={COLOR_BAR_STROKE} fontWeight={600}
+                  >
+                    {mode === 'relative' ? Number(b.count.toFixed(3)) : b.count}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </g>
 
         {/* mean / median markers — when both present and close, push labels
             apart by anchoring in opposite directions so they don't overlap */}
@@ -93,20 +111,34 @@ export function HistogramRenderer({ figure }: { figure: HistogramFigure }) {
           return (
             <>
               {meanX !== null && (
-                <>
+                <g
+                  data-feature={N.mean}
+                  data-feature-label={`mean = ${mean}`}
+                  data-feature-cx={meanX / W}
+                  data-feature-cy={(PAD_T + plotH / 2) / H}
+                  data-feature-w={28 / W}
+                  data-feature-h={plotH / H}
+                >
                   <line x1={meanX} y1={PAD_T} x2={meanX} y2={PAD_T + plotH} stroke={COLOR_MEAN} strokeWidth={2} strokeDasharray="6 4" />
                   <text x={meanLabelX} y={PAD_T + 12} fontSize={11} fill={COLOR_MEAN} fontWeight={600} textAnchor={meanAnchor}>
                     x̄ = {Number((mean as number).toFixed(2))}
                   </text>
-                </>
+                </g>
               )}
               {medianX !== null && (
-                <>
+                <g
+                  data-feature={N.median}
+                  data-feature-label={`median = ${median}`}
+                  data-feature-cx={medianX / W}
+                  data-feature-cy={(PAD_T + plotH / 2) / H}
+                  data-feature-w={28 / W}
+                  data-feature-h={plotH / H}
+                >
                   <line x1={medianX} y1={PAD_T} x2={medianX} y2={PAD_T + plotH} stroke={COLOR_MEDIAN} strokeWidth={2} strokeDasharray="2 3" />
                   <text x={medianLabelX} y={PAD_T + (close ? 12 : 26)} fontSize={11} fill={COLOR_MEDIAN} fontWeight={600} textAnchor={medianAnchor}>
                     med = {Number((median as number).toFixed(2))}
                   </text>
-                </>
+                </g>
               )}
             </>
           );
