@@ -6164,6 +6164,95 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Affirmative-after-continuation check (former Rule 15, moved
+        // to orchestrator 2026-05-14). When the previous tutor turn
+        // ended with a continuation question ("Ready to move on?",
+        // "Should we continue?", etc.) and the student replies with a
+        // plain affirmative ("yes", "yeah", "sure", "ok", "ready"),
+        // the brain MUST advance — but it commonly re-emits scribbles
+        // on the same segment instead. Skip-button is handled above;
+        // this catches the verbal-affirmative variant. Skip the
+        // check when the skip marker is present (already handled) or
+        // when the student message carries content beyond the
+        // affirmative (e.g. "yes but why X?" — let the brain teach).
+        if (!attemptKilled) {
+          const lastTutorMsg = transcriptRef.current
+            .filter((e) => e.role === 'tutor')
+            .slice(-2, -1)[0]?.text || ''; // -2 because the streaming entry for THIS turn is -1
+          const lastStudentMsgForAffirm = transcriptRef.current
+            .filter((e) => e.role === 'student')
+            .slice(-1)[0]?.text || '';
+          // Continuation-question detector: tutor's prior turn ended
+          // with a "shall we move on?"-style ask. Conservative —
+          // requires the question mark within ~80 chars of an
+          // advance-intent verb so we don't false-fire on rhetorical
+          // "what do you think?".
+          const continuationQuestionRegex = /\b(?:ready (?:to|for)|want to|should we|shall we|on to the|move on|got it|next one)\b[^?]{0,80}\?\s*$/i;
+          // Affirmative detector: student message is JUST an
+          // affirmative (one or two words). Compound replies like
+          // "yes but why X?" do NOT match — those carry teaching
+          // content the brain should address.
+          const affirmativeOnlyRegex = /^\s*(?:yes|yeah|yep|yup|yas|sure|ok|okay|ready|alright|sounds good|let'?s go|let'?s do it|onwards?|next|continue|go|good|cool|fine|great|all good)[\s.!,]*$/i;
+          const isAffirmative = affirmativeOnlyRegex.test(lastStudentMsgForAffirm.trim());
+          const continuationAsked = continuationQuestionRegex.test(lastTutorMsg.trim());
+          const isSkipMsg = /\[Skip-button-clicked/i.test(lastStudentMsgForAffirm);
+          const alreadyAdvanced = totalToolNamesSeen.some(
+            (n) => n === 'advance_lesson' || n === 'generate_problem',
+          );
+          if (
+            continuationAsked &&
+            isAffirmative &&
+            !isSkipMsg &&
+            !alreadyAdvanced
+          ) {
+            const reason =
+              `Your previous turn ended with a continuation question ("${lastTutorMsg.slice(-80)}") and the student replied with a plain affirmative ("${lastStudentMsgForAffirm.trim()}"). ` +
+              `That's a forward signal — the lesson pointer MUST move. You emitted [${totalToolNamesSeen.join(', ') || '(none)'}] this turn without advance_lesson or generate_problem, so the lesson is stuck on the same segment. ` +
+              `Re-emit your response and INCLUDE mark_segment_complete for the current segment AND advance_lesson({to: "next"}). Do NOT re-render or re-scribble the current segment's content. If you have something useful to say about the prior segment, keep it to one short sentence BEFORE the advance.`;
+            rejectionsThisAttempt.push({ action: 'affirmative_no_advance', reason });
+            await performKill();
+            console.warn('[brain-orchestrator] Affirmative-no-advance KILL: student said "', lastStudentMsgForAffirm.trim(), '" after a continuation question, brain emitted no advance.');
+            onDebugEvent?.('affirmative_no_advance', `student="${lastStudentMsgForAffirm.slice(0, 30)}"`);
+          }
+        }
+
+        // Try-yourself answer-reveal check (former Rule 18, moved to
+        // orchestrator 2026-05-14). When the brain emits show_problem
+        // / show_segment_card resolving to a try_yourself segment AND
+        // also emits show_equation / show_solution in the SAME turn,
+        // the answer is revealed alongside the question — collapses
+        // the learning loop. Reject the answer-revealing emission;
+        // brain can re-emit it next turn after the student attempts.
+        // Limited to try_yourself segments — worked_example
+        // intentionally walks through the solution, so show_equation
+        // alongside the problem there is correct.
+        if (!attemptKilled) {
+          const planForRule18 = lessonPlanRef.current;
+          const segIdForRule18 = currentSegmentIdRef.current;
+          if (planForRule18 && segIdForRule18) {
+            const segForRule18 = getSegment(planForRule18, segIdForRule18);
+            const isTryYourself = segForRule18?.kind === 'try_yourself';
+            if (isTryYourself) {
+              const emittedShowProblem = totalToolNamesSeen.some(
+                (n) => n === 'show_problem' || n === 'show_segment_card',
+              );
+              const emittedAnswerReveal = totalToolNamesSeen.some(
+                (n) => n === 'show_equation' || n === 'show_solution',
+              );
+              if (emittedShowProblem && emittedAnswerReveal) {
+                const reason =
+                  `You emitted both show_problem/show_segment_card AND show_equation/show_solution for try_yourself segment "${segIdForRule18}" in the same turn — that reveals the answer alongside the question and collapses the learning loop. ` +
+                  `Re-emit this turn WITHOUT the show_equation/show_solution. Present only the problem and wait for the student's attempt. After the student answers (correctly or not), THAT'S when you reveal the worked answer / equation in a follow-up turn. ` +
+                  `Tool whitelist for this turn: show_problem (or show_segment_card), new_page, scribble/handwrite on the problem card, and a brief verbal prompt. No equation, no solution, no answer narration.`;
+                rejectionsThisAttempt.push({ action: 'try_yourself_answer_reveal', reason });
+                await performKill();
+                console.warn(`[brain-orchestrator] try_yourself answer-reveal KILL on segment "${segIdForRule18}".`);
+                onDebugEvent?.('try_yourself_answer_reveal', `segId="${segIdForRule18}" tools=[${totalToolNamesSeen.join(', ')}]`);
+              }
+            }
+          }
+        }
+
         // Judge LLM groundedness check (Lever B1). Only fires when the
         // attempt produced spoken text AND wasn't already killed by a
         // structural rejection (no point judging speech we're about to
