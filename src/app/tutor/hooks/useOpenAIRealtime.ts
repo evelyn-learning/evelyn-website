@@ -461,6 +461,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isPlayingRef = useRef(false);
   const currentResponseTextRef = useRef('');
   const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // B1 hard-cancel (2026-05-14): track the in-flight Realtime response id
+  // and the set of ids we've cancelled via clearSpeechQueue. The WS
+  // `response.cancel` we send is async — the server keeps streaming
+  // `response.audio.delta` events for tens of ms after we send cancel.
+  // Without this filter, those in-flight deltas land in audioQueueRef
+  // AFTER clearSpeechQueue emptied it, and play interleaved with the
+  // kill-bridge / retry audio. The filter drops any delta whose
+  // response_id is in cancelledResponseIdsRef.
+  const currentResponseIdRef = useRef<string | null>(null);
+  const cancelledResponseIdsRef = useRef<Set<string>>(new Set());
   // Anti-double-response: track when last response finished and when user last spoke
   const lastResponseDoneRef = useRef<number>(0);
   const lastUserInputRef = useRef<number>(0);
@@ -839,6 +849,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         case 'response.audio.delta':
           // Audio chunk from the model
           if (data.delta) {
+            // B1 hard-cancel: drop deltas that belong to a response we've
+            // already cancelled. Otherwise the post-cancel in-flight
+            // chunks slip into audioQueueRef after clearSpeechQueue
+            // emptied it, and play on top of the bridge / retry audio.
+            const respId = typeof data.response_id === 'string' ? data.response_id : null;
+            if (respId && cancelledResponseIdsRef.current.has(respId)) {
+              break;
+            }
             console.log('[Realtime] Audio chunk received, length:', data.delta.length);
             queueAudio(data.delta);
           }
@@ -872,6 +890,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
         // Cancel unwanted follow-up responses (model sends multiple without user input)
         case 'response.created': {
+          // B1 hard-cancel: track this response's id so clearSpeechQueue
+          // can register it in the cancelled set on KILL. Cleared on
+          // response.done (the response completed naturally — no cancel
+          // needed and any further deltas after this are unexpected).
+          const createdRespId = data.response?.id;
+          if (typeof createdRespId === 'string') {
+            currentResponseIdRef.current = createdRespId;
+          }
           const timeSinceLastResponse = Date.now() - lastResponseDoneRef.current;
           const timeSinceUserInput = Date.now() - lastUserInputRef.current;
           const noUserInputSinceLastResponse =
@@ -910,6 +936,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           console.log('[Realtime] Response complete');
           lastResponseDoneRef.current = Date.now();
           currentResponseTextRef.current = '';
+          // B1: response finished naturally — no longer in-flight for
+          // cancel purposes. Don't touch cancelledResponseIdsRef here:
+          // a response can transition to done AFTER we cancelled it
+          // (server confirms cancel), in which case keeping the id in
+          // the cancelled set is correct so any late deltas still drop.
+          currentResponseIdRef.current = null;
           // Drain one queued speakText sentence (Phase 5 streaming brain).
           // Idempotent: if no queue, this just clears the in-flight flag.
           // Must run BEFORE the listening-state branch below, so a queued
@@ -2041,6 +2073,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       stopped = true;
     }
     if (speakTextInFlightRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
+      // B1 hard-cancel: register the in-flight response id BEFORE
+      // sending response.cancel so any audio.delta still in transit
+      // from the server drops on arrival instead of slipping into
+      // audioQueueRef after we just emptied it.
+      const cancelId = currentResponseIdRef.current;
+      if (cancelId) {
+        cancelledResponseIdsRef.current.add(cancelId);
+        // Cap the set so repeated kills over a long session don't grow
+        // it unbounded. 64 is generous — the most aggressive observed
+        // session has ~10 kills total.
+        if (cancelledResponseIdsRef.current.size > 64) {
+          const first = cancelledResponseIdsRef.current.values().next().value;
+          if (first) cancelledResponseIdsRef.current.delete(first);
+        }
+      }
       wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
       // Stop client-side audio that's already arrived.
       try { playbackSourceRef.current?.stop(); } catch { /* may already be stopped */ }

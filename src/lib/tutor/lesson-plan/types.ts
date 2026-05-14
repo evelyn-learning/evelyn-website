@@ -59,6 +59,24 @@ export type Segment =
   | SegmentRecap
   | SegmentExtension;
 
+/** Authored contract that pins down the EXACT tool emission for a
+ *  segment. When set, the orchestrator deep-equals the brain's emitted
+ *  params against `params` (for the matching `tool` name) and rejects
+ *  via the existing validator-feedback retry loop on mismatch — same
+ *  pattern as the show_problem authored-target check. Use this for
+ *  segments where determinism matters (test plans, segments with
+ *  scripted concrete examples). Leave unset for segments where the
+ *  brain has authoring freedom. */
+export interface PrescribedRender {
+  /** The tool name the brain MUST emit, e.g. "show_diagram",
+   *  "show_problem", "show_equation". Match is by exact string. */
+  tool: string;
+  /** The params object the brain MUST emit verbatim. Deep-equal compared
+   *  against the brain's emission. Field order doesn't matter; types
+   *  do (string "5" !== number 5). */
+  params: Record<string, unknown>;
+}
+
 interface SegmentBase {
   /** Stable id within the plan, e.g. "concept-1", "try-2". Lets the brain
    *  branch to a specific segment via `advance_lesson({ to })`. */
@@ -69,6 +87,12 @@ interface SegmentBase {
   /** Approximate time budget for this segment, in minutes. Used by the
    *  pedagogy layer to pace the lesson. */
   estimatedMinutes?: number;
+  /** Optional authored contract for the SPECIFIC tool emission this
+   *  segment requires. When set, the orchestrator's validator rejects
+   *  any matching-tool emission whose params differ. Brain corrects via
+   *  the existing retry loop. Use for test plans that need a specific
+   *  diagram/problem to render. */
+  prescribedRender?: PrescribedRender;
 }
 
 /** Opening hook — pique curiosity, connect to prior knowledge, real-world

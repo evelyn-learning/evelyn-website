@@ -56,7 +56,24 @@ function parseSegment(raw: unknown, i: number): Segment {
   const kind = requireString(r, path, 'kind');
   const teacherNote = optionalString(r, 'teacherNote');
   const estimatedMinutes = typeof r.estimatedMinutes === 'number' ? r.estimatedMinutes : undefined;
-  const base = { id, teacherNote, estimatedMinutes };
+  // prescribedRender: authored contract for the exact tool emission this
+  // segment requires. Must be { tool: string; params: object } or absent.
+  let prescribedRender: { tool: string; params: Record<string, unknown> } | undefined;
+  const rawPrescribed = r.prescribedRender;
+  if (rawPrescribed !== undefined && rawPrescribed !== null) {
+    if (typeof rawPrescribed !== 'object' || Array.isArray(rawPrescribed)) {
+      throw new PlanParseError(`${path}.prescribedRender`, 'must be an object');
+    }
+    const pr = rawPrescribed as { tool?: unknown; params?: unknown };
+    if (typeof pr.tool !== 'string' || pr.tool.length === 0) {
+      throw new PlanParseError(`${path}.prescribedRender.tool`, 'must be a non-empty string');
+    }
+    if (!pr.params || typeof pr.params !== 'object' || Array.isArray(pr.params)) {
+      throw new PlanParseError(`${path}.prescribedRender.params`, 'must be an object');
+    }
+    prescribedRender = { tool: pr.tool, params: pr.params as Record<string, unknown> };
+  }
+  const base = { id, teacherNote, estimatedMinutes, prescribedRender };
 
   switch (kind) {
     case 'hook':

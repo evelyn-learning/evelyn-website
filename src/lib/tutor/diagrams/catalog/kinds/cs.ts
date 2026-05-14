@@ -314,16 +314,46 @@ export function buildBinaryTreeManifest(figure: BinaryTreeFigure): FeatureManife
       scribbleable: true,
     },
   ];
-  function walk(n: BinaryTreeNode, path: string, depth: number) {
+  function walk(
+    n: BinaryTreeNode,
+    path: string,
+    depth: number,
+    parent: BinaryTreeNode | null,
+    side: 'left' | 'right' | null,
+  ) {
     const isRoot = path === '';
     const isLeaf = !n.left && !n.right;
+    // Tag order: position (parent/side) first so the description reads
+    // structurally ("node X (right child of Y, leaf)" not "(leaf, right
+    // child of Y)"). Position is what the judge needs to reason about
+    // BST structure — without it, the board summary is a flat depth
+    // list and the judge guesses (often wrong, observed Phase 5
+    // session 2026-05-14 where it consistently inverted left/right).
     const tags: string[] = [];
+    if (!isRoot && parent && side) tags.push(`${side} child of node "${parent.value}"`);
     if (isRoot) tags.push('root');
     if (isLeaf) tags.push('leaf');
+    const tagStr = tags.length ? ` (${tags.join(', ')})` : '';
+    const positionLabels: string[] = [];
+    if (!isRoot && parent && side) {
+      positionLabels.push(
+        `${side} child of ${parent.value}`,
+        `the ${side} child of ${parent.value}`,
+        `${side} child of node ${parent.value}`,
+        `${side} child of node "${parent.value}"`,
+        `the ${side} child of node "${parent.value}"`,
+        `node "${n.value}" (${side} child of node "${parent.value}")`,
+      );
+      if (isLeaf) {
+        positionLabels.push(
+          `node "${n.value}" (${side} child of node "${parent.value}", leaf)`,
+        );
+      }
+    }
     features.push({
       name: N.node(path),
       kind: 'label',
-      description: `node "${n.value}"${tags.length ? ` (${tags.join(', ')})` : ''} at depth ${depth}`,
+      description: `node "${n.value}"${tagStr} at depth ${depth}`,
       labels: [
         n.value, `the ${n.value}`, `"${n.value}"`,
         `node ${n.value}`, `the node ${n.value}`,
@@ -341,14 +371,15 @@ export function buildBinaryTreeManifest(figure: BinaryTreeFigure): FeatureManife
         ...(isRoot && isLeaf ? [
           `node "${n.value}" (root, leaf)`,
         ] : []),
+        ...positionLabels,
       ],
       displayName: n.value,
       scribbleable: true,
     });
-    if (n.left) walk(n.left, path + 'L', depth + 1);
-    if (n.right) walk(n.right, path + 'R', depth + 1);
+    if (n.left) walk(n.left, path + 'L', depth + 1, n, 'left');
+    if (n.right) walk(n.right, path + 'R', depth + 1, n, 'right');
   }
-  walk(figure.root, '', 0);
+  walk(figure.root, '', 0, null, null);
   return features;
 }
 

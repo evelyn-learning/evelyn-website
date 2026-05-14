@@ -191,6 +191,31 @@ import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 
+/** Strict deep-equal for prescribedRender validator. Returns true when
+ *  `a` and `b` are structurally identical (same keys + same primitive
+ *  values + element-wise array equality). Types are NOT coerced: the
+ *  string "5" is not equal to the number 5. Used to verify the brain's
+ *  emitted tool args match the lesson-plan-authored prescribed params
+ *  verbatim. */
+function deepEqualParams(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (a === null || b === null) return a === b;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((v, i) => deepEqualParams(v, b[i]));
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    const ao = a as Record<string, unknown>;
+    const bo = b as Record<string, unknown>;
+    const ak = Object.keys(ao); const bk = Object.keys(bo);
+    if (ak.length !== bk.length) return false;
+    return ak.every((k) => Object.prototype.hasOwnProperty.call(bo, k) && deepEqualParams(ao[k], bo[k]));
+  }
+  if (typeof a === 'number' && typeof b === 'number' && Number.isNaN(a) && Number.isNaN(b)) return true;
+  return false;
+}
+
 interface VoiceTutorRealtimeProps {
   subject: string;
   topic: string;
@@ -2809,7 +2834,20 @@ export function VoiceTutorRealtime({
     // in the prior batch.)
     const justSolvedPending = recentlyFinishedProblemRef.current;
     const topicShiftPending = topicShiftPendingRef.current;
-    // Tutor-side same-context check also suppresses auto-newPage.
+    // Student-redraw intent: explicit "draw this", "show me the tree
+    // again", "redraw it", etc. Triggers auto-newPage even without a
+    // justSolved / topicShift signal, AND bypasses the continuation /
+    // tutor-context suppression branches below (the student explicitly
+    // asked for a fresh look — we should honor that over those guards).
+    // Built 2026-05-14 after Phase 5 BST session: student asked "can
+    // you draw this tree to show me?" — brain emitted show_diagram for
+    // the after-insertion BST → signature-dedup'd against an earlier
+    // render → silent-dropped, student saw nothing despite brain
+    // narrating "Sure, here's the final tree…".
+    const redrawIntentRegex = /\b(?:redraw|draw|show|render|display)\b.{0,60}\b(?:this|that|it|tree|diagram|graph|chart|figure|picture|image|again|once more)\b/i;
+    const redrawRequested = redrawIntentRegex.test(lastStudentText);
+    // Tutor-side same-context check also suppresses auto-newPage —
+    // but not when the student explicitly requested a redraw.
     const tutorCtxAuto = (justSolvedPending || topicShiftPending) && processed.length > 0
       ? detectTutorSameContext({
           batch: processed,
@@ -2819,18 +2857,19 @@ export function VoiceTutorRealtime({
       : { same: false, signals: [] as Array<'A' | 'B' | 'C' | 'D'>, decisive: false, reason: '' };
     const tutorCtxAutoStrip = tutorCtxAuto.same
       && decidePageStrip({ tutorContext: tutorCtxAuto, studentText: lastStudentText }).stripNewPage;
-    if ((justSolvedPending || topicShiftPending) && processed.length > 0 && continuationGuardActive) {
+    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawRequested) && processed.length > 0;
+    if (autoNewPageTrigger && !redrawRequested && continuationGuardActive) {
       console.log('[VoiceTutorRealtime] Suppressed auto-newPage — student said a continuation:', lastStudentText.slice(0, 60));
       onDebugEvent?.('auto_new_page_suppressed_continuation', `"${lastStudentText.slice(0, 40)}…"`);
       // Clear both flags so this path doesn't fire again next batch.
       recentlyFinishedProblemRef.current = null;
       topicShiftPendingRef.current = null;
-    } else if ((justSolvedPending || topicShiftPending) && processed.length > 0 && tutorCtxAutoStrip) {
+    } else if (autoNewPageTrigger && !redrawRequested && tutorCtxAutoStrip) {
       console.log('[VoiceTutorRealtime] Suppressed auto-newPage — tutor same-context:', tutorCtxAuto.reason);
       onDebugEvent?.('auto_new_page_suppressed_tutor_context', tutorCtxAuto.reason);
       recentlyFinishedProblemRef.current = null;
       topicShiftPendingRef.current = null;
-    } else if ((justSolvedPending || topicShiftPending) && processed.length > 0) {
+    } else if (autoNewPageTrigger) {
       // All show_* actions that represent "fresh teaching content" — i.e.
       // anything that should start on its own whiteboard page. Meta-
       // actions (scribble/scrollTo/newPage/clear/goToPage) and pure
@@ -2892,14 +2931,16 @@ export function VoiceTutorRealtime({
         const nextTitle =
           ('label' in firstTeachingCmd && typeof (firstTeachingCmd as { label?: string }).label === 'string' && (firstTeachingCmd as { label?: string }).label)
           || ('title' in firstTeachingCmd && typeof (firstTeachingCmd as { title?: string }).title === 'string' && (firstTeachingCmd as { title?: string }).title)
-          || 'Next';
+          || (redrawRequested ? 'Redraw' : 'Next');
         const synthetic: WhiteboardCommand = { action: 'newPage', title: String(nextTitle) };
         processed = [synthetic, ...processed];
-        const reason = justSolvedPending
+        const reason = redrawRequested
+          ? `Student redraw request "${lastStudentText.slice(0, 40)}…" → "${nextTitle}"`
+          : justSolvedPending
           ? `After Final Answer "${justSolvedPending}" → "${nextTitle}"`
           : `After topic shift (dist=${topicShiftPending?.fromDistance.toFixed(3)}) → "${nextTitle}"`;
         console.log('[VoiceTutorRealtime] Auto-newPage injected:', reason);
-        onDebugEvent?.('auto_new_page', reason);
+        onDebugEvent?.(redrawRequested ? 'auto_new_page_redraw' : 'auto_new_page', reason);
       }
       // Either way, clear both flags so this fires at most once per event.
       recentlyFinishedProblemRef.current = null;
@@ -4871,6 +4912,30 @@ export function VoiceTutorRealtime({
         };
         const gateTimer = setTimeout(openGate, 1000);
 
+        // Final-attempt kill suppression. When attempt ===
+        // MAX_VALIDATOR_RETRIES, the retry budget is exhausted — a
+        // kill here would silence the brain's last attempted text
+        // without a follow-up to replace it, freezing the lesson
+        // (observed Phase 6 stress test 2026-05-13: judge confused
+        // seed try-yourself problem text with brain-emitted
+        // show_problem values, three KILLs in a row, MAX hit, final
+        // attempt audio dropped → silence). All kill sites route
+        // through performKill() so the rule is enforced consistently.
+        // The helper is also idempotent across multi-kill within a
+        // single attempt.
+        const performKill = async (): Promise<void> => {
+          if (attempt === MAX_VALIDATOR_RETRIES) {
+            console.warn(`[brain-orchestrator] kill suppressed on final attempt (${attempt}/${MAX_VALIDATOR_RETRIES}) — audio plays through; rejection logged but no bridge.`);
+            onDebugEvent?.('kill_suppressed_final_attempt', `attempt=${attempt}/${MAX_VALIDATOR_RETRIES}`);
+            return;
+          }
+          if (attemptKilled) return;
+          attemptKilled = true;
+          clearTimeout(gateTimer);
+          closeGate();
+          await speakKillBridge();
+        };
+
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -4979,10 +5044,7 @@ export function VoiceTutorRealtime({
                       `Do not narrate your own confusion or backtrack out loud.`;
                     rejectionsThisAttempt.push({ action: 'mid_turn_self_correction', reason });
                     judgeRetriesUsed++;
-                    attemptKilled = true;
-                    clearTimeout(gateTimer);
-                    closeGate();
-                    await speakKillBridge();
+                    await performKill();
                     console.warn('[brain-orchestrator] mid-turn self-correction detected — retrying:', updatedSentence.slice(0, 80));
                     onDebugEvent?.('self_correction_retry', updatedSentence.slice(0, 80));
                     continue;
@@ -5012,10 +5074,7 @@ export function VoiceTutorRealtime({
                       `Re-emit cleanly: if the answer is correct, affirm it directly. If it is wrong, explain what's wrong without an immediate reversal.`;
                     rejectionsThisAttempt.push({ action: 'contradiction_inversion', reason });
                     judgeRetriesUsed++;
-                    attemptKilled = true;
-                    clearTimeout(gateTimer);
-                    closeGate();
-                    await speakKillBridge();
+                    await performKill();
                     console.warn('[brain-orchestrator] contradiction-inversion detected — retrying:', updatedSentence.slice(0, 80));
                     onDebugEvent?.('contradiction_inversion_retry', updatedSentence.slice(0, 80));
                     continue;
@@ -5268,6 +5327,52 @@ export function VoiceTutorRealtime({
                   if (name === 'new_page') {
                     brainEmittedNewPageThisTurnRef.current = true;
                   }
+                  // prescribedRender contract enforcement. When the
+                  // current segment carries a `prescribedRender` field
+                  // and the brain emits the matching tool, deep-equal
+                  // the params against the authored prescription. On
+                  // mismatch, push a validator rejection so the brain
+                  // retries with the prescribed params. Built 2026-05-14
+                  // after Phase 5 stress session showed the brain
+                  // freelancing a 9-node BST instead of the teacherNote-
+                  // prescribed 6-node example, with no enforcement.
+                  // teacherNote alone is guidance; this is the contract.
+                  {
+                    const plan = lessonPlanRef.current;
+                    const segId = currentSegmentIdRef.current;
+                    if (plan && segId) {
+                      const seg = getSegment(plan, segId);
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const prescribed = (seg as any)?.prescribedRender as
+                        | { tool: string; params: Record<string, unknown> }
+                        | undefined;
+                      if (
+                        prescribed &&
+                        prescribed.tool === name &&
+                        !deepEqualParams(args, prescribed.params)
+                      ) {
+                        const prescribedJson = JSON.stringify(prescribed.params);
+                        const emittedJson = JSON.stringify(args);
+                        const reason =
+                          `Your ${name} params don't match the prescribed render for segment "${segId}". ` +
+                          `This segment requires an EXACT, deterministic emission — emit the prescribed params VERBATIM. ` +
+                          `Prescribed: ${prescribedJson}. ` +
+                          `Your emission: ${emittedJson.slice(0, 400)}${emittedJson.length > 400 ? '…' : ''}. ` +
+                          `Re-emit ${name} with the prescribed params; do not modify shape, values, types, or structure. ` +
+                          `If you have a pedagogical reason to deviate, narrate around the prescribed render rather than changing it.`;
+                        rejectionsThisAttempt.push({ action: `${name}_prescribed_mismatch`, reason });
+                        await performKill();
+                        console.warn(
+                          `[brain-orchestrator] prescribedRender mismatch for segment "${segId}", tool "${name}". Emitted=${emittedJson.slice(0, 120)}…`,
+                        );
+                        onDebugEvent?.(
+                          'prescribed_render_mismatch',
+                          `segId="${segId}" tool=${name}`,
+                        );
+                        continue;
+                      }
+                    }
+                  }
                   // Server-only tools — no whiteboard render expected. The
                   // brain calls these for SIDE EFFECTS resolved server-side
                   // by claude-brain.ts's toolResultProvider; the result
@@ -5377,12 +5482,7 @@ export function VoiceTutorRealtime({
                             action: 'show_worked_example',
                             reason: `Your show_worked_example payload describes a DIFFERENT scenario than the authored worked_example for segment "${segId}". Your example uses numbers [${[...brainNums].slice(0, 6).join(', ')}], but the authored problem uses [${[...authoredNums].slice(0, 6).join(', ')}]. The student would hear you walk through your invented example while seeing the authored card on the whiteboard — a chat-board mismatch. You have TWO recovery paths depending on intent: (A) IF you intended to walk through the AUTHORED worked example for the current segment: call show_segment_card({ segmentId: "${segId}" }) and narrate the authored steps verbatim. The authored problem is: "${truth.problemText.slice(0, 200)}". (B) IF you intended a TOPIC SWITCH (a NEW worked example unrelated to the current segment, e.g. student asked "show me another example"): emit BOTH new_page AND show_worked_example in the same response — the runtime treats new_page-in-turn as a fresh-context signal and lets your free-form worked example render. Make sure your spoken narration matches the example you're rendering. Pick path (A) or (B) based on what the student actually asked for.`,
                           });
-                          if (!attemptKilled) {
-                            attemptKilled = true;
-                            clearTimeout(gateTimer);
-                            closeGate();
-                            await speakKillBridge();
-                          }
+                          await performKill();
                           continue;
                         } else {
                           // Numbers match (or weren't extractable) → the
@@ -5500,12 +5600,7 @@ export function VoiceTutorRealtime({
                             action: 'show_problem',
                             reason: `Your show_problem asked the student to find "${brainTarget}", but the authored ${truth.kind} for segment "${segId}" asks for "${authoredTarget}". This causes a chat-board mismatch where the student hears one question but sees another. You have TWO recovery paths depending on intent: (A) IF you intended to render the AUTHORED problem for the current segment: call show_segment_card({ segmentId: "${segId}" }) instead, and ensure your spoken narration is about finding "${authoredTarget}". The authored problem is: "${truth.problemText.slice(0, 200)}". (B) IF you intended a TOPIC SWITCH (new concept, e.g. switching mean → median at the student's request): emit BOTH new_page AND show_problem in the same response — the runtime treats new_page-in-turn as a fresh-context signal and lets your free-form show_problem render. Make sure your show_problem statement is well-formed and your narration matches the new target ("${brainTarget}"). Pick path (A) or (B) based on what the student actually asked for.`,
                           });
-                          if (!attemptKilled) {
-                            attemptKilled = true;
-                            clearTimeout(gateTimer);
-                            closeGate();
-                            await speakKillBridge();
-                          }
+                          await performKill();
                           continue;
                         }
                         // Substitute path: only when targets match (or
@@ -5578,12 +5673,7 @@ export function VoiceTutorRealtime({
                           action: 'show_segment_card',
                           reason: `Segment "${segId}" is already marked COMPLETE this session — the student already solved it. Re-rendering it would regress the student to easier content they've already done. RECOVERY: (1) PREFERRED — call generate_problem with anchorProblem set to the most-recent problem the student solved, anchorAnswer set to its answer, and difficulty="slightly_harder" or "much_harder"; (2) if you've already received no_problem_available for the current concept, IMPROVISE an ad-hoc show_problem with clearly different content (different numbers, different scenario) than anything previously rendered, prefixed with the disclaimer "Off the top of my head, not from the standard bank — here's one for you." Do NOT call show_segment_card again on any segment id you've previously marked complete. The list of completed segments this session: [${[...completedSegmentIdsRef.current].join(', ')}].`,
                         });
-                        if (!attemptKilled) {
-                          attemptKilled = true;
-                          clearTimeout(gateTimer);
-                          closeGate();
-                          await speakKillBridge();
-                        }
+                        await performKill();
                         continue;
                       }
                       const truth = getSegmentTruth(seg);
@@ -5608,12 +5698,7 @@ export function VoiceTutorRealtime({
                           action: 'show_segment_card',
                           reason: `Segment "${segId}" is marked OFF-TOPIC relative to the rest of this lesson plan and will not be rendered via passive natural-flow advance. The student likely intended to advance within the current concept, NOT into an unrelated drill. Recovery options: (a) call generate_problem to source a topic-relevant practice problem, (b) emit a topic-switch via new_page + show_problem if the student explicitly asked for a different concept, (c) wrap up the session if there's no relevant content left. DO NOT call show_segment_card("${segId}") again — render-refusal is structural, not transient.`,
                         });
-                        if (!attemptKilled) {
-                          attemptKilled = true;
-                          clearTimeout(gateTimer);
-                          closeGate();
-                          await speakKillBridge();
-                        }
+                        await performKill();
                         continue;
                       }
                       if (seg && truth?.problemText) {
@@ -5832,12 +5917,7 @@ export function VoiceTutorRealtime({
                         ? `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup) AND you've already received no_problem_available from generate_problem earlier this session — the bank/plan is exhausted for this concept. RETRY this attempt with ONE of: (1) PREFERRED — improvise an ad-hoc show_problem with clearly different content from anything previously rendered, prefixed by a disclaimer in narration ("here's one off the top of my head, not from the standard bank…"); or (2) ask the student whether they want to switch topic or wrap up. DO NOT call generate_problem again for this anchor — you've already exhausted it. DO NOT re-emit show_segment_card / show_problem with content matching any prior board card. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`
                         : `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Recovery options, in order: (1) call generate_problem if you haven't already exhausted it for this anchor; (2) improvise an ad-hoc show_problem with clearly different content + explicit "off-the-cuff" disclaimer in narration; (3) ask the student whether to switch topic or wrap up. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
                       rejectionsThisAttempt.push({ action: name, reason });
-                      if (!attemptKilled) {
-                        attemptKilled = true;
-                        clearTimeout(gateTimer);
-                        closeGate();
-                        await speakKillBridge();
-                      }
+                      await performKill();
                       onDebugEvent?.('dedup_surfaced_as_rejection', `${name} → ${segId}${activeIsOffSegment ? ' (off-segment)' : ''}`);
                       continue;
                     }
@@ -5853,12 +5933,7 @@ export function VoiceTutorRealtime({
                       // audible speech has already happened — when the
                       // gate buffered everything and we close it here, no
                       // bridge is needed (the student heard nothing yet).
-                      if (!attemptKilled) {
-                        attemptKilled = true;
-                        clearTimeout(gateTimer);
-                        closeGate();
-                        await speakKillBridge();
-                      }
+                      await performKill();
                     } else if (gateState === 'gated') {
                       // Clean tool dispatch — open the gate and flush any
                       // sentences we held back while waiting for this
@@ -5916,10 +5991,7 @@ export function VoiceTutorRealtime({
             `not promise a visual — describe the idea in words instead.`;
           rejectionsThisAttempt.push({ action: 'rule8_promise_without_visual', reason });
           rule8RetriesUsed++;
-          attemptKilled = true;
-          clearTimeout(gateTimer);
-          closeGate();
-          await speakKillBridge();
+          await performKill();
           console.warn('[brain-orchestrator] RULE8 violation: promise without visual — retrying');
           onDebugEvent?.('rule8_retry', `Promised visual but no show_* tool: "${promisedSnippet.slice(0, 80)}…"`);
         }
@@ -5965,10 +6037,7 @@ export function VoiceTutorRealtime({
               `Re-emit your response and INCLUDE either advance_lesson({to: "next"}) (preferred — moves to the next on-topic segment) or generate_problem (if you've reached the end of the lesson plan and need a fresh problem at the current level). ` +
               `Skip is NOT an answer to your prior question — do not affirm, do not state the expected answer, do not re-render the same segment card the student just skipped past. Acknowledge briefly ("got it, moving on") and advance.`;
             rejectionsThisAttempt.push({ action: 'skip_button_no_advance', reason });
-            attemptKilled = true;
-            clearTimeout(gateTimer);
-            closeGate();
-            await speakKillBridge();
+            await performKill();
             console.warn('[brain-orchestrator] Skip-button KILL: student clicked Skip but brain emitted no advance_lesson / generate_problem this turn.');
             onDebugEvent?.('skip_button_no_advance', `tools=[${emittedToolsList}]`);
           }
@@ -6047,10 +6116,23 @@ export function VoiceTutorRealtime({
             // the card the student is looking at; flag claims that
             // contradict it specifically."
             const focus = currentProblemRef.current?.statement ?? undefined;
+            // studentAnswer: the original transcript triggering THIS brain
+            // turn — used by the judge to detect wrong-answer affirmations
+            // ("Exactly!" applied to a wrong student answer). Strip
+            // synthetic markers like [Skip-button-clicked] so the judge
+            // sees just the student's words. Skipped for empty / synthetic
+            // transcripts where there's no answer to verify.
+            const studentAnswer = (() => {
+              if (typeof transcript !== 'string') return undefined;
+              const stripped = transcript
+                .replace(/\[(?:Skip-button-clicked|I'm-stuck-button-clicked|start lesson|validator feedback)[^\]]*\]/gi, '')
+                .trim();
+              return stripped.length > 0 ? stripped : undefined;
+            })();
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary, spokenText: attemptText, focus }),
+              body: JSON.stringify({ boardSummary, spokenText: attemptText, focus, studentAnswer }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -6236,12 +6318,7 @@ export function VoiceTutorRealtime({
                   }
                   for (const i of killIssues) priorJudgeKillClaimsThisTurn.push(i.claim);
                   rejectionsThisAttempt.push({ action: 'judge', reason });
-                  if (!attemptKilled) {
-                    attemptKilled = true;
-                    clearTimeout(gateTimer);
-                    closeGate();
-                    await speakKillBridge();
-                  }
+                  await performKill();
                 }
               } else {
                 onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);

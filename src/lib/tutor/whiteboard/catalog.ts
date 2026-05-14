@@ -465,7 +465,17 @@ export class WhiteboardCatalog {
         for (const f of item.features) {
           if (
             f.canonical.toLowerCase() === rawLower ||
-            f.labels.some((l) => l.toLowerCase() === rawLower)
+            f.labels.some((l) => l.toLowerCase() === rawLower) ||
+            // Description-verbatim match. The brain habitually copies the
+            // manifest's `description` field literally into the scribble
+            // target (observed 2026-05-14 Phase 5 BST session: targets
+            // like `node "4" (leaf) at depth 2` and
+            // `output column "A AND B"` came straight from the
+            // description and silent-dropped because no label carried
+            // the depth-suffix / column-prefix exactly). Cheaper to
+            // accept the description here than to enumerate every
+            // suffix variant in every manifest's labels list.
+            (typeof f.description === 'string' && f.description.toLowerCase() === rawLower)
           ) {
             matches.set(item.itemId, { item, feature: f });
             break;
@@ -479,7 +489,11 @@ export class WhiteboardCatalog {
       const item = this.items[i];
       if (matches.has(item.itemId)) continue;
       for (const f of item.features) {
-        if (normalizeToken(f.canonical) === q || f.labels.some((l) => normalizeToken(l) === q)) {
+        if (
+          normalizeToken(f.canonical) === q ||
+          f.labels.some((l) => normalizeToken(l) === q) ||
+          (typeof f.description === 'string' && normalizeToken(f.description) === q)
+        ) {
           matches.set(item.itemId, { item, feature: f });
           break;
         }
