@@ -140,8 +140,28 @@ function Math({ latex }: { latex: string }) {
   return <span ref={ref} className="inline-block align-baseline" />;
 }
 
+/** Decode the small set of HTML entities the brain habitually emits
+ *  when generating code in plain-text fields (Java generics, C++
+ *  templates, comparisons, etc.). The show_problem statement is
+ *  rendered as plain text — entities would otherwise display literally
+ *  ("ArrayList&lt;Integer&gt;" instead of "ArrayList<Integer>").
+ *  Observed 2026-05-15 session. The set is restricted to the entities
+ *  with unambiguous text equivalents; numeric entities (&#N;) and
+ *  named entities beyond this set are intentionally NOT decoded to
+ *  avoid surprising rewrites of intentional content. */
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&'); // amp last
+}
+
 export function InlineMathText({ text, className = '' }: InlineMathTextProps) {
-  const parts = segment(autoWrapUnicodeMath(text));
+  const parts = segment(autoWrapUnicodeMath(decodeHtmlEntities(text)));
   return (
     <span className={`whitespace-pre-wrap ${className}`}>
       {parts.map((p, i) =>
