@@ -2438,6 +2438,18 @@ export function VoiceTutorRealtime({
             // new segment id. The brain's per-turn snapshot filter
             // uses this to scope its view to current-segment items.
             catalogRef.current.setCurrentSegment(next);
+            // Clear the focus card so the judge doesn't carry a stale
+            // currentProblemRef across the segment boundary. Observed
+            // broken 2026-05-15 session: turn 8 emitted advance_lesson
+            // + show_segment_card("try-yourself") in the same batch,
+            // setting currentProblemRef to the new segment's authored
+            // problem. Turn 9 affirmed the student's answer for the
+            // PRIOR (PPC) segment, but the judge saw the stale focus
+            // and Path B mis-fired a KILL on a correct affirmation.
+            // Resetting here forces the judge to operate without focus
+            // until a fresh show_problem / show_segment_card fires on
+            // the new segment.
+            currentProblemRef.current = null;
             // Auto-newPage for visual freshness: every segment
             // transition starts the student on a fresh whiteboard
             // page so they aren't scrolling through stacked content
@@ -3292,18 +3304,29 @@ export function VoiceTutorRealtime({
       const manifest = buildManifestForCommand(cmd) ?? undefined;
       commandByIdRef.current.set(id, { cmd: cmdWithId, order: nextCommandOrderRef.current++, manifest });
       // Register in the authoritative session catalog. The catalog is the
-      // single source of truth for tutor_scribble target resolution —
-      // every feature the tutor may reference gets a row here.
-      if (manifest && manifest.length > 0) {
-        catalogRef.current.append({
-          itemId: id,
-          action,
-          pageTitle: currentPageTitle,
-          title: extractCommandTitle(cmd),
-          signature,
-          features: manifest,
-        });
-      }
+      // single source of truth for tutor_scribble target resolution AND
+      // for the show_*-dedup signature lookup. UNCONDITIONAL registration
+      // (no manifest-length gate) — items WITHOUT a manifest still need
+      // catalog entries so subsequent same-content emissions dedup
+      // against them. The catalog's append() synthesizes a whole-item
+      // feature from `wholeItemLabelsFor(action, title)` so non-manifest
+      // items still have addressable labels.
+      // Observed broken 2026-05-15 session: show_code has no manifest
+      // dispatch case, so it was being skipped here, and 4 identical
+      // emissions across 4 turns all rendered (the brain re-emits the
+      // code on every turn habitually). Same gap applies to ~15 other
+      // non-manifested renderers (show_run_code, show_early_math,
+      // show_phonics, show_graphic_organizer, show_writing_frame,
+      // show_solved_example, show_quiz, show_balanced_equation,
+      // show_dimensional_check, show_labeled_image, etc.).
+      catalogRef.current.append({
+        itemId: id,
+        action,
+        pageTitle: currentPageTitle,
+        title: extractCommandTitle(cmd),
+        signature,
+        features: manifest ?? [],
+      });
     }
     // Strip duplicate-skipped commands from the render pipeline. They
     // remain in `commands` for index alignment in the duplicates[] array
