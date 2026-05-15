@@ -4620,10 +4620,40 @@ export function VoiceTutorRealtime({
       // a stale segment. Triggers on explicit switch language:
       // "switch to X", "move to X", "let's do X", "let's try X",
       // "go to X", "do X now". Generic — works for any concept.
-      const topicSwitchRe = /\b(?:switch(?:ing)?\s+to|move\s+(?:to|on\s+to|onto)|let'?s\s+(?:do|try|move\s+to|go\s+to|switch\s+to)|now\s+(?:do|try|let'?s)|go\s+to|head(?:ing)?\s+(?:to|over\s+to))\s+(?:the\s+)?(?:concept\s+of\s+)?\w+/i;
-      if (topicSwitchRe.test(transcript) && currentSegmentIdRef.current) {
+      //
+      // 2026-05-15: the switch construction alone over-matched. Bare
+      // "go to" / "move to" + a positional word caught ubiquitous
+      // directional ANSWERS — "I'd go to the right" (BST/graph/
+      // geometry/maps walks), "move to the next one" — clearing the
+      // segment cursor mid-lesson. Once empty, advance_lesson({to:
+      // "next"}) can't resolve and the student silently falls off the
+      // authored plan (observed: a BST answer dropped the whole back
+      // half of the plan; the brain improvised an off-plan topic).
+      // Fix: also require the switch OBJECT to look like a topic, not
+      // a positional / deictic / ordinal / navigational token. Generic
+      // linguistic class — no subject terms.
+      const topicSwitchRe = /\b(?:switch(?:ing)?\s+to|move\s+(?:to|on\s+to|onto)|let'?s\s+(?:do|try|move\s+to|go\s+to|switch\s+to)|now\s+(?:do|try|let'?s)|go\s+to|head(?:ing)?\s+(?:to|over\s+to))\s+(?:the\s+|a\s+|an\s+)?(?:concept\s+of\s+|topic\s+of\s+)?(\w+)/i;
+      const topicSwitchM = topicSwitchRe.exec(transcript);
+      // Positional / deictic / ordinal / navigational objects mean the
+      // utterance is an answer or in-content navigation, NOT a request
+      // to change what's being studied. Articles are here defensively
+      // (a captured bare article = no real topic object).
+      const NAV_DEICTIC_OBJECT = new Set([
+        'right', 'left', 'up', 'down', 'top', 'bottom', 'back', 'front',
+        'forward', 'forwards', 'backward', 'backwards', 'next', 'previous',
+        'prev', 'first', 'last', 'other', 'there', 'here', 'it', 'that',
+        'this', 'these', 'those', 'them', 'one', 'same', 'side', 'ahead',
+        'below', 'above', 'beginning', 'end', 'the', 'a', 'an',
+      ]);
+      const switchObject = (topicSwitchM?.[1] ?? '').toLowerCase();
+      const isTopicSwitch =
+        !!topicSwitchM &&
+        !!currentSegmentIdRef.current &&
+        switchObject.length > 0 &&
+        !NAV_DEICTIC_OBJECT.has(switchObject);
+      if (isTopicSwitch) {
         console.log(`[brain-orchestrator] topic-switch detected ("${transcript.slice(0, 60)}…") — clearing currentSegmentIdRef from "${currentSegmentIdRef.current}" to free-conversation`);
-        onDebugEvent?.('topic_switch_segment_cleared', `was="${currentSegmentIdRef.current}"`);
+        onDebugEvent?.('topic_switch_segment_cleared', `was="${currentSegmentIdRef.current}" obj="${switchObject}"`);
         currentSegmentIdRef.current = '';
         setActiveSegmentId('');
       }
