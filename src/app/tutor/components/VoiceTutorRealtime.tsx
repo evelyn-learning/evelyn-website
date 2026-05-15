@@ -6543,67 +6543,17 @@ export function VoiceTutorRealtime({
                   console.warn(`[brain-orchestrator] judge KILL → ADVISORY (grounding-override) — ${groundingOverrideHits.length} claim(s) not substantially present in brain's spoken text`);
                   onDebugEvent?.('judge_kill_grounding_override', `${groundingOverrideHits.length}: ${groundingOverrideHits[0].claim.slice(0, 60)}…`);
                 }
-                // Citation-verification override. The judge prompt
-                // requires "kill"-severity Path A claims to QUOTE the
-                // contradicting literal verbatim from boardSummary, but
-                // Haiku has been observed to fabricate citations
-                // confidently (2026-05-15 session: judge cited "walk
-                // through the search algorithm for value 6 (from
-                // showDiagram page description)" — that phrase doesn't
-                // exist anywhere in boardSummary). Programmatic
-                // enforcement: for each remaining kill whose `why`
-                // references the board, require at least one 3-word
-                // phrase from `why` to appear in boardSummary. If no
-                // phrase matches, the citation is hallucinated →
-                // downgrade to advisory. Mirrors the wolfram-override
-                // and grounding-override deterministic defenses.
-                const citationOverrideHits: typeof rawKillIssues = [];
-                {
-                  const boardClaimRegex = /\b(?:board|diagram|page|shown|rendered|displayed|whiteboard|figure|chart|graph|tree|on[- ]screen)\b/i;
-                  const normForCitation = (s: string): string => s
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, ' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                  const boardNorm = normForCitation(boardSummary || '');
-                  for (let kIdx = killIssues.length - 1; kIdx >= 0; kIdx--) {
-                    const issue = killIssues[kIdx];
-                    const why = issue.why || '';
-                    // Only verify board citations — Path B kills (self-
-                    // contradicting affirmation) don't cite the board
-                    // and shouldn't be subjected to this check.
-                    if (!boardClaimRegex.test(why)) continue;
-                    // Board-claim kill on stale-snapshot path: boardSummary
-                    // was sent as empty to the judge, so it CAN'T have a
-                    // legitimate board citation. Downgrade unconditionally.
-                    if (!boardNorm || boardNorm.length === 0) {
-                      citationOverrideHits.push(issue);
-                      advisoryIssues.push(issue);
-                      killIssues.splice(kIdx, 1);
-                      continue;
-                    }
-                    const whyN = normForCitation(why);
-                    const whyWords = whyN.length > 0 ? whyN.split(' ') : [];
-                    if (whyWords.length < 3) continue;
-                    let matched = 0;
-                    for (let i = 0; i <= whyWords.length - 3; i++) {
-                      const tri = whyWords.slice(i, i + 3).join(' ');
-                      if (boardNorm.includes(tri)) {
-                        matched++;
-                        if (matched > 0) break; // one match is enough
-                      }
-                    }
-                    if (matched === 0) {
-                      citationOverrideHits.push(issue);
-                      advisoryIssues.push(issue);
-                      killIssues.splice(kIdx, 1);
-                    }
-                  }
-                }
-                if (citationOverrideHits.length > 0) {
-                  console.warn(`[brain-orchestrator] judge KILL → ADVISORY (citation-unverified) — ${citationOverrideHits.length} board-claim(s) lack any verifiable citation in boardSummary`);
-                  onDebugEvent?.('judge_kill_citation_unverified', `${citationOverrideHits.length}: ${citationOverrideHits[0].claim.slice(0, 60)}…`);
-                }
+                // Defense-in-depth: as of 2026-05-15 the judge prompt
+                // restricts kill severity to Path B (self-contradicting
+                // affirmation) only. Board-contradiction claims are
+                // flagged as advisory by the prompt and never reach this
+                // path. The Wolfram and grounding overrides above still
+                // catch the deterministic numeric / spoken-text cases.
+                // The citation-verification override that used to live
+                // here was retired in the same commit — Haiku could
+                // fabricate citations confidently, so the deterministic
+                // approach is to not let the LLM judge kill on board
+                // claims at all.
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
                     advisoryIssues.map((i) => i.claim.slice(0, 80)));

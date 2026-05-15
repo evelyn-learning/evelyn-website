@@ -182,54 +182,28 @@ For self-contained claims you're not confident about, leave them alone.
 Only flag when you're CERTAIN the claim is wrong.
 
 Each flagged issue carries a SEVERITY. Use:
-- "kill" — TWO independent paths qualify for kill:
-  Path A — BOARD CONTRADICTION with literal citation.
-  The speech makes a CONCRETE NUMERIC, DATASET, OR LITERAL claim about board content that DIRECTLY CONTRADICTS what's on the board. ONLY use "kill" on Path A when ALL of the following are true:
-    (a) the speech contains a specific literal value (a number, a named
-        label, a dataset element, an exact string), AND
-    (b) you can QUOTE the contradicting literal verbatim from the
-        boardSummary — your "why" field MUST include the exact phrase
-        you read off the board, copied character-for-character from
-        what appears in <whiteboard_state>. If you cannot quote it
-        verbatim, your "contradiction" is inferred rather than read,
-        which is hallucination — mark advisory instead. Verifying the
-        contradiction does NOT require you to perform arithmetic,
-        magnitude comparison, classification, or any re-derivation, AND
-    (c) the sentence is asserting a property of the CURRENT board state
-        (not hypothetical, contrastive, comparative, descriptive, or
-        about an imagined alternative — see the DO NOT flag list), AND
-    (d) you are NOT inferring the "task" or "active question" from
-        feature names in the diagram. A node labeled "6" in a tree is
-        NOT evidence that the task involves the value 6 — it's just a
-        node label. The task/question is only knowable from the
-        <focus> block or from explicit prose on the board (a problem
-        card, an equation labeled with the question, etc.).
-  If any of (a)-(d) is false, mark "advisory" instead of "kill" on Path A.
-
-  Path B — SELF-CONTRADICTING AFFIRMATION.
-  The speech opens with or contains an affirmation word ("Exactly", "Right", "Correct", "Yes", "Perfect", "Spot on", "You got it", "That's right", "Nailed it") AND immediately states an answer that does NOT match the student's. The brain is contradicting itself within a single utterance — confirming the student's answer while explicitly stating a different one. Kill on Path B when ALL of the following are true:
+- "kill" — ONE path qualifies for kill: SELF-CONTRADICTING AFFIRMATION.
+  The speech opens with or contains an affirmation word AND immediately states an answer that does NOT match the student's. The tutor is contradicting itself within a single utterance — confirming the student's answer while explicitly stating a different one. Kill when ALL of the following are true:
     (a) <student_answer> is provided and non-empty, AND
-    (b) the speech contains an explicit affirmation word, AND
-    (c) the CORRECT answer is QUOTABLE verbatim from the brain's
-        CURRENT-TURN spoken text — the brain has stated the correct
+    (b) the speech contains an explicit affirmation word
+        (e.g. those listed in the AFFIRMATION CLAIMS section above), AND
+    (c) the CORRECT answer is QUOTABLE verbatim from the tutor's
+        CURRENT-TURN spoken text — the tutor has stated the correct
         answer explicitly in this turn. Quote the exact phrase in
         your "why" field. Do NOT derive the correct answer from
         <focus>, from <whiteboard_state>, or from your own general
-        knowledge — only from what the brain literally said in this
-        turn. If the brain didn't state the answer in this turn,
+        knowledge — only from what the tutor literally said in this
+        turn. If the tutor didn't state the answer in this turn,
         mark advisory or skip, AND
     (d) the student's answer, after permitting trivial encoding
         differences (case, abbreviation, digit-vs-word equivalents),
-        clearly does NOT match the brain's stated answer from (c).
-  If any of (a)-(d) is false, mark "advisory" instead of "kill" on Path B.
+        clearly does NOT match the tutor's stated answer from (c).
+  If any of (a)-(d) is false, mark "advisory" instead of "kill".
+- "advisory" — everything else that's worth flagging: factual issues, tone/phrasing problems, common-knowledge errors, self-contained claims that don't reference the board, shape/orientation interpretations, BOARD CONTRADICTIONS (claims that contradict whiteboard content), anything requiring re-derivation or inference. The student can recover conversationally; the orchestrator logs but doesn't kill. Default to "advisory" when uncertain.
 
-  The brain is a stronger reasoner than you are on calculation, ordering,
-  classification, and conversational context. Your kill role is
-  strictly literal-citable contradiction detection — either against
-  the board (Path A) or within the brain's own speech (Path B).
-- "advisory" — soft factual issues (tone, phrasing, common-knowledge minor errors, self-contained claims that don't reference the board, shape/orientation interpretations, anything requiring re-derivation to disagree on a board claim, affirmation mismatches where the correct answer is NOT quotable from the current-turn speech, anything requiring inference about what task or question is active). The student can recover conversationally; the orchestrator logs but doesn't kill. Default to "advisory" when uncertain.
+BOARD CONTRADICTION claims (the speech makes a literal claim about board content that doesn't match what's there) are flagged as ADVISORY only — never kill. The tutor model is a stronger reasoner than you are on calculation, ordering, classification, and conversational context, and your inference about "what the board says the task is" or "what the focus is" has repeatedly fabricated quotes in past sessions. Surface board contradictions for telemetry; do not interrupt the lesson with a kill. Deterministic verifiers in the orchestrator (Wolfram-based numeric checks, grounding-overlap checks, signature-based render dedup, prescribedRender contracts) handle the high-confidence board-contradiction cases that genuinely need to interrupt.
 
-DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrastive narration, restatements of student input WITHOUT affirmation, vague references, subjective descriptors of shape/orientation/quality, board claims that require you to do arithmetic or comparison to disagree, self-contained claims that don't anchor against the board, claims that require inferring "the active task" from feature labels, OR affirmations where you have to derive the correct answer from external knowledge instead of from the brain's own current-turn speech.
+DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrastive narration, restatements of student input WITHOUT a contradicting affirmation, vague references, subjective descriptors of shape/orientation/quality, claims about board content of ANY kind, claims that require inference about the active task or question, OR affirmations where you have to derive the correct answer from external knowledge instead of from the tutor's own current-turn speech.
 
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}
