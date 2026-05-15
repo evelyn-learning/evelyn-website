@@ -212,6 +212,23 @@ const NOISE_REGEXES: RegExp[] = [
   /\bwww\.[a-z0-9-]+\.(com|org|net|co)\b/i,
   /\b\d{3}[- ]\d{3}[- ]\d{4}\b/,            // NANP phone
   /\b1[- ]?8\d\d[- ]?[a-z0-9]{3,}\b/i,      // 1-800 vanity
+
+  // ── Customer-service / email-closing / podcast-outro register ──────────
+  // Whisper emits this professional sign-off boilerplate on silence /
+  // ambient hum (it's all over its training data: voicemails, support
+  // calls, corporate videos, podcast outros). A student ANSWERING a
+  // tutor's question never speaks in closing register — these are
+  // second-person, conditional, "wrap-up" constructions, distinct from a
+  // student's own "I have a question". Observed 2026-05-15 session: a
+  // pure-silence turn transcribed as "…if you have any questions, please
+  // feel free to reach out to me. I'll be happy to answer any questions.
+  // Thank you." → drove a real brain turn + a cut-off cascade.
+  /\bif you have any (questions|concerns)\b/i,
+  /\b(feel free to|don'?t hesitate to|please) (reach out|contact|get in touch|email)\b/i,
+  /\bi'?(ll| will) be (happy|glad|more than happy) to (answer|help|assist)\b/i,
+  /\bthank you for (your time|listening|joining|tuning in|having me|your attention)\b/i,
+  /\b(reach out|get in touch) (to|with) (me|us) (anytime|any time|with any)\b/i,
+  /\bif you (need|have) (anything|any (questions|help))\b.*\b(let me know|reach out|contact)\b/i,
 ];
 
 /**
