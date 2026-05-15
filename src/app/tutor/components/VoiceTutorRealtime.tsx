@@ -485,6 +485,12 @@ export function VoiceTutorRealtime({
   // mount; segment progression is tracked locally.
   const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const currentSegmentIdRef = useRef<string>('');
+  // Last on-plan segment before the brain released the cursor via
+  // advance_lesson({to:"free"}) (off-plan / topic-switch). Lets a
+  // later advance_lesson({to:"next"|"previous"}) resume from where the
+  // student left the plan instead of failing to resolve from an empty
+  // cursor. Empty when never released, or released from plan start.
+  const segmentBeforeFreeRef = useRef<string>('');
   // UI-facing state — refs above are for the brain orchestrator, but the
   // progress bar / segment chips / time remaining must re-render on
   // changes. Kept in sync with the refs by the loader and the advance
@@ -2399,6 +2405,28 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const to = (cmd as any).to as string | undefined;
         if (plan && to) {
+          // Brain-driven topic-switch (replaces the retired
+          // topicSwitchRe heuristic). The brain calls
+          // advance_lesson({to:"free"}) when the student wants off the
+          // planned track for something this plan doesn't cover.
+          // Release the segment cursor → free-conversation mode
+          // (lessonPlanContext omitted next turn; requiredPhrases /
+          // prescribedRender / segment-card guardrails relax so they
+          // don't drag the brain back to a stale segment). Stash the
+          // prior segment so a later {to:"next"} can resume where the
+          // student left the plan. Idempotent.
+          if (to === 'free') {
+            if (currentSegmentIdRef.current) {
+              segmentBeforeFreeRef.current = currentSegmentIdRef.current;
+              console.log(`[VoiceTutorRealtime] advance_lesson({to:"free"}) — releasing cursor from "${currentSegmentIdRef.current}" → free-conversation`);
+              onDebugEvent?.('advance_free_cursor_released', `was="${currentSegmentIdRef.current}"`);
+              currentSegmentIdRef.current = '';
+              setActiveSegmentId('');
+              currentProblemRef.current = null;
+              catalogRef.current.setCurrentSegment('');
+            }
+            continue;
+          }
           // Pass shownProblemHashesRef so resolveAdvanceTarget skips
           // try-yourself / misconception / extension segments whose
           // authored problem text the student already saw earlier in
@@ -2409,7 +2437,14 @@ export function VoiceTutorRealtime({
           // (observed 2026-05-07 K-2 test session: 3 Skip clicks
           // needed to get past content the student had already done).
           const consumedHashes = new Set(shownProblemHashesRef.current);
-          const next = resolveAdvanceTarget(plan, currentSegmentIdRef.current, to, { consumedHashes });
+          // Resume-from-free: when the cursor was released, resolve
+          // relative to the segment the student left the plan at —
+          // resolveAdvanceTarget can't position from an empty cursor,
+          // which is what silently stranded the student off-plan
+          // before this fix. Falls back to plan-start resume inside
+          // resolveAdvanceTarget when there is no stashed segment.
+          const fromSegId = currentSegmentIdRef.current || segmentBeforeFreeRef.current;
+          const next = resolveAdvanceTarget(plan, fromSegId, to, { consumedHashes });
           if (next) {
             console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
             // Auto-mark "visited" segments: every segment from the
@@ -2422,7 +2457,7 @@ export function VoiceTutorRealtime({
             // because the brain only emits mark_segment_complete for
             // segments it taught (observed 2026-05-12 — 5 consecutive
             // skip clicks, strip frozen).
-            const outgoingIdx = plan.segments.findIndex((s) => s.id === currentSegmentIdRef.current);
+            const outgoingIdx = plan.segments.findIndex((s) => s.id === fromSegId);
             const targetIdx = plan.segments.findIndex((s) => s.id === next);
             if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {
               let mutated = false;
@@ -2439,6 +2474,9 @@ export function VoiceTutorRealtime({
             }
             currentSegmentIdRef.current = next;
             setActiveSegmentId(next);
+            // Re-entered the plan — drop the stashed pre-free segment
+            // so a future release starts a fresh stash.
+            segmentBeforeFreeRef.current = '';
             // Mirror into the catalog so subsequent appends stamp the
             // new segment id. The brain's per-turn snapshot filter
             // uses this to scope its view to current-segment items.
@@ -2503,7 +2541,7 @@ export function VoiceTutorRealtime({
             console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
             onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
           } else {
-            console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
+            console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
             // 2026-05-15: when `to: "next"` from the LAST segment fails
             // (no segment after recap), surface an explicit cue so the
             // brain knows to use generate_problem (or end the lesson)
@@ -2515,14 +2553,14 @@ export function VoiceTutorRealtime({
             // wrap-up summary).
             const planForReject = lessonPlanRef.current;
             const currentSegIdx = planForReject
-              ? planForReject.segments.findIndex((s) => s.id === currentSegmentIdRef.current)
+              ? planForReject.segments.findIndex((s) => s.id === fromSegId)
               : -1;
             const isAtLastSegment = planForReject
               ? currentSegIdx === planForReject.segments.length - 1
               : false;
             const reason = isAtLastSegment
-              ? `advance_lesson({to: "${to}"}) failed: the current segment "${currentSegmentIdRef.current}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`
-              : `advance_lesson({to: "${to}"}) failed: could not resolve target "${to}" from current segment "${currentSegmentIdRef.current}". Valid targets are "next", "previous", or an explicit segment id from this plan. Verify the target and re-emit.`;
+              ? `advance_lesson({to: "${to}"}) failed: the current segment "${fromSegId}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`
+              : `advance_lesson({to: "${to}"}) failed: could not resolve target "${to}"${fromSegId ? ` from segment "${fromSegId}"` : ' (no active plan position — session is in free conversation; advance by an explicit segment id to re-enter the plan, or just keep teaching)'}. Valid targets are "next", "previous", or an explicit segment id from this plan.`;
             rejected.push({ action: 'advance_lesson', reason });
           }
         }
@@ -4611,52 +4649,20 @@ export function VoiceTutorRealtime({
             ...priorWithoutCurrent,
           ];
 
-      // Round-7++++ Fix Issue 4: detect topic-switch student utterances
-      // and clear currentSegmentIdRef so subsequent turns run in
-      // free-conversation mode. Otherwise the segment cursor stays
-      // pinned to the prior concept's last segment (e.g., "try-mean-2")
-      // while the brain teaches the new concept (mode/median),
-      // creating drift where the brain's lessonPlanContext describes
-      // a stale segment. Triggers on explicit switch language:
-      // "switch to X", "move to X", "let's do X", "let's try X",
-      // "go to X", "do X now". Generic — works for any concept.
-      //
-      // 2026-05-15: the switch construction alone over-matched. Bare
-      // "go to" / "move to" + a positional word caught ubiquitous
-      // directional ANSWERS — "I'd go to the right" (BST/graph/
-      // geometry/maps walks), "move to the next one" — clearing the
-      // segment cursor mid-lesson. Once empty, advance_lesson({to:
-      // "next"}) can't resolve and the student silently falls off the
-      // authored plan (observed: a BST answer dropped the whole back
-      // half of the plan; the brain improvised an off-plan topic).
-      // Fix: also require the switch OBJECT to look like a topic, not
-      // a positional / deictic / ordinal / navigational token. Generic
-      // linguistic class — no subject terms.
-      const topicSwitchRe = /\b(?:switch(?:ing)?\s+to|move\s+(?:to|on\s+to|onto)|let'?s\s+(?:do|try|move\s+to|go\s+to|switch\s+to)|now\s+(?:do|try|let'?s)|go\s+to|head(?:ing)?\s+(?:to|over\s+to))\s+(?:the\s+|a\s+|an\s+)?(?:concept\s+of\s+|topic\s+of\s+)?(\w+)/i;
-      const topicSwitchM = topicSwitchRe.exec(transcript);
-      // Positional / deictic / ordinal / navigational objects mean the
-      // utterance is an answer or in-content navigation, NOT a request
-      // to change what's being studied. Articles are here defensively
-      // (a captured bare article = no real topic object).
-      const NAV_DEICTIC_OBJECT = new Set([
-        'right', 'left', 'up', 'down', 'top', 'bottom', 'back', 'front',
-        'forward', 'forwards', 'backward', 'backwards', 'next', 'previous',
-        'prev', 'first', 'last', 'other', 'there', 'here', 'it', 'that',
-        'this', 'these', 'those', 'them', 'one', 'same', 'side', 'ahead',
-        'below', 'above', 'beginning', 'end', 'the', 'a', 'an',
-      ]);
-      const switchObject = (topicSwitchM?.[1] ?? '').toLowerCase();
-      const isTopicSwitch =
-        !!topicSwitchM &&
-        !!currentSegmentIdRef.current &&
-        switchObject.length > 0 &&
-        !NAV_DEICTIC_OBJECT.has(switchObject);
-      if (isTopicSwitch) {
-        console.log(`[brain-orchestrator] topic-switch detected ("${transcript.slice(0, 60)}…") — clearing currentSegmentIdRef from "${currentSegmentIdRef.current}" to free-conversation`);
-        onDebugEvent?.('topic_switch_segment_cleared', `was="${currentSegmentIdRef.current}" obj="${switchObject}"`);
-        currentSegmentIdRef.current = '';
-        setActiveSegmentId('');
-      }
+      // Topic-switch / off-plan handling is BRAIN-DRIVEN as of
+      // 2026-05-15. The old programmatic topicSwitchRe heuristic
+      // (Round-7 Issue 4) cleared currentSegmentIdRef on a regex match;
+      // it was brittle both ways — false positives on ubiquitous
+      // directional ANSWERS ("I'd go to the right") that silently
+      // stranded the student off-plan, and false negatives on phrasings
+      // it didn't anticipate. The brain (which sees the utterance + the
+      // lesson-plan context every turn) is the right detector: it now
+      // calls advance_lesson({to:"free"}) to release the cursor when
+      // the student wants off the planned track (handled in the
+      // advanceLesson command branch above; system-prompt topic-switch
+      // rule instructs it). resolveAdvanceTarget resumes gracefully
+      // from an empty cursor so a later {to:"next"} can't strand the
+      // student. No regex here on purpose.
 
       // Pacing v2 — Phase 1 (inert): student-utterance arrival bookkeeping.
       // Runs AFTER topic-switch (which may clear segId) so the new segId
@@ -4702,10 +4708,10 @@ export function VoiceTutorRealtime({
         // analysis). Streak tracks CONCEPT mastery across consecutive
         // segments testing the same skill, not within a single segment.
         // Reset cases:
-        //   (a) topic-switch detected — segIdNow === '' (set above by
-        //       topicSwitchRe handler clearing currentSegmentIdRef);
-        //       this is the only "concept changed" signal at the
-        //       segment-tracking layer.
+        //   (a) cursor released — segIdNow === '' because the brain
+        //       called advance_lesson({to:"free"}) on a prior turn
+        //       (off-plan / topic switch); this is the "concept
+        //       changed" signal at the segment-tracking layer.
         //   (b) brain emits a correction utterance — handled in the
         //       post-stream streak update (resets correct-streak when
         //       brainCorrectionRegex matches).

@@ -1789,11 +1789,11 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   // ─── Lesson-plan control (only meaningful when <lesson_plan> is present) ──
   {
     name: 'advance_lesson',
-    description: 'Move to a different segment of the active lesson plan. Call this when the current segment\'s goal is met and you want to proceed (`to: "next"`), to revisit a previous one (`to: "previous"`), or to branch to a specific segment by id. Use sparingly — staying in the current segment until its goal is achieved is the default.',
+    description: 'Move to a different segment of the active lesson plan. Call this when the current segment\'s goal is met and you want to proceed (`to: "next"`), to revisit a previous one (`to: "previous"`), or to branch to a specific segment by id. Use `to: "free"` when the student clearly wants to leave the planned track for something this plan does not cover (a request to study a different concept that no segment addresses, or to set the plan aside): it releases the plan position so you can teach freely without the lesson scaffolding pulling you back to a stale segment. After releasing, just teach what they asked; later, `to: "next"` resumes the plan where they left it, or branch by an explicit segment id to re-enter at a chosen point. Do NOT use `"free"` for in-plan navigation, for a different plan within the same topic (that is a separate plan-swap action), or merely because the student got something wrong. Use sparingly — staying in the current segment until its goal is achieved is the default.',
     parameters: {
       type: 'object',
       properties: {
-        to: { type: 'string', description: '"next" | "previous" | "<segmentId>" — destination.' },
+        to: { type: 'string', description: '"next" | "previous" | "free" | "<segmentId>" — destination ("free" releases the plan position for off-plan teaching).' },
         reason: { type: 'string', description: 'Brief why (for telemetry). E.g. "student answered try-1 correctly".' },
       },
       required: ['to'],

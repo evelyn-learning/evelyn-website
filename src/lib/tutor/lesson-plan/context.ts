@@ -108,12 +108,20 @@ export function resolveAdvanceTarget(
   };
   if (to === 'next') {
     const idx = plan.segments.findIndex((s) => s.id === currentSegmentId);
-    if (idx < 0) return null;
+    // idx < 0 means there is no active plan position — empty cursor
+    // (free-conversation with no stashed pre-free segment) or an
+    // unknown id. Treat "next" as "resume the plan from its start":
+    // scan from the first segment for the earliest on-topic,
+    // non-consumed one. Previously this returned null, which the
+    // orchestrator surfaced as an unresolvable advance — that is what
+    // silently stranded a student off-plan after a (mis)cleared
+    // cursor. Resuming at plan start is the safe graceful default.
+    const startFrom = idx < 0 ? 0 : idx + 1;
     // Skip off-topic segments. They're bait / test-only segments —
     // the brain should never land on them via natural-flow advance.
     // Auto-skip past them; if no on-topic segment remains, return null
     // (treated as end-of-plan by the orchestrator).
-    for (let j = idx + 1; j < plan.segments.length; j++) {
+    for (let j = startFrom; j < plan.segments.length; j++) {
       const s = plan.segments[j];
       if (isOffTopic(s)) continue;
       if (isConsumed(s)) continue;
