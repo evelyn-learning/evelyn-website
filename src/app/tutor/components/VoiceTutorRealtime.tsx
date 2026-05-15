@@ -5490,10 +5490,28 @@ export function VoiceTutorRealtime({
                       const prescribed = (seg as any)?.prescribedRender as
                         | { tool: string; params: Record<string, unknown> }
                         | undefined;
+                      // Bypass conditions — when these fire, the brain is
+                      // legitimately moving past the prescribed render
+                      // (improvising via generate_problem fallback, opening
+                      // a fresh page, or working on a segment that's
+                      // already complete). Observed 2026-05-15 session:
+                      // after try-yourself completed, "try another
+                      // practice problem" triggered generate_problem →
+                      // no_problem_available → brain improvises
+                      // show_problem → prescribedRender mis-fired → retry
+                      // cascade → MAX_VALIDATOR_RETRIES → stuck. Mirrors
+                      // the existing show_problem_target_divergence
+                      // bypass for new_page-in-batch.
+                      const segCompleted = completedSegmentIdsRef.current.has(segId);
+                      const bypassPrescribed =
+                        generateProblemThisTurnRef.current ||
+                        brainEmittedNewPageThisTurnRef.current ||
+                        segCompleted;
                       if (
                         prescribed &&
                         prescribed.tool === name &&
-                        !deepEqualParams(args, prescribed.params)
+                        !deepEqualParams(args, prescribed.params) &&
+                        !bypassPrescribed
                       ) {
                         const prescribedJson = JSON.stringify(prescribed.params);
                         const emittedJson = JSON.stringify(args);
