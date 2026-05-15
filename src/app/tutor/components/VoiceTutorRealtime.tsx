@@ -6345,15 +6345,39 @@ export function VoiceTutorRealtime({
               titlesEmitted.length === 0
                 ? true
                 : titlesEmitted.some((t) => boardSummary.includes(t));
+            // Compute studentAnswer first — used for both the
+            // snapshot-race decision below and the judge request body.
+            // Strip synthetic markers so the judge sees just the
+            // student's words. Empty / synthetic transcripts → undefined.
+            const studentAnswer = (() => {
+              if (typeof transcript !== 'string') return undefined;
+              const stripped = transcript
+                .replace(/\[(?:Skip-button-clicked|I'm-stuck-button-clicked|start lesson|validator feedback)[^\]]*\]/gi, '')
+                .trim();
+              return stripped.length > 0 ? stripped : undefined;
+            })();
             const isSnapshotRace =
               showToolsEmitted > 0 &&
               (boardSummary === '(whiteboard is empty)' || !summaryReflectsNewTools);
-            if (isSnapshotRace) {
+            // Stale-snapshot handling: Path A (board contradiction) can't
+            // operate on a stale board, but Path B (self-contradicting
+            // affirmation) doesn't need the board at all — it only needs
+            // studentAnswer + brain spokenText. Previously we skipped the
+            // judge entirely on stale snapshot, which let wrong-answer
+            // affirmations through unchecked (observed 2026-05-15: brain
+            // affirmed "Exactly!" on student's wrong remove(20), turn
+            // emitted new_page + show_geometry_constructed → judge
+            // skipped → no Path B). When stale AND studentAnswer is
+            // present, run the judge with an EMPTY boardSummary. Path A
+            // can't fabricate a citation against nothing; Path B runs
+            // normally.
+            const shouldRunJudgeOnStale = isSnapshotRace && !!studentAnswer;
+            if (isSnapshotRace && !shouldRunJudgeOnStale) {
               const reason =
                 boardSummary === '(whiteboard is empty)'
                   ? 'empty snapshot'
                   : `stale snapshot — ${titlesEmitted.length} new tool title(s) not yet in summary`;
-              console.warn(`[judge] skip — ${reason}; ${showToolsEmitted} show_* tool(s) just emitted. Letting speech through.`);
+              console.warn(`[judge] skip — ${reason}; ${showToolsEmitted} show_* tool(s) just emitted; no studentAnswer. Letting speech through.`);
               onDebugEvent?.('judge_skip_empty_snapshot', `tools=${showToolsEmitted}; ${reason}`);
               // Pass through — no judge fetch, treat as grounded.
             } else {
@@ -6367,23 +6391,17 @@ export function VoiceTutorRealtime({
             // the card the student is looking at; flag claims that
             // contradict it specifically."
             const focus = currentProblemRef.current?.statement ?? undefined;
-            // studentAnswer: the original transcript triggering THIS brain
-            // turn — used by the judge to detect wrong-answer affirmations
-            // ("Exactly!" applied to a wrong student answer). Strip
-            // synthetic markers like [Skip-button-clicked] so the judge
-            // sees just the student's words. Skipped for empty / synthetic
-            // transcripts where there's no answer to verify.
-            const studentAnswer = (() => {
-              if (typeof transcript !== 'string') return undefined;
-              const stripped = transcript
-                .replace(/\[(?:Skip-button-clicked|I'm-stuck-button-clicked|start lesson|validator feedback)[^\]]*\]/gi, '')
-                .trim();
-              return stripped.length > 0 ? stripped : undefined;
-            })();
+            // When running on stale snapshot, send empty boardSummary so
+            // Path A can't fire and Path B still has what it needs.
+            const judgeBoardSummary = shouldRunJudgeOnStale ? '' : boardSummary;
+            if (shouldRunJudgeOnStale) {
+              console.warn(`[judge] stale snapshot but studentAnswer present — running with empty board for Path B coverage.`);
+              onDebugEvent?.('judge_stale_snapshot_path_b_only', `tools=${showToolsEmitted}`);
+            }
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary, spokenText: attemptText, focus, studentAnswer }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -6524,6 +6542,67 @@ export function VoiceTutorRealtime({
                 if (groundingOverrideHits.length > 0) {
                   console.warn(`[brain-orchestrator] judge KILL → ADVISORY (grounding-override) — ${groundingOverrideHits.length} claim(s) not substantially present in brain's spoken text`);
                   onDebugEvent?.('judge_kill_grounding_override', `${groundingOverrideHits.length}: ${groundingOverrideHits[0].claim.slice(0, 60)}…`);
+                }
+                // Citation-verification override. The judge prompt
+                // requires "kill"-severity Path A claims to QUOTE the
+                // contradicting literal verbatim from boardSummary, but
+                // Haiku has been observed to fabricate citations
+                // confidently (2026-05-15 session: judge cited "walk
+                // through the search algorithm for value 6 (from
+                // showDiagram page description)" — that phrase doesn't
+                // exist anywhere in boardSummary). Programmatic
+                // enforcement: for each remaining kill whose `why`
+                // references the board, require at least one 3-word
+                // phrase from `why` to appear in boardSummary. If no
+                // phrase matches, the citation is hallucinated →
+                // downgrade to advisory. Mirrors the wolfram-override
+                // and grounding-override deterministic defenses.
+                const citationOverrideHits: typeof rawKillIssues = [];
+                {
+                  const boardClaimRegex = /\b(?:board|diagram|page|shown|rendered|displayed|whiteboard|figure|chart|graph|tree|on[- ]screen)\b/i;
+                  const normForCitation = (s: string): string => s
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                  const boardNorm = normForCitation(boardSummary || '');
+                  for (let kIdx = killIssues.length - 1; kIdx >= 0; kIdx--) {
+                    const issue = killIssues[kIdx];
+                    const why = issue.why || '';
+                    // Only verify board citations — Path B kills (self-
+                    // contradicting affirmation) don't cite the board
+                    // and shouldn't be subjected to this check.
+                    if (!boardClaimRegex.test(why)) continue;
+                    // Board-claim kill on stale-snapshot path: boardSummary
+                    // was sent as empty to the judge, so it CAN'T have a
+                    // legitimate board citation. Downgrade unconditionally.
+                    if (!boardNorm || boardNorm.length === 0) {
+                      citationOverrideHits.push(issue);
+                      advisoryIssues.push(issue);
+                      killIssues.splice(kIdx, 1);
+                      continue;
+                    }
+                    const whyN = normForCitation(why);
+                    const whyWords = whyN.length > 0 ? whyN.split(' ') : [];
+                    if (whyWords.length < 3) continue;
+                    let matched = 0;
+                    for (let i = 0; i <= whyWords.length - 3; i++) {
+                      const tri = whyWords.slice(i, i + 3).join(' ');
+                      if (boardNorm.includes(tri)) {
+                        matched++;
+                        if (matched > 0) break; // one match is enough
+                      }
+                    }
+                    if (matched === 0) {
+                      citationOverrideHits.push(issue);
+                      advisoryIssues.push(issue);
+                      killIssues.splice(kIdx, 1);
+                    }
+                  }
+                }
+                if (citationOverrideHits.length > 0) {
+                  console.warn(`[brain-orchestrator] judge KILL → ADVISORY (citation-unverified) — ${citationOverrideHits.length} board-claim(s) lack any verifiable citation in boardSummary`);
+                  onDebugEvent?.('judge_kill_citation_unverified', `${citationOverrideHits.length}: ${citationOverrideHits[0].claim.slice(0, 60)}…`);
                 }
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
