@@ -295,8 +295,22 @@ export function WhiteboardCanvas({
     const result: { title?: string; commands: WhiteboardCommand[] }[] = [];
     let current: { title?: string; commands: WhiteboardCommand[] } = { commands: [] };
 
+    // Rollback pre-pass: a 'removeItems' command lists the stamped ids
+    // of renders from a killed brain attempt. Collect every removed id
+    // up front, then drop those commands (by their stamped `id`) below.
+    // Append-only — the markers stay in the stream but render nothing.
+    const removedIds = new Set<string>();
     for (const cmd of commands) {
-      if (cmd.action === 'clear' || cmd.action === 'goToPage') continue;
+      if (cmd.action === 'removeItems') {
+        for (const id of cmd.ids) removedIds.add(id);
+      }
+    }
+
+    for (const cmd of commands) {
+      if (cmd.action === 'clear' || cmd.action === 'goToPage' || cmd.action === 'removeItems') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmdId = (cmd as any).id as string | undefined;
+      if (cmdId && removedIds.has(cmdId)) continue;
       if (cmd.action === 'newPage') {
         if (current.commands.length > 0) {
           result.push({ ...current, commands: dedupeSupersededCommands(current.commands) });
@@ -2319,6 +2333,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'clear':
     case 'newPage':
     case 'goToPage':
+    case 'removeItems':
     case 'handwrite':
       return null;
 

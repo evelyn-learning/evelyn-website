@@ -4894,6 +4894,61 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('kill_bridge_spoken', phrase);
       };
 
+      // Roll back the renders dispatched by a killed attempt. The
+      // student heard a kill bridge and the attempt's narration was
+      // dropped from aggregatedFullText / chat — but any show_* tool it
+      // already dispatched is still on the board (and in the catalog,
+      // the id map, and the PDF export). Left in place it produces an
+      // orphaned figure with no narration, and on a tool-swap retry two
+      // contradictory figures (observed 2026-05-15: killed
+      // show_geometry_constructed BST persisted next to the retry's
+      // show_diagram binary_tree; killed show_problem persisted into the
+      // wrap-up). Emit a 'removeItems' command (parent appends → canvas
+      // page-builder + PDF export filter it out), and prune every local
+      // structure that resolves ids → renders so dedup / scribble-target
+      // resolution / the empty-board gate don't reference vanished
+      // figures. The killed streaming chat entry is removed separately
+      // by the existing retry/give-up cleanup, so its attached
+      // whiteboardCommands go with it — no transcript work needed here.
+      const rollbackKilledRenders = (ids: string[]): void => {
+        const unique = Array.from(new Set(ids.filter(Boolean)));
+        if (unique.length === 0) return;
+        const idSet = new Set(unique);
+        onWhiteboardCommand([{ action: 'removeItems', ids: unique }]);
+        const beforeMirror = whiteboardCommandsRef.current.length;
+        whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c) => !idSet.has((c as any).id),
+        );
+        const prunedFromMirror = beforeMirror - whiteboardCommandsRef.current.length;
+        whiteboardCommandCountRef.current = Math.max(
+          0,
+          whiteboardCommandCountRef.current - prunedFromMirror,
+        );
+        for (const id of unique) commandByIdRef.current.delete(id);
+        const prunedFromCatalog = catalogRef.current.removeByIds(unique);
+        console.warn(
+          `[brain-orchestrator] rolled back ${unique.length} killed render(s): ` +
+            `mirror-${prunedFromMirror} catalog-${prunedFromCatalog} [${unique.join(', ')}]`,
+        );
+        onDebugEvent?.('killed_render_rollback', `${unique.length}: ${unique.join(',')}`);
+      };
+
+      // #4 (2026-05-15): Skip-turn pre-emptive TTS gating. A correct
+      // response to a Skip click is short and advance-FIRST ("Got it,
+      // moving on!" + advance_lesson). A bad one answers the skipped
+      // question instead and gets Skip-KILLed post-stream — but by then
+      // the partial answer + a "one moment" bridge have already been
+      // spoken (observed Issue 2: "Integer dot value of 30. one
+      // moment."). Since the advance is a discrete event we can wait
+      // for, hold the gate on Skip turns until advance_lesson /
+      // generate_problem actually dispatches: a good turn opens it in
+      // real time at that dispatch; a bad turn never opens it, so the
+      // Skip-KILL drops the buffered text silently — nothing spoken, no
+      // bridge. `transcript` is the turn's actual student input and is
+      // stable across validator retries.
+      const skipTurnMarkerPresent = /\[Skip-button-clicked/i.test(transcript);
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -5040,6 +5095,10 @@ export function VoiceTutorRealtime({
         const toolNamesThisAttempt: string[] = [];
         const toolArgsThisAttempt: Array<Record<string, unknown>> = [];
         const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
+        // Stamped ids of every render this attempt actually dispatched.
+        // If the attempt is killed, these are rolled back so no orphaned
+        // figure survives the dropped narration (see rollbackKilledRenders).
+        const renderIdsThisAttempt: string[] = [];
         let attemptText = '';
         // Once a tool call in this attempt is rejected, the attempt is
         // doomed and we'll retry. Stop voicing further sentences from
@@ -5079,7 +5138,12 @@ export function VoiceTutorRealtime({
           gateState = 'closed';
           pendingSentences.length = 0;
         };
-        const gateTimer = setTimeout(openGate, 1000);
+        // Skip turns (#4): never auto-open on the 1s timer — the gate
+        // opens only when advance_lesson / generate_problem dispatches,
+        // or stays shut so the Skip-KILL drops the turn silently. The
+        // long value is just a cleared-anyway backstop against a hung
+        // stream. All other turns keep the 1s first-tool grace.
+        const gateTimer = setTimeout(openGate, skipTurnMarkerPresent ? 3_600_000 : 1000);
 
         // Final-attempt kill suppression. When attempt ===
         // MAX_VALIDATOR_RETRIES, the retry budget is exhausted — a
@@ -5507,6 +5571,22 @@ export function VoiceTutorRealtime({
                   toolNamesThisAttempt.push(name);
                   toolArgsThisAttempt.push(args);
                   totalToolNamesSeen.push(name);
+                  // #4: a Skip turn that actually advances is a legit
+                  // "moving on" response — open the held gate the moment
+                  // advance_lesson / generate_problem dispatches so the
+                  // brief acknowledgement speaks in real time instead of
+                  // buffering to stream-end. (generate_problem also opens
+                  // the gate via its own handler below; advance_lesson
+                  // otherwise wouldn't, since the skip-turn render-tool
+                  // open is suppressed.)
+                  if (
+                    skipTurnMarkerPresent &&
+                    (name === 'advance_lesson' || name === 'generate_problem') &&
+                    gateState === 'gated'
+                  ) {
+                    clearTimeout(gateTimer);
+                    openGate();
+                  }
                   // Mark brain-emitted new_page on event ARRIVAL (before
                   // any downstream stripping by the same-context guard).
                   // Used by the divergence guard + silent-substitute
@@ -6062,6 +6142,11 @@ export function VoiceTutorRealtime({
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     const result = await handleWhiteboardCommand([cmd]);
+                    // Track what actually landed so a later kill can
+                    // roll exactly these renders back off the board.
+                    if (result?.assignedIds?.length) {
+                      renderIdsThisAttempt.push(...result.assignedIds);
+                    }
                     // Incoherence-fix: surface dedup-suppressed renders
                     // for show_segment_card / show_problem as synthetic
                     // rejections. Otherwise the brain narrates "here's
@@ -6180,12 +6265,18 @@ export function VoiceTutorRealtime({
                       // gate buffered everything and we close it here, no
                       // bridge is needed (the student heard nothing yet).
                       await performKill();
-                    } else if (gateState === 'gated') {
+                    } else if (gateState === 'gated' && !skipTurnMarkerPresent) {
                       // Clean tool dispatch — open the gate and flush any
                       // sentences we held back while waiting for this
                       // verdict. Subsequent tools fall through (gate is
                       // already 'open'); subsequent rejections still kill
                       // this attempt as before.
+                      // #4: a render tool does NOT open the gate on a
+                      // Skip turn — only advance_lesson/generate_problem
+                      // does (handled above). A Skip turn that renders
+                      // instead of advancing is exactly the bad case the
+                      // Skip-KILL drops; opening here would leak its
+                      // partial narration audibly (the Issue 2 bug).
                       clearTimeout(gateTimer);
                       openGate();
                     }
@@ -6204,13 +6295,30 @@ export function VoiceTutorRealtime({
           try { reader.releaseLock(); } catch { /* already released */ }
         }
 
-        // Stream is fully drained. Stop the 1s gate timer (no longer
+        // Stream is fully drained. Stop the gate timer (no longer
         // needed) and flush any sentences still gated. This covers fast
         // text-only turns that finished before the timer fired and any
         // stream that ended without a tool ever resolving the gate.
         // No-op when the gate already opened or closed.
         clearTimeout(gateTimer);
-        openGate();
+        // #4: a Skip turn that never advanced is about to be Skip-KILLed
+        // (deterministic: marker present + no advance). Keep the gate
+        // SHUT so that kill drops the buffered partial silently — no
+        // audible answer-to-a-skipped-question, no "one moment" bridge
+        // (audibleSentenceCount stays 0, so the bridge self-suppresses).
+        // On the final attempt the kill is suppressed (audio must play
+        // to avoid a frozen lesson) so we flush there as normal. Skip
+        // turns that DID advance already opened the gate at that
+        // dispatch; every non-skip turn is unaffected.
+        const skipNoAdvanceAtStreamEnd =
+          skipTurnMarkerPresent &&
+          attempt !== MAX_VALIDATOR_RETRIES &&
+          !totalToolNamesSeen.some(
+            (n) => n === 'advance_lesson' || n === 'generate_problem',
+          );
+        if (!skipNoAdvanceAtStreamEnd) {
+          openGate();
+        }
 
         // RULE8 coherence check (promise-without-visual). The brain
         // SAID "let me draw / I'll show / I'm going to plot" but emitted
@@ -6256,10 +6364,21 @@ export function VoiceTutorRealtime({
         // show_problem carrying the identical statement. Detect this
         // structural omission directly.
         if (!attemptKilled) {
-          const lastStudentMsgForSkip = transcriptRef.current
-            .filter((e) => e.role === 'student')
-            .slice(-1)[0]?.text || '';
-          const skipMarkerPresent = /\[Skip-button-clicked/i.test(lastStudentMsgForSkip);
+          // Source the Skip marker from THIS turn's actual student input
+          // (`transcript`, the callBrainOnce arg) — NOT the last pushed
+          // 'student' transcript entry. Bracketed synthetic turns
+          // (try-yourself submissions, "[The student wrote…]", drawing
+          // extraction) are intentionally NOT pushed to transcriptRef
+          // (callBrainOnce silent-skip ~line 4571), so a slice(-1) read
+          // would return the PREVIOUS real student message — e.g. a
+          // stale [Skip-button-clicked] — and re-fire this kill on a
+          // turn the student never skipped (observed 2026-05-15: Skip
+          // then a try-yourself submission → spurious Skip KILL +
+          // ignored submission). `transcript` is stable across validator
+          // retries (retries reassign runTranscript, not transcript), so
+          // Skip enforcement still persists across a kill→retry within
+          // the same genuine Skip turn.
+          const skipMarkerPresent = /\[Skip-button-clicked/i.test(transcript);
           // Use totalToolNamesSeen (cross-attempt), NOT toolNamesThisAttempt.
           // The brain only needs to advance ONCE per turn — if attempt 0
           // already emitted advance_lesson and a later attempt is retrying
@@ -6304,9 +6423,15 @@ export function VoiceTutorRealtime({
           const lastTutorMsg = transcriptRef.current
             .filter((e) => e.role === 'tutor')
             .slice(-2, -1)[0]?.text || ''; // -2 because the streaming entry for THIS turn is -1
-          const lastStudentMsgForAffirm = transcriptRef.current
-            .filter((e) => e.role === 'student')
-            .slice(-1)[0]?.text || '';
+          // Same staleness fix as the Skip check above: source the
+          // student message from THIS turn's actual input (`transcript`),
+          // not the last pushed 'student' entry. Otherwise a bracketed
+          // synthetic turn (e.g. a try-yourself submission) following a
+          // plain "yes" after a continuation question would re-read the
+          // stale "yes" and spuriously fire affirmative-no-advance.
+          // Bracketed synthetic input never matches affirmativeOnlyRegex
+          // (leading '['), so synthetic turns correctly skip this gate.
+          const lastStudentMsgForAffirm = transcript;
           // Continuation-question detector: tutor's prior turn ended
           // with a "shall we move on?"-style ask. Conservative —
           // requires the question mark within ~80 chars of an
@@ -6395,7 +6520,40 @@ export function VoiceTutorRealtime({
         if (!attemptKilled) {
           const planForPhrases = lessonPlanRef.current;
           const segIdForPhrases = currentSegmentIdRef.current;
-          if (planForPhrases && segIdForPhrases && !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)) {
+          // 2026-05-15 (#3): suppress the check on a turn that
+          // auto-advanced INTO this segment. When the brain emits
+          // advance_lesson / generate_problem mid-turn, currentSegmentId
+          // is already the NEW segment but attemptText is the PRIOR
+          // segment's affirmation + a brief transition ("Exactly right!
+          // … Nice work! Let's move on…") — not teaching content for the
+          // new segment, so it legitimately won't contain the anchor
+          // phrase. Killing here false-positives a correct, well-formed
+          // turn (observed: ArrayList answer affirmed → killed because
+          // BST's 'value 6' wasn't said yet → student heard their
+          // correct answer cut by a kill bridge). Defer the anchor to
+          // the next turn that actually teaches the segment (don't kill,
+          // don't mark checked) so it still fires on the real teaching
+          // turn and still catches sustained value-substitution.
+          const advancedIntoSegmentThisTurn = totalToolNamesSeen.some(
+            (n) => n === 'advance_lesson' || n === 'generate_problem',
+          );
+          if (
+            planForPhrases &&
+            segIdForPhrases &&
+            advancedIntoSegmentThisTurn &&
+            !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)
+          ) {
+            console.warn(
+              `[brain-orchestrator] requiredPhrases check deferred on "${segIdForPhrases}" — turn auto-advanced into the segment (transition turn, not a teaching turn).`,
+            );
+            onDebugEvent?.('required_phrase_check_deferred', `segId="${segIdForPhrases}" (auto-advance transition turn)`);
+          }
+          if (
+            planForPhrases &&
+            segIdForPhrases &&
+            !advancedIntoSegmentThisTurn &&
+            !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)
+          ) {
             const segForPhrases = getSegment(planForPhrases, segIdForPhrases);
             const required = (segForPhrases as { requiredPhrases?: string[] } | undefined)?.requiredPhrases;
             if (Array.isArray(required) && required.length > 0 && totalSentenceCount >= 3 && attemptText) {
@@ -6739,6 +6897,16 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // #4 safety backstop: after every post-stream check, if the
+        // gate is still held and the attempt was NOT killed, flush now.
+        // Guarantees no turn ends with buffered-but-unspoken text and no
+        // kill (a silent turn). A killed skip-no-advance attempt leaves
+        // attemptKilled=true here, so its buffered partial correctly
+        // stays dropped; every other path already opened the gate.
+        if (gateState === 'gated' && !attemptKilled) {
+          openGate();
+        }
+
         // Only the WINNING attempt's text goes into aggregatedFullText
         // (which becomes the tutor turn in transcriptRef + the brain's
         // memory of "what I said"). Killed attempts are dropped — the
@@ -6787,6 +6955,10 @@ export function VoiceTutorRealtime({
                 'give_up_render_kill',
                 `rejections=${rejectionsThisAttempt.map((r) => r.action).join(',')}`,
               );
+              // Pull any renders this give-up attempt DID land off the
+              // board too — the narration was just cancelled, so they
+              // would otherwise sit orphaned (and export into the PDF).
+              rollbackKilledRenders(renderIdsThisAttempt);
             }
           }
           break;
@@ -6829,6 +7001,12 @@ export function VoiceTutorRealtime({
           `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
           `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
           speechDeliveryNote;
+        // Roll the killed attempt's renders off the board before the
+        // retry runs. Without this the retry's fresh renders pile up
+        // next to the orphaned ones (the 2026-05-15 two-BSTs bug).
+        // Gated on attemptKilled so a clean attempt's renders are never
+        // touched; in the retry path performKill always set it.
+        if (attemptKilled) rollbackKilledRenders(renderIdsThisAttempt);
         // Remove the killed attempt's streaming entry from the chat
         // before the next attempt creates a fresh one. Without this,
         // the user would see the killed text remain alongside the new

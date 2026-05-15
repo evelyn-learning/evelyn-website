@@ -385,6 +385,20 @@ export class WhiteboardCatalog {
     return this.items.find((i) => i.itemId === itemId);
   }
 
+  /** Forget the listed items. Called by the orchestrator when a brain
+   *  attempt is killed AFTER it dispatched renders — the figures are
+   *  pulled off the board (via a 'removeItems' whiteboard command), so
+   *  the catalog must also drop them or the brain's per-turn snapshot
+   *  and scribble/scroll target resolution would still reference renders
+   *  the student can no longer see. Returns the count actually removed. */
+  removeByIds(ids: string[]): number {
+    if (ids.length === 0) return 0;
+    const drop = new Set(ids);
+    const before = this.items.length;
+    this.items = this.items.filter((it) => !drop.has(it.itemId));
+    return before - this.items.length;
+  }
+
   /** Resolve a query against page TITLES (not feature names). Used as a
    *  scroll-handler fallback when the brain emits the page title as the
    *  scrollTo target (e.g. `target: "Six Kingdoms"` after a recent

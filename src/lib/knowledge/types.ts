@@ -640,6 +640,15 @@ export type WhiteboardCommand =
   | { action: 'clear' }
   | { action: 'newPage'; title?: string }
   | { action: 'goToPage'; title: string }
+  // Roll back previously-dispatched renders by their stamped command
+  // id. Emitted by the orchestrator when a brain attempt is killed
+  // (validator/judge/requiredPhrases/skip/give-up) AFTER it already
+  // dispatched show_* renders — the student heard a kill bridge and
+  // the narration was dropped, so the orphaned figure must leave the
+  // board too. Append-only, like 'clear'/'newPage': the canvas
+  // page-builder and the PDF export filter out any command whose id
+  // is listed here (and the markers themselves render nothing).
+  | { action: 'removeItems'; ids: string[] }
   | {
       // Annotate an EXISTING whiteboard item — the tutor equivalent of a
       // real teacher circling, underlining, or pointing at something

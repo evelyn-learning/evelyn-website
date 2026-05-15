@@ -1590,12 +1590,28 @@ export async function exportTutorSessionPDF(
     return true;
   });
 
+  // Rollback pre-pass: a 'removeItems' command lists the stamped ids of
+  // renders the orchestrator pulled off the live board after a killed
+  // brain attempt. The parent whiteboardCommands array is append-only,
+  // so those orphaned renders are still here — drop them (by stamped
+  // `id`) so the PDF matches what the student actually saw. Without
+  // this the export shows the ghost figure the kill removed (the
+  // 2026-05-15 two-contradictory-BSTs report).
+  const pdfRemovedIds = new Set<string>();
+  for (const cmd of dedupedAll) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((cmd as any).action === 'removeItems' && Array.isArray((cmd as any).ids)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const id of (cmd as any).ids) pdfRemovedIds.add(id);
+    }
+  }
+
   // Meta-commands don't render as their own whiteboard items — split them
   // out so the numbered list in the PDF only contains real content, and
   // bake scribble overlays onto their target item's captured SVG below.
-  // scrollTo / newPage / clear / goToPage have no PDF representation;
-  // discard.
-  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage']);
+  // scrollTo / newPage / clear / goToPage / removeItems have no PDF
+  // representation; discard.
+  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems']);
   // Two lookup paths for matching scribbles to target items:
   //   - byId keyed on the stamped id ("showSpringMass-1") — preferred
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
@@ -1632,6 +1648,11 @@ export async function exportTutorSessionPDF(
       return false;
     }
     if (META_PDF_ACTIONS.has(String(action))) return false;
+    // Drop renders rolled back by a killed attempt (matched on the
+    // stamped command id collected in the pre-pass above).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cmdId = (cmd as any).id;
+    if (typeof cmdId === 'string' && pdfRemovedIds.has(cmdId)) return false;
     // Drop showEquation cards whose latex payload is empty/missing —
     // they render as label-only blanks ("sin 30° confirmed" with no
     // formula) in the Whiteboard Content section, which looks broken.
