@@ -208,7 +208,20 @@ DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrasti
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}
 or
-{"grounded": false, "issues": [{"claim": "<the spoken claim>", "why": "<board has X / actually it's Y>", "severity": "kill" | "advisory"}]}
+{"grounded": false, "issues": [{"claim": "<verbatim quote>", "why": "<explanation>", "severity": "kill" | "advisory"}]}
+
+The "claim" field MUST be a VERBATIM quote from <tutor_said> — copy
+the exact text that contains the issue, character-for-character. Do
+NOT paraphrase, summarize, or write meta-commentary describing what
+was said or affirmed. If you find yourself writing something that
+describes the conversation rather than quoting it, stop — the claim
+field is the literal text from <tutor_said>; any analysis or
+description goes in the "why" field instead. The orchestrator
+verifies that the "claim" text appears in the tutor's spoken text; a
+non-verbatim claim will be downgraded to advisory and the kill will
+not fire. For affirmation issues (Path B), quote the affirmation
+phrase plus the contradicting answer phrase — not a description of
+who said what.
 
 If the whiteboard is empty, board claims fall through but self-contained
 claims still apply.
