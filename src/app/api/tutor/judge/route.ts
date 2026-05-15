@@ -212,17 +212,15 @@ Each flagged issue carries a SEVERITY. Use:
     (b) the speech contains an explicit affirmation word, AND
     (c) the CORRECT answer is QUOTABLE verbatim from the brain's
         CURRENT-TURN spoken text — the brain has stated the correct
-        answer explicitly in this turn ("go LEFT", "the answer is 80",
-        "A AND B is false", "Executive branch", etc.). Quote the
-        exact phrase in your "why" field. Do NOT derive the correct
-        answer from <focus>, from <whiteboard_state>, or from your
-        own general knowledge — only from what the brain literally
-        said in this turn. If the brain didn't state the answer in
-        this turn, mark advisory or skip, AND
-    (d) the student's answer (after normalizing trivial encodings:
-        1↔true, 0↔false, digit↔word, case differences, left/right
-        synonyms like "L"="left") does NOT match the brain's stated
-        answer from (c).
+        answer explicitly in this turn. Quote the exact phrase in
+        your "why" field. Do NOT derive the correct answer from
+        <focus>, from <whiteboard_state>, or from your own general
+        knowledge — only from what the brain literally said in this
+        turn. If the brain didn't state the answer in this turn,
+        mark advisory or skip, AND
+    (d) the student's answer, after permitting trivial encoding
+        differences (case, abbreviation, digit-vs-word equivalents),
+        clearly does NOT match the brain's stated answer from (c).
   If any of (a)-(d) is false, mark "advisory" instead of "kill" on Path B.
 
   The brain is a stronger reasoner than you are on calculation, ordering,
