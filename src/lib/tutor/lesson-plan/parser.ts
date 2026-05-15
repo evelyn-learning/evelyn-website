@@ -73,7 +73,21 @@ function parseSegment(raw: unknown, i: number): Segment {
     }
     prescribedRender = { tool: pr.tool, params: pr.params as Record<string, unknown> };
   }
-  const base = { id, teacherNote, estimatedMinutes, prescribedRender };
+  // requiredPhrases: narrative anchors that must appear in the brain's
+  // narration for this segment. Optional array of non-empty strings.
+  let requiredPhrases: string[] | undefined;
+  if (r.requiredPhrases !== undefined && r.requiredPhrases !== null) {
+    if (!Array.isArray(r.requiredPhrases)) {
+      throw new PlanParseError(`${path}.requiredPhrases`, 'must be an array of strings');
+    }
+    requiredPhrases = r.requiredPhrases.map((s: unknown, j: number) => {
+      if (typeof s !== 'string' || s.length === 0) {
+        throw new PlanParseError(`${path}.requiredPhrases[${j}]`, 'must be a non-empty string');
+      }
+      return s;
+    });
+  }
+  const base = { id, teacherNote, estimatedMinutes, prescribedRender, requiredPhrases };
 
   switch (kind) {
     case 'hook':

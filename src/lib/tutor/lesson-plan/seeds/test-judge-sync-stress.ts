@@ -172,6 +172,11 @@ export const SEED_TEST_JUDGE_SYNC_STRESS: LessonPlan = {
         'BST search: O(log n) when balanced — halve the search space at each comparison.',
         'Less than parent → go left; greater than parent → go right.',
       ],
+      // 2026-05-15: pin the search target. Observed session where the
+      // brain substituted "13" for "6" — whole multi-turn trace ran
+      // against the wrong target. requiredPhrases forces the brain to
+      // mention the literal target value in the first ≥3-sentence turn.
+      requiredPhrases: ['value 6'],
       suggestedTools: ['show_diagram', 'tutor_handwrite', 'new_page'],
       estimatedMinutes: 3,
     },

@@ -629,6 +629,11 @@ export function VoiceTutorRealtime({
   // sometimes ignores it; orchestrator-side enforcement is the
   // safety net.
   const completedSegmentIdsRef = useRef<Set<string>>(new Set());
+  // 2026-05-15: per-segment requiredPhrases enforcement. Tracks segments
+  // whose first non-trivial turn has been checked; the check fires once
+  // per segment so we don't re-narrate mid-trace. See the post-stream
+  // check site for the matching condition.
+  const segmentRequiredPhrasesCheckedRef = useRef<Set<string>>(new Set());
   // Round-7+++++ Issue 3 fix: track number-tuples of equations that
   // Wolfram has verified as CORRECT this session. The judge LLM
   // periodically hallucinates arithmetic ("511 ÷ 7 = 72.857"; actually
@@ -2499,6 +2504,26 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${currentSegmentIdRef.current}"`);
+            // 2026-05-15: when `to: "next"` from the LAST segment fails
+            // (no segment after recap), surface an explicit cue so the
+            // brain knows to use generate_problem (or end the lesson)
+            // instead of silently re-attempting. Without this the
+            // advance fails quietly, the brain's narration about
+            // "moving on" plays, and the lesson stalls — observed in
+            // judge-sync-stress session #7 (advance_lesson({to:"next"})
+            // from "recap" failed silently while brain narrated a
+            // wrap-up summary).
+            const planForReject = lessonPlanRef.current;
+            const currentSegIdx = planForReject
+              ? planForReject.segments.findIndex((s) => s.id === currentSegmentIdRef.current)
+              : -1;
+            const isAtLastSegment = planForReject
+              ? currentSegIdx === planForReject.segments.length - 1
+              : false;
+            const reason = isAtLastSegment
+              ? `advance_lesson({to: "${to}"}) failed: the current segment "${currentSegmentIdRef.current}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`
+              : `advance_lesson({to: "${to}"}) failed: could not resolve target "${to}" from current segment "${currentSegmentIdRef.current}". Valid targets are "next", "previous", or an explicit segment id from this plan. Verify the target and re-emit.`;
+            rejected.push({ action: 'advance_lesson', reason });
           }
         }
         continue;
@@ -5166,7 +5191,26 @@ export function VoiceTutorRealtime({
                   // STUDENT's wrong answer — extremely common in tutor
                   // turns), "actually, let me reframe", "hmm, actually" all
                   // false-positived. Keep only unambiguous self-attribution.
-                  const selfCorrectionRe = /\b(?:wait,?\s+actually|actually,?\s+(?:i was wrong|i['’]m wrong|never mind)|let me re-?(?:check|verify|consider|examine)|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong)/i;
+                  // 2026-05-15: widened to catch additional "wait,…"
+                  // walkback markers. Observed Issue C: brain said the
+                  // first clause, then "…, wait, [restated different
+                  // clause]" within a single sentence. Pure semantic
+                  // re-statement ("X is A … wait, X is B") cannot be
+                  // detected without LLM-level inspection, but explicit
+                  // correction markers (wait+no, wait+sorry, wait+i
+                  // meant, or rather, or actually, correction:) can be.
+                  // Keep markers GENERIC — structural correction words
+                  // only, no subject content.
+                  //
+                  // 2026-05-15 second pass: observed "Actually, let me
+                  // back up — the correct path is …" after the brain
+                  // realized it had gone down a wrong-direction trace.
+                  // Added "back up" / "redo" / "restart" / "try again"
+                  // as standalone correction markers. "back up" is
+                  // gated on a preceding "actually," to avoid catching
+                  // pedagogical "let me back up and explain why" uses
+                  // that don't signal a walkback.
+                  const selfCorrectionRe = /\b(?:wait,?\s+actually|wait,?\s+no\b|wait,?\s+i\s+(?:meant|said|mean)\b|wait,?\s+sorry|actually,?\s+(?:i was wrong|i['’]m wrong|never mind|i meant|let me back up|let me re-?\w+)|let me re-?(?:check|verify|consider|examine|state|phrase)|let me (?:redo|restart|try again)\b|or rather\b|or actually\b|i mean,?\s+(?:no|actually)\b|i meant\s+to\s+(?:say|write)\b|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong|correction:)/i;
                   // Round-7+++ Fix Issue 2: skip self-correction
                   // detection on RETRY attempts. The brain's retry
                   // following a judge KILL or rejection legitimately
@@ -5507,31 +5551,71 @@ export function VoiceTutorRealtime({
                         generateProblemThisTurnRef.current ||
                         brainEmittedNewPageThisTurnRef.current ||
                         segCompleted;
-                      if (
-                        prescribed &&
-                        prescribed.tool === name &&
-                        !deepEqualParams(args, prescribed.params) &&
-                        !bypassPrescribed
-                      ) {
-                        const prescribedJson = JSON.stringify(prescribed.params);
-                        const emittedJson = JSON.stringify(args);
-                        const reason =
-                          `Your ${name} params don't match the prescribed render for segment "${segId}". ` +
-                          `This segment requires an EXACT, deterministic emission — emit the prescribed params VERBATIM. ` +
-                          `Prescribed: ${prescribedJson}. ` +
-                          `Your emission: ${emittedJson.slice(0, 400)}${emittedJson.length > 400 ? '…' : ''}. ` +
-                          `Re-emit ${name} with the prescribed params; do not modify shape, values, types, or structure. ` +
-                          `If you have a pedagogical reason to deviate, narrate around the prescribed render rather than changing it.`;
-                        rejectionsThisAttempt.push({ action: `${name}_prescribed_mismatch`, reason });
-                        await performKill();
-                        console.warn(
-                          `[brain-orchestrator] prescribedRender mismatch for segment "${segId}", tool "${name}". Emitted=${emittedJson.slice(0, 120)}…`,
-                        );
-                        onDebugEvent?.(
-                          'prescribed_render_mismatch',
-                          `segId="${segId}" tool=${name}`,
-                        );
-                        continue;
+                      if (prescribed && !bypassPrescribed) {
+                        const isShowTool = /^show[A-Z]/.test(name);
+                        // toolNamesThisAttempt already includes `name` at
+                        // this point (pushed earlier in the loop), so
+                        // slice(0, -1) checks emissions BEFORE the current.
+                        const prescribedEmittedEarlier = toolNamesThisAttempt
+                          .slice(0, -1)
+                          .some((n) => n === prescribed.tool);
+                        // Case A — matching tool, wrong params.
+                        if (
+                          prescribed.tool === name &&
+                          !deepEqualParams(args, prescribed.params)
+                        ) {
+                          const prescribedJson = JSON.stringify(prescribed.params);
+                          const emittedJson = JSON.stringify(args);
+                          const reason =
+                            `Your ${name} params don't match the prescribed render for segment "${segId}". ` +
+                            `This segment requires an EXACT, deterministic emission — emit the prescribed params VERBATIM. ` +
+                            `Prescribed: ${prescribedJson}. ` +
+                            `Your emission: ${emittedJson.slice(0, 400)}${emittedJson.length > 400 ? '…' : ''}. ` +
+                            `Re-emit ${name} with the prescribed params; do not modify shape, values, types, or structure. ` +
+                            `If you have a pedagogical reason to deviate, narrate around the prescribed render rather than changing it.`;
+                          rejectionsThisAttempt.push({ action: `${name}_prescribed_mismatch`, reason });
+                          await performKill();
+                          console.warn(
+                            `[brain-orchestrator] prescribedRender mismatch for segment "${segId}", tool "${name}". Emitted=${emittedJson.slice(0, 120)}…`,
+                          );
+                          onDebugEvent?.(
+                            'prescribed_render_mismatch',
+                            `segId="${segId}" tool=${name}`,
+                          );
+                          continue;
+                        }
+                        // Case B — wrong tool entirely (and prescribed
+                        // hasn't fired yet in this attempt). Brain emitted
+                        // a different show_* before the prescribed one.
+                        // Observed 2026-05-15 session #5: BST segment with
+                        // prescribed show_diagram(binary_tree) — brain
+                        // emitted show_geometry_constructed first
+                        // (different tool name, so Case A above didn't
+                        // fire). The geometry tree rendered, then later
+                        // the prescribed show_diagram rendered too — two
+                        // trees on the page. Force the brain to emit
+                        // the prescribed tool BEFORE any other show_*
+                        // on this segment.
+                        if (
+                          isShowTool &&
+                          prescribed.tool !== name &&
+                          !prescribedEmittedEarlier
+                        ) {
+                          const reason =
+                            `You emitted ${name} on segment "${segId}", but this segment requires ${prescribed.tool} FIRST as the prescribed render. ` +
+                            `Re-emit your response with ${prescribed.tool} (using the prescribed params for this segment) as the primary teaching render. ` +
+                            `Other show_* tools are allowed AFTER ${prescribed.tool} has rendered, but not before.`;
+                          rejectionsThisAttempt.push({ action: `${name}_prescribed_wrong_tool`, reason });
+                          await performKill();
+                          console.warn(
+                            `[brain-orchestrator] prescribedRender wrong-tool for segment "${segId}": emitted "${name}" before prescribed "${prescribed.tool}".`,
+                          );
+                          onDebugEvent?.(
+                            'prescribed_render_wrong_tool',
+                            `segId="${segId}" emitted=${name} prescribed=${prescribed.tool}`,
+                          );
+                          continue;
+                        }
                       }
                     }
                   }
@@ -6294,6 +6378,47 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // requiredPhrases narrative-anchor check. When a segment
+        // declares `requiredPhrases: [...]`, the brain's narration on
+        // the FIRST non-trivial turn (≥3 sentences) for that segment
+        // must contain each phrase as a case-insensitive substring.
+        // Observed 2026-05-15: BST segment description specified
+        // "search for value 6" but the brain substituted 13 — the
+        // whole multi-turn trace ran against the wrong target, judge
+        // kills came late, retries thrashed. requiredPhrases pins the
+        // narrative param at segment-entry so substitution gets caught
+        // before the trace commits. Fires once per segment; later
+        // turns aren't checked (mid-trace re-narration is worse than
+        // letting the anchor slide). Threshold of 3 sentences avoids
+        // false-firing on a brief connector turn that legitimately
+        // delays the example.
+        if (!attemptKilled) {
+          const planForPhrases = lessonPlanRef.current;
+          const segIdForPhrases = currentSegmentIdRef.current;
+          if (planForPhrases && segIdForPhrases && !segmentRequiredPhrasesCheckedRef.current.has(segIdForPhrases)) {
+            const segForPhrases = getSegment(planForPhrases, segIdForPhrases);
+            const required = (segForPhrases as { requiredPhrases?: string[] } | undefined)?.requiredPhrases;
+            if (Array.isArray(required) && required.length > 0 && totalSentenceCount >= 3 && attemptText) {
+              const haystack = attemptText.toLowerCase();
+              const missing = required.filter((p) => !haystack.includes(p.toLowerCase()));
+              if (missing.length > 0) {
+                const reason =
+                  `Your narration for segment "${segIdForPhrases}" is missing required phrase(s): ${missing.map((m) => `"${m}"`).join(', ')}. ` +
+                  `This segment pins specific narrative parameters (target values, example inputs, etc.) that you must reference verbatim — substituting a different value mid-segment desynchronizes the lesson from the board/segment-card and the student's tracking. ` +
+                  `Re-emit your response with each required phrase appearing at least once in the spoken narration.`;
+                rejectionsThisAttempt.push({ action: 'required_phrase_missing', reason });
+                await performKill();
+                console.warn(`[brain-orchestrator] requiredPhrases miss on segment "${segIdForPhrases}": missing=[${missing.join(', ')}]`);
+                onDebugEvent?.(
+                  'required_phrase_missing',
+                  `segId="${segIdForPhrases}" missing=[${missing.join(', ')}]`,
+                );
+              }
+              segmentRequiredPhrasesCheckedRef.current.add(segIdForPhrases);
+            }
+          }
+        }
+
         // Judge LLM groundedness check (Lever B1). Only fires when the
         // attempt produced spoken text AND wasn't already killed by a
         // structural rejection (no point judging speech we're about to
@@ -6630,6 +6755,39 @@ export function VoiceTutorRealtime({
             console.warn(
               `[brain-orchestrator] hit MAX_VALIDATOR_RETRIES with ${rejectionsThisAttempt.length} rejection(s); giving up.`,
             );
+            // 2026-05-15: when give-up includes a show_* render failure
+            // (solver pre-check rejection, prescribedRender mismatch,
+            // prescribedRender wrong-tool), the brain's narration has
+            // likely referenced board content that never landed (e.g.,
+            // "Take a look at the PPC on the board — points A, B, C,
+            // and D all sit on the curve" when show_diagram was
+            // rejected). Without cancellation the student hears
+            // narration anchored to absent renders. Cancel in-flight
+            // TTS, mark attempt as killed (so text isn't added to
+            // aggregatedFullText / brain memory), and remove the
+            // streaming chat entry. The student is left with a clean
+            // page state; their next input triggers a fresh brain turn
+            // that re-emits the corrected render.
+            const hasRenderFailure = rejectionsThisAttempt.some((r) => {
+              const a = r.action || '';
+              return a.startsWith('show_') || a.includes('_prescribed_');
+            });
+            if (hasRenderFailure && !attemptKilled) {
+              await clearSpeechQueueRef.current?.();
+              attemptKilled = true;
+              closeGate();
+              const killedStreamingId = `tutor-streaming-${t0}-${attempt}`;
+              const beforeLen = transcriptRef.current.length;
+              transcriptRef.current = transcriptRef.current.filter((e) => e.id !== killedStreamingId);
+              if (transcriptRef.current.length !== beforeLen) {
+                onTranscriptUpdate([...transcriptRef.current]);
+              }
+              console.warn('[brain-orchestrator] give-up included show_* render failure — cancelled TTS + dropped attempt text to avoid orphaned narration.');
+              onDebugEvent?.(
+                'give_up_render_kill',
+                `rejections=${rejectionsThisAttempt.map((r) => r.action).join(',')}`,
+              );
+            }
           }
           break;
         }
@@ -6664,7 +6822,7 @@ export function VoiceTutorRealtime({
         // contradicting numbers if the judge KILLed a stat that the
         // brain then "corrected" in re-narration).
         const speechDeliveryNote = attemptKilled
-          ? `Your spoken text from the prior attempt was CUT OFF by a kill bridge, so the student heard only a partial version. Re-deliver the spoken portion in full so they get a complete narration. If you asked a question, re-ask it and wait; do not answer it yourself or skip ahead.`
+          ? `Your spoken text from the prior attempt was CUT OFF by a kill bridge, so the student heard only a partial version. Re-deliver the spoken portion in full so they get a complete narration. If you asked a question, re-ask it and wait; do not answer it yourself or skip ahead. No new student input has occurred since your last attempt. Do NOT open with an affirmation or reference any student answer (real or imagined) — just re-deliver your prior teaching content with the required correction applied.`
           : `Your spoken text from the prior attempt was DELIVERED IN FULL to the student. Do NOT repeat the same narration — the student already heard it. In this turn, focus on emitting the corrected tool call(s) and speak only a brief connector (≤ one short sentence) if speech is needed at all. If you asked a question on the prior attempt and the student hasn't answered yet, just wait; do not re-ask.`;
         runTranscript =
           `[validator feedback — not from the student] Your last turn emitted ` +

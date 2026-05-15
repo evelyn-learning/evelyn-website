@@ -93,6 +93,16 @@ interface SegmentBase {
    *  the existing retry loop. Use for test plans that need a specific
    *  diagram/problem to render. */
   prescribedRender?: PrescribedRender;
+  /** Optional list of phrases the brain's narration MUST contain across
+   *  this segment's turns. Case-insensitive substring match. After the
+   *  brain's first non-trivial turn in the segment (≥3 sentences), any
+   *  unmatched phrase triggers a validator-feedback rejection. Use to
+   *  pin narrative parameters that prescribedRender can't capture (e.g.
+   *  search-target value, example dataset, worked-example operand) —
+   *  the brain otherwise drifts to a different example value mid-trace.
+   *  Keep phrases short and concrete; long phrases or sentence fragments
+   *  false-positive easily. */
+  requiredPhrases?: string[];
 }
 
 /** Opening hook — pique curiosity, connect to prior knowledge, real-world

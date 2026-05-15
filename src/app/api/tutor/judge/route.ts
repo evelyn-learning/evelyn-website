@@ -150,6 +150,25 @@ You check THREE kinds of factual claims:
        - <student_answer> is absent (no student answer to verify
          against).
 
+    DENIAL CLAIMS work symmetrically. When speech contains a denial
+    phrase ("not quite", "not right", "no, that's not", "wrong",
+    "incorrect", "actually no", "you're off") AND the student's answer
+    is DEFINITIVELY CORRECT by your re-derivation, flag as a wrong
+    judgment. Severity: kill-eligible only via Path C (see below);
+    otherwise advisory.
+
+    SOFT / PARTIAL-APPROVAL markers also count for advisory flagging:
+    "Good start", "You're on the right track", "Close, but...", "Almost
+    there", "Not exactly", "Sort of" — anything that takes a stance on
+    the student's answer's correctness. When the tutor's stance
+    contradicts your re-derived correctness, flag as ADVISORY (never
+    kill — kill remains reserved for the explicit affirmation/denial
+    words listed above paired with the Path B/C verbatim-restate bar).
+    This catches the mode-1 case: tutor passively validates a wrong
+    student step without restating any answer in this turn. Without
+    this catch, the lesson can drift several turns down a wrong path
+    before the tutor self-corrects.
+
 DO NOT flag:
 - Pedagogical asides ("good question", "let's think about this", "exactly right")
 - Hypothetical, conditional, comparative, contrastive, or counterfactual
@@ -182,8 +201,14 @@ For self-contained claims you're not confident about, leave them alone.
 Only flag when you're CERTAIN the claim is wrong.
 
 Each flagged issue carries a SEVERITY. Use:
-- "kill" — ONE path qualifies for kill: SELF-CONTRADICTING AFFIRMATION.
-  The speech opens with or contains an affirmation word AND immediately states an answer that does NOT match the student's. The tutor is contradicting itself within a single utterance — confirming the student's answer while explicitly stating a different one. Kill when ALL of the following are true:
+- "kill" — TWO paths qualify for kill. Both share the same shape: the
+  tutor's own current-turn speech contains BOTH a judgment word about
+  the student's answer AND a verbatim statement of an answer that
+  contradicts the judgment.
+
+  (Path B — SELF-CONTRADICTING AFFIRMATION) The speech contains an
+  affirmation word AND the answer the tutor states verbatim does NOT
+  match the student's answer. Kill when ALL of the following are true:
     (a) <student_answer> is provided and non-empty, AND
     (b) the speech contains an explicit affirmation word
         (e.g. those listed in the AFFIRMATION CLAIMS section above), AND
@@ -196,14 +221,36 @@ Each flagged issue carries a SEVERITY. Use:
         turn. If the tutor didn't state the answer in this turn,
         mark advisory or skip, AND
     (d) the student's answer, after permitting trivial encoding
-        differences (case, abbreviation, digit-vs-word equivalents),
-        clearly does NOT match the tutor's stated answer from (c).
-  If any of (a)-(d) is false, mark "advisory" instead of "kill".
+        differences (case, abbreviation, digit-vs-word equivalents,
+        whitespace/spacing variants, and common student typos that
+        don't alter meaning), clearly does NOT match the tutor's
+        stated answer from (c).
+
+  (Path C — SELF-CONTRADICTING DENIAL) The speech contains a denial
+  word AND the answer the tutor states verbatim in the same turn
+  DOES match the student's answer. The tutor denies the student's
+  answer while explicitly stating that same answer back. Kill when
+  ALL of the following are true:
+    (a) <student_answer> is provided and non-empty, AND
+    (b) the speech contains an explicit denial phrase — a negation
+        marker applied to the student's answer (e.g. "not quite",
+        "not right", "that's not", "that isn't", "no,", "wrong",
+        "incorrect", "actually no"), AND
+    (c) the answer the tutor states verbatim in the CURRENT-TURN
+        spoken text is QUOTABLE — same provenance rules as Path B(c).
+        Do NOT derive it from <focus>, <whiteboard_state>, or your
+        own knowledge, AND
+    (d) the student's answer, after permitting trivial encoding
+        differences (same set as Path B(d)), DOES match the tutor's
+        stated answer from (c).
+
+  If any of (a)-(d) is false for the relevant path, mark "advisory"
+  instead of "kill".
 - "advisory" — everything else that's worth flagging: factual issues, tone/phrasing problems, common-knowledge errors, self-contained claims that don't reference the board, shape/orientation interpretations, BOARD CONTRADICTIONS (claims that contradict whiteboard content), anything requiring re-derivation or inference. The student can recover conversationally; the orchestrator logs but doesn't kill. Default to "advisory" when uncertain.
 
 BOARD CONTRADICTION claims (the speech makes a literal claim about board content that doesn't match what's there) are flagged as ADVISORY only — never kill. The tutor model is a stronger reasoner than you are on calculation, ordering, classification, and conversational context, and your inference about "what the board says the task is" or "what the focus is" has repeatedly fabricated quotes in past sessions. Surface board contradictions for telemetry; do not interrupt the lesson with a kill. Deterministic verifiers in the orchestrator (Wolfram-based numeric checks, grounding-overlap checks, signature-based render dedup, prescribedRender contracts) handle the high-confidence board-contradiction cases that genuinely need to interrupt.
 
-DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrastive narration, restatements of student input WITHOUT a contradicting affirmation, vague references, subjective descriptors of shape/orientation/quality, claims about board content of ANY kind, claims that require inference about the active task or question, OR affirmations where you have to derive the correct answer from external knowledge instead of from the tutor's own current-turn speech.
+DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrastive narration, restatements of student input WITHOUT a contradicting affirmation or denial, vague references, subjective descriptors of shape/orientation/quality, claims about board content of ANY kind, claims that require inference about the active task or question, OR affirmations/denials where you have to derive the correct answer from external knowledge instead of from the tutor's own current-turn speech.
 
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}
@@ -219,9 +266,10 @@ field is the literal text from <tutor_said>; any analysis or
 description goes in the "why" field instead. The orchestrator
 verifies that the "claim" text appears in the tutor's spoken text; a
 non-verbatim claim will be downgraded to advisory and the kill will
-not fire. For affirmation issues (Path B), quote the affirmation
-phrase plus the contradicting answer phrase — not a description of
-who said what.
+not fire. For Path B affirmation kills, quote the affirmation phrase
+plus the contradicting answer phrase — not a description of who said
+what. For Path C denial kills, quote the denial phrase plus the
+matching answer phrase from the same utterance.
 
 If the whiteboard is empty, board claims fall through but self-contained
 claims still apply.
