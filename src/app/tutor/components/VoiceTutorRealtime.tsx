@@ -4554,6 +4554,13 @@ export function VoiceTutorRealtime({
   const vadThreshold = parseFloat(process.env.NEXT_PUBLIC_TUTOR_VAD_THRESHOLD || '0.8');
   const vadSilenceDurationMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_SILENCE_MS || '1500', 10);
   const vadPrefixPaddingMs = parseInt(process.env.NEXT_PUBLIC_TUTOR_VAD_PREFIX_MS || '500', 10);
+  // Reconnect-resilience (caching-initiative levers 2+3, 2026-05-18).
+  // Default OFF ⇒ byte-identical to the frozen 7de734c voice behavior;
+  // set NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT=true to enable (build-time
+  // inlined → dev-server restart required to flip, same as the
+  // NEXT_PUBLIC_TUTOR_VAD_* knobs). Unsetting it is the instant,
+  // code-free revert.
+  const reconnectEnabled = process.env.NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT === 'true';
 
   // ── Claude-brain orchestrator ────────────────────────────────────────────
   // When claudeBrainMode is on, every student transcript completion is
@@ -7337,6 +7344,7 @@ export function VoiceTutorRealtime({
     vadThreshold,
     vadSilenceDurationMs,
     vadPrefixPaddingMs,
+    reconnectEnabled,
     relayMode: claudeBrainMode
       ? {
           instructions: RELAY_MODE_PROMPT,

@@ -36,13 +36,28 @@ export async function POST(request: NextRequest) {
     if (typeof instructions === 'string' && instructions.trim()) {
       sessionConfig.instructions = instructions;
     }
+    // Caching-initiative lever 1 (2026-05-18): extend the ephemeral-key
+    // TTL from OpenAI's ~600s default to the 7200s (2h) max. Observed
+    // failure: a ~10-min idle expired the key (log: expires_at =
+    // session_start + 602s) → no reconnect/refresh path → 12s
+    // transcription-watchdog → "technical issue" dead session
+    // (project_voice_tutor_issues 2026-05-18). This widens the
+    // idle-vulnerability window 10min → ~2h. Server-route only — does
+    // NOT touch the frozen useOpenAIRealtime voice hook, turn_detection,
+    // mic-gate, VAD env, or transcript-filters. `anchor:'created_at'`
+    // + `seconds` per the OpenAI /v1/realtime/client_secrets API
+    // (valid range 10–7200). Partial mitigation; the robust fix is the
+    // reactive token-refresh + reconnect (levers 2–3, to be grilled).
     const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ session: sessionConfig }),
+      body: JSON.stringify({
+        expires_after: { anchor: 'created_at', seconds: 7200 },
+        session: sessionConfig,
+      }),
     });
 
     if (!response.ok) {

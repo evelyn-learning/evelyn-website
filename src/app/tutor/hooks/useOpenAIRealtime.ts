@@ -84,6 +84,15 @@ export interface RealtimeConfig {
   vadThreshold?: number;
   vadSilenceDurationMs?: number;
   vadPrefixPaddingMs?: number;
+  /** Reconnect-resilience (caching-initiative levers 2+3, 2026-05-18).
+   *  When true: an unintentional ws.onclose OR a transcription-watchdog
+   *  fire on a non-OPEN socket triggers a bounded reconnect ladder
+   *  (reuse cached key → re-mint) instead of dead-ending to the
+   *  "technical issue" banner. Default false ⇒ byte-identical to the
+   *  frozen 7de734c behavior (instant, code-free revert). Read from
+   *  NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT in VoiceTutorRealtime,
+   *  mirroring the vad* env-prop convention. */
+  reconnectEnabled?: boolean;
   onTranscriptUpdate?: (role: 'user' | 'assistant', text: string, isFinal: boolean) => void;
   // The callback may be async and may return rejection info. When it does,
   // the Realtime hook reports those drops back to the LLM as tool-call
@@ -439,6 +448,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const {
     instructions, voice = 'alloy',
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
+    reconnectEnabled = false,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk, relayMode,
   } = config;
@@ -495,6 +505,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // transcription event never arrives. Catches the silently-stuck
   // "Thinking…" bug from the 2026-04-29 electricity session.
   const transcriptionWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Reconnect-resilience state (caching-initiative levers 2+3,
+  // 2026-05-18). reconnectAttemptsRef: per-drop attempt counter, max 3,
+  // reset to 0 on transcription.completed (proven end-to-end recovery —
+  // also subsumes the flap-breaker). reconnectTimerRef: the backoff
+  // timer. connectRef / scheduleReconnectRef: break the connect↔reconnect
+  // circular dep via the file's existing latest-fn-in-a-ref idiom (cf.
+  // startListeningRef). reconnectEnabledRef: synced each render so the
+  // long-lived ws.onclose / watchdog closures read the live flag without
+  // touching any useCallback dep array (minimal frozen-file churn).
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectRef = useRef<() => Promise<void>>(async () => {});
+  const scheduleReconnectRef = useRef<(() => boolean) | null>(null);
+  const reconnectEnabledRef = useRef(reconnectEnabled);
+  reconnectEnabledRef.current = reconnectEnabled;
   // True when the user has explicitly muted themselves. Distinct from
   // shouldListenRef (which is the INTENT — "we want to listen after the
   // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
@@ -717,6 +742,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           transcriptionWatchdogRef.current = setTimeout(() => {
             console.warn('[Realtime] Transcription watchdog fired — no transcript event in 12s; resetting state');
             transcriptionWatchdogRef.current = null;
+            // Lever 3 / W2: if the SOCKET itself is dead/half-dead
+            // (ws.onclose may not have fired), recover via the reconnect
+            // ladder instead of dead-ending at the banner. ONLY when the
+            // socket is not OPEN — an OPEN socket with no transcription
+            // is the watchdog's ORIGINAL scope (server-side Whisper
+            // stall); reconnecting wouldn't help and would churn the
+            // session, so that case keeps the exact frozen behavior.
+            // < 3 gate ⇒ an exhausted ladder also falls to the frozen
+            // banner below (no reliance on scheduleReconnect's internal
+            // exhaustion path here).
+            if (
+              reconnectEnabledRef.current &&
+              !intentionallyDisconnectedRef.current &&
+              wsRef.current?.readyState !== WebSocket.OPEN &&
+              reconnectAttemptsRef.current < 3 &&
+              scheduleReconnectRef.current?.()
+            ) {
+              return;
+            }
             updateState(shouldListenRef.current ? 'listening' : 'connected');
             // Surface the silent failure to the parent. Without this, the
             // student's utterance disappears with no visible signal: audio
@@ -754,6 +798,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             clearTimeout(transcriptionWatchdogRef.current);
             transcriptionWatchdogRef.current = null;
           }
+          // Q3: reset the reconnect ladder ONLY on proven end-to-end
+          // recovery (a real transcription round-tripped). This also
+          // subsumes the flap-breaker — a socket that reopens but never
+          // delivers a transcription never resets, so it hits 3 and
+          // falls back to the banner instead of looping forever.
+          reconnectAttemptsRef.current = 0;
           onTranscriptionStatus?.('completed');
           // User's speech transcription.
           //
@@ -1444,10 +1494,37 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       ws.onclose = (event) => {
         console.log('[Realtime] WebSocket closed:', event.code, event.reason);
         wsRef.current = null;
+        // Lever 2: an UNINTENTIONAL close (network drop, idle/session
+        // expiry) attempts a bounded reconnect instead of dead-ending.
+        // scheduleReconnect sets state to 'connecting' itself (Q5 — no
+        // new UI) and returns true when a retry was scheduled. When the
+        // flag is off, the disconnect is intentional, or the ladder is
+        // exhausted, it returns false and we keep the frozen behavior.
+        if (
+          !intentionallyDisconnectedRef.current &&
+          reconnectEnabledRef.current &&
+          scheduleReconnectRef.current?.()
+        ) {
+          return;
+        }
         updateState('disconnected');
       };
 
       wsRef.current = ws;
+
+      // Dev-only test scaffold (caching-initiative Q6). Closes the raw
+      // socket WITHOUT going through disconnect(), so ws.onclose sees
+      // !intentionallyDisconnectedRef → exercises the exact lever-2
+      // path. Lets every reconnect scenario be reproduced in seconds,
+      // repeatedly, single-variable — no ~2h wait for real expiry, no
+      // live tutoring session, zero inference spend. NODE_ENV-guarded;
+      // never ships to production. Not a behavior change.
+      if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+        (window as unknown as { __tutorForceRealtimeClose?: () => void }).__tutorForceRealtimeClose = () => {
+          console.warn('[Realtime][dev] __tutorForceRealtimeClose() — simulating unintentional drop');
+          wsRef.current?.close();
+        };
+      }
     } catch (err) {
       console.error('[Realtime] Connection error:', err);
       const error = err instanceof Error ? err : new Error('Connection failed');
@@ -1456,6 +1533,90 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       updateState('error');
     }
   }, [voice, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
+
+  // Break the connect↔reconnect circular dep via the file's existing
+  // latest-fn-in-a-ref idiom (cf. startListeningRef below).
+  connectRef.current = connect;
+
+  /**
+   * Reconnect ladder (caching-initiative levers 2+3, 2026-05-18).
+   * Returns true when it has HANDLED the drop (scheduled a retry, or
+   * exhausted the ladder and shown the frozen banner) so the caller
+   * skips its own fallback; false when the caller should keep the
+   * frozen dead-end behavior (flag off / intentional disconnect).
+   *
+   * Q3 ladder: 0 / 1 s / 3 s backoff, max 3 attempts, the counter
+   * resets only on transcription.completed (proven end-to-end —
+   * subsumes the flap-breaker). Q4 token: attempt 1 reuses the cached
+   * client_secret (lever 1 keeps it valid 2 h → sub-second recovery,
+   * no token round-trip); a prior failed attempt nulls tokenPromiseRef
+   * so attempts 2-3 re-mint. W1/W3/W4 applied on every initiate.
+   * Never tears down mic capture (Q2 guard covers the gap) and never
+   * sets intentionallyDisconnectedRef.
+   */
+  const scheduleReconnect = useCallback((): boolean => {
+    if (!reconnectEnabledRef.current || intentionallyDisconnectedRef.current) {
+      return false;
+    }
+    if (reconnectAttemptsRef.current >= 3) {
+      // Ladder exhausted — graceful degradation to the frozen behavior:
+      // the existing voice-trouble banner + state reset (mirrors the
+      // transcription.failed handler exactly). No new UX.
+      console.warn('[Realtime] Reconnect ladder exhausted (3/3) — falling back to voice-trouble banner');
+      if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
+      updateState(shouldListenRef.current ? 'listening' : 'connected');
+      onTranscriptionStatus?.('failed');
+      return true; // handled — caller must NOT also banner
+    }
+    const attemptIndex = reconnectAttemptsRef.current; // 0,1,2
+    const delayMs = [0, 1000, 3000][attemptIndex] ?? 3000;
+
+    // W1: kill any pending transcription watchdog — its utterance is
+    // lost (audio went to a dead socket); the student re-speaks after
+    // recovery. Without this it fires mid-reconnect and banners.
+    if (transcriptionWatchdogRef.current) {
+      clearTimeout(transcriptionWatchdogRef.current);
+      transcriptionWatchdogRef.current = null;
+    }
+    // W4: drop stale playback from the dead session (don't let a
+    // half-played reply resume / confuse the audio thread).
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    hasAudioInBufferRef.current = false;
+    // W3: force a fresh session.update on the next ws.onopen so the
+    // reconnected session is re-armed with the BYTE-IDENTICAL frozen
+    // config (server_vad + env threshold/silence/prefix +
+    // create_response:false + whisper-1 + instructions) via the
+    // existing trySendSessionUpdate. Reconnect introduces ZERO
+    // VAD/turn-detection change.
+    sessionUpdateSentRef.current = false;
+    trySendSessionUpdateRef.current = null;
+    // Q4 token: reuse the cached key on attempt 1; re-mint after a
+    // prior failed attempt.
+    if (attemptIndex > 0) {
+      tokenPromiseRef.current = null;
+    }
+
+    reconnectAttemptsRef.current = attemptIndex + 1;
+    updateState('connecting'); // Q5: reuse existing state, no new UI
+    console.log(
+      `[Realtime] Scheduling reconnect ${attemptIndex + 1}/3 in ${delayMs}ms ` +
+      `(token=${attemptIndex > 0 ? 're-mint' : 'reuse'})`,
+    );
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    reconnectTimerRef.current = setTimeout(() => {
+      reconnectTimerRef.current = null;
+      if (intentionallyDisconnectedRef.current) return; // ended during backoff
+      connectRef.current().catch((err) => {
+        // A thrown connect() produces no ws.onclose — re-arm directly
+        // so recovery doesn't stall mid-ladder.
+        console.error('[Realtime] Reconnect attempt threw:', err);
+        scheduleReconnectRef.current?.();
+      });
+    }, delayMs);
+    return true;
+  }, [updateState, onTranscriptionStatus]);
+  scheduleReconnectRef.current = scheduleReconnect;
 
   // Fire the ephemeral-token fetch early so it can overlap with
   // buildInstructions (saves ~500–1500 ms on typical startup). Safe to call
@@ -1507,6 +1668,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       clearTimeout(transcriptionWatchdogRef.current);
       transcriptionWatchdogRef.current = null;
     }
+    // Cancel any pending reconnect backoff + reset the ladder counter
+    // (caching-initiative lever 2). intentionallyDisconnectedRef is
+    // already true above, so the timer callback's guard would also
+    // catch this, but clearing the timer prevents the connect() call
+    // outright. Counter reset gives a future fresh session a clean
+    // ladder. Pass criterion #5 (End-tap / unmount during a pending
+    // reconnect must NOT reconnect).
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    reconnectAttemptsRef.current = 0;
 
     // Stop audio capture
     if (audioProcessorRef.current) {
@@ -1643,11 +1816,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
         const base64Audio = float32ToBase64PCM16(resampledData);
 
-        hasAudioInBufferRef.current = true;
-        wsRef.current.send(JSON.stringify({
-          type: 'input_audio_buffer.append',
-          audio: base64Audio,
-        }));
+        // Q2 readyState guard (caching-initiative lever 2). onaudioprocess
+        // fires ~every 85ms; during a reconnect gap wsRef.current is null
+        // (ws.onclose) or a closed socket → an unguarded .send() crashes
+        // the audio thread. Dropping gap audio is correct: it has no
+        // valid session to land in (same as today's dead-socket
+        // behavior). Also closes a latent PRE-EXISTING crash — even on
+        // the frozen baseline, an onclose mid-speech hit this same
+        // null.send(). hasAudioInBufferRef stays false when nothing was
+        // sent (no audio in the server buffer to commit).
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          hasAudioInBufferRef.current = true;
+          wsRef.current.send(JSON.stringify({
+            type: 'input_audio_buffer.append',
+            audio: base64Audio,
+          }));
+        }
       };
 
       source.connect(processor);
