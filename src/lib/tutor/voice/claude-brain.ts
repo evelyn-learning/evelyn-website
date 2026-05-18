@@ -770,6 +770,61 @@ function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): stri
  * successfully"). Phase 2 of this fix will pipe real validator feedback
  * (rejection reasons, board state changes) so Claude can self-correct.
  */
+
+/**
+ * Assemble the `messages` array for a brain SDK call: prior conversation
+ * (oldest-first) followed by this turn's volatile userContent wrapper.
+ *
+ * Stage 1 item 2 (2026-05-18 caching initiative): a 2nd cache breakpoint
+ * on the LAST conversationHistory message. conversationHistory is
+ * strictly append-only across turns — the client rebuilds it from refs
+ * each turn and never mutates prior entries (VoiceTutorRealtime
+ * runHistory: `[...runHistory, u, a]`), so turn N's history is a
+ * byte-stable prefix of turn N+1's. Caching through the last history
+ * message converts the growing transcript from full-price input
+ * ($3/MTok) to cache reads ($0.30/MTok) and trims TTFT. The volatile
+ * userContent (lesson plan / whiteboard / student_said) is the LAST
+ * message and is intentionally left UNMARKED — it changes every turn
+ * and must not be cached. ttl:'1h' matches the system breakpoint
+ * (item 1) so the whole cached region has a uniform 1-hour TTL: no
+ * mixed-TTL ordering subtlety, and the history survives mid-session
+ * pauses for the same reason the system prefix does.
+ *
+ * Empty history (turn 1 of a session): map yields [] (lastIdx = -1),
+ * so no 2nd breakpoint is added — the system breakpoint already caches
+ * tools+system and userContent stays correctly uncached.
+ *
+ * Within a turn's agent loop / validator retry, callers append after
+ * userContent; the history prefix and its breakpoint position are
+ * unchanged, so the cached prefix is re-read (not rebuilt) each
+ * iteration.
+ *
+ * Both runBrainTurn (non-streaming fallback) and streamBrainTurn (live
+ * path) build messages through this helper so their cache behavior
+ * cannot drift — the same twin-consistency requirement as item 1.
+ */
+function buildBrainMessages(
+  conversationHistory: BrainTurnInput['conversationHistory'],
+  userContent: string,
+): Anthropic.MessageParam[] {
+  const lastIdx = conversationHistory.length - 1;
+  const history: Anthropic.MessageParam[] = conversationHistory.map((m, i) =>
+    i === lastIdx
+      ? {
+          role: m.role,
+          content: [
+            {
+              type: 'text' as const,
+              text: m.content,
+              cache_control: { type: 'ephemeral' as const, ttl: '1h' as const },
+            },
+          ],
+        }
+      : { role: m.role, content: m.content },
+  );
+  return [...history, { role: 'user' as const, content: userContent }];
+}
+
 export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutput> {
   const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
 
@@ -811,10 +866,10 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
   // Initial messages: prior conversation + the student's just-said wrapper.
-  let messages: Anthropic.MessageParam[] = [
-    ...input.conversationHistory.map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user' as const, content: userContent },
-  ];
+  let messages: Anthropic.MessageParam[] = buildBrainMessages(
+    input.conversationHistory,
+    userContent,
+  );
 
   let accumulatedText = '';
   const accumulatedToolCalls: BrainToolCall[] = [];
@@ -829,7 +884,18 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
         {
           type: 'text',
           text: input.systemPrompt,
-          cache_control: { type: 'ephemeral' },
+          // Stage 1 item 1 (2026-05-18 caching initiative): 1-hour TTL
+          // on the system+tools cached prefix (62K tok, $0.234 to
+          // create). Default 5m expires on any >5-min student pause →
+          // full re-create + cold ~62K prefill (latency stall) mid-
+          // session. 1h write premium is +$0.141 once vs avoiding a
+          // $0.234 re-create per gap — net win with ≥1 mid-session
+          // pause. Both twins (this streaming live path + the
+          // non-streaming fallback) carry it so their cache behavior
+          // stays consistent. RISK 2 refuted in Stage 0 — the prefix is
+          // byte-stable per turn, so this strictly extends a working
+          // cache; no behavioral change.
+          cache_control: { type: 'ephemeral', ttl: '1h' },
         },
       ],
       tools: toAnthropicTools(input.tools),
@@ -946,10 +1012,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
-  let messages: Anthropic.MessageParam[] = [
-    ...input.conversationHistory.map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user' as const, content: userContent },
-  ];
+  let messages: Anthropic.MessageParam[] = buildBrainMessages(
+    input.conversationHistory,
+    userContent,
+  );
 
   let accumulatedText = '';
   const accumulatedToolCalls: BrainToolCall[] = [];
@@ -970,7 +1036,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         {
           type: 'text',
           text: input.systemPrompt,
-          cache_control: { type: 'ephemeral' },
+          // Stage 1 item 1 (2026-05-18 caching initiative): 1-hour TTL
+          // on the system+tools cached prefix (62K tok, $0.234 to
+          // create). Default 5m expires on any >5-min student pause →
+          // full re-create + cold ~62K prefill (latency stall) mid-
+          // session. 1h write premium is +$0.141 once vs avoiding a
+          // $0.234 re-create per gap — net win with ≥1 mid-session
+          // pause. Both twins (this streaming live path + the
+          // non-streaming fallback) carry it so their cache behavior
+          // stays consistent. RISK 2 refuted in Stage 0 — the prefix is
+          // byte-stable per turn, so this strictly extends a working
+          // cache; no behavioral change.
+          cache_control: { type: 'ephemeral', ttl: '1h' },
         },
       ],
       tools: toAnthropicTools(input.tools),

@@ -515,7 +515,7 @@ export async function POST(req: NextRequest) {
           `→ tools=[${toolNames.join(', ') || '(none)'}] · sentences=${sentenceCount} ` +
           `· first_sentence=${firstSentenceMs}ms · first_tool=${firstToolMs}ms · total=${totalMs}ms ` +
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
-          `· stop=${stopReason} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens}` +
+          `· stop=${stopReason} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
           (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
           (clientGone ? ' (client_gone)' : '')
         );
