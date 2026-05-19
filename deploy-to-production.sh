@@ -56,6 +56,40 @@ run_remote_command() {
   ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "$command"
 }
 
+# Robust file upload. Three reasons this exists (2026-05-18 stall):
+#  -O                  force the legacy SCP protocol. Modern OpenSSH (9.x,
+#                      incl. macOS) defaults scp to the SFTP subsystem; if
+#                      the server's sftp-server subsystem is mis/disabled,
+#                      scp connects then hangs at 0% / 0.0KB/s forever
+#                      (while `ssh host "cmd"` exec still works — which is
+#                      exactly the symptom we saw).
+#  ConnectTimeout +    a genuine stall now ERRORS in ~30s instead of
+#  ServerAlive*        hanging indefinitely (the script was unkillable).
+#  3-attempt retry     rides out transient network drops.
+# The `if scp; then` form keeps an intermediate failure from tripping the
+# ERR trap (this script uses `trap ERR`, not `set -e`); the caller handles
+# the final non-zero return via `|| { ... }`.
+scp_with_retry() {
+  local src=$1
+  local dest=$2
+  local attempt=1
+  local max=3
+  while [ "$attempt" -le "$max" ]; do
+    if scp -O \
+         -o StrictHostKeyChecking=no \
+         -o ConnectTimeout=15 \
+         -o ServerAliveInterval=10 \
+         -o ServerAliveCountMax=3 \
+         "$src" "$dest"; then
+      return 0
+    fi
+    log_message "WARNING" "Upload attempt ${attempt}/${max} failed (${src}); retrying in $((attempt * 5))s..."
+    sleep $((attempt * 5))
+    attempt=$((attempt + 1))
+  done
+  return 1
+}
+
 # Starting deployment
 log_message "INFO" "Starting Evelyn Learning deployment to production..."
 
@@ -71,9 +105,15 @@ if [ -f ".env.local.production" ]; then
   log_message "INFO" "Temporarily using .env.local.production for build"
 fi
 
-# Clean up previous builds
+# Clean up previous builds. `.next/` alone is not enough: a stale
+# tsconfig.tsbuildinfo (TS incremental cache) survives the .next wipe and
+# can carry a dangling `.next/types/cache-life.d.ts` root-file reference,
+# failing `next build`'s type-check with "File not found" even though the
+# code is clean (2026-05-18 build failure — Next 16 only emits
+# cache-life.d.ts when cacheComponents is on, which it isn't here).
 log_message "INFO" "Cleaning up previous build artifacts..."
 rm -rf .next/ 2>/dev/null || true
+rm -f tsconfig.tsbuildinfo 2>/dev/null || true
 
 npm run build || {
   # Restore dev env before exiting on error
@@ -138,8 +178,8 @@ run_remote_command "mkdir -p $REMOTE_DIR" || {
 }
 
 log_message "STEP" "Uploading to production server..."
-scp -o StrictHostKeyChecking=no "$ZIP_FILE" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/" || {
-  log_message "ERROR" "Failed to upload zip file to server"
+scp_with_retry "$ZIP_FILE" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/" || {
+  log_message "ERROR" "Failed to upload zip file to server after 3 attempts"
   exit 1
 }
 log_message "INFO" "Successfully uploaded zip file to server"
@@ -147,8 +187,8 @@ log_message "INFO" "Successfully uploaded zip file to server"
 # Step 3.5: Upload production environment file
 log_message "STEP" "Uploading production environment file..."
 if [ -f ".env.local.production" ]; then
-  scp -o StrictHostKeyChecking=no ".env.local.production" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/.env.local" || {
-    log_message "WARNING" "Failed to upload .env.local.production"
+  scp_with_retry ".env.local.production" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/.env.local" || {
+    log_message "WARNING" "Failed to upload .env.local.production after 3 attempts"
   }
   log_message "INFO" "Successfully uploaded .env.local.production as .env.local"
 else
