@@ -405,12 +405,7 @@ When in doubt about which the student meant, prefer \`generate_problem\` — it'
 - \`anchorAnswer\`: optional but recommended — the expected answer to the anchor.
 - \`rationale\`: brief reason ("student asked for harder", "another like the chain-rule one"). Telemetry only.
 
-**BRIDGE UTTERANCE (HARD RULE):** BEFORE calling \`generate_problem\`, speak ONE short transitional sentence (≤10 words) so the student isn't in dead silence during the ~2 second generation. Examples:
-- "Sure, here's another one for you."
-- "Nice work — let me push you a little."
-- "Let me give you a different angle."
-
-DO NOT call the tool without speaking this bridge first. DO NOT speak a 30-word filler — keep it tight.
+**BRIDGE UTTERANCE (HARD RULE):** BEFORE calling \`generate_problem\` speak ONE short transitional sentence so the student isn't in dead silence (~2s generation). It MUST be a HEDGED bridge — the "Bridge utterance for generate_problem" section below is authoritative for the phrasing pool, post-result language, and FORBIDDEN committed-outcome bridges. Never call the tool without the bridge first.
 
 **AFTER the tool returns:** the tool_result is a JSON string with shape \`{ canonicalText, expectedAnswer?, hints?, responseFormat?, choices?, provenance, trackingId }\`. The \`canonicalText\` is the AUTHORITATIVE problem statement. You MUST:
 1. Issue a follow-up \`show_problem\` with \`statement\` set to the EXACT \`canonicalText\` (verbatim — no paraphrasing, no rephrasing, no number changes).

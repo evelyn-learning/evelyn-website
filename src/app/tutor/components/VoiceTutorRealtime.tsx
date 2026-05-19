@@ -5029,6 +5029,13 @@ export function VoiceTutorRealtime({
             lessonPlanContext,
             studentProfileBlock: studentProfileBlockRef.current || undefined,
             grade: level,
+            // Lever A tools-array subject filter (server-side, behind
+            // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
+            // session subject, immutable for the session ⇒ cache-safe.
+            // When a future mid-session subject-change feature ships,
+            // STOP sending this on/after the change (⇒ sticky fail open)
+            // — see project_lever_a_tools_filter.md.
+            subject,
             // Adaptive-pacing v1 dedup state. Empty arrays for sessions
             // that haven't shown any generated problems yet — fine,
             // pipeline treats absent + empty identically.

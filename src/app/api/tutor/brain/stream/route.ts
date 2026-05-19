@@ -24,6 +24,11 @@ import { NextRequest } from 'next/server';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
+import {
+  resolveToolSubjects,
+  filterToolsForSubject,
+  type ToolFilterResult,
+} from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import {
   generateProblem,
@@ -44,6 +49,13 @@ interface BrainStreamRequestBody {
   studentProfileBlock?: string;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
+  /** Configured session subject (UI `selectedSubject`). Used ONLY by the
+   *  Lever A tools-array filter (TUTOR_TOOL_SUBJECT_FILTER). Immutable for
+   *  a running session ⇒ the filtered tools array is byte-stable ⇒
+   *  prefix cache safe. A future mid-session subject change must make the
+   *  client STOP sending this (⇒ sticky fail open). See
+   *  project_lever_a_tools_filter.md. */
+  subject?: string;
   model?: string;
   maxTokens?: number;
   /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
@@ -368,6 +380,39 @@ export async function POST(req: NextRequest) {
         }
       };
 
+      // Lever A — flag-gated subject filter for the tools array (the
+      // largest cached-prefix cost). Default OFF ⇒ pass WHITEBOARD_TOOLS
+      // by reference, byte-identical to pre-Lever-A. Freestyle/pasted
+      // plans + no-plan sessions ⇒ fail open (untrusted subject). The
+      // log line is grep-able (one per turn) as the before/after harness.
+      // See project_lever_a_tools_filter.md.
+      let toolFilter: ToolFilterResult;
+      if (process.env.TUTOR_TOOL_SUBJECT_FILTER !== 'true') {
+        toolFilter = {
+          tools: WHITEBOARD_TOOLS,
+          mode: 'failopen',
+          sent: WHITEBOARD_TOOLS.length,
+          total: WHITEBOARD_TOOLS.length,
+          excluded: [],
+        };
+      } else {
+        const planId = body.lessonPlanContext?.plan?.id ?? '';
+        const untrusted =
+          !body.lessonPlanContext || planId.startsWith('freestyle-');
+        toolFilter = filterToolsForSubject(
+          WHITEBOARD_TOOLS,
+          untrusted ? null : resolveToolSubjects(body.subject),
+        );
+      }
+      console.log(
+        `[toolfilter] flag=${process.env.TUTOR_TOOL_SUBJECT_FILTER === 'true' ? 'on' : 'off'} ` +
+          `subject=${body.subject ?? ''} mode=${toolFilter.mode} ` +
+          `sent=${toolFilter.sent}/${toolFilter.total}` +
+          (toolFilter.excluded.length
+            ? ` excluded=[${toolFilter.excluded.join(',')}]`
+            : ''),
+      );
+
       try {
         for await (const ev of runTutorTurn({
           systemPrompt: body.systemPrompt,
@@ -382,7 +427,7 @@ export async function POST(req: NextRequest) {
           pacingState: body.pacingState,
           topicNotesState: body.topicNotesState,
           grade: body.grade,
-          tools: WHITEBOARD_TOOLS,
+          tools: toolFilter.tools,
           model: body.model,
           maxTokens: body.maxTokens,
           toolResultProvider: makeToolResultProvider(
