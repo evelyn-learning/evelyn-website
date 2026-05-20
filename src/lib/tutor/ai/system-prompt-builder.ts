@@ -16,6 +16,7 @@ import { renderAnalogiesBlock } from '@/lib/tutor/pedagogy/analogies';
 import { renderHumorBlock, resolveHumorCeiling, type HumorLevel } from '@/lib/tutor/pedagogy/humor';
 import type { StudentPreferences, PartnerPolicy } from '@/lib/tutor/student-profile/types';
 import { renderCatalogForPrompt } from '@/lib/tutor/diagrams/catalog/manifest';
+import { resolveToolSubjects, type CatalogSubject } from './tool-subject-taxonomy';
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
 import { renderBrandingBlock } from './branding/render';
@@ -38,9 +39,6 @@ function parseGradeForCatalog(level?: string): 'k' | number | undefined {
   if (l.includes('elementary')) return 4;
   return undefined;
 }
-
-/** Catalog subject tags used by `renderCatalogForPrompt`. */
-type CatalogSubject = 'math' | 'physics' | 'chemistry' | 'biology' | 'earth' | 'cs' | 'ela' | 'social';
 
 /** Map a plan-side `subject` value (free-form across seeds) to a catalog
  *  subject tag. Returns `undefined` when the plan subject doesn't have a
@@ -155,6 +153,113 @@ export interface SystemPromptContext {
    *  the API doesn't change. */
   partnerPolicy?: PartnerPolicy;
 }
+
+/**
+ * Lever B trim #2 redux — subject-filter the manual Structured-diagram-tools
+ * list in lockstep with Lever A (tool-subject-taxonomy.ts). Each entry's
+ * `subjects` field MUST mirror TOOL_SUBJECTS for the same tool name — null
+ * = universal CORE (always kept). Fail-open identity: when allowed === null
+ * the renderer reproduces the full prose byte-identical to the pre-trim
+ * BASE_PROMPT. Cache-safe: session subject is immutable, so the rendered
+ * block is byte-stable per session (prefix stays cached).
+ */
+interface StructuredToolEntry {
+  name: string;
+  /** Exact prose body. Multi-line entries use '\n' between lines. */
+  body: string;
+  /** null = universal CORE (always kept). Otherwise: kept iff any of these subjects is allowed. */
+  subjects: CatalogSubject[] | null;
+}
+interface StructuredToolCategory {
+  header: string;
+  entries: StructuredToolEntry[];
+}
+const STRUCTURED_TOOL_BLOCK: StructuredToolCategory[] = [
+  {
+    header: 'Math / data',
+    entries: [
+      { name: 'show_coordinate_plane', subjects: null, body: '     · show_coordinate_plane — points, segments, vectors from origin on labeled x-y axes with gridlines' },
+      { name: 'show_scatter_plot', subjects: null, body: '     · show_scatter_plot — data points + optional least-squares regression line with R²' },
+      { name: 'show_geometry_constructed', subjects: null, body: '     · show_geometry_constructed — declarative construction tool (see <geometry_constructions> below for the full step catalog). PREFER this over show_geometry whenever the figure has a construction description.' },
+      { name: 'show_lewis_constructed', subjects: ['chemistry'], body: '     · show_lewis_constructed — declarative Lewis-structure tool (atoms by element, bonds by atom-id pair, lone-pair counts auto-derived from valence, octet validated). PREFER this over show_lewis whenever you can describe the molecule by atoms + bonds — which is most of the time. Reserve show_lewis for resonance arrows mid-structure or expanded octets you want to assert manually.' },
+      { name: 'show_balanced_equation', subjects: ['chemistry'], body: '     · show_balanced_equation — pass an UNBALANCED chemical equation as a string ("Fe + O2 -> Fe2O3"); the solver deterministically computes smallest positive-integer coefficients and renders them. PREFER this over writing balanced equations into show_equation by hand — non-trivial reactions (combustion of larger hydrocarbons, redox like KMnO4 + HCl, etc.) are a documented frequent failure mode for LLM atom-counting.' },
+      { name: 'show_dimensional_check', subjects: ['chemistry', 'physics'], body: '     · show_dimensional_check — pass either a "formula" ("F = m·a") or an "expression" + "expectedUnit" ("m v² / r" with "N"); the validator parses both sides and confirms (or rejects) dimensional consistency. Use this BEFORE walking through a calculation to make sure the formula you wrote actually has the right units — catches "KE = m·v" / "F = m·v" / energy-vs-power confusion deterministically.' },
+      { name: 'show_run_code', subjects: ['cs', 'math'], body: [
+          '     · show_run_code — Run code in a sandbox with per-test pass/fail and captured stdout. Two modes:',
+          '       - JavaScript (default, language: "javascript"): server-side node:vm sandbox; tests are an array of {input, expected} objects that call your `solve` function. Use for algorithms, data structures, basic logic problems.',
+          '       - Python (language: "python"): browser-side Pyodide sandbox with numpy / pandas / sympy preloaded. Tests are pytest-style — embed `def test_*(): assert ...` functions in the source itself; the runtime auto-discovers and runs them. Use for data-science demos (pandas DataFrames, numpy arrays), symbolic math (sympy.solve, sympy.diff), or any Python lesson. The first Python use in a session triggers a one-time ~7-15 MB CDN download (cached afterward) so the student sees a brief "Loading Python sandbox…" before results land.',
+          '       Sandbox is isolated (no file/network access). Timeout cap: 5s for JS, 15s for Python.',
+        ].join('\n') },
+      { name: 'show_early_math', subjects: ['math'], body: '     · show_early_math — K-2 / K-5 visual primitives: place_value (base-10 blocks), ten_frame (5×2 dot grid), array (rows×cols dots for multiplication intro), skip_count (number line with hop arcs), bar_model (Singapore-style tape diagram). PREFER this over the dense math tools when the student is in early grades or a concept is being introduced for the first time.' },
+      { name: 'show_phonics', subjects: ['ela'], body: '     · show_phonics — K-2 reading: sound_out (graphemes in colored boxes), syllables (split + stress), blend (consonant cluster underlined). For decoding instruction.' },
+      { name: 'show_graphic_organizer', subjects: ['ela', 'social'], body: '     · show_graphic_organizer — ELA / writing organizers: story_map, kwl, t_chart, sequence, cause_effect. One tool, five layouts.' },
+      { name: 'show_writing_frame', subjects: ['ela'], body: '     · show_writing_frame — writing scaffolds: sentence_stems (numbered starters with dashed lines), paragraph_frame (topic + 3 details + closing), five_paragraph (intro / body×3 / conclusion stack with thesis hint).' },
+      { name: 'show_labeled_image', subjects: null, body: "     · show_labeled_image — a real photo / illustration with brain-supplied callouts (percentage coords). For biology / social studies / chemistry where a real image carries information a synthesized diagram can't." },
+      { name: 'show_solved_example', subjects: null, body: '     · show_solved_example — a standalone "Example 1" artifact: problem + ordered steps with reasoning + boxed answer + key idea. Pedagogically: the model the student studies BEFORE attempting a try-yourself.' },
+      { name: 'show_quiz', subjects: null, body: '     · show_quiz — small embedded quiz (1-5 items, mixed mcq/frq/numeric) the student works through on their own with auto-scoring. Use at end-of-segment or end-of-session to check retention.' },
+    ],
+  },
+  {
+    header: 'Process / concept visualizations',
+    entries: [
+      { name: 'show_cycle_diagram', subjects: null, body: '     · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)' },
+      { name: 'show_concept_map', subjects: null, body: '     · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted' },
+    ],
+  },
+  {
+    header: 'Physics — mechanics',
+    entries: [
+      { name: 'show_motion_diagram', subjects: ['physics'], body: '     · show_motion_diagram — x/v/a vs t stacked sub-panels with shared time axis' },
+      { name: 'show_projectile_motion', subjects: ['physics'], body: '     · show_projectile_motion — trajectory + vx/vy components + range + max height annotations' },
+      { name: 'show_simple_machine', subjects: ['physics'], body: '     · show_simple_machine — lever (class-1/2/3), pulley (fixed/movable/compound), inclined-plane, wedge' },
+      { name: 'show_pendulum', subjects: ['physics'], body: '     · show_pendulum — string + bob at ±amplitude with T = 2π√(L/g) readout' },
+      { name: 'show_spring_mass', subjects: ['physics'], body: '     · show_spring_mass — mass on spring at displaced position with ω = √(k/m), T = 2π/ω readout' },
+    ],
+  },
+  {
+    header: 'Physics — E&M / waves / optics',
+    entries: [
+      { name: 'show_ray_diagram', subjects: ['physics'], body: '     · show_ray_diagram — lens/mirror with object, image, focal points; thin-lens equation' },
+      { name: 'show_wave', subjects: ['physics'], body: '     · show_wave — sinusoid with λ/A/phase, optional superposition overlay' },
+      { name: 'show_vector', subjects: null, body: '     · show_vector — 2D vectors from-origin or tip-to-tail + optional resultant' },
+    ],
+  },
+  {
+    header: 'Chemistry',
+    entries: [
+      { name: 'show_orbital_diagram', subjects: ['chemistry', 'physics'], body: '     · show_orbital_diagram — electron config box-and-arrow (Aufbau/Pauli/Hund); pass element symbol' },
+    ],
+  },
+  {
+    header: 'Biology',
+    entries: [
+      { name: 'show_pedigree', subjects: ['biology'], body: '     · show_pedigree — standard genetics symbols with marriages + offspring lines' },
+      { name: 'show_cell_diagram', subjects: ['biology'], body: '     · show_cell_diagram — animal or plant cell with labeled organelles' },
+      { name: 'show_dna', subjects: ['biology'], body: '     · show_dna — helix or base-pairs mode with optional mRNA row' },
+      { name: 'show_food_web', subjects: ['biology', 'earth'], body: '     · show_food_web — species arranged by trophic level with prey→predator arrows' },
+    ],
+  },
+];
+
+/** Render the structured-tools block, filtered by `allowed` (Lever A taxonomy).
+ *  `allowed === null` ⇒ full prose, byte-identical to pre-trim BASE_PROMPT. */
+export function renderStructuredToolsBlock(allowed: CatalogSubject[] | null): string {
+  const allowSet = allowed === null ? null : new Set(allowed);
+  const out: string[] = ['**Structured diagram tools** — pick the matching one for every visual:'];
+  for (const cat of STRUCTURED_TOOL_BLOCK) {
+    const kept = cat.entries.filter((e) => {
+      if (allowSet === null) return true;
+      if (e.subjects === null) return true;
+      return e.subjects.some((s) => allowSet.has(s));
+    });
+    if (kept.length === 0) continue;
+    out.push(`   - ${cat.header}:`);
+    for (const e of kept) out.push(e.body);
+  }
+  return out.join('\n');
+}
+
+const STRUCTURED_DIAGRAM_TOOLS_SENTINEL = '__STRUCTURED_DIAGRAM_TOOLS_BLOCK_SENTINEL__';
 
 /**
  * Base tutor personality and guidelines
@@ -661,45 +766,7 @@ The whiteboard organizes content into **pages**. Related items appear together o
 
 If you say "let me show you" / "here's a diagram" / "I'll draw" you MUST emit the matching tool call in the same turn. Saying it without calling the tool is lying to the student.
 
-**Structured diagram tools** — pick the matching one for every visual:
-   - Math / data:
-     · show_coordinate_plane — points, segments, vectors from origin on labeled x-y axes with gridlines
-     · show_scatter_plot — data points + optional least-squares regression line with R²
-     · show_geometry_constructed — declarative construction tool (see <geometry_constructions> below for the full step catalog). PREFER this over show_geometry whenever the figure has a construction description.
-     · show_lewis_constructed — declarative Lewis-structure tool (atoms by element, bonds by atom-id pair, lone-pair counts auto-derived from valence, octet validated). PREFER this over show_lewis whenever you can describe the molecule by atoms + bonds — which is most of the time. Reserve show_lewis for resonance arrows mid-structure or expanded octets you want to assert manually.
-     · show_balanced_equation — pass an UNBALANCED chemical equation as a string ("Fe + O2 -> Fe2O3"); the solver deterministically computes smallest positive-integer coefficients and renders them. PREFER this over writing balanced equations into show_equation by hand — non-trivial reactions (combustion of larger hydrocarbons, redox like KMnO4 + HCl, etc.) are a documented frequent failure mode for LLM atom-counting.
-     · show_dimensional_check — pass either a "formula" ("F = m·a") or an "expression" + "expectedUnit" ("m v² / r" with "N"); the validator parses both sides and confirms (or rejects) dimensional consistency. Use this BEFORE walking through a calculation to make sure the formula you wrote actually has the right units — catches "KE = m·v" / "F = m·v" / energy-vs-power confusion deterministically.
-     · show_run_code — Run code in a sandbox with per-test pass/fail and captured stdout. Two modes:
-       - JavaScript (default, language: "javascript"): server-side node:vm sandbox; tests are an array of {input, expected} objects that call your \`solve\` function. Use for algorithms, data structures, basic logic problems.
-       - Python (language: "python"): browser-side Pyodide sandbox with numpy / pandas / sympy preloaded. Tests are pytest-style — embed \`def test_*(): assert ...\` functions in the source itself; the runtime auto-discovers and runs them. Use for data-science demos (pandas DataFrames, numpy arrays), symbolic math (sympy.solve, sympy.diff), or any Python lesson. The first Python use in a session triggers a one-time ~7-15 MB CDN download (cached afterward) so the student sees a brief "Loading Python sandbox…" before results land.
-       Sandbox is isolated (no file/network access). Timeout cap: 5s for JS, 15s for Python.
-     · show_early_math — K-2 / K-5 visual primitives: place_value (base-10 blocks), ten_frame (5×2 dot grid), array (rows×cols dots for multiplication intro), skip_count (number line with hop arcs), bar_model (Singapore-style tape diagram). PREFER this over the dense math tools when the student is in early grades or a concept is being introduced for the first time.
-     · show_phonics — K-2 reading: sound_out (graphemes in colored boxes), syllables (split + stress), blend (consonant cluster underlined). For decoding instruction.
-     · show_graphic_organizer — ELA / writing organizers: story_map, kwl, t_chart, sequence, cause_effect. One tool, five layouts.
-     · show_writing_frame — writing scaffolds: sentence_stems (numbered starters with dashed lines), paragraph_frame (topic + 3 details + closing), five_paragraph (intro / body×3 / conclusion stack with thesis hint).
-     · show_labeled_image — a real photo / illustration with brain-supplied callouts (percentage coords). For biology / social studies / chemistry where a real image carries information a synthesized diagram can\'t.
-     · show_solved_example — a standalone "Example 1" artifact: problem + ordered steps with reasoning + boxed answer + key idea. Pedagogically: the model the student studies BEFORE attempting a try-yourself.
-     · show_quiz — small embedded quiz (1-5 items, mixed mcq/frq/numeric) the student works through on their own with auto-scoring. Use at end-of-segment or end-of-session to check retention.
-   - Process / concept visualizations:
-     · show_cycle_diagram — cyclic processes (water cycle, rock cycle, cell cycle, PDCA)
-     · show_concept_map — labeled nodes + labeled edges, auto-layout from BFS if coords omitted
-   - Physics — mechanics:
-     · show_motion_diagram — x/v/a vs t stacked sub-panels with shared time axis
-     · show_projectile_motion — trajectory + vx/vy components + range + max height annotations
-     · show_simple_machine — lever (class-1/2/3), pulley (fixed/movable/compound), inclined-plane, wedge
-     · show_pendulum — string + bob at ±amplitude with T = 2π√(L/g) readout
-     · show_spring_mass — mass on spring at displaced position with ω = √(k/m), T = 2π/ω readout
-   - Physics — E&M / waves / optics:
-     · show_ray_diagram — lens/mirror with object, image, focal points; thin-lens equation
-     · show_wave — sinusoid with λ/A/phase, optional superposition overlay
-     · show_vector — 2D vectors from-origin or tip-to-tail + optional resultant
-   - Chemistry:
-     · show_orbital_diagram — electron config box-and-arrow (Aufbau/Pauli/Hund); pass element symbol
-   - Biology:
-     · show_pedigree — standard genetics symbols with marriages + offspring lines
-     · show_cell_diagram — animal or plant cell with labeled organelles
-     · show_dna — helix or base-pairs mode with optional mRNA row
-     · show_food_web — species arranged by trophic level with prey→predator arrows
+${STRUCTURED_DIAGRAM_TOOLS_SENTINEL}
 
 **When to use the whiteboard:** show every calculation step (one show_equation per substitution / intermediate / result), draw a diagram for any path-motion-force problem, never describe a diagram in words without also showing it, and one concept per board item. **Problem extensions require a new diagram FIRST** — if the student adds a mass / spring / force / dimension change, your first tool call MUST be the updated diagram BEFORE any verbal answer or calculation.
 
@@ -1063,6 +1130,19 @@ Every academic response includes a whiteboard tool call — never explain withou
  */
 export function buildSystemPrompt(context: SystemPromptContext): string {
   let prompt = BASE_PROMPT;
+
+  // Lever B trim #2 redux — splice the structured-tools block, subject-
+  // filtered in lockstep with Lever A. Same env flag (TUTOR_TOOL_SUBJECT_FILTER).
+  // Flag OFF ⇒ render(null) returns the full prose byte-identical to the
+  // pre-trim BASE_PROMPT. Cache-safe (subject immutable per session).
+  const allowedForBlock =
+    process.env.TUTOR_TOOL_SUBJECT_FILTER === 'true'
+      ? resolveToolSubjects(context.subject)
+      : null;
+  prompt = prompt.replace(
+    STRUCTURED_DIAGRAM_TOOLS_SENTINEL,
+    renderStructuredToolsBlock(allowedForBlock),
+  );
 
   // Branding / metadata block — deployment-swappable. Sits in the
   // cacheable prefix so it costs ~nothing per turn. The brain answers
