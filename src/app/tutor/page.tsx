@@ -41,7 +41,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 
 type InputMode = 'text' | 'voice';
-type VoiceEngine = 'classic' | 'realtime' | 'realtime-validated' | 'claude-brain' | 'gemini-live';
+type VoiceEngine = 'classic' | 'realtime' | 'realtime-2' | 'realtime-validated' | 'claude-brain' | 'gemini-live';
 
 // Voice settings from environment variables (hides UI options)
 const ENV_VOICE_ENGINE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_ENGINE as VoiceEngine) || 'classic';
@@ -59,6 +59,9 @@ interface TokenUsage {
   outputAudioTokens?: number;
   inputTextTokens?: number;
   outputTextTokens?: number;
+  // GPT-Realtime-2: server-cached input tokens (billed ~80x cheaper than
+  // uncached audio input). Captured for cost analysis.
+  inputCachedTokens?: number;
 }
 
 // Pricing per 1M tokens
@@ -69,11 +72,24 @@ const PRICING = {
 };
 
 const REALTIME_PRICING = {
-  // OpenAI Realtime API (voice mode)
+  // OpenAI Realtime API (voice mode) — GA gpt-realtime rate card
   audioInput: 100.0,   // $100 per 1M audio input tokens
   audioOutput: 200.0,  // $200 per 1M audio output tokens
   textInput: 5.0,      // $5 per 1M text input tokens
   textOutput: 20.0,    // $20 per 1M text output tokens
+};
+
+// GPT-Realtime-2 rate card — used only when voiceEngine === 'realtime-2'.
+// Audio input is billed at the uncached rate below; the cached portion
+// (captured per-turn as inputCachedTokens) is far cheaper at $0.40/1M, so
+// the realtime-2 cost figure is a slight OVER-estimate. Compute the cached
+// saving post-hoc from the inputCachedTokens totals.
+const REALTIME_2_PRICING = {
+  audioInput: 32.0,        // $32 per 1M uncached audio input tokens
+  audioInputCached: 0.40,  // $0.40 per 1M cached audio input tokens (post-hoc)
+  audioOutput: 64.0,       // $64 per 1M audio output tokens
+  textInput: 4.0,          // $4 per 1M text input tokens
+  textOutput: 24.0,        // $24 per 1M text output tokens
 };
 
 
@@ -187,10 +203,15 @@ function TutorPage() {
   // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
   const baseVoiceEngine: VoiceEngine = ENV_VOICE_ENGINE;
-  // Lesson plans only work in claude-brain mode (the brain orchestrator
-  // is what consumes lessonPlanContext). Force the engine when one is
-  // selected so the user doesn't have to know about engine flags.
-  const voiceEngine: VoiceEngine = selectedLessonPlanId ? 'claude-brain' : baseVoiceEngine;
+  // Lesson plans need an engine that consumes lessonPlanContext. The
+  // claude-brain orchestrator does this server-side; realtime-2 does it
+  // natively (the plan is injected straight into the RT-2 session). Force
+  // the engine to claude-brain when a plan is selected so the user
+  // doesn't have to know about engine flags — but leave realtime-2
+  // deployments on realtime-2, since that engine runs plans itself.
+  const voiceEngine: VoiceEngine = selectedLessonPlanId
+    ? (baseVoiceEngine === 'realtime-2' ? 'realtime-2' : 'claude-brain')
+    : baseVoiceEngine;
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
 
   // Session state
@@ -304,15 +325,22 @@ function TutorPage() {
     let cost = 0;
     for (const u of tokenUsage) {
       if (u.operation === 'realtime-response') {
-        // OpenAI Realtime: separate audio and text token pricing
+        // OpenAI Realtime: separate audio and text token pricing.
+        // realtime-2 has its own (much lower) rate card; every other
+        // realtime engine uses the GA gpt-realtime rates. The engine is
+        // fixed for the whole session, so voiceEngine is authoritative.
+        const rt = voiceEngine === 'realtime-2' ? REALTIME_2_PRICING : REALTIME_PRICING;
         const audioIn = u.inputAudioTokens || 0;
         const audioOut = u.outputAudioTokens || 0;
         const textIn = u.inputTextTokens || 0;
         const textOut = u.outputTextTokens || 0;
-        cost += (audioIn / 1_000_000) * REALTIME_PRICING.audioInput
-              + (audioOut / 1_000_000) * REALTIME_PRICING.audioOutput
-              + (textIn / 1_000_000) * REALTIME_PRICING.textInput
-              + (textOut / 1_000_000) * REALTIME_PRICING.textOutput;
+        // Audio input priced at the uncached rate — for realtime-2 the
+        // cached portion (u.inputCachedTokens) is billed far cheaper, so
+        // this is a slight over-estimate; derive the saving post-hoc.
+        cost += (audioIn / 1_000_000) * rt.audioInput
+              + (audioOut / 1_000_000) * rt.audioOutput
+              + (textIn / 1_000_000) * rt.textInput
+              + (textOut / 1_000_000) * rt.textOutput;
       } else {
         // Claude API: standard text token pricing
         cost += (u.inputTokens / 1_000_000) * PRICING.input
@@ -358,6 +386,7 @@ function TutorPage() {
         ...(u.outputAudioTokens ? { outputAudioTokens: u.outputAudioTokens } : {}),
         ...(u.inputTextTokens ? { inputTextTokens: u.inputTextTokens } : {}),
         ...(u.outputTextTokens ? { outputTextTokens: u.outputTextTokens } : {}),
+        ...(u.inputCachedTokens ? { inputCachedTokens: u.inputCachedTokens } : {}),
       })) } : {}),
       ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
       // Always include the full transcript + whiteboard snapshot. Was
@@ -1184,7 +1213,7 @@ function TutorPage() {
   );
 
   // Handle token usage from OpenAI Realtime responses
-  const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number }) => {
+  const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number; inputCachedTokens?: number }) => {
     if (usage.totalTokens === 0) return;
     setTokenUsage((prev) => [...prev, {
       inputTokens: usage.inputTokens,
@@ -1193,6 +1222,7 @@ function TutorPage() {
       outputAudioTokens: usage.outputAudioTokens,
       inputTextTokens: usage.inputTextTokens,
       outputTextTokens: usage.outputTextTokens,
+      inputCachedTokens: usage.inputCachedTokens,
       operation: 'realtime-response',
       timestamp: new Date(),
     }]);
@@ -2192,7 +2222,7 @@ function TutorPage() {
               </div>
             )}
             {inputMode === 'voice' && selectedTopicId ? (
-              (voiceEngine === 'realtime' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
+              (voiceEngine === 'realtime' || voiceEngine === 'realtime-2' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
                 <VoiceTutorRealtime
                   // key={sessionId} forces a remount on every new session
                   // so the component's internal refs (transcriptRef,
@@ -2224,6 +2254,7 @@ function TutorPage() {
                   handleRef={realtimeHandleRef}
                   validateToolCalls={voiceEngine === 'realtime-validated'}
                   claudeBrainMode={voiceEngine === 'claude-brain'}
+                  useRealtimeV2={voiceEngine === 'realtime-2'}
                   ttsProvider={ttsProvider}
                   onLessonPlanProgress={setLessonProgress}
                   onTutorBusy={setIsProcessing}

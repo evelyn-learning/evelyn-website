@@ -19,9 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { voice = 'alloy', instructions } = body as {
+    const { voice = 'alloy', instructions, engine } = body as {
       voice?: string;
       instructions?: string;
+      engine?: string;
     };
 
     // Instructions, when supplied, replace OpenAI's default tutor persona
@@ -29,9 +30,13 @@ export async function POST(request: NextRequest) {
     // has a default-tutor turn before our session.update lands —
     // otherwise Realtime authors greetings + answers questions in the
     // brain's text instead of voicing it verbatim.
+    // The realtime-2 engine (GPT-Realtime-2, with GPT-5-class reasoning)
+    // uses a distinct model id. Every other engine stays on the GA
+    // gpt-realtime model.
+    const model = engine === 'realtime-2' ? 'gpt-realtime-2' : 'gpt-realtime';
     const sessionConfig: Record<string, unknown> = {
       type: 'realtime',
-      model: 'gpt-realtime',
+      model,
     };
     if (typeof instructions === 'string' && instructions.trim()) {
       sessionConfig.instructions = instructions;

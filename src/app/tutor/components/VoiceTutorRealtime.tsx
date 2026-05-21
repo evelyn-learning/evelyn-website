@@ -11,9 +11,10 @@
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
-import { mapFunctionCallToCommand } from '../hooks/toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
 import { getSegment } from '@/lib/tutor/lesson-plan/types';
@@ -262,6 +263,16 @@ interface VoiceTutorRealtimeProps {
    * Default false — the legacy "Realtime authors everything" path.
    */
   claudeBrainMode?: boolean;
+  /**
+   * When true, the GPT-Realtime-2 native engine is used: the Realtime
+   * session connects to gpt-realtime-2, receives the full tutor system
+   * prompt + all whiteboard tools directly, and authors every turn
+   * itself (no Claude relay). Lesson plans are injected straight into
+   * the RT-2 session. Mutually exclusive with claudeBrainMode.
+   *
+   * Default false.
+   */
+  useRealtimeV2?: boolean;
   /** TTS provider for relay-mode voicing of the brain's text.
    *  - 'realtime' (default): Realtime out-of-band response. Highest quality, expensive.
    *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper. */
@@ -326,6 +337,47 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-2': 'alloy',      // Energetic
 };
 
+/** Format a lesson plan + current segment into a compact context block
+ *  for the realtime-2 engine. RT-2 has no brain orchestrator feeding it
+ *  lessonPlanContext, so the plan is pushed straight into the session as
+ *  a conversation item; this builds that item's text. Returns null when
+ *  the segment id can't be resolved against the plan. */
+function formatLessonPlanForRealtime(
+  plan: import('@/lib/tutor/lesson-plan/types').LessonPlan,
+  currentSegmentId: string,
+  completedSegmentIds: ReadonlyArray<string>,
+): string | null {
+  const seg = plan.segments.find((s) => s.id === currentSegmentId);
+  if (!seg) return null;
+  const lines: string[] = ['[ACTIVE LESSON PLAN]'];
+  lines.push(`Title: ${plan.title} (grade ${plan.grade}, ~${plan.estimatedMinutes} min)`);
+  if (plan.los.length > 0) {
+    lines.push('Learning objectives:');
+    for (const lo of plan.los) lines.push(`  - ${lo.id}: ${lo.description}`);
+  }
+  lines.push('Segments in order: ' + plan.segments.map((s) => `${s.id}(${s.kind})`).join(' → '));
+  if (completedSegmentIds.length > 0) {
+    lines.push(`Already completed: ${completedSegmentIds.join(', ')}`);
+  }
+  lines.push('');
+  const segRec = seg as unknown as Record<string, unknown>;
+  lines.push(`CURRENT SEGMENT: ${seg.id} (${seg.kind})`);
+  if (typeof segRec.goal === 'string' && segRec.goal) lines.push(`Goal: ${segRec.goal}`);
+  if (Array.isArray(segRec.keyIdeas) && segRec.keyIdeas.length > 0) {
+    lines.push('Key ideas: ' + segRec.keyIdeas.map((k) => String(k)).join('; '));
+  }
+  const truth = getSegmentTruth(seg);
+  if (truth?.problemText) lines.push(`Authored problem (render verbatim): ${truth.problemText}`);
+  if (truth?.expectedAnswer) lines.push(`Expected answer: ${truth.expectedAnswer}`);
+  lines.push('');
+  lines.push(
+    'Teach the CURRENT SEGMENT now. When the student finishes it, call ' +
+      'mark_segment_complete for it and advance_lesson({to: "next"}) to move on. ' +
+      'Do not skip ahead.',
+  );
+  return lines.join('\n');
+}
+
 // Coherence pass v1 (problemSimilarity, extractConstants,
 // extractCoefficients) was retired 2026-04-29 in favor of A + B1:
 //   Lever A — show_segment_card resolves segmentId → authored data
@@ -361,6 +413,7 @@ export function VoiceTutorRealtime({
   handleRef,
   validateToolCalls = false,
   claudeBrainMode = false,
+  useRealtimeV2 = false,
   ttsProvider = 'realtime',
   onLessonPlanProgress,
   onTutorBusy,
@@ -485,6 +538,11 @@ export function VoiceTutorRealtime({
   // mount; segment progression is tracked locally.
   const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const currentSegmentIdRef = useRef<string>('');
+  // realtime-2: guards one-time lesson-plan injection per plan, and holds
+  // the inject-current-segment function (assigned after the hook call so
+  // it can close over injectContextRef).
+  const lessonPlanV2InjectedRef = useRef(false);
+  const injectLessonPlanV2Ref = useRef<() => void>(() => {});
   // Last on-plan segment before the brain released the cursor via
   // advance_lesson({to:"free"}) (off-plan / topic-switch). Lets a
   // later advance_lesson({to:"next"|"previous"}) resume from where the
@@ -2481,6 +2539,9 @@ export function VoiceTutorRealtime({
             // new segment id. The brain's per-turn snapshot filter
             // uses this to scope its view to current-segment items.
             catalogRef.current.setCurrentSegment(next);
+            // realtime-2: re-inject the lesson plan so RT-2 sees the new
+            // current segment (claude-brain feeds this via the orchestrator).
+            if (useRealtimeV2) injectLessonPlanV2Ref.current();
             // Clear the focus card so the judge doesn't carry a stale
             // currentProblemRef across the segment boundary. Observed
             // broken 2026-05-15 session: turn 8 emitted advance_lesson
@@ -4095,6 +4156,58 @@ export function VoiceTutorRealtime({
     // chunk in claude-brain mode, not per brain turn, so it sees partial
     // text and the affirmation/correction regexes miss reliably.)
 
+    // realtime-2: post-turn judge groundedness check. Fully async — the
+    // turn has already played, so the judge never interrupts it. Instead,
+    // when it flags ungrounded claim(s) we inject a soft correction note
+    // so RT-2 reconciles them on its NEXT turn (the non-interrupting
+    // correction loop). claude-brain runs its own judge inside the
+    // orchestrator; the GA realtime engine has no judge — so this block
+    // is realtime-2 only.
+    if (useRealtimeV2 && tutorText.trim()) {
+      const boardSummary = buildWhiteboardSummary(catalogRef.current.getSnapshot());
+      // focus = the problem the student is currently attending to. Passing
+      // it sharply cuts the judge's false-positive rate (it stops flagging
+      // grounded speech that simply references a different board card).
+      const focus = currentProblemRef.current?.statement;
+      fetch('/api/tutor/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardSummary, spokenText: tutorText, ...(focus ? { focus } : {}) }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((judge: { grounded?: boolean; issues?: Array<{ claim: string; why: string; severity?: string }> } | null) => {
+          if (!judge?.issues?.length) return;
+          const kills = judge.issues.filter((i) => i.severity === 'kill');
+          onDebugEvent?.(
+            kills.length > 0 ? 'rt2_judge_kill' : 'rt2_judge_advisory',
+            `${judge.issues.length}: ${judge.issues[0].claim.slice(0, 80)}`,
+          );
+          if (kills.length > 0) {
+            console.warn('[realtime-2 judge] KILL flagged (correction queued, not interrupting):',
+              kills.map((k) => k.claim).join(' | '));
+          }
+          // Non-interrupting correction loop. The judge can't kill an RT-2
+          // turn (already spoken), so feed the flagged claims back as a
+          // context note for the NEXT turn. Phrased softly: realtime-2 has
+          // no retry / wolfram-override safety net around the judge, so
+          // RT-2 must evaluate the flag, not blindly comply.
+          if (injectContextRef.current) {
+            const issueLines = judge.issues
+              .map((i) => `- "${i.claim}"${i.why ? ` — ${i.why}` : ''}`)
+              .join('\n');
+            injectContextRef.current(
+              'GROUNDEDNESS CHECK — a review of your last turn flagged spoken claim(s) that ' +
+              'may not match the whiteboard:\n' + issueLines +
+              '\nOn your NEXT turn, silently re-check each against the current board. If a claim ' +
+              'was genuinely wrong, correct it naturally with the student. If it was actually ' +
+              'correct, disregard this. If the board itself is wrong, render the corrected content. ' +
+              'Do not mention this check to the student.',
+            );
+          }
+        })
+        .catch((err) => console.warn('[realtime-2 judge] failed (ignored):', err));
+    }
+
     // --- Student-answer verification (async, non-blocking) ---
     verifyStudentAnswerIfRejected(tutorText).catch(err =>
       console.error('[VoiceTutorRealtime] verifyStudentAnswerIfRejected threw:', err)
@@ -4339,6 +4452,7 @@ export function VoiceTutorRealtime({
   }, [
     claimsToShowVisual, generateMissingWhiteboardCommands, detectContextLoss, buildContextSummary,
     onUsageUpdate, verifyStudentAnswerIfRejected, verifySpokenFinalAnswer, checkVoiceWhiteboardConsistency,
+    useRealtimeV2,
   ]);
 
   // Handle errors
@@ -4399,6 +4513,8 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     completedSegmentIdsRef.current = new Set();
     onCompletedSegmentsChange?.([]);
+    // realtime-2: a new plan must be re-injected into the RT-2 session.
+    lessonPlanV2InjectedRef.current = false;
     if (!lessonPlanId) {
       lessonPlanRef.current = null;
       currentSegmentIdRef.current = '';
@@ -7344,6 +7460,15 @@ export function VoiceTutorRealtime({
     'Do not call tools.',
   ].join(' ');
 
+  // realtime-2: subject-filter the whiteboard tools registered in the RT-2
+  // session so e.g. an AP Physics session doesn't carry chemistry / biology
+  // / ELA tools. Fail-open — resolveToolSubjects returns null for subjects
+  // it can't map and filterToolsForSubject then returns the full set. Other
+  // engines leave this undefined; the hook registers the full WHITEBOARD_TOOLS.
+  const realtimeV2Tools = useRealtimeV2
+    ? filterToolsForSubject(WHITEBOARD_TOOLS, resolveToolSubjects(subject)).tools
+    : undefined;
+
   // Initialize the realtime connection
   const realtime = useOpenAIRealtime({
     instructions,
@@ -7352,6 +7477,8 @@ export function VoiceTutorRealtime({
     vadSilenceDurationMs,
     vadPrefixPaddingMs,
     reconnectEnabled,
+    useRealtimeV2,
+    tools: realtimeV2Tools,
     relayMode: claudeBrainMode
       ? {
           instructions: RELAY_MODE_PROMPT,
@@ -7397,6 +7524,20 @@ export function VoiceTutorRealtime({
   speakTextRef.current = realtime.speakText;
   clearSpeechQueueRef.current = realtime.clearSpeechQueue;
 
+  // realtime-2: assemble + inject the lesson plan context into the RT-2
+  // session. Called once on connect (effect below) and again after every
+  // advance_lesson so RT-2 always teaches the live segment.
+  injectLessonPlanV2Ref.current = () => {
+    if (!useRealtimeV2) return;
+    const plan = lessonPlanRef.current;
+    if (!plan) return;
+    const segId = currentSegmentIdRef.current || plan.segments[0]?.id || '';
+    const text = formatLessonPlanForRealtime(plan, segId, [...completedSegmentIdsRef.current]);
+    if (!text) return;
+    injectContextRef.current?.(text);
+    onDebugEvent?.('rt2_lesson_plan_injected', `segment="${segId}"`);
+  };
+
   // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {
     if (handleRef) {
@@ -7421,6 +7562,18 @@ export function VoiceTutorRealtime({
     };
   }, [handleRef, realtime, stepPaceBias]);
 
+  // realtime-2: inject the lesson plan into the RT-2 session once the
+  // session is connected and the plan has loaded. claude-brain mode feeds
+  // the plan through the brain orchestrator, so this guard no-ops there.
+  useEffect(() => {
+    if (!useRealtimeV2) return;
+    if (!activePlan) return;
+    if (!realtime.isConnected) return;
+    if (lessonPlanV2InjectedRef.current) return;
+    lessonPlanV2InjectedRef.current = true;
+    injectLessonPlanV2Ref.current();
+  }, [useRealtimeV2, activePlan, realtime.isConnected]);
+
   // Build system prompt / instructions on mount
   useEffect(() => {
     const buildInstructions = async () => {
@@ -7444,6 +7597,7 @@ export function VoiceTutorRealtime({
           topic,
           level,
           studentPreferences,
+          realtimeV2: useRealtimeV2,
         });
 
         // Read optional voice personality from env

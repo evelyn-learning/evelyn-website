@@ -11,7 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
-import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools } from './toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDefinition } from './toolDefinitions';
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 
@@ -26,6 +26,10 @@ export interface RealtimeUsage {
   inputAudioTokens: number;
   outputTextTokens: number;
   outputAudioTokens: number;
+  /** GPT-Realtime-2: server-cached input tokens (prompt + tools cached
+   *  across turns, billed far cheaper than uncached input). Optional —
+   *  the GA gpt-realtime and Gemini engines do not report it. */
+  inputCachedTokens?: number;
 }
 
 /**
@@ -93,6 +97,18 @@ export interface RealtimeConfig {
    *  NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT in VoiceTutorRealtime,
    *  mirroring the vad* env-prop convention. */
   reconnectEnabled?: boolean;
+  /** GPT-Realtime-2 native engine. When true the hook connects to the
+   *  gpt-realtime-2 model, adds reasoning.effort to session.update, and
+   *  lets the server auto-create a response on each VAD commit
+   *  (turn_detection.create_response:true) instead of the manual
+   *  response.create the GA gpt-realtime path uses. Default false ⇒
+   *  byte-identical to the existing gpt-realtime behavior. */
+  useRealtimeV2?: boolean;
+  /** Override the whiteboard tools registered in the realtime session.
+   *  When omitted the hook registers the full WHITEBOARD_TOOLS; realtime-2
+   *  passes a subject-filtered subset so an off-subject session doesn't
+   *  carry irrelevant tools. */
+  tools?: ToolDefinition[];
   onTranscriptUpdate?: (role: 'user' | 'assistant', text: string, isFinal: boolean) => void;
   // The callback may be async and may return rejection info. When it does,
   // the Realtime hook reports those drops back to the LLM as tool-call
@@ -449,6 +465,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     instructions, voice = 'alloy',
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     reconnectEnabled = false,
+    useRealtimeV2 = false,
+    tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk, relayMode,
   } = config;
@@ -520,6 +538,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const scheduleReconnectRef = useRef<(() => boolean) | null>(null);
   const reconnectEnabledRef = useRef(reconnectEnabled);
   reconnectEnabledRef.current = reconnectEnabled;
+  // useRealtimeV2 synced each render so long-lived closures (handleMessage,
+  // connect's onopen) read the current value rather than a stale capture.
+  const useRealtimeV2Ref = useRef(useRealtimeV2);
+  useRealtimeV2Ref.current = useRealtimeV2;
+  // Optional subject-filtered tool set (realtime-2). Ref'd so connect's
+  // onopen closure reads the current value rather than a stale capture.
+  const toolDefsRef = useRef(toolDefs);
+  toolDefsRef.current = toolDefs;
   // True when the user has explicitly muted themselves. Distinct from
   // shouldListenRef (which is the INTENT — "we want to listen after the
   // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
@@ -879,7 +905,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               } catch (err) {
                 console.error('[Realtime] relayMode.onUserTranscript threw:', err);
               }
-            } else if (wsRef.current?.readyState === WebSocket.OPEN) {
+            } else if (!useRealtimeV2Ref.current && wsRef.current?.readyState === WebSocket.OPEN) {
+              // GA gpt-realtime: manually trigger the reply. realtime-2 sets
+              // turn_detection.create_response:true, so the server already
+              // created the response on VAD commit — a manual response.create
+              // here would double-respond.
               wsRef.current.send(JSON.stringify({ type: 'response.create' }));
             }
           } else {
@@ -1010,6 +1040,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               inputAudioTokens: responseUsage.input_token_details?.audio_tokens || 0,
               outputTextTokens: responseUsage.output_token_details?.text_tokens || 0,
               outputAudioTokens: responseUsage.output_token_details?.audio_tokens || 0,
+              // GPT-Realtime-2 reports server-cached input tokens here;
+              // GA gpt-realtime omits the field, so this is 0 there.
+              inputCachedTokens: responseUsage.input_token_details?.cached_tokens || 0,
             };
             console.log('[Realtime] Usage:', JSON.stringify(usage));
           }
@@ -1395,7 +1428,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ voice, instructions: initInstructions }),
+          body: JSON.stringify({ voice, instructions: initInstructions, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime' }),
         })
           .then(async (r) => {
             if (!r.ok) {
@@ -1418,9 +1451,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       console.log('[Realtime] Got client secret, connecting...');
 
-      // Connect to OpenAI Realtime API (GA version)
+      // Connect to OpenAI Realtime API. realtime-2 connects to the
+      // gpt-realtime-2 model; every other engine uses the GA gpt-realtime.
+      const realtimeModel = useRealtimeV2Ref.current ? 'gpt-realtime-2' : 'gpt-realtime';
       const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=gpt-realtime`,
+        `wss://api.openai.com/v1/realtime?model=${realtimeModel}`,
         ['realtime', `openai-insecure-api-key.${client_secret}`]
       );
 
@@ -1443,15 +1478,30 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           // Relay mode: omit tools entirely. Realtime is STT+TTS only;
           // Claude (called from VoiceTutorRealtime via /api/tutor/brain)
           // is the author of every tool call.
+          // realtime-2 may pass a subject-filtered tool subset; every
+          // other engine registers the full WHITEBOARD_TOOLS.
+          const sessionToolDefs = toolDefsRef.current ?? WHITEBOARD_TOOLS;
           const toolsBlock = isRelayRef.current
             ? {}
-            : { tools: toOpenAITools(WHITEBOARD_TOOLS), tool_choice: 'auto' as const };
+            : { tools: toOpenAITools(sessionToolDefs), tool_choice: 'auto' as const };
+          if (!isRelayRef.current) {
+            console.log('[Realtime] tools registered:', sessionToolDefs.length, 'of', WHITEBOARD_TOOLS.length);
+          }
+          // GPT-Realtime-2: attach reasoning.effort (env-tunable) and let
+          // the server auto-create a response on each VAD commit. The GA
+          // gpt-realtime path keeps create_response:false and drives
+          // response.create manually from the transcription handler.
+          const v2 = useRealtimeV2Ref.current;
+          const reasoningBlock = v2
+            ? { reasoning: { effort: process.env.NEXT_PUBLIC_TUTOR_RT2_REASONING_EFFORT || 'medium' } }
+            : {};
           ws.send(JSON.stringify({
           type: 'session.update',
           session: {
             type: 'realtime',
             instructions: inst,
             ...toolsBlock,
+            ...reasoningBlock,
             audio: {
               input: {
                 transcription: { model: 'whisper-1' },
@@ -1460,14 +1510,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   threshold: vadThreshold,              // Higher threshold = less sensitive to quiet sounds (0-1)
                   prefix_padding_ms: vadPrefixPaddingMs, // Audio included before detected speech
                   silence_duration_ms: vadSilenceDurationMs, // Wait this long before responding
-                  // Do NOT let the server auto-generate a reply on every VAD
-                  // commit. We call response.create manually from the
-                  // transcription-completed handler once we know the
-                  // student actually said something worth responding to.
-                  // Without this, the tutor fills silence with "let me
+                  // GA gpt-realtime: do NOT let the server auto-generate a
+                  // reply on every VAD commit — response.create is called
+                  // manually from the transcription-completed handler once
+                  // we know the student said something worth responding to
+                  // (otherwise the tutor fills silence with "let me
                   // re-engage" filler on every phantom turn from ambient
-                  // noise (see 2026-04-23 Physics session screenshot).
-                  create_response: false,
+                  // noise — see 2026-04-23 Physics session screenshot).
+                  // realtime-2: the server auto-responds; phantom turns are
+                  // still scrubbed by deleting their transcript item.
+                  create_response: v2,
                 },
               },
               output: {
@@ -1623,10 +1675,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // multiple times — the promise is cached in tokenPromiseRef.
   const prefetchToken = useCallback(() => {
     if (tokenPromiseRef.current) return tokenPromiseRef.current;
+    // MUST pass `engine` here too: connect() reuses this cached token
+    // promise, so a prefetch minted for the wrong model leaves the WS
+    // (opened with ?model=gpt-realtime-2) mismatched against the token's
+    // gpt-realtime session.
     tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ voice }),
+      body: JSON.stringify({ voice, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime' }),
     })
       .then(async (r) => {
         if (!r.ok) {

@@ -42,7 +42,7 @@ export interface ITutorSession extends Document {
   level: string;
   sessionGoal: "practice" | "homework-help" | "concept-review" | "test-prep" | "catch-up" | "challenge";
   inputMode: "text" | "voice";
-  voiceEngine?: "classic" | "realtime" | "realtime-validated" | "claude-brain" | "gemini-live";
+  voiceEngine?: "classic" | "realtime" | "realtime-2" | "realtime-validated" | "claude-brain" | "gemini-live";
   startedAt: Date;
   endedAt?: Date;
   duration?: number;
@@ -195,7 +195,7 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     voiceEngine: {
       type: String,
-      enum: ["classic", "realtime", "realtime-validated", "claude-brain", "gemini-live"],
+      enum: ["classic", "realtime", "realtime-2", "realtime-validated", "claude-brain", "gemini-live"],
     },
     startedAt: {
       type: Date,

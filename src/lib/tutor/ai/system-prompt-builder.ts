@@ -152,6 +152,12 @@ export interface SystemPromptContext {
    *  yet — but the resolver accepts it so when partners need humor caps
    *  the API doesn't change. */
   partnerPolicy?: PartnerPolicy;
+  /** When true, append the GPT-Realtime-2 spoken-preamble guidance block.
+   *  RT-2 reasons mid-turn and can call tools, so a brief spoken preamble
+   *  keeps the student from hearing dead air. Only the realtime-2 voice
+   *  engine sets this — all other engines and text chat leave it
+   *  undefined, so their prompt stays byte-identical. */
+  realtimeV2?: boolean;
 }
 
 /**
@@ -1304,6 +1310,21 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   const pronunciationSection = formatPronunciationPrompt(subjectForPronunciation, topicForPronunciation);
   if (pronunciationSection) {
     prompt += pronunciationSection;
+  }
+
+  // GPT-Realtime-2 spoken-preamble guidance. Appended only for the
+  // realtime-2 voice engine: RT-2 reasons mid-turn and may call tools,
+  // so a brief spoken preamble keeps the student from hearing dead air
+  // while it works. Other engines (claude-brain relay, classic, gemini)
+  // never set realtimeV2, so their prompt is unchanged.
+  if (context.realtimeV2) {
+    prompt += `\n\n## Spoken preambles\n`;
+    prompt += `When you need time to reason through a complex request or execute tools, speak a brief natural preamble before processing. Match the preamble to what you're about to do:\n`;
+    prompt += `- Before drawing on the whiteboard: 'Let me draw this out for you' or 'Let me show you what that looks like'\n`;
+    prompt += `- Before a multi-step explanation: 'Good question — let me walk you through this'\n`;
+    prompt += `- Before checking/validating: 'Let me double-check that'\n`;
+    prompt += `- Before generating a problem: 'Let me put together a problem for you'\n`;
+    prompt += `Keep preambles under 8 words. Never use them on simple acknowledgments or short answers — only when the response will take noticeable time.\n`;
   }
 
   return prompt;
