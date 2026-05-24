@@ -270,17 +270,18 @@ function TutorPage() {
   // stares at "Thinking…" forever. Observed 2026-04-29 electricity
   // session: voice "I don't think so" never reached the brain, the
   // indicator stayed up for ~90s until the user typed. Auto-clear
-  // after 10 seconds — short enough that the UX recovers quickly,
-  // long enough that normal multi-tool brain turns (~5-9s of total
-  // brain.stream time observed) finish first.
+  // after 15 seconds — short enough that the UX recovers quickly,
+  // long enough that legitimate slow turns (T1 first-content batch
+  // observed at 10.5s first_sentence 2026-05-24, multi-tool batches
+  // up to ~22s total brain.stream) don't false-fire.
   useEffect(() => {
     if (!isProcessing) return;
     const t = setTimeout(() => {
-      console.warn('[tutor/page] isProcessing watchdog fired — clearing stuck indicator after 10s');
+      console.warn('[tutor/page] isProcessing watchdog fired — clearing stuck indicator after 15s');
       setIsProcessing(false);
       setStatusMessage('That took a moment — try saying it again, or type below if I missed it.');
       setTimeout(() => setStatusMessage(null), 6000);
-    }, 10_000);
+    }, 15_000);
     return () => clearTimeout(t);
   }, [isProcessing]);
   const [error, setError] = useState<string | null>(null);

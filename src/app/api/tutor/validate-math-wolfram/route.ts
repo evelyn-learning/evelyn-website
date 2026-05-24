@@ -555,10 +555,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ correct: true, source: 'skipped' } satisfies ValidationResult);
     }
 
-    // Wolfram failed — fall back to Claude
-    console.log('[WolframMath] Wolfram unavailable, falling back to Claude');
-    const claudeResult = await validateViaClaude(latex, label, conversationContext);
-    return NextResponse.json(claudeResult);
+    // Item P5 (2026-05-24): Wolfram unavailable → skip validation
+    // entirely. The Claude fallback adds ~4s of round-trip latency on
+    // a path that's best-effort verification anyway — if Wolfram is
+    // down or rate-limited, the orchestrator's other guards (judge,
+    // prescribedRender, Path B/C checks) still catch real errors;
+    // a slow Claude call here just delays the next student turn.
+    // 2026-05-23 (opener-merge-stress) hit this branch once at 4.2s.
+    // The downstream consumer (handleWhiteboardCommand) treats
+    // source='skipped' as "verification passed by default" — so the
+    // tool call still dispatches, the equation renders, narration
+    // proceeds. Real arithmetic errors that slip through here would
+    // also have slipped through the prior Claude fallback (Claude's
+    // arithmetic is itself unreliable); the cost-benefit doesn't
+    // justify the fallback.
+    console.log('[WolframMath] Wolfram unavailable — skipping Claude fallback (saves ~4s; verification falls through to other guards)');
+    return NextResponse.json({ correct: true, source: 'skipped' } satisfies ValidationResult);
   } catch (error) {
     console.error('[WolframMath] Error:', error);
     return NextResponse.json({ correct: true, source: 'skipped', error: 'Validation failed' });

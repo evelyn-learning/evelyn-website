@@ -1462,6 +1462,21 @@ export function VoiceTutorRealtime({
     // currentProblemRef across the segment boundary (observed 2026-05-15:
     // stale focus → Path B mis-fired a KILL on a correct affirmation).
     currentProblemRef.current = null;
+    // Item P4 (2026-05-24) — clear the equation-label dedup map on
+    // segment advance. The map's purpose is to catch "Final Answer
+    // (x=12)" then "Final Answer (x=5)" within the SAME segment (a
+    // brain habit of reusing the same label for different equations
+    // makes the board confusing). Across segments though, the second
+    // segment's "Final Answer" is conceptually a fresh artifact — the
+    // prior was already accepted to a now-completed segment's history.
+    // Observed 2026-05-23 (opener-merge-stress T11): brain emitted
+    // show_equation(label="Final Answer", latex="x=15/3=5") on entry
+    // to try-ratio after the prior try-percent had used the SAME label
+    // for "0.15×80=12". The runtime silently dropped the linear
+    // equation, but the brain narrated as if it rendered. Per-segment
+    // scoping eliminates the false collision without changing intra-
+    // segment dedup behavior.
+    equationLabelsThisSessionRef.current.clear();
     // Auto-newPage for visual freshness: every segment transition starts
     // the student on a fresh whiteboard page. Page title: for generated
     // freestyle plans the segment ids are "<loId>-hook/-concept/-worked/
@@ -7692,6 +7707,24 @@ export function VoiceTutorRealtime({
       return;
     }
     brainBusyRef.current = true;
+    // Item P3 (2026-05-24) — reset per-turn refs at the relay-mode entry
+    // point. This is the unified pipe ALL student-driven turns flow
+    // through: voice transcripts (realtime hook onUserTranscript), Skip
+    // / I'm-stuck button clicks (page.tsx → realtime.sendTextMessage
+    // → relay branch), typed input via sendTextMessage, and lesson
+    // kickoff. Previously only the voice handleTranscriptUpdate path
+    // (line ~1226) and the typed-input form handler (line ~8394) reset
+    // the refs — button clicks bypassed both. Each session that used
+    // Skip+I'm-stuck buttons heavily fired the defensive-reset warning
+    // at callBrainOnce 4× per session (2026-05-24). Resetting here at
+    // the relay entry covers every path; the defensive reset at
+    // callBrainOnce remains as a paranoid backstop. `silent` opt-out
+    // not needed — a fresh transcript (synthetic or otherwise) is
+    // always a fresh student turn.
+    visualActionsThisTurnRef.current = new Set();
+    newPageThisTurnRef.current = false;
+    brainEmittedNewPageThisTurnRef.current = false;
+    generateProblemThisTurnRef.current = false;
     // Watchdog: if callBrainOnce hangs (network never resolves, no
     // error thrown), brainBusyRef stays true forever and every
     // subsequent student turn gets queued silently. Observed
