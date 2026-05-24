@@ -17,7 +17,7 @@ import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/syst
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
-import { getSegment } from '@/lib/tutor/lesson-plan/types';
+import { getSegment, type LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
@@ -191,6 +191,38 @@ import { validateManipulative } from '@/lib/tutor/diagrams/manipulative-validato
 import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
+
+// ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
+// Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
+//
+// FIX A — fast opener. When on, the brain is prompted (system-prompt-
+// builder TURN_OPENER_RULE) to begin every turn with a short content-free
+// runway sentence, and the orchestrator voices that sentence-0 immediately
+// (bypassing the TTS gate) while keeping the gate on sentences 1+. Drops
+// first-audio latency to ~Claude-TTFT without ever voicing doomed content.
+const TUTOR_BRAIN_FAST_OPENER =
+  process.env.NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER === 'true';
+// FIX B — deterministic Skip-button advance. When on, a Skip-ahead button
+// click is resolved app-side (resolveAdvanceTarget) before the brain call;
+// the brain is handed the advance as a FACT, deleting the Skip-button-KILL
+// retry for the resolvable case.
+const TUTOR_SKIP_DETERMINISTIC =
+  process.env.NEXT_PUBLIC_TUTOR_SKIP_DETERMINISTIC === 'true';
+
+/** FIX A backstop — decide whether a turn's first sentence is a genuine
+ *  content-free opener, safe to voice ungated. The prompt rule is the
+ *  primary guarantee; this re-gates a sentence-0 that looks substantive
+ *  so a doomed-then-retried turn never lets the student hear two voices.
+ *  Deliberately liberal at catching substance: a false "not safe"
+ *  (re-gating a real opener) only forfeits the latency win that turn —
+ *  a false "safe" (voicing real content ungated) is the failure mode. */
+function isSafeOpener(s: string): boolean {
+  if (/\d/.test(s)) return false;                  // any digit → a value/claim
+  if (/[=+×÷√^%<>≤≥*/]/.test(s)) return false;     // math operators → a claim
+  if (/\?/.test(s)) return false;                  // a question → student must act
+  if (s.split(/\s+/).filter(Boolean).length > 10) return false; // too long for an opener
+  return true;
+}
 
 /** Strict deep-equal for prescribedRender validator. Returns true when
  *  `a` and `b` are structurally identical (same keys + same primitive
@@ -698,6 +730,16 @@ export function VoiceTutorRealtime({
   // per segment so we don't re-narrate mid-trace. See the post-stream
   // check site for the matching condition.
   const segmentRequiredPhrasesCheckedRef = useRef<Set<string>>(new Set());
+  // 2026-05-23: opener-merge-stress session T18 + T19 both started with
+  // verbatim "Let me see what I have for you. Off the top of my head —
+  // here's one for you." across consecutive generate_problem hits. The
+  // prompt rule (Bridge utterance for generate_problem — VARY across
+  // turns; disclaimer pool — VARY) was being ignored by the brain. This
+  // ref stores a normalized prefix of the previous turn's text so the
+  // post-stream guard can detect verbatim reuse and force a one-retry
+  // variation. Only updated on a non-killed final attempt — see the
+  // post-stream commit site below.
+  const lastBrainOpenerNormalizedRef = useRef<string>('');
   // Round-7+++++ Issue 3 fix: track number-tuples of equations that
   // Wolfram has verified as CORRECT this session. The judge LLM
   // periodically hallucinates arithmetic ("511 ÷ 7 = 72.857"; actually
@@ -1365,6 +1407,81 @@ export function VoiceTutorRealtime({
       }
     });
   }, [onDebugEvent]);
+
+  // Apply a RESOLVED lesson-plan advance — move the segment cursor to
+  // `next` and run every side-effect a segment transition needs. Shared
+  // by the brain-driven advance_lesson command branch (handleWhiteboard-
+  // Command, below) and the app-side deterministic Skip-button advance
+  // (callBrainOnce, FIX B). `next` MUST be a real segment id already
+  // resolved via resolveAdvanceTarget — this helper does not validate it.
+  const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string) => {
+    console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+    // Auto-mark "visited" segments: every segment from the outgoing
+    // index (inclusive) up to the target index (exclusive) is added to
+    // completedSegmentIdsRef. Keeps the progress strip advancing even
+    // when the brain skipped a segment without mark_segment_complete
+    // (observed 2026-05-12 — 5 consecutive skip clicks, strip frozen).
+    const outgoingIdx = plan.segments.findIndex((s) => s.id === fromSegId);
+    const targetIdx = plan.segments.findIndex((s) => s.id === next);
+    if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {
+      let mutated = false;
+      for (let i = outgoingIdx; i < targetIdx; i++) {
+        const segId = plan.segments[i].id;
+        if (!completedSegmentIdsRef.current.has(segId)) {
+          completedSegmentIdsRef.current.add(segId);
+          mutated = true;
+        }
+      }
+      if (mutated) {
+        onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+      }
+    }
+    currentSegmentIdRef.current = next;
+    setActiveSegmentId(next);
+    // Re-entered the plan — drop the stashed pre-free segment.
+    segmentBeforeFreeRef.current = '';
+    // Mirror into the catalog so subsequent appends stamp the new
+    // segment id + the brain's per-turn snapshot filter scopes correctly.
+    catalogRef.current.setCurrentSegment(next);
+    // realtime-2: re-inject the lesson plan so RT-2 sees the new segment.
+    if (useRealtimeV2) injectLessonPlanV2Ref.current();
+    // Clear the focus card so the judge doesn't carry a stale
+    // currentProblemRef across the segment boundary (observed 2026-05-15:
+    // stale focus → Path B mis-fired a KILL on a correct affirmation).
+    currentProblemRef.current = null;
+    // Auto-newPage for visual freshness: every segment transition starts
+    // the student on a fresh whiteboard page. Page title: for generated
+    // freestyle plans the segment ids are "<loId>-hook/-concept/-worked/
+    // -try" — derive the loId + its description; else fall back to the
+    // segment's goal/problem/id.
+    const nextSeg = plan.segments.find((s) => s.id === next);
+    let loHeading = '';
+    if (next && plan.los?.length) {
+      for (const lo of plan.los) {
+        if (next.startsWith(`${lo.id}-`) || next === lo.id) {
+          const KIND_MAP: Record<string, string> = {
+            hook: 'Hook',
+            concept: 'Concept',
+            worked: 'Worked Example',
+            try: 'Try Yourself',
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const kindLabel = KIND_MAP[(nextSeg as any)?.kind === 'worked_example' ? 'worked' : (nextSeg as any)?.kind === 'try_yourself' ? 'try' : (nextSeg as any)?.kind ?? ''];
+          loHeading = kindLabel ? `${lo.description} — ${kindLabel}` : lo.description;
+          break;
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newPageTitle = loHeading || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pageTitleStr = typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '';
+    // Defer the auto-newPage to the next batch — fire only if that batch
+    // contains a command that actually renders (see pendingAdvanceNewPageRef).
+    pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
+    console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
+    onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
+  }, [onCompletedSegmentsChange, useRealtimeV2, onDebugEvent]);
 
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
   const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
@@ -2504,103 +2621,11 @@ export function VoiceTutorRealtime({
           const fromSegId = currentSegmentIdRef.current || segmentBeforeFreeRef.current;
           const next = resolveAdvanceTarget(plan, fromSegId, to, { consumedHashes });
           if (next) {
-            console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
-            // Auto-mark "visited" segments: every segment from the
-            // outgoing index (inclusive) up to the target index
-            // (exclusive) is added to completedSegmentIdsRef. This
-            // makes the progress strip show advancement-as-completion
-            // even when the brain skipped past a segment without
-            // explicitly calling mark_segment_complete on it. Without
-            // this, skip-ahead clicks left the strip stuck at 0/4
-            // because the brain only emits mark_segment_complete for
-            // segments it taught (observed 2026-05-12 — 5 consecutive
-            // skip clicks, strip frozen).
-            const outgoingIdx = plan.segments.findIndex((s) => s.id === fromSegId);
-            const targetIdx = plan.segments.findIndex((s) => s.id === next);
-            if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {
-              let mutated = false;
-              for (let i = outgoingIdx; i < targetIdx; i++) {
-                const segId = plan.segments[i].id;
-                if (!completedSegmentIdsRef.current.has(segId)) {
-                  completedSegmentIdsRef.current.add(segId);
-                  mutated = true;
-                }
-              }
-              if (mutated) {
-                onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
-              }
-            }
-            currentSegmentIdRef.current = next;
-            setActiveSegmentId(next);
-            // Re-entered the plan — drop the stashed pre-free segment
-            // so a future release starts a fresh stash.
-            segmentBeforeFreeRef.current = '';
-            // Mirror into the catalog so subsequent appends stamp the
-            // new segment id. The brain's per-turn snapshot filter
-            // uses this to scope its view to current-segment items.
-            catalogRef.current.setCurrentSegment(next);
-            // realtime-2: re-inject the lesson plan so RT-2 sees the new
-            // current segment (claude-brain feeds this via the orchestrator).
-            if (useRealtimeV2) injectLessonPlanV2Ref.current();
-            // Clear the focus card so the judge doesn't carry a stale
-            // currentProblemRef across the segment boundary. Observed
-            // broken 2026-05-15 session: turn 8 emitted advance_lesson
-            // + show_segment_card("try-yourself") in the same batch,
-            // setting currentProblemRef to the new segment's authored
-            // problem. Turn 9 affirmed the student's answer for the
-            // PRIOR (PPC) segment, but the judge saw the stale focus
-            // and Path B mis-fired a KILL on a correct affirmation.
-            // Resetting here forces the judge to operate without focus
-            // until a fresh show_problem / show_segment_card fires on
-            // the new segment.
-            currentProblemRef.current = null;
-            // Auto-newPage for visual freshness: every segment
-            // transition starts the student on a fresh whiteboard
-            // page so they aren't scrolling through stacked content
-            // from prior segments. Synthesized as a real catalog-aware
-            // newPage command (uses the resolved segment's title when
-            // available) so the page break shows up in the page nav.
-            const nextSeg = plan.segments.find((s) => s.id === next);
-            // Compute a sensible page title. For generated freestyle
-            // plans the segment ids are "<loId>-hook" / "-concept" /
-            // "-worked" / "-try" — derive the loId, look up its
-            // description, and use that as the page heading. Falls
-            // back to the segment's goal/problem/id if the id doesn't
-            // match the pattern (curated plans, intro, etc.).
-            let loHeading = '';
-            if (next && plan.los?.length) {
-              for (const lo of plan.los) {
-                if (next.startsWith(`${lo.id}-`) || next === lo.id) {
-                  // Kind suffix (Hook / Concept / Worked / Try) helps the
-                  // student see which beat of the LO is on screen.
-                  const KIND_MAP: Record<string, string> = {
-                    hook: 'Hook',
-                    concept: 'Concept',
-                    worked: 'Worked Example',
-                    try: 'Try Yourself',
-                  };
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const kindLabel = KIND_MAP[(nextSeg as any)?.kind === 'worked_example' ? 'worked' : (nextSeg as any)?.kind === 'try_yourself' ? 'try' : (nextSeg as any)?.kind ?? ''];
-                  loHeading = kindLabel ? `${lo.description} — ${kindLabel}` : lo.description;
-                  break;
-                }
-              }
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newPageTitle = loHeading || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const pageTitleStr = typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '';
-            // Defer the auto-newPage until the next batch — fire it only
-            // if that batch contains a teaching command that will
-            // actually render (not get dedup'd). See
-            // pendingAdvanceNewPageRef declaration for rationale.
-            // Observed 2026-05-13 (10) session: brain advanced hook →
-            // concept-comparison, auto-newPage created page 2, next
-            // turn's show_diagram dedup'd against page 1's chart, leaving
-            // page 2 blank.
-            pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
-            console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
-            onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
+            // Behavior-preserving extraction (2026-05-22): the advance-
+            // apply side-effects now live in applyResolvedAdvance so the
+            // app-side deterministic Skip-button advance (FIX B) runs the
+            // exact same transition logic.
+            applyResolvedAdvance(plan, fromSegId, next);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
             // 2026-05-15: when `to: "next"` from the LAST segment fails
@@ -3881,7 +3906,7 @@ export function VoiceTutorRealtime({
     // decision time and routes through scroll/scribble for repeats.
     const boardSnapshot = catalogRef.current.getSnapshot();
     return { rejected, assignedIds, manifests, duplicates, boardSnapshot };
-  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent]);
+  }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
 
   // Build a context summary from the current transcript
   const buildContextSummary = useCallback(() => {
@@ -4731,6 +4756,54 @@ export function VoiceTutorRealtime({
       const trimmedT = transcript.trim();
       const isBracketed = trimmedT.startsWith('[') && trimmedT.endsWith(']');
       const silent = opts?.silent || isBracketed;
+
+      // ── FIX B — app-side deterministic Skip-button advance ──────────
+      // The Skip-ahead button injects a "[Skip-button-clicked: ...]"
+      // marker telling the brain to call advance_lesson; when the brain
+      // forgot, the orchestrator burned a full retry (the "Skip-button
+      // KILL", ~5-15s). But a one-segment advance is deterministic —
+      // resolveAdvanceTarget already computes it. So perform the advance
+      // HERE, before the brain call, and hand the brain the resulting
+      // FACT instead of the instruction. Rewriting the marker out of
+      // `transcript` makes skipTurnMarkerPresent / skipMarkerPresent
+      // (both downstream) go false on their own, so the Skip-KILL retry
+      // is structurally dead for the resolvable case — no code deleted.
+      // Scoped to the Skip BUTTON only (a deterministic one-segment
+      // advance); verbal whole-LO skips stay brain-driven (Rule 12).
+      // `originalTranscript` preserves the pre-rewrite text so the
+      // boredom-cue suppression further down still sees the button marker.
+      const originalTranscript = transcript;
+      if (TUTOR_SKIP_DETERMINISTIC && /\[Skip-button-clicked/i.test(transcript)) {
+        const skipPlan = lessonPlanRef.current;
+        const skipFromSegId = currentSegmentIdRef.current;
+        if (skipPlan && skipFromSegId) {
+          const consumedHashes = new Set(shownProblemHashesRef.current);
+          const skipNext = resolveAdvanceTarget(skipPlan, skipFromSegId, 'next', { consumedHashes });
+          if (skipNext) {
+            const skipNextSeg = skipPlan.segments.find((s) => s.id === skipNext);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const skipNextKind = (skipNextSeg as any)?.kind ? ` (a ${(skipNextSeg as any).kind} segment)` : '';
+            applyResolvedAdvance(skipPlan, skipFromSegId, skipNext);
+            // Replace the action-INSTRUCTION marker with a state FACT.
+            // Still bracketed ⇒ TranscriptView strips it from the visible
+            // chat; the brain reads it as the current student turn and
+            // teaches the new segment without being asked to advance.
+            transcript = transcript.replace(
+              /\[Skip-button-clicked[^\]]*\]/i,
+              `[Lesson auto-advanced: the student clicked Skip-ahead and the lesson pointer has ALREADY moved to segment "${skipNext}"${skipNextKind}. Teach THAT segment now. Do NOT call advance_lesson — the advance is already done. Skip is a navigation action, not an answer: do NOT affirm, grade, or state an expected answer for any prior question.]`,
+            );
+            console.warn(`[brain-orchestrator] Skip-button: app-side deterministic advance "${skipFromSegId}" → "${skipNext}" (brain told as fact; Skip-KILL retry bypassed).`);
+            onDebugEvent?.('skip_button_app_advance', `"${skipFromSegId}" → "${skipNext}"`);
+          } else {
+            // End of plan — no resolvable next segment. Leave the marker
+            // INTACT: the existing Skip-KILL retry stays alive ONLY for
+            // this case and drives the brain to generate_problem.
+            console.warn(`[brain-orchestrator] Skip-button: no resolvable next from "${skipFromSegId}" (end of plan) — marker left for the brain (generate_problem path + Skip-KILL retry retained).`);
+            onDebugEvent?.('skip_button_app_advance_skipped', `no next from "${skipFromSegId}"`);
+          }
+        }
+      }
+
       const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
       if (!silent && (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== transcript)) {
         const studentEntry: TranscriptEntry = {
@@ -4883,7 +4956,10 @@ export function VoiceTutorRealtime({
         // verbosity instead of action. Observed 2026-05-06 G5 earth-
         // systems: clicked Skip → tutor offered three choices instead
         // of advancing.
-        const hasButtonMarker = /\[(Skip-button-clicked|I'?m-stuck-button-clicked)/i.test(t);
+        // Test the ORIGINAL transcript: FIX B may have rewritten the
+        // Skip-button marker into a "[Lesson auto-advanced…]" fact, but
+        // the boredom-cue must still be suppressed on a Skip turn.
+        const hasButtonMarker = /\[(Skip-button-clicked|I'?m-stuck-button-clicked)/i.test(originalTranscript);
         const cueMatch = !hasButtonMarker && t.match(boredomCueRegex);
         if (hasButtonMarker) {
           logPacing(`student-cue suppressed (explicit button click) turn=${pacingTurnCounterRef.current}`);
@@ -5656,7 +5732,30 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('no_problem_available_observed', trimmedSentence.slice(0, 100));
                   }
                   if (!attemptKilled) {
-                    if (gateState === 'gated') {
+                    // FIX A — fast opener. The brain is prompted to open
+                    // every turn with a short content-free runway phrase
+                    // (TURN_OPENER_RULE). Voice that sentence-0 the moment
+                    // it arrives — bypassing the TTS gate — WITHOUT opening
+                    // the gate, so sentences 1+ stay buffered until the
+                    // first tool dispatch resolves. The opener is retry-
+                    // safe by construction (isSafeOpener re-gates anything
+                    // that looks substantive), so a doomed-then-retried
+                    // turn never lets the student hear two voices of
+                    // CONTENT. Restricted to attempt 0 (retries already
+                    // played a bridge / silence — avoids opener cascades)
+                    // and to non-Skip turns (a real Skip turn with FIX B
+                    // off must keep #4's silent-drop on a botched skip).
+                    const fastOpenerEligible =
+                      TUTOR_BRAIN_FAST_OPENER &&
+                      attempt === 0 &&
+                      !skipTurnMarkerPresent &&
+                      totalSentenceCount === 1 &&
+                      gateState === 'gated' &&
+                      isSafeOpener(trimmedSentence);
+                    if (fastOpenerEligible) {
+                      speakTextRef.current?.(sentenceForSpeech);
+                      audibleSentenceCount++;
+                    } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
                     } else if (gateState === 'open') {
                       speakTextRef.current?.(sentenceForSpeech);
@@ -6621,14 +6720,38 @@ export function VoiceTutorRealtime({
             !isSkipMsg &&
             !alreadyAdvanced
           ) {
-            const reason =
-              `Your previous turn ended with a continuation question ("${lastTutorMsg.slice(-80)}") and the student replied with a plain affirmative ("${lastStudentMsgForAffirm.trim()}"). ` +
-              `That's a forward signal — the lesson pointer MUST move. You emitted [${totalToolNamesSeen.join(', ') || '(none)'}] this turn without advance_lesson or generate_problem, so the lesson is stuck on the same segment. ` +
-              `Re-emit your response and INCLUDE mark_segment_complete for the current segment AND advance_lesson({to: "next"}). Do NOT re-render or re-scribble the current segment's content. If you have something useful to say about the prior segment, keep it to one short sentence BEFORE the advance.`;
-            rejectionsThisAttempt.push({ action: 'affirmative_no_advance', reason });
-            await performKill();
-            console.warn('[brain-orchestrator] Affirmative-no-advance KILL: student said "', lastStudentMsgForAffirm.trim(), '" after a continuation question, brain emitted no advance.');
-            onDebugEvent?.('affirmative_no_advance', `student="${lastStudentMsgForAffirm.slice(0, 30)}"`);
+            // SOFT advisory (was a KILL pre-2026-05-23). The kill was
+            // tearing down coherent turns: 2026-05-23 opener-merge-stress
+            // session, recap segment — brain offered "harder vs wrap up?",
+            // student said "Yes", brain (incorrectly) defaulted to the
+            // wrap-up branch and rendered a recap table + asked again.
+            // KILL fired, rolled back the table, ran a retry that called
+            // generate_problem. Student heard ~2s of "Solid session today.
+            // Four problems, four key ideas — all up on the board…" CUT,
+            // then "Let me see what I have for you. Off the top of my
+            // head — here's one for you…" — the "spoke garbage, sounded
+            // like correcting itself" UX symptom.
+            //
+            // The brain's choice (recap table) was a valid response to
+            // the ambiguous "Yes"; the rule it violated is the prompt-
+            // level "default to continuation on ambiguous yes" guidance.
+            // That's a narration-shape rule the orchestrator can't fix
+            // mid-stream without UX damage. Surface as a debug event
+            // instead — the violation is observable in telemetry, and
+            // the conversation history naturally carries the signal into
+            // the next brain turn (the brain sees its own non-advance
+            // and the student's follow-up; it can self-correct).
+            console.warn(
+              '[brain-orchestrator] Affirmative-no-advance ADVISORY (no kill): student said "',
+              lastStudentMsgForAffirm.trim(),
+              '" after a continuation question, brain emitted no advance — tools=[',
+              totalToolNamesSeen.join(', ') || '(none)',
+              ']. Letting the turn play through.',
+            );
+            onDebugEvent?.(
+              'affirmative_no_advance_advisory',
+              `student="${lastStudentMsgForAffirm.slice(0, 30)}" tools=[${totalToolNamesSeen.join(', ')}]`,
+            );
           }
         }
 
@@ -6649,13 +6772,45 @@ export function VoiceTutorRealtime({
             const segForRule18 = getSegment(planForRule18, segIdForRule18);
             const isTryYourself = segForRule18?.kind === 'try_yourself';
             if (isTryYourself) {
-              const emittedShowProblem = totalToolNamesSeen.some(
-                (n) => n === 'show_problem' || n === 'show_segment_card',
+              // Batch attribution: when the brain transitioned segments
+              // mid-turn (advance_lesson / generate_problem in the batch),
+              // tools emitted BEFORE that transition belong to the PRIOR
+              // segment. A show_equation that lands BEFORE the advance is
+              // the prior segment's final-answer reveal on completion —
+              // legitimate, NOT an answer-reveal of the new try_yourself.
+              // Observed 2026-05-23 (opener-merge-stress session, try-
+              // linear → try-ratio): brain emitted [show_equation
+              // "x=15/3=5", mark_segment_complete try-linear, advance,
+              // show_segment_card try-ratio]; the equation was for the
+              // just-completed try-linear but the flat-name check matched
+              // against the new try-ratio segment, KILL'd three turns in
+              // a row, MAX_VALIDATOR_RETRIES hit, mid-stream audio cut
+              // each time → "spoke garbage, sounded like correcting
+              // itself" UX symptom.
+              const advanceIdx = totalToolNamesSeen.findIndex(
+                (n) => n === 'advance_lesson' || n === 'generate_problem',
               );
-              const emittedAnswerReveal = totalToolNamesSeen.some(
-                (n) => n === 'show_equation' || n === 'show_solution',
-              );
-              if (emittedShowProblem && emittedAnswerReveal) {
+              const emittedShowProblemForCurrent =
+                advanceIdx === -1
+                  ? totalToolNamesSeen.some(
+                      (n) => n === 'show_problem' || n === 'show_segment_card',
+                    )
+                  : totalToolNamesSeen.some(
+                      (n, i) =>
+                        i >= advanceIdx &&
+                        (n === 'show_problem' || n === 'show_segment_card'),
+                    );
+              const emittedAnswerRevealForCurrent =
+                advanceIdx === -1
+                  ? totalToolNamesSeen.some(
+                      (n) => n === 'show_equation' || n === 'show_solution',
+                    )
+                  : totalToolNamesSeen.some(
+                      (n, i) =>
+                        i >= advanceIdx &&
+                        (n === 'show_equation' || n === 'show_solution'),
+                    );
+              if (emittedShowProblemForCurrent && emittedAnswerRevealForCurrent) {
                 const reason =
                   `You emitted both show_problem/show_segment_card AND show_equation/show_solution for try_yourself segment "${segIdForRule18}" in the same turn — that reveals the answer alongside the question and collapses the learning loop. ` +
                   `Re-emit this turn WITHOUT the show_equation/show_solution. Present only the problem and wait for the student's attempt. After the student answers (correctly or not), THAT'S when you reveal the worked answer / equation in a follow-up turn. ` +
@@ -6664,8 +6819,67 @@ export function VoiceTutorRealtime({
                 await performKill();
                 console.warn(`[brain-orchestrator] try_yourself answer-reveal KILL on segment "${segIdForRule18}".`);
                 onDebugEvent?.('try_yourself_answer_reveal', `segId="${segIdForRule18}" tools=[${totalToolNamesSeen.join(', ')}]`);
+              } else if (
+                advanceIdx !== -1 &&
+                totalToolNamesSeen.some(
+                  (n, i) =>
+                    i < advanceIdx && (n === 'show_equation' || n === 'show_solution'),
+                )
+              ) {
+                // Exempt path — there WAS a show_equation/show_solution
+                // in the batch, but it landed before the advance and so
+                // belongs to the prior segment. Surface as a debug event
+                // for observability; not a kill.
+                onDebugEvent?.(
+                  'try_yourself_answer_reveal_exempt_prior_segment',
+                  `segId="${segIdForRule18}" advanceIdx=${advanceIdx} tools=[${totalToolNamesSeen.join(', ')}]`,
+                );
               }
             }
+          }
+        }
+
+        // Disclaimer verbatim-reuse guard (2026-05-23). The
+        // "Bridge utterance for generate_problem" prompt rule says to
+        // VARY the hedged bridge + improvise disclaimer across turns,
+        // but the brain reuses them verbatim on consecutive
+        // generate_problem hits — observed live in T18 + T19 of the
+        // opener-merge-stress session: both turns opened with "Let me
+        // see what I have for you. Off the top of my head — here's one
+        // for you." byte-identical. Hearing the same disclaimer twice
+        // in 10s is the failure mode this guard prevents. Detection:
+        // normalize the brain's first 60 chars and compare against the
+        // prior turn's stored value; on identity AND a generate_problem
+        // tool call this turn, kill + retry to force variation. One-
+        // retry cost (~$0.07) is cheap vs the UX cost. Limited to
+        // attempt 0 — if the retry still produces a match, we let it
+        // play through (MAX_VALIDATOR_RETRIES caps the loop anyway).
+        if (!attemptKilled && attempt === 0 && attemptText) {
+          const calledGenerateProblem = totalToolNamesSeen.includes('generate_problem');
+          const normalized = attemptText
+            .slice(0, 60)
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (
+            calledGenerateProblem &&
+            normalized.length >= 20 &&
+            lastBrainOpenerNormalizedRef.current &&
+            lastBrainOpenerNormalizedRef.current === normalized
+          ) {
+            const reason =
+              `Your opener this turn is byte-identical to your previous turn's opener ("${attemptText.slice(0, 80).trim()}…"). ` +
+              `The "Bridge utterance for generate_problem" rule says VARY phrasing across turns — never use the same hedged bridge or improvise-disclaimer two turns in a row. ` +
+              `Re-emit this turn with a DIFFERENT hedged bridge from the pool (or invent a fresh ≤10-word hedged variant) AND, if you're on a no_problem_available improvisation path, a DIFFERENT improvise-disclaimer than the one you just used. Keep the tool calls the same — only vary the opening sentences.`;
+            rejectionsThisAttempt.push({ action: 'disclaimer_verbatim_reuse', reason });
+            await performKill();
+            console.warn(
+              `[brain-orchestrator] disclaimer verbatim-reuse KILL — opener matches prior turn ("${normalized.slice(0, 40)}…").`,
+            );
+            onDebugEvent?.(
+              'disclaimer_verbatim_reuse_kill',
+              `opener="${normalized.slice(0, 40)}"`,
+            );
           }
         }
 
@@ -7081,6 +7295,20 @@ export function VoiceTutorRealtime({
           aggregatedFullText = aggregatedFullText
             ? `${aggregatedFullText} ${attemptText}`
             : attemptText;
+          // 2026-05-23 disclaimer verbatim-reuse guard — commit this
+          // attempt's normalized opener as the comparison baseline for
+          // the NEXT turn. Only on non-killed attempts so a killed
+          // duplicate doesn't pollute the baseline (the retry's text is
+          // what actually landed). Empty attemptText falls through to
+          // an empty string, which is harmless: the next turn's check
+          // requires normalized.length >= 20 to fire.
+          if (attemptText) {
+            lastBrainOpenerNormalizedRef.current = attemptText
+              .slice(0, 60)
+              .toLowerCase()
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
         }
 
         // No rejections OR we've burned the retry budget → done with this turn.
@@ -7392,7 +7620,7 @@ export function VoiceTutorRealtime({
       }
       setStreamingEntryActive(false);
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an

@@ -267,6 +267,30 @@ export function renderStructuredToolsBlock(allowed: CatalogSubject[] | null): st
 
 const STRUCTURED_DIAGRAM_TOOLS_SENTINEL = '__STRUCTURED_DIAGRAM_TOOLS_BLOCK_SENTINEL__';
 
+/** FIX A — flag-gated retry-safe turn-opener rule. Spliced into
+ *  BASE_PROMPT only when NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER === 'true'
+ *  (the SAME flag the orchestrator reads to fast-voice sentence-0 ungated;
+ *  see VoiceTutorRealtime.tsx). Flag off ⇒ the sentinel is replaced with
+ *  '' so the rendered prompt is byte-identical to the pre-fix BASE_PROMPT.
+ *  Cache-safe: the flag is a build-time constant, so the prompt is stable
+ *  across every session in a deployment. */
+const TURN_OPENER_RULE_SENTINEL = '__TURN_OPENER_RULE_SENTINEL__';
+const TURN_OPENER_RULE = `### Turn opener — content-free runway phrase (HARD RULE)
+
+Begin EVERY response with one short opener sentence — at most 8 words — BEFORE any tool call and before any substantive content. The opener must be generic and content-free: no numbers, no computed value, no answer, no claim about the topic, no question, no topic-specific words, and not a greeting. It is a runway phrase only: it lets the student hear you begin while the rest of the turn is still being composed.
+
+Use varied, natural wording each turn. The REQUIRED shape (do NOT reuse these verbatim every turn): "Alright, let's work through this." / "Okay, let me take a look." / "Good question — let's dig in." / "Right, here we go."
+
+**End the opener with a full stop.** Do NOT join the opener to a substantive clause with an em-dash, comma, or colon. The opener is its own complete sentence; any affirmation, value, claim, OR corrective statement is a SEPARATE sentence after it.
+
+Affirmative-turn merges (the brain's most common ✗ pattern after a correct answer): ✗ "Yes — x equals 3!" / "Nice — y equals 6!" / "Exactly — that's the right value!" — substance rides in on a dash, the sentence as a whole is substantive. ✓ "Yes, that's right. x equals 3." / "Nice. y equals 6." / "Exactly. That's the right value."
+
+Corrective- and transitional-turn merges (the brain's most common ✗ pattern after a WRONG answer or on a segment hand-off — this is where the rule is broken most often in practice): ✗ "Not quite — close though!" / "Close — but the ratio is flipped!" / "Good — so one pencil costs forty cents." / "Got it — let's keep moving." / "Hmm — not quite." — same merge pattern, the substance ("close though" / "but the ratio is flipped" / "one pencil costs forty cents" / "let's keep moving" / "not quite") rides in on a dash and the whole sentence becomes substantive. ✓ "Not quite. Close though." / "Close. But the ratio is flipped." / "Good. So one pencil costs forty cents." / "Got it. Let's keep moving." / "Hmm. Not quite."
+
+The em-dash IS allowed inside sentence 2 onwards — it's only sentence 1 (the opener) where the dash is forbidden.
+
+After the opener, continue normally with your teaching content and tool calls. The opener is IN ADDITION to your normal response, never a replacement for it. Never load substantive content onto the first sentence — it must stay true and safe to say even if everything after it changes.`;
+
 /**
  * Base tutor personality and guidelines
  */
@@ -341,6 +365,7 @@ Implicit signals ("I think I get it", a confident-sounding answer, the student a
 
 Why this rule exists: without it, a brain that judges the student "knows it" jumps concept-to-concept across LOs and the student never practises. The try_yourself is the structural assurance the student actually engaged with each LO. And without the Skip Ahead = one-step semantic, a button labelled "Skip ahead" gets interpreted as "skip everything" and the student loses worked examples + try problems entirely.
 
+${TURN_OPENER_RULE_SENTINEL}
 ## Your Personality
 - Warm, patient, and encouraging but not over-the-top
 - Curious about how the student thinks
@@ -1155,6 +1180,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   prompt = prompt.replace(
     STRUCTURED_DIAGRAM_TOOLS_SENTINEL,
     renderStructuredToolsBlock(allowedForBlock),
+  );
+
+  // FIX A — retry-safe turn-opener rule. Spliced in only when the
+  // fast-opener lever is on (NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER — the
+  // same flag the orchestrator reads). Flag off ⇒ sentinel replaced with
+  // '' ⇒ byte-identical prompt, cache prefix unchanged.
+  prompt = prompt.replace(
+    `${TURN_OPENER_RULE_SENTINEL}\n`,
+    process.env.NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER === 'true'
+      ? `${TURN_OPENER_RULE}\n\n`
+      : '',
   );
 
   // Branding / metadata block — deployment-swappable. Sits in the

@@ -485,6 +485,35 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      // Asymmetric-variable short-circuit (2026-05-23): when one side
+      // contains a symbolic variable (a letter that isn't a known math
+      // function/constant) and the other is purely numeric, Wolfram
+      // can't equate them — the variable side evaluates to itself
+      // ("3x" → "3 x") and the numeric side resolves ("20 - 5" → "15"),
+      // producing a guaranteed false-positive mismatch report. Observed
+      // in the 2026-05-23 opener-merge-stress session: brain rendered
+      // "3x = 20 - 5 = 15" (a correct step in solving the linear
+      // equation, NOT a numeric equality claim), Wolfram returned
+      // "3x ≈ 3 x but 20 - 5 ≈ 15 (mismatch)" after a 4.6s round-trip.
+      // The new step asks the student to solve for x — verifying that
+      // "3x equals 15" is the student's job, not Wolfram's. Skip the
+      // pair instead of round-tripping for a guaranteed-false answer.
+      const stripFnConst = (s: string): string =>
+        s
+          .replace(
+            /\\(sin|cos|tan|sec|csc|cot|arcsin|arccos|arctan|sinh|cosh|tanh|log|ln|exp|sqrt|cdot|times|div|frac|pi|theta|alpha|beta|gamma|delta|epsilon|zeta|eta|lambda|mu|nu|xi|rho|sigma|tau|phi|chi|psi|omega|sum|prod|int|infty|partial|nabla|leq|geq|neq|approx|equiv|forall|exists|in|notin|subset|supset|cup|cap|emptyset|degree|circ)\b/gi,
+            '',
+          )
+          .replace(/\\text\{[^}]*\}/g, '');
+      const leftHasSymbolicVar = /[a-zA-Z]/.test(stripFnConst(left));
+      const rightHasSymbolicVar = /[a-zA-Z]/.test(stripFnConst(right));
+      if (leftHasSymbolicVar !== rightHasSymbolicVar) {
+        console.log(
+          `[WolframMath] Skipping asymmetric symbolic pair: "${left}" vs "${right}" (one side has a variable, the other is purely numeric — can't be equated)`,
+        );
+        continue;
+      }
+
       anyPairAttempted = true;
       // Evaluate each side
       const leftResult = await queryWolframShort(`evaluate ${left}`);

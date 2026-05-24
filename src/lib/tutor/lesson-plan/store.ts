@@ -1303,6 +1303,7 @@ import { SEED_TEST_G12_PHASE11_STATISTICS } from './seeds/test-g12-phase11-stati
 import { SEED_TEST_G11_PHASE12_ENVIRONMENTAL } from './seeds/test-g11-phase12-environmental';
 import { SEED_TEST_MULTIRENDERER_STRESS } from './seeds/test-multirenderer-stress';
 import { SEED_TEST_JUDGE_SYNC_STRESS } from './seeds/test-judge-sync-stress';
+import { SEED_TEST_OPENER_MERGE_STRESS } from './seeds/test-opener-merge-stress';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -2548,6 +2549,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_G11_PHASE12_ENVIRONMENTAL,
   SEED_TEST_MULTIRENDERER_STRESS,
   SEED_TEST_JUDGE_SYNC_STRESS,
+  SEED_TEST_OPENER_MERGE_STRESS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
