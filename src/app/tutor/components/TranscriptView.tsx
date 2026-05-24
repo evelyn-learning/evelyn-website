@@ -146,6 +146,24 @@ function splitTrailingQuestion(text: string): { body: string; question: string }
  *  not blocking. False negatives mean no buttons (current default).
  */
 export type QuickAnswerKind = 'yes-no' | 'true-false' | 'open';
+/**
+ * Detect continuation / wrap-up questions ("Ready for the next one?",
+ * "Want to keep drilling?", "Should we wrap up?"). Used to gate the
+ * I'm-stuck button: when the tutor's trailing question is offering
+ * forward motion (no active problem to be stuck on), the button is
+ * meaningless — and observed 2026-05-24 the brain interprets the
+ * click as an advance signal instead of a Socratic-breakdown request.
+ *
+ * Mirrors the orchestrator's continuationQuestionRegex shape so the
+ * UI gate aligns with the brain-side detection.
+ */
+function isContinuationQuestion(question: string): boolean {
+  if (!question) return false;
+  const q = question.trim();
+  if (!q.endsWith('?')) return false;
+  return /\b(?:ready (?:to|for)|want to|should we|shall we|on to the|move on|got it|next one|keep going|keep drilling|wrap up|done for now|good for now|all set|that's enough|more practice)\b[^?]{0,80}\?\s*$/i.test(q);
+}
+
 export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKind {
   if (!question) return 'open';
   const q = question.trim().toLowerCase();
@@ -319,6 +337,18 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         ? classifyQuestionForQuickAnswer(split.question)
         : 'open'
     );
+    // Issue #2a gate (2026-05-24): hide the I'm-stuck chip when the
+    // trailing question is a continuation / wrap-up offer. In that
+    // state there's no active problem to break down — the prior one
+    // was just solved, the tutor is offering forward motion. Observed
+    // 2026-05-24: student clicked I'm-stuck right after "Ready for the
+    // next one?" and the brain advanced + acknowledged the prior
+    // answer as if it were the response. The button is meaningless in
+    // this state; gating prevents the ambiguous click. Skip ahead stays
+    // visible — it's meaningful regardless. The button also stays
+    // hidden when there's NO trailing question at all (statement-only
+    // tutor turns).
+    const showStuckChip = !!split && !isContinuationQuestion(split.question);
     return (
     <div
       key={entry.id}
@@ -439,6 +469,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                 hook); see pacingChipsAllowed gate above. */}
             {enablePacingChips && pacingChipsAllowed && (
               <>
+                {showStuckChip && (
                 <button
                   key="pacing-stuck"
                   disabled={!!isProcessing}
@@ -452,11 +483,15 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   // y equals 2x plus 5!" without student ever
                   // answering). TranscriptView's bracketed-segment
                   // strip hides the directive in chat.
+                  // Gated by showStuckChip (2026-05-24) — hidden when
+                  // the trailing question is a continuation / wrap-up
+                  // offer with no active problem to be stuck on.
                   onClick={() => onQuickAnswer("I'm stuck on this — can you break it down? [I'm-stuck-button-clicked: walk me through this Socratically. Ask me ONE first sub-question and WAIT for my answer. Do NOT reveal the final answer or any computed value in this turn. Do NOT say 'Exactly' or affirm anything until I actually answer something.]")}
                   className="px-3 py-1 text-xs font-medium bg-white text-amber-700 border border-amber-300 rounded-full hover:bg-amber-50 hover:border-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   I&apos;m stuck
                 </button>
+                )}
                 <button
                   key="pacing-skip"
                   disabled={!!isProcessing}

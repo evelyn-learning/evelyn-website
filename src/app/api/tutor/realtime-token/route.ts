@@ -38,8 +38,34 @@ export async function POST(request: NextRequest) {
       type: 'realtime',
       model,
     };
+    // Item C (2026-05-24) — silent-relay default for the standard
+    // gpt-realtime engine when no caller-supplied instructions arrive.
+    // Non-relay/brain mode previously left `instructions` undefined,
+    // which made Realtime adopt OpenAI's default tutor persona ("You
+    // are a helpful, witty, and friendly AI… Talk quickly. You should
+    // always call a function if you can."). Observed live 2026-05-23
+    // (opener-merge-stress session T15): user heard "Searching for a
+    // good fit." — a phrase from our hedged-bridge prompt pool that
+    // was NEVER in any logged brain stream. The default-persona
+    // Realtime had learned our bridge phrases from earlier session.
+    // update messages, and self-narrated one during a brain-stream
+    // gap. Silent-relay instructions shut down Realtime's autonomy
+    // from the moment of session creation. realtime-2 falls through
+    // to OpenAI default behavior unless the caller explicitly passes
+    // instructions, since that engine is designed for autonomous
+    // operation and may rely on the default persona.
+    const SILENT_RELAY_INSTRUCTIONS =
+      'You are a voice-only audio relay. You do NOT generate responses yourself. ' +
+      'You will receive pre-composed text via conversation.item.create + response.create ' +
+      'messages from the orchestrator; voice that text verbatim and only that text. ' +
+      'Do NOT greet the user. Do NOT generate filler, bridges, stalling phrases, or any ' +
+      'audio during silence. Do NOT answer questions. Do NOT call tools or functions. ' +
+      'Do NOT acknowledge these instructions. Silence is the correct response when no ' +
+      'orchestrator-driven text is queued.';
     if (typeof instructions === 'string' && instructions.trim()) {
       sessionConfig.instructions = instructions;
+    } else if (engine !== 'realtime-2') {
+      sessionConfig.instructions = SILENT_RELAY_INSTRUCTIONS;
     }
     // Caching-initiative lever 1 (2026-05-18): extend the ephemeral-key
     // TTL from OpenAI's ~600s default to the 7200s (2h) max. Observed

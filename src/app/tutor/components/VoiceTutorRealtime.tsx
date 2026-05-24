@@ -224,6 +224,19 @@ function isSafeOpener(s: string): boolean {
   return true;
 }
 
+/** Extract the first sentence of a brain response and normalize it for
+ *  cross-turn comparison. Used by the disclaimer-verbatim-reuse guard
+ *  to detect openers that repeat across consecutive generate_problem
+ *  hits. Split on terminal punctuation (. ! ?) and take the first
+ *  non-empty chunk; lowercase + collapse whitespace. Some brain outputs
+ *  omit the post-period space ("for you.Off the top of my head…"), so
+ *  the regex doesn't require a trailing space. Falls back to the full
+ *  string if no terminal punctuation is found. */
+function extractSentence1Normalized(s: string): string {
+  const m = s.match(/^[^.!?]+/);
+  return (m ? m[0] : s).toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
 /** Strict deep-equal for prescribedRender validator. Returns true when
  *  `a` and `b` are structurally identical (same keys + same primitive
  *  values + element-wise array equality). Types are NOT coerced: the
@@ -5341,6 +5354,20 @@ export function VoiceTutorRealtime({
         // If the attempt is killed, these are rolled back so no orphaned
         // figure survives the dropped narration (see rollbackKilledRenders).
         const renderIdsThisAttempt: string[] = [];
+        // Snapshot of renderIdsThisAttempt.length captured at the moment
+        // advance_lesson / generate_problem dispatches. Item B fix
+        // (2026-05-24): if the attempt is killed AFTER an advance, the
+        // pre-advance renders belong to the PRIOR segment which was
+        // already marked complete + committed — they MUST NOT be rolled
+        // back as collateral damage from a post-advance failure. Observed
+        // live 2026-05-23 (opener-merge-stress T3): batch was [show_eq
+        // "0.15×80=12" (percent final answer), mark_complete try-percent,
+        // advance, show_problem try-proportion (prescribedRender
+        // mismatch)]. The mismatch kill called rollbackKilledRenders on
+        // ALL renderIdsThisAttempt, taking down the percent's already-
+        // accepted final-answer equation. Null = no advance dispatched
+        // (rollback scope = full attempt, original behavior).
+        let renderCountAtAdvance: number | null = null;
         let attemptText = '';
         // Once a tool call in this attempt is rejected, the attempt is
         // doomed and we'll retry. Stop voicing further sentences from
@@ -5851,6 +5878,17 @@ export function VoiceTutorRealtime({
                   ) {
                     clearTimeout(gateTimer);
                     openGate();
+                  }
+                  // Item B (2026-05-24) — capture pre-advance render
+                  // count before this lesson-control tool dispatches.
+                  // Snapshot only once per attempt (first advance wins);
+                  // a later generate_problem in the same attempt is part
+                  // of the new-segment work and shouldn't move the line.
+                  if (
+                    (name === 'advance_lesson' || name === 'generate_problem') &&
+                    renderCountAtAdvance === null
+                  ) {
+                    renderCountAtAdvance = renderIdsThisAttempt.length;
                   }
                   // Mark brain-emitted new_page on event ARRIVAL (before
                   // any downstream stripping by the same-context guard).
@@ -6856,29 +6894,32 @@ export function VoiceTutorRealtime({
         // play through (MAX_VALIDATOR_RETRIES caps the loop anyway).
         if (!attemptKilled && attempt === 0 && attemptText) {
           const calledGenerateProblem = totalToolNamesSeen.includes('generate_problem');
-          const normalized = attemptText
-            .slice(0, 60)
-            .toLowerCase()
-            .replace(/\s+/g, ' ')
-            .trim();
+          // Tightened 2026-05-24 (item A): compare sentence-1 ONLY, not
+          // the first 60 chars. Sentence-1 comparison is the right
+          // granularity for the "VARY across turns" rule, which is
+          // about the spoken opener.
+          //
+          // Softened 2026-05-24 from kill+retry → silent advisory.
+          // Live experience 2026-05-24: a verbatim-reuse kill produces
+          // a kill bridge sound + a retry, which the student perceives
+          // as a stutter/hiccup — worse UX than just hearing the same
+          // opener twice. Same logic as the Affirmative-no-advance
+          // softening: log the violation for telemetry, let the turn
+          // play through. Brain sees its own duplicate in conversation
+          // history and naturally rotates on the next turn.
+          const normalized = extractSentence1Normalized(attemptText);
           if (
             calledGenerateProblem &&
-            normalized.length >= 20 &&
+            normalized.length >= 15 &&
             lastBrainOpenerNormalizedRef.current &&
             lastBrainOpenerNormalizedRef.current === normalized
           ) {
-            const reason =
-              `Your opener this turn is byte-identical to your previous turn's opener ("${attemptText.slice(0, 80).trim()}…"). ` +
-              `The "Bridge utterance for generate_problem" rule says VARY phrasing across turns — never use the same hedged bridge or improvise-disclaimer two turns in a row. ` +
-              `Re-emit this turn with a DIFFERENT hedged bridge from the pool (or invent a fresh ≤10-word hedged variant) AND, if you're on a no_problem_available improvisation path, a DIFFERENT improvise-disclaimer than the one you just used. Keep the tool calls the same — only vary the opening sentences.`;
-            rejectionsThisAttempt.push({ action: 'disclaimer_verbatim_reuse', reason });
-            await performKill();
             console.warn(
-              `[brain-orchestrator] disclaimer verbatim-reuse KILL — opener matches prior turn ("${normalized.slice(0, 40)}…").`,
+              `[brain-orchestrator] disclaimer verbatim-reuse ADVISORY (no kill) — sentence-1 matches prior turn ("${normalized.slice(0, 60)}"). Letting the turn play through; brain should self-rotate next turn.`,
             );
             onDebugEvent?.(
-              'disclaimer_verbatim_reuse_kill',
-              `opener="${normalized.slice(0, 40)}"`,
+              'disclaimer_verbatim_reuse_advisory',
+              `s1="${normalized.slice(0, 60)}"`,
             );
           }
         }
@@ -7303,11 +7344,7 @@ export function VoiceTutorRealtime({
           // an empty string, which is harmless: the next turn's check
           // requires normalized.length >= 20 to fire.
           if (attemptText) {
-            lastBrainOpenerNormalizedRef.current = attemptText
-              .slice(0, 60)
-              .toLowerCase()
-              .replace(/\s+/g, ' ')
-              .trim();
+            lastBrainOpenerNormalizedRef.current = extractSentence1Normalized(attemptText);
           }
         }
 
@@ -7352,7 +7389,14 @@ export function VoiceTutorRealtime({
               // Pull any renders this give-up attempt DID land off the
               // board too — the narration was just cancelled, so they
               // would otherwise sit orphaned (and export into the PDF).
-              rollbackKilledRenders(renderIdsThisAttempt);
+              // Item B scope: only renders emitted AFTER advance_lesson
+              // are part of the failed-new-segment work; pre-advance
+              // renders belong to the now-completed prior segment.
+              const giveUpRollbackTargets =
+                renderCountAtAdvance !== null
+                  ? renderIdsThisAttempt.slice(renderCountAtAdvance)
+                  : renderIdsThisAttempt;
+              rollbackKilledRenders(giveUpRollbackTargets);
             }
           }
           break;
@@ -7400,7 +7444,17 @@ export function VoiceTutorRealtime({
         // next to the orphaned ones (the 2026-05-15 two-BSTs bug).
         // Gated on attemptKilled so a clean attempt's renders are never
         // touched; in the retry path performKill always set it.
-        if (attemptKilled) rollbackKilledRenders(renderIdsThisAttempt);
+        // Item B scope (2026-05-24): only renders emitted AFTER
+        // advance_lesson are part of the failed-new-segment work;
+        // pre-advance renders belong to the prior (now-completed)
+        // segment and were already accepted.
+        if (attemptKilled) {
+          const retryRollbackTargets =
+            renderCountAtAdvance !== null
+              ? renderIdsThisAttempt.slice(renderCountAtAdvance)
+              : renderIdsThisAttempt;
+          rollbackKilledRenders(retryRollbackTargets);
+        }
         // Remove the killed attempt's streaming entry from the chat
         // before the next attempt creates a fresh one. Without this,
         // the user would see the killed text remain alongside the new
