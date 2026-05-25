@@ -71,7 +71,7 @@ Tie-breaking rules:
 1. If <production_state> is "listening" → almost always "new_turn" (rare exceptions: pure filler or pure noise).
 2. If <production_state> is "processing" → the question is continuation vs barge_in. Default to continuation unless the student says STOP / WAIT / NO or asks a totally different question. Short additions to a prior numeric/short answer ("oh wait, I meant 12") are continuation.
 3. If <production_state> is "speaking" → the question is filler vs barge_in. Default to filler for ambient acks. Treat as barge_in if the speech contains an instruction to stop, a corrective ("actually...", "no, but..."), or a new question.
-4. If <recent_tutor_script> appears verbatim or near-verbatim in <transcript>, it's likely self-voice contamination — return "noise".
+4. SELF-VOICE: return "noise" ONLY when the transcript repeats the TUTOR's recent speech (from <recent_tutor_script>) very closely — long phrases shared (4+ consecutive content words in order) or full-sentence overlap. Do NOT call "noise" for partial similarity to <last_student_turn> — the student commonly opens consecutive answers with the same preamble ("I think that...", "It's...", "The answer is..."), and shared preambles alone are NOT self-voice. <last_student_turn> is context for continuation-vs-barge, not a self-voice signal. When in doubt, prefer new_turn / continuation / barge_in over noise.
 
 Return STRICT JSON of the form:
 {"verdict":"<label>","reason":"<one short clause>"}

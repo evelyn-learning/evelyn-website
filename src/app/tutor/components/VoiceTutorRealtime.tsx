@@ -508,10 +508,29 @@ export function VoiceTutorRealtime({
 
   // Voice Perception Layer — Stage 1 state (Q1.5/Q2 in design doc).
   // ttsScriptBufferRef holds the rolling ~8s of tutor TTS scripts for the
-  // self-voice script-cancellation defence layer. Populated from
-  // handleTranscriptUpdate's assistant branch; read by the perception
-  // onTranscript callback before running the heuristic classifier.
+  // self-voice script-cancellation defence layer. Populated from BOTH
+  // (a) handleTranscriptUpdate's assistant branch (legacy Realtime
+  // authoring) and (b) the brain orchestrator's speakText call sites
+  // (claude-brain + openai-mini TTS — Realtime audio_transcript events
+  // don't fire there, so we have to capture at the dispatch site).
   const ttsScriptBufferRef = useRef<RecentTtsScript[]>([]);
+  const pushTtsScriptForPerception = useCallback((text: string) => {
+    const trimmed = (text ?? '').trim();
+    if (!trimmed) return;
+    const nowMs = Date.now();
+    ttsScriptBufferRef.current.push({
+      text: trimmed,
+      spokenStartedAt: nowMs,
+      spokenEndedAt: nowMs,
+    });
+    const cutoff = nowMs - 10_000;
+    while (
+      ttsScriptBufferRef.current.length > 0 &&
+      ttsScriptBufferRef.current[0].spokenStartedAt < cutoff
+    ) {
+      ttsScriptBufferRef.current.shift();
+    }
+  }, []);
   // Circuit breaker for the Haiku perception-classify endpoint per Q6:
   // 5 consecutive failures opens the circuit for 60s, during which the
   // 'escalate' verdict short-circuits to 'noise' (fail-open). Resets on
@@ -5450,6 +5469,7 @@ export function VoiceTutorRealtime({
         const pendingSentences: string[] = [];
         const flushPending = () => {
           for (const s of pendingSentences) {
+            pushTtsScriptForPerception(s);
             speakTextRef.current?.(s);
             audibleSentenceCount++;
           }
@@ -5838,11 +5858,13 @@ export function VoiceTutorRealtime({
                       gateState === 'gated' &&
                       isSafeOpener(trimmedSentence);
                     if (fastOpenerEligible) {
+                      pushTtsScriptForPerception(sentenceForSpeech);
                       speakTextRef.current?.(sentenceForSpeech);
                       audibleSentenceCount++;
                     } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
                     } else if (gateState === 'open') {
+                      pushTtsScriptForPerception(sentenceForSpeech);
                       speakTextRef.current?.(sentenceForSpeech);
                       audibleSentenceCount++;
                     }
@@ -7981,7 +8003,11 @@ export function VoiceTutorRealtime({
             .join(' ');
           const ctrl = new AbortController();
           const tHaiku0 = Date.now();
-          const timeoutId = setTimeout(() => ctrl.abort(), 1500);
+          // 3000ms: observed Haiku p95 in dev was 1200–1600ms (first
+          // Stage-1 live session, 2026-05-25), above the design's
+          // aspirational 500ms target. Bump until prompt-cache warm-up
+          // settles in production; revisit when we have real p95 data.
+          const timeoutId = setTimeout(() => ctrl.abort(), 3000);
           fetch('/api/tutor/perception-classify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
