@@ -203,7 +203,9 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   const setState = useCallback((next: PerceptionState) => {
     setStateInternal((prev) => {
       if (prev === next) return prev;
-      console.log(`${logPrefix} state: ${prev} → ${next}`);
+      // warn-level so the browser→server log bridge surfaces lifecycle
+      // transitions in the dev terminal alongside the production WS logs.
+      console.warn(`${logPrefix} state: ${prev} → ${next}`);
       try { onStateChangeRef.current?.(next); } catch {}
       return next;
     });
@@ -278,7 +280,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
         },
       },
     }));
-    console.log(`${logPrefix} session.update sent (transcription-only)`);
+    console.warn(`${logPrefix} session.update sent (transcription-only)`);
   }, [logPrefix]);
 
   const startMic = useCallback(async () => {
@@ -327,7 +329,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       processor.connect(ctx.destination);
       processorRef.current = processor;
       setState('listening');
-      console.log(`${logPrefix} microphone started (independent stream)`);
+      console.warn(`${logPrefix} microphone started (independent stream)`);
     } catch (err) {
       console.error(`${logPrefix} mic error:`, err);
       const e = err instanceof Error ? err : new Error('Perception mic access failed');
@@ -393,7 +395,10 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
         const tMs = perceptionT0Ref.current ? now - perceptionT0Ref.current : 0;
         const latencyMs = speechStartedAtRef.current ? now - speechStartedAtRef.current : 0;
         const itemId = typeof data.item_id === 'string' ? data.item_id : undefined;
-        console.log(`${logPrefix} transcript (${latencyMs}ms): ${JSON.stringify(text)}`);
+        // warn-level so each perception transcript appears in the dev
+        // terminal next to the production hook's `[Realtime] User transcript:`
+        // lines — the Stage 0 (and Stage 1) agreement-rate review signal.
+        console.warn(`${logPrefix} transcript (${latencyMs}ms): ${JSON.stringify(text)}`);
         try { onTranscriptRef.current?.({ text, tMs, latencyMs, itemId }); } catch {}
         break;
       }
@@ -480,7 +485,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     sessionUpdateSentRef.current = false;
 
     ws.onopen = () => {
-      console.log(`${logPrefix} WS opened`);
+      console.warn(`${logPrefix} WS opened`);
       sendSessionUpdate(ws);
       // Start mic only after WS is open so audio chunks land in a live
       // socket (avoids onaudioprocess racing the handshake).

@@ -12,6 +12,12 @@ import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react'
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
+import {
+  classifyHeuristic,
+  type RecentTtsScript,
+  type ProductionStateForClassifier,
+  type PerceptionVerdict,
+} from '@/lib/tutor/voice/perception-classifier';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
@@ -499,6 +505,19 @@ export function VoiceTutorRealtime({
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
   const currentAssistantTextRef = useRef('');
+
+  // Voice Perception Layer — Stage 1 state (Q1.5/Q2 in design doc).
+  // ttsScriptBufferRef holds the rolling ~8s of tutor TTS scripts for the
+  // self-voice script-cancellation defence layer. Populated from
+  // handleTranscriptUpdate's assistant branch; read by the perception
+  // onTranscript callback before running the heuristic classifier.
+  const ttsScriptBufferRef = useRef<RecentTtsScript[]>([]);
+  // Circuit breaker for the Haiku perception-classify endpoint per Q6:
+  // 5 consecutive failures opens the circuit for 60s, during which the
+  // 'escalate' verdict short-circuits to 'noise' (fail-open). Resets on
+  // a successful call.
+  const perceptionClassifyFailCountRef = useRef(0);
+  const perceptionClassifyCircuitOpenAtRef = useRef<number>(0);
 
   // Track whiteboard tool calls per response turn for validation pass
   const turnHadToolCallRef = useRef(false);
@@ -1284,6 +1303,29 @@ export function VoiceTutorRealtime({
           .replace(/\[Whiteboard\][^\n]*/gi, '')
           .replace(/\[whiteboard command[^\]]*\][^\n]*/gi, '')
           .trim();
+
+        // Perception layer (Stage 1) — capture spoken text into the rolling
+        // TTS-script buffer so the classifier's self-voice defence layer
+        // can detect tutor-voice contamination on the perception WS. Fires
+        // for BOTH engines (claude-brain + legacy Realtime authoring) and
+        // happens BEFORE the engine-specific early returns below. No effect
+        // when the perception flag is off — the buffer just isn't read.
+        if (cleanText) {
+          const nowMs = Date.now();
+          ttsScriptBufferRef.current.push({
+            text: cleanText,
+            spokenStartedAt: nowMs,
+            spokenEndedAt: nowMs,
+          });
+          // Keep the buffer trimmed to the last ~8s + padding.
+          const cutoff = nowMs - 10_000;
+          while (
+            ttsScriptBufferRef.current.length > 0 &&
+            ttsScriptBufferRef.current[0].spokenStartedAt < cutoff
+          ) {
+            ttsScriptBufferRef.current.shift();
+          }
+        }
 
         // In claude-brain mode the brain orchestrator is the authoritative
         // source of tutor turns: it appends to transcriptRef BEFORE
@@ -7883,19 +7925,107 @@ export function VoiceTutorRealtime({
     vadSilenceDurationMs,
     vadPrefixPaddingMs,
     onTranscript: useCallback((t: PerceptionTranscript) => {
-      // Tagged log for Stage 0 transcript-agreement review. Pair with the
+      // Tagged log for Stage 0+ transcript-agreement review. Pair with the
       // production hook's `[Realtime] User transcript:` lines at similar
-      // timestamps to compute agreement rate.
+      // timestamps to compute agreement rate. warn-level so the
+      // browser→server log bridge surfaces it in the dev terminal.
       const prodState = productionStateRef.current;
-      console.log(
+      console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms): ${JSON.stringify(t.text)}`,
       );
-    }, []),
+
+      // ── Stage 1: heuristic classifier + Haiku escalation (logged, not enforced)
+      // Per design Q2 + Q6, every perception transcript runs through the
+      // heuristic; ambiguous mid-utterances escalate to Haiku. Verdicts are
+      // logged ONLY at this stage — no cancellation, no refire. The signal
+      // we're measuring is verdict distribution + Haiku FP rate over 5
+      // sessions before Stage 2 ships any state change.
+      if (perceptionStage >= 1) {
+        const nowMs = Date.now();
+        const speechStartedAt = nowMs - t.latencyMs;
+        const recentTtsScripts: RecentTtsScript[] = ttsScriptBufferRef.current.filter(
+          (s) => s.spokenStartedAt >= nowMs - 8000,
+        );
+        const heur = classifyHeuristic({
+          transcript: t.text,
+          productionState: prodState as ProductionStateForClassifier,
+          recentTtsScripts,
+          now: nowMs,
+          speechStartedAt,
+        });
+        const ttsBufLen = recentTtsScripts.length;
+        const svScore = heur.selfVoiceScore !== undefined
+          ? heur.selfVoiceScore.toFixed(2)
+          : 'n/a';
+        console.warn(
+          `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
+        );
+        onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+
+        if (heur.verdict === 'escalate') {
+          // Circuit breaker: skip Haiku if the circuit is open.
+          const circuitOpenAt = perceptionClassifyCircuitOpenAtRef.current;
+          if (circuitOpenAt > 0 && nowMs - circuitOpenAt < 60_000) {
+            console.warn('[CLASSIFIER] haiku skipped (circuit open)');
+            return;
+          }
+          if (circuitOpenAt > 0) {
+            perceptionClassifyCircuitOpenAtRef.current = 0;
+            perceptionClassifyFailCountRef.current = 0;
+          }
+          const lastStudentEntry = [...transcriptRef.current]
+            .reverse()
+            .find((e) => e.role === 'student');
+          const recentTutorScript = recentTtsScripts
+            .map((s) => s.text)
+            .join(' ');
+          const ctrl = new AbortController();
+          const tHaiku0 = Date.now();
+          const timeoutId = setTimeout(() => ctrl.abort(), 1500);
+          fetch('/api/tutor/perception-classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              transcript: t.text,
+              productionState: prodState,
+              recentTutorScript,
+              lastStudentTurn: lastStudentEntry?.text,
+            }),
+            signal: ctrl.signal,
+          })
+            .then((r) => r.json())
+            .then((data: { verdict?: PerceptionVerdict; reason?: string }) => {
+              clearTimeout(timeoutId);
+              const haikuMs = Date.now() - tHaiku0;
+              const verdict = data?.verdict ?? 'noise';
+              const reason = data?.reason ?? 'no reason';
+              console.warn(
+                `[CLASSIFIER] haiku=${verdict} (${haikuMs}ms) — ${reason}`,
+              );
+              onDebugEvent?.('perception_haiku', `${verdict}:${reason}`);
+              perceptionClassifyFailCountRef.current = 0;
+            })
+            .catch((err: unknown) => {
+              clearTimeout(timeoutId);
+              perceptionClassifyFailCountRef.current += 1;
+              const fails = perceptionClassifyFailCountRef.current;
+              console.warn(
+                `[CLASSIFIER] haiku failed (${fails}/5):`,
+                err instanceof Error ? err.message : String(err),
+              );
+              if (fails >= 5) {
+                perceptionClassifyCircuitOpenAtRef.current = Date.now();
+                console.warn('[CLASSIFIER] haiku circuit OPEN for 60s');
+              }
+            });
+        }
+      }
+    }, [onDebugEvent, perceptionStage]),
     onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
-      console.log(`[PERCEPTION] speech_started (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+      console.warn(`[PERCEPTION] speech_started (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
     }, []),
     onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
-      console.log(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+      console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
     }, []),
     onTranscriptionFailed: useCallback((errorType: string | undefined) => {
       console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
