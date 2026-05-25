@@ -11,6 +11,7 @@
 import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
+import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
@@ -7838,6 +7839,77 @@ export function VoiceTutorRealtime({
   sendTextMessageRef.current = realtime.sendTextMessage;
   speakTextRef.current = realtime.speakText;
   clearSpeechQueueRef.current = realtime.clearSpeechQueue;
+
+  // ── Voice Perception Layer (Stage 0 — shadowed, logs only) ─────────────
+  // See memory/project_voice_perception_layer_design.md for the locked
+  // architecture. Stage 0 spins up a parallel gpt-realtime-2 WS in
+  // transcription-only mode so we can measure transcript-agreement rate
+  // against the production WS WITHOUT altering production behaviour.
+  //
+  // Enable: NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE=0 (or higher; later stages
+  // layer behaviour on top). Default unset ⇒ feature OFF entirely.
+  // Runtime override: window.__tutorPerceptionStage = 0..4 (dev only;
+  // changes the resolved stage on the NEXT effect run — refresh the page
+  // or call window.__tutorForcePerceptionClose() to re-enter).
+  const perceptionEnvStage = process.env.NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE;
+  const [perceptionRuntimeStage, setPerceptionRuntimeStage] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
+    const w = window as unknown as { __tutorPerceptionStage?: string | number };
+    if (w.__tutorPerceptionStage !== undefined) {
+      setPerceptionRuntimeStage(String(w.__tutorPerceptionStage));
+    }
+  }, []);
+  const perceptionStageRaw = perceptionRuntimeStage ?? perceptionEnvStage;
+  const perceptionStage = (() => {
+    const n = Number.parseInt(perceptionStageRaw ?? '', 10);
+    return Number.isFinite(n) && n >= 0 && n <= 4 ? n : -1;
+  })();
+  // Only open the perception WS once the production WS is connected — this
+  // avoids issuing a mic-permission prompt before the user clicks Start.
+  const perceptionEnabled = perceptionStage >= 0 && realtime.isConnected;
+
+  // Keep production WS state in a ref so the perception onTranscript callback
+  // can tag every log with what the production WS was doing at the moment
+  // perception saw the transcript. Stage 0 review uses this to filter
+  // self-voice contamination (perception logs during state='speaking').
+  const productionStateRef = useRef<RealtimeState>(realtime.state);
+  productionStateRef.current = realtime.state;
+
+  const perception = usePerceptionWS({
+    enabled: perceptionEnabled,
+    vadThreshold,
+    vadSilenceDurationMs,
+    vadPrefixPaddingMs,
+    onTranscript: useCallback((t: PerceptionTranscript) => {
+      // Tagged log for Stage 0 transcript-agreement review. Pair with the
+      // production hook's `[Realtime] User transcript:` lines at similar
+      // timestamps to compute agreement rate.
+      const prodState = productionStateRef.current;
+      console.log(
+        `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms): ${JSON.stringify(t.text)}`,
+      );
+    }, []),
+    onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
+      console.log(`[PERCEPTION] speech_started (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+    }, []),
+    onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
+      console.log(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+    }, []),
+    onTranscriptionFailed: useCallback((errorType: string | undefined) => {
+      console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
+    }, []),
+    onStateChange: useCallback((next: PerceptionState) => {
+      onDebugEvent?.('perception_state', next);
+    }, [onDebugEvent]),
+    onError: useCallback((err: Error) => {
+      onDebugEvent?.('perception_error', err.message);
+    }, [onDebugEvent]),
+  });
+  // Reference for lint cleanliness; explicit read so a future stage that
+  // surfaces a status pill / closes barge-in gaps has something to consume.
+  void perception.state;
 
   // realtime-2: assemble + inject the lesson plan context into the RT-2
   // session. Called once on connect (effect below) and again after every
