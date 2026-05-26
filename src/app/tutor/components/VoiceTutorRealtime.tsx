@@ -537,6 +537,54 @@ export function VoiceTutorRealtime({
   // a successful call.
   const perceptionClassifyFailCountRef = useRef(0);
   const perceptionClassifyCircuitOpenAtRef = useRef<number>(0);
+  // Stage 2 cancellation surface. inFlightBrainAbortRef holds the
+  // AbortController of the in-flight callBrainOnce fetch so the
+  // perception layer can abort the brain stream when the student
+  // starts speaking during 'processing'. lastBrainCallContextRef
+  // remembers the (transcript, opts) of the most recent brain call
+  // so the perception verdict handler can RESTORE (re-fire with the
+  // original input on a noise/filler false positive) or MERGE
+  // (re-fire with the original + perception text for a continuation).
+  // perceptionInterruptCheckpointRef gates the verdict handler so
+  // only verdicts following a Stage-2 cancel trigger restore/merge.
+  const inFlightBrainAbortRef = useRef<AbortController | null>(null);
+  const lastBrainCallContextRef = useRef<{ transcript: string; opts?: { silent?: boolean } } | null>(null);
+  const perceptionInterruptCheckpointRef = useRef<
+    | {
+        originalTranscript: string;
+        originalOpts?: { silent?: boolean };
+        cancelledAt: number;
+        /** Bug 1 fix: minimum transcript-sequence number whose verdict
+         *  is allowed to dispatch against THIS checkpoint. Set at cancel
+         *  time to perceptionTranscriptSeqRef.current — any Haiku verdict
+         *  whose source transcript had a seq <= this value is from a
+         *  perception transcript that ARRIVED BEFORE the cancel and
+         *  must be dropped. */
+        minSeqForDispatch: number;
+      }
+    | null
+  >(null);
+  // Bug 1 fix: per-perception-transcript sequence number. Incremented
+  // once per onTranscript entry. Closure-captured by Haiku callbacks
+  // so the then-handler can check whether its verdict is still fresh
+  // when the dispatch slot is opened.
+  const perceptionTranscriptSeqRef = useRef(0);
+  // Bug 2 fix: after a Stage-2 cancel, record the perception transcript
+  // that drove the merge so we can dedupe the inevitable production-WS
+  // transcript of the same utterance (production WS still mics during
+  // 'processing' state — Stage 4 takes its input role away, Stage 2 has
+  // to suppress the duplicate in-band).
+  const productionWsTranscriptSuppressRef = useRef<{ text: string; until: number } | null>(null);
+  // Stage 2 verdict → action dispatcher. Filled in once
+  // handleStudentTranscriptForBrain is defined further down (forward
+  // reference via ref to avoid hoisting issues). Called from the
+  // perception onTranscript callback's heuristic + Haiku paths.
+  const applyPerceptionVerdictRef = useRef<((verdict: PerceptionVerdict, perceptionText: string) => void) | null>(null);
+  // Stage 2 dev-only verdict pin. When set via
+  // window.__tutorForceClassifierVerdict('continuation'), the next
+  // perception transcript skips heuristic + Haiku and dispatches the
+  // pinned verdict directly. Consumed once then auto-cleared.
+  const pinnedClassifierVerdictRef = useRef<PerceptionVerdict | null>(null);
 
   // Track whiteboard tool calls per response turn for validation pass
   const turnHadToolCallRef = useRef(false);
@@ -5300,9 +5348,19 @@ export function VoiceTutorRealtime({
           ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
           : undefined;
 
+        // Stage 2 perception cancellation surface. Create an
+        // AbortController for this brain call and expose it via
+        // inFlightBrainAbortRef so the perception layer's
+        // speech_started callback can call .abort() when the student
+        // starts speaking during 'processing' (= design's "thinking").
+        // No effect when perception isn't running — nothing reads the
+        // ref, signal is never aborted, fetch behaves identically.
+        const brainAbort = new AbortController();
+        inFlightBrainAbortRef.current = brainAbort;
         const res = await fetch('/api/tutor/brain/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: brainAbort.signal,
           body: JSON.stringify({
             systemPrompt: claudeSystemPromptRef.current,
             conversationHistory: runHistory,
@@ -7738,21 +7796,49 @@ export function VoiceTutorRealtime({
         // will flush but TranscriptView filters out historyOnly.
       }
     } catch (err) {
-      console.error('[brain-orchestrator] error:', err);
-      onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
-      speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
-      // Round-7+ Fix 9 (catch path): clear any residual streaming
-      // entries + reset the active flag so the cursor doesn't keep
-      // blinking after a thrown error mid-turn.
-      const turnStreamingPrefix = `tutor-streaming-${t0}-`;
-      const beforeLen = transcriptRef.current.length;
-      transcriptRef.current = transcriptRef.current.filter((e) =>
-        typeof e.id !== 'string' || !e.id.startsWith(turnStreamingPrefix),
-      );
-      if (transcriptRef.current.length !== beforeLen) {
-        onTranscriptUpdate([...transcriptRef.current]);
+      // Stage 2: a perception-initiated abort surfaces as DOMException
+      // name='AbortError' OR a TypeError whose message includes
+      // 'aborted'. Treat both as silent — the perception layer will
+      // re-fire (restore or merge) once the verdict lands; the user
+      // shouldn't hear "lost my train of thought" mid-thinking.
+      const isAbort =
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && /abort/i.test(err.message));
+      if (isAbort) {
+        console.log('[brain-orchestrator] aborted (perception-initiated cancel)');
+        // Clean up the streaming chat entries so the cursor doesn't
+        // keep blinking; do NOT speak a fallback line.
+        const turnStreamingPrefix = `tutor-streaming-${t0}-`;
+        const beforeLen = transcriptRef.current.length;
+        transcriptRef.current = transcriptRef.current.filter((e) =>
+          typeof e.id !== 'string' || !e.id.startsWith(turnStreamingPrefix),
+        );
+        if (transcriptRef.current.length !== beforeLen) {
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
+        setStreamingEntryActive(false);
+      } else {
+        console.error('[brain-orchestrator] error:', err);
+        onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
+        speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+        // Round-7+ Fix 9 (catch path): clear any residual streaming
+        // entries + reset the active flag so the cursor doesn't keep
+        // blinking after a thrown error mid-turn.
+        const turnStreamingPrefix = `tutor-streaming-${t0}-`;
+        const beforeLen = transcriptRef.current.length;
+        transcriptRef.current = transcriptRef.current.filter((e) =>
+          typeof e.id !== 'string' || !e.id.startsWith(turnStreamingPrefix),
+        );
+        if (transcriptRef.current.length !== beforeLen) {
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
+        setStreamingEntryActive(false);
       }
-      setStreamingEntryActive(false);
+    } finally {
+      // Stage 2: clear the perception cancellation surface — this brain
+      // call is no longer in flight so a later abort() would be a no-op
+      // against a stale controller.
+      inFlightBrainAbortRef.current = null;
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance]);
 
@@ -7764,8 +7850,28 @@ export function VoiceTutorRealtime({
   // expects: if they say "draw the perpendicular" then "now find the
   // area", they want one coherent response, not two responses where
   // the first is interrupted by the second.
-  const handleStudentTranscriptForBrain = useCallback(async (transcript: string, opts?: { silent?: boolean }) => {
+  const handleStudentTranscriptForBrain = useCallback(async (
+    transcript: string,
+    opts?: { silent?: boolean; bypassPerceptionDedupe?: boolean },
+  ) => {
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
+    // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
+    // recent cancel armed the suppression slot AND this call did NOT
+    // come from the perception refire path, drop it — perception is
+    // already handling the same utterance via MERGE/FRESH/RESTORE.
+    const suppress = productionWsTranscriptSuppressRef.current;
+    if (suppress && !opts?.bypassPerceptionDedupe) {
+      const now = Date.now();
+      if (now < suppress.until) {
+        console.warn(
+          `[brain-orchestrator] suppressed production-WS turn within ${Math.round((suppress.until - now) / 1000)}s of perception cancel: ${JSON.stringify(transcript).slice(0, 80)}`,
+        );
+        onDebugEvent?.('production_ws_suppressed', `dt=${5000 - (suppress.until - now)}ms`);
+        productionWsTranscriptSuppressRef.current = null;
+        return;
+      }
+      productionWsTranscriptSuppressRef.current = null;
+    }
     if (brainBusyRef.current) {
       console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
       queuedTranscriptsRef.current.push(transcript);
@@ -7806,6 +7912,10 @@ export function VoiceTutorRealtime({
       }
     }, 90_000);
     try {
+      // Stage 2 (perception cancellation): remember the args so a
+      // post-cancel verdict can RESTORE (re-fire with these exact
+      // args) or MERGE (re-fire with these + perception text).
+      lastBrainCallContextRef.current = { transcript, opts };
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -7813,6 +7923,7 @@ export function VoiceTutorRealtime({
       while (queuedTranscriptsRef.current.length > 0) {
         const combined = queuedTranscriptsRef.current.splice(0).join(' ');
         console.log('[brain-orchestrator] processing queued combined:', JSON.stringify(combined).slice(0, 100));
+        lastBrainCallContextRef.current = { transcript: combined };
         await callBrainOnce(combined);
       }
     } finally {
@@ -7820,6 +7931,83 @@ export function VoiceTutorRealtime({
       brainBusyRef.current = false;
     }
   }, [callBrainOnce, onDebugEvent]);
+
+  // Stage 2 — perception verdict dispatcher. Called after a perception
+  // cancel checkpoint is set (perceptionInterruptCheckpointRef populated
+  // by onSpeechStart). Picks an action based on the verdict:
+  //   - noise / filler           → RESTORE: re-fire the original call
+  //   - drop_self_voice          → DROP: no re-fire (false alarm; the
+  //                                "speech" we heard was the tutor's
+  //                                own voice leaking back)
+  //   - continuation             → MERGE: re-fire with original
+  //                                transcript + bracketed perception
+  //                                addendum (Q3 simplification — true
+  //                                timestamped history deferred)
+  //   - barge_in / new_turn      → FRESH: re-fire with perception
+  //                                transcript as the new student turn
+  // Checkpoint is cleared in every branch so a stale checkpoint never
+  // triggers a refire on a later unrelated verdict.
+  const applyPerceptionVerdict = useCallback((
+    verdict: PerceptionVerdict,
+    perceptionText: string,
+  ) => {
+    const checkpoint = perceptionInterruptCheckpointRef.current;
+    if (!checkpoint) return;
+    perceptionInterruptCheckpointRef.current = null;
+    const elapsedMs = Date.now() - checkpoint.cancelledAt;
+    const cleanPerceptionText = (perceptionText || '').trim();
+    if (verdict === 'noise' || verdict === 'filler' || verdict === 'drop_self_voice') {
+      if (verdict === 'drop_self_voice') {
+        // Self-voice: don't even restore — the audio we cancelled on
+        // was the tutor's own voice loop, not a real student
+        // utterance. The brain call already ran (we cancelled it).
+        // Re-firing would just repeat the same response.
+        console.warn(`[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): drop, no refire`);
+        onDebugEvent?.('perception_stage2_drop', `${verdict} after ${elapsedMs}ms`);
+        return;
+      }
+      console.warn(
+        `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): RESTORE — re-firing original transcript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
+      );
+      onDebugEvent?.('perception_stage2_restore', `${verdict} after ${elapsedMs}ms`);
+      // bypassPerceptionDedupe: our own refire must not be dropped by
+      // the production-WS suppression slot armed at cancel time.
+      void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
+        ...(checkpoint.originalOpts || {}),
+        bypassPerceptionDedupe: true,
+      });
+      return;
+    }
+    if (verdict === 'continuation') {
+      // Q3 simplification (Stage 2 MVP): merge as bracketed addendum.
+      // True timestamped-history protocol is a brain-route schema
+      // change deferred until Stage 3+ work picks it up.
+      const merged = cleanPerceptionText
+        ? `${checkpoint.originalTranscript} [Student added while you were thinking: ${cleanPerceptionText}]`
+        : checkpoint.originalTranscript;
+      console.warn(
+        `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): MERGE — original+perception, len=${merged.length}`,
+      );
+      onDebugEvent?.('perception_stage2_merge', `${verdict} after ${elapsedMs}ms`);
+      void handleStudentTranscriptForBrain(merged, {
+        ...(checkpoint.originalOpts || {}),
+        bypassPerceptionDedupe: true,
+      });
+      return;
+    }
+    // barge_in / new_turn / escalate (escalate shouldn't reach here
+    // post-Haiku, but handle defensively) → FRESH new turn.
+    const fresh = cleanPerceptionText || checkpoint.originalTranscript;
+    console.warn(
+      `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): FRESH new turn, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
+    );
+    onDebugEvent?.('perception_stage2_fresh', `${verdict} after ${elapsedMs}ms`);
+    void handleStudentTranscriptForBrain(fresh, { bypassPerceptionDedupe: true });
+  }, [handleStudentTranscriptForBrain, onDebugEvent]);
+  // Publish to the ref so the perception callbacks (defined earlier in
+  // render order via useCallback closures) can call it through the ref
+  // surface without a hoisting reference issue.
+  applyPerceptionVerdictRef.current = applyPerceptionVerdict;
 
   // Short relay-mode prompt for Realtime when claudeBrainMode is on.
   // Realtime is reduced to STT + verbatim TTS. It does not author content.
@@ -7952,9 +8140,41 @@ export function VoiceTutorRealtime({
       // timestamps to compute agreement rate. warn-level so the
       // browser→server log bridge surfaces it in the dev terminal.
       const prodState = productionStateRef.current;
+      // Bug 1 fix: capture per-transcript sequence number. Used by Haiku
+      // then-handler closures to detect stale verdicts and by the heuristic
+      // direct-dispatch path to gate against the cancel checkpoint.
+      const mySeq = ++perceptionTranscriptSeqRef.current;
       console.warn(
-        `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms): ${JSON.stringify(t.text)}`,
+        `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+
+      // Stage 2 dev-only verdict pin. When set, skip heuristic + Haiku
+      // and dispatch the pinned verdict directly so the developer can
+      // exercise every restore/merge/fresh/drop branch deterministically
+      // without crafting a real-audio scenario.
+      const pinned = pinnedClassifierVerdictRef.current;
+      if (pinned && perceptionStage >= 2) {
+        pinnedClassifierVerdictRef.current = null;
+        const cp = perceptionInterruptCheckpointRef.current;
+        if (!cp) {
+          // Bug 3 fix: explicit no-op log when no Stage-2 checkpoint is
+          // open. Production WS handles the turn via its own path.
+          console.warn(`[CLASSIFIER] PINNED verdict=${pinned} but skipped (no Stage-2 checkpoint — speech_started fired during 'listening' or '${prodState}')`);
+          onDebugEvent?.('perception_pinned_verdict_skipped', `${pinned}:no-checkpoint`);
+          return;
+        }
+        if (mySeq <= cp.minSeqForDispatch) {
+          // Bug 1 fix: this transcript predates the cancel; pinned verdict
+          // applied to a stale transcript would still drive the wrong
+          // dispatch. Drop.
+          console.warn(`[CLASSIFIER] PINNED verdict=${pinned} but skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
+          return;
+        }
+        console.warn(`[CLASSIFIER] PINNED verdict=${pinned} (seq=${mySeq}) — dispatching`);
+        onDebugEvent?.('perception_pinned_verdict', pinned);
+        applyPerceptionVerdictRef.current?.(pinned, t.text);
+        return;
+      }
 
       // ── Stage 1: heuristic classifier + Haiku escalation (logged, not enforced)
       // Per design Q2 + Q6, every perception transcript runs through the
@@ -7983,6 +8203,23 @@ export function VoiceTutorRealtime({
           `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
         );
         onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+
+        // ── Stage 2: if a perception cancel fired (checkpoint set),
+        // route every NON-escalate heuristic verdict to restore/refire
+        // immediately. Escalate falls through to the Haiku call below
+        // and the Haiku then-handler does the same routing.
+        // Bug 1 fix: gate on mySeq > minSeqForDispatch so a stale
+        // transcript (one that arrived BEFORE the cancel set this
+        // checkpoint) can't drive dispatch.
+        if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current && heur.verdict !== 'escalate') {
+          const cp = perceptionInterruptCheckpointRef.current;
+          if (mySeq <= cp.minSeqForDispatch) {
+            console.warn(`[CLASSIFIER] heuristic=${heur.verdict} skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
+            return;
+          }
+          applyPerceptionVerdictRef.current?.(heur.verdict, t.text);
+          return;
+        }
 
         if (heur.verdict === 'escalate') {
           // Circuit breaker: skip Haiku if the circuit is open.
@@ -8030,6 +8267,20 @@ export function VoiceTutorRealtime({
               );
               onDebugEvent?.('perception_haiku', `${verdict}:${reason}`);
               perceptionClassifyFailCountRef.current = 0;
+              // Stage 2: route to restore/refire if a cancel checkpoint is set.
+              // Bug 1 fix: gate on mySeq > minSeqForDispatch. Without this,
+              // a Haiku verdict for a transcript that arrived BEFORE the
+              // cancel can leak into a checkpoint opened by a LATER
+              // speech_started — observed live 2026-05-26 ("MERGE — len=106"
+              // with self-referential addendum).
+              if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
+                const cp = perceptionInterruptCheckpointRef.current;
+                if (mySeq <= cp.minSeqForDispatch) {
+                  console.warn(`[CLASSIFIER] haiku=${verdict} skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale verdict from pre-cancel transcript)`);
+                  return;
+                }
+                applyPerceptionVerdictRef.current?.(verdict, t.text);
+              }
             })
             .catch((err: unknown) => {
               clearTimeout(timeoutId);
@@ -8043,13 +8294,66 @@ export function VoiceTutorRealtime({
                 perceptionClassifyCircuitOpenAtRef.current = Date.now();
                 console.warn('[CLASSIFIER] haiku circuit OPEN for 60s');
               }
+              // Stage 2: fail-open — treat Haiku timeout/error as 'noise'
+              // (restore the original brain call). Don't leave the
+              // student hanging because the classifier endpoint was slow.
+              // Bug 1 fix: same stale-verdict gate as the success path.
+              if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
+                const cp = perceptionInterruptCheckpointRef.current;
+                if (mySeq <= cp.minSeqForDispatch) return;
+                applyPerceptionVerdictRef.current?.('noise', t.text);
+              }
             });
         }
       }
     }, [onDebugEvent, perceptionStage]),
     onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
-      console.warn(`[PERCEPTION] speech_started (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
-    }, []),
+      const prodState = productionStateRef.current;
+      console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
+      // ── Stage 2: cancel-on-speech_started for 'processing' state ───
+      // Production WS 'processing' = brain in flight, no TTS yet (the
+      // narrow window Q5 calls "thinking"). Aborting the brain call here
+      // gives ~100-300ms barge-in latency. Verdict from onTranscript
+      // decides RESTORE (re-fire original — noise/filler false positive)
+      // vs REFIRE (continuation/barge_in/new_turn). Other prod states
+      // are out of scope at Stage 2: 'speaking' is Stage 3, 'listening'
+      // is the existing path (no cancel needed), 'recording' rare.
+      if (
+        perceptionStage >= 2 &&
+        prodState === 'processing' &&
+        inFlightBrainAbortRef.current &&
+        lastBrainCallContextRef.current
+      ) {
+        const ctx = lastBrainCallContextRef.current;
+        console.warn(
+          `[PERCEPTION] STAGE-2 cancel: aborting brain in 'processing' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
+        );
+        onDebugEvent?.('perception_stage2_cancel', `prev=${prodState}`);
+        perceptionInterruptCheckpointRef.current = {
+          originalTranscript: ctx.transcript,
+          originalOpts: ctx.opts,
+          cancelledAt: Date.now(),
+          // Only verdicts from perception transcripts whose seq is
+          // STRICTLY GREATER than this snapshot may dispatch against
+          // this checkpoint. Earlier (in-flight) Haiku calls from a
+          // pre-cancel perception transcript are stale and get dropped.
+          minSeqForDispatch: perceptionTranscriptSeqRef.current,
+        };
+        try { inFlightBrainAbortRef.current.abort(); } catch {}
+        // Drain any queued TTS (typically none at 'processing', but
+        // be defensive — a fast brain might have started queueing
+        // the first sentence just as speech_started landed).
+        try { void clearSpeechQueueRef.current?.(); } catch {}
+        // Bug 2 fix: arm production-WS dedupe. Production WS still mics
+        // during 'processing' and will independently transcribe the
+        // same utterance perception just heard — without this it would
+        // fire as a second brain turn (queued behind our refire) and
+        // the student would hear two responses. Drop the next
+        // production-WS-driven brain call within 5s. Cleared on
+        // consumption or on timeout.
+        productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+      }
+    }, [onDebugEvent, perceptionStage]),
     onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
     }, []),
@@ -8066,6 +8370,84 @@ export function VoiceTutorRealtime({
   // Reference for lint cleanliness; explicit read so a future stage that
   // surfaces a status pill / closes barge-in gaps has something to consume.
   void perception.state;
+
+  // ── Stage 2 dev-only test triggers ────────────────────────────────
+  // window.__tutorForceFalseBargein() — fully synthetic cancel+restore
+  // exercise. Sets a checkpoint, aborts the in-flight brain call,
+  // drains TTS, then dispatches a 'noise' verdict (the RESTORE path).
+  // Use this to verify the orchestrator-side cancel+restore plumbing
+  // without needing to time a real student utterance into the narrow
+  // 'processing' window.
+  //
+  // window.__tutorForceClassifierVerdict('continuation' | 'barge_in' |
+  // 'new_turn' | 'noise' | 'filler' | 'drop_self_voice') — pin the next
+  // perception transcript's verdict. The next real perception event
+  // skips heuristic + Haiku and routes through applyPerceptionVerdict
+  // with the pinned label. Lets you exercise every branch (MERGE,
+  // FRESH, DROP, etc.) with a single real utterance.
+  //
+  // NODE_ENV-guarded so neither helper ships to production.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
+    const VERDICT_SET: ReadonlySet<PerceptionVerdict> = new Set([
+      'drop_self_voice', 'noise', 'filler', 'new_turn',
+      'continuation', 'barge_in', 'escalate',
+    ]);
+    const w = window as unknown as {
+      __tutorForceFalseBargein?: () => void;
+      __tutorForceClassifierVerdict?: (verdict: string) => void;
+    };
+    w.__tutorForceFalseBargein = () => {
+      if (perceptionStage < 2) {
+        console.warn('[dev] __tutorForceFalseBargein: needs perceptionStage >= 2, current=', perceptionStage);
+        return;
+      }
+      const prodState = productionStateRef.current;
+      if (prodState !== 'processing') {
+        console.warn(`[dev] __tutorForceFalseBargein: prodState=${prodState}, expected 'processing'. Run while brain is in flight.`);
+      }
+      const ctx = lastBrainCallContextRef.current;
+      if (!ctx) {
+        console.warn('[dev] __tutorForceFalseBargein: no in-flight brain context — call after a turn starts');
+        return;
+      }
+      console.warn('[dev] __tutorForceFalseBargein: synthetic cancel + restore');
+      perceptionInterruptCheckpointRef.current = {
+        originalTranscript: ctx.transcript,
+        originalOpts: ctx.opts,
+        cancelledAt: Date.now(),
+        // Parity with real cancel: any verdict from a transcript whose
+        // seq is > this snapshot may dispatch. The synthetic 'noise'
+        // dispatch below skips classifier entirely so this guard is
+        // moot for the trigger itself, but keeps shape parity.
+        minSeqForDispatch: perceptionTranscriptSeqRef.current,
+      };
+      try { inFlightBrainAbortRef.current?.abort(); } catch {}
+      try { void clearSpeechQueueRef.current?.(); } catch {}
+      // Arm dedupe so a concurrent production-WS transcript doesn't
+      // sneak through as a second brain turn (matches real-cancel flow).
+      productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+      // Dispatch RESTORE on a short delay so the abort/finally chain
+      // completes first (brainBusyRef releases, queue clears).
+      setTimeout(() => {
+        applyPerceptionVerdictRef.current?.('noise', '');
+      }, 150);
+    };
+    w.__tutorForceClassifierVerdict = (verdict: string) => {
+      if (!VERDICT_SET.has(verdict as PerceptionVerdict) || verdict === 'escalate') {
+        console.warn(`[dev] __tutorForceClassifierVerdict: invalid '${verdict}'. Use one of:`,
+          [...VERDICT_SET].filter((v) => v !== 'escalate'));
+        return;
+      }
+      pinnedClassifierVerdictRef.current = verdict as PerceptionVerdict;
+      console.warn(`[dev] __tutorForceClassifierVerdict: pinned next verdict = ${verdict}`);
+    };
+    return () => {
+      delete w.__tutorForceFalseBargein;
+      delete w.__tutorForceClassifierVerdict;
+    };
+  }, [perceptionStage]);
 
   // realtime-2: assemble + inject the lesson plan context into the RT-2
   // session. Called once on connect (effect below) and again after every
