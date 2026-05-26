@@ -1278,6 +1278,24 @@ export function VoiceTutorRealtime({
       currentUserTextRef.current = text;
       if (isFinal && text.trim()) {
         const raw = text.trim();
+        // Stage 3 fix #2 (2026-05-26): suppress chat-add when the
+        // production-WS dedupe slot is armed. After a Stage-2/3 cancel,
+        // perception WS handles the utterance via FRESH/MERGE; the
+        // production WS then re-enables its mic (post hard-stop) and
+        // catches the TAIL of the SAME utterance as its own transcript.
+        // handleStudentTranscriptForBrain already drops the duplicate
+        // brain call, but it runs AFTER this entry-add. Without this
+        // guard, the chat shows the same message twice (observed live
+        // 2026-05-26: "Why are you writing half and not the full?"
+        // duplicated). PEEK only — handleStudentTranscriptForBrain
+        // consumes the slot so the brain-call drop also fires.
+        const suppress = productionWsTranscriptSuppressRef.current;
+        if (suppress && Date.now() < suppress.until) {
+          console.warn(`[VoiceTutorRealtime] suppressed production-WS chat-add (perception just handled this utterance): ${JSON.stringify(raw).slice(0, 80)}`);
+          onDebugEvent?.('production_ws_chatadd_suppressed', `"${raw.slice(0, 40)}"`);
+          currentUserTextRef.current = '';
+          return;
+        }
         const classification = classifyTranscript(raw);
         if (classification === 'noise') {
           console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
@@ -1452,7 +1470,7 @@ export function VoiceTutorRealtime({
         pendingTutorTextRef.current = cleanText;
       }
     }
-  }, [onTranscriptUpdate, onTrackInteraction, claudeBrainMode]);
+  }, [onTranscriptUpdate, onTrackInteraction, claudeBrainMode, onDebugEvent]);
 
   // Validate a tool call via Claude (async, for openai-realtime-validated engine)
   const validateToolCallViaClaude = useCallback(async (
@@ -8017,8 +8035,30 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — original+perception, len=${merged.length}`,
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
+      // Split brain context from chat display: brain receives the full
+      // merged transcript with the bracketed addendum (so it knows what
+      // it was mid-saying when the student spoke). Chat sees only what
+      // the student literally just said — adding the merged bracket
+      // text to chat (observed live 2026-05-26) made it look like the
+      // student's old message was repeating verbatim. Manually pre-add
+      // the perception chat entry, then dispatch to brain with silent
+      // so callBrainOnce skips its own chat add.
+      if (cleanPerceptionText) {
+        const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
+        if (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== cleanPerceptionText) {
+          const perceptionEntry: TranscriptEntry = {
+            id: `student-perception-${Date.now()}`,
+            timestamp: new Date(),
+            role: 'student',
+            text: cleanPerceptionText,
+          };
+          transcriptRef.current = [...transcriptRef.current, perceptionEntry];
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
+      }
       void handleStudentTranscriptForBrain(merged, {
         ...(checkpoint.originalOpts || {}),
+        silent: true,
         bypassPerceptionDedupe: true,
       });
       return;
@@ -8401,7 +8441,7 @@ export function VoiceTutorRealtime({
         // duplicate brain turn. During 'speaking' production WS mic is
         // hardware-disabled (useOpenAIRealtime ~line 691) so the dedupe
         // is mostly inert; harmless to arm anyway.
-        productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+        productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
       }
     }, [onDebugEvent, perceptionStage]),
     onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
@@ -8479,7 +8519,7 @@ export function VoiceTutorRealtime({
       try { void clearSpeechQueueRef.current?.(); } catch {}
       // Arm dedupe so a concurrent production-WS transcript doesn't
       // sneak through as a second brain turn (matches real-cancel flow).
-      productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+      productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
       // Dispatch RESTORE on a short delay so the abort/finally chain
       // completes first (brainBusyRef releases, queue clears).
       setTimeout(() => {
