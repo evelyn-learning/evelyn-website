@@ -561,6 +561,14 @@ export function VoiceTutorRealtime({
          *  perception transcript that ARRIVED BEFORE the cancel and
          *  must be dropped. */
         minSeqForDispatch: number;
+        /** Stage 3: which production state was the cancel triggered in?
+         *  'processing' = Stage 2 ("thinking") — brain in flight, no TTS
+         *  yet. RESTORE/FILLER/NOISE can safely re-fire the brain.
+         *  'speaking'   = Stage 3 — TTS was playing, partial response
+         *  already delivered. RESTORE/FILLER/NOISE accept the cut
+         *  silently (no refire would just duplicate); MERGE/FRESH still
+         *  fire a fresh brain turn for substantive interrupts. */
+        cancelledDuringState: 'processing' | 'speaking';
       }
     | null
   >(null);
@@ -7956,18 +7964,32 @@ export function VoiceTutorRealtime({
     perceptionInterruptCheckpointRef.current = null;
     const elapsedMs = Date.now() - checkpoint.cancelledAt;
     const cleanPerceptionText = (perceptionText || '').trim();
+    const stage = checkpoint.cancelledDuringState;
+    const stageLabel = stage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
     if (verdict === 'noise' || verdict === 'filler' || verdict === 'drop_self_voice') {
       if (verdict === 'drop_self_voice') {
-        // Self-voice: don't even restore — the audio we cancelled on
-        // was the tutor's own voice loop, not a real student
-        // utterance. The brain call already ran (we cancelled it).
-        // Re-firing would just repeat the same response.
-        console.warn(`[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): drop, no refire`);
-        onDebugEvent?.('perception_stage2_drop', `${verdict} after ${elapsedMs}ms`);
+        // Self-voice: never refire. The cancelled audio was the tutor's
+        // own voice loop, not a real student utterance.
+        console.warn(`[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): drop, no refire`);
+        onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_drop`, `${verdict} after ${elapsedMs}ms`);
         return;
       }
+      if (stage === 'speaking') {
+        // Stage 3: the partial TTS already played (we cut it off
+        // mid-sentence). RESTORE-equivalent here would mean resuming
+        // the cut audio — Stage 3.1 polish per design Q5 B2. For MVP,
+        // accept the cut: tutor stays silent, student speaks again or
+        // types. This is the ~5-10% FP cost Q5 explicitly accepts.
+        console.warn(
+          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (cut TTS not resumed — FP cost per Q5)`,
+        );
+        onDebugEvent?.('perception_stage3_silent_accept', `${verdict} after ${elapsedMs}ms`);
+        return;
+      }
+      // Stage 2: brain hadn't started speaking yet. Re-fire the
+      // original transcript — brain produces a fresh response.
       console.warn(
-        `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): RESTORE — re-firing original transcript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
+        `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE — re-firing original transcript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
       );
       onDebugEvent?.('perception_stage2_restore', `${verdict} after ${elapsedMs}ms`);
       // bypassPerceptionDedupe: our own refire must not be dropped by
@@ -7979,16 +8001,22 @@ export function VoiceTutorRealtime({
       return;
     }
     if (verdict === 'continuation') {
-      // Q3 simplification (Stage 2 MVP): merge as bracketed addendum.
-      // True timestamped-history protocol is a brain-route schema
-      // change deferred until Stage 3+ work picks it up.
+      // Q3 simplification (MVP): merge as bracketed addendum. True
+      // timestamped-history protocol with <cut> marker is a brain-route
+      // schema change deferred to later polish work. The bracket
+      // phrasing varies by cancel state so the brain knows whether it
+      // had started speaking yet — important context for whether to
+      // restate or just continue.
+      const bracketLabel = stage === 'speaking'
+        ? 'Student interrupted you mid-response with'
+        : 'Student added while you were thinking';
       const merged = cleanPerceptionText
-        ? `${checkpoint.originalTranscript} [Student added while you were thinking: ${cleanPerceptionText}]`
+        ? `${checkpoint.originalTranscript} [${bracketLabel}: ${cleanPerceptionText}]`
         : checkpoint.originalTranscript;
       console.warn(
-        `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): MERGE — original+perception, len=${merged.length}`,
+        `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — original+perception, len=${merged.length}`,
       );
-      onDebugEvent?.('perception_stage2_merge', `${verdict} after ${elapsedMs}ms`);
+      onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
       void handleStudentTranscriptForBrain(merged, {
         ...(checkpoint.originalOpts || {}),
         bypassPerceptionDedupe: true,
@@ -7999,9 +8027,9 @@ export function VoiceTutorRealtime({
     // post-Haiku, but handle defensively) → FRESH new turn.
     const fresh = cleanPerceptionText || checkpoint.originalTranscript;
     console.warn(
-      `[PERCEPTION] STAGE-2 verdict=${verdict} (${elapsedMs}ms): FRESH new turn, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
+      `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
     );
-    onDebugEvent?.('perception_stage2_fresh', `${verdict} after ${elapsedMs}ms`);
+    onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
     void handleStudentTranscriptForBrain(fresh, { bypassPerceptionDedupe: true });
   }, [handleStudentTranscriptForBrain, onDebugEvent]);
   // Publish to the ref so the perception callbacks (defined earlier in
@@ -8310,25 +8338,46 @@ export function VoiceTutorRealtime({
     onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
-      // ── Stage 2: cancel-on-speech_started for 'processing' state ───
-      // Production WS 'processing' = brain in flight, no TTS yet (the
-      // narrow window Q5 calls "thinking"). Aborting the brain call here
-      // gives ~100-300ms barge-in latency. Verdict from onTranscript
-      // decides RESTORE (re-fire original — noise/filler false positive)
-      // vs REFIRE (continuation/barge_in/new_turn). Other prod states
-      // are out of scope at Stage 2: 'speaking' is Stage 3, 'listening'
-      // is the existing path (no cancel needed), 'recording' rare.
-      if (
-        perceptionStage >= 2 &&
-        prodState === 'processing' &&
-        inFlightBrainAbortRef.current &&
-        lastBrainCallContextRef.current
-      ) {
+      // ── Stage 2 + Stage 3: cancel-on-speech_started ─────────────────
+      // Stage 2 fires the cancel during 'processing' (brain in flight,
+      // no TTS yet — Q5's "thinking" window). Stage 3 extends to
+      // 'speaking' (TTS playing, full barge-in). Both produce the same
+      // checkpoint shape; the dispatcher branches on cancelledDuringState
+      // because RESTORE-after-speaking can't truly resume the partial
+      // TTS (Stage 3 MVP accepts the cut on noise/filler — true
+      // resume-from-cut is Stage 3.1 polish per design Q5 B2).
+      //
+      // Q5 explicitly accepts ~5-10% FP rate during 'speaking' as the
+      // price of fast barge-in. Browser AEC + the TTS-script self-voice
+      // defence cover most of the speaker→mic loop in practice — the
+      // Stage-2 verify session (2026-05-26) showed real student
+      // barge-ins were correctly classified as sv=0.00 despite TTS
+      // playing concurrently (log lines 1020 + 2087).
+      //
+      // Double-fire guard: if a cancel is already pending (checkpoint
+      // set, verdict not yet dispatched), don't fire another. The
+      // existing checkpoint will dispatch and dedupe handles followups.
+      const canStage2 = perceptionStage >= 2 && prodState === 'processing';
+      const canStage3 = perceptionStage >= 3 && prodState === 'speaking';
+      if ((canStage2 || canStage3) && !perceptionInterruptCheckpointRef.current) {
         const ctx = lastBrainCallContextRef.current;
+        // For Stage 3 'speaking' cancels, the brain may already have
+        // finished emitting (just TTS playing out the queue) — ctx is
+        // still set from the most recent brain call so RESTORE/MERGE
+        // have an anchor. brain abort below is a no-op if not in flight.
+        if (!ctx) {
+          console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (prod=${prodState})`);
+          return;
+        }
+        const cancelStage: 'processing' | 'speaking' = canStage3 ? 'speaking' : 'processing';
+        const stageLabel = canStage3 ? 'STAGE-3' : 'STAGE-2';
         console.warn(
-          `[PERCEPTION] STAGE-2 cancel: aborting brain in 'processing' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
+          `[PERCEPTION] ${stageLabel} cancel: aborting in '${prodState}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
         );
-        onDebugEvent?.('perception_stage2_cancel', `prev=${prodState}`);
+        onDebugEvent?.(
+          canStage3 ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
+          `prev=${prodState}`,
+        );
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
           originalOpts: ctx.opts,
@@ -8338,19 +8387,20 @@ export function VoiceTutorRealtime({
           // this checkpoint. Earlier (in-flight) Haiku calls from a
           // pre-cancel perception transcript are stale and get dropped.
           minSeqForDispatch: perceptionTranscriptSeqRef.current,
+          cancelledDuringState: cancelStage,
         };
-        try { inFlightBrainAbortRef.current.abort(); } catch {}
-        // Drain any queued TTS (typically none at 'processing', but
-        // be defensive — a fast brain might have started queueing
-        // the first sentence just as speech_started landed).
+        // Abort brain stream if still in flight. For 'speaking' cancels
+        // the brain may have already finished (ref is null after
+        // callBrainOnce's finally clears it) — abort is a no-op.
+        try { inFlightBrainAbortRef.current?.abort(); } catch {}
+        // Drain TTS. For 'processing' usually empty; for 'speaking'
+        // this is the actual barge-in kill.
         try { void clearSpeechQueueRef.current?.(); } catch {}
-        // Bug 2 fix: arm production-WS dedupe. Production WS still mics
-        // during 'processing' and will independently transcribe the
-        // same utterance perception just heard — without this it would
-        // fire as a second brain turn (queued behind our refire) and
-        // the student would hear two responses. Drop the next
-        // production-WS-driven brain call within 5s. Cleared on
-        // consumption or on timeout.
+        // Production-WS dedupe. During 'processing' production WS still
+        // mics and would independently transcribe the same utterance →
+        // duplicate brain turn. During 'speaking' production WS mic is
+        // hardware-disabled (useOpenAIRealtime ~line 691) so the dedupe
+        // is mostly inert; harmless to arm anyway.
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
       }
     }, [onDebugEvent, perceptionStage]),
@@ -8404,15 +8454,16 @@ export function VoiceTutorRealtime({
         return;
       }
       const prodState = productionStateRef.current;
-      if (prodState !== 'processing') {
-        console.warn(`[dev] __tutorForceFalseBargein: prodState=${prodState}, expected 'processing'. Run while brain is in flight.`);
+      if (prodState !== 'processing' && prodState !== 'speaking') {
+        console.warn(`[dev] __tutorForceFalseBargein: prodState=${prodState}, expected 'processing' or 'speaking'. Run while brain is in flight or TTS is playing.`);
       }
       const ctx = lastBrainCallContextRef.current;
       if (!ctx) {
         console.warn('[dev] __tutorForceFalseBargein: no in-flight brain context — call after a turn starts');
         return;
       }
-      console.warn('[dev] __tutorForceFalseBargein: synthetic cancel + restore');
+      const cancelStage: 'processing' | 'speaking' = prodState === 'speaking' ? 'speaking' : 'processing';
+      console.warn(`[dev] __tutorForceFalseBargein: synthetic ${cancelStage} cancel + ${cancelStage === 'speaking' ? 'silent-accept' : 'restore'}`);
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
@@ -8422,6 +8473,7 @@ export function VoiceTutorRealtime({
         // dispatch below skips classifier entirely so this guard is
         // moot for the trigger itself, but keeps shape parity.
         minSeqForDispatch: perceptionTranscriptSeqRef.current,
+        cancelledDuringState: cancelStage,
       };
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}
