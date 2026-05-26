@@ -2336,6 +2336,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       speakTextInFlightRef.current = false;
       stopped = true;
     }
+    // Voice Perception Layer (Stage 3, 2026-05-26) — defensive third
+    // branch. When the brain has finished emitting but the
+    // AudioBufferSource is still playing through client-side queued
+    // chunks (response.done fired but audio is draining), the two
+    // branches above do nothing because speakTextInFlightRef is false.
+    // Without this, Stage 3 barge-in CANNOT cut the tutor off in the
+    // common case where the brain emit ended just before the student
+    // spoke (observed live 2026-05-26: both barge-in attempts left
+    // the tutor talking through the entire utterance). For pre-Stage-3
+    // callers (validator-feedback retry, B1 hard-cancel) this branch
+    // is moot — they always have an in-flight response and stopped is
+    // already true. Purely additive.
+    if (!stopped && playbackSourceRef.current) {
+      try { playbackSourceRef.current.stop(); } catch { /* may already be stopped */ }
+      audioQueueRef.current = [];
+      isPlayingRef.current = false;
+      console.log('[Realtime] clearSpeechQueue: hard-stopped post-response audio');
+      stopped = true;
+    }
     if (droppedCount > 0) {
       console.log(`[Realtime] clearSpeechQueue: dropped ${droppedCount} queued sentence(s)`);
     }
