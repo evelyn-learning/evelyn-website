@@ -8268,6 +8268,25 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
 
+      // Stage 3 fix #6 (2026-05-28): apply the SAME noise filter the
+      // production WS uses (line 1310). Whisper has well-known
+      // hallucinations from its YouTube training data — "Thanks for
+      // watching!", "由 Amara.org 社群提供的字幕", "Subscribe!" etc. —
+      // that production WS already drops as noise. Without this filter
+      // in the perception path, Haiku has no way to recognize them as
+      // hallucinations (the text reads as plausibly intentional speech)
+      // and labels them barge_in/new_turn, then the Stage-3 late-fallback
+      // fires them as fresh brain turns. Observed live 2026-05-28:
+      // phantom "Thanks for watching!" reached the brain and produced a
+      // wasted "Sorry, could you say that again?" turn. Match production
+      // WS's behaviour exactly — same filter, same drop.
+      const noiseCheck = classifyTranscript(t.text);
+      if (noiseCheck === 'noise') {
+        console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
+        onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
+        return;
+      }
+
       // Stage 2 dev-only verdict pin. When set, skip heuristic + Haiku
       // and dispatch the pinned verdict directly so the developer can
       // exercise every restore/merge/fresh/drop branch deterministically
