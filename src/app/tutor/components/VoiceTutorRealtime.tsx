@@ -7896,6 +7896,19 @@ export function VoiceTutorRealtime({
     // recent cancel armed the suppression slot AND this call did NOT
     // come from the perception refire path, drop it — perception is
     // already handling the same utterance via MERGE/FRESH/RESTORE.
+    //
+    // Stage-3 fix #7 (2026-05-28): the slot is WINDOW-based, not
+    // consume-once. Whisper on the production WS routinely splits a
+    // long student utterance into 2+ transcripts at the speaker's
+    // mid-sentence pauses — the original consume-on-first-hit logic
+    // dropped the first fragment but let later ones through as
+    // separate brain turns. Observed live: "Oh, okay. So, the first,
+    // the 2AP..." was suppressed, then "pq minus 1 times k." (the
+    // tail of the same utterance) slipped through and fired a brain
+    // turn, after which the queued perception MERGE drained as
+    // ANOTHER turn — making the tutor sound like it was repeating
+    // the student's earlier speech. Now: drop every production-WS
+    // turn within the 20s window. The slot times out naturally.
     const suppress = productionWsTranscriptSuppressRef.current;
     if (suppress && !opts?.bypassPerceptionDedupe) {
       const now = Date.now();
@@ -7903,10 +7916,12 @@ export function VoiceTutorRealtime({
         console.warn(
           `[brain-orchestrator] suppressed production-WS turn within ${Math.round((suppress.until - now) / 1000)}s of perception cancel: ${JSON.stringify(transcript).slice(0, 80)}`,
         );
-        onDebugEvent?.('production_ws_suppressed', `dt=${5000 - (suppress.until - now)}ms`);
-        productionWsTranscriptSuppressRef.current = null;
+        onDebugEvent?.('production_ws_suppressed', `${Math.round((suppress.until - now) / 1000)}s left`);
+        // Do NOT null the slot — leave it active for the rest of the
+        // window so subsequent fragments of the same utterance also drop.
         return;
       }
+      // Window expired — clean up the stale slot.
       productionWsTranscriptSuppressRef.current = null;
     }
     if (brainBusyRef.current) {
