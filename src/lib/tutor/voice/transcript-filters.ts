@@ -330,8 +330,15 @@ export function isNoiseTranscript(text: string): boolean {
   // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
   const words = normalized.split(/\s+/);
   if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
-  // Single word under 4 characters
-  if (words.length === 1 && normalized.length < 4) return true;
+  // Single word ≤ 2 characters, EXCEPT single-letter math variables.
+  // Originally "< 4 chars" but that dropped legitimate single-word math
+  // answers like "one", "two", "six", "ten", "pi", "yes" (observed live
+  // 2026-05-28: student answered "one" twice to "what is minus one times
+  // minus one?" — both dropped as noise, brain never got the answer).
+  // 1-2 char fillers ("uh", "ok", "ah", "hm") still drop via NOISE_PATTERNS
+  // above; single letters like "x" / "y" / "i" are kept (math variables).
+  const MATH_VAR_LETTERS = new Set(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
+  if (words.length === 1 && normalized.length <= 2 && !MATH_VAR_LETTERS.has(normalized)) return true;
   // Phonetic garbage — mostly single letters separated by spaces
   if (isPhoneticGarbage(normalized)) return true;
   // Stutter — "f-f-f-f-ck" or "wacht wacht wacht wacht"
