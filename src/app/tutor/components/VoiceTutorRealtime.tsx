@@ -583,6 +583,17 @@ export function VoiceTutorRealtime({
   // 'processing' state — Stage 4 takes its input role away, Stage 2 has
   // to suppress the duplicate in-band).
   const productionWsTranscriptSuppressRef = useRef<{ text: string; until: number } | null>(null);
+  // Stage 3 fix #4 (2026-05-28): perception mid-utterance tracker for
+  // the state-race fix. speech_started sets this to true; speech_stopped
+  // clears it. The realtime-state effect uses it to fire a retroactive
+  // cancel if production state flips to 'speaking'/'processing' while
+  // the student is mid-utterance — the gate-at-speech_started check
+  // would otherwise miss any utterance that began during 'listening'
+  // and spans into 'speaking' (observed live 2026-05-28: user spoke
+  // "All right, hold on. I think I got this wrong. So...17 and 48" but
+  // only the fragment "All right, hold on I think I got this" reached
+  // the brain because the corrected answer was lost to the gate).
+  const perceptionMidUtteranceRef = useRef<boolean>(false);
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -8197,6 +8208,47 @@ export function VoiceTutorRealtime({
   const productionStateRef = useRef<RealtimeState>(realtime.state);
   productionStateRef.current = realtime.state;
 
+  // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
+  // When the user starts speaking BEFORE the tutor TTS begins,
+  // perception's speech_started fires during 'listening' — the cancel
+  // gate misses. But if production state later TRANSITIONS to 'speaking'
+  // (or 'processing' for Stage 2) while the student is still mid-utterance,
+  // fire the cancel retroactively so the eventual perception transcript
+  // dispatches normally. Without this, the corrected answer in a long
+  // utterance is lost (observed live 2026-05-28: user said "17 and 48"
+  // but only the fragment "All right, hold on I think I got this"
+  // reached the brain — the rest was spoken after production WS's mic
+  // was disabled by the TTS-state mic-gate).
+  useEffect(() => {
+    if (!perceptionMidUtteranceRef.current) return;
+    if (perceptionInterruptCheckpointRef.current) return;
+    if (!lastBrainCallContextRef.current) return;
+    const toState = realtime.state;
+    const canRetroStage2 = perceptionStage >= 2 && toState === 'processing';
+    const canRetroStage3 = perceptionStage >= 3 && toState === 'speaking';
+    if (!canRetroStage2 && !canRetroStage3) return;
+    const ctx = lastBrainCallContextRef.current;
+    const cancelStage: 'processing' | 'speaking' = canRetroStage3 ? 'speaking' : 'processing';
+    const stageLabel = canRetroStage3 ? 'STAGE-3' : 'STAGE-2';
+    console.warn(
+      `[PERCEPTION] ${stageLabel} retro-cancel: prod transitioned mid-utterance → '${toState}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
+    );
+    onDebugEvent?.(
+      canRetroStage3 ? 'perception_stage3_retro_cancel' : 'perception_stage2_retro_cancel',
+      `→${toState}`,
+    );
+    perceptionInterruptCheckpointRef.current = {
+      originalTranscript: ctx.transcript,
+      originalOpts: ctx.opts,
+      cancelledAt: Date.now(),
+      minSeqForDispatch: perceptionTranscriptSeqRef.current,
+      cancelledDuringState: cancelStage,
+    };
+    try { inFlightBrainAbortRef.current?.abort(); } catch {}
+    try { void clearSpeechQueueRef.current?.(); } catch {}
+    productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+  }, [realtime.state, perceptionStage, onDebugEvent]);
+
   const perception = usePerceptionWS({
     enabled: perceptionEnabled,
     vadThreshold,
@@ -8289,6 +8341,30 @@ export function VoiceTutorRealtime({
           return;
         }
 
+        // Stage 3 fix #4 part B — late-arrival fallback. If the
+        // perception transcript carries a substantive verdict
+        // (barge_in / continuation / new_turn) AND no checkpoint
+        // exists AND prod state is 'speaking' or 'processing' at
+        // transcript time, the student was very likely speaking during
+        // tutor activity but speech_started fired during 'listening'
+        // so the cancel gate (and even the retro-cancel effect, if the
+        // state transition happened after speech_stopped) missed.
+        // Fire as a FRESH new turn so the student's content reaches
+        // the brain. Without this, long answers spanning the
+        // listening→speaking boundary are silently dropped (observed
+        // live 2026-05-28: "17 and 48" lost; only fragment captured).
+        if (
+          perceptionStage >= 3 &&
+          !perceptionInterruptCheckpointRef.current &&
+          (prodState === 'speaking' || prodState === 'processing') &&
+          (heur.verdict === 'barge_in' || heur.verdict === 'new_turn' || heur.verdict === 'continuation')
+        ) {
+          console.warn(`[PERCEPTION] STAGE-3 late-fallback (no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
+          onDebugEvent?.('perception_stage3_late_fallback', `${heur.verdict} at prod=${prodState}`);
+          void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
+          return;
+        }
+
         if (heur.verdict === 'escalate') {
           // Circuit breaker: skip Haiku if the circuit is open.
           const circuitOpenAt = perceptionClassifyCircuitOpenAtRef.current;
@@ -8348,6 +8424,20 @@ export function VoiceTutorRealtime({
                   return;
                 }
                 applyPerceptionVerdictRef.current?.(verdict, t.text);
+              } else if (
+                perceptionStage >= 3 &&
+                !perceptionInterruptCheckpointRef.current &&
+                (prodState === 'speaking' || prodState === 'processing') &&
+                (verdict === 'barge_in' || verdict === 'new_turn' || verdict === 'continuation')
+              ) {
+                // Stage 3 fix #4 part B — same late-fallback as the
+                // heuristic path. Escalate verdicts that come back as
+                // substantive interruptions during prod 'speaking'/'processing'
+                // without a checkpoint also fire as FRESH new turn so
+                // the student's content reaches the brain.
+                console.warn(`[PERCEPTION] STAGE-3 late-fallback (haiku, no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
+                onDebugEvent?.('perception_stage3_late_fallback', `haiku:${verdict} at prod=${prodState}`);
+                void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
               }
             })
             .catch((err: unknown) => {
@@ -8374,10 +8464,12 @@ export function VoiceTutorRealtime({
             });
         }
       }
-    }, [onDebugEvent, perceptionStage]),
+    }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain]),
     onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
+      // Stage 3 fix #4: track mid-utterance for the state-race retro-cancel.
+      perceptionMidUtteranceRef.current = true;
       // ── Stage 2 + Stage 3: cancel-on-speech_started ─────────────────
       // Stage 2 fires the cancel during 'processing' (brain in flight,
       // no TTS yet — Q5's "thinking" window). Stage 3 extends to
@@ -8446,6 +8538,8 @@ export function VoiceTutorRealtime({
     }, [onDebugEvent, perceptionStage]),
     onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+      // Stage 3 fix #4: clear mid-utterance flag.
+      perceptionMidUtteranceRef.current = false;
     }, []),
     onTranscriptionFailed: useCallback((errorType: string | undefined) => {
       console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
