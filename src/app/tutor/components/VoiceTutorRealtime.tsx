@@ -523,7 +523,7 @@ export function VoiceTutorRealtime({
       spokenStartedAt: nowMs,
       spokenEndedAt: nowMs,
     });
-    const cutoff = nowMs - 10_000;
+    const cutoff = nowMs - 60_000;
     while (
       ttsScriptBufferRef.current.length > 0 &&
       ttsScriptBufferRef.current[0].spokenStartedAt < cutoff
@@ -1422,7 +1422,7 @@ export function VoiceTutorRealtime({
             spokenEndedAt: nowMs,
           });
           // Keep the buffer trimmed to the last ~8s + padding.
-          const cutoff = nowMs - 10_000;
+          const cutoff = nowMs - 60_000;
           while (
             ttsScriptBufferRef.current.length > 0 &&
             ttsScriptBufferRef.current[0].spokenStartedAt < cutoff
@@ -8305,8 +8305,16 @@ export function VoiceTutorRealtime({
       if (perceptionStage >= 1) {
         const nowMs = Date.now();
         const speechStartedAt = nowMs - t.latencyMs;
+        // Stage-3 fix #5 (2026-05-28): anchor the buffer read on
+        // SPEECH_STARTED, not nowMs. The relevant question for self-voice
+        // is "what was the tutor saying when the student STARTED
+        // speaking?" — perception transcript latency (6-16s) was
+        // pushing the relevant tutor speech outside the old 8s
+        // nowMs-anchored window, leaving the defence with empty data
+        // and sv=0.00 even when the student transcript was clearly
+        // a verbatim copy of recent tutor speech.
         const recentTtsScripts: RecentTtsScript[] = ttsScriptBufferRef.current.filter(
-          (s) => s.spokenStartedAt >= nowMs - 8000,
+          (s) => s.spokenStartedAt >= speechStartedAt - 30_000,
         );
         const heur = classifyHeuristic({
           transcript: t.text,
