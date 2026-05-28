@@ -594,6 +594,26 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // Stage 3 fix #10 (2026-05-28): synchronous speakText gate for the
+  // brain orchestrator's emit-after-abort race. When a perception
+  // cancel fires (onSpeechStart, retro-cancel useEffect, or any
+  // applyPerceptionVerdict branch that re-fires the brain), the
+  // in-flight callBrainOnce's `for await` loop continues processing
+  // 1-3 already-buffered sentence SSE events before the AbortError
+  // propagates. Without this gate those sentences reach speakText() →
+  // sendOneSpeakText() → response.create, racing the response.cancel +
+  // clearSpeechQueue that fired at cancel time. Symptoms: tutor leaks
+  // 1-2 sentences of audio between successive student utterances; self-
+  // cancellation of just-dispatched FRESH refire leaves residual audio.
+  // The gate stores an expiry timestamp; callBrainOnce checks it
+  // SYNCHRONOUSLY before every brain-sentence speakText emission and
+  // silently drops the sentence if blocked. 600ms covers SSE buffer
+  // drain + AbortError propagation comfortably; refire's first sentence
+  // typically lands at ~1-3s (HTTP RT + brain stream startup) so the
+  // gate has expired by then. If a refire IS fast enough to land
+  // inside the gate, its first sentence is dropped — accepted cost.
+  const speakTextBlockedUntilRef = useRef<number>(0);
+  const SPEAK_TEXT_GATE_MS = 600;
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -5562,8 +5582,27 @@ export function VoiceTutorRealtime({
         // enough time to resolve before sentences flush.)
         let gateState: 'gated' | 'open' | 'closed' = 'gated';
         const pendingSentences: string[] = [];
+        // Stage 3 fix #10 (2026-05-28): synchronous speakText gate check.
+        // Returns true if perception has armed the cancel gate within
+        // the SPEAK_TEXT_GATE_MS window. Drops the sentence silently so
+        // the orchestrator's SSE for-await buffer drain after an abort
+        // signal doesn't leak audio past the cancel. NOT used by the
+        // kill-bridge / error-fallback speakText paths — they live
+        // outside the brain-emit race window and have their own
+        // semantics.
+        const speakTextGated = (): boolean => {
+          if (Date.now() < speakTextBlockedUntilRef.current) {
+            return true;
+          }
+          return false;
+        };
         const flushPending = () => {
           for (const s of pendingSentences) {
+            if (speakTextGated()) {
+              console.warn('[brain-orchestrator] STAGE-3 fix #10: flushPending dropped sentence — perception cancel gate active:', s.slice(0, 80));
+              onDebugEvent?.('speak_text_gated_flush', s.slice(0, 80));
+              continue;
+            }
             pushTtsScriptForPerception(s);
             speakTextRef.current?.(s);
             audibleSentenceCount++;
@@ -5953,15 +5992,25 @@ export function VoiceTutorRealtime({
                       gateState === 'gated' &&
                       isSafeOpener(trimmedSentence);
                     if (fastOpenerEligible) {
-                      pushTtsScriptForPerception(sentenceForSpeech);
-                      speakTextRef.current?.(sentenceForSpeech);
-                      audibleSentenceCount++;
+                      if (speakTextGated()) {
+                        console.warn('[brain-orchestrator] STAGE-3 fix #10: fast-opener dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
+                        onDebugEvent?.('speak_text_gated_opener', sentenceForSpeech.slice(0, 80));
+                      } else {
+                        pushTtsScriptForPerception(sentenceForSpeech);
+                        speakTextRef.current?.(sentenceForSpeech);
+                        audibleSentenceCount++;
+                      }
                     } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
                     } else if (gateState === 'open') {
-                      pushTtsScriptForPerception(sentenceForSpeech);
-                      speakTextRef.current?.(sentenceForSpeech);
-                      audibleSentenceCount++;
+                      if (speakTextGated()) {
+                        console.warn('[brain-orchestrator] STAGE-3 fix #10: gate-open emit dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
+                        onDebugEvent?.('speak_text_gated_open', sentenceForSpeech.slice(0, 80));
+                      } else {
+                        pushTtsScriptForPerception(sentenceForSpeech);
+                        speakTextRef.current?.(sentenceForSpeech);
+                        audibleSentenceCount++;
+                      }
                     }
                   }
                   // Streaming reveal in the chat: incrementally append
@@ -8006,6 +8055,15 @@ export function VoiceTutorRealtime({
     const checkpoint = perceptionInterruptCheckpointRef.current;
     if (!checkpoint) return;
     perceptionInterruptCheckpointRef.current = null;
+    // Stage 3 fix #10: re-arm the speakText gate AT VERDICT TIME. The
+    // original cancel-site arm (in onSpeechStart / retro-cancel) may
+    // have expired by the time Haiku returns (300-1500ms typical, up to
+    // 3000ms timeout). Re-arming here covers any straggler sentence
+    // from the cancelled orchestrator that the loop is still draining.
+    // RESTORE/MERGE/FRESH paths below dispatch NEW brain calls; those
+    // calls' first sentences typically arrive 1-3s later, well after
+    // this 600ms gate expires.
+    speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
     const elapsedMs = Date.now() - checkpoint.cancelledAt;
     const cleanPerceptionText = (perceptionText || '').trim();
     const stage = checkpoint.cancelledDuringState;
@@ -8259,6 +8317,10 @@ export function VoiceTutorRealtime({
       minSeqForDispatch: perceptionTranscriptSeqRef.current,
       cancelledDuringState: cancelStage,
     };
+    // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
+    // sentence drained from the in-flight orchestrator's SSE buffer
+    // between this point and AbortError propagation drops silently.
+    speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
     try { inFlightBrainAbortRef.current?.abort(); } catch {}
     try { void clearSpeechQueueRef.current?.(); } catch {}
     productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
@@ -8563,6 +8625,10 @@ export function VoiceTutorRealtime({
           minSeqForDispatch: perceptionTranscriptSeqRef.current,
           cancelledDuringState: cancelStage,
         };
+        // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
+        // sentence drained from the in-flight orchestrator's SSE buffer
+        // between this point and AbortError propagation drops silently.
+        speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
         // Abort brain stream if still in flight. For 'speaking' cancels
         // the brain may have already finished (ref is null after
         // callBrainOnce's finally clears it) — abort is a no-op.

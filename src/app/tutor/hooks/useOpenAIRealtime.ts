@@ -499,6 +499,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // response_id is in cancelledResponseIdsRef.
   const currentResponseIdRef = useRef<string | null>(null);
   const cancelledResponseIdsRef = useRef<Set<string>>(new Set());
+  // Stage 3 fix #10 (2026-05-28): grace window after clearSpeechQueue
+  // during which any newly-created response.created auto-adds its id
+  // to cancelledResponseIdsRef. Covers the multi-response race where
+  // the brain orchestrator's emit loop is still in flight when
+  // clearSpeechQueue runs, and queues more speakText calls after
+  // speakTextInFlightRef has been reset to false — those calls go
+  // DIRECTLY to dispatchSpeakText → sendOneSpeakText → response.create,
+  // bypassing the queue. The new response gets a fresh id that is NOT
+  // in the cancelled set (only the original in-flight id was added),
+  // so audio.delta events for the new response play normally. The
+  // grace window catches these auto-cancelling them server-side AND
+  // dropping their deltas client-side. 1000ms covers SSE buffer drain
+  // (typical 100-300ms) plus the orchestrator-side speakTextBlockedUntilRef
+  // gate window (600ms), with margin.
+  const responseCancelWindowUntilRef = useRef<number>(0);
+  const RESPONSE_CANCEL_WINDOW_MS = 1000;
   // Anti-double-response: track when last response finished and when user last spoke
   const lastResponseDoneRef = useRef<number>(0);
   const lastUserInputRef = useRef<number>(0);
@@ -977,6 +993,27 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           const createdRespId = data.response?.id;
           if (typeof createdRespId === 'string') {
             currentResponseIdRef.current = createdRespId;
+            // Stage 3 fix #10 (2026-05-28): if a clearSpeechQueue fired
+            // recently, any response.created within the grace window is
+            // from the brain orchestrator's emit-after-abort race. Mark
+            // it cancelled and send response.cancel immediately so the
+            // server stops generating + any audio.delta still in transit
+            // drops on arrival (the audio.delta handler reads from
+            // cancelledResponseIdsRef).
+            if (Date.now() < responseCancelWindowUntilRef.current) {
+              cancelledResponseIdsRef.current.add(createdRespId);
+              if (cancelledResponseIdsRef.current.size > 64) {
+                const first = cancelledResponseIdsRef.current.values().next().value;
+                if (first) cancelledResponseIdsRef.current.delete(first);
+              }
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({ type: 'response.cancel' }));
+              }
+              console.warn(`[Realtime] STAGE-3 fix #10: auto-cancelled response ${createdRespId} (within ${RESPONSE_CANCEL_WINDOW_MS}ms grace after clearSpeechQueue)`);
+              // Don't fall through to the unwanted-follow-up logic below
+              // — we've already cancelled.
+              break;
+            }
           }
           const timeSinceLastResponse = Date.now() - lastResponseDoneRef.current;
           const timeSinceUserInput = Date.now() - lastUserInputRef.current;
@@ -2285,6 +2322,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // through the clear and play after the kill (observed 2026-05-04
     // Linear-Functions kill-then-retry overlap).
     speakEpochRef.current++;
+    // Stage 3 fix #10 (2026-05-28): open the response-cancel grace
+    // window. Any response.created that fires within this window will
+    // be auto-cancelled (added to cancelledResponseIdsRef + server-side
+    // response.cancel sent) — closes the emit-after-abort race for the
+    // queued-but-not-yet-active responses that the brain orchestrator's
+    // SSE buffer may have queued just before the AbortError propagated.
+    responseCancelWindowUntilRef.current = Date.now() + RESPONSE_CANCEL_WINDOW_MS;
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
     // Drop any pre-fetched TTS bytes — they're for sentences we're
