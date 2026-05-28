@@ -594,6 +594,16 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
+  // flag. If perception WS misses a speech_stopped event (network blip,
+  // server bug), the flag would stay stuck → all subsequent brain
+  // dispatches blocked by the defer-on-dispatch guard. 30s is generous
+  // for any real utterance length; if a student genuinely speaks past
+  // 30s, the flag clears + the next perception verdict still dispatches
+  // (the eventual transcript routes normally through applyPerceptionVerdict
+  // or the production-WS fallback).
+  const perceptionMidUtteranceWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const PERCEPTION_MID_UTTERANCE_WATCHDOG_MS = 30_000;
   // Stage 3 fix #10 (2026-05-28): synchronous speakText gate for the
   // brain orchestrator's emit-after-abort race. When a perception
   // cancel fires (onSpeechStart, retro-cancel useEffect, or any
@@ -7938,9 +7948,33 @@ export function VoiceTutorRealtime({
   // the first is interrupted by the second.
   const handleStudentTranscriptForBrain = useCallback(async (
     transcript: string,
-    opts?: { silent?: boolean; bypassPerceptionDedupe?: boolean },
+    opts?: { silent?: boolean; bypassPerceptionDedupe?: boolean; bypassMidUtteranceGuard?: boolean },
   ) => {
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
+    // Stage 3 fix #11 (2026-05-28): defer-on-dispatch guard. If the
+    // student is CURRENTLY mid-utterance, drop this dispatch — the
+    // user is actively speaking and any brain response we fire now
+    // would just talk over them. The eventual perception verdict for
+    // the in-flight utterance will route through applyPerceptionVerdict
+    // and dispatch its own brain call. Closes the residual race where
+    // fix #10 doesn't catch the brain because the cancel-target brain
+    // hasn't STARTED yet at retro-cancel time (observed live
+    // 2026-05-28: late-arriving MERGE verdict dispatched Brain-6 while
+    // student was already saying "And also like factorials..."; Brain-6
+    // emitted 6 sentences past the 600ms speakText gate and 1000ms
+    // response-cancel grace). bypassMidUtteranceGuard opt for internal
+    // dispatches that need to fire regardless (none yet, reserved for
+    // future).
+    if (
+      perceptionMidUtteranceRef.current &&
+      !opts?.bypassMidUtteranceGuard
+    ) {
+      console.warn(
+        `[brain-orchestrator] STAGE-3 fix #11: dispatch dropped — student is mid-utterance (perceptionMidUtteranceRef=true): ${JSON.stringify(transcript).slice(0, 80)}`,
+      );
+      onDebugEvent?.('dispatch_dropped_mid_utterance', transcript.slice(0, 80));
+      return;
+    }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
     // come from the perception refire path, drop it — perception is
@@ -8574,6 +8608,21 @@ export function VoiceTutorRealtime({
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
       // Stage 3 fix #4: track mid-utterance for the state-race retro-cancel.
       perceptionMidUtteranceRef.current = true;
+      // Stage 3 fix #11: watchdog reset for the mid-utterance flag.
+      // Clears any prior watchdog (overlapping speech_started events
+      // shouldn't happen, but be idempotent), then schedules a 30s
+      // timeout that clears the flag if speech_stopped never fires.
+      if (perceptionMidUtteranceWatchdogRef.current) {
+        clearTimeout(perceptionMidUtteranceWatchdogRef.current);
+      }
+      perceptionMidUtteranceWatchdogRef.current = setTimeout(() => {
+        if (perceptionMidUtteranceRef.current) {
+          console.warn('[PERCEPTION] STAGE-3 fix #11 watchdog: clearing stuck perceptionMidUtteranceRef after 30s');
+          onDebugEvent?.('perception_mid_utterance_watchdog', '30s timeout');
+          perceptionMidUtteranceRef.current = false;
+        }
+        perceptionMidUtteranceWatchdogRef.current = null;
+      }, PERCEPTION_MID_UTTERANCE_WATCHDOG_MS);
       // ── Stage 2 + Stage 3: cancel-on-speech_started ─────────────────
       // Stage 2 fires the cancel during 'processing' (brain in flight,
       // no TTS yet — Q5's "thinking" window). Stage 3 extends to
@@ -8648,6 +8697,12 @@ export function VoiceTutorRealtime({
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
+      // Stage 3 fix #11: clear the watchdog timer — flag was cleared
+      // normally via speech_stopped, no need for the safety reset.
+      if (perceptionMidUtteranceWatchdogRef.current) {
+        clearTimeout(perceptionMidUtteranceWatchdogRef.current);
+        perceptionMidUtteranceWatchdogRef.current = null;
+      }
     }, []),
     onTranscriptionFailed: useCallback((errorType: string | undefined) => {
       console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
