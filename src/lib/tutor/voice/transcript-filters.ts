@@ -251,17 +251,36 @@ function isPhoneticGarbage(text: string): boolean {
  * Stutter from audio glitches: "f-f-f-f-f-f-ck" or a single word repeated
  * four or more times in a row ("wacht wacht wacht wacht"). Neither form is
  * recoverable speech.
+ *
+ * The 4-in-a-row check ONLY fires when the run dominates the transcript —
+ * either the whole utterance is short (≤4 tokens, the run *is* the
+ * utterance) or the run is ≥70% of total tokens. Without this guard, an
+ * emphatic prefix like "Oh, no, no, no, no, I don't think so. I think this
+ * is..." (50+ tokens of substantive content) gets dropped because of the
+ * 4 consecutive "no" tokens at the start (observed live 2026-05-28: a
+ * student's correct Fibonacci explanation silently dropped, ~30s latency
+ * before the brain finally got the content via a production-WS fragment).
  */
 function isStutter(text: string): boolean {
   // Three or more occurrences of "X-" (single letter + hyphen).
   if (/(?:[a-zA-Z]-){3,}/i.test(text)) return true;
-  // Same word four or more times consecutively.
   const tokens = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim().split(/\s+/).filter(Boolean);
-  if (tokens.length >= 4) {
-    for (let i = 0; i <= tokens.length - 4; i++) {
-      if (tokens[i] === tokens[i + 1] && tokens[i] === tokens[i + 2] && tokens[i] === tokens[i + 3]) {
-        return true;
-      }
+  if (tokens.length < 4) return false;
+  // Walk the tokens once, finding the longest run of consecutive identical
+  // tokens. If any run ≥ 4 dominates the transcript, flag as stutter.
+  let i = 0;
+  while (i <= tokens.length - 4) {
+    if (
+      tokens[i] === tokens[i + 1] &&
+      tokens[i] === tokens[i + 2] &&
+      tokens[i] === tokens[i + 3]
+    ) {
+      let runLen = 4;
+      while (i + runLen < tokens.length && tokens[i + runLen] === tokens[i]) runLen++;
+      if (tokens.length <= 4 || runLen / tokens.length >= 0.7) return true;
+      i += runLen;
+    } else {
+      i++;
     }
   }
   return false;
