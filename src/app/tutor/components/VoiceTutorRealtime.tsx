@@ -8056,10 +8056,50 @@ export function VoiceTutorRealtime({
       // processing, combine them into one transcript so Claude sees a
       // single follow-up question rather than a stale chain.
       while (queuedTranscriptsRef.current.length > 0) {
-        const combined = queuedTranscriptsRef.current.splice(0).join(' ');
+        // Stage 3 fix #12 (2026-05-29): dedup identical queued transcripts
+        // before combining. When both perception WS and production WS
+        // transcribe the same student utterance during a no-cancel
+        // window (e.g. session kickoff, where the [start lesson] brain
+        // is in flight but no perception cancel fires because student
+        // spoke during prod='listening'), both paths reach
+        // handleStudentTranscriptForBrain and queue identical text.
+        // Without dedup the queue drain joined them into
+        // "Yeah, sure. Let's go. Yeah, sure. Let's go." → produced a
+        // duplicate-text student chat entry (observed live 2026-05-29
+        // JEE trig kickoff). Normalize whitespace + case for the
+        // comparison so trivial Whisper/perception capitalization
+        // differences still dedup.
+        const all = queuedTranscriptsRef.current.splice(0);
+        const seen = new Set<string>();
+        const deduped = all.filter((t) => {
+          const norm = t.trim().toLowerCase().replace(/\s+/g, ' ');
+          if (!norm) return false;
+          if (seen.has(norm)) return false;
+          seen.add(norm);
+          return true;
+        });
+        if (deduped.length < all.length) {
+          console.log(`[brain-orchestrator] STAGE-3 fix #12: queue-drain dedup ${all.length} → ${deduped.length}`);
+          onDebugEvent?.('queue_drain_dedup', `${all.length}→${deduped.length}`);
+        }
+        const combined = deduped.join(' ');
+        if (!combined.trim()) continue;
         console.log('[brain-orchestrator] processing queued combined:', JSON.stringify(combined).slice(0, 100));
+        // Stage 3 fix #12 (cont): if the combined text already appears
+        // as the last student chat entry (production WS or a perception
+        // path added it during the busy window), suppress callBrainOnce's
+        // chat-add via silent=true. Without this, the brain's chat-add
+        // step duplicates an already-visible student turn.
+        const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
+        const normalizedCombined = combined.trim().toLowerCase().replace(/\s+/g, ' ');
+        const alreadyInChat = lastEntry?.role === 'student'
+          && lastEntry.text.trim().toLowerCase().replace(/\s+/g, ' ') === normalizedCombined;
+        if (alreadyInChat) {
+          console.log('[brain-orchestrator] STAGE-3 fix #12: combined matches last chat entry — dispatching silent');
+          onDebugEvent?.('queue_drain_silent', 'matches_last_chat');
+        }
         lastBrainCallContextRef.current = { transcript: combined };
-        await callBrainOnce(combined);
+        await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
     } finally {
       clearTimeout(watchdog);
@@ -8499,6 +8539,15 @@ export function VoiceTutorRealtime({
         ) {
           console.warn(`[PERCEPTION] STAGE-3 late-fallback (no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_stage3_late_fallback', `${heur.verdict} at prod=${prodState}`);
+          // Stage 3 fix #12 (2026-05-29): arm production-WS suppress so
+          // any production-WS transcript for this utterance window that
+          // arrives AFTER late-fallback gets dropped (both chat-add
+          // and brain dispatch). 5s window covers typical Whisper
+          // tail latency; shorter than the 20s cancel-time window
+          // since there's no in-flight brain to wait through.
+          // Production-WS transcripts that already fired BEFORE
+          // late-fallback are caught by the queue-drain dedup above.
+          productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
@@ -8575,6 +8624,9 @@ export function VoiceTutorRealtime({
                 // the student's content reaches the brain.
                 console.warn(`[PERCEPTION] STAGE-3 late-fallback (haiku, no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
                 onDebugEvent?.('perception_stage3_late_fallback', `haiku:${verdict} at prod=${prodState}`);
+                // Stage 3 fix #12: same suppress arming as the
+                // heuristic late-fallback above.
+                productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
                 void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
               }
             })
