@@ -248,6 +248,29 @@ export interface RealtimeResult {
    */
   clearSpeechQueue: () => Promise<void>;
   /**
+   * Voice Perception Stage 3.1 (2026-06-16). Non-destructive snapshot of
+   * the pending speakText queue — sentences that the brain emitted but
+   * have NOT yet been dispatched to TTS. The currently-playing sentence
+   * (in-flight) is NOT in this snapshot; once popped from the queue and
+   * dispatched, it leaves the queue.
+   *
+   * Used by the perception cancel sites: capture the snapshot BEFORE
+   * calling `clearSpeechQueue` so a false-positive cancel verdict
+   * (noise/filler/drop_self_voice) can resume the unplayed sentences
+   * via `resumeSpeakText` instead of refiring the brain.
+   */
+  peekSpeechQueue: () => string[];
+  /**
+   * Voice Perception Stage 3.1 (2026-06-16). Re-queue an ordered list
+   * of sentences for TTS playback. Each sentence enters the same
+   * `speakTextQueueRef` machinery as `speakText`, played one at a
+   * time as the prior finishes. Used by `applyPerceptionVerdict` to
+   * resume queued content after a false-positive cancel, without
+   * paying the latency/duplication cost of re-firing the whole brain
+   * call.
+   */
+  resumeSpeakText: (sentences: string[]) => void;
+  /**
    * Resume the playback AudioContext synchronously inside a user gesture.
    * iOS Safari requires audio playback to be initiated from a user gesture
    * (touch / click). Without this call on the Start button, the AudioContext
@@ -2503,6 +2526,29 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     });
   }, []);
 
+  // Voice Perception Stage 3.1 (2026-06-16): non-destructive snapshot
+  // of the pending speakText queue. Capture sites: perception cancel
+  // handlers in VoiceTutorRealtime.tsx (onSpeechStart, retro-cancel
+  // useEffect, dev trigger) call this BEFORE clearSpeechQueue so a
+  // false-positive cancel verdict can re-queue the same sentences via
+  // resumeSpeakText. The currently-playing sentence is intentionally
+  // NOT included — only sentences that never got dispatched to TTS.
+  const peekSpeechQueue = useCallback((): string[] => {
+    return [...speakTextQueueRef.current];
+  }, []);
+
+  // Voice Perception Stage 3.1 (2026-06-16): re-queue an ordered array
+  // of sentences via the existing speakText machinery. Each sentence
+  // enters the queue and plays one at a time as the prior finishes,
+  // identical to brain-orchestrator-driven playback. Used after a
+  // false-positive cancel to resume queued content without paying the
+  // ~3-15s latency cost of re-firing the brain call.
+  const resumeSpeakText = useCallback((sentences: string[]) => {
+    for (const s of sentences) {
+      speakText(s);
+    }
+  }, [speakText]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -2527,6 +2573,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     injectContext,
     speakText,
     clearSpeechQueue,
+    peekSpeechQueue,
+    resumeSpeakText,
     unlockAudio,
   };
 }

@@ -579,6 +579,16 @@ export function VoiceTutorRealtime({
          *  of "Can you do a diagram demo..." — 2 of them from brief-
          *  noise retro-cancels triggering RESTORE-after-finished). */
         brainWasInFlight: boolean;
+        /** Stage 3.1 (2026-06-16): snapshot of the speakText queue at
+         *  cancel time — sentences the brain emitted but were waiting
+         *  in the queue when the cancel fired (the currently-playing
+         *  sentence is NOT included; once dispatched to TTS it left
+         *  the queue). On false-positive cancel verdict
+         *  (noise/filler/drop_self_voice) during 'speaking', resume
+         *  these via realtime.resumeSpeakText instead of refiring the
+         *  brain. Lossy on the partially-played sentence's tail —
+         *  the rest of B is gone, but C / D / … are recovered. */
+        unplayedSentencesSnapshot: string[];
       }
     | null
   >(null);
@@ -665,6 +675,11 @@ export function VoiceTutorRealtime({
   // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
   const speakTextRef = useRef<((text: string) => void) | null>(null);
   const clearSpeechQueueRef = useRef<(() => Promise<void>) | null>(null);
+  // Stage 3.1 (2026-06-16): refs to the new resume-from-cut hook
+  // methods. Following the same long-lived-closure pattern as
+  // speakTextRef / clearSpeechQueueRef.
+  const peekSpeechQueueRef = useRef<(() => string[]) | null>(null);
+  const resumeSpeakTextRef = useRef<((sentences: string[]) => void) | null>(null);
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
@@ -8197,33 +8212,54 @@ export function VoiceTutorRealtime({
     const stageLabel = stage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
     if (verdict === 'noise' || verdict === 'filler' || verdict === 'drop_self_voice') {
       if (verdict === 'drop_self_voice') {
-        // Self-voice: never refire. The cancelled audio was the tutor's
-        // own voice loop, not a real student utterance.
-        console.warn(`[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): drop, no refire`);
-        onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_drop`, `${verdict} after ${elapsedMs}ms`);
-        return;
+        // Self-voice: the cancelled audio was the tutor's own voice
+        // loop, not a real student utterance — the cancel was a false
+        // positive. For Stage 3.1, fall through to the 'speaking'
+        // branch below so resume-from-cut can replay the queued
+        // content. For Stage 2 (processing — brain was thinking, no
+        // TTS yet), there's no queue to resume — keep the historical
+        // drop behavior.
+        if (stage !== 'speaking') {
+          console.warn(`[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): drop, no refire (nothing to resume in 'processing' state)`);
+          onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_drop`, `${verdict} after ${elapsedMs}ms`);
+          return;
+        }
+        // Stage 3.1: fall through to the resume-from-cut path below.
       }
       if (stage === 'speaking') {
-        // Stage 3 quick-fix (2026-06-16): refire-on-noise-during-speaking
-        // when the brain was actually in flight at cancel time. The cancel
-        // killed a legitimate mid-emit brain on a false-positive trigger
-        // (self-voice / Whisper hallucination during TTS playback). The
-        // original silent-accept path left the session in a dead-end —
-        // partial whiteboard, no audio, no recovery. Refiring with the
-        // original transcript restores the brain content (audible TTS
-        // cut + ~3-15s gap + brain restart from beginning). Audible
-        // glitch, but recoverable. Proper fix = Stage 3.1 resume-from-cut
-        // (preserves the speakText queue at cut time and resumes mid-
-        // sentence with ~500ms gap); deferred per design Q5 B2.
+        // Stage 3.1 (2026-06-16): RESUME-FROM-CUT — the proper Q5 B2
+        // fix. The verdict says the cancel was a false positive (noise,
+        // filler, or self-voice). If we have unplayed sentences from
+        // the speakText queue at cut time, re-queue them via
+        // resumeSpeakText — the student hears ~500ms of silence then
+        // the queued content resumes naturally. The partially-played
+        // sentence's tail is lost (not in the snapshot), but C / D /
+        // E… all replay cleanly. This is dramatically better UX than
+        // the refire-on-noise quick fix (~3-15s gap + brain restart
+        // from beginning).
         //
-        // Observed live 2026-06-15 SAT Math Stage-4 test: brain.stream
-        // killed mid [start lesson], perception transcribed "Bye"
-        // (hallucination), classifyTranscript flagged as noise, original
-        // silent-accept path left the tutor dead. brainWasInFlight=true
-        // → this path now refires the welcome.
+        // Applies regardless of brainWasInFlight: we're not generating
+        // new content, just replaying queued content. No duplication
+        // risk because the brain isn't being called again.
+        if (checkpoint.unplayedSentencesSnapshot.length > 0) {
+          const n = checkpoint.unplayedSentencesSnapshot.length;
+          console.warn(
+            `[PERCEPTION] STAGE-3.1 resume-from-cut (${verdict}, ${elapsedMs}ms): re-queuing ${n} unplayed sentence(s)`,
+          );
+          onDebugEvent?.('perception_stage3_1_resume', `${verdict} after ${elapsedMs}ms · ${n} sentences`);
+          resumeSpeakTextRef.current?.(checkpoint.unplayedSentencesSnapshot);
+          return;
+        }
+
+        // Stage 3.1 fallback to the quick-fix (refire-on-noise) for
+        // the case where the snapshot is empty (brain was mid-emit
+        // but the queue was momentarily drained between sentences, or
+        // the brain hadn't queued anything yet). Refire restores the
+        // content via a fresh brain call — audible glitch but
+        // recoverable.
         if (checkpoint.brainWasInFlight) {
           console.warn(
-            `[PERCEPTION] STAGE-3 refire-on-noise (${verdict}, ${elapsedMs}ms): brain was in flight, refiring originalTranscript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
+            `[PERCEPTION] STAGE-3 refire-on-noise fallback (${verdict}, ${elapsedMs}ms): empty queue snapshot, brain was in flight, refiring originalTranscript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
           );
           onDebugEvent?.('perception_stage3_refire_on_noise', `${verdict} after ${elapsedMs}ms`);
           void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
@@ -8232,13 +8268,12 @@ export function VoiceTutorRealtime({
           });
           return;
         }
-        // Brain had already finished emitting; TTS was just draining.
-        // Cancel cut the drain; refire would re-execute the brain and
-        // produce a near-duplicate response (audible repeat). Keep the
-        // silent-accept path here — student lost some narration but the
-        // brain content was delivered up to the cut.
+
+        // Brain had already finished AND queue was empty — TTS was
+        // fully drained when the cancel hit (or near-fully drained).
+        // Nothing to resume, nothing in flight. Silent-accept.
         console.warn(
-          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (brain already finished, TTS draining — no refire to avoid duplicate)`,
+          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (no unplayed content to resume, brain already finished)`,
         );
         onDebugEvent?.('perception_stage3_silent_accept', `${verdict} after ${elapsedMs}ms`);
         return;
@@ -8445,6 +8480,8 @@ export function VoiceTutorRealtime({
   sendTextMessageRef.current = realtime.sendTextMessage;
   speakTextRef.current = realtime.speakText;
   clearSpeechQueueRef.current = realtime.clearSpeechQueue;
+  peekSpeechQueueRef.current = realtime.peekSpeechQueue;
+  resumeSpeakTextRef.current = realtime.resumeSpeakText;
 
   // ── Voice Perception Layer (Stage 0 — shadowed, logs only) ─────────────
   // See memory/project_voice_perception_layer_design.md for the locked
@@ -8512,6 +8549,11 @@ export function VoiceTutorRealtime({
       // ambiguous. If the brain had already finished and we're just
       // mid-TTS, this is false and RESTORE will not re-fire.
       brainWasInFlight: inFlightBrainAbortRef.current !== null,
+      // Stage 3.1 (2026-06-16): snapshot the pending speakText queue
+      // BEFORE clearSpeechQueue empties it, so a false-positive
+      // cancel verdict can resume the unplayed sentences instead of
+      // re-firing the brain.
+      unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
     };
     // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
     // sentence drained from the in-flight orchestrator's SSE buffer
@@ -8896,6 +8938,9 @@ export function VoiceTutorRealtime({
           // Stage 3 fix #14: see retro-cancel useEffect for rationale.
           // Captured BEFORE the abort below.
           brainWasInFlight: inFlightBrainAbortRef.current !== null,
+          // Stage 3.1: snapshot the pending speakText queue BEFORE
+          // clearSpeechQueue empties it. See retro-cancel useEffect.
+          unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
         };
         // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
         // sentence drained from the in-flight orchestrator's SSE buffer
@@ -8998,6 +9043,9 @@ export function VoiceTutorRealtime({
         // brainWasInFlight before abort. Dev trigger usually fires
         // mid-turn so this is true; included for shape parity.
         brainWasInFlight: inFlightBrainAbortRef.current !== null,
+        // Stage 3.1: parity with real cancel — snapshot the queue
+        // before clearSpeechQueue empties it.
+        unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
       };
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}

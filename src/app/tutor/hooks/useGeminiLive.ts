@@ -730,6 +730,13 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
       // No-op. Gemini Live doesn't run in relay mode and has no speech queue.
       return Promise.resolve();
     },
+    // Stage 3.1 stubs for shared RealtimeResult shape. Gemini Live
+    // doesn't run in relay mode, so the perception cancel pathway
+    // doesn't fire here; these are pure shape-conformance no-ops.
+    peekSpeechQueue: (): string[] => [],
+    resumeSpeakText: (sentences: string[]) => {
+      console.warn('[Gemini] resumeSpeakText called but relay mode is not supported on Gemini Live.', { count: sentences.length });
+    },
     unlockAudio: () => {
       // No-op for Gemini Live; iOS audio-unlock is a Realtime-engine concern.
     },
