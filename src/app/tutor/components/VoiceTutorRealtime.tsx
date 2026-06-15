@@ -569,6 +569,16 @@ export function VoiceTutorRealtime({
          *  silently (no refire would just duplicate); MERGE/FRESH still
          *  fire a fresh brain turn for substantive interrupts. */
         cancelledDuringState: 'processing' | 'speaking';
+        /** Stage 3 fix #14 (2026-06-15): was the brain actually in
+         *  flight at cancel time, or had it already finished (TTS
+         *  prep / playback)? Captured from inFlightBrainAbortRef.current
+         *  !== null at cancel time. RESTORE only makes sense when the
+         *  brain was mid-flight — re-firing a transcript whose brain
+         *  call already completed produces a DUPLICATE brain response
+         *  (observed live 2026-06-15 phys-sci session: 4 dispatches
+         *  of "Can you do a diagram demo..." — 2 of them from brief-
+         *  noise retro-cancels triggering RESTORE-after-finished). */
+        brainWasInFlight: boolean;
       }
     | null
   >(null);
@@ -8070,16 +8080,55 @@ export function VoiceTutorRealtime({
         // comparison so trivial Whisper/perception capitalization
         // differences still dedup.
         const all = queuedTranscriptsRef.current.splice(0);
-        const seen = new Set<string>();
+        // Stage 3 fix #15 (2026-06-15): fuzzy similarity helper for
+        // near-duplicate dedup. Perception WS (gpt-realtime-2) and
+        // production WS (Whisper) often transcribe the same audio
+        // with minor differences ("Can it speak in Tamil?" vs "Can I
+        // speak in Tamil?"). Fix #12's exact-match dedup misses these.
+        // Use length-normalized Levenshtein distance — if <15% edit
+        // distance (i.e., >85% character similarity), treat as duplicate.
+        const lev = (a: string, b: string): number => {
+          if (a === b) return 0;
+          if (!a.length) return b.length;
+          if (!b.length) return a.length;
+          // Single-row DP — O(min(a, b)) memory.
+          let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+          let curr = new Array<number>(b.length + 1);
+          for (let i = 1; i <= a.length; i++) {
+            curr[0] = i;
+            for (let j = 1; j <= b.length; j++) {
+              const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+              curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+            }
+            [prev, curr] = [curr, prev];
+          }
+          return prev[b.length];
+        };
+        const isFuzzyDup = (a: string, b: string): boolean => {
+          if (a === b) return true;
+          const maxLen = Math.max(a.length, b.length);
+          // Skip fuzzy for short strings — short questions can differ
+          // semantically with very few edits ("what is an AP" vs
+          // "what is an MP" → lev=1, ratio 0.07, would wrongly dedup).
+          // 20-char minimum keeps short-clause questions safe while
+          // catching real perception/production transcript variants of
+          // longer utterances (Tamil case = 21 chars, diagram-demo = 71).
+          if (maxLen < 20) return false;
+          const d = lev(a, b);
+          return d / maxLen <= 0.15;
+        };
+        const dedupedNorms: string[] = [];
         const deduped = all.filter((t) => {
           const norm = t.trim().toLowerCase().replace(/\s+/g, ' ');
           if (!norm) return false;
-          if (seen.has(norm)) return false;
-          seen.add(norm);
+          if (dedupedNorms.some((seenNorm) => isFuzzyDup(seenNorm, norm))) {
+            return false;
+          }
+          dedupedNorms.push(norm);
           return true;
         });
         if (deduped.length < all.length) {
-          console.log(`[brain-orchestrator] STAGE-3 fix #12: queue-drain dedup ${all.length} → ${deduped.length}`);
+          console.log(`[brain-orchestrator] STAGE-3 fix #12+#15: queue-drain dedup ${all.length} → ${deduped.length}`);
           onDebugEvent?.('queue_drain_dedup', `${all.length}→${deduped.length}`);
         }
         const combined = deduped.join(' ');
@@ -8090,10 +8139,14 @@ export function VoiceTutorRealtime({
         // path added it during the busy window), suppress callBrainOnce's
         // chat-add via silent=true. Without this, the brain's chat-add
         // step duplicates an already-visible student turn.
+        // Fix #15: match the chat entry with fuzzy too — production
+        // and perception transcripts of the same audio can differ.
         const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
         const normalizedCombined = combined.trim().toLowerCase().replace(/\s+/g, ' ');
-        const alreadyInChat = lastEntry?.role === 'student'
-          && lastEntry.text.trim().toLowerCase().replace(/\s+/g, ' ') === normalizedCombined;
+        const lastEntryNorm = lastEntry?.role === 'student'
+          ? lastEntry.text.trim().toLowerCase().replace(/\s+/g, ' ')
+          : '';
+        const alreadyInChat = !!lastEntryNorm && isFuzzyDup(lastEntryNorm, normalizedCombined);
         if (alreadyInChat) {
           console.log('[brain-orchestrator] STAGE-3 fix #12: combined matches last chat entry — dispatching silent');
           onDebugEvent?.('queue_drain_silent', 'matches_last_chat');
@@ -8160,6 +8213,24 @@ export function VoiceTutorRealtime({
           `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (cut TTS not resumed — FP cost per Q5)`,
         );
         onDebugEvent?.('perception_stage3_silent_accept', `${verdict} after ${elapsedMs}ms`);
+        return;
+      }
+      // Stage 3 fix #14 (2026-06-15): RESTORE-after-finished guard.
+      // If the brain was NOT in flight at cancel time, it already
+      // produced its response and TTS is just playing out. Re-firing
+      // the same transcript would generate a DUPLICATE brain response
+      // (observed live 2026-06-15 phys-sci session: brief noise during
+      // post-brain TTS triggered Stage 2 retro-cancel + heuristic
+      // filler + RESTORE, which re-fired the prior brain call's
+      // transcript and produced the same "diagram demo" tutor reply
+      // twice more). When brainWasInFlight is false, treat
+      // noise/filler/drop_self_voice as DROP — TTS is already drained
+      // by the cancel-site clearSpeechQueue, no re-fire needed.
+      if (!checkpoint.brainWasInFlight) {
+        console.warn(
+          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE-after-finished DROP (brain already produced response; not re-firing to avoid duplicate)`,
+        );
+        onDebugEvent?.('perception_stage2_restore_dropped_brain_done', `${verdict} after ${elapsedMs}ms`);
         return;
       }
       // Stage 2: brain hadn't started speaking yet. Re-fire the
@@ -8390,6 +8461,12 @@ export function VoiceTutorRealtime({
       cancelledAt: Date.now(),
       minSeqForDispatch: perceptionTranscriptSeqRef.current,
       cancelledDuringState: cancelStage,
+      // Stage 3 fix #14: capture whether the brain was actually in
+      // flight at cancel time. Read inFlightBrainAbortRef BEFORE the
+      // abort() call below — once aborted, the ref state is
+      // ambiguous. If the brain had already finished and we're just
+      // mid-TTS, this is false and RESTORE will not re-fire.
+      brainWasInFlight: inFlightBrainAbortRef.current !== null,
     };
     // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
     // sentence drained from the in-flight orchestrator's SSE buffer
@@ -8539,15 +8616,23 @@ export function VoiceTutorRealtime({
         ) {
           console.warn(`[PERCEPTION] STAGE-3 late-fallback (no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_stage3_late_fallback', `${heur.verdict} at prod=${prodState}`);
-          // Stage 3 fix #12 (2026-05-29): arm production-WS suppress so
-          // any production-WS transcript for this utterance window that
-          // arrives AFTER late-fallback gets dropped (both chat-add
-          // and brain dispatch). 5s window covers typical Whisper
-          // tail latency; shorter than the 20s cancel-time window
-          // since there's no in-flight brain to wait through.
+          // Stage 3 fix #12 (2026-05-29) + fix #13 (2026-06-15): arm
+          // production-WS suppress so any production-WS transcript for
+          // this utterance window that arrives AFTER late-fallback
+          // gets dropped (both chat-add and brain dispatch).
+          // Fix #13: bumped 5s→20s after live evidence (2026-06-15
+          // chemistry session) of production-WS Whisper transcripts
+          // arriving ~10s after late-fallback fired — the 5s window
+          // expired 154ms before the production-WS dispatch landed,
+          // producing a duplicate brain call for "Can I speak in
+          // Tamil?" (near-duplicate of the perception-handled "Can
+          // it speak in Tamil?"). 20s matches the cancel-time window;
+          // production-WS transcripts within 20s of a perception-
+          // handled utterance are almost always either Whisper
+          // duplicates or Whisper context-bias hallucinations.
           // Production-WS transcripts that already fired BEFORE
           // late-fallback are caught by the queue-drain dedup above.
-          productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+          productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
@@ -8624,9 +8709,10 @@ export function VoiceTutorRealtime({
                 // the student's content reaches the brain.
                 console.warn(`[PERCEPTION] STAGE-3 late-fallback (haiku, no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
                 onDebugEvent?.('perception_stage3_late_fallback', `haiku:${verdict} at prod=${prodState}`);
-                // Stage 3 fix #12: same suppress arming as the
-                // heuristic late-fallback above.
-                productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 5000 };
+                // Stage 3 fix #12 + fix #13: same suppress arming as
+                // the heuristic late-fallback above. 20s window per
+                // fix #13 — see comment there for rationale.
+                productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
                 void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
               }
             })
@@ -8725,6 +8811,9 @@ export function VoiceTutorRealtime({
           // pre-cancel perception transcript are stale and get dropped.
           minSeqForDispatch: perceptionTranscriptSeqRef.current,
           cancelledDuringState: cancelStage,
+          // Stage 3 fix #14: see retro-cancel useEffect for rationale.
+          // Captured BEFORE the abort below.
+          brainWasInFlight: inFlightBrainAbortRef.current !== null,
         };
         // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
         // sentence drained from the in-flight orchestrator's SSE buffer
@@ -8823,6 +8912,10 @@ export function VoiceTutorRealtime({
         // moot for the trigger itself, but keeps shape parity.
         minSeqForDispatch: perceptionTranscriptSeqRef.current,
         cancelledDuringState: cancelStage,
+        // Stage 3 fix #14: parity with real cancel — capture
+        // brainWasInFlight before abort. Dev trigger usually fires
+        // mid-turn so this is true; included for shape parity.
+        brainWasInFlight: inFlightBrainAbortRef.current !== null,
       };
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}
