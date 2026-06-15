@@ -2049,7 +2049,17 @@ function solveEllipse(step: StepEllipse, state: State): void {
   } else if (step.center !== undefined && step.a !== undefined) {
     centerId = normalizePointRef(state, step.center, step.id, 'center');
     a = step.a;
-    b = step.b ?? step.a;
+    // 2026-06-15: default b = 0.6 * a (clearly elongated) instead of
+    // b = a when omitted. The brain frequently calls ellipse
+    // construction without specifying b — and the prior `b = a` default
+    // rendered the ellipse as a circle indistinguishable from the
+    // circle next to it (observed live: "Four Conic Sections — One
+    // Cone" diagram showed Circle and Ellipse as two identical
+    // circles). If the brain actually wants a circle, the `circle`
+    // construction tool is the correct call; reaching the ellipse
+    // branch implies the brain intends an elongated shape, so the
+    // default should look like one.
+    b = step.b ?? step.a * 0.6;
     rotationRad = ((step.rotation ?? 0) * Math.PI) / 180;
   } else {
     throw new Error(`ellipse "${step.id}": need (foci+sum) OR (center+a, b?)`);

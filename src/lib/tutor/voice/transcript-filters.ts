@@ -128,6 +128,14 @@ const NOISE_PATTERNS = new Set([
   'thank you for watching', 'thanks for watching',
   'subscribe', 'like and subscribe',
   'music', 'applause', 'laughter',
+  // 2026-06-15 algebra-2 session: gpt-realtime-2 transcribed ambient
+  // background noise as "Success!" → fired FRESH new_turn → brain
+  // interpreted as student confirmation and advanced the lesson.
+  // Trade-off: a student genuinely shouting "Success!" after solving
+  // would now be dropped; rare enough vs the hallucination case to
+  // be worth the swap. Students typically say "got it" or "yes" not
+  // a standalone "Success!".
+  'success', 'successful',
 ]);
 
 // Longer Whisper hallucinations — typically YouTube video outros or subtitle

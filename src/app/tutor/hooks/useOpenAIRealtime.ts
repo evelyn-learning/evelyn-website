@@ -179,7 +179,21 @@ export interface RealtimeConfig {
    */
   relayMode?: {
     instructions: string;
-    onUserTranscript: (transcript: string) => void | Promise<void>;
+    /** Forwards a student transcript (or a synthetic deliberate-input
+     *  message — Skip button text, typed form input, lesson kickoff)
+     *  to the caller-owned brain orchestrator.
+     *  Opts (2026-06-15): forwarded for deliberate-input dispatches via
+     *  `sendTextMessage`. The perception layer's production-WS suppress
+     *  window and mid-utterance guard were designed to drop duplicate
+     *  Whisper transcripts — they should NOT block user-initiated
+     *  buttons or typed input. When this hook calls `onUserTranscript`
+     *  from `sendTextMessage`'s relay branch, it sets both bypass
+     *  flags; production-WS-transcript path calls without opts and
+     *  remains gated by both. */
+    onUserTranscript: (
+      transcript: string,
+      opts?: { bypassPerceptionDedupe?: boolean; bypassMidUtteranceGuard?: boolean },
+    ) => void | Promise<void>;
     /** TTS engine for voicing the brain's text in relay mode.
      *  - 'realtime' (default): use Realtime's out-of-band response. Highest
      *    voice quality; expensive (full Realtime audio output billing).
@@ -2129,7 +2143,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     if (isRelayRef.current) {
       try {
         console.log('[Realtime] sendTextMessage relayed to brain, len=', text.length);
-        relayUserTranscriptRef.current?.(text);
+        // 2026-06-15: deliberate-input dispatches (Skip button, typed
+        // form input, lesson kickoff) bypass perception's production-WS
+        // suppress window AND mid-utterance guard. Both gates were
+        // designed for duplicate Whisper transcripts and were silently
+        // dropping Skip/typed-input dispatches that arrived during the
+        // 20s post-cancel window — observed live as "Skip needed two
+        // clicks" and "typed input needed two enters" (2026-06-15
+        // algebra-2 session).
+        relayUserTranscriptRef.current?.(text, {
+          bypassPerceptionDedupe: true,
+          bypassMidUtteranceGuard: true,
+        });
       } catch (err) {
         console.error('[Realtime] sendTextMessage relay threw:', err);
       }
