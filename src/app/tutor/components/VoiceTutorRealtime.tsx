@@ -8204,13 +8204,41 @@ export function VoiceTutorRealtime({
         return;
       }
       if (stage === 'speaking') {
-        // Stage 3: the partial TTS already played (we cut it off
-        // mid-sentence). RESTORE-equivalent here would mean resuming
-        // the cut audio — Stage 3.1 polish per design Q5 B2. For MVP,
-        // accept the cut: tutor stays silent, student speaks again or
-        // types. This is the ~5-10% FP cost Q5 explicitly accepts.
+        // Stage 3 quick-fix (2026-06-16): refire-on-noise-during-speaking
+        // when the brain was actually in flight at cancel time. The cancel
+        // killed a legitimate mid-emit brain on a false-positive trigger
+        // (self-voice / Whisper hallucination during TTS playback). The
+        // original silent-accept path left the session in a dead-end —
+        // partial whiteboard, no audio, no recovery. Refiring with the
+        // original transcript restores the brain content (audible TTS
+        // cut + ~3-15s gap + brain restart from beginning). Audible
+        // glitch, but recoverable. Proper fix = Stage 3.1 resume-from-cut
+        // (preserves the speakText queue at cut time and resumes mid-
+        // sentence with ~500ms gap); deferred per design Q5 B2.
+        //
+        // Observed live 2026-06-15 SAT Math Stage-4 test: brain.stream
+        // killed mid [start lesson], perception transcribed "Bye"
+        // (hallucination), classifyTranscript flagged as noise, original
+        // silent-accept path left the tutor dead. brainWasInFlight=true
+        // → this path now refires the welcome.
+        if (checkpoint.brainWasInFlight) {
+          console.warn(
+            `[PERCEPTION] STAGE-3 refire-on-noise (${verdict}, ${elapsedMs}ms): brain was in flight, refiring originalTranscript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
+          );
+          onDebugEvent?.('perception_stage3_refire_on_noise', `${verdict} after ${elapsedMs}ms`);
+          void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
+            ...(checkpoint.originalOpts || {}),
+            bypassPerceptionDedupe: true,
+          });
+          return;
+        }
+        // Brain had already finished emitting; TTS was just draining.
+        // Cancel cut the drain; refire would re-execute the brain and
+        // produce a near-duplicate response (audible repeat). Keep the
+        // silent-accept path here — student lost some narration but the
+        // brain content was delivered up to the cut.
         console.warn(
-          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (cut TTS not resumed — FP cost per Q5)`,
+          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (brain already finished, TTS draining — no refire to avoid duplicate)`,
         );
         onDebugEvent?.('perception_stage3_silent_accept', `${verdict} after ${elapsedMs}ms`);
         return;
@@ -8529,6 +8557,21 @@ export function VoiceTutorRealtime({
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
+        // Stage 3 quick-fix (2026-06-16): if a cancel checkpoint is
+        // armed (i.e., a STAGE-2/3 cancel fired at speech_started and
+        // killed the brain mid-flight), this noise-classified transcript
+        // means the cancel was a false positive. Dispatch a 'noise'
+        // verdict so applyPerceptionVerdict's brainWasInFlight refire
+        // path can recover. Without this, the checkpoint dangles, the
+        // brain stays dead, the student sits in silence.
+        if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
+          const cp = perceptionInterruptCheckpointRef.current;
+          if (mySeq <= cp.minSeqForDispatch) {
+            console.warn(`[PERCEPTION] noise-dispatch skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
+            return;
+          }
+          applyPerceptionVerdictRef.current?.('noise', t.text);
+        }
         return;
       }
 
