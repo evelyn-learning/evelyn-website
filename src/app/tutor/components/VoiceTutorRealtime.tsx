@@ -8335,6 +8335,29 @@ export function VoiceTutorRealtime({
     : undefined;
 
   // Initialize the realtime connection
+  // ── Perception stage resolution (Stage 4 needs this BEFORE the
+  // realtime hook is constructed so it can derive `inputAuthority`).
+  // Stage 0+ also uses this for the perception WS, but those couplings
+  // sit further down the file; declaring here keeps both forward-
+  // references happy and lets a dev runtime override
+  // (window.__tutorPerceptionStage) propagate to the realtime hook
+  // through the standard render cycle.
+  const perceptionEnvStage = process.env.NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE;
+  const [perceptionRuntimeStage, setPerceptionRuntimeStage] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
+    const w = window as unknown as { __tutorPerceptionStage?: string | number };
+    if (w.__tutorPerceptionStage !== undefined) {
+      setPerceptionRuntimeStage(String(w.__tutorPerceptionStage));
+    }
+  }, []);
+  const perceptionStageRaw = perceptionRuntimeStage ?? perceptionEnvStage;
+  const perceptionStage = (() => {
+    const n = Number.parseInt(perceptionStageRaw ?? '', 10);
+    return Number.isFinite(n) && n >= 0 && n <= 4 ? n : -1;
+  })();
+
   const realtime = useOpenAIRealtime({
     instructions,
     voice,
@@ -8344,6 +8367,12 @@ export function VoiceTutorRealtime({
     reconnectEnabled,
     useRealtimeV2,
     tools: realtimeV2Tools,
+    // Stage 4 (2026-06-15): when perception WS is the sole input
+    // authority (perceptionStage >= 4), production WS skips its
+    // input_audio_transcription config and stops forwarding mic PCM.
+    // Stage ≤3 retains the production input pathway byte-identically
+    // for instant rollback via flag flip.
+    inputAuthority: perceptionStage >= 4 ? 'perception' : 'production',
     relayMode: claudeBrainMode
       ? {
           instructions: RELAY_MODE_PROMPT,
@@ -8400,21 +8429,9 @@ export function VoiceTutorRealtime({
   // Runtime override: window.__tutorPerceptionStage = 0..4 (dev only;
   // changes the resolved stage on the NEXT effect run — refresh the page
   // or call window.__tutorForcePerceptionClose() to re-enter).
-  const perceptionEnvStage = process.env.NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE;
-  const [perceptionRuntimeStage, setPerceptionRuntimeStage] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (process.env.NODE_ENV === 'production') return;
-    const w = window as unknown as { __tutorPerceptionStage?: string | number };
-    if (w.__tutorPerceptionStage !== undefined) {
-      setPerceptionRuntimeStage(String(w.__tutorPerceptionStage));
-    }
-  }, []);
-  const perceptionStageRaw = perceptionRuntimeStage ?? perceptionEnvStage;
-  const perceptionStage = (() => {
-    const n = Number.parseInt(perceptionStageRaw ?? '', 10);
-    return Number.isFinite(n) && n >= 0 && n <= 4 ? n : -1;
-  })();
+  // perceptionStage / perceptionRuntimeStage / perceptionEnvStage are
+  // declared just above the useOpenAIRealtime call (Stage 4 needs the
+  // resolved stage to derive inputAuthority).
   // Only open the perception WS once the production WS is connected — this
   // avoids issuing a mic-permission prompt before the user clicks Start.
   const perceptionEnabled = perceptionStage >= 0 && realtime.isConnected;
@@ -8632,6 +8649,28 @@ export function VoiceTutorRealtime({
           // duplicates or Whisper context-bias hallucinations.
           // Production-WS transcripts that already fired BEFORE
           // late-fallback are caught by the queue-drain dedup above.
+          productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+          void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
+          return;
+        }
+
+        // Stage 4 (2026-06-15): perception WS as sole input authority.
+        // When prod is 'listening'/'connected' the heuristic returns
+        // 'new_turn' (perception-classifier.ts:274). At Stage ≤3 this
+        // verdict is intentionally a no-op — production WS owns the
+        // listening-state input pathway and its transcript dispatches
+        // the brain. At Stage 4 production WS has no transcription, so
+        // perception must dispatch directly; otherwise listening-state
+        // student turns never reach the brain. The 20s suppress arming
+        // is a defense-in-depth no-op at Stage 4 (production WS isn't
+        // transcribing) but matches the late-fallback pattern.
+        if (
+          perceptionStage >= 4 &&
+          heur.verdict === 'new_turn' &&
+          !perceptionInterruptCheckpointRef.current
+        ) {
+          console.warn(`[PERCEPTION] STAGE-4 direct-dispatch (new_turn, prod=${prodState}): firing as student turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
+          onDebugEvent?.('perception_stage4_direct_dispatch', `${heur.verdict} at prod=${prodState}`);
           productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
