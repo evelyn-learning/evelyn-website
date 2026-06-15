@@ -647,6 +647,19 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // is lost. The queue holds pending sentences; response.done drains it.
   const speakTextQueueRef = useRef<string[]>([]);
   const speakTextInFlightRef = useRef(false);
+  // Stage 3.1 enhancement (2026-06-16): track the sentence currently
+  // being TTS'd (dispatched to Realtime, not yet drained). The student
+  // is hearing this sentence — or about to. On a false-positive cancel,
+  // peekSpeechQueue returns [currentSpeakText, ...queue] so resume-from-
+  // cut can re-dispatch the cut sentence from the start (audible repeat
+  // of whatever played before the cut, then the rest of the sentence)
+  // plus everything queued behind it. Without this, a 1-2 sentence
+  // response has nothing to resume because by the time TTS plays the
+  // last sentence the queue is already empty. Reframe from "queue
+  // snapshot" to "audio the student would have heard if not cut" —
+  // closer to the actual UX promise. Set on dispatch, cleared when
+  // the response drains naturally OR clearSpeechQueue runs.
+  const currentSpeakTextRef = useRef<string | null>(null);
   // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
   // captures the epoch at start and re-checks before pushing decoded
   // PCM into audioQueueRef. If the epoch changed during the in-flight
@@ -2383,6 +2396,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       speakTextQueueRef.current.push(trimmed);
       return;
     }
+    // Stage 3.1 enhancement: track this as the in-flight sentence
+    // BEFORE dispatch so peekSpeechQueue (called from a cancel handler
+    // that interleaves with the dispatch) sees the correct state.
+    currentSpeakTextRef.current = trimmed;
     dispatchSpeakText(trimmed);
   }, [dispatchSpeakText]);
 
@@ -2391,8 +2408,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const drainSpeakTextQueueRef = useRef<() => void>(() => {});
   drainSpeakTextQueueRef.current = () => {
     speakTextInFlightRef.current = false;
+    // Stage 3.1 enhancement: the prior sentence finished naturally
+    // (response.done fired). It's no longer "in flight" so the next
+    // cancel shouldn't try to re-dispatch it.
+    currentSpeakTextRef.current = null;
     const next = speakTextQueueRef.current.shift();
     if (!next) return;
+    // Stage 3.1 enhancement: bind currentSpeakTextRef to the next
+    // sentence BEFORE dispatching so a cancel during the brief drain-
+    // to-dispatch window sees the right text.
+    currentSpeakTextRef.current = next;
     if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
       sendOneSpeakTextViaOpenAITTSRef.current(next);
     } else {
@@ -2431,6 +2456,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     responseCancelWindowUntilRef.current = Date.now() + RESPONSE_CANCEL_WINDOW_MS;
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
+    // Stage 3.1 enhancement: clear the in-flight sentence too. The
+    // perception cancel pathway always calls peekSpeechQueue BEFORE
+    // clearSpeechQueue so the snapshot is already captured by now.
+    // Leaving currentSpeakTextRef populated past this point would
+    // wrongly include it in a SUBSEQUENT cancel's snapshot.
+    currentSpeakTextRef.current = null;
     // Drop any pre-fetched TTS bytes — they're for sentences we're
     // about to skip via clearSpeechQueue (validator-feedback retry).
     ttsPrefetchCacheRef.current.clear();
@@ -2526,15 +2557,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     });
   }, []);
 
-  // Voice Perception Stage 3.1 (2026-06-16): non-destructive snapshot
-  // of the pending speakText queue. Capture sites: perception cancel
-  // handlers in VoiceTutorRealtime.tsx (onSpeechStart, retro-cancel
-  // useEffect, dev trigger) call this BEFORE clearSpeechQueue so a
-  // false-positive cancel verdict can re-queue the same sentences via
-  // resumeSpeakText. The currently-playing sentence is intentionally
-  // NOT included — only sentences that never got dispatched to TTS.
+  // Voice Perception Stage 3.1 (2026-06-16) + enhancement (2026-06-16):
+  // snapshot of TTS content the student would have heard if not cut.
+  // Includes the currently-in-flight sentence (whatever Realtime is
+  // playing right now) plus all queued sentences waiting for dispatch.
+  // The student WILL hear the cut sentence repeated from its start when
+  // resume runs — audible repetition vs lost content was the right
+  // trade-off per UX framing (a 1-sentence response with no in-flight
+  // tracking has NOTHING resumable, which means short responses can't
+  // recover from FP cancels at all).
+  // Caller pattern: peek BEFORE clearSpeechQueue (which both empties
+  // the queue and nulls currentSpeakTextRef) so the snapshot reflects
+  // pre-clear state.
   const peekSpeechQueue = useCallback((): string[] => {
-    return [...speakTextQueueRef.current];
+    const inFlight = currentSpeakTextRef.current;
+    const queued = speakTextQueueRef.current;
+    return inFlight ? [inFlight, ...queued] : [...queued];
   }, []);
 
   // Voice Perception Stage 3.1 (2026-06-16): re-queue an ordered array
