@@ -97,20 +97,6 @@ export interface RealtimeConfig {
    *  NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT in VoiceTutorRealtime,
    *  mirroring the vad* env-prop convention. */
   reconnectEnabled?: boolean;
-  /** Voice Perception Layer Stage 4 (2026-06-15). Who owns the input
-   *  audio pathway:
-   *  - 'production' (default): this hook configures Whisper transcription
-   *    on its session.update AND forwards mic PCM via input_audio_buffer.append.
-   *    Byte-identical to the Stage ≤3 behavior.
-   *  - 'perception': perception WS is the sole input authority. This hook
-   *    skips both the transcription config and the audio-buffer append,
-   *    becoming a pure TTS sink. The student-transcript handler still
-   *    runs (the input_audio_transcription.completed event will never
-   *    fire without a buffer to transcribe — the handler is inert).
-   *  Caller wires this from NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE=4 via
-   *  VoiceTutorRealtime. Default 'production' keeps Stage ≤3 untouched
-   *  for rollback. */
-  inputAuthority?: 'production' | 'perception';
   /** GPT-Realtime-2 native engine. When true the hook connects to the
    *  gpt-realtime-2 model, adds reasoning.effort to session.update, and
    *  lets the server auto-create a response on each VAD commit
@@ -518,7 +504,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     reconnectEnabled = false,
     useRealtimeV2 = false,
     tools: toolDefs,
-    inputAuthority = 'production',
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk, relayMode,
   } = config;
@@ -614,12 +599,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // onopen closure reads the current value rather than a stale capture.
   const toolDefsRef = useRef(toolDefs);
   toolDefsRef.current = toolDefs;
-  // Stage 4 (2026-06-15): inputAuthority synced for the same reason —
-  // the session.update closure in connect() and the onaudioprocess
-  // closure in startListening() are long-lived and must see the
-  // current value, not a stale capture.
-  const inputAuthorityRef = useRef(inputAuthority);
-  inputAuthorityRef.current = inputAuthority;
   // True when the user has explicitly muted themselves. Distinct from
   // shouldListenRef (which is the INTENT — "we want to listen after the
   // tutor stops talking"). userMutedRef is the OVERRIDE — "never open
@@ -751,15 +730,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // in-flight sentence so a subsequent cancel doesn't try to
       // resume audio that already played out.
       currentSpeakTextRef.current = null;
-      // Re-enable mic tracks when playback ends (echo-loop prevention).
-      // On phone speakers, the device's hardware echo cancellation isn't
-      // perfect — Whisper picks up the tutor's own voice and transcribes
-      // it as student speech. Disabling tracks during playback eliminates
-      // the loop. Restore here when the queue empties, unless the user
-      // explicitly muted.
-      if (mediaStreamRef.current && !userMutedRef.current) {
-        mediaStreamRef.current.getTracks().forEach((t) => { t.enabled = true; });
-      }
       // openai-mini path has no response.done event to drive the queue,
       // so drain the next sentence here when the audio finishes. The
       // realtime path leaves this branch alone — its drain runs from
@@ -794,11 +764,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     isPlayingRef.current = true;
     updateState('speaking');
-    // Disable mic tracks during playback — see comment in the
-    // queue-empty branch above for the echo-loop reasoning.
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => { t.enabled = false; });
-    }
+    // Stage 4 cleanup (2026-06-15): the hard mic-gate that disabled
+    // production-WS mic tracks during TTS is gone. It was a defense
+    // against Whisper picking up the tutor's own voice — irrelevant
+    // now that production WS doesn't transcribe. Perception WS has
+    // its own MediaStream and handles self-voice via the classifier's
+    // script-cancellation defense (Q1.5 layer 1).
 
     const ctx = getAudioContext();
     const chunk = audioQueueRef.current.shift()!;
@@ -1642,45 +1613,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           const reasoningBlock = v2
             ? { reasoning: { effort: process.env.NEXT_PUBLIC_TUTOR_RT2_REASONING_EFFORT || 'medium' } }
             : {};
-          // Stage 4 (2026-06-15): when perception WS owns input, omit
-          // the transcription config from this WS. The server VAD block
-          // stays configured but is inert without audio frames arriving
+          // Stage 4 cleanup (2026-06-15): perception WS is the sole
+          // input authority. This WS omits the transcription config
+          // and acts as a pure TTS sink. Server VAD block stays
+          // configured but is inert without audio frames arriving
           // (input_audio_buffer.append is also skipped — see
-          // onaudioprocess below). The whisper-1 model is the entire
-          // production-WS input pathway; removing it makes the WS
-          // behave as a pure TTS sink.
-          const inputBlock = inputAuthorityRef.current === 'perception'
-            ? {
-                turn_detection: {
-                  type: 'server_vad',
-                  threshold: vadThreshold,
-                  prefix_padding_ms: vadPrefixPaddingMs,
-                  silence_duration_ms: vadSilenceDurationMs,
-                  create_response: v2,
-                },
-              }
-            : {
-                transcription: { model: 'whisper-1' },
-                turn_detection: {
-                  type: 'server_vad',
-                  threshold: vadThreshold,              // Higher threshold = less sensitive to quiet sounds (0-1)
-                  prefix_padding_ms: vadPrefixPaddingMs, // Audio included before detected speech
-                  silence_duration_ms: vadSilenceDurationMs, // Wait this long before responding
-                  // GA gpt-realtime: do NOT let the server auto-generate a
-                  // reply on every VAD commit — response.create is called
-                  // manually from the transcription-completed handler once
-                  // we know the student said something worth responding to
-                  // (otherwise the tutor fills silence with "let me
-                  // re-engage" filler on every phantom turn from ambient
-                  // noise — see 2026-04-23 Physics session screenshot).
-                  // realtime-2: the server auto-responds; phantom turns are
-                  // still scrubbed by deleting their transcript item.
-                  create_response: v2,
-                },
-              };
-          if (inputAuthorityRef.current === 'perception') {
-            console.log('[Realtime] STAGE-4 input-authority=perception — session.update omits transcription; production WS is TTS-only');
-          }
+          // onaudioprocess below). The whisper-1 transcription path is
+          // gone; perception WS handles all student-input transcription
+          // via its own MediaStream + gpt-realtime-2 connection.
           ws.send(JSON.stringify({
           type: 'session.update',
           session: {
@@ -1689,7 +1629,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             ...toolsBlock,
             ...reasoningBlock,
             audio: {
-              input: inputBlock,
+              input: {
+                turn_detection: {
+                  type: 'server_vad',
+                  threshold: vadThreshold,
+                  prefix_padding_ms: vadPrefixPaddingMs,
+                  silence_duration_ms: vadSilenceDurationMs,
+                  create_response: v2,
+                },
+              },
               output: {
                 voice: voice,
               },
@@ -2035,37 +1983,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           }
         }
 
-        // Tap student audio for recording (use ref to avoid stale closure)
+        // Tap student audio for recording (use ref to avoid stale closure).
+        // The recorded audio is the only consumer of the resampled mic
+        // stream now — production WS no longer transcribes (Stage 4
+        // cleanup, 2026-06-15). Perception WS captures its own audio
+        // via a separate MediaStream in usePerceptionWS.
         onStudentAudioChunkRef.current?.(resampledData);
-
-        const base64Audio = float32ToBase64PCM16(resampledData);
-
-        // Q2 readyState guard (caching-initiative lever 2). onaudioprocess
-        // fires ~every 85ms; during a reconnect gap wsRef.current is null
-        // (ws.onclose) or a closed socket → an unguarded .send() crashes
-        // the audio thread. Dropping gap audio is correct: it has no
-        // valid session to land in (same as today's dead-socket
-        // behavior). Also closes a latent PRE-EXISTING crash — even on
-        // the frozen baseline, an onclose mid-speech hit this same
-        // null.send(). hasAudioInBufferRef stays false when nothing was
-        // sent (no audio in the server buffer to commit).
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          // Stage 4 (2026-06-15): when perception WS owns input,
-          // skip forwarding mic PCM to production WS. Production stays
-          // open as a TTS sink; no transcription work happens
-          // server-side without buffer frames. The audio frame is
-          // dropped from this socket only — perception WS has its own
-          // independent MediaStream and is still capturing the same
-          // audio.
-          if (inputAuthorityRef.current === 'perception') {
-            return;
-          }
-          hasAudioInBufferRef.current = true;
-          wsRef.current.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: base64Audio,
-          }));
-        }
       };
 
       source.connect(processor);
