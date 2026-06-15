@@ -556,6 +556,13 @@ export function VoiceTutorRealtime({
   // only verdicts following a Stage-2 cancel trigger restore/merge.
   const inFlightBrainAbortRef = useRef<AbortController | null>(null);
   const lastBrainCallContextRef = useRef<{ transcript: string; opts?: { silent?: boolean } } | null>(null);
+  // Q3 timestamped-history (2026-06-16): wall-clock ms at which the
+  // current/last brain turn actually started streaming (set in
+  // callBrainOnce at the t0 reassignment). Used by applyPerceptionVerdict
+  // to compute the relative `[t+N.Ns]` offset on the interrupted-tutor
+  // <cut> history entry and to scope ttsScriptBufferRef to this turn's
+  // spoken sentences. 0 = no turn has started yet.
+  const brainTurnStartedAtRef = useRef<number>(0);
   const perceptionInterruptCheckpointRef = useRef<
     | {
         originalTranscript: string;
@@ -4957,7 +4964,22 @@ export function VoiceTutorRealtime({
   // Inner brain-call worker — does the actual fetch + dispatch. Pulled out
   // so the outer wrapper can serialize calls and process queued transcripts
   // without duplicating the body.
-  const callBrainOnce = useCallback(async (transcript: string, opts?: { silent?: boolean }) => {
+  const callBrainOnce = useCallback(async (
+    transcript: string,
+    opts?: {
+      silent?: boolean;
+      // Q3 timestamped-history (2026-06-16): ephemeral history entries
+      // spliced in AFTER the transcriptRef-derived prior history and
+      // BEFORE this turn's <student_said> wrapper. Used by the perception
+      // MERGE/FRESH paths to inject the interrupted tutor turn as its own
+      // {role:'assistant'} entry carrying a `<cut>` marker — replacing the
+      // old bracketed-addendum synthetic string. These entries are NOT
+      // written to transcriptRef, so they affect only THIS brain call and
+      // vanish from history on the next turn (the interrupted partial was
+      // never a committed tutor turn).
+      injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    },
+  ) => {
     // Brain-turn start timestamp. Declared OUTSIDE the try so the catch
     // block can reference it for streaming-entry cleanup (Fix 9).
     // Re-assigned inside the try once we know the turn actually starts.
@@ -5228,6 +5250,10 @@ export function VoiceTutorRealtime({
         : undefined;
       const whiteboardSnapshot = catalogRef.current.getSnapshot(segmentSnapshotOpts);
       t0 = Date.now();
+      // Q3 timestamped-history: anchor for the relative `[t+N.Ns]` cut
+      // offset + the ttsScriptBuffer turn-scoping filter in
+      // applyPerceptionVerdict. Set once per turn at the real start.
+      brainTurnStartedAtRef.current = t0;
 
       // Validator-feedback retry loop (Phase 5 Option B). When a tool
       // call is rejected by a structural validator (circuit topology,
@@ -5279,7 +5305,15 @@ export function VoiceTutorRealtime({
       // adjective ("a quick", "the small") between subject and noun
       // handles the most common phrasings.
       const visualPromiseRegex = /\b(let me|i['’]ll|i will|here['’]s|here is|i['’]m going to)\s+(?:(?:a|an|the|this|that|some)\s+(?:quick\s+|simple\s+|small\s+|nice\s+)?)?(draw|plot|show|sketch|display|render|graph|create|drawing|chart|diagram|figure|illustration|visualization|image|picture|rendering)\b/i;
-      let runHistory = priorHistory;
+      // Q3 timestamped-history: splice any ephemeral injected entries
+      // (e.g. the interrupted tutor `<cut>` turn from a perception
+      // MERGE/FRESH) between the prior history and this turn's
+      // <student_said> wrapper. buildBrainMessages appends the volatile
+      // userContent as the final message, so the injected tail lands in
+      // the correct position: ...prior, [cut turn], <student_said>.
+      let runHistory = opts?.injectedHistoryTail?.length
+        ? [...priorHistory, ...opts.injectedHistoryTail]
+        : priorHistory;
       let runTranscript = transcript;
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
@@ -7980,7 +8014,15 @@ export function VoiceTutorRealtime({
   // the first is interrupted by the second.
   const handleStudentTranscriptForBrain = useCallback(async (
     transcript: string,
-    opts?: { silent?: boolean; bypassPerceptionDedupe?: boolean; bypassMidUtteranceGuard?: boolean },
+    opts?: {
+      silent?: boolean;
+      bypassPerceptionDedupe?: boolean;
+      bypassMidUtteranceGuard?: boolean;
+      // Q3 timestamped-history: forwarded verbatim to callBrainOnce (the
+      // direct first call only — queue-drained follow-ups are separate
+      // turns and intentionally don't carry it).
+      injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    },
   ) => {
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
     // Stage 3 fix #11 (2026-05-28): defer-on-dispatch guard. If the
@@ -8317,59 +8359,80 @@ export function VoiceTutorRealtime({
       });
       return;
     }
+    // Q3 timestamped-history protocol (2026-06-16): both MERGE
+    // (continuation) and FRESH (barge_in/new_turn) below now represent the
+    // interrupted tutor turn as its OWN {role:'assistant'} history entry
+    // carrying a `<cut>` marker — replacing the old bracketed-addendum
+    // synthetic string ("X [Student interrupted you mid-response with: Y]").
+    // The brain reads the separate entries naturally (...prior, the cut
+    // partial, then the student's interrupting words as <student_said>);
+    // no new prompt rule needed (design Q3).
+    //
+    // The cut entry is built ONLY when the brain was genuinely mid-flight
+    // at cancel time. If it had already finished, its full response is
+    // committed to transcriptRef by handleResponseDone and lives in
+    // history on its own — injecting a cut entry would duplicate it (same
+    // duplicate-response hazard fix #14 addressed for the RESTORE path).
+    const cutTurn = ((): { role: 'assistant'; content: string } | null => {
+      if (!checkpoint.brainWasInFlight) return null;
+      const turnStart = brainTurnStartedAtRef.current;
+      const tCutSec = turnStart > 0
+        ? Math.max(0, (checkpoint.cancelledAt - turnStart) / 1000)
+        : null;
+      const timeTag = tCutSec != null ? `[t+${tCutSec.toFixed(1)}s] ` : '';
+      // What the student actually HEARD before the cut = every sentence
+      // dispatched to TTS this turn (ttsScriptBuffer, scoped to this turn
+      // via brainTurnStartedAt) MINUS the never-heard queued tail.
+      // unplayedSentencesSnapshot is [in-flight, ...queued] (Stage 3.1
+      // f435560); the in-flight sentence WAS partially heard, so it stays
+      // as the cut boundary — drop only slice(1) (the queue that never
+      // reached the speaker).
+      const neverHeard = new Set(checkpoint.unplayedSentencesSnapshot.slice(1));
+      const heard = ttsScriptBufferRef.current
+        .filter((s) => turnStart > 0 && s.spokenStartedAt >= turnStart)
+        .map((s) => s.text)
+        .filter((t) => !neverHeard.has(t));
+      const spokenText = heard.join(' ').trim();
+      // 'speaking' with spoken text → "[t+N.Ns] <partial> <cut>".
+      // 'thinking' (or speaking before any audio) → "[t+N.Ns] <cut>"
+      // (interrupted before saying anything).
+      return {
+        role: 'assistant',
+        content: spokenText ? `${timeTag}${spokenText} <cut>` : `${timeTag}<cut>`,
+      };
+    })();
     if (verdict === 'continuation') {
-      // Q3 simplification (MVP): merge as bracketed addendum. True
-      // timestamped-history protocol with <cut> marker is a brain-route
-      // schema change deferred to later polish work. The bracket
-      // phrasing varies by cancel state so the brain knows whether it
-      // had started speaking yet — important context for whether to
-      // restate or just continue.
-      const bracketLabel = stage === 'speaking'
-        ? 'Student interrupted you mid-response with'
-        : 'Student added while you were thinking';
-      const merged = cleanPerceptionText
-        ? `${checkpoint.originalTranscript} [${bracketLabel}: ${cleanPerceptionText}]`
-        : checkpoint.originalTranscript;
+      // MERGE: the student added to / built on what they were saying. The
+      // interrupting words are dispatched as a normal (visible) student
+      // turn; the cut partial rides along as injected history so the
+      // brain knows it was mid-utterance. No silent pre-add dance — Y is
+      // the actual current student turn, so callBrainOnce adds it to chat
+      // exactly once. When there's no perception text, fall back to
+      // re-firing the original transcript.
+      const freshText = cleanPerceptionText || checkpoint.originalTranscript;
       console.warn(
-        `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — original+perception, len=${merged.length}`,
+        `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — cutTurn=${cutTurn ? `"${cutTurn.content.slice(0, 60)}"` : 'none'}, fresh=${JSON.stringify(freshText).slice(0, 80)}`,
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
-      // Split brain context from chat display: brain receives the full
-      // merged transcript with the bracketed addendum (so it knows what
-      // it was mid-saying when the student spoke). Chat sees only what
-      // the student literally just said — adding the merged bracket
-      // text to chat (observed live 2026-05-26) made it look like the
-      // student's old message was repeating verbatim. Manually pre-add
-      // the perception chat entry, then dispatch to brain with silent
-      // so callBrainOnce skips its own chat add.
-      if (cleanPerceptionText) {
-        const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
-        if (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== cleanPerceptionText) {
-          const perceptionEntry: TranscriptEntry = {
-            id: `student-perception-${Date.now()}`,
-            timestamp: new Date(),
-            role: 'student',
-            text: cleanPerceptionText,
-          };
-          transcriptRef.current = [...transcriptRef.current, perceptionEntry];
-          onTranscriptUpdate([...transcriptRef.current]);
-        }
-      }
-      void handleStudentTranscriptForBrain(merged, {
-        ...(checkpoint.originalOpts || {}),
-        silent: true,
+      void handleStudentTranscriptForBrain(freshText, {
         bypassPerceptionDedupe: true,
+        ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
       });
       return;
     }
     // barge_in / new_turn / escalate (escalate shouldn't reach here
-    // post-Haiku, but handle defensively) → FRESH new turn.
+    // post-Haiku, but handle defensively) → FRESH new turn. The cut
+    // partial rides along as injected history so the brain knows the
+    // student talked over it (rather than answering an idle prompt).
     const fresh = cleanPerceptionText || checkpoint.originalTranscript;
     console.warn(
-      `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
+      `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, cutTurn=${cutTurn ? 'yes' : 'none'}, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
     );
     onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
-    void handleStudentTranscriptForBrain(fresh, { bypassPerceptionDedupe: true });
+    void handleStudentTranscriptForBrain(fresh, {
+      bypassPerceptionDedupe: true,
+      ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
+    });
   }, [handleStudentTranscriptForBrain, onDebugEvent]);
   // Publish to the ref so the perception callbacks (defined earlier in
   // render order via useCallback closures) can call it through the ref
