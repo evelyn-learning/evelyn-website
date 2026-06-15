@@ -1021,6 +1021,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const accumulatedToolCalls: BrainToolCall[] = [];
   const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   let lastStopReason: string = 'unknown';
+  // Last iteration's full message — hoisted out so the post-loop rescue
+  // (Option A, 2026-06-16) can rebuild a valid tool_use/tool_result
+  // message history to bridge into the rescue call.
+  let lastFinalMessage: Anthropic.Message | null = null;
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
     const sentenceBuffer = new SentenceBuffer();
@@ -1124,6 +1128,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
     const finalMessage = await stream.finalMessage();
+    lastFinalMessage = finalMessage;
     totalUsage.inputTokens += finalMessage.usage.input_tokens;
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
     totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;
@@ -1175,6 +1180,95 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         content: resolvedResults,
       },
     ];
+  }
+
+  // ── Option A rescue (2026-06-16) ──────────────────────────────────────
+  // When the agent loop ends with tool calls accumulated but ZERO
+  // narration text, Rule 9 ("Always speak when you act") was violated —
+  // the student is on a voice channel and would hear silence while the
+  // whiteboard fills. Make ONE more brain call with no tools registered
+  // so the model is forced to emit text. Empirically rare; cost is one
+  // extra Anthropic call per stuck turn (~$0.01 + ~3s).
+  //
+  // Path that triggers this:
+  //  - MAX_AGENT_ITERATIONS exit with text="" + tool_use stream of N tools
+  //    (observed 2026-06-15 SAT Math kickoff: 9 tools, 0 sentences).
+  //  - Defensive end_turn exit with tools but no text (rare; same shape).
+  //
+  // To preserve a valid message history for the rescue call, append the
+  // final iteration's assistant content + synthetic tool_result blocks
+  // for any tool_use blocks it contained. This is the same bridging
+  // pattern that the in-loop continuation uses; we just apply it once
+  // more before the rescue user-message.
+  if (!accumulatedText.trim() && accumulatedToolCalls.length > 0 && lastFinalMessage) {
+    console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
+    const lastToolUseBlocks = lastFinalMessage.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+    );
+    if (lastToolUseBlocks.length > 0) {
+      messages = [
+        ...messages,
+        { role: 'assistant', content: lastFinalMessage.content },
+        {
+          role: 'user',
+          content: lastToolUseBlocks.map((b) => ({
+            type: 'tool_result' as const,
+            tool_use_id: b.id,
+            content: `${b.name} executed successfully.`,
+          })),
+        },
+      ];
+    }
+    messages = [
+      ...messages,
+      {
+        role: 'user',
+        content:
+          'You emitted whiteboard tools without any narration. ' +
+          'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
+          'No more tools — text only.',
+      },
+    ];
+    // No `tools` field → model has no tool slots to fill → forced to
+    // emit text. We deliberately omit tools rather than passing []
+    // because some Anthropic SDK versions treat [] as "no tools
+    // available" while others raise on it; omitting is portable.
+    try {
+      const rescueStream = anthropic.messages.stream({
+        model: input.model ?? BRAIN_MODEL_ID,
+        max_tokens: 250,
+        system: [
+          {
+            type: 'text',
+            text: input.systemPrompt,
+            cache_control: { type: 'ephemeral', ttl: '1h' },
+          },
+        ],
+        messages,
+      });
+      const rescueBuffer = new SentenceBuffer();
+      for await (const event of rescueStream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          accumulatedText += event.delta.text;
+          for (const sentence of rescueBuffer.push(event.delta.text)) {
+            yield { type: 'sentence', text: sentence };
+          }
+        } else if (event.type === 'content_block_stop') {
+          const remaining = rescueBuffer.flush();
+          if (remaining) yield { type: 'sentence', text: remaining };
+        }
+      }
+      const rescueFinal = await rescueStream.finalMessage();
+      totalUsage.inputTokens += rescueFinal.usage.input_tokens;
+      totalUsage.outputTokens += rescueFinal.usage.output_tokens;
+      totalUsage.cacheReadTokens += rescueFinal.usage.cache_read_input_tokens ?? 0;
+      totalUsage.cacheCreationTokens += rescueFinal.usage.cache_creation_input_tokens ?? 0;
+      lastStopReason = `${lastStopReason}+rescued`;
+    } catch (err) {
+      console.error('[brain.stream] OPTION-A rescue call failed:', err);
+      // Swallow — the original (toolful, textless) result is still returned.
+      // Better silent failure than crashing the whole turn.
+    }
   }
 
   yield {
