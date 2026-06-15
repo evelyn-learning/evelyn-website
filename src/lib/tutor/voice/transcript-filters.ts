@@ -333,6 +333,22 @@ export function isNoiseTranscript(text: string): boolean {
   if (normalized.length === 0) return true;
   // Exact match with known noise
   if (NOISE_PATTERNS.has(normalized)) return true;
+  // 2026-06-15 (JEE physics session): concatenated noise patterns
+  // separated by sentence punctuation. Whisper transcribed a cough as
+  // "Thank you. Bye bye." — neither "thank you" nor "bye bye" is the
+  // whole normalized string, so the exact-match check above missed it.
+  // Split the original text by sentence boundaries and check whether
+  // EVERY clause is a known noise pattern. Catches Whisper compounds
+  // like "Thanks. Bye!" / "Hello. Goodbye." / "Hi. Thank you." without
+  // adding combinatorial entries to NOISE_PATTERNS.
+  const clauses = text
+    .toLowerCase()
+    .split(/[.,!?;:]+/)
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0);
+  if (clauses.length >= 2 && clauses.every((c) => NOISE_PATTERNS.has(c))) {
+    return true;
+  }
   // Longer subscribe/outro/subtitle hallucinations
   if (NOISE_REGEXES.some((re) => re.test(text))) return true;
   // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
