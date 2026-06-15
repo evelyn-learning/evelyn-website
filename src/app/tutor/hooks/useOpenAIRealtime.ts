@@ -647,19 +647,32 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // is lost. The queue holds pending sentences; response.done drains it.
   const speakTextQueueRef = useRef<string[]>([]);
   const speakTextInFlightRef = useRef(false);
-  // Stage 3.1 enhancement (2026-06-16): track the sentence currently
-  // being TTS'd (dispatched to Realtime, not yet drained). The student
-  // is hearing this sentence — or about to. On a false-positive cancel,
-  // peekSpeechQueue returns [currentSpeakText, ...queue] so resume-from-
-  // cut can re-dispatch the cut sentence from the start (audible repeat
-  // of whatever played before the cut, then the rest of the sentence)
-  // plus everything queued behind it. Without this, a 1-2 sentence
-  // response has nothing to resume because by the time TTS plays the
-  // last sentence the queue is already empty. Reframe from "queue
-  // snapshot" to "audio the student would have heard if not cut" —
-  // closer to the actual UX promise. Set on dispatch, cleared when
-  // the response drains naturally OR clearSpeechQueue runs.
+  // Stage 3.1 enhancement v2 (2026-06-16): track sentences based on
+  // AUDIO PLAYBACK state, not server response state. response.done
+  // fires when the SERVER has finished generating TTS audio for a
+  // response, but the audio chunks for that response are still in
+  // audioQueueRef and being played out for several more seconds. The
+  // first version of this enhancement (commit f435560) tracked
+  // sentences via server response.done, so by cancel time the in-flight
+  // sentence ref was already nulled by drain even though the student
+  // was still hearing the audio. Now:
+  //  - audioQueueSentenceRef: parallel to audioQueueRef, one sentence
+  //    string per audio chunk. Push on chunk arrival, shift on chunk
+  //    dequeue for playback.
+  //  - currentSpeakTextRef: the sentence whose chunk was most recently
+  //    DEQUEUED for playback. Updated in playNextAudio. Reflects what
+  //    the student is hearing right now.
+  //  - pendingDispatchSentenceRef: sentence sent to Realtime but its
+  //    response.created hasn't echoed back yet. Bridge for getting
+  //    sentence text into the response_id → sentence map.
+  //  - responseIdToSentenceRef: maps Realtime response_id to sentence
+  //    text. Populated in response.created handler.
+  // peekSpeechQueue returns unique sentence list = [currentSpeakText,
+  //  ...audioQueueSentenceRef (deduped), ...speakTextQueueRef].
   const currentSpeakTextRef = useRef<string | null>(null);
+  const audioQueueSentenceRef = useRef<string[]>([]);
+  const pendingDispatchSentenceRef = useRef<string | null>(null);
+  const responseIdToSentenceRef = useRef<Map<string, string>>(new Map());
   // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
   // captures the epoch at start and re-checks before pushing decoded
   // PCM into audioQueueRef. If the epoch changed during the in-flight
@@ -734,6 +747,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      // Stage 3.1 v2: nothing left in the audio pipeline. Null the
+      // in-flight sentence so a subsequent cancel doesn't try to
+      // resume audio that already played out.
+      currentSpeakTextRef.current = null;
       // Re-enable mic tracks when playback ends (echo-loop prevention).
       // On phone speakers, the device's hardware echo cancellation isn't
       // perfect — Whisper picks up the tutor's own voice and transcribes
@@ -785,6 +802,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     const ctx = getAudioContext();
     const chunk = audioQueueRef.current.shift()!;
+    // Stage 3.1 v2: dequeue the parallel sentence text and bind it as
+    // the currently-heard sentence. If the chunk arrived without
+    // sentence context (e.g., a rare pre-mapping race), leave the
+    // ref alone — better stale than wrong.
+    const sentText = audioQueueSentenceRef.current.shift();
+    if (sentText) {
+      currentSpeakTextRef.current = sentText;
+    }
     const buffer = ctx.createBuffer(1, chunk.length, 24000);
     buffer.getChannelData(0).set(chunk);
 
@@ -1025,7 +1050,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               break;
             }
             console.log('[Realtime] Audio chunk received, length:', data.delta.length);
+            // Stage 3.1 v2: tag this chunk with its sentence text so
+            // peekSpeechQueue knows what audio is in the playback
+            // pipeline. queueAudio pushes the chunk; the sentence push
+            // happens in parallel.
+            const sentText = respId ? (responseIdToSentenceRef.current.get(respId) ?? '') : '';
             queueAudio(data.delta);
+            audioQueueSentenceRef.current.push(sentText);
           }
           break;
 
@@ -1062,6 +1093,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           // response.done (the response completed naturally — no cancel
           // needed and any further deltas after this are unexpected).
           const createdRespId = data.response?.id;
+          // Stage 3.1 v2: bind the response_id to the sentence text that
+          // was just dispatched. Audio chunks for this response can then
+          // be tagged with sentence text so peekSpeechQueue knows what
+          // the student is hearing.
+          if (typeof createdRespId === 'string' && pendingDispatchSentenceRef.current) {
+            responseIdToSentenceRef.current.set(createdRespId, pendingDispatchSentenceRef.current);
+            pendingDispatchSentenceRef.current = null;
+          }
           if (typeof createdRespId === 'string') {
             currentResponseIdRef.current = createdRespId;
             // Stage 3 fix #10 (2026-05-28): if a clearSpeechQueue fired
@@ -2357,6 +2396,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       onTutorAudioChunk?.(float32);
       audioQueueRef.current.push(float32);
+      // Stage 3.1 v2: tag this chunk with its sentence text. The
+      // openai-mini path pushes a whole sentence as one chunk so the
+      // mapping is trivial (no response_id needed — the sentence text
+      // is right here).
+      audioQueueSentenceRef.current.push(trimmed);
       if (!isPlayingRef.current) playNextAudio();
       // Pre-fetch the NEXT queued sentence's audio in parallel so its
       // bytes are ready when this one ends. Idempotent — repeat calls
@@ -2396,10 +2440,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       speakTextQueueRef.current.push(trimmed);
       return;
     }
-    // Stage 3.1 enhancement: track this as the in-flight sentence
-    // BEFORE dispatch so peekSpeechQueue (called from a cancel handler
-    // that interleaves with the dispatch) sees the correct state.
-    currentSpeakTextRef.current = trimmed;
+    // Stage 3.1 v2: stash text in pendingDispatchSentenceRef so the
+    // response.created handler can map the Realtime response_id back
+    // to this sentence. Audio chunks then carry sentence text through
+    // audioQueueSentenceRef. currentSpeakTextRef is NOT set here —
+    // it gets set when a chunk dequeues for playback.
+    pendingDispatchSentenceRef.current = trimmed;
     dispatchSpeakText(trimmed);
   }, [dispatchSpeakText]);
 
@@ -2408,16 +2454,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const drainSpeakTextQueueRef = useRef<() => void>(() => {});
   drainSpeakTextQueueRef.current = () => {
     speakTextInFlightRef.current = false;
-    // Stage 3.1 enhancement: the prior sentence finished naturally
-    // (response.done fired). It's no longer "in flight" so the next
-    // cancel shouldn't try to re-dispatch it.
-    currentSpeakTextRef.current = null;
     const next = speakTextQueueRef.current.shift();
     if (!next) return;
-    // Stage 3.1 enhancement: bind currentSpeakTextRef to the next
-    // sentence BEFORE dispatching so a cancel during the brief drain-
-    // to-dispatch window sees the right text.
-    currentSpeakTextRef.current = next;
+    // Stage 3.1 v2: stash next sentence for the response.created
+    // mapping. Don't touch currentSpeakTextRef — that's driven by
+    // chunk dequeue in playNextAudio.
+    pendingDispatchSentenceRef.current = next;
     if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
       sendOneSpeakTextViaOpenAITTSRef.current(next);
     } else {
@@ -2456,12 +2498,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     responseCancelWindowUntilRef.current = Date.now() + RESPONSE_CANCEL_WINDOW_MS;
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
-    // Stage 3.1 enhancement: clear the in-flight sentence too. The
-    // perception cancel pathway always calls peekSpeechQueue BEFORE
-    // clearSpeechQueue so the snapshot is already captured by now.
-    // Leaving currentSpeakTextRef populated past this point would
-    // wrongly include it in a SUBSEQUENT cancel's snapshot.
+    // Stage 3.1 v2: clear the sentence tracking. peekSpeechQueue was
+    // called BEFORE this so the snapshot is already captured. Leaving
+    // these populated past this point would wrongly include them in
+    // a SUBSEQUENT cancel's snapshot.
     currentSpeakTextRef.current = null;
+    audioQueueSentenceRef.current = [];
+    pendingDispatchSentenceRef.current = null;
     // Drop any pre-fetched TTS bytes — they're for sentences we're
     // about to skip via clearSpeechQueue (validator-feedback retry).
     ttsPrefetchCacheRef.current.clear();
@@ -2557,22 +2600,33 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     });
   }, []);
 
-  // Voice Perception Stage 3.1 (2026-06-16) + enhancement (2026-06-16):
-  // snapshot of TTS content the student would have heard if not cut.
-  // Includes the currently-in-flight sentence (whatever Realtime is
-  // playing right now) plus all queued sentences waiting for dispatch.
-  // The student WILL hear the cut sentence repeated from its start when
-  // resume runs — audible repetition vs lost content was the right
-  // trade-off per UX framing (a 1-sentence response with no in-flight
-  // tracking has NOTHING resumable, which means short responses can't
-  // recover from FP cancels at all).
-  // Caller pattern: peek BEFORE clearSpeechQueue (which both empties
-  // the queue and nulls currentSpeakTextRef) so the snapshot reflects
-  // pre-clear state.
+  // Voice Perception Stage 3.1 v2 (2026-06-16): snapshot of TTS content
+  // the student would have heard if not cut. Now tracked at audio-
+  // playback granularity, not server-response granularity (v1 nulled
+  // currentSpeakTextRef when response.done fired but the audio was
+  // still playing — a 1-2 sentence response then had nothing to
+  // resume).
+  // Composed in playback order, deduplicated:
+  //   1. currentSpeakTextRef — the sentence whose chunk is being
+  //      played NOW (most recently dequeued from audioQueueRef).
+  //   2. Unique sentences from the remaining audioQueueSentenceRef —
+  //      future chunks waiting to play (could be more chunks for
+  //      the current sentence, or chunks for sentences whose
+  //      response.done has fired but whose audio is still queued).
+  //   3. speakTextQueueRef — sentences not yet dispatched to Realtime.
+  // Caller pattern: peek BEFORE clearSpeechQueue.
   const peekSpeechQueue = useCallback((): string[] => {
-    const inFlight = currentSpeakTextRef.current;
-    const queued = speakTextQueueRef.current;
-    return inFlight ? [inFlight, ...queued] : [...queued];
+    const unique: string[] = [];
+    const seen = new Set<string>();
+    const push = (s: string | null | undefined): void => {
+      if (!s || seen.has(s)) return;
+      unique.push(s);
+      seen.add(s);
+    };
+    push(currentSpeakTextRef.current);
+    for (const s of audioQueueSentenceRef.current) push(s);
+    for (const s of speakTextQueueRef.current) push(s);
+    return unique;
   }, []);
 
   // Voice Perception Stage 3.1 (2026-06-16): re-queue an ordered array
