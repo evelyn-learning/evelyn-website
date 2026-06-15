@@ -91,4 +91,27 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  // 2026-06-16: silence the JWT_SESSION_ERROR stack-trace spam. Fires
+  // when a stale next-auth cookie was signed with a different
+  // NEXTAUTH_SECRET than the current process knows about — benign for
+  // demo endpoints (they treat decryption failures as "no session"
+  // gracefully). next-auth's default logger emits a multi-line stack
+  // trace per occurrence, which fills server logs during normal
+  // tutoring sessions. Downgrade to a single one-liner; other auth
+  // errors continue to log normally.
+  logger: {
+    error(code) {
+      if (code === 'JWT_SESSION_ERROR' || code === 'JWE_DECRYPTION_FAILED') {
+        // Suppress entirely — stale-cookie noise.
+        return;
+      }
+      console.error(`[next-auth] ${code}`);
+    },
+    warn(code) {
+      console.warn(`[next-auth] ${code}`);
+    },
+    debug() {
+      // Always off.
+    },
+  },
 };

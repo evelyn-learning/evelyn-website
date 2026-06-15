@@ -136,6 +136,18 @@ const NOISE_PATTERNS = new Set([
   // be worth the swap. Students typically say "got it" or "yes" not
   // a standalone "Success!".
   'success', 'successful',
+  // 2026-06-16 JEE physics session: cough transcribed as
+  // "Thank you very much. Bye." — the prior compound check
+  // ("thank you. bye bye." → both clauses noise) didn't catch this
+  // because "thank you very much" wasn't an exact NOISE_PATTERN.
+  // Adding common gratitude/farewell wrap-up variants so the
+  // concatenated-clause check covers them too.
+  'thank you very much', 'thank you so much', 'thanks a lot',
+  'thanks so much', 'thanks very much', 'thank you again',
+  'thanks again', 'cheers',
+  'see you', 'see you later', 'see you next time', 'see ya',
+  'have a good day', 'have a nice day', 'have a great day',
+  'take care', 'goodbye everyone',
 ]);
 
 // Longer Whisper hallucinations — typically YouTube video outros or subtitle
