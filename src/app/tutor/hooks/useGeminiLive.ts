@@ -737,6 +737,13 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     resumeSpeakText: (sentences: string[]) => {
       console.warn('[Gemini] resumeSpeakText called but relay mode is not supported on Gemini Live.', { count: sentences.length });
     },
+    // Q9 stubs for shared RealtimeResult shape. Gemini Live's perception
+    // pathway doesn't surface cancel events through this hook, so the
+    // interrupted signal is always false here.
+    isInterrupted: false,
+    markInterrupted: (): void => {
+      // No-op on Gemini Live — perception cancels don't route through here.
+    },
     unlockAudio: () => {
       // No-op for Gemini Live; iOS audio-unlock is a Realtime-engine concern.
     },

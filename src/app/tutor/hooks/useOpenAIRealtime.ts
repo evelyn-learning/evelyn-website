@@ -202,6 +202,24 @@ export interface RealtimeResult {
   state: RealtimeState;
   isConnected: boolean;
   isSpeaking: boolean;
+  /**
+   * Voice Perception Q9 (2026-06-16). True for ~300ms after a perception
+   * cancel fires; auto-clears. UI consumers (mic indicator, button
+   * row, typed-input form) read this to render a yellow-flash and
+   * briefly disable interactions, giving the student a visible "I
+   * heard you" signal even before the classifier verdict resolves.
+   * Independent of the underlying state machine — `state` keeps
+   * evolving normally underneath.
+   */
+  isInterrupted: boolean;
+  /**
+   * Voice Perception Q9 (2026-06-16). Called by the perception cancel
+   * handlers in VoiceTutorRealtime (onSpeechStart cancel, retro-cancel
+   * useEffect, dev __tutorForceFalseBargein trigger) to enter the
+   * 'interrupted' transient signal. Idempotent — repeated calls
+   * restart the 300ms window cleanly.
+   */
+  markInterrupted: () => void;
   error: Error | null;
   connect: () => Promise<void>;
   prefetchToken: () => Promise<string | null>;
@@ -514,6 +532,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   const [state, setState] = useState<RealtimeState>('disconnected');
   const [error, setError] = useState<Error | null>(null);
+  // Voice Perception Q9 (2026-06-16): transient signal flag that's true
+  // for ~300ms after a perception cancel fires. Layered on top of the
+  // existing state machine — the underlying `state` ('speaking',
+  // 'listening', 'processing') continues evolving normally; the UI
+  // checks isInterrupted independently to render a yellow-flash on the
+  // mic indicator + briefly disable buttons. Auto-clears after the
+  // window so the signal is bounded; markInterrupted is idempotent
+  // (back-to-back cancels restart the window cleanly).
+  const [isInterrupted, setIsInterrupted] = useState(false);
+  const interruptedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep audio chunk callbacks in refs to avoid stale closures in onaudioprocess
   const onStudentAudioChunkRef = useRef(onStudentAudioChunk);
@@ -2564,6 +2592,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, [speakText]);
 
+  // Voice Perception Q9 (2026-06-16): enter the 'interrupted' transient
+  // signal for 300ms. Restarts the window cleanly if called again before
+  // the timer fires.
+  const markInterrupted = useCallback(() => {
+    setIsInterrupted(true);
+    if (interruptedTimerRef.current) {
+      clearTimeout(interruptedTimerRef.current);
+    }
+    interruptedTimerRef.current = setTimeout(() => {
+      setIsInterrupted(false);
+      interruptedTimerRef.current = null;
+    }, 300);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -2575,6 +2617,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     state,
     isConnected: state !== 'disconnected' && state !== 'connecting' && state !== 'error',
     isSpeaking: state === 'speaking',
+    isInterrupted,
+    markInterrupted,
     error,
     connect,
     prefetchToken,

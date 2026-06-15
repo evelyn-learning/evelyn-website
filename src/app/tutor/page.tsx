@@ -186,6 +186,12 @@ function TutorPage() {
   const [paceBias, setPaceBias] = useState(0);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Voice Perception Q9 (2026-06-16): true for ~300ms after a perception
+  // cancel fires. Drives the yellow-flash on the typed-input area to give
+  // the student a visible "I heard you" signal even before the classifier
+  // verdict resolves. Forwarded from VoiceTutorRealtime via the
+  // onInterruptedChange callback.
+  const [isPerceptionInterrupted, setIsPerceptionInterrupted] = useState(false);
 
   // Stage 4: humor preference accessor for the in-session ⋯ menu chip.
   // localStorage-only here (no studentId on this page yet); the settings
@@ -2265,6 +2271,7 @@ function TutorPage() {
                     if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
                     paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
                   }}
+                  onInterruptedChange={setIsPerceptionInterrupted}
                   onBeforeTypedSubmit={handleBeforeTypedSubmit}
                   onProposePlanSwap={handleProposePlanSwap}
                   onConfirmPlanLos={handleConfirmPlanLos}
@@ -2314,7 +2321,15 @@ function TutorPage() {
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Type your message..."
                   disabled={isProcessing}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  // Q9: yellow ring during the perception-cancel transient
+                  // window (~300ms) so the student sees a visible "I heard
+                  // you" signal even before the classifier verdict
+                  // resolves.
+                  className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${
+                    isPerceptionInterrupted
+                      ? 'border-yellow-400 ring-4 ring-yellow-400 ring-opacity-50'
+                      : 'border-gray-300'
+                  }`}
                 />
                 <button
                   type="submit"

@@ -343,6 +343,12 @@ interface VoiceTutorRealtimeProps {
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
   onPaceBiasChange?: (bias: number) => void;
+  /** Voice Perception Q9 (2026-06-16). Fires true when a perception
+   *  cancel fires (yellow-flash window opens) and false ~300ms later
+   *  when the window closes. Parent uses this to render a visible
+   *  "I heard you" signal on the input area + briefly disable typed
+   *  input / quick-answer buttons. */
+  onInterruptedChange?: (interrupted: boolean) => void;
   /** Fires before a typed student message is forwarded to the brain.
    *  When set, the parent can intercept (e.g. to detect a freestyle
    *  study-text paste and kick off plan generation). The promise's
@@ -470,6 +476,7 @@ export function VoiceTutorRealtime({
   onLessonPlanProgress,
   onTutorBusy,
   onPaceBiasChange,
+  onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
   onConfirmPlanLos,
@@ -8555,7 +8562,12 @@ export function VoiceTutorRealtime({
     try { inFlightBrainAbortRef.current?.abort(); } catch {}
     try { void clearSpeechQueueRef.current?.(); } catch {}
     productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
-  }, [realtime.state, perceptionStage, onDebugEvent]);
+    // Q9 (2026-06-16): visible signal to the student that we heard
+    // them — yellow flash on the mic indicator + briefly disabled
+    // buttons / typed input for ~300ms. Independent of the verdict
+    // resolution downstream.
+    realtime.markInterrupted();
+  }, [realtime, perceptionStage, onDebugEvent]);
 
   const perception = usePerceptionWS({
     enabled: perceptionEnabled,
@@ -8957,8 +8969,10 @@ export function VoiceTutorRealtime({
         // hardware-disabled (useOpenAIRealtime ~line 691) so the dedupe
         // is mostly inert; harmless to arm anyway.
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+        // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
+        realtime.markInterrupted();
       }
-    }, [onDebugEvent, perceptionStage]),
+    }, [onDebugEvent, perceptionStage, realtime]),
     onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // Stage 3 fix #4: clear mid-utterance flag.
@@ -9050,6 +9064,8 @@ export function VoiceTutorRealtime({
       // Arm dedupe so a concurrent production-WS transcript doesn't
       // sneak through as a second brain turn (matches real-cancel flow).
       productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+      // Q9: visible signal parity with the real cancel sites.
+      realtime.markInterrupted();
       // Dispatch RESTORE on a short delay so the abort/finally chain
       // completes first (brainBusyRef releases, queue clears).
       setTimeout(() => {
@@ -9504,6 +9520,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }
   }, [isWarmingUp, realtime.state, onTutorBusy, streamingEntryActive]);
 
+  // Q9: forward the perception-cancel transient signal to the parent
+  // so it can render a visible "I heard you" flash on the input area
+  // while the classifier verdict is pending. Independent of onTutorBusy
+  // (which tracks brain composition state).
+  useEffect(() => {
+    onInterruptedChange?.(realtime.isInterrupted);
+  }, [realtime.isInterrupted, onInterruptedChange]);
+
   return (
     <div className="voice-tutor-realtime flex items-center gap-2 sm:gap-3 py-2 px-2 flex-wrap">
       {/* Connection indicator — hide on mobile to save horizontal room */}
@@ -9550,6 +9574,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               ${stateUI.color}
               ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
               ${stateUI.pulse ? 'animate-pulse' : ''}
+              ${realtime.isInterrupted ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''}
             `}
           >
             {stateUI.icon}
