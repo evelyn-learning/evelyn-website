@@ -533,6 +533,12 @@ export function VoiceTutorRealtime({
   sessionMaxMinutes = 30,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
+  // Sync mirror of isMicMuted for the perception onTranscript callback,
+  // which needs the live value synchronously to drop transcripts that were
+  // already in flight when the student muted (perception latency is 5–14s,
+  // so a transcript can arrive well after the mute click).
+  const isMicMutedRef = useRef(false);
+  isMicMutedRef.current = isMicMuted;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Transient whiteboard status — e.g. "rendering problem…" when a tool
   // call gets dropped so the student sees the system is responding without
@@ -5906,8 +5912,31 @@ export function VoiceTutorRealtime({
           await speakKillBridge();
         };
 
+        // Dev-only forced kill (window.__tutorForceKill). Fires a synthetic
+        // content kill once at least one sentence is audible — deterministically
+        // exercising the judge-kill Stage 3.1 snapshot → bridge-suppress →
+        // retry → restate/resume path without a real validator rejection.
+        // Checked at the top of the loop (so it catches sentences that became
+        // audible via a gate flush, not just inside a sentence event) and once
+        // after stream-end (so a short, fully-gated turn still fires). The
+        // armed flag PERSISTS across turns until it actually fires, so arming
+        // between turns or on a too-short turn still lands on the next one.
+        const tryForceKill = async (): Promise<void> => {
+          if (!forceKillPendingRef.current) return;
+          if (attemptKilled || attempt >= MAX_VALIDATOR_RETRIES) return;
+          if (audibleSentenceCount < 1) return;
+          const forcedReason = forceKillPendingRef.current;
+          forceKillPendingRef.current = null;
+          rejectionsThisAttempt.push({ action: 'dev_forced_kill', reason: forcedReason });
+          const tailLen = peekSpeechQueueRef.current?.()?.length ?? 0;
+          console.warn(`[brain-orchestrator] dev __tutorForceKill: synthetic content kill after ${audibleSentenceCount} audible sentence(s), tail=${tailLen}${tailLen === 0 ? ' (no resumable tail — speak a longer explanation to test the resume path)' : ''}`);
+          onDebugEvent?.('dev_forced_kill', `audible=${audibleSentenceCount} tail=${tailLen}`);
+          await performKill();
+        };
+
         try {
           while (true) {
+            await tryForceKill();
             const { done, value } = await reader.read();
             if (done) break;
             buf += decoder.decode(value, { stream: true });
@@ -6272,26 +6301,6 @@ export function VoiceTutorRealtime({
                       // judge-kill Stage 3.1 resume hold/decision.
                       emitBrainSpeak(sentenceForSpeech);
                     }
-                  }
-                  // Dev-only forced kill (window.__tutorForceKill). Once
-                  // armed, fire a synthetic content kill right after the
-                  // first audible sentence — deterministically exercising the
-                  // judge-kill Stage 3.1 snapshot → bridge-suppress → retry →
-                  // restatement/resume path without needing a real structural
-                  // validator rejection. The armed string becomes the retry's
-                  // rejection reason (steers restate-vs-correct).
-                  if (
-                    forceKillPendingRef.current &&
-                    !attemptKilled &&
-                    attempt < MAX_VALIDATOR_RETRIES &&
-                    audibleSentenceCount >= 1
-                  ) {
-                    const forcedReason = forceKillPendingRef.current;
-                    forceKillPendingRef.current = null;
-                    rejectionsThisAttempt.push({ action: 'dev_forced_kill', reason: forcedReason });
-                    console.warn(`[brain-orchestrator] dev __tutorForceKill: synthetic content kill after ${audibleSentenceCount} audible sentence(s)`);
-                    onDebugEvent?.('dev_forced_kill', `audible=${audibleSentenceCount}`);
-                    await performKill();
                   }
                   // Streaming reveal in the chat: incrementally append
                   // each sentence to a tutor entry so the student sees
@@ -7126,6 +7135,12 @@ export function VoiceTutorRealtime({
         if (!skipNoAdvanceAtStreamEnd) {
           openGate();
         }
+
+        // Dev forced kill: a short, fully-gated turn flushes its only
+        // sentence at stream-end (above), so audibleSentenceCount becomes ≥1
+        // only now — fire here too so __tutorForceKill lands even on
+        // single-sentence turns (the in-loop check ran before the flush).
+        await tryForceKill();
 
         // Judge-kill Stage 3.1: if this was a post-kill retry whose opener
         // we were still HOLDING (stream ended before we had ≥4 content
@@ -8882,6 +8897,17 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
 
+      // Mute gate (2026-06-16). Drop any transcript that arrives while the
+      // student is muted. The perception mic stops appending audio on mute
+      // (usePerceptionWS.setMuted), but a transcript captured BEFORE the
+      // mute can still land here up to ~14s later — this catches it so a
+      // muted student never triggers a brain turn from ambient sound.
+      if (isMicMutedRef.current) {
+        console.warn(`[PERCEPTION] dropped — student muted: ${JSON.stringify(t.text).slice(0, 80)}`);
+        onDebugEvent?.('perception_dropped_muted', t.text.slice(0, 80));
+        return;
+      }
+
       // Stage 3 fix #6 (2026-05-28): apply the SAME noise filter the
       // production WS uses (line 1310). Whisper has well-known
       // hallucinations from its YouTube training data — "Thanks for
@@ -9626,6 +9652,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const toggleMicMute = useCallback(() => {
     setIsMicMuted((prev) => {
       const newMuted = !prev;
+      isMicMutedRef.current = newMuted;
+      // Gate BOTH inputs. perception owns the mic now (Stage 4), so muting
+      // only the production WS left perception transcribing ambient sound
+      // (observed: train announcements fired brain turns while "muted").
+      perception.setMuted(newMuted);
       if (newMuted) {
         realtime.muteInput();
         console.log('[VoiceTutorRealtime] Student mic muted (buffer cleared)');
@@ -9647,7 +9678,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       }
       return newMuted;
     });
-  }, [realtime, onDebugEvent]);
+  }, [realtime, perception, onDebugEvent]);
 
   // Handle user's "continue" choice on the 55-min rotation prompt. We
   // disconnect the current session and immediately reconnect; on fresh

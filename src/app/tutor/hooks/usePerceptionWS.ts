@@ -83,6 +83,9 @@ export interface UsePerceptionWSResult {
    *  Start button so the perception WS comes up alongside the production WS. */
   connect: () => Promise<void>;
   disconnect: () => void;
+  /** Mute/unmute the perception mic. Wired to the student mute button so
+   *  muting actually stops input now that perception owns the mic (Stage 4). */
+  setMuted: (muted: boolean) => void;
 }
 
 const PERCEPTION_SAMPLE_RATE = 24000;
@@ -186,6 +189,12 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  // Mute gate (2026-06-16). With perception as the sole input authority,
+  // the student mute button must gate THIS mic — otherwise muting only
+  // silences the (now input-less) production WS while perception keeps
+  // transcribing ambient sound (observed: train announcements fired brain
+  // turns while "muted"). When true, onaudioprocess stops appending audio.
+  const mutedRef = useRef<boolean>(false);
   const sessionUpdateSentRef = useRef<boolean>(false);
   const perceptionT0Ref = useRef<number>(0);
   const speechStartedAtRef = useRef<number>(0);
@@ -310,6 +319,8 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       processor.onaudioprocess = (e) => {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        // Muted: don't forward audio to the perception transcriber.
+        if (mutedRef.current) return;
         const inputData = e.inputBuffer.getChannelData(0);
         const resampled = captureRate === PERCEPTION_SAMPLE_RATE
           ? inputData
@@ -575,5 +586,20 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     };
   }, [logPrefix, state]);
 
-  return { state, connect, disconnect };
+  // Mute / unmute the perception mic. Called by the student mute button so
+  // muting actually stops input now that perception owns the mic. On mute we
+  // also clear the server-side input buffer so a partial utterance captured
+  // before the mute doesn't transcribe afterward.
+  const setMuted = useCallback((muted: boolean) => {
+    mutedRef.current = muted;
+    if (muted) {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try { ws.send(JSON.stringify({ type: 'input_audio_buffer.clear' })); } catch {}
+      }
+    }
+    console.warn(`${logPrefix} mic ${muted ? 'muted' : 'unmuted'}`);
+  }, [logPrefix]);
+
+  return { state, connect, disconnect, setMuted };
 }
