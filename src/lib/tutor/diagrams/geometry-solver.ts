@@ -2323,8 +2323,15 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   // resolve.
   const givens = spec.given ?? [];
   for (const g of givens) {
-    if (g.kind === 'point') {
-      setObject(state, { kind: 'point', id: g.id, x: g.x, y: g.y, label: g.label });
+    // Tolerate a given point that omits `kind:"point"` but carries numeric
+    // x/y — the brain is inconsistent about including the discriminant
+    // (observed 2026-06-16 geometry session: given:[{id:"A",x:0,y:0},…]
+    // with no kind → A/B/C never registered → polygon vertices unresolved →
+    // an empty axes-only render). Treat any kindless x/y entry as a point.
+    const gx = (g as { x?: number }).x;
+    const gy = (g as { y?: number }).y;
+    if (g.kind === 'point' || (g.kind === undefined && Number.isFinite(gx) && Number.isFinite(gy))) {
+      setObject(state, { kind: 'point', id: g.id, x: gx as number, y: gy as number, label: (g as { label?: string }).label });
     }
   }
   for (const g of givens) {
@@ -2496,6 +2503,24 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     }
     // Lines are not directly rendered — they're construction scaffolding.
     // If a brain wants a line drawn it should also emit a long segment.
+  }
+
+  // Zero-drawable guard. A spec that resolves to nothing visible (e.g. given
+  // points the loader couldn't register, or steps that all reference
+  // unresolved ids) would otherwise render as a blank axes-only frame while
+  // the tutor narrates a figure the student can't see (observed 2026-06-16
+  // geometry session). Throw so the orchestrator's solver pre-check rejects
+  // it and the brain retries with a corrected spec, rather than shipping an
+  // empty board.
+  if (
+    points.length === 0 && segments.length === 0 && circles.length === 0 &&
+    polygons.length === 0 && arcs.length === 0 && anglesOut.length === 0 &&
+    conics.length === 0
+  ) {
+    throw new Error(
+      'construction produced nothing drawable — every given/step reference failed to resolve. ' +
+      'Declare each given point with kind:"point" and x/y, and make sure step references (vertices, from/to, etc.) match declared ids.',
+    );
   }
 
   return {
