@@ -266,15 +266,27 @@ function judgeKillContentWords(s: string): string[] {
 function judgeKillNumericTokens(s: string): string[] {
   return s.match(/\d+(?:[./]\d+)?%?/g) ?? [];
 }
-/** True when `retry` is a re-statement of `killed` (≥60% content-word
- *  overlap relative to the retry text) AND introduces no number absent
- *  from `killed` (so a value correction is never mistaken for a restatement). */
+/** True when `retry` is a re-statement of `killed`: ≥60% content-word
+ *  overlap relative to the SHORTER text, ≥2 shared content words, AND no
+ *  number in `retry` absent from `killed` (so a value correction is never
+ *  mistaken for a restatement).
+ *
+ *  The min-denominator matters: the killed text is captured at kill time, so
+ *  it's a truncated prefix (often a single sentence — the kill fires mid-
+ *  stream), while a faithful retry re-delivers the FULL response. Dividing by
+ *  the retry length systematically under-scored faithful restatements
+ *  (observed 2026-06-16: an IDENTICAL retry scored 0.23 and wrongly "diverged"
+ *  because the killed snippet was a 1-sentence prefix of the 3-sentence
+ *  retry). Relative-to-shorter treats "killed ⊆ retry" as the strong
+ *  restatement signal it is. */
 function isJudgeKillRestatement(retry: string, killed: string): boolean {
-  const rWords = judgeKillContentWords(retry);
-  if (rWords.length === 0) return false;
-  const kWords = new Set(judgeKillContentWords(killed));
-  const overlap = rWords.filter((w) => kWords.has(w)).length / rWords.length;
-  if (overlap < 0.6) return false;
+  const rSet = new Set(judgeKillContentWords(retry));
+  const kSet = new Set(judgeKillContentWords(killed));
+  if (rSet.size === 0 || kSet.size === 0) return false;
+  let shared = 0;
+  for (const w of rSet) if (kSet.has(w)) shared++;
+  const overlap = shared / Math.min(rSet.size, kSet.size);
+  if (shared < 2 || overlap < 0.6) return false;
   const kNums = new Set(judgeKillNumericTokens(killed));
   if (judgeKillNumericTokens(retry).some((n) => !kNums.has(n))) return false;
   return true;
@@ -683,6 +695,15 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // Opening-turn barge-in guard (2026-06-16). The very first brain turn is
+  // a synthetic kickoff ([start lesson] / [start session]) — the student
+  // isn't responding to anything yet, so a perception "barge-in" here is
+  // almost always ambient noise (observed live: a train announcement
+  // retro-cancelled the opening turn, the utterance never resolved to a
+  // transcript so RESTORE never re-fired, and the lesson stalled with a
+  // seemingly-dead start button). We suppress perception-initiated cancels
+  // until the first brain turn completes; flips true at the first "turn ok".
+  const tutorFirstTurnDoneRef = useRef<boolean>(false);
   // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
   // flag. If perception WS misses a speech_stopped event (network blip,
   // server bug), the flag would stay stuck → all subsequent brain
@@ -893,6 +914,29 @@ export function VoiceTutorRealtime({
   // silently discarded. Queue overlapping utterances and combine them
   // into one follow-up call after the in-flight one completes.
   const brainBusyRef = useRef(false);
+  // State mirror of brainBusyRef purely for the status pill. getStatusDisplay
+  // reads the ref, but a ref change doesn't re-render — during a long
+  // render-only phase (e.g. a 48s Skip turn dumping a formula sheet) there's no
+  // state change to refresh the status, so it goes stale on "Click to speak"
+  // (observed 2026-06-16 JEE Skip turn). Driving the status off this state
+  // guarantees a re-render whenever the brain starts/stops composing. Always
+  // flip both together via setBrainBusy so the ref stays the synchronous source
+  // of truth for the gating logic that reads it mid-turn.
+  const [isBrainResponding, setIsBrainResponding] = useState(false);
+  const setBrainBusy = useCallback((v: boolean) => {
+    brainBusyRef.current = v;
+    setIsBrainResponding(v);
+  }, []);
+  // True iff the most recent brain call actually threw AbortError (a perception
+  // cancel that landed mid-stream). Reset at the start of every brain attempt,
+  // set in the AbortError catch. The RESTORE-after-noise path reads this to
+  // avoid the race where a barge-in fires while the brain is in flight but the
+  // stream FINISHES before the abort propagates: the cancel-time
+  // `brainWasInFlight` snapshot says "true" yet the turn completed normally, so
+  // re-firing the original transcript duplicates an already-delivered answer
+  // (observed 2026-06-16 JEE session: "Yeah, yeah, yeah." noise during TTS of a
+  // completed turn re-fired "Perpendicular to BNC?" → duplicate turn).
+  const brainTurnAbortedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
 
   // Variable-name continuity: track declared functions across the session.
@@ -2669,6 +2713,26 @@ export function VoiceTutorRealtime({
             console.warn('[VoiceTutorRealtime] Dimensional mismatch:', result.issues);
             onDebugEvent?.('dim_mismatch',
               `${latex.slice(0, 80)} (${label}) — ${(result.issues || []).join('; ')}`);
+            // Confidence gate (2026-06-16): this validator is unreliable on
+            // SYMBOLIC physics — it maps single-letter VARIABLES onto base
+            // dimension symbols (so "L = I\omega", angular momentum, reads L as
+            // Length), can't parse implicit multiplication ("I\omega" → one
+            // unknown symbol "Iomega"), and bails on multi-part formulas. Each
+            // such case produced a FALSE "PHYSICS CORRECTION" injected into the
+            // brain (observed 2026-06-16 JEE session, 4× on a correct L=Iω).
+            // Only inject when the parse looks trustworthy: drop it when the
+            // issues admit unknown / assumed-dimensionless symbols or an
+            // unsupported multi-equation, or when the LHS is a lone letter that
+            // collides with a dimension symbol (L/M/T/I/N/J) — the exact cases
+            // it gets wrong. Telemetry above still fires for tuning.
+            const issuesText = (result.issues || []).join(' ').toLowerCase();
+            const lowConfidence = /unknown symbol|assumed dimensionless|single[- ]equation|only single/.test(issuesText);
+            const lhs = latex.split('=')[0].replace(/\\[a-zA-Z]+|[{}\\\s$]/g, '').trim();
+            const lhsCollidesWithDimension = /^[LMTINJ]$/.test(lhs);
+            if (lowConfidence || lhsCollidesWithDimension) {
+              onDebugEvent?.('dim_mismatch_suppressed', `lhs=${lhs || '?'} — ${issuesText.slice(0, 80)}`);
+              return;
+            }
             if (injectContextRef.current) {
               injectContextRef.current(
                 `PHYSICS CORRECTION: The formula "${latex}" labeled "${label}" does not check out dimensionally. ` +
@@ -5401,6 +5465,14 @@ export function VoiceTutorRealtime({
       // tail instead of re-speaking the overlap. null = no pending resume.
       let judgeKillResumeSnapshot: string[] | null = null;
       let judgeKillResumeKilledText: string | null = null;
+      // Count of sentences the killed attempt DISPATCHED to TTS before the
+      // kill (== audibleSentenceCount at kill time). The snapshot is the
+      // unplayed subset of these, so this is the total content already
+      // accounted for by (heard-before-kill + snapshot replay). A restatement
+      // retry re-delivers these N sentences AND any further sentences the
+      // brain only emits AFTER the kill point — those extras must still be
+      // spoken, so the suppress-audio path speaks retry sentences beyond N.
+      let judgeKillResumeCoveredCount = 0;
       // E3 — renderer-error spoken bridge. When the FIRST kill of this
       // turn fires (validator rejection / RULE8 / judge / show_problem
       // block), we cancel the audio queue + speak a brief acknowledgment
@@ -5563,6 +5635,9 @@ export function VoiceTutorRealtime({
         // ref, signal is never aborted, fetch behaves identically.
         const brainAbort = new AbortController();
         inFlightBrainAbortRef.current = brainAbort;
+        // Fresh attempt — clear the aborted flag; only an AbortError this
+        // attempt re-sets it (see the RESTORE-after-noise guard).
+        brainTurnAbortedRef.current = false;
         const res = await fetch('/api/tutor/brain/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -5725,8 +5800,16 @@ export function VoiceTutorRealtime({
         const resumeSnapshot: string[] = judgeKillResumeSnapshot ?? [];
         const resumeKilledText: string = judgeKillResumeKilledText ?? '';
         const resumeArmed = resumeSnapshot.length > 0;
+        // Sentences the killed attempt already covered (heard + snapshot). On a
+        // restatement, retry sentences at index ≤ this are suppressed (audio
+        // comes from the snapshot replay); sentences BEYOND it are content the
+        // kill pre-empted and must still be spoken. `resumeRetryCount` tracks
+        // the retry's running sentence index through emitBrainSpeak.
+        const resumeCoveredCount = judgeKillResumeCoveredCount;
+        let resumeRetryCount = 0;
         judgeKillResumeSnapshot = null;
         judgeKillResumeKilledText = null;
+        judgeKillResumeCoveredCount = 0;
         // Decision bookkeeping: until we've seen enough of the retry's
         // opener to judge restatement-vs-correction, its sentences are HELD
         // (not spoken). Once decided: restatement → replay the snapshot and
@@ -5791,6 +5874,14 @@ export function VoiceTutorRealtime({
             );
             onDebugEvent?.('judge_kill_resume', `${resumeSnapshot.length} sentences`);
             resumeSpeakTextRef.current?.(resumeSnapshot);
+            // Held sentences beyond the covered range are NEW content the kill
+            // fired before the brain emitted (so the snapshot can't carry
+            // them). The held opener's array index i maps to retry sentence
+            // index i+1 — speak the ones past resumeCoveredCount so the turn
+            // doesn't end abruptly after the replay.
+            resumeHeldSentences.forEach((s, i) => {
+              if (i + 1 > resumeCoveredCount && !speakTextGated()) speakOne(s);
+            });
           } else {
             resumeSuppressAudio = false;
             // Speak the opener we held while deciding, then continue live.
@@ -5817,6 +5908,9 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('speak_text_gated_emit', s.slice(0, 80));
             return;
           }
+          // Count every retry sentence (held or not) so the suppress path can
+          // tell which ones the snapshot already covers vs. which are new.
+          if (resumeArmed) resumeRetryCount++;
           if (resumeArmed && !resumeDecided) {
             // Hold the opener until we have enough signal to judge
             // restatement-vs-correction (a sentence/buffer with ≥4 content
@@ -5830,9 +5924,16 @@ export function VoiceTutorRealtime({
             return;
           }
           if (resumeArmed && resumeDecided && resumeSuppressAudio) {
-            // Audio is supplied by the replayed snapshot; this retry's
-            // sentences are chat-only (the chat update happens at the call
-            // site after this returns).
+            // Restatement path. Sentences within the killed attempt's covered
+            // range get their audio from the snapshot replay → chat-only here.
+            // But a kill that fired early (e.g. after sentence 1) never saw the
+            // brain's later sentences, so the snapshot can't cover them — those
+            // would be silently dropped (observed 2026-06-16: tutor spoke the
+            // first sentence then went quiet on the rest). Speak retry
+            // sentences beyond the covered range so the turn finishes.
+            if (resumeRetryCount > resumeCoveredCount) {
+              speakOne(s);
+            }
             return;
           }
           speakOne(s);
@@ -5895,6 +5996,7 @@ export function VoiceTutorRealtime({
             if (tail.length > 0) {
               judgeKillResumeSnapshot = tail;
               judgeKillResumeKilledText = attemptText;
+              judgeKillResumeCoveredCount = audibleSentenceCount;
               onDebugEvent?.('judge_kill_snapshot', `${tail.length} unplayed · heard=${audibleSentenceCount}`);
               // Resume is armed → SUPPRESS the kill bridge (user feedback
               // 2026-06-16). The retry either replays the snapshot as a
@@ -6209,12 +6311,39 @@ export function VoiceTutorRealtime({
                   // false-positive drops of legit short echoes.
                   const dedupNorm = normalizeForDedup(finalSentence);
                   const wordCount = dedupNorm ? dedupNorm.split(/\s+/).filter(Boolean).length : 0;
-                  if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm)) {
+                  // Judge-kill Stage 3.1 (2026-06-16): suppress this cross-turn
+                  // dedup while a resume is armed. A post-kill RESTATEMENT retry
+                  // re-delivers the killed content verbatim, so every sentence
+                  // trips this dedup and `continue`s out BEFORE reaching
+                  // emitBrainSpeak. That starves the resume hold —
+                  // resumeHeldText stays empty, so decideResume misclassifies
+                  // the restatement as "diverged" and DISCARDS the snapshot,
+                  // leaving the unplayed tail never spoken (silent retry +
+                  // status stuck on "Click to speak", observed 2026-06-16 SAT
+                  // session via __tutorForceKill). It also empties the retry's
+                  // fresh chat entry (the killed attempt's was already removed
+                  // on retry). While resumeArmed, let emitBrainSpeak own the
+                  // hold/decision instead: a restatement suppresses this retry's
+                  // audio (the snapshot supplies it) and a correction speaks
+                  // live — neither double-speaks, so the dedup adds no value here.
+                  if (wordCount >= 4 && sentencesSpokenThisTurn.has(dedupNorm) && !resumeArmed) {
                     console.log('[brain-orchestrator] dropped duplicate sentence:', JSON.stringify(updatedSentence.slice(0, 80)));
                     onDebugEvent?.('duplicate_sentence_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
-                  if (wordCount >= 4) sentencesSpokenThisTurn.add(dedupNorm);
+                  // Only record sentences the student actually HEARD. A killed
+                  // attempt keeps streaming after performKill (gated from audio
+                  // by the `if (!attemptKilled)` block below), so its post-kill
+                  // sentences were never spoken — adding them here would make
+                  // the dedup drop them on the re-delivery retry, silencing
+                  // them for good (observed 2026-06-16 JEE session: the kill's
+                  // tail=0 path armed no resume, so the retry's verbatim
+                  // "What do you think the slope…?" matched a gated attempt-0
+                  // emission and was dropped — the student never heard the
+                  // question). Gating the add on !attemptKilled keeps the
+                  // within-turn duplicate guard for real double-emissions while
+                  // letting a post-kill retry re-speak content that was cut off.
+                  if (wordCount >= 4 && !attemptKilled) sentencesSpokenThisTurn.add(dedupNorm);
                   totalSentenceCount++;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   // KEEP markdown emphasis (*word*, **strong**) in the
@@ -6345,8 +6474,15 @@ export function VoiceTutorRealtime({
                       ...transcriptRef.current.slice(existingIdx + 1),
                     ];
                   } else {
+                    // A retry bubble is now appearing — drop any dimmed
+                    // ("revising") bubbles from THIS turn that the kill left in
+                    // place for the hand-off, so the fresh bubble replaces them
+                    // smoothly instead of stacking beside them.
+                    const turnStreamingPrefix = `tutor-streaming-${t0}-`;
                     transcriptRef.current = [
-                      ...transcriptRef.current,
+                      ...transcriptRef.current.filter(
+                        (e) => !(e.revising && typeof e.id === 'string' && e.id.startsWith(turnStreamingPrefix)),
+                      ),
                       {
                         id: streamingId,
                         timestamp: new Date(),
@@ -7984,16 +8120,23 @@ export function VoiceTutorRealtime({
               : renderIdsThisAttempt;
           rollbackKilledRenders(retryRollbackTargets);
         }
-        // Remove the killed attempt's streaming entry from the chat
-        // before the next attempt creates a fresh one. Without this,
-        // the user would see the killed text remain alongside the new
-        // attempt's text — and even with attempt-suffixed ids, the
-        // killed entry is no longer the canonical "what the tutor
-        // said" so it shouldn't linger in the transcript.
+        // DIM (don't yank) the killed attempt's streaming bubble. A retry is
+        // coming, so instead of removing the text — which leaves a blank gap
+        // until the retry re-streams seconds later (jarring, esp. on a slow
+        // link) — we mark it `revising` so TranscriptView fades it. The new
+        // attempt's bubble removes all revising bubbles for this turn the
+        // moment it starts streaming (see the streaming-reveal block), giving
+        // a smooth dim → replace hand-off rather than vanish → reappear.
         const killedStreamingId = `tutor-streaming-${t0}-${attempt}`;
-        const beforeLen = transcriptRef.current.length;
-        transcriptRef.current = transcriptRef.current.filter((e) => e.id !== killedStreamingId);
-        if (transcriptRef.current.length !== beforeLen) {
+        let changedRevise = false;
+        transcriptRef.current = transcriptRef.current.map((e) => {
+          if (e.id === killedStreamingId && !e.revising) {
+            changedRevise = true;
+            return { ...e, revising: true, streaming: false };
+          }
+          return e;
+        });
+        if (changedRevise) {
           onTranscriptUpdate([...transcriptRef.current]);
         }
       }
@@ -8007,6 +8150,9 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      // Opening-turn barge-in guard: the first brain turn has now landed, so
+      // perception-initiated cancels are safe to honour from here on.
+      tutorFirstTurnDoneRef.current = true;
 
       // Pacing v2 — Phase 1 (inert): streak update from brain
       // affirmation/correction. Runs ONCE per brain turn at end-of-stream
@@ -8104,6 +8250,22 @@ export function VoiceTutorRealtime({
       // setStreamingEntryActive(false) call inside the fullText branch.
       setStreamingEntryActive(false);
 
+      // Drop any leftover dimmed ("revising") bubbles from this turn. The
+      // streaming-reveal block clears them when a retry bubble appears, but a
+      // retry that emits no chat text (tool-only) would otherwise strand the
+      // dimmed bubble. Also keeps the finalize findIndex below from latching
+      // onto a revising entry instead of the winning one.
+      {
+        const turnStreamingPrefix = `tutor-streaming-${t0}-`;
+        const beforeRevise = transcriptRef.current.length;
+        transcriptRef.current = transcriptRef.current.filter(
+          (e) => !(e.revising && typeof e.id === 'string' && e.id.startsWith(turnStreamingPrefix)),
+        );
+        if (transcriptRef.current.length !== beforeRevise) {
+          onTranscriptUpdate([...transcriptRef.current]);
+        }
+      }
+
       // Empty-turn fallback. Brain produced neither text nor tool calls.
       if (!fullText.trim() && totalToolNamesSeen.length === 0) {
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
@@ -8196,6 +8358,7 @@ export function VoiceTutorRealtime({
         (err instanceof DOMException && err.name === 'AbortError') ||
         (err instanceof Error && /abort/i.test(err.message));
       if (isAbort) {
+        brainTurnAbortedRef.current = true;
         console.log('[brain-orchestrator] aborted (perception-initiated cancel)');
         // Clean up the streaming chat entries so the cursor doesn't
         // keep blinking; do NOT speak a fallback line.
@@ -8315,7 +8478,7 @@ export function VoiceTutorRealtime({
       queuedTranscriptsRef.current.push(transcript);
       return;
     }
-    brainBusyRef.current = true;
+    setBrainBusy(true);
     // Stage 4 regression fix (2026-06-16): show the 'processing' ("Thinking…")
     // indicator while the brain fetch is in flight. The production WS no
     // longer transcribes input (perception is the sole input authority), so
@@ -8354,7 +8517,7 @@ export function VoiceTutorRealtime({
     const watchdog = setTimeout(() => {
       if (brainBusyRef.current) {
         console.warn('[brain-orchestrator] watchdog: brain stuck > 90s — force-resetting busy flag');
-        brainBusyRef.current = false;
+        setBrainBusy(false);
         queuedTranscriptsRef.current = [];
         onDebugEvent?.('brain_watchdog_reset', '90s timeout');
       }
@@ -8459,7 +8622,7 @@ export function VoiceTutorRealtime({
       }
     } finally {
       clearTimeout(watchdog);
-      brainBusyRef.current = false;
+      setBrainBusy(false);
       // Clear the thinking indicator. No-op if TTS already promoted the
       // state to 'speaking' (signalBrainThinking only resets when still
       // 'processing'), so a turn that produced audio is unaffected; this
@@ -8583,9 +8746,15 @@ export function VoiceTutorRealtime({
       // twice more). When brainWasInFlight is false, treat
       // noise/filler/drop_self_voice as DROP — TTS is already drained
       // by the cancel-site clearSpeechQueue, no re-fire needed.
-      if (!checkpoint.brainWasInFlight) {
+      // Two ways the original turn is already safely delivered → DROP rather
+      // than re-fire (either would duplicate an answer the student already got):
+      //   (a) brain wasn't in flight at cancel time (TTS-only playout), or
+      //   (b) it WAS in flight but the stream finished before the abort landed,
+      //       so the turn completed normally (brainTurnAbortedRef stayed false).
+      // Only re-fire when the turn was genuinely cut off (actually aborted).
+      if (!checkpoint.brainWasInFlight || !brainTurnAbortedRef.current) {
         console.warn(
-          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE-after-finished DROP (brain already produced response; not re-firing to avoid duplicate)`,
+          `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE-after-finished DROP (brain response already delivered — inFlight=${checkpoint.brainWasInFlight}, aborted=${brainTurnAbortedRef.current}; not re-firing to avoid duplicate)`,
         );
         onDebugEvent?.('perception_stage2_restore_dropped_brain_done', `${verdict} after ${elapsedMs}ms`);
         return;
@@ -8836,6 +9005,13 @@ export function VoiceTutorRealtime({
     const canRetroStage2 = perceptionStage >= 2 && toState === 'processing';
     const canRetroStage3 = perceptionStage >= 3 && toState === 'speaking';
     if (!canRetroStage2 && !canRetroStage3) return;
+    // Opening-turn guard: don't let ambient noise retro-cancel the synthetic
+    // kickoff turn before the tutor has delivered anything.
+    if (!tutorFirstTurnDoneRef.current) {
+      console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
+      onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
+      return;
+    }
     const ctx = lastBrainCallContextRef.current;
     const cancelStage: 'processing' | 'speaking' = canRetroStage3 ? 'speaking' : 'processing';
     const stageLabel = canRetroStage3 ? 'STAGE-3' : 'STAGE-2';
@@ -9236,6 +9412,13 @@ export function VoiceTutorRealtime({
       // existing checkpoint will dispatch and dedupe handles followups.
       const canStage2 = perceptionStage >= 2 && prodState === 'processing';
       const canStage3 = perceptionStage >= 3 && prodState === 'speaking';
+      // Opening-turn guard: suppress barge-in on the synthetic kickoff turn —
+      // ambient noise here would abort the lesson before it ever started.
+      if ((canStage2 || canStage3) && !tutorFirstTurnDoneRef.current) {
+        console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
+        onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
+        return;
+      }
       if ((canStage2 || canStage3) && !perceptionInterruptCheckpointRef.current) {
         const ctx = lastBrainCallContextRef.current;
         // For Stage 3 'speaking' cancels, the brain may already have
@@ -9669,7 +9852,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // and the UI shows "thinking" indefinitely.
         if (brainBusyRef.current) {
           console.log('[VoiceTutorRealtime] Unmute: clearing stale brain-busy flag');
-          brainBusyRef.current = false;
+          setBrainBusy(false);
           queuedTranscriptsRef.current = [];
         }
         realtime.startListening();
@@ -9755,6 +9938,22 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           pulse: false,
         };
       case 'listening':
+        // Same desync guard as the `default` branch below: after a kill drains
+        // the TTS queue, playNextAudio parks the state on 'listening' while the
+        // retry recomposes, so the student sees "Listening…" while the tutor is
+        // actually mid-reply (observed 2026-06-16 JEE forcekill session). In a
+        // normal turn the brain drives 'processing'→'speaking', never
+        // 'listening', so brainBusy here means an active reply, not the
+        // student's turn. Presentational only — realtime.state is unchanged.
+        if (isBrainResponding) {
+          return {
+            icon: <Volume2 className="w-5 h-5" />,
+            text: 'Tutor responding',
+            subtext: '',
+            color: 'bg-green-500',
+            pulse: true,
+          };
+        }
         return {
           icon: <Square className="w-4 h-4" />,
           text: 'Listening...',
@@ -9795,6 +9994,24 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           pulse: false,
         };
       default:
+        // Status desync guard (2026-06-16): in claude-brain mode the chat text
+        // streams from the brain SSE while TTS audio round-trips to the relay
+        // sentence-by-sentence. Between sentences realtime.state drops to
+        // 'connected' (this default branch) even though the turn is still in
+        // flight — on a high-latency link those gaps are long enough that the
+        // student sees "Click to speak" while the tutor is plainly mid-reply.
+        // While the brain is actively composing, show an active label instead.
+        // Purely presentational — does not touch the barge-in state machine
+        // (perception keys off realtime.state, which is unchanged here).
+        if (isBrainResponding) {
+          return {
+            icon: <Volume2 className="w-5 h-5" />,
+            text: 'Tutor responding',
+            subtext: '',
+            color: 'bg-green-500',
+            pulse: true,
+          };
+        }
         return {
           icon: <Mic className="w-5 h-5" />,
           text: transcriptRef.current.length === 0 ? 'Click to start' : 'Click to speak',
@@ -10000,7 +10217,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // request. Observed 2026-04-29 electricity session.
             if (brainBusyRef.current) {
               console.warn('[VoiceTutor] typed input while brainBusy=true — force-clearing stale busy flag');
-              brainBusyRef.current = false;
+              setBrainBusy(false);
               queuedTranscriptsRef.current = [];
             }
             // Clear the input box immediately so the student sees their

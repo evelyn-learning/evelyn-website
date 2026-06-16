@@ -95,13 +95,24 @@ const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
 function CellContent({ value }: { value: string }) {
   if (!value) return null;
 
+  // Defensive ASCII-math → LaTeX upgrade for the unambiguous tokens the brain
+  // still emits in table cells (sqrt(...), bare greek words, "2pi"). Without
+  // this KaTeX renders them as literal letters ("sqrt", "theta", "pir"). The
+  // genuinely ambiguous cases — a bare "x" meant as ×, or "pi" fused to a
+  // variable as in "pir" — are deliberately left alone: auto-fixing them would
+  // corrupt legitimate single-letter variables, so the brain prompt owns them.
+  const normalized = value
+    .replace(/\bsqrt\s*[([]\s*([^)\]]*?)\s*[)\]]/gi, '\\sqrt{$1}')
+    .replace(/\b(pi|theta|alpha|beta|gamma|delta|lambda|sigma|phi|omega)\b/g, '\\$1')
+    .replace(/(\d)\s*pi\b/g, '$1\\pi');
+
   // Explicit $...$ delimiters → use the inline text+math renderer.
-  if (/\$.+?\$/.test(value)) {
-    return <InlineMathText text={value} />;
+  if (/\$.+?\$/.test(normalized)) {
+    return <InlineMathText text={normalized} />;
   }
 
-  const hasLatexCmd = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)/.test(value);
-  const hasSubSup = /[_^{}]/.test(value);
+  const hasLatexCmd = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)/.test(normalized);
+  const hasSubSup = /[_^{}]/.test(normalized);
 
   if (!hasLatexCmd && !hasSubSup) {
     return <>{value}</>;
@@ -111,14 +122,14 @@ function CellContent({ value }: { value: string }) {
   // alphabetic word-runs of length ≥ 2 in \text{} so KaTeX renders them as
   // upright prose. Common filler words (with/and/the/of/...) signal prose.
   // Single-letter variables (x, y, etc.) are untouched.
-  const proseSignal = /\b(with|and|the|of|in|to|from|then|for|using|given|or|as|it|is|are|each|both|let|apply|rewrite|simplify|substitution|substitute|multiply|divide|expression|original|result|answer|step|formula|final|combined|limit|upper|lower)\b/i.test(value);
-  let latex = value;
+  const proseSignal = /\b(with|and|the|of|in|to|from|then|for|using|given|or|as|it|is|are|each|both|let|apply|rewrite|simplify|substitution|substitute|multiply|divide|expression|original|result|answer|step|formula|final|combined|limit|upper|lower|angle|base|height|width|length|opp|adj|hyp|radius|side|area|perimeter|diameter)\b/i.test(normalized);
+  let latex = normalized;
   if (proseSignal) {
     // Wrap each 2+ letter alphabetic run in \text{...}. Skip runs that are
     // already inside a \text{} block (simple check: previous char was "{")
     // and skip common math-mode function names (sin, cos, tan, log, ln, exp).
     const mathFns = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp', 'lim', 'max', 'min', 'arg', 'det', 'dim', 'gcd', 'lcm']);
-    latex = value.replace(/(\\?)([a-zA-Z]{2,})/g, (match, slash, word) => {
+    latex = normalized.replace(/(\\?)([a-zA-Z]{2,})/g, (match, slash, word) => {
       if (slash) return match;
       if (mathFns.has(word.toLowerCase())) return match;
       return `\\text{${word}}`;

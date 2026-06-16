@@ -70,6 +70,12 @@ export interface TranscriptEntry {
    *  their chat bubble feed (observed 2026-05-02 session). */
   historyOnly?: boolean;
 
+  /** True while a content kill is being recovered: the killed attempt's
+   *  bubble is dimmed ("revising") instead of yanked, so the student sees a
+   *  smooth hand-off rather than a blank gap, then it's removed once the
+   *  retry's fresh bubble starts streaming. Purely visual. */
+  revising?: boolean;
+
   // For tutor messages
   whiteboardCommands?: WhiteboardCommand[];
   pedagogicalIntent?: PedagogicalIntent;

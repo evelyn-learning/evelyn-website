@@ -352,9 +352,9 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     return (
     <div
       key={entry.id}
-      className={`flex gap-3 ${
+      className={`flex gap-3 transition-opacity duration-300 ${
         entry.role === 'student' ? 'flex-row-reverse' : ''
-      }`}
+      } ${entry.revising ? 'opacity-40 italic' : ''}`}
     >
       {/* Avatar */}
       <div
