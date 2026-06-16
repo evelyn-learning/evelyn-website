@@ -231,6 +231,55 @@ function isSafeOpener(s: string): boolean {
   return true;
 }
 
+// ── Judge-kill Stage 3.1 (2026-06-16) restatement detector ────────────
+// When a content-correctness kill fires mid-narration and the retry comes
+// back saying substantively the SAME thing (a re-statement, not a real
+// correction), the orchestrator replays the killed attempt's unplayed TTS
+// tail instead of letting the retry re-speak the overlap (the audible
+// self-correction symptom: "Spot on. That's the hyperbola" [KILL] "Right."
+// [KILL] "The equation has a minus sign…"). `isJudgeKillRestatement`
+// decides "same thing" via content-word overlap PLUS a numeric-token guard.
+// The numeric guard is load-bearing: validators kill on VALUE mismatches
+// and the retry corrects the value, so a changed/new number is the signal
+// of a REAL correction — replaying the old (wrong-value) tail there would
+// voice wrong content. Generic (no subject terms), per [[feedback_generic_prompts]].
+const JUDGE_KILL_STOPWORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'but', 'so', 'to', 'of', 'in', 'on', 'at',
+  'is', 'are', 'was', 'were', 'that', 'this', 'it', 'its', 'as', 'for', 'with',
+  'i', 'you', 'we', 'your', 'my', 'me', 'here', 'there', 'let', 'lets',
+  'okay', 'ok', 'right', 'well', 'now', 'then', 'just', 'do', 'does', 'did',
+  'be', 'been', 'have', 'has', 'had', 'what', 'how', 'why', 'when', 'if',
+  'not', 'no', 'yes', 'yeah', 'great', 'good', 'nice', 'exactly', 'perfect',
+  'spot', 'sure', 'got', 'gonna', 'going', 'about', 'into', 'from', 'by',
+]);
+function judgeKillContentWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9./\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter((w) => w.length >= 2 && !JUDGE_KILL_STOPWORDS.has(w));
+}
+/** Numbers, decimals, fractions (1/2), percentages (50%) — the value
+ *  tokens a correctness retry would change. */
+function judgeKillNumericTokens(s: string): string[] {
+  return s.match(/\d+(?:[./]\d+)?%?/g) ?? [];
+}
+/** True when `retry` is a re-statement of `killed` (≥60% content-word
+ *  overlap relative to the retry text) AND introduces no number absent
+ *  from `killed` (so a value correction is never mistaken for a restatement). */
+function isJudgeKillRestatement(retry: string, killed: string): boolean {
+  const rWords = judgeKillContentWords(retry);
+  if (rWords.length === 0) return false;
+  const kWords = new Set(judgeKillContentWords(killed));
+  const overlap = rWords.filter((w) => kWords.has(w)).length / rWords.length;
+  if (overlap < 0.6) return false;
+  const kNums = new Set(judgeKillNumericTokens(killed));
+  if (judgeKillNumericTokens(retry).some((n) => !kNums.has(n))) return false;
+  return true;
+}
+
 /** Extract the first sentence of a brain response and normalize it for
  *  cross-turn comparison. Used by the disclaimer-verbatim-reuse guard
  *  to detect openers that repeat across consecutive generate_problem
@@ -5328,6 +5377,13 @@ export function VoiceTutorRealtime({
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
       let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
+      // Judge-kill Stage 3.1 (2026-06-16): cross-attempt resume-from-cut
+      // state. When a content kill leaves an unplayed TTS tail, performKill
+      // captures it here; the NEXT attempt (the retry) consumes it, holds
+      // its opener, and — if the retry is a re-statement — replays this
+      // tail instead of re-speaking the overlap. null = no pending resume.
+      let judgeKillResumeSnapshot: string[] | null = null;
+      let judgeKillResumeKilledText: string | null = null;
       // E3 — renderer-error spoken bridge. When the FIRST kill of this
       // turn fires (validator rejection / RULE8 / judge / show_problem
       // block), we cancel the audio queue + speak a brief acknowledgment
@@ -5644,6 +5700,26 @@ export function VoiceTutorRealtime({
         // we collect ALL rejections in one pass for the retry message.
         let attemptKilled = false;
 
+        // Judge-kill Stage 3.1: this attempt's resume-decision state. Armed
+        // when the PRIOR attempt left a resume snapshot (a content kill with
+        // an unplayed TTS tail). Consume the cross-attempt slot here so a
+        // kill on THIS attempt can re-arm it cleanly for the next one.
+        // performKill only arms with a non-empty tail, so armed ⇔ length>0.
+        const resumeSnapshot: string[] = judgeKillResumeSnapshot ?? [];
+        const resumeKilledText: string = judgeKillResumeKilledText ?? '';
+        const resumeArmed = resumeSnapshot.length > 0;
+        judgeKillResumeSnapshot = null;
+        judgeKillResumeKilledText = null;
+        // Decision bookkeeping: until we've seen enough of the retry's
+        // opener to judge restatement-vs-correction, its sentences are HELD
+        // (not spoken). Once decided: restatement → replay the snapshot and
+        // suppress this attempt's audio (chat-only); correction → speak the
+        // held opener live and continue normally.
+        let resumeDecided = false;
+        let resumeSuppressAudio = false;
+        const resumeHeldSentences: string[] = [];
+        let resumeHeldText = '';
+
         // TTS gate. Buffer sentences until the first tool dispatch
         // resolves so a rejected tool can drop its narration before the
         // student hears it. Falls open via a 1s timer for text-only
@@ -5672,16 +5748,81 @@ export function VoiceTutorRealtime({
           }
           return false;
         };
+        // Raw TTS dispatch: push to the perception self-voice buffer, speak,
+        // count as audible. The single place a brain sentence actually
+        // reaches the speaker.
+        const speakOne = (s: string): void => {
+          pushTtsScriptForPerception(s);
+          speakTextRef.current?.(s);
+          audibleSentenceCount++;
+        };
+        // Judge-kill Stage 3.1: decide restatement-vs-correction for a
+        // post-content-kill retry, using whatever opener text we've held so
+        // far. Restatement (≥60% content-word overlap + no changed number)
+        // → replay the killed attempt's unplayed tail and suppress this
+        // retry's audio (chat-only). Correction (or nothing to resume) →
+        // speak the held opener live and continue normally.
+        const decideResume = (): void => {
+          resumeDecided = true;
+          const restated =
+            resumeSnapshot.length > 0 &&
+            isJudgeKillRestatement(resumeHeldText, resumeKilledText);
+          if (restated) {
+            resumeSuppressAudio = true;
+            console.warn(
+              `[brain-orchestrator] judge-kill Stage 3.1: retry is a restatement — replaying ${resumeSnapshot.length} unplayed sentence(s), suppressing retry audio`,
+            );
+            onDebugEvent?.('judge_kill_resume', `${resumeSnapshot.length} sentences`);
+            resumeSpeakTextRef.current?.(resumeSnapshot);
+          } else {
+            resumeSuppressAudio = false;
+            // Speak the opener we held while deciding, then continue live.
+            for (const s of resumeHeldSentences) {
+              if (speakTextGated()) continue;
+              speakOne(s);
+            }
+            if (resumeSnapshot.length > 0) {
+              console.warn(
+                '[brain-orchestrator] judge-kill Stage 3.1: retry diverged (correction / no overlap) — speaking retry live, snapshot discarded',
+              );
+              onDebugEvent?.('judge_kill_resume_diverged', `held=${resumeHeldSentences.length}`);
+            }
+          }
+        };
+        // Unified brain-sentence emit. Routes every brain sentence through
+        // (1) the perception cancel gate, then (2) the judge-kill resume
+        // hold/decision, before the raw speakOne. flushPending + the
+        // gate-open path both call this so the resume logic is applied
+        // consistently regardless of TTS-gate timing.
+        const emitBrainSpeak = (s: string): void => {
+          if (speakTextGated()) {
+            console.warn('[brain-orchestrator] STAGE-3 fix #10: brain sentence dropped — perception cancel gate active:', s.slice(0, 80));
+            onDebugEvent?.('speak_text_gated_emit', s.slice(0, 80));
+            return;
+          }
+          if (resumeArmed && !resumeDecided) {
+            // Hold the opener until we have enough signal to judge
+            // restatement-vs-correction (a sentence/buffer with ≥4 content
+            // words, or a 2nd held sentence as a cap to bound latency).
+            resumeHeldSentences.push(s);
+            resumeHeldText += (resumeHeldText ? ' ' : '') + s;
+            const enough =
+              judgeKillContentWords(resumeHeldText).length >= 4 ||
+              resumeHeldSentences.length >= 2;
+            if (enough) decideResume();
+            return;
+          }
+          if (resumeArmed && resumeDecided && resumeSuppressAudio) {
+            // Audio is supplied by the replayed snapshot; this retry's
+            // sentences are chat-only (the chat update happens at the call
+            // site after this returns).
+            return;
+          }
+          speakOne(s);
+        };
         const flushPending = () => {
           for (const s of pendingSentences) {
-            if (speakTextGated()) {
-              console.warn('[brain-orchestrator] STAGE-3 fix #10: flushPending dropped sentence — perception cancel gate active:', s.slice(0, 80));
-              onDebugEvent?.('speak_text_gated_flush', s.slice(0, 80));
-              continue;
-            }
-            pushTtsScriptForPerception(s);
-            speakTextRef.current?.(s);
-            audibleSentenceCount++;
+            emitBrainSpeak(s);
           }
           pendingSentences.length = 0;
         };
@@ -5723,6 +5864,23 @@ export function VoiceTutorRealtime({
           attemptKilled = true;
           clearTimeout(gateTimer);
           closeGate();
+          // Judge-kill Stage 3.1: capture the unplayed TTS tail BEFORE the
+          // bridge's clearSpeechQueue drains it, so a restatement retry can
+          // replay it instead of re-speaking the overlap. Armed only when
+          // the student actually heard narration this attempt
+          // (audibleSentenceCount > 0) AND there's an unplayed tail — this
+          // scopes the resume to content kills with real spoken content
+          // (Skip-KILL never opens the gate, so audibleSentenceCount stays
+          // 0; dedup-suppression `continue`s without killing). peekSpeechQueue
+          // returns [in-flight, ...queued] per Stage 3.1 f435560.
+          if (audibleSentenceCount > 0) {
+            const tail = peekSpeechQueueRef.current?.() ?? [];
+            if (tail.length > 0) {
+              judgeKillResumeSnapshot = tail;
+              judgeKillResumeKilledText = attemptText;
+              onDebugEvent?.('judge_kill_snapshot', `${tail.length} unplayed · heard=${audibleSentenceCount}`);
+            }
+          }
           await speakKillBridge();
         };
 
@@ -6079,14 +6237,9 @@ export function VoiceTutorRealtime({
                     } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
                     } else if (gateState === 'open') {
-                      if (speakTextGated()) {
-                        console.warn('[brain-orchestrator] STAGE-3 fix #10: gate-open emit dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
-                        onDebugEvent?.('speak_text_gated_open', sentenceForSpeech.slice(0, 80));
-                      } else {
-                        pushTtsScriptForPerception(sentenceForSpeech);
-                        speakTextRef.current?.(sentenceForSpeech);
-                        audibleSentenceCount++;
-                      }
+                      // Routes through the perception cancel gate AND the
+                      // judge-kill Stage 3.1 resume hold/decision.
+                      emitBrainSpeak(sentenceForSpeech);
                     }
                   }
                   // Streaming reveal in the chat: incrementally append
@@ -6921,6 +7074,16 @@ export function VoiceTutorRealtime({
           );
         if (!skipNoAdvanceAtStreamEnd) {
           openGate();
+        }
+
+        // Judge-kill Stage 3.1: if this was a post-kill retry whose opener
+        // we were still HOLDING (stream ended before we had ≥4 content
+        // words / a 2nd sentence — e.g. a 1-sentence or tool-only retry),
+        // decide now with whatever's held so the held opener isn't
+        // stranded unspoken. Empty held text → not a restatement → snapshot
+        // discarded (no replay of unverified content).
+        if (resumeArmed && !resumeDecided) {
+          decideResume();
         }
 
         // RULE8 coherence check (promise-without-visual). The brain
