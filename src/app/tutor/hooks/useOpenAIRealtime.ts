@@ -275,6 +275,19 @@ export interface RealtimeResult {
    */
   resumeSpeakText: (sentences: string[]) => void;
   /**
+   * Stage 4 regression fix (2026-06-16). Drive the 'processing'
+   * ("Thinking…") indicator from the claude-brain orchestrator. With the
+   * perception WS as the sole input authority, the production WS no longer
+   * transcribes student speech, so it never enters 'processing' on
+   * `input_audio_buffer.speech_stopped` — the UI sat on 'listening' through
+   * the entire brain fetch. The orchestrator calls this `true` when it
+   * dispatches a brain turn and `false` when the turn ends. `true` only
+   * promotes from an idle state (listening/connected); `false` only resets
+   * if still 'processing' (if TTS already started, state is 'speaking' and
+   * playNextAudio owns the return to 'listening').
+   */
+  signalBrainThinking: (on: boolean) => void;
+  /**
    * Resume the playback AudioContext synchronously inside a user gesture.
    * iOS Safari requires audio playback to be initiated from a user gesture
    * (touch / click). Without this call on the Start button, the AudioContext
@@ -531,6 +544,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isRelay = Boolean(relayMode);
 
   const [state, setState] = useState<RealtimeState>('disconnected');
+  // Live mirror of `state` for callbacks that need the current value
+  // synchronously (the `state` closure is stale). Kept in sync in updateState,
+  // the only setState caller.
+  const stateRef = useRef<RealtimeState>('disconnected');
   const [error, setError] = useState<Error | null>(null);
   // Voice Perception Q9 (2026-06-16): transient signal flag that's true
   // for ~300ms after a perception cancel fires. Layered on top of the
@@ -730,9 +747,23 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   // Update state and notify parent
   const updateState = useCallback((newState: RealtimeState) => {
+    stateRef.current = newState;
     setState(newState);
     onStateChange?.(newState);
   }, [onStateChange]);
+
+  // Stage 4 regression fix (2026-06-16): orchestrator-driven 'processing'
+  // indicator. See the signalBrainThinking doc on RealtimeResult. Reads the
+  // live state via stateRef (state is stale inside this callback) and only
+  // transitions when it won't clobber 'speaking'/'connecting'/etc.
+  const signalBrainThinking = useCallback((on: boolean) => {
+    const cur = stateRef.current;
+    if (on) {
+      if (cur === 'listening' || cur === 'connected') updateState('processing');
+    } else if (cur === 'processing') {
+      updateState(shouldListenRef.current ? 'listening' : 'connected');
+    }
+  }, [updateState]);
 
   // Unlock the playback AudioContext from inside a user gesture. iOS
   // Safari starts contexts in 'suspended' state until any user-gesture-
@@ -2634,6 +2665,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     clearSpeechQueue,
     peekSpeechQueue,
     resumeSpeakText,
+    signalBrainThinking,
     unlockAudio,
   };
 }

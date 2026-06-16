@@ -737,6 +737,10 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     resumeSpeakText: (sentences: string[]) => {
       console.warn('[Gemini] resumeSpeakText called but relay mode is not supported on Gemini Live.', { count: sentences.length });
     },
+    // Stage 4 thinking-indicator stub. Gemini Live drives its own status
+    // (native audio in/out), so the orchestrator-driven 'processing' signal
+    // is a no-op here.
+    signalBrainThinking: () => {},
     // Q9 stubs for shared RealtimeResult shape. Gemini Live's perception
     // pathway doesn't surface cancel events through this hook, so the
     // interrupted signal is always false here.

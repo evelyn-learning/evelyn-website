@@ -717,6 +717,13 @@ export function VoiceTutorRealtime({
   // perception transcript skips heuristic + Haiku and dispatches the
   // pinned verdict directly. Consumed once then auto-cleared.
   const pinnedClassifierVerdictRef = useRef<PerceptionVerdict | null>(null);
+  // Dev-only (window.__tutorForceKill): when set, the brain orchestrator's
+  // streaming loop fires a synthetic content kill after the next audible
+  // sentence — deterministically exercising the judge-kill Stage 3.1
+  // snapshot → retry → restatement/resume path without needing to land a
+  // real structural validator rejection. Consumed once per arm. The string
+  // payload becomes the retry's rejection reason (steers restate vs correct).
+  const forceKillPendingRef = useRef<string | null>(null);
 
   // Track whiteboard tool calls per response turn for validation pass
   const turnHadToolCallRef = useRef(false);
@@ -743,6 +750,10 @@ export function VoiceTutorRealtime({
   // speakTextRef / clearSpeechQueueRef.
   const peekSpeechQueueRef = useRef<(() => string[]) | null>(null);
   const resumeSpeakTextRef = useRef<((sentences: string[]) => void) | null>(null);
+  // Stage 4 regression fix (2026-06-16): drive the 'processing' ("Thinking…")
+  // indicator from the brain orchestrator. realtime is defined later in
+  // render order, so reach it through a ref (same pattern as the queue refs).
+  const signalBrainThinkingRef = useRef<((on: boolean) => void) | null>(null);
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
@@ -6262,6 +6273,26 @@ export function VoiceTutorRealtime({
                       emitBrainSpeak(sentenceForSpeech);
                     }
                   }
+                  // Dev-only forced kill (window.__tutorForceKill). Once
+                  // armed, fire a synthetic content kill right after the
+                  // first audible sentence — deterministically exercising the
+                  // judge-kill Stage 3.1 snapshot → bridge-suppress → retry →
+                  // restatement/resume path without needing a real structural
+                  // validator rejection. The armed string becomes the retry's
+                  // rejection reason (steers restate-vs-correct).
+                  if (
+                    forceKillPendingRef.current &&
+                    !attemptKilled &&
+                    attempt < MAX_VALIDATOR_RETRIES &&
+                    audibleSentenceCount >= 1
+                  ) {
+                    const forcedReason = forceKillPendingRef.current;
+                    forceKillPendingRef.current = null;
+                    rejectionsThisAttempt.push({ action: 'dev_forced_kill', reason: forcedReason });
+                    console.warn(`[brain-orchestrator] dev __tutorForceKill: synthetic content kill after ${audibleSentenceCount} audible sentence(s)`);
+                    onDebugEvent?.('dev_forced_kill', `audible=${audibleSentenceCount}`);
+                    await performKill();
+                  }
                   // Streaming reveal in the chat: incrementally append
                   // each sentence to a tutor entry so the student sees
                   // the response materialize as it's being composed,
@@ -8270,6 +8301,16 @@ export function VoiceTutorRealtime({
       return;
     }
     brainBusyRef.current = true;
+    // Stage 4 regression fix (2026-06-16): show the 'processing' ("Thinking…")
+    // indicator while the brain fetch is in flight. The production WS no
+    // longer transcribes input (perception is the sole input authority), so
+    // it never enters 'processing' on its own — without this the UI sat on
+    // 'listening' for the full 2–22s brain turn (observed CS session). Set
+    // here, AFTER the mid-utterance / suppression early-returns above (so a
+    // deferred/dropped dispatch doesn't flip the indicator), and cleared in
+    // the finally. queueAudio promotes 'processing'→'speaking' when the
+    // first TTS sentence plays; the finally only resets if no audio started.
+    signalBrainThinkingRef.current?.(true);
     // Item P3 (2026-05-24) — reset per-turn refs at the relay-mode entry
     // point. This is the unified pipe ALL student-driven turns flow
     // through: voice transcripts (realtime hook onUserTranscript), Skip
@@ -8404,6 +8445,12 @@ export function VoiceTutorRealtime({
     } finally {
       clearTimeout(watchdog);
       brainBusyRef.current = false;
+      // Clear the thinking indicator. No-op if TTS already promoted the
+      // state to 'speaking' (signalBrainThinking only resets when still
+      // 'processing'), so a turn that produced audio is unaffected; this
+      // catches tool-only / empty / errored turns that would otherwise
+      // leave the UI stuck on "Thinking…".
+      signalBrainThinkingRef.current?.(false);
     }
   }, [callBrainOnce, onDebugEvent]);
 
@@ -8728,6 +8775,7 @@ export function VoiceTutorRealtime({
   clearSpeechQueueRef.current = realtime.clearSpeechQueue;
   peekSpeechQueueRef.current = realtime.peekSpeechQueue;
   resumeSpeakTextRef.current = realtime.resumeSpeakText;
+  signalBrainThinkingRef.current = realtime.signalBrainThinking;
 
   // ── Voice Perception Layer (Stage 0 — shadowed, logs only) ─────────────
   // See memory/project_voice_perception_layer_design.md for the locked
@@ -9270,6 +9318,7 @@ export function VoiceTutorRealtime({
     const w = window as unknown as {
       __tutorForceFalseBargein?: () => void;
       __tutorForceClassifierVerdict?: (verdict: string) => void;
+      __tutorForceKill?: (reason?: string) => void;
     };
     w.__tutorForceFalseBargein = () => {
       if (perceptionStage < 2) {
@@ -9327,9 +9376,27 @@ export function VoiceTutorRealtime({
       pinnedClassifierVerdictRef.current = verdict as PerceptionVerdict;
       console.warn(`[dev] __tutorForceClassifierVerdict: pinned next verdict = ${verdict}`);
     };
+    // __tutorForceKill(reason?) — arm a synthetic content kill on the
+    // in-flight (or next) brain turn. The orchestrator fires performKill()
+    // after the first audible sentence: snapshots the unplayed tail,
+    // suppresses the kill bridge, retries. With no reason (default) the
+    // retry is told to re-deliver verbatim → a RESTATEMENT, so Stage 3.1
+    // replays the snapshot (resume path). Pass a correction-style reason
+    // (e.g. "your value was wrong, recompute") to drive the DIVERGE path
+    // where the retry speaks live instead.
+    w.__tutorForceKill = (reason?: string) => {
+      if (!brainBusyRef.current) {
+        console.warn('[dev] __tutorForceKill: no brain turn in flight yet — arming anyway; it fires on the next turn.');
+      }
+      forceKillPendingRef.current = (reason && reason.trim())
+        ? reason.trim()
+        : 'Internal delivery hiccup on the prior attempt — re-deliver your previous spoken response verbatim. The content was correct; do not change any values or wording.';
+      console.warn('[dev] __tutorForceKill: armed — next audible sentence triggers a synthetic content kill + retry.');
+    };
     return () => {
       delete w.__tutorForceFalseBargein;
       delete w.__tutorForceClassifierVerdict;
+      delete w.__tutorForceKill;
     };
   }, [perceptionStage]);
 
