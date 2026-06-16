@@ -194,6 +194,16 @@ function toWinAnsiSafe(text: string): string {
   // This preserves readability for Serbian, Czech, Polish, Turkish, Vietnamese, Russian, etc.
   normalized = normalized.replace(LATIN_DIACRITIC_REGEX, (ch) => LATIN_DIACRITIC_MAP[ch] || ch);
 
+  // Combining diacritical marks (U+0300–U+036F). The brain emits "x̄"
+  // (x + combining macron, U+0304) as the mean notation in narration; the
+  // base letter is Latin-1 but the combining mark is not, so the non-Latin
+  // run match below would render "x̄ = 6" as "x[non-Latin text] = 6"
+  // (observed 2026-06-16 IB AA session). Verbalize a macron over a letter/
+  // digit as "-bar" (mean notation), then strip any remaining combining
+  // marks so the base glyph survives cleanly.
+  normalized = normalized.replace(/([A-Za-z0-9])\u0304/g, '$1-bar');
+  normalized = normalized.replace(/[\u0300-\u036F]/g, '');
+
   // Match remaining runs of characters outside Latin-1 printable range (U+0020–U+00FF)
   return normalized.replace(
     /[^\u0000-\u00FF]+/g,

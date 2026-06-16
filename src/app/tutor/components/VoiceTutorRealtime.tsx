@@ -6200,7 +6200,16 @@ export function VoiceTutorRealtime({
                     .replace(/\*([^*]+)\*/g, '$1')
                     .replace(/!+/g, '.')
                     .replace(/\s*[—–]\s*/g, ', ')
-                    .replace(/\s--+\s/g, ', ');
+                    .replace(/\s--+\s/g, ', ')
+                    // Combining macron over a letter/digit is the brain's
+                    // mean notation ("x̄"). Sent to TTS raw, the malformed
+                    // grapheme is dropped or mangled (observed 2026-06-16 IB
+                    // AA session: "x̄ = 6" reached the speaker as bare "x").
+                    // Verbalize as "x bar", then strip any other stray
+                    // combining marks (U+0300–U+036F) so they can't corrupt
+                    // the spoken token.
+                    .replace(/([A-Za-z0-9])\u0304/g, '$1 bar')
+                    .replace(/[\u0300-\u036F]/g, '');
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
                   // Detect brain narration that signals the pipeline
                   // returned no_problem_available. Generic patterns —
