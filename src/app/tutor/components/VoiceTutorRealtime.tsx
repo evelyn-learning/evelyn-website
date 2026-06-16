@@ -5879,6 +5879,17 @@ export function VoiceTutorRealtime({
               judgeKillResumeSnapshot = tail;
               judgeKillResumeKilledText = attemptText;
               onDebugEvent?.('judge_kill_snapshot', `${tail.length} unplayed · heard=${audibleSentenceCount}`);
+              // Resume is armed → SUPPRESS the kill bridge (user feedback
+              // 2026-06-16). The retry either replays the snapshot as a
+              // seamless continuation (restatement) or speaks corrected
+              // content after a brief natural pause; a "Hmm."/"One moment."
+              // filler here reads as the tutor hesitating/self-correcting —
+              // the exact symptom Stage 3.1 exists to remove. We still drain
+              // the in-flight audio (the bridge's first job) but skip the
+              // spoken phrase. Kills with nothing to resume fall through to
+              // the normal bridge below.
+              await clearSpeechQueueRef.current?.();
+              return;
             }
           }
           await speakKillBridge();
