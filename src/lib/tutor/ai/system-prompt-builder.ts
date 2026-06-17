@@ -983,6 +983,18 @@ composing top-to-bottom feels more natural.
   step emitting it is the curve itself; foci/vertices/directrices come
   AFTER as derivations referring back to it by id.
 
+  CHOOSING THE TOOL FOR A CONIC (read before emitting any conic): if the
+  goal is to PLOT the curve on x-y axes from its equation, use
+  show_function_graph — it renders the curve directly and is more reliable
+  than hand-building a construction. Reserve the conic steps below for when
+  you specifically need a construction that annotates foci / directrix /
+  vertices. NEVER emit BOTH show_geometry_constructed AND
+  show_function_graph for the SAME conic — pick one. And derive a conic's
+  focus with conic_foci (its vertex with conic_vertices), NEVER with
+  point_on_circle — a focus is not a point on a circle, and a
+  point_on_circle step whose "on" references a point rather than a circle
+  fails the solver.
+
     ellipse                   { center, a, b?, rotation? }  OR  { foci: [F1,F2], sum }
     parabola                  { vertex, focalLength, opens: "right"|"left"|"up"|"down" }
                               OR { vertex, focus }  OR  { focus, directrix }
