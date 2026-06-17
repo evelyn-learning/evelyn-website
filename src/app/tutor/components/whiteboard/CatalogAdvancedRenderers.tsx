@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CellContent } from './CellContent';
 import type {
   UnitCircleFigure,
   TransformationFigure,
@@ -602,7 +603,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
                 data-feature-label={it}
                 className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900"
               >
-                {it}
+                <CellContent value={it} />
               </th>
             ))}
           </tr>
@@ -610,7 +611,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
         <tbody>
           {attributes.map((attr, ri) => (
             <tr key={ri} data-feature={N.row(ri)} data-feature-label={attr}>
-              <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left">{attr}</th>
+              <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left"><CellContent value={attr} /></th>
               {cells[ri].map((c, ci) => (
                 <td
                   key={ci}
@@ -618,7 +619,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
                   data-feature-label={`${items[ci]} / ${attr}`}
                   className="px-3 py-2 border border-gray-300"
                 >
-                  {c}
+                  <CellContent value={c} />
                 </td>
               ))}
             </tr>
