@@ -5918,6 +5918,19 @@ export function VoiceTutorRealtime({
             resumeHeldSentences.forEach((s, i) => {
               if (i + 1 > resumeCoveredCount && !speakTextGated()) speakOne(s);
             });
+            // Restatement = content unchanged → KEEP the killed renders rather
+            // than rolling them back at end-of-call. The brain commonly
+            // re-delivers the SPEECH (and even scribbles on the existing render)
+            // without re-emitting the render tool call, so the dedup-confirm
+            // path never fires and they'd be swept — dimmed then removed, with
+            // any fresh scribble left orphaned (observed 2026-06-17 live test).
+            // Clear the pending set (so the finally keeps them) and un-dim.
+            if (pendingRevisionRef.current.size > 0) {
+              const keptIds = [...pendingRevisionRef.current];
+              pendingRevisionRef.current = new Set();
+              onWhiteboardCommand([{ action: 'reviseItems', ids: keptIds, revising: false }]);
+              onDebugEvent?.('killed_render_kept_restatement', `${keptIds.length}: ${keptIds.join(',')}`);
+            }
           } else {
             resumeSuppressAudio = false;
             // Speak the opener we held while deciding, then continue live.
