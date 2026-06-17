@@ -98,7 +98,7 @@ const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
  * "triangle with altitude".
  */
 /** Actions where redraws should supersede earlier versions rather than stack. */
-const SUPERSEDABLE_ACTIONS = new Set(['showGeometry', 'showGraph', 'showDiagram', 'showSvgDiagram', 'showCircuit', 'showLewis', 'showFlowchart', 'showTimeline', 'showMap']);
+const SUPERSEDABLE_ACTIONS = new Set(['showGeometry', 'showGeometryConstructed', 'showGraph', 'showDiagram', 'showSvgDiagram', 'showCircuit', 'showLewis', 'showFlowchart', 'showTimeline', 'showMap']);
 
 /**
  * Within a single page, drop an earlier whiteboard command when a later
