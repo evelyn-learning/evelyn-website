@@ -30,6 +30,7 @@ import {
   type BrainStreamEvent,
 } from '@/lib/tutor/voice/claude-brain';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
+import { applyTurnPacing, isSkipTurn } from './turn-pacing';
 
 export interface OrchestratorTurnInput extends BrainTurnInput {
   /** Configured grade for the session. Drives the pacing multiplier
@@ -37,13 +38,6 @@ export interface OrchestratorTurnInput extends BrainTurnInput {
    *  rendered into the system prompt block. */
   grade?: string;
 }
-
-// Baseline pause durations the brain hints at via sentence.pauseAfter
-// or that the engine inserts automatically after a tool call (the
-// student needs time to read the new visual). Tuned for grade 6-8;
-// the grade profile multiplier scales these for younger / older.
-const PAUSE_BASELINE_MS = { small: 600, medium: 1200, large: 2000 } as const;
-const POST_TOOL_PAUSE_MS = 1100;     // baseline beat after any show_* tool
 
 /**
  * Run one brain turn, yielding events as they arrive.
@@ -67,26 +61,10 @@ export async function* runTutorTurn(input: OrchestratorTurnInput): AsyncIterable
   const profile = getGradeProfile(input.grade);
   const scale = profile.pacingMultiplier;
 
-  for await (const ev of streamBrainTurn(input)) {
-    yield ev;
-
-    if (ev.type === 'tool-call' && isVisualTool(ev.name)) {
-      // Auto-pause after a visual lands so the student has time to
-      // read it. Brain doesn't have to remember to ask for this.
-      yield { type: 'pause', ms: Math.round(POST_TOOL_PAUSE_MS * scale), reason: `post-${ev.name}` };
-    } else if (ev.type === 'sentence' && ev.pauseAfter) {
-      const baseline = PAUSE_BASELINE_MS[ev.pauseAfter];
-      yield { type: 'pause', ms: Math.round(baseline * scale), reason: `sentence:${ev.pauseAfter}` };
-    }
-  }
-}
-
-/** Heuristic: which tool names produce a board change worth pausing for.
- *  Engine-side tools (advance_lesson, mark_segment_complete) and
- *  zero-render tools (list_whiteboard_features) shouldn't trigger pauses. */
-function isVisualTool(name: string): boolean {
-  if (name.startsWith('show_') || name === 'highlight' || name === 'annotate' || name === 'draw_vector' || name === 'tutor_scribble') return true;
-  return false;
+  yield* applyTurnPacing(streamBrainTurn(input), {
+    isSkipTurn: isSkipTurn(input.studentTranscript),
+    scale,
+  });
 }
 
 export type { BrainStreamEvent, BrainTurnInput };

@@ -12,6 +12,7 @@
     "seed:teacher": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-teacher.ts",
     "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
     "test:gaps": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-cross-session-promotion.ts",
+    "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {

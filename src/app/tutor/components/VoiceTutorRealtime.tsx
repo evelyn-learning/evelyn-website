@@ -5201,7 +5201,7 @@ export function VoiceTutorRealtime({
             // teaches the new segment without being asked to advance.
             transcript = transcript.replace(
               /\[Skip-button-clicked[^\]]*\]/i,
-              `[Lesson auto-advanced: the student clicked Skip-ahead and the lesson pointer has ALREADY moved to segment "${skipNext}"${skipNextKind}. Teach THAT segment now. Do NOT call advance_lesson — the advance is already done. Skip is a navigation action, not an answer: do NOT affirm, grade, or state an expected answer for any prior question.]`,
+              `[Lesson auto-advanced: the student clicked Skip-ahead and the lesson pointer has ALREADY moved to segment "${skipNext}"${skipNextKind}. Introduce THAT segment now, but keep it LIGHT — a sentence or two plus AT MOST ONE anchor visual, not the segment's full set of cards/formulas. A Skip is brisk navigation, not a re-teach; the student can ask for depth. Extra show_* renders past the first are capped and silently dropped. Do NOT call advance_lesson — the advance is already done. Skip is a navigation action, not an answer: do NOT affirm, grade, or state an expected answer for any prior question.]`,
             );
             console.warn(`[brain-orchestrator] Skip-button: app-side deterministic advance "${skipFromSegId}" → "${skipNext}" (brain told as fact; Skip-KILL retry bypassed).`);
             onDebugEvent?.('skip_button_app_advance', `"${skipFromSegId}" → "${skipNext}"`);
