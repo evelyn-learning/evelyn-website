@@ -937,6 +937,17 @@ export function VoiceTutorRealtime({
   // (observed 2026-06-16 JEE session: "Yeah, yeah, yeah." noise during TTS of a
   // completed turn re-fired "Perpendicular to BNC?" → duplicate turn).
   const brainTurnAbortedRef = useRef(false);
+  // Whiteboard kill-recovery (B, 2026-06-16). On a content kill we DEFER the
+  // rollback of the killed attempt's renders instead of yanking them
+  // immediately — that immediate remove + the retry's re-add is what makes the
+  // board flash. The killed render ids land here; they stay on the board (and
+  // in the dedup catalog) so a restatement retry that re-renders them
+  // identically dedup-drops and CONFIRMS them (id removed from this set → kept,
+  // no flash). Whatever ids remain at end-of-call were NOT re-confirmed (a
+  // correction rendered different content, or the turn aborted) → rolled back
+  // in the finally. Cleared at the start of each brain call. (Visual dim layer
+  // is phase A, on top of this.)
+  const pendingRevisionRef = useRef<Set<string>>(new Set());
   const queuedTranscriptsRef = useRef<string[]>([]);
 
   // Variable-name continuity: track declared functions across the session.
@@ -3799,6 +3810,14 @@ export function VoiceTutorRealtime({
         cmdWithId._duplicateOf = existing.itemId;
         console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
         onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        // Whiteboard kill-recovery (B): a deferred ("revising") render that the
+        // retry just re-emitted identically dedup-dropped right here — that's
+        // the CONFIRM signal. Keep the original (drop it from the pending set
+        // so it survives the end-of-call cleanup), giving a flash-free
+        // restatement: the killed render never left the board.
+        if (pendingRevisionRef.current.delete(existing.itemId)) {
+          onDebugEvent?.('killed_render_confirmed', existing.itemId);
+        }
         // Whiteboard markup Phase 1: record the dedup so the brain
         // learns next turn that its re-emission was suppressed. Include
         // the show_diagram type when present so the advisory reads
@@ -5600,6 +5619,11 @@ export function VoiceTutorRealtime({
       // stable across validator retries.
       const skipTurnMarkerPresent = /\[Skip-button-clicked/i.test(transcript);
 
+      // Kill-recovery (B): fresh per-call deferred-rollback set. Any kill this
+      // call defers its renders here; the finally rolls back whatever the retry
+      // didn't re-confirm.
+      pendingRevisionRef.current = new Set();
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -5616,6 +5640,15 @@ export function VoiceTutorRealtime({
           newPageThisTurnRef.current = false;
           brainEmittedNewPageThisTurnRef.current = false;
           generateProblemThisTurnRef.current = false;
+          // Kill-recovery (B): also clear the consecutive-equation guard. It
+          // fires BEFORE the catalog-signature dedup, so without this a retry
+          // re-emitting the killed equation verbatim would be dropped here and
+          // never reach the catalog dedup where the deferred render gets
+          // CONFIRMED — leaving it stranded in pendingRevisionRef and swept at
+          // end-of-call (the equation would vanish). Clearing lets the re-emit
+          // flow to the catalog dedup → confirm → kept. Consistent with the
+          // other per-retry dedup resets above.
+          lastEquationLatexRef.current = '';
         }
         // Compose lesson plan context from the active plan + current
         // segment id (both ref-tracked so segment advances mid-turn are
@@ -8104,21 +8137,24 @@ export function VoiceTutorRealtime({
           `tool call(s) that the runtime structural validator rejected:\n${summarizedRejections}\n` +
           `Re-emit the corrected tool call(s). Don't apologize; the student doesn't see this message. ` +
           speechDeliveryNote;
-        // Roll the killed attempt's renders off the board before the
-        // retry runs. Without this the retry's fresh renders pile up
-        // next to the orphaned ones (the 2026-05-15 two-BSTs bug).
-        // Gated on attemptKilled so a clean attempt's renders are never
-        // touched; in the retry path performKill always set it.
-        // Item B scope (2026-05-24): only renders emitted AFTER
-        // advance_lesson are part of the failed-new-segment work;
-        // pre-advance renders belong to the prior (now-completed)
-        // segment and were already accepted.
+        // Kill-recovery (B): DEFER rolling the killed attempt's renders off the
+        // board. Yanking them here and re-adding on the retry is the board
+        // flash. Instead, stash the ids in pendingRevisionRef and leave the
+        // renders on the board + in the dedup catalog. A restatement retry that
+        // re-emits them identically will dedup-drop and CONFIRM them (kept, no
+        // flash); a correction renders different content and these stale ids
+        // are rolled back in the end-of-call cleanup (which still fixes the
+        // 2026-05-15 two-BSTs pile-up — just at end-of-call instead of
+        // pre-retry). Gated on attemptKilled; Item B scope (2026-05-24): only
+        // renders emitted AFTER advance_lesson are part of the failed segment.
         if (attemptKilled) {
           const retryRollbackTargets =
             renderCountAtAdvance !== null
               ? renderIdsThisAttempt.slice(renderCountAtAdvance)
               : renderIdsThisAttempt;
-          rollbackKilledRenders(retryRollbackTargets);
+          for (const id of retryRollbackTargets) {
+            if (id) pendingRevisionRef.current.add(id);
+          }
         }
         // DIM (don't yank) the killed attempt's streaming bubble. A retry is
         // coming, so instead of removing the text — which leaves a blank gap
@@ -8393,6 +8429,32 @@ export function VoiceTutorRealtime({
       // call is no longer in flight so a later abort() would be a no-op
       // against a stale controller.
       inFlightBrainAbortRef.current = null;
+      // Kill-recovery (B): roll back any deferred killed renders the retry did
+      // NOT re-confirm. Restatement-confirmed ids were dropped from the set at
+      // dedup time, so this only sweeps genuinely superseded (a correction
+      // rendered different content) or abandoned (the call aborted) renders —
+      // preserving the old anti-orphan guarantee, just at end-of-call instead
+      // of pre-retry. Mirrors rollbackKilledRenders (which is try-scoped and
+      // unreachable here); kept compact since it runs on every call.
+      if (pendingRevisionRef.current.size > 0) {
+        const staleIds = [...pendingRevisionRef.current];
+        pendingRevisionRef.current = new Set();
+        onWhiteboardCommand([{ action: 'removeItems', ids: staleIds }]);
+        const idSet = new Set(staleIds);
+        const beforeMirror = whiteboardCommandsRef.current.length;
+        whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c) => !idSet.has((c as any).id),
+        );
+        whiteboardCommandCountRef.current = Math.max(
+          0,
+          whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length),
+        );
+        for (const id of staleIds) commandByIdRef.current.delete(id);
+        catalogRef.current.removeByIds(staleIds);
+        console.warn(`[brain-orchestrator] kill-recovery: rolled back ${staleIds.length} unconfirmed render(s) [${staleIds.join(', ')}]`);
+        onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
+      }
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance]);
 
