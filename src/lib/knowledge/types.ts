@@ -649,6 +649,12 @@ export type WhiteboardCommand =
   // page-builder and the PDF export filter out any command whose id
   // is listed here (and the markers themselves render nothing).
   | { action: 'removeItems'; ids: string[] }
+  // Kill-recovery phase A: mark existing items as "revising" (dimmed) or clear
+  // it (revising:false). Used while a content kill is recovered — the killed
+  // renders are dimmed during the gap, then un-dimmed on confirm or removed on
+  // cleanup. Render-only marker (renders nothing itself); the canvas applies
+  // opacity to items whose id is currently flagged revising.
+  | { action: 'reviseItems'; ids: string[]; revising: boolean }
   | {
       // Annotate an EXISTING whiteboard item — the tutor equivalent of a
       // real teacher circling, underlining, or pointing at something

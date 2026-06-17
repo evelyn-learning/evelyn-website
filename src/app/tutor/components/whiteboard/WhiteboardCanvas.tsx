@@ -270,7 +270,7 @@ export function WhiteboardCanvas({
     }
 
     for (const cmd of commands) {
-      if (cmd.action === 'clear' || cmd.action === 'goToPage' || cmd.action === 'removeItems') continue;
+      if (cmd.action === 'clear' || cmd.action === 'goToPage' || cmd.action === 'removeItems' || cmd.action === 'reviseItems') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdId = (cmd as any).id as string | undefined;
       if (cmdId && removedIds.has(cmdId)) continue;
@@ -327,6 +327,22 @@ export function WhiteboardCanvas({
       relocated[i].commands = keep;
     }
     return relocated;
+  }, [commands]);
+
+  // Kill-recovery phase A: ids currently flagged "revising" (dimmed). Built
+  // from reviseItems markers in stream order (revising:true adds, false
+  // clears). The item wrappers dim any rendered item whose id is in this set —
+  // a content kill dims the killed render during the recovery gap, then it's
+  // un-dimmed on confirm or removed on cleanup.
+  const revisingIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const cmd of commands) {
+      if (cmd.action === 'reviseItems') {
+        if (cmd.revising) for (const id of cmd.ids) s.add(id);
+        else for (const id of cmd.ids) s.delete(id);
+      }
+    }
+    return s;
   }, [commands]);
 
   // Handle goToPage navigation: find the target page by title
@@ -506,6 +522,10 @@ export function WhiteboardCanvas({
     () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
     [safeCurrentPage.commands],
   );
+  // Kill-recovery phase A: dim style for an item currently flagged revising.
+  const reviseStyle = (cmd: WhiteboardCommand): React.CSSProperties | undefined =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    revisingIds.has((cmd as any).id) ? { opacity: 0.4, transition: 'opacity 0.3s ease' } : undefined;
   const scribbles = useMemo(
     () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'scribble' }> => c.action === 'scribble'),
     [safeCurrentPage.commands],
@@ -652,6 +672,7 @@ export function WhiteboardCanvas({
         {renderableCommands.length === 1 ? (
           <div
             className="relative wb-item-enter"
+            style={reviseStyle(renderableCommands[0])}
             ref={(el) => { itemRefsRef.current[0] = el; }}
             data-wb-item-index={1}
           >
@@ -675,6 +696,7 @@ export function WhiteboardCanvas({
                   )}
                   <div
                     className="relative"
+                    style={reviseStyle(cmd)}
                     ref={(el) => { itemRefsRef.current[i] = el; }}
                     data-wb-item-index={i + 1}
                   >
@@ -2297,6 +2319,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
     case 'newPage':
     case 'goToPage':
     case 'removeItems':
+    case 'reviseItems':
     case 'handwrite':
       return null;
 

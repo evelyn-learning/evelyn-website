@@ -3817,6 +3817,9 @@ export function VoiceTutorRealtime({
         // restatement: the killed render never left the board.
         if (pendingRevisionRef.current.delete(existing.itemId)) {
           onDebugEvent?.('killed_render_confirmed', existing.itemId);
+          // Phase A: un-dim — the retry re-confirmed this render, so it stays
+          // at full opacity (it never left the board).
+          onWhiteboardCommand([{ action: 'reviseItems', ids: [existing.itemId], revising: false }]);
         }
         // Whiteboard markup Phase 1: record the dedup so the brain
         // learns next turn that its re-emission was suppressed. Include
@@ -8152,8 +8155,13 @@ export function VoiceTutorRealtime({
             renderCountAtAdvance !== null
               ? renderIdsThisAttempt.slice(renderCountAtAdvance)
               : renderIdsThisAttempt;
-          for (const id of retryRollbackTargets) {
-            if (id) pendingRevisionRef.current.add(id);
+          const deferIds = retryRollbackTargets.filter(Boolean);
+          for (const id of deferIds) pendingRevisionRef.current.add(id);
+          // Phase A: dim the deferred renders during the recovery gap. They're
+          // un-dimmed on confirm (restatement re-render dedup-drops) or removed
+          // on cleanup (correction / abort).
+          if (deferIds.length > 0) {
+            onWhiteboardCommand([{ action: 'reviseItems', ids: deferIds, revising: true }]);
           }
         }
         // DIM (don't yank) the killed attempt's streaming bubble. A retry is

@@ -1621,7 +1621,7 @@ export async function exportTutorSessionPDF(
   // bake scribble overlays onto their target item's captured SVG below.
   // scrollTo / newPage / clear / goToPage / removeItems have no PDF
   // representation; discard.
-  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems']);
+  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems']);
   // Two lookup paths for matching scribbles to target items:
   //   - byId keyed on the stamped id ("showSpringMass-1") — preferred
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
