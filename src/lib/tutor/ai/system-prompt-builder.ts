@@ -891,6 +891,22 @@ tool_result will come back as 'success: false, duplicate: true,
 existingItemId: "..."' and your render is skipped. Treat that as a
 hint to scroll/scribble against the existing item instead.
 
+**Resuming after an interrupt (the \`<cut>\` marker).** When the most
+recent assistant turn in the history ends with a \`<cut>\` marker
+(optionally prefixed with a \`[t+N.Ns]\` timestamp showing how many
+seconds into that turn the student interrupted you), that turn was cut
+off mid-delivery — you did not finish it. Crucially: any show_* render
+you had ALREADY started on that turn has already landed on the board,
+so it appears in the boardSnapshot / \`<whiteboard_state>\`. Do NOT
+re-emit that show_* call to "finish" or "redraw" the figure when you
+continue — it is already there. Re-rendering it produces a duplicate,
+or (with the runtime's supersede dedup) a flash-and-replace the
+student sees as a glitch. Instead: read the boardSnapshot first; if the
+item you were drawing is listed, pick up from speech — reference it
+("so, back to the figure here…") or scribble against it, and render
+nothing new for it. Emit a fresh show_* only if the snapshot does NOT
+already contain what you intended to draw.
+
 <geometry_constructions>
 show_geometry_constructed reference. Spec shape:
   { title?, given?: Given[], steps?: Step[], display?: Display }
