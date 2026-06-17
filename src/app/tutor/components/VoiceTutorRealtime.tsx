@@ -948,6 +948,13 @@ export function VoiceTutorRealtime({
   // in the finally. Cleared at the start of each brain call. (Visual dim layer
   // is phase A, on top of this.)
   const pendingRevisionRef = useRef<Set<string>>(new Set());
+  // Kill-recovery (B) keep-on-no-replacement (2026-06-17): true if the WINNING
+  // (final) attempt of the current brain call rendered anything. Reset at the
+  // top of each attempt; read in the finally to decide whether a diverged /
+  // abandoned retry actually superseded the killed renders (rendered a
+  // replacement → sweep) or just failed to re-emit them (rendered nothing →
+  // keep, so a valid render the student asked for doesn't vanish).
+  const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
 
   // Variable-name continuity: track declared functions across the session.
@@ -5640,6 +5647,17 @@ export function VoiceTutorRealtime({
       // call defers its renders here; the finally rolls back whatever the retry
       // didn't re-confirm.
       pendingRevisionRef.current = new Set();
+      // Kill-recovery (B) — keep-on-no-replacement (2026-06-17). Tracks
+      // whether the WINNING (final) attempt rendered anything. Reset at the
+      // top of each attempt, set on every render; after the loop it reflects
+      // only the last attempt's render activity. The finally uses it to decide
+      // whether a diverged/abandoned retry actually superseded the killed
+      // renders (winning attempt rendered a replacement → sweep) or simply
+      // failed to re-emit them (winning attempt rendered nothing → KEEP, so a
+      // valid graph the student asked for doesn't vanish — server_5
+      // 2026-06-17: brain bailed to a next-steps offer after repeated
+      // validation rejections and a valid show_function_graph was swept).
+      winningAttemptRenderedRef.current = false;
 
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
@@ -5820,6 +5838,10 @@ export function VoiceTutorRealtime({
         // If the attempt is killed, these are rolled back so no orphaned
         // figure survives the dropped narration (see rollbackKilledRenders).
         const renderIdsThisAttempt: string[] = [];
+        // Reset the winning-attempt render flag at the top of each attempt.
+        // After the loop it holds only the LAST attempt's render activity
+        // (keep-on-no-replacement, see the finally).
+        winningAttemptRenderedRef.current = false;
         // Snapshot of renderIdsThisAttempt.length captured at the moment
         // advance_lesson / generate_problem dispatches. Item B fix
         // (2026-05-24): if the attempt is killed AFTER an advance, the
@@ -7161,6 +7183,10 @@ export function VoiceTutorRealtime({
                     // roll exactly these renders back off the board.
                     if (result?.assignedIds?.length) {
                       renderIdsThisAttempt.push(...result.assignedIds);
+                      // Keep-on-no-replacement: this attempt produced a render.
+                      // If it turns out to be the winning attempt, the finally
+                      // treats these as a replacement for any killed renders.
+                      winningAttemptRenderedRef.current = true;
                     }
                     // Incoherence-fix: surface dedup-suppressed renders
                     // for show_segment_card / show_problem as synthetic
@@ -8474,21 +8500,36 @@ export function VoiceTutorRealtime({
       if (pendingRevisionRef.current.size > 0) {
         const staleIds = [...pendingRevisionRef.current];
         pendingRevisionRef.current = new Set();
-        onWhiteboardCommand([{ action: 'removeItems', ids: staleIds }]);
-        const idSet = new Set(staleIds);
-        const beforeMirror = whiteboardCommandsRef.current.length;
-        whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c) => !idSet.has((c as any).id),
-        );
-        whiteboardCommandCountRef.current = Math.max(
-          0,
-          whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length),
-        );
-        for (const id of staleIds) commandByIdRef.current.delete(id);
-        catalogRef.current.removeByIds(staleIds);
-        console.warn(`[brain-orchestrator] kill-recovery: rolled back ${staleIds.length} unconfirmed render(s) [${staleIds.join(', ')}]`);
-        onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
+        if (!winningAttemptRenderedRef.current) {
+          // Keep-on-no-replacement (2026-06-17): the winning attempt rendered
+          // NOTHING, so it never superseded these killed renders — it just
+          // diverged in speech (or the brain bailed to a next-steps offer
+          // after repeated validation rejections, server_5 2026-06-17).
+          // Sweeping here would blank the board for content the student
+          // explicitly asked for (a valid show_function_graph vanished). Keep
+          // them and un-dim instead. The pile-up case the sweep exists for
+          // always has the winning attempt render a replacement (→ the else
+          // branch still fires).
+          onWhiteboardCommand([{ action: 'reviseItems', ids: staleIds, revising: false }]);
+          console.warn(`[brain-orchestrator] kill-recovery: kept ${staleIds.length} render(s) — winning attempt rendered no replacement [${staleIds.join(', ')}]`);
+          onDebugEvent?.('killed_render_kept_no_replacement', `${staleIds.length}: ${staleIds.join(',')}`);
+        } else {
+          onWhiteboardCommand([{ action: 'removeItems', ids: staleIds }]);
+          const idSet = new Set(staleIds);
+          const beforeMirror = whiteboardCommandsRef.current.length;
+          whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (c) => !idSet.has((c as any).id),
+          );
+          whiteboardCommandCountRef.current = Math.max(
+            0,
+            whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length),
+          );
+          for (const id of staleIds) commandByIdRef.current.delete(id);
+          catalogRef.current.removeByIds(staleIds);
+          console.warn(`[brain-orchestrator] kill-recovery: rolled back ${staleIds.length} unconfirmed render(s) [${staleIds.join(', ')}]`);
+          onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
+        }
       }
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance]);
