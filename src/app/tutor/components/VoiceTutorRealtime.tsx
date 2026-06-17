@@ -3434,6 +3434,20 @@ export function VoiceTutorRealtime({
     // narrating "Sure, here's the final tree…".
     const redrawIntentRegex = /\b(?:redraw|draw|show|render|display)\b.{0,60}\b(?:this|that|it|tree|diagram|graph|chart|figure|picture|image|again|once more)\b/i;
     const redrawRequested = redrawIntentRegex.test(lastStudentText);
+    // Fire the redraw auto-newPage AT MOST ONCE per turn. Unlike the
+    // justSolved / topicShift refs (which self-clear after firing — see
+    // "fires at most once per event" below), redrawRequested is a
+    // recomputed boolean, so while the student's redraw text persists it
+    // re-triggers on EVERY teaching batch. That scattered a single "draw
+    // the graph and explain the focus" request across pages — the graph
+    // and each supporting equation each got their own auto-newPage
+    // (server_4 2026-06-17: graph on one page, Focus equation on the
+    // next, same turn, newPageThisTurnRef already true). Once a fresh
+    // page exists this turn, related renders stay on it; the FIRST redraw
+    // render still opens its page (newPageThisTurnRef starts false at
+    // turn start), preserving the BST silent-drop fix this trigger was
+    // built for.
+    const redrawNeedsNewPage = redrawRequested && !newPageThisTurnRef.current;
     // B3 — segment-transition auto-newPage. When a batch contains
     // `advance_lesson` + a teaching show_* command + no `new_page`
     // BEFORE the show, the brain has transitioned segments but is
@@ -3506,14 +3520,14 @@ export function VoiceTutorRealtime({
       : { same: false, signals: [] as Array<'A' | 'B' | 'C' | 'D'>, decisive: false, reason: '' };
     const tutorCtxAutoStrip = tutorCtxAuto.same
       && decidePageStrip({ tutorContext: tutorCtxAuto, studentText: lastStudentText }).stripNewPage;
-    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawRequested || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage) && processed.length > 0;
+    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawNeedsNewPage || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage) && processed.length > 0;
     // segmentAdvanceWithShow, redrawRequested, and same-type-different-
     // params all bypass the continuation guard and tutor-context
     // strip — each is its own explicit signal that a page break is
     // appropriate (segment transitioned, student asked to redraw, or
     // brain is dual-emitting the same diagram kind with refined
     // content).
-    const bypassSuppression = redrawRequested || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage;
+    const bypassSuppression = redrawNeedsNewPage || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage;
     if (autoNewPageTrigger && !bypassSuppression && continuationGuardActive) {
       console.log('[VoiceTutorRealtime] Suppressed auto-newPage — student said a continuation:', lastStudentText.slice(0, 60));
       onDebugEvent?.('auto_new_page_suppressed_continuation', `"${lastStudentText.slice(0, 40)}…"`);
@@ -3587,14 +3601,14 @@ export function VoiceTutorRealtime({
         const nextTitle =
           ('label' in firstTeachingCmd && typeof (firstTeachingCmd as { label?: string }).label === 'string' && (firstTeachingCmd as { label?: string }).label)
           || ('title' in firstTeachingCmd && typeof (firstTeachingCmd as { title?: string }).title === 'string' && (firstTeachingCmd as { title?: string }).title)
-          || (redrawRequested ? 'Redraw' : 'Next');
+          || (redrawNeedsNewPage ? 'Redraw' : 'Next');
         const synthetic: WhiteboardCommand = { action: 'newPage', title: String(nextTitle) };
         processed = [synthetic, ...processed];
         const reason = segmentAdvanceWithShow
           ? `Segment transition (advance_lesson + show_* in same batch, no new_page) → "${nextTitle}"`
           : sameTypeButDifferentParamsOnPage
           ? `Same-type show_diagram dual-emit on current page (intro-then-refine) → "${nextTitle}"`
-          : redrawRequested
+          : redrawNeedsNewPage
           ? `Student redraw request "${lastStudentText.slice(0, 40)}…" → "${nextTitle}"`
           : justSolvedPending
           ? `After Final Answer "${justSolvedPending}" → "${nextTitle}"`
@@ -3604,7 +3618,7 @@ export function VoiceTutorRealtime({
           ? 'auto_new_page_segment_advance'
           : sameTypeButDifferentParamsOnPage
           ? 'auto_new_page_dual_emit_dedup'
-          : redrawRequested
+          : redrawNeedsNewPage
           ? 'auto_new_page_redraw'
           : 'auto_new_page';
         onDebugEvent?.(event, reason);
