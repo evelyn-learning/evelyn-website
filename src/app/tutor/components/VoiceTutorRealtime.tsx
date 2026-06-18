@@ -57,7 +57,8 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
-import { WhiteboardCatalog, buildShowSignature, extractCommandTitle } from '@/lib/tutor/whiteboard/catalog';
+import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure } from '@/lib/tutor/whiteboard/catalog';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction } from '@/lib/tutor/whiteboard/page-grouping';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 // ─── Topic-notes orchestrator guardrails ───
@@ -1267,13 +1268,6 @@ export function VoiceTutorRealtime({
     persistPacingState();
   }, [logPacing, persistPacingState]);
 
-  // Flag flipped true when the tutor just emitted a show_equation with
-  // label: "Final Answer". On the NEXT batch of whiteboard commands that
-  // contains anything teaching-like (any show_*), we prepend a synthetic
-  // newPage so the board is clear for the next example. Then we reset
-  // the flag. This saves us from depending on the tutor remembering to
-  // call newPage itself between examples.
-  const recentlyFinishedProblemRef = useRef<string | null>(null);
 
   // Monotonic ID counters per action type — stamped onto every rendered
   // whiteboard command so the tutor can reference items it created earlier
@@ -1312,6 +1306,12 @@ export function VoiceTutorRealtime({
   // never re-rendered after a wave-diagram detour. Reset alongside
   // visualActionsThisTurnRef on every student transcript finalization.
   const newPageThisTurnRef = useRef(false);
+  // Monotonic brain-turn counter for the cross-turn page-grouping staleness
+  // backstop (a page gone N render-less turns is auto-closed). Incremented +
+  // mirrored into the catalog (setCurrentTurn) at brain-call start; the
+  // catalog stamps it onto Page.lastRenderTurn on every render append. See
+  // project_tutor_page_grouping_design.md.
+  const pageTurnRef = useRef(0);
   // Distinct from newPageThisTurnRef: tracks whether the brain EMITTED
   // a new_page tool-call in the current turn, regardless of whether the
   // tutor-side same-context guard later stripped that command. Set on
@@ -3412,227 +3412,133 @@ export function VoiceTutorRealtime({
       }
     }
 
-    // Auto-newPage triggers. Two reasons we'd prepend one:
-    //   A) "Just-solved" — the previous batch ended with a Final Answer,
-    //      and this batch is starting new teaching content.
-    //   B) "Topic shift" — the student's last clean transcript was
-    //      semantically far from the running signature (see
-    //      topic-shift-detector.ts), so even within the same subject a
-    //      fresh board makes sense.
-    // Continuation guard takes precedence over BOTH — if the student's
-    // last utterance was clearly a continuation ("for this", "got it
-    // next", "show me the steps to find T for this"), the tutor is
-    // answering a sub-question of the same problem and the fresh board
-    // makes the student lose their place. (2026-04-24 vertical-spring
-    // session: "Can you show me the steps to find T for this?" after
-    // solving ω fired auto-newPage because ω was tagged as a Final Answer
-    // in the prior batch.)
-    const justSolvedPending = recentlyFinishedProblemRef.current;
-    const topicShiftPending = topicShiftPendingRef.current;
-    // Student-redraw intent: explicit "draw this", "show me the tree
-    // again", "redraw it", etc. Triggers auto-newPage even without a
-    // justSolved / topicShift signal, AND bypasses the continuation /
-    // tutor-context suppression branches below (the student explicitly
-    // asked for a fresh look — we should honor that over those guards).
-    // Built 2026-05-14 after Phase 5 BST session: student asked "can
-    // you draw this tree to show me?" — brain emitted show_diagram for
-    // the after-insertion BST → signature-dedup'd against an earlier
-    // render → silent-dropped, student saw nothing despite brain
-    // narrating "Sure, here's the final tree…".
+    // ===== Cross-turn page grouping (page-grouping.ts) =====
+    // The page-break decision — group onto the active page, open a new page,
+    // overflow to a continuation, or pin a kill-recovery replacement in
+    // place — is owned by the pure decidePageForBatch module. This block only
+    // sources its inputs from orchestrator refs + the catalog Page model and
+    // applies the result. See project_tutor_page_grouping_design.md for the
+    // full tiered precedence (Tier 0 kill-pin → 1 structural → 2 continuation
+    // → 3 topic-shift → 4 default → overflow) and the do-NOT-regress set
+    // (e.g. 2026-04-24 "show me the steps to find T for this" stays on page:
+    // Tier-2 continuation beats Tier-3 topic-shift).
+    // Student-redraw intent ("draw this again", "show me the tree once
+    // more"). NO LONGER a page trigger (design Q6) — it is now a DEDUP-BYPASS
+    // signal only: the re-render lands on the active page (grouped) and
+    // bypasses the signature dedup gate below so it actually shows
+    // (preserving the 2026-05-14 BST silent-drop fix). redrawRequested is
+    // consumed at the dedup gate (~line 3817).
     const redrawIntentRegex = /\b(?:redraw|draw|show|render|display)\b.{0,60}\b(?:this|that|it|tree|diagram|graph|chart|figure|picture|image|again|once more)\b/i;
     const redrawRequested = redrawIntentRegex.test(lastStudentText);
-    // Fire the redraw auto-newPage AT MOST ONCE per turn. Unlike the
-    // justSolved / topicShift refs (which self-clear after firing — see
-    // "fires at most once per event" below), redrawRequested is a
-    // recomputed boolean, so while the student's redraw text persists it
-    // re-triggers on EVERY teaching batch. That scattered a single "draw
-    // the graph and explain the focus" request across pages — the graph
-    // and each supporting equation each got their own auto-newPage
-    // (server_4 2026-06-17: graph on one page, Focus equation on the
-    // next, same turn, newPageThisTurnRef already true). Once a fresh
-    // page exists this turn, related renders stay on it; the FIRST redraw
-    // render still opens its page (newPageThisTurnRef starts false at
-    // turn start), preserving the BST silent-drop fix this trigger was
-    // built for.
-    const redrawNeedsNewPage = redrawRequested && !newPageThisTurnRef.current;
-    // B3 — segment-transition auto-newPage. When a batch contains
-    // `advance_lesson` + a teaching show_* command + no `new_page`
-    // BEFORE the show, the brain has transitioned segments but is
-    // about to render on the previous segment's page. Symptoms:
-    // judge sees stale snapshot from previous segment → KILL → retry
-    // adds a duplicate diagram. Observed 2026-05-13 Phase 4 eclipse
-    // segment: brain emitted [advance_lesson(concept-eclipse),
-    // mark_segment_complete(concept-earth-layers),
-    // show_diagram(eclipse_diagram)] in one turn. Two eclipse
-    // diagrams ended up on the resulting page. Auto-inject new_page
-    // so the show_* lands cleanly on a fresh page. Independent of
-    // the justSolved / topicShift / redraw triggers — segment
-    // advance is its OWN signal that a page break is appropriate.
-    const advanceLessonIdx = processed.findIndex((c) => c.action === 'advanceLesson');
-    const firstTeachingIdx = processed.findIndex((c) => {
-      const a = String(c.action);
-      return a !== 'newPage' && a !== 'showSegmentCard' && /^show[A-Z]/.test(a);
-    });
-    const newPageIdx = processed.findIndex((c) => c.action === 'newPage');
-    const segmentAdvanceWithShow =
-      advanceLessonIdx >= 0 &&
-      firstTeachingIdx >= 0 &&
-      (newPageIdx < 0 || newPageIdx > firstTeachingIdx);
-    // B2 — within-page same-type dual-emit. Brain's intro-then-refine
-    // pattern: turn 1 emits show_diagram(type=X) with generic content,
-    // turn 2 emits show_diagram(type=X) with refined content. Both
-    // land on the same page (no new_page between). Different
-    // signatures → exact-signature dedup doesn't fire. Observed
-    // 2026-05-13 Phase 5 binary_tree (intro tree root=8 then test-
-    // seed root=5) and Phase 4 plate_tectonics (generic Plate A/B
-    // then Indian × Eurasian). Fix: inject new_page so the new
-    // emission lands on a fresh page (newest wins per page). Pure
-    // exact-duplicate emissions (same signature) continue to drop via
-    // the existing dedup at line 3113 — no new_page injected for them
-    // (would leave an empty page).
-    const sameTypeButDifferentParamsOnPage = (() => {
-      const firstCmd = firstTeachingIdx >= 0 ? processed[firstTeachingIdx] : null;
-      if (!firstCmd || String(firstCmd.action) !== 'showDiagram') return false;
-      const newType = (firstCmd as { type?: string }).type;
-      if (typeof newType !== 'string' || newType.length === 0) return false;
-      // If exact signature matches existing → exact dedup will drop
-      // the new emission anyway; don't inject new_page.
-      const sig = buildShowSignature(String(firstCmd.action), firstCmd);
-      if (catalogRef.current.findBySignature(sig)) return false;
-      // Walk whiteboardCommandsRef backwards. Stop at the most recent
-      // newPage; anything between that newPage and now is "on current
-      // page". A same-type show_diagram in that window is the
-      // intro-then-refine case.
-      const prior = whiteboardCommandsRef.current;
-      for (let i = prior.length - 1; i >= 0; i--) {
-        const c = prior[i];
-        if (c.action === 'newPage') break;
-        if (
-          c.action === 'showDiagram' &&
-          (c as { type?: string }).type === newType
-        ) {
-          return true;
-        }
-      }
-      return false;
-    })();
-    // Tutor-side same-context check also suppresses auto-newPage —
-    // but not when the student explicitly requested a redraw.
-    const tutorCtxAuto = (justSolvedPending || topicShiftPending) && processed.length > 0
+
+    // Tier-3 heuristic signal: topic-shift (embedding distance). One-shot.
+    const topicShiftPending = topicShiftPendingRef.current;
+    // Tier-2 suppressor: tutor narration indicates same-context continuation.
+    // Only relevant to the topic-shift heuristic (Tier-1 structural breaks
+    // beat continuation anyway), so compute it only when a shift is pending.
+    const tutorCtxAuto = topicShiftPending && processed.length > 0
       ? detectTutorSameContext({
           batch: processed,
           tutorSpeech: pendingTutorTextRef.current || currentAssistantTextRef.current || '',
           catalog: catalogRef.current,
         })
       : { same: false, signals: [] as Array<'A' | 'B' | 'C' | 'D'>, decisive: false, reason: '' };
-    const tutorCtxAutoStrip = tutorCtxAuto.same
+    const tutorSameContext = tutorCtxAuto.same
       && decidePageStrip({ tutorContext: tutorCtxAuto, studentText: lastStudentText }).stripNewPage;
-    const autoNewPageTrigger = (justSolvedPending || topicShiftPending || redrawNeedsNewPage || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage) && processed.length > 0;
-    // segmentAdvanceWithShow, redrawRequested, and same-type-different-
-    // params all bypass the continuation guard and tutor-context
-    // strip — each is its own explicit signal that a page break is
-    // appropriate (segment transitioned, student asked to redraw, or
-    // brain is dual-emitting the same diagram kind with refined
-    // content).
-    const bypassSuppression = redrawNeedsNewPage || segmentAdvanceWithShow || sameTypeButDifferentParamsOnPage;
-    if (autoNewPageTrigger && !bypassSuppression && continuationGuardActive) {
-      console.log('[VoiceTutorRealtime] Suppressed auto-newPage — student said a continuation:', lastStudentText.slice(0, 60));
-      onDebugEvent?.('auto_new_page_suppressed_continuation', `"${lastStudentText.slice(0, 40)}…"`);
-      // Clear both flags so this path doesn't fire again next batch.
-      recentlyFinishedProblemRef.current = null;
-      topicShiftPendingRef.current = null;
-    } else if (autoNewPageTrigger && !bypassSuppression && tutorCtxAutoStrip) {
-      console.log('[VoiceTutorRealtime] Suppressed auto-newPage — tutor same-context:', tutorCtxAuto.reason);
-      onDebugEvent?.('auto_new_page_suppressed_tutor_context', tutorCtxAuto.reason);
-      recentlyFinishedProblemRef.current = null;
-      topicShiftPendingRef.current = null;
-    } else if (autoNewPageTrigger) {
-      // All show_* actions that represent "fresh teaching content" — i.e.
-      // anything that should start on its own whiteboard page. Meta-
-      // actions (scribble/scrollTo/newPage/clear/goToPage) and pure
-      // annotations (highlight/drawVector/annotate) are excluded so they
-      // don't spuriously trigger a page break.
-      //
-      // Must stay in sync with CommandRenderer's case list in
-      // WhiteboardCanvas.tsx — new show_* renderers added there must be
-      // registered here too, or auto-newPage injection silently fails
-      // for them (2026-04-24 regression: showVennDiagram/showFlowchart/
-      // showOrbital/showDna/showPendulum/showSimpleMachine missing).
-      const teachingActions = new Set([
-        // Legacy generic
-        'showEquation', 'showDiagram', 'showGraph', 'showTable',
-        'showProblem', 'showSolution', 'showSvgDiagram', 'showGeometry',
-        'showCode', 'showDerivation',
-        // Tier-1 structured renderers
-        'showRayDiagram', 'showSpringMass', 'showWave', 'showFoodWeb',
-        'showMotionDiagram', 'showProjectileMotion', 'showSimpleMachine',
-        'showPendulum', 'showVector', 'showCoordinatePlane',
-        'showScatterPlot', 'showCycleDiagram', 'showConceptMap',
-        'showOrbitalDiagram', 'showPedigree', 'showCellDiagram',
-        'showDna', 'showFreeBodyDiagram', 'showEnergyBars',
-        'showCollision', 'showReactionCoordinate', 'showPunnett',
-        'showLewis', 'showPeriodicTable', 'showAnnotatedPassage',
-        'showCallStack', 'showFlowchart', 'showManipulative',
-        'showNumberLine', 'showFractionBar', 'showTree',
-        'showTimeline', 'showMap', 'showVennDiagram', 'showStats',
-        'showUnitCircle', 'showCircuit', 'showMolecule',
-      ]);
-      const firstTeachingCmd = processed.find((c) => teachingActions.has(String(c.action)));
-      const alreadyHasNewPage = processed[0]?.action === 'newPage';
-      // Whiteboard markup Phase 1 hotfix 5: when the first teaching
-      // command is an organizer-kind show_diagram and its signature
-      // already exists in the catalog, the dedup gate will drop it.
-      // Injecting a synthetic newPage in front of a guaranteed-dedup
-      // leaves an empty page behind (observed 2026-05-13 (6) session:
-      // student saw a blank "page 2" after the brain re-emitted
-      // comparison_table). Suppress injection in that case.
-      const isOrganizerKindForAuto = firstTeachingCmd
-        && String(firstTeachingCmd.action) === 'showDiagram'
-        && typeof (firstTeachingCmd as { type?: string }).type === 'string'
-        && new Set([
-          'comparison_table', 't_chart', 'frayer_model',
-          'hierarchy_pyramid', 'argument_structure', 'government_branches',
-          'body_system', 'life_cycle', 'water_cycle', 'rock_cycle',
-        ]).has((firstTeachingCmd as { type?: string }).type as string);
-      const wouldDedupOnExistingOrganizer = isOrganizerKindForAuto
-        && !!catalogRef.current.findBySignature(
-          buildShowSignature(String(firstTeachingCmd!.action), firstTeachingCmd),
-        );
-      if (firstTeachingCmd && !alreadyHasNewPage && wouldDedupOnExistingOrganizer) {
-        console.log(
-          '[VoiceTutorRealtime] Suppressed auto-newPage — first teaching command is an organizer-kind show_diagram that will dedup against existing item; injecting newPage would leave a blank page',
-        );
-        onDebugEvent?.('auto_new_page_suppressed_organizer_dedup', String((firstTeachingCmd as { type?: string }).type ?? ''));
+
+    // Blank-page guard input: is the first teaching command an organizer-kind
+    // show_diagram whose signature already exists (→ it WILL dedup-drop)?
+    // Injecting a page break in front of a guaranteed-dedup leaves a blank
+    // page (2026-05-13 comparison_table regression), so the module suppresses
+    // the break in that case.
+    const firstTeachingCmdForGrouping = processed.find((c) => isTeachingRenderAction(String(c.action)));
+    const firstTeachingWillDedup = (() => {
+      if (!firstTeachingCmdForGrouping) return false;
+      const a = String(firstTeachingCmdForGrouping.action);
+      if (a !== 'showDiagram') return false;
+      const t = (firstTeachingCmdForGrouping as { type?: string }).type;
+      const isOrganizer = typeof t === 'string' && new Set([
+        'comparison_table', 't_chart', 'frayer_model', 'hierarchy_pyramid',
+        'argument_structure', 'government_branches', 'body_system',
+        'life_cycle', 'water_cycle', 'rock_cycle',
+      ]).has(t);
+      if (!isOrganizer) return false;
+      try {
+        return !!catalogRef.current.findBySignature(buildShowSignature(a, firstTeachingCmdForGrouping));
+      } catch {
+        return false;
       }
-      if (firstTeachingCmd && !alreadyHasNewPage && !wouldDedupOnExistingOrganizer) {
-        const nextTitle =
-          ('label' in firstTeachingCmd && typeof (firstTeachingCmd as { label?: string }).label === 'string' && (firstTeachingCmd as { label?: string }).label)
-          || ('title' in firstTeachingCmd && typeof (firstTeachingCmd as { title?: string }).title === 'string' && (firstTeachingCmd as { title?: string }).title)
-          || (redrawNeedsNewPage ? 'Redraw' : 'Next');
-        const synthetic: WhiteboardCommand = { action: 'newPage', title: String(nextTitle) };
-        processed = [synthetic, ...processed];
-        const reason = segmentAdvanceWithShow
-          ? `Segment transition (advance_lesson + show_* in same batch, no new_page) → "${nextTitle}"`
-          : sameTypeButDifferentParamsOnPage
-          ? `Same-type show_diagram dual-emit on current page (intro-then-refine) → "${nextTitle}"`
-          : redrawNeedsNewPage
-          ? `Student redraw request "${lastStudentText.slice(0, 40)}…" → "${nextTitle}"`
-          : justSolvedPending
-          ? `After Final Answer "${justSolvedPending}" → "${nextTitle}"`
-          : `After topic shift (dist=${topicShiftPending?.fromDistance.toFixed(3)}) → "${nextTitle}"`;
-        console.log('[VoiceTutorRealtime] Auto-newPage injected:', reason);
-        const event = segmentAdvanceWithShow
-          ? 'auto_new_page_segment_advance'
-          : sameTypeButDifferentParamsOnPage
-          ? 'auto_new_page_dual_emit_dedup'
-          : redrawNeedsNewPage
-          ? 'auto_new_page_redraw'
-          : 'auto_new_page';
-        onDebugEvent?.(event, reason);
+    })();
+
+    // Tier-0 input: is this batch a kill-recovery replacement? If killed
+    // renders are still dimmed in the pending-revision set, pin the
+    // replacement to their page (replace-in-place beats any split signal).
+    const killRecoveryPinPageId = (() => {
+      if (pendingRevisionRef.current.size === 0) return null;
+      for (const id of pendingRevisionRef.current) {
+        const it = catalogRef.current.getItem(id);
+        if (it?.pageId) return it.pageId;
       }
-      // Either way, clear both flags so this fires at most once per event.
-      recentlyFinishedProblemRef.current = null;
-      topicShiftPendingRef.current = null;
+      return null;
+    })();
+
+    // Active-page view for the decision (weighted load + subject anchor).
+    const activePageObj = catalogRef.current.getActivePage();
+    const activePageView = activePageObj
+      ? {
+          id: activePageObj.id,
+          title: activePageObj.title,
+          segmentId: activePageObj.segmentId,
+          anchorKey: activePageObj.anchorKey,
+          weightedLoad: catalogRef.current.getItems().reduce(
+            (sum, it) => (it.pageId === activePageObj.id ? sum + weightOfAction(it.action) : sum),
+            0,
+          ),
+          lastRenderTurn: activePageObj.lastRenderTurn,
+        }
+      : null;
+
+    const pageDecision = decidePageForBatch({
+      batch: processed,
+      studentText: lastStudentText,
+      activePage: activePageView,
+      currentTurn: pageTurnRef.current,
+      signals: {
+        topicShiftDistance: topicShiftPending ? topicShiftPending.fromDistance : null,
+        continuationGuardActive,
+        tutorSameContext,
+        // Prior-turn deferred segment advance is handled by the B1 flush
+        // block immediately below — don't double-count it here.
+        segmentAdvancePending: false,
+        killRecoveryPinPageId,
+        firstTeachingWillDedup,
+      },
+    });
+    // Topic-shift is one-shot — clear it now that the decision consumed it.
+    topicShiftPendingRef.current = null;
+
+    if (pageDecision.action === 'newPage' || pageDecision.action === 'continuation') {
+      const synthetic: WhiteboardCommand = { action: 'newPage', title: pageDecision.title };
+      processed = [synthetic, ...processed];
+      // Open the page in the catalog Page model NOW. Synthetic newPages are
+      // prepended AFTER the step-1 side-effect loop (~line 2961), so the
+      // setCurrentPage bridge there never sees them. A continuation inherits
+      // the active page's subject (anchorKey) so grouping + Board Map treat
+      // the unit as one. setCurrentPage afterward syncs the VIEW marker
+      // (isOnCurrentPage) without re-opening (idempotent on same title).
+      catalogRef.current.openPage(
+        pageDecision.action === 'continuation'
+          ? { title: pageDecision.title, isContinuation: true, parentPageId: activePageView?.id }
+          : { title: pageDecision.title },
+      );
+      catalogRef.current.setCurrentPage(pageDecision.title);
+      console.log(`[VoiceTutorRealtime] page-grouping → ${pageDecision.action}: ${pageDecision.reason}`);
+      onDebugEvent?.(pageDecision.event, pageDecision.reason);
+    } else if (pageDecision.action === 'pin') {
+      // Kill-recovery replace: no synthetic break. The append loop stamps the
+      // replacement onto killRecoveryPinPageId (see the append call below).
+      console.log(`[VoiceTutorRealtime] page-grouping → pin to ${pageDecision.pageId}: ${pageDecision.reason}`);
+      onDebugEvent?.('page_grouping_pin', `${pageDecision.pageId}: ${pageDecision.reason}`);
     }
 
     // Flush a deferred auto-newPage from a prior segment advance — but
@@ -3671,6 +3577,11 @@ export function VoiceTutorRealtime({
       if (hasFreshTeaching) {
         const deferred = pendingAdvanceNewPageRef.current;
         processed = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand, ...processed];
+        // Open the deferred page in the catalog Page model (this synthetic
+        // newPage is prepended after the step-1 side-effect loop, so the
+        // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
+        catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
+        catalogRef.current.setCurrentPage(deferred.title);
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${deferred.title}")`);
         onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title}`);
         pendingAdvanceNewPageRef.current = null;
@@ -3679,20 +3590,9 @@ export function VoiceTutorRealtime({
       }
     }
 
-    // Detect Final Answer in this batch so the NEXT batch gets an auto-
-    // newPage prepended. Stored as the latex text so the debug log is
-    // useful; the actual trigger is a truthy check above.
-    for (const cmd of processed) {
-      if (
-        cmd.action === 'showEquation'
-        && 'label' in cmd
-        && typeof cmd.label === 'string'
-        && /\bfinal answer\b/i.test(cmd.label)
-      ) {
-        recentlyFinishedProblemRef.current = cmd.latex ? String(cmd.latex) : cmd.label;
-        console.log('[VoiceTutorRealtime] Final Answer detected; next batch will get an auto-newPage');
-      }
-    }
+    // (Final-Answer → next-batch new page ["justSolved"] retired with
+    // cross-turn page grouping — it was subsumed by H6/H2/grouping and was
+    // the source of the 2026-04-24 "find T for this" misfire. See design Q10.)
 
     // Stamp a stable id onto every rendered whiteboard command BEFORE we
     // resolve scribble/scrollTo targets. ID format is `<action>-<counter>`
@@ -3757,6 +3657,15 @@ export function VoiceTutorRealtime({
         currentPageTitle = (cmd as { title?: string }).title;
         newPageThisBatch = true;
         newPageThisTurnRef.current = true;
+        // Uniform catalog Page-model sync point: ensure a Page is opened +
+        // active for EVERY newPage as the loop walks it, regardless of source
+        // (brain / synthetic / B1-deferred) — so subsequent renders in this
+        // batch stamp onto the right page. Idempotent: a page already opened
+        // upstream (step-1 bridge for titled brain newPages, or the
+        // page-grouping openPage for synthetic ones) is a no-op here; this
+        // catches the gaps (e.g. an empty-title brain newPage, which the
+        // title-gated step-1 bridge skips).
+        catalogRef.current.setCurrentPage(currentPageTitle);
         // Reset per-page step tracking — references to "Step N" on
         // a fresh page must be re-grounded by new emissions.
         stepsEmittedOnCurrentPageRef.current = new Set();
@@ -3814,7 +3723,7 @@ export function VoiceTutorRealtime({
           'body_system', 'life_cycle', 'water_cycle', 'rock_cycle',
         ]).has(cmdForAxes.type);
       const dedupAllowedDespiteNewPage = isOrganizerKind;
-      if (existing && (dedupAllowedDespiteNewPage || (!newPageThisBatch && !newPageThisTurnRef.current))) {
+      if (existing && (dedupAllowedDespiteNewPage || (!newPageThisBatch && !newPageThisTurnRef.current && !redrawRequested))) {
         const inputIdx = commands.indexOf(cmd);
         if (inputIdx >= 0) {
           duplicates[inputIdx] = {
@@ -3889,6 +3798,10 @@ export function VoiceTutorRealtime({
         itemId: id,
         action,
         pageTitle: currentPageTitle,
+        // Kill-recovery replace (Tier 0): pin the replacement onto the killed
+        // render's page so it replaces in place, beating any boundary signal.
+        // Otherwise undefined → the catalog stamps the active page.
+        pageId: killRecoveryPinPageId ?? undefined,
         title: extractCommandTitle(cmd),
         signature,
         features: manifest ?? [],
@@ -3898,6 +3811,24 @@ export function VoiceTutorRealtime({
     // remain in `commands` for index alignment in the duplicates[] array
     // returned to the Realtime hook.
     processed = processed.filter((c) => !droppedAsDuplicate.has(c));
+
+    // Set / transfer the active (or pinned) page's subject anchor from this
+    // batch's first PRIMARY figure, so the H6 same-segment-different-figure
+    // backstop compares against the real figure's subject key. Covers the
+    // first figure on a fresh page AND the kill-recovery/redraw replace case
+    // (the replacement figure becomes the new anchor — anchor-transfer, Q5).
+    // Only figures that actually rendered have an `id` (dedup-dropped ones
+    // were skipped before id assignment), so this never anchors to a phantom.
+    for (const cmd of processed) {
+      const a = String(cmd.action);
+      if (!isPrimaryFigure(a)) continue;
+      const id = (cmd as { id?: string }).id;
+      if (!id) continue;
+      const it = catalogRef.current.getItem(id);
+      if (!it?.pageId) continue;
+      catalogRef.current.setPageAnchor(it.pageId, id, computeAnchorKey(a, cmd));
+      break; // first primary figure only
+    }
 
     // Resolve a stamped targetId → which page + item index it lives at,
     // by walking the running command history. The catalog gives us the
@@ -5173,6 +5104,11 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
+    // Advance the page-grouping turn counter (staleness backstop) and mirror
+    // it into the catalog so render appends stamp the current turn onto their
+    // page's lastRenderTurn.
+    pageTurnRef.current += 1;
+    catalogRef.current.setCurrentTurn(pageTurnRef.current);
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
