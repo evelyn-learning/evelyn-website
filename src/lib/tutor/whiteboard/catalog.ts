@@ -61,6 +61,11 @@ export interface CatalogItem {
   action: string;
   /** Page title at time of render, if any (tracks cross-page resolution later). */
   pageTitle?: string;
+  /** Id of the Page (see {@link Page}) that was active when this item was
+   *  appended. The first-class successor to pageTitle — a page's items are
+   *  DERIVED by filtering on this field (single source of truth, no stored
+   *  item lists). Undefined for items appended before any page was opened. */
+  pageId?: string;
   /** Optional human-readable title (e.g. show_problem.problem.title or show_energy_bars.title). */
   title?: string;
   /**
@@ -83,6 +88,60 @@ export interface CatalogItem {
 }
 
 /**
+ * A first-class whiteboard page — one coherent subject/figure exploration
+ * unit (the parabola: graph it, find its focus, do a problem on it = ONE
+ * Page). Replaces the prior ephemeral "page is just a title string" model.
+ * See project_tutor_page_grouping_design.md.
+ *
+ * Items are NOT stored on the Page — a page's items are derived by filtering
+ * catalog items on `pageId` (single source of truth). The fields here are
+ * page-level identity + lifecycle metadata only.
+ */
+export interface Page {
+  /** Stable, session-unique id. Counter-based ("page-1", "page-2", …). */
+  id: string;
+  /** Human-readable page title (from the newPage command or first render). */
+  title: string;
+  /** Lesson-plan segment active when the page opened. Empty for free convo. */
+  segmentId?: string;
+  /** Subject key of the page's anchor render — the deterministic identity
+   *  the H6 same-segment-different-figure backstop compares against. Set
+   *  from the first PRIMARY-figure item appended; transfers on kill-recovery
+   *  / redraw replace. Undefined until a primary figure lands. */
+  anchorKey?: string;
+  /** itemId of the anchor (primary-figure) render. Transfers on replace. */
+  anchorItemId?: string;
+  /** Turn index when the page was opened. */
+  openedAtTurn: number;
+  /** Turn index of the most recent render appended to this page. Drives the
+   *  staleness backstop (a page gone N render-less turns is auto-closed). */
+  lastRenderTurn: number;
+  /** True when this is an overflow continuation page ("Title (cont.)"). It
+   *  shares the parent's anchorKey — grouping + Board Map treat the parent
+   *  and its continuations as one logical subject. */
+  isContinuation?: boolean;
+  /** For a continuation page: the id of the page it continues. */
+  parentPageId?: string;
+}
+
+/**
+ * One row of the Board Map page index ({@link WhiteboardCatalog.getPageIndex}).
+ * Surfaced to the brain as the `<whiteboard_pages>` block so it can address
+ * an earlier page by number via go_to_page. (Board Map feature — this is the
+ * seam the page-grouping work exposes for it.)
+ */
+export interface PageIndexEntry {
+  /** 1-based page number in creation order (the addressable handle). */
+  number: number;
+  id: string;
+  title: string;
+  /** Distinct prettified artifact kinds on the page (e.g. ["Function Graph",
+   *  "Equation"]) — derived from the page's items' actions. */
+  artifactTypes: string[];
+  isContinuation?: boolean;
+}
+
+/**
  * One row of the per-turn whiteboard snapshot returned alongside every
  * show_* tool_result. The tutor reads this to remember what's already on
  * the board and route through scroll/scribble instead of redrawing.
@@ -92,6 +151,8 @@ export interface CatalogSnapshotEntry {
   action: string;
   title?: string;
   pageTitle?: string;
+  /** Id of the Page this item lives on (mirrors CatalogItem.pageId). */
+  pageId?: string;
   featureCount: number;
   /** Segment id the entry was appended in (mirrors CatalogItem.segmentId).
    *  When the brain's per-turn snapshot filters by segment, the entries
@@ -105,6 +166,12 @@ export interface CatalogSnapshotEntry {
    *  before narrating about it. Always undefined when no current page
    *  has been registered (free-conversation sessions / pre-newPage). */
   isOnCurrentPage?: boolean;
+  /** True when the item lives on the catalog's ACTIVE page (the page new
+   *  teaching renders currently accumulate onto). Distinct from
+   *  isOnCurrentPage, which tracks the VIEW (where the student is looking).
+   *  Active page vs. view position are intentionally separate (the Board Map
+   *  seam). Undefined when no page is active. */
+  isOnActivePage?: boolean;
   /** Per-feature short descriptions surfaced to the brain so it can preserve
    *  exact coordinates / labels across turns. Without these, the brain sees
    *  only "[1] showGeometry — Circle: Center O(-2,3), Radius 5 (5 features)"
@@ -224,6 +291,133 @@ export class WhiteboardCatalog {
    *  page, brain didn't know it had moved. */
   private currentPageTitle = '';
 
+  /** Ordered list of first-class Pages opened this session. See {@link Page}.
+   *  Items reference these by pageId; a page's items are derived by filtering
+   *  this.items, never stored on the Page. */
+  private pages: Page[] = [];
+  /** Id of the active page — where new teaching renders accumulate. Distinct
+   *  from currentPageTitle (the VIEW). Null before any page is opened. */
+  private activePageId: string | null = null;
+  /** Monotonic page-id counter ("page-1", "page-2", …). */
+  private nextPageNum = 1;
+  /** Current turn index, mirrored from the orchestrator (setCurrentTurn).
+   *  Stamped onto Page.openedAtTurn / lastRenderTurn for the staleness
+   *  backstop. 0 until the orchestrator wires it. */
+  private currentTurn = 0;
+
+  /** Mirror the orchestrator's turn counter so page lifecycle metadata
+   *  (openedAtTurn / lastRenderTurn) is accurate. Idempotent. */
+  setCurrentTurn(turn: number): void {
+    this.currentTurn = Number.isFinite(turn) ? turn : 0;
+  }
+
+  /** Open a fresh page, make it active, and return its id. The caller (the
+   *  page-grouping decision module via the orchestrator) decides WHEN to
+   *  open; this method only allocates + activates. A continuation page
+   *  inherits its parent's anchorKey so grouping treats the unit as one
+   *  subject. */
+  openPage(input: {
+    title?: string;
+    segmentId?: string;
+    isContinuation?: boolean;
+    parentPageId?: string;
+  } = {}): string {
+    const id = `page-${this.nextPageNum++}`;
+    const parent = input.parentPageId
+      ? this.pages.find((p) => p.id === input.parentPageId)
+      : undefined;
+    const page: Page = {
+      id,
+      title: (input.title ?? '').trim(),
+      segmentId: input.segmentId ?? (this.currentSegmentId || undefined),
+      openedAtTurn: this.currentTurn,
+      lastRenderTurn: this.currentTurn,
+      isContinuation: input.isContinuation || undefined,
+      parentPageId: input.parentPageId,
+      // A continuation shares the parent's subject identity.
+      anchorKey: parent?.anchorKey,
+      anchorItemId: undefined,
+    };
+    this.pages.push(page);
+    this.activePageId = id;
+    return id;
+  }
+
+  /** Re-activate an existing page (e.g. resuming work on it). No-op if the
+   *  id is unknown. Note: navigation/scroll does NOT call this — the VIEW is
+   *  tracked separately via setCurrentPage. */
+  setActivePage(pageId: string): void {
+    if (this.pages.some((p) => p.id === pageId)) this.activePageId = pageId;
+  }
+
+  getActivePageId(): string | null {
+    return this.activePageId;
+  }
+
+  getActivePage(): Page | undefined {
+    return this.activePageId
+      ? this.pages.find((p) => p.id === this.activePageId)
+      : undefined;
+  }
+
+  getPages(): ReadonlyArray<Page> {
+    return this.pages;
+  }
+
+  getPage(pageId: string): Page | undefined {
+    return this.pages.find((p) => p.id === pageId);
+  }
+
+  /** Number of items currently on a page (derived — items are the source of
+   *  truth). Used by the overflow guard and empty-page GC. */
+  pageItemCount(pageId: string): number {
+    return this.items.reduce((n, it) => (it.pageId === pageId ? n + 1 : n), 0);
+  }
+
+  /** Set/transfer the anchor (primary-figure identity) of a page. Called when
+   *  the first primary figure lands, and on kill-recovery / redraw replace so
+   *  the replacement becomes the new anchor and page identity stays coherent. */
+  setPageAnchor(pageId: string, anchorItemId: string, anchorKey: string): void {
+    const page = this.pages.find((p) => p.id === pageId);
+    if (!page) return;
+    page.anchorItemId = anchorItemId;
+    page.anchorKey = anchorKey;
+  }
+
+  /** Drop any page that has zero derived items (empty-page GC). Returns the
+   *  ids removed. Called after removeByIds so a kill-recovery sweep that
+   *  empties a page doesn't leave a phantom page in the Board Map index. The
+   *  active page is preserved even when empty (it's about to receive a
+   *  render); only NON-active empty pages are collected. */
+  gcEmptyPages(): string[] {
+    const removed: string[] = [];
+    this.pages = this.pages.filter((p) => {
+      if (p.id === this.activePageId) return true;
+      if (this.pageItemCount(p.id) > 0) return true;
+      removed.push(p.id);
+      return false;
+    });
+    return removed;
+  }
+
+  /** Compact page index for the Board Map `<whiteboard_pages>` block. One row
+   *  per page, in creation order, with the distinct artifact kinds on each. */
+  getPageIndex(): PageIndexEntry[] {
+    return this.pages.map((p, i) => {
+      const types = new Set<string>();
+      for (const it of this.items) {
+        if (it.pageId === p.id) types.add(prettyAction(it.action));
+      }
+      return {
+        number: i + 1,
+        id: p.id,
+        title: p.title,
+        artifactTypes: Array.from(types),
+        isContinuation: p.isContinuation,
+      };
+    });
+  }
+
   /** Update the current-segment marker. Subsequent append()s stamp
    *  this segmentId on their items. The orchestrator calls this on
    *  every brain turn to mirror lessonPlanRef + currentSegmentIdRef
@@ -234,9 +428,21 @@ export class WhiteboardCatalog {
 
   /** Update the current-visible-page marker. The orchestrator calls
    *  this whenever a newPage command processes (the brain explicitly
-   *  switched pages). Idempotent. */
+   *  switched pages). Idempotent.
+   *
+   *  Phase 1 bridge: a newPage flows through here, so this is also where the
+   *  first-class Page model is populated off the EXISTING newPage path —
+   *  behavior-neutral (nothing reads the Page model yet). A new title that
+   *  differs from the active page opens a fresh Page. Phase 3 will drive
+   *  openPage() directly from the page-grouping decision module and this
+   *  bridge can be retired. */
   setCurrentPage(pageTitle: string | undefined): void {
-    this.currentPageTitle = (pageTitle ?? '').trim();
+    const title = (pageTitle ?? '').trim();
+    this.currentPageTitle = title;
+    const active = this.getActivePage();
+    if (!active || active.title !== title) {
+      this.openPage({ title });
+    }
   }
 
   getCurrentPageTitle(): string {
@@ -247,6 +453,10 @@ export class WhiteboardCatalog {
     itemId: string;
     action: string;
     pageTitle?: string;
+    /** Page to stamp this item onto. Defaults to the active page. Phase 3
+     *  passes an explicit id to pin a kill-recovery replacement to the killed
+     *  render's page (replace-in-place beats any split signal). */
+    pageId?: string;
     title?: string;
     signature?: string;
     features: FeatureManifestEntry[];
@@ -299,11 +509,13 @@ export class WhiteboardCatalog {
         });
       }
     }
+    const pageId = input.pageId ?? this.activePageId ?? undefined;
     const item: CatalogItem = {
       itemId: input.itemId,
       order: this.nextOrder++,
       action: input.action,
       pageTitle: input.pageTitle,
+      pageId,
       title: input.title,
       signature: input.signature,
       segmentId: this.currentSegmentId || undefined,
@@ -314,6 +526,18 @@ export class WhiteboardCatalog {
       this.items[existing] = { ...item, order: this.items[existing].order };
     } else {
       this.items.push(item);
+    }
+    // Page lifecycle bookkeeping: bump the render-turn watermark (staleness
+    // backstop) and seed a provisional anchor if the page has none yet. The
+    // PRIMARY-figure anchor + anchorKey are set explicitly by the orchestrator
+    // via setPageAnchor (it has the raw command); this only ensures a page
+    // that received a render has some anchorItemId for empty-page reasoning.
+    if (pageId) {
+      const page = this.pages.find((p) => p.id === pageId);
+      if (page) {
+        page.lastRenderTurn = this.currentTurn;
+        if (!page.anchorItemId) page.anchorItemId = item.itemId;
+      }
     }
     return item;
   }
@@ -347,16 +571,19 @@ export class WhiteboardCatalog {
       : this.items;
     const currentPage = this.currentPageTitle;
     const haveCurrentPage = currentPage.length > 0;
+    const activePageId = this.activePageId;
     return items.map((it) => ({
       itemId: it.itemId,
       action: it.action,
       title: it.title,
       pageTitle: it.pageTitle,
+      pageId: it.pageId,
       featureCount: it.features.length,
       segmentId: it.segmentId,
       isOnCurrentPage: haveCurrentPage
         ? (it.pageTitle ?? '').trim() === currentPage
         : undefined,
+      isOnActivePage: activePageId ? it.pageId === activePageId : undefined,
       // Pull a compact list of per-feature descriptions. Skip the synthetic
       // whole-item region (kind === 'region') — its description is just the
       // title we already surface above. The remaining descriptions carry
@@ -396,6 +623,15 @@ export class WhiteboardCatalog {
     const drop = new Set(ids);
     const before = this.items.length;
     this.items = this.items.filter((it) => !drop.has(it.itemId));
+    // Empty-page GC: a sweep (e.g. kill-recovery) may have emptied a page.
+    // Drop now-empty non-active pages so they don't linger in the Board Map
+    // index. Also clear a stale anchor that pointed at a removed item.
+    for (const page of this.pages) {
+      if (page.anchorItemId && drop.has(page.anchorItemId)) {
+        page.anchorItemId = undefined;
+      }
+    }
+    this.gcEmptyPages();
     return before - this.items.length;
   }
 
@@ -422,6 +658,10 @@ export class WhiteboardCatalog {
   clear(): void {
     this.items = [];
     this.nextOrder = 0;
+    this.pages = [];
+    this.activePageId = null;
+    this.nextPageNum = 1;
+    this.currentPageTitle = '';
   }
 
   /**
@@ -951,6 +1191,102 @@ export function buildShowSignature(action: string, cmd: any): string {
   } catch {
     return `${action}|<unhashable>`;
   }
+}
+
+/**
+ * Render actions that are PRIMARY FIGURES — the big visual anchors that
+ * define a page's subject identity (graphs, diagrams, geometry, charts,
+ * trees, maps…). Used by the page-grouping H6 backstop (only a primary
+ * figure whose subject differs from the page anchor forces a split) and by
+ * the overflow guard (primaries weigh more than supporting renders).
+ *
+ * Everything NOT in this set — equations, derivations, code, problem/
+ * solution cards, plain tables, reading passages — is SUPPORTING: it
+ * accompanies the anchor and never triggers a page split, so a follow-up
+ * "explain its focus" equation groups onto the figure's page (G1).
+ *
+ * Bias-to-group: actions absent from this set default to SUPPORTING, so an
+ * unrecognized renderer under-splits (recoverable, capped by overflow)
+ * rather than scattering. ADD a new big-figure renderer here when you author
+ * one — mirror the orchestrator's teachingActions list.
+ */
+const PRIMARY_FIGURE_ACTIONS = new Set<string>([
+  'showDiagram', 'showGraph', 'showFunctionGraph', 'showGeometry',
+  'showGeometryConstructed', 'showCoordinatePlane', 'showSvgDiagram',
+  'showScatterPlot', 'showRayDiagram', 'showSpringMass', 'showWave',
+  'showFoodWeb', 'showMotionDiagram', 'showProjectileMotion',
+  'showSimpleMachine', 'showPendulum', 'showVector', 'showCycleDiagram',
+  'showConceptMap', 'showOrbitalDiagram', 'showPedigree', 'showCellDiagram',
+  'showDna', 'showFreeBodyDiagram', 'showEnergyBars', 'showCollision',
+  'showReactionCoordinate', 'showPunnett', 'showLewis', 'showPeriodicTable',
+  'showFlowchart', 'showManipulative', 'showNumberLine', 'showFractionBar',
+  'showTree', 'showTimeline', 'showMap', 'showVennDiagram', 'showStats',
+  'showUnitCircle', 'showCircuit', 'showMolecule', 'showCallStack',
+]);
+
+/**
+ * Is this render a primary figure (a page-anchor candidate) vs a supporting
+ * render (equation/text/card that accompanies it)? See
+ * {@link PRIMARY_FIGURE_ACTIONS}.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isPrimaryFigure(action: string, _cmd?: any): boolean {
+  return PRIMARY_FIGURE_ACTIONS.has(action);
+}
+
+/** Normalize a label/expression for anchor-key comparison. */
+function normForKey(s: unknown): string {
+  return typeof s === 'string' ? s.trim().toLowerCase().replace(/\s+/g, ' ') : '';
+}
+
+/**
+ * Pull the figure's defining content tokens (expression / function /
+ * equation / shape) from a command, so two function graphs (a parabola vs a
+ * hyperbola) get DIFFERENT anchor keys even when their titles are generic.
+ * Best-effort across the common field locations our renderers use.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function primaryContentTokens(cmd: any): string {
+  if (!cmd || typeof cmd !== 'object') return '';
+  const p = cmd.params && typeof cmd.params === 'object' ? cmd.params : {};
+  const eqStr = (v: unknown): unknown =>
+    v && typeof v === 'object' ? (v as { latex?: unknown }).latex : v;
+  const cands = [
+    cmd.expression, cmd.function, cmd.latex, cmd.shape, eqStr(cmd.equation),
+    p.expression, p.function, p.latex, p.shape, eqStr(p.equation),
+  ];
+  const out: string[] = [];
+  for (const v of cands) {
+    const n = normForKey(v);
+    if (n) out.push(n);
+  }
+  return out.join(' ');
+}
+
+/**
+ * Subject key for page membership (H6) — coarser than buildShowSignature
+ * (which is for exact dedup). Two renders share an anchorKey when they're
+ * "the same subject/figure": same organizer axes, OR same action+type+title
+ * +defining-expression. A page's anchorKey is its anchor (primary-figure)
+ * render's key; H6 splits when an incoming primary figure's key differs.
+ *
+ * Derived from the render itself — never from student text or a brain tag —
+ * so the decision stays deterministic.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function computeAnchorKey(action: string, cmd: any): string {
+  const structural = structuralAxesFor(action, cmd);
+  if (structural) {
+    try {
+      return `${structural.tag}|${JSON.stringify(structural.axes)}`;
+    } catch {
+      return structural.tag;
+    }
+  }
+  const type = cmd && typeof cmd === 'object' && typeof cmd.type === 'string' ? cmd.type : '';
+  const title = normForKey(extractCommandTitle(cmd));
+  const content = primaryContentTokens(cmd);
+  return [action, type, title, content].filter(Boolean).join('|');
 }
 
 /**
