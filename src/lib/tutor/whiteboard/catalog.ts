@@ -955,7 +955,7 @@ function pickDisplayLabel(f: CatalogFeature): string {
  * "showEnergyBars" → "Energy Bars". Used in describeItem (catalog hints)
  * and to seed whole-item synonyms ("the energy bars chart").
  */
-function prettyAction(action: string): string {
+export function prettyAction(action: string): string {
   return action.replace(/^show/, '').replace(/([A-Z])/g, ' $1').trim();
 }
 
