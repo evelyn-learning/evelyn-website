@@ -84,6 +84,15 @@ export interface CatalogItem {
    * about which card the student is attending to.
    */
   segmentId?: string;
+  /** Subject key (computeAnchorKey: category|||title) for PRIMARY figures —
+   *  drives generic evolve-in-place (findEvolvableFigure compares it via
+   *  anchorsDiverge to decide if a re-emit replaces this figure in place).
+   *  Undefined for supporting renders (equations/text) and pre-stamp items.
+   *  See project_tutor_figure_identity_design.md. */
+  anchorKey?: string;
+  /** Turn index when this item was appended (mirrors catalog.currentTurn).
+   *  Used by findEvolvableFigure's staleness bound. */
+  renderedAtTurn?: number;
   features: CatalogFeature[];
 }
 
@@ -464,6 +473,9 @@ export class WhiteboardCatalog {
     pageId?: string;
     title?: string;
     signature?: string;
+    /** Subject key for PRIMARY figures (computeAnchorKey) — enables generic
+     *  evolve-in-place. Orchestrator passes it for primary figures only. */
+    anchorKey?: string;
     features: FeatureManifestEntry[];
   }): CatalogItem {
     const features: CatalogFeature[] = input.features.map((f) => ({
@@ -524,6 +536,8 @@ export class WhiteboardCatalog {
       title: input.title,
       signature: input.signature,
       segmentId: this.currentSegmentId || undefined,
+      anchorKey: input.anchorKey,
+      renderedAtTurn: this.currentTurn,
       features,
     };
     const existing = this.items.findIndex((i) => i.itemId === input.itemId);
@@ -615,6 +629,36 @@ export class WhiteboardCatalog {
 
   getItem(itemId: string): CatalogItem | undefined {
     return this.items.find((i) => i.itemId === itemId);
+  }
+
+  /**
+   * Generic evolve-in-place query (project_tutor_figure_identity_design):
+   * the most-recent, NON-STALE PRIMARY figure whose subject matches
+   * `newAnchorKey` (same subject ⇔ `anchorsDiverge === false`). The
+   * orchestrator calls this BEFORE appending a new primary figure; a non-null
+   * result means "replace this prior figure in place" (remove it + pin the new
+   * one to its page). Returns null when there's no confident same-subject match
+   * → caller renders the new figure as fresh (fail-safe = coexist). Generic
+   * across all figure types — no per-type logic.
+   */
+  findEvolvableFigure(newAnchorKey: string, staleTurns: number): CatalogItem | null {
+    if (!newAnchorKey) return null;
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const it = this.items[i];
+      if (!it.anchorKey) continue;                       // supporting / pre-stamp
+      if (!isPrimaryFigure(it.action)) continue;
+      // STRICTER than anchorsDiverge (grouping): containment-only, fail-safe —
+      // a wrong replace destroys a figure, so demand a confident match.
+      if (!isFigureEvolution(newAnchorKey, it.anchorKey)) continue;  // different subject
+      if (
+        typeof it.renderedAtTurn === 'number' &&
+        this.currentTurn - it.renderedAtTurn > staleTurns
+      ) {
+        continue; // stale — student moved on; don't yank it
+      }
+      return it;
+    }
+    return null;
   }
 
   /** Forget the listed items. Called by the orchestrator when a brain
@@ -1319,6 +1363,31 @@ export function computeFigureCategory(action: string, cmd: any): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function computeAnchorKey(action: string, cmd: any): string {
   return `${computeFigureCategory(action, cmd)}|||${normForKey(extractCommandTitle(cmd))}`;
+}
+
+/**
+ * STRICTER same-subject test for generic evolve-in-place REPLACE (vs
+ * {@link anchorsDiverge}'s looser GROUPING test). Same category AND one
+ * normalized title CONTAINS the other (the "evolving figure: title grows a
+ * qualifier" case — "Parabola y²=4x" → "Parabola y²=4x with Tangent").
+ *
+ * Deliberately DROPS anchorsDiverge's token-overlap (Jaccard) branch, which is
+ * too loose for replace: two conics with similar equation titles
+ * (ellipse "x²/9+y²/4=1" vs hyperbola "x²/4−y²/9=1") share enough tokens to
+ * pass it, and a WRONG replace silently DESTROYS a figure. Fail-safe: missing
+ * title or no containment → NOT an evolution → coexist (the recoverable
+ * outcome). See project_tutor_figure_identity_design.md.
+ */
+export function isFigureEvolution(newKey: string, priorKey: string): boolean {
+  const sepN = newKey.indexOf('|||');
+  const sepP = priorKey.indexOf('|||');
+  const catN = sepN >= 0 ? newKey.slice(0, sepN) : newKey;
+  const catP = sepP >= 0 ? priorKey.slice(0, sepP) : priorKey;
+  if (catN !== catP) return false; // different figure kind
+  const titleN = sepN >= 0 ? newKey.slice(sepN + 3) : '';
+  const titleP = sepP >= 0 ? priorKey.slice(sepP + 3) : '';
+  if (!titleN || !titleP) return false; // no title → too risky to replace
+  return titleN.includes(titleP) || titleP.includes(titleN);
 }
 
 /** Alphanumeric tokens of a normalized title, for the H6 fuzzy compare. */
