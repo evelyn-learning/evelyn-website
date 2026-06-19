@@ -33,7 +33,13 @@ export function CellContent({ value }: { value: string }) {
     return <InlineMathText text={normalized} />;
   }
 
-  const hasLatexCmd = /\\(?:frac|sqrt|sum|int|prod|binom|left|right|times|div|pm|cdot|leq|geq|neq|approx|infty|alpha|beta|gamma|delta|theta|pi|sigma|omega|text|mathrm|mathbf)/.test(normalized);
+  // Any backslash-command signals LaTeX: a named command (\frac, \pm, \pi,
+  // …) OR a spacing/punctuation command (\, \; \: \!). The earlier explicit
+  // allow-list missed the spacing commands, so a cell like "(a,\,0)" (thin
+  // space) matched no signal, fell through to plain text, and leaked the
+  // literal "\," (2026-06-19 Console5 Img1). In a math table cell a backslash
+  // is virtually always LaTeX, so the broad match is safe.
+  const hasLatexCmd = /\\(?:[a-zA-Z]+|[,;:!])/.test(normalized);
   const hasSubSup = /[_^{}]/.test(normalized);
 
   if (!hasLatexCmd && !hasSubSup) {
