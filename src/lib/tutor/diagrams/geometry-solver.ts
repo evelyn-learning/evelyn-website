@@ -299,11 +299,15 @@ export interface StepDiameter extends StepCommon {
   through?: string;
 }
 
-/** Tangent line to a circle at an existing point on the circle. */
+/** Tangent line at an existing point ON a circle OR conic (ellipse /
+ *  parabola / hyperbola). The point must lie on the curve — the solver
+ *  computes the exact tangent (perpendicular to the radius for a circle,
+ *  the polar line for a conic). For a tangent from an OUTSIDE point use
+ *  tangents_from_external / chord_of_contact instead. */
 export interface StepTangentAt extends StepCommon {
   kind: 'tangent_at';
-  on: string;       // circle id
-  point: string;    // point on circle
+  on: string;       // circle OR conic id
+  point: string;    // point on the curve
   /** Length of the rendered tangent segment (centered on the point). */
   length?: number;
 }
@@ -1245,6 +1249,14 @@ function solveDiameter(step: StepDiameter, state: State): void {
 }
 
 function solveTangentAt(step: StepTangentAt, state: State): void {
+  // Conic tangent at an on-curve point = the polar line at that point.
+  // Reuses the canonical-coord machinery; the brain was hand-rolling these
+  // (wrong endpoints) for lack of a primitive (2026-06-19 Console5 Img2/3).
+  const target = state.byId.get(step.on);
+  if (target && target.kind === 'conic') {
+    solveConicTangentAt(step, target, state);
+    return;
+  }
   const c = circ(state, step.on);
   const center = pt(state, c.center);
   const P = pt(state, step.point);
@@ -1259,6 +1271,52 @@ function solveTangentAt(step: StepTangentAt, state: State): void {
   const toId = `${step.id}_to`;
   setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * tx), y: round2(P.y - half * ty) });
   setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * tx), y: round2(P.y + half * ty) });
+  setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
+}
+
+/** Tangent to a conic at a point lying ON the curve. The tangent direction
+ *  is perpendicular to the canonical gradient ∇F (sign-robust across both
+ *  branches of a hyperbola / either side of a parabola); the point is
+ *  validated to be on the curve, else reject-with-hint (fail-safe, mirrors
+ *  chord_of_contact). */
+function solveConicTangentAt(step: StepTangentAt, c: ResolvedConic, state: State): void {
+  const center = pt(state, c.center);
+  const P = pt(state, step.point);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  // World → canonical (inverse rotation about the conic center).
+  const dx = P.x - center.x, dy = P.y - center.y;
+  const ex = dx * cosR + dy * sinR;
+  const ey = -dx * sinR + dy * cosR;
+  const a = c.a, b = c.b ?? a;
+  // Canonical implicit F=0 residual (normalized) + gradient ∇F.
+  let residual: number, gx: number, gy: number;
+  if (c.conicType === 'ellipse') {
+    residual = ex * ex / (a * a) + ey * ey / (b * b) - 1;
+    gx = 2 * ex / (a * a); gy = 2 * ey / (b * b);
+  } else if (c.conicType === 'hyperbola') {
+    residual = ex * ex / (a * a) - ey * ey / (b * b) - 1;
+    gx = 2 * ex / (a * a); gy = -2 * ey / (b * b);
+  } else { // parabola y² = 4a·x
+    residual = (ey * ey - 4 * a * ex) / (4 * a * Math.abs(ex) + ey * ey + 1);
+    gx = -4 * a; gy = 2 * ey;
+  }
+  if (Math.abs(residual) > 0.06) {
+    throw new Error(
+      `tangent_at "${step.id}": point "${step.point}" is not on the conic "${step.on}" — it must lie ON the curve. ` +
+      `Check its coordinates, or use tangents_from_external / chord_of_contact for a tangent from an OUTSIDE point.`,
+    );
+  }
+  // Tangent direction ⊥ gradient (canonical), then rotate back to world.
+  let tcx = -gy, tcy = gx;
+  const tm = Math.hypot(tcx, tcy) || 1;
+  tcx /= tm; tcy /= tm;
+  const tdx = tcx * cosR - tcy * sinR;
+  const tdy = tcx * sinR + tcy * cosR;
+  const half = (step.length ?? Math.max(a, b) * 2) / 2;
+  const fromId = `${step.id}_from`, toId = `${step.id}_to`;
+  setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * tdx), y: round2(P.y - half * tdy) });
+  setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * tdx), y: round2(P.y + half * tdy) });
   setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
 }
 

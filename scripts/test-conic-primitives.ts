@@ -154,6 +154,64 @@ function main() {
     assert.ok(segsTouching(out, 'P') === 2, 'two tangent segments from external point');
   });
 
+  // ── tangent_at (conic) — the 2026-06-19 Console5 Img2/3 fix ───────────────
+  // Slope of the tangent segment, and the midpoint of from/to (which is P,
+  // since the segment is centered on the point of tangency).
+  const tanSlope = (out: SolverOutput, id: string) => {
+    const f = findPt(out, `${id}_from`), t = findPt(out, `${id}_to`);
+    return (t.y - f.y) / (t.x - f.x);
+  };
+  const tanMidpoint = (out: SolverOutput, id: string) => {
+    const f = findPt(out, `${id}_from`), t = findPt(out, `${id}_to`);
+    return { x: (f.x + t.x) / 2, y: (f.y + t.y) / 2 };
+  };
+
+  test('tangent_at ellipse x²/9+y²/4=1 at (√5,4/3) → slope −√5/3, centered on P', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'P', kind: 'point', x: 2.236, y: 1.333 }],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'tan', kind: 'tangent_at', on: 'e', point: 'P' },
+      ],
+    });
+    assert.ok(hasSeg(out, 'tan_from', 'tan_to'), 'tangent segment present');
+    approx(tanSlope(out, 'tan'), -Math.sqrt(5) / 3, 0.02); // −0.745: tangent, NOT the secant through V₂
+    const mid = tanMidpoint(out, 'tan');
+    approx(mid.x, 2.236, 0.05); approx(mid.y, 1.333, 0.05);
+  });
+
+  test('tangent_at hyperbola x²/4−y²/9=1 at (√13,9/2) → slope √13/2', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'P', kind: 'point', x: 3.606, y: 4.5 }],
+      steps: [
+        { id: 'h', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'tan', kind: 'tangent_at', on: 'h', point: 'P' },
+      ],
+    });
+    approx(tanSlope(out, 'tan'), Math.sqrt(13) / 2, 0.03); // 1.803
+  });
+
+  test('tangent_at parabola y²=4x at (1,2) → slope 1 (y=x+1)', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'P', kind: 'point', x: 1, y: 2 }],
+      steps: [
+        { id: 'p', kind: 'parabola', vertex: 'O', focalLength: 1, opens: 'right' },
+        { id: 'tan', kind: 'tangent_at', on: 'p', point: 'P' },
+      ],
+    });
+    approx(tanSlope(out, 'tan'), 1, 0.02);
+  });
+
+  test('tangent_at REJECTS a point not on the conic (fail-safe)', () => {
+    assert.throws(() => solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'P', kind: 'point', x: 3, y: 3 }],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'tan', kind: 'tangent_at', on: 'e', point: 'P' },
+      ],
+    }), /not on the conic/);
+  });
+
   // ── circle (kind:'circle', not a conic) ──────────────────────────────────
   test('chord_of_contact on a CIRCLE x²+y²=9 from (4,0) → polar x=9/4, touch (2.25, ±1.984)', () => {
     // Img15: the brain correctly emitted chord_of_contact on the circle, but the
