@@ -3596,25 +3596,21 @@ export function VoiceTutorRealtime({
     // deferred for a future batch — the brain may emit fresh content
     // later. See pendingAdvanceNewPageRef declaration.
     if (pendingAdvanceNewPageRef.current) {
-      const teachingActionSet = new Set([
-        'showEquation', 'showDiagram', 'showGraph', 'showTable', 'showProblem',
-        'showSolution', 'showSvgDiagram', 'showGeometry', 'showCode',
-        'showDerivation', 'showRayDiagram', 'showSpringMass', 'showWave',
-        'showFoodWeb', 'showMotionDiagram', 'showProjectileMotion',
-        'showSimpleMachine', 'showPendulum', 'showVector', 'showCoordinatePlane',
-        'showScatterPlot', 'showCycleDiagram', 'showConceptMap',
-        'showOrbitalDiagram', 'showPedigree', 'showCellDiagram', 'showDna',
-        'showFreeBodyDiagram', 'showEnergyBars', 'showCollision',
-        'showReactionCoordinate', 'showPunnett', 'showLewis', 'showPeriodicTable',
-        'showAnnotatedPassage', 'showCallStack', 'showFlowchart',
-        'showManipulative', 'showNumberLine', 'showFractionBar', 'showTree',
-        'showTimeline', 'showMap', 'showVennDiagram', 'showStats',
-        'showUnitCircle', 'showCircuit', 'showMolecule', 'showSegmentCard',
-        'showWorkedExample',
-      ]);
+      // "Fresh teaching content" = any teaching render not already on the board.
+      // Uses the canonical isTeachingRender predicate (page-grouping.ts) rather
+      // than a hand-maintained action allow-list. The old list had drifted and
+      // was MISSING showGeometryConstructed (+ showBalancedEquation, showMatrix,
+      // showGraphicOrganizer, showLabeledImage, showLewisConstructed, showEarlyMath,
+      // showPhonics, showSolvedExample, showTryYourself, showWritingFrame, …): a
+      // conic FIGURE drawn right after a segment advance therefore failed to flush
+      // the deferred new-page and leaked onto the PRIOR page while its equations
+      // landed on the new one — the parabola/ellipse split in the 2026-06-19 conic
+      // session. The predicate is the single source of truth, so new show_* tools
+      // never re-introduce this drift. showSegmentCard is OR'd back in to preserve
+      // its prior flush behavior (it's excluded from isTeachingRender by design).
       const hasFreshTeaching = processed.some((cmd) => {
         const a = String(cmd.action);
-        if (!teachingActionSet.has(a)) return false;
+        if (!isTeachingRenderAction(a) && a !== 'showSegmentCard') return false;
         try {
           const sig = buildShowSignature(a, cmd);
           return !catalogRef.current.findBySignature(sig);
