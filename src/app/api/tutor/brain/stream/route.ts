@@ -43,6 +43,9 @@ interface BrainStreamRequestBody {
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   studentTranscript: string;
   whiteboardSnapshot: BrainTurnInput['whiteboardSnapshot'];
+  /** Full-board page list for the Board Map (project_tutor_board_map_design).
+   *  Presence drives page-grouped rendering of the whiteboard summary. */
+  whiteboardPages?: BrainTurnInput['whiteboardPages'];
   /** Active lesson plan context, when the session is plan-driven. */
   lessonPlanContext?: BrainTurnInput['lessonPlanContext'];
   /** Pre-rendered student profile block (cross-session memory). */
@@ -272,6 +275,9 @@ export async function POST(req: NextRequest) {
   if (!Array.isArray(body.whiteboardSnapshot)) {
     return badRequest('whiteboardSnapshot must be an array');
   }
+  if (body.whiteboardPages !== undefined && !Array.isArray(body.whiteboardPages)) {
+    return badRequest('whiteboardPages must be an array');
+  }
 
   // Pacing v2 telemetry forwarding: drain the client's buffer to the
   // server log so grep on serverlog_*.txt finds [pacing] lines.
@@ -419,6 +425,7 @@ export async function POST(req: NextRequest) {
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,
           whiteboardSnapshot: body.whiteboardSnapshot,
+          whiteboardPages: body.whiteboardPages,
           lessonPlanContext: body.lessonPlanContext,
           studentProfileBlock: body.studentProfileBlock,
           activeProblem: body.activeProblem,

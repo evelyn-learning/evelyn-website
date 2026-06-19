@@ -13,7 +13,7 @@
  * and keeps the swap from the Realtime-as-brain architecture localized.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import type { CatalogSnapshotEntry } from '../whiteboard/catalog';
+import type { CatalogSnapshotEntry, Page } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
@@ -48,8 +48,17 @@ export interface BrainTurnInput {
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   /** What the student just said — the trigger for this turn. */
   studentTranscript: string;
-  /** Current whiteboard contents (catalog snapshot). Empty array = blank board. */
+  /** Current whiteboard contents (catalog snapshot). Empty array = blank board.
+   *  For the Board Map (project_tutor_board_map_design), this is the FULL-board
+   *  snapshot (NOT segment-scoped) so off-segment expanded pages have detail;
+   *  buildWhiteboardSummary owns the segment-scoping via whiteboardPages +
+   *  currentSegmentId. Legacy callers may still pass a segment-scoped snapshot
+   *  with no whiteboardPages → flat rendering. */
   whiteboardSnapshot: CatalogSnapshotEntry[];
+  /** Full-board page list (catalog.getPages()) for the Board Map. Presence
+   *  switches buildWhiteboardSummary into page-grouped MAP mode; absence →
+   *  legacy flat list. */
+  whiteboardPages?: readonly Page[];
   /** Tool definitions in the neutral format. Converted to Anthropic shape internally. */
   tools: ToolDefinition[];
   /** Active lesson plan context, when the session is plan-driven. The brain
@@ -826,7 +835,10 @@ function buildBrainMessages(
 }
 
 export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutput> {
-  const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
+  const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot, {
+    pages: input.whiteboardPages,
+    currentSegmentId: input.lessonPlanContext?.currentSegmentId,
+  });
 
   // Compose the user-side message with whiteboard state + the student's words
   // wrapped in clearly labeled blocks. Keeping them in the user role (rather
@@ -978,7 +990,10 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
  * the consumer.
  */
 export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<BrainStreamEvent, void, void> {
-  const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot);
+  const whiteboardSummary = buildWhiteboardSummary(input.whiteboardSnapshot, {
+    pages: input.whiteboardPages,
+    currentSegmentId: input.lessonPlanContext?.currentSegmentId,
+  });
   const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`

@@ -5684,7 +5684,14 @@ export function VoiceTutorRealtime({
             systemPrompt: claudeSystemPromptRef.current,
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
-            whiteboardSnapshot: catalogRef.current.getSnapshot(segmentSnapshotOpts),
+            // Board Map (project_tutor_board_map_design): send the FULL-board
+            // snapshot (NOT segment-scoped) + the page list. buildWhiteboardSummary
+            // now owns segment-scoping — it expands current-segment + current-view
+            // + top-N off-segment pages and collapses the rest, so off-segment
+            // pages still need their item detail available here. The judge path
+            // (separate call) keeps its segment-scoped snapshot.
+            whiteboardSnapshot: catalogRef.current.getSnapshot(),
+            whiteboardPages: catalogRef.current.getPages(),
             lessonPlanContext,
             studentProfileBlock: studentProfileBlockRef.current || undefined,
             grade: level,

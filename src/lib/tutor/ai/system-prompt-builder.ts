@@ -813,7 +813,11 @@ For any programming code, call show_code with { language, label, code }. NEVER u
   \`\`\`
 - The runtime titles each page from your content automatically, so give your figures/cards good \`title\`/\`label\` fields and the page titles follow.
 
-**Reference only what the student can see right now.** The \`<whiteboard_state>\` block tags each item with either \`[CURRENT PAGE]\` or \`[earlier page]\`, and the block opens with a \`Currently visible page:\` line. Before referencing an item in speech ("look at the X", "see the Y on the board"), confirm it's marked \`[CURRENT PAGE]\`. If it's on an \`[earlier page]\`, you must FIRST either (a) call \`tutor_scroll_whiteboard({target: ...})\` to bring it back into view, or (b) re-render it via the appropriate show_* tool, before narrating about it. Telling the student to look at something they can't see is a chat-board mismatch and breaks trust.
+**The \`<whiteboard_state>\` block is your map of the whole board.** It is a numbered list of pages (a table of contents) — each \`Page N: "title" — <artifact kinds>\` line is one page, listed in order, and \`N\` is its position. The page you are currently viewing is tagged \`[CURRENT PAGE]\`; pages from earlier in the lesson are tagged \`[earlier]\`; a \`(cont.)\` page is an overflow continuation of the page above it. The current page plus the most recently-used pages are shown EXPANDED with their items and per-feature detail; older pages are COLLAPSED to just their header line — their detail still exists, you simply bring the page into view (\`tutor_scroll_whiteboard\`) or list its features (\`tutor_list_whiteboard_features\`) to see it.
+
+Use the map two ways:
+- **Before rendering**, scan the page headers + artifact kinds to check whether what you're about to draw is already on the board. If it is, scroll/scribble to it instead of redrawing.
+- **To reference earlier content**, first bring it back into view. Before saying "look at the X" / "see the Y", confirm that item is on the \`[CURRENT PAGE]\`. If it lives on an \`[earlier]\` page, you must FIRST either (a) call \`tutor_scroll_whiteboard({target: ...})\` to bring it into view, or (b) re-render it via the appropriate show_* tool. Telling the student to look at something off-screen is a chat-board mismatch and breaks trust.
 
 ### Whiteboard Guidelines
 
