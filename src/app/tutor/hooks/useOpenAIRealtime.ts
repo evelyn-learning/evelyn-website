@@ -150,6 +150,17 @@ export interface RealtimeConfig {
   onStudentAudioChunk?: (float32: Float32Array) => void;
   onTutorAudioChunk?: (float32: Float32Array) => void;
   /**
+   * Render↔speech sync (2026-06-19): fires as TTS playback crosses sentence
+   * boundaries so the brain orchestrator can flush buffered whiteboard renders
+   * in sync with the narrating sentence. `'sentence-start'` fires when
+   * playNextAudio dequeues a chunk belonging to a NEW sentence (audio for that
+   * sentence is now beginning); `'drain'` fires when the audio queue empties
+   * (the turn's last sentence has finished playing). Additive + inert unless
+   * consumed; only the claude-brain orchestrator wires it (gated on
+   * NEXT_PUBLIC_TUTOR_RENDER_SYNC). See project_tutor_render_speech_sync.
+   */
+  onTtsPlaybackProgress?: (event: 'sentence-start' | 'drain') => void;
+  /**
    * Relay mode — when set, Realtime is used purely as STT + TTS. The hook
    * suppresses Realtime's own response generation (no auto-`response.create`
    * on student transcript completion) and hands the transcript to the caller
@@ -536,7 +547,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     useRealtimeV2 = false,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk, relayMode,
+    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
   // so the Realtime model behaves as a transport layer, not a tutor.
@@ -695,6 +706,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   //  ...audioQueueSentenceRef (deduped), ...speakTextQueueRef].
   const currentSpeakTextRef = useRef<string | null>(null);
   const audioQueueSentenceRef = useRef<string[]>([]);
+  // Render↔speech sync: ref-mirror the playback-progress callback so
+  // playNextAudio can fire it without re-creating on every render.
+  const onTtsPlaybackProgressRef = useRef(onTtsPlaybackProgress);
+  onTtsPlaybackProgressRef.current = onTtsPlaybackProgress;
   const pendingDispatchSentenceRef = useRef<string | null>(null);
   const responseIdToSentenceRef = useRef<Map<string, string>>(new Map());
   // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
@@ -798,6 +813,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         ttsProviderRef.current === 'openai-mini' &&
         speakTextQueueRef.current.length > 0
       ) {
+        // Inter-sentence gap in mini-relay mode (the queue empties between
+        // each sentence's fetch) — NOT a turn-end. Shift the next sentence
+        // and keep going WITHOUT firing 'drain', so render↔speech sync
+        // doesn't mistake the gap for the turn's last sentence.
         const next = speakTextQueueRef.current.shift()!;
         speakTextInFlightRef.current = false;
         sendOneSpeakTextViaOpenAITTSRef.current?.(next);
@@ -806,6 +825,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
         speakTextInFlightRef.current = false;
       }
+      // Render↔speech sync: truly nothing left to play (no queued sentence
+      // to advance to) — the turn's last dispatched sentence has finished.
+      // Fire 'drain' so the orchestrator flushes any remaining buffered
+      // tail renders (turn-tail anchor).
+      onTtsPlaybackProgressRef.current?.('drain');
       // If mic is running, go straight back to listening
       if (audioProcessorRef.current && mediaStreamRef.current) {
         updateState('listening');
@@ -838,6 +862,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // ref alone — better stale than wrong.
     const sentText = audioQueueSentenceRef.current.shift();
     if (sentText) {
+      // Render↔speech sync: a chunk for a NEW sentence is being dequeued
+      // (audio for it begins now) → fire 'sentence-start' so the
+      // orchestrator can release renders anchored to the prior sentence.
+      // Guard on a real transition so multi-chunk sentences fire once.
+      if (sentText !== currentSpeakTextRef.current) {
+        onTtsPlaybackProgressRef.current?.('sentence-start');
+      }
       currentSpeakTextRef.current = sentText;
     }
     const buffer = ctx.createBuffer(1, chunk.length, 24000);

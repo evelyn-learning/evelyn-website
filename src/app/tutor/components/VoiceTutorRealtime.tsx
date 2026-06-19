@@ -60,6 +60,7 @@ import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure } from '@/lib/tutor/whiteboard/catalog';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
+import { flushableCount } from '@/lib/tutor/whiteboard/render-sync';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 // ─── Topic-notes orchestrator guardrails ───
@@ -217,6 +218,28 @@ const TUTOR_BRAIN_FAST_OPENER =
 // retry for the resolvable case.
 const TUTOR_SKIP_DETERMINISTIC =
   process.env.NEXT_PUBLIC_TUTOR_SKIP_DETERMINISTIC === 'true';
+// Render↔speech sync (2026-06-19): defer each whiteboard render so it
+// surfaces on the board in sync with the sentence that introduces it,
+// instead of popping the instant the brain's tool-call frame is parsed
+// (TTS lags, so renders otherwise beat their narration). Default ON;
+// flip to 'off' for an instant, code-free rollback to immediate dispatch.
+// claude-brain-mode only by construction. See
+// project_tutor_render_speech_sync.
+const TUTOR_RENDER_SYNC =
+  process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
+// Render-buffer STALL window. A SINGLE shared timer, reset on every
+// playback-progress signal (sentence-start / drain) and on each buffer
+// add. It fires only when NO progress has happened for this long — a
+// genuine stall — at which point the whole buffer is released (narration
+// isn't coming). This is the key correction from the first live test
+// (2026-06-19, Console5): a short per-render cap RACED the legitimately-
+// pending anchor — TTS is slow (2-3s/sentence) so a render buffered early
+// whose introducing sentence plays 10-20s later hit the cap and popped
+// BEFORE its narration. Reset-on-progress means the cap can't fire while
+// sentences are steadily playing toward the anchor; it's now a true
+// stall-safety + thin-turn anti-pile, never a routine racer. Sized to
+// comfortably exceed one long TTS sentence (~3-5s) + slack.
+const RENDER_SYNC_STALL_MS = 6000;
 
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
@@ -753,6 +776,36 @@ export function VoiceTutorRealtime({
   // real structural validator rejection. Consumed once per arm. The string
   // payload becomes the retry's rejection reason (steers restate vs correct).
   const forceKillPendingRef = useRef<string | null>(null);
+
+  // --- Render↔speech sync (2026-06-19) ---------------------------------
+  // Per-turn buffer of whiteboard render batches whose VISUAL dispatch
+  // (onWhiteboardCommand) is deferred until their introducing sentence has
+  // been spoken. Everything else about each render (validation, id
+  // assignment, dedup catalog, page-grouping, brain-feedback return) ran
+  // synchronously inside handleWhiteboardCommand — only the pixels wait.
+  // See project_tutor_render_speech_sync.
+  const renderBufferRef = useRef<Array<{
+    processed: WhiteboardCommand[];
+    anchorM: number;
+  }>>([]);
+  // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
+  // buffer-add + playback-progress event; fires only on a genuine stall.
+  const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sentences DISPATCHED to TTS this turn (anchor source) and sentences
+  // that have STARTED playing this turn (flush driver). Turn-global: reset
+  // once at callBrainOnce start, not per attempt — stays aligned for the
+  // common no-kill / rejection-retry path. A kill drops the buffer and the
+  // counters drift (cleared audio never fires sentence-start), so post-kill
+  // renders degrade gracefully to cap-based flush.
+  const ttsDispatchedCountRef = useRef(0);
+  const ttsPlaybackStartedCountRef = useRef(0);
+  // True only while a brain stream is actively buffering — gates whether
+  // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
+  // fires immediately (enricher validation pass, non-brain callers).
+  const renderSyncActiveRef = useRef(false);
+  // Paused while a perception cancel is mid-flight (verdict pending). On
+  // abort → buffer dropped; on resume → whole buffer flushed.
+  const renderBufferPausedRef = useRef(false);
 
   // Track whiteboard tool calls per response turn for validation pass
   const turnHadToolCallRef = useRef(false);
@@ -1855,6 +1908,102 @@ export function VoiceTutorRealtime({
     console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
     onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
   }, [onCompletedSegmentsChange, useRealtimeV2, onDebugEvent]);
+
+  // --- Render↔speech sync control surface --------------------------------
+  // Flush whatever FIFO prefix of the render buffer is ready right now
+  // (anchor sentence has completed, cap fired, or turn audio drained).
+  // Pure decision in flushableCount(); this drives the side effects.
+  const flushReadyRenders = useCallback((opts: { drainAll?: boolean } = {}) => {
+    const buf = renderBufferRef.current;
+    if (buf.length === 0) return;
+    const n = flushableCount(buf, ttsPlaybackStartedCountRef.current, {
+      drainAll: opts.drainAll,
+      paused: renderBufferPausedRef.current,
+    });
+    if (n === 0) return;
+    const ready = buf.splice(0, n);
+    for (const entry of ready) onWhiteboardCommand(entry.processed);
+    // Nothing left to hold → cancel the stall timer.
+    if (renderBufferRef.current.length === 0 && renderStallTimerRef.current) {
+      clearTimeout(renderStallTimerRef.current);
+      renderStallTimerRef.current = null;
+    }
+  }, [onWhiteboardCommand]);
+
+  // (Re)arm the shared stall timer. Called on each buffer-add and each
+  // playback-progress event; only fires after RENDER_SYNC_STALL_MS of NO
+  // progress, then releases the whole buffer (narration isn't coming).
+  const armRenderStall = useCallback(() => {
+    if (renderStallTimerRef.current) clearTimeout(renderStallTimerRef.current);
+    renderStallTimerRef.current = setTimeout(() => {
+      renderStallTimerRef.current = null;
+      if (renderBufferRef.current.length === 0 || renderBufferPausedRef.current) return;
+      onDebugEvent?.('render_sync_stall_flush', `${renderBufferRef.current.length} render(s) released on stall`);
+      flushReadyRenders({ drainAll: true });
+    }, RENDER_SYNC_STALL_MS);
+  }, [onDebugEvent, flushReadyRenders]);
+
+  // Buffer one render batch (or dispatch immediately when render-sync is
+  // off / not on the brain-stream path). Anchored to the count of
+  // sentences dispatched to TTS so far this turn.
+  const dispatchVisualRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
+  dispatchVisualRef.current = (processed: WhiteboardCommand[]) => {
+    if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
+      onWhiteboardCommand(processed);
+      return;
+    }
+    const anchorM = ttsDispatchedCountRef.current;
+    renderBufferRef.current.push({ processed, anchorM });
+    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}`);
+    armRenderStall();
+    // A boundary may already have passed (e.g. anchor sentence completed
+    // before this batch finished its synchronous validation) — try now.
+    flushReadyRenders();
+  };
+
+  // Drop the buffer WITHOUT flushing (turn kill / abort). The renders were
+  // never shown, so no removeItems is needed — but they WERE recorded in the
+  // catalog / command mirror synchronously at handleWhiteboardCommand time
+  // (catalog leads pixels), so we must RETRACT them. Otherwise a retry that
+  // re-emits the same figure would dedup against the never-shown catalog
+  // entry and suppress the re-render (the figure would never appear).
+  const dropRenderBuffer = useCallback(() => {
+    if (renderStallTimerRef.current) {
+      clearTimeout(renderStallTimerRef.current);
+      renderStallTimerRef.current = null;
+    }
+    const buf = renderBufferRef.current;
+    if (buf.length === 0) { renderBufferPausedRef.current = false; return; }
+    const ids: string[] = [];
+    for (const entry of buf) {
+      for (const c of entry.processed) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const id = (c as any).id;
+        if (typeof id === 'string') ids.push(id);
+      }
+    }
+    const dropped = buf.length;
+    renderBufferRef.current = [];
+    if (ids.length > 0) {
+      const idSet = new Set(ids);
+      whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (c) => !idSet.has((c as any).id),
+      );
+      whiteboardCommandCountRef.current = Math.max(0, whiteboardCommandCountRef.current - ids.length);
+      for (const id of ids) commandByIdRef.current.delete(id);
+      catalogRef.current.removeByIds(ids);
+    }
+    renderBufferPausedRef.current = false;
+    onDebugEvent?.('render_sync_drop', `${dropped} buffered render(s) dropped + retracted (${ids.length} id)`);
+  }, [onDebugEvent]);
+
+  // Flush the ENTIRE buffer immediately, ignoring anchors (perception
+  // resume — the held tail content is being replayed; or turn teardown).
+  const flushAllRenderBuffer = useCallback(() => {
+    renderBufferPausedRef.current = false;
+    flushReadyRenders({ drainAll: true });
+  }, [flushReadyRenders]);
 
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
   const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
@@ -4356,7 +4505,13 @@ export function VoiceTutorRealtime({
         c.action !== 'addTopicNotesPointer',
     );
 
-    onWhiteboardCommand(processed);
+    // Render↔speech sync: on the brain-stream path this BUFFERS the visual
+    // dispatch (flushed when the introducing sentence is spoken); off-path
+    // or with the flag off it dispatches immediately. Everything below —
+    // catalog mirror, transcript attach, the synchronously-returned
+    // assignedIds/boardSnapshot/rejected — runs NOW regardless, so brain
+    // retry-feedback + dedup ordering are unaffected (catalog leads pixels).
+    dispatchVisualRef.current(processed);
     // Mirror into our local running log so targetId lookups across future
     // batches can walk the full session history without round-tripping
     // through the parent's state.
@@ -5270,6 +5425,16 @@ export function VoiceTutorRealtime({
     // page's lastRenderTurn.
     pageTurnRef.current += 1;
     catalogRef.current.setCurrentTurn(pageTurnRef.current);
+    // Render↔speech sync: per-turn reset. Release any stragglers from the
+    // prior turn (their narration is long over), zero the turn-global
+    // counters, and arm buffering for this turn's stream. Cleared in the
+    // finally so post-stream the buffer keeps flushing against playing
+    // audio but no NEW batches buffer.
+    flushAllRenderBuffer();
+    ttsDispatchedCountRef.current = 0;
+    ttsPlaybackStartedCountRef.current = 0;
+    renderBufferPausedRef.current = false;
+    renderSyncActiveRef.current = true;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -6031,6 +6196,10 @@ export function VoiceTutorRealtime({
           pushTtsScriptForPerception(s);
           speakTextRef.current?.(s);
           audibleSentenceCount++;
+          // Render↔speech sync: a sentence just reached TTS. Renders
+          // buffered AFTER this point anchor to the new count, so they
+          // flush only once this sentence (and all before it) has played.
+          ttsDispatchedCountRef.current++;
         };
         // Judge-kill Stage 3.1: decide restatement-vs-correction for a
         // post-content-kill retry, using whatever opener text we've held so
@@ -6171,6 +6340,19 @@ export function VoiceTutorRealtime({
           attemptKilled = true;
           clearTimeout(gateTimer);
           closeGate();
+          // Render↔speech sync: this attempt's still-buffered renders were
+          // never shown — drop them + retract from the catalog so the
+          // retry's re-emit isn't dedup-suppressed against a never-shown
+          // figure. Already-FLUSHED renders stay on the existing
+          // pendingRevisionRef dim/rollback path untouched.
+          dropRenderBuffer();
+          // The kill's clearSpeechQueue (below) drains the dispatched-but-
+          // unplayed audio, so the dispatched/playback counts would drift
+          // permanently apart and the retry's renders would never reach
+          // their anchor (flushing only on stall = early). Reset both so the
+          // retry re-anchors against its own fresh audio.
+          ttsDispatchedCountRef.current = 0;
+          ttsPlaybackStartedCountRef.current = 0;
           // Judge-kill Stage 3.1: capture the unplayed TTS tail BEFORE the
           // bridge's clearSpeechQueue drains it, so a restatement retry can
           // replay it instead of re-speaking the overlap. Armed only when
@@ -6611,6 +6793,9 @@ export function VoiceTutorRealtime({
                         pushTtsScriptForPerception(sentenceForSpeech);
                         speakTextRef.current?.(sentenceForSpeech);
                         audibleSentenceCount++;
+                        // Render↔speech sync: count the fast-opener too (it
+                        // bypasses speakOne but still reaches the speaker).
+                        ttsDispatchedCountRef.current++;
                       }
                     } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
@@ -8635,8 +8820,13 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
         }
       }
+      // Render↔speech sync: the stream is done — stop buffering NEW batches.
+      // The buffer itself is NOT cleared here: TTS lags the stream, so any
+      // remaining buffered renders keep flushing against the still-playing
+      // audio (sentence-start / drain / cap) after this call returns.
+      renderSyncActiveRef.current = false;
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
@@ -8921,6 +9111,7 @@ export function VoiceTutorRealtime({
         if (stage !== 'speaking') {
           console.warn(`[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): drop, no refire (nothing to resume in 'processing' state)`);
           onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_drop`, `${verdict} after ${elapsedMs}ms`);
+          dropRenderBuffer(); // render↔speech sync: aborted turn, never shown
           return;
         }
         // Stage 3.1: fall through to the resume-from-cut path below.
@@ -8947,6 +9138,9 @@ export function VoiceTutorRealtime({
           );
           onDebugEvent?.('perception_stage3_1_resume', `${verdict} after ${elapsedMs}ms · ${n} sentences`);
           resumeSpeakTextRef.current?.(checkpoint.unplayedSentencesSnapshot);
+          // Render↔speech sync: the held tail is being replayed → release
+          // the whole buffer so its renders land with the resumed narration.
+          flushAllRenderBuffer();
           return;
         }
 
@@ -8961,6 +9155,7 @@ export function VoiceTutorRealtime({
             `[PERCEPTION] STAGE-3 refire-on-noise fallback (${verdict}, ${elapsedMs}ms): empty queue snapshot, brain was in flight, refiring originalTranscript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
           );
           onDebugEvent?.('perception_stage3_refire_on_noise', `${verdict} after ${elapsedMs}ms`);
+          dropRenderBuffer(); // render↔speech sync: refire redraws from scratch
           void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
             ...(checkpoint.originalOpts || {}),
             bypassPerceptionDedupe: true,
@@ -8975,6 +9170,9 @@ export function VoiceTutorRealtime({
           `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): silent-accept (no unplayed content to resume, brain already finished)`,
         );
         onDebugEvent?.('perception_stage3_silent_accept', `${verdict} after ${elapsedMs}ms`);
+        // Render↔speech sync: content was delivered (no refire) → release
+        // any buffered renders that belong to the played narration.
+        flushAllRenderBuffer();
         return;
       }
       // Stage 3 fix #14 (2026-06-15): RESTORE-after-finished guard.
@@ -8999,6 +9197,9 @@ export function VoiceTutorRealtime({
           `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE-after-finished DROP (brain response already delivered — inFlight=${checkpoint.brainWasInFlight}, aborted=${brainTurnAbortedRef.current}; not re-firing to avoid duplicate)`,
         );
         onDebugEvent?.('perception_stage2_restore_dropped_brain_done', `${verdict} after ${elapsedMs}ms`);
+        // Render↔speech sync: original turn already delivered, no refire →
+        // release its buffered renders rather than dropping them.
+        flushAllRenderBuffer();
         return;
       }
       // Stage 2: brain hadn't started speaking yet. Re-fire the
@@ -9007,6 +9208,7 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE — re-firing original transcript=${JSON.stringify(checkpoint.originalTranscript).slice(0, 80)}`,
       );
       onDebugEvent?.('perception_stage2_restore', `${verdict} after ${elapsedMs}ms`);
+      dropRenderBuffer(); // render↔speech sync: refire redraws from scratch
       // bypassPerceptionDedupe: our own refire must not be dropped by
       // the production-WS suppression slot armed at cancel time.
       void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
@@ -9070,6 +9272,7 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — cutTurn=${cutTurn ? `"${cutTurn.content.slice(0, 60)}"` : 'none'}, fresh=${JSON.stringify(freshText).slice(0, 80)}`,
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
+      dropRenderBuffer(); // render↔speech sync: new merged turn redraws
       void handleStudentTranscriptForBrain(freshText, {
         bypassPerceptionDedupe: true,
         ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
@@ -9085,11 +9288,12 @@ export function VoiceTutorRealtime({
       `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, cutTurn=${cutTurn ? 'yes' : 'none'}, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
     );
     onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
+    dropRenderBuffer(); // render↔speech sync: fresh turn redraws
     void handleStudentTranscriptForBrain(fresh, {
       bypassPerceptionDedupe: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
-  }, [handleStudentTranscriptForBrain, onDebugEvent]);
+  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer]);
   // Publish to the ref so the perception callbacks (defined earlier in
   // render order via useCallback closures) can call it through the ref
   // surface without a hoisting reference issue.
@@ -9192,6 +9396,24 @@ export function VoiceTutorRealtime({
     onStateChange,
     onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
     onTutorAudioChunk: audioRecordEnabled ? audioRecorder.pushTutorChunk : undefined,
+    // Render↔speech sync: drive the buffered-render flush off TTS playback.
+    // 'sentence-start' = a new sentence's audio began (the prior one
+    // completed) → release renders anchored to that prior sentence.
+    // 'drain' = all dispatched audio has played → release the tail.
+    onTtsPlaybackProgress: TUTOR_RENDER_SYNC
+      ? (event) => {
+          if (event === 'sentence-start') {
+            ttsPlaybackStartedCountRef.current++;
+            // Progress happened → reset the stall timer so it can't fire
+            // while sentences are steadily playing toward an anchor.
+            if (renderBufferRef.current.length > 0) armRenderStall();
+            flushReadyRenders();
+          } else {
+            // Turn audio drained → release the tail; no stall re-arm needed.
+            flushReadyRenders({ drainAll: true });
+          }
+        }
+      : undefined,
   });
 
   // Wire up refs so callbacks can access hook functions
@@ -9286,6 +9508,10 @@ export function VoiceTutorRealtime({
     // sentence drained from the in-flight orchestrator's SSE buffer
     // between this point and AbortError propagation drops silently.
     speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+    // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
+    // drain so the cancel doesn't flush buffered renders — the verdict
+    // decides drop (abort/re-fire) vs flush-all (resume/deliver).
+    renderBufferPausedRef.current = true;
     try { inFlightBrainAbortRef.current?.abort(); } catch {}
     try { void clearSpeechQueueRef.current?.(); } catch {}
     productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
@@ -9701,6 +9927,9 @@ export function VoiceTutorRealtime({
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.
         speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+        // Render↔speech sync: PAUSE the buffer before the drain (see
+        // retro-cancel) — verdict decides drop vs flush-all.
+        renderBufferPausedRef.current = true;
         // Abort brain stream if still in flight. For 'speaking' cancels
         // the brain may have already finished (ref is null after
         // callBrainOnce's finally clears it) — abort is a no-op.
@@ -9770,6 +9999,8 @@ export function VoiceTutorRealtime({
       __tutorForceFalseBargein?: () => void;
       __tutorForceClassifierVerdict?: (verdict: string) => void;
       __tutorForceKill?: (reason?: string) => void;
+      __tutorRenderBuffer?: () => void;
+      __tutorFlushRenderBuffer?: () => void;
     };
     w.__tutorForceFalseBargein = () => {
       if (perceptionStage < 2) {
@@ -9805,6 +10036,9 @@ export function VoiceTutorRealtime({
         // before clearSpeechQueue empties it.
         unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
       };
+      // Render↔speech sync: PAUSE the buffer before the drain (dev trigger
+      // parity with the real cancel sites).
+      renderBufferPausedRef.current = true;
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}
       // Arm dedupe so a concurrent production-WS transcript doesn't
@@ -9844,12 +10078,29 @@ export function VoiceTutorRealtime({
         : 'Internal delivery hiccup on the prior attempt — re-deliver your previous spoken response verbatim. The content was correct; do not change any values or wording.';
       console.warn('[dev] __tutorForceKill: armed — next audible sentence triggers a synthetic content kill + retry.');
     };
+    // Render↔speech sync inspection/force-flush (Q7d). __tutorRenderBuffer()
+    // logs the live buffer (depth, anchors, counters); __tutorFlushRenderBuffer()
+    // force-flushes everything immediately (bypasses anchors), to verify a
+    // stuck render manually.
+    w.__tutorRenderBuffer = () => {
+      const buf = renderBufferRef.current;
+      console.warn(
+        `[dev] render-sync buffer: depth=${buf.length} dispatched=${ttsDispatchedCountRef.current} playbackStarted=${ttsPlaybackStartedCountRef.current} paused=${renderBufferPausedRef.current} active=${renderSyncActiveRef.current} stallArmed=${renderStallTimerRef.current !== null}`,
+        buf.map((e) => ({ anchorM: e.anchorM, actions: e.processed.map((c) => (c as { action?: string }).action) })),
+      );
+    };
+    w.__tutorFlushRenderBuffer = () => {
+      console.warn('[dev] __tutorFlushRenderBuffer: force-flushing entire render buffer');
+      flushAllRenderBuffer();
+    };
     return () => {
       delete w.__tutorForceFalseBargein;
       delete w.__tutorForceClassifierVerdict;
       delete w.__tutorForceKill;
+      delete w.__tutorRenderBuffer;
+      delete w.__tutorFlushRenderBuffer;
     };
-  }, [perceptionStage]);
+  }, [perceptionStage, flushAllRenderBuffer]);
 
   // realtime-2: assemble + inject the lesson plan context into the RT-2
   // session. Called once on connect (effect below) and again after every
