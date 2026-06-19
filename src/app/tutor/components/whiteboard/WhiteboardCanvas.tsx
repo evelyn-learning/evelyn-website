@@ -349,10 +349,17 @@ export function WhiteboardCanvas({
   useEffect(() => {
     const lastGoTo = [...commands].reverse().find((cmd) => cmd.action === 'goToPage');
     if (lastGoTo && lastGoTo.action === 'goToPage') {
-      const targetTitle = lastGoTo.title.toLowerCase();
-      const targetIndex = pages.findIndex(
-        (p) => p.title?.toLowerCase() === targetTitle
-      );
+      // Title is the primary handle (the orchestrator translates a Board Map
+      // page number → title before this runs). Fall back to the page number
+      // as an index only if no title matched.
+      const targetTitle = lastGoTo.title?.toLowerCase();
+      let targetIndex = targetTitle
+        ? pages.findIndex((p) => p.title?.toLowerCase() === targetTitle)
+        : -1;
+      if (targetIndex < 0 && typeof lastGoTo.page === 'number'
+          && lastGoTo.page >= 1 && lastGoTo.page <= pages.length) {
+        targetIndex = lastGoTo.page - 1;
+      }
       if (targetIndex >= 0) {
         setCurrentIndex(targetIndex);
       }

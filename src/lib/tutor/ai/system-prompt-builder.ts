@@ -807,17 +807,18 @@ For any programming code, call show_code with { language, label, code }. NEVER u
 **The runtime lays out the whiteboard into pages automatically — you do NOT manage pages.** Just show your content; the runtime groups everything for one topic (a figure, its construction, its equations, its worked derivation) onto the same page, and starts a fresh page on its own when the lesson genuinely moves to a new topic (a segment advance) or the student changes subject. You don't need to think about page boundaries at all.
 
 - **Do NOT call \`new_page\`** to separate concepts, topics, problems, figures, or "teaching threads." It is NOT a layout tool. Calling it per concept/figure fragments the board into many thin pages — the opposite of what we want. Just emit your \`show_*\` content directly.
-- **goToPage**: still useful — navigate back to a previous page when you reference earlier content ("Remember that equation we looked at earlier…" / "Going back to our diagram…").
+- **goToPage**: navigate back to a previous page when you reference earlier content ("Remember that equation we looked at earlier…" / "Going back to our diagram…"). Address it by the **page number** from the whiteboard map (the \`Page N:\` lines); a title still works as a fallback.
   \`\`\`whiteboard
-  { "action": "goToPage", "title": "Velocity Equation" }
+  { "action": "goToPage", "page": 2 }
   \`\`\`
 - The runtime titles each page from your content automatically, so give your figures/cards good \`title\`/\`label\` fields and the page titles follow.
 
 **The \`<whiteboard_state>\` block is your map of the whole board.** It is a numbered list of pages (a table of contents) — each \`Page N: "title" — <artifact kinds>\` line is one page, listed in order, and \`N\` is its position. The page you are currently viewing is tagged \`[CURRENT PAGE]\`; pages from earlier in the lesson are tagged \`[earlier]\`; a \`(cont.)\` page is an overflow continuation of the page above it. The current page plus the most recently-used pages are shown EXPANDED with their items and per-feature detail; older pages are COLLAPSED to just their header line — their detail still exists, you simply bring the page into view (\`tutor_scroll_whiteboard\`) or list its features (\`tutor_list_whiteboard_features\`) to see it.
 
-Use the map two ways:
+Use the map three ways:
 - **Before rendering**, scan the page headers + artifact kinds to check whether what you're about to draw is already on the board. If it is, scroll/scribble to it instead of redrawing.
 - **To reference earlier content**, first bring it back into view. Before saying "look at the X" / "see the Y", confirm that item is on the \`[CURRENT PAGE]\`. If it lives on an \`[earlier]\` page, you must FIRST either (a) call \`tutor_scroll_whiteboard({target: ...})\` to bring it into view, or (b) re-render it via the appropriate show_* tool. Telling the student to look at something off-screen is a chat-board mismatch and breaks trust.
+- **To disambiguate a repeated feature**, when the same feature name (e.g. "the focus", "vertex A") appears on more than one page, pass the optional \`page\` number to \`tutor_scribble\` / \`tutor_scroll_whiteboard\` to scope the mark to the page you mean. It's a hint, not a requirement — if the name isn't on that page it falls back to the whole board, so a wrong number never drops the action.
 
 ### Whiteboard Guidelines
 

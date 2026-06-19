@@ -639,7 +639,7 @@ export interface PieSlice {
 export type WhiteboardCommand =
   | { action: 'clear' }
   | { action: 'newPage'; title?: string }
-  | { action: 'goToPage'; title: string }
+  | { action: 'goToPage'; title?: string; page?: number }
   // Roll back previously-dispatched renders by their stamped command
   // id. Emitted by the orchestrator when a brain attempt is killed
   // (validator/judge/requiredPhrases/skip/give-up) AFTER it already
@@ -678,6 +678,10 @@ export type WhiteboardCommand =
        * The resolver maps this to targetId + targetFeature.
        */
       target?: string;
+      /** TUTOR-SUPPLIED (Board Map): optional 1-based page number to scope
+       *  resolution to (disambiguates a feature name repeated across pages).
+       *  Fail-open — falls back to the whole board if not found there. */
+      page?: number;
       /** Resolver output — id of the item owning the matched feature. */
       targetId?: string;
       /** Resolver output — canonical data-feature name (e.g. "point-a"). */
@@ -709,6 +713,9 @@ export type WhiteboardCommand =
       action: 'scrollTo';
       /** Tutor-supplied: feature name OR "top" / "bottom". */
       target: string;
+      /** TUTOR-SUPPLIED (Board Map): optional 1-based page number to scope
+       *  resolution to. Fail-open to the whole board if not found there. */
+      page?: number;
       /** Resolver output — id of the item to focus. */
       targetId?: string;
       /** Resolver output — canonical feature name to bring into view. */

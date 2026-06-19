@@ -134,13 +134,14 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'go_to_page',
-    description: 'Navigate the whiteboard to a previously created page by its title.',
+    description: 'Navigate the whiteboard back to a previously created page. PREFER addressing by `page` number — the `Page N:` handle from the whiteboard map (<whiteboard_state>). `title` still works as a fallback when you do not have the number.',
     parameters: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'The title of the page to navigate to.' },
+        page: { type: 'number', description: 'The page number to navigate to (the `Page N` handle from the whiteboard map). Preferred over title.' },
+        title: { type: 'string', description: 'The title of the page to navigate to (fallback when you do not have the page number).' },
       },
-      required: ['title'],
+      required: [],
     },
   },
   {
@@ -1738,11 +1739,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'tutor_scribble',
-    description: 'Draw the student\'s attention to a feature already on the whiteboard. Overlay only — does NOT redraw. Default behavior: places a small ✓ tick mark just past the feature\'s right edge. Use sparingly — one or two per turn.\n\nHOW TO ADDRESS:\n  Pass a single `target` string naming the feature. The client resolves it deterministically against the catalog of features every show_* tool registered — you do NOT pass an item id, item index, page, or coordinates. Use the exact feature name from the `features` array you received in the show_*\'s tool_result (e.g. "point-a", "object", "mass-1", "force-weight", "stage-precipitation"). Natural-language variants also work ("A", "vertex A", "the object"). If the feature can\'t be resolved, the tool_result returns the current feature catalog — retry with one of those names.\n\nIf you provide a `label`, it appears in the page\'s annotation strip below the rendered items as "{feature} → {label}" — NOT on the diagram itself. Keep labels short.\n\nDo not use this for new content or for unlabeled spots. If you need to mark something that was never drawn, render it first with a show_* tool.',
+    description: 'Draw the student\'s attention to a feature already on the whiteboard. Overlay only — does NOT redraw. Default behavior: places a small ✓ tick mark just past the feature\'s right edge. Use sparingly — one or two per turn.\n\nHOW TO ADDRESS:\n  Pass a single `target` string naming the feature. The client resolves it deterministically against the catalog of features every show_* tool registered. Use the exact feature name from the `features` array you received in the show_*\'s tool_result (e.g. "point-a", "object", "mass-1", "force-weight", "stage-precipitation"). Natural-language variants also work ("A", "vertex A", "the object"). If the feature can\'t be resolved, the tool_result returns the current feature catalog — retry with one of those names.\n\nOPTIONAL `page` (number): when the same feature name appears on more than one page (e.g. an earlier page AND a recent one), pass the `Page N` number from the whiteboard map to disambiguate — resolution is scoped to that page first. If the name is not on that page it falls back to the whole board, so a wrong number never drops the mark.\n\nIf you provide a `label`, it appears in the page\'s annotation strip below the rendered items as "{feature} → {label}" — NOT on the diagram itself. Keep labels short.\n\nDo not use this for new content or for unlabeled spots. If you need to mark something that was never drawn, render it first with a show_* tool.',
     parameters: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'The feature to mark. Use a name from the `features` array in a prior show_* tool_result (e.g. "point-a", "object", "mass-1"). Natural-language variants like "vertex A" also resolve — the client maps them to the canonical name.' },
+        page: { type: 'number', description: 'Optional. The `Page N` number from the whiteboard map — scopes resolution to that page first (disambiguates a feature name that repeats across pages). Falls back to the whole board if not found there.' },
         shape: { type: 'string', enum: ['tick', 'highlight'], description: 'tick = small ✓ next to the feature (default); highlight = semi-transparent fill over the feature\'s region. Defaults to "tick" when omitted.' },
         color: { type: 'string', description: 'CSS color. Defaults to blue (#3b82f6).' },
         label: { type: 'string', description: 'Optional short text that appears in the page\'s annotation strip below the diagram as "{feature} → {label}". Keep short.' },
@@ -1753,7 +1755,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'list_whiteboard_features',
-    description: 'Look up the authoritative list of feature names currently on the whiteboard. Call this if you want to scribble but the original show_* tool_results have rolled out of your context. Returns every feature across every rendered item, with the exact names to pass as `target` in tutor_scribble.',
+    description: 'Look up the authoritative list of feature names currently on the whiteboard. Call this if you want to scribble but the original show_* tool_results have rolled out of your context. Returns every feature across every rendered item, with the exact names to pass as `target` in tutor_scribble. (To see a COLLAPSED page\'s detail, navigate to it with go_to_page — it expands once you are viewing it.)',
     parameters: {
       type: 'object',
       properties: {
@@ -1765,11 +1767,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'tutor_scroll_whiteboard',
-    description: 'Bring an item into the student\'s view. Use when you want to reference something that may be off-screen or on a previous page. No redraw; pure view change.\n\nPass `target` as the feature name — same string you would pass to tutor_scribble. The client resolves it deterministically against the session catalog and switches page + scrolls to that item in one call. Reserved values: "top" / "bottom" scroll the edges of the current page (rarely needed — auto-scroll already shows the latest item). Iframe-backed items (graphs, molecules) are scroll-only — this is the ONLY way to reference them.',
+    description: 'Bring an item into the student\'s view. Use when you want to reference something that may be off-screen or on a previous page. No redraw; pure view change.\n\nPass `target` as the feature name — same string you would pass to tutor_scribble. The client resolves it deterministically against the session catalog and switches page + scrolls to that item in one call. OPTIONAL `page` (number): pass the `Page N` map handle to scope resolution to that page first (disambiguates a name that repeats across pages); falls back to the whole board if not found there. Reserved values: "top" / "bottom" scroll the edges of the current page (rarely needed — auto-scroll already shows the latest item). Iframe-backed items (graphs, molecules) are scroll-only — this is the ONLY way to reference them.',
     parameters: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Feature name (e.g. "the graph", "vertex A", "the molecule") OR reserved keyword "top" / "bottom" to scroll the current page edges.' },
+        page: { type: 'number', description: 'Optional. The `Page N` number from the whiteboard map — scopes resolution to that page first. Falls back to the whole board if not found there.' },
       },
       required: ['target'],
     },
@@ -1990,7 +1993,11 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     return { action: 'newPage', title: funcArgs.title };
   }
   if (funcName === 'go_to_page') {
-    return { action: 'goToPage', title: funcArgs.title };
+    return {
+      action: 'goToPage',
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      page: typeof funcArgs.page === 'number' ? funcArgs.page : undefined,
+    };
   }
   if (funcName === 'show_equation') {
     return { action: 'showEquation', latex: funcArgs.latex, label: funcArgs.label };
@@ -2648,13 +2655,20 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       shape,
       color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
       label: typeof funcArgs.label === 'string' ? funcArgs.label : undefined,
+      // Board Map page-scoping: disambiguates a feature name repeated across
+      // pages. Resolved (fail-open) in the orchestrator's resolveTarget call.
+      page: typeof funcArgs.page === 'number' ? funcArgs.page : undefined,
     };
   }
 
   if (funcName === 'tutor_scroll_whiteboard') {
     const target = typeof funcArgs.target === 'string' ? funcArgs.target.trim() : '';
     if (!target) return null;
-    return { action: 'scrollTo', target };
+    return {
+      action: 'scrollTo',
+      target,
+      page: typeof funcArgs.page === 'number' ? funcArgs.page : undefined,
+    };
   }
   if (funcName === 'tutor_handwrite') {
     const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';

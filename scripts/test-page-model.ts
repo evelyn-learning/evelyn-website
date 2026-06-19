@@ -242,6 +242,64 @@ async function main() {
     assert.equal(anchorsDiverge(parabola, parabola), false);
   });
 
+  // ───────── Board Map: resolveTarget page-scoping (Phase 3) ─────────
+  // Two pages each carrying a feature with the SAME name; page-scoping must
+  // pick the right page, and fail open when the page misses.
+  function twoPageCatalog() {
+    const cat = new WhiteboardCatalog();
+    cat.setCurrentPage('Page A'); // page-1
+    cat.append({
+      itemId: 'a1', action: 'showGraph', title: 'Parabola',
+      features: [{ name: 'focus', kind: 'point', description: 'Focus (1,0)' }],
+    });
+    cat.setCurrentPage('Page B'); // page-2
+    cat.append({
+      itemId: 'b1', action: 'showGeometry', title: 'Ellipse',
+      features: [{ name: 'focus', kind: 'point', description: 'Focus (2,0)' }],
+    });
+    return cat;
+  }
+
+  await test('resolveTarget: no page → newest-first (page-2 item wins)', () => {
+    const r = twoPageCatalog().resolveTarget('focus');
+    assert.ok(r.ok && r.itemId === 'b1', 'newest (page-2) item');
+    assert.ok(r.ok && !r.pageFallback, 'no fallback flag without a page arg');
+  });
+
+  await test('resolveTarget: page=1 scopes to that page (older item)', () => {
+    const r = twoPageCatalog().resolveTarget('focus', { page: 1 });
+    assert.ok(r.ok && r.itemId === 'a1', 'page-1 scoped pick');
+    assert.ok(r.ok && !r.pageFallback, 'no fallback — matched on page');
+  });
+
+  await test('resolveTarget: page=2 scopes to page 2', () => {
+    const r = twoPageCatalog().resolveTarget('focus', { page: 2 });
+    assert.ok(r.ok && r.itemId === 'b1', 'page-2 scoped pick');
+  });
+
+  await test('resolveTarget: out-of-range page → fail-open + pageFallback', () => {
+    const r = twoPageCatalog().resolveTarget('focus', { page: 99 });
+    assert.ok(r.ok && r.itemId === 'b1', 'falls back to board newest-first');
+    assert.ok(r.ok && r.pageFallback === true, 'pageFallback flagged');
+  });
+
+  await test('resolveTarget: name absent on named page → fail-open to board', () => {
+    const cat = new WhiteboardCatalog();
+    cat.setCurrentPage('P1');
+    cat.append({ itemId: 'x', action: 'showGraph', features: [{ name: 'alpha', kind: 'point', description: 'A' }] });
+    cat.setCurrentPage('P2');
+    cat.append({ itemId: 'y', action: 'showGraph', features: [{ name: 'beta', kind: 'point', description: 'B' }] });
+    // "beta" only exists on page 2; scoped to page 1 it must fail open to page 2.
+    const r = cat.resolveTarget('beta', { page: 1 });
+    assert.ok(r.ok && r.itemId === 'y', 'fell open to page-2 item');
+    assert.ok(r.ok && r.pageFallback === true, 'pageFallback flagged');
+  });
+
+  await test('resolveTarget: genuine no_match even with page → no_match', () => {
+    const r = twoPageCatalog().resolveTarget('nonexistent-thing', { page: 1 });
+    assert.ok(!r.ok && r.reason === 'no_match', 'no_match preserved');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

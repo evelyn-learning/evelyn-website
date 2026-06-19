@@ -194,6 +194,11 @@ export interface ResolveSuccess {
    *  onto the scribble cmd so the strip can read it instantly without
    *  racing a DOM lookup against the first render. */
   displayName?: string;
+  /** Board Map fail-open flag: the caller passed a `page` scope that did NOT
+   *  contain the target, so resolution fell back to the full board. The
+   *  orchestrator surfaces this to the brain (next-turn advisory) so it can
+   *  correct its page references. */
+  pageFallback?: boolean;
 }
 
 export interface ResolveFailure {
@@ -680,29 +685,19 @@ export class WhiteboardCatalog {
    * distinguishing labels exist (e.g., two identical "object" features),
    * we fall back to newest-first.
    */
-  resolveTarget(raw: string): ResolveResult {
-    const q = normalizeToken(raw);
-    if (!q) {
-      return {
-        ok: false,
-        reason: 'empty_query',
-        message: 'target is empty — specify which feature to mark.',
-        candidates: this.candidatesList(),
-      };
-    }
-    if (this.items.length === 0) {
-      return {
-        ok: false,
-        reason: 'no_items',
-        message: 'Nothing has been drawn on the whiteboard yet — render a show_* item first.',
-        candidates: [],
-      };
-    }
-
-    // Phase 1: collect ONE matching feature per item (newest-first, first
-    // matching feature within the item wins). Multiple items in this
-    // map = ambiguous match.
-    //
+  /**
+   * Phase-matching core, factored out so resolveTarget can run it over a
+   * page-scoped item subset first and the full board as a fail-open
+   * fallback (Board Map — project_tutor_board_map_design). Collects ONE
+   * matching feature per item, newest-first (items iterated from the end),
+   * so the returned Map's first entry is the most-recent match.
+   */
+  private collectMatches(
+    items: readonly CatalogItem[],
+    raw: string,
+    q: string,
+  ): Map<string, { item: CatalogItem; feature: CatalogFeature }> {
+    const matches = new Map<string, { item: CatalogItem; feature: CatalogFeature }>();
     // Phase 1a (exact case-insensitive label match) runs FIRST so that a
     // query with a normalize-stripped distinguisher (apostrophe, prime,
     // dash) still routes to the right feature. Example: query="Ms'"
@@ -710,11 +705,10 @@ export class WhiteboardCatalog {
     // both would match in normalized form, with first-registered (Ms)
     // winning. The exact-match phase routes "Ms'" to the shifted
     // feature whose label literally is "Ms'".
-    const matches = new Map<string, { item: CatalogItem; feature: CatalogFeature }>();
     const rawLower = String(raw ?? '').trim().toLowerCase();
     if (rawLower) {
-      for (let i = this.items.length - 1; i >= 0; i--) {
-        const item = this.items[i];
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
         if (matches.has(item.itemId)) continue;
         for (const f of item.features) {
           if (
@@ -739,8 +733,8 @@ export class WhiteboardCatalog {
     }
     // Phase 1b: fall back to normalized matching for items that didn't
     // exact-match (the common case).
-    for (let i = this.items.length - 1; i >= 0; i--) {
-      const item = this.items[i];
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
       if (matches.has(item.itemId)) continue;
       for (const f of item.features) {
         if (
@@ -756,8 +750,8 @@ export class WhiteboardCatalog {
 
     // Phase 2: bare-identifier fallback only if Phase 1 found nothing.
     if (matches.size === 0 && /^[a-z0-9]{1,4}$/.test(q)) {
-      for (let i = this.items.length - 1; i >= 0; i--) {
-        const item = this.items[i];
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
         if (matches.has(item.itemId)) continue;
         for (const f of item.features) {
           if (f.canonical.endsWith(`-${q}`)) {
@@ -767,42 +761,84 @@ export class WhiteboardCatalog {
         }
       }
     }
+    return matches;
+  }
+
+  /** Items on the 1-based page number (the Board Map handle the brain
+   *  navigates by). Out-of-range / empty → []. */
+  private itemsOnPage(pageNumber: number): CatalogItem[] {
+    if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > this.pages.length) {
+      return [];
+    }
+    const pageId = this.pages[pageNumber - 1]?.id;
+    if (!pageId) return [];
+    return this.items.filter((it) => it.pageId === pageId);
+  }
+
+  /**
+   * Deterministic target resolution. Priority: exact label/description →
+   * normalized → bare identifier; newest-first on ties (the brain is almost
+   * always referring to what it just drew). See collectMatches.
+   *
+   * Board Map page-scoping (opts.page): pre-filter to that page's items and
+   * resolve there FIRST. If nothing matches on that page (brain mis-numbered
+   * or the page renumbered via GC), FAIL OPEN — retry against the full board
+   * and flag `pageFallback` so the caller can advise the brain. The page arg
+   * can only NARROW a match, never block one → strictly additive.
+   */
+  resolveTarget(raw: string, opts?: { page?: number }): ResolveResult {
+    const q = normalizeToken(raw);
+    if (!q) {
+      return {
+        ok: false,
+        reason: 'empty_query',
+        message: 'target is empty — specify which feature to mark.',
+        candidates: this.candidatesList(),
+      };
+    }
+    if (this.items.length === 0) {
+      return {
+        ok: false,
+        reason: 'no_items',
+        message: 'Nothing has been drawn on the whiteboard yet — render a show_* item first.',
+        candidates: [],
+      };
+    }
+
+    let matches: Map<string, { item: CatalogItem; feature: CatalogFeature }> | null = null;
+    let pageFallback = false;
+    if (opts?.page != null) {
+      const pageItems = this.itemsOnPage(opts.page);
+      if (pageItems.length > 0) {
+        const scoped = this.collectMatches(pageItems, raw, q);
+        if (scoped.size > 0) matches = scoped;
+        else pageFallback = true; // page had no match → fall open to full board
+      } else {
+        pageFallback = true; // page out of range / empty → fall open
+      }
+    }
+    if (matches === null) {
+      matches = this.collectMatches(this.items, raw, q);
+    }
 
     if (matches.size === 0) {
+      const where = opts?.page != null ? ` (page ${opts.page} or anywhere on the board)` : '';
       return {
         ok: false,
         reason: 'no_match',
-        message: `No feature matching "${raw}" on the current whiteboard.`,
+        message: `No feature matching "${raw}"${where} on the current whiteboard.`,
         candidates: this.candidatesForQuery(q, 14),
       };
     }
 
-    if (matches.size === 1) {
-      const { item, feature } = matches.values().next().value!;
-      return this.ok(item, feature);
-    }
-
-    // Ambiguous: 2+ items matched the same target. Newest-first wins
-    // silently. The brain is almost always referring to the diagram it
-    // just emitted, so returning an `ambiguous` error here forced the
-    // orchestrator to silent-drop the scribble — yet the brain's
-    // intent (mark the newest match) was clear (observed 2026-05-13
-    // session: target="claim" silent-dropped because two
-    // argument_structure diagrams shared the "claim" label;
-    // target="left-column" silent-dropped across two t_charts).
-    //
-    // `matches` is built newest-first (items iterated from
-    // this.items.length - 1 downward), so matchList[0] is the most
-    // recent item that matched. Accept it.
-    //
-    // We keep the distinguisher-walk only for the rare case where the
-    // brain's query is so generic that every item on the board could
-    // mean it (and the brain genuinely needs a hint to disambiguate).
-    // That case is now unreachable in practice — soft pedagogy aids
-    // (scribble) deserve "go with the latest", not a retry cycle.
-    const matchList = Array.from(matches.values());
-    const newest = matchList[0];
-    return this.ok(newest.item, newest.feature);
+    // `matches` is newest-first (collectMatches iterates items from the end),
+    // so the first entry is the most recent match — accept it. (We dropped the
+    // ambiguous-error path long ago: soft pedagogy aids deserve "go with the
+    // latest", not a retry cycle. See 2026-05-13 shared-label sessions.)
+    const newest = Array.from(matches.values())[0];
+    const res = this.ok(newest.item, newest.feature);
+    if (pageFallback) res.pageFallback = true;
+    return res;
   }
 
   private ok(item: CatalogItem, f: CatalogFeature): ResolveSuccess {

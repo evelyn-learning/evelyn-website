@@ -2093,6 +2093,20 @@ export function VoiceTutorRealtime({
       // --- Unconditional structural guards ---
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdAny = cmd as any;
+      // Board Map (project_tutor_board_map_design): resolve
+      // go_to_page({page:N}) to a page TITLE the canvas can navigate by.
+      // The canvas matches pages by title; the brain's page number is the
+      // `Page N` handle from catalog.getPages() (the map it was shown), which
+      // is the safe anchor — the canvas's own page index can drift by an
+      // implicit untitled "page 0". Out-of-range number → title stays unset
+      // and the canvas no-ops the nav (fail-safe).
+      if (cmd.action === 'goToPage') {
+        const g = cmdAny as { title?: string; page?: number };
+        if ((!g.title || !String(g.title).trim()) && typeof g.page === 'number') {
+          const pg = catalogRef.current.getPages()[g.page - 1];
+          if (pg?.title) g.title = pg.title;
+        }
+      }
       if (cmd.action === 'showProblem') {
         const statement = cmdAny.problem?.statement?.trim() || '';
         // Adaptive-pacing v1 dedup: append the rendered problem's hash
@@ -3931,7 +3945,18 @@ export function VoiceTutorRealtime({
         cmdAny._scribbleRejected = true;
         continue;
       }
-      const result = catalogRef.current.resolveTarget(raw);
+      const result = catalogRef.current.resolveTarget(raw, {
+        page: typeof cmdAny.page === 'number' ? cmdAny.page : undefined,
+      });
+      if (result.ok && result.pageFallback) {
+        // Board Map fail-open: the brain page-qualified to a page that did
+        // NOT contain the target, so resolution fell back to the whole board.
+        // The mark still landed (correct item via newest-first); surface the
+        // mismatch for verification. Not pushed to unrealized_marks — that
+        // block means "mark failed", and this one succeeded.
+        console.log('[VoiceTutor] scribble page-scope fallback: target="%s" page=%s → resolved board-wide', raw, cmdAny.page);
+        onDebugEvent?.('scribble_page_fallback', `"${raw}" (page ${cmdAny.page} → board)`);
+      }
       if (!result.ok) {
         // Round-7+ Fix: silently drop tutor_scribble no-match. Previously
         // this pushed a rejection that triggered the full retry cascade
@@ -4114,7 +4139,15 @@ export function VoiceTutorRealtime({
           rejected.push({ action: 'tutor_scroll_whiteboard', reason: 'target is required.' });
           continue;
         }
-        const result = catalogRef.current.resolveTarget(raw);
+        const result = catalogRef.current.resolveTarget(raw, {
+          page: typeof cmdAny.page === 'number' ? cmdAny.page : undefined,
+        });
+        if (result.ok && result.pageFallback) {
+          // Board Map fail-open (see scribble path): page-scope missed, fell
+          // back to the whole board; the scroll still resolves to an item.
+          console.log('[VoiceTutor] scrollTo page-scope fallback: target="%s" page=%s → resolved board-wide', raw, cmdAny.page);
+          onDebugEvent?.('scrollTo_page_fallback', `"${raw}" (page ${cmdAny.page} → board)`);
+        }
         if (!result.ok) {
           // Page-title fallback: the brain often emits a page title as
           // the scroll target (e.g. `target:"Six Kingdoms"` right after
