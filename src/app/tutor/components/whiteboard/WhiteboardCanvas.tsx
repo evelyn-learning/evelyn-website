@@ -680,18 +680,22 @@ export function WhiteboardCanvas({
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="flex-1 flex items-center justify-center gap-1.5">
+          <div className="flex-1 flex flex-wrap items-center justify-center gap-1">
             {pages.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentIndex(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                // Numbered pills (not bare dots) so the brain's spoken
+                // "look at Page 4" maps to a visible label on the board.
+                className={`min-w-[20px] h-5 px-1 rounded-full text-[10px] font-semibold tabular-nums transition-all ${
                   i === currentIndex
-                    ? 'bg-blue-600 scale-125'
-                    : 'bg-gray-300 hover:bg-gray-400'
+                    ? 'bg-blue-600 text-white scale-110 shadow-sm'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                 }`}
                 title={pages[i].title || `Page ${i + 1}`}
-              />
+              >
+                {i + 1}
+              </button>
             ))}
           </div>
           <span className="text-xs font-semibold text-blue-700 min-w-[44px] text-center tabular-nums">
