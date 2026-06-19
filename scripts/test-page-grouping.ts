@@ -68,9 +68,12 @@ function defaultActivePage(over: Partial<ActivePageView> = {}): ActivePageView {
   };
 }
 
-const graph = (expr = 'y = x^2'): PageGroupingCommand => ({ action: 'showFunctionGraph', expression: expr, title: 'Graph' });
+const graph = (title = 'Parabola: y² = 4x', expr = 'y = x^2'): PageGroupingCommand => ({ action: 'showFunctionGraph', expression: expr, title });
+const construction = (title = 'Focus-Directrix Property'): PageGroupingCommand => ({ action: 'showGeometryConstructed', title });
 const equation = (): PageGroupingCommand => ({ action: 'showEquation', label: 'Focus', latex: 'x=1' });
 const scribble = (): PageGroupingCommand => ({ action: 'tutorScribble', target: 'vertex' });
+// Composite anchor keys (category|||normTitle) as computeAnchorKey produces.
+const PARABOLA_ANCHOR = 'showFunctionGraph|||parabola: y² = 4x';
 
 function main() {
   console.log('page-grouping.ts — Phase 2 (tiered precedence)\n');
@@ -141,43 +144,40 @@ function main() {
     if (d.action === 'newPage') assert.equal(d.event, 'auto_new_page_segment_advance');
   });
 
-  test('H6 different primary figure (same segment) → split', () => {
+  // ---- Topic/segment-level grouping (H6 removed 2026-06-19): figures NEVER
+  // split. A graph, a different-kind construction, a different-subject graph —
+  // all group onto the active page. Only segment-advance / topic-shift / reset
+  // / overflow split. ----
+  test('different KIND (graph → construction) → GROUP (no figure split)', () => {
     const d = decidePageForBatch(input({
-      batch: [graph('x^2 - y^2 = 1')], // hyperbola
-      activePage: defaultActivePage({ anchorKey: 'showFunctionGraph||a parabola|y = x^2' }),
+      batch: [construction('Focus-Directrix Property')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
     }));
-    assert.equal(d.action, 'newPage');
-    if (d.action === 'newPage') assert.equal(d.event, 'auto_new_page_different_figure');
+    assert.equal(d.action, 'none', 'figures of the same topic stay together');
   });
 
-  test('H6 same primary figure → group (replace-in-place; evolving figure)', () => {
-    // anchorKey computed from the SAME graph command → matches.
-    const sameGraph = graph();
-    const { computeAnchorKey } = require('../src/lib/tutor/whiteboard/catalog');
-    const ak = computeAnchorKey(sameGraph.action, sameGraph);
+  test('different SUBJECT, same kind (parabola → ellipse graph) → GROUP (split via topic-shift/segment, not figure)', () => {
     const d = decidePageForBatch(input({
-      batch: [graph()],
-      activePage: defaultActivePage({ anchorKey: ak }),
+      batch: [graph('Ellipse: x²/9 + y²/4 = 1')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
     }));
-    assert.equal(d.action, 'none', 'same subject → group, no split');
+    assert.equal(d.action, 'none', 'figure subject alone never splits; a real topic boundary does');
   });
 
-  test('G1 headline: follow-up equation on a graph page → group (supporting render, no H6)', () => {
-    // Active page anchored on a parabola graph; incoming is a supporting
-    // equation (the "explain its focus" follow-up). Must GROUP.
+  test('evolving figure (parabola → parabola+directrix) → GROUP', () => {
     const d = decidePageForBatch(input({
-      batch: [equation()],
-      activePage: defaultActivePage({ anchorKey: 'showFunctionGraph||a parabola|y = x^2' }),
-    }));
-    assert.equal(d.action, 'none', 'supporting equation never triggers H6 — groups with the figure');
-  });
-
-  test('H6 does not fire when active page has no anchor yet → group', () => {
-    const d = decidePageForBatch(input({
-      batch: [graph('x^2 - y^2 = 1')],
-      activePage: defaultActivePage({ anchorKey: undefined }),
+      batch: [graph('Parabola: y² = 4x with Directrix', 'y = sqrt(4x)')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
     }));
     assert.equal(d.action, 'none');
+  });
+
+  test('G1 headline: follow-up equation on a graph page → group', () => {
+    const d = decidePageForBatch(input({
+      batch: [equation()],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
+    }));
+    assert.equal(d.action, 'none', 'supporting equation groups with the figure');
   });
 
   // ---- Tier 2 continuation ----
@@ -263,6 +263,17 @@ function main() {
     }));
     assert.equal(d.action, 'newPage');
     if (d.action === 'newPage') assert.equal(d.title, 'Vieta');
+  });
+
+  test('title reads nested data.title (show_function_graph → showGraph)', () => {
+    // 2026-06-19 regression: graph titles live at cmd.data.title; pickTitle
+    // must not fall back to "Next".
+    const d = decidePageForBatch(input({
+      batch: [{ action: 'showGraph', data: { title: 'Parabola: y² = 4x' } }],
+      activePage: null,
+    }));
+    assert.equal(d.action, 'newPage');
+    if (d.action === 'newPage') assert.equal(d.title, 'Parabola: y² = 4x');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -21,6 +21,8 @@ import { strict as assert } from 'node:assert';
 import {
   WhiteboardCatalog,
   computeAnchorKey,
+  computeFigureCategory,
+  anchorsDiverge,
   isPrimaryFigure,
 } from '../src/lib/tutor/whiteboard/catalog';
 
@@ -207,24 +209,37 @@ async function main() {
     );
   });
 
-  await test('computeAnchorKey: generic titles still distinguished by expression', () => {
-    // Same generic title, different defining expression → must differ.
-    const a = { title: 'Graph', expression: 'y = x^2' };
-    const b = { title: 'Graph', expression: 'y = 1/x' };
-    assert.notEqual(
+  await test('computeAnchorKey ignores expression (anchor = category|||title)', () => {
+    // Same title, different expression → SAME key now (expressions intentionally
+    // dropped so evolving figures don't split — design Q6 / 2026-06-19 fix).
+    const a = { title: 'Parabola: y² = 4x', expression: 'y = 2*sqrt(x)' };
+    const b = { title: 'Parabola: y² = 4x', expression: 'y = sqrt(4x)' };
+    assert.equal(
       computeAnchorKey('showFunctionGraph', a),
       computeAnchorKey('showFunctionGraph', b),
+      'same subject, equivalent curve written differently → same key',
     );
   });
 
-  await test('computeAnchorKey: organizer dedup via structural axes (content reworded)', () => {
-    const t1 = { type: 'comparison_table', params: { items: ['Cat', 'Dog'], attributes: ['Legs'], cells: [['Fixed shape']] } };
-    const t2 = { type: 'comparison_table', params: { items: ['Cat', 'Dog'], attributes: ['Legs'], cells: [['Fixed']] } };
-    assert.equal(
-      computeAnchorKey('showDiagram', t1),
-      computeAnchorKey('showDiagram', t2),
-      'same axes, reworded cells → same subject',
-    );
+  await test('computeFigureCategory: kind only (showDiagram carries its type)', () => {
+    assert.equal(computeFigureCategory('showGraph', {}), 'showGraph');
+    assert.equal(computeFigureCategory('showGeometryConstructed', {}), 'showGeometryConstructed');
+    assert.equal(computeFigureCategory('showDiagram', { type: 'eclipse_diagram' }), 'showDiagram:eclipse_diagram');
+  });
+
+  await test('anchorsDiverge: kind, evolving figure, and different subject', () => {
+    const parabola = computeAnchorKey('showFunctionGraph', { title: 'Parabola: y² = 4x' });
+    const parabolaDir = computeAnchorKey('showFunctionGraph', { title: 'Parabola: y² = 4x with Directrix' });
+    const ellipse = computeAnchorKey('showFunctionGraph', { title: 'Ellipse: x²/9 + y²/4 = 1' });
+    const construction = computeAnchorKey('showGeometryConstructed', { title: 'Focus-Directrix Property' });
+    // Evolving figure (title superset, same kind) → NOT diverge → group.
+    assert.equal(anchorsDiverge(parabola, parabolaDir), false, 'evolving figure groups');
+    // Different subject, same kind (dissimilar titles) → diverge → split.
+    assert.equal(anchorsDiverge(parabola, ellipse), true, 'parabola vs ellipse splits');
+    // Different kind → diverge → split.
+    assert.equal(anchorsDiverge(parabola, construction), true, 'graph vs construction splits');
+    // Identical → not diverge.
+    assert.equal(anchorsDiverge(parabola, parabola), false);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -2925,6 +2925,34 @@ export function VoiceTutorRealtime({
       })
     );
 
+    // ===== Brain new_page is ADVISORY (topic/segment-level grouping) =====
+    // The orchestrator (page-grouping.ts) owns pagination. A brain-emitted
+    // new_page must NOT create a page or a visual break — figures of the same
+    // topic stay together; splits happen only on segment-advance / topic-shift
+    // / reset / overflow. So STRIP brain new_page from `processed` here, BEFORE
+    // the side-effect loop below opens a catalog page for it. We preserve its
+    // dedup-bypass role (newPageThisTurnRef — the divergence guard that lets
+    // fresh/off-plan content render, per system-prompt-builder.ts:604) and
+    // stash its title as a hint the page-grouping apply block prefers when the
+    // runtime DOES open a page this turn. Synthetic newPages (added after the
+    // decision) are appended later, so this filter only catches brain ones.
+    let brainNewPageTitleHint: string | undefined;
+    {
+      const brainPages = processed.filter((c) => c.action === 'newPage');
+      if (brainPages.length > 0) {
+        newPageThisTurnRef.current = true;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const lastTitle = String((brainPages[brainPages.length - 1] as any).title || '').trim();
+        if (lastTitle) {
+          brainNewPageTitleHint = lastTitle;
+          currentTopicRef.current = lastTitle;
+          if (!topicsCoveredRef.current.includes(lastTitle)) topicsCoveredRef.current.push(lastTitle);
+        }
+        processed = processed.filter((c) => c.action !== 'newPage');
+        console.log(`[VoiceTutorRealtime] brain new_page(s) stripped (advisory) — runtime owns pagination; hint="${brainNewPageTitleHint ?? ''}"`);
+      }
+    }
+
     // --- Track declarations + integrands + current problem for next turn ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const cmd of processed) {
@@ -3518,7 +3546,13 @@ export function VoiceTutorRealtime({
     topicShiftPendingRef.current = null;
 
     if (pageDecision.action === 'newPage' || pageDecision.action === 'continuation') {
-      const synthetic: WhiteboardCommand = { action: 'newPage', title: pageDecision.title };
+      // Prefer the brain's stripped new_page title (often the most descriptive,
+      // e.g. "Ellipse: Standard Form") for a fresh page; a continuation keeps
+      // its "(cont.)" title.
+      const pageTitle = pageDecision.action === 'newPage' && brainNewPageTitleHint
+        ? brainNewPageTitleHint
+        : pageDecision.title;
+      const synthetic: WhiteboardCommand = { action: 'newPage', title: pageTitle };
       processed = [synthetic, ...processed];
       // Open the page in the catalog Page model NOW. Synthetic newPages are
       // prepended AFTER the step-1 side-effect loop (~line 2961), so the
@@ -3528,11 +3562,11 @@ export function VoiceTutorRealtime({
       // (isOnCurrentPage) without re-opening (idempotent on same title).
       catalogRef.current.openPage(
         pageDecision.action === 'continuation'
-          ? { title: pageDecision.title, isContinuation: true, parentPageId: activePageView?.id }
-          : { title: pageDecision.title },
+          ? { title: pageTitle, isContinuation: true, parentPageId: activePageView?.id }
+          : { title: pageTitle },
       );
-      catalogRef.current.setCurrentPage(pageDecision.title);
-      console.log(`[VoiceTutorRealtime] page-grouping → ${pageDecision.action}: ${pageDecision.reason}`);
+      catalogRef.current.setCurrentPage(pageTitle);
+      console.log(`[VoiceTutorRealtime] page-grouping → ${pageDecision.action}: ${pageDecision.reason}${brainNewPageTitleHint ? ` (title="${pageTitle}")` : ''}`);
       onDebugEvent?.(pageDecision.event, pageDecision.reason);
     } else if (pageDecision.action === 'pin') {
       // Kill-recovery replace: no synthetic break. The append loop stamps the

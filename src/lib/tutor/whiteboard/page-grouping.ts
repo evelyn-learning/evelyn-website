@@ -35,7 +35,7 @@
  *     (same subject → replace in place; different → split).
  */
 
-import { computeAnchorKey, isPrimaryFigure } from './catalog';
+import { computeAnchorKey, isPrimaryFigure, extractCommandTitle } from './catalog';
 
 /** A whiteboard command (loosely typed — we only read `action` + pass the
  *  whole object to computeAnchorKey). */
@@ -106,10 +106,14 @@ export type PageDecision =
 export const PRIMARY_WEIGHT = 3;
 /** Weight of a supporting render (equation/text/card) toward the budget. */
 export const SUPPORTING_WEIGHT = 1;
-/** Per-page weighted-render budget. ~ one big figure + ~5 light items, or a
- *  couple of figures. Beyond this a grouping batch overflows to a "(cont.)"
- *  page. Pages already scroll, so this is a coherence guard, not a hard cap. */
-export const PAGE_WEIGHT_BUDGET = 8;
+/** Per-page weighted-render budget. ~ one big figure + ~13 light items, or
+ *  ~5 figures. Beyond this a grouping batch overflows to a "(cont.)" page.
+ *  Pages already scroll, so this is a LAST-RESORT coherence guard against
+ *  runaway density, NOT a frequent splitter — the bias is strongly toward
+ *  grouping. (Tuned up from 8 after a 2026-06-19 JEE parabola session where a
+ *  6-step derivation under a geometry figure hit 8 and orphaned the final-
+ *  answer equation onto its own continuation page.) */
+export const PAGE_WEIGHT_BUDGET = 16;
 /** A page gone this many render-less turns is auto-closed (staleness). */
 export const STALE_TURNS = 5;
 
@@ -144,16 +148,16 @@ function segmentAdvanceWithShow(batch: readonly PageGroupingCommand[]): boolean 
 }
 
 /** Title for a freshly-opened page. Priority: segment title (on a segment
- *  advance) > first teaching command's label/title > "Next". */
+ *  advance) > first teaching command's title (via extractCommandTitle, which
+ *  handles nested `data.title` etc.) > "Next". */
 function pickTitle(
   firstTeaching: PageGroupingCommand | undefined,
   segmentTitle: string | undefined,
   useSegmentTitle: boolean,
 ): string {
   if (useSegmentTitle && segmentTitle && segmentTitle.trim()) return segmentTitle.trim();
-  const label = firstTeaching && typeof firstTeaching.label === 'string' ? firstTeaching.label : '';
-  const title = firstTeaching && typeof firstTeaching.title === 'string' ? firstTeaching.title : '';
-  return (label || title || 'Next').trim() || 'Next';
+  const extracted = firstTeaching ? extractCommandTitle(firstTeaching) : undefined;
+  return (extracted || 'Next').trim() || 'Next';
 }
 
 /** "Parabola" → "Parabola (cont.)"; idempotent (won't double-suffix). */
@@ -223,22 +227,21 @@ export function decidePageForBatch(input: PageGroupingInput): PageDecision {
   // Tier 1 — structural boundaries (beat continuation & grouping).
   const explicitReset = RESET_RE.test(studentText);
   const segmentAdvance = signals.segmentAdvancePending || segmentAdvanceWithShow(batch);
-  const differentFigure = !!(
-    incomingAnchorKey &&
-    activePage.anchorKey &&
-    incomingAnchorKey !== activePage.anchorKey
-  );
+  // NOTE: H6 (different-primary-figure split) was REMOVED 2026-06-19 in favor
+  // of TOPIC/SEGMENT-level grouping (the user's chosen model): different
+  // figures of the same topic — a parabola's graph, its focus-directrix
+  // construction, its derivation — all stay on ONE page. Figures NEVER force a
+  // page break. Splits happen only on a genuine TOPIC boundary: segment
+  // advance (H2), topic-shift (H4), explicit reset (H5), or overflow (H7).
+  // Brain new_page is advisory (stripped in the orchestrator), so it's not a
+  // boundary here either. (anchorsDiverge / computeAnchorKey are retained in
+  // catalog.ts for the page subject anchor + potential Board Map use, but the
+  // page-break decision no longer consults them.)
   if (explicitReset) {
     return makeNewPage('auto_new_page_reset', `explicit student reset "${studentText.slice(0, 40)}" (H5)`);
   }
   if (segmentAdvance) {
     return makeNewPage('auto_new_page_segment_advance', 'segment advance with teaching content (H2)', true);
-  }
-  if (differentFigure) {
-    return makeNewPage(
-      'auto_new_page_different_figure',
-      `different primary figure on same page — anchor mismatch (H6)`,
-    );
   }
 
   // Tier 2 — continuation / keep (beat the heuristic boundary below).

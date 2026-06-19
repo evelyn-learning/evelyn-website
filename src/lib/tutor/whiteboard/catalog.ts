@@ -1240,53 +1240,82 @@ function normForKey(s: unknown): string {
 }
 
 /**
- * Pull the figure's defining content tokens (expression / function /
- * equation / shape) from a command, so two function graphs (a parabola vs a
- * hyperbola) get DIFFERENT anchor keys even when their titles are generic.
- * Best-effort across the common field locations our renderers use.
+ * Figure CATEGORY for page membership (H6). Deliberately COARSE — the render
+ * KIND only, NOT its content: `showGraph`, `showGeometryConstructed`,
+ * `showDiagram:eclipse_diagram`, etc. Two primary figures share a category
+ * when they're the same kind of figure, even if their titles/expressions
+ * differ (a parabola graph and the same parabola redrawn with its directrix
+ * are both `showGraph` → one page; the "evolving figure" case, design Q6).
+ *
+ * H6 ("same-segment different primary figure → split") compares categories,
+ * so it splits a graph from a construction (different kind) but NOT a graph
+ * from an evolved graph (same kind). Genuinely different same-kind subjects
+ * (a parabola vs a hyperbola graph) are left to topic-shift / segment
+ * boundaries — the bias is toward grouping. Derived from the render itself,
+ * never from student text — deterministic.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function primaryContentTokens(cmd: any): string {
-  if (!cmd || typeof cmd !== 'object') return '';
-  const p = cmd.params && typeof cmd.params === 'object' ? cmd.params : {};
-  const eqStr = (v: unknown): unknown =>
-    v && typeof v === 'object' ? (v as { latex?: unknown }).latex : v;
-  const cands = [
-    cmd.expression, cmd.function, cmd.latex, cmd.shape, eqStr(cmd.equation),
-    p.expression, p.function, p.latex, p.shape, eqStr(p.equation),
-  ];
-  const out: string[] = [];
-  for (const v of cands) {
-    const n = normForKey(v);
-    if (n) out.push(n);
+export function computeFigureCategory(action: string, cmd: any): string {
+  if (
+    action === 'showDiagram' &&
+    cmd && typeof cmd === 'object' &&
+    typeof cmd.type === 'string' && cmd.type
+  ) {
+    return `showDiagram:${cmd.type}`;
   }
-  return out.join(' ');
+  return action;
 }
 
 /**
- * Subject key for page membership (H6) — coarser than buildShowSignature
- * (which is for exact dedup). Two renders share an anchorKey when they're
- * "the same subject/figure": same organizer axes, OR same action+type+title
- * +defining-expression. A page's anchorKey is its anchor (primary-figure)
- * render's key; H6 splits when an incoming primary figure's key differs.
- *
- * Derived from the render itself — never from student text or a brain tag —
- * so the decision stays deterministic.
+ * The page's subject anchor key — a composite `${category}|||${normTitle}`.
+ * H6 compares two of these via {@link anchorsDiverge}, which treats the
+ * category EXACTLY (a graph and a construction are different kinds → split)
+ * but the title FUZZILY (containment / token overlap), so:
+ *   - a parabola graph "Parabola: y² = 4x" and the same parabola redrawn
+ *     "Parabola: y² = 4x with Directrix" → same kind, title is a prefix-
+ *     superset → SAME subject → group (the evolving-figure case, Q6);
+ *   - a parabola graph and an ellipse graph → same kind but dissimilar
+ *     titles ("Parabola: …" vs "Ellipse: …") → DIFFERENT subject → split.
+ * Deliberately drops raw expressions (which split evolving figures whose
+ * content drifts, e.g. y=2√x vs y=√(4x) — the same curve). Derived from the
+ * render itself, never from student text — deterministic.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function computeAnchorKey(action: string, cmd: any): string {
-  const structural = structuralAxesFor(action, cmd);
-  if (structural) {
-    try {
-      return `${structural.tag}|${JSON.stringify(structural.axes)}`;
-    } catch {
-      return structural.tag;
-    }
-  }
-  const type = cmd && typeof cmd === 'object' && typeof cmd.type === 'string' ? cmd.type : '';
-  const title = normForKey(extractCommandTitle(cmd));
-  const content = primaryContentTokens(cmd);
-  return [action, type, title, content].filter(Boolean).join('|');
+  return `${computeFigureCategory(action, cmd)}|||${normForKey(extractCommandTitle(cmd))}`;
+}
+
+/** Alphanumeric tokens of a normalized title, for the H6 fuzzy compare. */
+function titleTokens(s: string): Set<string> {
+  return new Set(s.split(/[^a-z0-9]+/).filter((t) => t.length > 0));
+}
+
+/**
+ * H6 predicate: do two page-anchor keys ({@link computeAnchorKey}) name
+ * DIFFERENT figure subjects (→ split onto a new page)? Different category →
+ * always diverge. Same category → diverge only when the titles are dissimilar
+ * (neither contains the other AND token-overlap < 0.5), so an evolving figure
+ * (title grows a qualifier) stays together while a genuinely different
+ * same-kind subject splits. Missing title info → assume same (group; bias).
+ */
+export function anchorsDiverge(a: string, b: string): boolean {
+  if (a === b) return false;
+  const sepA = a.indexOf('|||');
+  const sepB = b.indexOf('|||');
+  const catA = sepA >= 0 ? a.slice(0, sepA) : a;
+  const catB = sepB >= 0 ? b.slice(0, sepB) : b;
+  if (catA !== catB) return true; // different figure kind → split
+  const titleA = sepA >= 0 ? a.slice(sepA + 3) : '';
+  const titleB = sepB >= 0 ? b.slice(sepB + 3) : '';
+  if (!titleA || !titleB) return false; // no title to compare → group
+  if (titleA.includes(titleB) || titleB.includes(titleA)) return false; // evolving figure
+  const ta = titleTokens(titleA);
+  const tb = titleTokens(titleB);
+  if (ta.size === 0 || tb.size === 0) return false;
+  let inter = 0;
+  for (const t of ta) if (tb.has(t)) inter++;
+  const jaccard = inter / (ta.size + tb.size - inter);
+  return jaccard < 0.5; // dissimilar titles → different subject → split
 }
 
 /**
@@ -1299,6 +1328,11 @@ export function extractCommandTitle(cmd: any): string | undefined {
   if (!cmd || typeof cmd !== 'object') return undefined;
   const candidates = [
     cmd.title,
+    // Some renderers nest their title under a `data` config (e.g.
+    // show_function_graph → { action:'showGraph', data:{ title } }). Without
+    // this, a graph's catalog title AND its auto-page title fall back to a
+    // generic "Next" (observed 2026-06-19 JEE parabola session).
+    cmd.data?.title,
     cmd.problem?.title,
     cmd.label,
     cmd.equation?.label,

@@ -1616,6 +1616,25 @@ export async function exportTutorSessionPDF(
     }
   }
 
+  // Page-grouping pre-walk: assign each content command the whiteboard PAGE it
+  // belongs to by walking the newPage markers in order. The runtime owns
+  // pagination (page-grouping.ts), and its newPage boundaries flow through in
+  // the command stream — so the PDF's Whiteboard Content section can group
+  // items under page headers, matching what the student saw on screen (rather
+  // than dumping all items flat, which diverged from the live board).
+  {
+    let curPage: string | undefined;
+    for (const cmd of dedupedAll) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = cmd as any;
+      if (c.action === 'newPage') {
+        curPage = String(c.title || '').trim() || undefined;
+      } else {
+        c.__pdfPageTitle = curPage;
+      }
+    }
+  }
+
   // Meta-commands don't render as their own whiteboard items — split them
   // out so the numbered list in the PDF only contains real content, and
   // bake scribble overlays onto their target item's captured SVG below.
@@ -1776,8 +1795,32 @@ export async function exportTutorSessionPDF(
     addPageIfNeeded(14);
     drawWrappedText('Whiteboard Content', margin, contentWidth, { size: 12, style: 'bold', color: [26, 32, 44], lineHeight: 8 });
 
+    // Track whiteboard page groups so each page (per the runtime's page model)
+    // gets its own header + starts on a fresh PDF page — mirroring the on-
+    // screen pagination instead of a flat item dump.
+    let pdfGroupTitle: string | undefined;
+    let pdfGroupNum = 0;
+    let pdfGroupStarted = false;
+
     for (let i = 0; i < dedupedCommands.length; i++) {
       const cmd = dedupedCommands[i];
+
+      // New whiteboard page? Emit a page header (and a fresh PDF page for every
+      // group after the first) so the export reads page-by-page like the board.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const thisGroupTitle = (cmd as any).__pdfPageTitle as string | undefined;
+      if (!pdfGroupStarted || thisGroupTitle !== pdfGroupTitle) {
+        pdfGroupStarted = true;
+        pdfGroupTitle = thisGroupTitle;
+        pdfGroupNum += 1;
+        if (pdfGroupNum > 1) { pdf.addPage(); y = 20; }
+        else { y += 2; }
+        drawWrappedText(
+          `Page ${pdfGroupNum}: ${thisGroupTitle || 'Untitled'}`,
+          margin, contentWidth,
+          { size: 10, style: 'bold', color: [59, 130, 246], lineHeight: 7 },
+        );
+      }
 
       // Check if this command has a visual renderer and estimate height.
       // For actions with native drawers we know the shape; everything else
