@@ -59,6 +59,7 @@ import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure } from '@/lib/tutor/whiteboard/catalog';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction } from '@/lib/tutor/whiteboard/page-grouping';
+import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 // ─── Topic-notes orchestrator guardrails ───
@@ -2275,6 +2276,33 @@ export function VoiceTutorRealtime({
       // a triangle the student couldn't see. solveGeometry is pure
       // (no side effects) so we can call it as a validator.
       if (cmd.action === 'showGeometryConstructed') {
+        // Conic curve-drop guard (project_tutor_conic_construction_fix): a conic
+        // figure (recognized by title) emitted with NO base curve step renders
+        // directrices/foci/asymptotes floating with no ellipse/parabola/hyperbola
+        // — and the curve-less redraw supersedes the original full figure, wiping
+        // the curve. If a prior same-subject conic exists in history, carry its
+        // curve step forward so the figure can't render curve-less; otherwise
+        // reject with a hint. Deterministic — no system-prompt mandate needed.
+        if (isCurveLessConic(cmd)) {
+          const prior = findPriorConic(cmd, whiteboardCommandsRef.current);
+          if (prior) {
+            const merged = carryForwardConicCurve(cmd as unknown as Parameters<typeof carryForwardConicCurve>[0], prior);
+            cmdAny.given = merged.given;
+            cmdAny.steps = merged.steps;
+            console.log('[VoiceTutorRealtime] conic curve-drop: carried curve from prior "%s" into "%s"', prior.title, cmdAny.title);
+            onDebugEvent?.('conic_curve_carried', `${prior.title} → ${cmdAny.title}`);
+          } else {
+            const reason =
+              `show_geometry_constructed: the conic figure "${cmdAny.title ?? ''}" has no base curve step, ` +
+              `so it would render annotations (directrices / foci / asymptotes) with no ellipse / parabola / ` +
+              `hyperbola. Include the base conic curve step in the SAME construction and derive the ` +
+              `annotations from it (conic_directrix / conic_foci / conic_vertices / conic_asymptotes).`;
+            console.warn('[VoiceTutorRealtime] conic curve-drop: no prior to carry from — rejecting "%s"', cmdAny.title);
+            onDebugEvent?.('tool_call', `Rejected curve-less conic: ${cmdAny.title}`);
+            rejected.push({ action: 'show_geometry_constructed', reason });
+            return [];
+          }
+        }
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { solveGeometry } = require('@/lib/tutor/diagrams/geometry-solver') as typeof import('@/lib/tutor/diagrams/geometry-solver');
