@@ -58,7 +58,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure } from '@/lib/tutor/whiteboard/catalog';
-import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction } from '@/lib/tutor/whiteboard/page-grouping';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
@@ -3723,6 +3723,14 @@ export function VoiceTutorRealtime({
     // each show_problem dedupped, leaving four blank new pages and
     // the brain switching to Malay trying to apologize.
     let newPageThisBatch = false;
+    // Generic evolve-in-place (project_tutor_figure_identity_design): prior
+    // figures this batch's re-emissions supersede. A same-subject re-emit with
+    // added annotations has a DIFFERENT signature (so the dedup above misses it)
+    // but the SAME subject — instead of letting them coexist (figure-
+    // multiplication + "which ellipse?" nav ambiguity), we remove the prior
+    // after the loop and keep only the freshly-drawn one. Collected here,
+    // applied below the loop (mirrors the kill-recovery rollback).
+    const evolveReplaceIds: string[] = [];
     for (const cmd of processed) {
       const action = String(cmd.action);
       if (action === 'newPage') {
@@ -3850,6 +3858,26 @@ export function VoiceTutorRealtime({
       // undefined and fall back to the prompt's per-renderer feature docs.
       const manifest = buildManifestForCommand(cmd) ?? undefined;
       commandByIdRef.current.set(id, { cmd: cmdWithId, order: nextCommandOrderRef.current++, manifest });
+      // Generic evolve-in-place: compute the subject anchorKey for every PRIMARY
+      // figure (so future re-emits can find THIS one), then look up the most
+      // recent non-stale same-subject prior. On a confident match the prior is
+      // superseded — collect it for removal after the loop. The replacement
+      // lands on the active page (the canvas derives pages from the stream, not
+      // catalog pageId, so a fresh render can't be relocated onto an arbitrary
+      // earlier page; removing the prior + GC'ing its now-empty page leaves
+      // exactly one figure either way). Fail-safe: only on isFigureEvolution
+      // (containment, same category) + non-stale; kill-recovery owns the replace
+      // on its own batches (skip then), and we never yank a render still pending
+      // kill-recovery confirmation. See project_tutor_figure_identity_design.md.
+      const anchorKey = isPrimaryFigure(action) ? computeAnchorKey(action, cmd) : undefined;
+      if (anchorKey && !killRecoveryPinPageId) {
+        const prior = catalogRef.current.findEvolvableFigure(anchorKey, STALE_TURNS);
+        if (prior && prior.itemId !== id && !pendingRevisionRef.current.has(prior.itemId)) {
+          evolveReplaceIds.push(prior.itemId);
+          console.log(`[VoiceTutorRealtime] evolve-in-place: ${id} (${anchorKey}) supersedes ${prior.itemId} on ${prior.pageId ?? '(no page)'}`);
+          onDebugEvent?.('figure_evolve_replace', `${id} ⟵ ${prior.itemId}`);
+        }
+      }
       // Register in the authoritative session catalog. The catalog is the
       // single source of truth for tutor_scribble target resolution AND
       // for the show_*-dedup signature lookup. UNCONDITIONAL registration
@@ -3876,6 +3904,9 @@ export function VoiceTutorRealtime({
         pageId: killRecoveryPinPageId ?? undefined,
         title: extractCommandTitle(cmd),
         signature,
+        // Subject key for PRIMARY figures only (undefined for supporting
+        // renders) — drives generic evolve-in-place on future re-emits.
+        anchorKey,
         features: manifest ?? [],
       });
     }
@@ -3883,6 +3914,35 @@ export function VoiceTutorRealtime({
     // remain in `commands` for index alignment in the duplicates[] array
     // returned to the Realtime hook.
     processed = processed.filter((c) => !droppedAsDuplicate.has(c));
+
+    // Apply generic evolve-in-place removals collected in the loop: pull the
+    // superseded prior figures off the board (canvas removeItems pre-pass + PDF
+    // export filter) and prune every local structure that maps id → render so
+    // dedup / scribble-target resolution / Board Map don't reference a figure
+    // the student can no longer see. Mirrors the kill-recovery rollback
+    // (rollbackKilledRenders). The replacement was already appended above and
+    // lives on the active page, so removing the prior never GCs the page it now
+    // occupies; a DIFFERENT page emptied by the removal is GC'd inside
+    // removeByIds → gcEmptyPages, and the canvas drops the matching empty bucket.
+    if (evolveReplaceIds.length > 0) {
+      const unique = Array.from(new Set(evolveReplaceIds));
+      const idSet = new Set(unique);
+      onWhiteboardCommand([{ action: 'removeItems', ids: unique }]);
+      const beforeMirror = whiteboardCommandsRef.current.length;
+      whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (c) => !idSet.has((c as any).id),
+      );
+      const prunedFromMirror = beforeMirror - whiteboardCommandsRef.current.length;
+      whiteboardCommandCountRef.current = Math.max(0, whiteboardCommandCountRef.current - prunedFromMirror);
+      for (const id of unique) commandByIdRef.current.delete(id);
+      const prunedFromCatalog = catalogRef.current.removeByIds(unique);
+      console.warn(
+        `[VoiceTutorRealtime] evolve-in-place removed ${unique.length} superseded figure(s): ` +
+          `mirror-${prunedFromMirror} catalog-${prunedFromCatalog} [${unique.join(', ')}]`,
+      );
+      onDebugEvent?.('figure_evolve_removed', `${unique.length}: ${unique.join(',')}`);
+    }
 
     // Set / transfer the active (or pinned) page's subject anchor from this
     // batch's first PRIMARY figure, so the H6 same-segment-different-figure
