@@ -12,7 +12,7 @@
  *   Tier 0 — kill-recovery replace ....... pin to the killed render's page
  *   Tier 1 — structural boundaries ....... new page (beat continuation)
  *              H5 explicit reset · H1 brain new_page (already in batch) ·
- *              H2 segment advance · H6 different primary figure
+ *              H2 segment advance · H6′ distinct-subject split (subjectsDiffer)
  *   Tier 2 — continuation / keep ......... group (beat heuristic boundary)
  *              G3 continuation utterance · G6 tutor-same-context
  *   Tier 3 — heuristic boundary .......... new page (H4 topic-shift)
@@ -35,7 +35,7 @@
  *     (same subject → replace in place; different → split).
  */
 
-import { computeAnchorKey, isPrimaryFigure, extractCommandTitle } from './catalog';
+import { computeAnchorKey, isPrimaryFigure, extractCommandTitle, subjectsDiffer } from './catalog';
 
 /** A whiteboard command (loosely typed — we only read `action` + pass the
  *  whole object to computeAnchorKey). */
@@ -227,21 +227,42 @@ export function decidePageForBatch(input: PageGroupingInput): PageDecision {
   // Tier 1 — structural boundaries (beat continuation & grouping).
   const explicitReset = RESET_RE.test(studentText);
   const segmentAdvance = signals.segmentAdvancePending || segmentAdvanceWithShow(batch);
-  // NOTE: H6 (different-primary-figure split) was REMOVED 2026-06-19 in favor
-  // of TOPIC/SEGMENT-level grouping (the user's chosen model): different
+  // NOTE: the original H6 (different-primary-FIGURE split) was REMOVED 2026-06-19
+  // in favor of TOPIC/SEGMENT-level grouping (the user's chosen model): different
   // figures of the same topic — a parabola's graph, its focus-directrix
-  // construction, its derivation — all stay on ONE page. Figures NEVER force a
-  // page break. Splits happen only on a genuine TOPIC boundary: segment
-  // advance (H2), topic-shift (H4), explicit reset (H5), or overflow (H7).
-  // Brain new_page is advisory (stripped in the orchestrator), so it's not a
-  // boundary here either. (anchorsDiverge / computeAnchorKey are retained in
-  // catalog.ts for the page subject anchor + potential Board Map use, but the
-  // page-break decision no longer consults them.)
+  // construction, its derivation — all stay on ONE page. It was RESTORED the same
+  // day as H6′ (just below), but NARROWED to split on different SUBJECT (title
+  // lead noun, subjectsDiffer) rather than different figure KIND — so a topic's
+  // representations still group while genuinely different subjects (ellipse vs
+  // hyperbola) split. Other splits remain TOPIC boundaries: segment advance (H2),
+  // topic-shift (H4), explicit reset (H5), or overflow (H7). Brain new_page is
+  // advisory (stripped in the orchestrator), so it's not a boundary here.
   if (explicitReset) {
     return makeNewPage('auto_new_page_reset', `explicit student reset "${studentText.slice(0, 40)}" (H5)`);
   }
   if (segmentAdvance) {
     return makeNewPage('auto_new_page_segment_advance', 'segment advance with teaching content (H2)', true);
+  }
+  // H6′ (restored, NARROWED 2026-06-19) — DISTINCT-SUBJECT split. A new primary
+  // figure whose SUBJECT differs from the active page's anchor opens a new page,
+  // so different subjects (ellipse vs hyperbola) never share a page — the Bug 2
+  // nav / scribble ambiguity ("go to the ellipse" landing on the hyperbola;
+  // "circle the focus on the ellipse" mis-resolving on an overcrowded page).
+  // CRUCIALLY narrower than the H6 that P5 removed: it splits on SUBJECT (the
+  // title's lead noun, via subjectsDiffer — category-IGNORING) NOT on figure
+  // KIND, so a topic's own representations (parabola graph + focus-directrix
+  // construction + derivation) share the lead noun "parabola" and STAY grouped.
+  // It therefore does NOT reintroduce P5's over-splitting, and is safe now that
+  // evolve-in-place collapses same-subject re-emits. Tier 1: beats the Tier 2
+  // continuation guards — a genuine subject change warrants its own page even
+  // mid-"keep going" (the conic-comparison session is exactly that case). Gated
+  // on BOTH anchors present; missing either → fall through to group (fail-safe).
+  if (
+    incomingAnchorKey &&
+    activePage.anchorKey &&
+    subjectsDiffer(incomingAnchorKey, activePage.anchorKey)
+  ) {
+    return makeNewPage('auto_new_page', 'distinct subject from active page anchor (H6′)');
   }
 
   // Tier 2 — continuation / keep (beat the heuristic boundary below).

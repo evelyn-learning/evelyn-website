@@ -144,32 +144,74 @@ function main() {
     if (d.action === 'newPage') assert.equal(d.event, 'auto_new_page_segment_advance');
   });
 
-  // ---- Topic/segment-level grouping (H6 removed 2026-06-19): figures NEVER
-  // split. A graph, a different-kind construction, a different-subject graph —
-  // all group onto the active page. Only segment-advance / topic-shift / reset
-  // / overflow split. ----
-  test('different KIND (graph → construction) → GROUP (no figure split)', () => {
+  // ---- H6′ distinct-SUBJECT split (restored, narrowed 2026-06-19). The split
+  // fires on a different SUBJECT (title lead noun, subjectsDiffer — category-
+  // IGNORING), NOT on figure KIND. So a topic's own representations (graph +
+  // construction + derivation) GROUP, while genuinely different subjects
+  // (ellipse vs hyperbola) SPLIT. Preserves P5's topic-level model + fixes
+  // Bug 2. See project_tutor_figure_identity_design.md. ----
+  test('H6′ GROUP: same subject, different KIND (parabola graph → parabola construction)', () => {
+    // Category ignored: showGeometryConstructed vs showFunctionGraph, same lead
+    // noun "parabola" (no containment) → group. The core P5-preservation case.
     const d = decidePageForBatch(input({
-      batch: [construction('Focus-Directrix Property')],
+      batch: [construction('Parabola Focus-Directrix Property')],
       activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
     }));
-    assert.equal(d.action, 'none', 'figures of the same topic stay together');
+    assert.equal(d.action, 'none', "a topic's representations stay together");
   });
 
-  test('different SUBJECT, same kind (parabola → ellipse graph) → GROUP (split via topic-shift/segment, not figure)', () => {
-    const d = decidePageForBatch(input({
-      batch: [graph('Ellipse: x²/9 + y²/4 = 1')],
-      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
-    }));
-    assert.equal(d.action, 'none', 'figure subject alone never splits; a real topic boundary does');
-  });
-
-  test('evolving figure (parabola → parabola+directrix) → GROUP', () => {
+  test('H6′ GROUP: evolving figure (parabola → parabola+directrix, containment)', () => {
     const d = decidePageForBatch(input({
       batch: [graph('Parabola: y² = 4x with Directrix', 'y = sqrt(4x)')],
       activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
     }));
-    assert.equal(d.action, 'none');
+    assert.equal(d.action, 'none', 'anchor title contained in the new title → group');
+  });
+
+  test('H6′ SPLIT: different SUBJECT, same kind (parabola → ellipse graph)', () => {
+    const d = decidePageForBatch(input({
+      batch: [graph('Ellipse: x²/9 + y²/4 = 1')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
+    }));
+    assert.equal(d.action, 'newPage', 'different lead noun → distinct subject → split');
+    if (d.action === 'newPage') assert.equal(d.event, 'auto_new_page');
+  });
+
+  test('H6′ SPLIT: ellipse → hyperbola (the ~0.75-Jaccard trap that must still split)', () => {
+    // Their equation titles share x, y, 1, "directrices", digits — a Jaccard
+    // test would false-GROUP. Lead noun ellipse ≠ hyperbola → split.
+    const d = decidePageForBatch(input({
+      batch: [construction('Hyperbola: x²/4 − y²/9 = 1 with Directrices')],
+      activePage: defaultActivePage({ anchorKey: 'showGeometryConstructed|||ellipse: x²/9 + y²/4 = 1 with directrices' }),
+    }));
+    assert.equal(d.action, 'newPage', 'ellipse vs hyperbola must split despite token overlap');
+  });
+
+  test('H6′ SPLIT beats continuation (Tier 1 > Tier 2): ellipse mid-"keep going"', () => {
+    const d = decidePageForBatch(input({
+      batch: [graph('Ellipse: x²/9 + y²/4 = 1')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
+      signals: { continuationGuardActive: true, tutorSameContext: true } as PageGroupingInput['signals'],
+    }));
+    assert.equal(d.action, 'newPage', 'a genuine subject change splits even mid-continuation');
+  });
+
+  test('H6′ GROUP (fail-safe): no active page anchor yet → group (gate)', () => {
+    const d = decidePageForBatch(input({
+      batch: [graph('Ellipse: x²/9 + y²/4 = 1')],
+      activePage: defaultActivePage({ anchorKey: undefined }),
+    }));
+    assert.equal(d.action, 'none', 'missing active anchor → cannot compare → group');
+  });
+
+  test('H6′ WART (accepted): annotation-led title ("Latus Rectum") splits its own topic', () => {
+    // Lead noun "latus" ≠ "parabola" → split. Documented minor/cosmetic wart of
+    // the generic title predicate (real brain titles lead with the subject).
+    const d = decidePageForBatch(input({
+      batch: [construction('Latus Rectum')],
+      activePage: defaultActivePage({ anchorKey: PARABOLA_ANCHOR }),
+    }));
+    assert.equal(d.action, 'newPage', 'documents the annotation-led split wart');
   });
 
   test('G1 headline: follow-up equation on a graph page → group', () => {

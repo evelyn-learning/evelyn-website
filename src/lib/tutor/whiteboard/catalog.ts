@@ -1390,6 +1390,53 @@ export function isFigureEvolution(newKey: string, priorKey: string): boolean {
   return titleN.includes(titleP) || titleP.includes(titleN);
 }
 
+/** First alphabetic token of a (normalized) title — the lead SUBJECT NOUN used
+ *  by {@link subjectsDiffer}. "ellipse: x²/9…" → "ellipse"; "hyperbola: x²/4…"
+ *  → "hyperbola"; "latus rectum — parabola…" → "latus" (annotation-led titles
+ *  are an accepted split wart). Empty when the title has no alphabetic run. */
+function firstAlphaToken(s: string): string {
+  const m = s.toLowerCase().match(/[a-z]+/);
+  return m ? m[0] : '';
+}
+
+/**
+ * Distinct-SUBJECT test for whiteboard page-splitting (figure-identity Bug 2 /
+ * Q5 — restored, narrowed H6′). True ⇔ the two anchor keys name DIFFERENT
+ * subjects and the incoming figure should open a NEW page.
+ *
+ * Compares the TITLE's leading subject noun ONLY and IGNORES render category —
+ * deliberately unlike {@link anchorsDiverge}, BOTH of whose branches are wrong
+ * for this decision:
+ *   - its CATEGORY split would split a parabola graph (showGraph) from its
+ *     construction (showGeometryConstructed) — regressing P5's topic-level
+ *     model where a topic's many representations share one page;
+ *   - its JACCARD branch FALSE-GROUPS ellipse vs hyperbola — their equation
+ *     titles overlap ~0.75 (share x, y, 1, "directrices", the digits), so the
+ *     only distinguishing token is the lead noun.
+ *
+ * Rules (fail-safe biases to GROUP — a wrong split fragments a topic, the
+ * recoverable outcome; this never merges two subjects):
+ *   1. either title empty → group;
+ *   2. one title contains the other → group (the evolve/superset case
+ *      "parabola y²=4x" → "parabola y²=4x with tangent");
+ *   3. compare first alphabetic token — differ → SPLIT, else group.
+ *
+ * Generic across all subjects (no per-figure-type vocabulary). Deterministic —
+ * derived from the render title, never student text.
+ */
+export function subjectsDiffer(a: string, b: string): boolean {
+  const sepA = a.indexOf('|||');
+  const sepB = b.indexOf('|||');
+  const titleA = sepA >= 0 ? a.slice(sepA + 3) : a;
+  const titleB = sepB >= 0 ? b.slice(sepB + 3) : b;
+  if (!titleA || !titleB) return false;                                  // no title → group
+  if (titleA.includes(titleB) || titleB.includes(titleA)) return false;  // superset/evolve → group
+  const headA = firstAlphaToken(titleA);
+  const headB = firstAlphaToken(titleB);
+  if (!headA || !headB) return false;                                    // no comparable noun → group
+  return headA !== headB;                                                // different lead subject → split
+}
+
 /** Alphanumeric tokens of a normalized title, for the H6 fuzzy compare. */
 function titleTokens(s: string): Set<string> {
   return new Set(s.split(/[^a-z0-9]+/).filter((t) => t.length > 0));
