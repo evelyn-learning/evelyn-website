@@ -510,7 +510,13 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     ws.onmessage = handleMessage;
 
     ws.onerror = (e) => {
-      console.error(`${logPrefix} WS error:`, e);
+      // WebSocket `error` events carry no actionable detail (they serialize
+      // to `{}`) and are ALWAYS followed by `onclose`, which owns the
+      // reconnect / 'degraded' handling. The common trigger is the OpenAI
+      // Realtime session hitting its ~30-min max duration (close 1006/1005),
+      // which auto-recovers — so warn, not error. console.error here tripped
+      // the Next.js dev error overlay on a benign, recovered drop (Console5).
+      console.warn(`${logPrefix} WS error (transient — onclose handles reconnect):`, e);
       onErrorRef.current?.(new Error('Perception WS error'));
     };
 
