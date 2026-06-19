@@ -306,10 +306,24 @@ export function WhiteboardCanvas({
         if (cmd.action !== 'scribble') { keep.push(cmd); continue; }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cmdAny = cmd as any;
+        const targetId = cmdAny.targetId as string | undefined;
         const targetPageTitle = cmdAny.targetPageTitle as string | undefined;
         const targetPageIndex = cmdAny.targetPageIndex as number | undefined;
         let targetIdx = -1;
-        if (targetPageTitle) {
+        // Prefer the page bucket that actually CONTAINS the target item (by
+        // its stable stamped id) — page titles repeat and the stream-walked
+        // targetPageIndex drifts from the rendered page list after
+        // evolve-in-place / kill-recovery removeItems prune items, sending the
+        // scribble to the wrong page bucket (2026-06-19 ellipse "circle the
+        // focus" landed on the tangent ellipse's page). See VoiceTutorRealtime
+        // pushPageScrollTo for the matching view-nav fix.
+        if (targetId) {
+          for (let j = 0; j < relocated.length; j++) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (relocated[j].commands.some((c) => (c as any).id === targetId)) { targetIdx = j; break; }
+          }
+        }
+        if (targetIdx < 0 && targetPageTitle) {
           const targetLower = targetPageTitle.toLowerCase();
           // Find the LAST matching page — if the title repeats, the most
           // recent one is the intended target.
@@ -395,9 +409,23 @@ export function WhiteboardCanvas({
       if (cmd.action !== 'scrollTo') continue;
       if (cmd.target !== 'page') continue;
       let idx = -1;
-      if (typeof cmd.pageIndex === 'number' && cmd.pageIndex >= 0 && cmd.pageIndex < pages.length) {
+      // Prefer the page that actually CONTAINS the resolved target item —
+      // robust against repeated page titles (a lesson segment spanning two
+      // pages titles both the same) and pageIndex drift from removed (emptied)
+      // page buckets (evolve-in-place / kill-recovery removeItems empties a
+      // page → it's dropped here but still counted by the orchestrator's
+      // newPage walk). See pushPageScrollTo in VoiceTutorRealtime. Title +
+      // index remain fallbacks for targets without a stamped id.
+      if (cmd.targetId) {
+        for (let i = 0; i < pages.length; i++) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if (pages[i].commands.some((c) => (c as any).id === cmd.targetId)) { idx = i; break; }
+        }
+      }
+      if (idx < 0 && typeof cmd.pageIndex === 'number' && cmd.pageIndex >= 0 && cmd.pageIndex < pages.length) {
         idx = cmd.pageIndex;
-      } else if (cmd.pageTitle) {
+      }
+      if (idx < 0 && cmd.pageTitle) {
         const title = cmd.pageTitle.toLowerCase();
         for (let i = pages.length - 1; i >= 0; i--) {
           if (pages[i].title?.toLowerCase() === title) { idx = i; break; }
@@ -418,8 +446,21 @@ export function WhiteboardCanvas({
           container.scrollTo({ top: 0, behavior: 'smooth' });
         } else if (cmd.target === 'bottom') {
           container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        } else if (cmd.target === 'item' && typeof cmd.itemIndex === 'number') {
-          const itemEl = itemRefsRef.current[cmd.itemIndex - 1];
+        } else if (cmd.target === 'item' && (typeof cmd.itemIndex === 'number' || cmd.targetId)) {
+          // Resolve the item element by its STABLE stamped id when available
+          // (targetItemIndex drifts from the rendered position after
+          // evolve-in-place / kill-recovery prune items — same root cause as
+          // the page/overlay id fixes). Fall back to the index ref.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const scrollTargetId = (cmd as any).targetId as string | undefined;
+          let itemEl: HTMLElement | null = null;
+          if (scrollTargetId) {
+            const safeId = scrollTargetId.replace(/"/g, '\\"');
+            itemEl = container.querySelector(`[data-wb-item-id="${safeId}"]`) as HTMLElement | null;
+          }
+          if (!itemEl && typeof cmd.itemIndex === 'number') {
+            itemEl = itemRefsRef.current[cmd.itemIndex - 1] ?? null;
+          }
           if (!itemEl) continue;
           // Prefer scrolling the specific feature into view if the
           // resolver tagged one — lets "scroll to intersection points"
@@ -451,19 +492,45 @@ export function WhiteboardCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands.length, pages]);
 
-  // Auto-navigate to the newest page when new pages are added
-  // (but not when goToPage just navigated us)
-  const prevPageCountRef = useRef(0);
+  // View-follow: switch the view to the page that the NEWEST teaching render
+  // landed on. The old behavior only auto-advanced when the page COUNT changed,
+  // so a render that GROUPED onto an existing, non-viewed page left the student
+  // stranded — 2026-06-19 Img13: "show me the steps to find the latus rectum"
+  // resumed work on the hyperbola (page 4) while the view stayed on the ellipse
+  // (page 3). Now any batch that adds renders pulls the view to the newest
+  // render's page (located by its stable id; falls back to the newest page).
+  // Skip when the batch carried an explicit nav (goToPage / scrollTo) — the
+  // scrollTo effect above already positioned the view (incl. Board Map jumps
+  // and scribble auto-page-switches), so we must not fight it.
+  const prevFollowCountRef = useRef(0);
   useEffect(() => {
-    if (pages.length > 0 && pages.length !== prevPageCountRef.current) {
-      // Check if the latest command is a goToPage — if so, skip auto-advance
-      const lastCmd = commands[commands.length - 1];
-      if (lastCmd?.action !== 'goToPage') {
-        setCurrentIndex(pages.length - 1);
-      }
-      prevPageCountRef.current = pages.length;
+    if (commands.length <= prevFollowCountRef.current) {
+      prevFollowCountRef.current = commands.length;
+      return;
     }
-  }, [pages.length, commands]);
+    const added = commands.slice(prevFollowCountRef.current);
+    prevFollowCountRef.current = commands.length;
+    if (added.some((c) => c.action === 'goToPage' || c.action === 'scrollTo')) return;
+    const META = new Set([
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+    ]);
+    for (let k = added.length - 1; k >= 0; k--) {
+      const c = added[k];
+      if (META.has(c.action)) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const id = (c as any).id as string | undefined;
+      let target = -1;
+      if (id) {
+        for (let i = 0; i < pages.length; i++) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if (pages[i].commands.some((x) => (x as any).id === id)) { target = i; break; }
+        }
+      }
+      if (target < 0) target = pages.length - 1; // fallback: newest page
+      if (target >= 0) setCurrentIndex((prev) => (target !== prev ? target : prev));
+      break;
+    }
+  }, [commands.length, pages]);
 
   // Auto-scroll to the latest item when a new command is added to the current page
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -682,14 +749,16 @@ export function WhiteboardCanvas({
             style={reviseStyle(renderableCommands[0])}
             ref={(el) => { itemRefsRef.current[0] = el; }}
             data-wb-item-index={1}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data-wb-item-id={(renderableCommands[0] as any).id ?? undefined}
           >
             <CommandRenderer command={renderableCommands[0]} />
-            <ScribbleOverlays scribbles={scribbles.filter((s) => s.targetItemIndex === 1)} />
+            <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} />
           </div>
         ) : (
           <div className="space-y-1">
             {renderableCommands.map((cmd, i) => {
-              const overlays = scribbles.filter((s) => s.targetItemIndex === i + 1);
+              const overlays = scribbles.filter((s) => scribbleMatchesItem(s, cmd, i + 1));
               return (
                 <div key={i} className="wb-item-enter">
                   {i > 0 && (
@@ -706,6 +775,8 @@ export function WhiteboardCanvas({
                     style={reviseStyle(cmd)}
                     ref={(el) => { itemRefsRef.current[i] = el; }}
                     data-wb-item-index={i + 1}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    data-wb-item-id={(cmd as any).id ?? undefined}
                   >
                     <CommandRenderer command={cmd} />
                     <ScribbleOverlays scribbles={overlays} />
@@ -1003,6 +1074,26 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
  */
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
 type ResolvedRegion = { x: number; y: number; w: number; h: number };
+
+/** Bind a scribble to its target render item. Prefer the STABLE stamped id
+ *  (scribble.targetId === item.id) — the page-relative targetItemIndex drifts
+ *  when the orchestrator's stream walk (resolveTargetFromId) and the rendered
+ *  page disagree after evolve-in-place / kill-recovery removeItems prune items
+ *  (2026-06-19 ellipse session: "circle the focus" bound to the directrices
+ *  equation card instead of the ellipse figure → HTML-mode resolve-miss, no
+ *  paint). Fall back to the 1-based index for scribbles without a stamped id. */
+function scribbleMatchesItem(
+  s: ScribbleCmd,
+  item: WhiteboardCommand | undefined,
+  idx1: number,
+): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sid = (s as any).targetId as string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cid = item ? ((item as any).id as string | undefined) : undefined;
+  if (sid && cid) return sid === cid;
+  return s.targetItemIndex === idx1;
+}
 
 function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   const svgRef = useRef<SVGSVGElement | null>(null);

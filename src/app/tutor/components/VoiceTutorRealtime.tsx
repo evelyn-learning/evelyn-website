@@ -4184,24 +4184,32 @@ export function VoiceTutorRealtime({
     // navigation scrollTo first.
     const withAutoScrolls: WhiteboardCommand[] = [];
     const itemsAlreadyScrolledThisBatch = new Set<number>();
+    // Dedup key per batch: the stable targetId when we have one, else the
+    // title, else the index — so the same page isn't navigated twice.
     const pagesAlreadyNavigatedThisBatch = new Set<string>();
-    // Also track page-index navigations so the untitled implicit first
-    // page ("page 0") doesn't get a duplicate scrollTo injected for
-    // each successive scribble that targets it.
-    const pageIndicesAlreadyNavigatedThisBatch = new Set<number>();
-    // Emit either a pageTitle- or pageIndex-keyed scrollTo depending on
-    // what the resolver returned. Titled pages use the title (robust
-    // against page reordering); the untitled first page uses pageIndex=0.
-    const pushPageScrollTo = (pageTitle: string | undefined, pageIndex: number) => {
-      if (pageTitle) {
-        if (pagesAlreadyNavigatedThisBatch.has(pageTitle)) return;
-        withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageTitle });
-        pagesAlreadyNavigatedThisBatch.add(pageTitle);
-      } else {
-        if (pageIndicesAlreadyNavigatedThisBatch.has(pageIndex)) return;
-        withAutoScrolls.push({ action: 'scrollTo', target: 'page', pageIndex });
-        pageIndicesAlreadyNavigatedThisBatch.add(pageIndex);
-      }
+    // Emit a page-switch scrollTo for a resolved target. Prefer the STABLE
+    // targetId for cross-page navigation: page TITLES repeat (a lesson segment
+    // spanning two pages titles both the same) and the newPage-counted
+    // pageINDEX can drift from the canvas's rendered page list when
+    // evolve-in-place / kill-recovery removeItems empties a bucket (the canvas
+    // drops empty pages; resolveTargetFromId's walk doesn't). Either alone can
+    // land the auto-page-switch on the WRONG page, so the scribble overlay then
+    // searches a DOM that lacks the feature and never resolves (2026-06-19
+    // ellipse session: "circle the focus" switched to the TANGENT ellipse's
+    // page — same segment title — not the FOCI ellipse's page → 79 resolve-miss,
+    // no paint). The canvas locates the page that actually CONTAINS targetId;
+    // title + index ride along as fallbacks for targets without a stamped id.
+    const pushPageScrollTo = (pageTitle: string | undefined, pageIndex: number, targetId?: string) => {
+      const dedupKey = targetId ?? pageTitle ?? `#${pageIndex}`;
+      if (pagesAlreadyNavigatedThisBatch.has(dedupKey)) return;
+      pagesAlreadyNavigatedThisBatch.add(dedupKey);
+      withAutoScrolls.push({
+        action: 'scrollTo',
+        target: 'page',
+        ...(targetId ? { targetId } : {}),
+        ...(pageTitle ? { pageTitle } : {}),
+        pageIndex,
+      });
     };
     for (const cmd of processed) {
       if (cmd.action === 'scrollTo') {
@@ -4242,7 +4250,7 @@ export function VoiceTutorRealtime({
           if (pageMatch) {
             const located = resolveTargetFromId(pageMatch.itemId);
             if (located) {
-              pushPageScrollTo(pageMatch.pageTitle, located.pageIndex);
+              pushPageScrollTo(pageMatch.pageTitle, located.pageIndex, pageMatch.itemId);
               console.log(
                 '[VoiceTutor] scrollTo-page-title-match: target="%s" → page "%s" (page %d)',
                 raw, pageMatch.pageTitle, located.pageIndex,
@@ -4267,7 +4275,7 @@ export function VoiceTutorRealtime({
         }
         const located = resolveTargetFromId(result.itemId);
         if (located) {
-          pushPageScrollTo(located.pageTitle, located.pageIndex);
+          pushPageScrollTo(located.pageTitle, located.pageIndex, result.itemId);
           // Stamp targetFeature so the renderer's scroll handler can
           // scrollIntoView() the specific feature element (not just the
           // item's top). Avoids landing above a feature that lives near
@@ -4278,7 +4286,7 @@ export function VoiceTutorRealtime({
           (withAutoScrolls as any).push({
             action: 'scrollTo', target: 'item',
             itemIndex: located.itemIndex,
-            targetId: result.itemId,
+            targetId: result.itemId, // canvas resolves the item by id (index drifts)
             targetFeature: result.canonical,
           });
           itemsAlreadyScrolledThisBatch.add(located.itemIndex);
@@ -4298,8 +4306,9 @@ export function VoiceTutorRealtime({
         const effectiveIndex = cmd.targetItemIndex;
         const effectivePageTitle = cmd.targetPageTitle;
         const effectivePageIndex = cmd.targetPageIndex;
+        const effectiveTargetId = cmd.targetId;
         if (typeof effectivePageIndex === 'number') {
-          pushPageScrollTo(effectivePageTitle, effectivePageIndex);
+          pushPageScrollTo(effectivePageTitle, effectivePageIndex, effectiveTargetId);
           console.log(
             '[VoiceTutorRealtime] Auto-page-switch injected before scribble →',
             effectivePageTitle ?? `page ${effectivePageIndex}`,
@@ -4316,6 +4325,7 @@ export function VoiceTutorRealtime({
           (withAutoScrolls as any).push({
             action: 'scrollTo', target: 'item',
             itemIndex: effectiveIndex,
+            ...(effectiveTargetId ? { targetId: effectiveTargetId } : {}), // canvas resolves by id (index drifts)
             ...(tf ? { targetFeature: tf } : {}),
           });
           itemsAlreadyScrolledThisBatch.add(effectiveIndex);
