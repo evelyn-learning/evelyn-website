@@ -134,6 +134,8 @@ export type Step =
   | StepConicVertices
   | StepConicDirectrix
   | StepConicAsymptotes
+  | StepLatusRectum
+  | StepChordOfContact
   | StepAngleMarker;
 
 /**
@@ -199,6 +201,8 @@ export const STEP_KINDS = [
   'conic_vertices',
   'conic_directrix',
   'conic_asymptotes',
+  'latus_rectum',
+  'chord_of_contact',
   'angle_marker',
 ] as const;
 
@@ -533,6 +537,7 @@ export interface StepExcircle extends StepCommon {
  *  points of tangency. Output: two segments + two touch points. */
 export interface StepTangentsFromExternal extends StepCommon {
   kind: 'tangents_from_external';
+  /** Circle OR conic id — the curve to draw both tangents to. */
   on: string;
   external: string;
   /** Ids for the two segments. Defaults: `${id}_a`, `${id}_b`.
@@ -740,6 +745,27 @@ export interface StepConicAsymptotes extends StepCommon {
   kind: 'conic_asymptotes';
   conic: string;
   length?: number;
+}
+
+/** Latus rectum of an existing conic — the focal chord perpendicular to the
+ *  axis. Parabola: one (at its single focus). Ellipse / hyperbola: `which`
+ *  selects 'first' | 'second' | 'both' (default 'both'). Yields a segment per
+ *  chord. */
+export interface StepLatusRectum extends StepCommon {
+  kind: 'latus_rectum';
+  conic: string;
+  which?: 'first' | 'second' | 'both';
+}
+
+/** Chord of contact of an external point wrt an existing conic — the polar
+ *  line. Draws the COMPLETE construction: the two points of tangency (T₁,T₂),
+ *  the chord joining them, AND the two tangent lines (external → each touch
+ *  point). `tangents: false` suppresses the tangent lines (chord only). */
+export interface StepChordOfContact extends StepCommon {
+  kind: 'chord_of_contact';
+  conic: string;
+  external: string;       // external point id
+  tangents?: boolean;     // default true — also draw the two tangent lines
 }
 
 /** Angle marker — a small arc (or right-angle square) drawn at a vertex
@@ -1039,6 +1065,8 @@ function solveStep(step: Step, state: State): void {
     case 'conic_vertices': return solveConicVertices(step, state);
     case 'conic_directrix': return solveConicDirectrix(step, state);
     case 'conic_asymptotes': return solveConicAsymptotes(step, state);
+    case 'latus_rectum': return solveLatusRectum(step, state);
+    case 'chord_of_contact': return solveChordOfContact(step, state);
     case 'angle_marker': return solveAngleMarker(step, state);
   }
 }
@@ -1741,23 +1769,20 @@ function solveExcircle(step: StepExcircle, state: State): void {
 }
 
 function solveTangentsFromExternal(step: StepTangentsFromExternal, state: State): void {
-  const c = circ(state, step.on);
-  const center = pt(state, c.center);
-  const E = pt(state, step.external);
-  const dx = E.x - center.x, dy = E.y - center.y;
-  const d = Math.hypot(dx, dy);
-  if (d < c.radius - 1e-6) {
-    throw new Error(`tangents_from_external "${step.id}": external point is inside the circle`);
+  // `on` is polymorphic: circle OR conic (the shared helper handles both).
+  const target = state.byId.get(step.on);
+  if (!target || (target.kind !== 'circle' && target.kind !== 'conic')) {
+    throw new Error(`tangents_from_external "${step.id}": "${step.on}" is not a circle or conic`);
   }
-  const r = c.radius;
-  const baseAngle = Math.atan2(dy, dx);
-  const theta = Math.acos(Math.min(1, Math.max(-1, r / d)));
+  const E = pt(state, step.external);
+  const tps = tangentPointsFromExternal(target, state, E);
+  if (!tps) {
+    throw new Error(`tangents_from_external "${step.id}": external point is not outside the curve`);
+  }
   const [segA, segB] = step.segmentIds ?? [`${step.id}_a`, `${step.id}_b`];
   const [touchA, touchB] = step.touchIds ?? [`${step.id}_touchA`, `${step.id}_touchB`];
-  const aAngle = baseAngle + theta;
-  const bAngle = baseAngle - theta;
-  setObject(state, { kind: 'point', id: touchA, x: round2(center.x + r * Math.cos(aAngle)), y: round2(center.y + r * Math.sin(aAngle)) });
-  setObject(state, { kind: 'point', id: touchB, x: round2(center.x + r * Math.cos(bAngle)), y: round2(center.y + r * Math.sin(bAngle)) });
+  emitPoint(state, touchA, tps[0].x, tps[0].y);
+  emitPoint(state, touchB, tps[1].x, tps[1].y);
   setObject(state, { kind: 'segment', id: segA, from: step.external, to: touchA, label: step.label });
   setObject(state, { kind: 'segment', id: segB, from: step.external, to: touchB });
 }
@@ -2282,6 +2307,186 @@ function solveConicAsymptotes(step: StepConicAsymptotes, state: State): void {
   emitPoint(state, b2, B2.x, B2.y);
   setObject(state, { kind: 'segment', id: `${step.id}_1`, from: a1, to: b1 });
   setObject(state, { kind: 'segment', id: `${step.id}_2`, from: a2, to: b2 });
+}
+
+/**
+ * Latus rectum of a conic — the focal chord perpendicular to the axis.
+ * Semi-latus-rectum ℓ (canonical frame, then projected to world like
+ * conic_directrix so rotation/translation are handled):
+ *   - parabola y²=4a·x : single focus (a,0), ℓ = 2a → endpoints (a, ±2a)
+ *   - ellipse  x²/a²+y²/b²=1 : foci (±f,0), f=√(a²−b²), ℓ = b²/a → (±f, ±b²/a)
+ *   - hyperbola x²/a²−y²/b²=1 : foci (±f,0), f=√(a²+b²), ℓ = b²/a → (±f, ±b²/a)
+ */
+function solveLatusRectum(step: StepLatusRectum, state: State): void {
+  const c = conic(state, step.conic);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  const emitChord = (fx: number, semi: number, suffix: string) => {
+    const P1 = project(fx, semi);
+    const P2 = project(fx, -semi);
+    const id1 = `${step.id}${suffix}_a`, id2 = `${step.id}${suffix}_b`;
+    emitPoint(state, id1, P1.x, P1.y);
+    emitPoint(state, id2, P2.x, P2.y);
+    setObject(state, {
+      kind: 'segment', id: `${step.id}${suffix}`, from: id1, to: id2,
+      label: suffix === '_2' ? undefined : step.label,
+    });
+  };
+  const a = c.a, b = c.b ?? a;
+  if (c.conicType === 'parabola') {
+    emitChord(a, 2 * a, '');
+    return;
+  }
+  const semi = (b * b) / a; // semi-latus rectum
+  const f = c.conicType === 'ellipse'
+    ? Math.sqrt(Math.max(0, a * a - b * b))
+    : Math.sqrt(a * a + b * b);
+  if (c.conicType === 'ellipse' && f < 1e-9) {
+    throw new Error(`latus_rectum "${step.id}": ellipse is a circle (degenerate latus rectum)`);
+  }
+  const which = step.which ?? 'both';
+  if (which === 'both') {
+    emitChord(-f, semi, '_1');
+    emitChord(f, semi, '_2');
+  } else {
+    emitChord(which === 'first' ? -f : f, semi, '');
+  }
+}
+
+/**
+ * The two points of tangency of the tangents from an external point to a
+ * conic, via the pole–polar relation. Returns world-coord points, or null when
+ * the point is not strictly outside (on/inside → no two real tangents). Handles
+ * rotated/translated conics by transforming the external point into the conic's
+ * canonical frame, solving there, then projecting the touch points back.
+ */
+function conicTangentPointsFromExternal(
+  c: ResolvedConic,
+  center: ResolvedPoint,
+  Ew: { x: number; y: number },
+): [{ x: number; y: number }, { x: number; y: number }] | null {
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const project = (lx: number, ly: number) => ({
+    x: center.x + lx * cosR - ly * sinR,
+    y: center.y + lx * sinR + ly * cosR,
+  });
+  // World → canonical (inverse rotation about the conic center).
+  const dx = Ew.x - center.x, dy = Ew.y - center.y;
+  const ex = dx * cosR + dy * sinR;
+  const ey = -dx * sinR + dy * cosR;
+  const a = c.a, b = c.b ?? a;
+  const cps: Array<{ x: number; y: number }> = [];
+  if (c.conicType === 'parabola') {
+    // y² = 4a·x. Touch-point y solves y² − 2·ey·y + 4a·ex = 0.
+    const disc = ey * ey - 4 * a * ex;
+    if (disc <= 1e-9) return null; // on/inside the parabola
+    const s = Math.sqrt(disc);
+    for (const yt of [ey + s, ey - s]) cps.push({ x: (yt * yt) / (4 * a), y: yt });
+  } else if (c.conicType === 'ellipse') {
+    // Normalize to the unit circle u=x/a, v=y/b; reuse circle tangent geometry.
+    const u1 = ex / a, v1 = ey / b;
+    const D = Math.hypot(u1, v1);
+    if (D <= 1 + 1e-9) return null; // on/inside
+    const base = Math.atan2(v1, u1);
+    const th = Math.acos(Math.min(1, Math.max(-1, 1 / D)));
+    for (const ang of [base + th, base - th]) cps.push({ x: a * Math.cos(ang), y: b * Math.sin(ang) });
+  } else {
+    // Hyperbola u=x/a, v=y/b → u²−v²=1, polar u·u1 − v·v1 = 1.
+    const u1 = ex / a, v1 = ey / b;
+    if (Math.abs(u1) > 1e-9) {
+      // u = (1 + v·v1)/u1 → (v1²−u1²)v² + 2v1·v + (1−u1²) = 0.
+      const A = v1 * v1 - u1 * u1, B = 2 * v1, C = 1 - u1 * u1;
+      if (Math.abs(A) < 1e-12) return null;
+      const disc = B * B - 4 * A * C;
+      if (disc <= 1e-9) return null;
+      const sd = Math.sqrt(disc);
+      for (const v of [(-B + sd) / (2 * A), (-B - sd) / (2 * A)]) {
+        cps.push({ x: a * ((1 + v * v1) / u1), y: b * v });
+      }
+    } else {
+      // External point on the conjugate axis: polar −v·v1 = 1 → v = −1/v1.
+      if (Math.abs(v1) < 1e-9) return null;
+      const v = -1 / v1;
+      const u2 = 1 + v * v;
+      const u = Math.sqrt(u2);
+      cps.push({ x: a * u, y: b * v });
+      cps.push({ x: -a * u, y: b * v });
+    }
+  }
+  if (cps.length < 2) return null;
+  return [project(cps[0].x, cps[0].y), project(cps[1].x, cps[1].y)];
+}
+
+/**
+ * The two points of tangency from an external point to a circle OR conic, in
+ * world coords (or null when the point is not strictly outside). Unifies the
+ * circle tangent geometry with the conic pole-polar so chord_of_contact and
+ * tangents_from_external accept either curve — a circle is `kind:'circle'`
+ * (center/radius), NOT a conic, so the brain's chord_of_contact on a circle
+ * was rejected before this (2026-06-19 Img15).
+ */
+function tangentPointsFromExternal(
+  target: ResolvedCircle | ResolvedConic,
+  state: State,
+  E: { x: number; y: number },
+): [{ x: number; y: number }, { x: number; y: number }] | null {
+  if (target.kind === 'circle') {
+    const center = pt(state, target.center);
+    const dx = E.x - center.x, dy = E.y - center.y;
+    const d = Math.hypot(dx, dy);
+    const r = target.radius;
+    if (d < r - 1e-6 || d < 1e-9) return null; // inside, on, or at center
+    const base = Math.atan2(dy, dx);
+    const th = Math.acos(Math.min(1, Math.max(-1, r / d)));
+    return [
+      { x: center.x + r * Math.cos(base + th), y: center.y + r * Math.sin(base + th) },
+      { x: center.x + r * Math.cos(base - th), y: center.y + r * Math.sin(base - th) },
+    ];
+  }
+  return conicTangentPointsFromExternal(target, pt(state, target.center), E);
+}
+
+/**
+ * Chord of contact of an external point wrt a conic (the polar). Draws the
+ * COMPLETE construction by default — the two points of tangency, the chord
+ * joining them, AND the two tangent lines — so a single step renders the whole
+ * picture and the brain can't omit the tangents (the 2026-06-19 Img12 bug).
+ * Fail-safe: a point not strictly outside (e.g. the brain mis-set the conic's
+ * vertex to the external point) → reject-with-hint, so it self-corrects.
+ */
+function solveChordOfContact(step: StepChordOfContact, state: State): void {
+  const target = state.byId.get(step.conic);
+  if (!target || (target.kind !== 'conic' && target.kind !== 'circle')) {
+    throw new Error(
+      `chord_of_contact "${step.id}": "${step.conic}" is not a conic or circle in this command — ` +
+      `include the conic/circle step (with this id) in the same showGeometryConstructed call.`,
+    );
+  }
+  const E = pt(state, step.external);
+  const tps = tangentPointsFromExternal(target, state, E);
+  if (!tps) {
+    throw new Error(
+      `chord_of_contact "${step.id}": external point "${step.external}" is not outside the curve ` +
+      `(no real tangents) — place it outside, or check the curve's center/vertex.`,
+    );
+  }
+  const [T1, T2] = tps;
+  const t1 = `${step.id}_T1`, t2 = `${step.id}_T2`;
+  emitPoint(state, t1, T1.x, T1.y, 'T₁');
+  emitPoint(state, t2, T2.x, T2.y, 'T₂');
+  // The chord of contact (polar) joining the points of tangency.
+  setObject(state, { kind: 'segment', id: step.id, from: t1, to: t2, label: step.label });
+  // The two tangent lines (external point → each touch point), unless suppressed.
+  if (step.tangents !== false) {
+    setObject(state, { kind: 'segment', id: `${step.id}_tan1`, from: step.external, to: t1 });
+    setObject(state, { kind: 'segment', id: `${step.id}_tan2`, from: step.external, to: t2 });
+  }
 }
 
 function solveAngleMarker(step: StepAngleMarker, state: State): void {
