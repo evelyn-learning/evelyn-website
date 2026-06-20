@@ -6340,6 +6340,14 @@ export function VoiceTutorRealtime({
         };
         const closeGate = () => {
           clearVbsCap();
+          // Validate-before-speak: if a kill/abort closes the gate while we
+          // were rolling, the buffered (un-played) sentences are dropped
+          // BEFORE the speaker — the headline win. Log the count so a live
+          // test can see the wrong narration get retracted pre-audio.
+          if (vbsRolling && pendingSentences.length > 0) {
+            console.log(`[brain-orchestrator] validate-before-speak: DROPPED ${pendingSentences.length} buffered sentence(s) pre-audio on gate close (never spoken):`, pendingSentences.map((s) => s.slice(0, 60)));
+            onDebugEvent?.('vbs_dropped_pre_audio', `${pendingSentences.length} sentence(s)`);
+          }
           gateState = 'closed';
           pendingSentences.length = 0;
         };
@@ -6841,13 +6849,26 @@ export function VoiceTutorRealtime({
                         ttsDispatchedCountRef.current++;
                       }
                     } else if (gateState === 'gated') {
-                      pendingSentences.push(sentenceForSpeech);
-                      // Rolling-hold: once a clean tool has put us in the
-                      // post-first-tool rolling phase, each newly-buffered
-                      // sentence (re)arms the verbal-tail cap so it isn't
-                      // stranded if no further tool arrives. Before the first
-                      // tool, the turn-open gateTimer owns the flush.
-                      if (vbsRolling) armVbsCap();
+                      if (vbsRolling) {
+                        // Rolling-hold = 1-DEEP lookahead. Hold AT MOST one
+                        // sentence. A new sentence means the previously-held
+                        // one is now safe (no rejecting tool arrived between
+                        // it and this one), so release it BEFORE buffering
+                        // the new one. This keeps TTS flowing one sentence at
+                        // a time at the normal cadence — NOT accumulated into
+                        // a burst-flush (the 2026-06-20 "one word at a time"
+                        // stutter, Console7). A rejecting tool still drops
+                        // this single held sentence via closeGate; the cap
+                        // flushes it if no successor/tool arrives.
+                        if (pendingSentences.length > 0) flushPending();
+                        pendingSentences.push(sentenceForSpeech);
+                        armVbsCap();
+                      } else {
+                        // Pre-first-tool turn-open hold (unchanged): the
+                        // gateTimer owns the flush; these flush together when
+                        // the first tool validates (typically 1-2 sentences).
+                        pendingSentences.push(sentenceForSpeech);
+                      }
                     } else if (gateState === 'open') {
                       // Routes through the perception cancel gate AND the
                       // judge-kill Stage 3.1 resume hold/decision.
@@ -7669,6 +7690,10 @@ export function VoiceTutorRealtime({
                         // LATER rejecting tool drop the wrong sentence before
                         // it's spoken — the gap today's one-shot openGate
                         // leaves open for the rest of the turn.
+                        if (!vbsRolling) {
+                          console.log('[brain-orchestrator] validate-before-speak: rolling-hold engaged (later sentences buffer until their tool verdict)');
+                          onDebugEvent?.('vbs_rolling_engaged', `tool=${name}`);
+                        }
                         flushPending();
                         vbsRolling = true;
                       } else {
