@@ -179,12 +179,26 @@ async function main() {
       } else { anomalies.push('Export PDF button not visible'); }
     } catch (e) { anomalies.push(`PDF export failed: ${(e as Error).message}`); }
 
-    // Transcript dump — pull the brain's own per-turn log lines (reliable,
-    // unlike scraping the chat DOM whose class names churn).
-    const transcript = consoleLines
-      .filter((l) => l.includes('[brain-orchestrator] turn ok') || l.includes('turn start, transcript:'))
-      .map((l) => l.replace(/^\[\w+\]\s*/, ''));
-    fs.writeFileSync(path.join(outDir, 'transcript.txt'), transcript.join('\n'));
+    // Transcript dump — pull the FULL per-turn transcript off __tutorTestState
+    // (untruncated; the console turn-ok lines cap spoken text at ~80 chars, which
+    // is useless for the Phase-2 judge). Fall back to the console-derived lines
+    // if the hook is unavailable.
+    try {
+      const turns = await page.evaluate(() =>
+        (window.__tutorTestState() as { transcript?: Array<{ role: string; text: string }> }).transcript ?? []);
+      if (turns.length > 0) {
+        const full = turns.map((t) => `${t.role.toUpperCase()}: ${t.text}`).join('\n\n');
+        fs.writeFileSync(path.join(outDir, 'transcript.txt'), full);
+        fs.writeFileSync(path.join(outDir, 'transcript.json'), JSON.stringify(turns, null, 2));
+        log(`saved transcript.txt (${turns.length} turns, full text)`);
+      } else {
+        const transcript = consoleLines
+          .filter((l) => l.includes('[brain-orchestrator] turn ok') || l.includes('turn start, transcript:'))
+          .map((l) => l.replace(/^\[\w+\]\s*/, ''));
+        fs.writeFileSync(path.join(outDir, 'transcript.txt'), transcript.join('\n'));
+        log('saved transcript.txt (console fallback — full transcript hook empty)');
+      }
+    } catch (e) { anomalies.push(`transcript dump failed: ${(e as Error).message}`); }
 
     // Debug-event telemetry (render-sync / kill-recovery / substitution). The
     // page POSTs these to /api/demos/session, which 500s headless, so pull them

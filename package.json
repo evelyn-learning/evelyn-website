@@ -22,6 +22,7 @@
     "test:render-sync": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-render-sync.ts",
     "test:kill-keep": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-kill-keep.ts",
     "test:tutor-e2e": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-e2e/run.ts",
+    "test:tutor-judge": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-e2e/judge.ts",
     "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {

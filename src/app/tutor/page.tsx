@@ -308,6 +308,12 @@ function TutorPage() {
   const debugEventsRef = useRef<DebugEvent[]>([]);
   const lastSavedDebugCountRef = useRef(0);
   const sessionEndedRef = useRef(false);
+  // e2e: always-fresh mirror of the full transcript (the turn-ok console log
+  // truncates spoken text to ~80 chars; the Phase-2 judge needs the FULL
+  // narration). A ref because a tutor turn is one entry whose text grows
+  // mid-stream without changing transcript.length — a length-keyed closure
+  // would capture stale text.
+  const transcriptStateRef = useRef<TranscriptEntry[]>([]);
 
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
     debugEventsRef.current.push({
@@ -1013,9 +1019,15 @@ function TutorPage() {
       // substitution events). Persisted to /api/demos/session in prod, but that
       // POST 500s under the e2e harness, so expose it directly for capture.
       debugEvents: debugEventsRef.current,
+      // e2e: FULL per-turn transcript (untruncated) for the Phase-2 judge.
+      transcript: transcriptStateRef.current.map((e) => ({ role: e.role, text: e.text })),
     });
     return () => { delete w.__tutorTestStart; delete w.__tutorSendText; delete w.__tutorTestState; };
   }, [stage, isProcessing, transcript.length, error, canStartSession, handleStartSession]);
+
+  // e2e: keep transcriptStateRef in sync with the full transcript (every
+  // change, incl. mid-stream text growth) so __tutorTestState reads fresh text.
+  useEffect(() => { transcriptStateRef.current = transcript; }, [transcript]);
 
   // Handle transcript updates from VoiceTutor
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
