@@ -6363,6 +6363,19 @@ export function VoiceTutorRealtime({
             if (gateState === 'gated' && pendingSentences.length > 0) flushPending();
           }, VALIDATE_BEFORE_SPEAK_CAP_MS);
         };
+        // v2 divergence-substitute: drop the held narration WITHOUT closing
+        // the gate (the turn continues — we substitute the authored card and
+        // let the brain's subsequent sentences keep streaming). closeGate
+        // would end the turn; this just retracts the buffered wrong sentence
+        // so it's never spoken, then we keep rolling.
+        const dropPendingForSubstitute = (why: string) => {
+          clearVbsCap();
+          if (pendingSentences.length > 0) {
+            console.log(`[brain-orchestrator] validate-before-speak: DROPPED ${pendingSentences.length} buffered sentence(s) pre-audio (${why}, never spoken):`, pendingSentences.map((s) => s.slice(0, 60)));
+            onDebugEvent?.('vbs_dropped_pre_audio', `${pendingSentences.length} sentence(s) — ${why}`);
+            pendingSentences.length = 0;
+          }
+        };
         // Skip turns (#4): never auto-open on the 1s timer — the gate
         // opens only when advance_lesson / generate_problem dispatches,
         // or stays shut so the Skip-KILL drops the turn silently. The
@@ -7203,6 +7216,23 @@ export function VoiceTutorRealtime({
                           // Fall through — dispatch the brain's free-form
                           // worked example as-is. Do NOT substitute (the
                           // authored card is the wrong one for this turn).
+                        } else if (divergent && TUTOR_VALIDATE_BEFORE_SPEAK) {
+                          // v2 divergence-substitute (project_tutor_validate_
+                          // before_speak): the brain narrated an INVENTED
+                          // scenario and the validating tool diverges from the
+                          // authored card. With the rolling buffer holding the
+                          // narration, DROP the buffered invented-setup
+                          // sentence(s) (never spoken) and SUBSTITUTE the
+                          // authored card — no kill, no 3-8s retry, no wrong
+                          // content on the board. The brain's subsequent
+                          // sentences continue (the accepted residual: an
+                          // occasional later sentence may still reference the
+                          // invented scenario — monitored, see the memo).
+                          dropPendingForSubstitute('worked_example divergence');
+                          console.warn(`[brain-orchestrator] show_worked_example divergence for segment "${segId}" — DROP held narration + substitute authored card (no kill). brain="${[...brainNums].slice(0, 4).join(',')}" authored="${[...authoredNums].slice(0, 4).join(',')}"`);
+                          onDebugEvent?.('show_worked_example_divergence_substituted', `segId="${segId}"`);
+                          name = 'show_segment_card';
+                          args = { segmentId: segId };
                         } else if (divergent) {
                           console.warn(`[brain-orchestrator] show_worked_example payload diverges from authored worked_example for segment "${segId}". brain numbers="${[...brainNums].slice(0, 5).join(',')}", authored numbers="${[...authoredNums].slice(0, 5).join(',')}". Killing attempt for retry.`);
                           onDebugEvent?.('show_worked_example_divergence', `segId="${segId}" brain="${[...brainNums].slice(0, 3).join(',')}" authored="${[...authoredNums].slice(0, 3).join(',')}"`);
@@ -7321,6 +7351,19 @@ export function VoiceTutorRealtime({
                           // showing the authored card would be wrong.
                           // Fall through to dispatch show_problem with the
                           // brain's free-form statement as-is.
+                        } else if (targetsDiverge && TUTOR_VALIDATE_BEFORE_SPEAK) {
+                          // v2 divergence-substitute: brain asked for a
+                          // different target than authored on the current
+                          // segment (a drift). DROP the held narration about
+                          // the brain's target (never spoken) + SUBSTITUTE the
+                          // authored card — no kill, no retry, no chat-board
+                          // mismatch. (A genuine topic switch carries new_page,
+                          // handled by the bypass above.)
+                          dropPendingForSubstitute('show_problem target divergence');
+                          console.warn(`[brain-orchestrator] show_problem target divergence for segment "${segId}" (brain="${brainTarget}" authored="${authoredTarget}") — DROP held narration + substitute authored card (no kill).`);
+                          onDebugEvent?.('show_problem_target_divergence_substituted', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
+                          name = 'show_segment_card';
+                          args = { segmentId: segId };
                         } else if (targetsDiverge) {
                           console.warn(`[brain-orchestrator] show_problem query-target divergence for segment "${segId}": brain asks for "${brainTarget}", authored asks for "${authoredTarget}". Killing attempt for retry.`);
                           onDebugEvent?.('show_problem_target_divergence', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
