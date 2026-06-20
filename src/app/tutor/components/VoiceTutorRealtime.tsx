@@ -6143,6 +6143,16 @@ export function VoiceTutorRealtime({
         // (rollback scope = full attempt, original behavior).
         let renderCountAtAdvance: number | null = null;
         let attemptText = '';
+        // Validate-before-speak chat gating: the streaming chat bubble shows
+        // `attemptText`, which keeps accumulating even AFTER a kill (the
+        // killed attempt streams to completion, audio-gated by attemptKilled
+        // but still recorded) — so the wrong/post-kill content flashes in
+        // chat then gets dimmed+corrected (the 2026-06-20 visual leak). When
+        // the flag is on we reveal `chatRevealText` instead, which only
+        // accumulates pre-kill content (the bubble freezes at what was
+        // actually voiced, the retry replaces it). Per-attempt (resets with
+        // attemptText). Normal turns: chatRevealText == attemptText.
+        let chatRevealText = '';
         // Once a tool call in this attempt is rejected, the attempt is
         // doomed and we'll retry. Stop voicing further sentences from
         // this attempt (otherwise the student hears both the bad voice-
@@ -6829,6 +6839,13 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('no_problem_available_observed', trimmedSentence.slice(0, 100));
                   }
                   if (!attemptKilled) {
+                    // Validate-before-speak chat gating: record this sentence
+                    // for the chat bubble ONLY while the attempt is alive.
+                    // Post-kill sentences (attemptKilled=true) skip this, so
+                    // they never appear in chat — the bubble freezes at the
+                    // voiced content and the retry replaces it (no flash of
+                    // wrong/post-kill text). Mirrors the attemptText concat.
+                    chatRevealText += (chatRevealText ? ' ' : '') + trimmedSentence;
                     // FIX A — fast opener. The brain is prompted to open
                     // every turn with a short content-free runway phrase
                     // (TURN_OPENER_RULE). Voice that sentence-0 the moment
@@ -6909,6 +6926,12 @@ export function VoiceTutorRealtime({
                   // and React doesn't unmount/remount it (which produced
                   // visible flicker before 2026-04-29).
                   const streamingId = `tutor-streaming-${t0}-${attempt}`;
+                  // Validate-before-speak: reveal only pre-kill content in the
+                  // bubble (chatRevealText) when the flag is on; else the full
+                  // accumulated attemptText (today's behavior). Always
+                  // non-empty by the time we reveal (the first sentence is
+                  // pre-kill), so no empty-bubble guard needed.
+                  const revealText = TUTOR_VALIDATE_BEFORE_SPEAK ? chatRevealText : attemptText;
                   // Locate ANY existing entry with this streaming id —
                   // not just the last one. If a user turn (e.g. typed
                   // input) lands BETWEEN two of our sentence events,
@@ -6927,7 +6950,7 @@ export function VoiceTutorRealtime({
                     const existing = transcriptRef.current[existingIdx];
                     transcriptRef.current = [
                       ...transcriptRef.current.slice(0, existingIdx),
-                      { ...existing, text: attemptText, streaming: true },
+                      { ...existing, text: revealText, streaming: true },
                       ...transcriptRef.current.slice(existingIdx + 1),
                     ];
                   } else {
@@ -6944,7 +6967,7 @@ export function VoiceTutorRealtime({
                         id: streamingId,
                         timestamp: new Date(),
                         role: 'tutor',
-                        text: attemptText,
+                        text: revealText,
                         streaming: true,
                       } as TranscriptEntry,
                     ];
