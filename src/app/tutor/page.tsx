@@ -955,6 +955,64 @@ function TutorPage() {
     }
   }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
 
+  // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
+  // NODE_ENV-guarded window hooks so the tutor-e2e harness can drive a real
+  // claude-brain session through the TYPED-INPUT path (no mic/voice needed):
+  //   __tutorTestStart({subject, level, topic, lessonPlanId, studentName?})
+  //       — set the picker selections + start the session. Selecting a
+  //         lessonPlanId flips voiceEngine→claude-brain automatically.
+  //   __tutorSendText(text) — dispatch a student turn (= typed input).
+  //   __tutorTestState() — poll observable state for turn-synchronization.
+  // See project_tutor_test_automation. Counterpart dev triggers
+  // (__tutorForceKill, __tutorRenderBuffer, …) live in VoiceTutorRealtime.
+  const pendingTestStartRef = useRef(false);
+  const turnsCompletedRef = useRef(0);
+  const prevBrainBusyRef = useRef(false);
+  useEffect(() => {
+    // A brain turn completed when isProcessing (onTutorBusy) falls true→false.
+    if (prevBrainBusyRef.current && !isProcessing) turnsCompletedRef.current += 1;
+    prevBrainBusyRef.current = isProcessing;
+  }, [isProcessing]);
+  // Fire the deferred start once the selections have actually landed in state
+  // (setState is async, so __tutorTestStart can't call handleStartSession
+  // synchronously — canStartSession would still be false).
+  useEffect(() => {
+    if (pendingTestStartRef.current && canStartSession && stage === 'setup') {
+      pendingTestStartRef.current = false;
+      void handleStartSession();
+    }
+  }, [canStartSession, stage, handleStartSession]);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    w.__tutorTestStart = (cfg: { subject: string; level: string; topic: string; lessonPlanId?: string; studentName?: string }) => {
+      setSelectedSubject(cfg.subject);
+      setSelectedLevel(cfg.level);
+      setSelectedTopicId(cfg.topic);
+      setSelectedLessonPlanId(cfg.lessonPlanId || '');
+      setInputMode('voice');
+      setStudentName(cfg.studentName || 'Test Student');
+      turnsCompletedRef.current = 0;
+      pendingTestStartRef.current = true;
+      console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg));
+    };
+    w.__tutorSendText = (text: string) => {
+      if (!realtimeHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
+      console.warn('[tutor-e2e] __tutorSendText', JSON.stringify(text).slice(0, 120));
+      realtimeHandleRef.current.sendTextMessage(text);
+    };
+    w.__tutorTestState = () => ({
+      stage,
+      brainBusy: isProcessing,
+      connected: !!realtimeHandleRef.current,
+      transcriptLen: transcript.length,
+      turnsCompleted: turnsCompletedRef.current,
+      error,
+    });
+    return () => { delete w.__tutorTestStart; delete w.__tutorSendText; delete w.__tutorTestState; };
+  }, [stage, isProcessing, transcript.length, error, canStartSession, handleStartSession]);
+
   // Handle transcript updates from VoiceTutor
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
     setTranscript(entries);

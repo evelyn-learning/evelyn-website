@@ -20,6 +20,7 @@
     "test:figure-evolve": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-figure-evolve.ts",
     "test:conic-primitives": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-primitives.ts",
     "test:render-sync": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-render-sync.ts",
+    "test:tutor-e2e": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-e2e/run.ts",
     "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {
@@ -90,6 +91,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.1.0",
     "happy-dom": "^20.9.0",
+    "playwright": "^1.61.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",

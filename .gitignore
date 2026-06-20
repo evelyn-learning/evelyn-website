@@ -48,3 +48,6 @@ scripts/.cache/
 
 # AP source corpus (textbook PDFs + extracted text, downloaded via scripts/extract-ap-corpus.ts)
 data/ap-source-corpus/
+
+# tutor-e2e test artifacts
+artifacts/
