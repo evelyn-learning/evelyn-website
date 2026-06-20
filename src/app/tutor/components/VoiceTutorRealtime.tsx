@@ -240,6 +240,23 @@ const TUTOR_RENDER_SYNC =
 // stall-safety + thin-turn anti-pile, never a routine racer. Sized to
 // comfortably exceed one long TTS sentence (~3-5s) + slack.
 const RENDER_SYNC_STALL_MS = 6000;
+// Validate-before-speak (Pillar 2 of the robustness track,
+// project_tutor_validate_before_speak). Rolling micro-hold: after the
+// first clean tool opens the gate, subsequent sentences stay BUFFERED
+// (not spoken) and a sentence flushes only when the NEXT tool-call
+// validates OK or a short cap elapses — so a LATER rejecting tool drops
+// the wrong sentence BEFORE its audio plays ("never spoke it" instead of
+// "spoke wrong → corrected 3-8s later"). Default OFF until live-verified;
+// claude-brain orchestrator only (this is the only path with the gate).
+const TUTOR_VALIDATE_BEFORE_SPEAK =
+  process.env.NEXT_PUBLIC_TUTOR_VALIDATE_BEFORE_SPEAK === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_VALIDATE_BEFORE_SPEAK === 'true';
+// Per-sentence cap for the rolling hold: a buffered sentence with no
+// following tool flushes after this long (the verbal-tail flush). Must
+// exceed the typical sentence→tool gap so a wrong claim stays buffered
+// until its rejecting tool arrives. Hidden behind TTS playback for
+// multi-sentence turns; only the post-last-tool tail pays it. Tunable.
+const VALIDATE_BEFORE_SPEAK_CAP_MS = 1200;
 
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
@@ -6175,6 +6192,18 @@ export function VoiceTutorRealtime({
         // enough time to resolve before sentences flush.)
         let gateState: 'gated' | 'open' | 'closed' = 'gated';
         const pendingSentences: string[] = [];
+        // Validate-before-speak rolling-hold state (project_tutor_validate_
+        // before_speak). When ON, the gate does NOT fully open on the first
+        // clean tool — it flushes the sentences that preceded that tool but
+        // STAYS 'gated' (vbsRolling=true) so later sentences keep buffering
+        // until THEIR following tool's verdict (or vbsCapTimer). A later
+        // rejecting tool's performKill→closeGate then drops the still-
+        // buffered wrong sentence before it's ever spoken.
+        let vbsRolling = false;
+        let vbsCapTimer: ReturnType<typeof setTimeout> | null = null;
+        const clearVbsCap = () => {
+          if (vbsCapTimer) { clearTimeout(vbsCapTimer); vbsCapTimer = null; }
+        };
         // Stage 3 fix #10 (2026-05-28): synchronous speakText gate check.
         // Returns true if perception has armed the cancel gate within
         // the SPEAK_TEXT_GATE_MS window. Drops the sentence silently so
@@ -6297,6 +6326,7 @@ export function VoiceTutorRealtime({
           speakOne(s);
         };
         const flushPending = () => {
+          clearVbsCap();
           for (const s of pendingSentences) {
             emitBrainSpeak(s);
           }
@@ -6309,8 +6339,21 @@ export function VoiceTutorRealtime({
           }
         };
         const closeGate = () => {
+          clearVbsCap();
           gateState = 'closed';
           pendingSentences.length = 0;
+        };
+        // Rolling-hold verbal-tail flush: a buffered sentence with no
+        // following tool flushes after VALIDATE_BEFORE_SPEAK_CAP_MS so the
+        // tail of a tool turn (and pure narration after the last tool) isn't
+        // stranded. Re-armed on every buffered sentence; cleared whenever
+        // pending is flushed/dropped. Only used while vbsRolling.
+        const armVbsCap = () => {
+          clearVbsCap();
+          vbsCapTimer = setTimeout(() => {
+            vbsCapTimer = null;
+            if (gateState === 'gated' && pendingSentences.length > 0) flushPending();
+          }, VALIDATE_BEFORE_SPEAK_CAP_MS);
         };
         // Skip turns (#4): never auto-open on the 1s timer — the gate
         // opens only when advance_lesson / generate_problem dispatches,
@@ -6799,6 +6842,12 @@ export function VoiceTutorRealtime({
                       }
                     } else if (gateState === 'gated') {
                       pendingSentences.push(sentenceForSpeech);
+                      // Rolling-hold: once a clean tool has put us in the
+                      // post-first-tool rolling phase, each newly-buffered
+                      // sentence (re)arms the verbal-tail cap so it isn't
+                      // stranded if no further tool arrives. Before the first
+                      // tool, the turn-open gateTimer owns the flush.
+                      if (vbsRolling) armVbsCap();
                     } else if (gateState === 'open') {
                       // Routes through the perception cancel gate AND the
                       // judge-kill Stage 3.1 resume hold/decision.
@@ -7602,11 +7651,9 @@ export function VoiceTutorRealtime({
                       // bridge is needed (the student heard nothing yet).
                       await performKill();
                     } else if (gateState === 'gated' && !skipTurnMarkerPresent) {
-                      // Clean tool dispatch — open the gate and flush any
-                      // sentences we held back while waiting for this
-                      // verdict. Subsequent tools fall through (gate is
-                      // already 'open'); subsequent rejections still kill
-                      // this attempt as before.
+                      // Clean tool dispatch — flush any sentences we held
+                      // back while waiting for this verdict. Subsequent
+                      // rejections still kill this attempt as before.
                       // #4: a render tool does NOT open the gate on a
                       // Skip turn — only advance_lesson/generate_problem
                       // does (handled above). A Skip turn that renders
@@ -7614,7 +7661,21 @@ export function VoiceTutorRealtime({
                       // Skip-KILL drops; opening here would leak its
                       // partial narration audibly (the Issue 2 bug).
                       clearTimeout(gateTimer);
-                      openGate();
+                      if (TUTOR_VALIDATE_BEFORE_SPEAK) {
+                        // Rolling-hold: flush the sentences that preceded
+                        // THIS validated tool, but STAY 'gated' so the next
+                        // sentences keep buffering until their own following
+                        // tool's verdict (or the cap). This is what lets a
+                        // LATER rejecting tool drop the wrong sentence before
+                        // it's spoken — the gap today's one-shot openGate
+                        // leaves open for the rest of the turn.
+                        flushPending();
+                        vbsRolling = true;
+                      } else {
+                        // Legacy: open fully — every later sentence streams
+                        // straight to TTS for the rest of the turn.
+                        openGate();
+                      }
                     }
                   } else {
                     console.warn('[brain-orchestrator] unmapped tool call:', name);
@@ -7637,6 +7698,7 @@ export function VoiceTutorRealtime({
         // stream that ended without a tool ever resolving the gate.
         // No-op when the gate already opened or closed.
         clearTimeout(gateTimer);
+        clearVbsCap();
         // #4: a Skip turn that never advanced is about to be Skip-KILLed
         // (deterministic: marker present + no advance). Keep the gate
         // SHUT so that kill drops the buffered partial silently — no
