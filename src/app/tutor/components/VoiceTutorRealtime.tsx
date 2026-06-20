@@ -6970,25 +6970,25 @@ export function VoiceTutorRealtime({
                           prescribed.tool === name &&
                           !deepEqualParams(args, prescribed.params)
                         ) {
-                          const prescribedJson = JSON.stringify(prescribed.params);
+                          // Pillar 1 (silent substitution): the orchestrator
+                          // owns the authored prescription verbatim, so swap
+                          // the brain's deviating params for the prescribed
+                          // ones and dispatch — instead of killing + a
+                          // 3-8s retry. The prescribed render is the
+                          // segment's pinned teaching artifact and the
+                          // brain's narration is about that artifact, so the
+                          // board now matches both the script and the
+                          // narration. Mirrors the show_worked_example /
+                          // show_problem auto-substitute pattern.
                           const emittedJson = JSON.stringify(args);
-                          const reason =
-                            `Your ${name} params don't match the prescribed render for segment "${segId}". ` +
-                            `This segment requires an EXACT, deterministic emission — emit the prescribed params VERBATIM. ` +
-                            `Prescribed: ${prescribedJson}. ` +
-                            `Your emission: ${emittedJson.slice(0, 400)}${emittedJson.length > 400 ? '…' : ''}. ` +
-                            `Re-emit ${name} with the prescribed params; do not modify shape, values, types, or structure. ` +
-                            `If you have a pedagogical reason to deviate, narrate around the prescribed render rather than changing it.`;
-                          rejectionsThisAttempt.push({ action: `${name}_prescribed_mismatch`, reason });
-                          await performKill();
+                          args = prescribed.params;
                           console.warn(
-                            `[brain-orchestrator] prescribedRender mismatch for segment "${segId}", tool "${name}". Emitted=${emittedJson.slice(0, 120)}…`,
+                            `[brain-orchestrator] prescribedRender mismatch for segment "${segId}", tool "${name}" — auto-substituting prescribed params (no kill). Emitted=${emittedJson.slice(0, 120)}…`,
                           );
                           onDebugEvent?.(
-                            'prescribed_render_mismatch',
-                            `segId="${segId}" tool=${name}`,
+                            'prescribed_render_substituted',
+                            `segId="${segId}" tool=${name} (params swapped)`,
                           );
-                          continue;
                         }
                         // Case B — wrong tool entirely (and prescribed
                         // hasn't fired yet in this attempt). Brain emitted
@@ -7007,20 +7007,26 @@ export function VoiceTutorRealtime({
                           prescribed.tool !== name &&
                           !prescribedEmittedEarlier
                         ) {
-                          const reason =
-                            `You emitted ${name} on segment "${segId}", but this segment requires ${prescribed.tool} FIRST as the prescribed render. ` +
-                            `Re-emit your response with ${prescribed.tool} (using the prescribed params for this segment) as the primary teaching render. ` +
-                            `Other show_* tools are allowed AFTER ${prescribed.tool} has rendered, but not before.`;
-                          rejectionsThisAttempt.push({ action: `${name}_prescribed_wrong_tool`, reason });
-                          await performKill();
+                          // Pillar 1 (silent substitution): the brain emitted
+                          // a different show_* before the prescribed render
+                          // (the 2026-05-15 "two trees on the page" bug).
+                          // Instead of killing + retry, swap this wrong tool
+                          // for the prescribed one. If the brain ALSO emits
+                          // the real prescribed render later this turn, the
+                          // catalog dedup collapses the identical signature,
+                          // so the net result is a single prescribed render —
+                          // no double-tree, no abort. Narration is render-
+                          // generic ("here's the tree"), so the swap is safe.
+                          const emittedTool = name;
+                          name = prescribed.tool;
+                          args = prescribed.params;
                           console.warn(
-                            `[brain-orchestrator] prescribedRender wrong-tool for segment "${segId}": emitted "${name}" before prescribed "${prescribed.tool}".`,
+                            `[brain-orchestrator] prescribedRender wrong-tool for segment "${segId}": emitted "${emittedTool}" before prescribed "${prescribed.tool}" — auto-substituting prescribed render (no kill).`,
                           );
                           onDebugEvent?.(
-                            'prescribed_render_wrong_tool',
-                            `segId="${segId}" emitted=${name} prescribed=${prescribed.tool}`,
+                            'prescribed_render_tool_substituted',
+                            `segId="${segId}" emitted=${emittedTool} → ${prescribed.tool}`,
                           );
-                          continue;
                         }
                       }
                     }
@@ -8310,8 +8316,19 @@ export function VoiceTutorRealtime({
                   const summary = killIssues.map((i, idx) =>
                     `(${idx + 1}) Claim: "${i.claim.slice(0, 120)}" — ${i.why.slice(0, 200)}`
                   ).join(' ');
-                  console.warn(`[brain-orchestrator] judge KILL — ${killIssues.length} board-contradiction claim(s):`, summary);
-                  onDebugEvent?.('judge_kill', `${killIssues.length}: ${killIssues[0].claim.slice(0, 60)}…`);
+                  // Pillar 2b (robustness): the judge is now ADVISORY-ONLY.
+                  // This branch is the last LLM kill path — and it's
+                  // POST-STREAM, so a kill here re-fetches + re-narrates a
+                  // turn the student already heard (the "spoke-then-
+                  // corrected" UX) on a HIGH-false-positive signal (Haiku
+                  // can flag claims the brain never made). Telemetry +
+                  // reassertion detection are preserved; the performKill is
+                  // removed. The brain still self-grounds from the
+                  // <whiteboard_state> snapshot each turn, and the
+                  // deterministic Wolfram/grounding overrides above still
+                  // suppress the numeric false positives.
+                  console.warn(`[brain-orchestrator] judge ADVISORY (no kill — Pillar 2b) — ${killIssues.length} board-contradiction claim(s):`, summary);
+                  onDebugEvent?.('judge_advisory_was_kill', `${killIssues.length}: ${killIssues[0].claim.slice(0, 60)}…`);
                   // Round-7 Fix D: detect re-assertion loops. Tokenize
                   // each new claim into structural tokens (multi-digit
                   // numbers, multi-char identifiers, and bracketed
@@ -8335,17 +8352,14 @@ export function VoiceTutorRealtime({
                   let overlap = 0;
                   for (const t of newTokens) if (priorTokens.has(t)) overlap++;
                   const isReassertion = priorJudgeKillClaimsThisTurn.length > 0 && overlap >= 2;
-                  const activeStatement = currentProblemRef.current?.statement?.slice(0, 200) ?? '(no active problem tracked)';
-                  const reason = isReassertion
-                    ? `STOP — you have just retried the SAME contradictory claim ${priorJudgeKillClaimsThisTurn.length + 1} times in a row. The judge keeps killing your speech because you keep re-asserting numbers / dataset literals / labels that are NOT on the active card. Latest issues: ${summary}. The active problem the student is looking at is: "${activeStatement}". HARD RESET: read the <active_problem> block + <whiteboard_state> snapshot LITERALLY token-by-token, and re-derive your next sentence from THAT content alone. Discard everything you've said earlier in this turn — your prior reasoning chain has anchored on stale context. If the active card's content does not match what you intended to teach, emit new_page + show_problem FIRST to reset the board, then narrate against the new card. Do NOT repeat the previous claim.`
-                    : `The judge detected your spoken claim(s) directly contradict what's on the whiteboard — the student would experience an obvious chat-board mismatch. Issues: ${summary}. RETRY: re-derive your statement from the actual content of the active board card(s); do NOT reference numeric values, dataset literals, or labels that don't appear on the board. If the board content is correct and your reasoning needs different content, emit a new render tool (show_problem / show_equation / new_page) FIRST so the board reflects what you're about to say, then narrate.`;
+                  // Reassertion telemetry retained (advisory now): a repeated
+                  // same-token flag across the turn is still a useful signal
+                  // even though we no longer kill on it.
                   if (isReassertion) {
-                    console.warn(`[brain-orchestrator] judge KILL — ESCALATED (re-assertion loop, attempt ${priorJudgeKillClaimsThisTurn.length + 1}, overlap=${overlap})`);
-                    onDebugEvent?.('judge_kill_escalated', `attempt=${priorJudgeKillClaimsThisTurn.length + 1} overlap=${overlap}`);
+                    console.warn(`[brain-orchestrator] judge advisory — ESCALATED (re-assertion loop, ${priorJudgeKillClaimsThisTurn.length + 1}× this turn, overlap=${overlap})`);
+                    onDebugEvent?.('judge_advisory_escalated', `count=${priorJudgeKillClaimsThisTurn.length + 1} overlap=${overlap}`);
                   }
                   for (const i of killIssues) priorJudgeKillClaimsThisTurn.push(i.claim);
-                  rejectionsThisAttempt.push({ action: 'judge', reason });
-                  await performKill();
                 }
               } else {
                 onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);
