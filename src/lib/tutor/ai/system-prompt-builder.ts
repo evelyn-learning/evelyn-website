@@ -919,6 +919,7 @@ composing top-to-bottom feels more natural.
   Points and ratios:
     midpoint                  { of: segId | { from, to } }
     point_on_circle           { on, angle }                       # degrees CCW
+    point_on_conic            { on, at: [x,y] }                   # ellipse/parabola/hyperbola; at = the point (solver snaps it ON the curve). NEVER point_on_circle on a conic.
     section_point             { of, ratio: [m, n] }                # m toward to, n toward from
     reflect_point             { point, across }                    # see line refs below
     rotate_point              { point, around, angle }             # degrees CCW
@@ -987,7 +988,9 @@ composing top-to-bottom feels more natural.
   focus with conic_foci (its vertex with conic_vertices), NEVER with
   point_on_circle — a focus is not a point on a circle, and a
   point_on_circle step whose "on" references a point rather than a circle
-  fails the solver.
+  fails the solver. To place a point ON a conic (e.g. the point of tangency
+  for tangent_at), use point_on_conic { on, at: [x,y] } — NEVER
+  point_on_circle on an ellipse/parabola/hyperbola.
 
     ellipse                   { center, a, b?, rotation? }  OR  { foci: [F1,F2], sum }
     parabola                  { vertex, focalLength, opens: "right"|"left"|"up"|"down" }

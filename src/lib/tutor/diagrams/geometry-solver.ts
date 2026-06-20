@@ -76,6 +76,7 @@ export type Given =
 export type Step =
   | StepMidpoint
   | StepPointOnCircle
+  | StepPointOnConic
   | StepChord
   | StepRadius
   | StepDiameter
@@ -154,6 +155,7 @@ export type Step =
 export const STEP_KINDS = [
   'midpoint',
   'point_on_circle',
+  'point_on_conic',
   'chord',
   'radius',
   'diameter',
@@ -261,6 +263,25 @@ export interface StepPointOnCircle extends StepCommon {
   kind: 'point_on_circle';
   on: string;
   angle: number;
+}
+
+/** A point ON a conic (ellipse / parabola / hyperbola) — the conic analogue
+ *  of point_on_circle. The brain expresses INTENT and the SOLVER computes the
+ *  exact on-curve coordinates (it can't be off the curve, so a downstream
+ *  tangent_at always validates). Two modes:
+ *    - `at: [x, y]` — the world point the brain means (e.g. [√13, 4.5]); the
+ *      solver SNAPS it onto the exact curve, preserving the branch/quadrant of
+ *      the intended point. Preferred — matches "tangent at (√13, 9/2)".
+ *    - `angle` (degrees) — parametric point, ELLIPSE only: (a·cosθ, b·sinθ) in
+ *      canonical coords. For hyperbola / parabola use `at`.
+ *  Solver-deferred (work-queue Pillar 3): the brain never hand-computes the
+ *  coordinate, so it can't fumble it; replaces misuse of point_on_circle on a
+ *  conic ("Expected circle, got conic"). */
+export interface StepPointOnConic extends StepCommon {
+  kind: 'point_on_conic';
+  on: string;                 // conic id (ellipse / parabola / hyperbola)
+  at?: [number, number];      // intended world point — snapped onto the curve
+  angle?: number;             // parametric angle (degrees), ellipse only
 }
 
 /** A chord on a circle. Either give the brain a length (absolute or ratio)
@@ -996,6 +1017,7 @@ function solveStep(step: Step, state: State): void {
   switch (step.kind) {
     case 'midpoint': return solveMidpoint(step, state);
     case 'point_on_circle': return solvePointOnCircle(step, state);
+    case 'point_on_conic': return solvePointOnConic(step, state);
     case 'chord': return solveChord(step, state);
     case 'radius': return solveRadius(step, state);
     case 'diameter': return solveDiameter(step, state);
@@ -1101,6 +1123,62 @@ function solvePointOnCircle(step: StepPointOnCircle, state: State): void {
     y: center.y + c.radius * Math.sin(r),
     label: step.label,
   });
+}
+
+function solvePointOnConic(step: StepPointOnConic, state: State): void {
+  // Conic analogue of point_on_circle. The brain gives intent; the solver
+  // computes the EXACT on-curve coordinate (solver-deferred). Mirrors the
+  // canonical-coords machinery in solveConicTangentAt.
+  const c = conic(state, step.on);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const a = c.a, b = c.b ?? c.a;
+
+  // Compute the on-curve point in CANONICAL coords (xc, yc).
+  let xc: number, yc: number;
+  if (step.angle !== undefined) {
+    if (c.conicType !== 'ellipse') {
+      throw new Error(
+        `point_on_conic "${step.id}": "angle" is supported for an ellipse only. ` +
+        `For a ${c.conicType} give "at": [x, y] — the solver snaps it onto the curve.`,
+      );
+    }
+    const t = (step.angle * Math.PI) / 180;
+    xc = a * Math.cos(t);
+    yc = b * Math.sin(t);
+  } else if (step.at) {
+    // World → canonical (inverse rotation about the conic center).
+    const dx = step.at[0] - center.x, dy = step.at[1] - center.y;
+    const ex = dx * cosR + dy * sinR;
+    const ey = -dx * sinR + dy * cosR;
+    if (c.conicType === 'ellipse') {
+      // Nearest parametric angle to the intended point — exact on-curve.
+      const t = Math.atan2(ey / b, ex / a);
+      xc = a * Math.cos(t);
+      yc = b * Math.sin(t);
+    } else if (c.conicType === 'hyperbola') {
+      // Use the intended height to fix x exactly on the branch nearest ex.
+      const branch = ex >= 0 ? 1 : -1;
+      yc = ey;
+      xc = branch * a * Math.sqrt(1 + (ey / b) * (ey / b));
+    } else { // parabola, canonical y² = 4a·x
+      // Use the intended height to fix x exactly on the curve.
+      yc = ey;
+      xc = (ey * ey) / (4 * a);
+    }
+  } else {
+    throw new Error(`point_on_conic "${step.id}": give "at": [x, y] (preferred) or "angle" (ellipse only).`);
+  }
+
+  if (!Number.isFinite(xc) || !Number.isFinite(yc)) {
+    throw new Error(`point_on_conic "${step.id}": could not place a point on conic "${step.on}".`);
+  }
+
+  // Canonical → world (rotate back about the center).
+  const x = center.x + xc * cosR - yc * sinR;
+  const y = center.y + xc * sinR + yc * cosR;
+  setObject(state, { kind: 'point', id: step.id, x: round2(x), y: round2(y), label: step.label });
 }
 
 function solveChord(step: StepChord, state: State): void {

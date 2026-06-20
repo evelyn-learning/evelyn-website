@@ -278,6 +278,81 @@ function main() {
     }), /not outside the curve/);
   });
 
+  // ── point_on_conic (Pillar 3 solver-deferred) ───────────────────────────────
+  test('point_on_conic hyperbola at [√13, 4.5] → exact on-curve point (the measured kill case)', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'hyp', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'P', kind: 'point_on_conic', on: 'hyp', at: [Math.sqrt(13), 4.5] },
+      ],
+    });
+    const p = findPt(out, 'P');
+    approx(p.x, Math.sqrt(13)); approx(p.y, 4.5);
+    // x²/4 − y²/9 = 1 must hold exactly.
+    approx((p.x * p.x) / 4 - (p.y * p.y) / 9, 1);
+  });
+
+  test('point_on_conic → tangent_at flows without rejection (replaces point_on_circle misuse)', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'hyp', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'P', kind: 'point_on_conic', on: 'hyp', at: [Math.sqrt(13), 4.5] },
+        { id: 'tang', kind: 'tangent_at', on: 'hyp', point: 'P', length: 6 },
+      ],
+    });
+    assert.ok(hasSeg(out, 'tang_from', 'tang_to'), 'tangent segment present (no solver rejection)');
+  });
+
+  test('point_on_conic ellipse at [√5, 4/3] → exact on-curve (measured ellipse case)', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'P', kind: 'point_on_conic', on: 'e', at: [Math.sqrt(5), 4 / 3] },
+      ],
+    });
+    const p = findPt(out, 'P');
+    approx((p.x * p.x) / 9 + (p.y * p.y) / 4, 1);
+  });
+
+  test('point_on_conic SNAPS an off-curve intended point onto the curve (solver-deferred core)', () => {
+    // Intended [3.5, 0] is OUTSIDE the a=3 ellipse; solver snaps to the vertex (3,0).
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'P', kind: 'point_on_conic', on: 'e', at: [3.5, 0] },
+      ],
+    });
+    const p = findPt(out, 'P');
+    approx(p.x, 3); approx(p.y, 0);
+    approx((p.x * p.x) / 9 + (p.y * p.y) / 4, 1);
+  });
+
+  test('point_on_conic ellipse parametric angle=90 → top co-vertex (0, b)', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'P', kind: 'point_on_conic', on: 'e', angle: 90 },
+      ],
+    });
+    const p = findPt(out, 'P');
+    approx(p.x, 0); approx(p.y, 2);
+  });
+
+  test('point_on_conic angle on a hyperbola is rejected with a helpful hint', () => {
+    assert.throws(() => solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'h', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'P', kind: 'point_on_conic', on: 'h', angle: 30 },
+      ],
+    }), /ellipse only/);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }
