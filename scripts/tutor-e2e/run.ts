@@ -18,6 +18,7 @@ import { chromium, type ConsoleMessage } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Scenario, ScenarioTurn } from './types';
+import { askClaude } from './llm';
 
 const BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
 const HEADED = process.argv.includes('--headed');
@@ -166,8 +167,39 @@ async function main() {
 
     let i = 0;
     for (const t of scenario.seedTurns ?? []) { await runTurn(t, 'seed', i++); }
-    i = 0;
-    for (const t of scenario.testTurns) { await runTurn(t, 'test', i++); }
+
+    if (scenario.cooperativeStudent) {
+      // LLM-driven cooperative student: read the tutor's last turn, reply as an
+      // engaged student working toward the goal, so completion/coherence is
+      // fairly tested (vs uncooperative fixed turns that change subject).
+      const coop = scenario.cooperativeStudent;
+      const turns = coop.turns ?? 6;
+      const persona = coop.persona ?? `a cooperative ${scenario.start.level} student`;
+      const sys = `You are ${persona} in a one-on-one tutoring session. Your goal for the session: ${coop.goal}. Reply ONLY as the student, in ONE short sentence (≤ 20 words). Answer the tutor's question or do what it asks — ATTEMPT the math/work yourself (being a little unsure, or occasionally wrong, is realistic). Keep working toward the goal. Never act as the tutor; no meta-commentary; no quotation marks.`;
+      let nextSay = coop.firstSay ?? coop.goal;
+      for (let k = 0; k < turns; k++) {
+        const before = (await getState()).turnsCompleted;
+        log(`coop-${k} say: ${nextSay.slice(0, 80)}`);
+        await page.evaluate((text) => window.__tutorSendText(text), nextSay);
+        await waitForTurn(before, 150_000, nextSay);
+        await sleep(SETTLE_MS);
+        await shot(`coop-${k}`);
+        if (k === turns - 1) break;
+        const tr = await page.evaluate(() =>
+          (window.__tutorTestState() as { transcript?: Array<{ role: string; text: string }> }).transcript ?? []);
+        const lastTutor = [...tr].reverse().find((e) => e.role === 'tutor')?.text ?? '';
+        try {
+          const reply = await askClaude(sys, `The tutor just said:\n"${lastTutor}"\n\nYour reply (one short sentence):`);
+          nextSay = reply.replace(/^["']|["']$/g, '').replace(/^Student:\s*/i, '').trim() || 'Okay, what next?';
+        } catch (e) {
+          anomalies.push(`cooperative student LLM failed: ${(e as Error).message}`);
+          nextSay = 'Okay, can you walk me through the next step?';
+        }
+      }
+    } else {
+      i = 0;
+      for (const t of scenario.testTurns) { await runTurn(t, 'test', i++); }
+    }
 
     // Export PDF (best-effort — capture the download).
     try {
@@ -222,6 +254,7 @@ async function main() {
       finishedAt: new Date().toISOString(),
       screenshots: shots,
       watchFor: [...(scenario.seedTurns ?? []), ...scenario.testTurns].map((t, i) => ({ turn: i, say: t.say, watchFor: t.watchFor })),
+      ...(scenario.cooperativeStudent ? { cooperativeGoal: scenario.cooperativeStudent.goal } : {}),
       anomalies,
     };
     fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));

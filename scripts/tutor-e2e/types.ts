@@ -35,4 +35,16 @@ export interface Scenario {
   seedTurns?: ScenarioTurn[];
   /** The test-worthy turns — the prompts that exercise the change. */
   testTurns: ScenarioTurn[];
+  /** Optional: drive a COOPERATIVE STUDENT via an LLM instead of fixed
+   *  testTurns. After seedTurns, an LLM reads the tutor's last turn and replies
+   *  as an engaged student working toward `goal` — answering Socratic
+   *  questions across turns so the tutor's completion/coherence is fairly
+   *  tested. The judge grades the whole session against `goal` (embed the
+   *  known answer in it). When present, testTurns are ignored. */
+  cooperativeStudent?: {
+    goal: string;          // what the session should accomplish; embed the known answer
+    persona?: string;      // override the default student persona
+    turns?: number;        // cooperative turns to drive (default 6)
+    firstSay?: string;     // the opening student utterance (kicks off the goal)
+  };
 }

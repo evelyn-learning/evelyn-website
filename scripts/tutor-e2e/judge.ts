@@ -88,17 +88,24 @@ async function main() {
   }
   if (!transcript.trim()) { console.error('[judge] empty transcript — nothing to judge'); process.exit(1); }
 
-  // Pull the scenario's watchFor rubric (it embeds the known answers).
-  let watchFor: Array<{ say?: string; watchFor?: string }> = summary.watchFor ?? [];
-  if (watchFor.length === 0) {
-    try {
-      const scenario = (await import(`./scenarios/${summary.scenario}`)).default as Scenario;
-      watchFor = scenario.testTurns.map((t) => ({ say: t.say, watchFor: t.watchFor }));
-    } catch { /* fall back to none */ }
+  // Rubric: cooperative sessions grade the whole session vs a goal; scripted
+  // sessions grade per-turn vs each watchFor (which embeds the known answers).
+  const coopGoal: string | undefined = summary.cooperativeGoal;
+  let rubric: string;
+  if (coopGoal) {
+    rubric = `COOPERATIVE-STUDENT SESSION (the student was an engaged LLM answering the tutor across turns).\nSESSION GOAL (embeds the known-correct answer): ${coopGoal}\nThere are no per-student-turn rubrics. Emit ONE verdict per TUTOR turn (in order), judging that turn for correctness + coherence, PLUS a final verdict with turn=-1 for whether the SESSION reached the goal correctly (pass) or not, with errorClass describing the dominant failure if any.`;
+  } else {
+    let watchFor: Array<{ say?: string; watchFor?: string }> = summary.watchFor ?? [];
+    if (watchFor.length === 0) {
+      try {
+        const scenario = (await import(`./scenarios/${summary.scenario}`)).default as Scenario;
+        watchFor = scenario.testTurns.map((t) => ({ say: t.say, watchFor: t.watchFor }));
+      } catch { /* fall back to none */ }
+    }
+    rubric = watchFor
+      .map((w, i) => `Turn ${i} — student said: "${w.say ?? ''}"\n  Expected (rubric, includes known answers): ${w.watchFor ?? '(none)'}`)
+      .join('\n');
   }
-  const rubric = watchFor
-    .map((w, i) => `Turn ${i} — student said: "${w.say ?? ''}"\n  Expected (rubric, includes known answers): ${w.watchFor ?? '(none)'}`)
-    .join('\n');
 
   const sys = `You are a strict grader of an AI math/science TUTOR. You are given a tutoring session transcript and a per-turn rubric (the rubric embeds the KNOWN-CORRECT answers). For each rubric turn, decide whether the tutor was correct and met the rubric.
 
