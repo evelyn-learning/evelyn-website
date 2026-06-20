@@ -275,6 +275,19 @@ const VALIDATE_BEFORE_SPEAK_CAP_MS = 1200;
 const TUTOR_KEEP_VALIDATED_ON_KILL =
   process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'true';
+// Wolfram math/graph validation (the external PAID API). The old "check every
+// math" directive fired Wolfram on every showGraph/showEquation turn. Measured
+// 2026-06-20 (e2e, all subjects): Wolfram caught ZERO real errors — only 2
+// false-positives (0.5≈1/2, 4x≈4 x) — while costing money, risking commercial
+// terms (free tier is non-commercial only), and adding noise. The FREE local
+// validators (validateConicGraph / validateGeometryCommand / intersection +
+// the geometry solver) run independently (earlier block) and catch the real
+// structured errors. So Wolfram is SCOPED DOWN: default OFF; set
+// NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK='on' to re-enable (e.g. after a
+// commercial license). See work-queue item 11d.
+const TUTOR_WOLFRAM_MATH_CHECK =
+  process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'true';
 
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
@@ -3034,12 +3047,13 @@ export function VoiceTutorRealtime({
       }
     }
 
-    // --- Always-on Wolfram math validation ---
-    // User directive: "I want wolfram to check every math — the latency is
-    // acceptable but the inaccuracy isn't." We validate every math-bearing
-    // command here regardless of the legacy `validateToolCalls` flag.
-    // Claude-based validation (geometry/number-line structural fixes)
-    // remains gated so non-validated engines don't pay that latency twice.
+    // --- Wolfram math validation (SCOPED DOWN 2026-06-20, default OFF) ---
+    // The old "check every math" directive is retired: measurement showed
+    // Wolfram caught zero real errors (only false-positives) at real cost +
+    // commercial-terms risk. Gated behind TUTOR_WOLFRAM_MATH_CHECK (default
+    // OFF); the FREE local validators ran in the earlier block. Claude-based
+    // validation (geometry/number-line structural fixes) remains gated on
+    // validateToolCalls as before.
     const recentContext = () => transcriptRef.current.slice(-4)
       .map(e => `${e.role === 'student' ? 'Student' : 'Tutor'}: ${e.text}`).join('\n');
 
@@ -3048,6 +3062,9 @@ export function VoiceTutorRealtime({
       processed.map(async (cmd) => {
         // Graphs: Wolfram first, Claude fallback (only if validateToolCalls)
         if (cmd.action === 'showGraph') {
+          // Wolfram scoped down (default OFF) — the FREE local validateConicGraph
+          // already ran (earlier block) and catches the real conic errors.
+          if (!TUTOR_WOLFRAM_MATH_CHECK) return cmd;
           let wolframFailed = false;
           try {
             console.log('[VoiceTutorRealtime] Sending graph to Wolfram for validation');
@@ -3087,6 +3104,10 @@ export function VoiceTutorRealtime({
         // an error. This mirrors the pattern used by chemistry-balance,
         // chemistry-smiles, code-run, etc.
         if (cmd.action === 'showEquation') {
+          // Wolfram scoped down (default OFF). Equation renders as-is; the
+          // fire-and-forget Wolfram check caught nothing real (measured) and
+          // produced false-positives. Re-enable via the flag if licensed.
+          if (!TUTOR_WOLFRAM_MATH_CHECK) return cmd;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const cmdAny = cmd as any;
           const latex: string = cmdAny.latex || '';
@@ -4693,6 +4714,8 @@ export function VoiceTutorRealtime({
     // Only proceed if the student's utterance looks like a math answer
     const hasMath = /[\d]|\^|\bx\b|\bsqrt|\bpi\b|\bplus\b|\bminus\b|\btimes\b|\bover\b/i.test(lastStudent);
     if (!hasMath) return;
+    // Wolfram scoped down (default OFF) — see TUTOR_WOLFRAM_MATH_CHECK.
+    if (!TUTOR_WOLFRAM_MATH_CHECK) return;
 
     // Build a verification prompt: compare tutor-claimed correct answer vs student's
     const studentLatex = spokenToRoughLatex(lastStudent);
