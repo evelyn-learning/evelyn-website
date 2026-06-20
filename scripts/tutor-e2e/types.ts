@@ -13,8 +13,9 @@ export interface ScenarioTurn {
   say?: string;
   /** Dev trigger to fire BEFORE sending `say` (or standalone). Mirrors the
    *  window.__tutor* triggers in VoiceTutorRealtime. */
-  trigger?: '__tutorForceKill' | '__tutorForceFalseBargein' | '__tutorFlushRenderBuffer';
-  /** Optional arg for the trigger (e.g. a kill reason). */
+  trigger?: '__tutorForceKill' | '__tutorForceKillAfterRenders' | '__tutorForceFalseBargein' | '__tutorFlushRenderBuffer';
+  /** Optional arg for the trigger. For __tutorForceKillAfterRenders it's the
+   *  render count (string, parsed to a number); otherwise e.g. a kill reason. */
   triggerArg?: string;
   /** Free-text "what should be true after this turn" — consumed by the
    *  Phase-2 judge and surfaced in the run summary for manual review. */

@@ -185,6 +185,16 @@ async function main() {
       .filter((l) => l.includes('[brain-orchestrator] turn ok') || l.includes('turn start, transcript:'))
       .map((l) => l.replace(/^\[\w+\]\s*/, ''));
     fs.writeFileSync(path.join(outDir, 'transcript.txt'), transcript.join('\n'));
+
+    // Debug-event telemetry (render-sync / kill-recovery / substitution). The
+    // page POSTs these to /api/demos/session, which 500s headless, so pull them
+    // straight off __tutorTestState (exposed for e2e). High-signal for studying
+    // what paints/dims/rolls-back on a kill.
+    try {
+      const dbg = await page.evaluate(() => (window.__tutorTestState() as { debugEvents?: unknown[] }).debugEvents ?? []);
+      fs.writeFileSync(path.join(outDir, 'debug-events.json'), JSON.stringify(dbg, null, 2));
+      log(`saved debug-events.json (${(dbg as unknown[]).length} events)`);
+    } catch (e) { anomalies.push(`debug-events dump failed: ${(e as Error).message}`); }
   } catch (e) {
     anomalies.push(`FATAL: ${(e as Error).message}`);
     log(`FATAL: ${(e as Error).message}`);

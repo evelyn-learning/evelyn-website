@@ -1009,6 +1009,10 @@ function TutorPage() {
       transcriptLen: transcript.length,
       turnsCompleted: turnsCompletedRef.current,
       error,
+      // e2e telemetry: full debug-event stream (render-sync / kill-recovery /
+      // substitution events). Persisted to /api/demos/session in prod, but that
+      // POST 500s under the e2e harness, so expose it directly for capture.
+      debugEvents: debugEventsRef.current,
     });
     return () => { delete w.__tutorTestStart; delete w.__tutorSendText; delete w.__tutorTestState; };
   }, [stage, isProcessing, transcript.length, error, canStartSession, handleStartSession]);

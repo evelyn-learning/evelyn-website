@@ -57,7 +57,8 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
-import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure } from '@/lib/tutor/whiteboard/catalog';
+import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount } from '@/lib/tutor/whiteboard/render-sync';
@@ -257,6 +258,23 @@ const TUTOR_VALIDATE_BEFORE_SPEAK =
 // until its rejecting tool arrives. Hidden behind TTS playback for
 // multi-sentence turns; only the post-last-tool tail pays it. Tunable.
 const VALIDATE_BEFORE_SPEAK_CAP_MS = 1200;
+// Keep-validated-on-kill (robustness track, project_tutor_validate_before_speak
+// / work-queue #5+#7). On a content kill / give-up, the existing rollback
+// removes EVERY render the killed attempt(s) painted — including renders that
+// passed validation (e.g. wolfram-correct tangent equations) and were merely
+// collateral to a LATER tool's failure. Instrumentation (2026-06-20 e2e
+// give-up capture) showed two validated equations vanish for exactly this
+// reason. When ON, the rollback is NARROWED: a painted render is kept unless a
+// later same-turn render SUPERSEDES it (same figure-category + page, via
+// computeFigureCategory — the H6 grouping primitive; non-figure renders
+// coexist → always kept). This subsumes the long-deferred Tier-3 #7
+// (winningAttemptRendered all-or-nothing sweep). Default OFF until
+// live-verified; claude-brain orchestrator only. Pure decision in
+// src/lib/tutor/whiteboard/kill-keep.ts (test:kill-keep). When OFF, the
+// full-attempt rollback runs verbatim (zero behavior change).
+const TUTOR_KEEP_VALIDATED_ON_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'true';
 
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
@@ -793,6 +811,12 @@ export function VoiceTutorRealtime({
   // real structural validator rejection. Consumed once per arm. The string
   // payload becomes the retry's rejection reason (steers restate vs correct).
   const forceKillPendingRef = useRef<string | null>(null);
+  // Dev-only (window.__tutorForceKillAfterRenders): when set, the synthetic
+  // kill waits until the attempt has painted at least this many renders (rather
+  // than firing after the first audible sentence). Deterministically exercises
+  // the keep-validated-on-kill path — a kill AFTER validated renders landed,
+  // which is the precondition the post-sentence force-kill can't produce.
+  const forceKillAfterRendersRef = useRef<number | null>(null);
 
   // --- Render↔speech sync (2026-06-19) ---------------------------------
   // Per-turn buffer of whiteboard render batches whose VISUAL dispatch
@@ -1940,12 +1964,19 @@ export function VoiceTutorRealtime({
     if (n === 0) return;
     const ready = buf.splice(0, n);
     for (const entry of ready) onWhiteboardCommand(entry.processed);
+    if (onDebugEvent) {
+      const flushedIds = ready.flatMap((e) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e.processed.map((c) => (c as any).id).filter((id: unknown): id is string => typeof id === 'string'),
+      );
+      onDebugEvent('render_sync_flush', `${ready.length} render(s) painted${flushedIds.length ? ` (${flushedIds.join(',')})` : ''}`);
+    }
     // Nothing left to hold → cancel the stall timer.
     if (renderBufferRef.current.length === 0 && renderStallTimerRef.current) {
       clearTimeout(renderStallTimerRef.current);
       renderStallTimerRef.current = null;
     }
-  }, [onWhiteboardCommand]);
+  }, [onWhiteboardCommand, onDebugEvent]);
 
   // (Re)arm the shared stall timer. Called on each buffer-add and each
   // playback-progress event; only fires after RENDER_SYNC_STALL_MS of NO
@@ -2021,6 +2052,38 @@ export function VoiceTutorRealtime({
     renderBufferPausedRef.current = false;
     flushReadyRenders({ drainAll: true });
   }, [flushReadyRenders]);
+
+  // Keep-validated-on-kill (TUTOR_KEEP_VALIDATED_ON_KILL, work-queue #5+#7).
+  // Decide which of `candidateIds` (killed-attempt renders) to KEEP vs SWEEP:
+  // a render is swept only if a later same-turn render supersedes it (same
+  // figure-category + page; non-figure renders get a unique slot → always
+  // kept). Context = the whole current board, so older content (lower order)
+  // can never trigger a false sweep. Pure decision in kill-keep.ts; this
+  // resolves slots from the catalog + the id→cmd map.
+  const planKillKeep = useCallback((candidateIds: string[]): { keep: string[]; sweep: string[] } => {
+    const descFor = (id: string): KillRenderDesc | null => {
+      const it = catalogRef.current.getItem(id);
+      const entry = commandByIdRef.current.get(id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cmd: any = entry?.cmd;
+      const action: string = it?.action ?? cmd?.action ?? '';
+      if (!action) return null;
+      const order = it?.order ?? entry?.order ?? 0;
+      if (isPrimaryFigure(action)) {
+        const category = computeFigureCategory(action, cmd ?? {});
+        return { id, slot: `fig:${category}:${it?.pageId ?? 'nopage'}`, order };
+      }
+      return { id, slot: `uniq:${id}`, order };
+    };
+    const candidates = candidateIds
+      .map(descFor)
+      .filter((d): d is KillRenderDesc => d !== null);
+    const context = catalogRef.current
+      .getItems()
+      .map((it) => descFor(it.itemId))
+      .filter((d): d is KillRenderDesc => d !== null);
+    return decideKillKeep(candidates, context);
+  }, []);
 
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
   const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
@@ -6471,9 +6534,16 @@ export function VoiceTutorRealtime({
         const tryForceKill = async (): Promise<void> => {
           if (!forceKillPendingRef.current) return;
           if (attemptKilled || attempt >= MAX_VALIDATOR_RETRIES) return;
-          if (audibleSentenceCount < 1) return;
+          const needRenders = forceKillAfterRendersRef.current;
+          if (needRenders != null) {
+            // Wait for the attempt to paint enough renders (keep-validated test).
+            if (renderIdsThisAttempt.length < needRenders) return;
+          } else if (audibleSentenceCount < 1) {
+            return;
+          }
           const forcedReason = forceKillPendingRef.current;
           forceKillPendingRef.current = null;
+          forceKillAfterRendersRef.current = null;
           rejectionsThisAttempt.push({ action: 'dev_forced_kill', reason: forcedReason });
           const tailLen = peekSpeechQueueRef.current?.()?.length ?? 0;
           console.warn(`[brain-orchestrator] dev __tutorForceKill: synthetic content kill after ${audibleSentenceCount} audible sentence(s), tail=${tailLen}${tailLen === 0 ? ' (no resumable tail — speak a longer explanation to test the resume path)' : ''}`);
@@ -8606,7 +8676,19 @@ export function VoiceTutorRealtime({
                 renderCountAtAdvance !== null
                   ? renderIdsThisAttempt.slice(renderCountAtAdvance)
                   : renderIdsThisAttempt;
-              rollbackKilledRenders(giveUpRollbackTargets);
+              if (TUTOR_KEEP_VALIDATED_ON_KILL) {
+                // Keep validated renders that no later render superseded (e.g.
+                // wolfram-correct equations collateral to the failed figure);
+                // sweep only the genuinely stale ones. The give-up targets were
+                // freshly painted (never dimmed), so kept ones need no un-dim.
+                const { keep, sweep } = planKillKeep(giveUpRollbackTargets);
+                if (sweep.length > 0) rollbackKilledRenders(sweep);
+                if (keep.length > 0) {
+                  onDebugEvent?.('killed_render_kept_validated', `give-up ${keep.length}: ${keep.join(',')}`);
+                }
+              } else {
+                rollbackKilledRenders(giveUpRollbackTargets);
+              }
             }
           }
           break;
@@ -8956,7 +9038,40 @@ export function VoiceTutorRealtime({
       if (pendingRevisionRef.current.size > 0) {
         const staleIds = [...pendingRevisionRef.current];
         pendingRevisionRef.current = new Set();
-        if (!winningAttemptRenderedRef.current) {
+        // Hard-remove deferred ids off the board + mirror + id-map + catalog.
+        const sweepDeferred = (ids: string[]): void => {
+          if (ids.length === 0) return;
+          onWhiteboardCommand([{ action: 'removeItems', ids }]);
+          const idSet = new Set(ids);
+          const beforeMirror = whiteboardCommandsRef.current.length;
+          whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (c) => !idSet.has((c as any).id),
+          );
+          whiteboardCommandCountRef.current = Math.max(
+            0,
+            whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length),
+          );
+          for (const id of ids) commandByIdRef.current.delete(id);
+          catalogRef.current.removeByIds(ids);
+        };
+        if (TUTOR_KEEP_VALIDATED_ON_KILL) {
+          // Keep-validated-on-kill (#5+#7): replace the all-or-nothing
+          // winningAttemptRendered gate with per-render supersession. Un-dim
+          // the kept (validated, not superseded) renders; sweep only the ones
+          // a later same-slot render actually replaced.
+          const { keep, sweep } = planKillKeep(staleIds);
+          if (keep.length > 0) {
+            onWhiteboardCommand([{ action: 'reviseItems', ids: keep, revising: false }]);
+            console.warn(`[brain-orchestrator] kill-recovery: kept ${keep.length} validated render(s) [${keep.join(', ')}]`);
+            onDebugEvent?.('killed_render_kept_validated', `deferred ${keep.length}: ${keep.join(',')}`);
+          }
+          if (sweep.length > 0) {
+            sweepDeferred(sweep);
+            console.warn(`[brain-orchestrator] kill-recovery: rolled back ${sweep.length} superseded render(s) [${sweep.join(', ')}]`);
+            onDebugEvent?.('killed_render_rollback_deferred', `${sweep.length}: ${sweep.join(',')}`);
+          }
+        } else if (!winningAttemptRenderedRef.current) {
           // Keep-on-no-replacement (2026-06-17): the winning attempt rendered
           // NOTHING, so it never superseded these killed renders — it just
           // diverged in speech (or the brain bailed to a next-steps offer
@@ -8970,19 +9085,7 @@ export function VoiceTutorRealtime({
           console.warn(`[brain-orchestrator] kill-recovery: kept ${staleIds.length} render(s) — winning attempt rendered no replacement [${staleIds.join(', ')}]`);
           onDebugEvent?.('killed_render_kept_no_replacement', `${staleIds.length}: ${staleIds.join(',')}`);
         } else {
-          onWhiteboardCommand([{ action: 'removeItems', ids: staleIds }]);
-          const idSet = new Set(staleIds);
-          const beforeMirror = whiteboardCommandsRef.current.length;
-          whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (c) => !idSet.has((c as any).id),
-          );
-          whiteboardCommandCountRef.current = Math.max(
-            0,
-            whiteboardCommandCountRef.current - (beforeMirror - whiteboardCommandsRef.current.length),
-          );
-          for (const id of staleIds) commandByIdRef.current.delete(id);
-          catalogRef.current.removeByIds(staleIds);
+          sweepDeferred(staleIds);
           console.warn(`[brain-orchestrator] kill-recovery: rolled back ${staleIds.length} unconfirmed render(s) [${staleIds.join(', ')}]`);
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
         }
@@ -8993,7 +9096,7 @@ export function VoiceTutorRealtime({
       // audio (sentence-start / drain / cap) after this call returns.
       renderSyncActiveRef.current = false;
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
@@ -10166,6 +10269,7 @@ export function VoiceTutorRealtime({
       __tutorForceFalseBargein?: () => void;
       __tutorForceClassifierVerdict?: (verdict: string) => void;
       __tutorForceKill?: (reason?: string) => void;
+      __tutorForceKillAfterRenders?: (n?: number, reason?: string) => void;
       __tutorRenderBuffer?: () => void;
       __tutorFlushRenderBuffer?: () => void;
     };
@@ -10245,6 +10349,17 @@ export function VoiceTutorRealtime({
         : 'Internal delivery hiccup on the prior attempt — re-deliver your previous spoken response verbatim. The content was correct; do not change any values or wording.';
       console.warn('[dev] __tutorForceKill: armed — next audible sentence triggers a synthetic content kill + retry.');
     };
+    // Dev-only: force a synthetic kill AFTER the attempt paints `n` renders
+    // (default 1), instead of after the first sentence. Deterministically
+    // exercises keep-validated-on-kill (a kill once validated renders are on
+    // the board → the deferred-sweep keep/sweep decision runs).
+    w.__tutorForceKillAfterRenders = (n?: number, reason?: string) => {
+      forceKillAfterRendersRef.current = Math.max(1, Number(n) || 1);
+      forceKillPendingRef.current = (reason && reason.trim())
+        ? reason.trim()
+        : 'Internal delivery hiccup — re-deliver your previous response. The content was correct; do not change any values or wording.';
+      console.warn(`[dev] __tutorForceKillAfterRenders: armed — kill fires after ${forceKillAfterRendersRef.current} render(s) this attempt.`);
+    };
     // Render↔speech sync inspection/force-flush (Q7d). __tutorRenderBuffer()
     // logs the live buffer (depth, anchors, counters); __tutorFlushRenderBuffer()
     // force-flushes everything immediately (bypasses anchors), to verify a
@@ -10264,6 +10379,7 @@ export function VoiceTutorRealtime({
       delete w.__tutorForceFalseBargein;
       delete w.__tutorForceClassifierVerdict;
       delete w.__tutorForceKill;
+      delete w.__tutorForceKillAfterRenders;
       delete w.__tutorRenderBuffer;
       delete w.__tutorFlushRenderBuffer;
     };
