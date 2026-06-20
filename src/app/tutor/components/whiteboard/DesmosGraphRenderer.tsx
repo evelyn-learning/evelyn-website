@@ -146,13 +146,36 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
 
       calculatorRef.current = calculator;
 
-      // Set viewport
-      calculator.setMathBounds({
-        left: data.xRange[0],
-        right: data.xRange[1],
-        bottom: data.yRange[0],
-        top: data.yRange[1],
-      });
+      // Uniform-scale viewport. Desmos (lockViewport + setMathBounds) stretches
+      // the requested math box to fill the container, so when the container's
+      // pixel aspect ratio doesn't match (xSpan : ySpan) a circle x²+y²=9
+      // renders as a wide ellipse (observed 2026-06-20 JEE chord-of-contact
+      // session). Pad the SHORTER math axis so (mathWidth : mathHeight) ==
+      // (pixelWidth : pixelHeight) → equal units-per-pixel on both axes →
+      // circles stay circular and tangents meet at the true angle. Re-apply on
+      // resize (e.g. whiteboard fullscreen toggle).
+      const container = containerRef.current;
+      const applyUniformBounds = () => {
+        const w = container.clientWidth, h = container.clientHeight;
+        const cx = (data.xRange[0] + data.xRange[1]) / 2;
+        const cy = (data.yRange[0] + data.yRange[1]) / 2;
+        let xSpan = Math.abs(data.xRange[1] - data.xRange[0]);
+        let ySpan = Math.abs(data.yRange[1] - data.yRange[0]);
+        if (w > 0 && h > 0 && xSpan > 0 && ySpan > 0) {
+          const pxRatio = w / h;
+          if (xSpan / ySpan < pxRatio) xSpan = ySpan * pxRatio;
+          else ySpan = xSpan / pxRatio;
+        }
+        calculator.setMathBounds({
+          left: cx - xSpan / 2,
+          right: cx + xSpan / 2,
+          bottom: cy - ySpan / 2,
+          top: cy + ySpan / 2,
+        });
+      };
+      applyUniformBounds();
+      const resizeObserver = new ResizeObserver(() => applyUniformBounds());
+      resizeObserver.observe(container);
 
       let exprId = 0;
 
@@ -253,6 +276,7 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
       }
 
       return () => {
+        resizeObserver.disconnect();
         calculator.destroy();
         calculatorRef.current = null;
       };
@@ -292,12 +316,9 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         <div
           ref={containerRef}
           className="w-full"
-          style={{
-            // Use square aspect ratio when x and y ranges are equal (circles, etc.)
-            aspectRatio: Math.abs(data.xRange[1] - data.xRange[0]) === Math.abs(data.yRange[1] - data.yRange[0]) ? '1' : undefined,
-            height: Math.abs(data.xRange[1] - data.xRange[0]) === Math.abs(data.yRange[1] - data.yRange[0]) ? undefined : 350,
-            maxHeight: 450,
-          }}
+          // Fixed pixel box; applyUniformBounds() pads the math bounds to this
+          // box's aspect ratio so the scale is uniform (circles stay circular).
+          style={{ height: 380, maxHeight: 450 }}
         />
         {/* Legend */}
         {(data.functions?.length || 0) + (data.functionsOfY?.length || 0) > 0 && (
