@@ -81,6 +81,7 @@ export type Step =
   | StepRadius
   | StepDiameter
   | StepTangentAt
+  | StepNormalAt
   | StepTangentFrom
   | StepPerpBisector
   | StepPerpFrom
@@ -160,6 +161,7 @@ export const STEP_KINDS = [
   'radius',
   'diameter',
   'tangent_at',
+  'normal_at',
   'tangent_from',
   'perpendicular_bisector',
   'perpendicular_from',
@@ -330,6 +332,18 @@ export interface StepTangentAt extends StepCommon {
   on: string;       // circle OR conic id
   point: string;    // point on the curve
   /** Length of the rendered tangent segment (centered on the point). */
+  length?: number;
+}
+
+/** Normal line at an existing point ON a circle OR conic (perpendicular to the
+ *  tangent there). Circle: the line through the center and the point (the
+ *  radius direction). Conic: along the gradient ∇F. The point must lie on the
+ *  curve. Common in coordinate-geometry ("the normal at P"). */
+export interface StepNormalAt extends StepCommon {
+  kind: 'normal_at';
+  on: string;       // circle OR conic id
+  point: string;    // point on the curve
+  /** Length of the rendered normal segment (centered on the point). */
   length?: number;
 }
 
@@ -1022,6 +1036,7 @@ function solveStep(step: Step, state: State): void {
     case 'radius': return solveRadius(step, state);
     case 'diameter': return solveDiameter(step, state);
     case 'tangent_at': return solveTangentAt(step, state);
+    case 'normal_at': return solveNormalAt(step, state);
     case 'tangent_from': return solveTangentFrom(step, state);
     case 'perpendicular_bisector': return solvePerpBisector(step, state);
     case 'perpendicular_from': return solvePerpFrom(step, state);
@@ -1398,6 +1413,65 @@ function solveConicTangentAt(step: StepTangentAt, c: ResolvedConic, state: State
   setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
 }
 
+/** Normal at an on-curve point. Circle: along the radius (center → P). Conic:
+ *  along the gradient ∇F (perpendicular to the tangent). Mirrors tangent_at. */
+function solveNormalAt(step: StepNormalAt, state: State): void {
+  const target = state.byId.get(step.on);
+  if (target && target.kind === 'conic') {
+    solveConicNormalAt(step, target, state);
+    return;
+  }
+  const c = circ(state, step.on);
+  const center = pt(state, c.center);
+  const P = pt(state, step.point);
+  const rx = P.x - center.x, ry = P.y - center.y;
+  const m = Math.hypot(rx, ry) || 1;
+  const nx = rx / m, ny = ry / m;   // along the radius
+  const half = (step.length ?? c.radius * 1.5) / 2;
+  const fromId = `${step.id}_from`, toId = `${step.id}_to`;
+  setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * nx), y: round2(P.y - half * ny) });
+  setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * nx), y: round2(P.y + half * ny) });
+  setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
+}
+
+function solveConicNormalAt(step: StepNormalAt, c: ResolvedConic, state: State): void {
+  const center = pt(state, c.center);
+  const P = pt(state, step.point);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const dx = P.x - center.x, dy = P.y - center.y;
+  const ex = dx * cosR + dy * sinR;
+  const ey = -dx * sinR + dy * cosR;
+  const a = c.a, b = c.b ?? a;
+  let residual: number, gx: number, gy: number;
+  if (c.conicType === 'ellipse') {
+    residual = ex * ex / (a * a) + ey * ey / (b * b) - 1;
+    gx = 2 * ex / (a * a); gy = 2 * ey / (b * b);
+  } else if (c.conicType === 'hyperbola') {
+    residual = ex * ex / (a * a) - ey * ey / (b * b) - 1;
+    gx = 2 * ex / (a * a); gy = -2 * ey / (b * b);
+  } else { // parabola y² = 4a·x
+    residual = (ey * ey - 4 * a * ex) / (4 * a * Math.abs(ex) + ey * ey + 1);
+    gx = -4 * a; gy = 2 * ey;
+  }
+  if (Math.abs(residual) > 0.06) {
+    throw new Error(
+      `normal_at "${step.id}": point "${step.point}" is not on the conic "${step.on}" — it must lie ON the curve.`,
+    );
+  }
+  // Normal direction = ALONG the gradient (canonical), then rotate to world.
+  let ncx = gx, ncy = gy;
+  const nm = Math.hypot(ncx, ncy) || 1;
+  ncx /= nm; ncy /= nm;
+  const ndx = ncx * cosR - ncy * sinR;
+  const ndy = ncx * sinR + ncy * cosR;
+  const half = (step.length ?? Math.max(a, b) * 2) / 2;
+  const fromId = `${step.id}_from`, toId = `${step.id}_to`;
+  setObject(state, { kind: 'point', id: fromId, x: round2(P.x - half * ndx), y: round2(P.y - half * ndy) });
+  setObject(state, { kind: 'point', id: toId, x: round2(P.x + half * ndx), y: round2(P.y + half * ndy) });
+  setObject(state, { kind: 'segment', id: step.id, from: fromId, to: toId, label: step.label });
+}
+
 function solveTangentFrom(step: StepTangentFrom, state: State): void {
   const c = circ(state, step.on);
   const center = pt(state, c.center);
@@ -1516,7 +1590,9 @@ function solveIntersect(step: StepIntersect, state: State): void {
   if (isLineLike(a) && b.kind === 'circle') return intersectLineCircle(step, state, step.of[0], step.of[1]);
   if (a.kind === 'circle' && isLineLike(b)) return intersectLineCircle(step, state, step.of[1], step.of[0]);
   if (a.kind === 'circle' && b.kind === 'circle') return intersectCircleCircle(step, state, step.of[0], step.of[1]);
-  throw new Error(`intersect "${step.id}": unsupported pair`);
+  if (isLineLike(a) && b.kind === 'conic') return intersectLineConic(step, state, step.of[0], step.of[1]);
+  if (a.kind === 'conic' && isLineLike(b)) return intersectLineConic(step, state, step.of[1], step.of[0]);
+  throw new Error(`intersect "${step.id}": unsupported pair (conic∩conic isn't supported — intersect a line with a conic, or use chord_of_contact / tangents_from_external)`);
 }
 
 function intersectLineCircle(step: StepIntersect, state: State, lineId: string, circleId: string): void {
@@ -1538,6 +1614,51 @@ function intersectLineCircle(step: StepIntersect, state: State, lineId: string, 
   const p1 = { x: ln.ax + t1 * dx, y: ln.ay + t1 * dy };
   const p2 = { x: ln.ax + t2 * dx, y: ln.ay + t2 * dy };
   emitIntersectionPair(step, state, p1, p2);
+}
+
+/** Intersection of a line/segment with a conic (ellipse / parabola / hyperbola).
+ *  Substitute the parametric line into the canonical conic equation → quadratic
+ *  in t; the world points come from the SAME parametrization (rotation-robust). */
+function intersectLineConic(step: StepIntersect, state: State, lineId: string, conicId: string): void {
+  const ln = lineLike(state, lineId);
+  const c = conic(state, conicId);
+  const center = pt(state, c.center);
+  const rot = c.rotation ?? 0;
+  const cosR = Math.cos(rot), sinR = Math.sin(rot);
+  const a = c.a, b = c.b ?? a;
+  const dx = ln.bx - ln.ax, dy = ln.by - ln.ay;
+  // Line anchor + direction in canonical coords (anchor translates, dir doesn't).
+  const ex0 = (ln.ax - center.x) * cosR + (ln.ay - center.y) * sinR;
+  const ey0 = -(ln.ax - center.x) * sinR + (ln.ay - center.y) * cosR;
+  const ddx = dx * cosR + dy * sinR;
+  const ddy = -dx * sinR + dy * cosR;
+  // Quadratic At² + Bt + C = 0 from the canonical conic F=0.
+  let A: number, B: number, C: number;
+  if (c.conicType === 'ellipse') {
+    A = (ddx * ddx) / (a * a) + (ddy * ddy) / (b * b);
+    B = 2 * ((ex0 * ddx) / (a * a) + (ey0 * ddy) / (b * b));
+    C = (ex0 * ex0) / (a * a) + (ey0 * ey0) / (b * b) - 1;
+  } else if (c.conicType === 'hyperbola') {
+    A = (ddx * ddx) / (a * a) - (ddy * ddy) / (b * b);
+    B = 2 * ((ex0 * ddx) / (a * a) - (ey0 * ddy) / (b * b));
+    C = (ex0 * ex0) / (a * a) - (ey0 * ey0) / (b * b) - 1;
+  } else { // parabola, canonical y² = 4a·x
+    A = ddy * ddy;
+    B = 2 * ey0 * ddy - 4 * a * ddx;
+    C = ey0 * ey0 - 4 * a * ex0;
+  }
+  const world = (t: number) => ({ x: round2(ln.ax + t * dx), y: round2(ln.ay + t * dy) });
+  if (Math.abs(A) < 1e-9) {
+    // Degenerate to linear (line parallel to a parabola axis / asymptote).
+    if (Math.abs(B) < 1e-9) throw new Error(`intersect "${step.id}": line does not meet conic "${conicId}"`);
+    const w = world(-C / B);
+    setObject(state, { kind: 'point', id: step.id, x: w.x, y: w.y, label: step.label });
+    return;
+  }
+  const disc = B * B - 4 * A * C;
+  if (disc < 0) throw new Error(`intersect "${step.id}": line does not meet conic "${conicId}"`);
+  const sqrtD = Math.sqrt(disc);
+  emitIntersectionPair(step, state, world((-B - sqrtD) / (2 * A)), world((-B + sqrtD) / (2 * A)));
 }
 
 function intersectCircleCircle(step: StepIntersect, state: State, c1Id: string, c2Id: string): void {

@@ -353,6 +353,86 @@ function main() {
     }), /ellipse only/);
   });
 
+  // ── normal_at (Pillar 3 solver gaps) ────────────────────────────────────────
+  test('normal_at circle at (5,0) → horizontal radius line', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'c', kind: 'circle', center: 'O', radius: 5 },
+        { id: 'P', kind: 'point_on_circle', on: 'c', angle: 0 },
+        { id: 'n', kind: 'normal_at', on: 'c', point: 'P', length: 4 },
+      ],
+    });
+    const f = findPt(out, 'n_from'), t = findPt(out, 'n_to');
+    approx(f.y, 0); approx(t.y, 0); // along the radius (horizontal at angle 0)
+    assert.ok(hasSeg(out, 'n_from', 'n_to'), 'normal segment present');
+  });
+
+  test('normal_at hyperbola at (√13, 9/2) → slope = −2/√13 (⊥ tangent √13/2)', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'O', kind: 'point', x: 0, y: 0 },
+        { id: 'P', kind: 'point', x: Math.sqrt(13), y: 4.5 },
+      ],
+      steps: [
+        { id: 'h', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'n', kind: 'normal_at', on: 'h', point: 'P', length: 6 },
+      ],
+    });
+    const f = findPt(out, 'n_from'), t = findPt(out, 'n_to');
+    const slope = (t.y - f.y) / (t.x - f.x);
+    approx(slope, -2 / Math.sqrt(13), 0.02);
+  });
+
+  // ── intersect line∩conic (Pillar 3 solver gaps) ─────────────────────────────
+  test('intersect vertical line x=1 ∩ parabola y²=4x → (1, ±2)', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'O', kind: 'point', x: 0, y: 0 },
+        { id: 'L1', kind: 'point', x: 1, y: -5 },
+        { id: 'L2', kind: 'point', x: 1, y: 5 },
+      ],
+      steps: [
+        { id: 'par', kind: 'parabola', vertex: 'O', focalLength: 1, opens: 'right' },
+        { id: 'L', kind: 'line', through: ['L1', 'L2'] },
+        { id: 'X', kind: 'intersect', of: ['L', 'par'], secondId: 'X2' },
+      ],
+    });
+    hasPointNear(out, 1, 2); hasPointNear(out, 1, -2);
+  });
+
+  test('intersect x-axis ∩ ellipse a=3,b=2 → vertices (±3, 0)', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'O', kind: 'point', x: 0, y: 0 },
+        { id: 'A', kind: 'point', x: -5, y: 0 },
+        { id: 'B', kind: 'point', x: 5, y: 0 },
+      ],
+      steps: [
+        { id: 'e', kind: 'ellipse', center: 'O', a: 3, b: 2 },
+        { id: 'L', kind: 'line', through: ['A', 'B'] },
+        { id: 'X', kind: 'intersect', of: ['L', 'e'], secondId: 'X2' },
+      ],
+    });
+    hasPointNear(out, 3, 0); hasPointNear(out, -3, 0);
+  });
+
+  test('intersect x-axis ∩ hyperbola a=2,b=3 → vertices (±2, 0)', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'O', kind: 'point', x: 0, y: 0 },
+        { id: 'A', kind: 'point', x: -8, y: 0 },
+        { id: 'B', kind: 'point', x: 8, y: 0 },
+      ],
+      steps: [
+        { id: 'h', kind: 'hyperbola', center: 'O', a: 2, b: 3 },
+        { id: 'L', kind: 'line', through: ['A', 'B'] },
+        { id: 'X', kind: 'intersect', of: ['L', 'h'], secondId: 'X2' },
+      ],
+    });
+    hasPointNear(out, 2, 0); hasPointNear(out, -2, 0);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

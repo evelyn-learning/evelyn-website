@@ -941,14 +941,15 @@ composing top-to-bottom feels more natural.
                                 through?, endpoints? }
     radius                    { on, to: pointId | { angle, pointId? } }
     diameter                  { on, direction? | through?, endpoints? }
-    tangent_at                { on, point, length? }
+    tangent_at                { on, point, length? }                 # circle OR conic; point must be ON the curve
+    normal_at                 { on, point, length? }                 # circle OR conic; line ⊥ the tangent at point
     tangent_from              { on, external, prefer?: "cw"|"ccw", touchId? }
     tangents_from_external    { on, external, segmentIds?, touchIds? }   # both
     arc                       { on, from, to, direction?: "ccw"|"cw" }
     sector                    { on, from, to, direction?, arcSegments? }
 
   Intersections:
-    intersect                 { of: [a, b], prefer?, secondId? }   # line∩line, line∩circle, circle∩circle
+    intersect                 { of: [a, b], prefer?, secondId? }   # line∩line, line∩circle, circle∩circle, line∩conic
 
   Polygons & triangles:
     polygon_regular           { on, sides, rotation?, vertexIds? }
