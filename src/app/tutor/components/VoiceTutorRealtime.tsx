@@ -288,6 +288,60 @@ const TUTOR_KEEP_VALIDATED_ON_KILL =
 const TUTOR_WOLFRAM_MATH_CHECK =
   process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'true';
+// Student-problem grounding (coherence fix, 2026-06-21). Measured: in a
+// plan-anchored segment the brain teaches the AUTHORED example (e.g. the
+// worked_example's problemText) and ignores the student's OWN stated problem,
+// because the segment-truth CONTRACT + divergence guard substitute the authored
+// card. When ON, the worked_example/show_problem divergence guards RELAX if the
+// rendered problem matches the STUDENT's recent message (token overlap) — i.e.
+// the brain is legitimately teaching the student's brought problem, not
+// drifting. Brain-drift (matches neither authored nor student) is still caught.
+// Default OFF until live-verified (touches the divergence machinery). See
+// project_tutor_work_queue + the cooperative-student coherence map.
+const TUTOR_STUDENT_PROBLEM_GROUNDING =
+  process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'true';
+/** Student-problem grounding: true when the brain's rendered numeric tokens
+ *  substantially match the student's recent message — i.e. the divergence from
+ *  the authored example is the student's OWN stated problem, not brain drift.
+ *  Generic, token-overlap only (no subject specifics). */
+function rendersStudentProblem(brainNums: Set<string>, studentText: string): boolean {
+  if (!brainNums || brainNums.size === 0 || !studentText) return false;
+  const studentNums = new Set(studentText.match(/-?\d+(?:\.\d+)?/g) || []);
+  if (studentNums.size === 0) return false;
+  let matched = 0;
+  brainNums.forEach((n) => { if (studentNums.has(n)) matched += 1; });
+  return matched / brainNums.size >= 0.5;
+}
+
+/** Request-TO-TUTOR framing — the student is ASKING the tutor to work/show a
+ *  problem, NOT narrating their own work ("let me solve", "I get…",
+ *  "substituting…") or answering a Socratic question. Deliberately excludes
+ *  bare work-verbs (solve/find/compute/what is) that students use while
+ *  thinking aloud — those caused a false positive on a mid-derivation turn.
+ *  Generic, no subject specifics. */
+const WORK_INTENT_RE = /\b(can\s+(?:we|you)\b|could\s+you\b|would\s+you\b|walk\s+me\s+through|help\s+me\b|how\s+(?:do|would|can|should)\s+(?:i|we|you)\b|work\s+(?:through|out)\b)/i;
+
+/** Detect that the student brought their OWN concrete problem to work. Returns
+ *  the student's verbatim text (to anchor on) or null. Three-way gate:
+ *  (1) request framing, (2) concrete content (has numbers), (3) divergence from
+ *  BOTH the authored problem AND the current active problem (so answering a
+ *  Socratic question about the active problem does NOT trigger). Generic. */
+function detectStudentBroughtProblem(studentText: string, authoredText: string, activeStatement: string): string | null {
+  if (!studentText || !WORK_INTENT_RE.test(studentText)) return null;
+  const sNums = studentText.match(/-?\d+(?:\.\d+)?/g) || [];
+  if (sNums.length === 0) return null;
+  const sSet = new Set(sNums);
+  const overlap = (other: string): number => {
+    const oSet = new Set((other || '').match(/-?\d+(?:\.\d+)?/g) || []);
+    if (oSet.size === 0) return 0;
+    let m = 0; sSet.forEach((n) => { if (oSet.has(n)) m += 1; });
+    return m / sSet.size;
+  };
+  if (overlap(authoredText) >= 0.5) return null;          // matches the authored example → not "brought"
+  if (activeStatement && overlap(activeStatement) >= 0.5) return null; // answering about the active problem
+  return studentText.trim();
+}
 
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
@@ -1105,7 +1159,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic' } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' } | null>(null);
 
   // Walk-through insistence counter for the current problem. The tutor should
   // default to Socratic; only switch to walk-through mode after the student
@@ -6059,6 +6113,26 @@ export function VoiceTutorRealtime({
           ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
           : undefined;
 
+        // Student-problem grounding (coherence fix): if the student brought
+        // their OWN concrete problem (request-framed, concrete, divergent from
+        // BOTH the authored example and the current active problem), anchor on
+        // THEIRS — set currentProblemRef(source:'student') so it surfaces as
+        // <active_problem> and the brain renders the student's problem (the
+        // authored <segment_truth> mandate is suppressed server-side, and the
+        // divergence-guard relax lets the render through). Persists until the
+        // brain advances (clears the ref) or the student brings another.
+        if (TUTOR_STUDENT_PROBLEM_GROUNDING) {
+          const lastStudent = transcriptRef.current.filter((e) => e.role === 'student').slice(-1)[0]?.text ?? '';
+          const authoredText = getSegmentTruth(lessonPlanContext?.currentSegment as Parameters<typeof getSegmentTruth>[0])?.problemText ?? '';
+          const activeStmt = currentProblemRef.current?.statement ?? '';
+          const brought = detectStudentBroughtProblem(lastStudent, authoredText, activeStmt);
+          if (brought) {
+            currentProblemRef.current = { statement: brought, kind: 'generic', source: 'student' };
+            console.log(`[VoiceTutorRealtime] student-brought problem detected → grounding on it: "${brought.slice(0, 80)}"`);
+            onDebugEvent?.('student_problem_detected', brought.slice(0, 90));
+          }
+        }
+
         // Stage 2 perception cancellation surface. Create an
         // AbortController for this brain call and expose it via
         // inFlightBrainAbortRef so the perception layer's
@@ -6112,7 +6186,7 @@ export function VoiceTutorRealtime({
             // verifies the student's correct answer against the OLD
             // problem (judge KILL spiral, observed 2026-05-02).
             activeProblem: currentProblemRef.current?.statement
-              ? { statement: currentProblemRef.current.statement }
+              ? { statement: currentProblemRef.current.statement, source: currentProblemRef.current.source }
               : undefined,
             // Whiteboard markup Phase 1 (2026-05-13 audit): drain the
             // unrealized-marks buffer accumulated during the prior turn's
@@ -7326,12 +7400,22 @@ export function VoiceTutorRealtime({
                         // new_page in the same turn. Mirrors the
                         // show_problem bypass pattern.
                         const newPageInTurn = brainEmittedNewPageThisTurnRef.current;
-                        if (divergent && newPageInTurn) {
-                          console.log(`[brain-orchestrator] show_worked_example divergence on "${segId}" — but new_page in turn (fresh context); bypassing substitute. brain="${[...brainNums].slice(0, 4).join(',')}" authored="${[...authoredNums].slice(0, 4).join(',')}"`);
-                          onDebugEvent?.('show_worked_example_divergence_bypass', `new_page-in-turn; brain="${[...brainNums].slice(0, 3).join(',')}" authored="${[...authoredNums].slice(0, 3).join(',')}"`);
-                          // Fall through — dispatch the brain's free-form
-                          // worked example as-is. Do NOT substitute (the
-                          // authored card is the wrong one for this turn).
+                        // Student-problem grounding: the divergence is the
+                        // STUDENT's own stated problem (their numbers), not brain
+                        // drift → teach theirs, don't substitute the authored
+                        // example. Structural: rendered numbers match the recent
+                        // student message.
+                        const recentStudentMsg = TUTOR_STUDENT_PROBLEM_GROUNDING
+                          ? transcriptRef.current.filter((e) => e.role === 'student').slice(-2).map((e) => e.text).join(' ')
+                          : '';
+                        const studentBrought = divergent && TUTOR_STUDENT_PROBLEM_GROUNDING
+                          && rendersStudentProblem(brainNums, recentStudentMsg);
+                        if (divergent && (newPageInTurn || studentBrought)) {
+                          const why = studentBrought ? 'matches the student\'s stated problem' : 'new_page in turn (fresh context)';
+                          console.log(`[brain-orchestrator] show_worked_example divergence on "${segId}" — but ${why}; teaching it as-is (no substitute). brain="${[...brainNums].slice(0, 4).join(',')}" authored="${[...authoredNums].slice(0, 4).join(',')}"`);
+                          onDebugEvent?.(studentBrought ? 'student_problem_grounding_worked_example' : 'show_worked_example_divergence_bypass', `${why}; segId="${segId}"`);
+                          // Fall through — dispatch the brain's worked example
+                          // as-is (the student's problem, or a fresh-context one).
                         } else if (divergent && TUTOR_VALIDATE_BEFORE_SPEAK) {
                           // v2 divergence-substitute (project_tutor_validate_
                           // before_speak): the brain narrated an INVENTED
@@ -7459,14 +7543,15 @@ export function VoiceTutorRealtime({
                           onDebugEvent?.('show_problem_post_generate_bypass', `segId="${segId}" target="${brainTarget}"`);
                           // Fall through. Treat the brain's show_problem
                           // statement as canonicalText — render as-is.
-                        } else if (targetsDiverge && newPageInTurn) {
-                          console.log(`[brain-orchestrator] show_problem target divergence for segment "${segId}" — but new_page in same turn (fresh context); bypassing guard. brain="${brainTarget}" authored="${authoredTarget}"`);
-                          onDebugEvent?.('show_problem_target_divergence_bypass', `new_page-in-batch; brain="${brainTarget}" authored="${authoredTarget}"`);
-                          // Don't substitute either — the brain is
-                          // intentionally rendering OFF-segment, and
-                          // showing the authored card would be wrong.
-                          // Fall through to dispatch show_problem with the
-                          // brain's free-form statement as-is.
+                        } else if (targetsDiverge && (newPageInTurn || (TUTOR_STUDENT_PROBLEM_GROUNDING && rendersStudentProblem(new Set(brainStatement.match(/-?\d+(?:\.\d+)?/g) || []), transcriptRef.current.filter((e) => e.role === 'student').slice(-2).map((e) => e.text).join(' '))))) {
+                          const sb = !newPageInTurn;
+                          const why = sb ? 'matches the student\'s stated problem' : 'new_page in same turn (fresh context)';
+                          console.log(`[brain-orchestrator] show_problem target divergence for segment "${segId}" — but ${why}; rendering as-is. brain="${brainTarget}" authored="${authoredTarget}"`);
+                          onDebugEvent?.(sb ? 'student_problem_grounding_show_problem' : 'show_problem_target_divergence_bypass', `${why}; brain="${brainTarget}" authored="${authoredTarget}"`);
+                          // Don't substitute — the brain is intentionally
+                          // rendering the student's brought problem (or a
+                          // fresh-context one); the authored card would be wrong.
+                          // Fall through to dispatch show_problem as-is.
                         } else if (targetsDiverge && TUTOR_VALIDATE_BEFORE_SPEAK) {
                           // v2 divergence-substitute: brain asked for a
                           // different target than authored on the current

@@ -111,7 +111,7 @@ export interface BrainTurnInput {
    *  on the next turn verified the student's correct answer against the
    *  anchor's expected answer — five judge KILLs in a row before the
    *  brain regrasped which dataset was active. */
-  activeProblem?: { statement: string };
+  activeProblem?: { statement: string; source?: 'student' | 'generated' };
   /** Pacing v2 student-state snapshot. Surfaces as `<student_state>`
    *  block when any signal is interesting (streak > 0 OR cue present
    *  OR segmentMastered set OR segTurns >= 2). Block is OMITTED
@@ -481,7 +481,13 @@ export function formatSegmentTruth(seg: unknown): string {
       ' the runtime drift check and you will be asked to retry. When you' +
       ' verbally state the answer, it must match expectedAnswer if one is' +
       ' provided. The student answers against what the board shows, not' +
-      ' against your memory of the script.',
+      ' against your memory of the script.' +
+      ' EXCEPTION: if the student has stated their OWN concrete problem to' +
+      ' work (their own values or expression), teach the student\'s problem —' +
+      ' render and narrate THEIR numbers and derive the answer yourself —' +
+      ' rather than problemText. The authored problem is the default example,' +
+      ' not a mandate when the student brought their own. Apply the segment\'s' +
+      ' method to the student\'s problem, then continue the plan normally.',
   );
   return lines.join('\n');
 }
@@ -750,6 +756,23 @@ function formatDeduplicatedShowsBlock(shows?: string[]): string {
 
 function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
   if (!active?.statement) return '';
+  // Student-brought problem: the student stated their OWN concrete problem to
+  // work. Teach THEIRS via show_problem (segment_truth is suppressed this turn,
+  // so there's no authored mandate competing). Crucially NOT the "verify
+  // against THIS only" framing used for generate_problem — that tunnels the
+  // brain onto a single problem and skips a segment's other objectives (e.g. a
+  // multi-part goal). Instead: teach their problem, then keep covering the
+  // segment's remaining objectives.
+  if (active.source === 'student') {
+    return (
+      `<active_problem>\n` +
+      `The student brought THIS problem themselves — it is what they asked to work on. ` +
+      `Render and narrate THEIR numbers/expression via show_problem (NOT the authored segment card; do not substitute different values), apply the current lesson's method, and derive the answer yourself. ` +
+      `This is the example to teach with — it does NOT replace the segment's learning objectives: once it is solved, keep going with the segment's remaining objectives and any follow-up the student raises, then advance normally. Do not tunnel on this single problem if the lesson has more to cover.\n\n` +
+      `Statement: ${active.statement}\n` +
+      `</active_problem>\n\n`
+    );
+  }
   return (
     `<active_problem>\n` +
     `This is the problem the student is currently working on. Verify their answers — and any narration that references "the problem" / numbers / data — against THIS statement only. ` +
@@ -851,7 +874,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const truthBody = input.lessonPlanContext
     ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
     : '';
-  const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
+  // A student-brought problem suppresses the authored segment_truth mandate for
+  // this turn — otherwise it competes with <active_problem> and the brain
+  // anchors to the authored example (see formatActiveProblemBlock).
+  const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
+    ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
@@ -1001,7 +1028,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const truthBody = input.lessonPlanContext
     ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
     : '';
-  const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
+  // A student-brought problem suppresses the authored segment_truth mandate for
+  // this turn — otherwise it competes with <active_problem> and the brain
+  // anchors to the authored example (see formatActiveProblemBlock).
+  const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
+    ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
