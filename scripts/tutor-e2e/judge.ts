@@ -92,8 +92,11 @@ async function main() {
   // sessions grade per-turn vs each watchFor (which embeds the known answers).
   const coopGoal: string | undefined = summary.cooperativeGoal;
   let rubric: string;
+  const studentProfile: string = summary.studentProfile ?? 'cooperative';
   if (coopGoal) {
-    rubric = `COOPERATIVE-STUDENT SESSION (the student was an engaged LLM answering the tutor across turns).\nSESSION GOAL (embeds the known-correct answer): ${coopGoal}\nThere are no per-student-turn rubrics. Emit ONE verdict per TUTOR turn (in order), judging that turn for correctness + coherence, PLUS a final verdict with turn=-1 for whether the SESSION reached the goal correctly (pass) or not, with errorClass describing the dominant failure if any.`;
+    rubric = `SIMULATED-STUDENT SESSION. The student was an LLM playing this behavior profile: "${studentProfile}". On-task objective (embeds the known-correct answer): ${coopGoal}\n` +
+      `Grade the TUTOR's RESPONSE QUALITY, not goal-completion. Emit ONE verdict per TUTOR turn (in order): did the tutor respond CORRECTLY (no wrong math/facts) and APPROPRIATELY to what the student actually did on that turn? A "${studentProfile}" student may be confused, wrong, distractible, skeptical, or may give up — the tutor PASSES a turn when it handles that well (re-explains for confusion; gives a hint and stays on the problem for a wrong attempt; redirects gracefully and doesn't chase a tangent for off-topic; shows/works the answer when the student gives up or asks to be shown; holds its ground with a correct justification when wrongly challenged; works the student's own problem if they brought one). It FAILS a turn only for a wrong/garbled/contradictory response or ignoring what the student said.\n` +
+      `Then a final verdict turn=-1: set pass=true if the tutor handled the SESSION well for this student; if the goal wasn't reached, set errorClass="coherence" ONLY when that's the TUTOR's fault (it derailed/looped/ignored), and pass=true with errorClass="none" when the student themselves steered away (off-topic / gave up / switched topic) and the tutor handled it correctly.`;
   } else {
     let watchFor: Array<{ say?: string; watchFor?: string }> = summary.watchFor ?? [];
     if (watchFor.length === 0) {

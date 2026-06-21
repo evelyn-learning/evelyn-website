@@ -8,6 +8,15 @@
  * are what a Phase-2 LLM-judge will check against.
  */
 
+/** Realistic student behavior archetypes for the simulated-student driver. */
+export type StudentProfile =
+  | 'cooperative'   // engaged, works through, occasionally unsure/wrong
+  | 'struggling'    // confused, asks "why?", needs re-explanation, slow
+  | 'distractible'  // drifts off-topic, asks tangents ("is this on the exam?")
+  | 'skeptical'     // challenges the tutor, questions answers, pushes back
+  | 'gives-up'      // disengages, "idk", asks to just be shown the answer
+  | 'brings-problem'; // brings their OWN concrete problem / homework to work
+
 export interface ScenarioTurn {
   /** Student utterance to send (the typed-input student turn). */
   say?: string;
@@ -35,16 +44,18 @@ export interface Scenario {
   seedTurns?: ScenarioTurn[];
   /** The test-worthy turns — the prompts that exercise the change. */
   testTurns: ScenarioTurn[];
-  /** Optional: drive a COOPERATIVE STUDENT via an LLM instead of fixed
-   *  testTurns. After seedTurns, an LLM reads the tutor's last turn and replies
-   *  as an engaged student working toward `goal` — answering Socratic
-   *  questions across turns so the tutor's completion/coherence is fairly
-   *  tested. The judge grades the whole session against `goal` (embed the
-   *  known answer in it). When present, testTurns are ignored. */
+  /** Optional: drive a SIMULATED STUDENT via an LLM instead of fixed testTurns.
+   *  After seedTurns, an LLM reads the tutor's last turn and replies as a
+   *  student of the given `profile`, so the tutor's coherence is tested against
+   *  realistic, non-deterministic behavior (not just an idealized learner). The
+   *  judge grades the tutor's RESPONSE QUALITY per turn given what the student
+   *  did — reaching `goal` is only expected if the student stays on task. When
+   *  present, testTurns are ignored. */
   cooperativeStudent?: {
-    goal: string;          // what the session should accomplish; embed the known answer
-    persona?: string;      // override the default student persona
-    turns?: number;        // cooperative turns to drive (default 6)
-    firstSay?: string;     // the opening student utterance (kicks off the goal)
+    goal: string;          // the on-task objective; embed the known answer for grading
+    profile?: StudentProfile; // behavior archetype (default 'cooperative')
+    persona?: string;      // free-text persona override (else derived from profile)
+    turns?: number;        // student turns to drive (default 6)
+    firstSay?: string;     // the opening student utterance
   };
 }

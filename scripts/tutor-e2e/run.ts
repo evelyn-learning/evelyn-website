@@ -17,8 +17,26 @@
 import { chromium, type ConsoleMessage } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Scenario, ScenarioTurn } from './types';
+import type { Scenario, ScenarioTurn, StudentProfile } from './types';
 import { askClaude } from './llm';
+
+/** Behavior directives per student profile — drive realistic, non-deterministic
+ *  student turns. The "sometimes/often/frequently" cues inject variation so the
+ *  tutor's coherence is tested against real situations, not an idealized learner. */
+const PROFILE_BEHAVIORS: Record<StudentProfile, string> = {
+  cooperative:
+    'You are engaged and trying. Answer the tutor\'s questions and attempt the work yourself; being a little unsure or occasionally wrong is realistic. Keep moving forward.',
+  struggling:
+    'You find this genuinely hard. You often do NOT follow the explanation — ask "why?", say "I don\'t get it", give halting or partially-wrong attempts, and need things re-explained more simply before you can go on.',
+  distractible:
+    'Your attention drifts. You sometimes answer, but you frequently go off on tangents — ask whether this is on the exam, say it\'s boring, ask an unrelated question, or try to change the subject — and can be gently brought back.',
+  skeptical:
+    'You question things. When the tutor asserts an answer or step, sometimes push back — "are you sure?", "I think that\'s wrong", "why isn\'t it ___?" — even when the tutor is actually right, to see whether it holds its ground or wrongly caves.',
+  'gives-up':
+    'You disengage easily. After a little effort you tend to give up — "idk", "I\'m not sure", "can you just show me?" — and would rather the tutor reveal the answer than work it yourself.',
+  'brings-problem':
+    'You brought your OWN problem from homework. Open by asking the tutor to help with YOUR specific problem (state it with concrete numbers), and steer the session toward solving that one.',
+};
 
 const BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
 const HEADED = process.argv.includes('--headed');
@@ -174,9 +192,14 @@ async function main() {
       // fairly tested (vs uncooperative fixed turns that change subject).
       const coop = scenario.cooperativeStudent;
       const turns = coop.turns ?? 6;
-      const persona = coop.persona ?? `a cooperative ${scenario.start.level} student`;
-      const sys = `You are ${persona} in a one-on-one tutoring session. Your goal for the session: ${coop.goal}. Reply ONLY as the student, in ONE short sentence (≤ 20 words). Answer the tutor's question or do what it asks — ATTEMPT the math/work yourself (being a little unsure, or occasionally wrong, is realistic). Keep working toward the goal. Never act as the tutor; no meta-commentary; no quotation marks.`;
-      let nextSay = coop.firstSay ?? coop.goal;
+      const profile = coop.profile ?? 'cooperative';
+      const persona = coop.persona ?? `a ${scenario.start.level} student`;
+      // NOTE: the student LLM is deliberately NOT given coop.goal — that string
+      // embeds the known ANSWER (for the judge). A student that "knows" the
+      // answer is unrealistic and risks blurting it. The student works from its
+      // opening message + the tutor's turns only.
+      const sys = `You are ${persona} talking to your tutor in a one-on-one session. ${PROFILE_BEHAVIORS[profile]} Stay engaged with the problem/topic from your opening message; do NOT state a final answer unless you have actually worked it out with the tutor. Reply ONLY as the student, in ONE short, natural sentence — real students aren't formal: fillers, fragments, and being unsure are all fine, and vary your phrasing turn to turn. Never act as the tutor, never narrate stage directions, no quotation marks.`;
+      let nextSay = coop.firstSay ?? 'Can we get started?';
       for (let k = 0; k < turns; k++) {
         const before = (await getState()).turnsCompleted;
         log(`coop-${k} say: ${nextSay.slice(0, 80)}`);
@@ -254,7 +277,10 @@ async function main() {
       finishedAt: new Date().toISOString(),
       screenshots: shots,
       watchFor: [...(scenario.seedTurns ?? []), ...scenario.testTurns].map((t, i) => ({ turn: i, say: t.say, watchFor: t.watchFor })),
-      ...(scenario.cooperativeStudent ? { cooperativeGoal: scenario.cooperativeStudent.goal } : {}),
+      ...(scenario.cooperativeStudent ? {
+        cooperativeGoal: scenario.cooperativeStudent.goal,
+        studentProfile: scenario.cooperativeStudent.profile ?? 'cooperative',
+      } : {}),
       anomalies,
     };
     fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
