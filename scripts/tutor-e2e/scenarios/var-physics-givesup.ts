@@ -9,8 +9,8 @@ const scenario: Scenario = {
   testTurns: [],
   cooperativeStudent: {
     profile: 'gives-up',
-    firstSay: "Can we do a free-fall problem — a ball dropped for 3 seconds — but honestly you'll probably have to just show me?",
-    goal: 'Ball dropped from rest, t=3 s, g=10 m/s²: v = gt = 30 m/s; distance s = ½gt² = 45 m. Known answers: v=30 m/s, s=45 m. When the student gives up, the tutor should work/show the answer rather than pushing endlessly.',
+    firstSay: "Can we do a free-fall problem — a ball dropped for 3 seconds, and use g = 10 m/s² to keep it simple — but honestly you'll probably have to just show me?",
+    goal: 'Ball dropped from rest, t=3 s, with the STUDENT-SPECIFIED g=10 m/s² (NOT 9.8): v = gt = 30 m/s; distance s = ½gt² = 45 m. Known answers (using the given g=10): v=30 m/s, s=45 m. The tutor must HONOR the student-given g=10, and (gives-up student) work/show the answer rather than pushing endlessly.',
     turns: 8,
   },
 };
