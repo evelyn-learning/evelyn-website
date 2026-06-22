@@ -285,6 +285,8 @@ export interface RealtimeResult {
    * call.
    */
   resumeSpeakText: (sentences: string[]) => void;
+  /** Resume-from-cut (P5): fraction (0..1) of the current sentence's audio played. */
+  getCurrentSentenceFraction: () => number;
   /**
    * Stage 4 regression fix (2026-06-16). Drive the 'processing'
    * ("Thinking…") indicator from the claude-brain orchestrator. With the
@@ -706,6 +708,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   //  ...audioQueueSentenceRef (deduped), ...speakTextQueueRef].
   const currentSpeakTextRef = useRef<string | null>(null);
   const audioQueueSentenceRef = useRef<string[]>([]);
+  // Resume-from-cut (P5): audio-seconds of the CURRENT sentence already played
+  // (accumulated in playNextAudio, reset on a sentence transition). With the
+  // queued-but-unplayed chunks of the same sentence it yields the fraction
+  // spoken at a noise cut. See getCurrentSentenceFraction.
+  const currentSentencePlayedSecRef = useRef(0);
   // Render↔speech sync: ref-mirror the playback-progress callback so
   // playNextAudio can fire it without re-creating on every render.
   const onTtsPlaybackProgressRef = useRef(onTtsPlaybackProgress);
@@ -804,6 +811,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // in-flight sentence so a subsequent cancel doesn't try to
       // resume audio that already played out.
       currentSpeakTextRef.current = null;
+      currentSentencePlayedSecRef.current = 0;
       // openai-mini path has no response.done event to drive the queue,
       // so drain the next sentence here when the audio finishes. The
       // realtime path leaves this branch alone — its drain runs from
@@ -861,6 +869,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // sentence context (e.g., a rare pre-mapping race), leave the
     // ref alone — better stale than wrong.
     const sentText = audioQueueSentenceRef.current.shift();
+    // Resume-from-cut (P5): accumulate audio-seconds played of the CURRENT
+    // sentence (chunk samples / 24000). Reset on a sentence transition. At a
+    // noise cut this + the queued-but-unplayed chunks of the same sentence give
+    // the fraction spoken → which clause to resume from. See resume-from-cut.
+    const chunkSec = chunk.length / 24000;
     if (sentText) {
       // Render↔speech sync: a chunk for a NEW sentence is being dequeued
       // (audio for it begins now) → fire 'sentence-start' so the
@@ -868,8 +881,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // Guard on a real transition so multi-chunk sentences fire once.
       if (sentText !== currentSpeakTextRef.current) {
         onTtsPlaybackProgressRef.current?.('sentence-start');
+        currentSentencePlayedSecRef.current = chunkSec;
+      } else {
+        currentSentencePlayedSecRef.current += chunkSec;
       }
       currentSpeakTextRef.current = sentText;
+    } else {
+      currentSentencePlayedSecRef.current += chunkSec;
     }
     const buffer = ctx.createBuffer(1, chunk.length, 24000);
     buffer.getChannelData(0).set(chunk);
@@ -2654,6 +2672,24 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, [speakText]);
 
+  // Resume-from-cut (P5): fraction (0..1) of the CURRENT sentence's audio that
+  // has played — played seconds / (played + queued-but-unplayed seconds of the
+  // same sentence). Read at a noise cut to decide which clause to resume from
+  // (see resume-from-cut.clauseTailFromFraction). 0 when nothing is playing.
+  const getCurrentSentenceFraction = useCallback((): number => {
+    const played = currentSentencePlayedSecRef.current;
+    if (played <= 0) return 0;
+    const cur = currentSpeakTextRef.current;
+    let remaining = 0;
+    const q = audioQueueRef.current;
+    const labels = audioQueueSentenceRef.current;
+    for (let i = 0; i < q.length; i++) {
+      if (labels[i] === cur) remaining += q[i].length / 24000;
+    }
+    const total = played + remaining;
+    return total > 0 ? Math.min(1, played / total) : 0;
+  }, []);
+
   // Voice Perception Q9 (2026-06-16): enter the 'interrupted' transient
   // signal for 300ms. Restarts the window cleanly if called again before
   // the timer fires.
@@ -2696,6 +2732,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     clearSpeechQueue,
     peekSpeechQueue,
     resumeSpeakText,
+    getCurrentSentenceFraction,
     signalBrainThinking,
     unlockAudio,
   };

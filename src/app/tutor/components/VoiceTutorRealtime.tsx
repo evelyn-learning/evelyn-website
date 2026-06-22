@@ -39,6 +39,7 @@ import {
   buildTransformationLatex,
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
+import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -244,6 +245,12 @@ const TUTOR_RENDER_SYNC =
 const TUTOR_BOARD_ANCHOR_ASSIST =
   process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'on'
   || process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'true';
+// Resume-from-cut granularity (P5): on a confirmed-noise mid-sentence pause,
+// resume from the CLAUSE the cut landed in instead of re-speaking the whole
+// sentence. Client-side, DEFAULT OFF. See resume-from-cut + project_tutor_work_queue.
+const TUTOR_RESUME_FROM_CLAUSE =
+  process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'on'
+  || process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'true';
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.
@@ -828,6 +835,10 @@ export function VoiceTutorRealtime({
          *  brain. Lossy on the partially-played sentence's tail —
          *  the rest of B is gone, but C / D / … are recovered. */
         unplayedSentencesSnapshot: string[];
+        /** Resume-from-cut (P5): fraction (0..1) of the in-flight sentence
+         *  (snapshot[0]) already played at cut time — picks which clause to
+         *  resume from when TUTOR_RESUME_FROM_CLAUSE is on. */
+        cutFraction: number;
       }
     | null
   >(null);
@@ -980,6 +991,8 @@ export function VoiceTutorRealtime({
   // speakTextRef / clearSpeechQueueRef.
   const peekSpeechQueueRef = useRef<(() => string[]) | null>(null);
   const resumeSpeakTextRef = useRef<((sentences: string[]) => void) | null>(null);
+  // Resume-from-cut (P5): read the in-flight sentence's played fraction at cut time.
+  const getCurrentSentenceFractionRef = useRef<(() => number) | null>(null);
   // Stage 4 regression fix (2026-06-16): drive the 'processing' ("Thinking…")
   // indicator from the brain orchestrator. realtime is defined later in
   // render order, so reach it through a ref (same pattern as the queue refs).
@@ -9623,11 +9636,27 @@ export function VoiceTutorRealtime({
         // risk because the brain isn't being called again.
         if (checkpoint.unplayedSentencesSnapshot.length > 0) {
           const n = checkpoint.unplayedSentencesSnapshot.length;
+          // Resume-from-cut granularity (P5): snapshot[0] is the in-flight
+          // (partially-played) sentence. By default it's re-spoken WHOLE; with
+          // the flag on, replace it with just the tail from the clause the cut
+          // landed in (clauseTailFromFraction), so we don't re-speak content the
+          // student already heard. Early-cut → tail === the whole sentence.
+          let resumeQueue = checkpoint.unplayedSentencesSnapshot;
+          if (TUTOR_RESUME_FROM_CLAUSE) {
+            const tail = clauseTailFromFraction(resumeQueue[0], checkpoint.cutFraction);
+            if (tail && tail !== resumeQueue[0]) {
+              console.warn(
+                `[RESUME-CUT] clause-snap @${checkpoint.cutFraction.toFixed(2)}: "${resumeQueue[0].slice(0, 40)}…" → "${tail.slice(0, 40)}…"`,
+              );
+              onDebugEvent?.('resume_from_clause', `@${checkpoint.cutFraction.toFixed(2)} tail="${tail.slice(0, 50)}"`);
+              resumeQueue = [tail, ...resumeQueue.slice(1)];
+            }
+          }
           console.warn(
             `[PERCEPTION] STAGE-3.1 resume-from-cut (${verdict}, ${elapsedMs}ms): re-queuing ${n} unplayed sentence(s)`,
           );
           onDebugEvent?.('perception_stage3_1_resume', `${verdict} after ${elapsedMs}ms · ${n} sentences`);
-          resumeSpeakTextRef.current?.(checkpoint.unplayedSentencesSnapshot);
+          resumeSpeakTextRef.current?.(resumeQueue);
           // Render↔speech sync: the held tail is being replayed → release
           // the whole buffer so its renders land with the resumed narration.
           flushAllRenderBuffer();
@@ -9913,6 +9942,7 @@ export function VoiceTutorRealtime({
   clearSpeechQueueRef.current = realtime.clearSpeechQueue;
   peekSpeechQueueRef.current = realtime.peekSpeechQueue;
   resumeSpeakTextRef.current = realtime.resumeSpeakText;
+  getCurrentSentenceFractionRef.current = realtime.getCurrentSentenceFraction;
   signalBrainThinkingRef.current = realtime.signalBrainThinking;
 
   // ── Voice Perception Layer (Stage 0 — shadowed, logs only) ─────────────
@@ -9993,6 +10023,9 @@ export function VoiceTutorRealtime({
       // cancel verdict can resume the unplayed sentences instead of
       // re-firing the brain.
       unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
+      // Resume-from-cut (P5): how far into the in-flight sentence the cut landed,
+      // captured BEFORE clearSpeechQueue empties the audio queue.
+      cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
     };
     // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
     // sentence drained from the in-flight orchestrator's SSE buffer
@@ -10399,6 +10432,7 @@ export function VoiceTutorRealtime({
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
           originalOpts: ctx.opts,
+          cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
           cancelledAt: Date.now(),
           // Only verdicts from perception transcripts whose seq is
           // STRICTLY GREATER than this snapshot may dispatch against
@@ -10512,6 +10546,7 @@ export function VoiceTutorRealtime({
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
+          cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
         cancelledAt: Date.now(),
         // Parity with real cancel: any verdict from a transcript whose
         // seq is > this snapshot may dispatch. The synthetic 'noise'

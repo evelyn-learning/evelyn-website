@@ -737,6 +737,9 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     resumeSpeakText: (sentences: string[]) => {
       console.warn('[Gemini] resumeSpeakText called but relay mode is not supported on Gemini Live.', { count: sentences.length });
     },
+    // Resume-from-cut (P5) is claude-brain/relay-only; Gemini drives its own
+    // native audio, so there's no chunk-level playback fraction to report.
+    getCurrentSentenceFraction: () => 0,
     // Stage 4 thinking-indicator stub. Gemini Live drives its own status
     // (native audio in/out), so the orchestrator-driven 'processing' signal
     // is a no-op here.
