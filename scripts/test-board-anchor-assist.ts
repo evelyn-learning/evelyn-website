@@ -65,6 +65,12 @@ check('xform: "A turns into B" → solid iron / iron oxide',
   !!t2 && t2.from === 'solid iron' && t2.to === 'iron oxide', JSON.stringify(t2));
 const t3 = detectTransformation('converting glucose into carbon dioxide');
 check('xform: "converting A into B"', !!t3 && t3.from === 'glucose' && t3.to === 'carbon dioxide', JSON.stringify(t3));
+const t4 = detectTransformation('one solid becomes countless particles spread through the solution');
+check('xform: "A becomes B" (multi-word B) → solid / countless particles',
+  !!t4 && t4.from === 'solid' && t4.to === 'countless particles', JSON.stringify(t4));
+const t5 = detectTransformation('1 intact glass becomes hundreds of fragments');
+check('xform: "A becomes B" → intact glass / hundreds of fragments',
+  !!t5 && t5.from === 'intact glass' && t5.to === 'hundreds of fragments', JSON.stringify(t5));
 check('xform latex: A → B', buildTransformationLatex({ from: 'iron', to: 'iron oxide' }) === '\\text{iron} \\rightarrow \\text{iron oxide}');
 
 // ── detectTransformation: NEGATIVES / false-fire guards ──
@@ -74,6 +80,8 @@ check('xform neg: "turns out" not a transformation', detectTransformation('It tu
 check('xform neg: no transformation phrasing', detectTransformation('A ball at the top of a hill rolls down to lower energy.') === null);
 check('xform neg: empty', detectTransformation('') === null);
 check('xform neg: "becomes spontaneous" (state word)', detectTransformation('At high temperature the reaction becomes spontaneous.') === null);
+check('xform neg: "becomes favorable" (single-word adjective B, not in blocklist)', detectTransformation('The reaction becomes favorable at high T.') === null);
+check('xform neg: "becomes more negative" (figurative)', detectTransformation('Subtracting makes delta G become more negative.') === null);
 check('xform neg: same entity both sides', detectTransformation('turning water into water') === null);
 
 console.log(`\n${passed} passed, ${failed} failed`);

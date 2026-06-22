@@ -127,7 +127,7 @@ const NON_ENTITY_WORDS = new Set([
   'impossible', 'true', 'false', 'clearer', 'visible', 'dominant',
 ]);
 
-const ENTITY_STOPWORDS = new Set(['the', 'a', 'an', 'some', 'any', 'its', 'their', 'this', 'that', 'back', 'just', 'only', 'pure']);
+const ENTITY_STOPWORDS = new Set(['the', 'a', 'an', 'one', 'some', 'any', 'its', 'their', 'this', 'that', 'back', 'just', 'only', 'pure']);
 
 /** Trailing adverbial / temporal words to strip off a captured entity
  *  ("iron oxide over time" → "iron oxide"). */
@@ -179,7 +179,42 @@ export function detectTransformation(text: string): Transformation | null {
     const to = cleanEntity(m[2]);
     if (from && to && from !== to) return { from, to };
   }
-  return null;
+  return detectBecomes(t);
+}
+
+// B-side words that END a "<A> becomes <B>" target — prepositions / verbs /
+// clause words after which the rest is modifier, not the entity itself
+// ("...particles SPREAD throughout...", "...negative FOR rusting").
+const BECOMES_B_STOP = new Set([
+  'for', 'at', 'in', 'on', 'through', 'throughout', 'with', 'by', 'from', 'over',
+  'spread', 'spreading', 'because', 'since', 'which', 'while', 'when', 'so',
+  'then', 'that', 'as', 'it', 'they', 'this', 'these', 'rather', 'instead',
+]);
+
+/**
+ * "<A> becomes <B>" — handled separately + MUCH more conservatively than the
+ * "turns into" family, because figurative state-changes ("ΔS becomes negative",
+ * "becomes favorable", "it becomes clear") share the verb. Guards: A is a
+ * letters-only phrase (so leading numerals like "1 intact glass" start at the
+ * noun); B is taken only up to the first preposition/verb/clause word and must
+ * be a ≥2-word noun phrase that survives the NON_ENTITY_WORDS blocklist. A bare
+ * single-word B (almost always an adjective) is rejected.
+ */
+function detectBecomes(text: string): Transformation | null {
+  const m = text.match(/\b([a-z][a-z\s]{1,38}?)\s+becomes?\s+(.+)/i);
+  if (!m) return null;
+  const from = cleanEntity(m[1]);
+  if (!from) return null;
+  const after = m[2].toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const bWords: string[] = [];
+  for (const w of after) {
+    if (BECOMES_B_STOP.has(w)) break;
+    bWords.push(w);
+    if (bWords.length >= 4) break;
+  }
+  const to = cleanEntity(bWords.join(' '));
+  if (!to || from === to || to.split(' ').length < 2) return null;
+  return { from, to };
 }
 
 /** LaTeX for the auto-drawn transformation arrow: `\text{A} \rightarrow \text{B}`. */
