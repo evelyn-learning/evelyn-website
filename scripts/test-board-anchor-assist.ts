@@ -43,6 +43,19 @@ check('intro: "let me draw that graph" matches (figure kind word)',
 check('intro: "equation" word does not falsely match a FIGURE anchor',
   !sentenceIntroducesAnchor('Here is the equation we use.', charles));
 
+// ── spoken-symbol matching (the "speaks the terms, not the word equation" case) ──
+const gibbs = extractAnchorKeywords({ action: 'showEquation', label: 'The Master Equation', latex: '\\Delta G = \\Delta H - T\\Delta S' })!;
+check('symbols: latex → "delta g"/"delta h"/"delta s"',
+  gibbs.symbolTokens.includes('delta g') && gibbs.symbolTokens.includes('delta h') && gibbs.symbolTokens.includes('delta s'), JSON.stringify(gibbs.symbolTokens));
+check('intro via symbols: "Think of delta H … and delta S" (2 symbols) matches',
+  sentenceIntroducesAnchor('Think of delta H as the energy side and delta S as the chaos side.', gibbs));
+check('intro via symbols: single "delta G is negative" (1 symbol) does NOT match',
+  !sentenceIntroducesAnchor('So when delta G is negative the reaction is spontaneous.', gibbs));
+check('intro: reported case "This one equation — delta G equals…" still matches (kind word)',
+  sentenceIntroducesAnchor('This one equation — delta G equals delta H minus T times delta S — predicts direction.', gibbs));
+check('symbols: hook sentence (no symbols, no kind word) does NOT match',
+  !sentenceIntroducesAnchor("Here's a question — iron rusts but never turns back into iron. Why?", gibbs));
+
 // ── detectTransformation: positives (real Console examples) ──
 const t1 = detectTransformation('turning carbon dioxide and water back into glucose and oxygen');
 check('xform: "turning A back into B" → CO2+water / glucose+oxygen',

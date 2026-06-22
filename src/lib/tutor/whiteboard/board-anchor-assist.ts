@@ -27,8 +27,13 @@
 export interface AnchorKeywords {
   kind: 'equation' | 'figure';
   /** Distinctive title/label words (≥4 chars, lowercased) that a sentence
-   *  naming this anchor is likely to repeat. */
+   *  naming this anchor is likely to repeat. ANY one match → introduces. */
   tokens: string[];
+  /** Spoken forms of the equation's symbols (e.g. "delta g", "delta h") parsed
+   *  from its LaTeX — the brain often introduces an equation by speaking its
+   *  terms ("when delta G is negative…") without saying the word "equation".
+   *  Requires ≥2 matches so a single vague symbol mention doesn't trigger. */
+  symbolTokens: string[];
 }
 
 const STOPWORDS = new Set([
@@ -50,7 +55,7 @@ const KIND_WORDS: Record<AnchorKeywords['kind'], string[]> = {
  * commands are excluded — they aren't front-loaded-then-narrated the same way).
  */
 export function extractAnchorKeywords(cmd: unknown): AnchorKeywords | null {
-  const c = cmd as { action?: string; label?: string; title?: string; data?: { title?: string } };
+  const c = cmd as { action?: string; label?: string; title?: string; latex?: string; data?: { title?: string } };
   const action = String(c?.action ?? '');
   let kind: AnchorKeywords['kind'] | null = null;
   if (action === 'showEquation') kind = 'equation';
@@ -63,7 +68,26 @@ export function extractAnchorKeywords(cmd: unknown): AnchorKeywords | null {
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
-  return { kind, tokens };
+  const symbolTokens = kind === 'equation' ? latexToSymbolTokens(c.latex || '') : [];
+  return { kind, tokens, symbolTokens };
+}
+
+const GREEK = ['alpha', 'beta', 'gamma', 'delta', 'theta', 'lambda', 'mu', 'sigma', 'omega', 'phi', 'psi', 'pi', 'rho', 'tau'];
+
+/** Spoken-symbol tokens from an equation's LaTeX: "\Delta G" → "delta g",
+ *  "\alpha" → "alpha". Greek-prefixed variables (the most distinctive, e.g.
+ *  ΔG/ΔH/ΔS) only — bare single letters are too noisy to match reliably. */
+function latexToSymbolTokens(latex: string): string[] {
+  const out = new Set<string>();
+  const s = String(latex ?? '');
+  // \Delta G  /  \Delta{G}  →  "delta g"   (greek symbol immediately modifying a letter)
+  const re = /\\([A-Za-z]+)\s*\{?\s*([A-Za-z])\b/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const g = m[1].toLowerCase();
+    if (GREEK.includes(g)) out.add(`${g} ${m[2].toLowerCase()}`);
+  }
+  return Array.from(out);
 }
 
 /**
@@ -72,12 +96,20 @@ export function extractAnchorKeywords(cmd: unknown): AnchorKeywords | null {
  * anchor's kind ("equation"/"graph"/…) or repeats a distinctive title word.
  */
 export function sentenceIntroducesAnchor(sentence: string, anchor: AnchorKeywords): boolean {
-  const s = ` ${String(sentence ?? '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ')} `;
+  const s = ` ${String(sentence ?? '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ')} `;
+  // Names the kind ("equation"/"graph") → introduces.
   for (const kw of KIND_WORDS[anchor.kind]) {
     if (s.includes(` ${kw} `)) return true;
   }
+  // Repeats a distinctive title word → introduces.
   for (const tok of anchor.tokens) {
     if (s.includes(` ${tok} `)) return true;
+  }
+  // Speaks ≥2 of the equation's symbols ("delta H … delta S") → introduces.
+  let symHits = 0;
+  for (const tok of anchor.symbolTokens) {
+    if (s.includes(` ${tok} `)) symHits++;
+    if (symHits >= 2) return true;
   }
   return false;
 }

@@ -266,6 +266,12 @@ const isBoardRenderCommand = (c: unknown): boolean => {
 // stall-safety + thin-turn anti-pile, never a routine racer. Sized to
 // comfortably exceed one long TTS sentence (~3-5s) + slack.
 const RENDER_SYNC_STALL_MS = 6000;
+// Board-anchor re-anchor: only a render emitted at the FRONT of the turn (anchor
+// ≤ this) is a front-load candidate. The content-free turn-opener occupies
+// sentence 0, so a front-loaded equation/figure lands at anchor 1, not 0 — the
+// original anchor===0 gate never fired (observed 2026-06-22 ear-test, Console4).
+// Bounded so mid-turn step renders (anchor ≥ 2) are never held/delayed.
+const RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR = 1;
 // Validate-before-speak (Pillar 2 of the robustness track,
 // project_tutor_validate_before_speak). Rolling micro-hold: after the
 // first clean tool opens the gate, subsequent sentences stay BUFFERED
@@ -2109,15 +2115,24 @@ export function VoiceTutorRealtime({
       return;
     }
     const anchorM = ttsDispatchedCountRef.current;
-    // Re-anchor: a turn-OPENING (anchorM===0) equation/figure is held until the
-    // later sentence that names it plays (pendingReanchor) instead of surfacing
-    // during the opening sentence. Fail-safe: drain/cap release it at turn-end.
+    // Re-anchor: a FRONT-LOADED discussable equation/figure — emitted at the top
+    // of the turn (anchor ≤ RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR) AND whose
+    // preceding sentence does NOT name it — is held (pendingReanchor) until the
+    // later sentence that names it plays, instead of surfacing during the
+    // opening/hook sentence. The preceding-sentence check means a render that's
+    // already introduced in sync (its anchor sentence names it) is NOT held.
+    // Fail-safe: drain/cap release it at turn-end.
     let pendingReanchor = false;
     let anchorKeywords: AnchorKeywords | undefined;
-    if (TUTOR_BOARD_ANCHOR_ASSIST && anchorM === 0) {
+    if (TUTOR_BOARD_ANCHOR_ASSIST && anchorM <= RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR) {
+      const lastSentence = turnNarrationRef.current[turnNarrationRef.current.length - 1] ?? '';
       for (const c of processed) {
         const kw = extractAnchorKeywords(c);
-        if (kw) { anchorKeywords = kw; pendingReanchor = true; break; }
+        if (kw && !sentenceIntroducesAnchor(lastSentence, kw)) {
+          anchorKeywords = kw;
+          pendingReanchor = true;
+          break;
+        }
       }
     }
     renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords });

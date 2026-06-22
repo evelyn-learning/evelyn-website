@@ -1992,6 +1992,14 @@ export async function exportTutorSessionPDF(
       'advanceLesson', 'markSegmentComplete', 'proposePlanSwap',
       'confirmPlanLos', 'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
+      // Nav + annotation commands have no standalone inline render — the live
+      // canvas handles them, and scribbles already render as annotations ON
+      // their target item elsewhere in the PDF. Without these, the transcript-
+      // inline renderer hits its default case and prints "Unknown command type"
+      // cards (observed 2026-06-22 ear-test: 9 such cards from the [scrollTo,
+      // scrollTo, scribble] triples that the auto-scroll-before-scribble path
+      // emits). Board-anchored speech's extra scribbling made the gap loud.
+      'scrollTo', 'goToPage', 'openPage', 'scribble', 'highlight',
     ]);
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {
