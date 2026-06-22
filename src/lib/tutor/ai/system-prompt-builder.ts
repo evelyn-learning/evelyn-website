@@ -947,6 +947,15 @@ Steps. All take { id, label? } plus the kind-specific fields below.
 Givens may also appear as steps (segment/line/polygon/circle) when
 composing top-to-bottom feels more natural.
 
+When a construction annotates or DERIVES features OF a base figure (its key
+points, lines, centres, or axes), INCLUDE the base-figure step itself in the
+SAME command — a derived point or line shown without the figure it belongs to
+is confusing. PREFER derive steps that reference the base figure by its id over
+hand-placing labelled points at coordinates you compute yourself: the solver
+positions and labels them exactly, which also avoids piling on redundant
+labels. Put any one annotation label on at most a SINGLE element — don't repeat
+the same label across several.
+
   Points and ratios:
     midpoint                  { of: segId | { from, to } }
     point_on_circle           { on, angle }                       # degrees CCW

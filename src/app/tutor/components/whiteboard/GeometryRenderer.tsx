@@ -1555,6 +1555,17 @@ export function GeometryRenderer({
     return computeLabels(points, segments, angles, ptMap, toSvg, { xAxisY, yAxisX });
   }, [points, segments, angles, ptMap, toSvg, range, showAxes]);
 
+  // Suppress the faint auto-"O" origin marker when brain labels crowd the
+  // origin — otherwise it collides with annotation labels placed near (0,0)
+  // (e.g. an "axis of symmetry" / "a = 2" cluster on a conic construction,
+  // observed 2026-06-22). The auto-"O" sits at (ox-6, oy+14); flag a clash when
+  // any resolved label box's center lands within that pocket.
+  const originCrowded = (() => {
+    if (!showAxes) return false;
+    const [ox, oy] = toSvg(0, 0);
+    return labelBoxes.some((lb) => Math.abs(lb.x + lb.w / 2 - ox) < 30 && Math.abs(lb.y - oy) < 20);
+  })();
+
   return (
     <div className={`geometry-renderer ${className}`}>
       {title && (
@@ -1584,7 +1595,8 @@ export function GeometryRenderer({
           points.some((p) =>
             (p.x === 0 && p.y === 0 && (!!p.label || !!p.showCoords))
             || (p.label?.trim().toLowerCase() === 'o')
-          ),
+          )
+          || originCrowded,
         )}
 
         {/* Polygons (filled areas behind lines and points) */}
