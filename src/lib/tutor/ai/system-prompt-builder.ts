@@ -293,6 +293,24 @@ The em-dash IS allowed inside sentence 2 onwards — it's only sentence 1 (the o
 
 After the opener, continue normally with your teaching content and tool calls. The opener is IN ADDITION to your normal response, never a replacement for it. Never load substantive content onto the first sentence — it must stay true and safe to say even if everything after it changes.`;
 
+/** Board-Anchored Speech — flag-gated "show, don't just tell" extension of the
+ *  "whiteboard carries the dense content" principle, from authored cards to the
+ *  conceptual content the brain IMPROVISES on Socratic/explanatory turns. Spliced
+ *  into BASE_PROMPT only when TUTOR_BOARD_ANCHORED_SPEECH === 'true' (SERVER-side
+ *  flag, read at prompt-build time — NOT NEXT_PUBLIC_, so it never reaches the
+ *  client). Flag off ⇒ the sentinel is replaced with '' so the rendered prompt is
+ *  byte-identical to the pre-feature BASE_PROMPT. Cache-safe: build-time constant,
+ *  stable across every session in a deployment. Design: project_tutor_board_anchored_speech. */
+const BOARD_ANCHORED_SPEECH_SENTINEL = '__BOARD_ANCHORED_SPEECH_SENTINEL__';
+const BOARD_ANCHORED_SPEECH_RULE = `**Show, don't just tell — anchor improvised content too.** The principle above (board carries the dense content, voice stays short) governs the content you IMPROVISE while teaching just as much as authored cards — the concepts, relationships, and definitions you voice on a Socratic or explanatory turn. Don't rely on audio (or the chat transcript) alone to carry a point the student must hold onto: when a board anchor would help the student follow or stay attentive, give the spoken idea a lightweight visual companion. Three ways to anchor, chosen by what you're saying:
+- MARK — when you point at something already on the board ("this term", "the part in front of…", "the row/line I just named", "the equation we wrote"), circle, underline, or tick that element (\`tutor_scribble\`) and bring it into focus, so the student's eye lands where your words point. This fires whenever YOU name a part to confirm, single out, or emphasize it — not only when a student answers. If you say "the third one", "this row", "that term", mark it as you say it.
+- WRITE — when you state a relationship, rule, definition, mapping, or an utterance packing two or more distinct ideas, put it on the board as a short expression or line (\`show_equation\` / \`tutor_handwrite\`) rather than only speaking it. A TRANSFORMATION or process you describe — one thing turning into or producing another, a before-and-after — should go up as a short arrow form (A → B), not just narrated.
+- SKETCH — when your words describe something inherently visual or spatial (a shape, a direction, a trend), OR you reach for an ANALOGY or concrete mental image to explain an abstract idea, draw a quick small depiction with the lightest fitting tool instead of painting it in words alone. If nothing graphical fits cleanly, a couple of handwritten labels or a single arrow still beats words-only. If that subject is ALREADY on the board, EVOLVE / annotate the existing figure in place — never spawn a second figure for the same subject.
+
+Calibration: this is NOT every turn. Anchor only when it helps the student follow — stay speech-only for affirmations, transitions, praise, a bare Socratic question that introduces no new content, or content already visible (MARK or refocus it instead of re-rendering). At most ONE anchor per turn unless the content genuinely has distinct parts.
+
+The anchor APPEARS as you speak it. You neither ANNOUNCE it (the banned process-commentary rule still holds — do not say "I'll put this on the board") nor DEFER it nor FRONT-LOAD it: emit the anchor's tool call at the moment you say the thing it depicts — not parked at the end of the turn, and NOT dumped at the start of the turn before the sentence that introduces it. If a LATER sentence is what brings the anchor up, emit the call THERE, even if the board sits bare through the opening sentences.`;
+
 /**
  * Base tutor personality and guidelines
  */
@@ -519,6 +537,8 @@ DO NOT collapse a worked example into a single utterance like "sum divided by co
 **Topic stickiness on "another / harder / easier" requests.** A modifier request keeps the topic of the most recently-attempted problem. The active topic is the one the *prior attempted problem* belongs to — not whatever else happens to be on the whiteboard. To switch topics, the student must say so explicitly (e.g. by naming a different topic, asking to "move on", or asking for a different concept).
 
 The whiteboard carries the dense content so your voice stays short. After calling \`show_problem\`, your voice narration should be a brief prompt only — e.g. *"Here is a problem for you — take a look and tell me when you are ready."* — then wait. Do not begin solving, do not ask "what would you do first?", until the student signals they have read it.
+
+${BOARD_ANCHORED_SPEECH_SENTINEL}
 
 Call the \`show_problem\` tool with these fields:
 - \`statement\` (REQUIRED, never empty): the full problem text, written out as ONE complete string. Tool calls with a missing or empty \`statement\` are rejected by the whiteboard and the student will see nothing. Always write the entire problem in this field before calling the tool.
@@ -1230,6 +1250,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     `${TURN_OPENER_RULE_SENTINEL}\n`,
     process.env.NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER === 'true'
       ? `${TURN_OPENER_RULE}\n\n`
+      : '',
+  );
+
+  // Board-Anchored Speech — "show, don't just tell" for improvised conceptual
+  // content. Spliced in only when TUTOR_BOARD_ANCHORED_SPEECH === 'true' (server-
+  // side flag, default OFF). Flag off ⇒ sentinel replaced with '' ⇒ byte-identical
+  // prompt, cache prefix unchanged. See project_tutor_board_anchored_speech.
+  prompt = prompt.replace(
+    `${BOARD_ANCHORED_SPEECH_SENTINEL}\n`,
+    process.env.TUTOR_BOARD_ANCHORED_SPEECH === 'true'
+      ? `${BOARD_ANCHORED_SPEECH_RULE}\n\n`
       : '',
   );
 

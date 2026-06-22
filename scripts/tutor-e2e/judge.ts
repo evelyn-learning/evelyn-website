@@ -58,8 +58,19 @@ const VERDICT_SCHEMA = {
           errorClass: { type: 'string', enum: ['none', 'figure', 'prose', 'content', 'coherence'] },
           issues: { type: 'array', items: { type: 'string' } },
           detail: { type: 'string' },
+          // Board-Anchored Speech ("show, don't just tell") dimension. Independent
+          // of `pass` (which measures content correctness). See project_tutor_board_anchored_speech.
+          //   anchored          — a helpful MARK/WRITE/SKETCH accompanied speech that warranted one.
+          //   warranted-missing — the speech referenced the board OR introduced a relationship /
+          //                       definition / visual the student must hold, but NO anchor fired.
+          //   not-warranted     — speech-only was correct (affirmation / transition / praise / a bare
+          //                       Socratic question / content already visible).
+          boardAnchored: { type: 'string', enum: ['anchored', 'warranted-missing', 'not-warranted'] },
+          // True if the turn OVER-rendered: a render on a turn that didn't warrant one, or a
+          // duplicate figure spawned for a subject already on the board.
+          overFire: { type: 'boolean' },
         },
-        required: ['turn', 'say', 'pass', 'errorClass', 'issues', 'detail'],
+        required: ['turn', 'say', 'pass', 'errorClass', 'issues', 'detail', 'boardAnchored', 'overFire'],
       },
     },
     summary: { type: 'string' },
@@ -68,8 +79,39 @@ const VERDICT_SCHEMA = {
 } as const;
 
 interface Verdict {
-  turns: Array<{ turn: number; say: string; pass: boolean; errorClass: string; issues: string[]; detail: string }>;
+  turns: Array<{ turn: number; say: string; pass: boolean; errorClass: string; issues: string[]; detail: string; boardAnchored: string; overFire: boolean }>;
   summary: string;
+}
+
+/**
+ * Build a chronological board-activity timeline from the debug-event stream so
+ * the judge can see, per brain turn, which whiteboard tools fired. Interleaves
+ * `brain_turn` markers (turn boundaries) with `tool_call` render events, in
+ * timestamp order. Returns '' if the stream is unavailable. Powers the
+ * board-support / over-fire dimension (project_tutor_board_anchored_speech).
+ */
+function buildBoardTimeline(dir: string): string {
+  let events: Array<{ type?: string; message?: string; timestamp?: string }> = [];
+  try {
+    events = JSON.parse(fs.readFileSync(path.join(dir, 'debug-events.json'), 'utf8'));
+  } catch { return ''; }
+  // `brain_turn` is logged at the END of its turn, so a turn's tool_calls appear
+  // BEFORE its marker. Buffer renders and flush them under the turn that closes.
+  const lines: string[] = [];
+  let turnIdx = -1;
+  let buffered: string[] = [];
+  for (const e of events) {
+    if (e.type === 'tool_call') {
+      buffered.push(`    [render] ${(e.message ?? '').replace(/^Whiteboard tool:\s*/, '')}`);
+    } else if (e.type === 'brain_turn') {
+      turnIdx++;
+      lines.push(`— brain turn ${turnIdx}: ${e.message ?? ''}`);
+      lines.push(...(buffered.length ? buffered : ['    (no whiteboard render this turn)']));
+      buffered = [];
+    }
+  }
+  if (buffered.length) lines.push('— after last marker:', ...buffered);
+  return lines.join('\n');
 }
 
 async function main() {
@@ -125,10 +167,23 @@ IMPORTANT — Socratic teaching is NOT a failure. A tutor that ASKS the student 
 
 Be specific in "detail" — quote the wrong text and give the correct value.
 
+BOARD-ANCHORED SPEECH dimension ("show, don't just tell") — score this SEPARATELY from \`pass\` (it is about whether the tutor VISUALLY anchored its teaching, not about correctness). A BOARD-ACTIVITY TIMELINE is provided below: per brain turn it lists which whiteboard tools fired ([render] lines). Renders that anchor improvised teaching: MARK = scribble (circle/underline an existing element); WRITE = showEquation / handwrite (a short expression, line, definition); SKETCH = a show_*graph / geometry / diagram (a quick visual depiction). Renders like showProblem / showSegmentCard / advanceLesson / markSegmentComplete / addTopicNotesPointer are NOT anchors of improvised speech (they surface authored cards or are bookkeeping). For each tutor turn set:
+- \`boardAnchored\`:
+    "anchored"          — the speech warranted a visual AND a helpful MARK/WRITE/SKETCH fired this turn.
+    "warranted-missing" — the speech REFERENCED something on the board ("this term", "the part in front of…", "look at the equation") OR introduced a relationship/transformation, a definition/rule/mapping to retain, an utterance packing 2+ distinct ideas, or something inherently visual/spatial — but NO anchoring render fired this turn (speech-only).
+    "not-warranted"     — speech-only was correct: an affirmation/transition/praise, a bare Socratic question introducing no new content, or content already visible on the board.
+- \`overFire\`: true if the turn OVER-rendered — a render on a turn that plainly didn't warrant one, or a duplicate figure spawned for a subject already on the board (figure-multiplication). Otherwise false.
+A board-anchored-speech regression looks like many "warranted-missing" turns (under-firing) OR many \`overFire\` turns (spam / duplicate figures). Both are bad; the goal is anchoring exactly when warranted.
+
 Respond with ONLY a JSON object (no prose, no markdown fences) of exactly this shape:
 ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
 
-  const prompt = `SCENARIO: ${summary.scenario} — ${summary.description}\n\nRUBRIC (known answers embedded):\n${rubric}\n\n--- FULL TRANSCRIPT ---\n${transcript}\n--- END TRANSCRIPT ---\n\nGrade each rubric turn. Output ONLY the JSON object.`;
+  const boardTimeline = buildBoardTimeline(dir);
+  const timelineBlock = boardTimeline
+    ? `\n\n--- BOARD-ACTIVITY TIMELINE (whiteboard tools per brain turn) ---\n${boardTimeline}\n--- END TIMELINE ---`
+    : '\n\n(No board-activity timeline available — set boardAnchored="not-warranted" and overFire=false for every turn.)';
+
+  const prompt = `SCENARIO: ${summary.scenario} — ${summary.description}\n\nRUBRIC (known answers embedded):\n${rubric}\n\n--- FULL TRANSCRIPT ---\n${transcript}\n--- END TRANSCRIPT ---${timelineBlock}\n\nGrade each rubric turn. Output ONLY the JSON object.`;
 
   // Use the proven brain model (claude-sonnet-4-6) + plain messages.create —
   // SDK 0.71.2 only types output_config on the beta path and doesn't type
@@ -153,14 +208,25 @@ ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
   console.log(`\n=== JUDGE: ${summary.scenario} ===`);
   const byClass: Record<string, number> = {};
   let fails = 0;
+  let anchored = 0, warrantedMissing = 0, overFires = 0;
   for (const t of verdict.turns) {
     const mark = t.pass ? '✓' : '✗';
     if (!t.pass) fails++;
     byClass[t.errorClass] = (byClass[t.errorClass] ?? 0) + 1;
-    console.log(`  ${mark} turn ${t.turn} [${t.errorClass}] ${t.say.slice(0, 60)}`);
+    if (t.boardAnchored === 'anchored') anchored++;
+    else if (t.boardAnchored === 'warranted-missing') warrantedMissing++;
+    if (t.overFire) overFires++;
+    const anchorMark = t.boardAnchored === 'anchored' ? '✎' : t.boardAnchored === 'warranted-missing' ? '∅' : '·';
+    const fireMark = t.overFire ? ' ⚠over-fire' : '';
+    console.log(`  ${mark} turn ${t.turn} [${t.errorClass}] ${anchorMark}${fireMark} ${t.say.slice(0, 55)}`);
     if (!t.pass || t.errorClass !== 'none') console.log(`      ${t.detail}`);
   }
   console.log(`\n${verdict.turns.length - fails}/${verdict.turns.length} turns pass · errorClass: ${JSON.stringify(byClass)}`);
+  // Board-support (show-don't-tell): of turns that WARRANTED a visual anchor, how
+  // many got one — plus the over-fire count. ✎ anchored · ∅ warranted-missing · · not-warranted.
+  const warranted = anchored + warrantedMissing;
+  const pct = warranted ? Math.round((anchored / warranted) * 100) : 100;
+  console.log(`board-support: ${anchored}/${warranted} warranted turns anchored (${pct}%) · over-fire: ${overFires}`);
   console.log(`summary: ${verdict.summary}`);
   console.log(`[judge] saved judge.json`);
 }

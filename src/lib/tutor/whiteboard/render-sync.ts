@@ -24,6 +24,13 @@ export interface RenderSyncEntry {
    *  uses a shared stall timer + `drainAll`, but the pure decision still
    *  honors a per-entry override when set). Defaults to false. */
   capExpired?: boolean;
+  /** Board-anchor assist (re-anchor): a turn-opening equation/figure held until
+   *  the later sentence that NAMES it plays. While pending it is NOT anchor-
+   *  flushable (its `anchorM` is the stale 0); the orchestrator clears this and
+   *  bumps `anchorM` to the introducing sentence on match. Fail-safe: drainAll /
+   *  capExpired still release it (it surfaces at turn-end, never at the front).
+   *  See board-anchor-assist + project_tutor_board_anchored_speech. */
+  pendingReanchor?: boolean;
 }
 
 export interface FlushOpts {
@@ -54,7 +61,9 @@ export function flushableCount(
   if (opts.paused) return 0;
   let n = 0;
   for (const e of buffer) {
-    const anchorReady = playbackStartedCount >= e.anchorM + 1;
+    // A pending-reanchor entry is held against its (stale) anchor — only the
+    // turn-end drain or the cap may release it until it's been re-anchored.
+    const anchorReady = !e.pendingReanchor && playbackStartedCount >= e.anchorM + 1;
     if (opts.drainAll || anchorReady || e.capExpired) n++;
     else break;
   }

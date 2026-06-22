@@ -300,6 +300,59 @@ async function main() {
     assert.ok(!r.ok && r.reason === 'no_match', 'no_match preserved');
   });
 
+  // ───────── Kind-word-prefix fallback (board-anchored-speech ear-test 2026-06-22) ─────────
+  // The brain prefixes a scribble target with the item kind ("equation X",
+  // "the figure") but feature labels carry only the bare title → must strip+retry.
+  function equationCatalog() {
+    const cat = new WhiteboardCatalog();
+    cat.append({
+      itemId: 'eq1', action: 'showEquation', title: 'Gibbs Free Energy',
+      features: [{ name: 'Gibbs Free Energy', kind: 'equation', description: 'ΔG = ΔH − TΔS' }],
+    });
+    return cat;
+  }
+
+  await test('kind-prefix: "equation Gibbs Free Energy" strips + resolves', () => {
+    const r = equationCatalog().resolveTarget('equation "Gibbs Free Energy"');
+    assert.ok(r.ok && r.itemId === 'eq1', 'stripped "equation" prefix → matched the card');
+  });
+
+  await test('kind-prefix: bare title still resolves (no regression)', () => {
+    const r = equationCatalog().resolveTarget('Gibbs Free Energy');
+    assert.ok(r.ok && r.itemId === 'eq1', 'bare title matches directly');
+  });
+
+  await test('kind-prefix: stopword IN the title — "equation The Master Equation" peels only "equation"', () => {
+    // Regression for the live 2026-06-22 case: title literally "The Master
+    // Equation". Peeling all stopwords → "master equation" misses; peeling one
+    // at a time finds "the master equation" at cut=1.
+    const cat = new WhiteboardCatalog();
+    cat.append({
+      itemId: 'm1', action: 'showEquation', title: 'The Master Equation',
+      features: [{ name: 'The Master Equation', kind: 'equation', description: 'ΔG = ΔH − TΔS' }],
+    });
+    const r = cat.resolveTarget('equation "The Master Equation"');
+    assert.ok(r.ok && r.itemId === 'm1', 'kept "The" in the title, matched');
+  });
+
+  await test('kind-prefix: determiner "the focus" strips + resolves', () => {
+    const r = twoPageCatalog().resolveTarget('the focus');
+    assert.ok(r.ok && r.itemId === 'b1', 'stripped "the" → newest focus');
+  });
+
+  await test('kind-prefix: over-strip guard — all-stopword query never strips to an empty query', () => {
+    // The guard (cut < parts.length-1) must keep the last token, so the retry
+    // is never run on an empty string (which would mean empty_query / a throw).
+    const r = equationCatalog().resolveTarget('the equation');
+    assert.ok(r.ok || r.reason === 'no_match', 'well-formed result');
+    assert.ok(!(('reason' in r) && r.reason === 'empty_query'), 'never collapses to empty_query');
+  });
+
+  await test('kind-prefix: genuine miss after strip still no_match', () => {
+    const r = equationCatalog().resolveTarget('diagram Schrodinger');
+    assert.ok(!r.ok && r.reason === 'no_match', 'stripped but no real match');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

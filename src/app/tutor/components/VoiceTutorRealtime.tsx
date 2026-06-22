@@ -33,6 +33,13 @@ import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import {
+  extractAnchorKeywords,
+  sentenceIntroducesAnchor,
+  detectTransformation,
+  buildTransformationLatex,
+  type AnchorKeywords,
+} from '@/lib/tutor/whiteboard/board-anchor-assist';
+import {
   extractDeclarations,
   extractIntegrand,
   extractFinalAnswerClaim,
@@ -229,6 +236,23 @@ const TUTOR_SKIP_DETERMINISTIC =
 // project_tutor_render_speech_sync.
 const TUTOR_RENDER_SYNC =
   process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
+// Board-anchor structural assists (re-anchor a front-loaded equation/figure to
+// its introducing sentence; auto-write a transformation "A → B" arrow when the
+// tutor narrates one with no board anchor that turn). Client-side, DEFAULT OFF
+// — opt in with NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST=on. Both lean on the pure
+// board-anchor-assist helpers. See project_tutor_board_anchored_speech.
+const TUTOR_BOARD_ANCHOR_ASSIST =
+  process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'on'
+  || process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'true';
+// A command that paints teaching content on the board (vs meta nav like
+// newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
+// tell whether the brain drew anything this turn.
+const BOARD_RENDER_META_ACTIONS = new Set(['newPage', 'goToPage', 'openPage', 'scrollTo', 'clear']);
+const isBoardRenderCommand = (c: unknown): boolean => {
+  const a = String((c as { action?: string })?.action ?? '');
+  if (BOARD_RENDER_META_ACTIONS.has(a)) return false;
+  return a.startsWith('show') || ['scribble', 'handwrite', 'tutorHandwrite', 'drawVector', 'annotate', 'highlight'].includes(a);
+};
 // Render-buffer STALL window. A SINGLE shared timer, reset on every
 // playback-progress signal (sentence-start / drain) and on each buffer
 // add. It fires only when NO progress has happened for this long — a
@@ -896,7 +920,16 @@ export function VoiceTutorRealtime({
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
     anchorM: number;
+    // Board-anchor re-anchor (assist): a turn-opening equation/figure held
+    // until the sentence that names it plays. anchorKeywords drives the match.
+    pendingReanchor?: boolean;
+    anchorKeywords?: AnchorKeywords;
   }>>([]);
+  // Board-anchor assist, per turn: the narration spoken so far (for the
+  // transformation-arrow fallback) + whether ANY board render fired this turn
+  // (so the fallback only fires when the brain drew nothing). Reset at turn start.
+  const turnNarrationRef = useRef<string[]>([]);
+  const boardRenderFiredThisTurnRef = useRef(false);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2064,13 +2097,31 @@ export function VoiceTutorRealtime({
   // sentences dispatched to TTS so far this turn.
   const dispatchVisualRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
   dispatchVisualRef.current = (processed: WhiteboardCommand[]) => {
+    // Assist bookkeeping: record that the brain drew teaching content this turn
+    // (any show_* / scribble / handwrite), so the transformation-arrow fallback
+    // only fires when the board stayed bare. Meta commands (newPage/scrollTo)
+    // don't count. Tracked regardless of render-sync on/off.
+    if (TUTOR_BOARD_ANCHOR_ASSIST && processed.some(isBoardRenderCommand)) {
+      boardRenderFiredThisTurnRef.current = true;
+    }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
       return;
     }
     const anchorM = ttsDispatchedCountRef.current;
-    renderBufferRef.current.push({ processed, anchorM });
-    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}`);
+    // Re-anchor: a turn-OPENING (anchorM===0) equation/figure is held until the
+    // later sentence that names it plays (pendingReanchor) instead of surfacing
+    // during the opening sentence. Fail-safe: drain/cap release it at turn-end.
+    let pendingReanchor = false;
+    let anchorKeywords: AnchorKeywords | undefined;
+    if (TUTOR_BOARD_ANCHOR_ASSIST && anchorM === 0) {
+      for (const c of processed) {
+        const kw = extractAnchorKeywords(c);
+        if (kw) { anchorKeywords = kw; pendingReanchor = true; break; }
+      }
+    }
+    renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords });
+    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}`);
     armRenderStall();
     // A boundary may already have passed (e.g. anchor sentence completed
     // before this batch finished its synchronous validation) — try now.
@@ -5600,6 +5651,9 @@ export function VoiceTutorRealtime({
     ttsPlaybackStartedCountRef.current = 0;
     renderBufferPausedRef.current = false;
     renderSyncActiveRef.current = true;
+    // Board-anchor assist: fresh per-turn narration + "brain drew nothing" flag.
+    turnNarrationRef.current = [];
+    boardRenderFiredThisTurnRef.current = false;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -6403,6 +6457,20 @@ export function VoiceTutorRealtime({
           pushTtsScriptForPerception(s);
           speakTextRef.current?.(s);
           audibleSentenceCount++;
+          if (TUTOR_BOARD_ANCHOR_ASSIST) {
+            turnNarrationRef.current.push(s);
+            // Re-anchor: if a held turn-opening anchor is NAMED by this sentence,
+            // bind it here so it flushes as this sentence plays. anchorM =
+            // sentences dispatched BEFORE this one = the current (pre-increment)
+            // count, so it becomes flushable when this sentence starts.
+            for (const e of renderBufferRef.current) {
+              if (e.pendingReanchor && e.anchorKeywords && sentenceIntroducesAnchor(s, e.anchorKeywords)) {
+                e.anchorM = ttsDispatchedCountRef.current;
+                e.pendingReanchor = false;
+                onDebugEvent?.('render_sync_reanchor', `anchor→${e.anchorM} "${s.slice(0, 40)}"`);
+              }
+            }
+          }
           // Render↔speech sync: a sentence just reached TTS. Renders
           // buffered AFTER this point anchor to the new count, so they
           // flush only once this sentence (and all before it) has played.
@@ -9204,6 +9272,27 @@ export function VoiceTutorRealtime({
           sweepDeferred(staleIds);
           console.warn(`[brain-orchestrator] kill-recovery: rolled back ${staleIds.length} unconfirmed render(s) [${staleIds.join(', ')}]`);
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
+        }
+      }
+      // Board-anchor assist (transformations only): the brain narrated a clean
+      // "A → B" transformation but drew NOTHING on the board this turn — auto-
+      // write the arrow so it's shown, not just spoken. Conservative detector
+      // (explicit-A patterns, figurative "becomes X" excluded), fires once per
+      // turn, gated OFF by default. Direct dispatch = a terminal annotation
+      // (not catalogued); fail-safe = render nothing when no clean match.
+      if (
+        TUTOR_BOARD_ANCHOR_ASSIST
+        && !boardRenderFiredThisTurnRef.current
+        && turnNarrationRef.current.length > 0
+      ) {
+        const xform = detectTransformation(turnNarrationRef.current.join(' '));
+        if (xform) {
+          onWhiteboardCommand([{
+            action: 'showEquation',
+            latex: buildTransformationLatex(xform),
+            label: 'Transformation',
+          } as WhiteboardCommand]);
+          onDebugEvent?.('board_anchor_transformation_arrow', `${xform.from} → ${xform.to}`);
         }
       }
       // Render↔speech sync: the stream is done — stop buffering NEW batches.

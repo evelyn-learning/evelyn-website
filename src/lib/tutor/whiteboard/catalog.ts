@@ -237,6 +237,17 @@ export function normalizeToken(s: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/** Leading item-KIND nouns and determiners the brain prepends to a scribble
+ *  target ("equation Gibbs Free Energy", "the figure", "graph y=x^2"). Catalog
+ *  feature labels carry only the bare title, so resolveTarget strips these as a
+ *  last-resort fallback after a clean miss. Order-independent (Set membership).
+ *  See resolveTarget's kind-word-prefix fallback. */
+const KIND_PREFIX_STOPWORDS = new Set([
+  'the', 'this', 'that',
+  'equation', 'eqn', 'formula', 'expression',
+  'figure', 'fig', 'diagram', 'graph', 'plot', 'chart', 'table', 'card', 'image',
+]);
+
 /**
  * When a manifest entry doesn't declare explicit labels, synthesize a
  * minimal set so the feature still answers to:
@@ -863,6 +874,36 @@ export class WhiteboardCatalog {
     }
     if (matches === null) {
       matches = this.collectMatches(this.items, raw, q);
+    }
+
+    // Kind-word-prefix fallback. The brain habitually prefixes a scribble
+    // target with the item KIND or a determiner — "equation Gibbs Free Energy",
+    // "the figure", "diagram First Law" — but catalog feature labels carry only
+    // the bare title (showEquation registers the label "Gibbs Free Energy", not
+    // "equation Gibbs Free Energy"). The normalized query keeps the prefix, so
+    // it misses. Strip leading kind/determiner words and retry over the full
+    // board. Fires ONLY after a clean miss, so it can never override a real
+    // match. (Observed 2026-06-22 board-anchored-speech ear-test: targets
+    // `equation "Gibbs Free Energy"` and `equation "First Law of Thermodynamics"`
+    // silent-dropped no_match while the equation card sat on the board — every
+    // conceptual MARK on an equation/figure card was being lost this way.)
+    if (matches.size === 0) {
+      // Peel ONE leading stopword at a time and retry, accepting the FIRST
+      // (least-stripped) match. Peeling all stopwords at once is wrong when a
+      // stopword is genuinely part of the title — e.g. target
+      // `equation "The Master Equation"` must strip only "equation" and match
+      // the label "The Master Equation", NOT strip "the" too and miss. The loop
+      // condition keeps the final token, so the retry query is never empty.
+      const parts = q.split('-');
+      for (let cut = 1; cut < parts.length && KIND_PREFIX_STOPWORDS.has(parts[cut - 1]); cut++) {
+        const strippedQ = parts.slice(cut).join('-');
+        const strippedRaw = parts.slice(cut).join(' ');
+        const retry = this.collectMatches(this.items, strippedRaw, strippedQ);
+        if (retry.size > 0) {
+          const newest = Array.from(retry.values())[0];
+          return this.ok(newest.item, newest.feature);
+        }
+      }
     }
 
     if (matches.size === 0) {

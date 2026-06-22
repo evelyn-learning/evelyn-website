@@ -95,6 +95,29 @@ function main() {
     assert.equal(flushableCount(b, 5, { paused: true, drainAll: true }), 0);
   });
 
+  // ── Board-anchor re-anchor: pendingReanchor holds against the stale anchor ──
+  test('pendingReanchor: NOT anchor-flushable even when playback is way ahead', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }];
+    assert.equal(flushableCount(b, 9), 0, 'held at front despite anchorM=0 satisfied');
+  });
+  test('pendingReanchor: drainAll still releases it (fail-safe to turn-end)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }];
+    assert.equal(flushableCount(b, 0, { drainAll: true }), 1);
+  });
+  test('pendingReanchor: capExpired still releases it (stall backstop)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true, capExpired: true }];
+    assert.equal(flushableCount(b, 0), 1);
+  });
+  test('pendingReanchor cleared + anchorM bumped → flushes at the new anchor', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 3, pendingReanchor: false }];
+    assert.equal(flushableCount(b, 3), 0, 'sentence 4 not started yet');
+    assert.equal(flushableCount(b, 4), 1, 'sentence 4 started → flush');
+  });
+  test('pendingReanchor front entry holds later ready entries (FIFO)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }, { anchorM: 1 }];
+    assert.equal(flushableCount(b, 9), 0, 'second entry held behind the pending front');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }
