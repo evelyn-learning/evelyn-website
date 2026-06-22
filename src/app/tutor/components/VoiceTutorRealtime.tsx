@@ -31,6 +31,7 @@ import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
+import { validateGraphLinearConsistency } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -2805,14 +2806,21 @@ export function VoiceTutorRealtime({
         // mislabeled as an intersection of two curves), and backfill real
         // intersections when we can compute them deterministically.
         const afterIntersections = validateIntersectionPoints(afterConic);
-        if (afterIntersections !== original) {
+        // Slope guard: refit a straight line whose slope is inconsistent with
+        // its own labeled points (e.g. V=0.667·T plotted against (300,2)/(600,4)
+        // — should be 0.00667·T). See graph-consistency-validator.
+        const afterLinear = validateGraphLinearConsistency(afterIntersections);
+        if (afterLinear !== original) {
           if (afterConic !== original) {
             console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
           }
           if (afterIntersections !== afterConic) {
             console.log('[VoiceTutorRealtime] Intersection validator adjusted points');
           }
-          return [{ ...cmd, data: afterIntersections } as WhiteboardCommand];
+          if (afterLinear !== afterIntersections) {
+            console.log('[VoiceTutorRealtime] Linear-consistency guard refit slope to labeled points');
+          }
+          return [{ ...cmd, data: afterLinear } as WhiteboardCommand];
         }
       }
       return [cmd];

@@ -25,6 +25,14 @@ export interface DesmosGraphRef {
   screenshot: (opts?: { width?: number; height?: number }) => string | null;
 }
 
+// Above this requested x:y span ratio, a graph's axes are too different in
+// scale to be a "shape" — locking equal units-per-pixel would blow the smaller
+// axis up and clip the curve. Such graphs (V vs T, data vs time) keep the
+// brain's requested bounds. Shapes (circles, conics, geometry) sit well under
+// this and still aspect-lock. ~6× chosen so a tall parabola/ellipse still locks
+// but a disparate-unit data graph does not.
+const ASPECT_LOCK_MAX_SPAN_RATIO = 6;
+
 interface DesmosGraphRendererProps {
   type: string;
   data: GraphData;
@@ -154,6 +162,18 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
       // (pixelWidth : pixelHeight) → equal units-per-pixel on both axes →
       // circles stay circular and tangents meet at the true angle. Re-apply on
       // resize (e.g. whiteboard fullscreen toggle).
+      //
+      // BUT equal units-per-pixel only makes sense when the two axes are on
+      // COMPARABLE scales — i.e. the graph is a SHAPE where aspect fidelity
+      // matters. For a data/relationship graph whose axes are wildly different
+      // units (e.g. Volume[L] 0–5 vs Temperature[K] 0–700), forcing uniform
+      // aspect blows the smaller axis up ~100× → the curve shoots off the top
+      // and the labeled points collapse onto the x-axis (observed 2026-06-22
+      // Charles's-Law V–T graph cut off, Console2). So only equalize when the
+      // requested spans are within ASPECT_LOCK_MAX_SPAN_RATIO of each other;
+      // beyond that, honor the brain's framing as-is (it sized the box to fit
+      // the data). A circle/parabola/geometry graph has comparable spans (ratio
+      // ~1–3) and still locks; a V–T / time-series graph (ratio ≫) does not.
       const container = containerRef.current;
       const applyUniformBounds = () => {
         const w = container.clientWidth, h = container.clientHeight;
@@ -162,9 +182,12 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         let xSpan = Math.abs(data.xRange[1] - data.xRange[0]);
         let ySpan = Math.abs(data.yRange[1] - data.yRange[0]);
         if (w > 0 && h > 0 && xSpan > 0 && ySpan > 0) {
-          const pxRatio = w / h;
-          if (xSpan / ySpan < pxRatio) xSpan = ySpan * pxRatio;
-          else ySpan = xSpan / pxRatio;
+          const spanRatio = Math.max(xSpan / ySpan, ySpan / xSpan);
+          if (spanRatio <= ASPECT_LOCK_MAX_SPAN_RATIO) {
+            const pxRatio = w / h;
+            if (xSpan / ySpan < pxRatio) xSpan = ySpan * pxRatio;
+            else ySpan = xSpan / pxRatio;
+          }
         }
         calculator.setMathBounds({
           left: cx - xSpan / 2,
