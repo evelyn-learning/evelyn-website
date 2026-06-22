@@ -433,6 +433,58 @@ function main() {
     hasPointNear(out, 2, 0); hasPointNear(out, -2, 0);
   });
 
+  // ── resolveRefId: generic object-where-id-expected coercion (2026-06-22) ──
+  // The brain occasionally passes an OBJECT where a step-id string is expected
+  // (JEE parabola → "Expected circle '[object Object]'", which failed the whole
+  // construction). The solver now coerces it generically.
+  test('coerce: INLINE conic def passed as point_on_conic.on registers + resolves', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        // `on` is an inline parabola OBJECT, not an id — used to throw "[object Object]".
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'V', kind: 'point_on_conic', on: { kind: 'parabola', vertex: 'O', focalLength: 1, opens: 'right' }, at: [1, 2] } as any,
+      ],
+    });
+    const v = findPt(out, 'V');
+    approx(v.x, 1); approx(v.y, 2); // point lands ON the inlined parabola
+  });
+
+  test('coerce: { id } wrapper object resolves to the inner id', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'p', kind: 'parabola', vertex: 'O', focalLength: 1, opens: 'right' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'lr', kind: 'latus_rectum', conic: { id: 'p' } } as any,
+      ],
+    });
+    assert.ok(hasSeg(out, 'lr_a', 'lr_b'), 'latus_rectum resolved via the { id } wrapper');
+  });
+
+  test('coerce: inline conic on normal_at.on (the exact failure shape) now works', () => {
+    const out = solveGeometry({
+      given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'P', kind: 'point', x: 1, y: 2 }],
+      steps: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: 'n', kind: 'normal_at', on: { kind: 'parabola', vertex: 'O', focalLength: 1, opens: 'right' }, point: 'P' } as any,
+      ],
+    });
+    assert.ok(segsTouching(out, 'n') >= 0, 'normal_at on an inlined conic did not throw');
+    assert.ok(out.segments.length > 0, 'a normal segment was produced');
+  });
+
+  test('coerce: a bare partial object (no kind/id) still throws a CLEAR error', () => {
+    assert.throws(
+      () => solveGeometry({
+        given: [{ id: 'O', kind: 'point', x: 0, y: 0 }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        steps: [{ id: 'lr', kind: 'latus_rectum', conic: { foo: 'bar' } } as any],
+      }),
+      /expected a step id/,
+    );
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

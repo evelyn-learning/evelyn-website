@@ -906,12 +906,45 @@ function pt(state: State, ref: string | { x: number; y: number } | undefined): R
   if (!o || o.kind !== 'point') throw new Error(`Expected point "${ref}", got ${o?.kind ?? 'undefined'}`);
   return o;
 }
-function circ(state: State, id: string): ResolvedCircle {
+/**
+ * Normalize ANY shape reference to a string step-id — GENERIC, every step kind.
+ * The brain occasionally passes an OBJECT where a step-id string is expected
+ * (observed 2026-06-22, JEE parabola: a conic ref arrived as an inline object →
+ * "Expected circle '[object Object]', got undefined", which failed the whole
+ * construction and dropped the curve on retry). Coercions, in order:
+ *   1. INLINE DEFINITION `{ kind, ... }` → register it as a step (its own `id`
+ *      if given, else a synthesized one) and reference that id. Lets the brain
+ *      inline a shape anywhere a ref is expected, for ANY kind.
+ *   2. WRAPPER `{ id | ref | name: "x" }` → unwrap to the inner id.
+ *   3. string → use as-is (the normal path; zero behavior change).
+ * Anything else throws a CLEAR, actionable error so a retry can fix it.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resolveRefId(state: State, ref: any, ctx: string): string {
+  if (typeof ref === 'string') return ref;
+  if (ref && typeof ref === 'object') {
+    if (typeof ref.kind === 'string') {
+      const id = typeof ref.id === 'string' && ref.id ? ref.id : `__inline_${ref.kind}_${state.byId.size}`;
+      if (!state.byId.has(id)) solveStep({ ...ref, id } as Step, state);
+      return id;
+    }
+    for (const k of ['id', 'ref', 'name'] as const) {
+      if (typeof ref[k] === 'string' && ref[k]) return ref[k] as string;
+    }
+  }
+  throw new Error(
+    `${ctx}: expected a step id (string), got ${JSON.stringify(ref)}. ` +
+    `Reference a shape by its string id, or inline its full { kind, ... } definition — not a bare partial object.`,
+  );
+}
+function circ(state: State, ref: unknown): ResolvedCircle {
+  const id = resolveRefId(state, ref, 'circle reference');
   const o = state.byId.get(id);
   if (!o || o.kind !== 'circle') throw new Error(`Expected circle "${id}", got ${o?.kind ?? 'undefined'}`);
   return o;
 }
-function lineLike(state: State, id: string): { ax: number; ay: number; bx: number; by: number } {
+function lineLike(state: State, ref: unknown): { ax: number; ay: number; bx: number; by: number } {
+  const id = resolveRefId(state, ref, 'line reference');
   const o = state.byId.get(id);
   if (!o) throw new Error(`Unknown reference "${id}"`);
   if (o.kind === 'line') {
@@ -1345,12 +1378,13 @@ function solveTangentAt(step: StepTangentAt, state: State): void {
   // Conic tangent at an on-curve point = the polar line at that point.
   // Reuses the canonical-coord machinery; the brain was hand-rolling these
   // (wrong endpoints) for lack of a primitive (2026-06-19 Console5 Img2/3).
-  const target = state.byId.get(step.on);
+  const onId = resolveRefId(state, step.on, 'tangent_at.on');
+  const target = state.byId.get(onId);
   if (target && target.kind === 'conic') {
     solveConicTangentAt(step, target, state);
     return;
   }
-  const c = circ(state, step.on);
+  const c = circ(state, onId);
   const center = pt(state, c.center);
   const P = pt(state, step.point);
   const rx = P.x - center.x;
@@ -1416,12 +1450,13 @@ function solveConicTangentAt(step: StepTangentAt, c: ResolvedConic, state: State
 /** Normal at an on-curve point. Circle: along the radius (center → P). Conic:
  *  along the gradient ∇F (perpendicular to the tangent). Mirrors tangent_at. */
 function solveNormalAt(step: StepNormalAt, state: State): void {
-  const target = state.byId.get(step.on);
+  const onId = resolveRefId(state, step.on, 'normal_at.on');
+  const target = state.byId.get(onId);
   if (target && target.kind === 'conic') {
     solveConicNormalAt(step, target, state);
     return;
   }
-  const c = circ(state, step.on);
+  const c = circ(state, onId);
   const center = pt(state, c.center);
   const P = pt(state, step.point);
   const rx = P.x - center.x, ry = P.y - center.y;
@@ -1569,8 +1604,8 @@ function solveParallelThrough(step: StepParallelThrough, state: State): void {
 }
 
 function solveIntersect(step: StepIntersect, state: State): void {
-  const a = state.byId.get(step.of[0]);
-  const b = state.byId.get(step.of[1]);
+  const a = state.byId.get(resolveRefId(state, step.of[0], 'intersect.of[0]'));
+  const b = state.byId.get(resolveRefId(state, step.of[1], 'intersect.of[1]'));
   if (!a || !b) throw new Error(`intersect "${step.id}": unknown reference`);
   const isLineLike = (o: Resolved) => o.kind === 'line' || o.kind === 'segment';
   if (isLineLike(a) && isLineLike(b)) {
@@ -2027,7 +2062,7 @@ function solveExcircle(step: StepExcircle, state: State): void {
 
 function solveTangentsFromExternal(step: StepTangentsFromExternal, state: State): void {
   // `on` is polymorphic: circle OR conic (the shared helper handles both).
-  const target = state.byId.get(step.on);
+  const target = state.byId.get(resolveRefId(state, step.on, 'on'));
   if (!target || (target.kind !== 'circle' && target.kind !== 'conic')) {
     throw new Error(`tangents_from_external "${step.id}": "${step.on}" is not a circle or conic`);
   }
@@ -2303,7 +2338,8 @@ function solveMedian(step: StepMedian, state: State): void {
 
 // ─── Tier 3 — conic solvers ───────────────────────────────────────────────────
 
-function conic(state: State, id: string): ResolvedConic {
+function conic(state: State, ref: unknown): ResolvedConic {
+  const id = resolveRefId(state, ref, 'conic reference');
   const o = state.byId.get(id);
   if (!o || o.kind !== 'conic') throw new Error(`expected conic "${id}", got ${o?.kind ?? 'undefined'}`);
   return o;
@@ -2718,7 +2754,7 @@ function tangentPointsFromExternal(
  * vertex to the external point) → reject-with-hint, so it self-corrects.
  */
 function solveChordOfContact(step: StepChordOfContact, state: State): void {
-  const target = state.byId.get(step.conic);
+  const target = state.byId.get(resolveRefId(state, step.conic, 'chord_of_contact.conic'));
   if (!target || (target.kind !== 'conic' && target.kind !== 'circle')) {
     throw new Error(
       `chord_of_contact "${step.id}": "${step.conic}" is not a conic or circle in this command — ` +
