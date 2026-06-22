@@ -69,8 +69,16 @@ const VERDICT_SCHEMA = {
           // True if the turn OVER-rendered: a render on a turn that didn't warrant one, or a
           // duplicate figure spawned for a subject already on the board.
           overFire: { type: 'boolean' },
+          // Answer-equivalence dimension (P3). Independent of `pass`. Scores how the
+          // tutor judged a student's VOLUNTEERED answer on THIS turn:
+          //   n/a            — the student didn't volunteer a checkable answer this turn.
+          //   correct-judge  — judged it right when right, or wrong when genuinely wrong.
+          //   false-ding     — REJECTED / "not quite" / re-derived a student answer that the rubric
+          //                    says is CORRECT or equivalent (different form, paraphrase, ahead-of-step).
+          //   rubber-stamp   — AFFIRMED a student answer that the rubric says is genuinely WRONG.
+          answerJudge: { type: 'string', enum: ['n/a', 'correct-judge', 'false-ding', 'rubber-stamp'] },
         },
-        required: ['turn', 'say', 'pass', 'errorClass', 'issues', 'detail', 'boardAnchored', 'overFire'],
+        required: ['turn', 'say', 'pass', 'errorClass', 'issues', 'detail', 'boardAnchored', 'overFire', 'answerJudge'],
       },
     },
     summary: { type: 'string' },
@@ -79,7 +87,7 @@ const VERDICT_SCHEMA = {
 } as const;
 
 interface Verdict {
-  turns: Array<{ turn: number; say: string; pass: boolean; errorClass: string; issues: string[]; detail: string; boardAnchored: string; overFire: boolean }>;
+  turns: Array<{ turn: number; say: string; pass: boolean; errorClass: string; issues: string[]; detail: string; boardAnchored: string; overFire: boolean; answerJudge: string }>;
   summary: string;
 }
 
@@ -175,6 +183,13 @@ BOARD-ANCHORED SPEECH dimension ("show, don't just tell") — score this SEPARAT
 - \`overFire\`: true if the turn OVER-rendered — a render on a turn that plainly didn't warrant one, or a duplicate figure spawned for a subject already on the board (figure-multiplication). Otherwise false.
 A board-anchored-speech regression looks like many "warranted-missing" turns (under-firing) OR many \`overFire\` turns (spam / duplicate figures). Both are bad; the goal is anchoring exactly when warranted.
 
+ANSWER-EQUIVALENCE dimension (\`answerJudge\`, P3) — score how the tutor judged a student's VOLUNTEERED answer THIS turn, using the rubric's known-correct answer:
+- "n/a" — the student did not volunteer a checkable answer on this turn.
+- "correct-judge" — the tutor judged correctly: affirmed a right/equivalent answer, OR corrected a genuinely wrong one.
+- "false-ding" — the tutor REJECTED / said "not quite" / "close" / re-derived-the-long-way a student answer that is actually CORRECT or EQUIVALENT to the target (a different algebraic form, a paraphrase, a synonymous term, or a correct answer stated AHEAD of the expected step). THIS IS THE BUG P3 fixes.
+- "rubber-stamp" — the tutor AFFIRMED ("yes"/"exactly"/"right") a student answer that is genuinely WRONG per the rubric. This is the opposite failure (the anti-rubber-stamp control).
+Judge equivalence by VALUE/MEANING, not surface form: e.g. "y² = −4·2·(x+9/8)" IS equivalent to the standard form "y² = −8x − 9"; "the executive branch" IS equivalent to "the president's branch". A turn that affirms an equivalent answer is "correct-judge", NOT "false-ding".
+
 Respond with ONLY a JSON object (no prose, no markdown fences) of exactly this shape:
 ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
 
@@ -209,6 +224,7 @@ ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
   const byClass: Record<string, number> = {};
   let fails = 0;
   let anchored = 0, warrantedMissing = 0, overFires = 0;
+  let falseDings = 0, rubberStamps = 0;
   for (const t of verdict.turns) {
     const mark = t.pass ? '✓' : '✗';
     if (!t.pass) fails++;
@@ -216,10 +232,13 @@ ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
     if (t.boardAnchored === 'anchored') anchored++;
     else if (t.boardAnchored === 'warranted-missing') warrantedMissing++;
     if (t.overFire) overFires++;
+    if (t.answerJudge === 'false-ding') falseDings++;
+    else if (t.answerJudge === 'rubber-stamp') rubberStamps++;
     const anchorMark = t.boardAnchored === 'anchored' ? '✎' : t.boardAnchored === 'warranted-missing' ? '∅' : '·';
     const fireMark = t.overFire ? ' ⚠over-fire' : '';
-    console.log(`  ${mark} turn ${t.turn} [${t.errorClass}] ${anchorMark}${fireMark} ${t.say.slice(0, 55)}`);
-    if (!t.pass || t.errorClass !== 'none') console.log(`      ${t.detail}`);
+    const judgeMark = t.answerJudge === 'false-ding' ? ' ⚠false-ding' : t.answerJudge === 'rubber-stamp' ? ' ⚠rubber-stamp' : '';
+    console.log(`  ${mark} turn ${t.turn} [${t.errorClass}] ${anchorMark}${fireMark}${judgeMark} ${t.say.slice(0, 55)}`);
+    if (!t.pass || t.errorClass !== 'none' || t.answerJudge === 'false-ding' || t.answerJudge === 'rubber-stamp') console.log(`      ${t.detail}`);
   }
   console.log(`\n${verdict.turns.length - fails}/${verdict.turns.length} turns pass · errorClass: ${JSON.stringify(byClass)}`);
   // Board-support (show-don't-tell): of turns that WARRANTED a visual anchor, how
@@ -227,6 +246,9 @@ ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
   const warranted = anchored + warrantedMissing;
   const pct = warranted ? Math.round((anchored / warranted) * 100) : 100;
   console.log(`board-support: ${anchored}/${warranted} warranted turns anchored (${pct}%) · over-fire: ${overFires}`);
+  // Answer-equivalence (P3): false-dings (rejected a correct/equivalent answer) should be 0;
+  // rubber-stamps (affirmed a genuinely wrong answer) is the anti-regression control — also 0.
+  console.log(`answer-judge: false-ding: ${falseDings} · rubber-stamp: ${rubberStamps}`);
   console.log(`summary: ${verdict.summary}`);
   console.log(`[judge] saved judge.json`);
 }

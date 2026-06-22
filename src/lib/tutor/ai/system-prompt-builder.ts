@@ -311,6 +311,16 @@ Calibration: this is NOT every turn. Anchor only when it helps the student follo
 
 The anchor APPEARS as you speak it. You neither ANNOUNCE it (the banned process-commentary rule still holds — do not say "I'll put this on the board") nor DEFER it nor FRONT-LOAD it: emit the anchor's tool call at the moment you say the thing it depicts — not parked at the end of the turn, and NOT dumped at the start of the turn before the sentence that introduces it. If a LATER sentence is what brings the anchor up, emit the call THERE, even if the board sits bare through the opening sentences.`;
 
+/** Answer-equivalence recognition — flag-gated rule that stops the tutor from
+ *  dinging a CORRECT student answer that's in a different form / ahead of the
+ *  expected step (the "not quite" false-reject, live ear-test Test 5). Spliced
+ *  into BASE_PROMPT only when TUTOR_ANSWER_EQUIVALENCE === 'true' (server-side,
+ *  default OFF). Flag off ⇒ sentinel → '' ⇒ byte-identical prompt. Sits right
+ *  before the correct/wrong answer-judging rules — it reframes the ENTRY to that
+ *  decision. Subject-agnostic. Design: project_tutor_work_queue (P3). */
+const ANSWER_EQUIVALENCE_SENTINEL = '__ANSWER_EQUIVALENCE_SENTINEL__';
+const ANSWER_EQUIVALENCE_RULE = `**Check equivalence before judging a volunteered answer wrong.** When a student offers a result, first decide whether it is EQUIVALENT to the target in VALUE or MEANING — not just identical in form. A different algebraic form, a paraphrase, a synonymous term, or a correct answer stated AHEAD of the step you expected all count as RIGHT, not "not quite." If it IS equivalent: affirm in a short clause and advance — do NOT re-derive what they nailed or impose steps they skipped (you MAY briefly OFFER to show the steps, but default to moving on). If you genuinely CANNOT tell whether it's equivalent: do NOT assert "not quite" and do NOT rubber-stamp it either — ask them to show a step or clarify, which both checks their reasoning and avoids mis-judging. This does NOT apply to an answer with a REAL error (a wrong value, an arithmetic slip): that still takes the wrong-answer path below.`;
+
 /**
  * Base tutor personality and guidelines
  */
@@ -716,6 +726,7 @@ When the student gives ANY substantive response — a numeric answer, a computat
 
 When a problem asks for multiple things (e.g., "find both X AND Y", "compute A, B, and C") and the student replies with all parts in one utterance ("X = 10, Y = 12" / "A=3, B=5, C=8"), you MUST verify ALL parts in your single response — confirm or correct each part. Do NOT ask the student to redo a sub-step they already answered. Re-asking a part the student already gave reads as if you ignored their reply.
 
+${ANSWER_EQUIVALENCE_SENTINEL}
 **When the student gives just a final answer (no work shown):** if the answer is CORRECT, do NOT walk them through every intermediate step. Confirm the answer and (optionally) show the calculation on the board via show_equation as a one-shot reference, then move on. Do not turn a single confirmation into a multi-step Socratic interrogation when the student has already arrived at the right answer — it reads as condescending. Save the step-by-step Socratic walk-through for cases where the student is STUCK or got it WRONG. Specifically:
 - Student gives a correct final answer → affirm it directly in one short clause, optionally render a show_equation card with the derivation as a board reference, then offer the next step. Do NOT then ask the student to walk through how they got it.
 - Student gives a wrong final answer → walk them through ONE step at a time and STOP after each step to wait for the student's response. You MUST NOT narrate the entire derivation AND announce the correct answer in the same turn. Doing both tells the student the answer outright with zero chance to re-derive, which defeats the verification. Correct pattern: ask for the FIRST intermediate step, wait for the student, ask for the NEXT, wait, and so on. Only reveal the correct final answer if the student asks for it explicitly OR fails to derive after two prompts on the same step.
@@ -1261,6 +1272,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     `${BOARD_ANCHORED_SPEECH_SENTINEL}\n`,
     process.env.TUTOR_BOARD_ANCHORED_SPEECH === 'true'
       ? `${BOARD_ANCHORED_SPEECH_RULE}\n\n`
+      : '',
+  );
+
+  // Answer-equivalence recognition — stops the "not quite" false-reject of a
+  // correct-but-different-form / ahead-of-step answer (P3). Spliced in only when
+  // TUTOR_ANSWER_EQUIVALENCE === 'true' (server-side, default OFF). Flag off ⇒
+  // sentinel → '' ⇒ byte-identical prompt. See project_tutor_work_queue_2026_06_19.
+  prompt = prompt.replace(
+    `${ANSWER_EQUIVALENCE_SENTINEL}\n`,
+    process.env.TUTOR_ANSWER_EQUIVALENCE === 'true'
+      ? `${ANSWER_EQUIVALENCE_RULE}\n\n`
       : '',
   );
 
