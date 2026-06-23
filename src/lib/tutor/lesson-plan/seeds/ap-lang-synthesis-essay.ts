@@ -12,8 +12,8 @@ export const SEED_AP_LANG_SYNTHESIS_ESSAY: LessonPlan = {
   title: 'Synthesis essay strategy (AP Lang Q1)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

@@ -11,8 +11,8 @@ export const SEED_MCAT_STRATEGY: LessonPlan = {
   title: 'MCAT strategy: format, sections, prep approach',
   curriculum: 'CCSS',
   grade: '12',
-  subject: 'sci',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'mcat',
   locale: 'en',
   los: [
     {

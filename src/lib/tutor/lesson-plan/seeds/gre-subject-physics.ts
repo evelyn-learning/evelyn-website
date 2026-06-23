@@ -9,8 +9,8 @@ export const SEED_GRE_SUBJECT_PHYSICS: LessonPlan = {
   title: 'GRE Physics Subject Test strategy',
   curriculum: 'ETS',
   grade: '12',
-  subject: 'sci',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'gre-physics-subject',
   locale: 'en',
   los: [
     {

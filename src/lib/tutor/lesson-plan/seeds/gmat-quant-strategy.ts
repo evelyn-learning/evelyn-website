@@ -12,8 +12,8 @@ export const SEED_GMAT_QUANT_STRATEGY: LessonPlan = {
   title: 'GMAT Quantitative: problem solving + data sufficiency',
   curriculum: 'CCSS',
   grade: '12',
-  subject: 'math',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'gmat-quant',
   locale: 'en',
   los: [
     {

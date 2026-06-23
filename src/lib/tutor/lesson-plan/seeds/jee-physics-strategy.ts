@@ -9,8 +9,8 @@ export const SEED_JEE_PHYSICS_STRATEGY: LessonPlan = {
   title: 'JEE Physics strategy',
   curriculum: 'NCERT',
   grade: '11',
-  subject: 'sci',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'jee-physics',
   locale: 'en',
   los: [
     {

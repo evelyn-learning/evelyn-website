@@ -9,8 +9,8 @@ export const SEED_AP_ITALIAN_STRATEGY: LessonPlan = {
   title: 'AP Italian Language exam strategy',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

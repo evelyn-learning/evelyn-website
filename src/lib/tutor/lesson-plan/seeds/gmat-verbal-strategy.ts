@@ -12,8 +12,8 @@ export const SEED_GMAT_VERBAL_STRATEGY: LessonPlan = {
   title: 'GMAT Verbal: SC, CR, RC',
   curriculum: 'CCSS',
   grade: '12',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'gmat-verbal',
   locale: 'en',
   los: [
     {

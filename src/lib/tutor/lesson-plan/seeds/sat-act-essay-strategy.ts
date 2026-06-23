@@ -13,8 +13,8 @@ export const SEED_SAT_ACT_ESSAY_STRATEGY: LessonPlan = {
   title: 'Rhetorical analysis essay strategy (SAT/ACT/AP Lang)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

@@ -9,8 +9,8 @@ export const SEED_GRE_SUBJECT_MATH: LessonPlan = {
   title: 'GRE Math Subject Test strategy',
   curriculum: 'ETS',
   grade: '12',
-  subject: 'math',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'gre-math-subject',
   locale: 'en',
   los: [
     {

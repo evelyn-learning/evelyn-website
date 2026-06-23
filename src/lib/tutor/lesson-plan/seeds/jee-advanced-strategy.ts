@@ -9,8 +9,8 @@ export const SEED_JEE_ADVANCED_STRATEGY: LessonPlan = {
   title: 'JEE Advanced exam strategy',
   curriculum: 'NCERT',
   grade: '12',
-  subject: 'math',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'jee-advanced',
   locale: 'en',
   los: [
     {

@@ -12,8 +12,8 @@ export const SEED_LSAT_STRATEGY: LessonPlan = {
   title: 'LSAT strategy: logical reasoning and reading',
   curriculum: 'CCSS',
   grade: '12',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'lsat',
   locale: 'en',
   los: [
     {

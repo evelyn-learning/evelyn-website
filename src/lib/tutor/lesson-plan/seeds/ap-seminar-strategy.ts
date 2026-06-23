@@ -9,8 +9,8 @@ export const SEED_AP_SEMINAR_STRATEGY: LessonPlan = {
   title: 'AP Seminar exam + portfolio strategy',
   curriculum: 'CollegeBoard',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

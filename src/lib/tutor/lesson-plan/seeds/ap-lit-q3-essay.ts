@@ -12,8 +12,8 @@ export const SEED_AP_LIT_Q3_ESSAY: LessonPlan = {
   title: 'Novel/play analysis essay (AP Lit Q3)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

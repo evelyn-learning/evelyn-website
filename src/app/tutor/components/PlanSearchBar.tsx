@@ -1,35 +1,26 @@
 /**
- * PlanSearchBar — fast catalog-wide search for lesson plans.
+ * PlanSearchBar — instant, autocomplete-style catalog search.
  *
  * Solves the multi-dropdown funnel: instead of forcing
  * Subject → Level → Topic → Plan, the student types what they want
  * ("AP Calc derivatives", "GCSE quadratics", "phonics") and gets
- * one-click results across the entire 699-plan catalog.
+ * one-click results across the entire catalog.
  *
- * On selection: emits the chosen plan up to the page, which auto-fills
- * subject/level/topic from the plan metadata and starts the session.
- *
- * Backed by /api/tutor/lesson-plans?q=…  — token-AND match across
- * title + LO descriptions + topic/subject/grade tags. Server caps at 50.
+ * Backed by the in-memory plan index (usePlanIndex) — the whole catalog is
+ * loaded once on the setup page, so filtering is synchronous and instant
+ * (no per-keystroke API round-trip). On selection it emits the full
+ * PlanIndexEntry (which carries the resolved taxonomy cell) up to the page,
+ * which auto-fills subject/level/topic and pre-selects the lesson.
  */
 
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-export interface PlanSearchResult {
-  id: string;
-  title: string;
-  curriculum: string;
-  grade: string;
-  subject: string;
-  topic?: string;
-  estimatedMinutes: number;
-  los: Array<{ id: string; description: string }>;
-}
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePlanIndex } from '../hooks/usePlanIndex';
+import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
 
 interface PlanSearchBarProps {
-  onSelect: (plan: PlanSearchResult) => void;
+  onSelect: (plan: PlanIndexEntry) => void;
   /** Optional placeholder override. */
   placeholder?: string;
   /** Auto-focus the input on mount. */
@@ -37,60 +28,39 @@ interface PlanSearchBarProps {
 }
 
 const POPULAR_SUGGESTIONS = [
-  'AP Calc derivatives',
-  'GCSE quadratics',
   'fractions',
-  'IB DP statistics',
-  'JEE mechanics',
-  'phonics',
-  'civil rights',
   'photosynthesis',
+  'quadratic equations',
+  'the water cycle',
+  'Pythagoras theorem',
+  'ellipses',
+  "Newton's laws",
+  'essay writing',
 ];
 
 export default function PlanSearchBar({
   onSelect,
-  placeholder = '🔍 Search lessons (try "AP Calc derivatives", "GCSE quadratics", "phonics")',
+  placeholder = '🔍 Search any lesson — try "fractions", "photosynthesis", "quadratic equations"',
   autoFocus = false,
 }: PlanSearchBarProps) {
+  const planIndex = usePlanIndex();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<PlanSearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search — 200ms after last keystroke, hit the API.
-  useEffect(() => {
+  // Instant, synchronous filtering over the in-memory index. No debounce —
+  // searching ~1k entries is sub-millisecond.
+  const results = useMemo<PlanIndexEntry[]>(() => {
     const trimmed = query.trim();
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!trimmed) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/tutor/lesson-plans?q=${encodeURIComponent(trimmed)}`);
-        if (!res.ok) {
-          setResults([]);
-          return;
-        }
-        const data = await res.json();
-        setResults(Array.isArray(data.items) ? data.items : []);
-        setActiveIdx(0);
-      } catch {
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 200);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query]);
+    if (!trimmed) return [];
+    return planIndex.search(trimmed, 50);
+  }, [query, planIndex]);
+
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [results]);
 
   // Click-outside to close the dropdown.
   useEffect(() => {
@@ -116,9 +86,8 @@ export default function PlanSearchBar({
   }, []);
 
   const handleSelect = useCallback(
-    (plan: PlanSearchResult) => {
+    (plan: PlanIndexEntry) => {
       setQuery('');
-      setResults([]);
       setIsOpen(false);
       onSelect(plan);
     },
@@ -142,6 +111,7 @@ export default function PlanSearchBar({
   };
 
   const showDropdown = isOpen && (query.trim().length > 0 || results.length === 0);
+  const loading = !planIndex.ready && !planIndex.error;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -169,7 +139,7 @@ export default function PlanSearchBar({
       </div>
 
       {showDropdown && (
-        <div className="absolute z-30 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-2xl max-h-[480px] overflow-y-auto">
+        <div className="absolute z-30 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-2xl max-h-[70vh] sm:max-h-[480px] overflow-y-auto">
           {query.trim().length === 0 ? (
             <div className="p-4">
               <p className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">Try searching for…</p>
@@ -191,8 +161,8 @@ export default function PlanSearchBar({
                 Or use the structured picker below to browse by subject and level.
               </p>
             </div>
-          ) : isLoading ? (
-            <div className="p-4 text-sm text-gray-500">Searching…</div>
+          ) : loading ? (
+            <div className="p-4 text-sm text-gray-500">Loading catalog…</div>
           ) : results.length === 0 ? (
             <div className="p-4 text-sm text-gray-500">
               No lessons found for <span className="font-medium">&ldquo;{query}&rdquo;</span>. Try simpler keywords.
@@ -211,10 +181,8 @@ export default function PlanSearchBar({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="font-medium text-gray-900 truncate">{p.title}</div>
-                        {p.los[0]?.description && (
-                          <div className="text-xs text-gray-600 mt-0.5 line-clamp-2">
-                            {p.los[0].description}
-                          </div>
+                        {p.firstLo && (
+                          <div className="text-xs text-gray-600 mt-0.5 line-clamp-2">{p.firstLo}</div>
                         )}
                         <div className="flex items-center gap-2 mt-1.5 text-[11px]">
                           <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-medium uppercase">
@@ -232,7 +200,7 @@ export default function PlanSearchBar({
               ))}
               <li className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100 bg-gray-50/50">
                 {results.length === 50 ? 'Showing top 50 — refine your search to see more' : `${results.length} result${results.length === 1 ? '' : 's'}`}
-                <span className="ml-3">↑↓ to navigate · ↵ to start · esc to close</span>
+                <span className="ml-3 hidden sm:inline">↑↓ to navigate · ↵ to start · esc to close</span>
               </li>
             </ul>
           )}

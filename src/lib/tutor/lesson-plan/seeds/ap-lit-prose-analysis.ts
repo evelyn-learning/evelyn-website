@@ -12,8 +12,8 @@ export const SEED_AP_LIT_PROSE_ANALYSIS: LessonPlan = {
   title: 'Prose analysis essay (AP Lit Q2)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

@@ -69,6 +69,7 @@ export const SUBJECTS: TutorSubject[] = [
   { id: 'social-studies', label: 'Social Studies & History', icon: '🌍' },
   { id: 'cs', label: 'Computer Science', icon: '💻' },
   { id: 'languages', label: 'World Languages', icon: '🗣️' },
+  { id: 'arts', label: 'Arts', icon: '🎨' },
   { id: 'test-prep', label: 'Test Prep', icon: '🎯' },
 ];
 
@@ -80,6 +81,7 @@ export const LEVELS: TutorLevel[] = [
   { id: '6-8', label: 'Middle School (6-8)', description: 'Core concepts' },
   { id: '9-10', label: 'High School (9-10)', description: 'Standard courses' },
   { id: '11-12', label: 'High School (11-12)', description: 'Advanced courses' },
+  { id: 'gcse', label: 'GCSE', description: 'UK GCSE (Higher / Foundation)' },
   { id: 'ap', label: 'AP / IB', description: 'College-level rigor' },
   { id: 'sat-act', label: 'SAT / ACT', description: 'Standardized test prep' },
   { id: 'iitjee', label: 'IIT JEE', description: 'JEE Main + Advanced (engineering)' },
@@ -148,6 +150,10 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'sequences-series', label: 'Sequences & Series' },
       { id: 'logarithms-exponentials', label: 'Logarithms & Exponentials' },
       { id: 'matrices', label: 'Matrices' },
+      { id: 'statistics', label: 'Statistics' },
+    ],
+    gcse: [
+      { id: 'gcse-math', label: 'GCSE Maths (Higher / Foundation)' },
     ],
     ap: [
       { id: 'ap-precalculus', label: 'AP Precalculus' },
@@ -176,6 +182,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'earth-space', label: 'Earth & Space' },
       { id: 'matter-materials', label: 'Matter & Materials' },
       { id: 'animals-habitats', label: 'Animals & Habitats' },
+      { id: 'physical-science', label: 'Physical Science' },
     ],
     '3-5': [
       { id: 'life-cycles', label: 'Life Cycles' },
@@ -185,6 +192,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'water-cycle', label: 'Water Cycle' },
       { id: 'light-sound', label: 'Light & Sound' },
       { id: 'simple-machines', label: 'Simple Machines' },
+      { id: 'physical-science', label: 'Physical Science' },
     ],
     '6-8': [
       { id: 'cell-biology', label: 'Cell Biology' },
@@ -194,6 +202,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'earth-space-science', label: 'Earth & Space Science' },
       { id: 'genetics', label: 'Genetics' },
       { id: 'ecology', label: 'Ecology' },
+      { id: 'physical-science', label: 'Physical Science' },
     ],
     '9-10': [
       { id: 'biology', label: 'Biology' },
@@ -321,7 +330,10 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
     ],
     '11-12': [
       { id: 'us-history-advanced', label: 'US History (Advanced)' },
+      { id: 'world-history', label: 'World History' },
       { id: 'european-history', label: 'European History' },
+      { id: 'economics', label: 'Economics' },
+      { id: 'government-politics', label: 'Government & Politics' },
       { id: 'psychology', label: 'Psychology' },
       { id: 'sociology', label: 'Sociology' },
       { id: 'philosophy', label: 'Philosophy' },
@@ -417,6 +429,16 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ap-chinese-lang', label: 'AP Chinese Language' },
       { id: 'ib-spanish', label: 'IB Spanish' },
       { id: 'ib-french', label: 'IB French' },
+    ],
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ARTS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  arts: {
+    '11-12': [
+      { id: 'music-theory', label: 'Music Theory' },
+      { id: 'art-history', label: 'Art History' },
     ],
   },
 

@@ -12,8 +12,8 @@ export const SEED_GRE_VERBAL_STRATEGY: LessonPlan = {
   title: 'GRE Verbal Reasoning strategy',
   curriculum: 'CCSS',
   grade: '12',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'gre-verbal',
   locale: 'en',
   los: [
     {

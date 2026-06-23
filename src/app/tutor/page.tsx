@@ -13,10 +13,7 @@ import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
 import {
-  SUBJECTS,
   SESSION_GOALS,
-  getLevelsForSubject,
-  getTopicsForSubjectLevel,
   buildDisplayName,
   getTopicLabel,
 } from '@/lib/tutor/topic-taxonomy';
@@ -28,9 +25,10 @@ import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
-import PlanSearchBar, { type PlanSearchResult } from './components/PlanSearchBar';
+import LessonPicker from './components/LessonPicker';
+import { usePlanIndex } from './hooks/usePlanIndex';
+import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
-import { unitLabel } from '@/lib/tutor/lesson-plan/unit-titles';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
@@ -107,18 +105,6 @@ export default function TutorPageWrapper() {
 }
 
 /** Compact pill showing one setup step's done-or-pending state. */
-function StepChip({ label, done }: { label: string; done: boolean }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-        done ? 'bg-green-100 text-green-800' : 'bg-white text-blue-700 border border-blue-300'
-      }`}
-    >
-      {done ? '✓' : '○'} {label}
-    </span>
-  );
-}
-
 function TutorPage() {
   // Demo tracking
   const { onView, onTry, onComplete, trackInteraction } = useDemoTracker('voice-tutor', 'AI Voice Tutor');
@@ -151,18 +137,24 @@ function TutorPage() {
   // Lesson-plan selection. Optional — when set, the brain runs in
   // plan-driven mode (treats segments as a teaching script) instead of
   // free-conversation mode.
-  const [availableLessonPlans, setAvailableLessonPlans] = useState<Array<{
-    id: string;
-    title: string;
-    topic?: string;
-    los: Array<{ id: string; description: string }>;
-    estimatedMinutes: number;
-    /** Slim metadata exposed by /api/tutor/lesson-plans for UI grouping
-     *  (UNIT headers in the picker dropdown). Full metadata lives on the
-     *  per-plan endpoint. */
-    metadata?: { cedUnit?: unknown; cedTopic?: unknown; cedTitle?: unknown };
-  }>>([]);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState('');
+  // In-memory catalog index — powers instant quick-search + the cascade and
+  // (below) the in-session lesson nudge, with zero per-interaction DB hits.
+  const planIndex = usePlanIndex();
+  // Lessons available for the active (resolved) cell — derived in-memory from
+  // the index (replaces the old per-cascade DB fetch). Used by the setup
+  // picker and the in-session nudge.
+  const availableLessonPlans = useMemo(() => {
+    if (!selectedSubject || !selectedLevel || !selectedTopicId) return [];
+    return planIndex.lessonsFor(selectedSubject, selectedLevel, selectedTopicId).map((e) => ({
+      id: e.id,
+      title: e.title,
+      topic: e.cellTopic ?? e.topic,
+      los: e.firstLo ? [{ id: 'lo0', description: e.firstLo }] : [],
+      estimatedMinutes: e.estimatedMinutes,
+      metadata: { cedUnit: e.cedUnit, cedTopic: e.cedTopic, cedTitle: e.cedTitle },
+    }));
+  }, [planIndex, selectedSubject, selectedLevel, selectedTopicId]);
   // Sticky-dismiss for the in-session lesson nudge. Once the student
   // hides it, don't pop it back up later in the same session.
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
@@ -556,114 +548,47 @@ function TutorPage() {
   }, [stage]);
 
   // Derived taxonomy state
-  const availableLevels = useMemo(() => getLevelsForSubject(selectedSubject), [selectedSubject]);
-  const availableTopics = useMemo(() => getTopicsForSubjectLevel(selectedSubject, selectedLevel), [selectedSubject, selectedLevel]);
   const topicDisplayName = useMemo(
     () => selectedTopicId ? buildDisplayName(selectedSubject, selectedLevel, selectedTopicId) : '',
     [selectedSubject, selectedLevel, selectedTopicId]
   );
   const canStartSession = !!(selectedSubject && selectedLevel && selectedTopicId);
 
-  // Reset downstream selections when parent changes
+  // Reset downstream selections when a parent dropdown changes. (availableLessonPlans
+  // is derived from the index, so it clears automatically.)
   const handleSubjectChange = useCallback((subjectId: string) => {
     setSelectedSubject(subjectId);
     setSelectedLevel('');
     setSelectedTopicId('');
     setSelectedLessonPlanId('');
-    setAvailableLessonPlans([]);
   }, []);
 
   const handleLevelChange = useCallback((levelId: string) => {
     setSelectedLevel(levelId);
     setSelectedTopicId('');
     setSelectedLessonPlanId('');
-    setAvailableLessonPlans([]);
   }, []);
 
-  // Search-bar plan pick: derive subject + level band + topic from the
-  // chosen plan's metadata so the structured pickers stay in sync (they
-  // still drive the rest of the page) and the lesson is ready to start.
-  // Falls back gracefully when a band can't be inferred — the rest of
-  // the dropdowns just stay empty and the user can fix manually.
-  const handleSearchSelect = useCallback((plan: PlanSearchResult) => {
-    // Subject mapping — plan.subject uses short codes ('sci', 'ss',
-    // 'ela', 'math', 'cs') OR long forms; UI uses long. Normalise.
-    const subjectMap: Record<string, string> = {
-      sci: 'science',
-      science: 'science',
-      ss: 'social-studies',
-      'social-studies': 'social-studies',
-      ela: 'ela',
-      math: 'math',
-      cs: 'cs',
-      languages: 'languages',
-      'test-prep': 'test-prep',
-    };
-    const uiSubject = subjectMap[plan.subject] ?? plan.subject;
-    // Grade → level band. Plan grades are single ('k', '3', '11') or
-    // multi ('k-2', '11-12'). Map to the closest UI level.
-    const gradeToBand = (g: string): string => {
-      const norm = g.trim().toLowerCase();
-      if (norm.includes('-')) return norm; // already a band
-      if (norm === 'k' || norm === '1' || norm === '2') return 'k-2';
-      if (['3', '4', '5'].includes(norm)) return '3-5';
-      if (['6', '7', '8'].includes(norm)) return '6-8';
-      if (['9', '10'].includes(norm)) return '9-10';
-      if (['11', '12'].includes(norm)) return '11-12';
-      // Curriculum-based fallbacks (AP / SAT-ACT / IITJEE / GRE etc).
-      const c = plan.curriculum.toUpperCase();
-      if (c.includes('AP') || c.includes('IB-DP') || c === 'IB-DP') return 'ap';
-      if (c === 'GCSE' || c === 'A-LEVEL') return '11-12';
-      if (norm === 'graduate') return 'graduate';
-      return '11-12';
-    };
-    const uiLevel = gradeToBand(plan.grade);
-    setSelectedSubject(uiSubject);
-    setSelectedLevel(uiLevel);
-    setSelectedTopicId(plan.topic ?? '');
-    setSelectedLessonPlanId(plan.id);
-    // Pre-fill the available-plans state so the dropdown shows the pick
-    // immediately, even before the (subject,level,topic) effect re-fetches.
-    setAvailableLessonPlans([{
-      id: plan.id,
-      title: plan.title,
-      topic: plan.topic,
-      los: plan.los,
-      estimatedMinutes: plan.estimatedMinutes,
-    }]);
-    // Scroll the Start button into view so it's clear what to do next.
+  const handleTopicChange = useCallback((topicId: string) => {
+    setSelectedTopicId(topicId);
+    setSelectedLessonPlanId('');
+  }, []);
+
+  // Search-bar plan pick: snap the structured pickers to the plan's RESOLVED
+  // taxonomy cell (so subject/level/topic stay in sync and the Topic dropdown
+  // always has the option) and pre-select the lesson. The index entry carries
+  // the resolved cell (see resolve-cell.ts); for an orphan plan (no cell) we
+  // fall back to its raw tags so it still starts. availableLessonPlans then
+  // recomputes from the index on the next render — no DB round-trip.
+  const handleSearchSelect = useCallback((entry: PlanIndexEntry) => {
+    setSelectedSubject(entry.cellSubject ?? entry.subject);
+    setSelectedLevel(entry.cellLevel ?? entry.grade);
+    setSelectedTopicId(entry.cellTopic ?? entry.topic ?? '');
+    setSelectedLessonPlanId(entry.id);
     setTimeout(() => {
       document.getElementById('tutor-start-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   }, []);
-
-  // Fetch available lesson plans when (subject, level, topic) is set.
-  // Plans are filtered server-side; the demo UI only shows a dropdown
-  // when at least one plan matches.
-  useEffect(() => {
-    if (!selectedSubject || !selectedTopicId) {
-      setAvailableLessonPlans([]);
-      setSelectedLessonPlanId('');
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const params = new URLSearchParams();
-        params.set('subject', selectedSubject);
-        if (selectedLevel) params.set('grade', selectedLevel);
-        if (selectedTopicId) params.set('topic', selectedTopicId);
-        const res = await fetch(`/api/tutor/lesson-plans?${params.toString()}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled) return;
-        setAvailableLessonPlans(data.items || []);
-      } catch {
-        if (!cancelled) setAvailableLessonPlans([]);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [selectedSubject, selectedLevel, selectedTopicId]);
 
   // Resizable split between transcript and whiteboard (percentage for transcript)
   const [splitPercent, setSplitPercent] = useState(50);
@@ -1469,237 +1394,22 @@ function TutorPage() {
           </div>
 
           {/* Setup form */}
-          <div className="bg-white rounded-xl shadow-lg p-6 space-y-5">
-            {/* Quick-start search — fastest path to a session. Type
-                what you want ("AP Calc derivatives", "GCSE quadratics",
-                "phonics") and press Enter. Searches the entire
-                catalog of 700+ lesson plans by title, topic, and
-                learning objective. Selecting a plan auto-fills the
-                structured pickers below. Cmd-K from anywhere on page. */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ⚡ Quick start
-              </label>
-              <PlanSearchBar onSelect={handleSearchSelect} />
-              <p className="mt-2 text-xs text-gray-500">
-                Or scroll down to browse by subject and level.
-              </p>
-            </div>
-
-            {/* Visual divider between fast-path and structured browse. */}
-            <div className="relative my-4" aria-hidden>
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">or browse</span></div>
-            </div>
-
-            {/* Status header — shows the user exactly which steps remain
-                so they don't feel like they're walking down an unknown
-                tunnel of dropdowns. Subject → Level → Topic → Start. */}
-            <div className="rounded-lg bg-blue-50/60 border border-blue-100 px-4 py-3">
-              <div className="flex items-center gap-2 flex-wrap text-sm">
-                <span className="font-semibold text-blue-900">3 quick choices to begin:</span>
-                <StepChip label="Subject" done={!!selectedSubject} />
-                <span className="text-blue-300">›</span>
-                <StepChip label="Level" done={!!selectedLevel} />
-                <span className="text-blue-300">›</span>
-                <StepChip label="Topic" done={!!selectedTopicId} />
-                <span className="text-blue-300">›</span>
-                <span className="text-blue-700/70 text-xs italic">then Start</span>
-              </div>
-            </div>
-
-            {/* Name input */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Your Name (optional)
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                placeholder="Enter your name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Subject selection */}
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">1</span>
-                Subject
-              </label>
-              <select
-                id="subject"
-                value={selectedSubject}
-                onChange={(e) => handleSubjectChange(e.target.value)}
-                onInput={(e) => handleSubjectChange((e.target as HTMLSelectElement).value)}
-                onBlur={(e) => {
-                  const v = (e.target as HTMLSelectElement).value;
-                  if (v !== selectedSubject) handleSubjectChange(v);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              >
-                <option value="">Select a subject…</option>
-                {SUBJECTS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.icon} {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Level selection */}
-            {selectedSubject && (
-              <div>
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">2</span>
-                  Level
-                </label>
-                <select
-                  id="level"
-                  value={selectedLevel}
-                  onChange={(e) => handleLevelChange(e.target.value)}
-                  onInput={(e) => handleLevelChange((e.target as HTMLSelectElement).value)}
-                  onBlur={(e) => {
-                    const v = (e.target as HTMLSelectElement).value;
-                    if (v !== selectedLevel) handleLevelChange(v);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select a level…</option>
-                  {availableLevels.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Topic selection */}
-            {selectedLevel && availableTopics.length > 0 && (
-              <div>
-                <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold mr-2">3</span>
-                  Topic
-                </label>
-                <select
-                  id="topic"
-                  value={selectedTopicId}
-                  onChange={(e) => setSelectedTopicId(e.target.value)}
-                  onInput={(e) => setSelectedTopicId((e.target as HTMLSelectElement).value)}
-                  onBlur={(e) => {
-                    const v = (e.target as HTMLSelectElement).value;
-                    if (v !== selectedTopicId) setSelectedTopicId(v);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select a topic…</option>
-                  {availableTopics.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Lesson plan — the primary "what are we doing today" picker.
-                Visually emphasized: bigger, bolder, blue accent. When blank,
-                the tutor runs in free-conversation mode. */}
-            {selectedTopicId && availableLessonPlans.length > 0 && (
-              <div className="rounded-lg border-2 border-blue-200 bg-blue-50/40 p-4">
-                <label htmlFor="lesson-plan" className="block text-base font-semibold text-blue-900 mb-1">
-                  ✨ Pick a lesson
-                </label>
-                <p className="text-xs text-blue-700/70 mb-3">
-                  Or leave blank for open conversation.
-                </p>
-                <select
-                  id="lesson-plan"
-                  value={selectedLessonPlanId}
-                  onChange={(e) => setSelectedLessonPlanId(e.target.value)}
-                  onInput={(e) => setSelectedLessonPlanId((e.target as HTMLSelectElement).value)}
-                  className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-base"
-                >
-                  <option value="">— Just chat (no plan) —</option>
-                  {(() => {
-                    // Group plans by CED unit when metadata.cedUnit is present.
-                    // Falls back to a flat list when no plans have unit metadata
-                    // (preserves current behavior for non-AP courses until they
-                    // ship unit-grouping). See unit-titles.ts for the grouping
-                    // helper that powers labels and keys uniformly.
-                    const groups = new Map<string, typeof availableLessonPlans>();
-                    let anyGrouped = false;
-                    for (const p of availableLessonPlans) {
-                      const md = p.metadata;
-                      const cedUnit = md && typeof md.cedUnit === 'string' ? md.cedUnit : '';
-                      const key = cedUnit || '__flat__';
-                      if (cedUnit) anyGrouped = true;
-                      const list = groups.get(key) ?? [];
-                      list.push(p);
-                      groups.set(key, list);
-                    }
-                    if (!anyGrouped) {
-                      return availableLessonPlans.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.title} · {p.estimatedMinutes} min
-                        </option>
-                      ));
-                    }
-                    // Render each group as <optgroup> with a UNIT header label.
-                    // Sort group keys numerically so UNIT 1 → 2 → … → 10 order.
-                    const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
-                      if (a === '__flat__') return 1;
-                      if (b === '__flat__') return -1;
-                      const an = parseFloat(a);
-                      const bn = parseFloat(b);
-                      if (Number.isFinite(an) && Number.isFinite(bn)) return an - bn;
-                      return a.localeCompare(b);
-                    });
-                    return sortedKeys.map((groupKey) => {
-                      const groupPlans = groups.get(groupKey) ?? [];
-                      const sample = groupPlans[0];
-                      // Use shared unit-titles helper so AP Calc BC, AP
-                      // Stats, etc. ship the same grouping the moment they
-                      // add a UNIT_TITLES entry — no per-page changes.
-                      const label = groupKey === '__flat__'
-                        ? 'Other'
-                        : (sample ? unitLabel(sample) : `UNIT ${groupKey}`);
-                      return (
-                        <optgroup key={groupKey} label={label}>
-                          {groupPlans.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.title} · {p.estimatedMinutes} min
-                            </option>
-                          ))}
-                        </optgroup>
-                      );
-                    });
-                  })()}
-                </select>
-              </div>
-            )}
-
-            {/* Mode is fixed to Voice — the in-session UI lets the
-                student type as a fallback. No setup-time choice. */}
-
-
-            {/* Start button */}
-            <button
-              id="tutor-start-btn"
-              onClick={handleStartSession}
-              disabled={!canStartSession}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white text-lg font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {inputMode === 'voice' ? <Mic className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              Start {inputMode === 'voice' ? 'Voice' : ''} Session
-            </button>
-          </div>
+          <LessonPicker
+            studentName={studentName}
+            onStudentName={setStudentName}
+            subject={selectedSubject}
+            level={selectedLevel}
+            topicId={selectedTopicId}
+            lessonPlanId={selectedLessonPlanId}
+            onSubjectChange={handleSubjectChange}
+            onLevelChange={handleLevelChange}
+            onTopicChange={handleTopicChange}
+            onLessonPlanChange={setSelectedLessonPlanId}
+            onSearchSelect={handleSearchSelect}
+            canStart={canStartSession}
+            onStart={handleStartSession}
+            inputMode={inputMode}
+          />
 
           {/* Info */}
           <div className="mt-6 text-center text-sm text-gray-500">

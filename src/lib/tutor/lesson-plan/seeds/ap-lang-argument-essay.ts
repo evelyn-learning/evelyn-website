@@ -12,8 +12,8 @@ export const SEED_AP_LANG_ARGUMENT_ESSAY: LessonPlan = {
   title: 'Argument essay strategy (AP Lang Q3)',
   curriculum: 'CCSS',
   grade: '11',
-  subject: 'ela',
-  topic: 'test-prep',
+  subject: 'test-prep',
+  topic: 'ap-test-strategy',
   locale: 'en',
   los: [
     {

@@ -2585,13 +2585,14 @@ export interface LessonPlanFilter {
  *  tagged with the underlying grade rather than the level id. Without
  *  this expansion the picker would be empty for every level above
  *  high-school. */
-function gradesInBand(band: string): string[] {
+export function gradesInBand(band: string): string[] {
   const b = band.trim().toLowerCase();
   if (b === 'k-2') return ['k', '1', '2', 'k-2'];
   if (b === '3-5') return ['3', '4', '5', '3-5'];
   if (b === '6-8') return ['6', '7', '8', '6-8'];
   if (b === '9-10') return ['9', '10', '9-10', '9-12'];
   if (b === '11-12') return ['11', '12', '11-12', '9-12'];
+  if (b === 'gcse') return ['gcse', '10-11'];
   if (b === 'ap') return ['ap', '11', '12', '9-12', '11-12'];
   if (b === 'sat-act') return ['sat-act', '11', '12'];
   if (b === 'iitjee') return ['iitjee', '11', '12'];
@@ -2606,14 +2607,14 @@ function gradesInBand(band: string): string[] {
  *  vs long ('science', 'social-studies') ids interchangeably. The UI
  *  uses the long forms; this map lets a filter on the long form match
  *  plans tagged with either. */
-const SUBJECT_ALIASES: Record<string, string[]> = {
+export const SUBJECT_ALIASES: Record<string, string[]> = {
   science: ['science', 'sci'],
   sci: ['science', 'sci'],
   'social-studies': ['social-studies', 'ss'],
   ss: ['social-studies', 'ss'],
 };
 
-function subjectMatches(filter: string | undefined, planSubject: string): boolean {
+export function subjectMatches(filter: string | undefined, planSubject: string): boolean {
   if (!filter) return true;
   const aliases = SUBJECT_ALIASES[filter] ?? [filter];
   return aliases.includes(planSubject);
@@ -2631,7 +2632,7 @@ function subjectMatches(filter: string | undefined, planSubject: string): boolea
  *  Pattern: keys are taxonomy topic IDs from src/lib/tutor/topic-taxonomy.ts;
  *  values list the plan.topic strings that should match. The taxonomy
  *  ID itself is implicit — we always include it. */
-const TOPIC_ALIASES: Record<string, string[]> = {
+export const TOPIC_ALIASES: Record<string, string[]> = {
   // ── Math ──
   'algebra-1': ['algebra', 'algebra-1', 'equations', 'expressions', 'inequalities'],
   'algebra-2': ['algebra-2', 'polynomials', 'rational-functions', 'exponential-functions', 'logarithms'],
@@ -2834,9 +2835,57 @@ const TOPIC_ALIASES: Record<string, string[]> = {
   'academic-research': ['academic-research', 'college-ela'],
 };
 
+// Orphan-bridge additions (2026-06-23) — map loose plan-topic tags that the
+// picker cascade couldn't reach onto the nearest taxonomy topic in the plan's
+// grade band. The plan GRADE disambiguates which cell wins (same tag can map
+// to different topics at different bands). Merged into TOPIC_ALIASES so the
+// drilldown + search-select resolver (resolve-cell.ts) both pick these up.
+// See [[project-tutor-lesson-picker-index]] orphan cleanup.
+const ORPHAN_ALIAS_ADDITIONS: Record<string, string[]> = {
+  // ── Math ──
+  'expressions-equations': ['algebra', 'exponents', 'functions'],
+  'order-of-operations': ['expressions'],
+  'integers-rational': ['fractions'],
+  'geometry-basics': ['geometry'],
+  'shapes-patterns': ['geometry'],
+  'multiplication-division': ['number-theory', 'numbers'],
+  'pre-algebra': ['numbers'],
+  'geometry-angles': ['transformations'],
+  geometry: ['trigonometry'],
+  'pre-calculus': ['quadratics', 'rational-functions'],
+  statistics: ['statistics'],
+  // ── Science ──
+  'physical-science': ['forces-and-motion', 'waves', 'energy', 'matter', 'engineering'],
+  'life-cycles': ['genetics'],
+  'earth-science': ['space'],
+  'earth-space-science': ['space'],
+  genetics: ['evolution'],
+  biology: ['biotechnology'],
+  // ── ELA ──
+  'literature-fiction': ['drama'],
+  'reading-comprehension': ['literature', 'poetry'],
+  'literary-analysis': ['literature', 'reading-comprehension', 'reading'],
+  'critical-analysis': ['poetry'],
+  'basic-writing': ['grammar', 'spelling'],
+  'grammar-mechanics': ['grammar'],
+  'grammar-punctuation': ['grammar'],
+  'phonics-reading': ['spelling'],
+  'persuasive-writing': ['writing', 'grammar'],
+  'advanced-composition': ['research'],
+  'research-skills': ['speaking-listening'],
+  // ── Social Studies ──
+  'us-history-advanced': ['us-history'],
+  'government-politics': ['government', 'civics'],
+  'us-geography': ['geography', 'communities'],
+  'community-helpers': ['economics'],
+};
+for (const [taxTopic, tags] of Object.entries(ORPHAN_ALIAS_ADDITIONS)) {
+  TOPIC_ALIASES[taxTopic] = Array.from(new Set([...(TOPIC_ALIASES[taxTopic] ?? [taxTopic]), ...tags]));
+}
+
 /** Returns true if the plan's topic matches the filter topic — directly
  *  or via the alias map. If filter.topic is empty, returns true. */
-function topicMatches(filterTopic: string | undefined, planTopic: string | undefined): boolean {
+export function topicMatches(filterTopic: string | undefined, planTopic: string | undefined): boolean {
   if (!filterTopic) return true;
   if (!planTopic) return false;
   if (planTopic === filterTopic) return true;
@@ -2844,7 +2893,7 @@ function topicMatches(filterTopic: string | undefined, planTopic: string | undef
   return !!aliases && aliases.includes(planTopic);
 }
 
-function gradeMatches(filterGrade: string | undefined, planGrade: string): boolean {
+export function gradeMatches(filterGrade: string | undefined, planGrade: string): boolean {
   if (!filterGrade) return true;
   const filterSet = gradesInBand(filterGrade);
   const plan = planGrade.trim().toLowerCase();
