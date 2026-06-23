@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const t0 = Date.now();
   try {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
     // + `seconds` per the OpenAI /v1/realtime/client_secrets API
     // (valid range 10–7200). Partial mitigation; the robust fix is the
     // reactive token-refresh + reconnect (levers 2–3, to be grilled).
+    console.log(`[STARTUP][token] minting ephemeral key (engine=${engine ?? 'gpt-realtime'}, instrLen=${typeof instructions === 'string' ? instructions.length : 0})…`);
     const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
         session: sessionConfig,
       }),
     });
+    console.log(`[STARTUP][token] OpenAI client_secrets responded in ${Date.now() - t0}ms (status ${response.status})`);
 
     if (!response.ok) {
       const errorText = await response.text();

@@ -1636,6 +1636,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('connecting');
     setError(null);
 
+    // [STARTUP] breadcrumbs — diagnose the "preparing your tutor" hang by
+    // showing which connect phase stalls + elapsed ms (2026-06-23 recursion
+    // startup-hang investigation). The phase with no following breadcrumb is
+    // where it hung.
+    const startupT0 = Date.now();
+    const sb = (m: string) => console.log(`[STARTUP +${Date.now() - startupT0}ms] ${m}`);
+    sb(`connect() begin — engine=${useRealtimeV2Ref.current ? 'realtime-2' : 'gpt-realtime'} relay=${isRelayRef.current} instrReady=${!!currentInstructionsRef.current}`);
+
     try {
       // Reuse a pre-fetched token if one is already in flight (see
       // prefetchToken below — fired on mount from the UI layer so the network
@@ -1671,10 +1679,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             throw err;
           });
       }
+      sb('awaiting realtime-token…');
       const client_secret = await tokenPromiseRef.current;
       if (!client_secret) {
         throw new Error('Invalid token response: missing client_secret');
       }
+      sb('token resolved → opening WS');
       console.log('[Realtime] Got client secret, connecting...');
 
       // Connect to OpenAI Realtime API. realtime-2 connects to the
@@ -1686,6 +1696,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       );
 
       ws.onopen = () => {
+        sb('WS onopen');
         console.log('[Realtime] WebSocket connected');
 
         // Fire session.update when instructions are ready. If they haven't
@@ -1695,10 +1706,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           if (sessionUpdateSentRef.current) return;
           const inst = currentInstructionsRef.current;
           if (!inst) {
+            sb('session.update DEFERRED — instructions (system prompt) not built yet');
             console.log('[Realtime] WS open but instructions not ready — deferring session.update');
             return;
           }
           if (ws.readyState !== WebSocket.OPEN) return;
+          sb(`session.update SENT — instr len ${inst.length}`);
           console.log('[Realtime] Sending session.update (instructions length:', inst.length, ', relay:', isRelayRef.current, ')');
           sessionUpdateSentRef.current = true;
           // Relay mode: omit tools entirely. Realtime is STT+TTS only;
@@ -2459,9 +2472,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const speakText = useCallback((text: string) => {
     const usingOpenAITTS = isRelayRef.current && ttsProviderRef.current === 'openai-mini';
     if (!usingOpenAITTS && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
-      // Quietly skip when the disconnect is intentional (End tapped).
-      if (!intentionallyDisconnectedRef.current) {
-        console.error('[Realtime] speakText: not connected');
+      // Skip + warn (NOT error) when the WS isn't open. Stay fully quiet when
+      // the disconnect is intentional (End tapped) OR we're mid-(re)connect —
+      // a transient where a prior turn's stream is orphaned (e.g. a new-session
+      // remount, or React StrictMode's dev-only connect→cleanup→connect
+      // double-invoke). Downgraded from console.error because Next's dev
+      // overlay promotes any console.error to a full-screen error panel, which
+      // made this benign skip look like a crash/bounce on new-session start
+      // (2026-06-23 Test 3). Prod builds don't double-invoke effects, so this
+      // path is essentially dev-only.
+      if (!intentionallyDisconnectedRef.current && stateRef.current !== 'connecting') {
+        console.warn('[Realtime] speakText skipped — WS not open (transient)');
       }
       return;
     }

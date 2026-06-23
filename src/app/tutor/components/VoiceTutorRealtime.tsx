@@ -10992,6 +10992,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         setHasStarted(true);
         // Immediate visual feedback while the brain composes its first turn.
         setIsWarmingUp(true);
+        console.log(`[STARTUP] start → isWarmingUp=true (connected=${realtime.isConnected}, state=${realtime.state}, claudeBrain=${claudeBrainMode}, plan=${!!lessonPlanRef.current})`);
         // CRITICAL on iOS: the user's Start tap is the gesture iOS uses
         // to "unlock" audio playback. Calling resume() synchronously
         // inside this handler ensures TTS chunks play audibly. Without
@@ -11005,8 +11006,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // Lesson-plan-driven session: the brain owns the opening (Hook
           // segment). Kick it with a synthetic student-side trigger so it
           // starts teaching immediately rather than waiting for a "hi".
-          console.log('[VoiceTutorRealtime] claude-brain: kicking off lesson plan via brain.');
-          handleStudentTranscriptForBrain('[start lesson]', { silent: true });
+          console.log('[STARTUP] claude-brain: kicking off lesson plan via brain ([start lesson]).');
+          // bypassMidUtteranceGuard: the synthetic kickoff is the OPENER — it
+          // cannot "talk over" the student. Without this, transient perception
+          // noise at session start (e.g. mic catches an ambient "you", classified
+          // + dropped as noise a moment later) sets perceptionMidUtteranceRef=true
+          // for the instant the kickoff fires, so STAGE-3 fix #11 DROPS the
+          // kickoff and it is NEVER retried → the lesson never starts → "preparing
+          // your tutor" hangs forever (2026-06-23 recursion startup-hang repro).
+          handleStudentTranscriptForBrain('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
         } else {
           // Free-conversation mode: also kick the brain so it greets
           // first instead of leaving the student staring at "preparing
@@ -11016,7 +11024,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // where the student had to type "teach me anything" to break
           // out of the preparing state).
           console.log('[VoiceTutorRealtime] claude-brain: free-conversation, kicking brain to greet first.');
-          handleStudentTranscriptForBrain('[start session]', { silent: true });
+          // bypassMidUtteranceGuard: same as the lesson kickoff above — the
+          // synthetic opener must not be dropped by a transient startup-noise
+          // mid-utterance flag (else "preparing your tutor" hangs).
+          handleStudentTranscriptForBrain('[start session]', { silent: true, bypassMidUtteranceGuard: true });
         }
       }
       // If the student hit the Mute button BEFORE clicking Start, honour that
