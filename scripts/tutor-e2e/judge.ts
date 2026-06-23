@@ -105,12 +105,26 @@ function buildBoardTimeline(dir: string): string {
   } catch { return ''; }
   // `brain_turn` is logged at the END of its turn, so a turn's tool_calls appear
   // BEFORE its marker. Buffer renders and flush them under the turn that closes.
+  // Sketch lifecycle events (show_sketch doodler pipeline) surfaced so the judge
+  // can see WHEN a doodle was requested/auto-fired, and whether it RESOLVED or
+  // failed-to-nothing (a drop = the visual the speech warranted didn't appear →
+  // warranted-missing). See project_tutor_sketch_capability.
+  const SKETCH_EVENTS: Record<string, string> = {
+    sketch_request: 'sketch requested (brain)',
+    sketch_resolved: 'sketch resolved → drawn',
+    sketch_dropped: 'sketch DROPPED (fail-to-nothing)',
+    board_anchor_analogy: 'analogy auto-fire (brain drew nothing)',
+    board_anchor_analogy_rendered: 'analogy auto-fire resolved → drawn',
+    board_anchor_analogy_dropped: 'analogy auto-fire DROPPED',
+  };
   const lines: string[] = [];
   let turnIdx = -1;
   let buffered: string[] = [];
   for (const e of events) {
     if (e.type === 'tool_call') {
       buffered.push(`    [render] ${(e.message ?? '').replace(/^Whiteboard tool:\s*/, '')}`);
+    } else if (e.type && SKETCH_EVENTS[e.type]) {
+      buffered.push(`    [sketch] ${SKETCH_EVENTS[e.type]}${e.message ? `: ${e.message}` : ''}`);
     } else if (e.type === 'brain_turn') {
       turnIdx++;
       lines.push(`— brain turn ${turnIdx}: ${e.message ?? ''}`);
@@ -120,6 +134,20 @@ function buildBoardTimeline(dir: string): string {
   }
   if (buffered.length) lines.push('— after last marker:', ...buffered);
   return lines.join('\n');
+}
+
+/** Deterministic show_sketch pipeline tally from the debug-event stream (no LLM).
+ *  Powers the sketch fire-rate line for A/B. See project_tutor_sketch_capability. */
+function sketchActivity(dir: string): { brainReq: number; autoFire: number; resolved: number; dropped: number } {
+  let events: Array<{ type?: string }> = [];
+  try { events = JSON.parse(fs.readFileSync(path.join(dir, 'debug-events.json'), 'utf8')); } catch { return { brainReq: 0, autoFire: 0, resolved: 0, dropped: 0 }; }
+  const n = (t: string) => events.filter((e) => e.type === t).length;
+  return {
+    brainReq: n('sketch_request'),
+    autoFire: n('board_anchor_analogy'),
+    resolved: n('sketch_resolved') + n('board_anchor_analogy_rendered'),
+    dropped: n('sketch_dropped') + n('board_anchor_analogy_dropped'),
+  };
 }
 
 async function main() {
@@ -175,7 +203,7 @@ IMPORTANT — Socratic teaching is NOT a failure. A tutor that ASKS the student 
 
 Be specific in "detail" — quote the wrong text and give the correct value.
 
-BOARD-ANCHORED SPEECH dimension ("show, don't just tell") — score this SEPARATELY from \`pass\` (it is about whether the tutor VISUALLY anchored its teaching, not about correctness). A BOARD-ACTIVITY TIMELINE is provided below: per brain turn it lists which whiteboard tools fired ([render] lines). Renders that anchor improvised teaching: MARK = scribble (circle/underline an existing element); WRITE = showEquation / handwrite (a short expression, line, definition); SKETCH = a show_*graph / geometry / diagram (a quick visual depiction). Renders like showProblem / showSegmentCard / advanceLesson / markSegmentComplete / addTopicNotesPointer are NOT anchors of improvised speech (they surface authored cards or are bookkeeping). For each tutor turn set:
+BOARD-ANCHORED SPEECH dimension ("show, don't just tell") — score this SEPARATELY from \`pass\` (it is about whether the tutor VISUALLY anchored its teaching, not about correctness). A BOARD-ACTIVITY TIMELINE is provided below: per brain turn it lists which whiteboard tools fired ([render] lines). Renders that anchor improvised teaching: MARK = scribble (circle/underline an existing element); WRITE = showEquation / handwrite (a short expression, line, definition); SKETCH = a rough hand-drawn doodle (show_sketch — for analogies / visual-spatial mental images) OR a show_*graph / geometry / diagram (a quick visual depiction). Renders like showProblem / showSegmentCard / advanceLesson / markSegmentComplete / addTopicNotesPointer are NOT anchors of improvised speech (they surface authored cards or are bookkeeping). NOTE the [sketch] timeline lines: a doodle that was REQUESTED/auto-fired but then DROPPED (fail-to-nothing) means the warranted visual did NOT appear → treat that turn as "warranted-missing", not "anchored". For each tutor turn set:
 - \`boardAnchored\`:
     "anchored"          — the speech warranted a visual AND a helpful MARK/WRITE/SKETCH fired this turn.
     "warranted-missing" — the speech REFERENCED something on the board ("this term", "the part in front of…", "look at the equation") OR introduced a relationship/transformation, a definition/rule/mapping to retain, an utterance packing 2+ distinct ideas, or something inherently visual/spatial — but NO anchoring render fired this turn (speech-only).
@@ -246,6 +274,12 @@ ${JSON.stringify(VERDICT_SCHEMA, null, 2)}`;
   const warranted = anchored + warrantedMissing;
   const pct = warranted ? Math.round((anchored / warranted) * 100) : 100;
   console.log(`board-support: ${anchored}/${warranted} warranted turns anchored (${pct}%) · over-fire: ${overFires}`);
+  // Sketch pipeline (show_sketch): brain-requested + auto-fired doodles, and how
+  // many resolved-to-drawn vs dropped (fail-to-nothing). Deterministic.
+  const sk = sketchActivity(dir);
+  if (sk.brainReq + sk.autoFire + sk.resolved + sk.dropped > 0) {
+    console.log(`sketch: brain-req: ${sk.brainReq} · auto-fire: ${sk.autoFire} · resolved→drawn: ${sk.resolved} · dropped: ${sk.dropped}`);
+  }
   // Answer-equivalence (P3): false-dings (rejected a correct/equivalent answer) should be 0;
   // rubber-stamps (affirmed a genuinely wrong answer) is the anti-regression control — also 0.
   console.log(`answer-judge: false-ding: ${falseDings} · rubber-stamp: ${rubberStamps}`);

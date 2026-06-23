@@ -1,0 +1,91 @@
+/**
+ * Doodler core — the isolated Haiku call that turns a one-line concept into a
+ * SketchPrimitive[]. Extracted from the route so it's unit-probeable.
+ *
+ * Isolated by design: sees only the concept + labels (NOT the board/history).
+ * Grilled 2026-06-22 — see memory project_tutor_sketch_capability.
+ */
+import Anthropic from '@anthropic-ai/sdk';
+import { SKETCH_TOOL_NAME, SKETCH_TOOL_SCHEMA, type SketchPrimitive } from './sketch-schema';
+import { validateSketch } from './sketch-validate';
+import { SKETCH_FEWSHOT } from './sketch-examples';
+
+export const DOODLER_MODEL = 'claude-haiku-4-5-20251001';
+
+const FEWSHOT_JSON = SKETCH_FEWSHOT.map(
+  (f) => `Concept: "${f.concept}"\nLabels: ${JSON.stringify(f.labels)}\n→ ${JSON.stringify(f.primitives)}`,
+).join('\n\n');
+
+export const DOODLER_SYSTEM_PROMPT = `You are a fast DOODLER for a voice tutor. Given a one-line concept the tutor is explaining, draw a quick, rough sketch — the kind a teacher scribbles on a whiteboard to make an idea click. You ONLY draw; you do not decide what to draw (the tutor already chose the concept).
+
+Call the \`${SKETCH_TOOL_NAME}\` tool with an ordered list of primitives.
+
+CANVAS: a square, coordinates 0..100 on both axes. (0,0) = top-left, (100,100) = bottom-right; +y points DOWN. Center is (50,50). Keep everything inside 5..95 so nothing clips.
+
+PRIMITIVES (each has optional stroke/fill color = one of: ink, red, blue, green, amber, gray; default stroke ink, no fill):
+- line {x1,y1,x2,y2}
+- arrow {x1,y1,x2,y2}  — draws an arrowhead at (x2,y2); use for motion/causation/before→after.
+- curve {points:[{x,y}...], closed?}  — a smooth curve through the points; closed:true makes a blob/loop. Use for hills, arcs, organic shapes.
+- ellipse {cx,cy,rx,ry}  — balls, planets, bubbles (rx=ry = circle).
+- rect {x,y,w,h, rounded?}  — boxes, containers (x,y = top-left corner).
+- polygon {points:[{x,y}...]}  — triangles, fragments, cups; needs 3+ points.
+- label {x,y,text, fontSize?, anchor?}  — a few words of text (fontSize ~5). Use the tutor's provided labels.
+
+HOUSE STYLE — this is the most important rule:
+- A doodle is a FEW rough strokes + a couple of labels. Aim for 4–12 primitives. NOT a precise, busy diagram.
+- Make the analogy instantly readable: the key objects + one or two arrows + the provided labels, placed near what they describe.
+- Use color sparingly and meaningfully (e.g. red for the moving/important thing, green for the "good"/stable end).
+- Place every provided label. Don't invent lots of extra text.
+
+DRAWING RECIPES — avoid the common mistakes:
+- MOTION / CHANGE OVER TIME: draw the moving object ONCE at its start, then an ARROW showing where it goes. At most ONE more copy at the end position, and keep start and end ALIGNED along the direction of motion (e.g. a falling object: two circles on the SAME vertical line joined by a downward arrow). NEVER scatter three or more copies of the same object around the canvas — that reads as separate objects, not motion.
+- KEEP OBJECTS SIMPLE & RECOGNIZABLE: a ball/cart = ONE plain filled circle, nothing drawn inside it; a box / tank / battery = one plain rectangle; a person = a small stick figure. Do not decorate or add internal strokes.
+- COMPLEX REAL OBJECTS (a roller coaster, a machine, a building): draw only the ESSENTIAL simple form. A roller coaster or a hill is just ONE smooth downward-sloping curve — not a detailed track. A staircase is a few clean square steps made of straight line segments with sharp corners. Do NOT pile overlapping strokes trying to look realistic.
+- Keep every stroke and label inside 5..95, and place labels CLEAR of the drawing so text never overlaps the strokes.
+- SPACE LABELS APART: never place two labels at nearly the same spot — they overprint into unreadable mush. Give each label its own clear area (at least ~12 units apart), and keep each label short (2–4 words). Don't label every element; label only the few that carry the idea.
+
+EXAMPLES:
+${FEWSHOT_JSON}`;
+
+let sharedClient: Anthropic | null = null;
+
+export interface DoodleResult {
+  primitives: SketchPrimitive[] | null;
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
+/** One isolated doodler call. Returns validated primitives or null (fail-to-nothing). */
+export async function generateDoodle(
+  concept: string,
+  labels: string[] = [],
+  client?: Anthropic,
+): Promise<DoodleResult> {
+  const anthropic = client ?? (sharedClient ??= new Anthropic());
+  const userPrompt =
+    `Concept: "${concept}"\n` +
+    `Labels to place: ${labels.length ? JSON.stringify(labels) : '(none — add at most one or two if they help)'}\n\n` +
+    `Draw it. Keep it to a few rough strokes plus the labels.`;
+
+  const response = await anthropic.messages.create({
+    model: DOODLER_MODEL,
+    max_tokens: 1500,
+    system: DOODLER_SYSTEM_PROMPT,
+    tools: [
+      {
+        name: SKETCH_TOOL_NAME,
+        description: 'Emit the doodle as a list of primitives.',
+        input_schema: SKETCH_TOOL_SCHEMA as Anthropic.Tool.InputSchema,
+      },
+    ],
+    tool_choice: { type: 'tool', name: SKETCH_TOOL_NAME },
+    messages: [{ role: 'user', content: userPrompt }],
+  });
+
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === SKETCH_TOOL_NAME,
+  );
+  return {
+    primitives: validateSketch(toolUse?.input),
+    usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
+  };
+}

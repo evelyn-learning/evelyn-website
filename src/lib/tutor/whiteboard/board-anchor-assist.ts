@@ -222,3 +222,94 @@ export function buildTransformationLatex(t: Transformation): string {
   const esc = (s: string) => s.replace(/[\\{}]/g, '');
   return `\\text{${esc(t.from)}} \\rightarrow \\text{${esc(t.to)}}`;
 }
+
+// ─────────────────────────── analogy → sketch ───────────────────────────
+// The fragile, prompt-couldn't-move case (SKETCH under-fire, all 4 ear-tests):
+// the brain narrates a VISUAL/SPATIAL analogy ("imagine a ball rolling down a
+// hill") and draws nothing. detectAnalogy pulls the narrated scene clause so the
+// orchestrator can auto-fire show_sketch with it as the concept. CONSERVATIVE by
+// design (the prompt path is primary; this is the safety net) + only fires when
+// the brain drew nothing + gated OFF by default. Fail-safe = null (no sketch).
+
+const ANALOGY_END = '(?:[.,;:!?—]|\\b(?:because|since|which|while|when|where|so that|and then|so|but)\\b|$)';
+// Concrete physical-process words (gerunds). Used both for the bare-"like"
+// cue and for the declarative-imagery patterns ("a glass shattering") that the
+// 2026-06-23 ear-test exposed — the brain narrates analogies WITHOUT an
+// "imagine/picture/like" cue, so cue-only detection missed them.
+const PHYSICAL_GERUNDS =
+  'rolling|falling|flowing|sliding|spreading|scattering|stretching|bouncing|swinging|sinking|rising|colliding|orbiting|melting|shattering|pouring|stacking|spinning|floating|mixing|dropping|rusting|dissolving|evaporating|condensing|freezing|boiling|burning|exploding|expanding|contracting|breaking|collapsing|crashing|settling|leaking|bubbling|crumbling|tumbling';
+const ANALOGY_CUES: RegExp[] = [
+  // strongest: explicit imagery verbs
+  new RegExp(`\\b(?:imagine|picture|visuali[sz]e|envision)\\s+(.+?)\\s*${ANALOGY_END}`, 'i'),
+  // "think of it/this as|like X"
+  new RegExp(`\\bthink\\s+of\\s+(?:it|this|them|that)\\s+(?:as|like)\\s+(.+?)\\s*${ANALOGY_END}`, 'i'),
+  // "it's/that's/this is (just) like X"
+  new RegExp(`\\b(?:it'?s|that'?s|this\\s+is)\\s+(?:just\\s+|kind\\s+of\\s+|sort\\s+of\\s+)?like\\s+(.+?)\\s*${ANALOGY_END}`, 'i'),
+  // bare "like X" / "as if X" only when X carries a concrete motion verb (so
+  // "like the last example" / "like I said" don't fire)
+  new RegExp(`\\b(?:like|as\\s+if)\\s+(.+?\\b(?:${PHYSICAL_GERUNDS})\\b.*?)\\s*${ANALOGY_END}`, 'i'),
+  // DECLARATIVE imagery (no cue word): "<a/an/the X> is a perfect/classic example".
+  // Capture the subject before the example-frame. (2026-06-23: "A glass shattering
+  // is a perfect example".)
+  new RegExp(`\\b((?:(?:a|an|the)\\s+)?[a-z][a-z\\s]{2,34}?)\\s+is\\s+(?:a|an)\\s+(?:perfect|classic|good|great|nice|common|everyday|familiar|simple|textbook|clear|wonderful)\\s+example\\b`, 'i'),
+  // DECLARATIVE imagery: a standalone physical image "a/an <np> <physical-gerund>"
+  // ("a glass shattering", "a perfume bottle spreading"). Constrained to the
+  // physical-gerund list so "a function mapping…" / "a reaction releasing…" don't fire.
+  new RegExp(`\\b((?:a|an)\\s+[a-z][a-z\\s]{1,28}?\\s+(?:${PHYSICAL_GERUNDS}))\\b`, 'i'),
+  // "take <the/a> <np> <physical-gerund>" ("take the iron rusting").
+  new RegExp(`\\btake\\s+(?:the\\s+|a\\s+|an\\s+)?([a-z][a-z\\s]{1,28}?\\s+(?:${PHYSICAL_GERUNDS}))\\b`, 'i'),
+];
+
+// Abstract head nouns that shouldn't be doodled as a scene (math/CS objects,
+// not physical imagery). If the captured concept's head is one of these, skip.
+const ABSTRACT_HEADS = new Set([
+  'function', 'number', 'equation', 'formula', 'variable', 'value', 'set',
+  'concept', 'idea', 'process', 'way', 'case', 'example', 'rule', 'theorem',
+  'definition', 'term', 'factor', 'ratio', 'fraction', 'percentage', 'percent',
+  'probability', 'sum', 'product', 'matrix', 'vector', 'derivative', 'integral',
+  'sequence', 'series', 'expression', 'inequality', 'graph', 'word', 'sentence',
+]);
+
+// Function-word heads → the captured "concept" is junk, not a scene. Guards the
+// "picture/imagine as a SPEECH VERB" false positive: "let me pull up a quick
+// picture FOR THAT" matched the picture-cue and yielded "for that" (2026-06-23).
+// Rejecting it lets detectAnalogy fall through to the REAL later cue in the
+// sentence (e.g. "think of it like water in a pipe").
+const FUNCTION_HEADS = new Set([
+  'for', 'of', 'to', 'that', 'this', 'it', 'at', 'in', 'on', 'here', 'there',
+  'up', 'out', 'with', 'by', 'from', 'as', 'so', 'then', 'when', 'where',
+  'because', 'about', 'into', 'over', 'than', 'and', 'but', 'or', 'me', 'us',
+]);
+
+function cleanAnalogyConcept(raw: string): string | null {
+  const s = String(raw ?? '').trim().replace(/\s+/g, ' ').replace(/[.,;:!?—\s]+$/, '').trim();
+  const words = s.split(' ').filter(Boolean);
+  if (words.length < 2 || words.length > 14) return null;
+  // Reject second-person / word-problem framing ("you have 5 apples").
+  if (/^(?:you|we|i|he|she|they)\b/i.test(s)) return null;
+  // Head = first content word (skip a leading article).
+  const lead = words[0].toLowerCase();
+  const headRaw = (lead === 'a' || lead === 'an' || lead === 'the') ? (words[1] ?? '') : words[0];
+  const head = headRaw.toLowerCase().replace(/[^a-z]/g, '');
+  if (head && (ABSTRACT_HEADS.has(head) || FUNCTION_HEADS.has(head))) return null;
+  return s;
+}
+
+export interface Analogy { concept: string }
+
+/**
+ * Detect a narrated visual/spatial analogy and return its scene clause as a
+ * `concept` for show_sketch, or null. Conservative: explicit imagery cues only,
+ * abstract-head + second-person guards, fail-safe to null.
+ */
+export function detectAnalogy(text: string): Analogy | null {
+  const t = String(text ?? '');
+  if (!t.trim()) return null;
+  for (const re of ANALOGY_CUES) {
+    const m = t.match(re);
+    if (!m) continue;
+    const concept = cleanAnalogyConcept(m[1]);
+    if (concept) return { concept };
+  }
+  return null;
+}

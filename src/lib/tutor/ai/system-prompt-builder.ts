@@ -305,7 +305,7 @@ const BOARD_ANCHORED_SPEECH_SENTINEL = '__BOARD_ANCHORED_SPEECH_SENTINEL__';
 const BOARD_ANCHORED_SPEECH_RULE = `**Show, don't just tell — anchor improvised content too.** The principle above (board carries the dense content, voice stays short) governs the content you IMPROVISE while teaching just as much as authored cards — the concepts, relationships, and definitions you voice on a Socratic or explanatory turn. Don't rely on audio (or the chat transcript) alone to carry a point the student must hold onto: when a board anchor would help the student follow or stay attentive, give the spoken idea a lightweight visual companion. Three ways to anchor, chosen by what you're saying:
 - MARK — when you point at something already on the board ("this term", "the part in front of…", "the row/line I just named", "the equation we wrote"), circle, underline, or tick that element (\`tutor_scribble\`) and bring it into focus, so the student's eye lands where your words point. This fires whenever YOU name a part to confirm, single out, or emphasize it — not only when a student answers. If you say "the third one", "this row", "that term", mark it as you say it.
 - WRITE — when you state a relationship, rule, definition, mapping, or an utterance packing two or more distinct ideas, put it on the board as a short expression or line (\`show_equation\` / \`tutor_handwrite\`) rather than only speaking it. A TRANSFORMATION or process you describe — one thing turning into or producing another, a before-and-after — should go up as a short arrow form (A → B), not just narrated.
-- SKETCH — when your words describe something inherently visual or spatial (a shape, a direction, a trend), OR you reach for an ANALOGY or concrete mental image to explain an abstract idea, draw a quick small depiction with the lightest fitting tool instead of painting it in words alone. If nothing graphical fits cleanly, a couple of handwritten labels or a single arrow still beats words-only. If that subject is ALREADY on the board, EVOLVE / annotate the existing figure in place — never spawn a second figure for the same subject.
+- SKETCH — when your words describe something inherently visual or spatial (a shape, a direction, a trend), OR you reach for an ANALOGY or concrete mental image to explain an abstract idea, draw a quick small depiction instead of painting it in words alone.__SKETCH_TOOL_CLAUSE__ If nothing graphical fits cleanly, a couple of handwritten labels or a single arrow still beats words-only. If that subject is ALREADY on the board, EVOLVE / annotate the existing figure in place — never spawn a second figure for the same subject.
 
 Calibration: this is NOT every turn. Anchor only when it helps the student follow — stay speech-only for affirmations, transitions, praise, a bare Socratic question that introduces no new content, or content already visible (MARK or refocus it instead of re-rendering). At most ONE anchor per turn unless the content genuinely has distinct parts.
 
@@ -1279,10 +1279,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // content. Spliced in only when TUTOR_BOARD_ANCHORED_SPEECH === 'true' (server-
   // side flag, default OFF). Flag off ⇒ sentinel replaced with '' ⇒ byte-identical
   // prompt, cache prefix unchanged. See project_tutor_board_anchored_speech.
+  // The SKETCH verb names the real show_sketch tool ONLY when TUTOR_SKETCH is on
+  // (else the tool isn't in the brain's tool list and the rule must not point at
+  // it). See project_tutor_sketch_capability.
+  const sketchToolClause =
+    process.env.TUTOR_SKETCH === 'true'
+      ? ' Reach for `show_sketch` — a quick rough hand-drawn doodle generated from your one-line description — for analogies and visual/spatial mental images; for precise or quantitative figures prefer show_function_graph / show_geometry / show_diagram. When you give a concrete real-world analogy or mental image, DRAW it with show_sketch — do not substitute an equation or a scribble on existing text for the actual picture.'
+      : '';
   prompt = prompt.replace(
     `${BOARD_ANCHORED_SPEECH_SENTINEL}\n`,
     process.env.TUTOR_BOARD_ANCHORED_SPEECH === 'true'
-      ? `${BOARD_ANCHORED_SPEECH_RULE}\n\n`
+      ? `${BOARD_ANCHORED_SPEECH_RULE.replace('__SKETCH_TOOL_CLAUSE__', sketchToolClause)}\n\n`
       : '',
   );
 

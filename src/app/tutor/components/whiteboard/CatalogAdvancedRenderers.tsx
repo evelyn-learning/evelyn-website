@@ -651,8 +651,21 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
-      <div data-feature={N.chart} className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700">
-        <div data-feature={N.leftColumn} data-feature-label={figure.leftHeader || 'Left column'} className="flex flex-col border-r-2 border-gray-700">
+      {/* CSS subgrid: both columns span the SAME parent row tracks, so paired
+          rows size to the taller cell and ALIGN across columns — fixes the
+          drift when one side's item wraps to more lines (2026-06-23 ear-test).
+          The leftColumn/rightColumn elements are kept (scribble targets). */}
+      <div
+        data-feature={N.chart}
+        className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700"
+        style={{ gridTemplateRows: `repeat(${rows + 1}, auto)` }}
+      >
+        <div
+          data-feature={N.leftColumn}
+          data-feature-label={figure.leftHeader || 'Left column'}
+          className="border-r-2 border-gray-700"
+          style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
+        >
           <div data-feature={N.leftHeader} data-feature-label={figure.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center">{figure.leftHeader}</div>
           {Array.from({ length: rows }).map((_, i) => (
             <div
@@ -665,7 +678,11 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
             </div>
           ))}
         </div>
-        <div data-feature={N.rightColumn} data-feature-label={figure.rightHeader || 'Right column'} className="flex flex-col">
+        <div
+          data-feature={N.rightColumn}
+          data-feature-label={figure.rightHeader || 'Right column'}
+          style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
+        >
           <div data-feature={N.rightHeader} data-feature-label={figure.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center">{figure.rightHeader}</div>
           {Array.from({ length: rows }).map((_, i) => (
             <div

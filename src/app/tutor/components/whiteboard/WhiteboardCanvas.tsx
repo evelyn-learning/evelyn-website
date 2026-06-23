@@ -11,6 +11,8 @@ import React, { useState, useCallback, useMemo, useEffect, useLayoutEffect, useR
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
+import { SketchRenderer } from './SketchRenderer';
+import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import EarlyMathRenderer from './EarlyMathRenderer';
 import PhonicsRenderer from './PhonicsRenderer';
@@ -1762,6 +1764,22 @@ export function CommandRenderer({ command }: CommandRendererProps) {
 
     case 'showDiagram':
       return <DiagramDispatcher type={command.type} params={command.params} />;
+
+    case 'showSketch': {
+      // A doodle only renders once its primitives have resolved (async). A
+      // request without primitives should never reach here (render-sync holds
+      // it pending), but guard defensively.
+      const prims = command.primitives as SketchPrimitive[] | undefined;
+      if (!prims || prims.length === 0) return null;
+      return (
+        <SketchRenderer
+          primitives={prims}
+          title={command.title}
+          description={command.description}
+          labels={command.labels}
+        />
+      );
+    }
 
     case 'drawVector':
       return (

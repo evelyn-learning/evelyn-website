@@ -833,10 +833,29 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     // AP Macro session: 4 identical show_diagram(loanable_funds) calls
     // back-to-back, none dedup'd.
     case 'showDiagram':           return buildDiagramManifest(cmd as any);
+    case 'showSketch':            return buildSketchManifest(cmd as any);
     case 'handwrite':             return buildHandwriteManifest(cmd as any);
     default:                      return null;
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
+}
+
+/** Manifest for `show_sketch` doodles. Registers the WHOLE doodle as one
+ *  addressable feature so it catalogs (dedup / evolve-in-place) and the brain
+ *  can scribble it by title ("circle the sketch"). Internal-label features are
+ *  deferred — at manifest-build time the doodler's primitives don't exist yet
+ *  (they resolve async). See project_tutor_sketch_capability. */
+function buildSketchManifest(cmd: { concept?: string; title?: string }): FeatureManifestEntry[] {
+  const title = String(cmd.title ?? '').trim();
+  const concept = String(cmd.concept ?? '').trim();
+  const desc = title || (concept.length > 60 ? `${concept.slice(0, 57)}...` : concept) || 'sketch';
+  return [{
+    name: 'sketch',
+    kind: 'shape',
+    description: `sketch: ${desc}`,
+    labels: ['sketch', 'doodle', 'drawing', 'the sketch', 'the drawing', ...(title ? [title] : [])],
+    scribbleable: true,
+  }];
 }
 
 /** Manifest for `tutor_handwrite` commands. Post-redesign each handwrite

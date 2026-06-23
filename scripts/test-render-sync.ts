@@ -118,6 +118,33 @@ function main() {
     assert.equal(flushableCount(b, 9), 0, 'second entry held behind the pending front');
   });
 
+  // ── Async doodle: pendingAsync is content-less, NEVER flushable until resolved/removed ──
+  test('pendingAsync: never flushable even when anchor satisfied', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingAsync: true }];
+    assert.equal(flushableCount(b, 9), 0, 'no content yet');
+  });
+  test('pendingAsync: drainAll does NOT release it (no content to show)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingAsync: true }];
+    assert.equal(flushableCount(b, 9, { drainAll: true }), 0, 'unlike pendingReanchor, drain cannot show a content-less slot');
+  });
+  test('pendingAsync: capExpired does NOT release it either', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingAsync: true, capExpired: true }];
+    assert.equal(flushableCount(b, 9), 0);
+  });
+  test('pendingAsync resolved (flag cleared) → flushes at its anchor', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, pendingAsync: false }];
+    assert.equal(flushableCount(b, 2), 0, 'sentence 3 not started');
+    assert.equal(flushableCount(b, 3), 1, 'resolved + anchor satisfied → flush');
+  });
+  test('pendingAsync front blocks later ready entries until resolved/spliced (bounded by cap)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingAsync: true }, { anchorM: 0 }];
+    assert.equal(flushableCount(b, 9), 0, 'later entry held behind the pending sketch (orchestrator splices on timeout to unblock)');
+  });
+  test('pendingAsync resolved at front lets the contiguous ready prefix flush', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingAsync: false }, { anchorM: 0 }];
+    assert.equal(flushableCount(b, 1), 2, 'both flush once the sketch resolved');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

@@ -125,6 +125,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showImage',
     'showSvgDiagram',
     'showCode',
+    'showSketch',
     'showNumberLine',
     'showGeometry',
     'showUnitCircle',

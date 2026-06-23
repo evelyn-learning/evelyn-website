@@ -31,6 +31,14 @@ export interface RenderSyncEntry {
    *  capExpired still release it (it surfaces at turn-end, never at the front).
    *  See board-anchor-assist + project_tutor_board_anchored_speech. */
   pendingReanchor?: boolean;
+  /** Async-content placeholder (show_sketch): the doodler is still generating
+   *  this render's `primitives`, so it has NO content yet. It holds its FIFO
+   *  slot (preserving stream order) but is NEVER flushable — not even on
+   *  drainAll/cap — until the orchestrator either resolves it (clears this flag
+   *  + fills content) or splices it out (fail/timeout = fail-to-nothing). That
+   *  bounds how long it can block later renders to the doodler's hard cap.
+   *  See project_tutor_sketch_capability. */
+  pendingAsync?: boolean;
 }
 
 export interface FlushOpts {
@@ -61,6 +69,10 @@ export function flushableCount(
   if (opts.paused) return 0;
   let n = 0;
   for (const e of buffer) {
+    // An async placeholder has no content yet — never flushable (even on
+    // drainAll/cap). It blocks its slot until the orchestrator resolves it
+    // (clears pendingAsync) or splices it out. Stop the prefix here.
+    if (e.pendingAsync) break;
     // A pending-reanchor entry is held against its (stale) anchor — only the
     // turn-end drain or the cap may release it until it's been re-anchored.
     const anchorReady = !e.pendingReanchor && playbackStartedCount >= e.anchorM + 1;

@@ -437,6 +437,37 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       required: ['type', 'params'],
     },
   },
+  // show_sketch — rough hand-drawn doodle for visual/spatial analogies.
+  // Gated on TUTOR_SKETCH (server-side): the tool only exists for the brain
+  // when the flag is on, so A/B + rollback are a server-restart away. See
+  // project_tutor_sketch_capability.
+  ...((process.env.TUTOR_SKETCH === 'true'
+    ? [{
+        name: 'show_sketch',
+        description:
+          "Draw a quick, rough HAND-DRAWN doodle to make a concept, analogy, or mental image click — the kind a teacher scribbles on a whiteboard. Use when your words describe something inherently VISUAL or SPATIAL (a ball rolling down a hill, a glass shattering, gas spreading out, a seesaw balancing) and a precise structured diagram would be overkill or wouldn't fit. You describe WHAT to draw in one line; the system draws it. Prefer show_diagram / show_function_graph / show_geometry for quantitative or precise figures; reach for show_sketch for illustrative intuition.",
+        parameters: {
+          type: 'object',
+          properties: {
+            concept: {
+              type: 'string',
+              description:
+                'One vivid line describing the drawing, e.g. "a ball rolling down a curved hill to its lowest, most stable resting point".',
+            },
+            labels: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Short text labels to place on the doodle, e.g. ["high energy","stable"]. Optional.',
+            },
+            title: {
+              type: 'string',
+              description: 'Short caption / figure title (also used to evolve the same sketch in place). Optional.',
+            },
+          },
+          required: ['concept'],
+        },
+      }]
+    : []) as ToolDefinition[]),
   // show_image was removed 2026-04-30 — brain hallucinated URLs
   // (notably plausible-looking Wikimedia paths that don't exist),
   // and prompt-side "only use URLs you're confident exist" guidance
@@ -2001,6 +2032,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'show_equation') {
     return { action: 'showEquation', latex: funcArgs.latex, label: funcArgs.label };
+  }
+  if (funcName === 'show_sketch') {
+    // Request only — `primitives` are resolved async by the doodler
+    // (api/tutor/sketch) and mutated onto the command before it flushes.
+    return {
+      action: 'showSketch',
+      concept: typeof funcArgs.concept === 'string' ? funcArgs.concept : '',
+      labels: Array.isArray(funcArgs.labels) ? funcArgs.labels.map(String) : undefined,
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+    };
   }
   if (funcName === 'show_code') {
     return {

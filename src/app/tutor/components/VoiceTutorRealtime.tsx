@@ -37,6 +37,7 @@ import {
   sentenceIntroducesAnchor,
   detectTransformation,
   buildTransformationLatex,
+  detectAnalogy,
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
@@ -245,6 +246,13 @@ const TUTOR_RENDER_SYNC =
 const TUTOR_BOARD_ANCHOR_ASSIST =
   process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'on'
   || process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'true';
+// Tutor sketch capability (client side): gates the detectAnalogy → show_sketch
+// AUTO-FIRE. The brain-emitted show_sketch path is gated server-side by the
+// TUTOR_SKETCH tool flag instead (no tool → no call). Client default OFF — opt
+// in with NEXT_PUBLIC_TUTOR_SKETCH=on. See project_tutor_sketch_capability.
+const TUTOR_SKETCH =
+  process.env.NEXT_PUBLIC_TUTOR_SKETCH === 'on'
+  || process.env.NEXT_PUBLIC_TUTOR_SKETCH === 'true';
 // Resume-from-cut granularity (P5): on a confirmed-noise mid-sentence pause,
 // resume from the CLAUSE the cut landed in instead of re-speaking the whole
 // sentence. Client-side, DEFAULT OFF. See resume-from-cut + project_tutor_work_queue.
@@ -260,6 +268,18 @@ const isBoardRenderCommand = (c: unknown): boolean => {
   if (BOARD_RENDER_META_ACTIONS.has(a)) return false;
   return a.startsWith('show') || ['scribble', 'handwrite', 'tutorHandwrite', 'drawVector', 'annotate', 'highlight'].includes(a);
 };
+// A show_sketch REQUEST = the doodle hasn't been generated yet (no primitives).
+// Once the doodler resolves, primitives are mutated on and it's a normal render.
+const isSketchRequestCommand = (c: unknown): boolean => {
+  const cmd = c as { action?: string; primitives?: unknown[] };
+  return cmd?.action === 'showSketch' && !(Array.isArray(cmd.primitives) && cmd.primitives.length > 0);
+};
+// Hard cap on doodler latency before fail-to-nothing. Set above the observed
+// Haiku tail (2–6s; the larger 4-shot prompt pushed it up) so the slow tail
+// renders instead of dropping — the stranding fix flushes a late/stale resolve
+// gracefully (drainAll), so a slightly-late doodle lands in context rather than
+// being lost. Past this the sketch is dropped (fail-to-nothing).
+const SKETCH_TIMEOUT_MS = 7000;
 // Render-buffer STALL window. A SINGLE shared timer, reset on every
 // playback-progress signal (sentence-start / drain) and on each buffer
 // add. It fires only when NO progress has happened for this long — a
@@ -941,7 +961,13 @@ export function VoiceTutorRealtime({
     // until the sentence that names it plays. anchorKeywords drives the match.
     pendingReanchor?: boolean;
     anchorKeywords?: AnchorKeywords;
+    // Async doodle placeholder (show_sketch): held until the doodler resolves
+    // its primitives (mutated onto the command) or the entry is spliced out
+    // (fail/timeout). See project_tutor_sketch_capability.
+    pendingAsync?: boolean;
   }>>([]);
+  // In-flight doodle fetches — aborted on turn kill / buffer drop.
+  const sketchAbortsRef = useRef<Set<AbortController>>(new Set());
   // Board-anchor assist, per turn: the narration spoken so far (for the
   // transformation-arrow fallback) + whether ANY board render fired this turn
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
@@ -2111,6 +2137,91 @@ export function VoiceTutorRealtime({
     }, RENDER_SYNC_STALL_MS);
   }, [onDebugEvent, flushReadyRenders]);
 
+  // ── Async doodle (show_sketch) ──────────────────────────────────────────
+  // A sketch arrives as a REQUEST (concept/labels, no primitives). It's
+  // already cataloged-by-title (so dedup / evolve-in-place work); here we hold
+  // a pendingAsync render-sync slot (preserving stream order) and resolve the
+  // primitives off-thread. On success we MUTATE primitives onto the same
+  // command object (every ref — buffer entry, commandById, mirror — sees it),
+  // clear pendingAsync, and flush. On fail/timeout we splice the slot + retract
+  // the catalog entry (fail-to-nothing). See project_tutor_sketch_capability.
+  const dropPendingSketch = useCallback(
+    (entry: { pendingAsync?: boolean }, cmdId: string | undefined, why: string) => {
+      const buf = renderBufferRef.current;
+      const i = buf.indexOf(entry as (typeof buf)[number]);
+      if (i >= 0) buf.splice(i, 1);
+      if (typeof cmdId === 'string') {
+        whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c) => (c as any).id !== cmdId,
+        );
+        whiteboardCommandCountRef.current = Math.max(0, whiteboardCommandCountRef.current - 1);
+        commandByIdRef.current.delete(cmdId);
+        catalogRef.current.removeByIds([cmdId]);
+      }
+      onDebugEvent?.('sketch_dropped', `${why} id=${cmdId ?? '?'}`);
+      flushReadyRenders();
+    },
+    [onDebugEvent, flushReadyRenders],
+  );
+
+  const bufferAsyncSketch = useCallback(
+    (cmd: WhiteboardCommand, anchorM: number) => {
+      const entry = { processed: [cmd], anchorM, pendingAsync: true };
+      renderBufferRef.current.push(entry);
+      // The turn this sketch belongs to. If the doodler resolves AFTER the turn
+      // ends (brain emitted show_sketch late + 2–3s gen), the entry's anchorM is
+      // stale in the next turn's reset counters and would never satisfy — so on a
+      // stale resolve we force a drainAll flush instead of stranding it for turns
+      // (the 2026-06-23 "didn't doodle on turn 1, appeared 2 turns later" bug).
+      const entryTurn = pageTurnRef.current;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = cmd as any;
+      const concept: string = typeof c.concept === 'string' ? c.concept : '';
+      const labels: string[] = Array.isArray(c.labels) ? c.labels : [];
+      const cmdId: string | undefined = typeof c.id === 'string' ? c.id : undefined;
+      onDebugEvent?.('sketch_request', `anchor=${anchorM} "${concept.slice(0, 50)}" id=${cmdId ?? '?'}`);
+
+      const controller = new AbortController();
+      sketchAbortsRef.current.add(controller);
+      const timer = setTimeout(() => controller.abort(), SKETCH_TIMEOUT_MS);
+
+      fetch('/api/tutor/sketch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concept, labels, sessionId: sessionIdRef.current }),
+        signal: controller.signal,
+      })
+        .then((r) => (r.ok ? r.json() : { primitives: null }))
+        .then((data: { primitives?: unknown[] | null }) => {
+          clearTimeout(timer);
+          sketchAbortsRef.current.delete(controller);
+          // Entry may have been dropped (turn kill) while the fetch was inflight.
+          if (!renderBufferRef.current.includes(entry)) return;
+          const prims = Array.isArray(data?.primitives) && data.primitives.length > 0 ? data.primitives : null;
+          if (prims) {
+            c.primitives = prims; // attach the visual payload to the cataloged command
+            entry.pendingAsync = false;
+            const stale = pageTurnRef.current !== entryTurn;
+            onDebugEvent?.('sketch_resolved', `${prims.length} prims id=${cmdId ?? '?'}${stale ? ' (stale→drainAll)' : ''}`);
+            // Stale (resolved after its turn) OR sync inactive (turn audio drained)
+            // → release now via drainAll; its anchor sentence is gone. Otherwise
+            // flush normally against its introducing sentence (in-turn sync).
+            flushReadyRenders(stale || !renderSyncActiveRef.current ? { drainAll: true } : {});
+            armRenderStall();
+          } else {
+            dropPendingSketch(entry, cmdId, 'empty/invalid');
+          }
+        })
+        .catch(() => {
+          clearTimeout(timer);
+          sketchAbortsRef.current.delete(controller);
+          if (renderBufferRef.current.includes(entry)) dropPendingSketch(entry, cmdId, 'fetch-failed/timeout');
+        });
+    },
+    [onDebugEvent, flushReadyRenders, armRenderStall, dropPendingSketch],
+  );
+
   // Buffer one render batch (or dispatch immediately when render-sync is
   // off / not on the brain-stream path). Anchored to the count of
   // sentences dispatched to TTS so far this turn.
@@ -2128,6 +2239,32 @@ export function VoiceTutorRealtime({
       return;
     }
     const anchorM = ttsDispatchedCountRef.current;
+    // Async doodle: a show_sketch request can't render yet (no primitives). Hold
+    // a pendingAsync slot per sketch + kick the doodler; flush non-sketch
+    // commands in the same batch normally (preserving order). Sketches arrive
+    // essentially alone (one tool call), at most preceded by meta newPage/scrollTo.
+    if (processed.some(isSketchRequestCommand)) {
+      let run: WhiteboardCommand[] = [];
+      const flushRun = () => {
+        if (run.length) {
+          renderBufferRef.current.push({ processed: run, anchorM });
+          run = [];
+        }
+      };
+      for (const c of processed) {
+        if (isSketchRequestCommand(c)) {
+          flushRun();
+          bufferAsyncSketch(c, anchorM);
+        } else {
+          run.push(c);
+        }
+      }
+      flushRun();
+      onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length} (async-sketch)`);
+      armRenderStall();
+      flushReadyRenders();
+      return;
+    }
     // Re-anchor: a FRONT-LOADED discussable equation/figure — emitted at the top
     // of the turn (anchor ≤ RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR) AND whose
     // preceding sentence does NOT name it — is held (pendingReanchor) until the
@@ -2166,6 +2303,13 @@ export function VoiceTutorRealtime({
     if (renderStallTimerRef.current) {
       clearTimeout(renderStallTimerRef.current);
       renderStallTimerRef.current = null;
+    }
+    // Abort any in-flight doodle fetches — their late resolve must not paint
+    // onto a killed/replaced turn. The resolve handler also no-ops because the
+    // entry is gone from the buffer (cleared below).
+    if (sketchAbortsRef.current.size > 0) {
+      for (const ctrl of sketchAbortsRef.current) ctrl.abort();
+      sketchAbortsRef.current.clear();
     }
     const buf = renderBufferRef.current;
     if (buf.length === 0) { renderBufferPausedRef.current = false; return; }
@@ -9302,18 +9446,20 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
         }
       }
-      // Board-anchor assist (transformations only): the brain narrated a clean
-      // "A → B" transformation but drew NOTHING on the board this turn — auto-
-      // write the arrow so it's shown, not just spoken. Conservative detector
-      // (explicit-A patterns, figurative "becomes X" excluded), fires once per
-      // turn, gated OFF by default. Direct dispatch = a terminal annotation
-      // (not catalogued); fail-safe = render nothing when no clean match.
+      // Board-anchor assist (stream-end fallbacks): auto-anchor content the brain
+      // narrated but DREW NOTHING for the whole turn (boardRenderFired gate). The
+      // brain now reliably sketches analogies it engages with (prompt path), so
+      // the auto-fire is the last resort for FULLY-neglected turns only — firing
+      // when the brain merely wrote an equation caused DUPLICATES (it would draw
+      // the figure itself a turn later; 2026-06-23). Transformation arrow first,
+      // else analogy → sketch. Both dispatch TERMINALLY, fail to nothing.
       if (
         TUTOR_BOARD_ANCHOR_ASSIST
-        && !boardRenderFiredThisTurnRef.current
         && turnNarrationRef.current.length > 0
+        && !boardRenderFiredThisTurnRef.current
       ) {
-        const xform = detectTransformation(turnNarrationRef.current.join(' '));
+        const narration = turnNarrationRef.current.join(' ');
+        const xform = detectTransformation(narration);
         if (xform) {
           onWhiteboardCommand([{
             action: 'showEquation',
@@ -9321,6 +9467,41 @@ export function VoiceTutorRealtime({
             label: 'Transformation',
           } as WhiteboardCommand]);
           onDebugEvent?.('board_anchor_transformation_arrow', `${xform.from} → ${xform.to}`);
+        } else if (TUTOR_SKETCH) {
+          const analogy = detectAnalogy(narration);
+          if (analogy) {
+            onDebugEvent?.('board_anchor_analogy', analogy.concept.slice(0, 60));
+            const ctrl = new AbortController();
+            sketchAbortsRef.current.add(ctrl);
+            const timer = setTimeout(() => ctrl.abort(), SKETCH_TIMEOUT_MS);
+            void fetch('/api/tutor/sketch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ concept: analogy.concept, labels: [], sessionId: sessionIdRef.current }),
+              signal: ctrl.signal,
+            })
+              .then((r) => (r.ok ? r.json() : { primitives: null }))
+              .then((data: { primitives?: unknown[] | null }) => {
+                clearTimeout(timer);
+                sketchAbortsRef.current.delete(ctrl);
+                const prims = Array.isArray(data?.primitives) && data.primitives.length > 0 ? data.primitives : null;
+                if (prims) {
+                  onWhiteboardCommand([{
+                    action: 'showSketch',
+                    primitives: prims,
+                    title: 'Sketch',
+                    concept: analogy.concept,
+                  } as WhiteboardCommand]);
+                  onDebugEvent?.('board_anchor_analogy_rendered', `${prims.length} prims`);
+                } else {
+                  onDebugEvent?.('board_anchor_analogy_dropped', 'fail-to-nothing');
+                }
+              })
+              .catch(() => {
+                clearTimeout(timer);
+                sketchAbortsRef.current.delete(ctrl);
+              });
+          }
         }
       }
       // Render↔speech sync: the stream is done — stop buffering NEW batches.

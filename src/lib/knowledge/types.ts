@@ -754,6 +754,12 @@ export type WhiteboardCommand =
   | { action: 'showImage'; url: string; alt: string }
   | { action: 'showSvgDiagram'; svg: string; title?: string; description?: string }
   | { action: 'showCode'; code: string; language?: string; label?: string }
+  // Rough hand-drawn doodle. The brain emits {concept, labels, title} (a
+  // request); a Haiku doodler resolves `primitives` (SketchPrimitive[] from
+  // lib/tutor/whiteboard/sketch-schema) async, mutated onto this same command
+  // object before it flushes. Typed unknown[] to keep this file import-free;
+  // the canvas casts. See project_tutor_sketch_capability.
+  | { action: 'showSketch'; concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; description?: string }
   // ── New structured math diagram tools ──
   | { action: 'showNumberLine'; title?: string; min: number; max: number; step?: number; points?: NumberLinePoint[]; intervals?: NumberLineInterval[]; segments?: NumberLineSegment[]; fractionTicks?: { denominator: number; showLabels?: boolean } }
   | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; conics?: GeometryConic[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
