@@ -22,7 +22,7 @@
  * while this picker shows below. Either path can drive the lesson.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Bot, Clock } from 'lucide-react';
 
 export type NudgePlan = {
@@ -69,6 +69,8 @@ function isVague(text: string): boolean {
 }
 
 export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTopicId, introText, onSelect, onDismiss }: LessonNudgePickerProps) {
+  void onDismiss; // kept for API compat; "hide" now collapses (re-openable) instead of dismissing
+  const [collapsed, setCollapsed] = useState(false);
   const studentTurns = useMemo(
     () => recentTurns.filter((t) => t.role === 'student'),
     [recentTurns],
@@ -129,6 +131,26 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTo
 
   const greeting = introText ?? 'Ooh, blank canvas — I love it! Pick a lesson to jump straight in, or just tell me what you want to learn.';
 
+  // Collapsed view — "hide" collapses to a re-openable link instead of
+  // removing the suggestions outright (there was no way to un-hide before).
+  if (collapsed) {
+    return (
+      <div className="flex gap-3">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
+          <Bot className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 hover:underline bg-gray-100 rounded-lg rounded-bl-none px-3 py-2"
+          >
+            📚 Show lesson options
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-3">
       {/* Tutor avatar — matches the styling of real tutor entries in
@@ -141,15 +163,13 @@ export function LessonNudgePicker({ plans, recentTurns, lessonStarted, currentTo
         <div className="inline-block max-w-[95%] bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none">
           <div className="flex items-start justify-between gap-2 mb-2">
             <p className="whitespace-pre-wrap text-sm">{greeting}</p>
-            {onDismiss && (
-              <button
-                onClick={onDismiss}
-                className="flex-shrink-0 text-[11px] text-gray-500 hover:text-gray-800 underline"
-                aria-label="Hide lesson suggestions"
-              >
-                hide
-              </button>
-            )}
+            <button
+              onClick={() => setCollapsed(true)}
+              className="flex-shrink-0 text-[11px] text-gray-500 hover:text-gray-800 underline"
+              aria-label="Hide lesson suggestions"
+            >
+              hide
+            </button>
           </div>
           {currentPlans.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

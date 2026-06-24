@@ -26,6 +26,8 @@ import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutor
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
+import SessionStage, { type VoiceState } from './components/session/SessionStage';
+import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
@@ -1373,6 +1375,72 @@ function TutorPage() {
     }
   }, [stage]);
 
+  // Live voice-engine state for the new SessionStage presence orb (fed by
+  // VoiceTutorRealtime's onVoiceStateChange). 'idle' until the engine reports.
+  const [liveVoiceState, setLiveVoiceState] = useState<VoiceState>('idle');
+
+  // Flag for the new "Stage + Presence" in-session layout (Direction 4).
+  // Default OFF → legacy split-pane render is unchanged. See
+  // [[project-tutor-session-ui-redesign]].
+  const NEW_SESSION_UI = (() => {
+    const v = process.env.NEXT_PUBLIC_TUTOR_NEW_SESSION_UI;
+    if (!v) return false;
+    return ['1', 'true', 'on', 'yes'].includes(String(v).trim().toLowerCase());
+  })();
+
+  // Shared student-input handlers — extracted so BOTH the legacy whiteboard
+  // panel and the new SessionStage tools cluster route through identical logic.
+  const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null) => {
+    const verdict =
+      isCorrect === true ? 'matches the expected answer (string-equal)'
+      : isCorrect === false ? 'does NOT match the expected answer'
+      : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
+    const marker = expected
+      ? `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.]`
+      : `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
+    realtimeHandleRef.current?.sendTextMessage(marker);
+  }, []);
+
+  const handleStudentInput = useCallback((type: 'text' | 'drawing' | 'image', content: string) => {
+    const cmd: WhiteboardCommand = type === 'image'
+      ? { action: 'showSvgDiagram', title: 'Student Upload', svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="290" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
+      : type === 'drawing'
+      ? { action: 'showSvgDiagram', title: 'Student Drawing', svg: `<svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="140" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
+      : { action: 'showSvgDiagram', title: 'Student Answer', svg: `<svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="390" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/><text x="200" y="22" text-anchor="middle" font-size="11" fill="#6b7280">Student wrote:</text><text x="200" y="42" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>` } as WhiteboardCommand;
+    setWhiteboardCommands(prev => [...prev, cmd]);
+    if (type === 'drawing') setStatusMessage('✏️ Reading your drawing...');
+    else if (type === 'image') setStatusMessage('📷 Analyzing your image...');
+    else if (type === 'text') setStatusMessage('💬 Processing...');
+    if (realtimeHandleRef.current) {
+      if (type === 'text') {
+        realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
+        setTimeout(() => setStatusMessage(null), 1000);
+      } else {
+        const noun = type === 'drawing' ? 'drew on' : 'uploaded an image to';
+        (async () => {
+          try {
+            const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
+            const resp = await fetch('/api/tutor/extract-homework', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageData: base64Data, mimeType: 'image/png', subject: selectedSubject, topic: selectedTopicId, level: selectedLevel }),
+            });
+            const data = await resp.json();
+            setStatusMessage(null);
+            if (data.extractedProblem && realtimeHandleRef.current) {
+              realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`);
+            } else {
+              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`);
+            }
+          } catch {
+            setStatusMessage(null);
+            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`);
+          }
+        })();
+      }
+    }
+    trackInteraction('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
+  }, [selectedSubject, selectedTopicId, selectedLevel, trackInteraction]);
+
   // Render setup stage
   if (stage === 'setup') {
     return (
@@ -1420,6 +1488,260 @@ function TutorPage() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ===== NEW "Stage + Presence" in-session layout (flag-gated, additive) =====
+  if (stage === 'session' && NEW_SESSION_UI) {
+    const boardEl = (
+      <WhiteboardCanvas
+        commands={whiteboardCommands}
+        tutorBusy={isProcessing && whiteboardActiveThisTurn}
+        onClear={() => setWhiteboardCommands([])}
+        onAttentionShift={() => {}}
+        onTryYourselfAnswer={handleTryYourselfAnswer}
+        suppressEmptyState
+        className="h-full"
+      />
+    );
+    const transcriptEl = (
+      <TranscriptView
+        transcript={transcript}
+        isProcessing={isProcessing}
+        pickerAnchorIndex={pickerAnchorIndex}
+        enablePacingChips={(() => {
+          const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
+          if (v === undefined || v === null || v === '') return true;
+          const s = String(v).trim().toLowerCase();
+          return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
+        })()}
+        onQuickAnswer={(text) => {
+          realtimeHandleRef.current?.stopSpeaking();
+          realtimeHandleRef.current?.sendTextMessage(text);
+        }}
+        picker={!nudgeDismissed && availableLessonPlans.length > 0 ? (
+          <LessonNudgePicker
+            plans={availableLessonPlans}
+            recentTurns={transcript.slice(-6).map((t) => ({ role: t.role, text: t.text }))}
+            lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
+            currentTopicId={selectedTopicId}
+            introText={topicDisplayName ? `I see you chose ${topicDisplayName} — nice. You can tell me ANY topic in this area, or jump straight into one of these lessons:` : undefined}
+            onSelect={(plan) => {
+              setSelectedLessonPlanId(plan.id);
+              setNudgeDismissed(true);
+              realtimeHandleRef.current?.sendTextMessage(
+                `Let's do: ${plan.title}. [SYSTEM OVERRIDE: The student has explicitly selected the lesson "${plan.title}" via the in-session picker. Disregard any prior teasing or conversational tangent. This is now the active lesson. Begin teaching it immediately by calling show_segment_card with the FIRST authored segment id from the plan that is now loaded; do not invent segment ids and do not narrate any other topic.]`,
+              );
+            }}
+            onDismiss={() => setNudgeDismissed(true)}
+          />
+        ) : undefined}
+      />
+    );
+    const voiceInputEl = (
+      <>
+        {voiceTrouble && inputMode === 'voice' && (
+          <div className="mb-1 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 flex items-center gap-2"><span>⚠️</span><span>{voiceTrouble}</span></div>
+        )}
+        {inputMode === 'voice' && selectedTopicId ? (
+          (voiceEngine === 'realtime' || voiceEngine === 'realtime-2' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
+            <VoiceTutorRealtime
+              key={sessionId}
+              subject={selectedSubject}
+              topic={selectedTopicId}
+              level={selectedLevel}
+              studentName={studentName || undefined}
+              studentId={studentIdParam}
+              sessionId={sessionId}
+              sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
+              sessionGoal={sessionGoal}
+              lessonPlanId={selectedLessonPlanId || undefined}
+              voice={selectedOpenAIVoice}
+              onTranscriptUpdate={handleVoiceTranscriptUpdate}
+              onWhiteboardCommand={handleVoiceWhiteboardCommand}
+              onUsageUpdate={handleRealtimeUsage}
+              onDebugEvent={addDebugEvent}
+              onError={(err) => setError(err.message)}
+              onTranscriptionStatus={handleTranscriptionStatus}
+              onEndSession={handleEndSession}
+              onTrackInteraction={trackInteraction}
+              handleRef={realtimeHandleRef}
+              validateToolCalls={voiceEngine === 'realtime-validated'}
+              claudeBrainMode={voiceEngine === 'claude-brain'}
+              useRealtimeV2={voiceEngine === 'realtime-2'}
+              ttsProvider={ttsProvider}
+              onLessonPlanProgress={setLessonProgress}
+              onTutorBusy={setIsProcessing}
+              onVoiceStateChange={setLiveVoiceState}
+              onPaceBiasChange={(bias) => {
+                setPaceBias(bias);
+                setPaceBiasFlash(true);
+                if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
+                paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
+              }}
+              onInterruptedChange={setIsPerceptionInterrupted}
+              onBeforeTypedSubmit={handleBeforeTypedSubmit}
+              onProposePlanSwap={handleProposePlanSwap}
+              onConfirmPlanLos={handleConfirmPlanLos}
+              onCompletedSegmentsChange={setCompletedSegmentIds}
+              sessionMaxMinutes={30}
+            />
+          ) : voiceEngine === 'gemini-live' ? (
+            <VoiceTutorGemini
+              key={sessionId}
+              subject={selectedSubject}
+              topic={selectedTopicId}
+              level={selectedLevel}
+              studentName={studentName || undefined}
+              sessionGoal={sessionGoal}
+              voice={selectedOpenAIVoice}
+              onTranscriptUpdate={handleVoiceTranscriptUpdate}
+              onWhiteboardCommand={handleVoiceWhiteboardCommand}
+              onUsageUpdate={handleRealtimeUsage}
+              onError={(err) => setError(err.message)}
+              onEndSession={handleEndSession}
+              onTrackInteraction={trackInteraction}
+            />
+          ) : (
+            <VoiceTutor
+              subject={selectedSubject}
+              topic={selectedTopicId}
+              level={selectedLevel}
+              studentName={studentName || undefined}
+              sessionGoal={sessionGoal}
+              voiceId={selectedVoice}
+              externalConversationHistory={conversationHistory}
+              externalTranscript={transcript}
+              onTranscriptUpdate={handleVoiceTranscriptUpdate}
+              onWhiteboardCommand={handleVoiceWhiteboardCommand}
+              onConversationHistoryUpdate={handleVoiceConversationHistoryUpdate}
+              onError={(err) => setError(err.message)}
+              onEndSession={handleEndSession}
+              onTrackInteraction={trackInteraction}
+            />
+          )
+        ) : inputMode === 'text' ? (
+          <form onSubmit={handleSubmit} className="flex gap-2 p-1">
+            <input ref={inputRef} type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type your message..." disabled={isProcessing}
+              className={`flex-1 px-4 py-2.5 border rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${isPerceptionInterrupted ? 'border-yellow-400 ring-4 ring-yellow-400 ring-opacity-50' : 'border-gray-300'}`} />
+            <button type="submit" disabled={isProcessing || !inputText.trim()} className="px-5 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-gray-300 flex items-center gap-2">
+              {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </button>
+          </form>
+        ) : (
+          <div className="text-center text-gray-500 py-3">Loading session…</div>
+        )}
+      </>
+    );
+    const beatsEl = lessonProgress.plan ? (
+      <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
+    ) : null;
+    const controlsEl = (
+      <SessionControls sessionId={sessionId} maxDuration={30} onEndSession={handleEndSession} onUploadHomework={handleUploadHomework} transcript={transcript} whiteboardCommands={whiteboardCommands} topicName={topicDisplayName || 'AI Tutor'} sessionGoal={sessionGoal} studentName={studentName || undefined} subject={selectedSubject} level={selectedLevel} />
+    );
+    const adaptiveMenuEl = (
+      <div className="relative">
+        <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
+        {pacingMenuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setPacingMenuOpen(false)} />
+            <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
+              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
+              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
+              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
+              <div className="my-1 border-t border-slate-100" />
+              <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Slow down</button>
+              <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Speed up</button>
+              <div className="my-1 border-t border-slate-100" />
+              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+
+    const lastTutorEntry = [...transcript].reverse().find((t) => t.role === 'tutor');
+    const lastEntry = transcript[transcript.length - 1];
+    // Has the student actually started (clicked the mic / first turn)? Before
+    // that we must NOT show "Listening…" — the mic is closed.
+    const started = transcript.length > 0 || liveVoiceState !== 'idle';
+    // Prefer the precise engine-reported state; fall back to a coarse derived
+    // state once started. Before start → 'idle' ("tap the mic to begin").
+    const derivedVoiceState: VoiceState =
+      isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
+    const voiceState: VoiceState =
+      liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
+    // Full live tutor text, with markdown emphasis markers stripped (the brain
+    // uses *word* / **word** as TTS+visual hints — they shouldn't show raw in
+    // the caption). The Caption Strip then shows a word-boundary tail.
+    const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
+    const objective = (() => {
+      if (!lessonProgress.plan) return undefined;
+      const segId = lessonProgress.currentSegmentId || '';
+      const lo = lessonProgress.plan.los?.find((l) => segId.startsWith(`${l.id}-`) || segId === l.id);
+      return lo?.description;
+    })();
+
+    // Promoted quick-answer / pacing chips (shared logic with TranscriptView).
+    const pacingChipsOn = (() => {
+      const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
+      if (!v) return true;
+      const s = String(v).trim().toLowerCase();
+      return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
+    })();
+    const quickActionItems = getQuickActions(transcript, { enablePacing: pacingChipsOn });
+    const dispatchQuick = (text: string) => {
+      realtimeHandleRef.current?.stopSpeaking();
+      realtimeHandleRef.current?.sendTextMessage(text);
+    };
+    const quickActionsEl = quickActionItems.length > 0 ? (
+      <div className="flex flex-wrap items-center justify-center gap-1.5">
+        {quickActionItems.map((a) => (
+          <button
+            key={a.label}
+            disabled={isProcessing}
+            onClick={() => dispatchQuick(a.text)}
+            className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              a.tone === 'stuck' ? 'bg-white text-amber-700 border-amber-300 hover:bg-amber-50'
+              : a.tone === 'skip' ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+              : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'
+            }`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+    ) : null;
+
+    return (
+      <>
+        <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
+        <SessionStage
+          lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : (topicDisplayName || 'AI Tutor')}
+          subtitle={lessonProgress.plan ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}` : `${topicDisplayName || 'Open practice'} · Free practice`}
+          hasPlan={!!lessonProgress.plan}
+          isFreePractice={!lessonProgress.plan}
+          objective={objective}
+          beats={beatsEl}
+          controls={controlsEl}
+          adaptiveMenu={adaptiveMenuEl}
+          voiceState={voiceState}
+          started={started}
+          liveCaption={liveCaption}
+          boardEmpty={whiteboardCommands.length === 0}
+          board={boardEl}
+          voiceInput={voiceInputEl}
+          transcript={transcriptEl}
+          transcriptCount={transcript.length}
+          nudgeActive={pickerAnchorIndex !== null && !nudgeDismissed && availableLessonPlans.length > 0}
+          quickActions={quickActionsEl}
+          onStudentInput={handleStudentInput}
+          onBack={handleEndSession}
+        />
+        {error && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">{error}</div>
+        )}
+      </>
     );
   }
 
@@ -1840,141 +2162,8 @@ function TutorPage() {
                 // desktop where both panels are visible.
                 if (!isDesktop) setMobileTab('whiteboard');
               }}
-              onTryYourselfAnswer={(answer, expected, isCorrect) => {
-                // Route the student's submitted answer back to the brain
-                // as a synthetic student turn so the tutor can react with
-                // personalized feedback. Wrap in a marker the brain
-                // recognizes as a structured submission (not free chat).
-                //
-                // The marker is intentionally NEUTRAL when isCorrect is
-                // null (compareAnswer returns null for FRQ where string
-                // normalization is unreliable — see WhiteboardCanvas.tsx).
-                // Asserting "does not match expected" in that case biased
-                // the brain toward calling correct-but-different-form
-                // answers wrong (the 2026-04-29 pre-calc session: student
-                // wrote -1/√2, expected -√2/2 — algebraically identical
-                // but the marker said "does not match" and the brain had
-                // to fight that bias).
-                const verdict =
-                  isCorrect === true ? 'matches the expected answer (string-equal)'
-                  : isCorrect === false ? 'does NOT match the expected answer'
-                  : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
-                // Wrap the WHOLE marker in [...] so TranscriptView strips
-                // it from the visible chat. Previously only the
-                // "[try-yourself submission]" prefix was bracketed; the
-                // rest leaked into the student bubble (observed
-                // 2026-04-30 pre-calc session). Brain still sees the
-                // full text in its prompt.
-                //
-                // ALSO note: do NOT advance to a new problem on a wrong
-                // verdict. Re-prompt the same try-yourself with a hint.
-                // (Reinforced via the system prompt's
-                // answer-validation gate, but called out here too so
-                // anyone reading this code understands the intent.)
-                const marker = expected
-                  ? `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.]`
-                  : `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
-                if (realtimeHandleRef.current) {
-                  realtimeHandleRef.current.sendTextMessage(marker);
-                }
-              }}
-              onStudentInput={(type, content) => {
-                // Add student input to whiteboard as a command
-                const cmd: WhiteboardCommand = type === 'image'
-                  ? { action: 'showSvgDiagram', title: 'Student Upload', svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="290" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
-                  : type === 'drawing'
-                  ? { action: 'showSvgDiagram', title: 'Student Drawing', svg: `<svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="140" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
-                  // Plain text — render as SVG text, NOT LaTeX (avoids mangling x, =, etc.)
-                  : { action: 'showSvgDiagram', title: 'Student Answer', svg: `<svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="390" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/><text x="200" y="22" text-anchor="middle" font-size="11" fill="#6b7280">Student wrote:</text><text x="200" y="42" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>` } as WhiteboardCommand;
-
-                setWhiteboardCommands(prev => [...prev, cmd]);
-
-                // Show status message while processing
-                if (type === 'drawing') setStatusMessage('✏️ Reading your drawing...');
-                else if (type === 'image') setStatusMessage('📷 Analyzing your image...');
-                else if (type === 'text') setStatusMessage('💬 Processing...');
-
-                // Notify the AI about the student's input
-                if (realtimeHandleRef.current) {
-                  if (type === 'text') {
-                    realtimeHandleRef.current.sendTextMessage(
-                      `[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`
-                    );
-                    setTimeout(() => setStatusMessage(null), 1000);
-                  } else if (type === 'drawing') {
-                    // Send drawing to Claude to extract what's written, then tell the AI
-                    (async () => {
-                      try {
-                        // Strip data URL prefix to get raw base64
-                        const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
-                        const resp = await fetch('/api/tutor/extract-homework', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            imageData: base64Data,
-                            mimeType: 'image/png',
-                            subject: selectedSubject,
-                            topic: selectedTopicId,
-                            level: selectedLevel,
-                          }),
-                        });
-                        const data = await resp.json();
-                        setStatusMessage(null);
-                        if (data.extractedProblem && realtimeHandleRef.current) {
-                          realtimeHandleRef.current.sendTextMessage(
-                            `[The student drew on the whiteboard. Their drawing contains: "${data.extractedProblem}". Respond to what they drew and wrote.]`
-                          );
-                        } else if (realtimeHandleRef.current) {
-                          realtimeHandleRef.current.sendTextMessage(
-                            `[The student drew something on the whiteboard. Ask them to explain what they drew.]`
-                          );
-                        }
-                      } catch {
-                        setStatusMessage(null);
-                        realtimeHandleRef.current?.sendTextMessage(
-                          `[The student drew something on the whiteboard. Ask them to explain what they drew.]`
-                        );
-                      }
-                    })();
-                  } else if (type === 'image') {
-                    // Process image through vision to extract content before telling the AI
-                    (async () => {
-                      try {
-                        const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
-                        const resp = await fetch('/api/tutor/extract-homework', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            imageData: base64Data,
-                            mimeType: 'image/png',
-                            subject: selectedSubject,
-                            topic: selectedTopicId,
-                            level: selectedLevel,
-                          }),
-                        });
-                        const data = await resp.json();
-                        setStatusMessage(null);
-                        if (data.extractedProblem && realtimeHandleRef.current) {
-                          realtimeHandleRef.current.sendTextMessage(
-                            `[The student uploaded an image to the whiteboard. The image contains: "${data.extractedProblem}". Respond to what they shared.]`
-                          );
-                        } else if (realtimeHandleRef.current) {
-                          realtimeHandleRef.current.sendTextMessage(
-                            `[The student uploaded an image to the whiteboard but the content could not be extracted. Ask them to describe what the image shows.]`
-                          );
-                        }
-                      } catch {
-                        setStatusMessage(null);
-                        realtimeHandleRef.current?.sendTextMessage(
-                          `[The student uploaded an image to the whiteboard but it could not be analyzed. Ask them to describe what the image shows.]`
-                        );
-                      }
-                    })();
-                  }
-                }
-
-                trackInteraction('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
-              }}
+              onTryYourselfAnswer={handleTryYourselfAnswer}
+              onStudentInput={handleStudentInput}
             />
           </div>
           </div>{/* close inner flex */}
@@ -2305,7 +2494,12 @@ function TutorPage() {
               setWhiteboardCommands([]);
               whiteboardEventsRef.current = [];
               setTokenUsage([]);
-              setSelectedLessonPlanId('');
+              // PRESERVE selectedLessonPlanId + subject/level/topic so a
+              // same-topic restart resumes the last lesson (pre-filled on the
+              // setup screen with a "Change" option) instead of dropping to
+              // free-practice and re-asking the topic. The new session still
+              // starts clean: VoiceTutorRealtime remounts via key={sessionId}
+              // (fresh brain/plan refs) and the live state below is reset.
               setLessonProgress({ plan: null, currentSegmentId: '' });
               setNudgeDismissed(false);
               setPickerAnchorIndex(null);

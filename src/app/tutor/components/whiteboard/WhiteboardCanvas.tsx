@@ -170,6 +170,11 @@ interface WhiteboardCanvasProps {
    *  at the bottom of the current page so the student knows something
    *  is incoming, instead of staring at an unchanged board. */
   tutorBusy?: boolean;
+  /** When true, the built-in "Nothing on the board yet" empty state is
+   *  suppressed — the new SessionStage layout renders its own live "tutor
+   *  presence" over the empty board instead. (Flag-gated host; default false
+   *  keeps the legacy empty state.) */
+  suppressEmptyState?: boolean;
 }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
@@ -188,6 +193,7 @@ export function WhiteboardCanvas({
   onAttentionShift,
   className = '',
   tutorBusy = false,
+  suppressEmptyState = false,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -539,14 +545,18 @@ export function WhiteboardCanvas({
   const prevCommandCountRef = useRef(commands.length);
   useEffect(() => {
     if (commands.length > prevCommandCountRef.current) {
-      // Scroll the whiteboard pane (not the page) to show the latest item
       const container = scrollContainerRef.current;
       if (container) {
         requestAnimationFrame(() => {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'smooth',
-          });
+          // Bring the NEWEST item's TOP into view so its header/title is
+          // visible, rather than jumping to the absolute bottom (which left a
+          // single tall item — e.g. a big table — scrolled to its middle with
+          // the header cut off; observed 2026-06-23). Falls back to the
+          // bottom only if no item element is available.
+          const refs = itemRefsRef.current.filter(Boolean) as HTMLElement[];
+          const last = refs[refs.length - 1];
+          if (last) last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          else container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
         });
       }
     }
@@ -624,11 +634,13 @@ export function WhiteboardCanvas({
               touch the board. Showing a "preparing" message there is
               misleading (observed 2026-04-29 trig session). The board
               fills in naturally once a render command lands. */}
-          <div className="text-center text-gray-400">
-            <div className="text-4xl mb-3">📝</div>
-            <p className="text-sm">Nothing on the board yet.</p>
-            <p className="text-sm">I&apos;ll draw here as we work through things.</p>
-          </div>
+          {!suppressEmptyState && (
+            <div className="text-center text-gray-400">
+              <div className="text-4xl mb-3">📝</div>
+              <p className="text-sm">Nothing on the board yet.</p>
+              <p className="text-sm">I&apos;ll draw here as we work through things.</p>
+            </div>
+          )}
         </div>
         {onStudentInput && <StudentInputBar onStudentInput={onStudentInput} />}
       </div>
@@ -751,7 +763,7 @@ export function WhiteboardCanvas({
         >
         {renderableCommands.length === 1 ? (
           <div
-            className="relative wb-item-enter"
+            className="relative wb-item-enter scroll-mt-6"
             style={reviseStyle(renderableCommands[0])}
             ref={(el) => { itemRefsRef.current[0] = el; }}
             data-wb-item-index={1}
@@ -777,7 +789,7 @@ export function WhiteboardCanvas({
                     </div>
                   )}
                   <div
-                    className="relative"
+                    className="relative scroll-mt-6"
                     style={reviseStyle(cmd)}
                     ref={(el) => { itemRefsRef.current[i] = el; }}
                     data-wb-item-index={i + 1}

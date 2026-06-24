@@ -585,6 +585,11 @@ interface VoiceTutorRealtimeProps {
    *  brain is fetching a response, warm-up is in progress, or TTS is
    *  rendering. Parent can use this to drive a typing indicator. */
   onTutorBusy?: (busy: boolean) => void;
+  /** Coarse voice-engine state for the new SessionStage "tutor presence"
+   *  orb (Direction 4). Mirrors the underlying RealtimeState machine:
+   *  speaking (TTS playing) · listening (mic open) · thinking (composing /
+   *  warming up) · error · idle. Fires on every transition. */
+  onVoiceStateChange?: (state: 'idle' | 'listening' | 'thinking' | 'speaking' | 'error') => void;
   /** Phase 3: fires whenever paceBias changes (button click OR matching
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
@@ -721,6 +726,7 @@ export function VoiceTutorRealtime({
   ttsProvider = 'realtime',
   onLessonPlanProgress,
   onTutorBusy,
+  onVoiceStateChange,
   onPaceBiasChange,
   onInterruptedChange,
   onBeforeTypedSubmit,
@@ -11311,6 +11317,20 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   useEffect(() => {
     onInterruptedChange?.(realtime.isInterrupted);
   }, [realtime.isInterrupted, onInterruptedChange]);
+
+  // Direction 4: surface a coarse voice state for the SessionStage presence
+  // orb. Maps the underlying RealtimeState (+ warm-up) to the 5 orb states.
+  useEffect(() => {
+    if (!onVoiceStateChange) return;
+    const s = realtime.state;
+    const next =
+      s === 'error' ? 'error'
+      : s === 'speaking' ? 'speaking'
+      : (isWarmingUp || s === 'processing') ? 'thinking'
+      : s === 'listening' ? 'listening'
+      : 'idle';
+    onVoiceStateChange(next);
+  }, [realtime.state, isWarmingUp, onVoiceStateChange]);
 
   return (
     <div className="voice-tutor-realtime flex items-center gap-2 sm:gap-3 py-2 px-2 flex-wrap">

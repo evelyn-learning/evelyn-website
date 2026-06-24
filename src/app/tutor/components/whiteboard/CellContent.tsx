@@ -1,6 +1,21 @@
 import React from 'react';
+import katex from 'katex';
 import { EquationRenderer } from './EquationRenderer';
 import { InlineMathText } from './InlineMathText';
+
+/** Strip LaTeX markup down to readable text — graceful fallback when a cell's
+ *  LaTeX is malformed (e.g. the brain emits a stray "}"), so we never dump raw
+ *  red "\text{...}\sqrt{...}" source into a table cell. */
+function latexToReadableText(s: string): string {
+  return s
+    .replace(/\\text\s*\{([^{}]*)\}/g, '$1')
+    .replace(/\\sqrt\s*\{([^{}]*)\}/g, '√$1')
+    .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)')
+    .replace(/\\[a-zA-Z]+/g, ' ') // drop any remaining commands
+    .replace(/[{}$]/g, '')         // drop braces / $ delimiters
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /**
  * Render a table cell / header that may contain math. Detects LaTeX and renders
@@ -62,6 +77,19 @@ export function CellContent({ value }: { value: string }) {
       if (mathFns.has(word.toLowerCase())) return match;
       return `\\text{${word}}`;
     });
+  }
+
+  // Validate before handing to the (red-on-error) KaTeX renderer. If the LaTeX
+  // is malformed (unbalanced braces, etc.), degrade to cleaned readable text
+  // instead of dumping raw red source into the cell.
+  let valid = true;
+  try {
+    katex.renderToString(latex, { throwOnError: true, displayMode: false });
+  } catch {
+    valid = false;
+  }
+  if (!valid) {
+    return <span className="text-gray-800">{latexToReadableText(value)}</span>;
   }
 
   return <EquationRenderer latex={latex} displayMode={false} className="inline-block" />;

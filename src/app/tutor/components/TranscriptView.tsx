@@ -9,6 +9,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { User, Bot } from 'lucide-react';
 import type { TranscriptEntry } from '@/lib/tutor/types';
+// Brain-facing pacing-chip directives — shared with the SessionStage quick-
+// actions layer so the two surfaces never drift. (The pure detection helpers
+// below are mirrored in quick-actions.ts/getQuickActions for the stage.)
+import { STUCK_TEXT, SKIP_TEXT } from '@/lib/tutor/quick-actions';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -197,11 +201,15 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
-  // mounts/unmounts so it stays visible).
+  // mounts/unmounts) — but ONLY if the user is already near the bottom.
+  // Otherwise a streaming update would yank them back down every tick,
+  // making the transcript feel "stuck" / unscrollable when they try to
+  // read earlier turns (observed in the new SessionStage drawer 2026-06-23).
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
+    const el = containerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (nearBottom) el.scrollTop = el.scrollHeight;
   }, [transcript, picker]);
 
   // Progressive hint under the typing-dots while the brain is composing.
@@ -486,7 +494,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   // Gated by showStuckChip (2026-05-24) — hidden when
                   // the trailing question is a continuation / wrap-up
                   // offer with no active problem to be stuck on.
-                  onClick={() => onQuickAnswer("I'm stuck on this — can you break it down? [I'm-stuck-button-clicked: walk me through this Socratically. Ask me ONE first sub-question and WAIT for my answer. Do NOT reveal the final answer or any computed value in this turn. Do NOT say 'Exactly' or affirm anything until I actually answer something.]")}
+                  onClick={() => onQuickAnswer(STUCK_TEXT)}
                   className="px-3 py-1 text-xs font-medium bg-white text-amber-700 border border-amber-300 rounded-full hover:bg-amber-50 hover:border-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   I&apos;m stuck
@@ -510,7 +518,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   // a fabricated affirmation. The directive below is
                   // explicit that Skip is NOT an answer and the brain
                   // MUST NOT affirm or fabricate one.
-                  onClick={() => onQuickAnswer("Let's skip this and move on. [Skip-button-clicked: advance ONE segment by calling advance_lesson({to: 'next'}) — this moves to the IMMEDIATELY next segment in plan order, which is usually the next beat of the SAME LO (concept → worked_example → try_yourself). Briefly introduce that next segment — a sentence or two plus at most ONE anchor visual, not its full set of cards/formulas (a Skip is brisk navigation, not a re-teach; extra renders are capped and dropped). Do NOT skip multiple segments. Do NOT jump to a different LO unless the next segment in plan order is in fact the next LO's first segment. The student did NOT answer your prior question — Skip is a navigation action, not an answer. Do NOT say 'Exactly', 'Right', 'Correct', or any affirmation word. Do NOT fabricate the expected answer as if the student had given it. Do NOT ask for clarification, just advance.]")}
+                  onClick={() => onQuickAnswer(SKIP_TEXT)}
                   className="px-3 py-1 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Skip ahead
