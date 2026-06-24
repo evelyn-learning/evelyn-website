@@ -20,6 +20,7 @@
  */
 
 import React, { useState } from 'react';
+import { stripRedundantChoiceLabel } from './choiceLabel';
 
 export interface QuizItem {
   id: string;
@@ -97,7 +98,7 @@ export default function QuizRenderer({ spec }: { spec: QuizSpec }) {
                         }`}
                       >
                         <span className="font-mono mr-2 text-purple-700">{c.id}.</span>
-                        {c.text}
+                        {stripRedundantChoiceLabel(c.text, c.id)}
                         {showResult && c.correct && <span className="ml-2 font-bold">✓</span>}
                       </button>
                     );

@@ -17,6 +17,7 @@
  */
 
 import { useState } from 'react';
+import { stripRedundantChoiceLabel } from './choiceLabel';
 
 /** Compare a student's typed answer against the expected answer with
  *  format-aware tolerance:
@@ -142,7 +143,7 @@ export function TryYourselfRenderer({
                 }`}
               >
                 <span className="font-mono mr-2 text-amber-700">{c.id}.</span>
-                {c.text}
+                {stripRedundantChoiceLabel(c.text, c.id)}
                 {correctMark && <span className="ml-2 font-bold">{correctMark}</span>}
               </button>
             );

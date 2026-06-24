@@ -11,6 +11,7 @@ function latexToReadableText(s: string): string {
     .replace(/\\text\s*\{([^{}]*)\}/g, '$1')
     .replace(/\\sqrt\s*\{([^{}]*)\}/g, '√$1')
     .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)')
+    .replace(/\\[\s,;:!]/g, ' ')  // control space / escaped punctuation → space
     .replace(/\\[a-zA-Z]+/g, ' ') // drop any remaining commands
     .replace(/[{}$]/g, '')         // drop braces / $ delimiters
     .replace(/\s+/g, ' ')
@@ -49,12 +50,13 @@ export function CellContent({ value }: { value: string }) {
   }
 
   // Any backslash-command signals LaTeX: a named command (\frac, \pm, \pi,
-  // …) OR a spacing/punctuation command (\, \; \: \!). The earlier explicit
-  // allow-list missed the spacing commands, so a cell like "(a,\,0)" (thin
-  // space) matched no signal, fell through to plain text, and leaked the
-  // literal "\," (2026-06-19 Console5 Img1). In a math table cell a backslash
-  // is virtually always LaTeX, so the broad match is safe.
-  const hasLatexCmd = /\\(?:[a-zA-Z]+|[,;:!])/.test(normalized);
+  // …) OR a spacing/punctuation command (\, \; \: \! and the control space
+  // "\ " = backslash-whitespace). The earlier match missed the control
+  // space, so a cell like "(a,\ 0)" fell through to plain text and leaked the
+  // literal "\ " (2026-06-24 Console17 Img2; "(a,\,0)" thin space was the
+  // 2026-06-19 Console5 case). In a math table cell a backslash is virtually
+  // always LaTeX, so the broad match is safe.
+  const hasLatexCmd = /\\(?:[a-zA-Z]+|[\s,;:!])/.test(normalized);
   const hasSubSup = /[_^{}]/.test(normalized);
 
   if (!hasLatexCmd && !hasSubSup) {

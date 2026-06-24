@@ -83,6 +83,7 @@ import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
 import { CellContent } from './CellContent';
+import { stripRedundantChoiceLabel } from './choiceLabel';
 import dynamic from 'next/dynamic';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
@@ -544,23 +545,56 @@ export function WhiteboardCanvas({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const prevCommandCountRef = useRef(commands.length);
   useEffect(() => {
-    if (commands.length > prevCommandCountRef.current) {
-      const container = scrollContainerRef.current;
-      if (container) {
-        requestAnimationFrame(() => {
-          // Bring the NEWEST item's TOP into view so its header/title is
-          // visible, rather than jumping to the absolute bottom (which left a
-          // single tall item — e.g. a big table — scrolled to its middle with
-          // the header cut off; observed 2026-06-23). Falls back to the
-          // bottom only if no item element is available.
-          const refs = itemRefsRef.current.filter(Boolean) as HTMLElement[];
-          const last = refs[refs.length - 1];
-          if (last) last.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          else container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        });
-      }
+    if (commands.length <= prevCommandCountRef.current) {
+      prevCommandCountRef.current = commands.length;
+      return;
     }
+    const added = commands.slice(prevCommandCountRef.current);
     prevCommandCountRef.current = commands.length;
+    if (!scrollContainerRef.current) return;
+    // Explicit navigation (goToPage / scrollTo) owns its own scroll — the
+    // dedicated effects above already position the view; don't fight them.
+    if (added.some((c) => c.action === 'goToPage' || c.action === 'scrollTo')) return;
+
+    // Find the newest TEACHING render in this batch by its STABLE id. We scroll
+    // by id (not by itemRefsRef position) so the scroll survives the
+    // view-follow page switch: when the new render lands on a DIFFERENT page,
+    // the view-follow effect above switches currentIndex, the page subtree
+    // remounts (key={currentIndex}), and a position-based ref would point at
+    // the OLD page's last item — landing the student on the TOP of the new
+    // page instead of the freshly-drawn figure (2026-06-24 Console17: ellipse
+    // focal-distance graph). A double rAF waits for that switch + remount to
+    // commit so the new page's item ids are queryable.
+    const META = new Set([
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+    ]);
+    let newestId: string | undefined;
+    for (let k = added.length - 1; k >= 0; k--) {
+      if (META.has(added[k].action)) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const id = (added[k] as any).id as string | undefined;
+      if (id) { newestId = id; break; }
+    }
+
+    const scrollToNewest = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+      // Bring the NEWEST item's TOP into view so its header/title is visible,
+      // rather than jumping to the absolute bottom (which left a single tall
+      // item scrolled to its middle with the header cut off; 2026-06-23).
+      if (newestId) {
+        const safe = newestId.replace(/"/g, '\\"');
+        const el = container.querySelector(`[data-wb-item-id="${safe}"]`) as HTMLElement | null;
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      }
+      // Fallback (render carried no id): newest item by position, else bottom.
+      const refs = itemRefsRef.current.filter(Boolean) as HTMLElement[];
+      const last = refs[refs.length - 1];
+      if (last) last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(scrollToNewest));
   }, [commands.length]);
 
   // Detect if scroll container has overflow (content taller than viewport)
@@ -1908,7 +1942,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
                   <span className="font-semibold text-blue-900 flex-shrink-0 min-w-[1.25rem]">
                     {ac.letter})
                   </span>
-                  <span className="text-gray-800"><InlineMathText text={ac.text} /></span>
+                  <span className="text-gray-800"><InlineMathText text={stripRedundantChoiceLabel(ac.text, ac.letter || String.fromCharCode(65 + i))} /></span>
                 </li>
               ))}
             </ul>

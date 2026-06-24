@@ -1031,9 +1031,15 @@ the same label across several.
   focus with conic_foci (its vertex with conic_vertices), NEVER with
   point_on_circle — a focus is not a point on a circle, and a
   point_on_circle step whose "on" references a point rather than a circle
-  fails the solver. To place a point ON a conic (e.g. the point of tangency
-  for tangent_at), use point_on_conic { on, at: [x,y] } — NEVER
-  point_on_circle on an ellipse/parabola/hyperbola.
+  fails the solver. ANY point that must LIE ON a conic — a point of
+  tangency, a moving point used to show focal distances or chords, any
+  point you then draw segments / tangents to — MUST be created with
+  point_on_conic { on, at: [x,y] }, which snaps it EXACTLY onto the curve
+  (emit the conic step FIRST so point_on_conic can reference it by id).
+  NEVER hand-place such a point as a literal { x, y } in the given array
+  or inline,
+  and NEVER use point_on_circle on an ellipse/parabola/hyperbola — literal
+  coordinates will sit OFF the curve and mislead the student.
 
     ellipse                   { center, a, b?, rotation? }  OR  { foci: [F1,F2], sum }
     parabola                  { vertex, focalLength, opens: "right"|"left"|"up"|"down" }
