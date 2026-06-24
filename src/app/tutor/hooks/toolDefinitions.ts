@@ -445,7 +445,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     ? [{
         name: 'show_sketch',
         description:
-          "Draw a quick, rough HAND-DRAWN doodle to make a concept, analogy, or mental image click — the kind a teacher scribbles on a whiteboard. Use when your words describe something inherently VISUAL or SPATIAL (a ball rolling down a hill, a glass shattering, gas spreading out, a seesaw balancing) and a precise structured diagram would be overkill or wouldn't fit. You describe WHAT to draw in one line; the system draws it. Prefer show_diagram / show_function_graph / show_geometry for quantitative or precise figures; reach for show_sketch for illustrative intuition.",
+          "Draw a quick, rough HAND-DRAWN doodle to make a real-world ANALOGY or concrete mental image click — the kind a teacher scribbles on a whiteboard to build intuition for an abstract idea. You describe WHAT to draw in one line; the system draws it. This tool CANNOT render math accurately — it is freehand and approximate. Do NOT use it for any curve, function, graph, plotted relationship, data trend, or exact geometric figure: those go to show_function_graph / show_geometry / show_diagram, which draw them precisely. A doodled mathematical figure is wrong and misleads the student. Reach for show_sketch only when the depiction is illustrative intuition, not a precise figure.",
         parameters: {
           type: 'object',
           properties: {
