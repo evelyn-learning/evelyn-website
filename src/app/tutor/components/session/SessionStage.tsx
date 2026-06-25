@@ -137,7 +137,7 @@ export default function SessionStage(props: SessionStageProps) {
   };
 
   return (
-    <div ref={stageRef} className="relative h-[100dvh] w-full overflow-hidden bg-white select-none session-stage">
+    <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage">
       <style>{`
         .session-stage .ss-grid{background-image:linear-gradient(#eef2f7 1px,transparent 1px),linear-gradient(90deg,#eef2f7 1px,transparent 1px);background-size:28px 28px}
         @keyframes ss-pulse{0%{transform:scale(.85);opacity:.5}80%,100%{transform:scale(1.6);opacity:0}}
@@ -243,6 +243,21 @@ export default function SessionStage(props: SessionStageProps) {
             {/* beats (desktop) */}
             {hasPlan && beats && <div className="hidden lg:flex mx-auto min-w-0 max-w-[46%] overflow-x-auto">{beats}</div>}
             <div className="shrink-0 ml-auto flex items-center gap-1.5 sm:gap-2.5">
+              {/* Transcript trigger lives in the top bar on phones (below md):
+                  the bottom-left floating chip below would otherwise sit on top
+                  of the dock's full-width text input row and clip its
+                  placeholder. The floating chip stays for md+ where the dock is
+                  a narrow centered island and the two never collide. */}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                title="Transcript"
+                className="md:hidden relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"
+              >
+                <MessageSquareText className="w-5 h-5" />
+                {transcriptCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">{transcriptCount}</span>
+                )}
+              </button>
               <div className="hidden sm:block">{controls}</div>
               {adaptiveMenu}
             </div>
@@ -340,8 +355,13 @@ export default function SessionStage(props: SessionStageProps) {
               bobs; chips fade in/out WITHIN the card (one element, not two
               separate popping boxes). Drawn-board only — the empty board shows
               the big presence caption instead. ===== */}
+      {/* Caption strip sits just above the dock. The dock is TALLER on phones
+          (the text input wraps to its own row below md, ~150px) than on desktop
+          (one ~80px row), so the from-bottom offset is larger below md to clear
+          it — otherwise the caption tucks behind the dock and the tutor's live
+          sentence is hidden. Both honor the bottom safe-area inset. */}
       {liveCaption && (
-        <div className="absolute bottom-[124px] left-1/2 -translate-x-1/2 z-20 w-[min(96vw,640px)]">
+        <div className="absolute bottom-[calc(176px_+_env(safe-area-inset-bottom))] md:bottom-[calc(124px_+_env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-20 w-[min(96vw,640px)]">
           <div className="ss-cap w-full rounded-2xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
             {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
                 transcript). Single thin line so the panel never crowds. The
@@ -366,14 +386,14 @@ export default function SessionStage(props: SessionStageProps) {
       )}
 
       {/* ===== Transcript toggle ===== */}
-      <button onClick={() => setDrawerOpen(true)} className="absolute bottom-4 left-3 z-40 inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 shadow-md px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+      <button onClick={() => setDrawerOpen(true)} className="hidden md:inline-flex absolute bottom-4 left-3 z-40 items-center gap-2 rounded-full bg-white border border-slate-200 shadow-md px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
         <MessageSquareText className="w-4 h-4 text-slate-500" />
         <span className="hidden sm:inline">Transcript</span>
         {transcriptCount > 0 && <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">{transcriptCount}</span>}
       </button>
 
       {/* ===== Voice dock (floating island) ===== */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 w-[min(96vw,640px)]">
+      <div className="absolute bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 w-[min(96vw,640px)]">
         <div className="rounded-[24px] bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl px-2 sm:px-3 py-1.5">
           {/* "Being heard" status row — lives in the dock, next to the mic, so
               the caption strip above stays free for the tutor's question. Shows
@@ -401,7 +421,7 @@ export default function SessionStage(props: SessionStageProps) {
 
       {/* ===== Transcript drawer ===== */}
       {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setDrawerOpen(false)} />}
-      <div className={`absolute z-50 bg-white shadow-2xl flex flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
+      <div className={`absolute z-50 bg-white shadow-2xl flex flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Poppins, Caveat, Kalam } from "next/font/google";
 import "./globals.css";
 import {
@@ -41,6 +41,18 @@ const kalam = Kalam({
   variable: "--font-kalam",
   display: "swap",
 });
+
+// viewport-fit=cover lets full-bleed pages (the tutor session stage) extend
+// edge-to-edge and exposes the env(safe-area-inset-*) values used to keep the
+// dock/drawer clear of the notch + home indicator. interactiveWidget
+// 'resizes-content' shrinks the viewport when the soft keyboard opens so the
+// fixed bottom dock rides above it instead of being hidden behind it.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(
