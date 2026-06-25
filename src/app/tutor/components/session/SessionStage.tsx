@@ -276,7 +276,10 @@ export default function SessionStage(props: SessionStageProps) {
       </div>
 
       {/* ===== Student tools cluster (top-right) ===== */}
-      <div className="absolute top-16 right-2 z-20">
+      {/* Drop below the board-page switcher when it's shown — the switcher pill
+          (top-center, up to 360px wide) otherwise collides with this cluster on
+          narrow screens. Mirrors the board's pt-28/pt-16 padding. */}
+      <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
         <div className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => setTool(tool === 'draw' ? null : 'draw')}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
           <ToolBtn active={tool === 'text'} title="Text note" onClick={() => setTool(tool === 'text' ? null : 'text')}><span className="font-bold text-sm">Aa</span></ToolBtn>

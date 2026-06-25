@@ -812,20 +812,18 @@ export function WhiteboardCanvas({
           in from the right, backward slides in from the left. */}
       <div
         ref={scrollContainerRef}
-        // On mobile, drop the inner overflow-auto — it creates a
-        // scroll-within-scroll feel that's jarring on small screens.
-        // Content flows naturally and the parent / page handles scroll.
-        // Desktop keeps the inner scroll for the side-by-side split.
-        // Use overflow-y-auto instead of overflow-auto so wide
-        // renderers (concept maps with many nodes, diagrams, tables)
-        // never trigger a horizontal scrollbar across the WB pane —
-        // observed 2026-04-29 electricity session, where a 5-node
-        // concept map's right-most box extended past the visible
-        // edge. Renderers that legitimately need horizontal scroll
-        // (long equations, code blocks, wide tables) have their own
-        // inner overflow-x-auto on the specific element, so those
-        // still work.
-        className="flex-1 lg:overflow-y-auto lg:overflow-x-hidden p-4"
+        // Legacy 'full' chrome (split-pane): on mobile drop the inner
+        // overflow-auto — the page itself scrolls, and a nested scroll feels
+        // jarring on small screens; desktop keeps the inner scroll for the
+        // side-by-side split. 'minimal' chrome (the full-bleed SessionStage)
+        // is hosted in a `fixed overflow-hidden` stage where the PAGE can't
+        // scroll, so the board MUST own its scroll at every breakpoint —
+        // otherwise tall content is clipped and unreachable on mobile.
+        // Use overflow-y-auto (not overflow-auto) so wide renderers (concept
+        // maps, diagrams, tables) never trigger a horizontal scrollbar across
+        // the pane; renderers that legitimately need horizontal scroll have
+        // their own inner overflow-x-auto, so those still work.
+        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden'} p-4`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
