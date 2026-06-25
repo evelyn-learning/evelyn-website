@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 4 (Personality): Personality Assessment.
+ * AP Psychology — CED Unit 4.5: Personality Assessment.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PERSONALITY_ASSESSMENT: LessonPlan = {
   id: 'evelyn.ap.psych.personality-assessment.v1', title: 'U4.5 Personality Assessment',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.personality-assessment', description: 'Distinguish projective vs objective personality tests. Identify MMPI, Rorschach, TAT, and Big Five inventories. Discuss validity, reliability, and uses.', standard: 'AP-PSYCH-4-ASSESSMENT' }],
+  los: [{ id: 'appsych.personality-assessment', description: 'Distinguish projective vs objective personality tests. Identify MMPI, Rorschach, TAT, and Big Five inventories. Discuss validity, reliability, and uses.', standard: 'AP-PSYCH-4.5' }],
   prerequisites: ['appsych.personality-theories'], followUps: [], estimatedMinutes: 16,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame personality measurement.', script: "How do you MEASURE personality? Two approaches: SHOW someone an ambiguous image and see how they interpret it (projective), OR ask them STANDARDIZED questions (objective). The two approaches reveal different aspects.", estimatedMinutes: 2 },
@@ -108,5 +108,5 @@ export const SEED_AP_PSYCH_U4_PERSONALITY_ASSESSMENT: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '4', cedTopic: '4-ASSESSMENT', cedTitle: 'Personality Assessment', sources: [{ type: 'concept', book: 'feldman', chapter: '13', note: 'Standard test types and validity.' }] },
+  metadata: { cedUnit: '4', cedTopic: '4.5', cedTitle: 'Personality Assessment', sources: [{ type: 'concept', book: 'feldman', chapter: '13', note: 'Standard test types and validity.' }] },
 };

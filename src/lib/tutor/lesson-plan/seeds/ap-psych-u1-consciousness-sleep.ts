@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 1.6+1.7: Consciousness, Sleep, and Drugs.
+ * AP Psychology — CED Unit 1.5: Sleep.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP: LessonPlan = {
-  id: 'evelyn.ap.psych.consciousness-sleep.v1', title: 'U1.4 Consciousness, Sleep, and Drugs',
+  id: 'evelyn.ap.psych.consciousness-sleep.v1', title: 'U1.5 Sleep and Consciousness',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.consciousness-sleep', description: 'Identify sleep stages and their characteristics. Compare sleep theories. Identify drug categories and their behavioral effects.', standard: 'AP-PSYCH-1.6-1.7' }],
+  los: [{ id: 'appsych.consciousness-sleep', description: 'Identify sleep stages and their characteristics. Compare sleep theories. Identify drug categories and their behavioral effects.', standard: 'AP-PSYCH-1.5' }],
   prerequisites: ['appsych.nervous-endocrine'], followUps: ['appsych.sensation-perception'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame consciousness as variable.', script: "We spend a third of our lives ASLEEP. Yet we don\'t experience it as wasted time — sleep is essential for memory, mood, and immune function. Today: the stages of sleep, theories of dreaming, and how drugs alter consciousness.", estimatedMinutes: 2 },
@@ -89,5 +89,5 @@ export const SEED_AP_PSYCH_U1_CONSCIOUSNESS_SLEEP: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '1', cedTopic: '1.6-1.7', cedTitle: 'Consciousness, Sleep, Drugs', sources: [{ type: 'concept', book: 'feldman', chapter: '4', note: 'Standard consciousness + sleep + drugs.' }] },
+  metadata: { cedUnit: '1', cedTopic: '1.5', cedTitle: 'Sleep', sources: [{ type: 'concept', book: 'feldman', chapter: '4', note: 'Standard consciousness + sleep + drugs.' }] },
 };

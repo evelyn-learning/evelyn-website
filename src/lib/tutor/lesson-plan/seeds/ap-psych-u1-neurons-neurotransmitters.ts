@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 1.1+1.2: Neurons and Neurotransmitters.
+ * AP Psychology — CED Unit 1.3: The Neuron and Neural Firing.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_NEURONS_NEUROTRANSMITTERS: LessonPlan = {
-  id: 'evelyn.ap.psych.neurons-neurotransmitters.v1', title: 'U1.1 Neurons and Neurotransmitters',
+  id: 'evelyn.ap.psych.neurons-neurotransmitters.v1', title: 'U1.3 The Neuron and Neural Firing',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.neurons-neurotransmitters', description: 'Identify the parts of a neuron and trace the action potential. Distinguish neurotransmitters and their behavioral effects. Recognize how drugs (agonists vs antagonists) interact with neurotransmitter systems.', standard: 'AP-PSYCH-1.1-1.2' }],
+  los: [{ id: 'appsych.neurons-neurotransmitters', description: 'Identify the parts of a neuron and trace the action potential. Distinguish neurotransmitters and their behavioral effects. Recognize how drugs (agonists vs antagonists) interact with neurotransmitter systems.', standard: 'AP-PSYCH-1.3' }],
   prerequisites: [], followUps: ['appsych.brain-structures'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame neurons as the brain\'s building blocks.', script: "Your brain has 86 BILLION neurons. Each one fires up to 200 times per second, communicating via chemicals at junctions called synapses. Today: how a single neuron fires, and how chemical messengers shape your moods, thoughts, and actions.", estimatedMinutes: 2 },
@@ -81,5 +81,5 @@ export const SEED_AP_PSYCH_U1_NEURONS_NEUROTRANSMITTERS: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '1', cedTopic: '1.1-1.2', cedTitle: 'Neurons and Neurotransmitters', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard biological psychology.' }] },
+  metadata: { cedUnit: '1', cedTopic: '1.3', cedTitle: 'The Neuron and Neural Firing', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard biological psychology.' }] },
 };

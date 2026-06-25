@@ -1,10 +1,10 @@
 /**
- * AP Psychology — CED Unit 2.3+2.4: Memory Models and Encoding.
+ * AP Psychology — CED Unit 2.3-2.4: Introduction to Memory and Encoding.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_MODELS: LessonPlan = {
-  id: 'evelyn.ap.psych.memory-models.v1', title: 'U2.1 Memory Models and Encoding',
+  id: 'evelyn.ap.psych.memory-models.v1', title: 'U2.3 Introduction to Memory and Encoding',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-models', description: 'Identify the Atkinson-Shiffrin three-stage model and Baddeley\'s working memory. Distinguish encoding strategies (semantic, acoustic, visual; deep vs shallow processing).', standard: 'AP-PSYCH-2.3-2.4' }],
   prerequisites: [], followUps: ['appsych.memory-storage-retrieval'], estimatedMinutes: 22,
@@ -86,5 +86,5 @@ export const SEED_AP_PSYCH_U2_MEMORY_MODELS: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '2', cedTopic: '2.3-2.4', cedTitle: 'Memory Models and Encoding', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard memory models.' }] },
+  metadata: { cedUnit: '2', cedTopic: '2.3-2.4', cedTitle: 'Introduction to Memory and Encoding', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard memory models.' }] },
 };

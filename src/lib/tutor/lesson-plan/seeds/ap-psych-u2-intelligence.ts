@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 2.8+2.9+2.10: Intelligence, Achievement, and
+ * AP Psychology — CED Unit 2.8: Intelligence and Achievement.
  * Standardized Testing.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_INTELLIGENCE: LessonPlan = {
-  id: 'evelyn.ap.psych.intelligence.v1', title: 'U2.5 Intelligence',
+  id: 'evelyn.ap.psych.intelligence.v1', title: 'U2.8 Intelligence and Achievement',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.intelligence', description: 'Distinguish theories of intelligence (Spearman g, Sternberg, Gardner, emotional intelligence). Identify intelligence test history and properties (validity, reliability, standardization). Discuss heritability and group differences.', standard: 'AP-PSYCH-2.8-2.10' }],
+  los: [{ id: 'appsych.intelligence', description: 'Distinguish theories of intelligence (Spearman g, Sternberg, Gardner, emotional intelligence). Identify intelligence test history and properties (validity, reliability, standardization). Discuss heritability and group differences.', standard: 'AP-PSYCH-2.8' }],
   prerequisites: ['appsych.thinking-language'], followUps: [], estimatedMinutes: 20,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame intelligence as multifaceted.', script: "What is INTELLIGENCE? A single mental ability, or many separate ones? Can a test measure it? AP loves these debates. Today: theories, tests, what they measure (and don\'t).", estimatedMinutes: 2 },
@@ -120,5 +120,5 @@ export const SEED_AP_PSYCH_U2_INTELLIGENCE: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '2', cedTopic: '2.8-2.10', cedTitle: 'Intelligence', sources: [{ type: 'concept', book: 'feldman', chapter: '8', note: 'Standard intelligence theories and tests.' }] },
+  metadata: { cedUnit: '2', cedTopic: '2.8', cedTitle: 'Intelligence and Achievement', sources: [{ type: 'concept', book: 'feldman', chapter: '8', note: 'Standard intelligence theories and tests.' }] },
 };

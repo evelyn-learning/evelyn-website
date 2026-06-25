@@ -788,6 +788,13 @@ import { SEED_AP_PSYCH_U5_MOOD_DISORDERS } from './seeds/ap-psych-u5-mood-disord
 import { SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY } from './seeds/ap-psych-u5-schizo-personality';
 import { SEED_AP_PSYCH_U5_THERAPY } from './seeds/ap-psych-u5-therapy';
 import { SEED_AP_PSYCH_U5_FRQ_PRACTICE } from './seeds/ap-psych-u5-frq-practice';
+import { SEED_AP_PSYCH_SF_RESEARCH_METHODS } from './seeds/ap-psych-sf-research-methods';
+import { SEED_AP_PSYCH_U3_DEVELOPMENTAL_THEMES } from './seeds/ap-psych-u3-developmental-themes-methods';
+import { SEED_AP_PSYCH_U3_GENDER_SEXUAL_ORIENTATION } from './seeds/ap-psych-u3-gender-sexual-orientation';
+import { SEED_AP_PSYCH_U4_MOTIVATION } from './seeds/ap-psych-u4-motivation';
+import { SEED_AP_PSYCH_U4_EMOTION } from './seeds/ap-psych-u4-emotion';
+import { SEED_AP_PSYCH_U5_POSITIVE_PSYCHOLOGY } from './seeds/ap-psych-u5-positive-psychology';
+import { SEED_AP_PSYCH_U5_CLASSIFYING_DISORDERS } from './seeds/ap-psych-u5-classifying-disorders';
 // AP Research — new format (process-driven).
 import { SEED_AP_RESEARCH_U1_RESEARCH_QUESTION } from './seeds/ap-research-u1-research-question';
 import { SEED_AP_RESEARCH_U2_LITERATURE_REVIEW } from './seeds/ap-research-u2-literature-review';
@@ -2027,6 +2034,13 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY,
   SEED_AP_PSYCH_U5_THERAPY,
   SEED_AP_PSYCH_U5_FRQ_PRACTICE,
+  SEED_AP_PSYCH_SF_RESEARCH_METHODS,
+  SEED_AP_PSYCH_U3_DEVELOPMENTAL_THEMES,
+  SEED_AP_PSYCH_U3_GENDER_SEXUAL_ORIENTATION,
+  SEED_AP_PSYCH_U4_MOTIVATION,
+  SEED_AP_PSYCH_U4_EMOTION,
+  SEED_AP_PSYCH_U5_POSITIVE_PSYCHOLOGY,
+  SEED_AP_PSYCH_U5_CLASSIFYING_DISORDERS,
   SEED_AP_RESEARCH_U1_RESEARCH_QUESTION,
   SEED_AP_RESEARCH_U2_LITERATURE_REVIEW,
   SEED_AP_RESEARCH_U3_METHODOLOGY,

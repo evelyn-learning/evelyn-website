@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 4 (Personality): Major Personality Theories.
+ * AP Psychology — CED Unit 4.4-4.5: Personality Theories (Psychodynamic, Humanistic, Trait, Social-Cognitive).
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PERSONALITY_THEORIES: LessonPlan = {
   id: 'evelyn.ap.psych.personality-theories.v1', title: 'U4.4 Personality Theories',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.personality-theories', description: 'Compare four major personality theories: psychodynamic (Freud), humanistic (Maslow, Rogers), trait (Big Five), and social-cognitive (Bandura, Rotter).', standard: 'AP-PSYCH-4-PERSONALITY' }],
+  los: [{ id: 'appsych.personality-theories', description: 'Compare four major personality theories: psychodynamic (Freud), humanistic (Maslow, Rogers), trait (Big Five), and social-cognitive (Bandura, Rotter).', standard: 'AP-PSYCH-4.4-4.5' }],
   prerequisites: ['appsych.prejudice-stereotypes'], followUps: ['appsych.personality-assessment'], estimatedMinutes: 24,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame personality theories.', script: "Why are people DIFFERENT? Four major theories explain personality. Each emphasizes different forces — unconscious drives (Freud), self-actualization (humanists), stable traits (Big Five), or interaction with environment (social-cognitive). Today: each in turn.", estimatedMinutes: 2 },
@@ -86,5 +86,5 @@ export const SEED_AP_PSYCH_U4_PERSONALITY_THEORIES: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '4', cedTopic: '4-PERSONALITY', cedTitle: 'Personality Theories', sources: [{ type: 'concept', book: 'feldman', chapter: '13', note: 'Standard four personality frameworks.' }] },
+  metadata: { cedUnit: '4', cedTopic: '4.4-4.5', cedTitle: 'Personality Theories (Psychodynamic, Humanistic, Trait, Social-Cognitive)', sources: [{ type: 'concept', book: 'feldman', chapter: '13', note: 'Standard four personality frameworks.' }] },
 };

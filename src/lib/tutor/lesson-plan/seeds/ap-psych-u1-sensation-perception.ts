@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 1.8+1.9+1.10: Sensation and Perception.
+ * AP Psychology — CED Unit 1.6+2.1: Sensation and Perception.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_SENSATION_PERCEPTION: LessonPlan = {
-  id: 'evelyn.ap.psych.sensation-perception.v1', title: 'U1.5 Sensation and Perception',
+  id: 'evelyn.ap.psych.sensation-perception.v1', title: 'U1.6 Sensation and Perception',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.sensation-perception', description: 'Distinguish sensation from perception. Identify thresholds and sensory adaptation. Trace visual and auditory pathways. Apply Gestalt principles, depth cues, and explanations of perceptual illusions.', standard: 'AP-PSYCH-1.8-1.10' }],
+  los: [{ id: 'appsych.sensation-perception', description: 'Distinguish sensation from perception. Identify thresholds and sensory adaptation. Trace visual and auditory pathways. Apply Gestalt principles, depth cues, and explanations of perceptual illusions.', standard: 'AP-PSYCH-1.6+2.1' }],
   prerequisites: ['appsych.consciousness-sleep'], followUps: [], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame the gap between sensation and perception.', script: "Sensation is what your sense organs DETECT. Perception is what your brain MAKES of it. They\'re different — illusions reveal the gap. Today: how the brain converts physical energy into meaningful experience.", estimatedMinutes: 2 },
@@ -97,5 +97,5 @@ export const SEED_AP_PSYCH_U1_SENSATION_PERCEPTION: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '1', cedTopic: '1.8-1.10', cedTitle: 'Sensation and Perception', sources: [{ type: 'concept', book: 'feldman', chapter: '3', note: 'Standard sensation + perception.' }] },
+  metadata: { cedUnit: '1', cedTopic: '1.6+2.1', cedTitle: 'Sensation and Perception', sources: [{ type: 'concept', book: 'feldman', chapter: '3', note: 'Standard sensation + perception.' }] },
 };

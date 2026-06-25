@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 4 (Social): Conformity, Obedience, Bystander
+ * AP Psychology — CED Unit 4.3: Psychology of Social Situations.
  * Effect, Group Behavior.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_SOCIAL_INFLUENCE: LessonPlan = {
-  id: 'evelyn.ap.psych.social-influence.v1', title: 'U4.2 Social Influence',
+  id: 'evelyn.ap.psych.social-influence.v1', title: 'U4.3 Psychology of Social Situations',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.social-influence', description: 'Identify conformity (Asch), obedience (Milgram), and bystander effect (Darley & Latané). Distinguish normative vs informational social influence. Recognize group polarization, groupthink, deindividuation, social facilitation/loafing.', standard: 'AP-PSYCH-4-INFLUENCE' }],
+  los: [{ id: 'appsych.social-influence', description: 'Identify conformity (Asch), obedience (Milgram), and bystander effect (Darley & Latané). Distinguish normative vs informational social influence. Recognize group polarization, groupthink, deindividuation, social facilitation/loafing.', standard: 'AP-PSYCH-4.3' }],
   prerequisites: ['appsych.attribution-attitudes'], followUps: ['appsych.prejudice-stereotypes'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame social pressure.', script: "Most people will OBEY clearly unethical orders if given by an authority figure. They\'ll go along with a group even when the group is obviously wrong. They\'ll fail to help in emergencies if others are present. Today: the dark patterns of social influence.", estimatedMinutes: 2 },
@@ -105,5 +105,5 @@ export const SEED_AP_PSYCH_U4_SOCIAL_INFLUENCE: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '4', cedTopic: '4-INFLUENCE', cedTitle: 'Social Influence', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard Asch + Milgram + bystander.' }] },
+  metadata: { cedUnit: '4', cedTopic: '4.3', cedTitle: 'Psychology of Social Situations', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard Asch + Milgram + bystander.' }] },
 };

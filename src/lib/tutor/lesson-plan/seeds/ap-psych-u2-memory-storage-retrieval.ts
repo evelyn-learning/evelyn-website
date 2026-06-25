@@ -1,10 +1,10 @@
 /**
- * AP Psychology — CED Unit 2.5+2.6: Memory Storage and Retrieval.
+ * AP Psychology — CED Unit 2.5-2.6: Storing and Retrieving Memories.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_STORAGE_RETRIEVAL: LessonPlan = {
-  id: 'evelyn.ap.psych.memory-storage-retrieval.v1', title: 'U2.2 Memory Storage and Retrieval',
+  id: 'evelyn.ap.psych.memory-storage-retrieval.v1', title: 'U2.5 Storing and Retrieving Memories',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-storage-retrieval', description: 'Distinguish types of long-term memory (declarative vs procedural; semantic vs episodic). Identify retrieval cues, context-dependent and state-dependent memory, and the role of brain structures.', standard: 'AP-PSYCH-2.5-2.6' }],
   prerequisites: ['appsych.memory-models'], followUps: ['appsych.memory-forgetting'], estimatedMinutes: 18,
@@ -93,5 +93,5 @@ export const SEED_AP_PSYCH_U2_MEMORY_STORAGE_RETRIEVAL: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '2', cedTopic: '2.5-2.6', cedTitle: 'Memory Storage and Retrieval', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard LTM types + retrieval.' }] },
+  metadata: { cedUnit: '2', cedTopic: '2.5-2.6', cedTitle: 'Storing and Retrieving Memories', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard LTM types + retrieval.' }] },
 };

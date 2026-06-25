@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 4 (Social): Prejudice and Stereotypes.
+ * AP Psychology — CED Unit 4.3: Psychology of Social Situations: Prejudice and Discrimination.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_PREJUDICE_STEREOTYPES: LessonPlan = {
-  id: 'evelyn.ap.psych.prejudice-stereotypes.v1', title: 'U4.3 Prejudice and Stereotypes',
+  id: 'evelyn.ap.psych.prejudice-stereotypes.v1', title: 'U4.3 Prejudice, Stereotypes, and Discrimination',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.prejudice-stereotypes', description: 'Distinguish prejudice (attitude), stereotype (belief), and discrimination (behavior). Identify ingroup/outgroup dynamics, stereotype threat, and prejudice reduction strategies.', standard: 'AP-PSYCH-4-PREJUDICE' }],
+  los: [{ id: 'appsych.prejudice-stereotypes', description: 'Distinguish prejudice (attitude), stereotype (belief), and discrimination (behavior). Identify ingroup/outgroup dynamics, stereotype threat, and prejudice reduction strategies.', standard: 'AP-PSYCH-4.3' }],
   prerequisites: ['appsych.social-influence'], followUps: ['appsych.personality-classical'], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame prejudice as multi-component.', script: "Prejudice has THREE PARTS: a STEREOTYPE (belief), a PREJUDICE (negative feeling), and DISCRIMINATION (action). Each component can exist without the others. Today: the psychology and reduction of prejudice.", estimatedMinutes: 2 },
@@ -107,5 +107,5 @@ export const SEED_AP_PSYCH_U4_PREJUDICE_STEREOTYPES: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '4', cedTopic: '4-PREJUDICE', cedTitle: 'Prejudice and Stereotypes', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard prejudice psychology.' }] },
+  metadata: { cedUnit: '4', cedTopic: '4.3', cedTitle: 'Psychology of Social Situations: Prejudice and Discrimination', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard prejudice psychology.' }] },
 };

@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 2.2: Thinking, Problem Solving, and Language.
+ * AP Psychology — CED Unit 2.2+3.5: Thinking, Problem-Solving, and Language.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_THINKING_LANGUAGE: LessonPlan = {
-  id: 'evelyn.ap.psych.thinking-language.v1', title: 'U2.4 Thinking, Problem Solving, and Language',
+  id: 'evelyn.ap.psych.thinking-language.v1', title: 'U2.2 Thinking, Problem-Solving, and Language',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.thinking-language', description: 'Identify problem-solving strategies (algorithms, heuristics). Recognize cognitive biases (representativeness, availability, anchoring, confirmation bias). Trace language acquisition stages and the linguistic relativity hypothesis.', standard: 'AP-PSYCH-2.2' }],
+  los: [{ id: 'appsych.thinking-language', description: 'Identify problem-solving strategies (algorithms, heuristics). Recognize cognitive biases (representativeness, availability, anchoring, confirmation bias). Trace language acquisition stages and the linguistic relativity hypothesis.', standard: 'AP-PSYCH-2.2+3.5' }],
   prerequisites: ['appsych.memory-forgetting'], followUps: ['appsych.intelligence'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame thinking as biased.', script: "Humans are NOT rational decision-makers. We rely on shortcuts (HEURISTICS) that work most of the time but fail predictably. Today: how thinking actually works, the biases that fool us, and the parallel question of language.", estimatedMinutes: 2 },
@@ -101,5 +101,5 @@ export const SEED_AP_PSYCH_U2_THINKING_LANGUAGE: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '2', cedTopic: '2.2', cedTitle: 'Thinking, Problem Solving, Language', sources: [{ type: 'concept', book: 'feldman', chapter: '8', note: 'Standard cognitive psychology + language.' }] },
+  metadata: { cedUnit: '2', cedTopic: '2.2+3.5', cedTitle: 'Thinking, Problem-Solving, and Language', sources: [{ type: 'concept', book: 'feldman', chapter: '8', note: 'Standard cognitive psychology + language.' }] },
 };

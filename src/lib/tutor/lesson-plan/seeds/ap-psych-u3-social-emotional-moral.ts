@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 3 (Development): Social-Emotional and Moral
+ * AP Psychology — CED Unit 3.6: Social-Emotional Development Across the Lifespan.
  * Development. Erikson, Attachment, Kohlberg.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_SOCIAL_EMOTIONAL_MORAL: LessonPlan = {
-  id: 'evelyn.ap.psych.social-emotional-moral.v1', title: 'U3.2 Social, Emotional, and Moral Development',
+  id: 'evelyn.ap.psych.social-emotional-moral.v1', title: 'U3.6 Social-Emotional Development Across the Lifespan',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.social-emotional-moral', description: 'Identify Erikson\'s 8 psychosocial stages. Distinguish attachment styles (secure, avoidant, ambivalent, disorganized). Trace Kohlberg\'s 3 levels of moral reasoning.', standard: 'AP-PSYCH-3-SOCIAL' }],
+  los: [{ id: 'appsych.social-emotional-moral', description: 'Identify Erikson\'s 8 psychosocial stages. Distinguish attachment styles (secure, avoidant, ambivalent, disorganized). Trace Kohlberg\'s 3 levels of moral reasoning.', standard: 'AP-PSYCH-3.6' }],
   prerequisites: ['appsych.cognitive-development'], followUps: ['appsych.classical-conditioning'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame social/emotional/moral development.', script: "Cognitive development is one stream; SOCIAL and EMOTIONAL is another. ERIKSON traced 8 lifelong crises. AINSWORTH measured how infants attach. KOHLBERG mapped how moral reasoning matures. Each tells you something about who we become.", estimatedMinutes: 2 },
@@ -100,5 +100,5 @@ export const SEED_AP_PSYCH_U3_SOCIAL_EMOTIONAL_MORAL: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '3', cedTopic: '3-SOCIAL', cedTitle: 'Social, Emotional, Moral Development', sources: [{ type: 'concept', book: 'feldman', chapter: '9', note: 'Standard Erikson + attachment + Kohlberg.' }] },
+  metadata: { cedUnit: '3', cedTopic: '3.6', cedTitle: 'Social-Emotional Development Across the Lifespan', sources: [{ type: 'concept', book: 'feldman', chapter: '9', note: 'Standard Erikson + attachment + Kohlberg.' }] },
 };

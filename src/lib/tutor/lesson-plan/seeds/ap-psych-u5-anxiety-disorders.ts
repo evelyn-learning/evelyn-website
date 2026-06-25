@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 5 (Disorders): Anxiety, OCD, PTSD.
+ * AP Psychology — CED Unit 5.4: Categories of Psychological Disorders: Anxiety, OCD, Trauma.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_ANXIETY_DISORDERS: LessonPlan = {
-  id: 'evelyn.ap.psych.anxiety-disorders.v1', title: 'U5.2 Anxiety, OCD, PTSD',
+  id: 'evelyn.ap.psych.anxiety-disorders.v1', title: 'U5.4 Disorder Categories: Anxiety, OCD, and Trauma',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.anxiety-disorders', description: 'Distinguish generalized anxiety disorder, panic disorder, phobias, OCD, PTSD. Identify diagnostic criteria, prevalence, and theoretical explanations.', standard: 'AP-PSYCH-5-ANXIETY' }],
+  los: [{ id: 'appsych.anxiety-disorders', description: 'Distinguish generalized anxiety disorder, panic disorder, phobias, OCD, PTSD. Identify diagnostic criteria, prevalence, and theoretical explanations.', standard: 'AP-PSYCH-5.4' }],
   prerequisites: ['appsych.stress-health'], followUps: ['appsych.mood-disorders'], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame anxiety as a major mental health category.', script: "ANXIETY is the most common psychiatric concern. ~30% of people will experience an anxiety disorder. Today: GAD, panic, phobias, OCD, and PTSD — and how they\'re distinguished.", estimatedMinutes: 2 },
@@ -100,5 +100,5 @@ export const SEED_AP_PSYCH_U5_ANXIETY_DISORDERS: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '5', cedTopic: '5-ANXIETY', cedTitle: 'Anxiety Disorders', sources: [{ type: 'concept', book: 'feldman', chapter: '15', note: 'Standard anxiety + OCD + PTSD.' }] },
+  metadata: { cedUnit: '5', cedTopic: '5.4', cedTitle: 'Categories of Psychological Disorders: Anxiety, OCD, Trauma', sources: [{ type: 'concept', book: 'feldman', chapter: '15', note: 'Standard anxiety + OCD + PTSD.' }] },
 };

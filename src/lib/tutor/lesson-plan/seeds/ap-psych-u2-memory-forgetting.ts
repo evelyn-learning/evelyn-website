@@ -1,10 +1,10 @@
 /**
- * AP Psychology — CED Unit 2.7: Forgetting and Memory Distortion.
+ * AP Psychology — CED Unit 2.7: Forgetting and Other Memory Challenges.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U2_MEMORY_FORGETTING: LessonPlan = {
-  id: 'evelyn.ap.psych.memory-forgetting.v1', title: 'U2.3 Forgetting and Memory Distortion',
+  id: 'evelyn.ap.psych.memory-forgetting.v1', title: 'U2.7 Forgetting and Other Memory Challenges',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
   los: [{ id: 'appsych.memory-forgetting', description: 'Identify causes of forgetting (encoding failure, decay, interference, retrieval failure). Describe constructive memory and the misinformation effect. Distinguish forms of amnesia.', standard: 'AP-PSYCH-2.7' }],
   prerequisites: ['appsych.memory-storage-retrieval'], followUps: ['appsych.thinking-language'], estimatedMinutes: 18,
@@ -87,5 +87,5 @@ export const SEED_AP_PSYCH_U2_MEMORY_FORGETTING: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '2', cedTopic: '2.7', cedTitle: 'Forgetting and Memory Distortion', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard forgetting + Loftus.' }] },
+  metadata: { cedUnit: '2', cedTopic: '2.7', cedTitle: 'Forgetting and Other Memory Challenges', sources: [{ type: 'concept', book: 'feldman', chapter: '7', note: 'Standard forgetting + Loftus.' }] },
 };

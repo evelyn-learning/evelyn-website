@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 3 (Learning): Observational Learning.
+ * AP Psychology — CED Unit 3.9: Social, Cognitive, and Neurological Factors in Learning.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING: LessonPlan = {
-  id: 'evelyn.ap.psych.observational-learning.v1', title: 'U3.5 Observational and Cognitive Learning',
+  id: 'evelyn.ap.psych.observational-learning.v1', title: 'U3.9 Social, Cognitive, and Neurological Factors in Learning',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.observational-learning', description: 'Identify Bandura\'s observational learning. Recognize cognitive aspects of learning (latent learning, insight). Identify mirror neurons.', standard: 'AP-PSYCH-3-OBSERVATIONAL' }],
+  los: [{ id: 'appsych.observational-learning', description: 'Identify Bandura\'s observational learning. Recognize cognitive aspects of learning (latent learning, insight). Identify mirror neurons.', standard: 'AP-PSYCH-3.9' }],
   prerequisites: ['appsych.operant-conditioning'], followUps: [], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame learning beyond conditioning.', script: "Children watch others and IMITATE. We learn social rules without ever being directly rewarded. Bandura\'s BOBO DOLL study showed children learn aggressive behavior just by SEEING IT MODELED. Today: observational learning + cognitive aspects.", estimatedMinutes: 2 },
@@ -104,5 +104,5 @@ export const SEED_AP_PSYCH_U3_OBSERVATIONAL_LEARNING: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '3', cedTopic: '3-OBSERVATIONAL', cedTitle: 'Observational Learning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Bandura + cognitive learning.' }] },
+  metadata: { cedUnit: '3', cedTopic: '3.9', cedTitle: 'Social, Cognitive, and Neurological Factors in Learning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Bandura + cognitive learning.' }] },
 };

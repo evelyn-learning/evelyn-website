@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 1.3+1.4: Brain Structures and Hemispheric
+ * AP Psychology — CED Unit 1.4: The Brain.
  * Specialization.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_BRAIN_STRUCTURES: LessonPlan = {
-  id: 'evelyn.ap.psych.brain-structures.v1', title: 'U1.2 Brain Structures and Hemispheric Specialization',
+  id: 'evelyn.ap.psych.brain-structures.v1', title: 'U1.4 The Brain',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.brain-structures', description: 'Identify major brain structures (hindbrain, midbrain, forebrain) and their functions. Identify the four cortical lobes. Distinguish left vs. right hemisphere specialization. Understand brain plasticity and lesion studies.', standard: 'AP-PSYCH-1.3-1.4' }],
+  los: [{ id: 'appsych.brain-structures', description: 'Identify major brain structures (hindbrain, midbrain, forebrain) and their functions. Identify the four cortical lobes. Distinguish left vs. right hemisphere specialization. Understand brain plasticity and lesion studies.', standard: 'AP-PSYCH-1.4' }],
   prerequisites: ['appsych.neurons-neurotransmitters'], followUps: ['appsych.nervous-endocrine'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame the brain as functionally specialized.', script: "Your brain isn\'t one undifferentiated soup. SPECIFIC areas do SPECIFIC jobs. We know this because: when these areas get damaged, predictable abilities are lost. The famous Phineas Gage and patient HM cases revealed brain specialization.", estimatedMinutes: 2 },
@@ -94,5 +94,5 @@ export const SEED_AP_PSYCH_U1_BRAIN_STRUCTURES: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '1', cedTopic: '1.3-1.4', cedTitle: 'Brain Structures', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard brain structures.' }] },
+  metadata: { cedUnit: '1', cedTopic: '1.4', cedTitle: 'The Brain', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard brain structures.' }] },
 };

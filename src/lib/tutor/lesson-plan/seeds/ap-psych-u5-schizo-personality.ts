@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 5 (Disorders): Schizophrenia, Personality
+ * AP Psychology — CED Unit 5.4: Categories of Psychological Disorders: Schizophrenia and Personality.
  * Disorders, Other Disorders.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY: LessonPlan = {
-  id: 'evelyn.ap.psych.schizo-personality.v1', title: 'U5.4 Schizophrenia and Personality Disorders',
+  id: 'evelyn.ap.psych.schizo-personality.v1', title: 'U5.4 Disorder Categories: Schizophrenia and Personality',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.schizo-personality', description: 'Identify schizophrenia symptoms and theories. Distinguish dissociative disorders. Identify personality disorders (especially antisocial, borderline). Recognize neurodevelopmental disorders.', standard: 'AP-PSYCH-5-SCHIZO' }],
+  los: [{ id: 'appsych.schizo-personality', description: 'Identify schizophrenia symptoms and theories. Distinguish dissociative disorders. Identify personality disorders (especially antisocial, borderline). Recognize neurodevelopmental disorders.', standard: 'AP-PSYCH-5.4' }],
   prerequisites: ['appsych.mood-disorders'], followUps: ['appsych.therapy'], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame severe disorders.', script: "SCHIZOPHRENIA is one of the most severe mental illnesses — affects ~1% of population worldwide. Personality disorders affect ~10%. Today: schizo, dissociative, personality, and a glance at neurodevelopmental disorders.", estimatedMinutes: 2 },
@@ -106,5 +106,5 @@ export const SEED_AP_PSYCH_U5_SCHIZO_PERSONALITY: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '5', cedTopic: '5-SCHIZO', cedTitle: 'Schizophrenia, Personality, Other Disorders', sources: [{ type: 'concept', book: 'feldman', chapter: '15', note: 'Standard severe disorders.' }] },
+  metadata: { cedUnit: '5', cedTopic: '5.4', cedTitle: 'Categories of Psychological Disorders: Schizophrenia and Personality', sources: [{ type: 'concept', book: 'feldman', chapter: '15', note: 'Standard severe disorders.' }] },
 };

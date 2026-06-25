@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 3 (Learning): Classical Conditioning.
+ * AP Psychology — CED Unit 3.7: Classical Conditioning.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING: LessonPlan = {
-  id: 'evelyn.ap.psych.classical-conditioning.v1', title: 'U3.3 Classical Conditioning (Pavlov)',
+  id: 'evelyn.ap.psych.classical-conditioning.v1', title: 'U3.7 Classical Conditioning',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.classical-conditioning', description: 'Identify the components of classical conditioning (UCS, UCR, CS, CR). Trace acquisition, extinction, spontaneous recovery, generalization, discrimination. Apply to phobias and Watson\'s "Little Albert."', standard: 'AP-PSYCH-3-CLASSICAL' }],
+  los: [{ id: 'appsych.classical-conditioning', description: 'Identify the components of classical conditioning (UCS, UCR, CS, CR). Trace acquisition, extinction, spontaneous recovery, generalization, discrimination. Apply to phobias and Watson\'s "Little Albert."', standard: 'AP-PSYCH-3.7' }],
   prerequisites: ['appsych.social-emotional-moral'], followUps: ['appsych.operant-conditioning'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame Pavlov\'s discovery.', script: "Pavlov was studying digestion in dogs when he noticed they began salivating BEFORE food arrived — at the sound of footsteps. He realized: the dogs LEARNED that footsteps predicted food. Today: how to LEARN AN ASSOCIATION.", estimatedMinutes: 2 },
@@ -105,5 +105,5 @@ export const SEED_AP_PSYCH_U3_CLASSICAL_CONDITIONING: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '3', cedTopic: '3-CLASSICAL', cedTitle: 'Classical Conditioning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Pavlov + classical conditioning.' }] },
+  metadata: { cedUnit: '3', cedTopic: '3.7', cedTitle: 'Classical Conditioning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Pavlov + classical conditioning.' }] },
 };

@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 1.5: The Nervous and Endocrine Systems +
+ * AP Psychology — CED Unit 1.1-1.2: Overview of the Nervous System and Heredity.
  * Genetics.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE: LessonPlan = {
-  id: 'evelyn.ap.psych.nervous-endocrine.v1', title: 'U1.3 Nervous System, Endocrine, and Genetics',
+  id: 'evelyn.ap.psych.nervous-endocrine.v1', title: 'U1.1 Nervous System Overview, Endocrine, and Heredity',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.nervous-endocrine', description: 'Distinguish CNS from PNS; somatic from autonomic; sympathetic from parasympathetic. Identify endocrine glands and major hormones. Distinguish heritability and the nature/nurture interaction.', standard: 'AP-PSYCH-1.5' }],
+  los: [{ id: 'appsych.nervous-endocrine', description: 'Distinguish CNS from PNS; somatic from autonomic; sympathetic from parasympathetic. Identify endocrine glands and major hormones. Distinguish heritability and the nature/nurture interaction.', standard: 'AP-PSYCH-1.1-1.2' }],
   prerequisites: ['appsych.brain-structures'], followUps: ['appsych.consciousness-sleep'], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame the body\'s communication systems.', script: "Two systems coordinate your body: the FAST nervous system (electrical/chemical, milliseconds) and the SLOW endocrine system (hormones, seconds-to-hours). Together they regulate everything from your heartbeat to your fight-or-flight response.", estimatedMinutes: 2 },
@@ -83,5 +83,5 @@ export const SEED_AP_PSYCH_U1_NERVOUS_ENDOCRINE: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '1', cedTopic: '1.5', cedTitle: 'Nervous and Endocrine Systems', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard NS + endocrine + genetics.' }] },
+  metadata: { cedUnit: '1', cedTopic: '1.1-1.2', cedTitle: 'Overview of the Nervous System and Heredity', sources: [{ type: 'concept', book: 'feldman', chapter: '2', note: 'Standard NS + endocrine + genetics.' }] },
 };

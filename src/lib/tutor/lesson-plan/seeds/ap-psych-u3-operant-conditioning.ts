@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 3 (Learning): Operant Conditioning.
+ * AP Psychology — CED Unit 3.8: Operant Conditioning.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_OPERANT_CONDITIONING: LessonPlan = {
-  id: 'evelyn.ap.psych.operant-conditioning.v1', title: 'U3.4 Operant Conditioning (Skinner)',
+  id: 'evelyn.ap.psych.operant-conditioning.v1', title: 'U3.8 Operant Conditioning',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.operant-conditioning', description: 'Distinguish positive vs negative reinforcement and punishment. Identify reinforcement schedules (fixed/variable, ratio/interval). Understand shaping and the role of consequences.', standard: 'AP-PSYCH-3-OPERANT' }],
+  los: [{ id: 'appsych.operant-conditioning', description: 'Distinguish positive vs negative reinforcement and punishment. Identify reinforcement schedules (fixed/variable, ratio/interval). Understand shaping and the role of consequences.', standard: 'AP-PSYCH-3.8' }],
   prerequisites: ['appsych.classical-conditioning'], followUps: ['appsych.observational-learning'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame consequence-driven learning.', script: "Pavlov\'s dogs learned PASSIVE associations. Skinner\'s rats learned by ACTING on the world. Push a lever → get food. Push wrong button → get shocked. Behavior is shaped by CONSEQUENCES. Today: the most powerful framework for understanding behavior change.", estimatedMinutes: 2 },
@@ -99,5 +99,5 @@ export const SEED_AP_PSYCH_U3_OPERANT_CONDITIONING: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '3', cedTopic: '3-OPERANT', cedTitle: 'Operant Conditioning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Skinner + operant.' }] },
+  metadata: { cedUnit: '3', cedTopic: '3.8', cedTitle: 'Operant Conditioning', sources: [{ type: 'concept', book: 'feldman', chapter: '6', note: 'Standard Skinner + operant.' }] },
 };

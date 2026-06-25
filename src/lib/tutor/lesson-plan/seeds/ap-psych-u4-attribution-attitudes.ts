@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 4 (Social): Attribution, Attitudes, Cognitive
+ * AP Psychology — CED Unit 4.1-4.2: Attribution, Person Perception, and Attitudes.
  * Dissonance.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U4_ATTRIBUTION_ATTITUDES: LessonPlan = {
-  id: 'evelyn.ap.psych.attribution-attitudes.v1', title: 'U4.1 Attribution and Attitudes',
+  id: 'evelyn.ap.psych.attribution-attitudes.v1', title: 'U4.1 Attribution, Person Perception, and Attitudes',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.attribution-attitudes', description: 'Distinguish dispositional vs situational attributions. Identify fundamental attribution error, self-serving bias, just-world hypothesis. Understand attitudes and cognitive dissonance theory.', standard: 'AP-PSYCH-4-ATTRIBUTION' }],
+  los: [{ id: 'appsych.attribution-attitudes', description: 'Distinguish dispositional vs situational attributions. Identify fundamental attribution error, self-serving bias, just-world hypothesis. Understand attitudes and cognitive dissonance theory.', standard: 'AP-PSYCH-4.1-4.2' }],
   prerequisites: [], followUps: ['appsych.social-influence'], estimatedMinutes: 20,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame attribution as biased.', script: "When someone cuts you off in traffic, you assume they\'re a JERK. When YOU cut someone off, it\'s because you\'re LATE. We systematically attribute OTHERS\' actions to their personality, our OWN to circumstances. Today: this and other attribution biases.", estimatedMinutes: 2 },
@@ -101,5 +101,5 @@ export const SEED_AP_PSYCH_U4_ATTRIBUTION_ATTITUDES: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '4', cedTopic: '4-ATTRIBUTION', cedTitle: 'Attribution and Attitudes', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard attribution + cognitive dissonance.' }] },
+  metadata: { cedUnit: '4', cedTopic: '4.1-4.2', cedTitle: 'Attribution, Person Perception, and Attitudes', sources: [{ type: 'concept', book: 'feldman', chapter: '14', note: 'Standard attribution + cognitive dissonance.' }] },
 };

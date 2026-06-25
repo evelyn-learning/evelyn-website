@@ -1,13 +1,13 @@
 /**
- * AP Psychology — CED Unit 3 (Development): Piaget's Cognitive Stages
+ * AP Psychology — CED Unit 3.2+3.4: Cognitive and Physical Development Across the Lifespan.
  * and Vygotsky.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U3_COGNITIVE_DEVELOPMENT: LessonPlan = {
-  id: 'evelyn.ap.psych.cognitive-development.v1', title: 'U3.1 Cognitive Development (Piaget and Vygotsky)',
+  id: 'evelyn.ap.psych.cognitive-development.v1', title: 'U3.4 Cognitive and Physical Development',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.cognitive-development', description: 'Identify Piaget\'s four stages of cognitive development and key milestones. Compare with Vygotsky\'s sociocultural theory (ZPD, scaffolding). Recognize physical and motor development milestones.', standard: 'AP-PSYCH-3-COGNITIVE' }],
+  los: [{ id: 'appsych.cognitive-development', description: 'Identify Piaget\'s four stages of cognitive development and key milestones. Compare with Vygotsky\'s sociocultural theory (ZPD, scaffolding). Recognize physical and motor development milestones.', standard: 'AP-PSYCH-3.2+3.4' }],
   prerequisites: [], followUps: ['appsych.social-emotional-moral'], estimatedMinutes: 22,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame childhood as cognitive transformation.', script: "A 2-year-old can\'t understand that you still EXIST when you leave the room (object permanence). A 5-year-old can\'t see another\'s perspective (egocentrism). By 12, they reason abstractly. PIAGET mapped these stages.", estimatedMinutes: 2 },
@@ -98,5 +98,5 @@ export const SEED_AP_PSYCH_U3_COGNITIVE_DEVELOPMENT: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '3', cedTopic: '3-COGNITIVE', cedTitle: 'Cognitive Development', sources: [{ type: 'concept', book: 'feldman', chapter: '9', note: 'Standard Piaget + Vygotsky.' }] },
+  metadata: { cedUnit: '3', cedTopic: '3.2+3.4', cedTitle: 'Cognitive and Physical Development Across the Lifespan', sources: [{ type: 'concept', book: 'feldman', chapter: '9', note: 'Standard Piaget + Vygotsky.' }] },
 };

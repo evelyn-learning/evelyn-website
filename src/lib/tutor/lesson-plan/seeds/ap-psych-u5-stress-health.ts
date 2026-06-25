@@ -1,12 +1,12 @@
 /**
- * AP Psychology — CED Unit 5 (Health): Stress and Health.
+ * AP Psychology — CED Unit 5.1: Introduction to Health Psychology.
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_PSYCH_U5_STRESS_HEALTH: LessonPlan = {
-  id: 'evelyn.ap.psych.stress-health.v1', title: 'U5.1 Stress and Health',
+  id: 'evelyn.ap.psych.stress-health.v1', title: 'U5.1 Introduction to Health Psychology',
   curriculum: 'AP', grade: '11', subject: 'ss', topic: 'ap-psychology', locale: 'en',
-  los: [{ id: 'appsych.stress-health', description: 'Distinguish stressors and stress response. Identify Selye\'s GAS model. Understand the link between stress and health (cardiovascular, immune, mental). Identify coping strategies.', standard: 'AP-PSYCH-5-STRESS' }],
+  los: [{ id: 'appsych.stress-health', description: 'Distinguish stressors and stress response. Identify Selye\'s GAS model. Understand the link between stress and health (cardiovascular, immune, mental). Identify coping strategies.', standard: 'AP-PSYCH-5.1' }],
   prerequisites: [], followUps: ['appsych.anxiety-disorders'], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame stress as physical AND psychological.', script: "STRESS isn\'t just a feeling — it physically alters your body. Sustained stress damages cardiovascular, immune, and neural systems. Today: how stress works, why it hurts health, and what to do about it.", estimatedMinutes: 2 },
@@ -108,5 +108,5 @@ export const SEED_AP_PSYCH_U5_STRESS_HEALTH: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '5', cedTopic: '5-STRESS', cedTitle: 'Stress and Health', sources: [{ type: 'concept', book: 'feldman', chapter: '12', note: 'Standard stress + Selye GAS.' }] },
+  metadata: { cedUnit: '5', cedTopic: '5.1', cedTitle: 'Introduction to Health Psychology', sources: [{ type: 'concept', book: 'feldman', chapter: '12', note: 'Standard stress + Selye GAS.' }] },
 };
