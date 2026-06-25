@@ -130,10 +130,20 @@ export default function SessionStage(props: SessionStageProps) {
   }, [nudgeActive]);
   const stageRef = useRef<HTMLDivElement>(null);
   const toggleFullscreen = () => {
-    const el = stageRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const el = stageRef.current as any;
     if (!el) return;
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else el.requestFullscreen?.().catch(() => {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = document as any;
+    try {
+      if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+        (doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc);
+      } else {
+        // webkit* covers Safari (desktop/iPad). iPhone Safari has no Fullscreen
+        // API at all — the button is hidden there (see the tools cluster).
+        (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+      }
+    } catch { /* unsupported — button is hidden on those devices anyway */ }
   };
 
   return (
@@ -271,8 +281,14 @@ export default function SessionStage(props: SessionStageProps) {
           <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => setTool(tool === 'draw' ? null : 'draw')}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
           <ToolBtn active={tool === 'text'} title="Text note" onClick={() => setTool(tool === 'text' ? null : 'text')}><span className="font-bold text-sm">Aa</span></ToolBtn>
           <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
-          <div className="w-6 h-px bg-slate-200 my-0.5" />
-          <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+          {/* Fullscreen — iOS Safari (iPhone) has no Fullscreen API on
+              non-video elements, so the button is a dead no-op there. Show it
+              only md+ (desktop / iPad, where webkit fullscreen works).
+              md:contents keeps the divider+button in the cluster's flex flow. */}
+          <div className="hidden md:contents">
+            <div className="w-6 h-px bg-slate-200 my-0.5" />
+            <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+          </div>
         </div>
       </div>
 
@@ -421,7 +437,14 @@ export default function SessionStage(props: SessionStageProps) {
 
       {/* ===== Transcript drawer ===== */}
       {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setDrawerOpen(false)} />}
-      <div className={`absolute z-50 bg-white shadow-2xl flex flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
+      {/* On phones the CLOSED drawer is display:none, NOT just translated
+          off-canvas. iOS Safari does not reliably clip a translated-off-screen
+          child of a `fixed overflow-hidden` ancestor, so a translateY(100%)
+          drawer leaked BELOW the dock, grew the document's scroll height (top
+          bar scrolled away), and couldn't be dismissed (it was already in the
+          "closed" state). `hidden` removes it from layout entirely. Desktop
+          keeps the slide-in-from-right via translate-x. */}
+      <div className={`absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`}>
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
