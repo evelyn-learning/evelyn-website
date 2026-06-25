@@ -38,6 +38,13 @@ function readLocalStorage(): StudentPreferences {
   }
 }
 
+// Same-tab broadcast channel. The native `storage` event only fires in OTHER
+// tabs, so two hook instances in the SAME tab (e.g. the in-session ⋯ menu and
+// the VoiceTutorRealtime brain-prompt builder) wouldn't see each other's
+// changes — a mid-session humor/pacing change would never reach the brain.
+// This custom event closes that gap.
+const PREFS_EVENT = 'studentPreferencesChanged';
+
 function writeLocalStorage(prefs: StudentPreferences): void {
   if (typeof window === 'undefined') return;
   try {
@@ -46,6 +53,11 @@ function writeLocalStorage(prefs: StudentPreferences): void {
     // localStorage can be disabled / full; the in-memory state still
     // reflects the user's choice for this session.
   }
+  // Defer the broadcast: writeLocalStorage is called inside a setState updater,
+  // so dispatching synchronously would invoke other instances' listeners (→
+  // their setState) DURING render ("Cannot update a component while rendering a
+  // different component"). A microtask runs after the current render/commit.
+  try { queueMicrotask(() => { try { window.dispatchEvent(new Event(PREFS_EVENT)); } catch { /* no window */ } }); } catch { /* no queueMicrotask */ }
 }
 
 export interface UseStudentPreferencesOptions {
@@ -111,6 +123,19 @@ export function useStudentPreferences(options: UseStudentPreferencesOptions = {}
       cancelled = true;
     };
   }, [studentId]);
+
+  // Stay in sync with OTHER hook instances (same tab via PREFS_EVENT, other
+  // tabs via the native storage event) so an in-session preference change is
+  // reflected everywhere — including the brain-prompt builder.
+  useEffect(() => {
+    const onChange = () => setPreferences(readLocalStorage());
+    window.addEventListener(PREFS_EVENT, onChange);
+    window.addEventListener('storage', onChange);
+    return () => {
+      window.removeEventListener(PREFS_EVENT, onChange);
+      window.removeEventListener('storage', onChange);
+    };
+  }, []);
 
   const persistRemote = useCallback(
     async (patch: Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>) => {

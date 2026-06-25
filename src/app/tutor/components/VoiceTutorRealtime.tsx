@@ -586,10 +586,17 @@ interface VoiceTutorRealtimeProps {
    *  rendering. Parent can use this to drive a typing indicator. */
   onTutorBusy?: (busy: boolean) => void;
   /** Coarse voice-engine state for the new SessionStage "tutor presence"
-   *  orb (Direction 4). Mirrors the underlying RealtimeState machine:
-   *  speaking (TTS playing) · listening (mic open) · thinking (composing /
-   *  warming up) · error · idle. Fires on every transition. */
-  onVoiceStateChange?: (state: 'idle' | 'listening' | 'thinking' | 'speaking' | 'error') => void;
+   *  orb (Direction 4). Mirrors the underlying RealtimeState machine plus the
+   *  perception "being heard" states: speaking (TTS) · thinking (composing) ·
+   *  processing (student stopped, transcribing — "got that, one sec") · hearing
+   *  (student speaking now) · listening (mic open, idle) · muted · error · idle.
+   *  Fires on every transition. */
+  onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'error') => void;
+  /** Live student-mic amplitude (0..1) for the "being heard" meter. ~12×/sec. */
+  onMicLevel?: (level: number) => void;
+  /** Transient listening hint: 'didnt-catch' when the student clearly spoke but
+   *  nothing reached the brain (likely dropped); null clears it. */
+  onListeningHint?: (hint: 'didnt-catch' | null) => void;
   /** Phase 3: fires whenever paceBias changes (button click OR matching
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
@@ -636,6 +643,29 @@ interface VoiceTutorRealtimeProps {
    *  OpenAI's ~60-min Realtime session cap, so for T>60 the rotation
    *  still fires before the cap. Defaults to 30 (demo). */
   sessionMaxMinutes?: number;
+  /** Visual arrangement of the dock chrome. 'default' = the legacy split-pane
+   *  row (connection pill · mic · state · input · mute · End). 'island' = the
+   *  new SessionStage floating dock: no redundant connection pill, a HERO mic,
+   *  tighter single-row layout. The SessionStage wrapper supplies the rounded
+   *  background, so the island variant adds none of its own. (Flag-gated host;
+   *  default keeps every legacy caller byte-identical.) */
+  dockVariant?: 'default' | 'island';
+}
+
+/** Detect a "mute me" / "stop listening" voice command so the orchestrator can
+ *  mute the mic instead of routing it to the brain as a question. Kept tight to
+ *  avoid false positives: it must be a SHORT command-like utterance (a long
+ *  sentence that merely mentions "mute" is not a command). The student re-opens
+ *  the mic with the dock button (a muted mic can't hear an "unmute" command). */
+export function isMuteMeCommand(text: string): boolean {
+  const t = text.toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  const words = t.split(' ');
+  if (words.length > 7) return false; // a command, not a sentence about muting
+  if (/\bstop listening\b/.test(t)) return true;
+  if (/\bmute\b/.test(t) && /\b(me|mic|mike|microphone|my|myself|yourself|it|that|now|please)\b/.test(t)) return true;
+  if (/^mute$/.test(t)) return true;
+  return false;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -727,6 +757,8 @@ export function VoiceTutorRealtime({
   onLessonPlanProgress,
   onTutorBusy,
   onVoiceStateChange,
+  onMicLevel,
+  onListeningHint,
   onPaceBiasChange,
   onInterruptedChange,
   onBeforeTypedSubmit,
@@ -734,6 +766,7 @@ export function VoiceTutorRealtime({
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
+  dockVariant = 'default',
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
@@ -758,6 +791,11 @@ export function VoiceTutorRealtime({
   // when studentId is present. Used to drive the humor block in the
   // system prompt so the brain reflects the student's chosen level.
   const { preferences: studentPreferences } = useStudentPreferences({ studentId });
+  // Mirror the active humor level in a ref so the brain turn-start log can show
+  // it every turn (the prompt-build log only fires at mount/pref-change, which a
+  // late log capture can miss). Diagnostic only.
+  const humorCeilingRef = useRef(studentPreferences?.humorCeiling);
+  humorCeilingRef.current = studentPreferences?.humorCeiling;
 
   // Audio recording for session replay
   const audioRecordEnabled = sessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false';
@@ -890,6 +928,35 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // ── "Being heard" indicator state (2026-06-24) ──────────────────────────
+  // Drive an honest, turn-level feedback signal so the student doesn't have to
+  // guess whether they were heard. `perceptionHearing` = perception VAD says
+  // the student is speaking right now (speech_started→stopped). `awaitingDispatch`
+  // = they stopped and we're transcribing/deciding (the multi-second perception
+  // latency window) → shown as "Got that — one sec…". If that window elapses
+  // with no brain dispatch AND the utterance was long enough to be real speech,
+  // we surface a gentle "didn't catch that" hint (item D).
+  const [perceptionHearing, setPerceptionHearing] = useState(false);
+  const [perceptionAwaitingDispatch, setPerceptionAwaitingDispatch] = useState(false);
+  const speechWindowStartRef = useRef<number>(0);
+  const awaitingDispatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Mute-to-submit (2026-06-24): when the student mutes right after finishing an
+  // utterance (phone-like "I'm done"), submit that in-flight utterance and THEN
+  // go quiet, instead of discarding it. Set true at mute time if an utterance is
+  // in flight; lets the next transcript through the muted-drop guard once.
+  const submitPendingUtteranceRef = useRef<boolean>(false);
+  // Manual `input_audio_buffer.commit` errors on the transcription WS, so we
+  // can't force-commit a mid-utterance buffer. Instead, on a mute-with-in-flight
+  // we keep perception LISTENING for a short grace window so the server VAD
+  // finishes + commits the utterance naturally; then we actually mute. The
+  // start-gate effect honours muteGrace (perception stays unmuted while true).
+  const [muteGrace, setMuteGrace] = useState<boolean>(false);
+  const muteGraceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Holds the parent's "show/clear listening hint" callback (the onListeningHint
+  // prop), so the perception handlers + didn't-catch timer can surface or clear
+  // the gentle "didn't catch that" nudge.
+  const onListeningHintRef = useRef<((hint: 'didnt-catch' | null) => void) | null>(null);
+  onListeningHintRef.current = onListeningHint ?? null;
   // Opening-turn barge-in guard (2026-06-16). The very first brain turn is
   // a synthetic kickoff ([start lesson] / [start session]) — the student
   // isn't responding to anything yet, so a perception "barge-in" here is
@@ -908,6 +975,16 @@ export function VoiceTutorRealtime({
   // (the eventual transcript routes normally through applyPerceptionVerdict
   // or the production-WS fallback).
   const perceptionMidUtteranceWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Clears the post-speech "Got that — one sec…" state + its didn't-catch timer.
+  // Called when a real student turn reaches the brain, the tutor starts talking,
+  // or the student begins a new utterance.
+  const resolveAwaitingDispatch = useCallback(() => {
+    if (awaitingDispatchTimerRef.current) {
+      clearTimeout(awaitingDispatchTimerRef.current);
+      awaitingDispatchTimerRef.current = null;
+    }
+    setPerceptionAwaitingDispatch(false);
+  }, []);
   const PERCEPTION_MID_UTTERANCE_WATCHDOG_MS = 30_000;
   // Stage 3 fix #10 (2026-05-28): synchronous speakText gate for the
   // brain orchestrator's emit-after-abort race. When a perception
@@ -1630,6 +1707,9 @@ export function VoiceTutorRealtime({
   // Ref populated later so handleResponseDone (defined above handleContinueRotation)
   // can trigger a silent rotation when the banner is ignored.
   const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
+  // Populated after toggleMicMute is defined so the brain orchestrator (which
+  // lives above it) can honour a "mute me" voice command without a forward ref.
+  const muteMicRef = useRef<(() => void) | null>(null);
 
   // Check if text claims to show/display something visually (multi-language)
   // Uses explicit language patterns + a universal math content heuristic
@@ -2074,27 +2154,34 @@ export function VoiceTutorRealtime({
     // -try" — derive the loId + its description; else fall back to the
     // segment's goal/problem/id.
     const nextSeg = plan.segments.find((s) => s.id === next);
-    let loHeading = '';
+    // Stage prefix for the page title (Hook: / Concept: / Example: / Try: /
+    // Recap:). Comes from the segment's `kind` (authored plans) OR the segment
+    // id prefix (convention "try-…" / "worked-…" / "hook-…" / "concept-…" /
+    // "recap-…"). Previously this was only derived for FREESTYLE plans whose
+    // ids are "<loId>-try" etc., so an authored Try-Yourself page (id
+    // "try-histogram") fell through to the raw problem statement and the page
+    // never read as "Try" (2026-06-24 ear-test, Image 21).
+    const STAGE_PREFIX: Record<string, string> = {
+      hook: 'Hook', concept: 'Concept', worked: 'Example', worked_example: 'Example',
+      example: 'Example', try: 'Try', try_yourself: 'Try', recap: 'Recap', practice: 'Practice',
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const segKind = ((nextSeg as any)?.kind as string | undefined)?.toLowerCase();
+    const idPrefix = (next || '').split('-')[0].toLowerCase();
+    const stage = STAGE_PREFIX[segKind ?? ''] ?? STAGE_PREFIX[idPrefix] ?? '';
+    // Descriptive part: prefer the LO description (freestyle structured ids),
+    // else the segment's own goal/problem/question text.
+    let loDesc = '';
     if (next && plan.los?.length) {
       for (const lo of plan.los) {
-        if (next.startsWith(`${lo.id}-`) || next === lo.id) {
-          const KIND_MAP: Record<string, string> = {
-            hook: 'Hook',
-            concept: 'Concept',
-            worked: 'Worked Example',
-            try: 'Try Yourself',
-          };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const kindLabel = KIND_MAP[(nextSeg as any)?.kind === 'worked_example' ? 'worked' : (nextSeg as any)?.kind === 'try_yourself' ? 'try' : (nextSeg as any)?.kind ?? ''];
-          loHeading = kindLabel ? `${lo.description} — ${kindLabel}` : lo.description;
-          break;
-        }
+        if (next.startsWith(`${lo.id}-`) || next === lo.id) { loDesc = lo.description; break; }
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newPageTitle = loHeading || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || nextSeg?.id || '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pageTitleStr = typeof newPageTitle === 'string' ? newPageTitle.slice(0, 60) : '';
+    const descRaw = loDesc || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || '';
+    const desc = (typeof descRaw === 'string' ? descRaw : '').trim();
+    const newPageTitle = stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '';
+    const pageTitleStr = String(newPageTitle).slice(0, 70);
     // Defer the auto-newPage to the next batch — fire only if that batch
     // contains a command that actually renders (see pendingAdvanceNewPageRef).
     pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
@@ -9538,7 +9625,16 @@ export function VoiceTutorRealtime({
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
     },
   ) => {
-    console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120));
+    console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120), `· humor=${humorCeilingRef.current ?? 'default'}`);
+    // "Mute me" / "stop listening" voice command — mute the mic instead of
+    // sending it to the brain (which would otherwise try to "answer" it). Only
+    // for real student speech, never synthetic kickoffs (those are silent).
+    if (!opts?.silent && isMuteMeCommand(transcript)) {
+      console.log('[brain-orchestrator] "mute me" voice command — muting mic, not dispatching to brain');
+      onDebugEvent?.('voice_mute_command', transcript.slice(0, 60));
+      muteMicRef.current?.();
+      return;
+    }
     // Stage 3 fix #11 (2026-05-28): defer-on-dispatch guard. If the
     // student is CURRENTLY mid-utterance, drop this dispatch — the
     // user is actively speaking and any brain response we fire now
@@ -9562,6 +9658,14 @@ export function VoiceTutorRealtime({
       );
       onDebugEvent?.('dispatch_dropped_mid_utterance', transcript.slice(0, 80));
       return;
+    }
+    // "Being heard" indicator: a real student turn has reached the orchestrator
+    // (passed the mute + mid-utterance guards), so resolve the "got that — one
+    // sec…" window and clear any "didn't catch" nudge. Synthetic/silent
+    // kickoffs don't count.
+    if (!opts?.silent) {
+      resolveAwaitingDispatch();
+      onListeningHintRef.current?.(null);
     }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
@@ -10250,6 +10354,13 @@ export function VoiceTutorRealtime({
       console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+      // "Being heard" indicator: a transcript ARRIVED for the student's
+      // utterance, so it wasn't lost — resolve the "got that — one sec…" window
+      // (whether it now dispatches or gets classified as noise). This is what
+      // makes the "didn't catch that" hint fire ONLY on a true transcription
+      // hang (no transcript at all), never on the normal 9–15s perception
+      // latency (which previously tripped the timer almost every turn).
+      resolveAwaitingDispatch();
 
       // Mute gate (2026-06-16). Drop any transcript that arrives while the
       // student is muted. The perception mic stops appending audio on mute
@@ -10257,9 +10368,22 @@ export function VoiceTutorRealtime({
       // mute can still land here up to ~14s later — this catches it so a
       // muted student never triggers a brain turn from ambient sound.
       if (isMicMutedRef.current) {
-        console.warn(`[PERCEPTION] dropped — student muted: ${JSON.stringify(t.text).slice(0, 80)}`);
-        onDebugEvent?.('perception_dropped_muted', t.text.slice(0, 80));
-        return;
+        // Mute-to-submit: if the student muted right after finishing an
+        // utterance, let THIS (the in-flight one) through to the brain, then
+        // resume dropping. Phone-like "I'm done — send it and go quiet."
+        if (submitPendingUtteranceRef.current) {
+          submitPendingUtteranceRef.current = false;
+          // Utterance captured — end the grace window now so perception actually
+          // mutes (don't wait out the full timeout).
+          if (muteGraceTimerRef.current) { clearTimeout(muteGraceTimerRef.current); muteGraceTimerRef.current = null; }
+          setMuteGrace(false);
+          console.warn(`[PERCEPTION] muted, but submitting the in-flight utterance the student finished before mute: ${JSON.stringify(t.text).slice(0, 80)}`);
+          onDebugEvent?.('perception_submit_on_mute', t.text.slice(0, 80));
+        } else {
+          console.warn(`[PERCEPTION] dropped — student muted: ${JSON.stringify(t.text).slice(0, 80)}`);
+          onDebugEvent?.('perception_dropped_muted', t.text.slice(0, 80));
+          return;
+        }
       }
 
       // Stage 3 fix #6 (2026-05-28): apply the SAME noise filter the
@@ -10552,6 +10676,12 @@ export function VoiceTutorRealtime({
     onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
+      // "Being heard" indicator: student is speaking now. Clear any pending
+      // "Got that / didn't catch" state from a previous utterance.
+      speechWindowStartRef.current = Date.now();
+      setPerceptionHearing(true);
+      resolveAwaitingDispatch();
+      onListeningHintRef.current?.(null); // a fresh utterance supersedes any prior "didn't catch" nudge
       // Stage 3 fix #4: track mid-utterance for the state-race retro-cancel.
       perceptionMidUtteranceRef.current = true;
       // Stage 3 fix #11: watchdog reset for the mid-utterance flag.
@@ -10662,13 +10792,39 @@ export function VoiceTutorRealtime({
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
+      // "Being heard" indicator: student stopped. Enter the "Got that — one
+      // sec…" processing state covering the transcribe+dispatch latency. If the
+      // utterance was long enough to be real speech (not a cough/blip) and no
+      // brain dispatch lands within the window, surface a gentle "didn't catch
+      // that" nudge (item D). A real dispatch / new speech / tutor reply clears
+      // this via resolveAwaitingDispatch.
+      setPerceptionHearing(false);
+      const spokeMs = Date.now() - (speechWindowStartRef.current || Date.now());
+      if (awaitingDispatchTimerRef.current) clearTimeout(awaitingDispatchTimerRef.current);
+      // Only for SUSTAINED speech (≥2s — not a cough/blip). Show "got that…"
+      // and arm a LONG fallback: perception latency runs 9–15s, and any arriving
+      // transcript resolves this immediately (see onTranscript), so the only way
+      // this timer fires is a true transcription hang (no transcript at all).
+      if (spokeMs >= 2000) {
+        setPerceptionAwaitingDispatch(true);
+        awaitingDispatchTimerRef.current = setTimeout(() => {
+          awaitingDispatchTimerRef.current = null;
+          setPerceptionAwaitingDispatch(false);
+          if (isMicMutedRef.current) return; // student muted in the meantime — no nudge
+          onListeningHintRef.current?.('didnt-catch');
+          onDebugEvent?.('listening_no_dispatch', `Spoke ${(spokeMs / 1000).toFixed(1)}s, no transcript within window`);
+        }, 18000);
+      }
       // Stage 3 fix #11: clear the watchdog timer — flag was cleared
       // normally via speech_stopped, no need for the safety reset.
       if (perceptionMidUtteranceWatchdogRef.current) {
         clearTimeout(perceptionMidUtteranceWatchdogRef.current);
         perceptionMidUtteranceWatchdogRef.current = null;
       }
-    }, []),
+    }, [onDebugEvent]),
+    // Live mic amplitude → parent "being heard" meter (no React state here;
+    // the parent stores it in a ref so it doesn't re-render the page 12×/sec).
+    onMicLevel,
     onTranscriptionFailed: useCallback((errorType: string | undefined) => {
       console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
     }, []),
@@ -10933,6 +11089,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // In relay mode the actual Realtime `instructions` get overridden
         // with the short RELAY_MODE_PROMPT inside the hook, but Claude still
         // needs the full tutoring rules to author the conversation.
+        // Diagnostic: log the humor pref each (re)build so a MID-SESSION change
+        // via the ⋯ menu is visible — confirms the new level reached the brain.
+        console.log(`[VoiceTutorRealtime] system prompt (re)built — humorCeiling=${studentPreferences?.humorCeiling ?? '(default)'}`);
         claudeSystemPromptRef.current = openAIInstructions;
         setInstructions(openAIInstructions);
         setIsInitialized(true);
@@ -11060,43 +11219,92 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     realtime.startListening();
   }, [realtime]);
 
-  // Toggle mute student mic — uses muteInput to clear buffer without triggering a response
+  // Toggle mute student mic. Side effects run OUTSIDE a setState updater (which
+  // runs during render) — calling other setStates there throws "update during
+  // render". We read isMicMutedRef (kept in sync) for the current value.
   const toggleMicMute = useCallback(() => {
-    setIsMicMuted((prev) => {
-      const newMuted = !prev;
-      isMicMutedRef.current = newMuted;
-      // Gate BOTH inputs. perception owns the mic now (Stage 4), so muting
-      // only the production WS left perception transcribing ambient sound
-      // (observed: train announcements fired brain turns while "muted").
-      perception.setMuted(newMuted);
-      if (newMuted) {
-        realtime.muteInput();
-        console.log('[VoiceTutorRealtime] Student mic muted (buffer cleared)');
-        onDebugEvent?.('mic_mute', 'Student muted mic');
-      } else {
-        // On unmute, reset any stale orchestrator flags. A pending
-        // brain call from before a mute can leave brainBusyRef=true; if
-        // the orchestrator's promise threw without finalizing (network
-        // hiccup, aborted fetch), subsequent turns get queued forever
-        // and the UI shows "thinking" indefinitely.
-        if (brainBusyRef.current) {
-          console.log('[VoiceTutorRealtime] Unmute: clearing stale brain-busy flag');
-          setBrainBusy(false);
-          queuedTranscriptsRef.current = [];
-        }
-        realtime.startListening();
-        console.log('[VoiceTutorRealtime] Student mic unmuted');
-        onDebugEvent?.('mic_unmute', 'Student unmuted mic');
+    const newMuted = !isMicMutedRef.current;
+    isMicMutedRef.current = newMuted;
+    // Gate BOTH inputs. perception owns the mic now (Stage 4); it's muted by the
+    // start-gate effect (single owner, watches isMicMuted + hasStarted + muteGrace).
+    if (newMuted) {
+      // Mute-to-submit: if an utterance is in flight (still speaking, or stopped
+      // and transcribing), keep perception LISTENING for a short grace window so
+      // the server VAD commits it; arm the one-shot pass so its transcript
+      // reaches the brain. Then we actually go quiet. Phone-like "I'm done".
+      if (perceptionMidUtteranceRef.current || awaitingDispatchTimerRef.current != null) {
+        submitPendingUtteranceRef.current = true;
+        if (muteGraceTimerRef.current) clearTimeout(muteGraceTimerRef.current);
+        setMuteGrace(true);
+        muteGraceTimerRef.current = setTimeout(() => { muteGraceTimerRef.current = null; setMuteGrace(false); }, 3500);
+        console.log('[VoiceTutorRealtime] mute with in-flight utterance — perception listens briefly to capture it, then mutes');
       }
-      return newMuted;
-    });
-  }, [realtime, perception, onDebugEvent]);
+      realtime.muteInput();
+      console.log('[VoiceTutorRealtime] Student mic muted');
+      onDebugEvent?.('mic_mute', 'Student muted mic');
+    } else {
+      // Clear any unused mute-to-submit one-shot + grace so they can't leak a
+      // later ambient transcript through the muted guard.
+      submitPendingUtteranceRef.current = false;
+      if (muteGraceTimerRef.current) { clearTimeout(muteGraceTimerRef.current); muteGraceTimerRef.current = null; }
+      setMuteGrace(false);
+      // On unmute, reset any stale orchestrator flags (a pending brain call from
+      // before a mute can leave brainBusyRef=true and hang the UI on "thinking").
+      if (brainBusyRef.current) {
+        console.log('[VoiceTutorRealtime] Unmute: clearing stale brain-busy flag');
+        setBrainBusy(false);
+        queuedTranscriptsRef.current = [];
+      }
+      realtime.startListening();
+      console.log('[VoiceTutorRealtime] Student mic unmuted');
+      onDebugEvent?.('mic_unmute', 'Student unmuted mic');
+    }
+    setIsMicMuted(newMuted);
+  }, [realtime, onDebugEvent]);
+
+  // ===== Start-gate: keep the perception mic MUTED until explicit Start =====
+  // The perception WS connects warm on mount (perceptionEnabled, above) so
+  // there's no connect latency when the student begins — but it must not hear
+  // anything until the student explicitly clicks the mic to start (hasStarted)
+  // and hasn't muted. Muted = onaudioprocess drops frames, so nothing is
+  // transcribed or dispatched to the brain. This closes the long-standing
+  // "session auto-starts on ambient noise / pre-start speech is captured" gap
+  // (the production WS is already gated — it only startListening()s on Start).
+  // Single owner of perception mute: toggleMicMute flips isMicMuted and this
+  // effect applies it. setMuted logs + clears the server buffer, so we only
+  // apply it on a real transition (guard ref), never every render.
+  const perceptionSetMuted = perception.setMuted;
+  const lastPerceptionMutedRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    // muteGrace keeps perception LISTENING for a beat after a mute-with-in-flight
+    // so the VAD can commit the student's last utterance (mute-to-submit).
+    const shouldMute = (!hasStarted || isMicMuted) && !muteGrace;
+    if (lastPerceptionMutedRef.current === shouldMute) return;
+    lastPerceptionMutedRef.current = shouldMute;
+    perceptionSetMuted(shouldMute);
+  }, [perceptionSetMuted, hasStarted, isMicMuted, muteGrace]);
 
   // Handle user's "continue" choice on the 55-min rotation prompt. We
   // disconnect the current session and immediately reconnect; on fresh
   // connection, injectContext fires with a summary of what we covered.
   const handleContinueRotation = useCallback(async () => {
     setSessionRotationPrompt(false);
+    // The disconnect+reconnect below only exists to beat OpenAI's ~60-min
+    // Realtime session cap. If we're well under it (the common case — e.g. a
+    // 30-min session whose rotation prompt fires at ~0.92*T = 27.6 min), there
+    // is NO need to tear down the live session, which cuts off the tutor
+    // mid-sentence (observed 2026-06-24). Do a LIGHT continue instead: keep the
+    // session, and suppress the imminent silent auto-rotation. A real rotation
+    // only happens once we actually approach the cap.
+    const HARD_ROTATE_MIN = 50;
+    const sessionMinutes = (Date.now() - sessionStartMsRef.current) / 60000;
+    if (sessionMinutes < HARD_ROTATE_MIN) {
+      autoRotationFiredRef.current = true;     // don't let the 0.97*T fallback tear down
+      sessionRotationFiredRef.current = true;  // already shown; don't re-prompt on the T-relative threshold
+      console.log(`[VoiceTutorRealtime] continue (light, no reconnect) at ${sessionMinutes.toFixed(1)} min — keeping live session`);
+      onDebugEvent?.('session_continue_light', `Continue without reconnect at ${sessionMinutes.toFixed(1)} min`);
+      return;
+    }
     const summary = buildContextSummary();
     realtime.disconnect();
     // Reset session-start timestamp so the new session gets its own 45/55 gates.
@@ -11116,7 +11324,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         );
       }
     }, 1500);
-  }, [realtime, buildContextSummary]);
+  }, [realtime, buildContextSummary, onDebugEvent]);
 
   const handleWrapUpRotation = useCallback(() => {
     setSessionRotationPrompt(false);
@@ -11154,6 +11362,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Expose the rotation handler to the response-done callback via ref so
   // auto-rotation at 58 min can fire without a forward-reference problem.
   continueRotationRef.current = handleContinueRotation;
+  // Expose "ensure muted" to the brain orchestrator (defined above toggleMicMute)
+  // for the "mute me" voice command. Mutes only if not already muted.
+  muteMicRef.current = () => { if (!isMicMutedRef.current) toggleMicMute(); };
 
   // Get state-specific UI
   const getStateUI = () => {
@@ -11285,6 +11496,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         color: 'bg-yellow-500',
         pulse: false,
       }
+    : (isMicMuted && realtime.isConnected && !isBrainResponding && realtime.state !== 'speaking' && realtime.state !== 'processing')
+    // Muted, student's turn: show "Muted" rather than the misleading "Click to
+    // start"/"Click to speak" (the mic is off; the separate mute button unmutes).
+    ? { ...baseStateUI, text: 'Muted', subtext: 'tap the mic button to talk', color: 'bg-slate-400', pulse: false }
+    : (hasStarted && !isMicMuted && realtime.isConnected && !isBrainResponding && realtime.state !== 'speaking' && realtime.state !== 'processing' && realtime.state !== 'listening' && realtime.state !== 'connecting')
+    // Stage 4: perception is the always-open mic, so between turns the production
+    // WS sits at 'connected' — but the student IS being heard. Show "Listening…"
+    // (matching the real 'listening' state) instead of "Click to speak", which
+    // wrongly implies they must click before talking.
+    ? { icon: <Square className="w-4 h-4" />, text: 'Listening…', subtext: 'Click to stop', color: 'bg-red-500', pulse: true }
     : baseStateUI;
   const isDisabled = realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp;
 
@@ -11318,29 +11539,55 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     onInterruptedChange?.(realtime.isInterrupted);
   }, [realtime.isInterrupted, onInterruptedChange]);
 
-  // Direction 4: surface a coarse voice state for the SessionStage presence
-  // orb. Maps the underlying RealtimeState (+ warm-up) to the 5 orb states.
+  // Direction 4 + "being heard" (2026-06-24): surface a richer voice state for
+  // the SessionStage presence orb. Priority: tutor activity (speaking/thinking)
+  // outranks the student-side perception states (processing/hearing/listening).
+  // The tutor talking/thinking also resolves any pending "got that" window.
+  // When the tutor becomes active (composing or speaking), the student's turn
+  // is over — clear the "got that" window + any "didn't catch" nudge. Backstop
+  // for verdict paths (MERGE/FRESH) that don't run through the orchestrator's
+  // own resolve above.
+  useEffect(() => {
+    if (isWarmingUp || isBrainResponding || realtime.state === 'speaking' || realtime.state === 'processing') {
+      resolveAwaitingDispatch();
+      onListeningHintRef.current?.(null);
+    }
+  }, [realtime.state, isWarmingUp, isBrainResponding, resolveAwaitingDispatch]);
+
   useEffect(() => {
     if (!onVoiceStateChange) return;
     const s = realtime.state;
     const next =
       s === 'error' ? 'error'
       : s === 'speaking' ? 'speaking'
-      : (isWarmingUp || s === 'processing') ? 'thinking'
-      : s === 'listening' ? 'listening'
+      : (isWarmingUp || isBrainResponding || s === 'processing') ? 'thinking'
+      : (hasStarted && isMicMuted) ? 'muted'
+      : perceptionAwaitingDispatch ? 'processing'
+      : perceptionHearing ? 'hearing'
+      // Once started, the perception mic is the real (always-open) input, so the
+      // resting state is "listening" even when the production WS (a TTS sink in
+      // Stage 4) reports 'connected' between sentences.
+      : hasStarted ? 'listening'
       : 'idle';
     onVoiceStateChange(next);
-  }, [realtime.state, isWarmingUp, onVoiceStateChange]);
+  }, [realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, onVoiceStateChange]);
+
+  const isIsland = dockVariant === 'island';
 
   return (
-    <div className="voice-tutor-realtime flex items-center gap-2 sm:gap-3 py-2 px-2 flex-wrap">
-      {/* Connection indicator — hide on mobile to save horizontal room */}
-      <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
-        realtime.isConnected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-      }`}>
-        {realtime.isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-        {realtime.isConnected ? 'Live' : 'Off'}
-      </div>
+    <div className={`voice-tutor-realtime flex items-center flex-wrap py-2 px-2 ${isIsland ? 'gap-2 sm:gap-2.5' : 'gap-2 sm:gap-3'}`}>
+      {/* Connection indicator — hide on mobile to save horizontal room.
+          The island dock drops it entirely: the presence orb + mic state
+          already convey "connected", and a redundant pill clutters the
+          floating dock. (Only the error/Reconnect affordance below remains.) */}
+      {!isIsland && (
+        <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+          realtime.isConnected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+        }`}>
+          {realtime.isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+          {realtime.isConnected ? 'Live' : 'Off'}
+        </div>
+      )}
 
       {isPaused ? (
         <>
@@ -11368,13 +11615,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           )}
           */}
 
-          {/* Main mic button */}
+          {/* Main mic button — the HERO control. Larger + raised in the
+              island dock so it reads as the primary thing to tap. */}
           <button
             onClick={handleMicClick}
             disabled={isDisabled}
             className={`
-              relative w-12 h-12 rounded-full text-white flex-shrink-0
+              relative rounded-full text-white flex-shrink-0
               transition-all duration-200 flex items-center justify-center
+              ${isIsland ? 'w-14 h-14 shadow-lg' : 'w-12 h-12'}
               ${stateUI.color}
               ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
               ${stateUI.pulse ? 'animate-pulse' : ''}
@@ -11608,7 +11857,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               void commitSessionToProfile();
               onEndSession();
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+              isIsland
+                ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
+                : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+            }`}
           >
             {false ? (
               <>

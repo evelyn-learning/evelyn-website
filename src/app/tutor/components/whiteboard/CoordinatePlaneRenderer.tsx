@@ -179,10 +179,23 @@ export default function CoordinatePlaneRenderer({
   const sx = (x: number) => pad.left + ((x - xMin) / (xMax - xMin)) * plotW;
   const sy = (y: number) => pad.top + ((yMax - y) / (yMax - yMin)) * plotH;
 
+  // Nice integer tick step so a wide axis (e.g. a boxplot spanning 40–305)
+  // doesn't render hundreds of overlapping integer labels. Small ranges
+  // (span ≤ ~10) still tick every integer, matching the prior behavior.
+  const niceIntStep = (span: number, target = 10): number => {
+    if (!(span > 0)) return 1;
+    const raw = span / target;
+    if (raw <= 1) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const r = raw / mag;
+    return Math.max(1, Math.round((r <= 1.5 ? 1 : r <= 3 ? 2 : r <= 7 ? 5 : 10) * mag));
+  };
+  const xStep = niceIntStep(xMax - xMin);
+  const yStep = niceIntStep(yMax - yMin);
   const xTicks: number[] = [];
-  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) xTicks.push(x);
+  for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax + 1e-9; x += xStep) xTicks.push(x);
   const yTicks: number[] = [];
-  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) yTicks.push(y);
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax + 1e-9; y += yStep) yTicks.push(y);
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>

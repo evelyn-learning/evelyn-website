@@ -19,11 +19,16 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ChevronLeft, Sparkles, Pencil, Eraser, Camera, Maximize2,
+  ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, Eraser, Camera, Maximize2,
   MessageSquareText, X, Target, Upload, ArrowDown, ChevronUp,
 } from 'lucide-react';
 
-export type VoiceState = 'idle' | 'listening' | 'speaking' | 'thinking' | 'error';
+export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
+
+/** Hide the in-panel Quick-Actions chips for now — the caption + chips + dock
+ *  got too crowded (2026-06-24 ear-test, Images 16/17). Flip to true to restore
+ *  the Skip / I'm stuck / quick-answer chips above the dock. */
+const SHOW_QUICK_ACTIONS = false;
 
 export interface SessionStageProps {
   lessonTitle: string;
@@ -36,13 +41,21 @@ export interface SessionStageProps {
   adaptiveMenu?: ReactNode;      // the pacing ⋯ menu element
   // presence
   voiceState: VoiceState;
+  /** Live student-mic amplitude (0..1) in a ref, polled here for the "being
+   *  heard" meter — a ref so the parent doesn't re-render on every audio frame. */
+  micLevelRef?: { current: number };
+  /** Transient honesty hint when a clear utterance didn't reach the brain. */
+  listeningHint?: 'didnt-catch' | null;
   /** Has the student started the session (clicked the mic / first turn)?
    *  Before this we prompt "tap the mic to start" instead of "Listening…". */
   started?: boolean;
   liveCaption?: string;
   boardEmpty: boolean;
   // slots
-  board: ReactNode;              // <WhiteboardCanvas suppressEmptyState/>
+  board: ReactNode;              // <WhiteboardCanvas suppressEmptyState chrome="minimal"/>
+  /** Page-nav state surfaced from the chromeless board so the stage can render
+   *  its own slim top-center switcher. Undefined / count<=1 → no switcher. */
+  boardPages?: { index: number; count: number; titles: string[]; goTo: (i: number) => void };
   voiceInput: ReactNode;         // <VoiceTutorRealtime/> etc — the dock contents
   transcript: ReactNode;         // <TranscriptView/>
   transcriptCount?: number;      // for the drawer badge
@@ -58,25 +71,51 @@ export interface SessionStageProps {
 const ORB_STYLE: Record<VoiceState, string> = {
   speaking: 'from-emerald-300 to-emerald-600',
   listening: 'from-sky-300 to-blue-600',
+  hearing: 'from-blue-400 to-indigo-600',
+  processing: 'from-amber-200 to-amber-400',
   thinking: 'from-amber-300 to-amber-500',
+  muted: 'from-slate-300 to-slate-400',
   idle: 'from-slate-300 to-slate-500',
   error: 'from-rose-300 to-rose-600',
 };
 const STATE_LABEL: Record<VoiceState, string> = {
-  speaking: 'Tutor is speaking', listening: 'Listening…', thinking: 'Thinking…',
-  idle: 'Ready', error: 'Connection issue',
+  speaking: 'Tutor is speaking', listening: 'Listening…', hearing: 'Hearing you…',
+  processing: 'Got that — one sec…', thinking: 'Thinking…',
+  muted: 'Muted — tap the mic to talk', idle: 'Ready', error: 'Connection issue',
 };
 
 export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
-    voiceState, started = false, liveCaption, boardEmpty, board, voiceInput, transcript, transcriptCount = 0,
+    voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     nudgeActive = false, quickActions, onStudentInput, onBack,
   } = props;
 
+  const showSwitcher = !!boardPages && boardPages.count > 1;
+
+  // Poll the student-mic amplitude into local state ONLY while the mic could be
+  // active (listening/hearing), so the VU meter is live without re-rendering
+  // the whole stage the rest of the time. Smoothed for a natural feel.
+  const [micLevel, setMicLevel] = useState(0);
+  const reactsToMic = voiceState === 'listening' || voiceState === 'hearing';
+  useEffect(() => {
+    if (!micLevelRef || !reactsToMic) { setMicLevel(0); return; }
+    let smoothed = 0;
+    let last = -1;
+    const id = setInterval(() => {
+      const target = micLevelRef.current || 0;
+      smoothed += (target - smoothed) * 0.35;
+      // Only re-render on a meaningful change, so a silent listening period
+      // settles to 0 and stops churning until the student actually speaks.
+      if (Math.abs(smoothed - last) > 0.012) { last = smoothed; setMicLevel(smoothed); }
+    }, 60);
+    return () => clearInterval(id);
+  }, [micLevelRef, reactsToMic]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
-  const animate = voiceState === 'speaking' || voiceState === 'listening';
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
 
   // Auto-open the transcript drawer once when the tutor offers the lesson
   // picker (free practice) — otherwise the topic/lesson choices are hidden.
@@ -118,8 +157,12 @@ export default function SessionStage(props: SessionStageProps) {
             readable column (word problems / prose shouldn't stretch edge-to-
             edge). Bottom padding reserves room so the dock + overlays never
             cover board content. */}
-        <div className="absolute inset-0 pt-16 pb-52 flex justify-center">
-          <div className="w-full max-w-3xl h-full">{board}</div>
+        <div className={`absolute inset-0 ${showSwitcher ? 'pt-28' : 'pt-16'} pb-52 px-2 sm:px-0 flex justify-center`}>
+          {/* Once there's content, frame the board as a bounded white "sheet"
+              on the grid so the student can see the content boundary BEFORE a
+              scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
+              transparent — the presence overlay owns that state. */}
+          <div className={`w-full max-w-3xl h-full ${boardEmpty ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
         </div>
 
         {/* presence overlay when the board is empty */}
@@ -132,18 +175,23 @@ export default function SessionStage(props: SessionStageProps) {
             )}
             <div className="relative mb-6 grid place-items-center">
               {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
-              <div className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}>
+              <div
+                className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
+                // While the student speaks, the orb swells with their voice — a
+                // direct "I'm hearing you" signal.
+                style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
+              >
                 <Sparkles className="w-12 h-12 drop-shadow" />
               </div>
             </div>
-            <div className="flex items-end gap-1.5 h-8 mb-6">
-              {[0, .15, .3, .45, .1, .55, .25].map((d, i) => (
-                <span key={i} className={`w-1.5 rounded-full ${i % 2 ? 'bg-blue-400' : 'bg-blue-600'} ${animate ? 'ss-wave h-full' : 'h-2'}`} style={{ animationDelay: `${d}s` }} />
-              ))}
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-              {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
-            </p>
+            <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>
+            {listeningHint === 'didnt-catch' ? (
+              <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
+            ) : (
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
+              </p>
+            )}
             {/* Once started, the tutor's WORDS live in the small Caption Strip
                 at the bottom — NOT as a wall of big text here. The center stays
                 calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
@@ -213,6 +261,75 @@ export default function SessionStage(props: SessionStageProps) {
         </div>
       </div>
 
+      {/* Board-switcher dropdown click-catcher — at the STAGE ROOT (not inside
+          the translated switcher pill) so it actually covers the whole stage,
+          incl. the whiteboard. z-10 = above the board, below the switcher (z-20)
+          + dock (z-30), so the dropdown list and dock stay clickable. */}
+      {switcherOpen && <div className="absolute inset-0 z-10" onClick={() => setSwitcherOpen(false)} />}
+
+      {/* ===== Slim board page switcher (top-center) — only when the
+              chromeless board has >1 page. Shows the current board's title +
+              "n / N" with prev/next; the WhiteboardCanvas's own page bar is
+              suppressed (chrome="minimal"). ===== */}
+      {showSwitcher && boardPages && (
+        <div className="absolute top-[58px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          {/* FIXED-width pill so it never jitters as titles change on page
+              turns. The middle label is a button → opens a jump-to-page list. */}
+          <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
+            <button
+              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index - 1); }}
+              disabled={boardPages.index === 0}
+              className="shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+              title="Previous board"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSwitcherOpen((o) => !o)}
+              className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 h-7 rounded-full hover:bg-slate-50"
+              title="Jump to a board"
+            >
+              <span className="truncate text-xs font-medium text-slate-700">
+                {formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}
+              </span>
+              <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate-400">
+                {boardPages.index + 1}/{boardPages.count}
+              </span>
+              <ChevronDown className={`shrink-0 w-3.5 h-3.5 text-slate-400 transition-transform ${switcherOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <button
+              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index + 1); }}
+              disabled={boardPages.index >= boardPages.count - 1}
+              className="shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+              title="Next board"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          {/* Jump-to-page dropdown (the click-catcher lives at the stage root —
+              a `fixed` element inside this -translate-x parent would be sized to
+              the pill, not the viewport, and never cover the board). */}
+          {switcherOpen && (
+            <>
+              <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-[min(86vw,360px)] max-h-[50vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5">
+                {boardPages.titles.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { boardPages.goTo(i); setSwitcherOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-left text-xs ${
+                      i === boardPages.index ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="shrink-0 inline-grid place-items-center w-5 h-5 rounded-full bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">{i + 1}</span>
+                    <span className="truncate">{formatBoardTitle(t) || `Board ${i + 1}`}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* tool overlays */}
       {tool === 'draw' && <DrawPad onClose={() => setTool(null)} onSubmit={(d) => { onStudentInput('drawing', d); setTool(null); }} />}
       {tool === 'text' && <TextNote onClose={() => setTool(null)} onSubmit={(t) => { onStudentInput('text', t); setTool(null); }} />}
@@ -223,22 +340,24 @@ export default function SessionStage(props: SessionStageProps) {
               bobs; chips fade in/out WITHIN the card (one element, not two
               separate popping boxes). Drawn-board only — the empty board shows
               the big presence caption instead. ===== */}
-      {(liveCaption || quickActions) && (
-        <div className="absolute bottom-[96px] left-1/2 -translate-x-1/2 z-20 w-[min(96vw,640px)]">
+      {liveCaption && (
+        <div className="absolute bottom-[124px] left-1/2 -translate-x-1/2 z-20 w-[min(96vw,640px)]">
           <div className="ss-cap w-full rounded-2xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-            {/* CAPTION STRIP — the persistent "last said". Tap to open the full
-                Transcript Drawer (scrolled to the latest). */}
-            {liveCaption && (
-              <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50/70 transition-colors">
-                <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
-                <CaptionTicker text={liveCaption} />
-                {animate
-                  ? <div className="flex items-end gap-0.5 h-4 shrink-0">{[0, .2, .35, .5].map((d, i) => <span key={i} className="ss-wave w-1 h-full rounded-full bg-blue-500" style={{ animationDelay: `${d}s` }} />)}</div>
-                  : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
-              </button>
-            )}
-            {quickActions && (
-              <div className={`flex justify-center px-3 py-2 ${liveCaption ? 'border-t border-slate-100' : ''}`}>
+            {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
+                transcript). Single thin line so the panel never crowds. The
+                Quick-Actions chips (Skip / I'm stuck / quick answers) are HIDDEN
+                for now per 2026-06-24 ear-test (the panel got too busy, Images
+                16/17) — flip SHOW_QUICK_ACTIONS to bring them back. `quickActions`
+                still flows in so re-enabling is a one-line change. */}
+            <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50/70 transition-colors">
+              <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
+              <CaptionTicker text={liveCaption} />
+              {voiceState === 'speaking'
+                ? <MicMeter level={0} speaking />
+                : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
+            </button>
+            {SHOW_QUICK_ACTIONS && quickActions && (
+              <div className="flex justify-center px-3 py-2 border-t border-slate-100">
                 {quickActions}
               </div>
             )}
@@ -256,6 +375,26 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Voice dock (floating island) ===== */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 w-[min(96vw,640px)]">
         <div className="rounded-[24px] bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl px-2 sm:px-3 py-1.5">
+          {/* "Being heard" status row — lives in the dock, next to the mic, so
+              the caption strip above stays free for the tutor's question. Shows
+              the live mic meter + the perception states the mic button doesn't
+              convey (Hearing you / Got that / didn't catch / Muted). The row
+              keeps a FIXED height once started so the dock never grows/shrinks
+              (and overlaps the caption) as the status appears/disappears. */}
+          {started && (
+            <div className="flex items-center justify-center gap-2 h-5">
+              {(voiceState === 'listening' || voiceState === 'hearing' || voiceState === 'processing' || voiceState === 'muted' || listeningHint === 'didnt-catch') && (<>
+                {voiceState !== 'muted' && <MicMeter level={micLevel} speaking={false} />}
+                {(() => {
+                  if (listeningHint === 'didnt-catch') return <span className="text-xs font-medium text-amber-600">Didn’t catch that — mind repeating?</span>;
+                  if (voiceState === 'hearing') return <span className="text-xs font-medium text-blue-600">Hearing you…</span>;
+                  if (voiceState === 'processing') return <span className="text-xs font-medium text-amber-600">Got that — one sec…</span>;
+                  if (voiceState === 'muted') return <span className="text-xs font-medium text-slate-500">Muted — tap the mic to talk</span>;
+                  return <span className="text-xs font-medium text-slate-400">Listening…</span>;
+                })()}
+              </>)}
+            </div>
+          )}
           {voiceInput}
         </div>
       </div>
@@ -287,20 +426,59 @@ export default function SessionStage(props: SessionStageProps) {
 let _capMeasureCanvas: HTMLCanvasElement | null = null;
 function CaptionTicker({ text }: { text: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [display, setDisplay] = useState(text);
+  const [display, setDisplay] = useState('');
+  // How many characters of `text` are "revealed" so far. A typewriter advances
+  // this toward text.length at roughly speech pace, so the caption STREAMS in
+  // word-by-word as the tutor talks instead of snapping in whole sentences.
+  const [revealed, setRevealed] = useState(0);
+  const revealedRef = useRef(0);
+  const prevTextRef = useRef('');
+
   useEffect(() => {
+    const prev = prevTextRef.current;
+    prevTextRef.current = text;
+    // Reset (retype from 0) ONLY on a genuinely new turn — i.e. the new text
+    // shares almost no prefix with the previous one. Same-turn streaming keeps
+    // a long common prefix, INCLUDING the case where markdown-stripping removes
+    // a mid-string "*" (which makes the caption briefly non-monotonic) — a plain
+    // startsWith check would mis-fire there and re-type the sentence repeatedly.
+    let common = 0;
+    const n = Math.min(prev.length, text.length);
+    while (common < n && prev.charCodeAt(common) === text.charCodeAt(common)) common++;
+    const newTurn = prev.length > 8 && common < 8;
+    let start = newTurn ? 0 : revealedRef.current;
+    if (start > text.length) start = text.length;
+    revealedRef.current = start;
+    setRevealed(start);
+    if (start >= text.length) return;
+    // ~14 chars/sec ≈ natural TTS speaking rate, so the caption tracks the audio
+    // instead of racing ahead of it (48ms/char read visibly faster than the
+    // tutor spoke — 2026-06-24 ear-test). Not perfectly audio-locked (we don't
+    // have per-word playback timestamps), but the pace now matches.
+    const id = setInterval(() => {
+      const next = Math.min(text.length, revealedRef.current + 1);
+      revealedRef.current = next;
+      setRevealed(next);
+      if (next >= text.length) clearInterval(id);
+    }, 85);
+    return () => clearInterval(id);
+  }, [text]);
+
+  // Show the trailing words of the revealed prefix that fit one line.
+  useEffect(() => {
+    const shown = text.slice(0, revealed);
     const el = ref.current;
-    if (!el || typeof document === 'undefined') { setDisplay(text); return; }
+    if (!el || typeof document === 'undefined') { setDisplay(shown); return; }
     const width = el.clientWidth;
-    if (!width) { setDisplay(text); return; }
+    if (!width) { setDisplay(shown); return; }
     const cs = window.getComputedStyle(el);
     const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     _capMeasureCanvas ||= document.createElement('canvas');
     const ctx = _capMeasureCanvas.getContext('2d');
-    if (!ctx) { setDisplay(text); return; }
+    if (!ctx) { setDisplay(shown); return; }
     ctx.font = font;
-    if (ctx.measureText(text).width <= width) { setDisplay(text); return; }
-    const words = text.split(/\s+/).filter(Boolean);
+    if (ctx.measureText(shown).width <= width) { setDisplay(shown); return; }
+    const words = shown.split(/\s+/).filter(Boolean);
     const ell = '… ';
     let tail = '';
     for (let i = words.length - 1; i >= 0; i--) {
@@ -308,11 +486,41 @@ function CaptionTicker({ text }: { text: string }) {
       if (ctx.measureText(ell + cand).width > width) break;
       tail = cand;
     }
-    setDisplay(tail ? ell + tail : ell + (words[words.length - 1] ?? text));
-  }, [text]);
+    setDisplay(tail ? ell + tail : ell + (words[words.length - 1] ?? shown));
+  }, [text, revealed]);
+
   return (
     <div ref={ref} className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-sm text-slate-700">
       {display}
+    </div>
+  );
+}
+
+/** Tidy a board-page title for the switcher: trim + collapse whitespace.
+ *  (Stage prefixes — "Hook:", "Concept:", "Try:" … — would need the segment
+ *  KIND plumbed onto the page title; not available here yet, so this is a
+ *  no-op normalizer that's the hook for that future enrichment.) */
+function formatBoardTitle(t: string | undefined): string {
+  return (t || '').replace(/\s+/g, ' ').trim();
+}
+
+/** A small VU meter. When `speaking` (tutor) the bars run a decorative wave;
+ *  otherwise the bar heights track `level` (0..1) — the student's live mic
+ *  amplitude — so they can SEE they're being heard. `large` = presence size. */
+function MicMeter({ level, speaking, large = false }: { level: number; speaking: boolean; large?: boolean }) {
+  const variance = large ? [0.55, 0.85, 1, 0.7, 0.95, 0.6, 0.8] : [0.6, 1, 0.72, 0.9];
+  const barW = large ? 'w-1.5' : 'w-1';
+  return (
+    <div className={`flex items-center shrink-0 ${large ? 'gap-1.5 h-8' : 'gap-0.5 h-4'}`}>
+      {variance.map((v, i) => speaking ? (
+        <span key={i} className={`${barW} h-full rounded-full bg-blue-500 ss-wave`} style={{ animationDelay: `${i * 0.13}s` }} />
+      ) : (
+        <span
+          key={i}
+          className={`${barW} rounded-full bg-blue-500`}
+          style={{ height: `${Math.max(14, Math.min(100, 14 + level * 86 * v))}%`, transition: 'height 70ms linear' }}
+        />
+      ))}
     </div>
   );
 }

@@ -1379,6 +1379,41 @@ function TutorPage() {
   // VoiceTutorRealtime's onVoiceStateChange). 'idle' until the engine reports.
   const [liveVoiceState, setLiveVoiceState] = useState<VoiceState>('idle');
 
+  // Page-nav state surfaced from the (chromeless) WhiteboardCanvas so the new
+  // SessionStage can render its own slim page switcher. null until first fire.
+  const [boardNav, setBoardNav] = useState<{ index: number; count: number; titles: string[]; goTo: (i: number) => void } | null>(null);
+
+  // Export-PDF feedback on the summary screen (the button gave no signal that
+  // a download was in progress / done — observed 2026-06-24 ear-test).
+  const [summaryPdfState, setSummaryPdfState] = useState<'idle' | 'working' | 'done'>('idle');
+
+  // "Being heard" indicator (2026-06-24). Mic amplitude lives in a REF so the
+  // ~12×/sec updates from the audio processor don't re-render this whole page;
+  // SessionStage polls it. The transient "didn't catch that" hint is state.
+  const micLevelRef = useRef(0);
+  const [listeningHint, setListeningHint] = useState<'didnt-catch' | null>(null);
+  useEffect(() => {
+    if (listeningHint !== 'didnt-catch') return;
+    const id = setTimeout(() => setListeningHint(null), 6000);
+    return () => clearTimeout(id);
+  }, [listeningHint]);
+
+  // Close the adaptive ⋯ menu on an outside click. A plain `fixed inset-0`
+  // backdrop doesn't work in the new stage: the top bar has `backdrop-blur`,
+  // which (like a transform) makes `position:fixed` size to the bar, not the
+  // viewport — so the backdrop never covers the board. A document listener is
+  // robust regardless of stacking/containing-block.
+  const pacingMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pacingMenuOpen) return;
+    const handler = (e: PointerEvent) => {
+      if (!pacingMenuRef.current?.contains(e.target as Node)) setPacingMenuOpen(false);
+    };
+    // Defer so the click that OPENED the menu doesn't immediately close it.
+    const id = setTimeout(() => document.addEventListener('pointerdown', handler), 0);
+    return () => { clearTimeout(id); document.removeEventListener('pointerdown', handler); };
+  }, [pacingMenuOpen]);
+
   // Flag for the new "Stage + Presence" in-session layout (Direction 4).
   // Default OFF → legacy split-pane render is unchanged. See
   // [[project-tutor-session-ui-redesign]].
@@ -1501,6 +1536,8 @@ function TutorPage() {
         onAttentionShift={() => {}}
         onTryYourselfAnswer={handleTryYourselfAnswer}
         suppressEmptyState
+        chrome="minimal"
+        onNavChange={setBoardNav}
         className="h-full"
       />
     );
@@ -1573,6 +1610,8 @@ function TutorPage() {
               onLessonPlanProgress={setLessonProgress}
               onTutorBusy={setIsProcessing}
               onVoiceStateChange={setLiveVoiceState}
+              onMicLevel={(l) => { micLevelRef.current = l; }}
+              onListeningHint={setListeningHint}
               onPaceBiasChange={(bias) => {
                 setPaceBias(bias);
                 setPaceBiasFlash(true);
@@ -1585,6 +1624,7 @@ function TutorPage() {
               onConfirmPlanLos={handleConfirmPlanLos}
               onCompletedSegmentsChange={setCompletedSegmentIds}
               sessionMaxMinutes={30}
+              dockVariant="island"
             />
           ) : voiceEngine === 'gemini-live' ? (
             <VoiceTutorGemini
@@ -1639,23 +1679,67 @@ function TutorPage() {
     const controlsEl = (
       <SessionControls sessionId={sessionId} maxDuration={30} onEndSession={handleEndSession} onUploadHomework={handleUploadHomework} transcript={transcript} whiteboardCommands={whiteboardCommands} topicName={topicDisplayName || 'AI Tutor'} sessionGoal={sessionGoal} studentName={studentName || undefined} subject={selectedSubject} level={selectedLevel} />
     );
+    const humorBand = gradeBandFor(selectedLevel || '');
+    const HUMOR_CHOICES: Array<{ value: StudentPreferences['humorCeiling'] | null; label: string; minBand: 'K-2' | '3-5' | '6-8' | '9-12' }> = [
+      { value: null, label: 'Default', minBand: 'K-2' },
+      { value: 'off', label: 'Serious', minBand: 'K-2' },
+      { value: 'light', label: 'A little funny', minBand: 'K-2' },
+      { value: 'medium', label: 'Pretty funny', minBand: '3-5' },
+      { value: 'heavy', label: 'Very funny', minBand: '6-8' },
+    ];
+    const BAND_RANK: Record<'K-2' | '3-5' | '6-8' | '9-12', number> = { 'K-2': 0, '3-5': 1, '6-8': 2, '9-12': 3 };
+    const currentHumor = studentPreferencesForChip.humorCeiling ?? null;
     const adaptiveMenuEl = (
-      <div className="relative">
+      <div ref={pacingMenuRef} className="relative flex items-center gap-1">
+        {/* Pace badge — Slow down / Speed up only shift the brain's depth on
+            SUBSEQUENT turns, so without this the click feels inert. Shows the
+            current bias and flashes on each step (incl. clamp no-ops). */}
+        {(paceBias !== 0 || paceBiasFlash) && (
+          <span className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
+            paceBiasFlash ? 'bg-blue-100 border-blue-400 text-blue-800'
+            : paceBias < 0 ? 'bg-amber-50 border-amber-300 text-amber-800'
+            : 'bg-green-50 border-green-300 text-green-800'
+          }`}>
+            {paceBias < 0 ? `Slower ×${Math.abs(paceBias)}` : paceBias > 0 ? `Faster ×${paceBias}` : 'Pace'}
+          </span>
+        )}
         <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
         {pacingMenuOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setPacingMenuOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
-              <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
-              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
-              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
-              <div className="my-1 border-t border-slate-100" />
-              <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Slow down</button>
-              <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Speed up</button>
-              <div className="my-1 border-t border-slate-100" />
-              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
-            </div>
-          </>
+          // top-full anchors it just below the ⋯ (so the top items can't sit
+          // above the stage's overflow-hidden top edge); max-h + scroll keeps
+          // the now-tall menu (with Humor) fully reachable on short viewports.
+          <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
+            <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
+            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
+            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
+            <div className="my-1 border-t border-slate-100" />
+            <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Slow down</button>
+            <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Speed up</button>
+            <div className="my-1 border-t border-slate-100" />
+            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+            {/* Humor — grade-capped (the resolver clamps anyway; we hide the
+                out-of-band choices so the student can't pick a no-op). Ported
+                from the legacy ⋯ menu. */}
+            <div className="my-1 border-t border-slate-100" />
+            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
+            {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {
+              const isSel = currentHumor === c.value;
+              return (
+                <button
+                  key={c.value ?? 'default'}
+                  onClick={() => {
+                    console.log(`[TutorPage] humor selected: ${c.value ?? '(default)'} — writing humorCeiling`);
+                    if (c.value === null) clearStudentPreferenceForChip('humorCeiling');
+                    else setStudentPreferenceForChip('humorCeiling', c.value);
+                    setPacingMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl ${isSel ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
+                >
+                  <span className="inline-block w-3">{isSel ? '✓' : ''}</span> {c.label}
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     );
@@ -1726,10 +1810,13 @@ function TutorPage() {
           controls={controlsEl}
           adaptiveMenu={adaptiveMenuEl}
           voiceState={voiceState}
+          micLevelRef={micLevelRef}
+          listeningHint={listeningHint}
           started={started}
           liveCaption={liveCaption}
           boardEmpty={whiteboardCommands.length === 0}
           board={boardEl}
+          boardPages={boardNav ?? undefined}
           voiceInput={voiceInputEl}
           transcript={transcriptEl}
           transcriptCount={transcript.length}
@@ -2457,7 +2544,9 @@ function TutorPage() {
         <div className="flex gap-4 justify-center flex-wrap">
           {transcript.length > 0 && (
             <button
+              disabled={summaryPdfState === 'working'}
               onClick={async () => {
+                setSummaryPdfState('working');
                 try {
                   const { exportTutorSessionPDF } = await import('@/lib/utils/export/pdf-tutor-session');
                   await exportTutorSessionPDF(
@@ -2468,16 +2557,30 @@ function TutorPage() {
                     studentName || undefined,
                     { subject: selectedSubject, level: selectedLevel }
                   );
+                  setSummaryPdfState('done');
+                  // Revert the "Downloaded ✓" confirmation after a few seconds
+                  // so the button is reusable.
+                  setTimeout(() => setSummaryPdfState('idle'), 4000);
                 } catch (err) {
                   console.error('PDF export error:', err);
+                  setError('Could not export the session PDF. Please try again.');
+                  setSummaryPdfState('idle');
                 }
               }}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Export Session PDF
+              {summaryPdfState === 'working' ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : summaryPdfState === 'done' ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              )}
+              {summaryPdfState === 'working' ? 'Exporting…' : summaryPdfState === 'done' ? 'Downloaded ✓' : 'Export Session PDF'}
             </button>
           )}
           <button

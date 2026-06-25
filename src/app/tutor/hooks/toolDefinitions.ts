@@ -1225,13 +1225,15 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_stats',
-    description: 'Statistical charts: histogram, boxplot, dotplot, bar, pie, distribution curve, or scatter (with optional regression line). For `type: "distribution"`, provide `distribution.family`, `distribution.params`, and `distribution.shade` for a shaded probability region; `distribution.probabilityLabel` writes the computed probability inside the shaded region. For `type: "scatter"` (or "scatterplot" / "scatterplot_regression"), provide `points: [{x,y}]`; the LSRL is auto-computed when `showTrendLine` is true (default). Provide `regression`, `rValue`, `rSquared`, or `equationLabel` to override or annotate.',
+    description: 'Statistical charts: histogram, boxplot, dotplot, bar, pie, distribution curve, or scatter (with optional regression line). For `type: "histogram"`, give EITHER `bins` (pre-binned: array of [lowerEdge, upperEdge, count] — use this when you have bin frequencies, which is the usual case for a described histogram) OR raw `data: [numbers]`; set `showCounts: true` to label each bar with its count. Do NOT describe a histogram in speech without also drawing it. For `type: "distribution"`, provide `distribution.family`, `distribution.params`, and `distribution.shade` for a shaded probability region; `distribution.probabilityLabel` writes the computed probability inside the shaded region. For `type: "scatter"` (or "scatterplot" / "scatterplot_regression"), provide `points: [{x,y}]`; the LSRL is auto-computed when `showTrendLine` is true (default). Provide `regression`, `rValue`, `rSquared`, or `equationLabel` to override or annotate.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
         type: { type: 'string', enum: ['histogram', 'boxplot', 'dotplot', 'bar', 'pie', 'distribution', 'scatter', 'scatterplot', 'scatterplot_regression'] },
         data: { type: 'array', items: { type: 'number' } },
+        bins: { type: 'array', description: 'Pre-binned histogram: each entry is [lowerEdge, upperEdge, count]. Preferred over `data` for a described histogram.', items: { type: 'array', items: { type: 'number' } } },
+        showCounts: { type: 'boolean', description: 'Label each histogram bar with its count.' },
         binWidth: { type: 'number' },
         xLabel: { type: 'string' },
         yLabel: { type: 'string' },

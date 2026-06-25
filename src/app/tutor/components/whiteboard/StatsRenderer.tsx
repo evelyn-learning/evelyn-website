@@ -40,6 +40,12 @@ interface StatsRendererProps {
   type: 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie' | 'distribution' | 'scatter' | 'scatterplot' | 'scatterplot_regression';
   /** Raw numeric data for histogram / dot plot */
   data?: number[];
+  /** Pre-binned histogram: each entry is [lowerEdge, upperEdge, count]. Use this
+   *  when you have bin frequencies (a described histogram) rather than raw
+   *  values — the brain usually does. Takes precedence over `data`. */
+  bins?: Array<[number, number, number]>;
+  /** Draw the count above each histogram bar. */
+  showCounts?: boolean;
   /** Bin width for histogram (defaults to auto-computed) */
   binWidth?: number;
   xLabel?: string;
@@ -135,8 +141,16 @@ function fmt(n: number): string {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Histogram
 // ═══════════════════════════════════════════════════════════════════════════════
-function Histogram({ data, binWidth: bw, xLabel, yLabel }: StatsRendererProps) {
+function Histogram({ data, bins: preBins, showCounts, binWidth: bw, xLabel, yLabel }: StatsRendererProps) {
   const bins = useMemo(() => {
+    // Pre-binned input ([lo, hi, count]) — the common case for a described
+    // histogram. Use it directly so the bars actually draw (raw `data` is
+    // rarely available; without this the histogram rendered empty).
+    if (preBins && preBins.length > 0) {
+      return preBins
+        .filter((b) => Array.isArray(b) && b.length >= 3 && Number.isFinite(b[0]) && Number.isFinite(b[1]) && Number.isFinite(b[2]))
+        .map(([lo, hi, count]) => ({ lo, hi, count }));
+    }
     if (!data || data.length === 0) return [];
     const sorted = [...data].sort((a, b) => a - b);
     const min = sorted[0];
@@ -156,7 +170,7 @@ function Histogram({ data, binWidth: bw, xLabel, yLabel }: StatsRendererProps) {
       result[result.length - 1].count += data.filter(v => v === result[result.length - 1].hi).length;
     }
     return result;
-  }, [data, bw]);
+  }, [data, bw, preBins]);
 
   if (bins.length === 0) return null;
 
@@ -175,18 +189,22 @@ function Histogram({ data, binWidth: bw, xLabel, yLabel }: StatsRendererProps) {
         const bw = Math.max(xScale(bin.hi) - xScale(bin.lo) - 1, 1);
         const bh = yScale(0) - yScale(bin.count);
         return (
-          <rect
-            key={i}
-            x={bx}
-            y={yScale(bin.count)}
-            width={bw}
-            height={bh}
-            fill={color(0)}
-            opacity={0.8}
-            stroke="#fff"
-            strokeWidth={1}
-            {...feat(`bar-${i + 1}`, { cx: bx + bw / 2, cy: yScale(bin.count) + bh / 2, w: bw, h: bh }, { width: WIDTH, height: HEIGHT })}
-          />
+          <g key={i}>
+            <rect
+              x={bx}
+              y={yScale(bin.count)}
+              width={bw}
+              height={bh}
+              fill={color(0)}
+              opacity={0.8}
+              stroke="#fff"
+              strokeWidth={1}
+              {...feat(`bar-${i + 1}`, { cx: bx + bw / 2, cy: yScale(bin.count) + bh / 2, w: bw, h: bh }, { width: WIDTH, height: HEIGHT })}
+            />
+            {showCounts && bin.count > 0 && (
+              <text x={bx + bw / 2} y={yScale(bin.count) - 4} textAnchor="middle" fontSize={10} fill="#374151">{bin.count}</text>
+            )}
+          </g>
         );
       })}
 

@@ -71,6 +71,9 @@ export interface UsePerceptionWSOptions {
    *  current production WS state. */
   onSpeechStart?: (e: PerceptionSpeechEvent) => void;
   onSpeechStop?: (e: PerceptionSpeechEvent) => void;
+  /** Live student-mic amplitude (0..1, already scaled) emitted ~12×/sec from
+   *  the audio processor, for the "being heard" indicator. Emits 0 while muted. */
+  onMicLevel?: (level: number) => void;
   onTranscript?: (t: PerceptionTranscript) => void;
   onTranscriptionFailed?: (errorType: string | undefined) => void;
   onStateChange?: (state: PerceptionState) => void;
@@ -164,6 +167,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     vadPrefixPaddingMs = 500,
     onSpeechStart,
     onSpeechStop,
+    onMicLevel,
     onTranscript,
     onTranscriptionFailed,
     onStateChange,
@@ -175,12 +179,14 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   // Refs so stable callbacks see the latest values without re-instantiating.
   const onSpeechStartRef = useRef(onSpeechStart);
   const onSpeechStopRef = useRef(onSpeechStop);
+  const onMicLevelRef = useRef(onMicLevel);
   const onTranscriptRef = useRef(onTranscript);
   const onTranscriptionFailedRef = useRef(onTranscriptionFailed);
   const onStateChangeRef = useRef(onStateChange);
   const onErrorRef = useRef(onError);
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
+  onMicLevelRef.current = onMicLevel;
   onTranscriptRef.current = onTranscript;
   onTranscriptionFailedRef.current = onTranscriptionFailed;
   onStateChangeRef.current = onStateChange;
@@ -319,9 +325,17 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       processor.onaudioprocess = (e) => {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        // Muted: don't forward audio to the perception transcriber.
-        if (mutedRef.current) return;
+        // Muted: don't forward audio to the perception transcriber, and report
+        // a flat level so the "being heard" meter goes calm.
+        if (mutedRef.current) { try { onMicLevelRef.current?.(0); } catch {} return; }
         const inputData = e.inputBuffer.getChannelData(0);
+        // Live mic amplitude (RMS) for the "being heard" indicator. Cheap over
+        // 4096 samples; this processor fires ~12×/sec so no extra throttle is
+        // needed. Scaled so normal speech lands mid-range, then clamped 0..1.
+        let sumSq = 0;
+        for (let i = 0; i < inputData.length; i++) sumSq += inputData[i] * inputData[i];
+        const rms = Math.sqrt(sumSq / inputData.length);
+        try { onMicLevelRef.current?.(Math.min(1, rms * 6)); } catch {}
         const resampled = captureRate === PERCEPTION_SAMPLE_RATE
           ? inputData
           : resampleLinear(inputData, captureRate, PERCEPTION_SAMPLE_RATE, resamplerState);

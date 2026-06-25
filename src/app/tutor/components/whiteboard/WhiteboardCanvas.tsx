@@ -176,6 +176,16 @@ interface WhiteboardCanvasProps {
    *  presence" over the empty board instead. (Flag-gated host; default false
    *  keeps the legacy empty state.) */
   suppressEmptyState?: boolean;
+  /** Chrome variant. 'full' (default) renders the legacy header (Whiteboard
+   *  label · expand · clear · page-nav bar) and the bottom page-label footer.
+   *  'minimal' drops both so the full-bleed SessionStage can host its own slim
+   *  page switcher (driven by onNavChange) — the board itself becomes pure
+   *  content. (Flag-gated host; default keeps every legacy caller identical.) */
+  chrome?: 'full' | 'minimal';
+  /** Surfaces the internal page navigation state so a host (the SessionStage)
+   *  can render its own switcher in 'minimal' chrome. Fires whenever the page
+   *  count / current index / titles change. `goTo` is stable. */
+  onNavChange?: (nav: { index: number; count: number; titles: string[]; goTo: (i: number) => void }) => void;
 }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
@@ -195,6 +205,8 @@ export function WhiteboardCanvas({
   className = '',
   tutorBusy = false,
   suppressEmptyState = false,
+  chrome = 'full',
+  onNavChange,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -351,6 +363,12 @@ export function WhiteboardCanvas({
     }
     return relocated;
   }, [commands]);
+
+  // Mirror the live page count in a ref so the stable goToPage() jumper (used
+  // by the SessionStage's external switcher) can clamp without re-creating its
+  // identity on every page change. Set during render — read-only mirror.
+  const pagesLengthRef = useRef(0);
+  pagesLengthRef.current = pages.length;
 
   // Kill-recovery phase A: ids currently flagged "revising" (dimmed). Built
   // from reviseItems markers in stream order (revising:true adds, false
@@ -623,6 +641,26 @@ export function WhiteboardCanvas({
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
   }, []);
 
+  // Stable page jumper exposed to a host that renders its own switcher
+  // ('minimal' chrome). Clamped against the live page count at call time.
+  const goToPage = useCallback((i: number) => {
+    const max = pagesLengthRef.current - 1;
+    setCurrentIndex(Math.min(Math.max(i, 0), Math.max(max, 0)));
+  }, []);
+
+  // Surface page-nav state to a host that renders its own switcher ('minimal'
+  // chrome). `pages` is memoized on [commands], so this only fires when the
+  // page structure or the current page actually changes — no render loop.
+  useEffect(() => {
+    if (!onNavChange) return;
+    onNavChange({
+      index: currentIndex,
+      count: pages.length,
+      titles: pages.map((p) => p.title || ''),
+      goTo: goToPage,
+    });
+  }, [onNavChange, currentIndex, pages, goToPage]);
+
   // Handle clear
   const handleClear = useCallback(() => {
     setCurrentIndex(0);
@@ -683,7 +721,7 @@ export function WhiteboardCanvas({
 
   const currentPage = pages[Math.min(currentIndex, pages.length - 1)];
 
-  const headerContent = (
+  const headerContent = chrome === 'minimal' ? null : (
     <div className="border-b bg-gray-50 rounded-t-lg flex-shrink-0">
       {/* Top row: title + actions */}
       <div className="flex items-center justify-between px-3 py-1.5">
@@ -865,9 +903,11 @@ export function WhiteboardCanvas({
           <ChevronDown className="w-4 h-4 text-blue-400 animate-bounce" />
         </div>
       )}
-      <div className="px-3 py-1 bg-gray-50 border-t text-xs text-gray-400 text-center rounded-b-lg flex-shrink-0">
-        {pageLabel}
-      </div>
+      {chrome !== 'minimal' && (
+        <div className="px-3 py-1 bg-gray-50 border-t text-xs text-gray-400 text-center rounded-b-lg flex-shrink-0">
+          {pageLabel}
+        </div>
+      )}
     </>
   );
 
@@ -2192,7 +2232,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
       return <MatrixRenderer title={command.title} rows={command.rows} brackets={command.brackets} augmented={command.augmented} rowLabels={command.rowLabels} colLabels={command.colLabels} rowOperations={command.rowOperations} resultMatrix={command.resultMatrix} operatorSymbol={command.operatorSymbol} />;
 
     case 'showStats':
-      return <StatsRenderer title={command.title} type={command.type} data={command.data} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} distribution={command.distribution} points={command.points} regression={command.regression} showTrendLine={command.showTrendLine} rValue={command.rValue} rSquared={command.rSquared} equationLabel={command.equationLabel} highlightPoint={command.highlightPoint} showResiduals={command.showResiduals} />;
+      return <StatsRenderer title={command.title} type={command.type} data={command.data} bins={command.bins} showCounts={command.showCounts} binWidth={command.binWidth} xLabel={command.xLabel} yLabel={command.yLabel} boxplot={command.boxplot} bar={command.bar} pie={command.pie} distribution={command.distribution} points={command.points} regression={command.regression} showTrendLine={command.showTrendLine} rValue={command.rValue} rSquared={command.rSquared} equationLabel={command.equationLabel} highlightPoint={command.highlightPoint} showResiduals={command.showResiduals} />;
 
     case 'showTimeline':
       return <TimelineRenderer title={command.title} events={command.events} orientation={command.orientation} />;
