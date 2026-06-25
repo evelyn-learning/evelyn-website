@@ -1,5 +1,5 @@
 /**
- * AP Macroeconomics — CED Unit 5.3: Government Deficits and the
+ * AP Macroeconomics — CED Unit 5.4: Government Deficits and the
  * National Debt.
  *
  * Long-run sustainability emphasis. Builds on U3.8 (where deficit/debt
@@ -12,7 +12,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_DEFICITS_DEBT: LessonPlan = {
   id: 'evelyn.ap.macro.deficits-debt.v1',
-  title: 'U5.3 Government Deficits and the National Debt',
+  title: 'U5.4 Government Deficits and the National Debt',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -23,7 +23,7 @@ export const SEED_AP_MACRO_U5_DEFICITS_DEBT: LessonPlan = {
       id: 'apmacro.deficits-debt',
       description:
         'Distinguish budget deficit from national debt, compute debt-to-GDP ratio, identify factors affecting long-run debt sustainability, and articulate intergenerational and crowding-out implications of persistent deficits.',
-      standard: 'AP-MACRO-5.3',
+      standard: 'AP-MACRO-5.4',
     },
   ],
   prerequisites: ['apmacro.money-growth-inflation', 'apmacro.fiscal-policy'],
@@ -135,7 +135,7 @@ export const SEED_AP_MACRO_U5_DEFICITS_DEBT: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.3',
+    cedTopic: '5.4',
     cedTitle: 'Government Deficits and the National Debt',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '17', note: 'OpenStax Macro AP — government debt, sustainability, intergenerational reasoning.' },

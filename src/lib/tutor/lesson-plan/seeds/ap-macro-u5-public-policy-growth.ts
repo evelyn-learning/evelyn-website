@@ -1,5 +1,5 @@
 /**
- * AP Macroeconomics — CED Unit 5.6: Public Policy and Economic Growth.
+ * AP Macroeconomics — CED Unit 5.7: Public Policy and Economic Growth.
  *
  * Supply-side policies that shift LRAS: tax incentives for investment,
  * education, R&D, infrastructure, deregulation, immigration, openness
@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH: LessonPlan = {
   id: 'evelyn.ap.macro.public-policy-growth.v1',
-  title: 'U5.6 Public Policy and Economic Growth',
+  title: 'U5.7 Public Policy and Economic Growth',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -22,7 +22,7 @@ export const SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH: LessonPlan = {
       id: 'apmacro.public-policy-growth',
       description:
         'Identify supply-side policies that promote long-run economic growth (tax incentives for investment, education, R&D, infrastructure, deregulation, immigration, trade openness), apply the LRAS framework to predict their effects, and articulate trade-offs in policy choices.',
-      standard: 'AP-MACRO-5.6',
+      standard: 'AP-MACRO-5.7',
     },
   ],
   prerequisites: ['apmacro.economic-growth'],
@@ -119,7 +119,7 @@ export const SEED_AP_MACRO_U5_PUBLIC_POLICY_GROWTH: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.6',
+    cedTopic: '5.7',
     cedTitle: 'Public Policy and Economic Growth',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '20', note: 'OpenStax Macro AP — supply-side policies, growth-promotion menu.' },

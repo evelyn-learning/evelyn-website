@@ -565,6 +565,7 @@ import { SEED_AP_MACRO_U4_MONEY_MARKET } from './seeds/ap-macro-u4-money-market'
 import { SEED_AP_MACRO_U4_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
 import { SEED_AP_MACRO_U4_LOANABLE_FUNDS } from './seeds/ap-macro-u4-loanable-funds';
 import { SEED_AP_MACRO_U4_FRQ_PRACTICE } from './seeds/ap-macro-u4-frq-practice';
+import { SEED_AP_MACRO_U5_FISCAL_MONETARY_SHORT_RUN } from './seeds/ap-macro-u5-fiscal-monetary-short-run';
 import { SEED_AP_MACRO_U5_PHILLIPS_CURVE } from './seeds/ap-macro-u5-phillips-curve';
 import { SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION } from './seeds/ap-macro-u5-money-growth-inflation';
 import { SEED_AP_MACRO_U5_DEFICITS_DEBT } from './seeds/ap-macro-u5-deficits-debt';
@@ -587,6 +588,7 @@ import { SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_PROPERTIES } from './seeds/ap-calcbc
 import { SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_MANIPULATION } from './seeds/ap-calcbc-u1-limits-algebraic-manipulation';
 import { SEED_AP_CALCBC_U1_LIMITS_STRATEGY } from './seeds/ap-calcbc-u1-limits-strategy';
 import { SEED_AP_CALCBC_U1_SQUEEZE_THEOREM } from './seeds/ap-calcbc-u1-squeeze-theorem';
+import { SEED_AP_CALCBC_U1_LIMITS_REPRESENTATIONS } from './seeds/ap-calcbc-u1-limits-representations';
 import { SEED_AP_CALCBC_U1_DISCONTINUITY_TYPES } from './seeds/ap-calcbc-u1-discontinuity-types';
 import { SEED_AP_CALCBC_U1_CONTINUITY } from './seeds/ap-calcbc-u1-continuity';
 import { SEED_AP_CALCBC_U1_REMOVING_DISCONTINUITIES } from './seeds/ap-calcbc-u1-removing-discontinuities';
@@ -618,12 +620,14 @@ import { SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS } from './seeds/ap-calcbc-u
 import { SEED_AP_CALCBC_U5_CONCAVITY_SECOND_DERIVATIVE } from './seeds/ap-calcbc-u5-concavity-second-derivative';
 import { SEED_AP_CALCBC_U5_GRAPHING_F_FP_FPP } from './seeds/ap-calcbc-u5-graphing-f-fp-fpp';
 import { SEED_AP_CALCBC_U5_OPTIMIZATION } from './seeds/ap-calcbc-u5-optimization';
+import { SEED_AP_CALCBC_U5_IMPLICIT_BEHAVIORS } from './seeds/ap-calcbc-u5-implicit-behaviors';
 import { SEED_AP_CALCBC_U5_FRQ_PRACTICE } from './seeds/ap-calcbc-u5-frq-practice';
 import { SEED_AP_CALCBC_U6_RIEMANN_SUMS } from './seeds/ap-calcbc-u6-riemann-sums';
 import { SEED_AP_CALCBC_U6_FTC } from './seeds/ap-calcbc-u6-ftc';
 import { SEED_AP_CALCBC_U6_INTEGRAL_PROPERTIES } from './seeds/ap-calcbc-u6-integral-properties';
 import { SEED_AP_CALCBC_U6_BASIC_ANTIDERIVATIVES } from './seeds/ap-calcbc-u6-basic-antiderivatives';
 import { SEED_AP_CALCBC_U6_U_SUBSTITUTION } from './seeds/ap-calcbc-u6-u-substitution';
+import { SEED_AP_CALCBC_U6_LONG_DIVISION_COMPLETING_SQUARE } from './seeds/ap-calcbc-u6-long-division-completing-square';
 import { SEED_AP_CALCBC_U6_INTEGRATION_BY_PARTS } from './seeds/ap-calcbc-u6-integration-by-parts';
 import { SEED_AP_CALCBC_U6_PARTIAL_FRACTIONS } from './seeds/ap-calcbc-u6-partial-fractions';
 import { SEED_AP_CALCBC_U6_IMPROPER_INTEGRALS } from './seeds/ap-calcbc-u6-improper-integrals';
@@ -640,6 +644,7 @@ import { SEED_AP_CALCBC_U8_APPLICATIONS } from './seeds/ap-calcbc-u8-application
 import { SEED_AP_CALCBC_U8_AREA_BETWEEN_CURVES } from './seeds/ap-calcbc-u8-area-between-curves';
 import { SEED_AP_CALCBC_U8_VOLUMES_CROSS_SECTIONS } from './seeds/ap-calcbc-u8-volumes-cross-sections';
 import { SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION } from './seeds/ap-calcbc-u8-volumes-revolution';
+import { SEED_AP_CALCBC_U8_WASHER_OTHER_AXES } from './seeds/ap-calcbc-u8-washer-other-axes';
 import { SEED_AP_CALCBC_U8_ARC_LENGTH } from './seeds/ap-calcbc-u8-arc-length';
 import { SEED_AP_CALCBC_U8_FRQ_PRACTICE } from './seeds/ap-calcbc-u8-frq-practice';
 import { SEED_AP_CALCBC_U9_PARAMETRIC } from './seeds/ap-calcbc-u9-parametric';
@@ -1803,6 +1808,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_MACRO_U4_MONETARY_POLICY,
   SEED_AP_MACRO_U4_LOANABLE_FUNDS,
   SEED_AP_MACRO_U4_FRQ_PRACTICE,
+  SEED_AP_MACRO_U5_FISCAL_MONETARY_SHORT_RUN,
   SEED_AP_MACRO_U5_PHILLIPS_CURVE,
   SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION,
   SEED_AP_MACRO_U5_DEFICITS_DEBT,
@@ -1824,6 +1830,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U1_LIMITS_ALGEBRAIC_MANIPULATION,
   SEED_AP_CALCBC_U1_LIMITS_STRATEGY,
   SEED_AP_CALCBC_U1_SQUEEZE_THEOREM,
+  SEED_AP_CALCBC_U1_LIMITS_REPRESENTATIONS,
   SEED_AP_CALCBC_U1_DISCONTINUITY_TYPES,
   SEED_AP_CALCBC_U1_CONTINUITY,
   SEED_AP_CALCBC_U1_REMOVING_DISCONTINUITIES,
@@ -1855,12 +1862,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U5_CONCAVITY_SECOND_DERIVATIVE,
   SEED_AP_CALCBC_U5_GRAPHING_F_FP_FPP,
   SEED_AP_CALCBC_U5_OPTIMIZATION,
+  SEED_AP_CALCBC_U5_IMPLICIT_BEHAVIORS,
   SEED_AP_CALCBC_U5_FRQ_PRACTICE,
   SEED_AP_CALCBC_U6_RIEMANN_SUMS,
   SEED_AP_CALCBC_U6_FTC,
   SEED_AP_CALCBC_U6_INTEGRAL_PROPERTIES,
   SEED_AP_CALCBC_U6_BASIC_ANTIDERIVATIVES,
   SEED_AP_CALCBC_U6_U_SUBSTITUTION,
+  SEED_AP_CALCBC_U6_LONG_DIVISION_COMPLETING_SQUARE,
   SEED_AP_CALCBC_U6_INTEGRATION_BY_PARTS,
   SEED_AP_CALCBC_U6_PARTIAL_FRACTIONS,
   SEED_AP_CALCBC_U6_IMPROPER_INTEGRALS,
@@ -1877,6 +1886,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_CALCBC_U8_AREA_BETWEEN_CURVES,
   SEED_AP_CALCBC_U8_VOLUMES_CROSS_SECTIONS,
   SEED_AP_CALCBC_U8_VOLUMES_REVOLUTION,
+  SEED_AP_CALCBC_U8_WASHER_OTHER_AXES,
   SEED_AP_CALCBC_U8_ARC_LENGTH,
   SEED_AP_CALCBC_U8_FRQ_PRACTICE,
   SEED_AP_CALCBC_U9_PARAMETRIC,

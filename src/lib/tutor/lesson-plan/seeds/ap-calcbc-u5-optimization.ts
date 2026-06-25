@@ -1,6 +1,6 @@
 /**
- * AP Calculus BC — CED Unit 5.10+5.11: Optimization Problems and
- * Implicit Behavior (combined).
+ * AP Calculus BC — CED Unit 5.10-5.11: Optimization Problems
+ * (introduction to optimization and solving optimization problems).
  */
 
 import type { LessonPlan } from '../types';
@@ -19,7 +19,7 @@ export const SEED_AP_CALCBC_U5_OPTIMIZATION: LessonPlan = {
       id: 'apcalcbc.optimization',
       description:
         'Solve real-world optimization problems by identifying the quantity to optimize, expressing it as a function of a single variable using a constraint, and finding the extremum via critical points.',
-      standard: 'AP-CALCBC-5.10',
+      standard: 'AP-CALCBC-5.10-5.11',
     },
   ],
   prerequisites: ['apcalcbc.graphing-f-fp-fpp'],
@@ -107,7 +107,7 @@ export const SEED_AP_CALCBC_U5_OPTIMIZATION: LessonPlan = {
   schemaVersion: 1,
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
-    cedUnit: '5', cedTopic: '5.10', cedTitle: 'Optimization Problems',
+    cedUnit: '5', cedTopic: '5.10-5.11', cedTitle: 'Optimization Problems',
     sources: [{ type: 'concept', book: 'larson-calc-ap-ed', chapter: '4', note: 'Standard optimization recipe.' }],
   },
 };

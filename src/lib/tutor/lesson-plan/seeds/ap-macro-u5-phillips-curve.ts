@@ -1,5 +1,5 @@
 /**
- * AP Macroeconomics — CED Unit 5.1: The Phillips Curve.
+ * AP Macroeconomics — CED Unit 5.2: The Phillips Curve.
  *
  * Short-run Phillips Curve (downward-sloping inflation-unemployment
  * tradeoff) and long-run Phillips Curve (vertical at NAIRU). Connects
@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_PHILLIPS_CURVE: LessonPlan = {
   id: 'evelyn.ap.macro.phillips-curve.v1',
-  title: 'U5.1 The Phillips Curve',
+  title: 'U5.2 The Phillips Curve',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -22,10 +22,10 @@ export const SEED_AP_MACRO_U5_PHILLIPS_CURVE: LessonPlan = {
       id: 'apmacro.phillips-curve',
       description:
         'Construct the short-run Phillips Curve (downward-sloping) and long-run Phillips Curve (vertical at NAIRU), explain the role of inflation expectations in shifting the SRPC, and connect Phillips Curve dynamics to AD-AS shifts.',
-      standard: 'AP-MACRO-5.1',
+      standard: 'AP-MACRO-5.2',
     },
   ],
-  prerequisites: ['apmacro.loanable-funds-market'],
+  prerequisites: ['apmacro.fiscal-monetary-short-run'],
   followUps: ['apmacro.money-growth-inflation'],
   estimatedMinutes: 24,
   segments: [
@@ -138,7 +138,7 @@ export const SEED_AP_MACRO_U5_PHILLIPS_CURVE: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.1',
+    cedTopic: '5.2',
     cedTitle: 'The Phillips Curve',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '11', note: 'OpenStax Macro AP — Phillips Curve, expectations role, no long-run tradeoff.' },

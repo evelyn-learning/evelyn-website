@@ -1,5 +1,5 @@
 /**
- * AP Macroeconomics — CED Unit 5.4: Crowding Out (Long-Run Focus).
+ * AP Macroeconomics — CED Unit 5.5: Crowding Out (Long-Run Focus).
  *
  * Builds on U3.8 (fiscal policy) and U4.7 (loanable funds). Here the
  * focus is on cumulative LONG-RUN effects of persistent deficits on
@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN: LessonPlan = {
   id: 'evelyn.ap.macro.crowding-out-long-run.v1',
-  title: 'U5.4 Crowding Out (Long-Run Focus)',
+  title: 'U5.5 Crowding Out (Long-Run Focus)',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -22,7 +22,7 @@ export const SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN: LessonPlan = {
       id: 'apmacro.crowding-out-long-run',
       description:
         'Apply the loanable funds market to predict long-run effects of persistent government deficits on private investment, real interest rates, and the capital stock; explain how reduced investment reduces long-run economic growth.',
-      standard: 'AP-MACRO-5.4',
+      standard: 'AP-MACRO-5.5',
     },
   ],
   prerequisites: ['apmacro.deficits-debt'],
@@ -121,7 +121,7 @@ export const SEED_AP_MACRO_U5_CROWDING_OUT_LONG_RUN: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.4',
+    cedTopic: '5.5',
     cedTitle: 'Crowding Out',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '17', note: 'OpenStax Macro AP — long-run crowding-out, capital accumulation effects.' },

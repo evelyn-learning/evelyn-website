@@ -1,5 +1,5 @@
 /**
- * AP Macroeconomics — CED Unit 5.2: Money Growth and Inflation.
+ * AP Macroeconomics — CED Unit 5.3: Money Growth and Inflation.
  *
  * Quantity Theory of Money (MV = PQ) and the long-run link between
  * money supply growth and inflation. AP often tests "what would
@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION: LessonPlan = {
   id: 'evelyn.ap.macro.money-growth-inflation.v1',
-  title: 'U5.2 Money Growth and Inflation',
+  title: 'U5.3 Money Growth and Inflation',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -22,7 +22,7 @@ export const SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION: LessonPlan = {
       id: 'apmacro.money-growth-inflation',
       description:
         'Apply the Quantity Theory of Money (MV = PQ) to compute long-run inflation from money-supply growth, real-GDP growth, and velocity assumptions; explain why monetary expansion above real-GDP growth produces inflation.',
-      standard: 'AP-MACRO-5.2',
+      standard: 'AP-MACRO-5.3',
     },
   ],
   prerequisites: ['apmacro.phillips-curve'],
@@ -135,7 +135,7 @@ export const SEED_AP_MACRO_U5_MONEY_GROWTH_INFLATION: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.2',
+    cedTopic: '5.3',
     cedTitle: 'Money Growth and Inflation',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '13', note: 'OpenStax Macro AP — Quantity Theory, equation of exchange.' },

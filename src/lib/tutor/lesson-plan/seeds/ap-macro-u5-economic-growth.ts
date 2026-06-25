@@ -1,8 +1,8 @@
 /**
- * AP Macroeconomics — CED Unit 5.5: Economic Growth.
+ * AP Macroeconomics — CED Unit 5.6: Economic Growth.
  *
  * Drivers of long-run growth (capital, labor, human capital, technology),
- * growth accounting, and convergence theory. Sets up Unit 5.6 on
+ * growth accounting, and convergence theory. Sets up Unit 5.7 on
  * supply-side policies.
  */
 
@@ -11,7 +11,7 @@ import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_MACRO_U5_ECONOMIC_GROWTH: LessonPlan = {
   id: 'evelyn.ap.macro.economic-growth.v1',
-  title: 'U5.5 Economic Growth',
+  title: 'U5.6 Economic Growth',
   curriculum: 'AP',
   grade: '12',
   subject: 'ss',
@@ -22,7 +22,7 @@ export const SEED_AP_MACRO_U5_ECONOMIC_GROWTH: LessonPlan = {
       id: 'apmacro.economic-growth',
       description:
         'Identify the four sources of long-run economic growth (physical capital, labor, human capital, technology), apply the LRAS framework to track growth, and recognize the role of productivity in cross-country income differences.',
-      standard: 'AP-MACRO-5.5',
+      standard: 'AP-MACRO-5.6',
     },
   ],
   prerequisites: ['apmacro.crowding-out-long-run'],
@@ -137,7 +137,7 @@ export const SEED_AP_MACRO_U5_ECONOMIC_GROWTH: LessonPlan = {
   pacingThresholds: AP_PACING_THRESHOLDS,
   metadata: {
     cedUnit: '5',
-    cedTopic: '5.5',
+    cedTopic: '5.6',
     cedTitle: 'Economic Growth',
     sources: [
       { type: 'concept', book: 'openstax-macro-ap', chapter: '20', note: 'OpenStax Macro AP — sources of growth, growth accounting, convergence.' },

@@ -1,12 +1,12 @@
 /**
- * AP Calculus BC — CED Unit 8.12: Arc Length (BC only).
+ * AP Calculus BC — CED Unit 8.13: Arc Length (BC only).
  */
 import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 export const SEED_AP_CALCBC_U8_ARC_LENGTH: LessonPlan = {
-  id: 'evelyn.ap.calcbc.arc-length.v1', title: 'U8.12 Arc Length',
+  id: 'evelyn.ap.calcbc.arc-length.v1', title: 'U8.13 Arc Length',
   curriculum: 'AP', grade: '12', subject: 'math', topic: 'ap-calculus-bc', locale: 'en',
-  los: [{ id: 'apcalcbc.arc-length', description: 'Compute the arc length of a curve y = f(x) on [a, b] using L = ∫_a^b √(1 + [f\'(x)]²) dx. Recognize the formula\'s origin in Pythagorean infinitesimal segments.', standard: 'AP-CALCBC-8.12' }],
+  los: [{ id: 'apcalcbc.arc-length', description: 'Compute the arc length of a curve y = f(x) on [a, b] using L = ∫_a^b √(1 + [f\'(x)]²) dx. Recognize the formula\'s origin in Pythagorean infinitesimal segments.', standard: 'AP-CALCBC-8.13' }],
   prerequisites: ['apcalcbc.volumes-revolution'], followUps: [], estimatedMinutes: 18,
   segments: [
     { id: 'hook', kind: 'hook', goal: 'Frame arc length as the natural extension of distance to curves.', script: "How long is a curve? On a straight segment, distance is √(Δx² + Δy²). On a curve, integrate that over infinitesimal pieces: L = ∫ √(1 + (dy/dx)²) dx. Beautiful and just integration.", estimatedMinutes: 2 },
@@ -43,5 +43,5 @@ export const SEED_AP_CALCBC_U8_ARC_LENGTH: LessonPlan = {
     ], estimatedMinutes: 1 },
   ],
   source: AP_SOURCE, schemaVersion: 1, pacingThresholds: AP_PACING_THRESHOLDS,
-  metadata: { cedUnit: '8', cedTopic: '8.12', cedTitle: 'Arc Length (BC)', sources: [{ type: 'concept', book: 'larson-calc-ap-ed', chapter: '5', note: 'Standard arc length.' }] },
+  metadata: { cedUnit: '8', cedTopic: '8.13', cedTitle: 'Arc Length (BC)', sources: [{ type: 'concept', book: 'larson-calc-ap-ed', chapter: '5', note: 'Standard arc length.' }] },
 };
