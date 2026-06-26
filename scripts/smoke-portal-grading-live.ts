@@ -22,7 +22,7 @@ import {
   defaultGradeDeps,
   type GradeItem,
 } from '@/lib/tutor/portal/grade-free-response';
-import type { GradeFreeResponseRequest } from '@/lib/portal-contract/v1';
+import type { GradeFreeResponseRequest } from '@evelyn/portal-contract/v1';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('ANTHROPIC_API_KEY not found (.env.local). Aborting smoke test.');

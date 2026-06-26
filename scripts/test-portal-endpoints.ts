@@ -13,7 +13,7 @@ import assert from 'node:assert';
 
 process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ portalA: 'secret-a' });
 
-import { signPortalRequest } from '@/lib/portal-contract/auth';
+import { signPortalRequest } from '@evelyn/portal-contract/auth';
 import {
   StudentContextSchema,
   GapsReadSchema,
@@ -21,7 +21,7 @@ import {
   NotesReadSchema,
   RetrievePracticeResponseSchema,
   SessionResultSchema,
-} from '@/lib/portal-contract/v1';
+} from '@evelyn/portal-contract/v1';
 import { getOrCreateStudentProfile } from '@/lib/tutor/student-profile/store';
 import type { NextRequest } from 'next/server';
 

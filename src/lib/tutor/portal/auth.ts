@@ -18,7 +18,7 @@ import {
   PORTAL_SIGNATURE_HEADER,
   verifyPortalSignature,
   type SigningParts,
-} from '@/lib/portal-contract/auth';
+} from '@evelyn/portal-contract/auth';
 
 /**
  * Resolve a partner's shared secret from the environment.

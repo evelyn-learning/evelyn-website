@@ -9,7 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
-import { StudentContextSchema } from '@/lib/portal-contract/v1';
+import { StudentContextSchema } from '@evelyn/portal-contract/v1';
 import { updateStudentPreferences } from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 

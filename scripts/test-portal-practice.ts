@@ -12,7 +12,7 @@ import {
   type PlanLite,
   type BankLite,
 } from '@/lib/tutor/portal/practice';
-import type { RetrievePracticeRequest } from '@/lib/portal-contract/v1';
+import type { RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;
 let failed = 0;

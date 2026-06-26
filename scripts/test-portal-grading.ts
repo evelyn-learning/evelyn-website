@@ -11,7 +11,7 @@ import {
   type GradeDeps,
   type GradeItem,
 } from '@/lib/tutor/portal/grade-free-response';
-import type { GradeFreeResponseRequest } from '@/lib/portal-contract/v1';
+import type { GradeFreeResponseRequest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;
 let failed = 0;

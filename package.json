@@ -48,6 +48,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@deepgram/sdk": "^4.11.3",
+    "@evelyn/portal-contract": "git+ssh://git@github.com/evelyn-learning/portal-contract.git#v1.0.0",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "^16.1.6",
     "@rdkit/rdkit": "^2025.3.4-1.0.0",

@@ -15,7 +15,7 @@ import type {
   FrqRubric,
   GradeFreeResponseRequest,
   GradeFreeResponseResponse,
-} from '@/lib/portal-contract/v1';
+} from '@evelyn/portal-contract/v1';
 
 /** The gradable item, resolved by the caller from its content store. */
 export interface GradeItem {

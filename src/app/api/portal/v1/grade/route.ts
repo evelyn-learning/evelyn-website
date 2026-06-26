@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
-import { GradeFreeResponseRequestSchema } from '@/lib/portal-contract/v1';
+import { GradeFreeResponseRequestSchema } from '@evelyn/portal-contract/v1';
 import { gradeFreeResponse, defaultGradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { resolveGradeItem } from '@/lib/tutor/portal/adapters';
 
