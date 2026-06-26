@@ -429,6 +429,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'nutrient_cycle', 'neuron_diagram', 'brain_regions',
             // Phase 14 — conic sections
             'conic_sections',
+            // Phase 15 — 3D / spatial figures
+            'solid_of_revolution',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

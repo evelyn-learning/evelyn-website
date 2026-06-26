@@ -170,6 +170,10 @@ import {
   buildConicSectionsManifest,
   solveConicSections as solveConicSectionsForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/conic-sections';
+import {
+  buildSolidOfRevolutionManifest,
+  solveSolidOfRevolution as solveSolidOfRevolutionForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/solid-of-revolution';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1284,6 +1288,12 @@ function buildDiagramManifest(cmd: {
     case 'conic_sections': {
       try {
         return buildConicSectionsManifest(solveConicSectionsForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'solid_of_revolution': {
+      try {
+        return buildSolidOfRevolutionManifest(solveSolidOfRevolutionForManifest(params));
       } catch { /* fall through */ }
       break;
     }

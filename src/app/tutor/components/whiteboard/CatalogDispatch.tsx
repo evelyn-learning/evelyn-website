@@ -76,6 +76,7 @@ import { ClimateDiagramRenderer } from './ClimateDiagramRenderer';
 import { CatalogNutrientCycleRenderer } from './CatalogNutrientCycleRenderer';
 import { CatalogNeuronDiagramRenderer, CatalogBrainRegionsRenderer } from './CatalogAnatomyRenderers';
 import { CatalogConicSectionsRenderer } from './CatalogConicSectionsRenderer';
+import { CatalogSolidOfRevolutionRenderer } from './CatalogSolidOfRevolutionRenderer';
 
 interface Props {
   kind: string;
@@ -170,6 +171,8 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'brain_regions':              return <CatalogBrainRegionsRenderer figure={figure} />;
     // Phase 14 — conic sections
     case 'conic_sections':             return <CatalogConicSectionsRenderer figure={figure} />;
+    // Phase 15 — 3D / spatial
+    case 'solid_of_revolution':        return <CatalogSolidOfRevolutionRenderer figure={figure} />;
 
     default:
       return (

@@ -1,0 +1,6 @@
+{ "tool": "show_diagram", "args": { "type": "solid_of_revolution", "params": {
+  "title": "Volume by Washers: region between y = x and y = x² revolved about the x-axis",
+  "funcLabel": "y = x", "innerLabel": "y = x²", "axis": "x", "method": "washer", "representativeAt": 0.5,
+  "outer": [[0,0],[0.2,0.2],[0.4,0.4],[0.6,0.6],[0.8,0.8],[1,1]],
+  "inner": [[0,0],[0.2,0.04],[0.4,0.16],[0.6,0.36],[0.8,0.64],[1,1]]
+} }, "label": "authored-solid-washer" }

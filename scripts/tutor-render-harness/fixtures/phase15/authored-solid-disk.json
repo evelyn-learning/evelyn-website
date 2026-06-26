@@ -1,0 +1,5 @@
+{ "tool": "show_diagram", "args": { "type": "solid_of_revolution", "params": {
+  "title": "Volume by Disks: y = √x revolved about the x-axis",
+  "funcLabel": "y = √x", "axis": "x", "method": "disk", "representativeAt": 2.5,
+  "outer": [[0,0],[0.5,0.71],[1,1],[1.5,1.22],[2,1.41],[2.5,1.58],[3,1.73],[3.5,1.87],[4,2]]
+} }, "label": "authored-solid-disk" }

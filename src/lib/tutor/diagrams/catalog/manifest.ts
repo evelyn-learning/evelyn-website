@@ -77,6 +77,7 @@ import {
 import { solveNutrientCycle } from './kinds/nutrient-cycle';
 import { solveNeuronDiagram, solveBrainRegions } from './kinds/anatomy';
 import { solveConicSections } from './kinds/conic-sections';
+import { solveSolidOfRevolution } from './kinds/solid-of-revolution';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -182,6 +183,9 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 14 — conic sections ──────────────────────────────────────────
   { kind: 'conic_sections', displayName: 'Conic Sections (cone slices)', whenToUse: 'Show the four conic sections as slices of a double cone — the "one cone, four shapes" figure (circle, ellipse, parabola, hyperbola, each from a plane at a different angle). ALWAYS use this for the cone-slicing illustration instead of a freehand sketch (a rough doodle of a sliced 3D cone is unreadable). Not for plotting a single conic curve — for that use show_function_graph / show_geometry.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'slices?:[circle|ellipse|parabola|hyperbola] (default all four; pass a subset to show only some), highlight?:circle|ellipse|parabola|hyperbola (emphasize one), title?' },
+
+  // ── Phase 15 — 3D / spatial figures ────────────────────────────────────
+  { kind: 'solid_of_revolution', displayName: 'Solid of Revolution', whenToUse: 'Show a 2D region revolved about an axis to form a 3D solid, with a representative disk / washer / shell slice (AP Calc BC volumes). Use this for the 3D solid — a rough sketch cannot draw a surface of revolution. Pre-sample the bounding curve as the radius profile (like riemann_sum).', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'outer:[[u,r]…] (radius profile along the axis — u is the position along the axis of revolution, r≥0 the distance from it; ~15-25 samples; tuple form), inner?:[[u,r]…] (inner radius ⇒ washer/hollow), axis?:x|y (default x), method?:disk|washer|shell (default washer if inner else disk), representativeAt?:number (axis coord of the highlighted slice; default midpoint), funcLabel?:string e.g. "y = √x", innerLabel?:string, axisLabel?:string, title?' },
 ];
 
 /** Solver dispatch table. */
@@ -271,6 +275,8 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   brain_regions: solveBrainRegions,
   // Phase 14 — conic sections
   conic_sections: solveConicSections,
+  // Phase 15 — 3D / spatial
+  solid_of_revolution: solveSolidOfRevolution,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
