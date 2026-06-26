@@ -1,25 +1,26 @@
 {
-  "tool": "show_function_graph",
-  "args": {
-    "title": "Cardioid: r = 2 + 2cos(θ)",
-    "functions": [
-      {
-        "expr": "\\sqrt{x^2+y^2} - 2 - 2*(x/\\sqrt{x^2+y^2})",
-        "label": "r = 2 + 2cos(θ)",
-        "color": "blue"
-      }
-    ],
-    "xRange": [
-      -5,
-      5
-    ],
-    "yRange": [
-      -4,
-      4
-    ],
-    "xLabel": "x",
-    "yLabel": "y"
-  },
-  "label": "harvested-show-function-graph",
-  "_source": "polar-coordinates"
+ "tool": "show_function_graph",
+ "args": {
+  "title": "Cardioid: r = 2 + 2cos(θ)",
+  "functions": [
+   {
+    "expr": "\\sqrt{x^2+y^2} - 2 - 2*(x/\\sqrt{x^2+y^2})",
+    "label": "r = 2 + 2cos(θ)",
+    "color": "blue"
+   }
+  ],
+  "xRange": [
+   -5,
+   5
+  ],
+  "yRange": [
+   -4,
+   4
+  ],
+  "xLabel": "x",
+  "yLabel": "y"
+ },
+ "label": "harvested-show-function-graph (polar emission bug — now caught by guard)",
+ "_source": "polar-coordinates",
+ "expect": "rejected"
 }

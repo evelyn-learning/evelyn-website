@@ -17,7 +17,7 @@ Third course, and the first to test the **Desmos-faithful** graph path
 
 ## Real findings
 
-### 1. Emission bug — the brain draws polar curves the wrong way (CONTENT)
+### 1. Emission bug — the brain draws polar curves the wrong way — ADDRESSED
 Asked to "graph the polar curve r = 2 + 2cos(θ)", the brain emitted
 `show_function_graph` with a **Cartesian-implicit** expression
 (`\sqrt{x^2+y^2} - 2 - 2(x/\sqrt{x^2+y^2})`) in a **y=f(x)** slot. Desmos then
@@ -27,6 +27,14 @@ fixture), so this is a **tool-selection / prompt** issue: for polar curves the
 brain should use `show_diagram(polar_graph)` (or Desmos native `r = …` polar),
 not a Cartesian-implicit `show_function_graph`. Surfaced precisely because the
 harness now tests the real Desmos path.
+
+**Fix (generic, two layers):** (a) a `show_function_graph` tooldef nudge —
+"for a polar curve use `polar_graph`; `functions`/`functionsOfY` are Cartesian
+only"; (b) a deterministic guard `validateFunctionGraphVars` (in the orchestrator
++ the harness seam) that **rejects** a `y=f(x)` `functions` expression containing
+a standalone `y` or `θ` (it isn't a function of x), with a hint to use
+`polar_graph`. So instead of silently rendering garbage, the brain gets a
+specific retry hint. Unit-tested (`test:process-tool-call`).
 
 ### 2. Two cosmetic label-collision nits — FIXED
 - `riemann_sum` midpoint (v2): the method/area metadata overlapped the rising

@@ -25,7 +25,7 @@ import { validateToolCall } from './validate-tool-call';
 import { validateGeometryCommand, type GeometryCommand } from './geometry-validator';
 import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
-import { validateGraphLinearConsistency } from './graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars } from './graph-consistency-validator';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from './conic-construction';
 import { validateCircuit } from '../diagrams/circuit-validator';
 import { validateCollision } from '../diagrams/collision-validator';
@@ -229,6 +229,10 @@ export function processToolCall(
   }
   if (a === 'showGraph' && c.data) {
     const original = c.data;
+    // A y=f(x) `functions` entry must be a function of x — reject a polar curve
+    // converted to a Cartesian-implicit form stuffed into `functions`.
+    const vars = validateFunctionGraphVars(original);
+    if (!vars.ok) return { ok: false, reason: vars.reason };
     const afterConic = validateConicGraph(original);
     const afterIntersections = validateIntersectionPoints(afterConic);
     const afterLinear = validateGraphLinearConsistency(afterIntersections);

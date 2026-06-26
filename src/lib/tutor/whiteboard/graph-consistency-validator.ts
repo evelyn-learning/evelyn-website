@@ -28,6 +28,30 @@ interface GraphLike {
   yRange?: [number, number];
 }
 
+/**
+ * Reject a y=f(x) `functions` entry whose expression isn't actually a function
+ * of x. The brain sometimes converts a polar curve r=f(θ) into a Cartesian-
+ * implicit form (e.g. `sqrt(x^2+y^2) - 2 - 2(x/sqrt(x^2+y^2))`) and stuffs it
+ * into `functions` (which expects y=f(x)), so it references `y` (or θ) and
+ * renders as garbage (a parabola, not the cardioid). Generic, eval-free: any
+ * standalone `y` or a `θ` in a y=f(x) expression is a wrong-slot / wrong-tool
+ * signal — steer to show_diagram(polar_graph) or functionsOfY.
+ */
+export function validateFunctionGraphVars(
+  data: { functions?: Array<{ expr?: string; latex?: string; fn?: string }> },
+): { ok: true } | { ok: false; reason: string } {
+  for (const fn of data.functions ?? []) {
+    const e = fn.expr || fn.latex || fn.fn || '';
+    if (/\\theta\b|θ/.test(e)) {
+      return { ok: false, reason: `show_function_graph: the expression "${e}" uses θ — that is a POLAR curve r=f(θ). Use show_diagram(type: "polar_graph") with a {theta, r} point array; do not put a polar curve in \`functions\` (which is y=f(x)).` };
+    }
+    if (/(?<![A-Za-z\\])y(?![A-Za-z])/.test(e)) {
+      return { ok: false, reason: `show_function_graph: a \`functions\` entry is y=f(x), but its expression "${e}" references y, so it is not a function of x. For a POLAR curve use show_diagram(type: "polar_graph"); for x=f(y) use \`functionsOfY\`; do not stuff an implicit/polar relation into \`functions\`.` };
+    }
+  }
+  return { ok: true };
+}
+
 /** Parse a simple straight line `m*x + b` (or LaTeX `mx+b`) → {m,b}. Returns
  *  null for anything that isn't a recognizable degree-1 line in x (powers,
  *  other variables, functions, fractions all disqualify). Eval-free. */

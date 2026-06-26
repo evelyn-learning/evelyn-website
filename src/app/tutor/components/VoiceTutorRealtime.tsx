@@ -31,7 +31,7 @@ import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
-import { validateGraphLinearConsistency } from '@/lib/tutor/whiteboard/graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import {
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
@@ -3116,6 +3116,16 @@ export function VoiceTutorRealtime({
       }
       if (cmd.action === 'showGraph' && (cmd as any).data) {
         const original = (cmd as any).data;
+        // A y=f(x) `functions` entry must be a function of x. Reject a polar
+        // curve r=f(θ) that the brain converted to a Cartesian-implicit form and
+        // stuffed into `functions` (renders garbage) — steer it to polar_graph.
+        const varsCheck = validateFunctionGraphVars(original);
+        if (!varsCheck.ok) {
+          console.warn('[VoiceTutorRealtime] showGraph wrong-variable:', varsCheck.reason);
+          onDebugEvent?.('tool_call', `Rejected show_function_graph: ${varsCheck.reason}`);
+          rejected.push({ action: 'show_function_graph', reason: varsCheck.reason });
+          return [];
+        }
         // Fix conic section math (focus, directrix, etc.) using exact formulas.
         const afterConic = validateConicGraph(original);
         // Drop mislabeled "intersection" points (e.g. a parabola's vertex

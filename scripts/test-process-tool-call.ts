@@ -65,6 +65,15 @@ check('show_problem short statement → rejected', () => {
   const r = processToolCall('show_problem', { problem: { statement: 'hi' } });
   assert.equal(r.ok, false);
 });
+check('show_function_graph polar-as-Cartesian-implicit (expr has y) → rejected', () => {
+  const r = processToolCall('show_function_graph', { functions: [{ expr: '\\sqrt{x^2+y^2} - 2 - 2*(x/\\sqrt{x^2+y^2})', label: 'cardioid' }], xRange: [-5, 5], yRange: [-4, 4] });
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.match(r.reason, /polar_graph|references y/i);
+});
+check('show_function_graph plain y=f(x) cubic → ok', () => {
+  const r = processToolCall('show_function_graph', { functions: [{ expr: 'x^3 - 3x', label: 'f' }], xRange: [-3, 3], yRange: [-4, 4] });
+  assert.equal(r.ok, true);
+});
 check('curve-less conic (no prior) → rejected with hint', () => {
   const r = processToolCall('show_geometry_constructed', {
     title: 'Ellipse with directrices',
