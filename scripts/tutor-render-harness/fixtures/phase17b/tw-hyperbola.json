@@ -1,0 +1,3 @@
+{ "tool":"show_geometry_constructed","args":{"given":[{"kind":"point","id":"C","x":0,"y":0}],
+  "steps":[{"kind":"hyperbola","id":"hy","center":"C","a":4,"b":3},
+           {"kind":"tangent_with_slope","id":"tw","on":"hy","slope":2,"which":"both","label":"hyperbola tangents, slope 2"}]},"label":"tw-hyperbola" }

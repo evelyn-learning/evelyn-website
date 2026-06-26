@@ -1,0 +1,4 @@
+{ "tool":"show_geometry_constructed","args":{"given":[
+  {"kind":"point","id":"A","x":-5,"y":-3},{"kind":"circle","id":"a","center":"A","radius":2.5},
+  {"kind":"point","id":"B","x":5,"y":3},{"kind":"circle","id":"b","center":"B","radius":2}],
+  "steps":[{"kind":"common_tangent","id":"ct","of":["a","b"],"which":"internal","label":"internal tangents (tilted)"}]},"label":"ct-tilted" }

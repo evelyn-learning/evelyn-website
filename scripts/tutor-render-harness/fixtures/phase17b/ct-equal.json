@@ -1,0 +1,4 @@
+{ "tool":"show_geometry_constructed","args":{"given":[
+  {"kind":"point","id":"A","x":-6,"y":0},{"kind":"circle","id":"a","center":"A","radius":3},
+  {"kind":"point","id":"B","x":6,"y":0},{"kind":"circle","id":"b","center":"B","radius":3}],
+  "steps":[{"kind":"common_tangent","id":"ct","of":["a","b"],"which":"both","label":"equal-radii common tangents"}]},"label":"ct-equal" }

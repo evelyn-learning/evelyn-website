@@ -1,0 +1,3 @@
+{ "tool":"show_geometry_constructed","args":{"given":[{"kind":"point","id":"V","x":0,"y":0}],
+  "steps":[{"kind":"parabola","id":"par","vertex":"V","focalLength":2,"opens":"up"},
+           {"kind":"tangent_with_slope","id":"tw","on":"par","slope":1,"label":"slope 1 tangent (opens up)"}]},"label":"tw-parab-up" }
