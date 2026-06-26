@@ -80,6 +80,7 @@ import { CatalogSolidOfRevolutionRenderer } from './CatalogSolidOfRevolutionRend
 import { CatalogSolid3DRenderer } from './CatalogSolid3DRenderer';
 import { CatalogVectors3DRenderer } from './CatalogVectors3DRenderer';
 import { CatalogVseprRenderer } from './CatalogVseprRenderer';
+import { CatalogFieldLinesRenderer } from './CatalogFieldLinesRenderer';
 
 interface Props {
   kind: string;
@@ -179,6 +180,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'solid_3d':                   return <CatalogSolid3DRenderer figure={figure} />;
     case 'vectors_3d':                 return <CatalogVectors3DRenderer figure={figure} />;
     case 'vsepr_geometry':             return <CatalogVseprRenderer figure={figure} />;
+    case 'field_lines':                return <CatalogFieldLinesRenderer figure={figure} />;
 
     default:
       return (

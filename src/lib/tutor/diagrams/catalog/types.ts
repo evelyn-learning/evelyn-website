@@ -102,7 +102,8 @@ export type DiagramKindId =
   | 'solid_of_revolution'
   | 'solid_3d'
   | 'vectors_3d'
-  | 'vsepr_geometry';
+  | 'vsepr_geometry'
+  | 'field_lines';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

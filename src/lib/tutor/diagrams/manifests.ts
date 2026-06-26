@@ -186,6 +186,10 @@ import {
   buildVseprManifest,
   solveVseprGeometry as solveVseprForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/vsepr';
+import {
+  buildFieldLinesManifest,
+  solveFieldLines as solveFieldLinesForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/field-lines';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1324,6 +1328,12 @@ function buildDiagramManifest(cmd: {
     case 'vsepr_geometry': {
       try {
         return buildVseprManifest(solveVseprForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'field_lines': {
+      try {
+        return buildFieldLinesManifest(solveFieldLinesForManifest(params));
       } catch { /* fall through */ }
       break;
     }
