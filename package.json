@@ -21,6 +21,7 @@
     "test:portal-ced": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-ced-validator.ts",
     "test:portal-endpoints": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-endpoints.ts",
     "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints",
+    "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
     "test:page-grouping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-grouping.ts",
