@@ -178,6 +178,10 @@ import {
   buildSolid3DManifest,
   solveSolid3D as solveSolid3DForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/solid-3d';
+import {
+  buildVectors3DManifest,
+  solveVectors3D as solveVectors3DForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/vectors-3d';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1304,6 +1308,12 @@ function buildDiagramManifest(cmd: {
     case 'solid_3d': {
       try {
         return buildSolid3DManifest(solveSolid3DForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'vectors_3d': {
+      try {
+        return buildVectors3DManifest(solveVectors3DForManifest(params));
       } catch { /* fall through */ }
       break;
     }

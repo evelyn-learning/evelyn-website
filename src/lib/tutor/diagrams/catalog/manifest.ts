@@ -79,6 +79,7 @@ import { solveNeuronDiagram, solveBrainRegions } from './kinds/anatomy';
 import { solveConicSections } from './kinds/conic-sections';
 import { solveSolidOfRevolution } from './kinds/solid-of-revolution';
 import { solveSolid3D } from './kinds/solid-3d';
+import { solveVectors3D } from './kinds/vectors-3d';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -187,6 +188,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 15 — 3D / spatial figures ────────────────────────────────────
   { kind: 'solid_of_revolution', displayName: 'Solid of Revolution', whenToUse: 'Show a 2D region revolved about an axis to form a 3D solid, with a representative disk / washer / shell slice (AP Calc BC volumes). Use this for the 3D solid — a rough sketch cannot draw a surface of revolution. Pre-sample the bounding curve as the radius profile (like riemann_sum).', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'outer:[[u,r]…] (radius profile along the axis — u is the position along the axis of revolution, r≥0 the distance from it; ~15-25 samples; tuple form), inner?:[[u,r]…] (inner radius ⇒ washer/hollow), axis?:x|y (default x), method?:disk|washer|shell (default washer if inner else disk), representativeAt?:number (axis coord of the highlighted slice; default midpoint), funcLabel?:string e.g. "y = √x", innerLabel?:string, axisLabel?:string, title?' },
+  { kind: 'vectors_3d', displayName: '3D Vectors / Axes', whenToUse: 'Show a 3D coordinate system (isometric) with vectors, points, an optional line (r = p + t·d) and an optional plane (point + normal). For IB AA / JEE / multivariable 3D vectors & geometry — a 2D vector tool and a freehand sketch cannot represent 3D space.', subjects: ['math'], grades: { from: 10, to: 12 }, paramSchema: 'vectors?:[{to:[x,y,z], from?:[x,y,z] (default origin), label?, color?}], points?:[{at:[x,y,z], label?, color?}], line?:{point:[x,y,z], dir:[x,y,z], label?}, plane?:{point:[x,y,z], normal:[x,y,z], label?}, axisRange?:number (auto from data), title?' },
   { kind: 'solid_3d', displayName: '3D Solid (labeled)', whenToUse: 'Show a labeled 3D solid in oblique projection with dimension labels — a cube, rectangular prism, triangular prism, cylinder, cone, sphere, or square pyramid. Use for volume / surface-area work instead of a freehand sketch (a doodled 3D solid is unreadable).', subjects: ['math'], grades: { from: 4, to: 12 }, paramSchema: 'shape:cube|rectangular_prism|triangular_prism|cylinder|cone|sphere|square_pyramid, dims:{ … shape-specific: cube{side}; rectangular_prism{length,width,height}; triangular_prism{base,triHeight,length}; cylinder{radius,height}; cone{radius,height}; sphere{radius}; square_pyramid{base,height} }, title?' },
 ];
 
@@ -280,6 +282,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 15 — 3D / spatial
   solid_of_revolution: solveSolidOfRevolution,
   solid_3d: solveSolid3D,
+  vectors_3d: solveVectors3D,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

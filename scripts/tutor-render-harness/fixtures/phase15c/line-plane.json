@@ -1,0 +1,6 @@
+{ "tool":"show_diagram","args":{"type":"vectors_3d","params":{
+  "title":"Line and Plane in 3D",
+  "line":{"point":[-2,2,0],"dir":[2,-1,1],"label":"ℓ"},
+  "plane":{"point":[0,0,1],"normal":[1,2,3],"label":"Π"},
+  "vectors":[{"to":[1,2,3],"from":[0,0,1],"label":"n","color":"#9333ea"}]
+}},"label":"line-plane" }
