@@ -93,6 +93,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
       data-feature-label={title || 'AD/AS'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {shift && <div className="text-xs italic text-gray-600 -mt-1 mb-2">{shift.label ?? `${shift.curve} shifts ${shift.direction}`}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Axes */}
         <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />
@@ -247,19 +248,6 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
           Price Level
         </text>
 
-        {/* Shift arrow + label (top-right) */}
-        {shift && (
-          <text
-            x={PAD_L + plotW - 6}
-            y={PAD_T + 14}
-            fontSize={11}
-            fill="#374151"
-            textAnchor="end"
-            fontStyle="italic"
-          >
-            {shift.label ?? `${shift.curve} shifts ${shift.direction}`}
-          </text>
-        )}
       </svg>
     </div>
   );

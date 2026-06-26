@@ -28,37 +28,78 @@ interface ToolCall { name: string; args: Record<string, unknown> }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function log(m: string) { console.log(`[harvest] ${m}`); }
 
-// ---- Macro harvest config (scripted, tool-targeted) ----
-const START = { subject: 'social-studies', level: 'AP', topic: 'ap-macroeconomics', studentName: 'Harvest' };
-// Each session: turn 1 draws the BASE diagram; turn 2 asks for the DYNAMIC
-// SHIFT (the more bug-prone param path). Both raw emissions are harvested.
-const SESSIONS: Array<{ plan: string; says: string[] }> = [
-  { plan: 'evelyn.ap.macro.equilibrium-ad-as.v1', says: [
-    'Draw the AD-AS diagram showing long-run equilibrium.',
-    'Now show what happens when aggregate demand increases — shift AD to the right and mark the new equilibrium.' ] },
-  { plan: 'evelyn.ap.macro.money-market.v1', says: [
-    'Draw the money market graph.',
-    'Now show what happens when the Fed increases the money supply — shift MS right and mark the new lower interest rate.' ] },
-  { plan: 'evelyn.ap.macro.loanable-funds-market.v1', says: [
-    'Draw the loanable funds market.',
-    'Now show crowding out — a large government deficit raises the demand for loanable funds and pushes the real interest rate up.' ] },
-  { plan: 'evelyn.ap.macro.phillips-curve.v1', says: [
-    'Draw the short-run Phillips curve.',
-    'Now add the long-run Phillips curve (vertical at the natural rate) and show what happens when inflation expectations rise — shift the short-run Phillips curve up.' ] },
-  { plan: 'evelyn.ap.macro.ppc.v1', says: [
-    'Draw a production possibilities curve and mark an efficient point, an inefficient point, and an unattainable point.',
-    'Now show economic growth — shift the production possibilities curve outward.' ] },
-  { plan: 'evelyn.ap.macro.fx-market.v1', says: [
-    'Draw the foreign exchange market for the US dollar.',
-    'Now show the dollar appreciating — shift the demand for dollars to the right and mark the new exchange rate.' ] },
-  { plan: 'evelyn.ap.macro.business-cycle.v1', says: [
-    'Show the business cycle diagram with expansion, peak, recession, and trough.' ] },
-];
-const EXPECTED = [
-  'show_diagram:aggregate_demand_supply', 'show_diagram:money_market', 'show_diagram:loanable_funds',
-  'show_diagram:phillips_curve', 'show_diagram:foreign_exchange_market', 'show_diagram:production_possibilities',
-  'show_diagram:business_cycle', 'show_equation', 'show_table',
-];
+// ---- per-course harvest configs (scripted, tool-targeted) ----
+// Each session: a BASE turn, then (where meaningful) a follow-up turn that
+// exercises a related/dynamic render — the more bug-prone param path.
+interface CourseConfig {
+  start: { subject: string; level: string; topic: string; studentName: string };
+  idPrefix: string;
+  sessions: Array<{ plan: string; says: string[] }>;
+  expected: string[];
+}
+const COURSES: Record<string, CourseConfig> = {
+  macro: {
+    start: { subject: 'social-studies', level: 'AP', topic: 'ap-macroeconomics', studentName: 'Harvest' },
+    idPrefix: 'evelyn.ap.macro.',
+    sessions: [
+      { plan: 'evelyn.ap.macro.equilibrium-ad-as.v1', says: [
+        'Draw the AD-AS diagram showing long-run equilibrium.',
+        'Now show what happens when aggregate demand increases — shift AD to the right and mark the new equilibrium.' ] },
+      { plan: 'evelyn.ap.macro.money-market.v1', says: [
+        'Draw the money market graph.',
+        'Now show what happens when the Fed increases the money supply — shift MS right and mark the new lower interest rate.' ] },
+      { plan: 'evelyn.ap.macro.loanable-funds-market.v1', says: [
+        'Draw the loanable funds market.',
+        'Now show crowding out — a large government deficit raises the demand for loanable funds and pushes the real interest rate up.' ] },
+      { plan: 'evelyn.ap.macro.phillips-curve.v1', says: [
+        'Draw the short-run Phillips curve.',
+        'Now add the long-run Phillips curve (vertical at the natural rate) and show what happens when inflation expectations rise — shift the short-run Phillips curve up.' ] },
+      { plan: 'evelyn.ap.macro.ppc.v1', says: [
+        'Draw a production possibilities curve and mark an efficient point, an inefficient point, and an unattainable point.',
+        'Now show economic growth — shift the production possibilities curve outward.' ] },
+      { plan: 'evelyn.ap.macro.fx-market.v1', says: [
+        'Draw the foreign exchange market for the US dollar.',
+        'Now show the dollar appreciating — shift the demand for dollars to the right and mark the new exchange rate.' ] },
+      { plan: 'evelyn.ap.macro.business-cycle.v1', says: [
+        'Show the business cycle diagram with expansion, peak, recession, and trough.' ] },
+    ],
+    expected: [
+      'show_diagram:aggregate_demand_supply', 'show_diagram:money_market', 'show_diagram:loanable_funds',
+      'show_diagram:phillips_curve', 'show_diagram:foreign_exchange_market', 'show_diagram:production_possibilities',
+      'show_diagram:business_cycle', 'show_equation', 'show_table',
+    ],
+  },
+  stats: {
+    start: { subject: 'math', level: 'AP', topic: 'ap-stats', studentName: 'Harvest' },
+    idPrefix: 'evelyn.ap.stats.',
+    sessions: [
+      { plan: 'evelyn.ap.stats.quantitative-graphs.v1', says: [
+        'Make a histogram of a sample of 40 exam scores.',
+        'Now show the same data as a dotplot.' ] },
+      { plan: 'evelyn.ap.stats.normal-distribution.v1', says: [
+        'Draw a normal distribution curve.',
+        'Now shade the region within one standard deviation of the mean.' ] },
+      { plan: 'evelyn.ap.stats.summary-statistics.v1', says: [
+        'Make a boxplot of a sample of data and mark the five-number summary.' ] },
+      { plan: 'evelyn.ap.stats.scatterplots.v1', says: [
+        'Make a scatterplot of height versus weight for a sample of students.' ] },
+      { plan: 'evelyn.ap.stats.linear-regression.v1', says: [
+        'Make a scatterplot of the data and add the least-squares regression line.' ] },
+      { plan: 'evelyn.ap.stats.two-categorical-relationships.v1', says: [
+        'Make a two-way table of survey responses (likes coffee: yes/no) by class year.' ] },
+      { plan: 'evelyn.ap.stats.probability-basics.v1', says: [
+        'Draw a probability tree for flipping a fair coin twice.',
+        'Now draw a Venn diagram for two events A and B that can overlap.' ] },
+    ],
+    expected: [
+      'show_stats', 'show_diagram:normal_curve', 'show_diagram:scatterplot_regression', 'show_diagram:histogram',
+      'show_scatter_plot', 'show_table', 'show_tree', 'show_venn_diagram', 'show_equation',
+    ],
+  },
+};
+const course = process.argv.find((a, i) => i >= 2 && !a.startsWith('-')) || '';
+const cfg = COURSES[course];
+if (!cfg) { console.error(`Usage: npm run test:render-harvest -- <course>  (known: ${Object.keys(COURSES).join(', ')})`); process.exit(1); }
 
 /** identity used for dedup/reconcile — show_diagram is keyed by its kind. */
 function ident(c: ToolCall): string {
@@ -68,7 +109,7 @@ function ident(c: ToolCall): string {
 function safeName(id: string): string { return id.replace(/[^a-z0-9]+/gi, '-'); }
 
 async function main() {
-  const fixturesDir = path.join(__dirname, 'fixtures', 'macro');
+  const fixturesDir = path.join(__dirname, 'fixtures', course);
   fs.mkdirSync(fixturesDir, { recursive: true });
 
   const browser = await chromium.launch({
@@ -96,8 +137,8 @@ async function main() {
 
   const allCalls: Array<ToolCall & { session: string }> = [];
 
-  for (const sess of SESSIONS) {
-    const label = sess.plan.replace('evelyn.ap.macro.', '').replace('.v1', '');
+  for (const sess of cfg.sessions) {
+    const label = sess.plan.replace(cfg.idPrefix, '').replace('.v1', '');
     log(`session: ${label}`);
     try {
       let navOk = false;
@@ -109,7 +150,7 @@ async function main() {
         } catch (e) { log(`  ! nav attempt ${attempt + 1} failed: ${e instanceof Error ? e.message : String(e)}`); }
       }
       if (!navOk) { log('  ! could not load /tutor — skipping'); continue; }
-      await page.evaluate((cfg) => window.__tutorTestStart(cfg), { ...START, lessonPlanId: sess.plan });
+      await page.evaluate((c) => window.__tutorTestStart(c), { ...cfg.start, lessonPlanId: sess.plan });
       // wait for connect
       const cd = Date.now() + 60_000;
       while (Date.now() < cd && !(await getState()).connected) await sleep(500);
@@ -161,23 +202,23 @@ async function main() {
   }
 
   const fired = [...new Set([...seen.values()].map(ident))];
-  const missing = EXPECTED.filter((e) => !fired.includes(e));
-  const unexpected = fired.filter((f) => !EXPECTED.includes(f));
+  const missing = cfg.expected.filter((e) => !fired.includes(e));
+  const unexpected = fired.filter((f) => !cfg.expected.includes(f));
   const report = {
-    course: 'macro', sessions: SESSIONS.length, totalToolCalls: allCalls.length,
-    expected: EXPECTED, fired, missing, unexpected,
+    course, sessions: cfg.sessions.length, totalToolCalls: allCalls.length,
+    expected: cfg.expected, fired, missing, unexpected,
     variantsPerIdent: Object.fromEntries(variantsPerIdent),
     fixturesWritten: written,
   };
   fs.writeFileSync(path.join(fixturesDir, '_harvest-report.json'), JSON.stringify(report, null, 2) + '\n');
 
-  log('\n===== HARVEST RECONCILE (Macro) =====');
-  log(`tool calls captured: ${allCalls.length} across ${SESSIONS.length} sessions`);
+  log(`\n===== HARVEST RECONCILE (${course}) =====`);
+  log(`tool calls captured: ${allCalls.length} across ${cfg.sessions.length} sessions`);
   log(`distinct tools/kinds fired (${fired.length}): ${fired.join(', ')}`);
   log(`variants captured per kind (base + shifted): ${[...variantsPerIdent.entries()].map(([k, v]) => `${k}×${v}`).join(', ')}`);
   log(`EXPECTED but NOT fired (${missing.length}): ${missing.join(', ') || '— none —'}`);
   log(`fired but NOT expected (${unexpected.length}): ${unexpected.join(', ') || '— none —'}`);
-  log(`fixtures written: ${written.length} → scripts/tutor-render-harness/fixtures/macro/`);
+  log(`fixtures written: ${written.length} → scripts/tutor-render-harness/fixtures/${course}/`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

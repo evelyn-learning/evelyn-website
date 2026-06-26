@@ -213,7 +213,11 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
         {points.map((p, i) => {
           const cx = xToPx(p.x);
           const cy = yToPx(p.y);
-          const fill = p.color || colorFor(p.position);
+          // Color by zone so dots always match the legend (on=green /
+          // inside=red / outside=orange). Ignore an arbitrary brain-supplied
+          // p.color (e.g. "blue" for a "before growth" point) that would
+          // otherwise put an unlabeled color on the board.
+          const fill = colorFor(p.position);
           return (
             <g
               key={`pt-${i}`}
