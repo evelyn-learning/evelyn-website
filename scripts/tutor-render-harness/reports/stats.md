@@ -20,18 +20,28 @@ for the data-viz tools, which is the reliable path for concept-heavy courses.
 | `show_venn_diagram` (3-set) | authored | ✅ excellent |
 | `show_table` (two-way) | harvested | ✅ excellent |
 | `show_diagram: comparison_table` | harvested | ✅ (concept table) |
-| `show_function_graph` (normal curve, LaTeX) | harvested | 🔴 **BUG — renders as a straight line** |
+| `show_function_graph` (normal curve, LaTeX) | harvested | ✅ fixed (was 🔴 straight line — see below) |
 
-## Bug found — `show_function_graph` mis-renders a LaTeX Gaussian (OPEN)
-The brain emitted a **correct** standard-normal density —
-`expr: "\frac{1}{\sqrt{2\pi}}e^{-x^2/2}"`, xRange [-4,4] — and the tool def says
-`functions` takes a "LaTeX expression in x." But it rendered as a **straight
-diagonal line**, not a bell curve. So the native function-graph renderer's
-LaTeX→plottable parser fails on this Gaussian form (`\frac` + `e^{...}`) and falls
-back to a line. Affects normal / exponential / any `\frac`+`e^{...}` curve drawn
-via `show_function_graph`. Found by the vision-judge (the deterministic gate
-passed it — it renders *something*, just wrong). Workaround in the wild: the
-`show_stats` distribution path renders normals correctly.
+## Bug found — `show_function_graph` LaTeX Gaussian rendered as a line — FIXED
+The brain emitted a **correct** standard-normal density
+(`expr: "\frac{1}{\sqrt{2\pi}}e^{-x^2/2}"`), but it rendered as a **straight
+diagonal line**. Found by the vision-judge (the deterministic gate passed it —
+it renders *something*, just wrong). Three compounding causes, all fixed:
+1. **Harness exposed it:** in production `showGraph` uses `DesmosGraphRenderer`
+   (which loads `window.Desmos` and handles LaTeX); the render-harness route has
+   no Desmos, so it hits the native **Mafs `GraphRenderer` fallback** — the path
+   that was broken.
+2. **Wrong field:** the Mafs renderer read `fn.fn || fn.latex` but the tool
+   schema's field is **`expr`** — so it never saw the expression and plotted the
+   default `'x'` (the diagonal line). Now reads `fn.expr` (added to the type).
+3. **LaTeX + a JS pitfall:** the normalizer didn't handle `\frac`/`\sqrt`/`^{…}`,
+   and `-x**2` is a JS SyntaxError ("unary before \*\*"). Added a LaTeX→plain
+   pre-pass and a `-x**2 → -(x**2)` wrap.
+
+The normalizer was extracted to `@/lib/tutor/whiteboard/math-expr` and unit-tested
+(`npm run test:graph-math`, 7 checks). The Mafs fallback now renders a correct
+bell curve. (This also fixes the fallback for any `-x^2`/LaTeX curve, and the
+Desmos primary path was already fine.)
 
 ## Other observations (not render defects)
 - **Harvest methodology limit:** concept-heavy plans absorb "draw X" utterances;
@@ -45,7 +55,8 @@ passed it — it renders *something*, just wrong). Workaround in the wild: the
 
 ## Final state
 - **Deterministic gate: 14/14 pass.**
-- **Vision-judge: 13/14 pass** (1 fail = the `show_function_graph` Gaussian bug).
+- **Vision-judge: 13/14 at audit time** — the 1 fail (`show_function_graph`
+  Gaussian) is now **fixed** and renders a correct bell curve (visually confirmed).
 - All purpose-built Stats viz tools (histogram, boxplot, dotplot, tree, Venn,
   distribution, scatter+LSRL, two-way table) render excellently.
 

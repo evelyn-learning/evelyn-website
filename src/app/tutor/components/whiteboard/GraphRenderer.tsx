@@ -18,6 +18,7 @@ import {
 } from 'mafs';
 import 'mafs/core.css';
 import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@/lib/knowledge/types';
+import { parseFunctionString, parseFunctionOfYString } from '@/lib/tutor/whiteboard/math-expr';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -26,56 +27,8 @@ interface GraphRendererProps {
   className?: string;
 }
 
-// Normalize a math expression string into evaluable JavaScript
-function normalizeMathExpression(fnStr: string, variable: string = 'x'): string {
-  let s = fnStr;
-  // t -> x for time-based expressions
-  if (variable === 'x') s = s.replace(/\bt\b/g, 'x');
-  // ^ -> ** for exponentiation
-  s = s.replace(/\^/g, '**');
-  // Common math functions (avoid double-prefixing Math.)
-  s = s.replace(/(?<!Math\.)(?<!\w)(sin|cos|tan|sqrt|abs|log)\b/g, 'Math.$1');
-  // Constants
-  s = s.replace(/\bpi\b/gi, 'Math.PI');
-  s = s.replace(/(?<![a-zA-Z.])e\b/g, 'Math.E');
-  // Fix "x2" or "y2" → "x**2" or "y**2" (digit after variable = exponent, not multiply)
-  // Pattern: variable followed by a single digit with no operator between
-  const v = variable;
-  s = s.replace(new RegExp(`\\b${v}(\\d)\\b`, 'g'), `${v}**$1`);
-  // Implicit multiplication: 2x → 2*x, 4Math → 4*Math, )( → )*(
-  s = s.replace(/(\d)([a-zA-Z(])/g, '$1*$2');
-  s = s.replace(/([)])(\d)/g, '$1*$2');
-  s = s.replace(/([)])\s*\(/g, '$1*(');
-  return s;
-}
-
-// Parse a function string like "2*t + 5" into an evaluable function of x
-function parseFunctionString(fnStr: string): (x: number) => number {
-  const processed = normalizeMathExpression(fnStr, 'x');
-
-  return (x: number) => {
-    try {
-      const result = new Function('x', `"use strict"; return ${processed}`)(x);
-      return typeof result === 'number' && isFinite(result) ? result : NaN;
-    } catch {
-      return NaN;
-    }
-  };
-}
-
-// Parse a function string like "y**3" into an evaluable function of y
-function parseFunctionOfYString(fnStr: string): (y: number) => number {
-  const processed = normalizeMathExpression(fnStr, 'y');
-
-  return (y: number) => {
-    try {
-      const result = new Function('y', `"use strict"; return ${processed}`)(y);
-      return typeof result === 'number' && isFinite(result) ? result : NaN;
-    } catch {
-      return NaN;
-    }
-  };
-}
+// Math-expression parsing (LaTeX → evaluable JS) lives in
+// @/lib/tutor/whiteboard/math-expr so it can be unit-tested headlessly.
 
 // Color palette for multiple functions
 const COLORS = [
@@ -109,7 +62,7 @@ export function GraphRenderer({
   const parsedFunctions = useMemo(() => {
     return functions.map((fn, index) => ({
       ...fn,
-      evaluator: parseFunctionString(fn.fn || fn.latex || 'x'),
+      evaluator: parseFunctionString(fn.expr || fn.latex || fn.fn || 'x'),
       color: fn.color || COLORS[index % COLORS.length],
     }));
   }, [functions]);
@@ -118,7 +71,7 @@ export function GraphRenderer({
   const parsedFunctionsOfY = useMemo(() => {
     return functionsOfY.map((fn, index) => ({
       ...fn,
-      evaluator: parseFunctionOfYString(fn.fn || fn.latex || 'y'),
+      evaluator: parseFunctionOfYString(fn.expr || fn.latex || fn.fn || 'y'),
       color: fn.color || COLORS[(functions.length + index) % COLORS.length],
     }));
   }, [functionsOfY, functions.length]);

@@ -438,6 +438,7 @@ export interface GraphData {
 }
 
 export interface GraphFunction {
+  expr?: string; // LaTeX expression in x — the show_function_graph tool's field
   fn?: string; // Legacy JS expression: "2*t + 5" or "-4.9*t^2 + 20*t"
   latex?: string; // LaTeX expression: "2t + 5" (preferred, used by Desmos)
   color?: string;
@@ -446,6 +447,7 @@ export interface GraphFunction {
 }
 
 export interface GraphFunctionOfY {
+  expr?: string; // LaTeX expression in y — the show_function_graph tool's field
   fn?: string; // Legacy JS expression: "y**3" or "3*y - 2"
   latex?: string; // LaTeX expression (preferred, used by Desmos)
   color?: string;
