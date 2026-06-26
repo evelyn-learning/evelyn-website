@@ -474,11 +474,18 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
   const PAD = 40;
   const BOX_W = 156;
   const BOX_H = 52; // taller to fit 2 lines of label
-  const minY = events[0].year;
-  const maxY = events[events.length - 1].year;
+  const years = events.map((e) => e.year);
+  const minY = Math.min(...years);
+  const maxY = Math.max(...years);
   const span = maxY - minY || 1;
   const usableW = W - PAD * 2;
-  const xOf = (y: number) => PAD + ((y - minY) / span) * usableW;
+  // Even spacing in author order when years aren't reliable (or degenerate),
+  // else proportional by year. Prevents the squish/overlap from a stray year-0.
+  const evenSpace = figure.evenSpace || maxY <= minY || events.length === 1;
+  const xOf = (e: { year: number }, i: number) =>
+    evenSpace
+      ? PAD + (events.length === 1 ? usableW / 2 : (i / (events.length - 1)) * usableW)
+      : PAD + ((e.year - minY) / span) * usableW;
   const baseY = 200;
   const altOffsets = [-100, 70, -70, 100, -80, 80];
   return (
@@ -505,7 +512,7 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
           <line x1={PAD} y1={baseY} x2={W - PAD} y2={baseY} stroke="#1f2937" strokeWidth={2} />
         </g>
         {events.map((e, i) => {
-          const x = xOf(e.year);
+          const x = xOf(e, i);
           const dy = altOffsets[i % altOffsets.length];
           // Clamp labelY so the BOX (52px tall, centered on labelY)
           // stays inside the SVG viewBox. Without this the bottom-alt

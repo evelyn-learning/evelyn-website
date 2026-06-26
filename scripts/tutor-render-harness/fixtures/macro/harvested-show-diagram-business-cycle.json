@@ -1,0 +1,16 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "business_cycle",
+    "params": {
+      "cycles": 1.5,
+      "amplitude": 0.18,
+      "showTrend": true,
+      "showOutputGap": false,
+      "labels": "all",
+      "title": "The Business Cycle"
+    }
+  },
+  "label": "harvested-show-diagram-business-cycle",
+  "_source": "business-cycle"
+}

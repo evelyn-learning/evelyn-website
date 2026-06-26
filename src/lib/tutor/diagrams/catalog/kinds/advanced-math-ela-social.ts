@@ -384,15 +384,32 @@ export interface TimelineEvent { date: string; year: number; label: string; desc
 export interface HistoricalTimelineFigure {
   events: TimelineEvent[];
   title?: string;
+  /** Space events evenly in author order instead of proportionally by year —
+   *  set when any date lacks a parseable year (e.g. "Today", "present"). */
+  evenSpace?: boolean;
 }
 export function solveHistoricalTimeline(params: Record<string, unknown>): HistoricalTimelineFigure {
   if (!Array.isArray(params.events) || params.events.length === 0) throw new Error('timeline: events required');
+  let anyImprecise = false;
   const events = (params.events as Array<Record<string, unknown>>).map((e, i) => {
     const date = typeof e.date === 'string' ? e.date : '';
     if (!date) throw new Error(`timeline: events[${i}].date required (e.g. "1776", "Jul 1776", "10 Jul 1776")`);
-    const year = typeof e.year === 'number' ? e.year : parseInt(date.match(/-?\d{1,4}/)?.[0] || '0', 10);
-    if (!Number.isFinite(year)) throw new Error(`timeline: events[${i}].year invalid`);
     if (typeof e.label !== 'string') throw new Error(`timeline: events[${i}].label required`);
+    // Year drives PROPORTIONAL spacing. Require a 3-4 digit run so "10 Jul
+    // 1776" parses to 1776 (not 10). A date with NO parseable year — "Today",
+    // "present", or a decade the brain phrased without digits — can't be placed
+    // proportionally: flag the whole timeline for EVEN spacing in the author's
+    // (chronological) order, and use the array index as a finite stand-in so
+    // min/max math stays well-defined. Fixes "Today" → year 0 → sorted to the
+    // front → the real events squished into a sliver and overlapping.
+    let year: number;
+    if (typeof e.year === 'number' && Number.isFinite(e.year)) {
+      year = e.year;
+    } else {
+      const m = date.match(/-?\d{3,4}/);
+      if (m) { year = parseInt(m[0], 10); }
+      else { year = i; anyImprecise = true; }
+    }
     return {
       date, year,
       label: e.label,
@@ -400,8 +417,14 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
       color: typeof e.color === 'string' ? e.color : undefined,
     };
   });
-  events.sort((a, b) => a.year - b.year);
-  return { events, title: typeof params.title === 'string' ? params.title : undefined };
+  // Sort by year ONLY when every date had a real year; otherwise preserve the
+  // author's order (already chronological) and space evenly.
+  if (!anyImprecise) events.sort((a, b) => a.year - b.year);
+  return {
+    events,
+    title: typeof params.title === 'string' ? params.title : undefined,
+    evenSpace: anyImprecise || undefined,
+  };
 }
 
 // ── sentence_diagram manifest (Phase 2b — SVG organizer) ──────────────────

@@ -1,0 +1,21 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "aggregate_demand_supply",
+    "params": {
+      "potentialGdp": 50,
+      "initialEquilibriumGdp": 50,
+      "initialPriceLevel": 50,
+      "showLras": true,
+      "labels": {
+        "ad": "AD",
+        "sras": "SRAS",
+        "lras": "LRAS",
+        "eqInitial": "E"
+      },
+      "title": "The AD-AS Model — Economy at a Glance"
+    }
+  },
+  "label": "harvested-show-diagram-aggregate-demand-supply-v1",
+  "_source": "equilibrium-ad-as"
+}

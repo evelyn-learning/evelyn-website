@@ -1,0 +1,40 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "production_possibilities",
+    "params": {
+      "xAxis": {
+        "label": "Wheat (bushels)",
+        "max": 200
+      },
+      "yAxis": {
+        "label": "Computers",
+        "max": 100
+      },
+      "curve": "linear",
+      "points": [
+        {
+          "x": 100,
+          "y": 50,
+          "label": "A (efficient)",
+          "position": "on"
+        },
+        {
+          "x": 60,
+          "y": 20,
+          "label": "B (inefficient)",
+          "position": "inside"
+        },
+        {
+          "x": 160,
+          "y": 80,
+          "label": "C (unattainable)",
+          "position": "outside"
+        }
+      ],
+      "title": "Production Possibilities Curve"
+    }
+  },
+  "label": "harvested-show-diagram-production-possibilities-v2",
+  "_source": "ppc"
+}

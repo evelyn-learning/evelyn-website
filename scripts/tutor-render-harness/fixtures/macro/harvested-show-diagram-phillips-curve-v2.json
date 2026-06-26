@@ -1,0 +1,21 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "phillips_curve",
+    "params": {
+      "nairu": 50,
+      "initialUnemployment": 35,
+      "initialInflation": 60,
+      "showLrpc": true,
+      "shift": {
+        "curve": "SRPC",
+        "direction": "up",
+        "magnitude": 15,
+        "label": "Higher inflation expectations"
+      },
+      "title": "Phillips Curve: SRPC Shift Up + LRPC"
+    }
+  },
+  "label": "harvested-show-diagram-phillips-curve-v2",
+  "_source": "phillips-curve"
+}

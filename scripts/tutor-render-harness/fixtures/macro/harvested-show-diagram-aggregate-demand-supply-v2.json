@@ -1,0 +1,21 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "aggregate_demand_supply",
+    "params": {
+      "potentialGdp": 50,
+      "initialEquilibriumGdp": 50,
+      "initialPriceLevel": 50,
+      "showLras": true,
+      "labels": {
+        "ad": "AD",
+        "sras": "SRAS",
+        "lras": "LRAS",
+        "eqInitial": "Long-Run Equilibrium"
+      },
+      "title": "AD-AS: Long-Run Equilibrium"
+    }
+  },
+  "label": "harvested-show-diagram-aggregate-demand-supply-v2",
+  "_source": "equilibrium-ad-as"
+}

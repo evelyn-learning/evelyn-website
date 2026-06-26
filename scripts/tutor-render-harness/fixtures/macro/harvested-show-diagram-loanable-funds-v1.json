@@ -1,0 +1,13 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "loanable_funds",
+    "params": {
+      "initialQuantity": 50,
+      "initialRealRate": 50,
+      "title": "Loanable Funds Market"
+    }
+  },
+  "label": "harvested-show-diagram-loanable-funds-v1",
+  "_source": "loanable-funds-market"
+}

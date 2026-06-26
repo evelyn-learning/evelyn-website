@@ -7497,6 +7497,13 @@ export function VoiceTutorRealtime({
                 } else if (ev.type === 'tool-call') {
                   let name = ev.name as string;
                   let args = (ev.args as Record<string, unknown>) || {};
+                  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+                    // Dev-only RAW tool-call capture for the render-harness fixture
+                    // harvester (scripts/tutor-render-harness/harvest.ts). Captured
+                    // here, before any prescribed-render substitution mutates name/args.
+                    const w = window as unknown as { __tutorToolCalls?: Array<{ name: string; args: Record<string, unknown> }> };
+                    (w.__tutorToolCalls ||= []).push({ name, args });
+                  }
                   toolNamesThisAttempt.push(name);
                   toolArgsThisAttempt.push(args);
                   totalToolNamesSeen.push(name);

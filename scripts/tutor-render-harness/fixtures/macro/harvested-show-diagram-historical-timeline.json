@@ -1,0 +1,37 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "historical_timeline",
+    "params": {
+      "title": "Origins of the Phillips Curve",
+      "events": [
+        {
+          "date": "1958",
+          "label": "A.W. Phillips' Observation",
+          "description": "UK data shows low unemployment → high inflation, and vice versa",
+          "color": "#6366f1"
+        },
+        {
+          "date": "1960s",
+          "label": "Policy Tool Era",
+          "description": "Economists and governments treat it as a stable menu of choices",
+          "color": "#10b981"
+        },
+        {
+          "date": "1970s",
+          "label": "Stagflation Crisis",
+          "description": "High inflation AND high unemployment — the simple curve breaks down",
+          "color": "#ef4444"
+        },
+        {
+          "date": "Today",
+          "label": "Short-run + Long-run",
+          "description": "Modern Phillips Curve has two versions — the difference drives monetary policy",
+          "color": "#f59e0b"
+        }
+      ]
+    }
+  },
+  "label": "harvested-show-diagram-historical-timeline",
+  "_source": "phillips-curve"
+}

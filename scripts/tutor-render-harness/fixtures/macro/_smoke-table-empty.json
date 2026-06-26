@@ -1,0 +1,1 @@
+{ "tool": "show_table", "args": { "headers": ["A"], "rows": [] }, "expect": "rejected", "label": "_smoke-table-empty (edge: should reject)" }

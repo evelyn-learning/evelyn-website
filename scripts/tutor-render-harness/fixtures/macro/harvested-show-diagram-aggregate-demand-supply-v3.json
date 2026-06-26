@@ -1,0 +1,28 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "aggregate_demand_supply",
+    "params": {
+      "potentialGdp": 50,
+      "initialEquilibriumGdp": 50,
+      "initialPriceLevel": 50,
+      "showLras": true,
+      "shift": {
+        "curve": "AD",
+        "direction": "right",
+        "magnitude": 12,
+        "label": "AD₂"
+      },
+      "labels": {
+        "eqInitial": "E₁ (LR Eq.)",
+        "eqFinal": "E₂ (SR Eq.)",
+        "ad": "AD₁",
+        "sras": "SRAS",
+        "lras": "LRAS"
+      },
+      "title": "AD Shift Right — Inflationary Gap"
+    }
+  },
+  "label": "harvested-show-diagram-aggregate-demand-supply-v3",
+  "_source": "equilibrium-ad-as"
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "foreign_exchange_market",
+    "params": {
+      "currency": "USD",
+      "quoteCurrency": "EUR",
+      "initialQuantity": 50,
+      "initialExchangeRate": 50,
+      "shift": {
+        "curve": "D",
+        "direction": "right",
+        "magnitude": 15,
+        "label": "D₂ (increased demand for USD)"
+      },
+      "title": "FX Market for USD — Demand Shift Right (Dollar Appreciates)"
+    }
+  },
+  "label": "harvested-show-diagram-foreign-exchange-market-v3",
+  "_source": "fx-market"
+}

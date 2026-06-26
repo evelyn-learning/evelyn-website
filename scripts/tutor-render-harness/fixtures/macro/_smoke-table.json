@@ -1,0 +1,1 @@
+{ "tool": "show_table", "args": { "headers": ["Phase", "Real GDP", "Unemployment"], "rows": [["Expansion", "Rising", "Falling"], ["Recession", "Falling", "Rising"]] } }

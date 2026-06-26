@@ -1,0 +1,15 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "phillips_curve",
+    "params": {
+      "nairu": 5,
+      "initialUnemployment": 5,
+      "initialInflation": 3,
+      "showLrpc": false,
+      "title": "Short-Run Phillips Curve (SRPC)"
+    }
+  },
+  "label": "harvested-show-diagram-phillips-curve-v1",
+  "_source": "phillips-curve"
+}

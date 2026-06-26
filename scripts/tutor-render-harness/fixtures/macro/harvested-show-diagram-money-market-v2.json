@@ -1,0 +1,19 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "money_market",
+    "params": {
+      "moneySupplyQuantity": 40,
+      "initialInterestRate": 60,
+      "shift": {
+        "curve": "Ms",
+        "direction": "right",
+        "magnitude": 15,
+        "label": "Fed ↑ Ms"
+      },
+      "title": "Money Market — Fed Increases Money Supply"
+    }
+  },
+  "label": "harvested-show-diagram-money-market-v2",
+  "_source": "money-market"
+}

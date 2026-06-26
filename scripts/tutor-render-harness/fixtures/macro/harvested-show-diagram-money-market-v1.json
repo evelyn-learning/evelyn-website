@@ -1,0 +1,13 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "money_market",
+    "params": {
+      "moneySupplyQuantity": 50,
+      "initialInterestRate": 50,
+      "title": "The Money Market"
+    }
+  },
+  "label": "harvested-show-diagram-money-market-v1",
+  "_source": "money-market"
+}

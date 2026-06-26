@@ -1,0 +1,15 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "foreign_exchange_market",
+    "params": {
+      "currency": "USD",
+      "quoteCurrency": "foreign currency",
+      "initialQuantity": 50,
+      "initialExchangeRate": 50,
+      "title": "Foreign Exchange Market for the U.S. Dollar"
+    }
+  },
+  "label": "harvested-show-diagram-foreign-exchange-market-v2",
+  "_source": "fx-market"
+}

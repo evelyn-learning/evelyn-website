@@ -1,0 +1,62 @@
+{
+  "course": "macro",
+  "sessions": 7,
+  "totalToolCalls": 17,
+  "expected": [
+    "show_diagram:aggregate_demand_supply",
+    "show_diagram:money_market",
+    "show_diagram:loanable_funds",
+    "show_diagram:phillips_curve",
+    "show_diagram:foreign_exchange_market",
+    "show_diagram:production_possibilities",
+    "show_diagram:business_cycle",
+    "show_equation",
+    "show_table"
+  ],
+  "fired": [
+    "show_diagram:aggregate_demand_supply",
+    "show_diagram:money_market",
+    "show_diagram:loanable_funds",
+    "show_diagram:historical_timeline",
+    "show_diagram:phillips_curve",
+    "show_diagram:production_possibilities",
+    "show_diagram:foreign_exchange_market",
+    "show_diagram:business_cycle"
+  ],
+  "missing": [
+    "show_equation",
+    "show_table"
+  ],
+  "unexpected": [
+    "show_diagram:historical_timeline"
+  ],
+  "variantsPerIdent": {
+    "show_diagram:aggregate_demand_supply": 3,
+    "show_diagram:money_market": 2,
+    "show_diagram:loanable_funds": 2,
+    "show_diagram:historical_timeline": 1,
+    "show_diagram:phillips_curve": 2,
+    "show_diagram:production_possibilities": 3,
+    "show_diagram:foreign_exchange_market": 3,
+    "show_diagram:business_cycle": 1
+  },
+  "fixturesWritten": [
+    "harvested-show-diagram-aggregate-demand-supply-v1.json",
+    "harvested-show-diagram-aggregate-demand-supply-v2.json",
+    "harvested-show-diagram-aggregate-demand-supply-v3.json",
+    "harvested-show-diagram-money-market-v1.json",
+    "harvested-show-diagram-money-market-v2.json",
+    "harvested-show-diagram-loanable-funds-v1.json",
+    "harvested-show-diagram-loanable-funds-v2.json",
+    "harvested-show-diagram-historical-timeline.json",
+    "harvested-show-diagram-phillips-curve-v1.json",
+    "harvested-show-diagram-phillips-curve-v2.json",
+    "harvested-show-diagram-production-possibilities-v1.json",
+    "harvested-show-diagram-production-possibilities-v2.json",
+    "harvested-show-diagram-production-possibilities-v3.json",
+    "harvested-show-diagram-foreign-exchange-market-v1.json",
+    "harvested-show-diagram-foreign-exchange-market-v2.json",
+    "harvested-show-diagram-foreign-exchange-market-v3.json",
+    "harvested-show-diagram-business-cycle.json"
+  ]
+}
