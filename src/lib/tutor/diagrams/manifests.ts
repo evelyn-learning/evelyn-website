@@ -156,6 +156,16 @@ import {
   solvePopulationPyramid,
   solveClimateDiagram,
 } from '@/lib/tutor/diagrams/catalog/kinds/environmental';
+import {
+  buildNutrientCycleManifest,
+  solveNutrientCycle as solveNutrientCycleForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/nutrient-cycle';
+import {
+  buildNeuronManifest,
+  solveNeuronDiagram as solveNeuronForManifest,
+  buildBrainRegionsManifest,
+  solveBrainRegions as solveBrainForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/anatomy';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1244,6 +1254,26 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solveClimateDiagram(params);
         return buildClimateDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    // Phase 13 — biogeochemical cycles + anatomy.
+    case 'nutrient_cycle': {
+      try {
+        const figure = solveNutrientCycleForManifest(params);
+        return buildNutrientCycleManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'neuron_diagram': {
+      try {
+        return buildNeuronManifest(solveNeuronForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'brain_regions': {
+      try {
+        return buildBrainRegionsManifest(solveBrainForManifest(params));
       } catch { /* fall through */ }
       break;
     }

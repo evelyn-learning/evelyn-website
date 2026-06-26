@@ -1,0 +1,30 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "nutrient_cycle",
+    "params": {
+      "title": "The Carbon Cycle",
+      "reservoirs": [
+        {"id": "atmosphere", "label": "Atmosphere (CO₂)", "color": "#0ea5e9"},
+        {"id": "plants", "label": "Plants", "color": "#16a34a"},
+        {"id": "animals", "label": "Animals", "color": "#f59e0b"},
+        {"id": "soil", "label": "Soil & Detritus", "color": "#92400e"},
+        {"id": "fossil", "label": "Fossil Fuels", "color": "#475569"},
+        {"id": "ocean", "label": "Ocean", "color": "#2563eb"}
+      ],
+      "fluxes": [
+        {"from": "atmosphere", "to": "plants", "label": "photosynthesis"},
+        {"from": "plants", "to": "animals", "label": "feeding"},
+        {"from": "animals", "to": "atmosphere", "label": "respiration"},
+        {"from": "plants", "to": "soil", "label": "litterfall"},
+        {"from": "animals", "to": "soil", "label": "death & waste"},
+        {"from": "soil", "to": "atmosphere", "label": "decomposition"},
+        {"from": "soil", "to": "fossil", "label": "burial"},
+        {"from": "fossil", "to": "atmosphere", "label": "combustion"},
+        {"from": "atmosphere", "to": "ocean", "label": "dissolves"},
+        {"from": "ocean", "to": "atmosphere", "label": "outgassing"}
+      ]
+    }
+  },
+  "label": "authored-nutrient-cycle-carbon"
+}

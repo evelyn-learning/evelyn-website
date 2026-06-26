@@ -91,7 +91,11 @@ export type DiagramKindId =
   | 'scatterplot_regression'
   // Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro)
   | 'population_pyramid'
-  | 'climate_diagram';
+  | 'climate_diagram'
+  // Phase 13 — biogeochemical cycles + labeled anatomy (AP Env Sci, AP Psych/Bio)
+  | 'nutrient_cycle'
+  | 'neuron_diagram'
+  | 'brain_regions';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

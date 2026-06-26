@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "brain_regions", "params": { "title": "The Limbic System", "view": "limbic", "highlight": ["hippocampus", "amygdala"] } }, "label": "authored-brain-limbic" }

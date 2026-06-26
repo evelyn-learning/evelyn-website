@@ -73,6 +73,8 @@ import { NormalCurveRenderer } from './NormalCurveRenderer';
 import { ScatterRegressionRenderer } from './ScatterRegressionRenderer';
 import { PopulationPyramidRenderer } from './PopulationPyramidRenderer';
 import { ClimateDiagramRenderer } from './ClimateDiagramRenderer';
+import { CatalogNutrientCycleRenderer } from './CatalogNutrientCycleRenderer';
+import { CatalogNeuronDiagramRenderer, CatalogBrainRegionsRenderer } from './CatalogAnatomyRenderers';
 
 interface Props {
   kind: string;
@@ -161,6 +163,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 12 — environmental / demographic
     case 'population_pyramid':         return <PopulationPyramidRenderer figure={figure} />;
     case 'climate_diagram':            return <ClimateDiagramRenderer figure={figure} />;
+    // Phase 13 — biogeochemical cycles + anatomy
+    case 'nutrient_cycle':             return <CatalogNutrientCycleRenderer figure={figure} />;
+    case 'neuron_diagram':             return <CatalogNeuronDiagramRenderer figure={figure} />;
+    case 'brain_regions':              return <CatalogBrainRegionsRenderer figure={figure} />;
 
     default:
       return (

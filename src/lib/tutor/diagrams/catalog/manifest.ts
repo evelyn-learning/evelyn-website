@@ -74,6 +74,9 @@ import {
   solveClimateDiagram,
 } from './kinds/environmental';
 
+import { solveNutrientCycle } from './kinds/nutrient-cycle';
+import { solveNeuronDiagram, solveBrainRegions } from './kinds/anatomy';
+
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
  *  subject + grade band) so it knows what's available. */
@@ -168,6 +171,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro) ──
   { kind: 'population_pyramid', displayName: 'Population Pyramid', whenToUse: 'Show age-sex distribution as a horizontal pyramid: males extend left, females extend right. Wide base = expanding population (high TFR); narrow base = declining; column = stable. Used in AP Env Sci U3, AP Human Geo, AP Macro.', subjects: ['biology', 'social', 'general'], grades: { from: 9, to: 12 }, paramSchema: 'ageGroups:[[ageLabel,male,female]…] (tuple form preferred; e.g. ["0-4", 5.2, 5.0]; oldest age last in array), mode?:percent|count (default percent), maxValue?:number (auto from data), xLabel?:string, ageGroupLabel?:string (default "Age"), title?:string' },
   { kind: 'climate_diagram', displayName: 'Climate Diagram (Walter-Lieth)', whenToUse: 'Show one location\'s monthly temperature (line) and precipitation (bars) for a year. Identifies biome characteristics (rainfall pattern, seasonality). Used in AP Env Sci U1 biomes, U4 climate.', subjects: ['earth', 'biology', 'general'], grades: { from: 9, to: 12 }, paramSchema: 'months:[[label,temp,precip]…] (tuple form; exactly 12 months Jan-Dec; temp in °C or °F, precip in mm or in), tempUnit?:°C|°F (default °C), precipUnit?:mm|in (default mm), location?:string e.g. "Singapore", title?:string, meanAnnualTemp?:number (auto-computed if omitted), totalAnnualPrecip?:number (auto-computed if omitted)' },
+
+  // ── Phase 13 — biogeochemical cycles + labeled anatomy (AP Env Sci, AP Psych/Bio) ──
+  { kind: 'nutrient_cycle', displayName: 'Nutrient / Biogeochemical Cycle', whenToUse: 'Show a biogeochemical cycle as reservoirs (pools) connected by directed flux arrows (processes) — the carbon, nitrogen, phosphorus, or water cycle. Fluxes may connect ANY two reservoirs, not just adjacent ones (e.g. atmosphere ⇄ ocean). Prefer this over a freehand sketch for these cycles.', subjects: ['biology', 'earth', 'chemistry'], grades: { from: 6, to: 12 }, paramSchema: 'reservoirs:[{id?,label,description?,color?}] (the pools, e.g. Atmosphere, Plants, Soil, Ocean, Fossil Fuels; ≥2), fluxes:[{from,to,label?}] (a process moving the nutrient; from/to is a reservoir id or label; e.g. {from:"Atmosphere",to:"Plants",label:"photosynthesis"}), title?' },
+  { kind: 'neuron_diagram', displayName: 'Labeled Neuron', whenToUse: 'Show a labeled schematic neuron (dendrites, cell body/soma, nucleus, axon, myelin sheath, nodes of Ranvier, axon terminals, synapse). Use for AP Psych Unit 1 / AP Bio neurons instead of a freehand sketch.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — any of: dendrites, cell_body (aka soma), nucleus, axon, myelin_sheath, node_of_ranvier, axon_terminals, synapse), title?' },
+  { kind: 'brain_regions', displayName: 'Labeled Brain', whenToUse: 'Show a labeled side-view brain. view "lobes" = the four cortical lobes + cerebellum + brain stem; view "limbic" = thalamus, hypothalamus, hippocampus, amygdala. Use for AP Psych Unit 1 brain structures instead of a freehand sketch.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: 'view?:lobes|limbic (default lobes), highlight?:[string] (region ids to emphasize — lobes view: frontal_lobe, parietal_lobe, temporal_lobe, occipital_lobe, cerebellum, brain_stem; limbic view: thalamus, hypothalamus, hippocampus, amygdala), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -251,6 +259,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 12 — environmental / demographic
   population_pyramid: solvePopulationPyramid,
   climate_diagram: solveClimateDiagram,
+  // Phase 13 — biogeochemical cycles + anatomy
+  nutrient_cycle: solveNutrientCycle,
+  neuron_diagram: solveNeuronDiagram,
+  brain_regions: solveBrainRegions,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
