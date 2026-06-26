@@ -40,34 +40,6 @@ function parseGradeForCatalog(level?: string): 'k' | number | undefined {
   return undefined;
 }
 
-/** Map a plan-side `subject` value (free-form across seeds) to a catalog
- *  subject tag. Returns `undefined` when the plan subject doesn't have a
- *  single catalog counterpart (e.g. `'sci'` / `'science'` spans physics/
- *  chemistry/biology/earth; `'arts'` / `'languages'` / `'test-prep'` aren't
- *  in the catalog enum). When undefined is returned the catalog filter
- *  drops the subject constraint and narrows by grade only — better to
- *  show too many kinds than to filter the brain into an empty schema
- *  list (the original 2026-05-11 AP Macro bug). */
-function toCatalogSubject(planSubject?: string): CatalogSubject | undefined {
-  if (!planSubject) return undefined;
-  switch (planSubject) {
-    case 'math':       return 'math';
-    case 'physics':    return 'physics';
-    case 'chemistry':  return 'chemistry';
-    case 'biology':    return 'biology';
-    case 'earth':      return 'earth';
-    case 'cs':         return 'cs';
-    case 'ela':        return 'ela';
-    case 'social':     return 'social';
-    case 'ss':
-    case 'social-studies':
-      return 'social';
-    default:
-      // 'sci' / 'science' / 'arts' / 'languages' / 'test-prep' / unknown —
-      // no single catalog tag covers these. Fall through to grade-only filter.
-      return undefined;
-  }
-}
 
 /**
  * Generate a context-aware initial greeting prompt based on session goal
@@ -1263,7 +1235,7 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // pre-trim BASE_PROMPT. Cache-safe (subject immutable per session).
   const allowedForBlock =
     process.env.TUTOR_TOOL_SUBJECT_FILTER === 'true'
-      ? resolveToolSubjects(context.subject)
+      ? resolveToolSubjects(context.subject, context.topic)
       : null;
   prompt = prompt.replace(
     STRUCTURED_DIAGRAM_TOOLS_SENTINEL,
@@ -1346,8 +1318,11 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // 'D', direction: 'right' }` because it never saw the schema).
   try {
     const grade = parseGradeForCatalog(context.level);
-    const subject = toCatalogSubject(context.subject);
-    prompt += `\n\n## ${renderCatalogForPrompt({ subject, grade })}\n`;
+    // Topic-aware subject scope so test-prep / science sessions narrow by topic
+    // (e.g. "neet-biology" → biology) instead of receiving the whole catalog.
+    // null ⇒ fail open (grade-only), preserving the prior safe behavior.
+    const subjects = resolveToolSubjects(context.subject, context.topic) ?? undefined;
+    prompt += `\n\n## ${renderCatalogForPrompt({ subjects, grade })}\n`;
   } catch { /* catalog unavailable; skip */ }
 
   // Add module-specific content

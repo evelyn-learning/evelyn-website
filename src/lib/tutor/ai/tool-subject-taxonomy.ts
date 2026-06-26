@@ -91,6 +91,7 @@ const TOOL_SUBJECTS: Record<string, CatalogSubject[]> = {
  */
 export function resolveToolSubjects(
   uiSubject: string | undefined | null,
+  topic?: string | null,
 ): CatalogSubject[] | null {
   const s = (uiSubject || '').trim().toLowerCase();
   switch (s) {
@@ -127,10 +128,41 @@ export function resolveToolSubjects(
       // pure-early-math tools.
       return ['physics', 'chemistry', 'biology', 'earth'];
     default:
-      // 'test-prep' / 'languages' / 'arts' / '' / unknown — no trusted
-      // single scope. Fail open.
-      return null;
+      // 'test-prep' / 'languages' / 'arts' / '' / unknown — no trusted scope
+      // from the subject alone. Try the TOPIC (e.g. "neet-biology",
+      // "jee-physics"); fail open only when the topic reveals nothing.
+      return subjectsFromTopic(topic);
   }
+}
+
+/** Derive the catalog-subject set from a topic slug, for sessions whose subject
+ *  is generic (test-prep / science / unknown) — so NEET/JEE/etc. sessions get a
+ *  filtered catalog instead of the whole list. High-precision keyword stems; an
+ *  unrecognized subject falls back to the EXAM's subject span, then to null
+ *  (fail open). It never narrows to the WRONG subject — when unsure it returns
+ *  null, which the caller treats as "show everything" (the safe prior behavior). */
+function subjectsFromTopic(topic?: string | null): CatalogSubject[] | null {
+  const t = (topic || '').toLowerCase();
+  if (!t) return null;
+  const KW: Array<[RegExp, CatalogSubject]> = [
+    [/biolog|botan|zoolog|anatom|physiolog|genetic|ecolog|evolution/, 'biology'],
+    [/chemis|\bchem\b|organic|inorganic|stoichi|electrochem|thermochem/, 'chemistry'],
+    [/physic|\bphys\b|mechanic|electromag|thermodynam|optic|kinemat|electrostat|magnetism/, 'physics'],
+    [/\bmath|calculus|algebra|geometr|trigonom|statistic|probabilit|arithmetic|matrix|matrices/, 'math'],
+    [/comput|programming|algorithm|\bcs\b|data.structur/, 'cs'],
+    [/econom|macroecon|microecon|civics|geograph|histor|government|political/, 'social'],
+    [/earth-sci|geolog|astronom|environ|climate|meteorolog/, 'earth'],
+    [/english|literatur|grammar|\bela\b|reading|writing|essay|poetry|rhetoric/, 'ela'],
+  ];
+  const found = new Set<CatalogSubject>();
+  for (const [re, sub] of KW) if (re.test(t)) found.add(sub);
+  if (found.size) return [...found];
+  // Topic names the EXAM, not a subject → that exam's subject span.
+  if (/neet|mcat|aiims/.test(t)) return ['biology', 'chemistry', 'physics'];
+  if (/jee|iitjee|bitsat/.test(t)) return ['math', 'physics', 'chemistry'];
+  if (/\bgre\b|\bgmat\b/.test(t)) return ['math'];
+  if (/\bsat\b|\bact\b/.test(t)) return ['math', 'ela'];
+  return null;
 }
 
 let assertedOnce = false;

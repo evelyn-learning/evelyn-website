@@ -338,11 +338,15 @@ export function solveDiagram(kind: string, params: Record<string, unknown>): Nor
 /** Render the catalog as a compact prompt block. */
 export function renderCatalogForPrompt(filter?: {
   subject?: DiagramKindMeta['subjects'][number];
+  /** Multi-subject scope (a session may span several, e.g. NEET = bio/chem/phys).
+   *  A kind is kept if it shares ANY of these subjects (or is 'general'). */
+  subjects?: DiagramKindMeta['subjects'][number][];
   grade?: 'k' | number;
 }): string {
+  const subs = filter?.subjects ?? (filter?.subject ? [filter.subject] : undefined);
   const candidates = DIAGRAM_CATALOG.filter((k) => {
-    if (filter?.subject && !k.subjects.includes(filter.subject)) {
-      if (!k.subjects.includes('general')) return false;
+    if (subs && subs.length) {
+      if (!k.subjects.some((s) => subs.includes(s)) && !k.subjects.includes('general')) return false;
     }
     if (filter?.grade !== undefined) {
       const fromN = k.grades.from === 'k' ? 0 : k.grades.from;
