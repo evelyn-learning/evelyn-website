@@ -101,7 +101,8 @@ export type DiagramKindId =
   // Phase 15 — 3D / spatial figures (AP Calc, geometry, IB/JEE, chem, physics)
   | 'solid_of_revolution'
   | 'solid_3d'
-  | 'vectors_3d';
+  | 'vectors_3d'
+  | 'vsepr_geometry';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

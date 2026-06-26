@@ -182,6 +182,10 @@ import {
   buildVectors3DManifest,
   solveVectors3D as solveVectors3DForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/vectors-3d';
+import {
+  buildVseprManifest,
+  solveVseprGeometry as solveVseprForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/vsepr';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1314,6 +1318,12 @@ function buildDiagramManifest(cmd: {
     case 'vectors_3d': {
       try {
         return buildVectors3DManifest(solveVectors3DForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'vsepr_geometry': {
+      try {
+        return buildVseprManifest(solveVseprForManifest(params));
       } catch { /* fall through */ }
       break;
     }

@@ -430,7 +430,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             // Phase 14 — conic sections
             'conic_sections',
             // Phase 15 — 3D / spatial figures
-            'solid_of_revolution', 'solid_3d', 'vectors_3d',
+            'solid_of_revolution', 'solid_3d', 'vectors_3d', 'vsepr_geometry',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
