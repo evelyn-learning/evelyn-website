@@ -425,6 +425,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'histogram', 'normal_curve', 'scatterplot_regression',
             // Phase 12 — environmental / demographic (AP Env Sci, AP Human Geo, AP Macro)
             'population_pyramid', 'climate_diagram',
+            // Phase 13 — biogeochemical cycles + labeled anatomy (AP Env Sci, AP Psych/Bio)
+            'nutrient_cycle', 'neuron_diagram', 'brain_regions',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
