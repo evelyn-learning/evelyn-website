@@ -1,0 +1,58 @@
+{
+  "course": "envsci",
+  "sessions": 7,
+  "totalToolCalls": 10,
+  "expected": [
+    "show_diagram:population_pyramid",
+    "show_diagram:climate_diagram",
+    "show_food_web",
+    "show_diagram:carbon_cycle",
+    "show_diagram:water_cycle",
+    "show_stats",
+    "show_function_graph",
+    "show_equation",
+    "show_table"
+  ],
+  "fired": [
+    "show_diagram:population_pyramid",
+    "show_function_graph",
+    "show_sketch",
+    "show_food_web",
+    "tutor_scribble",
+    "show_concept_map",
+    "show_diagram:climate_diagram"
+  ],
+  "missing": [
+    "show_diagram:carbon_cycle",
+    "show_diagram:water_cycle",
+    "show_stats",
+    "show_equation",
+    "show_table"
+  ],
+  "unexpected": [
+    "show_sketch",
+    "tutor_scribble",
+    "show_concept_map"
+  ],
+  "variantsPerIdent": {
+    "show_diagram:population_pyramid": 2,
+    "show_function_graph": 2,
+    "show_sketch": 2,
+    "show_food_web": 1,
+    "tutor_scribble": 1,
+    "show_concept_map": 1,
+    "show_diagram:climate_diagram": 1
+  },
+  "fixturesWritten": [
+    "harvested-show-diagram-population-pyramid-v1.json",
+    "harvested-show-diagram-population-pyramid-v2.json",
+    "harvested-show-function-graph-v1.json",
+    "harvested-show-sketch-v1.json",
+    "harvested-show-food-web.json",
+    "harvested-tutor-scribble.json",
+    "harvested-show-sketch-v2.json",
+    "harvested-show-concept-map.json",
+    "harvested-show-diagram-climate-diagram.json",
+    "harvested-show-function-graph-v2.json"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "climate_diagram",
+    "params": {
+      "months": [
+        [
+          "Jan",
+          27,
+          280
+        ],
+        [
+          "Feb",
+          27,
+          250
+        ],
+        [
+          "Mar",
+          27,
+          300
+        ],
+        [
+          "Apr",
+          27,
+          310
+        ],
+        [
+          "May",
+          27,
+          280
+        ],
+        [
+          "Jun",
+          27,
+          160
+        ],
+        [
+          "Jul",
+          26,
+          130
+        ],
+        [
+          "Aug",
+          26,
+          150
+        ],
+        [
+          "Sep",
+          27,
+          170
+        ],
+        [
+          "Oct",
+          27,
+          200
+        ],
+        [
+          "Nov",
+          27,
+          240
+        ],
+        [
+          "Dec",
+          27,
+          270
+        ]
+      ],
+      "tempUnit": "°C",
+      "precipUnit": "mm",
+      "location": "Tropical Example",
+      "title": "Climate Diagram — Tropical Region"
+    }
+  },
+  "label": "harvested-show-diagram-climate-diagram",
+  "_source": "climate-enso"
+}

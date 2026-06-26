@@ -1,0 +1,104 @@
+{
+  "tool": "show_concept_map",
+  "args": {
+    "nodes": [
+      {
+        "id": "atm",
+        "label": "Atmosphere\n(CO₂)",
+        "level": 0,
+        "x": 50,
+        "y": 10,
+        "color": "#93c5fd"
+      },
+      {
+        "id": "bio",
+        "label": "Biomass\n(Plants & Animals)",
+        "x": 20,
+        "y": 50,
+        "color": "#86efac"
+      },
+      {
+        "id": "soil",
+        "label": "Soil &\nDecomposers",
+        "x": 20,
+        "y": 80,
+        "color": "#d97706"
+      },
+      {
+        "id": "ocean",
+        "label": "Oceans",
+        "x": 80,
+        "y": 50,
+        "color": "#67e8f9"
+      },
+      {
+        "id": "fossil",
+        "label": "Fossil Fuels",
+        "x": 50,
+        "y": 80,
+        "color": "#94a3b8"
+      }
+    ],
+    "edges": [
+      {
+        "from": "atm",
+        "to": "bio",
+        "label": "photosynthesis",
+        "directed": true,
+        "color": "#16a34a"
+      },
+      {
+        "from": "bio",
+        "to": "atm",
+        "label": "respiration",
+        "directed": true,
+        "color": "#dc2626"
+      },
+      {
+        "from": "bio",
+        "to": "soil",
+        "label": "decomposition",
+        "directed": true,
+        "color": "#92400e"
+      },
+      {
+        "from": "soil",
+        "to": "atm",
+        "label": "respiration",
+        "directed": true,
+        "color": "#dc2626"
+      },
+      {
+        "from": "atm",
+        "to": "ocean",
+        "label": "dissolution",
+        "directed": true,
+        "color": "#0891b2"
+      },
+      {
+        "from": "ocean",
+        "to": "atm",
+        "label": "outgassing",
+        "directed": true,
+        "color": "#0891b2"
+      },
+      {
+        "from": "fossil",
+        "to": "atm",
+        "label": "combustion",
+        "directed": true,
+        "color": "#dc2626"
+      },
+      {
+        "from": "soil",
+        "to": "fossil",
+        "label": "millions of years",
+        "directed": true,
+        "color": "#475569"
+      }
+    ],
+    "title": "The Carbon Cycle — Reservoirs & Fluxes"
+  },
+  "label": "harvested-show-concept-map",
+  "_source": "carbon-water-cycles"
+}

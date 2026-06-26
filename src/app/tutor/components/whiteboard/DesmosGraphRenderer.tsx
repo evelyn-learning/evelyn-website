@@ -49,11 +49,40 @@ interface DesmosGraphRendererProps {
  * the curve renders as nothing. We have to escape these before submission.
  */
 function normalizeBareLatex(s: string): string {
+  s = bracketExponents(s);
   s = s.replace(/(?<!\\)\b(sin|cos|tan|sec|csc|cot|sinh|cosh|tanh|log|ln|arcsin|arccos|arctan)\b/g, '\\$1');
   s = s.replace(/(?<!\\)\bsqrt\(([^()]*)\)/g, '\\sqrt{$1}');
   s = s.replace(/(?<!\\)\bpi\b/g, '\\pi');
   s = s.replace(/(?<!\\)\btheta\b/g, '\\theta');
   return s;
+}
+
+/**
+ * Convert parenthesized exponents `^(...)` to LaTeX brace form `^{...}`,
+ * matching balanced parens (so `e^(-0.7*x)` → `e^{-0.7*x}`). Without this,
+ * Desmos reads `e^(` as "e raised to `(`" and the curve renders as nothing —
+ * the model commonly emits plain-math exponents in the `expr` field, not LaTeX.
+ * Idempotent: `^{...}` and single-token `^2` are left untouched.
+ */
+function bracketExponents(s: string): string {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '^' && s[i + 1] === '(') {
+      let depth = 0;
+      let j = i + 1;
+      for (; j < s.length; j++) {
+        if (s[j] === '(') depth++;
+        else if (s[j] === ')' && --depth === 0) break;
+      }
+      if (j < s.length) {
+        out += '^{' + bracketExponents(s.slice(i + 2, j)) + '}';
+        i = j;
+        continue;
+      }
+    }
+    out += s[i];
+  }
+  return out;
 }
 
 /**

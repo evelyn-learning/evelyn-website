@@ -1,0 +1,13 @@
+{
+  "tool": "show_sketch",
+  "args": {
+    "concept": "An oyster releasing millions of tiny eggs into the ocean on the left, and an elephant tenderly caring for a single calf on the right",
+    "labels": [
+      "Oyster: millions of eggs",
+      "Elephant: one calf, years of care"
+    ],
+    "title": "Two Extremes of Reproduction"
+  },
+  "label": "harvested-show-sketch-v1",
+  "_source": "survivorship-r-k"
+}

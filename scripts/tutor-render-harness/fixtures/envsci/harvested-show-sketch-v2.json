@@ -1,0 +1,17 @@
+{
+  "tool": "show_sketch",
+  "args": {
+    "concept": "a carbon atom traveling through time: ancient fern, dinosaur, coal seam underground, smoke rising from a smokestack, then floating as CO2 in air near a person breathing",
+    "labels": [
+      "ancient fern",
+      "dinosaur",
+      "coal",
+      "combustion",
+      "CO₂ in air",
+      "you"
+    ],
+    "title": "The Carbon Journey"
+  },
+  "label": "harvested-show-sketch-v2",
+  "_source": "carbon-water-cycles"
+}

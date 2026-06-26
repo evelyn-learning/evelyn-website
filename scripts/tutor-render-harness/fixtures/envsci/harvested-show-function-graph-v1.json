@@ -1,0 +1,38 @@
+{
+  "tool": "show_function_graph",
+  "args": {
+    "functions": [
+      {
+        "expr": "100 * e^(0.3*x)",
+        "label": "Exponential (J-curve)",
+        "color": "#2563eb",
+        "domain": [
+          0,
+          8
+        ]
+      },
+      {
+        "expr": "1000 / (1 + 9 * e^(-0.7*x))",
+        "label": "Logistic (S-curve)",
+        "color": "#16a34a",
+        "domain": [
+          0,
+          10
+        ]
+      }
+    ],
+    "title": "Population Growth: J-curve vs S-curve",
+    "xLabel": "Time",
+    "yLabel": "Population Size",
+    "xRange": [
+      0,
+      10
+    ],
+    "yRange": [
+      0,
+      1100
+    ]
+  },
+  "label": "harvested-show-function-graph-v1",
+  "_source": "carrying-capacity-growth"
+}

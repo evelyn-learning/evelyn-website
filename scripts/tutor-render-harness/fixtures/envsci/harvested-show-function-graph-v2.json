@@ -1,0 +1,43 @@
+{
+  "tool": "show_function_graph",
+  "args": {
+    "title": "Atmospheric CO₂ Concentration Over Time",
+    "functions": [
+      {
+        "expr": "280 + (x - 1750) * 0.03 + 0.00015 * (x - 1750)^2",
+        "label": "CO₂ (ppm)",
+        "color": "#e74c3c",
+        "domain": [
+          1750,
+          2024
+        ]
+      }
+    ],
+    "points": [
+      {
+        "x": 1750,
+        "y": 280,
+        "label": "Pre-industrial: 280 ppm",
+        "color": "#2980b9"
+      },
+      {
+        "x": 2024,
+        "y": 420,
+        "label": "Today: 420 ppm",
+        "color": "#e74c3c"
+      }
+    ],
+    "xLabel": "Year",
+    "yLabel": "CO₂ (ppm)",
+    "xRange": [
+      1750,
+      2030
+    ],
+    "yRange": [
+      260,
+      440
+    ]
+  },
+  "label": "harvested-show-function-graph-v2",
+  "_source": "greenhouse-climate"
+}

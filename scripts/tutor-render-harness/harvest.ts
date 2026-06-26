@@ -120,6 +120,32 @@ const COURSES: Record<string, CourseConfig> = {
       'show_function_graph', 'show_equation', 'show_table',
     ],
   },
+  envsci: {
+    start: { subject: 'science', level: 'AP', topic: 'ap-environmental-science', studentName: 'Harvest' },
+    idPrefix: 'evelyn.ap.envsci.',
+    sessions: [
+      { plan: 'evelyn.ap.envsci.age-structure-fertility.v1', says: [
+        'Draw a population age-structure pyramid for a rapidly growing country.' ] },
+      { plan: 'evelyn.ap.envsci.carrying-capacity-growth.v1', says: [
+        'Graph exponential (J-curve) population growth.',
+        'Now graph logistic (S-curve) growth leveling off at the carrying capacity K.' ] },
+      { plan: 'evelyn.ap.envsci.survivorship-r-k.v1', says: [
+        'Draw the three survivorship curves (Type I, II, III) on a log scale.' ] },
+      { plan: 'evelyn.ap.envsci.food-webs.v1', says: [
+        'Draw a food web with producers, primary and secondary consumers, and energy-flow arrows.' ] },
+      { plan: 'evelyn.ap.envsci.carbon-water-cycles.v1', says: [
+        'Draw the carbon cycle showing the main reservoirs and fluxes.' ] },
+      { plan: 'evelyn.ap.envsci.climate-enso.v1', says: [
+        'Draw a climate diagram showing average monthly temperature and precipitation.' ] },
+      { plan: 'evelyn.ap.envsci.greenhouse-climate.v1', says: [
+        'Show a graph of atmospheric CO2 concentration rising over time.' ] },
+    ],
+    expected: [
+      'show_diagram:population_pyramid', 'show_diagram:climate_diagram', 'show_food_web',
+      'show_diagram:carbon_cycle', 'show_diagram:water_cycle', 'show_stats',
+      'show_function_graph', 'show_equation', 'show_table',
+    ],
+  },
 };
 const course = process.argv.find((a, i) => i >= 2 && !a.startsWith('-')) || '';
 const cfg = COURSES[course];
