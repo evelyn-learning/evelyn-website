@@ -1,0 +1,23 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "t_chart",
+    "params": {
+      "leftHeader": "Differentiation",
+      "rightHeader": "Integration",
+      "leftItems": [
+        "Instantaneous rate of change",
+        "Slope of tangent line",
+        "How fast?"
+      ],
+      "rightItems": [
+        "Accumulated total",
+        "Area under a curve",
+        "How much?"
+      ],
+      "title": "Two Big Ideas of Calculus"
+    }
+  },
+  "label": "harvested-show-diagram-t-chart",
+  "_source": "riemann-sums"
+}

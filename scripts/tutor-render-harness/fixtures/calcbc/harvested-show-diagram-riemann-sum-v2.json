@@ -1,0 +1,98 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "riemann_sum",
+    "params": {
+      "curve": [
+        [
+          0,
+          0
+        ],
+        [
+          0.5,
+          0.25
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1.5,
+          2.25
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2.5,
+          6.25
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3.5,
+          12.25
+        ],
+        [
+          4,
+          16
+        ],
+        [
+          4.5,
+          20.25
+        ],
+        [
+          5,
+          25
+        ]
+      ],
+      "rectangles": [
+        [
+          0,
+          0.833,
+          0.174
+        ],
+        [
+          0.833,
+          0.833,
+          1.563
+        ],
+        [
+          1.667,
+          0.833,
+          6.25
+        ],
+        [
+          2.5,
+          0.833,
+          12.5
+        ],
+        [
+          3.333,
+          0.833,
+          20.139
+        ],
+        [
+          4.167,
+          0.833,
+          30.25
+        ]
+      ],
+      "xMin": 0,
+      "xMax": 5,
+      "yMin": 0,
+      "yMax": 25,
+      "method": "midpoint",
+      "n": 6,
+      "exprLabel": "f(x) = x²",
+      "approxArea": 40.278,
+      "exactArea": 41.667,
+      "title": "Midpoint Riemann Sum (n = 6)"
+    }
+  },
+  "label": "harvested-show-diagram-riemann-sum-v2",
+  "_source": "riemann-sums"
+}

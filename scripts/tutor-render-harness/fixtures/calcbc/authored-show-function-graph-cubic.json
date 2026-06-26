@@ -1,0 +1,1 @@
+{"tool":"show_function_graph","args":{"title":"f(x) = x³ − 3x","functions":[{"expr":"x^3 - 3x","label":"f(x) = x³ − 3x","color":"blue"}],"xRange":[-3,3],"yRange":[-4,4],"xLabel":"x","yLabel":"y"},"label":"authored-show-function-graph-cubic"}

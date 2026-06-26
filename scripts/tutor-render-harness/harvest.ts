@@ -96,6 +96,30 @@ const COURSES: Record<string, CourseConfig> = {
       'show_scatter_plot', 'show_table', 'show_tree', 'show_venn_diagram', 'show_equation',
     ],
   },
+  calcbc: {
+    start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', studentName: 'Harvest' },
+    idPrefix: 'evelyn.ap.calcbc.',
+    sessions: [
+      { plan: 'evelyn.ap.calcbc.riemann-sums.v1', says: [
+        'Draw a left Riemann sum with 6 rectangles approximating the area under a curve.',
+        'Now show the midpoint Riemann sum for the same curve.' ] },
+      { plan: 'evelyn.ap.calcbc.slope-fields.v1', says: [
+        'Draw the slope field for the differential equation dy/dx = x - y.' ] },
+      { plan: 'evelyn.ap.calcbc.polar-coordinates.v1', says: [
+        'Graph the polar curve r = 2 + 2 cos(theta), a cardioid.' ] },
+      { plan: 'evelyn.ap.calcbc.parametric.v1', says: [
+        'Graph the parametric curve x = cos(t), y = sin(t) for t from 0 to 2 pi.' ] },
+      { plan: 'evelyn.ap.calcbc.taylor-polynomial.v1', says: [
+        'Show the degree-4 Taylor polynomial approximation of e^x overlaid on the function.' ] },
+      { plan: 'evelyn.ap.calcbc.first-derivative-analysis.v1', says: [
+        'Graph f of x equals x cubed minus 3x, and mark where it is increasing and decreasing.' ] },
+    ],
+    expected: [
+      'show_diagram:riemann_sum', 'show_diagram:slope_field', 'show_diagram:polar_graph',
+      'show_diagram:parametric_curve', 'show_diagram:taylor_polynomial_overlay',
+      'show_function_graph', 'show_equation', 'show_table',
+    ],
+  },
 };
 const course = process.argv.find((a, i) => i >= 2 && !a.startsWith('-')) || '';
 const cfg = COURSES[course];

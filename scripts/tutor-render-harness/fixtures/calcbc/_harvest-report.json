@@ -1,0 +1,50 @@
+{
+  "course": "calcbc",
+  "sessions": 6,
+  "totalToolCalls": 7,
+  "expected": [
+    "show_diagram:riemann_sum",
+    "show_diagram:slope_field",
+    "show_diagram:polar_graph",
+    "show_diagram:parametric_curve",
+    "show_diagram:taylor_polynomial_overlay",
+    "show_function_graph",
+    "show_equation",
+    "show_table"
+  ],
+  "fired": [
+    "show_diagram:t_chart",
+    "show_diagram:riemann_sum",
+    "show_diagram:slope_field",
+    "show_function_graph",
+    "show_sketch",
+    "show_diagram:parametric_curve"
+  ],
+  "missing": [
+    "show_diagram:polar_graph",
+    "show_diagram:taylor_polynomial_overlay",
+    "show_equation",
+    "show_table"
+  ],
+  "unexpected": [
+    "show_diagram:t_chart",
+    "show_sketch"
+  ],
+  "variantsPerIdent": {
+    "show_diagram:t_chart": 1,
+    "show_diagram:riemann_sum": 2,
+    "show_diagram:slope_field": 1,
+    "show_function_graph": 1,
+    "show_sketch": 1,
+    "show_diagram:parametric_curve": 1
+  },
+  "fixturesWritten": [
+    "harvested-show-diagram-t-chart.json",
+    "harvested-show-diagram-riemann-sum-v1.json",
+    "harvested-show-diagram-riemann-sum-v2.json",
+    "harvested-show-diagram-slope-field.json",
+    "harvested-show-function-graph.json",
+    "harvested-show-sketch.json",
+    "harvested-show-diagram-parametric-curve.json"
+  ]
+}
