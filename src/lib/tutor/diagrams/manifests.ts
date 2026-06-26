@@ -166,6 +166,10 @@ import {
   buildBrainRegionsManifest,
   solveBrainRegions as solveBrainForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/anatomy';
+import {
+  buildConicSectionsManifest,
+  solveConicSections as solveConicSectionsForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/conic-sections';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1274,6 +1278,12 @@ function buildDiagramManifest(cmd: {
     case 'brain_regions': {
       try {
         return buildBrainRegionsManifest(solveBrainForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'conic_sections': {
+      try {
+        return buildConicSectionsManifest(solveConicSectionsForManifest(params));
       } catch { /* fall through */ }
       break;
     }

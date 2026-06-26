@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "conic_sections", "params": { "slices": ["parabola"], "title": "Parabola: a Slice Parallel to the Cone's Side" } }, "label": "authored-conic-single-parabola" }

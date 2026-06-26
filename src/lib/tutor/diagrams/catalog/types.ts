@@ -95,7 +95,9 @@ export type DiagramKindId =
   // Phase 13 — biogeochemical cycles + labeled anatomy (AP Env Sci, AP Psych/Bio)
   | 'nutrient_cycle'
   | 'neuron_diagram'
-  | 'brain_regions';
+  | 'brain_regions'
+  // Phase 14 — conic sections (Algebra 2 / Precalc / AP Calc / JEE)
+  | 'conic_sections';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

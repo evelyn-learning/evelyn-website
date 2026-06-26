@@ -76,6 +76,7 @@ import {
 
 import { solveNutrientCycle } from './kinds/nutrient-cycle';
 import { solveNeuronDiagram, solveBrainRegions } from './kinds/anatomy';
+import { solveConicSections } from './kinds/conic-sections';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -178,6 +179,9 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // files under social studies (plan subject 'ss' → catalog subject 'social').
   { kind: 'neuron_diagram', displayName: 'Labeled Neuron', whenToUse: 'Show a labeled schematic neuron (dendrites, cell body/soma, nucleus, axon, myelin sheath, nodes of Ranvier, axon terminals, synapse). Use for AP Psych Unit 1 / AP Bio neurons instead of a freehand sketch.', subjects: ['biology', 'social'], grades: { from: 7, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — any of: dendrites, cell_body (aka soma), nucleus, axon, myelin_sheath, node_of_ranvier, axon_terminals, synapse), title?' },
   { kind: 'brain_regions', displayName: 'Labeled Brain', whenToUse: 'Show a labeled side-view brain. view "lobes" = the four cortical lobes + cerebellum + brain stem; view "limbic" = thalamus, hypothalamus, hippocampus, amygdala. Use for AP Psych Unit 1 brain structures instead of a freehand sketch.', subjects: ['biology', 'social'], grades: { from: 7, to: 12 }, paramSchema: 'view?:lobes|limbic (default lobes), highlight?:[string] (region ids to emphasize — lobes view: frontal_lobe, parietal_lobe, temporal_lobe, occipital_lobe, cerebellum, brain_stem; limbic view: thalamus, hypothalamus, hippocampus, amygdala), title?' },
+
+  // ── Phase 14 — conic sections ──────────────────────────────────────────
+  { kind: 'conic_sections', displayName: 'Conic Sections (cone slices)', whenToUse: 'Show the four conic sections as slices of a double cone — the "one cone, four shapes" figure (circle, ellipse, parabola, hyperbola, each from a plane at a different angle). ALWAYS use this for the cone-slicing illustration instead of a freehand sketch (a rough doodle of a sliced 3D cone is unreadable). Not for plotting a single conic curve — for that use show_function_graph / show_geometry.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'slices?:[circle|ellipse|parabola|hyperbola] (default all four; pass a subset to show only some), highlight?:circle|ellipse|parabola|hyperbola (emphasize one), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -265,6 +269,8 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   nutrient_cycle: solveNutrientCycle,
   neuron_diagram: solveNeuronDiagram,
   brain_regions: solveBrainRegions,
+  // Phase 14 — conic sections
+  conic_sections: solveConicSections,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
