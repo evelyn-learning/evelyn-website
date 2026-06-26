@@ -1,0 +1,7 @@
+{ "tool":"show_geometry_constructed","args":{
+  "given":[
+    {"kind":"point","id":"O1","x":-6,"y":0},{"kind":"circle","id":"c1","center":"O1","radius":4},
+    {"kind":"point","id":"O2","x":7,"y":1},{"kind":"circle","id":"c2","center":"O2","radius":2}
+  ],
+  "steps":[ {"kind":"common_tangent","id":"ct","of":["c1","c2"],"which":"both","label":"common tangents"} ]
+},"label":"common-tangent" }

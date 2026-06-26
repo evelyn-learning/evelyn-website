@@ -138,6 +138,8 @@ export type Step =
   | StepConicAsymptotes
   | StepLatusRectum
   | StepChordOfContact
+  | StepCommonTangent
+  | StepTangentWithSlope
   | StepAngleMarker;
 
 /**
@@ -207,6 +209,8 @@ export const STEP_KINDS = [
   'conic_asymptotes',
   'latus_rectum',
   'chord_of_contact',
+  'common_tangent',
+  'tangent_with_slope',
   'angle_marker',
 ] as const;
 
@@ -807,6 +811,31 @@ export interface StepChordOfContact extends StepCommon {
   tangents?: boolean;     // default true — also draw the two tangent lines
 }
 
+/** Common tangents of TWO circles. `external` tangents lie on the same side of
+ *  both circles (exist when the centre distance d ≥ |r₁−r₂|); `internal`
+ *  tangents cross between them (exist when d ≥ r₁+r₂). Each tangent yields a
+ *  segment plus its two points of tangency (T₁ on circle 1, T₂ on circle 2).
+ *  Use this instead of hand-placing the tangent endpoints. */
+export interface StepCommonTangent extends StepCommon {
+  kind: 'common_tangent';
+  of: [string, string];               // two circle ids
+  which?: 'external' | 'internal' | 'both';   // default 'external'
+  length?: number;                    // how far the tangent extends past the touch points
+}
+
+/** Tangent line(s) to a circle or conic with a GIVEN slope m (e.g. "the tangent
+ *  to the parabola of slope 2"). A circle / ellipse / hyperbola has TWO tangents
+ *  of a given slope (which: 'first'|'second'|'both', default 'both'); a parabola
+ *  has one. Emits the tangent segment(s) + the point(s) of tangency. The solver
+ *  computes the exact touch point — do NOT hand-place it. */
+export interface StepTangentWithSlope extends StepCommon {
+  kind: 'tangent_with_slope';
+  on: string;                 // circle OR conic id
+  slope: number;              // tangent slope m (world coordinates)
+  which?: 'first' | 'second' | 'both';   // default 'both' (ignored for a parabola)
+  length?: number;
+}
+
 /** Angle marker — a small arc (or right-angle square) drawn at a vertex
  *  showing the angle between rays vertex→from and vertex→to. The brain
  *  reaches for this whenever it wants to call out a measurement (e.g.
@@ -1141,6 +1170,8 @@ function solveStep(step: Step, state: State): void {
     case 'conic_asymptotes': return solveConicAsymptotes(step, state);
     case 'latus_rectum': return solveLatusRectum(step, state);
     case 'chord_of_contact': return solveChordOfContact(step, state);
+    case 'common_tangent': return solveCommonTangent(step, state);
+    case 'tangent_with_slope': return solveTangentWithSlope(step, state);
     case 'angle_marker': return solveAngleMarker(step, state);
   }
 }
@@ -2077,6 +2108,117 @@ function solveTangentsFromExternal(step: StepTangentsFromExternal, state: State)
   emitPoint(state, touchB, tps[1].x, tps[1].y);
   setObject(state, { kind: 'segment', id: segA, from: step.external, to: touchA, label: step.label });
   setObject(state, { kind: 'segment', id: segB, from: step.external, to: touchB });
+}
+
+/** Common tangents of two circles (external and/or internal). For a tangent
+ *  line with unit normal n at signed distance p, dist(Oᵢ, line)=rᵢ. External:
+ *  both circles same side ⇒ n·(O₁−O₂)=±(r₁−r₂); internal: opposite sides ⇒
+ *  n·(O₁−O₂)=±(r₁+r₂). Solve for n, then Tᵢ = Oᵢ ∓ rᵢn. */
+function solveCommonTangent(step: StepCommonTangent, state: State): void {
+  const c1 = circ(state, step.of[0]);
+  const c2 = circ(state, step.of[1]);
+  const O1 = pt(state, c1.center), O2 = pt(state, c2.center);
+  const r1 = c1.radius, r2 = c2.radius;
+  const wx = O1.x - O2.x, wy = O1.y - O2.y;
+  const d = Math.hypot(wx, wy);
+  if (d < 1e-6) throw new Error(`common_tangent "${step.id}": the circles are concentric — no common tangent exists`);
+  const ux = wx / d, uy = wy / d;          // unit (O₁−O₂)
+  const px = -uy, py = ux;                  // perpendicular
+  const which = step.which ?? 'external';
+  const lines: Array<{ T1: { x: number; y: number }; T2: { x: number; y: number } }> = [];
+  // k = n·û (cosine vs the centre line); t2Sign = +1 external, −1 internal.
+  const addSet = (k: number, t2Sign: number) => {
+    if (Math.abs(k) > 1 + 1e-9) return;
+    const s = Math.sqrt(Math.max(0, 1 - k * k));
+    for (const sg of [1, -1]) {
+      const nx = k * ux + sg * s * px;
+      const ny = k * uy + sg * s * py;
+      lines.push({
+        T1: { x: O1.x - r1 * nx, y: O1.y - r1 * ny },
+        T2: { x: O2.x - t2Sign * r2 * nx, y: O2.y - t2Sign * r2 * ny },
+      });
+    }
+  };
+  if (which === 'external' || which === 'both') addSet((r1 - r2) / d, 1);
+  if (which === 'internal' || which === 'both') addSet((r1 + r2) / d, -1);
+  if (lines.length === 0) {
+    throw new Error(`common_tangent "${step.id}": no ${which} common tangent exists (one circle lies inside the other, or they overlap)`);
+  }
+  const ext = step.length ?? Math.max(r1, r2) * 0.7;
+  lines.forEach((L, i) => {
+    const segId = i === 0 ? step.id : `${step.id}_${i}`;
+    const t1Id = `${step.id}_T${i + 1}a`, t2Id = `${step.id}_T${i + 1}b`;
+    emitPoint(state, t1Id, round2(L.T1.x), round2(L.T1.y));
+    emitPoint(state, t2Id, round2(L.T2.x), round2(L.T2.y));
+    let dx = L.T2.x - L.T1.x, dy = L.T2.y - L.T1.y;
+    const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
+    const aId = `${segId}_from`, bId = `${segId}_to`;
+    emitPoint(state, aId, round2(L.T1.x - ext * dx), round2(L.T1.y - ext * dy));
+    emitPoint(state, bId, round2(L.T2.x + ext * dx), round2(L.T2.y + ext * dy));
+    setObject(state, { kind: 'segment', id: segId, from: aId, to: bId, label: i === 0 ? step.label : undefined });
+  });
+}
+
+/** Tangent line(s) to a circle / conic with a given slope m. For a conic, the
+ *  world slope is mapped to the canonical slope m′ (rotation-robust), the closed-
+ *  form touch point(s) are computed in canonical coords, then rotated back. */
+function solveTangentWithSlope(step: StepTangentWithSlope, state: State): void {
+  const onId = resolveRefId(state, step.on, 'tangent_with_slope.on');
+  const target = state.byId.get(onId);
+  const m = step.slope;
+  const ulen = Math.hypot(1, m);
+  const dx = 1 / ulen, dy = m / ulen;       // unit tangent direction (world)
+  const touches: Array<{ x: number; y: number }> = [];
+  let scale = 1;
+  if (target && target.kind === 'circle') {
+    const O = pt(state, target.center), r = target.radius;
+    const nx = -m / ulen, ny = 1 / ulen;    // normal ⊥ tangent
+    touches.push({ x: O.x + r * nx, y: O.y + r * ny });
+    touches.push({ x: O.x - r * nx, y: O.y - r * ny });
+    scale = r;
+  } else {
+    const c = conic(state, onId);
+    const center = pt(state, c.center), rot = c.rotation ?? 0;
+    const cosR = Math.cos(rot), sinR = Math.sin(rot);
+    const a = c.a, b = c.b ?? a;
+    scale = Math.max(a, b);
+    const dcx = cosR + m * sinR, dcy = m * cosR - sinR;   // world-slope-m dir in canonical frame
+    const vertical = Math.abs(dcx) < 1e-7;
+    const mp = dcy / dcx;
+    let canon: Array<{ x: number; y: number }>;
+    if (c.conicType === 'ellipse') {
+      if (vertical) canon = [{ x: a, y: 0 }, { x: -a, y: 0 }];
+      else { const cc = Math.sqrt(a * a * mp * mp + b * b); canon = [{ x: -a * a * mp / cc, y: b * b / cc }, { x: a * a * mp / cc, y: -b * b / cc }]; }
+    } else if (c.conicType === 'hyperbola') {
+      if (vertical) canon = [{ x: a, y: 0 }, { x: -a, y: 0 }];
+      else {
+        const k = a * a * mp * mp - b * b;
+        if (k <= 1e-9) throw new Error(`tangent_with_slope "${step.id}": no tangent of slope ${m} to this hyperbola — the slope lies within the asymptotes (|m'| ≤ b/a in canonical frame)`);
+        const cc = Math.sqrt(k); canon = [{ x: a * a * mp / cc, y: b * b / cc }, { x: -a * a * mp / cc, y: -b * b / cc }];
+      }
+    } else { // parabola y² = 4a·x
+      if (vertical) canon = [{ x: 0, y: 0 }];
+      else if (Math.abs(mp) < 1e-7) throw new Error(`tangent_with_slope "${step.id}": a parabola has no tangent parallel to its axis (slope ${m})`);
+      else canon = [{ x: a / (mp * mp), y: 2 * a / mp }];
+    }
+    for (const tc of canon) {
+      touches.push({ x: center.x + tc.x * cosR - tc.y * sinR, y: center.y + tc.x * sinR + tc.y * cosR });
+    }
+  }
+  const which = step.which ?? 'both';
+  let sel = touches;
+  if (touches.length === 2 && which === 'first') sel = [touches[0]];
+  else if (touches.length === 2 && which === 'second') sel = [touches[1]];
+  const half = (step.length ?? scale * 2) / 2;
+  sel.forEach((T, i) => {
+    const segId = i === 0 ? step.id : `${step.id}_${i}`;
+    const tId = `${step.id}_T${i + 1}`;
+    emitPoint(state, tId, round2(T.x), round2(T.y));
+    const aId = `${segId}_from`, bId = `${segId}_to`;
+    emitPoint(state, aId, round2(T.x - half * dx), round2(T.y - half * dy));
+    emitPoint(state, bId, round2(T.x + half * dx), round2(T.y + half * dy));
+    setObject(state, { kind: 'segment', id: segId, from: aId, to: bId, label: i === 0 ? step.label : undefined });
+  });
 }
 
 function arcAnglesFor(step: { on: string; from: string; to: string; direction?: 'cw' | 'ccw' }, state: State): { center: string; radius: number; startAngle: number; endAngle: number } {
