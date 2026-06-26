@@ -1,0 +1,1 @@
+{ "tool":"show_diagram","args":{"type":"solid_3d","params":{"title":"Rectangular Prism and its Net","shape":"rectangular_prism","dims":{"length":7,"width":4,"height":5},"showNet":true}},"label":"box-net" }

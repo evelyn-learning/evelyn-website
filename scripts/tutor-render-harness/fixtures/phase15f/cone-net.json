@@ -1,0 +1,1 @@
+{ "tool":"show_diagram","args":{"type":"solid_3d","params":{"title":"Cone and its Net","shape":"cone","dims":{"radius":4,"height":7},"showNet":true}},"label":"cone-net" }

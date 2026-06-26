@@ -136,20 +136,116 @@ function drawSolid(shape: SolidShape, dims: Record<string, number>, cx: number, 
   );
 }
 
+type Face =
+  | { kind: 'rect'; x: number; y: number; w: number; h: number; label?: string }
+  | { kind: 'tri'; pts: [number, number][]; label?: string }
+  | { kind: 'circle'; cx: number; cy: number; r: number; label?: string }
+  | { kind: 'sector'; cx: number; cy: number; r: number; a0: number; a1: number; label?: string };
+
+/** Build the unfolded net (in net-local coords) for a shape, or null if none. */
+function netFaces(shape: SolidShape, d: Record<string, number>): Face[] | null {
+  if (shape === 'rectangular_prism' || shape === 'cube') {
+    const L = shape === 'cube' ? d.side : d.length;
+    const H = shape === 'cube' ? d.side : d.height;
+    const Wd = shape === 'cube' ? d.side : d.width;
+    return [
+      { kind: 'rect', x: Wd, y: 0, w: L, h: H, label: 'front' },
+      { kind: 'rect', x: 0, y: 0, w: Wd, h: H },
+      { kind: 'rect', x: Wd + L, y: 0, w: Wd, h: H },
+      { kind: 'rect', x: Wd + L + Wd, y: 0, w: L, h: H },
+      { kind: 'rect', x: Wd, y: -Wd, w: L, h: Wd, label: 'top' },
+      { kind: 'rect', x: Wd, y: H, w: L, h: Wd, label: 'base' },
+    ];
+  }
+  if (shape === 'cylinder') {
+    const r = d.radius, H = d.height, circ = 2 * Math.PI * r;
+    return [
+      { kind: 'rect', x: 0, y: 0, w: circ, h: H, label: '2πr × h' },
+      { kind: 'circle', cx: circ / 2, cy: -r - 2, r, label: 'top' },
+      { kind: 'circle', cx: circ / 2, cy: H + r + 2, r, label: 'base' },
+    ];
+  }
+  if (shape === 'cone') {
+    const r = d.radius, H = d.height, slant = Math.hypot(r, H);
+    const theta = (2 * Math.PI * r) / slant; // sector angle
+    return [
+      { kind: 'sector', cx: 0, cy: 0, r: slant, a0: -theta / 2, a1: theta / 2, label: 'lateral' },
+      { kind: 'circle', cx: slant + r + 6, cy: 0, r, label: 'base' },
+    ];
+  }
+  if (shape === 'square_pyramid') {
+    const B = d.base, h = d.height, slant = Math.hypot(h, B / 2);
+    // square base + 4 triangles
+    return [
+      { kind: 'rect', x: 0, y: 0, w: B, h: B, label: 'base' },
+      { kind: 'tri', pts: [[0, 0], [B, 0], [B / 2, -slant]] },
+      { kind: 'tri', pts: [[0, B], [B, B], [B / 2, B + slant]] },
+      { kind: 'tri', pts: [[0, 0], [0, B], [-slant, B / 2]] },
+      { kind: 'tri', pts: [[B, 0], [B, B], [B + slant, B / 2]] },
+    ];
+  }
+  if (shape === 'triangular_prism') {
+    const b = d.base, th = d.triHeight, L = d.length, side = Math.hypot(b / 2, th);
+    // 3 rectangles in a row (bottom b×L, two slanted sides side×L) + 2 triangles
+    return [
+      { kind: 'rect', x: 0, y: 0, w: side, h: L },
+      { kind: 'rect', x: side, y: 0, w: b, h: L, label: 'b × L' },
+      { kind: 'rect', x: side + b, y: 0, w: side, h: L },
+      { kind: 'tri', pts: [[side, 0], [side + b, 0], [side + b / 2, -th]] },
+      { kind: 'tri', pts: [[side, L], [side + b, L], [side + b / 2, L + th]] },
+    ];
+  }
+  return null;
+}
+
+function drawNet(shape: SolidShape, dims: Record<string, number>, cx: number, cy: number, maxW: number, maxH: number): React.ReactNode {
+  const faces = netFaces(shape, dims);
+  if (!faces) return <text x={cx} y={cy} fontSize={12} textAnchor="middle" fill="#9ca3af">(no net)</text>;
+  // bbox
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const ext = (x: number, y: number) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); };
+  for (const f of faces) {
+    if (f.kind === 'rect') { ext(f.x, f.y); ext(f.x + f.w, f.y + f.h); }
+    else if (f.kind === 'tri') f.pts.forEach((p) => ext(p[0], p[1]));
+    else if (f.kind === 'circle') { ext(f.cx - f.r, f.cy - f.r); ext(f.cx + f.r, f.cy + f.r); }
+    else { ext(f.cx - f.r, f.cy - f.r); ext(f.cx + f.r, f.cy + f.r); }
+  }
+  const S = Math.min(maxW / (maxX - minX || 1), maxH / (maxY - minY || 1));
+  const ox = cx - S * (minX + maxX) / 2;
+  const oy = cy - S * (minY + maxY) / 2;
+  const tx = (x: number) => ox + S * x;
+  const ty = (y: number) => oy + S * y;
+  const fill = '#bfdbfe', stroke = '#1e3a8a';
+  return (
+    <g>
+      {faces.map((f, i) => {
+        if (f.kind === 'rect') return <rect key={i} x={tx(f.x)} y={ty(f.y)} width={S * f.w} height={S * f.h} fill={fill} fillOpacity={0.5} stroke={stroke} strokeWidth={1.4} />;
+        if (f.kind === 'tri') return <polygon key={i} points={f.pts.map((p) => `${tx(p[0])},${ty(p[1])}`).join(' ')} fill={fill} fillOpacity={0.5} stroke={stroke} strokeWidth={1.4} />;
+        if (f.kind === 'circle') return <circle key={i} cx={tx(f.cx)} cy={ty(f.cy)} r={S * f.r} fill={fill} fillOpacity={0.5} stroke={stroke} strokeWidth={1.4} />;
+        // sector
+        const x0 = f.cx + f.r * Math.cos(f.a0), y0 = f.cy + f.r * Math.sin(f.a0);
+        const x1 = f.cx + f.r * Math.cos(f.a1), y1 = f.cy + f.r * Math.sin(f.a1);
+        const large = f.a1 - f.a0 > Math.PI ? 1 : 0;
+        return <path key={i} d={`M ${tx(f.cx)} ${ty(f.cy)} L ${tx(x0)} ${ty(y0)} A ${S * f.r} ${S * f.r} 0 ${large} 1 ${tx(x1)} ${ty(y1)} Z`} fill={fill} fillOpacity={0.5} stroke={stroke} strokeWidth={1.4} />;
+      })}
+    </g>
+  );
+}
+
 export function CatalogSolid3DRenderer({ figure }: { figure: Solid3DFigure }) {
   const N = solid3DFeatureNames;
-  const W = 480;
+  const net = figure.showNet && figure.shape !== 'sphere';
+  const W = net ? 780 : 480;
   const H = 380;
-  // Scale so the largest dimension fits comfortably.
   const maxDim = Math.max(...Object.values(figure.dims), 1);
-  const S = Math.min(34, 200 / maxDim);
+  const S = Math.min(net ? 24 : 34, (net ? 150 : 200) / maxDim);
 
   return (
     <div className="solid-3d-renderer w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[520px]"
+        className={net ? 'w-full max-w-[700px]' : 'w-full max-w-[520px]'}
         data-feature={N.solid}
         data-feature-label={figure.title || figure.shape.replace(/_/g, ' ')}
         data-feature-cx={0.5}
@@ -157,10 +253,27 @@ export function CatalogSolid3DRenderer({ figure }: { figure: Solid3DFigure }) {
         data-feature-w={1}
         data-feature-h={1}
       >
-        {drawSolid(figure.shape, figure.dims, W / 2 - 20, H / 2 + 30, S)}
-        <text x={W / 2} y={H - 12} fontSize={12.5} textAnchor="middle" fill="#6b7280">
-          {figure.shape.replace(/_/g, ' ')}
-        </text>
+        {net ? (
+          <>
+            <g data-feature={N.solid} data-feature-label={figure.shape.replace(/_/g, ' ')}>
+              {drawSolid(figure.shape, figure.dims, 175, H / 2 + 20, S)}
+            </g>
+            <text x={175} y={H - 18} fontSize={12.5} textAnchor="middle" fill="#6b7280">{figure.shape.replace(/_/g, ' ')}</text>
+            {/* unfolds-to arrow */}
+            <line x1={330} y1={H / 2} x2={384} y2={H / 2} stroke="#6b7280" strokeWidth={1.5} markerEnd="url(#net-arr)" />
+            <defs><marker id="net-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280" /></marker></defs>
+            <text x={357} y={H / 2 - 8} fontSize={11} textAnchor="middle" fill="#6b7280">unfolds to</text>
+            <g data-feature={N.net} data-feature-label="net">
+              {drawNet(figure.shape, figure.dims, 565, H / 2, 350, 280)}
+            </g>
+            <text x={565} y={H - 18} fontSize={12.5} textAnchor="middle" fill="#6b7280">net</text>
+          </>
+        ) : (
+          <>
+            {drawSolid(figure.shape, figure.dims, W / 2 - 20, H / 2 + 30, S)}
+            <text x={W / 2} y={H - 12} fontSize={12.5} textAnchor="middle" fill="#6b7280">{figure.shape.replace(/_/g, ' ')}</text>
+          </>
+        )}
       </svg>
     </div>
   );
