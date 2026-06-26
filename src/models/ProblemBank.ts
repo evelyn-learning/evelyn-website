@@ -34,6 +34,17 @@ export interface IProblemBank extends Document {
    *  through 4 (extension-grade). Calibrated at ingest time by
    *  the verifier. */
   difficulty: 1 | 2 | 3 | 4;
+  /** OPTIONAL canonical LO code — the lesson plan's `los[].id`
+   *  (e.g. "apstats.normal-distribution"). Added for gap-targeted
+   *  practice retrieval (Phase 3(c)). Existing rows lack it and are
+   *  still served by the legacy {topic,difficulty} queries. */
+  loId?: string;
+  /** OPTIONAL topic id companion. Mirrors `topic` for callers that scope
+   *  by an explicit topic id; topic-scope retrieval matches either field. */
+  topicId?: string;
+  /** OPTIONAL CED code (e.g. AP-Stats "AP-STATS-1.10", most-specific topic
+   *  level). Tagged on LO-aligned ingested content alongside `loId`. */
+  cedCode?: string;
   /** Canonical problem statement, ready for show_problem. May
    *  contain LaTeX; markdown allowed. */
   problemText: string;
@@ -73,6 +84,10 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     topic: { type: String, required: true, index: true },
     subtopic: { type: String, index: true },
     difficulty: { type: Number, required: true, enum: [1, 2, 3, 4] },
+    // Optional LO-alignment fields (Phase 3(c)) — additive, no migration.
+    loId: { type: String },
+    topicId: { type: String },
+    cedCode: { type: String },
     problemText: { type: String, required: true },
     answer: { type: String, required: true },
     hints: [{ type: String }],
@@ -94,6 +109,9 @@ const ProblemBankSchema = new Schema<IProblemBank>(
 // Hot path: pipeline Layer 1/3 query is (topic, difficulty) with id-NOT-IN.
 ProblemBankSchema.index({ topic: 1, difficulty: 1 });
 ProblemBankSchema.index({ topic: 1, subtopic: 1, difficulty: 1 });
+// Gap-targeted practice retrieval (Phase 3(c)) — new, additive index.
+// Sparse so the existing un-tagged corpus isn't indexed.
+ProblemBankSchema.index({ loId: 1, difficulty: 1 }, { sparse: true });
 
 export const ProblemBank =
   mongoose.models.ProblemBank ||

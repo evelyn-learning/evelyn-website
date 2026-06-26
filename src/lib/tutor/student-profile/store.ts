@@ -50,12 +50,12 @@ const CROSS_SESSION_PROMOTION_DELTA_THRESHOLD = 0.5;
 /** Cumulative mastery score above which `resolveSettledGaps` will
  *  auto-resolve an open LO gap. Aligned with render.ts SCORE_LABEL where
  *  ≥ 0.8 reads as "strong." Inclusive (>= so 0.8 exactly resolves). */
-const GAP_RESOLVE_SCORE_THRESHOLD = 0.8;
+export const GAP_RESOLVE_SCORE_THRESHOLD = 0.8;
 /** Minimum exposures required for resolution. Single-shot 0.8 from one
  *  attempt could be a lucky answer; require sustained performance.
  *  Aligned with applyMasteryDeltas confidence band: ≥ 3 exposures
  *  reads as "medium" or higher. Inclusive. */
-const GAP_RESOLVE_EXPOSURES_THRESHOLD = 3;
+export const GAP_RESOLVE_EXPOSURES_THRESHOLD = 3;
 /** Lazy-decay TTL for candidate gaps. Past this age (since lastSeenAt,
  *  with no re-trigger), candidates are treated as stale by `isGapStale`
  *  and hidden from the rendered <student_profile> block. Underlying

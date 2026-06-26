@@ -169,6 +169,15 @@ export interface StudentPreferences {
   modality?: 'visual' | 'equation' | 'mixed';
   /** Tone preference. */
   tone?: 'warm' | 'peer' | 'professional';
+  /** Stated interests (e.g. fandoms, hobbies) for themed analogies/examples.
+   *  Captured + stored first-class via the portal context-ingest endpoint;
+   *  brain-consumption ships in the committed Phase-2 personalization release.
+   *  Additive/optional — `preferences` is stored as Mixed (no migration). */
+  interests?: string[];
+  /** Portal/parent-set CEILING for rapport recall ('off' default), a dial like
+   *  humorCeiling. Stored (it is a setting); the social-memory THREADS remain
+   *  transient and are never persisted engine-side. */
+  socialMemoryLevel?: 'off' | 'light' | 'warm';
 }
 
 /** Partner-level (B2B) policy that constrains what students under a
