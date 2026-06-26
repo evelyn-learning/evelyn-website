@@ -36,12 +36,39 @@ export function PhillipsCurveRenderer({ figure }: { figure: PhillipsCurveFigure 
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
 
-  const AXIS_MAX = 100;
+  // SRPC slope = -1, intercept = pi0 + u0. inflation = intercept - UR.
+  const srpcIntercept0 = pi0 + u0;
+
+  // Resolve the shift first so its extent can feed the axis range.
+  let srpcShiftedIntercept: number | null = null;
+  let lrpcShiftedNairu: number | null = null;
+  if (shift) {
+    const delta = (shift.direction === 'up' || shift.direction === 'right') ? shift.magnitude : -shift.magnitude;
+    if (shift.curve === 'SRPC') srpcShiftedIntercept = srpcIntercept0 + delta;
+    else lrpcShiftedNairu = nairu + delta;
+  }
+
+  // Adaptive axis. The renderer historically hardcoded a 0-100 axis, but the
+  // brain emits REAL percentages (NAIRU ~5, inflation ~3), which collapsed the
+  // whole figure into the bottom-left corner. Scale the axis to the data extent
+  // so the curve fills the chart whether values are single-digit % or 0-100.
+  const niceMax = (v: number): number => {
+    const steps = [10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 120, 150, 200];
+    for (const s of steps) if (v <= s) return s;
+    return Math.ceil(v / 50) * 50;
+  };
+  const dataMax = Math.max(
+    nairu, u0, pi0,
+    u1 ?? 0, pi1 ?? 0,
+    srpcIntercept0,
+    srpcShiftedIntercept ?? 0,
+    lrpcShiftedNairu ?? 0,
+    1,
+  );
+  const AXIS_MAX = niceMax(dataMax * 1.15);
   const xAt = (v: number) => PAD_L + (v / AXIS_MAX) * plotW;
   const yAt = (v: number) => PAD_T + plotH - (v / AXIS_MAX) * plotH;
 
-  // SRPC slope = -1, intercept = pi0 + u0. inflation = intercept - UR.
-  const srpcIntercept0 = pi0 + u0;
   function clipLine(slope: number, intercept: number): { x1: number; y1: number; x2: number; y2: number } {
     const candidates: { U: number; pi: number }[] = [];
     candidates.push({ U: 0, pi: intercept });
@@ -62,17 +89,7 @@ export function PhillipsCurveRenderer({ figure }: { figure: PhillipsCurveFigure 
   }
 
   const srpcLine = clipLine(-1, srpcIntercept0);
-
-  let srpcShiftedLine: ReturnType<typeof clipLine> | null = null;
-  let lrpcShiftedNairu: number | null = null;
-  if (shift) {
-    const delta = (shift.direction === 'up' || shift.direction === 'right') ? shift.magnitude : -shift.magnitude;
-    if (shift.curve === 'SRPC') {
-      srpcShiftedLine = clipLine(-1, srpcIntercept0 + delta);
-    } else {
-      lrpcShiftedNairu = nairu + delta;
-    }
-  }
+  const srpcShiftedLine = srpcShiftedIntercept !== null ? clipLine(-1, srpcShiftedIntercept) : null;
 
   return (
     <div
