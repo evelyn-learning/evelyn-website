@@ -81,6 +81,7 @@ import { CatalogSolid3DRenderer } from './CatalogSolid3DRenderer';
 import { CatalogVectors3DRenderer } from './CatalogVectors3DRenderer';
 import { CatalogVseprRenderer } from './CatalogVseprRenderer';
 import { CatalogFieldLinesRenderer } from './CatalogFieldLinesRenderer';
+import { CatalogPhaseDiagramRenderer } from './CatalogPhaseDiagramRenderer';
 
 interface Props {
   kind: string;
@@ -181,6 +182,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'vectors_3d':                 return <CatalogVectors3DRenderer figure={figure} />;
     case 'vsepr_geometry':             return <CatalogVseprRenderer figure={figure} />;
     case 'field_lines':                return <CatalogFieldLinesRenderer figure={figure} />;
+    case 'phase_diagram':              return <CatalogPhaseDiagramRenderer figure={figure} />;
 
     default:
       return (

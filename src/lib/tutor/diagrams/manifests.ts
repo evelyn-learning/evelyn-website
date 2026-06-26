@@ -190,6 +190,10 @@ import {
   buildFieldLinesManifest,
   solveFieldLines as solveFieldLinesForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/field-lines';
+import {
+  buildPhaseDiagramManifest,
+  solvePhaseDiagram as solvePhaseDiagramForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/phase-diagram';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1334,6 +1338,12 @@ function buildDiagramManifest(cmd: {
     case 'field_lines': {
       try {
         return buildFieldLinesManifest(solveFieldLinesForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'phase_diagram': {
+      try {
+        return buildPhaseDiagramManifest(solvePhaseDiagramForManifest(params));
       } catch { /* fall through */ }
       break;
     }
