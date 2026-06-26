@@ -1,0 +1,23 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "t_chart",
+    "params": {
+      "leftHeader": "Pavlov's Dogs (Classical)",
+      "rightHeader": "Skinner's Rats (Operant)",
+      "leftItems": [
+        "Passive — just experience it",
+        "Bell → salivate",
+        "Association between stimuli"
+      ],
+      "rightItems": [
+        "Active — DO something",
+        "Press lever → get food",
+        "Consequence shapes behavior"
+      ],
+      "title": "Two Kinds of Learning"
+    }
+  },
+  "label": "harvested-show-diagram-t-chart-v2",
+  "_source": "operant-conditioning"
+}

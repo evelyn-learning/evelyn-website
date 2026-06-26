@@ -1,0 +1,51 @@
+{
+  "course": "psych",
+  "sessions": 6,
+  "totalToolCalls": 9,
+  "expected": [
+    "show_stats",
+    "show_function_graph",
+    "show_labeled_image",
+    "show_concept_map",
+    "comparison_table",
+    "show_table",
+    "show_diagram"
+  ],
+  "fired": [
+    "show_diagram:t_chart",
+    "show_stats",
+    "show_sketch",
+    "show_diagram:flowchart_simple",
+    "show_table"
+  ],
+  "missing": [
+    "show_function_graph",
+    "show_labeled_image",
+    "show_concept_map",
+    "comparison_table",
+    "show_diagram"
+  ],
+  "unexpected": [
+    "show_diagram:t_chart",
+    "show_sketch",
+    "show_diagram:flowchart_simple"
+  ],
+  "variantsPerIdent": {
+    "show_diagram:t_chart": 2,
+    "show_stats": 1,
+    "show_sketch": 2,
+    "show_diagram:flowchart_simple": 3,
+    "show_table": 1
+  },
+  "fixturesWritten": [
+    "harvested-show-diagram-t-chart-v1.json",
+    "harvested-show-stats.json",
+    "harvested-show-sketch-v1.json",
+    "harvested-show-sketch-v2.json",
+    "harvested-show-diagram-flowchart-simple-v1.json",
+    "harvested-show-diagram-t-chart-v2.json",
+    "harvested-show-diagram-flowchart-simple-v2.json",
+    "harvested-show-diagram-flowchart-simple-v3.json",
+    "harvested-show-table.json"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "flowchart_simple",
+    "params": {
+      "nodes": [
+        {
+          "id": "1",
+          "label": "Sensory Memory"
+        },
+        {
+          "id": "2",
+          "label": "Short-Term Memory"
+        },
+        {
+          "id": "3",
+          "label": "Long-Term Memory"
+        }
+      ],
+      "edges": [
+        {
+          "from": "1",
+          "to": "2",
+          "label": "attention"
+        },
+        {
+          "from": "2",
+          "to": "3",
+          "label": "encoding"
+        }
+      ],
+      "title": "Memory as a System"
+    }
+  },
+  "label": "harvested-show-diagram-flowchart-simple-v3",
+  "_source": "memory-models"
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "flowchart_simple",
+    "params": {
+      "title": "Memory as a System",
+      "steps": [
+        "Sensory Input",
+        "Short-Term Memory",
+        "Long-Term Memory"
+      ]
+    }
+  },
+  "label": "harvested-show-diagram-flowchart-simple-v2",
+  "_source": "memory-models"
+}

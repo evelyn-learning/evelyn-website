@@ -1,0 +1,15 @@
+{
+  "tool": "show_sketch",
+  "args": {
+    "concept": "a single neuron with branching dendrites on one end, a long axon in the middle, and axon terminals at the other end, with tiny lightning bolt symbols showing electrical signal traveling along it",
+    "labels": [
+      "dendrites",
+      "axon",
+      "terminals",
+      "signal →"
+    ],
+    "title": "Your Brain's Messenger"
+  },
+  "label": "harvested-show-sketch-v1",
+  "_source": "neurons-neurotransmitters"
+}

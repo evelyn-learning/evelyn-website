@@ -1,0 +1,23 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "t_chart",
+    "params": {
+      "leftHeader": "One General Intelligence?",
+      "rightHeader": "Many Separate Abilities?",
+      "leftItems": [
+        "One g factor drives all mental tasks",
+        "High in one area → high in others",
+        "Spearman's view"
+      ],
+      "rightItems": [
+        "Distinct skills (music, math, language…)",
+        "You can excel in one, struggle in another",
+        "Gardner's / Sternberg's view"
+      ],
+      "title": "What IS Intelligence?"
+    }
+  },
+  "label": "harvested-show-diagram-t-chart-v1",
+  "_source": "intelligence"
+}

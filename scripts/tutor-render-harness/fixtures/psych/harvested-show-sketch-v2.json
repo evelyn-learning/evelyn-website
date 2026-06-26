@@ -1,0 +1,18 @@
+{
+  "tool": "show_sketch",
+  "args": {
+    "concept": "Side profile of a human brain with labeled regions: hindbrain (cerebellum and brainstem at the back/bottom), midbrain (small region in the middle), and forebrain (large cerebral cortex at the top) with the four lobes marked — frontal lobe at the front, parietal lobe at the top-back, temporal lobe on the side, and occipital lobe at the very back",
+    "labels": [
+      "Frontal Lobe",
+      "Parietal Lobe",
+      "Temporal Lobe",
+      "Occipital Lobe",
+      "Cerebellum",
+      "Brainstem",
+      "Midbrain"
+    ],
+    "title": "Major Brain Structures"
+  },
+  "label": "harvested-show-sketch-v2",
+  "_source": "brain-structures"
+}

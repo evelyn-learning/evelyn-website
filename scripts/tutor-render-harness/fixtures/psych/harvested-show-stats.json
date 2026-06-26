@@ -1,0 +1,19 @@
+{
+  "tool": "show_stats",
+  "args": {
+    "type": "distribution",
+    "title": "Normal Distribution of IQ Scores",
+    "xLabel": "IQ Score",
+    "yLabel": "Frequency",
+    "distribution": {
+      "family": "normal",
+      "params": {
+        "mean": 100,
+        "sd": 15
+      },
+      "showMean": true
+    }
+  },
+  "label": "harvested-show-stats",
+  "_source": "intelligence"
+}

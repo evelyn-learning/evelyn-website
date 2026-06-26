@@ -1,0 +1,67 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "flowchart_simple",
+    "params": {
+      "title": "Classical Conditioning",
+      "nodes": [
+        {
+          "id": "before",
+          "label": "BEFORE Conditioning"
+        },
+        {
+          "id": "us_before",
+          "label": "UCS (Food) → UCR (Salivation)"
+        },
+        {
+          "id": "cs_before",
+          "label": "CS (Bell) → No Response"
+        },
+        {
+          "id": "during",
+          "label": "DURING Conditioning"
+        },
+        {
+          "id": "during_pair",
+          "label": "CS (Bell) + UCS (Food) → UCR (Salivation)"
+        },
+        {
+          "id": "after",
+          "label": "AFTER Conditioning"
+        },
+        {
+          "id": "after_cs",
+          "label": "CS (Bell) → CR (Salivation)"
+        }
+      ],
+      "edges": [
+        {
+          "from": "before",
+          "to": "us_before"
+        },
+        {
+          "from": "before",
+          "to": "cs_before"
+        },
+        {
+          "from": "before",
+          "to": "during"
+        },
+        {
+          "from": "during",
+          "to": "during_pair"
+        },
+        {
+          "from": "during",
+          "to": "after"
+        },
+        {
+          "from": "after",
+          "to": "after_cs"
+        }
+      ]
+    }
+  },
+  "label": "harvested-show-diagram-flowchart-simple-v1",
+  "_source": "classical-conditioning"
+}

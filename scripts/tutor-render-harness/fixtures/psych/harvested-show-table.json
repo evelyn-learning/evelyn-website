@@ -1,0 +1,29 @@
+{
+  "tool": "show_table",
+  "args": {
+    "headers": [
+      "Stage",
+      "Capacity",
+      "Duration"
+    ],
+    "rows": [
+      [
+        "Sensory Memory",
+        "Large (everything)",
+        "< 1 second"
+      ],
+      [
+        "Short-Term Memory",
+        "~7 items (±2)",
+        "~20-30 seconds"
+      ],
+      [
+        "Long-Term Memory",
+        "Unlimited",
+        "Lifetime"
+      ]
+    ]
+  },
+  "label": "harvested-show-table",
+  "_source": "memory-models"
+}

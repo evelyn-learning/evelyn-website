@@ -30,14 +30,38 @@ export function solveFlowchartSimple(params: Record<string, unknown>): Flowchart
     throw new Error('flowchart_simple: edges required');
   }
   const validTypes = new Set(['start', 'end', 'process', 'decision', 'io']);
-  const nodes: FlowchartNode[] = (params.nodes as Array<Record<string, unknown>>).map((n, i) => {
+  const rawNodes = params.nodes as Array<Record<string, unknown>>;
+  const rawEdges = params.edges as Array<Record<string, unknown>>;
+  // Tolerate the model's natural node shape: it commonly emits `label` (the field
+  // every other catalog kind uses) instead of `text`, and omits `type`. Accept
+  // `label` as an alias for `text`, and when `type` is missing/invalid infer it
+  // from edge connectivity (no incoming → start, no outgoing → end, else process)
+  // so the flowchart renders instead of failing the whole diagram to a placeholder.
+  const hasIncoming = new Set<string>();
+  const hasOutgoing = new Set<string>();
+  for (const e of rawEdges) {
+    if (typeof e.from === 'string') hasOutgoing.add(e.from);
+    if (typeof e.to === 'string') hasIncoming.add(e.to);
+  }
+  const nodes: FlowchartNode[] = rawNodes.map((n, i) => {
     if (typeof n.id !== 'string') throw new Error(`flowchart: nodes[${i}].id required`);
-    if (typeof n.type !== 'string' || !validTypes.has(n.type)) throw new Error(`flowchart: nodes[${i}].type invalid`);
-    if (typeof n.text !== 'string') throw new Error(`flowchart: nodes[${i}].text required`);
-    return { id: n.id, type: n.type as FlowchartNode['type'], text: n.text };
+    const text = typeof n.text === 'string' ? n.text
+      : typeof n.label === 'string' ? n.label : undefined;
+    if (text === undefined) throw new Error(`flowchart: nodes[${i}].text/label required`);
+    let type: FlowchartNode['type'];
+    if (typeof n.type === 'string' && validTypes.has(n.type)) {
+      type = n.type as FlowchartNode['type'];
+    } else if (!hasIncoming.has(n.id)) {
+      type = 'start';
+    } else if (!hasOutgoing.has(n.id)) {
+      type = 'end';
+    } else {
+      type = 'process';
+    }
+    return { id: n.id, type, text };
   });
   const ids = new Set(nodes.map((n) => n.id));
-  const edges: FlowchartEdge[] = (params.edges as Array<Record<string, unknown>>).map((e, i) => {
+  const edges: FlowchartEdge[] = rawEdges.map((e, i) => {
     if (typeof e.from !== 'string' || !ids.has(e.from)) throw new Error(`flowchart: edges[${i}].from invalid`);
     if (typeof e.to !== 'string' || !ids.has(e.to)) throw new Error(`flowchart: edges[${i}].to invalid`);
     return {

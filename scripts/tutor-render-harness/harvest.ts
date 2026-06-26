@@ -146,6 +146,28 @@ const COURSES: Record<string, CourseConfig> = {
       'show_function_graph', 'show_equation', 'show_table',
     ],
   },
+  psych: {
+    start: { subject: 'social-studies', level: 'AP', topic: 'ap-psychology', studentName: 'Harvest' },
+    idPrefix: 'evelyn.ap.psych.',
+    sessions: [
+      { plan: 'evelyn.ap.psych.intelligence.v1', says: [
+        'Draw the normal distribution of IQ scores, marking the mean of 100 and the standard deviations.' ] },
+      { plan: 'evelyn.ap.psych.neurons-neurotransmitters.v1', says: [
+        'Draw a labeled neuron showing the dendrites, cell body, axon, myelin sheath, and synapse.' ] },
+      { plan: 'evelyn.ap.psych.brain-structures.v1', says: [
+        'Draw a labeled diagram of the brain showing the major lobes and structures.' ] },
+      { plan: 'evelyn.ap.psych.classical-conditioning.v1', says: [
+        'Draw a diagram of classical conditioning showing the US, UR, CS, and CR before, during, and after conditioning.' ] },
+      { plan: 'evelyn.ap.psych.operant-conditioning.v1', says: [
+        'Draw a table of the four operant conditioning outcomes: positive and negative reinforcement and punishment.' ] },
+      { plan: 'evelyn.ap.psych.memory-models.v1', says: [
+        'Draw the information-processing model of memory: sensory memory to short-term to long-term, with the arrows between them.' ] },
+    ],
+    expected: [
+      'show_stats', 'show_function_graph', 'show_labeled_image', 'show_concept_map',
+      'comparison_table', 'show_table', 'show_diagram',
+    ],
+  },
 };
 const course = process.argv.find((a, i) => i >= 2 && !a.startsWith('-')) || '';
 const cfg = COURSES[course];
