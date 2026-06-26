@@ -106,7 +106,9 @@ export type DiagramKindId =
   | 'field_lines'
   | 'phase_diagram'
   // Phase 16 — labeled-bio diagrams
-  | 'heart_diagram';
+  | 'heart_diagram'
+  | 'photosynthesis'
+  | 'cellular_respiration';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

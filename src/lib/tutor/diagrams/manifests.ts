@@ -198,6 +198,11 @@ import {
   buildHeartManifest,
   solveHeartDiagram as solveHeartForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/heart';
+import {
+  buildCellEnergyManifest,
+  solvePhotosynthesis as solvePhotoForManifest,
+  solveCellularRespiration as solveRespForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/cell-energy';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1355,6 +1360,14 @@ function buildDiagramManifest(cmd: {
       try {
         return buildHeartManifest(solveHeartForManifest(params));
       } catch { /* fall through */ }
+      break;
+    }
+    case 'photosynthesis': {
+      try { return buildCellEnergyManifest(solvePhotoForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'cellular_respiration': {
+      try { return buildCellEnergyManifest(solveRespForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:
