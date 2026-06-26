@@ -99,6 +99,9 @@ function jsExprToLatex(expr: string, variable: string = 'x'): string {
  * Get LaTeX for a graph function, preferring the latex field, falling back to JS conversion.
  */
 function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string = 'x'): string {
+  // `expr` is the show_function_graph tool's documented LaTeX field; prefer it,
+  // then the legacy `latex`/`fn`. Without this the brain's `expr` was ignored.
+  if (fn.expr) return normalizeBareLatex(fn.expr);
   if (fn.latex) return normalizeBareLatex(fn.latex);
   if (fn.fn) return jsExprToLatex(fn.fn, variable);
   return variable;

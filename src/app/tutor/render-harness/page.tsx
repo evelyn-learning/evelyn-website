@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import Script from 'next/script';
 import { CommandRenderer, WhiteboardCallbackContext } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { processToolCall } from '@/lib/tutor/whiteboard/process-tool-call';
@@ -117,6 +118,12 @@ export default function RenderHarnessPage() {
 
   return (
     <WhiteboardCallbackContext.Provider value={{}}>
+      {/* Load Desmos so graph fixtures render via DesmosGraphRenderer (the
+          production primary), not the Mafs fallback. Same key as the tutor page. */}
+      <Script
+        src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a"
+        strategy="afterInteractive"
+      />
       <div data-harness="root" style={{ padding: 24, background: '#fff', minHeight: '100vh' }}>
         {panel && (
           <div

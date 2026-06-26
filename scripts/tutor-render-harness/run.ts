@@ -67,6 +67,12 @@ async function main() {
   log('Warming route (first client compile)…');
   await page.goto(`${BASE_URL}/tutor/render-harness`, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await page.waitForFunction(() => (window as unknown as { __renderResult?: unknown }).__renderResult !== undefined, { timeout: 120000 });
+  // Best-effort: wait for Desmos so graph fixtures render via the production
+  // DesmosGraphRenderer (not the Mafs fallback). If it doesn't load, graphs
+  // still render via Mafs — they just won't exercise the primary path.
+  await page.waitForFunction(() => !!(window as unknown as { Desmos?: unknown }).Desmos, { timeout: 30000 })
+    .then(() => log('Desmos loaded — graph fixtures use the primary renderer'))
+    .catch(() => log('Desmos did NOT load — graph fixtures fall back to Mafs'));
 
   for (let i = 0; i < fixtures.length; i++) {
     const fx = fixtures[i];
@@ -85,8 +91,10 @@ async function main() {
         window.location.hash = h;
       }, b64);
       await page.waitForFunction(() => (window as unknown as { __renderResult?: unknown }).__renderResult !== undefined, { timeout: 30000 });
-      // settle async renderers (Desmos/KaTeX) + any error boundary catch
-      await page.waitForTimeout(900);
+      // settle async renderers + any error-boundary catch. Graph fixtures render
+      // through Desmos (async script + calculator paint), so give them longer.
+      const action0 = await page.evaluate(() => (window as unknown as { __renderResult?: { action?: string } }).__renderResult?.action);
+      await page.waitForTimeout(action0 === 'showGraph' ? 3000 : 900);
       rr = await page.evaluate(() => (window as unknown as { __renderResult: RenderResult }).__renderResult);
     } catch (e) {
       rr = { rejected: false, error: e instanceof Error ? e.message : String(e) };
