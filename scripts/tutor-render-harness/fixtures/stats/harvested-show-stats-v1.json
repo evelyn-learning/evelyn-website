@@ -1,0 +1,24 @@
+{
+  "tool": "show_stats",
+  "args": {
+    "type": "distribution",
+    "title": "Normal Distribution — ±1 Standard Deviation",
+    "distribution": {
+      "family": "normal",
+      "params": {
+        "mean": 0,
+        "sd": 1
+      },
+      "shade": {
+        "type": "between",
+        "a": -1,
+        "b": 1
+      },
+      "probabilityLabel": "≈ 68%",
+      "showMean": true
+    },
+    "xLabel": "z"
+  },
+  "label": "harvested-show-stats-v1",
+  "_source": "normal-distribution"
+}

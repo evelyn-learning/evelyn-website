@@ -1,0 +1,1 @@
+{ "tool": "show_stats", "args": { "type": "boxplot", "title": "Reaction Times (ms)", "boxplot": { "datasets": [{ "label": "Group", "min": 180, "q1": 220, "median": 250, "q3": 290, "max": 340, "outliers": [410] }], "showValues": true }, "xLabel": "ms" }, "label": "authored-show-stats-boxplot" }

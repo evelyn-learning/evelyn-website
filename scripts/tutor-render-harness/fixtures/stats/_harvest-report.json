@@ -1,0 +1,66 @@
+{
+  "course": "stats",
+  "sessions": 7,
+  "totalToolCalls": 11,
+  "expected": [
+    "show_stats",
+    "show_diagram:normal_curve",
+    "show_diagram:scatterplot_regression",
+    "show_diagram:histogram",
+    "show_scatter_plot",
+    "show_table",
+    "show_tree",
+    "show_venn_diagram",
+    "show_equation"
+  ],
+  "fired": [
+    "show_diagram:comparison_table",
+    "mark_segment_complete",
+    "advance_lesson",
+    "show_problem",
+    "show_function_graph",
+    "show_stats",
+    "show_sketch",
+    "show_table"
+  ],
+  "missing": [
+    "show_diagram:normal_curve",
+    "show_diagram:scatterplot_regression",
+    "show_diagram:histogram",
+    "show_scatter_plot",
+    "show_tree",
+    "show_venn_diagram",
+    "show_equation"
+  ],
+  "unexpected": [
+    "show_diagram:comparison_table",
+    "mark_segment_complete",
+    "advance_lesson",
+    "show_problem",
+    "show_function_graph",
+    "show_sketch"
+  ],
+  "variantsPerIdent": {
+    "show_diagram:comparison_table": 2,
+    "mark_segment_complete": 1,
+    "advance_lesson": 1,
+    "show_problem": 1,
+    "show_function_graph": 1,
+    "show_stats": 3,
+    "show_sketch": 1,
+    "show_table": 1
+  },
+  "fixturesWritten": [
+    "harvested-show-diagram-comparison-table-v1.json",
+    "harvested-mark-segment-complete.json",
+    "harvested-advance-lesson.json",
+    "harvested-show-problem.json",
+    "harvested-show-function-graph.json",
+    "harvested-show-stats-v1.json",
+    "harvested-show-diagram-comparison-table-v2.json",
+    "harvested-show-stats-v2.json",
+    "harvested-show-sketch.json",
+    "harvested-show-stats-v3.json",
+    "harvested-show-table.json"
+  ]
+}

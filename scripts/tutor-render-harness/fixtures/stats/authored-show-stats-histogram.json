@@ -1,0 +1,1 @@
+{ "tool": "show_stats", "args": { "type": "histogram", "title": "Exam Scores (n = 40)", "bins": [[50, 60, 3], [60, 70, 7], [70, 80, 12], [80, 90, 11], [90, 100, 7]], "showCounts": true, "xLabel": "Score", "yLabel": "Frequency" }, "label": "authored-show-stats-histogram" }

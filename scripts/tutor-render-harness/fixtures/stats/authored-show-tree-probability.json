@@ -1,0 +1,10 @@
+{ "tool": "show_tree", "args": { "type": "probability", "title": "Two Coin Flips", "root": { "label": "Start", "children": [
+  { "label": "H", "probability": "0.5", "node": { "label": "Flip 1: H", "children": [
+    { "label": "H", "probability": "0.5", "node": { "label": "HH (0.25)" } },
+    { "label": "T", "probability": "0.5", "node": { "label": "HT (0.25)" } }
+  ] } },
+  { "label": "T", "probability": "0.5", "node": { "label": "Flip 1: T", "children": [
+    { "label": "H", "probability": "0.5", "node": { "label": "TH (0.25)" } },
+    { "label": "T", "probability": "0.5", "node": { "label": "TT (0.25)" } }
+  ] } }
+] } }, "label": "authored-show-tree-probability" }

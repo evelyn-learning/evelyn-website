@@ -1,0 +1,1 @@
+{ "tool": "show_stats", "args": { "type": "dotplot", "title": "Number of Siblings", "data": [0, 1, 1, 2, 2, 2, 3, 3, 1, 0, 2, 4, 1, 2, 3], "xLabel": "Siblings" }, "label": "authored-show-stats-dotplot" }

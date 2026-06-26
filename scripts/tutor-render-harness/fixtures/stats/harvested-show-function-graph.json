@@ -1,0 +1,25 @@
+{
+  "tool": "show_function_graph",
+  "args": {
+    "title": "The Normal Distribution",
+    "functions": [
+      {
+        "expr": "\\frac{1}{\\sqrt{2\\pi}}e^{-x^2/2}",
+        "label": "N(μ, σ)",
+        "color": "blue"
+      }
+    ],
+    "xRange": [
+      -4,
+      4
+    ],
+    "yRange": [
+      0,
+      0.45
+    ],
+    "xLabel": "z (standard deviations from mean)",
+    "yLabel": "Density"
+  },
+  "label": "harvested-show-function-graph",
+  "_source": "normal-distribution"
+}

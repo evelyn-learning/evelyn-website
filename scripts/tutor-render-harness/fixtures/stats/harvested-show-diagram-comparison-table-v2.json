@@ -1,0 +1,32 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "comparison_table",
+    "params": {
+      "items": [
+        "Center",
+        "Spread",
+        "Shape/Outliers"
+      ],
+      "attributes": [
+        "Statistic",
+        "Measures"
+      ],
+      "cells": [
+        [
+          "Mean, Median",
+          "SD, IQR, Range",
+          "Boxplot, 1.5×IQR rule"
+        ],
+        [
+          "Where data clusters",
+          "How stretched out",
+          "Symmetric? Skewed? Gaps?"
+        ]
+      ],
+      "title": "SOCS — Putting Numbers On It"
+    }
+  },
+  "label": "harvested-show-diagram-comparison-table-v2",
+  "_source": "summary-statistics"
+}

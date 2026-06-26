@@ -1,0 +1,38 @@
+{
+  "tool": "show_diagram",
+  "args": {
+    "type": "comparison_table",
+    "params": {
+      "items": [
+        "Dotplot",
+        "Stemplot",
+        "Histogram"
+      ],
+      "attributes": [
+        "What it shows",
+        "Detail level",
+        "Best for"
+      ],
+      "cells": [
+        [
+          "Each value as a dot",
+          "Each value as a digit",
+          "Grouped counts as bars"
+        ],
+        [
+          "High — every data point",
+          "High — exact values",
+          "Lower — grouped into bins"
+        ],
+        [
+          "Small datasets",
+          "Small/medium datasets",
+          "Large datasets"
+        ]
+      ],
+      "title": "Displays for Quantitative Data"
+    }
+  },
+  "label": "harvested-show-diagram-comparison-table-v1",
+  "_source": "quantitative-graphs"
+}

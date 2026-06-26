@@ -1,0 +1,45 @@
+{
+  "tool": "show_table",
+  "args": {
+    "headers": [
+      "Class Year",
+      "Likes Coffee: Yes",
+      "Likes Coffee: No",
+      "Total"
+    ],
+    "rows": [
+      [
+        "Freshman",
+        "18",
+        "22",
+        "40"
+      ],
+      [
+        "Sophomore",
+        "24",
+        "16",
+        "40"
+      ],
+      [
+        "Junior",
+        "30",
+        "10",
+        "40"
+      ],
+      [
+        "Senior",
+        "35",
+        "5",
+        "40"
+      ],
+      [
+        "Total",
+        "107",
+        "53",
+        "160"
+      ]
+    ]
+  },
+  "label": "harvested-show-table",
+  "_source": "two-categorical-relationships"
+}

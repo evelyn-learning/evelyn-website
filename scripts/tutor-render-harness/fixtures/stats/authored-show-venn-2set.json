@@ -1,0 +1,1 @@
+{ "tool": "show_venn_diagram", "args": { "title": "Beverage Preference (n = 42)", "sets": [{ "label": "Coffee" }, { "label": "Tea" }], "regions": { "onlyA": { "value": "18" }, "onlyB": { "value": "12" }, "intersection": { "value": "7" }, "neither": { "value": "5" } } }, "label": "authored-show-venn-2set" }

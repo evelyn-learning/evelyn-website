@@ -1,0 +1,86 @@
+{
+  "tool": "show_stats",
+  "args": {
+    "type": "scatter",
+    "points": [
+      {
+        "x": 60,
+        "y": 120
+      },
+      {
+        "x": 62,
+        "y": 130
+      },
+      {
+        "x": 63,
+        "y": 135
+      },
+      {
+        "x": 64,
+        "y": 140
+      },
+      {
+        "x": 65,
+        "y": 145
+      },
+      {
+        "x": 66,
+        "y": 150
+      },
+      {
+        "x": 67,
+        "y": 160
+      },
+      {
+        "x": 68,
+        "y": 165
+      },
+      {
+        "x": 69,
+        "y": 170
+      },
+      {
+        "x": 70,
+        "y": 175
+      },
+      {
+        "x": 71,
+        "y": 180
+      },
+      {
+        "x": 72,
+        "y": 190
+      },
+      {
+        "x": 73,
+        "y": 195
+      },
+      {
+        "x": 64,
+        "y": 155
+      },
+      {
+        "x": 67,
+        "y": 142
+      },
+      {
+        "x": 70,
+        "y": 168
+      },
+      {
+        "x": 65,
+        "y": 162
+      },
+      {
+        "x": 68,
+        "y": 180
+      }
+    ],
+    "xLabel": "Height (inches)",
+    "yLabel": "Weight (lbs)",
+    "title": "Height vs. Weight — Sample of Students",
+    "showTrendLine": false
+  },
+  "label": "harvested-show-stats-v2",
+  "_source": "scatterplots"
+}
