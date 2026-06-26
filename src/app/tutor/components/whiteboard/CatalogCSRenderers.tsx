@@ -20,16 +20,16 @@ import {
 export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFigure }) {
   const { nodes, edges, title } = figure;
   const N = flowchartSimpleFeatureNames;
-  const NODE_W = 200;
   const NODE_H = 44;
   const ROW_H = 90;
-  const HORIZ_GAP = 220; // horizontal stagger for decision branches
-  // Topo layout: BFS depths from start, then x via decision-branch
-  // stagger + parent-x averaging for convergence points. Avoids the
-  // old single-column layout where a decision's two outgoing edges
-  // stacked vertically and one label landed inside the other branch's
-  // box.
-  const { positions, maxDepth, minX, maxX } = layoutFlowchart(nodes, edges, NODE_W, ROW_H, HORIZ_GAP);
+  const GAP = 28; // horizontal gap between packed siblings in a row
+  // Per-rank packing layout (see layoutFlowchart): each node is sized to its
+  // label and every row is packed so siblings never overlap — regardless of
+  // node type or fan-out. Replaces the old stagger layout, which stacked all
+  // of a non-decision parent's children at a single x (total occlusion) and
+  // spaced decision branches by a fixed gap narrower than the labels.
+  const widths = new Map(nodes.map((n) => [n.id, estNodeWidth(n.text)]));
+  const { positions, maxDepth, minX, maxX } = layoutFlowchart(nodes, edges, widths, ROW_H, GAP);
   // Reserve a right-side gutter when the graph has back-edges OR
   // skip-edges (forward edges that jump more than one row — e.g. a
   // decision branch going straight to End past a process row). Both
@@ -43,7 +43,7 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
     return false;
   });
   const rightGutter = needsGutter ? 100 : 20;
-  const layoutSpan = (maxX - minX) + NODE_W; // outer-edge to outer-edge
+  const layoutSpan = maxX - minX; // outer-edge to outer-edge (minX/maxX already include half-widths)
   const W = Math.max(600, layoutSpan + 40 + rightGutter);
   const H = 60 + (maxDepth + 1) * ROW_H;
   // Center the layout within (0, W - rightGutter), so the back-edge
@@ -74,8 +74,8 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
           if (isBackEdge || isSkipEdge) {
             // Route around the right side: leave from source-right,
             // travel down/up the gutter, enter target from the right.
-            const sourceRightX = a.x + NODE_W / 2;
-            const targetRightX = b.x + NODE_W / 2;
+            const sourceRightX = a.x + (widths.get(e.from) ?? 200) / 2;
+            const targetRightX = b.x + (widths.get(e.to) ?? 200) / 2;
             const d = `
               M ${sourceRightX} ${a.y}
               L ${BACK_EDGE_X} ${a.y}
@@ -129,10 +129,11 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
               key={n.id}
               node={n}
               pos={p}
+              width={widths.get(n.id)!}
               dataFeature={N.node(n.id)}
               cxFrac={p.x / W}
               cyFrac={p.y / H}
-              wFrac={(NODE_W + 8) / W}
+              wFrac={(widths.get(n.id)! + 8) / W}
               hFrac={(NODE_H + 8) / H}
             />
           );
@@ -142,11 +143,22 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
   );
 }
 
+const FC_MIN_W = 140;
+const FC_MAX_W = 360;
+/** Estimate a node box width from its label so packed siblings never collide
+ *  and long labels (e.g. "CS (Bell) + UCS (Food) → UCR (Salivation)") get a
+ *  wider box instead of overflowing a fixed 200px one. Clamped so very long
+ *  labels don't blow out the row width. */
+function estNodeWidth(text: string): number {
+  return Math.max(FC_MIN_W, Math.min(FC_MAX_W, Math.round((text || '').length * 7) + 28));
+}
+
 function NodeBox({
-  node, pos, dataFeature, cxFrac, cyFrac, wFrac, hFrac,
+  node, pos, width, dataFeature, cxFrac, cyFrac, wFrac, hFrac,
 }: {
   node: FlowchartNode;
   pos: { x: number; y: number };
+  width: number;
   dataFeature: string;
   cxFrac: number;
   cyFrac: number;
@@ -154,8 +166,10 @@ function NodeBox({
   hFrac: number;
 }) {
   const { x, y } = pos;
-  const w = 200;
+  const w = width;
   const h = 44;
+  // Shrink the font a touch for long labels so the text stays inside its box.
+  const fontSize = node.text.length > 30 ? 11 : 13;
   const dataAttrs = {
     'data-feature': dataFeature,
     'data-feature-label': node.text,
@@ -168,7 +182,7 @@ function NodeBox({
     return (
       <g {...dataAttrs}>
         <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={22} ry={22} fill="#dcfce7" stroke="#16a34a" strokeWidth={2} />
-        <text x={x} y={y + 5} fontSize={13} textAnchor="middle" fill="#14532d" fontWeight={600}>{node.text}</text>
+        <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#14532d" fontWeight={600}>{node.text}</text>
       </g>
     );
   }
@@ -176,30 +190,31 @@ function NodeBox({
     return (
       <g {...dataAttrs}>
         <polygon points={`${x},${y - h / 2} ${x + w / 2},${y} ${x},${y + h / 2} ${x - w / 2},${y}`} fill="#fef3c7" stroke="#f59e0b" strokeWidth={2} />
-        <text x={x} y={y + 5} fontSize={12} textAnchor="middle" fill="#92400e" fontWeight={600}>{node.text}</text>
+        <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#92400e" fontWeight={600}>{node.text}</text>
       </g>
     );
   }
   return (
     <g {...dataAttrs}>
       <rect x={x - w / 2} y={y - h / 2} width={w} height={h} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
-      <text x={x} y={y + 5} fontSize={13} textAnchor="middle" fill="#1e3a8a" fontWeight={600}>{node.text}</text>
+      <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#1e3a8a" fontWeight={600}>{node.text}</text>
     </g>
   );
 }
 
-/** Topo layout for the flowchart: BFS depths from the start node, then
- *  assign x per node:
- *    - if the only parent is a decision, stagger horizontally by branch index
- *    - if multiple parents, average their x's (convergence point)
- *    - otherwise inherit parent x (linear chain)
- *  Returns positions in unshifted coordinates (caller shifts to a viewBox). */
+/** Layered layout for the flowchart: BFS longest-path depths from the start
+ *  node assign each node to a row, then each row is PACKED left-to-right by the
+ *  nodes' own widths + a gap and centered — so siblings never overlap no matter
+ *  how many children a node has or what type it is. Rows after the first are
+ *  ordered by the barycenter of each node's parents to keep edges short.
+ *  Returns positions in unshifted coordinates (caller shifts to a viewBox);
+ *  minX/maxX are the outer left/right edges (already include half-widths). */
 function layoutFlowchart(
   nodes: FlowchartNode[],
   edges: { from: string; to: string; label?: string }[],
-  _nodeWidth: number,
+  widths: Map<string, number>,
   rowHeight: number,
-  horizGap: number,
+  gap: number,
 ): {
   positions: Map<string, { x: number; y: number }>;
   maxDepth: number;
@@ -244,51 +259,51 @@ function layoutFlowchart(
   const maxReachedDepth = Math.max(0, ...Array.from(depth.values()));
   for (const n of nodes) if (!depth.has(n.id)) depth.set(n.id, maxReachedDepth + 1);
 
-  // Assign x in depth order (so all parents are placed before a child).
-  const sortedIds = [...depth.keys()].sort((a, b) => {
-    const da = depth.get(a)!;
-    const db = depth.get(b)!;
-    if (da !== db) return da - db;
-    return nodes.findIndex((n) => n.id === a) - nodes.findIndex((n) => n.id === b);
-  });
-  const x = new Map<string, number>();
+  // Group node ids into rows by depth, preserving original array order.
+  const maxDepth = Math.max(0, ...Array.from(depth.values()));
+  const rows: string[][] = Array.from({ length: maxDepth + 1 }, () => []);
+  for (const n of nodes) rows[depth.get(n.id)!].push(n.id);
+
+  // Pack each row top-down. A row's nodes are spaced by their own widths + gap
+  // and centered on CENTER (so a linear chain stays a centered vertical spine).
+  // Rows below the first are ordered by the average x of their already-placed
+  // parents, reducing edge crossings.
   const CENTER = 300;
-  for (const id of sortedIds) {
-    const parents = incoming.get(id)!;
-    if (parents.length === 0) {
-      x.set(id, CENTER);
-      continue;
+  const x = new Map<string, number>();
+  for (let d = 0; d <= maxDepth; d++) {
+    const row = rows[d];
+    if (d > 0) {
+      const bary = (id: string) => {
+        const ps = incoming.get(id)!.filter((p) => x.has(p));
+        if (ps.length === 0) return CENTER;
+        return ps.reduce((s, p) => s + x.get(p)!, 0) / ps.length;
+      };
+      row.sort((a, b) => {
+        const diff = bary(a) - bary(b);
+        if (diff !== 0) return diff;
+        return nodes.findIndex((n) => n.id === a) - nodes.findIndex((n) => n.id === b);
+      });
     }
-    if (parents.length === 1) {
-      const parentNode = nodes.find((n) => n.id === parents[0])!;
-      const parentX = x.get(parents[0]) ?? CENTER;
-      const parentOut = outgoing.get(parents[0])!;
-      if (parentNode.type === 'decision' && parentOut.length >= 2) {
-        const branchIdx = parentOut.findIndex((e) => e.to === id);
-        const branchCount = parentOut.length;
-        const offset = (branchIdx - (branchCount - 1) / 2) * horizGap;
-        x.set(id, parentX + offset);
-      } else {
-        x.set(id, parentX);
-      }
-      continue;
+    const totalW = row.reduce((s, id) => s + widths.get(id)!, 0) + gap * Math.max(0, row.length - 1);
+    let run = CENTER - totalW / 2;
+    for (const id of row) {
+      const w = widths.get(id)!;
+      x.set(id, run + w / 2);
+      run += w + gap;
     }
-    // Multiple parents → average (convergence).
-    const avg = parents.reduce((s, p) => s + (x.get(p) ?? CENTER), 0) / parents.length;
-    x.set(id, avg);
   }
 
   const positions = new Map<string, { x: number; y: number }>();
-  for (const id of sortedIds) {
-    positions.set(id, { x: x.get(id)!, y: 60 + depth.get(id)! * rowHeight });
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const n of nodes) {
+    const xv = x.get(n.id)!;
+    const w = widths.get(n.id)!;
+    positions.set(n.id, { x: xv, y: 60 + depth.get(n.id)! * rowHeight });
+    minX = Math.min(minX, xv - w / 2);
+    maxX = Math.max(maxX, xv + w / 2);
   }
-  const xs = [...x.values()];
-  return {
-    positions,
-    maxDepth: Math.max(0, ...Array.from(depth.values())),
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-  };
+  return { positions, maxDepth, minX, maxX };
 }
 
 // ── State machine ─────────────────────────────────────────────────────────
