@@ -54,6 +54,14 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
       data-feature-label={title || 'Riemann sum'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {/* method + areas as a caption above the plot — keeps them off the curve. */}
+      {method && (
+        <div className="text-xs text-gray-600 -mt-1 mb-2">
+          <span className="italic">{method} sum, n = {n}</span>
+          {approxArea !== undefined && <> · ≈ {Number(approxArea.toFixed(4))}</>}
+          {exactArea !== undefined && <> · <span style={{ color: '#16a34a' }}>exact = {Number(exactArea.toFixed(4))}</span></>}
+        </div>
+      )}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* gridlines */}
         {xTicks.map((tx, i) => (
@@ -175,17 +183,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
         <text x={PAD_L + plotW / 2} y={H - 8} fontSize={12} fontWeight={600} textAnchor="middle" fill="#374151">x</text>
         <text x={16} y={PAD_T + plotH / 2} fontSize={12} fontWeight={600} textAnchor="middle" fill="#374151" transform={`rotate(-90 16 ${PAD_T + plotH / 2})`}>y</text>
 
-        {/* method + areas */}
-        <text x={W - PAD_R - 4} y={PAD_T + 14} fontSize={11} textAnchor="end" fill="#374151" fontStyle="italic">
-          {method} sum, n = {n}
-        </text>
-        {(approxArea !== undefined || exactArea !== undefined) && (
-          <text x={W - PAD_R - 4} y={PAD_T + 30} fontSize={11} textAnchor="end" fill="#374151">
-            {approxArea !== undefined && <tspan>≈ {Number(approxArea.toFixed(4))}</tspan>}
-            {approxArea !== undefined && exactArea !== undefined && <tspan>  </tspan>}
-            {exactArea !== undefined && <tspan fill="#16a34a">exact = {Number(exactArea.toFixed(4))}</tspan>}
-          </text>
-        )}
+        {/* method + areas now render as a caption above the plot (see above). */}
       </svg>
     </div>
   );

@@ -54,6 +54,9 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
       data-feature-label={title || 'slope field'}
     >
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {/* equation as a caption above the plot — the slope field fills the plot,
+          so an in-plot label always collided with segments + the border. */}
+      {exprLabel && <div className="text-xs -mt-1 mb-2" style={{ color: COLOR_SOL }}>{exprLabel}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* gridlines */}
         {xTicks.map((tx, i) => (
@@ -141,21 +144,7 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
           </text>
         ))}
 
-        {/* labels */}
-        {exprLabel && (
-          <text
-            x={PAD_L + 8} y={PAD_T + 14}
-            fontSize={13} fontWeight={600} fill={COLOR_SOL}
-            data-feature={N.exprLabel}
-            data-feature-label={exprLabel}
-            data-feature-cx={(PAD_L + 60) / W}
-            data-feature-cy={(PAD_T + 12) / H}
-            data-feature-w={140 / W}
-            data-feature-h={18 / H}
-          >
-            {exprLabel}
-          </text>
-        )}
+        {/* equation now renders as a caption above the plot (see above). */}
         <text x={PAD_L + plotW / 2} y={H - 8} fontSize={12} fontWeight={600} textAnchor="middle" fill="#374151">x</text>
         <text x={16} y={PAD_T + plotH / 2} fontSize={12} fontWeight={600} textAnchor="middle" fill="#374151" transform={`rotate(-90 16 ${PAD_T + plotH / 2})`}>y</text>
       </svg>

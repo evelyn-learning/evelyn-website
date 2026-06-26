@@ -28,10 +28,12 @@ brain should use `show_diagram(polar_graph)` (or Desmos native `r = …` polar),
 not a Cartesian-implicit `show_function_graph`. Surfaced precisely because the
 harness now tests the real Desmos path.
 
-### 2. Two cosmetic label-collision nits (OPEN, low priority)
-- `riemann_sum` midpoint (v2): the legend "exact = 41.667" overlaps
-  "midpoint sum, n = 6 / ≈ 40.278".
-- `slope_field`: the "dy/dx = x − y" label sits on the plot border / top tick.
+### 2. Two cosmetic label-collision nits — FIXED
+- `riemann_sum` midpoint (v2): the method/area metadata overlapped the rising
+  curve + rightmost rectangle in the top-right.
+- `slope_field`: the "dy/dx = x − y" label sat on the plot border / top tick.
+Both moved to **caption divs above the plot** (the same fix as the Macro shift
+labels) — collision-proof since the slope field / curve fill the plot interior.
 
 ## Process notes (not render defects)
 - **Vision-judge false-positive:** it flagged the authored cardioid as a
@@ -46,6 +48,6 @@ harness now tests the real Desmos path.
 
 ## Final state
 - **Deterministic gate: 9/9 pass.**
-- **Vision-judge: 5/9** — 1 real emission bug (polar function-graph), 2 cosmetic
-  label nits, 1 judge false-positive (cardioid). All purpose-built render tools
-  render correctly.
+- **Vision-judge: 5/9 at audit time** — 1 real emission bug (polar function-graph),
+  2 cosmetic label nits (now FIXED), 1 judge false-positive (cardioid). All
+  purpose-built render tools render correctly.
