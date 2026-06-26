@@ -91,7 +91,7 @@ export async function loadStudentTopicNotes(
   return emptyNotes(studentId, baselineId);
 }
 
-async function saveStudentTopicNotes(notes: StudentTopicNotes): Promise<StudentTopicNotes> {
+export async function saveStudentTopicNotes(notes: StudentTopicNotes): Promise<StudentTopicNotes> {
   const next: StudentTopicNotes = {
     ...notes,
     updatedAt: new Date().toISOString(),
