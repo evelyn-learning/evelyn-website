@@ -35,6 +35,9 @@ only"; (b) a deterministic guard `validateFunctionGraphVars` (in the orchestrato
 a standalone `y` or `θ` (it isn't a function of x), with a hint to use
 `polar_graph`. So instead of silently rendering garbage, the brain gets a
 specific retry hint. Unit-tested (`test:process-tool-call`).
+**Live-verified** (1 brain session): the brain now emits `show_diagram(polar_graph)`
+directly for "graph r = 2 + 2cos(θ)" — 0 `show_function_graph` emissions, so the
+nudge alone fixed it (the guard never had to fire).
 
 ### 2. Two cosmetic label-collision nits — FIXED
 - `riemann_sum` midpoint (v2): the method/area metadata overlapped the rising
