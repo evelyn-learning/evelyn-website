@@ -104,7 +104,9 @@ export type DiagramKindId =
   | 'vectors_3d'
   | 'vsepr_geometry'
   | 'field_lines'
-  | 'phase_diagram';
+  | 'phase_diagram'
+  // Phase 16 — labeled-bio diagrams
+  | 'heart_diagram';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

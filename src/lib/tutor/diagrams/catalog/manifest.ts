@@ -83,6 +83,7 @@ import { solveVectors3D } from './kinds/vectors-3d';
 import { solveVseprGeometry } from './kinds/vsepr';
 import { solveFieldLines } from './kinds/field-lines';
 import { solvePhaseDiagram } from './kinds/phase-diagram';
+import { solveHeartDiagram } from './kinds/heart';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -191,6 +192,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 15 — 3D / spatial figures ────────────────────────────────────
   { kind: 'solid_of_revolution', displayName: 'Solid of Revolution', whenToUse: 'Show a 2D region revolved about an axis to form a 3D solid, with a representative disk / washer / shell slice (AP Calc BC volumes). Use this for the 3D solid — a rough sketch cannot draw a surface of revolution. Pre-sample the bounding curve as the radius profile (like riemann_sum).', subjects: ['math'], grades: { from: 11, to: 12 }, paramSchema: 'outer:[[u,r]…] (radius profile along the axis — u is the position along the axis of revolution, r≥0 the distance from it; ~15-25 samples; tuple form), inner?:[[u,r]…] (inner radius ⇒ washer/hollow), axis?:x|y (default x), method?:disk|washer|shell (default washer if inner else disk), representativeAt?:number (axis coord of the highlighted slice; default midpoint), funcLabel?:string e.g. "y = √x", innerLabel?:string, axisLabel?:string, title?' },
+  { kind: 'heart_diagram', displayName: 'Heart / Circulatory', whenToUse: 'Show a labeled schematic of the heart as a double pump: the four chambers (right/left atrium & ventricle), the great vessels (vena cava, pulmonary artery, pulmonary veins, aorta), and blood-flow direction (blue=deoxygenated, red=oxygenated). Use for circulatory-system teaching instead of a freehand sketch.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — right_atrium, right_ventricle, left_atrium, left_ventricle, vena_cava, pulmonary_artery, pulmonary_vein, aorta), title?' },
   { kind: 'phase_diagram', displayName: 'Phase Diagram (P–T)', whenToUse: 'Show a pressure-temperature phase diagram: solid / liquid / gas regions, the three phase boundaries (sublimation, fusion, vaporization), the triple point and critical point. Supports water\'s negative-slope fusion line. Positions are normalized 0..1 so the shape is always clean.', subjects: ['chemistry', 'physics'], grades: { from: 9, to: 12 }, paramSchema: 'substance?:water|co2|generic (sets fusion slope + title), triplePoint?:{t,p,label?} (t,p in 0..1), criticalPoint?:{t,p,label?}, fusionSlope?:positive|negative (water=negative), marker?:{t,p,label?} (a state point to mark), tLabel?:string, pLabel?:string, title?' },
   { kind: 'field_lines', displayName: 'Field Lines (E / B)', whenToUse: 'Show electric or magnetic field-line patterns: a point charge (radial), a dipole (looping + to −), parallel plates (uniform field), or a bar magnet (N→S loops). The field-line geometry carries the physics; a freehand sketch can\'t draw it cleanly.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'config:point_charge|dipole|parallel_plates|bar_magnet, field?:electric|magnetic (default electric; bar_magnet is always magnetic), charge?:+|- (for point_charge; default +), title?' },
   { kind: 'vsepr_geometry', displayName: 'VSEPR Molecular Geometry', whenToUse: 'Show an idealized 3D molecular shape (VSEPR): linear, trigonal_planar, bent, tetrahedral, trigonal_pyramidal, trigonal_bipyramidal, or octahedral — with wedge/dash bonds, lone pairs, and the bond angle. For electron/molecular geometry teaching. Distinct from show_molecule (a real 2D structure from SMILES); a freehand sketch cannot draw a 3D shape with correct angles.', subjects: ['chemistry'], grades: { from: 9, to: 12 }, paramSchema: 'geometry:linear|trigonal_planar|bent|tetrahedral|trigonal_pyramidal|trigonal_bipyramidal|octahedral, central:string (central atom symbol e.g. "C"), terminal?:string (same symbol on every bond e.g. "H") OR terminals?:[string] (per-position), lonePairs?:number (default per geometry), bondAngle?:string (default per geometry e.g. "109.5°"), title?' },
@@ -292,6 +294,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   vsepr_geometry: solveVseprGeometry,
   field_lines: solveFieldLines,
   phase_diagram: solvePhaseDiagram,
+  heart_diagram: solveHeartDiagram,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

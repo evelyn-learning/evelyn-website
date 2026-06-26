@@ -194,6 +194,10 @@ import {
   buildPhaseDiagramManifest,
   solvePhaseDiagram as solvePhaseDiagramForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/phase-diagram';
+import {
+  buildHeartManifest,
+  solveHeartDiagram as solveHeartForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/heart';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1344,6 +1348,12 @@ function buildDiagramManifest(cmd: {
     case 'phase_diagram': {
       try {
         return buildPhaseDiagramManifest(solvePhaseDiagramForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'heart_diagram': {
+      try {
+        return buildHeartManifest(solveHeartForManifest(params));
       } catch { /* fall through */ }
       break;
     }
