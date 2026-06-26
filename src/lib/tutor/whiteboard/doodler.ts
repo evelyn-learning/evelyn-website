@@ -20,6 +20,14 @@ export const DOODLER_SYSTEM_PROMPT = `You are a fast DOODLER for a voice tutor. 
 
 Call the \`${SKETCH_TOOL_NAME}\` tool with an ordered list of primitives.
 
+WHEN TO ABSTAIN (draw nothing) — read this FIRST:
+A rough freehand doodle is great for INTUITION and ANALOGY (a ball on a hill, energy flowing, a simple before→after, a metaphor). It is the WRONG tool for anything that needs precision, and a rough attempt at those reads as a misleading blob. So if the concept needs ANY of the following, set \`abstain: true\` (with a short \`abstainReason\`) and OMIT primitives — draw NOTHING rather than something wrong:
+- precise geometry or an exact graph/curve (conic sections, a parabola/ellipse/hyperbola as a curve, a plotted function, a labeled coordinate figure);
+- a 3D solid or a solid being sliced (a cone, a double cone, a cube, a cross-section);
+- a detailed labeled technical or anatomical diagram (a neuron, the brain, a cell, a circuit) where parts must be in the right place;
+- anything where accurate proportions or exact positions carry the meaning.
+Only doodle when a loose, approximate picture genuinely helps. When in doubt between a messy doodle and nothing, abstain.
+
 CANVAS: a square, coordinates 0..100 on both axes. (0,0) = top-left, (100,100) = bottom-right; +y points DOWN. Center is (50,50). Keep everything inside 5..95 so nothing clips.
 
 PRIMITIVES (each has optional stroke/fill color = one of: ink, red, blue, green, amber, gray; default stroke ink, no fill):
@@ -51,6 +59,10 @@ let sharedClient: Anthropic | null = null;
 
 export interface DoodleResult {
   primitives: SketchPrimitive[] | null;
+  /** True when the doodler deliberately declined (concept needs precision / 3D /
+   *  exact geometry that a rough doodle can't convey). Distinct from a structural
+   *  validation failure — both yield null primitives, but abstain is intentional. */
+  abstained?: boolean;
   usage?: { inputTokens: number; outputTokens: number };
 }
 
@@ -84,8 +96,13 @@ export async function generateDoodle(
   const toolUse = response.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === SKETCH_TOOL_NAME,
   );
-  return {
-    primitives: validateSketch(toolUse?.input),
-    usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
-  };
+  const usage = { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens };
+  // The doodler may decline a concept it can't convey with a rough sketch
+  // (precise/3D/exact-geometry). Surfaced as a deliberate abstain → null
+  // primitives, which the client turns into a clean fallback card.
+  const input = (toolUse?.input ?? {}) as { abstain?: unknown };
+  if (input.abstain === true) {
+    return { primitives: null, abstained: true, usage };
+  }
+  return { primitives: validateSketch(toolUse?.input), usage };
 }

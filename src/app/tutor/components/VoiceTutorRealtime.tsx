@@ -2275,6 +2275,23 @@ export function VoiceTutorRealtime({
       const cmdId: string | undefined = typeof c.id === 'string' ? c.id : undefined;
       onDebugEvent?.('sketch_request', `anchor=${anchorM} "${concept.slice(0, 50)}" id=${cmdId ?? '?'}`);
 
+      // When the doodler ABSTAINS (concept needs precision the rough sketch
+      // can't convey) or fails, don't leave the board blank under board-anchored
+      // narration ("as you can see…"). Replace the sketch with a clean labeled
+      // card in the SAME render-sync slot, flushed at the same anchor the sketch
+      // would have used — so the deictic reference always lands on something.
+      // Keeps the cataloged board item (no retract). See project_tutor_sketch_capability.
+      const showFallbackCard = (why: string) => {
+        c.primitives = undefined;
+        c.fallbackCard = { title: typeof c.title === 'string' ? c.title : undefined, concept, labels };
+        entry.pendingAsync = false;
+        const stale = pageTurnRef.current !== entryTurn;
+        onDebugEvent?.('sketch_fallback_card', `${why} id=${cmdId ?? '?'}${stale ? ' (stale→drainAll)' : ''}`);
+        flushReadyRenders(stale || !renderSyncActiveRef.current ? { drainAll: true } : {});
+        armRenderStall();
+      };
+      const canCard = () => Boolean(concept || labels.length || typeof c.title === 'string');
+
       const controller = new AbortController();
       sketchAbortsRef.current.add(controller);
       const timer = setTimeout(() => controller.abort(), SKETCH_TIMEOUT_MS);
@@ -2302,6 +2319,8 @@ export function VoiceTutorRealtime({
             // flush normally against its introducing sentence (in-turn sync).
             flushReadyRenders(stale || !renderSyncActiveRef.current ? { drainAll: true } : {});
             armRenderStall();
+          } else if (canCard()) {
+            showFallbackCard('empty/invalid');
           } else {
             dropPendingSketch(entry, cmdId, 'empty/invalid');
           }
@@ -2309,7 +2328,10 @@ export function VoiceTutorRealtime({
         .catch(() => {
           clearTimeout(timer);
           sketchAbortsRef.current.delete(controller);
-          if (renderBufferRef.current.includes(entry)) dropPendingSketch(entry, cmdId, 'fetch-failed/timeout');
+          if (renderBufferRef.current.includes(entry)) {
+            if (canCard()) showFallbackCard('fetch-failed/timeout');
+            else dropPendingSketch(entry, cmdId, 'fetch-failed/timeout');
+          }
         });
     },
     [onDebugEvent, flushReadyRenders, armRenderStall, dropPendingSketch],

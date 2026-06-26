@@ -104,6 +104,19 @@ export const SKETCH_TOOL_NAME = 'emit_sketch';
 export const SKETCH_TOOL_SCHEMA = {
   type: 'object' as const,
   properties: {
+    abstain: {
+      type: 'boolean',
+      description:
+        'Set true (and OMIT primitives) when this concept cannot be conveyed by a rough freehand doodle — ' +
+        'e.g. it needs precise geometry, an exact graph/curve, a 3D solid (a cone, a sliced solid), a ' +
+        'detailed labeled technical/anatomical diagram, or accurate proportions. A rough doodle of those ' +
+        'reads as a misleading blob, so it is better to draw NOTHING. Only doodle illustrative / ' +
+        'intuition / analogy concepts (a ball on a hill, energy flowing, a simple before→after).',
+    },
+    abstainReason: {
+      type: 'string',
+      description: 'When abstaining, a short reason (e.g. "3D sliced cone needs precise geometry").',
+    },
     primitives: {
       type: 'array',
       minItems: SKETCH_BOUNDS.minPrimitives,
@@ -111,7 +124,7 @@ export const SKETCH_TOOL_SCHEMA = {
       description:
         'Ordered list of drawing primitives on a square 0..100 canvas ((0,0)=top-left, +y down). ' +
         'Draw the concept as a teacher would doodle it: a few rough strokes plus a couple of labels. ' +
-        'Earlier primitives render under later ones.',
+        'Earlier primitives render under later ones. Omit when abstain is true.',
       items: {
         type: 'object',
         properties: {
@@ -144,5 +157,5 @@ export const SKETCH_TOOL_SCHEMA = {
       },
     },
   },
-  required: ['primitives'],
+  required: [],
 };

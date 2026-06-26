@@ -12,6 +12,7 @@ import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, 
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { SketchRenderer } from './SketchRenderer';
+import { SketchFallbackCard } from './SketchFallbackCard';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import EarlyMathRenderer from './EarlyMathRenderer';
@@ -1854,6 +1855,18 @@ export function CommandRenderer({ command }: CommandRendererProps) {
       // request without primitives should never reach here (render-sync holds
       // it pending), but guard defensively.
       const prims = command.primitives as SketchPrimitive[] | undefined;
+      // The doodler abstained / failed → render the clean labeled fallback card
+      // in place of the sketch (set by the orchestrator). Never a blank board
+      // under board-anchored narration.
+      if (command.fallbackCard) {
+        return (
+          <SketchFallbackCard
+            title={command.fallbackCard.title}
+            concept={command.fallbackCard.concept}
+            labels={command.fallbackCard.labels}
+          />
+        );
+      }
       if (!prims || prims.length === 0) return null;
       return (
         <SketchRenderer

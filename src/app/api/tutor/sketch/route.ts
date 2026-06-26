@@ -53,10 +53,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ primitives: cached, cached: true });
     }
 
-    const { primitives, usage } = await generateDoodle(concept, labels);
+    const { primitives, usage, abstained } = await generateDoodle(concept, labels);
     if (!primitives) {
-      console.warn(`[SKETCH] Session=${sessionId} | validation FAILED (render nothing) | "${concept.slice(0, 60)}"`);
-      return NextResponse.json({ primitives: null });
+      console.warn(
+        `[SKETCH] Session=${sessionId} | ${abstained ? 'ABSTAINED' : 'validation FAILED'} (fallback card) | "${concept.slice(0, 60)}"`,
+      );
+      // null primitives → the client renders a clean labeled fallback card in the
+      // same render-sync slot, so board-anchored narration never lands on a blank
+      // board. `abstained` is for observability; client behavior is the same.
+      return NextResponse.json({ primitives: null, abstained: !!abstained });
     }
 
     if (sketchCache.size >= CACHE_MAX) sketchCache.clear();

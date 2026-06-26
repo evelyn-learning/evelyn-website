@@ -761,7 +761,10 @@ export type WhiteboardCommand =
   // lib/tutor/whiteboard/sketch-schema) async, mutated onto this same command
   // object before it flushes. Typed unknown[] to keep this file import-free;
   // the canvas casts. See project_tutor_sketch_capability.
-  | { action: 'showSketch'; concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; description?: string }
+  // `fallbackCard` is set when the doodler abstains/fails: the canvas renders a
+  // clean labeled card (from the title/concept/labels) in place of the sketch, so
+  // board-anchored narration never lands on a blank board.
+  | { action: 'showSketch'; concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; description?: string; fallbackCard?: { title?: string; concept?: string; labels?: string[] } }
   // ── New structured math diagram tools ──
   | { action: 'showNumberLine'; title?: string; min: number; max: number; step?: number; points?: NumberLinePoint[]; intervals?: NumberLineInterval[]; segments?: NumberLineSegment[]; fractionTicks?: { denominator: number; showLabels?: boolean } }
   | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; conics?: GeometryConic[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
