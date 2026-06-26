@@ -77,6 +77,7 @@ import { CatalogNutrientCycleRenderer } from './CatalogNutrientCycleRenderer';
 import { CatalogNeuronDiagramRenderer, CatalogBrainRegionsRenderer } from './CatalogAnatomyRenderers';
 import { CatalogConicSectionsRenderer } from './CatalogConicSectionsRenderer';
 import { CatalogSolidOfRevolutionRenderer } from './CatalogSolidOfRevolutionRenderer';
+import { CatalogSolid3DRenderer } from './CatalogSolid3DRenderer';
 
 interface Props {
   kind: string;
@@ -173,6 +174,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'conic_sections':             return <CatalogConicSectionsRenderer figure={figure} />;
     // Phase 15 — 3D / spatial
     case 'solid_of_revolution':        return <CatalogSolidOfRevolutionRenderer figure={figure} />;
+    case 'solid_3d':                   return <CatalogSolid3DRenderer figure={figure} />;
 
     default:
       return (

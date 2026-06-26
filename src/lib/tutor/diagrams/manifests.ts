@@ -174,6 +174,10 @@ import {
   buildSolidOfRevolutionManifest,
   solveSolidOfRevolution as solveSolidOfRevolutionForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/solid-of-revolution';
+import {
+  buildSolid3DManifest,
+  solveSolid3D as solveSolid3DForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/solid-3d';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1294,6 +1298,12 @@ function buildDiagramManifest(cmd: {
     case 'solid_of_revolution': {
       try {
         return buildSolidOfRevolutionManifest(solveSolidOfRevolutionForManifest(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'solid_3d': {
+      try {
+        return buildSolid3DManifest(solveSolid3DForManifest(params));
       } catch { /* fall through */ }
       break;
     }

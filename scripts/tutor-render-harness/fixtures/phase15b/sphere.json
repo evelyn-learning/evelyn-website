@@ -1,0 +1,1 @@
+{ "tool":"show_diagram","args":{"type":"solid_3d","params":{"title":"Sphere","shape":"sphere","dims":{"radius":5}}},"label":"sphere" }

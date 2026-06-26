@@ -1,0 +1,1 @@
+{ "tool":"show_diagram","args":{"type":"solid_3d","params":{"title":"Square Pyramid","shape":"square_pyramid","dims":{"base":6,"height":7}}},"label":"pyramid" }

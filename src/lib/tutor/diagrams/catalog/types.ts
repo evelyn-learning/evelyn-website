@@ -99,7 +99,8 @@ export type DiagramKindId =
   // Phase 14 — conic sections (Algebra 2 / Precalc / AP Calc / JEE)
   | 'conic_sections'
   // Phase 15 — 3D / spatial figures (AP Calc, geometry, IB/JEE, chem, physics)
-  | 'solid_of_revolution';
+  | 'solid_of_revolution'
+  | 'solid_3d';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

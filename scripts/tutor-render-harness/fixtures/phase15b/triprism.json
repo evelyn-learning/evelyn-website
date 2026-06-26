@@ -1,0 +1,1 @@
+{ "tool":"show_diagram","args":{"type":"solid_3d","params":{"title":"Triangular Prism","shape":"triangular_prism","dims":{"base":5,"triHeight":4,"length":8}}},"label":"triprism" }
