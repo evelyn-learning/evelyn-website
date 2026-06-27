@@ -36,7 +36,7 @@ import {
   type SessionResult,
   type ShowQuizPayload,
   type ShowConceptMapPayload,
-} from '@/lib/portal-contract/v1';
+} from '@evelyn/portal-contract/v1';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {

@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
-import { RetrievePracticeRequestSchema } from '@/lib/portal-contract/v1';
+import { RetrievePracticeRequestSchema } from '@evelyn/portal-contract/v1';
 import { retrievePractice } from '@/lib/tutor/portal/practice';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 

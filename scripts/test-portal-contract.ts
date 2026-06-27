@@ -25,6 +25,10 @@ import type {
 } from '@/lib/tutor/student-profile/types';
 import type { RenderedTopicNotes as EngineRenderedTopicNotes } from '@/lib/tutor/topic-notes/types';
 
+// Side-effect import so this runner also type-checks the engine↔contract
+// drift guards (also enforced by tsc/next build).
+import '@/lib/tutor/portal/contract-drift-guard';
+
 import {
   CONTRACT_VERSION,
   MasteryEntrySchema,
@@ -42,7 +46,7 @@ import {
   ShowQuizPayloadSchema,
   ShowConceptMapPayloadSchema,
   FrqRubricSchema,
-} from '@/lib/portal-contract/v1';
+} from '@evelyn/portal-contract/v1';
 
 // ---------------------------------------------------------------------------
 // Test harness

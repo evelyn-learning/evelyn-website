@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
-import { SessionEmitRequestSchema } from '@/lib/portal-contract/v1';
+import { SessionEmitRequestSchema } from '@evelyn/portal-contract/v1';
 import { emitSessionResult } from '@/lib/tutor/portal/session-result';
 
 export const POST = withPortalAuth(async (_req, auth) => {

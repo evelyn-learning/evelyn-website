@@ -20,7 +20,7 @@ import type {
   RetrievePracticeRequest,
   RetrievePracticeResponse,
   PracticeItem,
-} from '@/lib/portal-contract/v1';
+} from '@evelyn/portal-contract/v1';
 
 type Difficulty = 1 | 2 | 3 | 4;
 

@@ -3,7 +3,7 @@
  *
  * Run: `npm run test:portal-auth`
  *
- * Covers the portable signer/verifier (`@/lib/portal-contract/auth`) and the
+ * Covers the portable signer/verifier (`@evelyn/portal-contract/auth`) and the
  * engine route wrapper (`@/lib/tutor/portal/auth`): header presence, unknown
  * partner, timestamp replay window, body-bound signature, tamper detection
  * (incl. studentId tamper), and invalid-JSON handling.
@@ -18,7 +18,7 @@ import {
   verifyPortalSignature,
   PORTAL_SIGNATURE_WINDOW_MS,
   type SigningParts,
-} from '@/lib/portal-contract/auth';
+} from '@evelyn/portal-contract/auth';
 
 // Configure partner secrets BEFORE the engine module reads them (it reads
 // process.env lazily per-call, so setting here is sufficient).
