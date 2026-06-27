@@ -97,3 +97,46 @@ export function resolveGradeItem(itemId: string): GradeItem | null {
   }
   return null;
 }
+
+/** Answer key for grading an assessment item, resolved statelessly by id from
+ *  the curated try-yourself seeds or ProblemBank. The key NEVER leaves the
+ *  engine (it is not part of AssessmentItem sent to the portal). */
+export interface ResolvedAssessmentKey {
+  responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
+  expectedAnswer?: string;
+  choices?: Array<{ id: string; text: string }>;
+  correctChoiceId?: string;
+}
+
+export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
+  // Plan try-yourselves (carry expectedAnswer + {id,text,correct?} choices).
+  for (const plan of SEED_PLANS) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const seg of plan.segments as any[]) {
+      if (seg.id === itemId && seg.kind === 'try_yourself') {
+        return {
+          responseFormat: seg.responseFormat,
+          expectedAnswer: seg.expectedAnswer,
+          choices: seg.choices?.map((c: { id: string; text: string }) => ({ id: c.id, text: c.text })),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          correctChoiceId: seg.choices?.find((c: any) => c.correct)?.id,
+        };
+      }
+    }
+  }
+  // ProblemBank (choices are string[]; the reference `answer` is the key).
+  try {
+    await connectDB();
+    const b = (await ProblemBank.findOne({ id: itemId }).lean()) as unknown as IProblemBank | null;
+    if (b) {
+      return {
+        responseFormat: b.responseFormat,
+        expectedAnswer: b.answer,
+        choices: b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t })),
+      };
+    }
+  } catch {
+    // DB unavailable — fall through.
+  }
+  return null;
+}

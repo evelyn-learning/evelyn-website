@@ -20,7 +20,8 @@
     "test:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-grading.ts",
     "test:portal-ced": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-ced-validator.ts",
     "test:portal-endpoints": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-endpoints.ts",
-    "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints",
+    "test:portal-assessment": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-assessment.ts",
+    "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints && npm run test:portal-assessment",
     "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
@@ -48,7 +49,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@deepgram/sdk": "^4.11.3",
-    "@evelyn/portal-contract": "git+ssh://git@github.com/evelyn-learning/portal-contract.git#v1.0.0",
+    "@evelyn/portal-contract": "github:evelyn-learning/portal-contract#v1.1.0",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "^16.1.6",
     "@rdkit/rdkit": "^2025.3.4-1.0.0",
