@@ -499,6 +499,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
             topic={topic}
             level={level}
             studentName={studentName || undefined}
+            studentId={config.student_id}
             sessionId={sessionId}
             sessionGoal={sessionGoal}
             voice={openAIVoice}
