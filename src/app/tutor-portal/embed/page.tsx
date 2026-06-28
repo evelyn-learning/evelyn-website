@@ -22,7 +22,22 @@ import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { TranscriptView } from '@/app/tutor/components/TranscriptView';
 import { SessionControls } from '@/app/tutor/components/SessionControls';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard';
-import { VoiceTutorRealtime, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
+import { VoiceTutorRealtime, type RealtimeHandle, type TutorMilestone } from '@/app/tutor/components/VoiceTutorRealtime';
+import type { SessionResult } from '@evelyn/portal-contract/v1';
+
+/** The contract's milestone enum (derived from SessionResult — the package
+ *  exports the type via this field rather than a standalone alias). */
+type SessionMilestone = SessionResult['milestone'];
+
+/** Ranking so the embed reports the FURTHEST milestone reached. Keyed by the
+ *  contract enum — assigning a TutorMilestone here proves it maps to a valid
+ *  SessionMilestone at compile time. */
+const MILESTONE_RANK: Record<SessionMilestone, number> = {
+  none: 0,
+  first_concept_complete: 1,
+  first_try_yourself_success: 2,
+  recap_reached: 3,
+};
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
@@ -379,6 +394,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands]);
 
+  // Furthest pedagogical milestone reached this session (from the runtime).
+  // Defaults to 'none'; reported to the portal in session_ended.
+  const milestoneRef = useRef<SessionMilestone>('none');
+  const handleMilestone = useCallback((m: TutorMilestone) => {
+    if (MILESTONE_RANK[m] > MILESTONE_RANK[milestoneRef.current]) milestoneRef.current = m;
+  }, []);
+
   // End session — save to DB + notify parent window
   const handleEndSession = useCallback(() => {
     saveSession('completed');
@@ -392,6 +414,9 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         duration,
         message_count: transcript.length,
         whiteboard_items: whiteboardCommands.length,
+        // Real engine milestone (value-boxed). 'none' if the student bailed
+        // before completing a concept — the portal consumes this directly.
+        milestone: milestoneRef.current,
       },
     }, '*');
   }, [saveSession, sessionId, transcript.length, whiteboardCommands.length]);
@@ -500,6 +525,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
             level={level}
             studentName={studentName || undefined}
             studentId={config.student_id}
+            onMilestone={handleMilestone}
             sessionId={sessionId}
             sessionGoal={sessionGoal}
             voice={openAIVoice}
