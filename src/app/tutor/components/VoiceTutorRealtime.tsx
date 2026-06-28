@@ -515,6 +515,12 @@ function deepEqualParams(a: unknown, b: unknown): boolean {
   return false;
 }
 
+/** Pedagogical milestones the runtime reports via `onMilestone`, fired once
+ *  each as the orchestrator genuinely crosses them (skips do NOT count).
+ *  Values map 1:1 to the portal contract's `SessionMilestone` enum — minus
+ *  `'none'`, which the consumer uses as the default when nothing fired. */
+export type TutorMilestone = 'first_concept_complete' | 'first_try_yourself_success' | 'recap_reached';
+
 interface VoiceTutorRealtimeProps {
   subject: string;
   topic: string;
@@ -548,6 +554,11 @@ interface VoiceTutorRealtimeProps {
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
+  /** Fires once per pedagogical milestone as the orchestrator genuinely
+   *  crosses it (a real concept completion / try-yourself success / reaching
+   *  recap — NOT segment skips). Additive + optional; absent ⇒ no-op. The
+   *  consumer tracks the furthest reached. See `TutorMilestone`. */
+  onMilestone?: (milestone: TutorMilestone) => void;
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
   validateToolCalls?: boolean;
@@ -748,6 +759,7 @@ export function VoiceTutorRealtime({
   onEndSession,
   onTrackInteraction,
   onUsageUpdate,
+  onMilestone,
   onDebugEvent,
   handleRef,
   validateToolCalls = false,
@@ -1191,6 +1203,18 @@ export function VoiceTutorRealtime({
   // a progress strip outside this control row.
   const onLessonPlanProgressRef = useRef(onLessonPlanProgress);
   useEffect(() => { onLessonPlanProgressRef.current = onLessonPlanProgress; }, [onLessonPlanProgress]);
+
+  // Milestone reporting (mirrored to a ref so the emit helper has stable
+  // identity and never goes stale inside the tool dispatch). Each milestone
+  // fires at most once per session-component lifetime.
+  const onMilestoneRef = useRef(onMilestone);
+  useEffect(() => { onMilestoneRef.current = onMilestone; }, [onMilestone]);
+  const firedMilestonesRef = useRef<Set<TutorMilestone>>(new Set());
+  const emitMilestone = useCallback((m: TutorMilestone) => {
+    if (firedMilestonesRef.current.has(m)) return;
+    firedMilestonesRef.current.add(m);
+    onMilestoneRef.current?.(m);
+  }, []);
   useEffect(() => {
     onLessonPlanProgressRef.current?.({ plan: activePlan, currentSegmentId: activeSegmentId });
   }, [activePlan, activeSegmentId]);
@@ -2122,6 +2146,8 @@ export function VoiceTutorRealtime({
     }
     currentSegmentIdRef.current = next;
     setActiveSegmentId(next);
+    // Reaching the recap segment is a milestone (value-boxed progress).
+    if (getSegment(plan, next)?.kind === 'recap') emitMilestone('recap_reached');
     // Re-entered the plan — drop the stashed pre-free segment.
     segmentBeforeFreeRef.current = '';
     // Mirror into the catalog so subsequent appends stamp the new
@@ -3786,6 +3812,21 @@ export function VoiceTutorRealtime({
             // Notify parent of the new completion set (truthful basis
             // for the progress strip's per-LO count).
             onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+          }
+        }
+        // Report pedagogical milestones on GENUINE completion. (Skips
+        // auto-mark via applyResolvedAdvance and deliberately do NOT fire a
+        // milestone — the conversion wall must be value-boxed on real work.)
+        if (typeof c.segmentId === 'string' && c.segmentId) {
+          const planNow = lessonPlanRef.current;
+          const doneSeg = planNow ? getSegment(planNow, c.segmentId) : undefined;
+          if (doneSeg?.kind === 'concept') {
+            emitMilestone('first_concept_complete');
+          } else if (doneSeg?.kind === 'try_yourself') {
+            // Treat completion as success unless an explicit non-positive
+            // mastery delta marks it a miss.
+            const md = typeof c.masteryDelta === 'number' ? c.masteryDelta : undefined;
+            if (md === undefined || md > 0) emitMilestone('first_try_yourself_success');
           }
         }
         // Pacing v2 — Phase 1 (inert): segment-mastered booster.
