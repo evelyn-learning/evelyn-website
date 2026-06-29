@@ -26,7 +26,7 @@ import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutor
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
-import SessionStage, { type VoiceState } from './components/session/SessionStage';
+import { type VoiceState } from './components/session/SessionStage';
 import TutorSession from './components/session/TutorSession';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
