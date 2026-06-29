@@ -294,6 +294,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         studentId={config.student_id}
         sessionId={sessionId}
         sessionGoal={sessionGoal}
+        lessonPlanId={config.curriculum_module || undefined}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         sessionMaxMinutes={maxDuration}

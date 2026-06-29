@@ -63,7 +63,8 @@ export interface SessionStageProps {
   transcript: ReactNode;         // <TranscriptView/>
   transcriptCount?: number;      // for the drawer badge
   /** True when the tutor is offering the in-session lesson picker (free
-   *  practice). Auto-opens the drawer once so the choices aren't buried. */
+   *  practice). Accepted for compatibility; the drawer no longer auto-opens
+   *  on it (the picker stays reachable via the Transcript button). */
   nudgeActive?: boolean;
   quickActions?: ReactNode;      // promoted chips (optional)
   // student tools → existing onStudentInput pipeline
@@ -91,7 +92,7 @@ export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
-    nudgeActive = false, quickActions, onStudentInput, onBack,
+    quickActions, onStudentInput, onBack,
   } = props;
 
   const showSwitcher = !!boardPages && boardPages.count > 1;
@@ -115,22 +116,16 @@ export default function SessionStage(props: SessionStageProps) {
     return () => clearInterval(id);
   }, [micLevelRef, reactsToMic]);
 
+  // The transcript drawer is CLOSED by default and only opens on explicit
+  // user action (Transcript button / caption tap). We deliberately do NOT
+  // auto-open it on the lesson-picker nudge — popping it over the board on
+  // session start was disorienting (it dimmed the whole stage). The nudge
+  // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
 
-  // Auto-open the transcript drawer once when the tutor offers the lesson
-  // picker (free practice) — otherwise the topic/lesson choices are hidden.
-  const nudgeAutoOpenedRef = useRef(false);
-  useEffect(() => {
-    if (nudgeActive && !nudgeAutoOpenedRef.current) {
-      nudgeAutoOpenedRef.current = true;
-      setDrawerOpen(true);
-    } else if (!nudgeActive) {
-      nudgeAutoOpenedRef.current = false;
-    }
-  }, [nudgeActive]);
   const stageRef = useRef<HTMLDivElement>(null);
   const toggleFullscreen = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,7 +145,7 @@ export default function SessionStage(props: SessionStageProps) {
   };
 
   return (
-    <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage">
+    <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col">
       <style>{`
         .session-stage .ss-grid{background-image:linear-gradient(#eef2f7 1px,transparent 1px),linear-gradient(90deg,#eef2f7 1px,transparent 1px);background-size:28px 28px}
         @keyframes ss-pulse{0%{transform:scale(.85);opacity:.5}80%,100%{transform:scale(1.6);opacity:0}}
@@ -164,13 +159,18 @@ export default function SessionStage(props: SessionStageProps) {
         .ss-cap{animation:ss-cap .4s ease both}
       `}</style>
 
-      {/* ===== Board stage (full-bleed grid, readable centered column) ===== */}
-      <div className="absolute inset-0 ss-grid">
-        {/* The grid is full-bleed, but the board CONTENT sits in a centered,
-            readable column (word problems / prose shouldn't stretch edge-to-
-            edge). Bottom padding reserves room so the dock + overlays never
-            cover board content. */}
-        <div className={`absolute inset-0 ${showSwitcher ? 'pt-28' : 'pt-16'} pb-52 px-2 sm:px-0 flex justify-center`}>
+      {/* Full-bleed grid background — behind every row (height-responsive
+          layout: the rows below are a flex column, so the board flexes to fill
+          and the dock/caption never overlap it, even in a ~600px iframe). */}
+      <div className="absolute inset-0 ss-grid z-0 pointer-events-none" />
+
+      {/* ===== Board area (flex row — fills between the top bar and the dock) ===== */}
+      <div className="relative z-10 flex-1 min-h-0 order-2">
+        {/* The board CONTENT sits in a centered, readable column (word problems
+            / prose shouldn't stretch edge-to-edge). The area already sits
+            between the top-bar and dock rows, so only small padding is needed
+            (plus clearance for the floating switcher when shown). */}
+        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : 'pt-2'} pb-2 px-2 sm:px-0 flex justify-center`}>
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
               scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
@@ -180,7 +180,7 @@ export default function SessionStage(props: SessionStageProps) {
 
         {/* presence overlay when the board is empty */}
         {boardEmpty && (
-          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 pt-16 pb-32 pointer-events-none">
+          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 py-4 overflow-y-auto pointer-events-none">
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
                 <Target className="w-4 h-4" /> {objective}
@@ -244,8 +244,8 @@ export default function SessionStage(props: SessionStageProps) {
         )}
       </div>
 
-      {/* ===== Floating top bar ===== */}
-      <div className="absolute top-0 inset-x-0 z-30">
+      {/* ===== Top bar (flex row) ===== */}
+      <div className="relative z-30 shrink-0 order-1">
         <div className="mx-2 mt-2 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4 px-2.5 sm:px-4 h-12">
             <button onClick={onBack} className="shrink-0 grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"><ChevronLeft className="w-5 h-5" /></button>
@@ -384,7 +384,7 @@ export default function SessionStage(props: SessionStageProps) {
           it — otherwise the caption tucks behind the dock and the tutor's live
           sentence is hidden. Both honor the bottom safe-area inset. */}
       {liveCaption && (
-        <div className="absolute bottom-[calc(176px_+_env(safe-area-inset-bottom))] md:bottom-[calc(124px_+_env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-20 w-[min(96vw,640px)]">
+        <div className="relative z-30 shrink-0 order-3 mx-auto mb-1.5 w-[min(96vw,640px)] px-2">
           <div className="ss-cap w-full rounded-2xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
             {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
                 transcript). Single thin line so the panel never crowds. The
@@ -415,8 +415,8 @@ export default function SessionStage(props: SessionStageProps) {
         {transcriptCount > 0 && <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">{transcriptCount}</span>}
       </button>
 
-      {/* ===== Voice dock (floating island) ===== */}
-      <div className="absolute bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 w-[min(96vw,640px)]">
+      {/* ===== Voice dock (flex row — sits below the board, never over it) ===== */}
+      <div className="relative z-30 shrink-0 order-4 mx-auto mb-[calc(0.5rem_+_env(safe-area-inset-bottom))] w-[min(96vw,640px)] px-2">
         <div className="rounded-[24px] bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl px-2 sm:px-3 py-1.5">
           {/* "Being heard" status row — lives in the dock, next to the mic, so
               the caption strip above stays free for the tutor's question. Shows
