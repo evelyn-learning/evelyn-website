@@ -8,6 +8,10 @@ function buildDemoToken() {
     subject: 'cs',
     level: 'ap',
     topic: 'ap-cs-principles',
+    // Boot a real seed lesson plan so the tutor starts teaching it instead of
+    // asking "what are we working on?" — the embed threads curriculum_module →
+    // lessonPlanId → VoiceTutorRealtime, which fetches the plan by id.
+    curriculum_module: 'evelyn.ap.csp.algorithms-abstraction.v1',
     student_name: 'Alex',
     session_goal: 'practice',
     input_mode: 'voice',
@@ -56,7 +60,7 @@ export function EngineSelector() {
         <iframe
           src={`/embed?token=${demoToken}`}
           width="100%"
-          height="650"
+          height="760"
           allow="microphone; camera; autoplay"
           className="border-0"
           title={`AI Voice Tutor — ${engine.name}`}
