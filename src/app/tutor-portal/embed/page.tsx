@@ -15,14 +15,10 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Script from 'next/script';
-import { Send, Loader2 } from 'lucide-react';
-import { getTopicLabel, buildDisplayName } from '@/lib/tutor/topic-taxonomy';
-import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
-import { TranscriptView } from '@/app/tutor/components/TranscriptView';
-import { SessionControls } from '@/app/tutor/components/SessionControls';
-import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard';
-import { VoiceTutorRealtime, type RealtimeHandle, type TutorMilestone } from '@/app/tutor/components/VoiceTutorRealtime';
+import { Loader2 } from 'lucide-react';
+import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
+import TutorSession from '@/app/tutor/components/session/TutorSession';
+import { type TutorMilestone } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult } from '@evelyn/portal-contract/v1';
 
 /** The contract's milestone enum (derived from SessionResult — the package
@@ -161,194 +157,24 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     ? { '--brand-color': branding.primary_color } as React.CSSProperties
     : {};
 
-  // Session state
+  // Session state. Transcript + whiteboard are mirrored from TutorSession via
+  // its callbacks so saveSession + the session_ended postMessage have counts.
   const [sessionId] = useState(() => `embed-${Date.now()}`);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsage[]>([]);
   const sessionStartRef = useRef(new Date());
-
-  // Input state
-  const [inputText, setInputText] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const realtimeHandleRef = useRef<RealtimeHandle | null>(null);
-
-  // Resizable split
-  const [splitPercent, setSplitPercent] = useState(50);
-  const isDraggingSplit = useRef(false);
-  const splitContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isDraggingSplit.current = true;
-    const onMove = (ev: MouseEvent) => {
-      if (!isDraggingSplit.current || !splitContainerRef.current) return;
-      const rect = splitContainerRef.current.getBoundingClientRect();
-      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-      setSplitPercent(Math.max(25, Math.min(75, pct)));
-    };
-    const onUp = () => {
-      isDraggingSplit.current = false;
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  }, []);
 
   const topicDisplayName = useMemo(
     () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,
     [subject, level, topic]
   );
 
-  // Auto-start text mode session with greeting
-  useEffect(() => {
-    if (inputMode !== 'text' || !topic) return;
-
-    const topicLabel = getTopicLabel(subject, level, topic);
-    const greetingMessage = getInitialGreetingPrompt(sessionGoal, topicLabel);
-
-    setIsProcessing(true);
-    fetch('/api/tutor/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: greetingMessage,
-        conversationHistory: [],
-        subject,
-        topic,
-        level,
-        studentName: studentName || undefined,
-        sessionGoal,
-      }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.usage) {
-          setTokenUsage([{ inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, operation: 'greeting', timestamp: new Date() }]);
-        }
-        const entry: TranscriptEntry = { id: `tutor-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: data.text, whiteboardCommands: data.whiteboardCommands };
-        setTranscript([entry]);
-        setConversationHistory([{ role: 'user', content: greetingMessage }, { role: 'assistant', content: data.rawText || data.text }]);
-        if (data.whiteboardCommands?.length > 0) setWhiteboardCommands(data.whiteboardCommands);
-      })
-      .catch(console.error)
-      .finally(() => setIsProcessing(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Send text message
-  const sendMessage = useCallback(
-    async (message: string) => {
-      if (!message.trim() || isProcessing || !topic) return;
-      setIsProcessing(true);
-      setError(null);
-
-      const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: message };
-      setTranscript((prev) => [...prev, userEntry]);
-
-      try {
-        const response = await fetch('/api/tutor/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, conversationHistory, subject, topic, level, studentName: studentName || undefined, sessionGoal }),
-        });
-        const data = await response.json();
-        if (!response.ok || data.error) throw new Error(data.error || 'Failed to get response');
-
-        if (data.usage) {
-          setTokenUsage((prev) => [...prev, { inputTokens: data.usage.inputTokens, outputTokens: data.usage.outputTokens, operation: 'chat', timestamp: new Date() }]);
-        }
-
-        const tutorEntry: TranscriptEntry = { id: `tutor-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: data.text, whiteboardCommands: data.whiteboardCommands, pedagogicalIntent: data.pedagogicalIntent };
-        setTranscript((prev) => [...prev, tutorEntry]);
-        setConversationHistory((prev) => [...prev, { role: 'user', content: message }, { role: 'assistant', content: data.rawText || data.text }]);
-        if (data.whiteboardCommands?.length > 0) setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to send message');
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [conversationHistory, subject, level, topic, studentName, sessionGoal, isProcessing]
-  );
-
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputText.trim()) { sendMessage(inputText); setInputText(''); }
-  }, [inputText, sendMessage]);
-
-  // Voice callbacks
-  const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => setTranscript(entries), []);
-  const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => setWhiteboardCommands((prev) => [...prev, ...commands]), []);
-  const handleRealtimeUsage = useCallback((usage: { totalTokens: number; inputTokens: number; outputTokens: number; inputTextTokens: number; inputAudioTokens: number; outputTextTokens: number; outputAudioTokens: number }) => {
-    if (usage.totalTokens === 0) return;
-    setTokenUsage((prev) => [...prev, { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, inputAudioTokens: usage.inputAudioTokens, outputAudioTokens: usage.outputAudioTokens, inputTextTokens: usage.inputTextTokens, outputTextTokens: usage.outputTextTokens, operation: 'realtime-response', timestamp: new Date() }]);
-  }, []);
-
-  // Upload homework and extract problems
-  const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
-    if (!topic) return;
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/tutor/extract-homework', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageData,
-          mimeType,
-          subject,
-          topic,
-          level,
-          conversationHistory,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to process homework image');
-      const data = await response.json();
-
-      if (data.usage) {
-        setTokenUsage((prev) => [...prev, {
-          inputTokens: data.usage.inputTokens,
-          outputTokens: data.usage.outputTokens,
-          operation: 'homework-extraction',
-          timestamp: new Date(),
-        }]);
-      }
-
-      const userMessageForHistory = data.extractedProblem
-        ? `I uploaded a homework problem. Here's what it says:\n\n${data.extractedProblem}\n\nCan you help me understand it and work through it?`
-        : 'Here is my homework problem. Can you help me understand it and work through it?';
-
-      // Voice mode: send the extracted problem through the realtime handle
-      // so the tutor draws the setup and starts working through it.
-      if (inputMode === 'voice' && realtimeHandleRef.current && data.extractedProblem) {
-        const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: '[Uploaded homework image]' };
-        setTranscript((prev) => [...prev, userEntry]);
-
-        realtimeHandleRef.current.sendTextMessage(
-          `The student just uploaded a homework problem image. Here is the extracted text:\n\n${data.extractedProblem}\n\nYou MUST do ALL of the following:\n1. Draw the problem setup on the whiteboard.\n2. Verbally acknowledge the upload and briefly summarize what the problem asks.\n3. As you work through each solution step, call show_equation to display each equation on the whiteboard.\n4. Guide the student through the solution step by step, asking them questions along the way.`
-        );
-      } else {
-        // Text mode or classic voice: add entries to transcript and conversation history
-        const userEntry: TranscriptEntry = { id: `user-${Date.now()}`, timestamp: new Date(), role: 'student', text: '[Uploaded homework image]' };
-        const tutorEntry: TranscriptEntry = { id: `tutor-${Date.now()}`, timestamp: new Date(), role: 'tutor', text: data.text, whiteboardCommands: data.whiteboardCommands };
-        setTranscript((prev) => [...prev, userEntry, tutorEntry]);
-        setConversationHistory((prev) => [...prev, { role: 'user', content: userMessageForHistory }, { role: 'assistant', content: data.text }]);
-        if (data.whiteboardCommands?.length > 0) setWhiteboardCommands((prev) => [...prev, ...data.whiteboardCommands]);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process homework');
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [subject, level, topic, conversationHistory, inputMode, voiceEngine]);
+  // Text-mode chat, the auto-greeting, voice callbacks, and homework upload
+  // all moved into the shared <TutorSession> (per the decision to route typed
+  // input through the brain). The embed only mirrors transcript/whiteboard via
+  // TutorSession's callbacks for saveSession + the session_ended counts.
 
   // Save session to DB
   const saveSession = useCallback((status: 'completed' | 'abandoned') => {
@@ -444,129 +270,44 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     );
   }
 
+  // Partner brand lockup shown in the new UI's top bar (keeps branding while
+  // matching the /tutor look). primary_color rides the --brand-color var below.
+  const headerBrand = (branding?.logo_url || branding?.product_name) ? (
+    <div className="flex items-center gap-2">
+      {branding?.logo_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={branding.logo_url} alt="" className="h-5" />
+      )}
+      {branding?.product_name && (
+        <span className="text-sm font-semibold text-slate-800 truncate max-w-[38vw]">{branding.product_name}</span>
+      )}
+    </div>
+  ) : undefined;
+
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-100" style={brandStyle}>
-      <Script
-        src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a"
-        strategy="lazyOnload"
+    <div style={brandStyle}>
+      <TutorSession
+        subject={subject}
+        topic={topic || ''}
+        level={level}
+        studentName={studentName || undefined}
+        studentId={config.student_id}
+        sessionId={sessionId}
+        sessionGoal={sessionGoal}
+        voice={openAIVoice}
+        voiceEngine="claude-brain"
+        sessionMaxMinutes={maxDuration}
+        topicDisplayName={topicDisplayName}
+        headerBrand={headerBrand}
+        onEndSession={handleEndSession}
+        onMilestone={handleMilestone}
+        onTranscriptUpdate={setTranscript}
+        onWhiteboardCommand={(cmds) => setWhiteboardCommands((prev) => [...prev, ...cmds])}
       />
-
-      {/* Header */}
-      <header className="flex-shrink-0 border-b bg-white px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {branding?.logo_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={branding.logo_url} alt="" className="h-6" />
-            )}
-            <div>
-              <h1 className="font-semibold text-gray-900">
-                {branding?.product_name || topicDisplayName || 'AI Tutor'}
-              </h1>
-              <p className="text-xs text-gray-500">{topicDisplayName}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Session controls */}
-      <div className="flex-shrink-0 px-4 py-1">
-        <SessionControls
-          sessionId={sessionId}
-          maxDuration={maxDuration}
-          onEndSession={handleEndSession}
-          onUploadHomework={handleUploadHomework}
-          transcript={transcript}
-          whiteboardCommands={whiteboardCommands}
-          topicName={topicDisplayName || 'AI Tutor'}
-          sessionGoal={sessionGoal}
-          studentName={studentName || undefined}
-          subject={subject}
-          level={level}
-        />
-      </div>
-
-      {/* Main content */}
-      <div ref={splitContainerRef} className="flex min-h-0 flex-1 px-4 py-1">
-        {/* Transcript */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg" style={{ width: `${splitPercent}%` }}>
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <TranscriptView transcript={transcript} isProcessing={isProcessing} />
-          </div>
-        </div>
-
-        {/* Split handle */}
-        <div
-          onMouseDown={handleSplitMouseDown}
-          className="group hidden w-4 flex-shrink-0 cursor-col-resize items-center justify-center rounded transition-colors hover:bg-blue-100 active:bg-blue-200 lg:flex"
-        >
-          <div className="flex flex-col items-center gap-1">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-1 w-1 rounded-full bg-gray-400 group-hover:bg-blue-500" />
-            ))}
-          </div>
-        </div>
-
-        {/* Whiteboard — always visible in embed (iframe may be narrower than lg breakpoint) */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg" style={{ width: `${100 - splitPercent}%` }}>
-          <WhiteboardCanvas
-            commands={whiteboardCommands}
-            onClear={() => setWhiteboardCommands([])}
-          />
-        </div>
-      </div>
-
-      {/* Input area */}
-      <div className="flex-shrink-0 bg-white px-2 py-1">
-        {inputMode === 'voice' && topic ? (
-          <VoiceTutorRealtime
-            subject={subject}
-            topic={topic}
-            level={level}
-            studentName={studentName || undefined}
-            studentId={config.student_id}
-            onMilestone={handleMilestone}
-            sessionId={sessionId}
-            sessionGoal={sessionGoal}
-            voice={openAIVoice}
-            onTranscriptUpdate={handleVoiceTranscriptUpdate}
-            onWhiteboardCommand={handleVoiceWhiteboardCommand}
-            onUsageUpdate={handleRealtimeUsage}
-            onDebugEvent={() => {}}
-            onError={(err) => setError(err.message)}
-            onEndSession={handleEndSession}
-            onTrackInteraction={() => {}}
-            handleRef={realtimeHandleRef}
-            claudeBrainMode
-            sessionMaxMinutes={maxDuration}
-          />
-        ) : (
-          <form onSubmit={handleSubmit} className="mx-auto flex gap-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type your message..."
-              disabled={isProcessing}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-            <button
-              type="submit"
-              disabled={isProcessing || !inputText.trim()}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-              style={branding?.primary_color ? { backgroundColor: branding.primary_color } : {}}
-            >
-              {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              Send
-            </button>
-          </form>
-        )}
-      </div>
 
       {/* Error toast */}
       {error && (
-        <div className="fixed bottom-20 right-4 flex items-center gap-2 rounded-lg border border-red-300 bg-red-100 px-4 py-3 text-red-700 shadow-lg">
+        <div className="fixed bottom-20 right-4 z-[70] flex items-center gap-2 rounded-lg border border-red-300 bg-red-100 px-4 py-3 text-red-700 shadow-lg">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">x</button>
         </div>
