@@ -33,6 +33,9 @@ const SHOW_QUICK_ACTIONS = false;
 export interface SessionStageProps {
   lessonTitle: string;
   subtitle?: ReactNode;
+  /** Optional partner brand lockup (logo / product name) shown at the left of
+   *  the top bar — used by the embed; standalone /tutor omits it. */
+  headerBrand?: ReactNode;
   hasPlan: boolean;
   isFreePractice: boolean;
   objective?: string;            // current LO / goal chip text
@@ -86,7 +89,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     nudgeActive = false, quickActions, onStudentInput, onBack,
   } = props;
@@ -246,6 +249,7 @@ export default function SessionStage(props: SessionStageProps) {
         <div className="mx-2 mt-2 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4 px-2.5 sm:px-4 h-12">
             <button onClick={onBack} className="shrink-0 grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"><ChevronLeft className="w-5 h-5" /></button>
+            {headerBrand && <div className="shrink-0 flex items-center">{headerBrand}</div>}
             <div className="min-w-0">
               <h1 className="text-sm font-semibold text-slate-900 truncate leading-tight">{lessonTitle}</h1>
               {subtitle && <p className="text-[11px] text-slate-500 truncate leading-tight">{subtitle}</p>}

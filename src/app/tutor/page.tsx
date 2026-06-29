@@ -26,7 +26,8 @@ import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutor
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
-import SessionStage, { type VoiceState } from './components/session/SessionStage';
+import { type VoiceState } from './components/session/SessionStage';
+import TutorSession from './components/session/TutorSession';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
@@ -1527,308 +1528,39 @@ function TutorPage() {
   }
 
   // ===== NEW "Stage + Presence" in-session layout (flag-gated, additive) =====
-  if (stage === 'session' && NEW_SESSION_UI) {
-    const boardEl = (
-      <WhiteboardCanvas
-        commands={whiteboardCommands}
-        tutorBusy={isProcessing && whiteboardActiveThisTurn}
-        onClear={() => setWhiteboardCommands([])}
-        onAttentionShift={() => {}}
-        onTryYourselfAnswer={handleTryYourselfAnswer}
-        suppressEmptyState
-        chrome="minimal"
-        onNavChange={setBoardNav}
-        className="h-full"
-      />
-    );
-    const transcriptEl = (
-      <TranscriptView
-        transcript={transcript}
-        isProcessing={isProcessing}
-        pickerAnchorIndex={pickerAnchorIndex}
-        enablePacingChips={(() => {
-          const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
-          if (v === undefined || v === null || v === '') return true;
-          const s = String(v).trim().toLowerCase();
-          return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
-        })()}
-        onQuickAnswer={(text) => {
-          realtimeHandleRef.current?.stopSpeaking();
-          realtimeHandleRef.current?.sendTextMessage(text);
-        }}
-        picker={!nudgeDismissed && availableLessonPlans.length > 0 ? (
-          <LessonNudgePicker
-            plans={availableLessonPlans}
-            recentTurns={transcript.slice(-6).map((t) => ({ role: t.role, text: t.text }))}
-            lessonStarted={!!selectedLessonPlanId || !!lessonProgress.plan}
-            currentTopicId={selectedTopicId}
-            introText={topicDisplayName ? `I see you chose ${topicDisplayName} — nice. You can tell me ANY topic in this area, or jump straight into one of these lessons:` : undefined}
-            onSelect={(plan) => {
-              setSelectedLessonPlanId(plan.id);
-              setNudgeDismissed(true);
-              realtimeHandleRef.current?.sendTextMessage(
-                `Let's do: ${plan.title}. [SYSTEM OVERRIDE: The student has explicitly selected the lesson "${plan.title}" via the in-session picker. Disregard any prior teasing or conversational tangent. This is now the active lesson. Begin teaching it immediately by calling show_segment_card with the FIRST authored segment id from the plan that is now loaded; do not invent segment ids and do not narrate any other topic.]`,
-              );
-            }}
-            onDismiss={() => setNudgeDismissed(true)}
-          />
-        ) : undefined}
-      />
-    );
-    const voiceInputEl = (
-      <>
-        {voiceTrouble && inputMode === 'voice' && (
-          <div className="mb-1 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 flex items-center gap-2"><span>⚠️</span><span>{voiceTrouble}</span></div>
-        )}
-        {inputMode === 'voice' && selectedTopicId ? (
-          (voiceEngine === 'realtime' || voiceEngine === 'realtime-2' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain') ? (
-            <VoiceTutorRealtime
-              key={sessionId}
-              subject={selectedSubject}
-              topic={selectedTopicId}
-              level={selectedLevel}
-              studentName={studentName || undefined}
-              studentId={studentIdParam}
-              sessionId={sessionId}
-              sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
-              sessionGoal={sessionGoal}
-              lessonPlanId={selectedLessonPlanId || undefined}
-              voice={selectedOpenAIVoice}
-              onTranscriptUpdate={handleVoiceTranscriptUpdate}
-              onWhiteboardCommand={handleVoiceWhiteboardCommand}
-              onUsageUpdate={handleRealtimeUsage}
-              onDebugEvent={addDebugEvent}
-              onError={(err) => setError(err.message)}
-              onTranscriptionStatus={handleTranscriptionStatus}
-              onEndSession={handleEndSession}
-              onTrackInteraction={trackInteraction}
-              handleRef={realtimeHandleRef}
-              validateToolCalls={voiceEngine === 'realtime-validated'}
-              claudeBrainMode={voiceEngine === 'claude-brain'}
-              useRealtimeV2={voiceEngine === 'realtime-2'}
-              ttsProvider={ttsProvider}
-              onLessonPlanProgress={setLessonProgress}
-              onTutorBusy={setIsProcessing}
-              onVoiceStateChange={setLiveVoiceState}
-              onMicLevel={(l) => { micLevelRef.current = l; }}
-              onListeningHint={setListeningHint}
-              onPaceBiasChange={(bias) => {
-                setPaceBias(bias);
-                setPaceBiasFlash(true);
-                if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
-                paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
-              }}
-              onInterruptedChange={setIsPerceptionInterrupted}
-              onBeforeTypedSubmit={handleBeforeTypedSubmit}
-              onProposePlanSwap={handleProposePlanSwap}
-              onConfirmPlanLos={handleConfirmPlanLos}
-              onCompletedSegmentsChange={setCompletedSegmentIds}
-              sessionMaxMinutes={30}
-              dockVariant="island"
-            />
-          ) : voiceEngine === 'gemini-live' ? (
-            <VoiceTutorGemini
-              key={sessionId}
-              subject={selectedSubject}
-              topic={selectedTopicId}
-              level={selectedLevel}
-              studentName={studentName || undefined}
-              sessionGoal={sessionGoal}
-              voice={selectedOpenAIVoice}
-              onTranscriptUpdate={handleVoiceTranscriptUpdate}
-              onWhiteboardCommand={handleVoiceWhiteboardCommand}
-              onUsageUpdate={handleRealtimeUsage}
-              onError={(err) => setError(err.message)}
-              onEndSession={handleEndSession}
-              onTrackInteraction={trackInteraction}
-            />
-          ) : (
-            <VoiceTutor
-              subject={selectedSubject}
-              topic={selectedTopicId}
-              level={selectedLevel}
-              studentName={studentName || undefined}
-              sessionGoal={sessionGoal}
-              voiceId={selectedVoice}
-              externalConversationHistory={conversationHistory}
-              externalTranscript={transcript}
-              onTranscriptUpdate={handleVoiceTranscriptUpdate}
-              onWhiteboardCommand={handleVoiceWhiteboardCommand}
-              onConversationHistoryUpdate={handleVoiceConversationHistoryUpdate}
-              onError={(err) => setError(err.message)}
-              onEndSession={handleEndSession}
-              onTrackInteraction={trackInteraction}
-            />
-          )
-        ) : inputMode === 'text' ? (
-          <form onSubmit={handleSubmit} className="flex gap-2 p-1">
-            <input ref={inputRef} type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type your message..." disabled={isProcessing}
-              className={`flex-1 px-4 py-2.5 border rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${isPerceptionInterrupted ? 'border-yellow-400 ring-4 ring-yellow-400 ring-opacity-50' : 'border-gray-300'}`} />
-            <button type="submit" disabled={isProcessing || !inputText.trim()} className="px-5 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-gray-300 flex items-center gap-2">
-              {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-            </button>
-          </form>
-        ) : (
-          <div className="text-center text-gray-500 py-3">Loading session…</div>
-        )}
-      </>
-    );
-    const beatsEl = lessonProgress.plan ? (
-      <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
-    ) : null;
-    const controlsEl = (
-      <SessionControls sessionId={sessionId} maxDuration={30} onEndSession={handleEndSession} onUploadHomework={handleUploadHomework} transcript={transcript} whiteboardCommands={whiteboardCommands} topicName={topicDisplayName || 'AI Tutor'} sessionGoal={sessionGoal} studentName={studentName || undefined} subject={selectedSubject} level={selectedLevel} />
-    );
-    const humorBand = gradeBandFor(selectedLevel || '');
-    const HUMOR_CHOICES: Array<{ value: StudentPreferences['humorCeiling'] | null; label: string; minBand: 'K-2' | '3-5' | '6-8' | '9-12' }> = [
-      { value: null, label: 'Default', minBand: 'K-2' },
-      { value: 'off', label: 'Serious', minBand: 'K-2' },
-      { value: 'light', label: 'A little funny', minBand: 'K-2' },
-      { value: 'medium', label: 'Pretty funny', minBand: '3-5' },
-      { value: 'heavy', label: 'Very funny', minBand: '6-8' },
-    ];
-    const BAND_RANK: Record<'K-2' | '3-5' | '6-8' | '9-12', number> = { 'K-2': 0, '3-5': 1, '6-8': 2, '9-12': 3 };
-    const currentHumor = studentPreferencesForChip.humorCeiling ?? null;
-    const adaptiveMenuEl = (
-      <div ref={pacingMenuRef} className="relative flex items-center gap-1">
-        {/* Pace badge — Slow down / Speed up only shift the brain's depth on
-            SUBSEQUENT turns, so without this the click feels inert. Shows the
-            current bias and flashes on each step (incl. clamp no-ops). */}
-        {(paceBias !== 0 || paceBiasFlash) && (
-          <span className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
-            paceBiasFlash ? 'bg-blue-100 border-blue-400 text-blue-800'
-            : paceBias < 0 ? 'bg-amber-50 border-amber-300 text-amber-800'
-            : 'bg-green-50 border-green-300 text-green-800'
-          }`}>
-            {paceBias < 0 ? `Slower ×${Math.abs(paceBias)}` : paceBias > 0 ? `Faster ×${paceBias}` : 'Pace'}
-          </span>
-        )}
-        <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
-        {pacingMenuOpen && (
-          // top-full anchors it just below the ⋯ (so the top items can't sit
-          // above the stage's overflow-hidden top edge); max-h + scroll keeps
-          // the now-tall menu (with Humor) fully reachable on short viewports.
-          <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
-            <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
-            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
-            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
-            <div className="my-1 border-t border-slate-100" />
-            <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Slow down</button>
-            <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Speed up</button>
-            <div className="my-1 border-t border-slate-100" />
-            <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
-            {/* Humor — grade-capped (the resolver clamps anyway; we hide the
-                out-of-band choices so the student can't pick a no-op). Ported
-                from the legacy ⋯ menu. */}
-            <div className="my-1 border-t border-slate-100" />
-            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
-            {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {
-              const isSel = currentHumor === c.value;
-              return (
-                <button
-                  key={c.value ?? 'default'}
-                  onClick={() => {
-                    console.log(`[TutorPage] humor selected: ${c.value ?? '(default)'} — writing humorCeiling`);
-                    if (c.value === null) clearStudentPreferenceForChip('humorCeiling');
-                    else setStudentPreferenceForChip('humorCeiling', c.value);
-                    setPacingMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-xl ${isSel ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
-                >
-                  <span className="inline-block w-3">{isSel ? '✓' : ''}</span> {c.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-
-    const lastTutorEntry = [...transcript].reverse().find((t) => t.role === 'tutor');
-    const lastEntry = transcript[transcript.length - 1];
-    // Has the student actually started (clicked the mic / first turn)? Before
-    // that we must NOT show "Listening…" — the mic is closed.
-    const started = transcript.length > 0 || liveVoiceState !== 'idle';
-    // Prefer the precise engine-reported state; fall back to a coarse derived
-    // state once started. Before start → 'idle' ("tap the mic to begin").
-    const derivedVoiceState: VoiceState =
-      isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
-    const voiceState: VoiceState =
-      liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
-    // Full live tutor text, with markdown emphasis markers stripped (the brain
-    // uses *word* / **word** as TTS+visual hints — they shouldn't show raw in
-    // the caption). The Caption Strip then shows a word-boundary tail.
-    const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
-    const objective = (() => {
-      if (!lessonProgress.plan) return undefined;
-      const segId = lessonProgress.currentSegmentId || '';
-      const lo = lessonProgress.plan.los?.find((l) => segId.startsWith(`${l.id}-`) || segId === l.id);
-      return lo?.description;
-    })();
-
-    // Promoted quick-answer / pacing chips (shared logic with TranscriptView).
-    const pacingChipsOn = (() => {
-      const v = process.env.NEXT_PUBLIC_PACING_V2_BUTTONS;
-      if (!v) return true;
-      const s = String(v).trim().toLowerCase();
-      return s !== 'false' && s !== '0' && s !== 'off' && s !== 'no';
-    })();
-    const quickActionItems = getQuickActions(transcript, { enablePacing: pacingChipsOn });
-    const dispatchQuick = (text: string) => {
-      realtimeHandleRef.current?.stopSpeaking();
-      realtimeHandleRef.current?.sendTextMessage(text);
-    };
-    const quickActionsEl = quickActionItems.length > 0 ? (
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        {quickActionItems.map((a) => (
-          <button
-            key={a.label}
-            disabled={isProcessing}
-            onClick={() => dispatchQuick(a.text)}
-            className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              a.tone === 'stuck' ? 'bg-white text-amber-700 border-amber-300 hover:bg-amber-50'
-              : a.tone === 'skip' ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-              : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'
-            }`}
-          >
-            {a.label}
-          </button>
-        ))}
-      </div>
-    ) : null;
-
+  if (stage === 'session' && NEW_SESSION_UI && (voiceEngine === 'realtime' || voiceEngine === 'realtime-2' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain')) {
     return (
-      <>
-        <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
-        <SessionStage
-          lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : (topicDisplayName || 'AI Tutor')}
-          subtitle={lessonProgress.plan ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}` : `${topicDisplayName || 'Open practice'} · Free practice`}
-          hasPlan={!!lessonProgress.plan}
-          isFreePractice={!lessonProgress.plan}
-          objective={objective}
-          beats={beatsEl}
-          controls={controlsEl}
-          adaptiveMenu={adaptiveMenuEl}
-          voiceState={voiceState}
-          micLevelRef={micLevelRef}
-          listeningHint={listeningHint}
-          started={started}
-          liveCaption={liveCaption}
-          boardEmpty={whiteboardCommands.length === 0}
-          board={boardEl}
-          boardPages={boardNav ?? undefined}
-          voiceInput={voiceInputEl}
-          transcript={transcriptEl}
-          transcriptCount={transcript.length}
-          nudgeActive={pickerAnchorIndex !== null && !nudgeDismissed && availableLessonPlans.length > 0}
-          quickActions={quickActionsEl}
-          onStudentInput={handleStudentInput}
-          onBack={handleEndSession}
-        />
-        {error && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">{error}</div>
-        )}
-      </>
+      <TutorSession
+        subject={selectedSubject}
+        topic={selectedTopicId}
+        level={selectedLevel}
+        studentName={studentName || undefined}
+        studentId={studentIdParam}
+        sessionId={sessionId}
+        sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
+        sessionGoal={sessionGoal}
+        lessonPlanId={selectedLessonPlanId || undefined}
+        voice={selectedOpenAIVoice}
+        voiceEngine={voiceEngine}
+        ttsProvider={ttsProvider}
+        sessionMaxMinutes={30}
+        topicDisplayName={topicDisplayName}
+        availableLessonPlans={availableLessonPlans}
+        onEndSession={handleEndSession}
+        onTranscriptUpdate={handleVoiceTranscriptUpdate}
+        onWhiteboardCommand={handleVoiceWhiteboardCommand}
+        onUsageUpdate={handleRealtimeUsage}
+        onDebugEvent={addDebugEvent}
+        onTrackInteraction={trackInteraction}
+        onTranscriptionStatus={handleTranscriptionStatus}
+        onProposePlanSwap={handleProposePlanSwap}
+        onConfirmPlanLos={handleConfirmPlanLos}
+        onBeforeTypedSubmit={handleBeforeTypedSubmit}
+        onUploadHomework={handleUploadHomework}
+        onLessonPlanIdChange={setSelectedLessonPlanId}
+        onLessonProgressChange={setLessonProgress}
+        onCompletedSegmentsChange={setCompletedSegmentIds}
+      />
     );
   }
 
