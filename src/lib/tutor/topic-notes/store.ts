@@ -41,6 +41,16 @@ import { BASELINE_AP_MACRO_NOMINAL_VS_REAL_INTEREST_RATES } from './seeds/ap-mac
 import { BASELINE_AP_MACRO_MONEY_MARKET } from './seeds/ap-macro-u4-money-market';
 import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-policy';
 
+// AP Statistics Unit 1 (CED 1.1–1.10) — calibration unit (hand-curated from
+// extract-topic-notes-baselines.ts drafts). FRQ-practice plan deferred (no
+// concept segments → pointers/methods only).
+import { BASELINE_AP_STATS_CATEGORICAL_DATA } from './seeds/ap-stats-u1-categorical-data';
+import { BASELINE_AP_STATS_QUANTITATIVE_GRAPHS } from './seeds/ap-stats-u1-quantitative-graphs';
+import { BASELINE_AP_STATS_DISTRIBUTION_SHAPE } from './seeds/ap-stats-u1-distribution-shape';
+import { BASELINE_AP_STATS_SUMMARY_STATISTICS } from './seeds/ap-stats-u1-summary-statistics';
+import { BASELINE_AP_STATS_COMPARING_DISTRIBUTIONS } from './seeds/ap-stats-u1-comparing-distributions';
+import { BASELINE_AP_STATS_NORMAL_DISTRIBUTION } from './seeds/ap-stats-u1-normal-distribution';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -49,6 +59,12 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_NOMINAL_VS_REAL_INTEREST_RATES,
   BASELINE_AP_MACRO_MONEY_MARKET,
   BASELINE_AP_MACRO_MONETARY_POLICY,
+  BASELINE_AP_STATS_CATEGORICAL_DATA,
+  BASELINE_AP_STATS_QUANTITATIVE_GRAPHS,
+  BASELINE_AP_STATS_DISTRIBUTION_SHAPE,
+  BASELINE_AP_STATS_SUMMARY_STATISTICS,
+  BASELINE_AP_STATS_COMPARING_DISTRIBUTIONS,
+  BASELINE_AP_STATS_NORMAL_DISTRIBUTION,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
