@@ -29,10 +29,11 @@
  * should 404).
  */
 
-import { getTopicNotesBaseline } from './store';
+import { getTopicNotesBaseline, listTopicNotesBaselinesForUnit } from './store';
 import { loadStudentTopicNotes } from './apply-overlay';
 import type {
   RenderedTopicNotes,
+  RenderedUnitNotes,
   RenderedTheorySection,
   RenderedTheoryOverlay,
   TheoryEntry,
@@ -122,4 +123,45 @@ export async function resolveTopicNotes(
       overlays: notes.pointersAdds,
     },
   };
+}
+
+/** Natural-order comparator for CED topic ids ("1.2" < "1.10" < "1.7-1.8").
+ *  Compares the leading numeric components, falling back to string order. */
+function compareCedTopic(a: string, b: string): number {
+  const parse = (s: string): number[] =>
+    s.split(/[.\-–]/).map((p) => parseInt(p, 10)).filter((n) => !Number.isNaN(n));
+  const pa = parse(a);
+  const pb = parse(b);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? -1) - (pb[i] ?? -1);
+    if (d !== 0) return d;
+  }
+  return a.localeCompare(b);
+}
+
+/**
+ * Compose a whole CED unit's notes for a student: every registered baseline
+ * for `(course, cedUnit)`, each resolved (baseline + that student's overlays)
+ * and ordered by cedTopic. Returns null when the unit has no baselines yet,
+ * so callers can render an empty/absent unit rather than a 404.
+ *
+ * Pure render-time composition over the existing per-topic resolver — the
+ * storage model stays one-baseline-per-plan (baselineId === planId).
+ */
+export async function resolveUnitTopicNotes(
+  studentId: string,
+  course: string,
+  cedUnit: number,
+): Promise<RenderedUnitNotes | null> {
+  const baselines = listTopicNotesBaselinesForUnit(course, cedUnit);
+  if (baselines.length === 0) return null;
+
+  const resolved = await Promise.all(
+    baselines.map((b) => resolveTopicNotes(studentId, b.baselineId)),
+  );
+  const topics = resolved
+    .filter((t): t is RenderedTopicNotes => t !== null)
+    .sort((a, b) => compareCedTopic(a.cedTopic, b.cedTopic));
+
+  return { course, cedUnit, topics };
 }

@@ -305,3 +305,15 @@ export interface RenderedTopicNotes {
   methods: RenderedMethodsSection;
   pointers: RenderedPointersSection;
 }
+
+/** What `resolveUnitTopicNotes(studentId, course, cedUnit)` returns — a whole
+ *  CED unit's notes, the per-topic `RenderedTopicNotes` composed in cedTopic
+ *  order. Pure composition; each entry is exactly the per-baseline render.
+ *  Mirrors the contract's `RenderedUnitNotes` (portal-contract v1.3.0). */
+export interface RenderedUnitNotes {
+  course: string;
+  cedUnit: number;
+  /** Human unit title when known (else absent). */
+  unitTitle?: string;
+  topics: RenderedTopicNotes[];
+}

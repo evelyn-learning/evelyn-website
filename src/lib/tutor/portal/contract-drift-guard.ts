@@ -17,8 +17,11 @@ import type {
   MasteryEntry as EngineMasteryEntry,
   GapEntry as EngineGapEntry,
 } from '@/lib/tutor/student-profile/types';
-import type { RenderedTopicNotes as EngineRenderedTopicNotes } from '@/lib/tutor/topic-notes/types';
-import type { MasteryEntry, GapEntry, RenderedTopicNotes } from '@evelyn/portal-contract/v1';
+import type {
+  RenderedTopicNotes as EngineRenderedTopicNotes,
+  RenderedUnitNotes as EngineRenderedUnitNotes,
+} from '@/lib/tutor/topic-notes/types';
+import type { MasteryEntry, GapEntry, RenderedTopicNotes, RenderedUnitNotes } from '@evelyn/portal-contract/v1';
 
 /** `true` only if A is assignable to B; otherwise a type error. */
 type AssertAssignable<A extends B, B> = A;
@@ -27,5 +30,6 @@ type AssertAssignable<A extends B, B> = A;
 type _GuardMastery = AssertAssignable<EngineMasteryEntry, MasteryEntry>;
 type _GuardGap = AssertAssignable<EngineGapEntry, GapEntry>;
 type _GuardNotes = AssertAssignable<EngineRenderedTopicNotes, RenderedTopicNotes>;
+type _GuardUnitNotes = AssertAssignable<EngineRenderedUnitNotes, RenderedUnitNotes>;
 
-export type __ContractDriftGuards = [_GuardMastery, _GuardGap, _GuardNotes];
+export type __ContractDriftGuards = [_GuardMastery, _GuardGap, _GuardNotes, _GuardUnitNotes];
