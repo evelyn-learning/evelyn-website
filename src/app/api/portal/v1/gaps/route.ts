@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { getOrCreateStudentProfile, isGapStale } from '@/lib/tutor/student-profile/store';
+import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
 export const GET = withPortalAuth(async (req) => {
   const studentId = new URL(req.url).searchParams.get('studentId');
@@ -13,5 +14,7 @@ export const GET = withPortalAuth(async (req) => {
   }
   const profile = await getOrCreateStudentProfile(studentId);
   const gaps = profile.gaps.filter((g) => !isGapStale(g));
-  return NextResponse.json(gaps);
+  // Contract optionals are `.optional()` not `.nullable()` — strip null keys so
+  // the portal parses (field absent), never 500s on a persisted null.
+  return NextResponse.json(stripNullsDeep(gaps));
 });

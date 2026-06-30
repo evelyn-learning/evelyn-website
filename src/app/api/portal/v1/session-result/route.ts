@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { SessionEmitRequestSchema } from '@evelyn/portal-contract/v1';
 import { emitSessionResult } from '@/lib/tutor/portal/session-result';
+import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
 export const POST = withPortalAuth(async (_req, auth) => {
   const parsed = SessionEmitRequestSchema.safeParse(auth.body);
@@ -16,5 +17,5 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
   const result = await emitSessionResult(parsed.data);
-  return NextResponse.json(result);
+  return NextResponse.json(stripNullsDeep(result));
 });

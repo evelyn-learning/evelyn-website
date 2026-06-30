@@ -11,6 +11,7 @@ import { AssessmentSubmissionSchema } from '@evelyn/portal-contract/v1';
 import { submitAssessment } from '@/lib/tutor/portal/assessment';
 import { defaultGradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { resolveAssessmentItem } from '@/lib/tutor/portal/adapters';
+import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
 export const POST = withPortalAuth(async (_req, auth) => {
   const parsed = AssessmentSubmissionSchema.safeParse(auth.body);
@@ -18,5 +19,5 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
   const result = await submitAssessment(parsed.data, defaultGradeDeps(), resolveAssessmentItem);
-  return NextResponse.json(result);
+  return NextResponse.json(stripNullsDeep(result));
 });
