@@ -22,7 +22,7 @@ import { TranscriptView } from './components/TranscriptView';
 import { SessionControls } from './components/SessionControls';
 import { WhiteboardCanvas } from './components/whiteboard';
 import { VoiceTutor } from './components/VoiceTutor';
-import { VoiceTutorRealtime, type RealtimeHandle } from './components/VoiceTutorRealtime';
+import { VoiceTutorRealtime, type RealtimeHandle, type TutorResumeState } from './components/VoiceTutorRealtime';
 import { LessonPlanProgress } from './components/LessonPlanProgress';
 import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
@@ -35,6 +35,7 @@ import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
+import { buildResumeState, type PriorSessionRead } from '@/lib/tutor/portal/resume';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
@@ -132,6 +133,11 @@ function TutorPage() {
   // get captured in the brain layer but never persist. The settings page
   // at /tutor/settings already uses this same param shape.
   const studentIdParam = searchParams.get('studentId') || undefined;
+  // /tutor?sid=<sessionId> — a stable session id carried in the URL so a
+  // reload reconnects to the same engine session instead of minting a fresh
+  // one. Written on session start (window.history.replaceState); read here to
+  // drive reload auto-resume below.
+  const sidParam = searchParams.get('sid') || '';
 
   const [stage, setStage] = useState<'setup' | 'session' | 'summary'>('setup');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -216,7 +222,17 @@ function TutorPage() {
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
 
   // Session state
-  const [sessionId, setSessionId] = useState(() => `session-${Date.now()}`);
+  // Reuse the URL's sid on reload so the engine session id is stable; else mint.
+  const [sessionId, setSessionId] = useState(() => sidParam || `session-${Date.now()}`);
+  // Resume snapshot to seed the runtime when reloading into an in-progress
+  // session (null = fresh). resumeBooting holds the first render while the
+  // checkpoint read is in flight so we don't flash the setup screen.
+  const [resumeState, setResumeState] = useState<TutorResumeState | null>(null);
+  const [resumeBooting, setResumeBooting] = useState(() => !!sidParam);
+  // Legacy-layout "Continue lesson" overlay gate (the new SessionStage UI owns
+  // its own overlay inside TutorSession). True while a resumed session is
+  // rehydrated but the student hasn't tapped Continue yet.
+  const [awaitingResume, setAwaitingResume] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
@@ -442,6 +458,16 @@ function TutorPage() {
           }));
         })(),
       } : {}),
+      // Lesson-phase position checkpoint (contract v1.2.0) so a reload can
+      // resume where the student left off. Only present for plan-driven
+      // sessions; written on every save (periodic + the per-advance save).
+      ...(lessonProgress.plan ? {
+        lessonProgress: {
+          lessonPlanId: lessonProgress.plan.id,
+          currentSegmentId: lessonProgress.currentSegmentId,
+          completedSegmentIds: [...completedSegmentIds],
+        },
+      } : {}),
     };
 
     // On final save, include the session-level topics-covered + weak-topics
@@ -467,7 +493,7 @@ function TutorPage() {
         body: JSON.stringify(payload),
       }).catch(() => {});
     }
-  }, [sessionId, selectedSubject, selectedLevel, selectedTopicId, stage, sessionGoal, inputMode, voiceEngine, studentName, transcript.length, whiteboardCommands.length, tokenUsage]);
+  }, [sessionId, selectedSubject, selectedLevel, selectedTopicId, stage, sessionGoal, inputMode, voiceEngine, studentName, transcript.length, whiteboardCommands.length, tokenUsage, lessonProgress.plan, lessonProgress.currentSegmentId, completedSegmentIds]);
 
   // Save on page unload (tab close) or component unmount (in-app navigation/back button)
   useEffect(() => {
@@ -549,6 +575,62 @@ function TutorPage() {
     }, 30_000);
     return () => clearInterval(interval);
   }, [stage]);
+
+  // Persist the position checkpoint promptly on each segment change (the 30s
+  // periodic flush would otherwise leave resume up to 30s stale). saveSessionUsage
+  // already carries the lessonProgress checkpoint; this just triggers it.
+  useEffect(() => {
+    if (stage !== 'session' || !lessonProgress.plan) return;
+    saveSessionUsageRef.current('active');
+  }, [stage, lessonProgress.plan, lessonProgress.currentSegmentId, completedSegmentIds]);
+
+  // Reload auto-resume: when the URL carries a ?sid= and that session has a
+  // fresh checkpoint, rebuild the session config from the persisted doc, seed
+  // the runtime (position + transcript + whiteboard via resumeState), and boot
+  // straight into the session — skipping setup. Runs once on mount. Anything
+  // missing / stale / completed → fall through to the normal setup screen.
+  useEffect(() => {
+    if (!sidParam) return; // resumeBooting already false → normal setup
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sidParam)}`);
+        if (res.ok) {
+          const data = (await res.json()) as PriorSessionRead;
+          const rs = buildResumeState(data);
+          // Resume whenever a FRESH checkpoint exists — regardless of status.
+          // 'completed'/'abandoned' both resume (the student reloaded or ended
+          // and wants to continue); freshness is bounded by RESUME_MAX_AGE_MS
+          // inside buildResumeState. (Was gated on status !== 'completed', which
+          // silently refused to resume any session the student had ended — the
+          // real reason reload-resume looked "still silent" in testing.)
+          if (!cancelled && rs && data.exists) {
+            if (data.subject) setSelectedSubject(data.subject);
+            if (data.level) setSelectedLevel(data.level);
+            if (data.topic) setSelectedTopicId(data.topic);
+            if (data.lessonProgress?.lessonPlanId) setSelectedLessonPlanId(data.lessonProgress.lessonPlanId);
+            if (data.sessionGoal) setSessionGoal(data.sessionGoal as SessionGoal);
+            if (data.studentName) setStudentName(data.studentName);
+            if (data.inputMode === 'text' || data.inputMode === 'voice') setInputMode(data.inputMode);
+            sessionStartTimeRef.current = data.startedAt ? new Date(data.startedAt) : new Date();
+            // Start the whiteboard persistence buffers empty so the resume seed
+            // (replayed once through onWhiteboardCommand) populates them exactly
+            // once — no doubling. On a fresh reload these are already empty; the
+            // clear keeps the invariant explicit and matches the summary-resume path.
+            whiteboardEventsRef.current = [];
+            setWhiteboardCommands([]);
+            setResumeState(rs);
+            setStage('session');
+          }
+        }
+      } catch {
+        // Read failed → fall through to the normal setup screen below.
+      }
+      if (!cancelled) setResumeBooting(false);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Derived taxonomy state
   const topicDisplayName = useMemo(
@@ -810,7 +892,17 @@ function TutorPage() {
     // wb event log, debug log, and the VoiceTutorRealtime internal
     // refs (transcriptRef, lessonPlanRef, queuedTranscriptsRef, the
     // catalog) all carried over.
-    setSessionId(`session-${Date.now()}`);
+    const newSessionId = `session-${Date.now()}`;
+    setSessionId(newSessionId);
+    // Carry the session id in the URL so a reload reconnects to THIS session
+    // (reload auto-resume). replaceState avoids a Next navigation/remount.
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('sid', newSessionId);
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+    // Fresh start — never inherit a prior session's resume snapshot.
+    setResumeState(null);
     setTranscript([]);
     setConversationHistory([]);
     setWhiteboardCommands([]);
@@ -821,6 +913,7 @@ function TutorPage() {
     setPickerAnchorIndex(null);
     setStatusMessage(null);
     setError(null);
+    setVoiceStartedAtMs(null);
     debugEventsRef.current = [];
     lastSavedDebugCountRef.current = 0;
     sessionStartTimeRef.current = new Date();
@@ -1380,6 +1473,11 @@ function TutorPage() {
   // VoiceTutorRealtime's onVoiceStateChange). 'idle' until the engine reports.
   const [liveVoiceState, setLiveVoiceState] = useState<VoiceState>('idle');
 
+  // Wallclock ms when the student actually starts the voice session (mic tap).
+  // Drives the SessionControls timer so it counts from start, not from when the
+  // session view mounted. Reset to null on each new session in handleStartSession.
+  const [voiceStartedAtMs, setVoiceStartedAtMs] = useState<number | null>(null);
+
   // Page-nav state surfaced from the (chromeless) WhiteboardCanvas so the new
   // SessionStage can render its own slim page switcher. null until first fire.
   const [boardNav, setBoardNav] = useState<{ index: number; count: number; titles: string[]; goTo: (i: number) => void } | null>(null);
@@ -1477,8 +1575,11 @@ function TutorPage() {
     trackInteraction('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
   }, [selectedSubject, selectedTopicId, selectedLevel, trackInteraction]);
 
-  // Render setup stage
-  if (stage === 'setup') {
+  // Render setup stage. Guard on !resumeBooting: on a ?sid= reload the initial
+  // stage is 'setup' while the checkpoint read is in flight — without this the
+  // setup/picker screen flashes for a frame before the resume boot flips to the
+  // session. The resumeBooting loader below owns that interim render.
+  if (stage === 'setup' && !resumeBooting) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -1527,6 +1628,17 @@ function TutorPage() {
     );
   }
 
+  // Reload auto-resume in flight — hold the first paint until the checkpoint
+  // read resolves so we don't flash the setup screen before booting into the
+  // resumed session.
+  if (resumeBooting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   // ===== NEW "Stage + Presence" in-session layout (flag-gated, additive) =====
   if (stage === 'session' && NEW_SESSION_UI && (voiceEngine === 'realtime' || voiceEngine === 'realtime-2' || voiceEngine === 'realtime-validated' || voiceEngine === 'claude-brain')) {
     return (
@@ -1544,6 +1656,7 @@ function TutorPage() {
         voiceEngine={voiceEngine}
         ttsProvider={ttsProvider}
         sessionMaxMinutes={30}
+        resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         availableLessonPlans={availableLessonPlans}
         onEndSession={handleEndSession}
@@ -1652,6 +1765,7 @@ function TutorPage() {
         <div className="flex-shrink-0 container mx-auto px-4 py-1">
           <SessionControls
             sessionId={sessionId}
+            startedAtMs={voiceStartedAtMs}
             maxDuration={30}
             onEndSession={handleEndSession}
             onUploadHomework={handleUploadHomework}
@@ -1971,19 +2085,34 @@ function TutorPage() {
             } lg:flex`}
             style={{ width: isDesktop ? `${100 - splitPercent}%` : '100%' }}
           >
-            <WhiteboardCanvas
-              commands={whiteboardCommands}
-              tutorBusy={isProcessing && whiteboardActiveThisTurn}
-              onClear={() => setWhiteboardCommands([])}
-              onAttentionShift={() => {
-                // Tutor wants the student to look at the board — auto-
-                // switch mobile tabs so they actually see it. No-op on
-                // desktop where both panels are visible.
-                if (!isDesktop) setMobileTab('whiteboard');
-              }}
-              onTryYourselfAnswer={handleTryYourselfAnswer}
-              onStudentInput={handleStudentInput}
-            />
+            <div className="relative w-full h-full">
+              <WhiteboardCanvas
+                commands={whiteboardCommands}
+                tutorBusy={isProcessing && whiteboardActiveThisTurn}
+                onClear={() => setWhiteboardCommands([])}
+                onAttentionShift={() => {
+                  // Tutor wants the student to look at the board — auto-
+                  // switch mobile tabs so they actually see it. No-op on
+                  // desktop where both panels are visible.
+                  if (!isDesktop) setMobileTab('whiteboard');
+                }}
+                onTryYourselfAnswer={handleTryYourselfAnswer}
+                onStudentInput={handleStudentInput}
+                openOnLastPage={!!resumeState}
+              />
+              {awaitingResume && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/65 backdrop-blur-[1.5px]">
+                  <button
+                    onClick={() => realtimeHandleRef.current?.resumeContinue()}
+                    className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-blue-600 text-white text-base font-semibold shadow-lg hover:bg-blue-700 hover:scale-[1.03] active:scale-95 transition-all"
+                  >
+                    <Play className="w-5 h-5" />
+                    Continue lesson
+                  </button>
+                  <p className="text-sm text-slate-600">Pick up where you left off</p>
+                </div>
+              )}
+            </div>
           </div>
           </div>{/* close inner flex */}
         </div>
@@ -2041,6 +2170,8 @@ function TutorPage() {
                   sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
                   sessionGoal={sessionGoal}
                   lessonPlanId={selectedLessonPlanId || undefined}
+                  resumeState={resumeState}
+                  onResumeAwaitingTapChange={setAwaitingResume}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
@@ -2057,6 +2188,7 @@ function TutorPage() {
                   ttsProvider={ttsProvider}
                   onLessonPlanProgress={setLessonProgress}
                   onTutorBusy={setIsProcessing}
+                  onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
                   onPaceBiasChange={(bias) => {
                     setPaceBias(bias);
                     setPaceBiasFlash(true);
@@ -2274,6 +2406,45 @@ function TutorPage() {
         </div>
 
         <div className="flex gap-4 justify-center flex-wrap">
+          {/* Resume the session the student just left (End / back chevron both
+              land here). All session state is still in memory, so we rebuild
+              the resume snapshot directly and re-enter — no DB round-trip. Only
+              offered for plan-driven sessions (the resumable kind). */}
+          {lessonProgress.plan && (
+            <button
+              onClick={() => {
+                const rs: TutorResumeState = {
+                  currentSegmentId: lessonProgress.currentSegmentId,
+                  completedSegmentIds: [...completedSegmentIds],
+                  transcript,
+                  whiteboardCommands,
+                };
+                // Reset the whiteboard persistence buffers BEFORE re-entering.
+                // Re-entering remounts VoiceTutorRealtime, whose resume seed
+                // replays rs.whiteboardCommands through onWhiteboardCommand —
+                // which appends them to whiteboardEventsRef + whiteboardCommands.
+                // Without clearing, the seed stacks a 2nd copy onto the still-
+                // populated buffers → the saved board (and every page) doubles,
+                // compounding on each Resume. rs already captured the snapshot.
+                whiteboardEventsRef.current = [];
+                setWhiteboardCommands([]);
+                // Re-enable saves (End set this true) + keep the sid in the URL
+                // so a later reload still auto-resumes this same session.
+                sessionEndedRef.current = false;
+                if (typeof window !== 'undefined') {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('sid', sessionId);
+                  window.history.replaceState(window.history.state, '', url.toString());
+                }
+                setResumeState(rs);
+                setStage('session');
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Play className="w-5 h-5" />
+              Resume session
+            </button>
+          )}
           {transcript.length > 0 && (
             <button
               disabled={summaryPdfState === 'working'}
@@ -2324,6 +2495,15 @@ function TutorPage() {
               // state. Match handleStartSession so both entry points
               // start clean.
               setSessionId(`session-${Date.now()}`);
+              // Drop the prior session's sid + resume snapshot so a reload from
+              // the setup screen starts clean (handleStartSession re-stamps a
+              // fresh sid into the URL when the next session actually begins).
+              setResumeState(null);
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('sid');
+                window.history.replaceState(window.history.state, '', url.toString());
+              }
               setTranscript([]);
               setConversationHistory([]);
               setWhiteboardCommands([]);
@@ -2340,13 +2520,14 @@ function TutorPage() {
               setPickerAnchorIndex(null);
               setStatusMessage(null);
               setError(null);
+              setVoiceStartedAtMs(null);
               debugEventsRef.current = [];
               lastSavedDebugCountRef.current = 0;
               lastSavedTokenCountRef.current = 0;
               sessionEndedRef.current = false;
               setStage('setup');
             }}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Start New Session
           </button>

@@ -127,6 +127,21 @@ export default function SessionStage(props: SessionStageProps) {
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
 
   const stageRef = useRef<HTMLDivElement>(null);
+  // Close the board-page dropdown on any pointerdown outside its container
+  // (the pill + list). Covers clicks anywhere — board, header, dock — which the
+  // old z-layered click-catcher missed (header/dock sat above it). Buttons
+  // inside the container manage their own close via onClick.
+  const switcherRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!switcherOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+        setSwitcherOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [switcherOpen]);
   const toggleFullscreen = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const el = stageRef.current as any;
@@ -299,18 +314,12 @@ export default function SessionStage(props: SessionStageProps) {
         </div>
       </div>
 
-      {/* Board-switcher dropdown click-catcher — at the STAGE ROOT (not inside
-          the translated switcher pill) so it actually covers the whole stage,
-          incl. the whiteboard. z-10 = above the board, below the switcher (z-20)
-          + dock (z-30), so the dropdown list and dock stay clickable. */}
-      {switcherOpen && <div className="absolute inset-0 z-10" onClick={() => setSwitcherOpen(false)} />}
-
       {/* ===== Slim board page switcher (top-center) — only when the
               chromeless board has >1 page. Shows the current board's title +
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
               suppressed (chrome="minimal"). ===== */}
       {showSwitcher && boardPages && (
-        <div className="absolute top-[58px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        <div ref={switcherRef} className="absolute top-[58px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
@@ -344,9 +353,8 @@ export default function SessionStage(props: SessionStageProps) {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          {/* Jump-to-page dropdown (the click-catcher lives at the stage root —
-              a `fixed` element inside this -translate-x parent would be sized to
-              the pill, not the viewport, and never cover the board). */}
+          {/* Jump-to-page dropdown. Outside-click close is handled by the
+              document pointerdown listener above (keyed to switcherRef). */}
           {switcherOpen && (
             <>
               <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-[min(86vw,360px)] max-h-[50vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5">

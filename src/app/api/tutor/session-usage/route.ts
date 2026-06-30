@@ -7,7 +7,47 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { TutorSession } from "@/models/TutorSession";
+import { TutorSession, type ITutorSession } from "@/models/TutorSession";
+
+/**
+ * GET /api/tutor/session-usage?sessionId= — read prior session state for the
+ * embed's resume boot (contract v1.2.0, E3). Returns just what rehydration
+ * needs: the lesson-position checkpoint + transcript + whiteboard. Keyed on the
+ * opaque sessionId, same trust model as the unauthenticated POST below. The
+ * embed enforces RESUME_MAX_AGE_MS on the checkpoint's updatedAt itself.
+ */
+export async function GET(req: NextRequest) {
+  const sessionId = new URL(req.url).searchParams.get("sessionId");
+  if (!sessionId) {
+    return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
+  }
+  try {
+    await connectDB();
+    const session = await TutorSession.findOne({ sessionId }).lean<ITutorSession | null>();
+    if (!session) {
+      return NextResponse.json({ exists: false });
+    }
+    return NextResponse.json({
+      exists: true,
+      status: session.status,
+      // Identity — lets the standalone /tutor page rebuild its session config
+      // (subject/level/topic/plan/goal) on reload-resume from the URL alone.
+      subject: session.subject,
+      topic: session.topic,
+      level: session.level,
+      sessionGoal: session.sessionGoal,
+      studentName: session.studentName,
+      inputMode: session.inputMode,
+      startedAt: session.startedAt,
+      lessonProgress: session.lessonProgress ?? null,
+      transcript: session.transcript ?? [],
+      whiteboardCommands: session.whiteboardCommands ?? [],
+    });
+  } catch (error) {
+    console.error("Session usage read error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
 
 // Simple in-memory rate limit: max 60 requests per minute per session
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -80,6 +120,29 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body.topicsCovered)) updateFields.topicsCovered = body.topicsCovered;
     if (Array.isArray(body.weakTopics)) updateFields.weakTopics = body.weakTopics;
 
+    // Lesson-phase position checkpoint (portal contract v1.2.0 — additive).
+    // Persisted on each segment change so the portal's session-progress read
+    // and conversation resume have a durable position even on abrupt close.
+    if (
+      body.lessonProgress &&
+      typeof body.lessonProgress === "object" &&
+      typeof body.lessonProgress.lessonPlanId === "string"
+    ) {
+      const lp = body.lessonProgress as {
+        lessonPlanId: string;
+        currentSegmentId?: string;
+        completedSegmentIds?: unknown;
+      };
+      updateFields.lessonProgress = {
+        lessonPlanId: lp.lessonPlanId,
+        currentSegmentId: typeof lp.currentSegmentId === "string" ? lp.currentSegmentId : "",
+        completedSegmentIds: Array.isArray(lp.completedSegmentIds)
+          ? lp.completedSegmentIds.filter((s): s is string => typeof s === "string")
+          : [],
+        updatedAt: new Date(),
+      };
+    }
+
     // Build the update operation
     const updateOp: Record<string, unknown> = {};
     if (Object.keys(updateFields).length > 0) {
@@ -101,7 +164,14 @@ export async function POST(req: NextRequest) {
         $each: body.debugEvents.map(
           (e: { type: string; message: string; timestamp?: string; data?: Record<string, unknown> }) => ({
             type: e.type,
-            message: typeof e.message === 'string' ? e.message.slice(0, 500) : '',
+            // `message` is required by the schema — an empty string fails
+            // validation and 400s the WHOLE save (checkpoint + transcript
+            // included). Fall back to the event type (or a placeholder) so one
+            // empty-message debug event can never sink the save.
+            message:
+              (typeof e.message === 'string' && e.message.trim() ? e.message.slice(0, 500) : '') ||
+              (typeof e.type === 'string' && e.type) ||
+              'event',
             timestamp: e.timestamp ? new Date(e.timestamp) : new Date(),
             ...(e.data ? { data: e.data } : {}),
           })

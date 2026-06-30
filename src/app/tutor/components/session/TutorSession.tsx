@@ -19,6 +19,7 @@
 
 import { useState, useCallback, useRef, type ComponentProps, type ReactNode } from 'react';
 import Script from 'next/script';
+import { Play } from 'lucide-react';
 import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
@@ -55,6 +56,8 @@ export interface TutorSessionProps {
   voiceEngine: TutorSessionVoiceEngine;
   ttsProvider?: VTRProps['ttsProvider'];
   sessionMaxMinutes: number;
+  /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
+  resumeState?: VTRProps['resumeState'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -102,7 +105,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onWhiteboardCommand, onUsageUpdate, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
-    onCompletedSegmentsChange, availableLessonPlans,
+    onCompletedSegmentsChange, availableLessonPlans, resumeState,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -111,10 +114,17 @@ export default function TutorSession(props: TutorSessionProps) {
   const [lessonProgress, setLessonProgress] = useState<LessonProgressState>({ plan: null, currentSegmentId: '' });
   const [completedSegmentIds, setCompletedSegmentIds] = useState<string[]>([]);
   const [liveVoiceState, setLiveVoiceState] = useState<VoiceState>('idle');
+  // Wallclock ms when the student actually starts the voice session (mic tap).
+  // Drives the SessionControls timer so it counts from start, not page mount.
+  const [voiceStartedAtMs, setVoiceStartedAtMs] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [whiteboardActiveThisTurn, setWhiteboardActiveThisTurn] = useState(false);
   const [listeningHint, setListeningHint] = useState<'didnt-catch' | null>(null);
   const [boardNav, setBoardNav] = useState<BoardNav | null>(null);
+  // True while a resumed session is rehydrated but the student hasn't continued
+  // yet — drives the "Continue lesson" overlay over the board (its click is the
+  // gesture that unlocks audio + kicks the brain to pick up the lesson).
+  const [awaitingResume, setAwaitingResume] = useState(false);
   const [paceBias, setPaceBias] = useState(0);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   const [, setIsPerceptionInterrupted] = useState(false);
@@ -224,17 +234,32 @@ export default function TutorSession(props: TutorSessionProps) {
   const topicLabel = topicDisplayName || 'AI Tutor';
 
   const boardEl = (
-    <WhiteboardCanvas
-      commands={whiteboardCommands}
-      tutorBusy={isProcessing && whiteboardActiveThisTurn}
-      onClear={() => setWhiteboardCommands([])}
-      onAttentionShift={() => {}}
-      onTryYourselfAnswer={handleTryYourselfAnswer}
-      suppressEmptyState
-      chrome="minimal"
-      onNavChange={setBoardNav}
-      className="h-full"
-    />
+    <div className="relative h-full">
+      <WhiteboardCanvas
+        commands={whiteboardCommands}
+        tutorBusy={isProcessing && whiteboardActiveThisTurn}
+        onClear={() => setWhiteboardCommands([])}
+        onAttentionShift={() => {}}
+        onTryYourselfAnswer={handleTryYourselfAnswer}
+        suppressEmptyState
+        chrome="minimal"
+        onNavChange={setBoardNav}
+        openOnLastPage={!!resumeState}
+        className="h-full"
+      />
+      {awaitingResume && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/65 backdrop-blur-[1.5px]">
+          <button
+            onClick={() => realtimeHandleRef.current?.resumeContinue()}
+            className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-blue-600 text-white text-base font-semibold shadow-lg hover:bg-blue-700 hover:scale-[1.03] active:scale-95 transition-all"
+          >
+            <Play className="w-5 h-5" />
+            Continue lesson
+          </button>
+          <p className="text-sm text-slate-600">Pick up where you left off</p>
+        </div>
+      )}
+    </div>
   );
 
   const transcriptEl = (
@@ -299,6 +324,9 @@ export default function TutorSession(props: TutorSessionProps) {
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}
+        resumeState={resumeState}
+        onResumeAwaitingTapChange={setAwaitingResume}
+        onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
         onMicLevel={(l) => { micLevelRef.current = l; }}
         onListeningHint={setListeningHint}
         onPaceBiasChange={(bias) => {
@@ -325,6 +353,7 @@ export default function TutorSession(props: TutorSessionProps) {
   const controlsEl = (
     <SessionControls
       sessionId={sessionId}
+      startedAtMs={voiceStartedAtMs}
       maxDuration={sessionMaxMinutes}
       onEndSession={onEndSession}
       onUploadHomework={onUploadHomework ?? (() => {})}

@@ -144,6 +144,11 @@ export interface RealtimeHandle {
    *  cues like "slow down" / "faster" go through the boredom-cue
    *  regex inside callBrainOnce and call stepPaceBias internally. */
   stepPaceBias: (delta: -1 | 1) => void;
+  /** Resume first-interaction: the gesture that unlocks TTS audio AND kicks
+   *  the brain to continue a rehydrated session. Wired to the "Continue
+   *  lesson" overlay (and mirrored by the mic dock's resume tap). No-op once
+   *  the session has started or when there is no resume snapshot. */
+  resumeContinue: () => void;
 }
 
 // --- Multi-language whiteboard intent detection ---
@@ -521,6 +526,18 @@ function deepEqualParams(a: unknown, b: unknown): boolean {
  *  `'none'`, which the consumer uses as the default when nothing fired. */
 export type TutorMilestone = 'first_concept_complete' | 'first_try_yourself_success' | 'recap_reached';
 
+/** Prior-session state to rehydrate on a resumed session (contract v1.2.0, E3).
+ *  The runtime seeds these on boot so the conversation continues where it left
+ *  off — position drives the pills, transcript feeds both the chat UI and the
+ *  brain's history, whiteboard restores the board. Resume never auto-opens the
+ *  mic; the student speaks/clicks to resume audio. */
+export interface TutorResumeState {
+  currentSegmentId: string;
+  completedSegmentIds: string[];
+  transcript: TranscriptEntry[];
+  whiteboardCommands: WhiteboardCommand[];
+}
+
 interface VoiceTutorRealtimeProps {
   subject: string;
   topic: string;
@@ -603,6 +620,20 @@ interface VoiceTutorRealtimeProps {
    *  (student speaking now) · listening (mic open, idle) · muted · error · idle.
    *  Fires on every transition. */
   onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'error') => void;
+  /** Fires once, the first time the student clicks the mic to start the voice
+   *  session (the "Click to start" tap). Lets the session timer begin counting
+   *  from the actual start rather than from page mount. */
+  onSessionStarted?: () => void;
+  /** When set, the runtime boots in RESUME mode: it seeds transcript +
+   *  whiteboard + segment position from this prior-session snapshot and
+   *  continues the same conversation (no fresh lesson kickoff, mic stays
+   *  closed until the student acts). Null/undefined = normal fresh start. */
+  resumeState?: TutorResumeState | null;
+  /** Fires when the "awaiting the resume first interaction" state flips: true
+   *  once a resume snapshot is seeded and the session hasn't started, false the
+   *  moment the student continues. The host renders a "Continue lesson" overlay
+   *  while true (its click calls handleRef.resumeContinue()). */
+  onResumeAwaitingTapChange?: (awaiting: boolean) => void;
   /** Live student-mic amplitude (0..1) for the "being heard" meter. ~12×/sec. */
   onMicLevel?: (level: number) => void;
   /** Transient listening hint: 'didnt-catch' when the student clearly spoke but
@@ -769,6 +800,9 @@ export function VoiceTutorRealtime({
   onLessonPlanProgress,
   onTutorBusy,
   onVoiceStateChange,
+  onSessionStarted,
+  resumeState,
+  onResumeAwaitingTapChange,
   onMicLevel,
   onListeningHint,
   onPaceBiasChange,
@@ -4226,14 +4260,19 @@ export function VoiceTutorRealtime({
     const firstTeachingWillDedup = (() => {
       if (!firstTeachingCmdForGrouping) return false;
       const a = String(firstTeachingCmdForGrouping.action);
-      if (a !== 'showDiagram') return false;
-      const t = (firstTeachingCmdForGrouping as { type?: string }).type;
-      const isOrganizer = typeof t === 'string' && new Set([
-        'comparison_table', 't_chart', 'frayer_model', 'hierarchy_pyramid',
-        'argument_structure', 'government_branches', 'body_system',
-        'life_cycle', 'water_cycle', 'rock_cycle',
-      ]).has(t);
-      if (!isOrganizer) return false;
+      // Any teaching render whose exact signature already exists in the catalog
+      // WILL dedup-drop at the gate below. Breaking to a new page in front of it
+      // leaves a blank page — and worse, the page break sets newPageThisBatch,
+      // which then SKIPS the dedup so the duplicate renders anyway. That is the
+      // resume re-render bug: after a reload the brain re-emits an existing
+      // equation/figure, the runtime opens a fresh page for it, and the dedup
+      // never fires → a duplicate page of identical content. Suppressing the
+      // break keeps newPageThisBatch false so the dedup runs. Match the dedup
+      // gate's own conditions (skip when the student explicitly asked for a
+      // redraw, or the brain already broke to a new page earlier this turn).
+      // (Was restricted to showDiagram organizers; generalized to every teaching
+      // action so re-emitted equations/figures on resume dedup too.)
+      if (redrawRequested || newPageThisTurnRef.current) return false;
       try {
         return !!catalogRef.current.findBySignature(buildShowSignature(a, firstTeachingCmdForGrouping));
       } catch {
@@ -5742,6 +5781,75 @@ export function VoiceTutorRealtime({
     return () => { cancelled = true; };
   }, [studentId]);
 
+  // RESUME (E3) — one-time guards. Position is applied inside the plan-load
+  // effect (it must run AFTER the plan resets to segment 1); transcript +
+  // whiteboard are seeded by the effect below (no plan dependency).
+  const resumePositionConsumedRef = useRef(false);
+  const resumeContentSeededRef = useRef(false);
+  useEffect(() => {
+    if (!resumeState || resumeContentSeededRef.current) return;
+    resumeContentSeededRef.current = true;
+    // Transcript → seeds the chat UI (onTranscriptUpdate) AND the brain's
+    // conversation history (callBrainOnce derives `priorHistory` straight from
+    // transcriptRef), so the next turn continues the same dialogue.
+    if (resumeState.transcript.length) {
+      transcriptRef.current = [...resumeState.transcript];
+      onTranscriptUpdate([...transcriptRef.current]);
+    }
+    // Whiteboard → restore prior figures both in the runtime's own ref (so its
+    // board-awareness / dedup logic doesn't think the board is empty) and in
+    // the rendered board (onWhiteboardCommand → parent's canvas state).
+    if (resumeState.whiteboardCommands.length) {
+      whiteboardCommandsRef.current = [...resumeState.whiteboardCommands];
+      onWhiteboardCommand([...resumeState.whiteboardCommands]);
+      // Seed the catalog so cross-turn dedup recognizes the RESTORED board.
+      // Without this, findBySignature is empty after a reload, so the brain's
+      // resume reflex ("re-render the interrupted visual") sails past the dedup
+      // gate and stacks a duplicate page of identical content (the F=ma / Newton
+      // re-render bug). We replay the page structure (newPage → openPage) and
+      // register each teaching render's signature — the SAME keys the live
+      // dispatch uses (buildShowSignature strips title/label, so a re-emit under
+      // a new heading still matches). Catalog entries are pure metadata (no
+      // render side-effect); features are omitted (scribble-target resolution on
+      // resumed items degrades gracefully — dedup, the actual bug, is restored).
+      resumeState.whiteboardCommands.forEach((cmd, i) => {
+        const action = String((cmd as { action?: string }).action ?? '');
+        if (!action) return;
+        // Advance the per-action id counter past every restored id so renders
+        // AFTER the resume get fresh, unique ids. The counter is in-memory and
+        // restarts at 0 on reload; without this the next render reuses a
+        // restored id (e.g. a 2nd showEquation-1 on a different page), which
+        // breaks view-follow (it resolves the id to the FIRST page holding it,
+        // snapping the view to the wrong page) plus id-based scribble / dedup /
+        // removeItems. Keyed on the id's prefix (= action).
+        const cmdId = (cmd as { id?: string }).id;
+        if (cmdId) {
+          const m = /^(.+)-(\d+)$/.exec(cmdId);
+          if (m && Number.isFinite(Number(m[2]))) {
+            idCountersRef.current.set(m[1], Math.max(idCountersRef.current.get(m[1]) ?? 0, Number(m[2])));
+          }
+        }
+        if (action === 'newPage') {
+          const title = (cmd as { title?: string }).title ?? '';
+          catalogRef.current.openPage({ title });
+          catalogRef.current.setCurrentPage(title);
+          return;
+        }
+        if (!isTeachingRenderAction(action) && action !== 'showSegmentCard') return;
+        try {
+          catalogRef.current.append({
+            itemId: (cmd as { id?: string }).id || `resume-${action}-${i}`,
+            action,
+            title: extractCommandTitle(cmd),
+            signature: buildShowSignature(action, cmd),
+            features: [],
+          });
+        } catch { /* a bad command shouldn't abort the whole seed */ }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeState]);
+
   // Load the active lesson plan (when lessonPlanId is set) at mount.
   // The plan is held in lessonPlanRef so the brain-call assembler always
   // sees the latest segment id without re-rendering.
@@ -5779,6 +5887,22 @@ export function VoiceTutorRealtime({
         setActivePlan(plan);
         setActiveSegmentId(plan.segments[0].id);
         console.log(`[VoiceTutorRealtime] lesson plan loaded: "${plan.title}" — starting at segment "${plan.segments[0].id}"`);
+        // RESUME (E3): override the fresh-start position with the prior
+        // session's checkpoint, once. Only honor ids that exist in THIS plan
+        // (guards against a stale checkpoint from a since-edited plan). The
+        // pills + % then reflect where the student left off instead of segment 1.
+        if (resumeState && !resumePositionConsumedRef.current) {
+          resumePositionConsumedRef.current = true;
+          const valid = new Set(plan.segments.map((s) => s.id));
+          const resumedCompleted = resumeState.completedSegmentIds.filter((id) => valid.has(id));
+          completedSegmentIdsRef.current = new Set(resumedCompleted);
+          onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+          if (resumeState.currentSegmentId && valid.has(resumeState.currentSegmentId)) {
+            currentSegmentIdRef.current = resumeState.currentSegmentId;
+            setActiveSegmentId(resumeState.currentSegmentId);
+            catalogRef.current.setCurrentSegment(resumeState.currentSegmentId);
+          }
+        }
         // Phase 4: per-plan persistence. Look up prior session's
         // pacing state for this plan in localStorage and pre-populate
         // refs. Bounded TTL — don't resume state from a session > 30
@@ -11077,6 +11201,11 @@ export function VoiceTutorRealtime({
     onDebugEvent?.('rt2_lesson_plan_injected', `segment="${segId}"`);
   };
 
+  // Always-current pointer to resumeContinue (defined further down, after the
+  // state/refs it closes over). The handle below + dock both fire through this
+  // ref so neither has to reference the callback before its declaration.
+  const resumeContinueRef = useRef<() => void>(() => {});
+
   // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {
     if (handleRef) {
@@ -11094,6 +11223,7 @@ export function VoiceTutorRealtime({
             .sort((a, b) => b.count - a.count),
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
+        resumeContinue: () => resumeContinueRef.current(),
       };
     }
     return () => {
@@ -11217,8 +11347,46 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Track if we've started the session (state, not ref, so pause button renders)
   const [hasStarted, setHasStarted] = useState(false);
 
+  // RESUME first-interaction: the single gesture that unlocks TTS audio AND
+  // kicks the brain to pick up a rehydrated session. The brain has the restored
+  // history + board, so it re-orients, RE-RENDERS any interrupted visual, and
+  // continues — voiced + drawn through the normal turn path (tools actually run,
+  // which a raw relay re-voice never could). bypassMidUtteranceGuard mirrors the
+  // [start lesson] kickoff: the synthetic opener must not be dropped by a
+  // transient startup-noise mid-utterance flag. Shared by the "Continue lesson"
+  // overlay (handleRef.resumeContinue) AND the mic dock's resume tap. Guarded so
+  // a second trigger after the session has started is a harmless no-op.
+  const resumeContinue = useCallback(() => {
+    if (hasStarted || !resumeState) return;
+    setHasStarted(true);
+    onSessionStarted?.();
+    setIsWarmingUp(true); // the brain is composing the resume turn now
+    realtime.unlockAudio();
+    handleStudentTranscriptForBrain(
+      '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]',
+      { silent: true, bypassMidUtteranceGuard: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasStarted, resumeState, onSessionStarted, realtime, handleStudentTranscriptForBrain]);
+  resumeContinueRef.current = resumeContinue;
+
   // Toggle listening
   const handleMicClick = useCallback(() => {
+    // RESUME first-tap — handled BEFORE the connection gate below. On a fresh
+    // reload the relay WS churns, so a tap can land while realtime.isConnected
+    // is still false; the gated path would no-op (dead tap). Here we mark the
+    // session started (which unmutes the perception mic — the input authority in
+    // claude-brain) and kick the BRAIN to resume the turn. The brain has the
+    // rehydrated history + restored board, so it re-orients, RE-RENDERS any
+    // interrupted visual, and continues — voiced + drawn through the normal
+    // turn path (reliable; no relay-timing races, and tools actually run, which
+    // a raw relay re-voice could never do). bypassMidUtteranceGuard mirrors the
+    // [start lesson] kickoff: the synthetic opener must not be dropped by a
+    // transient startup-noise mid-utterance flag.
+    if (resumeState && !hasStarted && realtime.state !== 'listening' && realtime.state !== 'speaking') {
+      resumeContinue();
+      return;
+    }
     if (realtime.state === 'listening') {
       realtime.stopListening();
     } else if (realtime.state === 'speaking') {
@@ -11235,6 +11403,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
+        // Session has truly begun now (student tapped the mic) — start the
+        // session timer from here, not from page mount.
+        onSessionStarted?.();
         // Immediate visual feedback while the brain composes its first turn.
         setIsWarmingUp(true);
         console.log(`[STARTUP] start → isWarmingUp=true (connected=${realtime.isConnected}, state=${realtime.state}, claudeBrain=${claudeBrainMode}, plan=${!!lessonPlanRef.current})`);
@@ -11285,7 +11456,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         console.log('[VoiceTutorRealtime] Start clicked while muted — skipping startListening');
       }
     }
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {
@@ -11587,7 +11758,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // wrongly implies they must click before talking.
     ? { icon: <Square className="w-4 h-4" />, text: 'Listening…', subtext: 'Click to stop', color: 'bg-red-500', pulse: true }
     : baseStateUI;
-  const isDisabled = realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp;
+  // A resume's first tap must be accepted even while the relay WS is still
+  // 'connecting' (it churns on a fresh reload): the tap queues the re-voice and
+  // unmutes the perception mic regardless of relay state, and the re-voice is
+  // fired later by the flush effect once connected. Without this exception the
+  // disabled button swallowed the tap entirely (handleMicClick never ran), which
+  // is why the resume was silent.
+  const resumeAwaitingFirstTap = !!resumeState && !hasStarted;
+  const isDisabled = (realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp) && !resumeAwaitingFirstTap;
+
+  // Surface the awaiting-resume state so the host (SessionStage / legacy board)
+  // can render the "Continue lesson" overlay. Flips false the moment the student
+  // continues (resumeContinue → hasStarted = true).
+  useEffect(() => {
+    onResumeAwaitingTapChange?.(resumeAwaitingFirstTap);
+  }, [resumeAwaitingFirstTap, onResumeAwaitingTapChange]);
 
   // Surface composing state to the parent. The typing indicator should
   // only appear when the brain is composing AND no streaming bubble has
@@ -11762,6 +11947,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           input wraps to its own row (full width); on desktop it shares
           the row with the mic + status. */}
       <form
+        autoComplete="off"
         className="order-last w-full md:order-none md:flex-1 md:w-auto flex items-center gap-2 min-w-0"
         onSubmit={async (e: FormEvent) => {
           e.preventDefault();
@@ -11876,6 +12062,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         <input
           name="studentText"
           type="text"
+          // Suppress the browser's autofill/history dropdown (it surfaced prior
+          // submitted answers — "hello", "yes", "ready" — over the board). The
+          // belt-and-suspenders attrs cover Chrome, which ignores autoComplete
+          // alone for some text inputs.
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-1p-ignore
+          data-lpignore="true"
           placeholder="Type here if you can't speak..."
           // 16px font-size on mobile — anything smaller triggers iOS Safari's
           // auto-zoom on focus, which makes the entire page appear zoomed in
@@ -11937,24 +12133,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               void commitSessionToProfile();
               onEndSession();
             }}
+            // Ending is non-destructive now: the session checkpoint (transcript
+            // + whiteboard + position) is saved, so the student can resume from
+            // the summary screen or a reload. Label reflects the dual role.
+            title="End or pause — your progress is saved, resume anytime"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
               isIsland
                 ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
                 : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
             }`}
           >
-            {false ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span className="hidden sm:inline">Wrapping up… (click to finish)</span>
-                <span className="sm:hidden">…</span>
-              </>
-            ) : (
-              <>
-                <LogOut className="w-3.5 h-3.5" />
-                <span>End</span>
-              </>
-            )}
+            <LogOut className="w-3.5 h-3.5" />
+            <span>End / Pause</span>
           </button>
         )}
       </div>

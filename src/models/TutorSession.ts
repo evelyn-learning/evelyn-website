@@ -64,6 +64,16 @@ export interface ITutorSession extends Document {
   weakTopics?: Array<{ topic: string; count: number }>;
   // Topics covered in this session, in order of first appearance.
   topicsCovered?: string[];
+  // Lesson-phase position checkpoint (portal contract v1.2.0 — additive).
+  // Written on each segment advance / mark_segment_complete so an abrupt
+  // close (reload, tab-kill) still leaves a durable position the portal can
+  // read (GET /api/portal/v1/session-progress) and resume from.
+  lessonProgress?: {
+    lessonPlanId: string;
+    currentSegmentId: string;
+    completedSegmentIds: string[];
+    updatedAt: Date;
+  };
 }
 
 const TokenUsageSchema = new Schema<ITokenUsage>(
@@ -264,6 +274,18 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     topicsCovered: {
       type: [String],
       default: [],
+    },
+    lessonProgress: {
+      type: new Schema(
+        {
+          lessonPlanId: { type: String, required: true },
+          currentSegmentId: { type: String, default: "" },
+          completedSegmentIds: { type: [String], default: [] },
+          updatedAt: { type: Date, default: Date.now },
+        },
+        { _id: false }
+      ),
+      default: undefined,
     },
   },
   {

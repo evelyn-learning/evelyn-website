@@ -119,6 +119,15 @@ export default function PlanSearchBar({
         <input
           ref={inputRef}
           type="text"
+          // Suppress the browser's autofill/history dropdown — it overlaps this
+          // component's own live catalog-results dropdown. (Extra attrs cover
+          // Chrome + password managers, which ignore autoComplete alone.)
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-1p-ignore
+          data-lpignore="true"
           autoFocus={autoFocus}
           value={query}
           onChange={(e) => {

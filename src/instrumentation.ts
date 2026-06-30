@@ -9,6 +9,17 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     console.log('[Instrumentation] Server starting...');
 
+    // Warm the tutor catalog index at boot so the first student doesn't wait on
+    // the cold-build ("Loading catalog…"): the full-catalog DB read + cell
+    // resolution happens here instead of on the first GET. Fire-and-forget,
+    // slightly delayed for DB readiness; the route shares this memo, so a
+    // request racing the warm-up just awaits the same in-flight build.
+    setTimeout(() => {
+      void import('@/lib/tutor/lesson-plan/plan-index-cache')
+        .then(({ warmPlanIndex }) => warmPlanIndex())
+        .catch((err) => console.warn('[Instrumentation] plan-index warm-up failed:', err));
+    }, 3000);
+
     // Only start schedulers in production (set ENABLE_BLOG_SCHEDULER=true in production env)
     if (process.env.ENABLE_BLOG_SCHEDULER !== 'true') {
       console.log('[Instrumentation] Blog scheduler disabled (set ENABLE_BLOG_SCHEDULER=true to enable)');

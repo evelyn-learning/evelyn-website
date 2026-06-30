@@ -187,6 +187,12 @@ interface WhiteboardCanvasProps {
    *  can render its own switcher in 'minimal' chrome. Fires whenever the page
    *  count / current index / titles change. `goTo` is stable. */
   onNavChange?: (nav: { index: number; count: number; titles: string[]; goTo: (i: number) => void }) => void;
+  /** On a resumed session the board is seeded with the prior work all at once;
+   *  the default view is page 1, but the student left off on the LAST page. When
+   *  true, the canvas jumps to the last page ONCE, after the seeded commands
+   *  populate the page model (a no-op until pages exist). Subsequent tutor
+   *  navigation (goToPage / scrollTo) takes over normally. */
+  openOnLastPage?: boolean;
 }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
@@ -208,6 +214,7 @@ export function WhiteboardCanvas({
   suppressEmptyState = false,
   chrome = 'full',
   onNavChange,
+  openOnLastPage = false,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -559,6 +566,22 @@ export function WhiteboardCanvas({
       break;
     }
   }, [commands.length, pages]);
+
+  // Resume: jump to the LAST page once, after the seeded board populates the
+  // page model. Runs a single time (guarded) so later tutor navigation is not
+  // overridden; a no-op until pages exist (seed arrives a tick after mount).
+  // Declared AFTER the view-follow effect on purpose: the seed arrives as one
+  // big batch, which also triggers view-follow; if a restored render's id
+  // collides across pages (legacy boards saved before the id-counter fix),
+  // view-follow can resolve to the wrong page. Running last lets this own the
+  // initial resumed view (the last page = where the student left off).
+  const resumeLastPageDoneRef = useRef(false);
+  useEffect(() => {
+    if (!openOnLastPage || resumeLastPageDoneRef.current || pages.length === 0) return;
+    resumeLastPageDoneRef.current = true;
+    setCurrentIndex(pages.length - 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openOnLastPage, pages.length]);
 
   // Auto-scroll to the latest item when a new command is added to the current page
   const scrollContainerRef = useRef<HTMLDivElement>(null);

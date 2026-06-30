@@ -29,6 +29,10 @@ interface TranscriptEntry {
 
 interface SessionControlsProps {
   sessionId: string | null;
+  /** Wallclock ms when the voice session actually started (student tapped the
+   *  mic). The timer counts up from here. null/undefined → not started yet, so
+   *  the timer stays at 0:00. */
+  startedAtMs?: number | null;
   maxDuration: number; // minutes
   onEndSession: () => void;
   onUploadHomework: (imageData: string, mimeType: string) => void;
@@ -122,6 +126,7 @@ function ResizableModal({
 
 export function SessionControls({
   sessionId,
+  startedAtMs,
   maxDuration,
   onEndSession,
   onUploadHomework,
@@ -139,19 +144,23 @@ export function SessionControls({
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Timer
+  // Timer — counts up from the moment the student actually starts the voice
+  // session (mic tap), not from when this component mounted. Until then it
+  // stays at 0:00. Deriving elapsed from a fixed start timestamp keeps the
+  // clock accurate even if the tab is backgrounded (setInterval throttles).
   useEffect(() => {
-    if (!sessionId) {
+    if (!startedAtMs) {
       setElapsedSeconds(0);
       return;
     }
 
-    const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
+    const tick = () =>
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
+    tick();
+    const interval = setInterval(tick, 1000);
 
     return () => clearInterval(interval);
-  }, [sessionId]);
+  }, [startedAtMs]);
 
   // Format time
   const formatTime = (seconds: number): string => {

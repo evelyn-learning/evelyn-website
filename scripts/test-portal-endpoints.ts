@@ -32,6 +32,7 @@ import { GET as masteryGET } from '@/app/api/portal/v1/mastery/route';
 import { POST as practicePOST } from '@/app/api/portal/v1/practice/route';
 import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
+import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
 
 const SECRET = 'secret-a';
 const PARTNER = 'portalA';
@@ -193,6 +194,17 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(status, 200);
     assert.strictEqual(json.status, 'in_progress');
     assert.strictEqual(json.learningStateDelta.gaps.new.length, 0);
+  });
+
+  console.log('\nSession-progress read (v1.2.0 — auth + validation; 200 path needs a DB):\n');
+  await test('session-progress GET without signature → 401', async () => {
+    const { status } = await call(sessionProgressGET, unsigned('GET', '/api/portal/v1/session-progress?sessionId=x'));
+    assert.strictEqual(status, 401);
+  });
+  await test('session-progress GET signed but no sessionId → 400', async () => {
+    const { status, json } = await call(sessionProgressGET, signed('GET', '/api/portal/v1/session-progress'));
+    assert.strictEqual(status, 400);
+    assert.strictEqual(json.reason, 'sessionId required');
   });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

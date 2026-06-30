@@ -18,8 +18,11 @@ import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
-import { type TutorMilestone } from '@/app/tutor/components/VoiceTutorRealtime';
-import type { SessionResult } from '@evelyn/portal-contract/v1';
+import { type TutorMilestone, type TutorResumeState } from '@/app/tutor/components/VoiceTutorRealtime';
+import type { SessionResult, LessonProgress } from '@evelyn/portal-contract/v1';
+import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
+import { buildResumeState } from '@/lib/tutor/portal/resume';
 
 /** The contract's milestone enum (derived from SessionResult — the package
  *  exports the type via this field rather than a standalone alias). */
@@ -55,6 +58,15 @@ interface EmbedConfig {
   voice?: string;
   curriculum_module?: string;
   max_duration_minutes?: number;
+  /** Stable session id minted by the portal (= Session.engineSessionId,
+   *  "portal-<uuid>"). When present the engine keys its TutorSession on THIS
+   *  instead of minting "embed-<Date.now()>" — unifies the two ids (E4). */
+  session_id?: string;
+  /** Continue an existing session rather than start fresh (E3). When true AND
+   *  the session has a checkpoint within RESUME_MAX_AGE_MS, the engine
+   *  rehydrates position + transcript + whiteboard and continues without
+   *  auto-opening the mic. Otherwise starts fresh on the same lesson. */
+  resume?: boolean;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -159,12 +171,42 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
 
   // Session state. Transcript + whiteboard are mirrored from TutorSession via
   // its callbacks so saveSession + the session_ended postMessage have counts.
-  const [sessionId] = useState(() => `embed-${Date.now()}`);
+  // E4 — id unification: key the engine session on the portal-minted id when
+  // the token carries one, so the portal's Session.engineSessionId and the
+  // engine's TutorSession.sessionId are the same. Else legacy mint.
+  const [sessionId] = useState(() => config.session_id || `embed-${Date.now()}`);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const sessionStartRef = useRef(new Date());
+
+  // E3 — resume boot. When the token asks to continue an existing session,
+  // read the engine's persisted checkpoint and, if it's within
+  // RESUME_MAX_AGE_MS (the engine is the decider — §1.4), rehydrate position +
+  // transcript + whiteboard. The first render is gated on this read so the
+  // runtime seeds cleanly instead of mounting empty then re-seeding. Any
+  // failure / stale / missing checkpoint → fresh start on the same lesson.
+  const wantsResume = !!(config.resume && config.session_id);
+  const [resumeReady, setResumeReady] = useState(!wantsResume);
+  const [resumeState, setResumeState] = useState<TutorResumeState | null>(null);
+  useEffect(() => {
+    if (!wantsResume) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sessionId)}`);
+        if (res.ok) {
+          const rs = buildResumeState(await res.json());
+          if (!cancelled && rs) setResumeState(rs);
+        }
+      } catch {
+        /* fresh start on any read error */
+      }
+      if (!cancelled) setResumeReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, [wantsResume, sessionId]);
 
   const topicDisplayName = useMemo(
     () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,
@@ -227,6 +269,59 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     if (MILESTONE_RANK[m] > MILESTONE_RANK[milestoneRef.current]) milestoneRef.current = m;
   }, []);
 
+  // Lesson-phase progress (contract v1.2.0). The two source callbacks fire
+  // independently — onLessonProgressChange carries {plan, currentSegmentId}
+  // (on plan load + each advance), onCompletedSegmentsChange carries the
+  // completed ids — so we hold each in a ref and rebuild from the latest of
+  // both. lessonProgressRef holds the last built value for session_ended.
+  const planRef = useRef<LessonPlan | null>(null);
+  const currentSegmentIdRef = useRef<string>('');
+  const completedSegmentIdsRef = useRef<string[]>([]);
+  const lessonProgressRef = useRef<LessonProgress | null>(null);
+  const lastEmittedProgressRef = useRef<string>('');
+
+  // Build LessonProgress from the latest position and surface it to the
+  // portal: a live `evelyn:progress` postMessage (highlights the current pill,
+  // updates the portal cache) PLUS a durable checkpoint POST (survives an
+  // abrupt close; the authoritative source for the session-progress read +
+  // resume). Fires once on plan load (manifest) and on every segment change.
+  const emitProgress = useCallback(() => {
+    const progress = buildLessonProgress(
+      planRef.current,
+      currentSegmentIdRef.current,
+      completedSegmentIdsRef.current,
+    );
+    if (!progress) return;
+    lessonProgressRef.current = progress;
+    const sig = JSON.stringify(progress);
+    if (sig === lastEmittedProgressRef.current) return;
+    lastEmittedProgressRef.current = sig;
+
+    window.parent.postMessage({
+      type: 'evelyn:progress',
+      data: { session_id: sessionId, lesson_progress: progress },
+    }, '*');
+
+    // Identity fields included so this upsert inserts validly if it lands
+    // before the first full save (required-field validation on insert).
+    fetch('/api/tutor/session-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        subject, topic, level, sessionGoal, inputMode,
+        voiceEngine, source: 'embed',
+        studentName: studentName || undefined,
+        startedAt: sessionStartRef.current.toISOString(),
+        lessonProgress: {
+          lessonPlanId: progress.lessonPlanId,
+          currentSegmentId: progress.currentSegmentId,
+          completedSegmentIds: progress.completedSegmentIds,
+        },
+      }),
+    }).catch(() => {});
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName]);
+
   // End session — save to DB + notify parent window
   const handleEndSession = useCallback(() => {
     saveSession('completed');
@@ -243,6 +338,9 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         // Real engine milestone (value-boxed). 'none' if the student bailed
         // before completing a concept — the portal consumes this directly.
         milestone: milestoneRef.current,
+        // Final lesson position (contract v1.2.0). Omitted for free-conversation
+        // sessions with no plan (lessonProgressRef stays null).
+        ...(lessonProgressRef.current ? { lesson_progress: lessonProgressRef.current } : {}),
       },
     }, '*');
   }, [saveSession, sessionId, transcript.length, whiteboardCommands.length]);
@@ -266,6 +364,17 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
             {transcript.length} messages exchanged, {whiteboardCommands.length} visuals generated.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // Resume boot in flight — hold the first render until the checkpoint read
+  // resolves so the runtime seeds once, cleanly. Only reached when the token
+  // asked to resume; a normal start has resumeReady=true from the outset.
+  if (!resumeReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -298,12 +407,22 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         voice={openAIVoice}
         voiceEngine="claude-brain"
         sessionMaxMinutes={maxDuration}
+        resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}
         onEndSession={handleEndSession}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds) => setWhiteboardCommands((prev) => [...prev, ...cmds])}
+        onLessonProgressChange={(p) => {
+          planRef.current = p.plan;
+          currentSegmentIdRef.current = p.currentSegmentId;
+          emitProgress();
+        }}
+        onCompletedSegmentsChange={(ids) => {
+          completedSegmentIdsRef.current = ids;
+          emitProgress();
+        }}
       />
 
       {/* Error toast */}
