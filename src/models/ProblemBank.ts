@@ -4,11 +4,16 @@ import mongoose, { Schema, Document } from 'mongoose';
  * ProblemBank — ingested practice-problem corpus for the adaptive-pacing
  * v1 pipeline.
  *
- * Source policy: ONLY scraped from license-clean external corpora
- * (OpenStax CC-BY 4.0 first; Wikiversity / public-domain later). Never
- * populated with our internally-authored try-yourself content — those
- * stay in lesson-plan seeds and serve as the ULTIMATE FALLBACK below
- * the bank in the pipeline.
+ * Source policy: license-clean content only. Two permitted origins:
+ *   1. License-clean external corpora (OpenStax CC-BY 4.0; Wikiversity /
+ *      public-domain).
+ *   2. ORIGINAL items authored for the bank (license 'internal-original',
+ *      source name 'Evelyn (original)') — e.g. the AP Statistics MCQ/numeric
+ *      bank seeded from src/data/problem-bank/ via scripts/seed-problem-bank.ts.
+ *      These are original AP-style items, NOT copies of copyrighted exam
+ *      questions.
+ * Still NEVER populated by copy-pasting our lesson-plan try-yourself content —
+ * those stay in lesson-plan seeds as the ULTIMATE FALLBACK below the bank.
  *
  * Layered usage in the runtime pipeline:
  *   Layer 1 (fast-path, ~50ms): student-initiated "another one" →

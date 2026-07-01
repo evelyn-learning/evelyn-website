@@ -137,10 +137,21 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
     await connectDB();
     const b = (await ProblemBank.findOne({ id: itemId }).lean()) as unknown as IProblemBank | null;
     if (b) {
+      const choices = b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t }));
+      // Bank MCQs store the correct choice LETTER in `answer`. Surface it as
+      // correctChoiceId when it's a valid bare letter within range so MCQ
+      // grading is as robust as the plan-try-yourself path (assessment.ts
+      // matches letter OR the correct choice's text).
+      let correctChoiceId: string | undefined;
+      if (b.responseFormat === 'mcq' && choices && /^[A-E]$/i.test((b.answer ?? '').trim())) {
+        const id = b.answer.trim().toUpperCase();
+        if (choices.some((c) => c.id === id)) correctChoiceId = id;
+      }
       return {
         responseFormat: b.responseFormat,
         expectedAnswer: b.answer,
-        choices: b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t })),
+        choices,
+        correctChoiceId,
       };
     }
   } catch {

@@ -1,0 +1,459 @@
+[
+  {
+    "id": "apstats.categorical-data.mcq.01",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following variables is categorical?",
+    "choices": [
+      "Number of siblings a student has",
+      "A student's height in centimeters",
+      "A student's five-digit ZIP code",
+      "A student's resting heart rate"
+    ],
+    "answer": "C",
+    "hints": ["Ask whether averaging the values would be meaningful.", "A number used only as a label is categorical."]
+  },
+  {
+    "id": "apstats.categorical-data.mcq.02",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a survey, responses are coded 1 = 'strongly disagree' through 5 = 'strongly agree.' A student computes the mean of these codes. Why can this be misleading?",
+    "choices": [
+      "The codes are an ordinal categorical coding, so averaging assumes equal spacing between categories that may not exist",
+      "A mean can never be computed for survey data",
+      "The data must be Normal before a mean is allowed",
+      "Categorical variables can never be summarized at all"
+    ],
+    "answer": "A",
+    "hints": ["The numbers are labels for ordered categories, not true measurements."]
+  },
+  {
+    "id": "apstats.categorical-data.mcq.03",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A two-way table classifies 200 students by grade level and whether they play a sport. Of the 200 students, 120 play a sport, and 120/200 = 0.60. This 0.60 is best described as:",
+    "choices": [
+      "A conditional distribution of grade given sport",
+      "A joint relative frequency for one cell",
+      "A marginal distribution: the overall proportion who play a sport",
+      "A conditional distribution of sport given grade"
+    ],
+    "answer": "C",
+    "hints": ["It uses a column/row total over the grand total, ignoring grade level."]
+  },
+  {
+    "id": "apstats.categorical-data.numeric.01",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Of 80 seniors surveyed, 60 plan to attend college. Report the conditional proportion who plan to attend college among these seniors, as a decimal.",
+    "answer": "0.75",
+    "hints": ["Divide by the senior subtotal, 80."]
+  },
+  {
+    "id": "apstats.categorical-data.mcq.04",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a segmented bar graph of two categorical variables, the conditional distributions (the colored segments) look essentially identical across every bar. The best conclusion is:",
+    "choices": [
+      "There is a strong association between the two variables",
+      "There is little or no association between the two variables",
+      "One variable must cause the other",
+      "The sample is too small to say anything"
+    ],
+    "answer": "B",
+    "hints": ["Association shows up as DIFFERENCES in the conditional distributions."]
+  },
+
+  {
+    "id": "apstats.quantitative-graphs.mcq.01",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which display is most appropriate for showing the distribution of a single quantitative variable such as exam scores?",
+    "choices": [
+      "A pie chart",
+      "A histogram",
+      "A bar chart with gaps between the bars",
+      "A two-way table"
+    ],
+    "answer": "B",
+    "hints": ["The variable is quantitative, and its bins are touching intervals."]
+  },
+  {
+    "id": "apstats.quantitative-graphs.mcq.02",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a dotplot of quiz scores, most dots are stacked between 7 and 9, with a single dot far away at 2. The dot at 2 is best described as:",
+    "choices": [
+      "The median",
+      "A potential outlier",
+      "The mode",
+      "The range"
+    ],
+    "answer": "B",
+    "hints": ["It is separated from the main cluster of the data."]
+  },
+  {
+    "id": "apstats.quantitative-graphs.numeric.01",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A histogram summarizes 50 test scores. The interval from 90 to 100 contains 8 scores. What proportion of the scores fall in that interval? Give a decimal.",
+    "answer": "0.16",
+    "hints": ["Divide the count in the bin by the total, 50."]
+  },
+  {
+    "id": "apstats.quantitative-graphs.mcq.03",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A back-to-back stemplot is most useful for:",
+    "choices": [
+      "Comparing the distributions of one quantitative variable across two groups",
+      "Showing the relationship between two quantitative variables",
+      "Displaying a single categorical variable",
+      "Computing a correlation coefficient"
+    ],
+    "answer": "A",
+    "hints": ["It shares one stem with leaves on each side."]
+  },
+  {
+    "id": "apstats.quantitative-graphs.mcq.04",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A histogram shows scores piling up on the left with a long tail stretching to the right. This shape is:",
+    "choices": [
+      "Skewed left",
+      "Skewed right",
+      "Symmetric",
+      "Uniform"
+    ],
+    "answer": "B",
+    "hints": ["Name the skew by the direction of the long tail."]
+  },
+
+  {
+    "id": "apstats.distribution-shape.mcq.01",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "House prices in a city include a few very expensive homes that pull the upper tail outward. The distribution of prices is most likely:",
+    "choices": [
+      "Skewed left",
+      "Symmetric",
+      "Skewed right",
+      "Uniform"
+    ],
+    "answer": "C",
+    "hints": ["The long tail is on the high (right) side."]
+  },
+  {
+    "id": "apstats.distribution-shape.mcq.02",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a distribution that is skewed to the right, which relationship between the mean and median is generally true?",
+    "choices": [
+      "The mean is less than the median",
+      "The mean is approximately equal to the median",
+      "The mean is greater than the median",
+      "The mean always equals the mode"
+    ],
+    "answer": "C",
+    "hints": ["The mean is pulled toward the long tail."]
+  },
+  {
+    "id": "apstats.distribution-shape.mcq.03",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A distribution of household incomes is strongly right-skewed. Which pair of statistics best summarizes its center and spread?",
+    "choices": [
+      "Mean and standard deviation",
+      "Median and IQR",
+      "Mode and range",
+      "Mean and range"
+    ],
+    "answer": "B",
+    "hints": ["Skew and outliers make the median and IQR more resistant."]
+  },
+  {
+    "id": "apstats.distribution-shape.mcq.04",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A histogram of adult shoe sizes shows two distinct peaks. The most likely explanation is:",
+    "choices": [
+      "A calculation error",
+      "Two overlapping groups in the data, such as men and women",
+      "The data are uniform",
+      "The presence of a single outlier"
+    ],
+    "answer": "B",
+    "hints": ["Two peaks (bimodal) often signal two subgroups combined."]
+  },
+  {
+    "id": "apstats.distribution-shape.mcq.05",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a roughly symmetric, bell-shaped distribution, the mean and median are:",
+    "choices": [
+      "Far apart",
+      "Approximately equal",
+      "Always exactly zero",
+      "Undefined"
+    ],
+    "answer": "B",
+    "hints": ["Symmetry pulls the mean and median together."]
+  },
+
+  {
+    "id": "apstats.summary-statistics.numeric.01",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Find the median of the data set: 3, 7, 8, 5, 12, 14, 21, 13, 18. Give a single number.",
+    "answer": "12",
+    "hints": ["Order the nine values and take the middle one."]
+  },
+  {
+    "id": "apstats.summary-statistics.numeric.02",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For the ordered data 4, 8, 10, 12, 15, 18, 20, 25, the first quartile is 9 and the third quartile is 19. What is the interquartile range (IQR)? Give a number.",
+    "answer": "10",
+    "hints": ["IQR = Q3 minus Q1."]
+  },
+  {
+    "id": "apstats.summary-statistics.mcq.01",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Using the 1.5 x IQR rule, a value is flagged as a LOW outlier if it falls below:",
+    "choices": [
+      "Q1 minus 1.5 x IQR",
+      "Q1 plus 1.5 x IQR",
+      "the median minus 1.5 x IQR",
+      "Q3 minus 1.5 x IQR"
+    ],
+    "answer": "A",
+    "hints": ["Low outliers are measured below the first quartile."]
+  },
+  {
+    "id": "apstats.summary-statistics.numeric.03",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A data set has Q1 = 20 and Q3 = 40. Using the 1.5 x IQR rule, find the upper boundary above which a value is considered a high outlier. Give a number.",
+    "answer": "70",
+    "hints": ["IQR = 20; upper fence = Q3 + 1.5 x IQR."]
+  },
+  {
+    "id": "apstats.summary-statistics.mcq.02",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Adding one extremely large outlier to a data set will most strongly affect which statistic?",
+    "choices": [
+      "The median",
+      "The IQR",
+      "The mean",
+      "The mode"
+    ],
+    "answer": "C",
+    "hints": ["Which statistic is non-resistant to extreme values?"]
+  },
+  {
+    "id": "apstats.summary-statistics.mcq.03",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The standard deviation of a data set measures:",
+    "choices": [
+      "The typical distance of the values from the mean",
+      "The span of the middle 50% of the data",
+      "The most frequently occurring value",
+      "The difference between the maximum and minimum"
+    ],
+    "answer": "A",
+    "hints": ["It is a spread-around-the-mean measure."]
+  },
+
+  {
+    "id": "apstats.comparing-distributions.mcq.01",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When comparing two distributions shown as boxplots on the AP exam, a full response should address:",
+    "choices": [
+      "Only the medians",
+      "Shape, center, spread, and unusual features, using explicit comparison language",
+      "Only whether either has outliers",
+      "The correlation between the two groups"
+    ],
+    "answer": "B",
+    "hints": ["Remember to actually COMPARE, not just describe each separately."]
+  },
+  {
+    "id": "apstats.comparing-distributions.mcq.02",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly COMPARES the centers of two groups?",
+    "choices": [
+      "Group A has a median of 50. Group B has a median of 42.",
+      "Group A's median (50) is higher than Group B's median (42).",
+      "Group A is bigger.",
+      "Both groups have a median."
+    ],
+    "answer": "B",
+    "hints": ["A comparison uses a word like 'higher than' linking the two values."]
+  },
+  {
+    "id": "apstats.comparing-distributions.mcq.03",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two boxplots show Group A with an IQR of 15 and Group B with an IQR of 8. Which conclusion about spread is best supported?",
+    "choices": [
+      "Group A is more variable in its middle 50% than Group B",
+      "Group B is more variable overall",
+      "Group A has a higher center",
+      "The two groups have identical spread"
+    ],
+    "answer": "A",
+    "hints": ["IQR describes the spread of the middle 50%."]
+  },
+  {
+    "id": "apstats.comparing-distributions.numeric.01",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Group A has a median of 70 and Group B has a median of 58. By how many points is Group A's median higher than Group B's? Give a number.",
+    "answer": "12",
+    "hints": ["Subtract the two medians."]
+  },
+  {
+    "id": "apstats.comparing-distributions.mcq.04",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two boxplots overlap substantially and have similar medians. The best description is:",
+    "choices": [
+      "The groups differ dramatically",
+      "The two distributions are broadly similar in center",
+      "Group 1 is clearly larger",
+      "There must be a calculation error"
+    ],
+    "answer": "B",
+    "hints": ["Overlap plus similar medians means similar centers."]
+  },
+
+  {
+    "id": "apstats.normal-distribution.numeric.01",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A distribution is approximately Normal with mean 100 and standard deviation 15. By the empirical rule, approximately what percent of values fall within one standard deviation of the mean (between 85 and 115)? Give the percent as a number, for example 68.",
+    "answer": "68",
+    "hints": ["This is the 68 part of the 68-95-99.7 rule."]
+  },
+  {
+    "id": "apstats.normal-distribution.numeric.02",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For a Normal distribution with mean 500 and standard deviation 100, compute the z-score of the value 640. Give a number.",
+    "answer": "1.4",
+    "hints": ["z = (value minus mean) divided by the standard deviation."]
+  },
+  {
+    "id": "apstats.normal-distribution.numeric.03",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Scores are approximately Normal with mean 70 and standard deviation 5. Using the empirical rule, approximately what percent of scores are ABOVE 80? Give the percent as a number, for example 2.5.",
+    "answer": "2.5",
+    "hints": ["80 is two standard deviations above the mean; about 2.5% lie beyond +2 SD."]
+  },
+  {
+    "id": "apstats.normal-distribution.mcq.01",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You know a score and want the proportion of a Normal distribution that lies below it. Which calculator function do you use?",
+    "choices": [
+      "invNorm",
+      "normalcdf",
+      "binompdf",
+      "the empirical rule only"
+    ],
+    "answer": "B",
+    "hints": ["normalcdf turns a value (or z) into an area; invNorm goes the other way."]
+  },
+  {
+    "id": "apstats.normal-distribution.numeric.04",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For a Normal distribution with mean 200 and standard deviation 20, a value has a z-score of 1.5. What is the actual value? Give a number.",
+    "answer": "230",
+    "hints": ["Un-standardize: value = mean + z times standard deviation."]
+  },
+  {
+    "id": "apstats.normal-distribution.mcq.02",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Heights are approximately Normal with mean 64 inches and standard deviation 3 inches. Using the empirical rule, approximately what percent of heights fall between 61 and 70 inches?",
+    "choices": [
+      "68%",
+      "81.5%",
+      "95%",
+      "47.5%"
+    ],
+    "answer": "B",
+    "hints": ["61 is -1 SD and 70 is +2 SD; add 34% + 34% + 13.5%."]
+  }
+]

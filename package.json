@@ -10,6 +10,7 @@
     "migrate": "npx ts-node scripts/migrate-wordpress.ts",
     "seed": "npx ts-node scripts/seed-sample-data.ts",
     "seed:teacher": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-teacher.ts",
+    "seed:problem-bank": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-problem-bank.ts",
     "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
     "test:gaps": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-cross-session-promotion.ts",
     "test:portal-contract": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-contract.ts",
