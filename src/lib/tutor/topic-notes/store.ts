@@ -79,6 +79,13 @@ import { BASELINE_AP_STATS_CENTRAL_LIMIT_THEOREM } from './seeds/ap-stats-u5-cen
 import { BASELINE_AP_STATS_PROPORTIONS_SAMPLING_DIST } from './seeds/ap-stats-u5-proportions-sampling-dist';
 import { BASELINE_AP_STATS_MEANS_SAMPLING_DIST } from './seeds/ap-stats-u5-means-sampling-dist';
 
+// AP Statistics Unit 6 (CED 6.1–6.11) — inference for proportions.
+import { BASELINE_AP_STATS_ONE_PROP_CI } from './seeds/ap-stats-u6-one-prop-ci';
+import { BASELINE_AP_STATS_ONE_PROP_TEST } from './seeds/ap-stats-u6-one-prop-test';
+import { BASELINE_AP_STATS_TEST_ERRORS } from './seeds/ap-stats-u6-test-errors';
+import { BASELINE_AP_STATS_TWO_PROP_CI } from './seeds/ap-stats-u6-two-prop-ci';
+import { BASELINE_AP_STATS_TWO_PROP_TEST } from './seeds/ap-stats-u6-two-prop-test';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -112,6 +119,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_CENTRAL_LIMIT_THEOREM,
   BASELINE_AP_STATS_PROPORTIONS_SAMPLING_DIST,
   BASELINE_AP_STATS_MEANS_SAMPLING_DIST,
+  BASELINE_AP_STATS_ONE_PROP_CI,
+  BASELINE_AP_STATS_ONE_PROP_TEST,
+  BASELINE_AP_STATS_TEST_ERRORS,
+  BASELINE_AP_STATS_TWO_PROP_CI,
+  BASELINE_AP_STATS_TWO_PROP_TEST,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
