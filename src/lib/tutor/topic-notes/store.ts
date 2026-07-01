@@ -86,6 +86,12 @@ import { BASELINE_AP_STATS_TEST_ERRORS } from './seeds/ap-stats-u6-test-errors';
 import { BASELINE_AP_STATS_TWO_PROP_CI } from './seeds/ap-stats-u6-two-prop-ci';
 import { BASELINE_AP_STATS_TWO_PROP_TEST } from './seeds/ap-stats-u6-two-prop-test';
 
+// AP Statistics Unit 7 (CED 7.1–7.10) — inference for means (t-procedures).
+import { BASELINE_AP_STATS_ONE_MEAN_CI } from './seeds/ap-stats-u7-one-mean-ci';
+import { BASELINE_AP_STATS_ONE_MEAN_TEST } from './seeds/ap-stats-u7-one-mean-test';
+import { BASELINE_AP_STATS_TWO_MEAN_CI } from './seeds/ap-stats-u7-two-mean-ci';
+import { BASELINE_AP_STATS_TWO_MEAN_TEST } from './seeds/ap-stats-u7-two-mean-test';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -124,6 +130,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_TEST_ERRORS,
   BASELINE_AP_STATS_TWO_PROP_CI,
   BASELINE_AP_STATS_TWO_PROP_TEST,
+  BASELINE_AP_STATS_ONE_MEAN_CI,
+  BASELINE_AP_STATS_ONE_MEAN_TEST,
+  BASELINE_AP_STATS_TWO_MEAN_CI,
+  BASELINE_AP_STATS_TWO_MEAN_TEST,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
