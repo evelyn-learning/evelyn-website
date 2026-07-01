@@ -84,8 +84,7 @@ export function mongoPracticeSources(): PracticeSources {
  *  segment with no rubric grades via the legacy single-answer path.) */
 export function resolveGradeItem(itemId: string): GradeItem | null {
   for (const plan of SEED_PLANS) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const seg of plan.segments as any[]) {
+    for (const seg of plan.segments) {
       if (seg.id === itemId && seg.kind === 'try_yourself') {
         return {
           itemId,
@@ -117,15 +116,13 @@ export interface ResolvedAssessmentKey {
 export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
   // Plan try-yourselves (carry expectedAnswer + {id,text,correct?} choices).
   for (const plan of SEED_PLANS) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const seg of plan.segments as any[]) {
+    for (const seg of plan.segments) {
       if (seg.id === itemId && seg.kind === 'try_yourself') {
         return {
           responseFormat: seg.responseFormat,
           expectedAnswer: seg.expectedAnswer,
-          choices: seg.choices?.map((c: { id: string; text: string }) => ({ id: c.id, text: c.text })),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          correctChoiceId: seg.choices?.find((c: any) => c.correct)?.id,
+          choices: seg.choices?.map((c) => ({ id: c.id, text: c.text })),
+          correctChoiceId: seg.choices?.find((c) => c.correct)?.id,
           rubric: seg.rubric,
           modelResponse: seg.modelResponse,
         };

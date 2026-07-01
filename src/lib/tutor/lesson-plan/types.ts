@@ -149,11 +149,39 @@ export interface SegmentWorkedExample extends SegmentBase {
 
 /** Hand-off problem for the student. The brain gives the question, waits
  *  for student work, then validates. */
+/** One scoring criterion of an FRQ rubric (usually one lettered part).
+ *  Mirrors `FrqRubric.parts[]` in @evelyn/portal-contract/v1 — kept in-tree
+ *  so lesson-plan authoring stays portal-agnostic; structurally identical, so
+ *  it flows to the contract type without conversion. */
+export interface FrqRubricPart {
+  /** Stable id for the criterion, e.g. 'a', 'b', 'c-conclusion'. */
+  criterionId: string;
+  /** Points this criterion is worth. */
+  maxPoints: number;
+  /** What a response must show to earn the points. */
+  scoringCriteria: string;
+  /** Full-credit reference response for this part. */
+  modelResponse: string;
+}
+
+/** Part-by-part AP-style FRQ rubric. */
+export interface FrqRubric {
+  parts: FrqRubricPart[];
+}
+
 export interface SegmentTryYourself extends SegmentBase {
   kind: 'try_yourself';
   problem: string;
   /** Expected answer. The brain compares student work against this. */
   expectedAnswer?: string;
+  /** Optional part-by-part AP rubric. When present on an FRQ, a scored quiz /
+   *  practice item is graded criterion-by-criterion for partial credit
+   *  (portal/grade-free-response.ts); when absent, FRQ grading falls back to
+   *  the single-answer judge. */
+  rubric?: FrqRubric;
+  /** Optional full-credit reference solution (used by the legacy judge path
+   *  and for review display). */
+  modelResponse?: string;
   /** Hints to give if the student is stuck (in order of escalating
    *  specificity). */
   hints?: string[];
