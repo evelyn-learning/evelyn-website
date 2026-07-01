@@ -57,7 +57,7 @@ export const BASELINE_AP_STATS_CORRELATION: TopicNotesBaseline = {
       kind: 'framework',
       title: 'Reading the value of r',
       content:
-        '$r = +1$ is a perfect increasing line and $r = -1$ a perfect decreasing line; $r = 0$ means no LINEAR association (a strong nonlinear pattern can still give $r \\approx 0$). As a rough scale: $|r| > 0.8$ strong, $0.5 < |r| \\le 0.8$ moderate, $|r| \\le 0.5$ weak. State the sign (direction) and the magnitude (strength) together, in context.',
+        '$r = +1$ is a perfect increasing line and $r = -1$ a perfect decreasing line; $r = 0$ means no LINEAR association (a strong nonlinear pattern can still give $r \\approx 0$). As a rough scale: $|r| > 0.8$ strong, $|r|$ from 0.5 to 0.8 moderate, $|r| \\le 0.5$ weak. State the sign (direction) and the magnitude (strength) together, in context.',
     },
     {
       loId: LO,
