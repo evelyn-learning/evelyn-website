@@ -170,10 +170,11 @@ async function gradePoints(
     };
   }
   const correct = await isCorrect(key, response, deps.judgeSingleAnswer);
-  // Surface a short rationale in the review (the academy renders review.feedback).
-  // Uses the item's first hint as the "why"; the correct answer is shown separately.
-  const hint = key.hints?.find((h) => h && h.trim().length > 0)?.trim();
-  const feedback = hint ? (correct ? `Correct. ${hint}` : hint) : undefined;
+  // Surface a rationale in the review (the academy renders review.feedback).
+  // Joins ALL of the item's hints so an incorrect answer gets a full "why",
+  // not just the gentlest nudge; the correct answer is shown separately.
+  const rationale = (key.hints ?? []).map((h) => h?.trim()).filter(Boolean).join(' ');
+  const feedback = rationale ? (correct ? `Correct. ${rationale}` : rationale) : undefined;
   return { pointsAwarded: correct ? 1 : 0, maxPoints: 1, feedback };
 }
 
