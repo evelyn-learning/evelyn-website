@@ -73,6 +73,12 @@ import { BASELINE_AP_STATS_COMBINING_RV } from './seeds/ap-stats-u4-combining-rv
 import { BASELINE_AP_STATS_BINOMIAL_DISTRIBUTION } from './seeds/ap-stats-u4-binomial-distribution';
 import { BASELINE_AP_STATS_GEOMETRIC_DISTRIBUTION } from './seeds/ap-stats-u4-geometric-distribution';
 
+// AP Statistics Unit 5 (CED 5.1–5.8) — sampling distributions & the CLT.
+import { BASELINE_AP_STATS_SAMPLING_DISTRIBUTION_CONCEPT } from './seeds/ap-stats-u5-sampling-distribution-concept';
+import { BASELINE_AP_STATS_CENTRAL_LIMIT_THEOREM } from './seeds/ap-stats-u5-central-limit-theorem';
+import { BASELINE_AP_STATS_PROPORTIONS_SAMPLING_DIST } from './seeds/ap-stats-u5-proportions-sampling-dist';
+import { BASELINE_AP_STATS_MEANS_SAMPLING_DIST } from './seeds/ap-stats-u5-means-sampling-dist';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -102,6 +108,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_COMBINING_RV,
   BASELINE_AP_STATS_BINOMIAL_DISTRIBUTION,
   BASELINE_AP_STATS_GEOMETRIC_DISTRIBUTION,
+  BASELINE_AP_STATS_SAMPLING_DISTRIBUTION_CONCEPT,
+  BASELINE_AP_STATS_CENTRAL_LIMIT_THEOREM,
+  BASELINE_AP_STATS_PROPORTIONS_SAMPLING_DIST,
+  BASELINE_AP_STATS_MEANS_SAMPLING_DIST,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
