@@ -1,0 +1,276 @@
+[
+  {
+    "id": "apstats.chi-square-goodness-of-fit.mcq.01",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chi-square goodness-of-fit test is used to determine whether:",
+    "choices": [
+      "The distribution of a single categorical variable matches a hypothesized distribution",
+      "Two categorical variables measured on the same sample are associated",
+      "The same categorical variable has the same distribution across several populations",
+      "Two quantitative variables are linearly related"
+    ],
+    "answer": "A",
+    "hints": ["There is only ONE categorical variable involved.", "Compare observed counts to the counts expected under a claimed distribution."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.mcq.02",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Before carrying out a chi-square goodness-of-fit test, which condition must be checked?",
+    "choices": [
+      "All observed counts must be at least 30",
+      "The data come from a random sample or random process, and all expected counts are at least 5",
+      "The population must be approximately Normal",
+      "Every category must have the same expected count"
+    ],
+    "answer": "B",
+    "hints": ["Look at the EXPECTED counts, not the observed counts.", "Random sampling still matters, just as it does for other inference procedures."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.numeric.01",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A spinner is claimed to be fair, landing on each of 4 colors with equal probability. In n = 200 spins, what is the expected count for each color under the null hypothesis? Give a number.",
+    "answer": "50",
+    "hints": ["Expected count = n times the hypothesized proportion for that category.", "Each color has probability 0.25 under the fair-spinner claim."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.numeric.02",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A chi-square goodness-of-fit test compares observed counts to a hypothesized distribution across 6 categories. How many degrees of freedom does the chi-square statistic have? Give a number.",
+    "answer": "5",
+    "hints": ["df = k minus 1, where k is the number of categories."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.numeric.03",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a goodness-of-fit test, one category has observed count O = 42 and expected count E = 50. Find this category's contribution to the chi-square statistic, (O - E)^2 / E. Give a number rounded to two decimal places.",
+    "answer": "1.28",
+    "hints": ["Subtract, square the difference, then divide by E.", "(42 - 50)^2 = 64."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.mcq.03",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a chi-square goodness-of-fit test, all else being equal, a larger value of the chi-square test statistic leads to:",
+    "choices": [
+      "A smaller test statistic, since the test is left-tailed",
+      "No change in the p-value, since chi-square tests ignore magnitude",
+      "A smaller p-value, since the chi-square goodness-of-fit test is right-tailed",
+      "A p-value of exactly zero"
+    ],
+    "answer": "C",
+    "hints": ["The chi-square goodness-of-fit test is right-tailed.", "Bigger discrepancies between observed and expected counts push the statistic higher and the area beyond it lower."]
+  },
+  {
+    "id": "apstats.chi-square-goodness-of-fit.numeric.04",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A fair four-sided spinner is tested with n = 160 spins, so each color has expected count E = 40. The observed counts are 50, 30, 45, and 35. Compute the chi-square test statistic, chi-square = sum((O-E)^2/E). Give a number.",
+    "answer": "6.25",
+    "hints": ["Find (O-E)^2/E separately for each of the four colors, then add the four contributions.", "The differences from 40 are +10, -10, +5, and -5."]
+  },
+
+  {
+    "id": "apstats.chi-square-twoway.mcq.01",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chi-square test for homogeneity is the appropriate procedure when:",
+    "choices": [
+      "One random sample is classified by two categorical variables",
+      "A single sample's distribution is compared to a claimed distribution",
+      "Two quantitative variables' correlation is tested",
+      "Independent random samples from several populations are compared on the same categorical variable"
+    ],
+    "answer": "D",
+    "hints": ["Look for MULTIPLE separate samples or populations.", "The same categorical variable is measured in each population."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.mcq.02",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chi-square test for independence is the appropriate procedure when:",
+    "choices": [
+      "A single random sample is classified by two categorical variables, and we ask whether the variables are associated",
+      "Independent samples from several populations are compared on one variable",
+      "A sample's counts are compared to a hypothesized population distribution",
+      "Two independent samples' means are compared"
+    ],
+    "answer": "A",
+    "hints": ["Look for ONE random sample classified by TWO categorical variables.", "The question asks whether the two variables are associated, not whether several populations match."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.numeric.01",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a two-way table, a particular row has a total of 80, a particular column has a total of 120, and the grand total is 300. Find the expected count for the cell where that row and column meet. Give a number.",
+    "answer": "32",
+    "hints": ["E = (row total)(column total) / grand total."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.numeric.02",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A two-way table has 3 rows and 4 columns of categories. How many degrees of freedom does the chi-square statistic have? Give a number.",
+    "answer": "6",
+    "hints": ["df = (r - 1)(c - 1)."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.mcq.03",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Before carrying out a chi-square test for independence, which condition must be checked?",
+    "choices": [
+      "All observed counts must be at least 5",
+      "All expected counts must be at least 5, along with random sampling and the 10% condition where needed",
+      "The two variables must already be known to be independent",
+      "Row totals must equal column totals"
+    ],
+    "answer": "B",
+    "hints": ["It's the EXPECTED counts that must be large enough, not the observed counts."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.numeric.03",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Two independent groups are each surveyed (n = 50 per group) on whether they support a proposal. Group 1: 45 support, 5 oppose. Group 2: 15 support, 35 oppose. The column totals are 60 support and 40 oppose, out of a grand total of 100. Compute the chi-square test statistic for a test of homogeneity. Give a number.",
+    "answer": "37.5",
+    "hints": ["First find the expected count for each of the 4 cells using E = (row total)(column total)/grand total; each row total is 50.", "Then sum (O-E)^2/E across all four cells."]
+  },
+  {
+    "id": "apstats.chi-square-twoway.mcq.04",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A chi-square test for independence produces chi-square = 12.3, df = 4, and p = 0.015. At alpha = 0.05, the correct conclusion is:",
+    "choices": [
+      "Fail to reject H0; there is no evidence of association",
+      "Reject H0; the variables are proven to be independent",
+      "Reject H0; there is convincing evidence of an association between the two variables",
+      "The test is invalid because the p-value is too small"
+    ],
+    "answer": "C",
+    "hints": ["Compare the p-value to alpha.", "A small p-value is evidence AGAINST the null hypothesis of no association."]
+  },
+
+  {
+    "id": "apstats.choosing-categorical-procedures.mcq.01",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher takes ONE random sample of voters and records both political party and opinion on a ballot measure for each person, then asks whether the two variables are associated. Which procedure is appropriate?",
+    "choices": [
+      "Chi-square test for homogeneity",
+      "Chi-square goodness-of-fit test",
+      "Two-sample t-test for means",
+      "Chi-square test for independence"
+    ],
+    "answer": "D",
+    "hints": ["There is one sample and two categorical variables measured on each individual."]
+  },
+  {
+    "id": "apstats.choosing-categorical-procedures.mcq.02",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher takes THREE separate random samples, one from each of three schools, and classifies each student by whether they prefer online or in-person classes, then compares the distribution of preference across the three schools. Which procedure is appropriate?",
+    "choices": [
+      "Chi-square test for homogeneity",
+      "Chi-square test for independence",
+      "Chi-square goodness-of-fit test",
+      "Two-proportion z-test"
+    ],
+    "answer": "A",
+    "hints": ["There are multiple independent samples (populations), not one sample with two variables measured on it."]
+  },
+  {
+    "id": "apstats.choosing-categorical-procedures.mcq.03",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A single random sample of 300 candies is classified by color, and the color distribution is compared to the manufacturer's claimed percentages. Which procedure is appropriate?",
+    "choices": [
+      "Chi-square test for homogeneity",
+      "Chi-square goodness-of-fit test",
+      "Chi-square test for independence",
+      "Two-sample t-test for means"
+    ],
+    "answer": "B",
+    "hints": ["There is one categorical variable and one sample, compared to a claimed distribution -- not another sample or a second variable."]
+  },
+  {
+    "id": "apstats.choosing-categorical-procedures.mcq.04",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to compare the mean study times (not counts) of two independent groups of students. Which procedure should be used instead of a chi-square procedure?",
+    "choices": [
+      "Chi-square test for homogeneity",
+      "Chi-square goodness-of-fit test",
+      "Two-sample t-test for means",
+      "Chi-square test for independence"
+    ],
+    "answer": "C",
+    "hints": ["Chi-square procedures analyze COUNTS of categorical outcomes, not means of a quantitative variable."]
+  },
+  {
+    "id": "apstats.choosing-categorical-procedures.mcq.05",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Independent random samples of 150 men and 150 women are each classified as supporting or opposing a policy (a single binary categorical variable). Besides a chi-square test for homogeneity, which other procedure could validly test the same question?",
+    "choices": [
+      "A chi-square goodness-of-fit test",
+      "A chi-square test for independence",
+      "A paired t-test",
+      "A two-proportion z-test, since there are exactly two groups and one binary variable"
+    ],
+    "answer": "D",
+    "hints": ["With exactly two groups and a two-category response, the chi-square test for homogeneity (df = 1) and another familiar procedure give equivalent results.", "Think about comparing two sample proportions directly."]
+  },
+  {
+    "id": "apstats.choosing-categorical-procedures.numeric.01",
+    "loId": "apstats.choosing-categorical-procedures",
+    "cedCode": "AP-STATS-8.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A chi-square test for homogeneity compares 5 independent populations on a categorical response variable with 3 levels. How many degrees of freedom does the chi-square statistic have? Give a number.",
+    "answer": "8",
+    "hints": ["df = (r - 1)(c - 1), where r is the number of populations and c is the number of response levels."]
+  }
+]

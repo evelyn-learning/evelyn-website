@@ -157,13 +157,28 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem): Promise<VerifyR
 
   const textBlock = msg.content.find((b) => b.type === 'text');
   const raw = textBlock && textBlock.text ? textBlock.text.trim() : '';
-  const m = raw.match(/\{[^}]*"answer"\s*:\s*"([^"]*)"[^}]*\}/);
-  const modelAnswer = m ? m[1].trim() : raw.replace(/[^A-E0-9.\-]/gi, '').slice(0, 12);
+  const jsonMatch = raw.match(/\{[^}]*"answer"\s*:\s*"([^"]*)"[^}]*\}/);
+  let modelAnswer: string;
+  let fell = false;
+  if (jsonMatch) {
+    modelAnswer = jsonMatch[1].trim();
+  } else {
+    fell = true;
+    if (isMcq) {
+      // First standalone A-E letter in the prose.
+      const lm = raw.match(/\b([A-E])\b/);
+      modelAnswer = lm ? lm[1] : raw.slice(0, 4);
+    } else {
+      // First numeric token in the prose.
+      const nm = raw.match(/-?\d+(?:\.\d+)?/);
+      modelAnswer = nm ? nm[0] : raw.slice(0, 12);
+    }
+  }
 
   const ok = isMcq
     ? modelAnswer.toUpperCase().startsWith(item.answer.toUpperCase())
     : numericMatch(item.answer, modelAnswer);
-  return { ok, modelAnswer, note: m ? undefined : 'unparsed→fallback' };
+  return { ok, modelAnswer, note: fell ? 'unparsed→fallback' : undefined };
 }
 
 async function runPool<T, R>(items: T[], concurrency: number, fn: (t: T, i: number) => Promise<R>): Promise<R[]> {

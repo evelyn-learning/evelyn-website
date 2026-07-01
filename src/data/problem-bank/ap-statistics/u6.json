@@ -1,0 +1,388 @@
+[
+  {
+    "id": "apstats.one-prop-ci.mcq.01",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which set of conditions must be checked before constructing a one-sample z-interval for a population proportion p?",
+    "choices": [
+      "Random, Independent groups, Equal variances",
+      "Random, Normal population, Large Counts using p0",
+      "Random, 10%, Large Counts (n times p-hat >= 10 and n times (1 - p-hat) >= 10)",
+      "Random, 10%, n times p0 >= 10 and n times (1 - p0) >= 10"
+    ],
+    "answer": "C",
+    "hints": ["A confidence interval has no hypothesized value, so the Large Counts check must use p-hat, not p0."]
+  },
+  {
+    "id": "apstats.one-prop-ci.mcq.02",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When constructing a confidence interval for a population proportion p, the standard error of p-hat is estimated using:",
+    "choices": [
+      "sqrt(p0(1-p0)/n)",
+      "sigma / sqrt(n)",
+      "p-hat(1-p-hat)/n",
+      "sqrt(p-hat(1-p-hat)/n)"
+    ],
+    "answer": "D",
+    "hints": ["Since p is unknown for a confidence interval, the sample proportion p-hat stands in for it in the standard error."]
+  },
+  {
+    "id": "apstats.one-prop-ci.mcq.03",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 95% confidence interval for the proportion of adults who support a policy is (0.42, 0.50). Which is a correct interpretation?",
+    "choices": [
+      "There is a 95% probability that the true proportion is between 0.42 and 0.50",
+      "We are 95% confident that the interval from 0.42 to 0.50 captures the true population proportion of adults who support the policy",
+      "95% of adults support the policy at a rate between 0.42 and 0.50",
+      "95% of all possible samples will have a sample proportion of exactly 0.46"
+    ],
+    "answer": "B",
+    "hints": ["Confidence describes the long-run capture rate of the METHOD, not a probability statement about the fixed true parameter."]
+  },
+  {
+    "id": "apstats.one-prop-ci.mcq.04",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "All else being equal, which change would DECREASE the margin of error of a one-sample z-interval for a proportion?",
+    "choices": [
+      "Increasing the sample size",
+      "Decreasing the sample size",
+      "Choosing a sample proportion closer to 0.5",
+      "Increasing the confidence level from 95% to 99%"
+    ],
+    "answer": "A",
+    "hints": ["Margin of error is z* times sqrt(p-hat(1-p-hat)/n); larger n shrinks the square-root term."]
+  },
+  {
+    "id": "apstats.one-prop-ci.numeric.01",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a random sample of 400 adults, 220 favor a new law, so p-hat = 220/400 = 0.55. Find the standard error of p-hat, sqrt(p-hat(1-p-hat)/n). Round to three decimal places.",
+    "answer": "0.025",
+    "hints": ["Compute 0.55 times 0.45, divide by 400, then take the square root."]
+  },
+  {
+    "id": "apstats.one-prop-ci.numeric.02",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In a random sample of 400 adults, 220 favor a new law (p-hat = 0.55, standard error approximately 0.025). Using z* = 1.96, find the margin of error for a 95% confidence interval. Round to three decimal places.",
+    "answer": "0.049",
+    "hints": ["Margin of error = z* times the standard error: 1.96 times 0.025 (use the unrounded SE for best precision)."]
+  },
+
+  {
+    "id": "apstats.one-prop-test.mcq.01",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a one-sample z-test for a population proportion, the standard error used in the test statistic is calculated using:",
+    "choices": [
+      "sqrt(p-hat(1-p-hat)/n)",
+      "s / sqrt(n)",
+      "sqrt(p0(1-p0)/n)",
+      "sqrt(p-hat(1-p-hat)/n) + sqrt(p0(1-p0)/n)"
+    ],
+    "answer": "C",
+    "hints": ["A test statistic assumes H0 is true, so the hypothesized value p0 is used in the standard error, not p-hat."]
+  },
+  {
+    "id": "apstats.one-prop-test.mcq.02",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quality-control manager claims that 10% of items are defective. A worker suspects the true defect rate is HIGHER than claimed. Which hypotheses correctly test this, where p is the true proportion of defective items?",
+    "choices": [
+      "H0: p = 0.10, Ha: p not equal to 0.10",
+      "H0: p = 0.10, Ha: p < 0.10",
+      "H0: p-hat = 0.10, Ha: p-hat > 0.10",
+      "H0: p = 0.10, Ha: p > 0.10"
+    ],
+    "answer": "D",
+    "hints": ["Hypotheses are always statements about the population parameter p, never about the sample statistic p-hat.", "'Suspects higher' points to a one-sided, greater-than alternative."]
+  },
+  {
+    "id": "apstats.one-prop-test.numeric.01",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A cereal company claims 90% of boxes contain a prize (p0 = 0.90). In a random sample of 200 boxes, 168 contain a prize (p-hat = 0.84). Compute the test statistic z = (p-hat - p0) / sqrt(p0(1-p0)/n). Round to two decimal places.",
+    "answer": "-2.83",
+    "hints": ["First find the standard error using p0 = 0.90 and n = 200: sqrt(0.9 times 0.1 / 200).", "Then divide (0.84 - 0.90) by that standard error."]
+  },
+  {
+    "id": "apstats.one-prop-test.mcq.03",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a test of H0: p = 0.90 vs Ha: p not equal to 0.90 at alpha = 0.05, the test statistic is z = -2.83 and the two-sided p-value is approximately 0.0047. What is the correct conclusion?",
+    "choices": [
+      "Since p-value > alpha, fail to reject H0",
+      "Since p-value < alpha, reject H0; there is convincing evidence the true proportion differs from 0.90",
+      "Since p-value < alpha, fail to reject H0",
+      "The test is invalid because p-hat is negative"
+    ],
+    "answer": "B",
+    "hints": ["Compare the p-value directly to alpha; a small p-value is evidence against H0."]
+  },
+  {
+    "id": "apstats.one-prop-test.mcq.04",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When checking the Large Counts condition before a one-sample z-test for a proportion, you should verify:",
+    "choices": [
+      "n times p0 >= 10 and n times (1 - p0) >= 10",
+      "n >= 30",
+      "n times p-hat >= 10 and n times (1 - p-hat) >= 10",
+      "p-hat(1-p-hat) >= 10"
+    ],
+    "answer": "A",
+    "hints": ["A significance test assumes H0 is true, so the check uses the hypothesized proportion p0, not p-hat."]
+  },
+  {
+    "id": "apstats.one-prop-test.numeric.02",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A politician claims that fewer than 50% of voters in her district support a proposed tax (p0 = 0.50, Ha: p < 0.50). In a random sample of 150 voters, 63 support the tax, so p-hat = 63/150 = 0.42. Compute the test statistic z = (p-hat - p0) / sqrt(p0(1-p0)/n). Round to two decimal places.",
+    "answer": "-1.96",
+    "hints": ["The standard error under H0 is sqrt(0.5 times 0.5 / 150).", "Divide (0.42 - 0.50) by that standard error."]
+  },
+
+  {
+    "id": "apstats.test-errors.mcq.01",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A Type I error in a significance test occurs when:",
+    "choices": [
+      "The null hypothesis is true, but we reject it",
+      "The null hypothesis is false, but we fail to reject it",
+      "The alternative hypothesis is true, and we correctly reject H0",
+      "We fail to collect a random sample"
+    ],
+    "answer": "A",
+    "hints": ["Type I error is a false alarm: rejecting a null hypothesis that was actually correct."]
+  },
+  {
+    "id": "apstats.test-errors.mcq.02",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A Type II error occurs when:",
+    "choices": [
+      "We reject a true null hypothesis",
+      "We correctly reject a false null hypothesis",
+      "We fail to reject a null hypothesis that is actually false",
+      "The p-value equals alpha exactly"
+    ],
+    "answer": "C",
+    "hints": ["Type II error is a missed signal: H0 is really false, but the test fails to detect it."]
+  },
+  {
+    "id": "apstats.test-errors.mcq.03",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which change would most directly INCREASE the power of a one-sample z-test for a proportion, holding all else constant?",
+    "choices": [
+      "Decreasing the sample size",
+      "Choosing a smaller true effect size (the true p closer to p0)",
+      "Decreasing the significance level alpha",
+      "Increasing the sample size"
+    ],
+    "answer": "D",
+    "hints": ["More data reduces the standard error, making it easier to detect a true difference from p0."]
+  },
+  {
+    "id": "apstats.test-errors.numeric.01",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A significance test is conducted using alpha = 0.05. If the null hypothesis H0 is actually true, what is the probability of committing a Type I error? Give a decimal.",
+    "answer": "0.05",
+    "hints": ["Alpha IS the probability of a Type I error, by definition."]
+  },
+  {
+    "id": "apstats.test-errors.numeric.02",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A significance test has power equal to 0.80. What is the probability of a Type II error (beta) for this test? Give a decimal.",
+    "answer": "0.2",
+    "hints": ["Power and beta are complements: power = 1 - beta."]
+  },
+
+  {
+    "id": "apstats.two-prop-ci.mcq.01",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When constructing a confidence interval for p1 - p2, the standard error is calculated using:",
+    "choices": [
+      "sqrt(p-hat_c(1-p-hat_c)(1/n1 + 1/n2)), where p-hat_c is the pooled proportion",
+      "sqrt(p-hat1(1-p-hat1)/n1) + sqrt(p-hat2(1-p-hat2)/n2)",
+      "sqrt(p-hat1(1-p-hat1)/n1 + p-hat2(1-p-hat2)/n2)",
+      "sqrt((p-hat1 - p-hat2)/(n1+n2))"
+    ],
+    "answer": "C",
+    "hints": ["A confidence interval does NOT assume p1 = p2, so each sample keeps its own proportion in the standard error."]
+  },
+  {
+    "id": "apstats.two-prop-ci.mcq.02",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 90% confidence interval for p1 - p2 (proportion of Group 1 minus Group 2) is (0.03, 0.15). Which is the best interpretation?",
+    "choices": [
+      "We are 90% confident that the true difference p1 - p2 is between 0.03 and 0.15",
+      "There is a 90% chance p1 equals p2",
+      "90% of the sample difference is 0.09",
+      "We are 90% confident that p1 is 90% larger than p2"
+    ],
+    "answer": "A",
+    "hints": ["Interpret the interval as capturing the true difference in population proportions, not a probability about a fixed value."]
+  },
+  {
+    "id": "apstats.two-prop-ci.mcq.03",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the interval (0.03, 0.15) for p1 - p2, since the entire interval is positive, what can be concluded?",
+    "choices": [
+      "No conclusion can be drawn about a difference",
+      "There is convincing evidence that p1 is greater than p2",
+      "There is convincing evidence that p1 equals p2",
+      "p2 must be greater than p1"
+    ],
+    "answer": "B",
+    "hints": ["If zero is not a plausible value for p1 - p2, the interval supports a genuine difference in that direction."]
+  },
+  {
+    "id": "apstats.two-prop-ci.numeric.01",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a study, 60 of 150 sampled men favor a policy (p-hat1 = 0.40), and 70 of 200 sampled women favor the policy (p-hat2 = 0.35). Find p-hat1 - p-hat2. Give a decimal.",
+    "answer": "0.05",
+    "hints": ["Subtract the two sample proportions directly: 0.40 - 0.35."]
+  },
+  {
+    "id": "apstats.two-prop-ci.numeric.02",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Using p-hat1 = 0.40 (n1 = 150) and p-hat2 = 0.35 (n2 = 200), find the standard error for a confidence interval for p1 - p2: sqrt(p-hat1(1-p-hat1)/n1 + p-hat2(1-p-hat2)/n2). Round to three decimal places.",
+    "answer": "0.052",
+    "hints": ["Compute each variance term separately, 0.40(0.60)/150 and 0.35(0.65)/200, then add before taking the square root."]
+  },
+  {
+    "id": "apstats.two-prop-ci.numeric.03",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Using the standard error 0.052 from the previous scenario and z* = 1.96, find the margin of error for a 95% confidence interval for p1 - p2. Round to three decimal places.",
+    "answer": "0.102",
+    "hints": ["Margin of error = z* times the standard error: 1.96 times 0.052."]
+  },
+
+  {
+    "id": "apstats.two-prop-test.mcq.01",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When performing a two-sample z-test for the difference in proportions p1 - p2, the pooled proportion p-hat_c is calculated as:",
+    "choices": [
+      "(p-hat1 + p-hat2)/2",
+      "sqrt(p-hat1 times p-hat2)",
+      "(n1 times p-hat1 + n2 times p-hat2)/(p-hat1 + p-hat2)",
+      "(x1 + x2)/(n1 + n2)"
+    ],
+    "answer": "D",
+    "hints": ["Pool the raw counts of successes over the combined sample sizes: total successes divided by total n."]
+  },
+  {
+    "id": "apstats.two-prop-test.mcq.02",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a two-sample z-test for proportions, the pooled proportion is used in the standard error because:",
+    "choices": [
+      "It always gives a smaller standard error than using separate proportions",
+      "The null hypothesis assumes p1 = p2, so a single common proportion estimates that shared value",
+      "Pooling is required only when n1 = n2",
+      "The confidence interval also requires pooling for consistency"
+    ],
+    "answer": "B",
+    "hints": ["Under H0: p1 = p2, both samples are treated as coming from a population with one common proportion."]
+  },
+  {
+    "id": "apstats.two-prop-test.mcq.03",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to test whether the proportion of successes differs between Treatment A and Treatment B. Which hypotheses are appropriate, where p1 and p2 are the true success proportions?",
+    "choices": [
+      "H0: p1 - p2 not equal to 0, Ha: p1 - p2 = 0",
+      "H0: p-hat1 = p-hat2, Ha: p-hat1 not equal to p-hat2",
+      "H0: p1 - p2 = 0, Ha: p1 - p2 not equal to 0",
+      "H0: p1 = 0, Ha: p2 = 0"
+    ],
+    "answer": "C",
+    "hints": ["Hypotheses are about the population parameters p1 and p2, and 'differs' signals a two-sided alternative."]
+  },
+  {
+    "id": "apstats.two-prop-test.numeric.01",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In an experiment, 45 of 100 subjects in Group 1 succeed (x1 = 45, n1 = 100) and 30 of 100 subjects in Group 2 succeed (x2 = 30, n2 = 100). Find the pooled proportion p-hat_c = (x1 + x2)/(n1 + n2). Give a decimal.",
+    "answer": "0.375",
+    "hints": ["Add the two success counts and divide by the combined sample size: 75/200."]
+  },
+  {
+    "id": "apstats.two-prop-test.numeric.02",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Group 1: x1 = 45, n1 = 100 (p-hat1 = 0.45). Group 2: x2 = 30, n2 = 100 (p-hat2 = 0.30). The pooled proportion is p-hat_c = 0.375. Compute the test statistic z = (p-hat1 - p-hat2) / sqrt(p-hat_c(1-p-hat_c)(1/n1 + 1/n2)). Round to two decimal places.",
+    "answer": "2.19",
+    "hints": ["First find the standard error: sqrt(0.375 times 0.625 times (1/100 + 1/100)).", "Then divide (0.45 - 0.30) by that standard error."]
+  }
+]

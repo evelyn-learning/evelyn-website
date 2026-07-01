@@ -1,0 +1,214 @@
+[
+  {
+    "id": "apstats.slope-ci.mcq.01",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the population regression model mu_y = alpha + beta·x, what does beta represent?",
+    "choices": [
+      "The predicted response y-hat for one particular individual",
+      "The population slope: the mean change in y for each one-unit increase in x",
+      "The sample slope b computed from one particular data set",
+      "The correlation coefficient r between x and y"
+    ],
+    "answer": "B",
+    "hints": [
+      "beta is a population parameter, not a sample statistic.",
+      "Compare units: beta describes the mean change in y per unit x in mu_y = alpha + beta·x."
+    ]
+  },
+  {
+    "id": "apstats.slope-ci.mcq.02",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A residual plot for a regression of exam score on hours of sleep shows about the same amount of vertical scatter above and below zero for small x-values as for large x-values, with no fan or megaphone shape. Which LINER condition does this check?",
+    "choices": [
+      "Equal standard deviation of residuals across all values of x",
+      "Independent condition (10% condition)",
+      "Nearly Normal distribution of residuals",
+      "Random sample or random assignment"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at whether the vertical scatter changes as x changes.",
+      "This condition is about constant variance of the residuals, not their shape or independence."
+    ]
+  },
+  {
+    "id": "apstats.slope-ci.mcq.03",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Before constructing a t-interval for the slope, a histogram of the residuals is roughly symmetric and bell-shaped with no strong skew or outliers. Which LINER condition does this satisfy?",
+    "choices": [
+      "Linear condition: the residual plot shows no leftover curved pattern",
+      "Independent condition: the 10% condition for sampling without replacement",
+      "Equal SD condition: consistent vertical spread of residuals",
+      "Normal condition: the residuals are nearly normally distributed"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check the shape of the residuals themselves, not the residual-versus-x scatter.",
+      "A histogram or Normal probability plot of residuals is the usual check for this condition."
+    ]
+  },
+  {
+    "id": "apstats.slope-ci.numeric.01",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A random sample of n = 22 (x, y) pairs is used to construct a t-interval for the slope beta of the least-squares regression line. What are the degrees of freedom, df = n − 2? Give a whole number.",
+    "answer": "20",
+    "hints": ["df = n − 2 for inference about a single slope, since two parameters (intercept and slope) are estimated from the data."]
+  },
+  {
+    "id": "apstats.slope-ci.numeric.02",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A least-squares regression of exam score (y) on hours of sleep (x) for a random sample of n = 22 students gives sample slope b = 3.85 and SE_b = 1.02. For a 95% confidence interval with df = 20, t* = 2.086. Compute the margin of error, t*·SE_b. Round to two decimal places.",
+    "answer": "2.13",
+    "hints": ["Margin of error = t* · SE_b.", "Multiply 2.086 by 1.02."]
+  },
+  {
+    "id": "apstats.slope-ci.numeric.03",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Using the same regression of exam score on hours of sleep (b = 3.85, margin of error = 2.13), find the upper bound of the 95% confidence interval for beta. Give a number rounded to two decimal places.",
+    "answer": "5.98",
+    "hints": ["Upper bound = b + margin of error."]
+  },
+  {
+    "id": "apstats.slope-ci.mcq.04",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 95% confidence interval for the slope beta, from a regression of exam score on hours of sleep, is (1.72, 5.98). Which is the correct interpretation?",
+    "choices": [
+      "95% of all students in the population have a slope in this range",
+      "There is a 95% probability that the sample slope b itself lies in this interval",
+      "We are 95% confident that the interval (1.72, 5.98) captures the true population slope beta relating sleep to exam score",
+      "95% of the exam scores in the sample fall between 1.72 and 5.98"
+    ],
+    "answer": "C",
+    "hints": [
+      "A confidence interval statement is about the population parameter beta, not about individual students or the sample slope.",
+      "Avoid saying 'probability' about a single already-computed interval."
+    ]
+  },
+  {
+    "id": "apstats.slope-test.mcq.01",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An engineer studies x = machine age (years) and y = monthly repair cost (dollars) for a random sample of 18 machines the company owns. To test whether there is a linear relationship between age and repair cost, what is the appropriate null hypothesis?",
+    "choices": [
+      "H0: beta = 0 (no linear relationship between age and repair cost in the population)",
+      "H0: b = 0, where b is the slope of this particular sample's regression line",
+      "H0: r = 1, indicating a perfect linear relationship",
+      "H0: mu_y = 0, the population mean repair cost is zero"
+    ],
+    "answer": "A",
+    "hints": [
+      "The null hypothesis is always stated in terms of the population parameter beta, not the sample statistic b.",
+      "'No linear relationship' means the population slope is 0."
+    ]
+  },
+  {
+    "id": "apstats.slope-test.numeric.01",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For the sample of n = 18 machines, computer regression output for predicting monthly repair cost (y) from machine age (x) gives slope coefficient b = 18.6 and SE_b = 6.20. Compute the test statistic t = b / SE_b for testing H0: beta = 0. Round to two decimal places.",
+    "answer": "3.00",
+    "hints": ["t = b / SE_b = 18.6 / 6.20."]
+  },
+  {
+    "id": "apstats.slope-test.numeric.02",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "For the same sample of n = 18 machines used to test H0: beta = 0 for the slope of repair cost on age, what are the degrees of freedom, df = n − 2? Give a whole number.",
+    "answer": "16",
+    "hints": ["df = n − 2 = 18 − 2."]
+  },
+  {
+    "id": "apstats.slope-test.mcq.02",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The regression of monthly repair cost on machine age (n = 18, df = 16) gives t = 3.00 and a two-sided P-value of 0.0086 for testing H0: beta = 0 vs Ha: beta ≠ 0. At alpha = 0.05, what should the engineer conclude?",
+    "choices": [
+      "Fail to reject H0; there is insufficient evidence of a linear relationship between age and repair cost",
+      "Reject H0; age causes higher repair costs in every machine",
+      "The value 0.0086 IS the population correlation between age and repair cost",
+      "Reject H0; since 0.0086 < 0.05 there is convincing evidence of a linear relationship between age and repair cost in the population"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the P-value to alpha: 0.0086 < 0.05 means reject H0.",
+      "Rejecting H0 supports an association; this is an observational study, not an experiment."
+    ]
+  },
+  {
+    "id": "apstats.slope-test.numeric.03",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A separate regression of y = battery life (hours) on x = screen brightness setting, based on a random sample of n = 25 devices, gives sample slope b = -2.4 and SE_b = 0.85. Compute the test statistic t = b / SE_b for testing H0: beta = 0 vs Ha: beta ≠ 0. Round to two decimal places.",
+    "answer": "-2.82",
+    "hints": ["t = b / SE_b = -2.4 / 0.85; keep the sign."]
+  },
+  {
+    "id": "apstats.slope-test.mcq.03",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Suppose the repair-cost study instead used a one-sided alternative, Ha: beta > 0 (repair cost increases with age), and the sample slope b = 18.6 is positive, matching the direction of Ha. The computer output reports a two-sided P-value of 0.0086 for testing H0: beta = 0. What is the correct P-value for this one-sided test?",
+    "choices": [
+      "0.0086, unchanged, because P-values never depend on the direction of Ha",
+      "0.0043, half the two-sided P-value, since the sample slope points in the direction of Ha",
+      "0.0172, double the two-sided P-value",
+      "It cannot be determined without re-running the regression"
+    ],
+    "answer": "B",
+    "hints": [
+      "Computer output reports a two-sided P-value by default.",
+      "Halve it only when the sample slope's sign matches the direction of Ha."
+    ]
+  },
+  {
+    "id": "apstats.slope-test.mcq.04",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A test of H0: beta = 0 yields strong evidence to reject H0 in favor of Ha: beta ≠ 0 for the regression of repair cost on machine age. Which conclusion is justified?",
+    "choices": [
+      "Older machine age directly causes higher repair costs, since the test rejected H0",
+      "The population slope beta must equal exactly 18.6, the sample estimate",
+      "There is convincing evidence of a linear association between age and repair cost in the population represented by the sample, but causation cannot be concluded from this observational study",
+      "The large sample size guarantees a causal relationship"
+    ],
+    "answer": "C",
+    "hints": [
+      "A small P-value shows evidence of linear association, not cause and effect.",
+      "Only a randomized experiment can support a causal claim."
+    ]
+  }
+]

@@ -1,0 +1,481 @@
+[
+  {
+    "id": "apstats.probability-basics.mcq.01",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the Law of Large Numbers, as a chance process is repeated many times, the proportion of trials that result in a given outcome:",
+    "choices": [
+      "Approaches the true underlying probability of that outcome",
+      "Becomes more variable and unpredictable",
+      "Approaches exactly 0.5, regardless of the process",
+      "Stays fixed at whatever it was after the first few trials"
+    ],
+    "answer": "A",
+    "hints": ["Long-run relative frequency settles down as the number of trials increases.", "This is a claim about the long run, not about any single short run of trials."]
+  },
+  {
+    "id": "apstats.probability-basics.mcq.02",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Event A is 'a randomly selected student plays soccer' and event B is 'a randomly selected student plays basketball.' No student in the group plays both sports. Events A and B are best described as:",
+    "choices": [
+      "Independent",
+      "Mutually exclusive",
+      "Complementary",
+      "Conditional"
+    ],
+    "answer": "B",
+    "hints": ["They cannot occur together for the same student.", "Mutually exclusive events share no outcomes in common."]
+  },
+  {
+    "id": "apstats.probability-basics.mcq.03",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Events A and B are NOT mutually exclusive. Which expression correctly gives P(A or B)?",
+    "choices": [
+      "P(A) + P(B)",
+      "P(A) times P(B)",
+      "P(A) + P(B) - P(A and B)",
+      "P(A) - P(B)"
+    ],
+    "answer": "C",
+    "hints": ["Adding P(A) and P(B) double-counts the outcomes that are in both events.", "Subtract the overlap, P(A and B), exactly once."]
+  },
+  {
+    "id": "apstats.probability-basics.mcq.04",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The true probability that a customer makes a purchase is 0.30. To simulate this using a table of random digits 0 through 9 (each equally likely), which digit assignment correctly models a single customer's decision?",
+    "choices": [
+      "Digits 0 through 6 represent 'buys'; digits 7 through 9 represent 'does not buy'",
+      "Digit 0 alone represents 'buys'; digits 1 through 9 represent 'does not buy'",
+      "Odd digits represent 'buys'; even digits represent 'does not buy'",
+      "Digits 0, 1, and 2 represent 'buys'; digits 3 through 9 represent 'does not buy'"
+    ],
+    "answer": "D",
+    "hints": ["You need exactly 3 of the 10 equally likely digits to represent 'buys,' since 3/10 = 0.30.", "Check what fraction of the 10 digits each choice assigns to 'buys.'"]
+  },
+  {
+    "id": "apstats.probability-basics.numeric.01",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "If P(A) = 0.35, what is P(A complement), the probability that A does not occur? Give a decimal.",
+    "answer": "0.65",
+    "hints": ["Use the complement rule: P(not A) = 1 - P(A)."]
+  },
+  {
+    "id": "apstats.probability-basics.numeric.02",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Events A and B satisfy P(A) = 0.5, P(B) = 0.4, and P(A and B) = 0.2. Find P(A or B). Give a decimal.",
+    "answer": "0.7",
+    "hints": ["Use the general addition rule: P(A or B) = P(A) + P(B) - P(A and B)."]
+  },
+
+  {
+    "id": "apstats.conditional-independence.mcq.01",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For events A and B with P(B) greater than 0, the conditional probability P(A given B) is defined as:",
+    "choices": [
+      "P(A and B) / P(B)",
+      "P(A) / P(B)",
+      "P(B) / P(A and B)",
+      "P(A) times P(B)"
+    ],
+    "answer": "A",
+    "hints": ["Conditional probability restricts the sample space to B, then asks what share of B is also A."]
+  },
+  {
+    "id": "apstats.conditional-independence.mcq.02",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For any two events A and B, the general multiplication rule states that P(A and B) equals:",
+    "choices": [
+      "P(A) + P(B given A)",
+      "P(A) times P(B given A)",
+      "P(A) times P(B)",
+      "P(A given B) + P(B given A)"
+    ],
+    "answer": "B",
+    "hints": ["Think of it as: the probability A happens, times the probability B happens given that A already occurred."]
+  },
+  {
+    "id": "apstats.conditional-independence.mcq.03",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Events A and B satisfy P(A) = 0.4, P(B) = 0.7, and P(A and B) = 0.28. Are A and B independent?",
+    "choices": [
+      "No, because P(A and B) is not zero",
+      "No, because P(A) and P(B) are not equal",
+      "Yes, because P(A) times P(B) = 0.28, which matches P(A and B)",
+      "Yes, because A and B are mutually exclusive"
+    ],
+    "answer": "C",
+    "hints": ["Independence means P(A and B) = P(A) times P(B).", "Compute 0.4 times 0.7 and compare it to the given joint probability."]
+  },
+  {
+    "id": "apstats.conditional-independence.numeric.01",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "P(A) = 0.4 and P(B given A) = 0.5. Use the general multiplication rule to find P(A and B). Give a decimal.",
+    "answer": "0.2",
+    "hints": ["P(A and B) = P(A) times P(B given A)."]
+  },
+  {
+    "id": "apstats.conditional-independence.numeric.02",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a group of students, P(B) = 0.5 and P(A and B) = 0.3. Find P(A given B). Give a decimal.",
+    "answer": "0.6",
+    "hints": ["P(A given B) = P(A and B) / P(B)."]
+  },
+  {
+    "id": "apstats.conditional-independence.numeric.03",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "On a given day, P(rain) = 0.3. If it rains, the probability the bus is late is 0.5. Find P(rain and bus is late). Give a decimal.",
+    "answer": "0.15",
+    "hints": ["Multiply P(rain) by P(bus is late given rain)."]
+  },
+
+  {
+    "id": "apstats.random-variables.mcq.01",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A discrete random variable X has a probability distribution. Which condition must this distribution satisfy?",
+    "choices": [
+      "Each probability must equal exactly 0.5",
+      "The probabilities must be listed in increasing order",
+      "X must take only two possible values",
+      "Each probability is between 0 and 1, and the probabilities sum to 1"
+    ],
+    "answer": "D",
+    "hints": ["Every valid probability distribution must total 1 across all possible outcomes."]
+  },
+  {
+    "id": "apstats.random-variables.mcq.02",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a continuous random variable?",
+    "choices": [
+      "The exact weight, in kilograms, of a randomly selected newborn",
+      "The number of siblings a randomly selected student has",
+      "The number of heads in 10 coin flips",
+      "The number of defective items in a batch of 50"
+    ],
+    "answer": "A",
+    "hints": ["Continuous random variables can take any value in an interval, not just whole-number counts."]
+  },
+  {
+    "id": "apstats.random-variables.mcq.03",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a discrete random variable X, the mean mu = sum(x times P(x)) is best interpreted as:",
+    "choices": [
+      "The value of X that occurs most often",
+      "The long-run average value of X over many repetitions of the chance process",
+      "The middle value when the outcomes are ordered from least to greatest",
+      "A value that X must equal on any single trial"
+    ],
+    "answer": "B",
+    "hints": ["The mean of a random variable describes what happens on average over the long run, not what happens on one trial."]
+  },
+  {
+    "id": "apstats.random-variables.numeric.01",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A discrete random variable X has possible values 0, 1, and 2 with probabilities P(0) = 0.2, P(1) = 0.5, and P(2) = 0.3. Find mu, the mean of X. Give a decimal.",
+    "answer": "1.1",
+    "hints": ["mu = sum(x times P(x)) = 0(0.2) + 1(0.5) + 2(0.3)."]
+  },
+  {
+    "id": "apstats.random-variables.numeric.02",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the random variable X with P(0) = 0.2, P(1) = 0.5, P(2) = 0.3, and mean mu = 1.1, find the standard deviation of X. Give a decimal.",
+    "answer": "0.7",
+    "hints": ["Variance = sum((x - mu)^2 times P(x)); the standard deviation is the square root of the variance.", "The three squared deviations, weighted by their probabilities, are 0.242, 0.005, and 0.243."]
+  },
+  {
+    "id": "apstats.random-variables.numeric.03",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A game costs 2 dollars to play. You win 10 dollars with probability 0.1 and win nothing otherwise. Find the expected net profit per play (expected winnings minus the 2 dollar cost). Give a number, using a negative sign if the expected profit is negative.",
+    "answer": "-1",
+    "hints": ["Expected winnings = 10(0.1) + 0(0.9) = 1 dollar.", "Subtract the 2 dollar cost from the expected winnings."]
+  },
+
+  {
+    "id": "apstats.combining-rv.mcq.01",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "X and Y are independent random variables. Which expression correctly gives the variance of X - Y?",
+    "choices": [
+      "Var(X) - Var(Y)",
+      "sqrt(Var(X)) - sqrt(Var(Y))",
+      "Var(X) + Var(Y)",
+      "Var(X) times Var(Y)"
+    ],
+    "answer": "C",
+    "hints": ["For independent random variables, variances always ADD, even when you are finding the variance of a difference."]
+  },
+  {
+    "id": "apstats.combining-rv.mcq.02",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "X and Y are independent random variables with means mu_X and mu_Y. What is the mean of X - Y?",
+    "choices": [
+      "mu_X + mu_Y",
+      "mu_X times mu_Y",
+      "mu_X / mu_Y",
+      "mu_X - mu_Y"
+    ],
+    "answer": "D",
+    "hints": ["Means combine the same way whether you are finding a sum or a difference: subtract for a difference.", "This is unlike variances, which add regardless of whether you are combining a sum or a difference."]
+  },
+  {
+    "id": "apstats.combining-rv.mcq.03",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A random variable Y is defined by the linear transformation Y = a + bX. Which expression gives the standard deviation of Y in terms of the standard deviation of X?",
+    "choices": [
+      "sigma_Y = |b| times sigma_X",
+      "sigma_Y = a + b times sigma_X",
+      "sigma_Y = b times sigma_X",
+      "sigma_Y = a times sigma_X"
+    ],
+    "answer": "A",
+    "hints": ["Adding the constant a shifts the distribution but does not change its spread.", "Take the absolute value of b, since a standard deviation cannot be negative."]
+  },
+  {
+    "id": "apstats.combining-rv.numeric.01",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Independent random variables X and Y have means mu_X = 50 and mu_Y = 30. Find the mean of X + Y. Give a number.",
+    "answer": "80",
+    "hints": ["Means simply add: mu of (X + Y) = mu_X + mu_Y."]
+  },
+  {
+    "id": "apstats.combining-rv.numeric.02",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Independent random variables X and Y have standard deviations sigma_X = 4 and sigma_Y = 3. Find the standard deviation of X + Y. Give a number.",
+    "answer": "5",
+    "hints": ["Variances add first: Var(X + Y) = 4^2 + 3^2 = 25.", "Then take the square root to get the standard deviation."]
+  },
+  {
+    "id": "apstats.combining-rv.numeric.03",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Independent random variables X and Y have standard deviations sigma_X = 6 and sigma_Y = 8. Find the standard deviation of X - Y. Give a number.",
+    "answer": "10",
+    "hints": ["Even for a difference, variances add for independent random variables: 6^2 + 8^2 = 100.", "Take the square root of 100."]
+  },
+
+  {
+    "id": "apstats.binomial-distribution.mcq.01",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT one of the conditions required for a binomial setting?",
+    "choices": [
+      "Each trial results in one of exactly two outcomes: success or failure",
+      "The trials must be dependent on one another",
+      "There is a fixed number of trials, decided in advance",
+      "The probability of success is the same on every trial"
+    ],
+    "answer": "B",
+    "hints": ["A binomial setting actually requires the trials to be INDEPENDENT, not dependent."]
+  },
+  {
+    "id": "apstats.binomial-distribution.mcq.02",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a binomial random variable X based on n trials with success probability p, which expression gives P(X = k)?",
+    "choices": [
+      "n times p times (1-p)",
+      "p^k times (1-p)^k",
+      "C(n,k) p^k (1-p)^(n-k)",
+      "C(n,k) times p^k"
+    ],
+    "answer": "C",
+    "hints": ["You need the number of arrangements C(n,k), the probability of the k successes, and the probability of the remaining failures, all multiplied together."]
+  },
+  {
+    "id": "apstats.binomial-distribution.mcq.03",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student guesses randomly on 10 independent true/false questions, each with probability 0.5 of a correct guess. Let X be the number of correct guesses. Which parameters describe this binomial random variable?",
+    "choices": [
+      "n = 0.5, p = 10",
+      "n = 10, p = 0.1",
+      "n = 5, p = 0.5",
+      "n = 10, p = 0.5"
+    ],
+    "answer": "D",
+    "hints": ["n is the fixed number of trials; p is the probability of success on each individual trial."]
+  },
+  {
+    "id": "apstats.binomial-distribution.numeric.01",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A binomial random variable X has n = 20 trials with success probability p = 0.3. Find mu, the mean of X. Give a number.",
+    "answer": "6",
+    "hints": ["mu = np."]
+  },
+  {
+    "id": "apstats.binomial-distribution.numeric.02",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A binomial random variable X has n = 25 trials with success probability p = 0.2. Find the standard deviation of X. Give a number.",
+    "answer": "2",
+    "hints": ["sigma = sqrt(np(1-p)) = sqrt(25 times 0.2 times 0.8)."]
+  },
+  {
+    "id": "apstats.binomial-distribution.numeric.03",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A binomial random variable X has n = 4 trials with success probability p = 0.5. Find P(X = 2). Give a decimal.",
+    "answer": "0.375",
+    "hints": ["P(X=2) = C(4,2) times 0.5^2 times 0.5^2.", "C(4,2) = 6."]
+  },
+
+  {
+    "id": "apstats.geometric-distribution.mcq.01",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality inspector tests light bulbs one at a time, independently, until the first defective bulb is found. The number of bulbs tested is best modeled by which distribution?",
+    "choices": [
+      "Geometric distribution",
+      "Binomial distribution",
+      "Normal distribution",
+      "Uniform distribution"
+    ],
+    "answer": "A",
+    "hints": ["The number of trials is NOT fixed in advance; the process stops at the first success (a defective bulb)."]
+  },
+  {
+    "id": "apstats.geometric-distribution.mcq.02",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a geometric random variable X with success probability p, which expression gives P(X = k), the probability that the first success occurs on trial k?",
+    "choices": [
+      "C(k,1) times p times (1-p)",
+      "(1-p)^(k-1) p",
+      "p^k times (1-p)",
+      "(1-p)^k times p^k"
+    ],
+    "answer": "B",
+    "hints": ["The first k-1 trials must all be failures, and trial k must be the success."]
+  },
+  {
+    "id": "apstats.geometric-distribution.mcq.03",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A basketball player shoots free throws independently, each with the same probability of success, until she makes her first shot; the total number of shots taken is recorded. This scenario differs from a binomial setting because:",
+    "choices": [
+      "The probability of success changes from shot to shot",
+      "The shots are not independent of each other",
+      "The number of trials is not fixed in advance",
+      "There are more than two possible outcomes per shot"
+    ],
+    "answer": "C",
+    "hints": ["Binomial settings require a fixed number of trials, chosen before the process starts."]
+  },
+  {
+    "id": "apstats.geometric-distribution.numeric.01",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A geometric random variable has success probability p = 0.25. Find mu, the mean number of trials until the first success. Give a number.",
+    "answer": "4",
+    "hints": ["mu = 1/p."]
+  },
+  {
+    "id": "apstats.geometric-distribution.numeric.02",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A geometric random variable has success probability p = 0.2. Find P(X = 3), the probability that the first success occurs on the third trial. Give a decimal.",
+    "answer": "0.128",
+    "hints": ["P(X=3) = (1-p)^2 times p = (0.8)^2 times 0.2."]
+  },
+  {
+    "id": "apstats.geometric-distribution.numeric.03",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A geometric random variable has success probability p = 0.1. Find P(X = 5), the probability that the first success occurs on the fifth trial. Give a decimal rounded to four decimal places.",
+    "answer": "0.0656",
+    "hints": ["P(X=5) = (1-p)^4 times p = (0.9)^4 times 0.1.", "(0.9)^4 = 0.6561."]
+  }
+]

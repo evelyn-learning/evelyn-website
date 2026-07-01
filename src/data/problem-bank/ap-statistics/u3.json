@@ -1,0 +1,431 @@
+[
+  {
+    "id": "apstats.sampling-methods.mcq.01",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher assigns every member of a population a number and uses a random number generator to choose 50 people, where every possible group of 50 is equally likely to be chosen. This describes:",
+    "choices": [
+      "A cluster sample",
+      "A simple random sample (SRS)",
+      "A convenience sample",
+      "A stratified sample"
+    ],
+    "answer": "B",
+    "hints": ["Every group of the given size has an equal chance of selection.", "This is the most basic form of random sampling."]
+  },
+  {
+    "id": "apstats.sampling-methods.mcq.02",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A school district separates students into groups by grade level, since students within a grade tend to be similar in age and coursework, and then selects a separate simple random sample from each grade. This describes:",
+    "choices": [
+      "Cluster sampling",
+      "Systematic sampling",
+      "Convenience sampling",
+      "Stratified sampling"
+    ],
+    "answer": "D",
+    "hints": ["Groups formed to be similar within themselves, with a sample taken from every group, define this method."]
+  },
+  {
+    "id": "apstats.sampling-methods.mcq.03",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher randomly selects 8 entire classrooms out of the 40 classrooms in a school and surveys every student in each of those 8 classrooms. This describes:",
+    "choices": [
+      "Stratified sampling",
+      "Cluster sampling",
+      "Simple random sampling",
+      "Voluntary response sampling"
+    ],
+    "answer": "B",
+    "hints": ["Each classroom acts like a small version of the whole school, and whole groups are sampled.", "Only some of the groups are used, but every member within a chosen group is included."]
+  },
+  {
+    "id": "apstats.sampling-methods.mcq.04",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quality-control inspector samples every 20th item coming off an assembly line, starting from a randomly chosen item among the first 20. This sampling method is called:",
+    "choices": [
+      "Cluster sampling",
+      "Stratified sampling",
+      "Systematic sampling",
+      "Convenience sampling"
+    ],
+    "answer": "C",
+    "hints": ["A fixed interval is used after one random starting point."]
+  },
+  {
+    "id": "apstats.sampling-methods.mcq.05",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher stands outside her own gym and surveys the first 30 people who walk by. This is an example of:",
+    "choices": [
+      "A stratified sample",
+      "A convenience sample",
+      "A systematic sample",
+      "A cluster sample"
+    ],
+    "answer": "B",
+    "hints": ["Individuals are chosen only because they are easy to reach."]
+  },
+  {
+    "id": "apstats.sampling-methods.mcq.06",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the key structural difference between stratified sampling and cluster sampling?",
+    "choices": [
+      "Strata are formed so members are similar within each group, and a sample is taken from every stratum; clusters are formed so each one mirrors the whole population, and only some clusters are sampled, but entirely",
+      "Stratified sampling never involves any randomization at all",
+      "Cluster sampling always produces a larger overall sample than stratified sampling",
+      "The two terms describe exactly the same procedure"
+    ],
+    "answer": "A",
+    "hints": ["Think about which groups are internally similar versus internally diverse, and whether every group or only some groups get sampled."]
+  },
+  {
+    "id": "apstats.sampling-methods.numeric.01",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A population of 900 students is divided into three strata: 300 freshmen, 450 sophomores, and 150 juniors. A stratified random sample of size 60 is selected, with the sample size from each stratum proportional to that stratum's share of the population. How many sophomores should be included in the sample?",
+    "answer": "30",
+    "hints": ["Sophomores make up 450 out of 900 students, or one half of the population.", "Apply that same proportion to the total sample size of 60."]
+  },
+
+  {
+    "id": "apstats.sampling-bias.mcq.01",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A radio station asks listeners to call in and vote for their favorite candidate. This type of sample suffers most from:",
+    "choices": [
+      "Response bias",
+      "Undercoverage",
+      "Voluntary response bias",
+      "Nonresponse bias"
+    ],
+    "answer": "C",
+    "hints": ["People with strong opinions are far more likely to choose to respond."]
+  },
+  {
+    "id": "apstats.sampling-bias.mcq.02",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A phone survey is conducted using only landline numbers, so households with only cell phones have no chance at all of being contacted. This is an example of:",
+    "choices": [
+      "Nonresponse bias",
+      "Undercoverage",
+      "Response bias",
+      "Voluntary response bias"
+    ],
+    "answer": "B",
+    "hints": ["Some part of the population is left entirely out of the sampling frame before selection even happens."]
+  },
+  {
+    "id": "apstats.sampling-bias.mcq.03",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mail survey is sent to 1,000 randomly selected households, but only 150 surveys are returned. The concern that the people who chose to respond may differ systematically from those who did not respond illustrates:",
+    "choices": [
+      "Undercoverage",
+      "Convenience sampling",
+      "Nonresponse bias",
+      "Question wording bias"
+    ],
+    "answer": "C",
+    "hints": ["The sampling frame was fine; the problem arose after selection, when many chosen people did not participate."]
+  },
+  {
+    "id": "apstats.sampling-bias.mcq.04",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A survey asks: 'Do you support the popular new policy that helps struggling families?' The phrasing of this question is likely to produce:",
+    "choices": [
+      "Undercoverage",
+      "Response bias due to leading question wording",
+      "Voluntary response bias",
+      "A smaller sample size"
+    ],
+    "answer": "B",
+    "hints": ["Words like 'popular' and 'helps struggling families' push respondents toward one answer."]
+  },
+  {
+    "id": "apstats.sampling-bias.mcq.05",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When asked about illegal drug use during a face-to-face interview conducted by a uniformed police officer, respondents may not answer truthfully. This illustrates:",
+    "choices": [
+      "Undercoverage",
+      "Nonresponse bias",
+      "Response bias",
+      "Systematic sampling error"
+    ],
+    "answer": "C",
+    "hints": ["The identity of the interviewer, or the sensitive nature of the question, can cause untruthful answers even when people do respond."]
+  },
+  {
+    "id": "apstats.sampling-bias.mcq.06",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A website's voluntary response poll collects 50,000 responses, while a properly designed random sample surveys only 500 people. Which statement is true?",
+    "choices": [
+      "The voluntary response poll is more trustworthy simply because it has a much larger sample size",
+      "Bias is a systematic error that is not reduced by increasing sample size, so the much smaller random sample can still be more trustworthy",
+      "Sample size alone determines whether a study is biased, so the larger poll must be correct",
+      "Neither method can ever be trusted, regardless of size"
+    ],
+    "answer": "B",
+    "hints": ["A biased method keeps missing the true value in the same direction no matter how many people respond."]
+  },
+
+  {
+    "id": "apstats.experimental-design.mcq.01",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In an experiment testing a new fertilizer on tomato plants, the individual plants that receive a treatment and are measured for growth are called the:",
+    "choices": [
+      "Factors",
+      "Experimental units",
+      "Treatments",
+      "Blocks"
+    ],
+    "answer": "B",
+    "hints": ["This is the general term for the individuals (plants, people, plots) that treatments are applied to."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.02",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An experiment studies the effects of watering frequency (daily or weekly) and sunlight exposure (full sun or partial shade) on plant growth. How many distinct treatments does this experiment have?",
+    "choices": [
+      "2",
+      "4",
+      "6",
+      "8"
+    ],
+    "answer": "B",
+    "hints": ["A treatment is one specific combination of a level from each factor.", "Multiply the number of levels of each factor together: 2 times 2."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.03",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT one of the three basic principles of experimental design?",
+    "choices": [
+      "Comparison",
+      "Randomization",
+      "Replication",
+      "Voluntary response"
+    ],
+    "answer": "D",
+    "hints": ["The three principles are about how treatments are compared and assigned, not about how subjects volunteer themselves."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.04",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a drug trial, one group receives the actual medication, and a second group receives an inactive pill that looks identical to the medication. The inactive pill is called a:",
+    "choices": [
+      "Confounding variable",
+      "Block",
+      "Placebo",
+      "Response variable"
+    ],
+    "answer": "C",
+    "hints": ["It is designed to be indistinguishable from the real treatment so subjects cannot tell which group they are in."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.05",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a double-blind experiment:",
+    "choices": [
+      "Only the subjects know which treatment they are receiving",
+      "Only the people evaluating the results know which treatment was given",
+      "Neither the subjects nor the people evaluating the results know who received which treatment",
+      "The experiment does not need a control group"
+    ],
+    "answer": "C",
+    "hints": ["'Double' means two groups of people are kept in the dark: the subjects and the evaluators."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.06",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An experiment on exercise and heart rate first separates subjects into a group of males and a group of females, and then randomly assigns males to treatments and separately randomly assigns females to treatments. This design is:",
+    "choices": [
+      "A completely randomized design",
+      "A randomized block design, blocking on sex",
+      "A matched pairs design",
+      "An observational study"
+    ],
+    "answer": "B",
+    "hints": ["Subjects are first grouped by a variable expected to affect the response, and randomization happens separately within each group."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.07",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To compare two brands of running shoes, each runner in a study wears Brand A on one foot and Brand B on the other, with the assignment of brand to left or right foot randomized for each runner. This design is:",
+    "choices": [
+      "A completely randomized design",
+      "A randomized block design",
+      "A matched pairs design",
+      "A voluntary response study"
+    ],
+    "answer": "C",
+    "hints": ["Each subject serves as their own comparison, receiving both treatments in a randomized order or arrangement."]
+  },
+  {
+    "id": "apstats.experimental-design.mcq.08",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A study finds that people who drink more coffee have higher rates of heart disease. However, coffee drinkers in the study also tend to smoke more than non-coffee drinkers. Smoking in this scenario is best described as a:",
+    "choices": [
+      "Response variable",
+      "Blocking variable",
+      "Confounding variable",
+      "Placebo"
+    ],
+    "answer": "C",
+    "hints": ["It is a variable, related to the explanatory variable, whose effect on the response cannot be separated from that of coffee."]
+  },
+
+  {
+    "id": "apstats.inference-experiments.mcq.01",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a study, subjects are randomly assigned to treatment groups, but the subjects were student volunteers rather than a random sample from a larger population. What conclusions can be drawn?",
+    "choices": [
+      "The results can be generalized to a larger population, and a cause-and-effect conclusion can be drawn",
+      "A cause-and-effect conclusion can be drawn for these subjects, but the results should not be generalized beyond them",
+      "Neither a causal conclusion nor a generalization is possible",
+      "Only generalization to a larger population is possible, not causation"
+    ],
+    "answer": "B",
+    "hints": ["Random assignment supports causal claims about the subjects actually studied.", "Without random sampling, there is no basis for extending conclusions beyond the subjects in the study."]
+  },
+  {
+    "id": "apstats.inference-experiments.mcq.02",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher takes a random sample from a population and simply observes, without assigning, whether each person exercises regularly and whether they report good sleep quality. What can be concluded from this study?",
+    "choices": [
+      "Any relationship found can be generalized to the population, but a cause-and-effect conclusion cannot be drawn",
+      "A cause-and-effect conclusion can be drawn for the population",
+      "Neither generalization nor a causal conclusion is appropriate",
+      "The study proves that exercise causes better sleep"
+    ],
+    "answer": "A",
+    "hints": ["Random sampling supports generalizing to the population it was drawn from.", "Without random assignment of a treatment, causation cannot be established."]
+  },
+  {
+    "id": "apstats.inference-experiments.mcq.03",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A study randomly samples subjects from a large population and then randomly assigns each sampled subject to a treatment or control group. This design allows the researcher to:",
+    "choices": [
+      "Generalize findings to the population only, without any causal claim",
+      "Draw a cause-and-effect conclusion for these subjects only, without generalizing",
+      "Both generalize the results to the population and draw a cause-and-effect conclusion",
+      "Neither generalize the results nor draw a causal conclusion"
+    ],
+    "answer": "C",
+    "hints": ["Random sampling and random assignment each contribute a different piece of the scope of inference, and this design has both."]
+  },
+  {
+    "id": "apstats.inference-experiments.mcq.04",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A convenience sample of volunteers tries a new study technique, with no comparison group and no randomization used anywhere in the study. Which statement is most appropriate?",
+    "choices": [
+      "Both causal conclusions and generalization to a broader population are fully justified",
+      "Results should not be generalized to a broader population, and a cause-and-effect conclusion cannot be established from this design",
+      "Only generalization to a broader population is justified",
+      "Only a cause-and-effect conclusion is justified"
+    ],
+    "answer": "B",
+    "hints": ["With neither random sampling nor random assignment present, neither leg of the scope of inference is supported."]
+  },
+  {
+    "id": "apstats.inference-experiments.mcq.05",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly matches each randomization technique to what it allows a statistician to conclude?",
+    "choices": [
+      "Random assignment allows generalization to a population; random sampling allows cause-and-effect conclusions",
+      "Random sampling allows generalization to a population; random assignment allows cause-and-effect conclusions",
+      "Both random sampling and random assignment allow only generalization, never causation",
+      "Neither technique affects the scope of the conclusions that can be drawn"
+    ],
+    "answer": "B",
+    "hints": ["Sampling is about WHO ends up in the study; assignment is about WHICH treatment each subject gets."]
+  },
+  {
+    "id": "apstats.inference-experiments.mcq.06",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pharmaceutical company wants to claim both that its new drug is effective for the general adult population and that the drug itself caused the improvement, rather than some other factor. To support both claims, the study design needs:",
+    "choices": [
+      "A large sample size only",
+      "Random assignment only",
+      "Both random sampling from the population and random assignment to treatment groups",
+      "Neither random sampling nor random assignment; only replication matters"
+    ],
+    "answer": "C",
+    "hints": ["Generalizing to 'the general adult population' requires one kind of randomization, and claiming 'the drug caused it' requires the other."]
+  }
+]

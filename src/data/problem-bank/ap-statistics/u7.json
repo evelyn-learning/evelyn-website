@@ -1,0 +1,329 @@
+[
+  {
+    "id": "apstats.one-mean-ci.mcq.01",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to estimate the mean weight of apples in an orchard. The population standard deviation sigma is unknown, so it must be estimated from the sample using s. Which distribution should be used to construct the confidence interval for the mean?",
+    "choices": [
+      "A t-distribution with n minus 1 degrees of freedom, because sigma is unknown and estimated by s",
+      "The standard Normal (z) distribution, because the sample size is always large enough",
+      "A chi-square distribution, because we are estimating a variance",
+      "The binomial distribution, because the data are counts"
+    ],
+    "answer": "A",
+    "hints": ["z-procedures require sigma to be known.", "Whenever s replaces sigma, the extra uncertainty is captured by the t-distribution."]
+  },
+  {
+    "id": "apstats.one-mean-ci.mcq.02",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to construct a one-sample t-interval for a mean using a random sample of n = 12 measurements. A dotplot of the data shows a strong right skew with no outliers. Which condition, if any, is violated?",
+    "choices": [
+      "The Random condition, because n = 12 is too small to be a random sample",
+      "The Normal/Large Sample condition: n is under 30, the population is not stated to be Normal, and the graph shows strong skew",
+      "The 10% condition, since the sample may not be independent",
+      "No condition is violated; the t-interval is safe to use"
+    ],
+    "answer": "B",
+    "hints": ["For small samples, the data need to look roughly symmetric with no strong skew or outliers.", "Random and 10% are about how the sample was collected, not the shape of the data."]
+  },
+  {
+    "id": "apstats.one-mean-ci.mcq.03",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 95% confidence interval for the mean commute time of employees at a company is (24.3, 29.7) minutes. Which is the correct interpretation of this interval?",
+    "choices": [
+      "There is a 95% probability that the true mean commute time is between 24.3 and 29.7 minutes",
+      "95% of employees have commute times between 24.3 and 29.7 minutes",
+      "We are 95% confident that the interval (24.3, 29.7) captures the true mean commute time for all employees at the company",
+      "The sample mean will fall in this interval 95% of the time in repeated sampling"
+    ],
+    "answer": "C",
+    "hints": ["A confidence interval is a statement about the CAPTURE of a fixed population parameter, not a probability about that parameter.", "Avoid interpretations that describe individual employees or the sample mean."]
+  },
+  {
+    "id": "apstats.one-mean-ci.mcq.04",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "All else held constant, which single change would make a one-sample t-confidence interval for a mean NARROWER?",
+    "choices": [
+      "Decreasing the sample size",
+      "Increasing the confidence level from 90% to 99%",
+      "Increasing s, the sample standard deviation",
+      "Increasing the sample size while keeping s and the confidence level fixed"
+    ],
+    "answer": "D",
+    "hints": ["The margin of error is t* times s divided by the square root of n.", "A larger n shrinks the standard error, which shrinks the margin of error."]
+  },
+  {
+    "id": "apstats.one-mean-ci.numeric.01",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A random sample of n = 25 measurements has x-bar = 68.2 and s = 9. Using t* = 2.064 (df = 24, 95% confidence), compute the margin of error for a one-sample t-interval for the mean: margin = t* times s divided by sqrt(n). Give your answer rounded to two decimal places.",
+    "answer": "3.72",
+    "hints": ["s divided by sqrt(25) is 9 divided by 5.", "Multiply that standard error by t* = 2.064."]
+  },
+  {
+    "id": "apstats.one-mean-ci.numeric.02",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A sample of n = 16 gives x-bar = 50 and s = 8. Using t* = 2.131 (df = 15, 95% confidence), find the UPPER bound of the one-sample t-confidence interval for the mean: upper bound = x-bar + t* times s divided by sqrt(n). Give a number rounded to two decimal places.",
+    "answer": "54.26",
+    "hints": ["s divided by sqrt(16) is 8 divided by 4, which is 2.", "Margin of error = 2.131 times 2. Add that to x-bar = 50."]
+  },
+
+  {
+    "id": "apstats.one-mean-test.mcq.01",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For a one-sample t-test about a population mean, the null hypothesis is typically stated as:",
+    "choices": [
+      "H0: mu = mu0",
+      "H0: x-bar = mu0",
+      "H0: s = sigma",
+      "H0: p = p0"
+    ],
+    "answer": "A",
+    "hints": ["Hypotheses are always statements about population parameters, never sample statistics.", "mu is the population mean; mu0 is the hypothesized value."]
+  },
+  {
+    "id": "apstats.one-mean-test.mcq.02",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a one-sample t-test of H0: mu = mu0, the test statistic is computed as:",
+    "choices": [
+      "z = (x-bar minus mu0) divided by sigma",
+      "t = (x-bar minus mu0) divided by (s divided by sqrt(n))",
+      "t = (x-bar minus mu0) divided by s",
+      "t = mu0 divided by (s divided by sqrt(n))"
+    ],
+    "answer": "B",
+    "hints": ["The denominator is the standard error of x-bar, which uses s (not sigma).", "Don't forget to divide s by sqrt(n), not just use s alone."]
+  },
+  {
+    "id": "apstats.one-mean-test.mcq.03",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A one-sample t-test for a mean produces a p-value of 0.032, with significance level alpha = 0.05. Which conclusion is correct?",
+    "choices": [
+      "Fail to reject H0; there is not convincing evidence that mu differs from mu0",
+      "Accept H0 as true",
+      "Reject H0; there is convincing evidence that mu differs from mu0",
+      "The test is invalid because the p-value is less than alpha"
+    ],
+    "answer": "C",
+    "hints": ["Compare the p-value to alpha: 0.032 is less than 0.05.", "A small p-value is evidence AGAINST H0, so it is rejected."]
+  },
+  {
+    "id": "apstats.one-mean-test.numeric.01",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A nutritionist tests H0: mu = 100 versus Ha: mu is not equal to 100 using a sample of n = 25 with x-bar = 104 and s = 10. Compute the test statistic t = (x-bar minus mu0) divided by (s divided by sqrt(n)). Give a number rounded to two decimal places.",
+    "answer": "2.00",
+    "hints": ["The standard error is s divided by sqrt(25), which is 10 divided by 5.", "t = (104 minus 100) divided by that standard error."]
+  },
+  {
+    "id": "apstats.one-mean-test.numeric.02",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Nine athletes' reaction times are measured before and after a training program. The differences (before minus after), one per athlete, have mean 8 milliseconds and standard deviation 6 milliseconds across the n = 9 pairs. Treating this as a one-sample t-test on the differences with hypothesized mean 0, compute the test statistic t. Give a number rounded to two decimal places.",
+    "answer": "4.00",
+    "hints": ["Paired data reduce to a one-sample t-test on the differences.", "Standard error = 6 divided by sqrt(9), which is 6 divided by 3."]
+  },
+  {
+    "id": "apstats.one-mean-test.numeric.03",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A one-sample t-test for a mean is based on a random sample of n = 20 observations. What are the degrees of freedom for this test?",
+    "answer": "19",
+    "hints": ["For a one-sample t-procedure, df = n minus 1."]
+  },
+
+  {
+    "id": "apstats.two-mean-ci.mcq.01",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A two-sample t-confidence interval for mu1 minus mu2 is appropriate for comparing:",
+    "choices": [
+      "The mean of one group to a single fixed value",
+      "The mean of the same group measured twice, such as before and after",
+      "Two proportions from independent groups",
+      "The means of two independent, separate groups"
+    ],
+    "answer": "D",
+    "hints": ["The two-sample procedure requires two SEPARATE groups, not repeated measures on the same subjects.", "Comparing a group to a fixed value uses a one-sample procedure instead."]
+  },
+  {
+    "id": "apstats.two-mean-ci.mcq.02",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To construct a two-sample t-confidence interval for mu1 minus mu2, which condition must be checked?",
+    "choices": [
+      "Random, 10% (independence), and Normal/Large Sample -- each checked separately for both groups",
+      "Only that the combined sample size exceeds 30",
+      "Only that the two sample standard deviations are equal",
+      "Only that the two sample means are numerically different"
+    ],
+    "answer": "A",
+    "hints": ["Each of the two samples needs its own check of the three standard conditions.", "The two-sample t-procedure does NOT require equal standard deviations."]
+  },
+  {
+    "id": "apstats.two-mean-ci.mcq.03",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The standard error used in a two-sample t confidence interval for mu1 minus mu2 is:",
+    "choices": [
+      "sqrt(s1 divided by n1, plus s2 divided by n2)",
+      "sqrt(s1^2 divided by n1, plus s2^2 divided by n2)",
+      "(s1 plus s2) divided by (n1 plus n2)",
+      "sqrt((s1^2 plus s2^2) divided by 2)"
+    ],
+    "answer": "B",
+    "hints": ["Each group contributes its own variance divided by its own sample size, summed under a square root.", "Use s SQUARED (the variance), not s alone, inside the square root."]
+  },
+  {
+    "id": "apstats.two-mean-ci.mcq.04",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When calculating a two-sample t-interval by hand (without technology), a conservative estimate for the degrees of freedom is:",
+    "choices": [
+      "n1 plus n2 minus 2",
+      "the larger of n1 minus 1 and n2 minus 1",
+      "the smaller of n1 minus 1 and n2 minus 1",
+      "n1 plus n2 minus 1"
+    ],
+    "answer": "C",
+    "hints": ["The conservative (by-hand) df is the SMALLER of the two individual sample dfs, which gives a wider, safer interval."]
+  },
+  {
+    "id": "apstats.two-mean-ci.numeric.01",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Sample 1 has n1 = 16 and s1 = 8. Sample 2 has n2 = 25 and s2 = 10. Compute the standard error for a two-sample t-interval for mu1 minus mu2: SE = sqrt(s1^2 divided by n1, plus s2^2 divided by n2). Give a number rounded to two decimal places.",
+    "answer": "2.83",
+    "hints": ["s1^2 divided by n1 is 64 divided by 16, which is 4.", "s2^2 divided by n2 is 100 divided by 25, which is 4. Add and take the square root."]
+  },
+  {
+    "id": "apstats.two-mean-ci.numeric.02",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Two independent samples give n1 = 10, s1 = 5, and n2 = 13, s2 = 6, with x-bar1 minus x-bar2 = 12. Using the conservative degrees of freedom df = min(n1 minus 1, n2 minus 1) = 9 and t* = 2.262 for 95% confidence, compute the margin of error = t* times sqrt(s1^2 divided by n1, plus s2^2 divided by n2). Give a number rounded to two decimal places.",
+    "answer": "5.19",
+    "hints": ["First find the standard error: sqrt(25 divided by 10, plus 36 divided by 13), which is about 2.30.", "Multiply that standard error by t* = 2.262."]
+  },
+
+  {
+    "id": "apstats.two-mean-test.mcq.01",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For a two-sample t-test comparing two population means, the null hypothesis is typically stated as:",
+    "choices": [
+      "H0: x-bar1 = x-bar2",
+      "H0: s1 = s2",
+      "H0: mu1 = mu2 = mu3",
+      "H0: mu1 minus mu2 = 0"
+    ],
+    "answer": "D",
+    "hints": ["Hypotheses describe population parameters (mu1 and mu2), not sample statistics.", "Saying mu1 minus mu2 = 0 is equivalent to saying mu1 = mu2."]
+  },
+  {
+    "id": "apstats.two-mean-test.mcq.02",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A physical education teacher measures the resting heart rate of the SAME 20 students before and after a semester of a new fitness program, and wants to test whether mean heart rate decreased. Which procedure is appropriate?",
+    "choices": [
+      "A one-sample t-test on the paired differences (before minus after) for each student",
+      "A two-sample t-test for mu1 minus mu2, treating before and after as independent groups",
+      "A two-sample z-test for a difference in proportions",
+      "A chi-square test for independence"
+    ],
+    "answer": "A",
+    "hints": ["The same 20 students are measured twice, so the two sets of measurements are NOT independent.", "Paired data are analyzed with a one-sample t-test on the differences."]
+  },
+  {
+    "id": "apstats.two-mean-test.mcq.03",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher randomly assigns 30 plants to Fertilizer A and a different set of 30 plants to Fertilizer B, then compares the mean heights of the two groups after 6 weeks. Which procedure is appropriate to test for a difference in mean height?",
+    "choices": [
+      "A one-sample t-test on paired differences, since both groups were fertilized",
+      "A two-sample t-test for mu1 minus mu2, since the two groups consist of different, independent plants",
+      "A matched-pairs t-test, since heights are being compared",
+      "A one-proportion z-test"
+    ],
+    "answer": "B",
+    "hints": ["There is no natural pairing between a specific Fertilizer A plant and a specific Fertilizer B plant.", "Two disjoint groups of subjects call for a two-sample procedure."]
+  },
+  {
+    "id": "apstats.two-mean-test.numeric.01",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Two independent samples are compared: Group 1 has n1 = 20, x-bar1 = 85, s1 = 12. Group 2 has n2 = 25, x-bar2 = 79, s2 = 10. Compute the test statistic t = (x-bar1 minus x-bar2) divided by sqrt(s1^2 divided by n1, plus s2^2 divided by n2) for testing H0: mu1 = mu2. Give a number rounded to two decimal places.",
+    "answer": "1.79",
+    "hints": ["First find the standard error: sqrt(144 divided by 20, plus 100 divided by 25), which is about 3.35.", "t = (85 minus 79) divided by that standard error."]
+  },
+  {
+    "id": "apstats.two-mean-test.numeric.02",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Two independent samples have n1 = 14 and n2 = 9. Using the conservative (by-hand) degrees of freedom for a two-sample t-test, df = min(n1 minus 1, n2 minus 1), what is df?",
+    "answer": "8",
+    "hints": ["n1 minus 1 is 13; n2 minus 1 is 8.", "The conservative df is the SMALLER of the two."]
+  },
+  {
+    "id": "apstats.two-mean-test.numeric.03",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A company compares two production lines' mean fill volumes. Line 1: n1 = 16, x-bar1 = 500, s1 = 8. Line 2: n2 = 16, x-bar2 = 495, s2 = 6. Compute the test statistic t = (x-bar1 minus x-bar2) divided by sqrt(s1^2 divided by n1, plus s2^2 divided by n2) for testing H0: mu1 minus mu2 = 0. Give a number rounded to two decimal places.",
+    "answer": "2.00",
+    "hints": ["s1^2 divided by n1 is 64 divided by 16, which is 4; s2^2 divided by n2 is 36 divided by 16, which is 2.25.", "The standard error is sqrt(4 plus 2.25), which is 2.5."]
+  }
+]

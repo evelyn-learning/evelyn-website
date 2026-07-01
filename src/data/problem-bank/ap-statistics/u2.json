@@ -1,0 +1,426 @@
+[
+  {
+    "id": "apstats.two-categorical-relationships.mcq.01",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A two-way table displays two categorical variables. The marginal distribution of one variable is found by:",
+    "choices": [
+      "Using the row or column totals divided by the grand total, ignoring the other variable",
+      "Dividing each cell count by its row total",
+      "Dividing each cell count by its column total",
+      "Comparing conditional distributions across rows"
+    ],
+    "answer": "A",
+    "hints": ["A marginal distribution only uses the totals in the margins of the table.", "It ignores the second variable entirely."]
+  },
+  {
+    "id": "apstats.two-categorical-relationships.mcq.02",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A survey of 200 students recorded grade level and favorite subject. Of the 100 freshmen surveyed, 50 chose math. Of the 100 seniors surveyed, 30 chose math. What is the conditional distribution of subject preference given the student is a senior?",
+    "choices": [
+      "50% math, 50% English",
+      "60% math, 40% English",
+      "30% math, 70% English",
+      "40% math, 60% English"
+    ],
+    "answer": "C",
+    "hints": ["Divide the number of seniors who chose math by the senior total, 100.", "30/100 = 0.30"]
+  },
+  {
+    "id": "apstats.two-categorical-relationships.numeric.01",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In the same survey of 200 students, 80 students in total (out of all 200) chose math as their favorite subject. What proportion of ALL students chose math? Give a decimal.",
+    "answer": "0.4",
+    "hints": ["Divide 80 by the grand total, 200."]
+  },
+  {
+    "id": "apstats.two-categorical-relationships.mcq.03",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the survey above, 50% of freshmen prefer math compared to only 30% of seniors. Based on this difference in conditional distributions, what can be concluded?",
+    "choices": [
+      "There is no association between grade level and subject preference",
+      "There is an association between grade level and subject preference, since the conditional distributions differ",
+      "Grade level causes a preference for math",
+      "The marginal distribution of subject preference cannot be computed"
+    ],
+    "answer": "B",
+    "hints": ["Association is present when conditional distributions differ across groups.", "Be careful: association is not the same as causation."]
+  },
+  {
+    "id": "apstats.two-categorical-relationships.numeric.02",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a two-way table of 200 students by grade level and subject preference, 50 of the 200 students are freshmen who prefer math. What is the joint relative frequency for this single cell? Give a decimal.",
+    "answer": "0.25",
+    "hints": ["Divide the cell count, 50, by the grand total, 200."]
+  },
+  {
+    "id": "apstats.two-categorical-relationships.mcq.04",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A two-way table classifies 150 people by smoking status and whether they exercise regularly. The proportion of all 150 people who BOTH smoke AND exercise regularly is an example of a:",
+    "choices": [
+      "Marginal distribution",
+      "Conditional distribution",
+      "Response variable",
+      "Joint relative frequency"
+    ],
+    "answer": "D",
+    "hints": ["This proportion uses one specific cell divided by the grand total."]
+  },
+
+  {
+    "id": "apstats.scatterplots.mcq.01",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a scatterplot displaying two quantitative variables, the explanatory variable is conventionally plotted on which axis?",
+    "choices": [
+      "There is no fixed convention",
+      "The y-axis",
+      "The x-axis",
+      "Whichever axis has more variability"
+    ],
+    "answer": "C",
+    "hints": ["Explanatory (x) variable typically goes on the horizontal axis."]
+  },
+  {
+    "id": "apstats.scatterplots.mcq.02",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot of hours studied (x) versus exam score (y) shows points rising from lower left to upper right, tightly clustered close to a straight line. The association is best described as:",
+    "choices": [
+      "Negative, linear, and weak",
+      "Positive, linear, and strong",
+      "Positive, nonlinear, and strong",
+      "No association"
+    ],
+    "answer": "B",
+    "hints": ["Direction: as x increases, y increases, so the direction is positive.", "Tightly clustered points indicate a strong association."]
+  },
+  {
+    "id": "apstats.scatterplots.mcq.03",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot shows points that closely follow a clear U-shaped curve rather than a straight line. The FORM of this relationship is best described as:",
+    "choices": [
+      "Curved (nonlinear)",
+      "Linear",
+      "No association",
+      "Categorical"
+    ],
+    "answer": "A",
+    "hints": ["Form describes the overall shape traced by the points: straight line versus curve."]
+  },
+  {
+    "id": "apstats.scatterplots.mcq.04",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a scatterplot of city population (x) versus number of hospitals (y), most points rise together in a clear positive trend, but one point has a very large population and very few hospitals, far from the rest of the pattern. This point is best described as:",
+    "choices": [
+      "The explanatory variable",
+      "An unusual point (outlier) relative to the pattern",
+      "A typical point that fits the overall trend",
+      "Evidence that there is no association"
+    ],
+    "answer": "B",
+    "hints": ["Unusual points are those that fall notably away from the overall pattern in the scatterplot."]
+  },
+  {
+    "id": "apstats.scatterplots.numeric.01",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A study records the age (x) and reaction time (y) for 15 people to construct a scatterplot. How many points will the completed scatterplot display? Give a number.",
+    "answer": "15",
+    "hints": ["Each person contributes exactly one (x, y) point."]
+  },
+  {
+    "id": "apstats.scatterplots.mcq.05",
+    "loId": "apstats.scatterplots",
+    "cedCode": "AP-STATS-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to know whether the number of hours of sleep affects test performance. In a scatterplot of this data, hours of sleep should be treated as the:",
+    "choices": [
+      "Response variable",
+      "Lurking variable",
+      "Categorical variable",
+      "Explanatory variable"
+    ],
+    "answer": "D",
+    "hints": ["The variable thought to affect or predict the other is the explanatory variable, usually plotted on the x-axis."]
+  },
+
+  {
+    "id": "apstats.correlation.mcq.01",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following values of the correlation coefficient r indicates the STRONGEST linear relationship between two variables?",
+    "choices": [
+      "-0.92",
+      "0.65",
+      "-0.40",
+      "0.15"
+    ],
+    "answer": "A",
+    "hints": ["Strength is measured by the magnitude (absolute value) of r, not its sign."]
+  },
+  {
+    "id": "apstats.correlation.mcq.02",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot of height (in inches) versus weight (in pounds) has correlation r = 0.80. If height is converted to centimeters and weight is converted to kilograms, the new correlation coefficient will be:",
+    "choices": [
+      "1.60, doubled",
+      "0.40, halved",
+      "0.80, unchanged",
+      "It cannot be determined without the original data"
+    ],
+    "answer": "C",
+    "hints": ["Correlation is unit-free: it does not change when you rescale the variables."]
+  },
+  {
+    "id": "apstats.correlation.mcq.03",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The correlation coefficient r measures the strength of:",
+    "choices": [
+      "Any relationship, linear or nonlinear, between two variables",
+      "Only the LINEAR relationship between two quantitative variables",
+      "The association between two categorical variables",
+      "Causation between two variables"
+    ],
+    "answer": "B",
+    "hints": ["r is specifically a measure of linear association; it can be misleading for curved relationships."]
+  },
+  {
+    "id": "apstats.correlation.mcq.04",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot has 9 points that fit a tight positive linear pattern with r approximately 0.95. One additional influential point is added far off the line, in a direction opposite the overall trend. Adding this point will most likely:",
+    "choices": [
+      "Increase r toward 1",
+      "Have no effect on r",
+      "Make r undefined",
+      "Decrease r toward 0"
+    ],
+    "answer": "D",
+    "hints": ["Correlation is sensitive to outliers; a point that breaks the linear pattern pulls r away from +1 or -1 and toward 0."]
+  },
+  {
+    "id": "apstats.correlation.numeric.01",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A data set has correlation r = 0.70. What is the value of r-squared, rounded to two decimals?",
+    "answer": "0.49",
+    "hints": ["Square the correlation coefficient: 0.70 times 0.70."]
+  },
+  {
+    "id": "apstats.correlation.numeric.02",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A scatterplot has correlation r = 0.90 between variable X and variable Y. Every X value is multiplied by 2 (a linear rescaling of X). What is the new correlation coefficient between the rescaled X and Y?",
+    "answer": "0.9",
+    "hints": ["Correlation does not change under a linear rescaling of either variable, as long as the scaling factor is positive."]
+  },
+
+  {
+    "id": "apstats.linear-regression.mcq.01",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A least-squares regression line predicting exam score (y) from hours studied (x) is: predicted score = 50 + 5(hours studied). The correct interpretation of the slope, 5, is:",
+    "choices": [
+      "For each additional hour studied, the predicted exam score increases by 5 points, on average",
+      "Every student who studies scores exactly 5 points",
+      "When hours studied is 0, the predicted score is 5",
+      "The correlation between hours studied and score is 5"
+    ],
+    "answer": "A",
+    "hints": ["The slope gives the average change in predicted y for a one-unit increase in x."]
+  },
+  {
+    "id": "apstats.linear-regression.mcq.02",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A regression of exam score on hours studied gives r-squared = 0.64. The correct interpretation is:",
+    "choices": [
+      "The correlation between the variables is 0.64",
+      "64% of students passed the exam",
+      "64% of the variability in exam scores is explained by the linear relationship with hours studied",
+      "The slope of the regression line is 0.64"
+    ],
+    "answer": "C",
+    "hints": ["r-squared is the proportion (as a percent) of variation in y accounted for by the linear model with x."]
+  },
+  {
+    "id": "apstats.linear-regression.numeric.01",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Using the regression equation predicted score = 50 + 5(hours studied), find the predicted score for a student who studied 6 hours. Give a number.",
+    "answer": "80",
+    "hints": ["Substitute 6 for hours studied: 50 + 5(6)."]
+  },
+  {
+    "id": "apstats.linear-regression.mcq.03",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The data used to build the model predicted score = 50 + 5(hours studied) came from students who studied between 1 and 10 hours. Using this equation to predict the score of a student who studied 40 hours is an example of:",
+    "choices": [
+      "Interpolation",
+      "Extrapolation",
+      "Residual analysis",
+      "A conditional distribution"
+    ],
+    "answer": "B",
+    "hints": ["Predicting far outside the range of the observed x-values is risky and is called extrapolation."]
+  },
+  {
+    "id": "apstats.linear-regression.numeric.02",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A data set has correlation r = 0.8, standard deviation of y equal to 10, and standard deviation of x equal to 5. Find the slope of the least-squares regression line.",
+    "answer": "1.6",
+    "hints": ["Slope b = r times (s_y divided by s_x).", "b = 0.8 x (10/5)"]
+  },
+  {
+    "id": "apstats.linear-regression.numeric.03",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "The least-squares regression line for predicting y from x has slope 2. The mean of x is 10 and the mean of y is 50. Find the y-intercept a of the regression line.",
+    "answer": "30",
+    "hints": ["The LSRL always passes through the point (x-bar, y-bar).", "a = y-bar - b(x-bar) = 50 - 2(10)"]
+  },
+
+  {
+    "id": "apstats.residuals.mcq.01",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The residual for a data point in a regression is defined as:",
+    "choices": [
+      "Predicted y minus observed y",
+      "Observed x minus predicted x",
+      "Observed y minus predicted y",
+      "The slope multiplied by x"
+    ],
+    "answer": "C",
+    "hints": ["residual = actual (observed) y minus y-hat (predicted y)."]
+  },
+  {
+    "id": "apstats.residuals.numeric.01",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A regression predicts y-hat = 25 for a data point whose actual observed y-value is 30. Find the residual for this point.",
+    "answer": "5",
+    "hints": ["residual = observed y minus predicted y = 30 - 25."]
+  },
+  {
+    "id": "apstats.residuals.mcq.02",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A residual plot shows points scattered randomly above and below the zero line with no clear pattern. This suggests:",
+    "choices": [
+      "The linear model is NOT appropriate for this data",
+      "A linear model is an appropriate fit for the data",
+      "The correlation must be negative",
+      "There is a strong influential outlier"
+    ],
+    "answer": "B",
+    "hints": ["Random scatter with no pattern in the residual plot supports a linear model."]
+  },
+  {
+    "id": "apstats.residuals.mcq.03",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A residual plot shows a clear U-shaped curved pattern rather than random scatter. This indicates:",
+    "choices": [
+      "A linear model is not appropriate; the underlying relationship may be curved",
+      "The linear model is a good fit",
+      "The standard deviation of the residuals must be zero",
+      "The correlation coefficient r must equal 1"
+    ],
+    "answer": "A",
+    "hints": ["A curved pattern left over in the residuals means the linear model missed some of the structure in the data."]
+  },
+  {
+    "id": "apstats.residuals.mcq.04",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A point that, when removed from the data set, causes the slope of the least-squares regression line to change substantially is called:",
+    "choices": [
+      "A marginal point",
+      "A resistant point",
+      "A categorical outlier",
+      "An influential point"
+    ],
+    "answer": "D",
+    "hints": ["Influential points are often high-leverage x-values whose removal noticeably changes the regression line."]
+  },
+  {
+    "id": "apstats.residuals.numeric.02",
+    "loId": "apstats.residuals",
+    "cedCode": "AP-STATS-2.7-2.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A regression predicting exam score has s = 4.2 points, the standard deviation of the residuals. This means the model's predictions typically differ from the actual exam scores by about how many points? Give a number.",
+    "answer": "4.2",
+    "hints": ["s estimates the typical (standard) size of the prediction error, in the units of y."]
+  }
+]

@@ -1,0 +1,339 @@
+[
+  {
+    "id": "apstats.sampling-distribution-concept.mcq.01",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A school has 2,000 students. The proportion of ALL 2,000 students who own a car is 0.42. This value 0.42 is a:",
+    "choices": [
+      "A statistic",
+      "A margin of error",
+      "A parameter",
+      "A sampling distribution"
+    ],
+    "answer": "C",
+    "hints": ["It describes the ENTIRE population of 2,000 students, not a sample."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.mcq.02",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A random sample of 50 students from that same school finds that 0.38 of them own a car. This value 0.38 is a:",
+    "choices": [
+      "A parameter",
+      "A population value",
+      "A sampling distribution",
+      "A statistic"
+    ],
+    "answer": "D",
+    "hints": ["It is computed from a sample, not from the entire population."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.mcq.03",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The sampling distribution of a statistic describes:",
+    "choices": [
+      "The distribution of values in one single sample",
+      "The distribution of the population itself",
+      "The distribution of the statistic's values over all possible samples of a given size from the population",
+      "The margin of error for a single confidence interval"
+    ],
+    "answer": "C",
+    "hints": ["Imagine taking many, many samples of the same size and computing the statistic each time."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.mcq.04",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sampling method is described as 'biased' when:",
+    "choices": [
+      "The sampling distribution is centered at the true parameter value",
+      "The statistic has a large standard deviation",
+      "The sample size is too small",
+      "The sampling distribution is centered away from the true parameter value"
+    ],
+    "answer": "D",
+    "hints": ["Bias is about the CENTER of the sampling distribution, not its spread."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.mcq.05",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "As the sample size n increases (with the sampling method unchanged), what happens to the sampling distribution of a statistic?",
+    "choices": [
+      "Its variability increases",
+      "Its variability (spread) decreases, but its bias is unaffected",
+      "Its center moves further from the parameter",
+      "It becomes biased"
+    ],
+    "answer": "B",
+    "hints": ["Larger samples give less sample-to-sample variability, but a flawed sampling method stays flawed."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.numeric.01",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A statistic is unbiased, meaning the mean of its sampling distribution equals the population parameter. If the true population parameter is 0.65, what is the mean of the sampling distribution of this unbiased statistic? Give a decimal.",
+    "answer": "0.65",
+    "hints": ["Unbiased means mu of the statistic equals the parameter exactly."]
+  },
+  {
+    "id": "apstats.sampling-distribution-concept.numeric.02",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Four independent random samples give sample proportions of 0.30, 0.34, 0.28, and 0.32 for the same population. Find the mean of these four sample proportions, as a decimal.",
+    "answer": "0.31",
+    "hints": ["Add the four values and divide by 4."]
+  },
+
+  {
+    "id": "apstats.central-limit-theorem.mcq.01",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Central Limit Theorem states that for a sufficiently large sample size n, the sampling distribution of the sample mean x-bar is approximately:",
+    "choices": [
+      "Uniform",
+      "Skewed like the population",
+      "Normal, regardless of the population's shape",
+      "Identical to the population distribution"
+    ],
+    "answer": "C",
+    "hints": ["The CLT lets us assume approximate Normality even when the population shape is unknown or skewed."]
+  },
+  {
+    "id": "apstats.central-limit-theorem.mcq.02",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the Central Limit Theorem to justify treating the sampling distribution of x-bar as approximately Normal regardless of the population's shape, a common guideline is that the sample size n should be at least:",
+    "choices": [
+      "10",
+      "100",
+      "15",
+      "30"
+    ],
+    "answer": "D",
+    "hints": ["This is the standard 'n >= 30' rule of thumb used throughout the course."]
+  },
+  {
+    "id": "apstats.central-limit-theorem.mcq.03",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A population of daily commute times is strongly right-skewed. Random samples of size n = 4 are selected repeatedly. Which statement is true about the sampling distribution of x-bar in this case?",
+    "choices": [
+      "It will still reflect the right skew of the population, since n = 4 is too small for the CLT to apply",
+      "It will be exactly Normal because x-bar is always Normal",
+      "It will be uniform",
+      "It cannot be determined without knowing the standard deviation"
+    ],
+    "answer": "A",
+    "hints": ["With such a small n and a strongly skewed population, the CLT has not 'kicked in' yet."]
+  },
+  {
+    "id": "apstats.central-limit-theorem.mcq.04",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the population itself is known to be exactly Normally distributed, the sampling distribution of x-bar is Normal:",
+    "choices": [
+      "Only when n is at least 30",
+      "For any sample size n, including small n",
+      "Never",
+      "Only when n is even"
+    ],
+    "answer": "B",
+    "hints": ["When the population is already Normal, x-bar is Normal no matter how small the sample is."]
+  },
+  {
+    "id": "apstats.central-limit-theorem.numeric.01",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population has a strongly skewed distribution. Samples of size n = 45 are drawn repeatedly. Using the common CLT guideline of n >= 30, is n = 45 large enough to treat the sampling distribution of x-bar as approximately Normal? Enter 1 for yes or 0 for no.",
+    "answer": "1",
+    "hints": ["Compare 45 to the guideline threshold of 30."]
+  },
+  {
+    "id": "apstats.central-limit-theorem.numeric.02",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Researchers want to treat the sampling distribution of x-bar as approximately Normal even though the population distribution is unknown and possibly skewed. Using the common CLT guideline, what is the minimum sample size n they should use? Give a number.",
+    "answer": "30",
+    "hints": ["This is the standard rule-of-thumb threshold used throughout the course."]
+  },
+
+  {
+    "id": "apstats.proportions-sampling-dist.mcq.01",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For the sampling distribution of a sample proportion p-hat, the mean mu_p-hat equals:",
+    "choices": [
+      "n times p",
+      "sigma_p-hat = sqrt(p(1-p)/n)",
+      "p, the population proportion",
+      "p-hat from one particular sample"
+    ],
+    "answer": "C",
+    "hints": ["p-hat is an unbiased estimator of p, so its sampling distribution is centered at p."]
+  },
+  {
+    "id": "apstats.proportions-sampling-dist.mcq.02",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For inference about a sample proportion, the '10% condition' (n <= 0.10N) is used to justify:",
+    "choices": [
+      "That the sampling distribution of p-hat is approximately Normal in shape",
+      "That p-hat is unbiased",
+      "That the sample size is large enough",
+      "That individual observations are approximately independent when sampling without replacement"
+    ],
+    "answer": "D",
+    "hints": ["The 10% condition is about INDEPENDENCE, not about shape. Shape is handled by the Large Counts condition."]
+  },
+  {
+    "id": "apstats.proportions-sampling-dist.mcq.03",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Suppose p = 0.5 and n = 400, so mu_p-hat = 0.5 and sigma_p-hat = sqrt(0.5 x 0.5 / 400) = 0.025. Assuming the Large Counts condition is met, what is the approximate z-score for a sample proportion of p-hat = 0.55?",
+    "choices": [
+      "2.0",
+      "0.5",
+      "1.0",
+      "4.0"
+    ],
+    "answer": "A",
+    "hints": ["z = (p-hat minus mu_p-hat) divided by sigma_p-hat."]
+  },
+  {
+    "id": "apstats.proportions-sampling-dist.numeric.01",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A population proportion is p = 0.05. Using the Large Counts condition (np >= 10 and n(1-p) >= 10), what is the smallest sample size n that satisfies BOTH requirements? Give a whole number.",
+    "answer": "200",
+    "hints": ["np >= 10 requires n >= 200. n(1-p) >= 10 requires only n >= 11. The stricter (larger) requirement wins."]
+  },
+  {
+    "id": "apstats.proportions-sampling-dist.numeric.02",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A sample of n = 100 is taken from a population where the true proportion is p = 0.3. Find the standard deviation of the sampling distribution of p-hat, sigma_p-hat = sqrt(p(1-p)/n). Give a decimal rounded to three decimal places.",
+    "answer": "0.046",
+    "hints": ["sigma_p-hat = sqrt(0.3 x 0.7 / 100) = sqrt(0.0021)."]
+  },
+  {
+    "id": "apstats.proportions-sampling-dist.numeric.03",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population has p = 0.4. A random sample of n = 150 is selected (assume the Large Counts and 10% conditions are both met). Find sigma_p-hat, the standard deviation of the sampling distribution of p-hat. Give a decimal.",
+    "answer": "0.04",
+    "hints": ["sigma_p-hat = sqrt(0.4 x 0.6 / 150) = sqrt(0.0016)."]
+  },
+
+  {
+    "id": "apstats.means-sampling-dist.mcq.01",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For the sampling distribution of the sample mean x-bar, the mean mu_x-bar equals:",
+    "choices": [
+      "sigma / sqrt(n)",
+      "x-bar from one particular sample",
+      "n times mu",
+      "mu, the population mean"
+    ],
+    "answer": "D",
+    "hints": ["x-bar is an unbiased estimator of mu, so its sampling distribution is centered at mu."]
+  },
+  {
+    "id": "apstats.means-sampling-dist.mcq.02",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the sample size n is quadrupled (multiplied by 4) while sigma stays the same, sigma_x-bar (the standard deviation of the sampling distribution of x-bar) is:",
+    "choices": [
+      "Divided by 2",
+      "Multiplied by 4",
+      "Divided by 4",
+      "Multiplied by 2"
+    ],
+    "answer": "A",
+    "hints": ["sigma_x-bar = sigma / sqrt(n). sqrt(4n) = 2 x sqrt(n), so sigma_x-bar is cut in half."]
+  },
+  {
+    "id": "apstats.means-sampling-dist.numeric.01",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population has standard deviation sigma = 20. For random samples of size n = 25, find sigma_x-bar, the standard deviation of the sampling distribution of x-bar. Give a number.",
+    "answer": "4",
+    "hints": ["sigma_x-bar = sigma / sqrt(n) = 20 / sqrt(25)."]
+  },
+  {
+    "id": "apstats.means-sampling-dist.numeric.02",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population has mean mu = 50 and standard deviation sigma = 12. For samples of size n = 36, find sigma_x-bar. Give a number.",
+    "answer": "2",
+    "hints": ["sigma_x-bar = sigma / sqrt(n) = 12 / sqrt(36)."]
+  },
+  {
+    "id": "apstats.means-sampling-dist.numeric.03",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Box weights have mean mu = 100 grams and standard deviation sigma = 15 grams. For random samples of size n = 25, assume conditions for approximate Normality are met. Find the z-score for a sample mean of x-bar = 106 grams. Give a number.",
+    "answer": "2",
+    "hints": ["First find sigma_x-bar = 15 / sqrt(25) = 3, then z = (106 - 100) / 3."]
+  },
+  {
+    "id": "apstats.means-sampling-dist.numeric.04",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population of test scores is approximately Normal with mean mu = 500 and standard deviation sigma = 100. For random samples of n = 25, find sigma_x-bar, the standard deviation of the sampling distribution of x-bar. Give a number.",
+    "answer": "20",
+    "hints": ["sigma_x-bar = sigma / sqrt(n) = 100 / sqrt(25)."]
+  }
+]
