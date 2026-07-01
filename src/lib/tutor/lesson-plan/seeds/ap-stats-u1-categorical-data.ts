@@ -46,7 +46,7 @@ export const SEED_AP_STATS_U1_CATEGORICAL_DATA: LessonPlan = {
     { id: 'try-comparison', kind: 'try_yourself',
       problem: 'AP-style synthesis. School A reports 200 students taking AP Calc; School B reports 50. Of those, 80 at A and 25 at B passed. Which school has higher pass rate?',
       expectedAnswer: 'A: 80/200 = 40%. B: 25/50 = 50%. School B has higher pass rate. Comparing raw counts (80 vs 25) would mislead — sample sizes differ.',
-      responseFormat: 'numeric', hints: ['Compute proportions, not counts.'], estimatedMinutes: 3 },
+      responseFormat: 'free', hints: ['Compute proportions, not counts.'], estimatedMinutes: 3 },
     { id: 'recap', kind: 'recap', mustRemember: [
       'Variable types: CATEGORICAL (label) vs QUANTITATIVE (measurement).',
       'Numbers used as labels (zip codes) are categorical.',

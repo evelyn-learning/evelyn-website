@@ -45,7 +45,7 @@ export const SEED_AP_STATS_U5_CENTRAL_LIMIT_THEOREM: LessonPlan = {
     { id: 'try-prob', kind: 'try_yourself',
       problem: 'Battery lifetimes are normal with μ = 800 hours, σ = 50 hours. SRS of 16 batteries. (a) Find the sampling distribution of x̄. (b) Find P(x̄ < 780).',
       expectedAnswer: '(a) Population is normal → sampling distribution of x̄ is exactly normal. μ_x̄ = 800, σ_x̄ = 50/√16 = 12.5. So x̄ ~ N(800, 12.5). (b) z = (780 − 800)/12.5 = -1.6. P(Z < -1.6) ≈ 0.0548. About 5.5%.',
-      responseFormat: 'numeric', hints: ['Apply σ/√n; standardize; look up z.'], estimatedMinutes: 3 },
+      responseFormat: 'free', hints: ['Apply σ/√n; standardize; look up z.'], estimatedMinutes: 3 },
     { id: 'try-synthesis', kind: 'try_yourself',
       problem: 'AP-style synthesis. A factory claims average widget weight is μ = 100 g, σ = 8 g. The population distribution is roughly bell-shaped. A quality auditor takes 64 widgets and finds mean weight 97 g. (a) Find the sampling distribution of x̄ assuming the claim is true. (b) Compute P(x̄ ≤ 97). (c) Interpret: should the auditor be suspicious of the claim?',
       expectedAnswer: '(a) μ_x̄ = 100, σ_x̄ = 8/√64 = 1. Sampling distribution: x̄ ~ N(100, 1). (Bell-shaped population OR n = 64 large → CLT.) (1.5)\n(b) z = (97 − 100)/1 = -3. P(Z ≤ -3) ≈ 0.00135 (about 0.13%). (1.5)\n(c) Yes — the auditor SHOULD be suspicious. If the claim were true, getting a sample mean as low as 97 g (or lower) would happen only about 0.13% of the time. This is strong evidence that the true mean is LESS than 100 g (or that something is wrong with the production). Formal hypothesis testing comes in Unit 6+. (2)\nTotal: 5 points.',

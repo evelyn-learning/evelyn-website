@@ -52,7 +52,7 @@ export const SEED_AP_STATS_U9_SLOPE_CI: LessonPlan = {
     { id: 'try-slope', kind: 'try_yourself',
       problem: 'A regression of test score (y) on study hours (x) for 16 students gives b = 4.2, SE(b) = 0.9. Construct a 90% CI for β.',
       expectedAnswer: 'n = 16, df = 14. t* for 90% with df = 14 ≈ 1.761. ME = 1.761(0.9) ≈ 1.585. CI: 4.2 ± 1.585 = (2.615, 5.785). \nInterpret: "We are 90% confident that the true slope is between 2.615 and 5.785 points per hour of study."',
-      responseFormat: 'numeric', hints: ['df = n − 2; pull SE(b) directly.'], estimatedMinutes: 3 },
+      responseFormat: 'free', hints: ['df = n − 2; pull SE(b) directly.'], estimatedMinutes: 3 },
     { id: 'try-conditions', kind: 'try_yourself',
       problem: 'For a regression CI on slope, state the LINER conditions and how you\'d check each.',
       expectedAnswer: 'L (Linear): scatterplot of x vs y is linear; residual plot shows random scatter (no curved pattern). \nI (Independent): observations independent (one observation doesn\'t affect another); apply 10% rule if sampling. \nN (Normal): residuals at each x are approximately normal; check histogram of residuals overall (proxy). \nE (Equal SD): residual plot shows constant spread across all x — no fan/funnel shape. \nR (Random): sample is from a random sampling or random assignment process.',

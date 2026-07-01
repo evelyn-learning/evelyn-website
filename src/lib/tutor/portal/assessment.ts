@@ -95,7 +95,11 @@ async function isCorrect(
       const tol = Math.max(0.01, Math.abs(b) * 0.01);
       return Math.abs(a - b) <= tol;
     }
-    return norm(text) === norm(key.expectedAnswer ?? '');
+    // The key isn't a clean single number (prose/multi-value reference — e.g. a
+    // mis-tagged item whose answer is "Mean = 8 … SD = √10"). An exact-string
+    // compare would fail any correct response, so judge it holistically.
+    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text } });
+    return j.correct;
   }
 
   if (fmt === 'mcq') {

@@ -42,7 +42,7 @@ export const SEED_AP_STATS_U4_COMBINING_RV: LessonPlan = {
     { id: 'try-sum', kind: 'try_yourself',
       problem: 'A box has X = number of pens drawn (μ_X = 3, σ_X = 1). An unrelated box has Y = number of pencils drawn (μ_Y = 5, σ_Y = 2). Assume X and Y are independent. (a) Find the mean and SD of TOTAL drawn (X + Y). (b) Find the mean and SD of pen excess Y − X.',
       expectedAnswer: '(a) μ_{X+Y} = 3 + 5 = 8. σ²_{X+Y} = 1² + 2² = 5. σ_{X+Y} = √5 ≈ 2.236. \n(b) μ_{Y−X} = 5 − 3 = 2. σ²_{Y−X} = 1² + 2² = 5 (variance ADDS). σ_{Y−X} = √5 ≈ 2.236.',
-      responseFormat: 'numeric', hints: ['Means add/subtract; variances ALWAYS add (when independent).'], estimatedMinutes: 4 },
+      responseFormat: 'free', hints: ['Means add/subtract; variances ALWAYS add (when independent).'], estimatedMinutes: 4 },
     { id: 'try-error', kind: 'try_yourself',
       problem: 'A student computes σ_{X+Y} = σ_X + σ_Y = 1 + 2 = 3 for independent X and Y with σ_X = 1 and σ_Y = 2. Why is this wrong, and what\'s the correct answer?',
       expectedAnswer: 'Wrong because SDs DO NOT ADD. VARIANCES add. σ²_{X+Y} = 1² + 2² = 5. σ_{X+Y} = √5 ≈ 2.236. The student\'s answer (3) is too large — it would correspond to the SDs being collinear (positively correlated, which violates independence).',

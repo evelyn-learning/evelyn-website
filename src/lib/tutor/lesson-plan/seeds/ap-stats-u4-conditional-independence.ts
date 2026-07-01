@@ -44,7 +44,7 @@ export const SEED_AP_STATS_U4_CONDITIONAL_INDEPENDENCE: LessonPlan = {
     { id: 'try-conditional', kind: 'try_yourself',
       problem: 'A medical test for a disease: 1% of population has the disease. The test is 95% accurate (95% sensitivity AND 95% specificity). A randomly chosen person tests positive. What is the probability they actually have the disease? (Use a hypothetical population of 10,000.)',
       expectedAnswer: 'Build a hypothetical 10,000 people: 100 have the disease (1%), 9900 don\'t. Among the 100 with disease: 95 test positive (true positives), 5 test negative. Among 9900 without: 95% specific = 9405 test negative, 495 test positive (false positives). Total positives = 95 + 495 = 590. P(disease | positive) = 95/590 ≈ 16.1%. (Counterintuitively low because false positives swamp true positives when disease is rare.)',
-      responseFormat: 'numeric', hints: ['Imagine 10,000 people; build the table; condition on test result.'], estimatedMinutes: 5 },
+      responseFormat: 'free', hints: ['Imagine 10,000 people; build the table; condition on test result.'], estimatedMinutes: 5 },
     { id: 'try-multiplication', kind: 'try_yourself',
       problem: 'AP-style synthesis. A jar has 5 red and 3 blue marbles. Draw two marbles WITHOUT replacement. (a) P(both red)? (b) P(red then blue)? (c) Are the two draws independent? Justify.',
       expectedAnswer: '(a) P(R₁) = 5/8. P(R₂ | R₁) = 4/7 (one red and one fewer total). P(R₁ and R₂) = (5/8)(4/7) = 20/56 = 5/14. (1.5)\n(b) P(R then B) = (5/8)(3/7) = 15/56. (1.5)\n(c) NOT INDEPENDENT. Without replacement, the first draw changes the second\'s probabilities. P(R₂) = 5/8 marginally, but P(R₂ | R₁) = 4/7 — different. (2)\nTotal: 5 points.',

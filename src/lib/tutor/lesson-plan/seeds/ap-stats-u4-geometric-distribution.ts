@@ -41,7 +41,7 @@ export const SEED_AP_STATS_U4_GEOMETRIC_DISTRIBUTION: LessonPlan = {
     { id: 'try-mean', kind: 'try_yourself',
       problem: 'You roll a fair 6-sided die until you get a 6. Let X = trial number of the first 6. (a) Find μ_X and σ_X. (b) Find P(X = 1). (c) Find P(X ≤ 3).',
       expectedAnswer: '(a) p = 1/6. μ = 1/(1/6) = 6. σ = √(1−1/6)/((1/6)) = √(5/6)/(1/6) = (√(5/6))·6 = 6·√(5/6) ≈ 5.477. \n(b) P(X = 1) = (5/6)⁰ · (1/6) = 1/6 ≈ 0.167. \n(c) P(X ≤ 3) = P(X=1) + P(X=2) + P(X=3) = 1/6 + (5/6)(1/6) + (5/6)²(1/6). \n  = 0.1667 + 0.1389 + 0.1157 ≈ 0.4213. \n  Or: geomcdf(1/6, 3) ≈ 0.4213.',
-      responseFormat: 'numeric', hints: ['μ = 1/p; geomcdf for cumulative.'], estimatedMinutes: 4 },
+      responseFormat: 'free', hints: ['μ = 1/p; geomcdf for cumulative.'], estimatedMinutes: 4 },
     { id: 'try-binomial-vs-geometric', kind: 'try_yourself',
       problem: 'Distinguish: (a) Number of heads in 10 flips of a fair coin. (b) Number of flips until the first head.',
       expectedAnswer: '(a) BINOMIAL (fixed n = 10, count successes). X ~ Binomial(10, 0.5). (b) GEOMETRIC (count trials until first success, n not fixed). X ~ Geometric(0.5). \nBinomial: BINS. Geometric: BITS.',

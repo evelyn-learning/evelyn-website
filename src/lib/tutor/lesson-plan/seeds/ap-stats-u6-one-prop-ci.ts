@@ -50,7 +50,7 @@ export const SEED_AP_STATS_U6_ONE_PROP_CI: LessonPlan = {
     { id: 'try-sample-size', kind: 'try_yourself',
       problem: 'A pollster wants a 95% CI for a proportion with margin of error at most 0.03. (a) If a previous poll suggests p̂ ≈ 0.4, what sample size is needed? (b) If no previous data, what sample size?',
       expectedAnswer: '(a) n ≥ (z*/m)²·p̂(1−p̂) = (1.96/0.03)²·(0.4)(0.6) = (4267.11)·(0.24) ≈ 1024. So n ≥ 1024. \n(b) Use p̂ = 0.5 (max of p̂(1−p̂)). n ≥ (1.96/0.03)²·(0.5)(0.5) = (4267.11)·(0.25) ≈ 1067. So n ≥ 1067.',
-      responseFormat: 'numeric', hints: ['n ≥ (z*/m)²·p̂(1−p̂); if unknown, use p̂ = 0.5.'], estimatedMinutes: 4 },
+      responseFormat: 'free', hints: ['n ≥ (z*/m)²·p̂(1−p̂); if unknown, use p̂ = 0.5.'], estimatedMinutes: 4 },
     { id: 'recap', kind: 'recap', mustRemember: [
       'CI: p̂ ± z*·√(p̂(1−p̂)/n).',
       'Conditions: Random, Large Counts (np̂ ≥ 10 AND n(1−p̂) ≥ 10), 10%.',
