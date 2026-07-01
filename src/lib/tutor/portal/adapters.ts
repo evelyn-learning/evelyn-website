@@ -131,6 +131,9 @@ export interface ResolvedAssessmentKey {
   rubric?: FrqRubric;
   /** Optional reference (full-credit) solution for the legacy judge path. */
   modelResponse?: string;
+  /** Item hints — used to synthesize a short review rationale (never sent as an
+   *  answer key; only a derived feedback string reaches the portal). */
+  hints?: string[];
 }
 
 export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
@@ -147,6 +150,7 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
       correctChoiceId: seg.choices?.find((c) => c.correct)?.id,
       rubric: seg.rubric,
       modelResponse: seg.modelResponse,
+      hints: seg.hints,
     };
   }
   // Bare id → ProblemBank (globally-unique ids; choices are string[]; the
@@ -170,6 +174,7 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
         expectedAnswer: b.answer,
         choices,
         correctChoiceId,
+        hints: b.hints,
       };
     }
   } catch {

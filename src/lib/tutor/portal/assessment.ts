@@ -74,6 +74,18 @@ function norm(s: string): string {
   return (s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+/** Parse a numeric answer that may be a simple fraction ("25/10" → 2.5), a
+ *  percent ("2.5%" → 2.5), or a plain number. Returns NaN for prose. */
+function parseNumeric(s: string): number {
+  const t = (s ?? '').trim().replace(/%\s*$/, '').replace(/,/g, '');
+  const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+  if (frac) {
+    const d = parseFloat(frac[2]);
+    return d !== 0 ? parseFloat(frac[1]) / d : NaN;
+  }
+  return parseFloat(t);
+}
+
 /** Grade a single response against its resolved key. Deterministic for
  *  numeric/mcq; the single-answer judge for frq/free and image responses. */
 async function isCorrect(
@@ -89,8 +101,8 @@ async function isCorrect(
   const fmt = key.responseFormat ?? 'free';
 
   if (fmt === 'numeric') {
-    const a = parseFloat(text);
-    const b = parseFloat(key.expectedAnswer ?? '');
+    const a = parseNumeric(text);
+    const b = parseNumeric(key.expectedAnswer ?? '');
     if (Number.isFinite(a) && Number.isFinite(b)) {
       const tol = Math.max(0.01, Math.abs(b) * 0.01);
       return Math.abs(a - b) <= tol;
@@ -158,7 +170,11 @@ async function gradePoints(
     };
   }
   const correct = await isCorrect(key, response, deps.judgeSingleAnswer);
-  return { pointsAwarded: correct ? 1 : 0, maxPoints: 1 };
+  // Surface a short rationale in the review (the academy renders review.feedback).
+  // Uses the item's first hint as the "why"; the correct answer is shown separately.
+  const hint = key.hints?.find((h) => h && h.trim().length > 0)?.trim();
+  const feedback = hint ? (correct ? `Correct. ${hint}` : hint) : undefined;
+  return { pointsAwarded: correct ? 1 : 0, maxPoints: 1, feedback };
 }
 
 /**

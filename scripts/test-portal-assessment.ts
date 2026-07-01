@@ -255,6 +255,30 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.ok(m.score > 0.5, 'partial-credit FRQ lifts mastery');
   });
 
+  await test('numeric grader accepts an equivalent simple fraction (25/10 == 2.5)', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '2.5' };
+    const resolver: AssessmentItemResolver = async () => key;
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'frac-1',
+        responses: [{ itemId: 'n1', loId: 'apstats.lo-n', response: { text: '25/10' } }] },
+      fakeDeps, resolver,
+    );
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'n1')!.correct, true, '25/10 should grade as 2.5');
+  });
+
+  await test('review feedback carries a hint-based rationale for mcq/numeric', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '5', hints: ['divide the total by n'] };
+    const resolver: AssessmentItemResolver = async () => key;
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'fb-1',
+        responses: [{ itemId: 'n2', loId: 'apstats.lo-n', response: { text: '5' } }] },
+      fakeDeps, resolver,
+    );
+    const r = res.review!.find((x) => x.itemId === 'n2')!;
+    assert.ok(r.correct);
+    assert.ok((r.feedback ?? '').includes('divide the total by n'), 'feedback surfaces the hint rationale');
+  });
+
   console.log('\nItem-id resolution — collision safety (qualified plan-TY ids):\n');
 
   await test('qualified plan-TY id resolves to the NAMED plan, not a same-segment-id collision', async () => {
