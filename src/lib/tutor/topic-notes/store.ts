@@ -92,6 +92,15 @@ import { BASELINE_AP_STATS_ONE_MEAN_TEST } from './seeds/ap-stats-u7-one-mean-te
 import { BASELINE_AP_STATS_TWO_MEAN_CI } from './seeds/ap-stats-u7-two-mean-ci';
 import { BASELINE_AP_STATS_TWO_MEAN_TEST } from './seeds/ap-stats-u7-two-mean-test';
 
+// AP Statistics Unit 8 (CED 8.1–8.7) — chi-square inference for categorical data.
+import { BASELINE_AP_STATS_CHI_SQUARE_GOODNESS_OF_FIT } from './seeds/ap-stats-u8-chi-square-goodness-of-fit';
+import { BASELINE_AP_STATS_CHI_SQUARE_TWOWAY } from './seeds/ap-stats-u8-chi-square-twoway';
+import { BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES } from './seeds/ap-stats-u8-choosing-categorical-procedures';
+
+// AP Statistics Unit 9 (CED 9.1–9.5) — inference for regression slopes.
+import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
+import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -134,6 +143,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_ONE_MEAN_TEST,
   BASELINE_AP_STATS_TWO_MEAN_CI,
   BASELINE_AP_STATS_TWO_MEAN_TEST,
+  BASELINE_AP_STATS_CHI_SQUARE_GOODNESS_OF_FIT,
+  BASELINE_AP_STATS_CHI_SQUARE_TWOWAY,
+  BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES,
+  BASELINE_AP_STATS_SLOPE_CI,
+  BASELINE_AP_STATS_SLOPE_TEST,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
