@@ -12,6 +12,7 @@ import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { PracticeSources, PlanLite, BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
+import type { FrqRubric } from '@evelyn/portal-contract/v1';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -106,6 +107,11 @@ export interface ResolvedAssessmentKey {
   expectedAnswer?: string;
   choices?: Array<{ id: string; text: string }>;
   correctChoiceId?: string;
+  /** Present on rubric-bearing FRQs → part-by-part partial-credit grading in a
+   *  scored quiz (v1.4.0). Absent → the legacy single-answer judge path. */
+  rubric?: FrqRubric;
+  /** Optional reference (full-credit) solution for the legacy judge path. */
+  modelResponse?: string;
 }
 
 export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
@@ -120,6 +126,8 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
           choices: seg.choices?.map((c: { id: string; text: string }) => ({ id: c.id, text: c.text })),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           correctChoiceId: seg.choices?.find((c: any) => c.correct)?.id,
+          rubric: seg.rubric,
+          modelResponse: seg.modelResponse,
         };
       }
     }

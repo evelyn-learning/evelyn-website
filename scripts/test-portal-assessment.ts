@@ -191,6 +191,69 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.strictEqual(again.learningStateDelta.gaps.new.length, 0);
   });
 
+  await test('returns a points-based score breakdown (v1.4.0)', async () => {
+    // firstResult graded a1✓ a2✓ (LO_A) and b1✗ b2✗ (LO_B): 2 of 4 pts.
+    const score = firstResult.score!;
+    assert.ok(score, 'score present');
+    assert.strictEqual(score.pointsAwarded, 2);
+    assert.strictEqual(score.maxPoints, 4);
+    assert.strictEqual(score.percent, 50);
+    const a = score.perLo.find((p) => p.loId === LO_A)!;
+    const b = score.perLo.find((p) => p.loId === LO_B)!;
+    assert.deepStrictEqual([a.pointsAwarded, a.maxPoints], [2, 2], 'LO_A full');
+    assert.deepStrictEqual([b.pointsAwarded, b.maxPoints], [0, 2], 'LO_B zero');
+  });
+
+  await test('returns a per-item review with revealed keys (v1.4.0)', async () => {
+    const review = firstResult.review!;
+    assert.strictEqual(review.length, 4, 'one review row per response');
+    const a1 = review.find((x) => x.itemId === 'a1')!;
+    assert.ok(a1.correct, 'a1 correct');
+    assert.strictEqual(a1.expectedAnswer, '5', 'key revealed post-submit');
+    const b1 = review.find((x) => x.itemId === 'b1')!;
+    assert.strictEqual(b1.correct, false, 'b1 wrong');
+    assert.strictEqual(b1.maxPoints, 1);
+  });
+
+  await test('FRQ with a rubric awards PARTIAL credit in the score', async () => {
+    const LO_F = 'apstats.lo-frq';
+    const rubricKey: ResolvedAssessmentKey = {
+      responseFormat: 'frq',
+      rubric: {
+        parts: [
+          { criterionId: 'p1', maxPoints: 2, scoringCriteria: 'states H0/Ha', modelResponse: '…' },
+          { criterionId: 'p2', maxPoints: 2, scoringCriteria: 'computes statistic', modelResponse: '…' },
+        ],
+      },
+    };
+    const rubricResolver: AssessmentItemResolver = async (id) => (id === 'f1' ? rubricKey : null);
+    // Award 1.5 / 2 on each part → 3 / 4 total.
+    const rubricDeps: GradeDeps = {
+      async gradeRubricPart(args) {
+        return { pointsAwarded: 1.5, feedback: `partial on ${args.criterionId}` };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: 'should not be called for rubric FRQ' };
+      },
+    };
+    const res = await submitAssessment(
+      {
+        assessmentId: 'asmt-frq', studentId: 'portalA:frq', courseId: 'ap-statistics', sessionId: 'frq-s1',
+        responses: [{ itemId: 'f1', loId: LO_F, response: { text: 'my answer' } }],
+      },
+      rubricDeps,
+      rubricResolver,
+    );
+    const score = res.score!;
+    assert.strictEqual(score.pointsAwarded, 3, 'partial 1.5+1.5');
+    assert.strictEqual(score.maxPoints, 4, 'rubric maxPoints summed');
+    assert.strictEqual(score.percent, 75);
+    // Partial (0.75 > 0.5) → strong-ish: no candidate gap, positive mastery.
+    assert.ok(!res.learningStateDelta.gaps.new.some((g) => g.loId === LO_F), 'no gap at 75%');
+    const m = res.learningStateDelta.mastery.find((x) => x.loId === LO_F)!;
+    assert.ok(m.score > 0.5, 'partial-credit FRQ lifts mastery');
+  });
+
   console.log('\nEndpoints (auth + conformance):\n');
 
   await test('assessment POST unsigned → 401', async () => {

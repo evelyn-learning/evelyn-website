@@ -19,15 +19,17 @@
 import { randomUUID } from 'crypto';
 import { retrievePractice, type PracticeSources } from './practice';
 import { emitSessionResult } from './session-result';
-import type { GradeDeps } from './grade-free-response';
+import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
 import type { ResolvedAssessmentKey } from './adapters';
 import type {
   AssessmentRequest,
   AssessmentSet,
   AssessmentItem,
   AssessmentSubmission,
+  AssessmentResult,
+  AssessmentScore,
+  AssessmentReviewItem,
   SessionEmitRequest,
-  SessionResult,
 } from '@evelyn/portal-contract/v1';
 
 export type AssessmentItemResolver = (itemId: string) => Promise<ResolvedAssessmentKey | null>;
@@ -113,33 +115,102 @@ async function isCorrect(
   return norm(text) === norm(key.expectedAnswer ?? '');
 }
 
+interface GradeDetail {
+  pointsAwarded: number;
+  maxPoints: number;
+  feedback?: string;
+  rubricParts?: AssessmentReviewItem['rubricParts'];
+}
+
+/** Grade one response to POINTS + review detail (v1.4.0).
+ *  - mcq / numeric (and image on a non-FRQ item): deterministic, worth 1 point.
+ *  - frq / free: via gradeFreeResponse — a rubric awards PARTIAL credit
+ *    (Σ part points / Σ part maxPoints); without a rubric the single-answer
+ *    judge awards 1/0. This is the same grader the standalone /grade endpoint
+ *    uses, so a quiz FRQ and a practice FRQ score identically. */
+async function gradePoints(
+  key: ResolvedAssessmentKey,
+  response: AssessmentSubmission['responses'][number]['response'],
+  deps: GradeDeps,
+): Promise<GradeDetail> {
+  const fmt = key.responseFormat ?? 'free';
+  if (fmt === 'frq' || fmt === 'free') {
+    const graded = await gradeFreeResponse(
+      { studentId: '', itemId: '', response },
+      { itemId: '', rubric: key.rubric, expectedAnswer: key.expectedAnswer, modelResponse: key.modelResponse },
+      deps,
+    );
+    const feedback = graded.parts.map((p) => p.feedback).filter(Boolean).join(' ') || undefined;
+    return {
+      pointsAwarded: graded.totalPoints,
+      maxPoints: graded.maxPoints,
+      feedback,
+      rubricParts: graded.parts.map((p) => ({
+        criterionId: p.criterionId,
+        pointsAwarded: p.pointsAwarded,
+        maxPoints: p.maxPoints,
+        feedback: p.feedback,
+      })),
+    };
+  }
+  const correct = await isCorrect(key, response, deps.judgeSingleAnswer);
+  return { pointsAwarded: correct ? 1 : 0, maxPoints: 1 };
+}
+
 /**
  * Grade a submission and commit the calibration as a preliminary read:
- *  - mastery delta per LO signed by correctness fraction (fresh LO → exposures 1)
+ *  - mastery delta per LO signed by POINTS fraction (fresh LO → exposures 1)
  *  - a single-signal CANDIDATE gap for each weak LO (frac < 0.5)
- * via emitSessionResult (idempotent on sessionId). Returns the SessionResult.
+ * via emitSessionResult (idempotent on sessionId). Threads `notesTouched`
+ * (v1.4.0) so a unit quiz runs the gap↔notes link reconcile for its baselines.
+ * Returns the SessionResult plus a points-based `score` breakdown (v1.4.0) — a
+ * scored quiz renders it; the silent diagnostic ignores it.
  */
 export async function submitAssessment(
   sub: AssessmentSubmission,
   deps: GradeDeps,
   resolveItem: AssessmentItemResolver,
-): Promise<SessionResult> {
-  const perLo = new Map<string, { correct: number; total: number }>();
+): Promise<AssessmentResult> {
+  const perLo = new Map<string, { awarded: number; max: number }>();
+  const review: AssessmentReviewItem[] = [];
   for (const r of sub.responses) {
-    const agg = perLo.get(r.loId) ?? { correct: 0, total: 0 };
-    agg.total += 1;
+    const agg = perLo.get(r.loId) ?? { awarded: 0, max: 0 };
     const key = await resolveItem(r.itemId);
-    if (key && (await isCorrect(key, r.response, deps.judgeSingleAnswer))) {
-      agg.correct += 1;
+    if (key) {
+      const detail = await gradePoints(key, r.response, deps);
+      agg.awarded += detail.pointsAwarded;
+      agg.max += detail.maxPoints;
+      review.push({
+        itemId: r.itemId,
+        loId: r.loId,
+        responseFormat: key.responseFormat,
+        pointsAwarded: detail.pointsAwarded,
+        maxPoints: detail.maxPoints,
+        correct: detail.maxPoints > 0 && detail.pointsAwarded >= detail.maxPoints,
+        correctChoiceId: key.correctChoiceId,
+        expectedAnswer: key.expectedAnswer,
+        feedback: detail.feedback,
+        rubricParts: detail.rubricParts,
+      });
+    } else {
+      // Unresolved item — count it as a 1-point miss so totals stay honest.
+      agg.max += 1;
+      review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
     }
     perLo.set(r.loId, agg);
   }
 
   const masteryDeltas: SessionEmitRequest['masteryDeltas'] = [];
   const gaps: SessionEmitRequest['gaps'] = [];
-  for (const [loId, { correct, total }] of perLo) {
-    if (total === 0) continue;
-    const frac = correct / total;
+  const perLoScore: AssessmentScore['perLo'] = [];
+  let totalAwarded = 0;
+  let totalMax = 0;
+  for (const [loId, { awarded, max }] of perLo) {
+    perLoScore.push({ loId, pointsAwarded: awarded, maxPoints: max });
+    totalAwarded += awarded;
+    totalMax += max;
+    if (max === 0) continue;
+    const frac = awarded / max;
     // 0 → -0.8, 0.5 → 0, 1 → +0.8. applyMasteryDeltas turns this into a
     // first-touch score at exposures 1 (deliberately low-trust).
     masteryDeltas.push({ loId, delta: (frac - 0.5) * 1.6 });
@@ -147,7 +218,7 @@ export async function submitAssessment(
       gaps.push({
         kind: 'lo',
         loId,
-        observation: `Diagnostic calibration: ${correct}/${total} correct on ${loId} (preliminary).`,
+        observation: `Assessment: ${awarded}/${max} pts on ${loId} (preliminary).`,
         studentQuotes: [],
         // Single signal → confidence 0.25 → stays CANDIDATE (never auto-confirmed).
         signals: ['INCORRECT_STREAK_2_PLUS'],
@@ -164,7 +235,14 @@ export async function submitAssessment(
     losTouched: [...perLo.keys()],
     masteryDeltas,
     gaps,
-    notesTouched: [],
+    notesTouched: sub.notesTouched ?? [],
   };
-  return emitSessionResult(emitReq);
+  const result = await emitSessionResult(emitReq);
+  const score: AssessmentScore = {
+    pointsAwarded: totalAwarded,
+    maxPoints: totalMax,
+    percent: totalMax > 0 ? Math.round((totalAwarded / totalMax) * 100) : 0,
+    perLo: perLoScore,
+  };
+  return { ...result, score, review };
 }
