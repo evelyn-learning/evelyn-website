@@ -83,9 +83,10 @@ console.log('\nPhase 3(c) retrievePractice:\n');
 await test('LO scope — plan try-yourselves (off-topic + non-try excluded) + bank, all tagged with the LO', async () => {
   const r = await retrievePractice(loReq(), new FakeSources([planWithLo], [bankItem]));
   const ids = r.items.map((i) => i.id);
-  assert.deepStrictEqual(ids, ['ty-1', 'ty-2', 'openstax.stats.0042']);
+  // Bank (verified) items first, then plan try-yourselves (off-topic + non-try excluded).
+  assert.deepStrictEqual(ids, ['openstax.stats.0042', 'ty-1', 'ty-2']);
   assert.ok(r.items.every((i) => i.loId === LO), 'every item tagged with the requested LO');
-  assert.strictEqual(r.items[0].source, 'plan-try-yourself');
+  assert.strictEqual(r.items[0].source, 'bank');
   assert.strictEqual(r.items[0].cedCode, 'AP-STATS-1.10');
 });
 
@@ -101,18 +102,25 @@ await test('difficulty is forwarded to the bank source', async () => {
   assert.strictEqual(src.lastBankDifficulty, 3);
 });
 
-await test('count caps the result (plan items first)', async () => {
+await test('count caps the result (bank items first)', async () => {
   const r = await retrievePractice(loReq({ count: 2 }), new FakeSources([planWithLo], [bankItem]));
   assert.strictEqual(r.items.length, 2);
-  assert.deepStrictEqual(r.items.map((i) => i.id), ['ty-1', 'ty-2']);
+  assert.deepStrictEqual(r.items.map((i) => i.id), ['openstax.stats.0042', 'ty-1']);
 });
 
-await test('dedup by id — plan item wins over a bank item with the same id', async () => {
-  const collidingBank: BankLite = { ...bankItem, id: 'ty-1' };
-  const r = await retrievePractice(loReq(), new FakeSources([planWithLo], [collidingBank]));
-  const ty1 = r.items.filter((i) => i.id === 'ty-1');
-  assert.strictEqual(ty1.length, 1);
-  assert.strictEqual(ty1[0].source, 'plan-try-yourself');
+await test('plan-TY item ids are qualified with the plan id (no false bank collision)', async () => {
+  const planWithId: PlanLite = {
+    id: 'evelyn.test.plan.v1',
+    los: [{ id: LO, standard: 'AP-STATS-1.10' }],
+    segments: [{ kind: 'try_yourself', id: 'ty-1', problem: 'Find the z-score', expectedAnswer: '1.5' }],
+  };
+  // A bank item whose bare id equals the plan's segment id must NOT dedup away:
+  // the plan-TY id is qualified (`planId::segId`), so the two are distinct.
+  const bankSameSeg: BankLite = { ...bankItem, id: 'ty-1' };
+  const r = await retrievePractice(loReq(), new FakeSources([planWithId], [bankSameSeg]));
+  assert.deepStrictEqual(r.items.map((i) => i.id).sort(), ['evelyn.test.plan.v1::ty-1', 'ty-1']);
+  const planItem = r.items.find((i) => i.source === 'plan-try-yourself')!;
+  assert.strictEqual(planItem.id, 'evelyn.test.plan.v1::ty-1', 'plan-TY id qualified with plan id');
 });
 
 await test('bank choices mapped from string[] to {id,text}', async () => {

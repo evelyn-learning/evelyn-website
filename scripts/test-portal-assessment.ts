@@ -29,6 +29,7 @@ import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import type { ResolvedAssessmentKey } from '@/lib/tutor/portal/adapters';
 import type { NextRequest } from 'next/server';
 
+import { resolveAssessmentItem } from '@/lib/tutor/portal/adapters';
 import { POST as assessmentPOST } from '@/app/api/portal/v1/assessment/route';
 import { POST as submitPOST } from '@/app/api/portal/v1/assessment/submit/route';
 
@@ -252,6 +253,26 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.ok(!res.learningStateDelta.gaps.new.some((g) => g.loId === LO_F), 'no gap at 75%');
     const m = res.learningStateDelta.mastery.find((x) => x.loId === LO_F)!;
     assert.ok(m.score > 0.5, 'partial-credit FRQ lifts mastery');
+  });
+
+  console.log('\nItem-id resolution — collision safety (qualified plan-TY ids):\n');
+
+  await test('qualified plan-TY id resolves to the NAMED plan, not a same-segment-id collision', async () => {
+    // `try-comparison` exists in BOTH the AP Stats categorical plan and the AP
+    // Calc BC logistic-models plan. Before qualification a whole-corpus scan
+    // returned the Calc answer for the Stats question (the logistic-growth bug).
+    const statsKey = await resolveAssessmentItem('evelyn.ap.stats.categorical-data.v1::try-comparison');
+    const calcKey = await resolveAssessmentItem('evelyn.ap.calcbc.logistic-models.v1::try-comparison');
+    assert.ok(statsKey?.expectedAnswer, 'stats key resolved');
+    assert.ok(calcKey?.expectedAnswer, 'calc key resolved');
+    assert.ok(/pass rate|80\/200/i.test(statsKey!.expectedAnswer!), 'stats id → stats (pass-rate) answer');
+    assert.ok(!/logistic|exponential/i.test(statsKey!.expectedAnswer!), 'stats id must NOT resolve the Calc answer');
+    assert.ok(/logistic|exponential/i.test(calcKey!.expectedAnswer!), 'calc id → calc (logistic) answer');
+  });
+
+  await test('qualified id for a missing plan/segment resolves to null (no fallback scan)', async () => {
+    const gone = await resolveAssessmentItem('evelyn.no.such.plan.v1::try-comparison');
+    assert.strictEqual(gone, null);
   });
 
   console.log('\nEndpoints (auth + conformance):\n');

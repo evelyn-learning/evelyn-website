@@ -9,7 +9,7 @@
 import connectDB from '@/lib/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
-import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
 import type { PracticeSources, PlanLite, BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
@@ -18,6 +18,7 @@ type Difficulty = 1 | 2 | 3 | 4;
 
 function toPlanLite(plan: LessonPlan): PlanLite {
   return {
+    id: plan.id,
     los: plan.los.map((l) => ({ id: l.id, standard: l.standard })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     segments: plan.segments.map((s: any) => ({
@@ -79,23 +80,42 @@ export function mongoPracticeSources(): PracticeSources {
   };
 }
 
-/** Resolve a gradable FRQ item by id from the curated try-yourself seeds.
- *  (Authored rubric-bearing FRQs are fixtures in the content workstream; a
- *  segment with no rubric grades via the legacy single-answer path.) */
-export function resolveGradeItem(itemId: string): GradeItem | null {
-  for (const plan of SEED_PLANS) {
-    for (const seg of plan.segments) {
-      if (seg.id === itemId && seg.kind === 'try_yourself') {
-        return {
-          itemId,
-          rubric: seg.rubric,
-          expectedAnswer: seg.expectedAnswer,
-          modelResponse: seg.modelResponse,
-        };
-      }
-    }
+/** Split a qualified plan-try-yourself item id (`${planId}::${segmentId}`).
+ *  Bank item ids (e.g. `apstats.correlation.mcq.01`) have no `::` → null. */
+function splitQualifiedItemId(itemId: string): { planId: string; segId: string } | null {
+  const i = itemId.indexOf('::');
+  if (i < 0) return null;
+  return { planId: itemId.slice(0, i), segId: itemId.slice(i + 2) };
+}
+
+/** Resolve the try-yourself segment for a qualified plan-TY item id — scoped to
+ *  the NAMED plan (segment ids are not globally unique, so a whole-corpus scan
+ *  returns the wrong plan's answer key). Returns null when unqualified or the
+ *  plan/segment is gone. */
+function resolveTrySegment(itemId: string): SegmentTryYourself | null {
+  const q = splitQualifiedItemId(itemId);
+  if (!q) return null;
+  const plan = SEED_PLANS.find((p) => p.id === q.planId);
+  if (!plan) return null;
+  for (const seg of plan.segments) {
+    if (seg.id === q.segId && seg.kind === 'try_yourself') return seg;
   }
   return null;
+}
+
+/** Resolve a gradable FRQ item by id from the curated try-yourself seeds.
+ *  Item ids are plan-qualified (`${planId}::${segmentId}`) so the answer key
+ *  resolves to the exact authoring plan. A segment with no rubric grades via
+ *  the legacy single-answer path. */
+export function resolveGradeItem(itemId: string): GradeItem | null {
+  const seg = resolveTrySegment(itemId);
+  if (!seg) return null;
+  return {
+    itemId,
+    rubric: seg.rubric,
+    expectedAnswer: seg.expectedAnswer,
+    modelResponse: seg.modelResponse,
+  };
 }
 
 /** Answer key for grading an assessment item, resolved statelessly by id from
@@ -114,22 +134,23 @@ export interface ResolvedAssessmentKey {
 }
 
 export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
-  // Plan try-yourselves (carry expectedAnswer + {id,text,correct?} choices).
-  for (const plan of SEED_PLANS) {
-    for (const seg of plan.segments) {
-      if (seg.id === itemId && seg.kind === 'try_yourself') {
-        return {
-          responseFormat: seg.responseFormat,
-          expectedAnswer: seg.expectedAnswer,
-          choices: seg.choices?.map((c) => ({ id: c.id, text: c.text })),
-          correctChoiceId: seg.choices?.find((c) => c.correct)?.id,
-          rubric: seg.rubric,
-          modelResponse: seg.modelResponse,
-        };
-      }
-    }
+  // Qualified id (`planId::segId`) → a plan try-yourself, scoped to the exact
+  // authoring plan (carry expectedAnswer + {id,text,correct?} choices). A
+  // qualified id is definitively a plan item, so never fall through to the bank.
+  if (splitQualifiedItemId(itemId)) {
+    const seg = resolveTrySegment(itemId);
+    if (!seg) return null;
+    return {
+      responseFormat: seg.responseFormat,
+      expectedAnswer: seg.expectedAnswer,
+      choices: seg.choices?.map((c) => ({ id: c.id, text: c.text })),
+      correctChoiceId: seg.choices?.find((c) => c.correct)?.id,
+      rubric: seg.rubric,
+      modelResponse: seg.modelResponse,
+    };
   }
-  // ProblemBank (choices are string[]; the reference `answer` is the key).
+  // Bare id → ProblemBank (globally-unique ids; choices are string[]; the
+  // reference `answer` is the key). No cross-plan scan (that mis-resolved keys).
   try {
     await connectDB();
     const b = (await ProblemBank.findOne({ id: itemId }).lean()) as unknown as IProblemBank | null;

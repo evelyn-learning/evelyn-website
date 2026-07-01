@@ -40,6 +40,10 @@ export interface BankLite {
 
 /** Lesson-plan projection the assembler needs. */
 export interface PlanLite {
+  /** Plan id. Used to QUALIFY try-yourself item ids as `${planId}::${segId}`
+   *  so grading resolves the right plan (segment ids are NOT globally unique
+   *  across plans — `try-1` alone appears in 100+ plans). */
+  id?: string;
   los: Array<{ id: string; standard?: string }>;
   segments: Array<{
     kind: string;
@@ -89,7 +93,10 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
   for (const seg of plan.segments) {
     if (seg.kind !== 'try_yourself' || seg.offTopic === true || !seg.problem) continue;
     items.push({
-      id: seg.id,
+      // Qualify with the plan id so the answer key resolves to THIS plan's
+      // segment (segment ids collide across plans). Bare fallback only when a
+      // caller supplies an id-less PlanLite (test fixtures).
+      id: plan.id ? `${plan.id}::${seg.id}` : seg.id,
       source: 'plan-try-yourself',
       problemText: seg.problem,
       expectedAnswer: seg.expectedAnswer,
@@ -104,8 +111,11 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
 }
 
 /**
- * Assemble practice for a request. Plan try-yourselves first (authored,
- * on-LO), then bank items; de-duplicated by id and capped at `count`.
+ * Assemble practice for a request. Verified ProblemBank items first (the
+ * purpose-built, answer-key-clean, globally-unique-id assessment pool), then
+ * plan try-yourselves as supplement/fallback; de-duplicated by id and capped
+ * at `count`. Bank-first ensures scored quizzes surface the vetted bank rather
+ * than being crowded out by teaching-scaffold try-yourselves.
  */
 export async function retrievePractice(
   req: RetrievePracticeRequest,
@@ -134,10 +144,10 @@ export async function retrievePractice(
     for (const b of bank) bankItems.push(bankToItem(b));
   }
 
-  // De-dup by id, plan items take precedence over bank items.
+  // De-dup by id; bank (verified) items first, then plan try-yourselves.
   const seen = new Set<string>();
   const ordered: PracticeItem[] = [];
-  for (const it of [...planItems, ...bankItems]) {
+  for (const it of [...bankItems, ...planItems]) {
     if (seen.has(it.id)) continue;
     seen.add(it.id);
     ordered.push(it);
