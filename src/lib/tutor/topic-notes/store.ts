@@ -65,6 +65,14 @@ import { BASELINE_AP_STATS_SAMPLING_BIAS } from './seeds/ap-stats-u3-sampling-bi
 import { BASELINE_AP_STATS_EXPERIMENTAL_DESIGN } from './seeds/ap-stats-u3-experimental-design';
 import { BASELINE_AP_STATS_INFERENCE_EXPERIMENTS } from './seeds/ap-stats-u3-inference-experiments';
 
+// AP Statistics Unit 4 (CED 4.1–4.11) — probability, random variables, binomial/geometric.
+import { BASELINE_AP_STATS_PROBABILITY_BASICS } from './seeds/ap-stats-u4-probability-basics';
+import { BASELINE_AP_STATS_CONDITIONAL_INDEPENDENCE } from './seeds/ap-stats-u4-conditional-independence';
+import { BASELINE_AP_STATS_RANDOM_VARIABLES } from './seeds/ap-stats-u4-random-variables';
+import { BASELINE_AP_STATS_COMBINING_RV } from './seeds/ap-stats-u4-combining-rv';
+import { BASELINE_AP_STATS_BINOMIAL_DISTRIBUTION } from './seeds/ap-stats-u4-binomial-distribution';
+import { BASELINE_AP_STATS_GEOMETRIC_DISTRIBUTION } from './seeds/ap-stats-u4-geometric-distribution';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -88,6 +96,12 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_SAMPLING_BIAS,
   BASELINE_AP_STATS_EXPERIMENTAL_DESIGN,
   BASELINE_AP_STATS_INFERENCE_EXPERIMENTS,
+  BASELINE_AP_STATS_PROBABILITY_BASICS,
+  BASELINE_AP_STATS_CONDITIONAL_INDEPENDENCE,
+  BASELINE_AP_STATS_RANDOM_VARIABLES,
+  BASELINE_AP_STATS_COMBINING_RV,
+  BASELINE_AP_STATS_BINOMIAL_DISTRIBUTION,
+  BASELINE_AP_STATS_GEOMETRIC_DISTRIBUTION,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
