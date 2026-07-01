@@ -51,6 +51,14 @@ import { BASELINE_AP_STATS_SUMMARY_STATISTICS } from './seeds/ap-stats-u1-summar
 import { BASELINE_AP_STATS_COMPARING_DISTRIBUTIONS } from './seeds/ap-stats-u1-comparing-distributions';
 import { BASELINE_AP_STATS_NORMAL_DISTRIBUTION } from './seeds/ap-stats-u1-normal-distribution';
 
+// AP Statistics Unit 2 (CED 2.1–2.9) — exploring two-variable data (hand-curated
+// from extract-topic-notes-baselines.ts drafts). FRQ-practice plan deferred.
+import { BASELINE_AP_STATS_TWO_CATEGORICAL_RELATIONSHIPS } from './seeds/ap-stats-u2-two-categorical-relationships';
+import { BASELINE_AP_STATS_SCATTERPLOTS } from './seeds/ap-stats-u2-scatterplots';
+import { BASELINE_AP_STATS_CORRELATION } from './seeds/ap-stats-u2-correlation';
+import { BASELINE_AP_STATS_LINEAR_REGRESSION } from './seeds/ap-stats-u2-linear-regression';
+import { BASELINE_AP_STATS_RESIDUALS } from './seeds/ap-stats-u2-residuals';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -65,6 +73,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_SUMMARY_STATISTICS,
   BASELINE_AP_STATS_COMPARING_DISTRIBUTIONS,
   BASELINE_AP_STATS_NORMAL_DISTRIBUTION,
+  BASELINE_AP_STATS_TWO_CATEGORICAL_RELATIONSHIPS,
+  BASELINE_AP_STATS_SCATTERPLOTS,
+  BASELINE_AP_STATS_CORRELATION,
+  BASELINE_AP_STATS_LINEAR_REGRESSION,
+  BASELINE_AP_STATS_RESIDUALS,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
