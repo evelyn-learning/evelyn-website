@@ -59,6 +59,12 @@ import { BASELINE_AP_STATS_CORRELATION } from './seeds/ap-stats-u2-correlation';
 import { BASELINE_AP_STATS_LINEAR_REGRESSION } from './seeds/ap-stats-u2-linear-regression';
 import { BASELINE_AP_STATS_RESIDUALS } from './seeds/ap-stats-u2-residuals';
 
+// AP Statistics Unit 3 (CED 3.1–3.7) — collecting data: sampling & experiments.
+import { BASELINE_AP_STATS_SAMPLING_METHODS } from './seeds/ap-stats-u3-sampling-methods';
+import { BASELINE_AP_STATS_SAMPLING_BIAS } from './seeds/ap-stats-u3-sampling-bias';
+import { BASELINE_AP_STATS_EXPERIMENTAL_DESIGN } from './seeds/ap-stats-u3-experimental-design';
+import { BASELINE_AP_STATS_INFERENCE_EXPERIMENTS } from './seeds/ap-stats-u3-inference-experiments';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
@@ -78,6 +84,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_CORRELATION,
   BASELINE_AP_STATS_LINEAR_REGRESSION,
   BASELINE_AP_STATS_RESIDUALS,
+  BASELINE_AP_STATS_SAMPLING_METHODS,
+  BASELINE_AP_STATS_SAMPLING_BIAS,
+  BASELINE_AP_STATS_EXPERIMENTAL_DESIGN,
+  BASELINE_AP_STATS_INFERENCE_EXPERIMENTS,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
