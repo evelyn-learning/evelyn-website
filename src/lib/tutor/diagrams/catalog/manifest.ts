@@ -87,6 +87,7 @@ import { solveHeartDiagram } from './kinds/heart';
 import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-energy';
 import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
+import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -214,6 +215,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'meiosis', displayName: 'Meiosis (I & II)', whenToUse: 'Show meiosis as a flow from one diploid (2n) cell through Meiosis I and Meiosis II to four haploid (n) cells, with homologous-pair (tetrad) synapsis, crossing over, and the two divisions. Use for meiosis / gamete formation instead of a freehand sketch. Not for mitosis (use mitosis).', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'stage?:meiosis_i|meiosis_ii|crossing_over (emphasise one stage; default shows the whole flow), title?' },
   { kind: 'dna_replication', displayName: 'DNA Replication Fork', whenToUse: 'Show the DNA replication fork: the parental double helix unwinding, the continuous leading strand and the discontinuous lagging strand made of Okazaki fragments, with the key enzymes (helicase, DNA polymerase, ligase) labeled. Use instead of a freehand sketch — a doodled fork with enzymes is unreadable.', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'showEnzymes?:boolean (label helicase / polymerase / ligase; default true), title?' },
   { kind: 'cell_membrane', displayName: 'Cell Membrane (fluid mosaic)', whenToUse: 'Show the cell membrane as the fluid-mosaic model: the phospholipid bilayer (hydrophilic heads, hydrophobic tails) with embedded channel / carrier / glycoprotein and cholesterol. Optionally illustrate a transport mode with the concentration gradient. Use instead of a freehand sketch.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: 'mode?:diffusion|facilitated|active (add a transport variant with the gradient; default shows the plain labeled bilayer), title?' },
+
+  // ── Phase 19 — chemistry ───────────────────────────────────────────────
+  { kind: 'bohr_model', displayName: 'Bohr Model (atom)', whenToUse: 'Show the Bohr model of an atom: concentric electron shells around a labeled nucleus (protons + neutrons), with electrons drawn as dots filling each shell. Give the element and the solver fills the shells (2, 8, 8, …). Use this canonical figure instead of a freehand sketch — a rough doodle of nested rings of dots is unreadable. Not for orbital/subshell notation (use electron_configuration / orbital_diagram).', subjects: ['chemistry'], grades: { from: 6, to: 12 }, paramSchema: 'element?:string (symbol, e.g. "Na" — H..Ca plus Fe/Cu/Zn; default carbon), OR protons?:int + neutrons?:int + shells?:[int] (explicit per-shell electron counts), title?' },
+  { kind: 'galvanic_cell', displayName: 'Galvanic / Voltaic Cell', whenToUse: 'Show an electrochemical (galvanic/voltaic) cell: two half-cells with metal electrodes in their salt solutions, a salt bridge, and the external circuit with a voltmeter and the electron-flow arrow. Labels the anode (−, oxidation, left) and cathode (+, reduction, right) with their half-reactions. Use for electrochemistry / redox instead of a freehand sketch. Default is the Daniell cell (Zn ‖ Cu).', subjects: ['chemistry'], grades: { from: 9, to: 12 }, paramSchema: 'anodeMetal?:string (metal symbol at the anode, e.g. "Zn"; default Zn), cathodeMetal?:string (metal at the cathode, e.g. "Cu"; default Cu — choices: Zn, Cu, Ag, Fe, Mg, Pb, Ni, Al), title?' },
+  { kind: 'titration_curve', displayName: 'Titration Curve (pH)', whenToUse: 'Show an acid-base titration curve: pH on the y-axis vs. volume of titrant added on the x-axis, with the sigmoid shape and the equivalence point marked. A weak-strong titration also shows the buffer region and the half-equivalence point where pH = pKa. Use instead of a freehand sketch. Not a general x-y plot (use show_function_graph).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:strong-strong|weak-strong (default strong-strong; weak-strong adds the buffer plateau + half-equivalence pKa), title?' },
+  { kind: 'crystal_lattice', displayName: 'Crystal Lattice (unit cell)', whenToUse: 'Show a cubic crystal unit cell in pseudo-3D with its lattice points: simple cubic (sc), body-centred cubic (bcc), or face-centred cubic (fcc). Corner / body-centre / face-centre atoms are colour-coded and the atoms-per-cell count is shown. Use for solid-state / crystal-structure teaching instead of a freehand sketch (a doodled 3D cell is unreadable).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:sc|bcc|fcc (default sc), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -322,6 +329,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   meiosis: solveMeiosis,
   dna_replication: solveDnaReplication,
   cell_membrane: solveCellMembrane,
+  // Phase 19 — chemistry
+  bohr_model: solveBohrModel,
+  galvanic_cell: solveGalvanicCell,
+  titration_curve: solveTitrationCurve,
+  crystal_lattice: solveCrystalLattice,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

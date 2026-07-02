@@ -117,7 +117,12 @@ export type DiagramKindId =
   | 'mitosis'
   | 'meiosis'
   | 'dna_replication'
-  | 'cell_membrane';
+  | 'cell_membrane'
+  // Phase 19 — chemistry (HS / AP / IB chemistry)
+  | 'bohr_model'
+  | 'galvanic_cell'
+  | 'titration_curve'
+  | 'crystal_lattice';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {
