@@ -8,7 +8,10 @@
  */
 import { validateSketch } from '../src/lib/tutor/whiteboard/sketch-validate';
 import { SKETCH_BOUNDS } from '../src/lib/tutor/whiteboard/sketch-schema';
-import { BALL_ON_HILL, GLASS_SHATTER } from '../src/lib/tutor/whiteboard/sketch-examples';
+import {
+  BALL_ON_HILL, GLASS_SHATTER,
+  SPRING_MASS, TRANSVERSE_WAVE, SKIER, BEAKER_HALF,
+} from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {
@@ -114,6 +117,94 @@ check('concentric with spacing<=0 dropped → null',
   validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3, spacing: 0 }] }) === null);
 check('concentric missing spacing dropped → null',
   validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3 }] }) === null);
+
+// ── wave primitive ──
+const wave = validateSketch({ primitives: [
+  { type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 14, damping: 0.5 },
+] }) as any[];
+check('wave validates', !!wave && wave.length === 1 && wave[0].type === 'wave');
+check('wave cycles clamped to max',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 99, amplitude: 10 }] }) as any[])[0].cycles
+    === SKETCH_BOUNDS.maxWaveCycles);
+check('wave cycles clamped to min',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 0.01, amplitude: 10 }] }) as any[])[0].cycles
+    === SKETCH_BOUNDS.minWaveCycles);
+check('wave amplitude clamped to max',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 999 }] }) as any[])[0].amplitude
+    === SKETCH_BOUNDS.maxAmplitude);
+check('wave damping clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 10, damping: 5 }] }) as any[])[0].damping === 1);
+check('wave coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'wave', x1: -50, y1: 50, x2: 9999, y2: 50, cycles: 3, amplitude: 10 }] }) as any[])[0].x1 === 0);
+check('wave with amplitude<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 0 }] }) === null);
+check('wave missing cycles dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, amplitude: 10 }] }) === null);
+check('wave zero-length segment dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 40, y1: 50, x2: 40, y2: 50, cycles: 3, amplitude: 10 }] }) === null);
+
+// ── spring primitive ──
+const spring = validateSketch({ primitives: [
+  { type: 'spring', x1: 50, y1: 14, x2: 50, y2: 60, coils: 6, width: 6 },
+] }) as any[];
+check('spring validates', !!spring && spring.length === 1 && spring[0].type === 'spring');
+check('spring coils clamped to max',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 99, width: 6 }] }) as any[])[0].coils
+    === SKETCH_BOUNDS.maxCoils);
+check('spring coils clamped to min',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 0, width: 6 }] }) as any[])[0].coils
+    === SKETCH_BOUNDS.minCoils);
+check('spring coils rounded',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 5.6, width: 6 }] }) as any[])[0].coils === 6);
+check('spring width clamped to max',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 6, width: 999 }] }) as any[])[0].width
+    === SKETCH_BOUNDS.maxSpringWidth);
+check('spring with width<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 6, width: 0 }] }) === null);
+check('spring missing coils dropped → null',
+  validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, width: 6 }] }) === null);
+
+// ── stick_figure primitive ──
+const stick = validateSketch({ primitives: [
+  { type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'run' },
+] }) as any[];
+check('stick_figure validates + keeps pose', !!stick && stick[0].type === 'stick_figure' && stick[0].pose === 'run');
+check('stick_figure scale clamped to max',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 999 }] }) as any[])[0].scale
+    === SKETCH_BOUNDS.maxStickScale);
+check('stick_figure scale clamped to min',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 1 }] }) as any[])[0].scale
+    === SKETCH_BOUNDS.minStickScale);
+check('stick_figure bad pose dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'moonwalk' }] }) as any[])[0].pose === undefined);
+check('stick_figure missing scale dropped → null',
+  validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50 }] }) === null);
+
+// ── container_fill primitive ──
+const cont = validateSketch({ primitives: [
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'beaker', fillColor: 'blue' },
+] }) as any[];
+check('container_fill validates + keeps shape/fillColor',
+  !!cont && cont[0].type === 'container_fill' && cont[0].shape === 'beaker' && cont[0].fillColor === 'blue');
+check('container_fill fillFrac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: 5 }] }) as any[])[0].fillFrac === 1);
+check('container_fill negative fillFrac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: -2 }] }) as any[])[0].fillFrac === 0);
+check('container_fill bad shape dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: 0.5, shape: 'jug' }] }) as any[])[0].shape === undefined);
+check('container_fill w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 0, h: 40, fillFrac: 0.5 }] }) === null);
+check('container_fill missing fillFrac dropped → null',
+  validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40 }] }) === null);
+
+// ── new exemplars survive validation ──
+for (const [name, prims] of [
+  ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
+  ['SKIER', SKIER], ['BEAKER_HALF', BEAKER_HALF],
+] as const) {
+  const v = validateSketch({ primitives: prims });
+  check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

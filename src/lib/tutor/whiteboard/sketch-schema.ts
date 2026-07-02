@@ -51,6 +51,17 @@ export const SKETCH_BOUNDS = {
   maxStrokeWidth: 4,
   minConcentricCount: 2,
   maxConcentricCount: 8,
+  // wave: a transverse sine along a segment
+  minWaveCycles: 0.5,
+  maxWaveCycles: 12,
+  maxAmplitude: 40,
+  // spring: a zig-zag coil between two points
+  minCoils: 1,
+  maxCoils: 14,
+  maxSpringWidth: 30,
+  // stick_figure: a simple person of the given pixel height
+  minStickScale: 8,
+  maxStickScale: 90,
 } as const;
 
 export interface Pt {
@@ -89,6 +100,56 @@ export type SketchPrimitive =
       squeeze?: number;
       angle?: number;
     } & Styled)
+  // Parametric: a transverse sine wave along the segment (x1,y1)→(x2,y2).
+  // `cycles` = number of full waves; `amplitude` = perpendicular swing in canvas
+  // units; `damping` 0..1 tapers the amplitude toward the far end (a decaying
+  // wave). Our code samples the sine, so the doodler never hand-places crests.
+  // Covers transverse/sound/light waves, oscillation, AC, a wave on a string.
+  | ({
+      type: 'wave';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      cycles: number;
+      amplitude: number;
+      damping?: number;
+    } & Styled)
+  // Parametric: a zig-zag helical spring between (x1,y1) and (x2,y2). `coils` =
+  // number of loops; `width` = coil half-height (perpendicular). Covers a
+  // Hooke/SHM spring-mass, a solenoid, an inductor, elasticity.
+  | ({
+      type: 'spring';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      coils: number;
+      width: number;
+    } & Styled)
+  // Parametric: a simple recognizable stick person centered near (x,y). `scale`
+  // = overall height in canvas units; `pose` varies the limb angles. Fixes the
+  // doodler NULLing/abstaining on people (a skier, a runner, an observer).
+  | ({
+      type: 'stick_figure';
+      x: number;
+      y: number;
+      scale: number;
+      pose?: 'stand' | 'walk' | 'run' | 'point' | 'arms-up';
+    } & Styled)
+  // Parametric: a container outline filled with liquid from the bottom to
+  // `fillFrac` (0..1). `shape` picks the outline; `fillColor` tints the liquid.
+  // Covers a water tank, a beaker, battery charge, a thermometer, a level/gauge.
+  | ({
+      type: 'container_fill';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      fillFrac: number;
+      shape?: 'beaker' | 'tank' | 'battery' | 'thermometer';
+      fillColor?: SketchColor;
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -109,6 +170,10 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'rect',
   'polygon',
   'concentric',
+  'wave',
+  'spring',
+  'stick_figure',
+  'container_fill',
   'label',
 ];
 
@@ -169,6 +234,35 @@ export const SKETCH_TOOL_SCHEMA = {
           angle: {
             type: 'number',
             description: 'concentric: motion direction in degrees; 0 = right (default), 90 = down.',
+          },
+          // wave (transverse sine along x1,y1→x2,y2)
+          cycles: { type: 'number', description: 'wave: number of full waves along the segment (0.5..12).' },
+          amplitude: { type: 'number', description: 'wave: perpendicular swing in canvas units (e.g. 8).' },
+          damping: {
+            type: 'number',
+            description: 'wave: 0..1, tapers amplitude toward the far end (0 = steady, ~0.7 = decaying wave).',
+          },
+          // spring (zig-zag coil along x1,y1→x2,y2)
+          coils: { type: 'number', description: 'spring: number of loops/zig-zags (1..14).' },
+          width: { type: 'number', description: 'spring: coil half-height perpendicular to the axis (e.g. 6).' },
+          // stick_figure (a simple person centered at x,y)
+          scale: { type: 'number', description: 'stick_figure: overall height in canvas units (e.g. 30).' },
+          pose: {
+            type: 'string',
+            enum: ['stand', 'walk', 'run', 'point', 'arms-up'],
+            description: 'stick_figure: limb pose (default stand).',
+          },
+          // container_fill (a container filled with liquid from the bottom)
+          fillFrac: { type: 'number', description: 'container_fill: fill level 0..1 (0.5 = half full).' },
+          shape: {
+            type: 'string',
+            enum: ['beaker', 'tank', 'battery', 'thermometer'],
+            description: 'container_fill: outline shape (default plain rounded tank).',
+          },
+          fillColor: {
+            type: 'string',
+            enum: SKETCH_COLOR_NAMES,
+            description: 'container_fill: liquid tint (default blue; battery→green, thermometer→red read well).',
           },
           points: {
             type: 'array',

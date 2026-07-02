@@ -23,7 +23,13 @@ import {
 const {
   minCoord, maxCoord, maxStrokeWidth, maxLabels, maxLabelLen, maxPolyPoints, minPolyPoints,
   minConcentricCount, maxConcentricCount,
+  minWaveCycles, maxWaveCycles, maxAmplitude,
+  minCoils, maxCoils, maxSpringWidth,
+  minStickScale, maxStickScale,
 } = SKETCH_BOUNDS;
+
+const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
+const CONTAINER_SHAPES = ['beaker', 'tank', 'battery', 'thermometer'] as const;
 
 function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -113,6 +119,77 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         spacing: Math.min(maxCoord, spacing),
         ...(sq !== null ? { squeeze: Math.min(0.9, Math.max(0, sq)) } : {}),
         ...(ang !== null ? { angle: ang } : {}),
+        ...styled,
+      };
+    }
+    case 'wave': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      const cycles = num(p.cycles), amplitude = num(p.amplitude);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (cycles === null || amplitude === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length segment
+      if (amplitude <= 0) return null;
+      const damping = num(p.damping);
+      return {
+        type,
+        x1, y1, x2, y2,
+        cycles: Math.min(maxWaveCycles, Math.max(minWaveCycles, cycles)),
+        amplitude: Math.min(maxAmplitude, amplitude),
+        ...(damping !== null ? { damping: Math.min(1, Math.max(0, damping)) } : {}),
+        ...styled,
+      };
+    }
+    case 'spring': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      let coils = num(p.coils);
+      const width = num(p.width);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (coils === null || width === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length segment
+      if (width <= 0) return null;
+      coils = Math.round(Math.min(maxCoils, Math.max(minCoils, coils)));
+      return {
+        type,
+        x1, y1, x2, y2,
+        coils,
+        width: Math.min(maxSpringWidth, width),
+        ...styled,
+      };
+    }
+    case 'stick_figure': {
+      const x = coord(p.x), y = coord(p.y);
+      const scale = num(p.scale);
+      if (x === null || y === null || scale === null) return null;
+      const pose =
+        typeof p.pose === 'string' && (STICK_POSES as readonly string[]).includes(p.pose)
+          ? (p.pose as (typeof STICK_POSES)[number])
+          : undefined;
+      return {
+        type,
+        x, y,
+        scale: Math.min(maxStickScale, Math.max(minStickScale, scale)),
+        ...(pose ? { pose } : {}),
+        ...styled,
+      };
+    }
+    case 'container_fill': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      const fillFrac = num(p.fillFrac);
+      if (x === null || y === null || w === null || h === null || fillFrac === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const shape =
+        typeof p.shape === 'string' && (CONTAINER_SHAPES as readonly string[]).includes(p.shape)
+          ? (p.shape as (typeof CONTAINER_SHAPES)[number])
+          : undefined;
+      const fillColor = color(p.fillColor);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        fillFrac: Math.min(1, Math.max(0, fillFrac)),
+        ...(shape ? { shape } : {}),
+        ...(fillColor ? { fillColor } : {}),
         ...styled,
       };
     }

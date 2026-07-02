@@ -93,6 +93,157 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       }
       return out;
     }
+    case 'wave': {
+      // Sample a transverse sine along (x1,y1)→(x2,y2). Perpendicular swing =
+      // amplitude·sin(2π·cycles·t), tapered by damping toward the far end. Our
+      // code places the crests, so the doodler never hand-draws a wobbly line.
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+      const L = Math.hypot(dx, dy) || 1;
+      const px = -dy / L, py = dx / L; // unit perpendicular
+      const damp = Math.min(1, Math.max(0, p.damping ?? 0));
+      const n = Math.max(16, Math.round(p.cycles * 12));
+      const pts: [number, number][] = [];
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        const s = p.amplitude * (1 - damp * t) * Math.sin(2 * Math.PI * p.cycles * t);
+        pts.push([p.x1 + dx * t + px * s, p.y1 + dy * t + py * s]);
+      }
+      return gen.toPaths(gen.curve(pts, opts));
+    }
+    case 'spring': {
+      // Zig-zag coil: straight leads at each end, then `coils` peaks alternating
+      // ±width perpendicular to the axis. Drawn as one rough polyline.
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+      const L = Math.hypot(dx, dy) || 1;
+      const px = -dy / L, py = dx / L;
+      const lead = 0.12;
+      const at = (t: number, s: number): [number, number] => [
+        p.x1 + dx * t + px * s,
+        p.y1 + dy * t + py * s,
+      ];
+      const pts: [number, number][] = [at(0, 0), at(lead, 0)];
+      const peaks = p.coils * 2;
+      for (let k = 0; k < peaks; k++) {
+        const t = lead + ((k + 0.5) / peaks) * (1 - 2 * lead);
+        pts.push(at(t, k % 2 === 0 ? p.width : -p.width));
+      }
+      pts.push(at(1 - lead, 0), at(1, 0));
+      return gen.toPaths(gen.linearPath(pts, opts));
+    }
+    case 'stick_figure': {
+      // A simple, legible stick person: head circle + spine + two arms + two
+      // legs, with pose-specific limb angles. Composed from rough line/ellipse.
+      const H = p.scale;
+      const cx = p.x;
+      const topY = p.y - H / 2;
+      const rh = H * 0.14; // head radius
+      const headCy = topY + rh;
+      const shoulderY = headCy + rh * 1.15;
+      const hipY = shoulderY + H * 0.3;
+      const footY = p.y + H / 2;
+      const armLen = H * 0.3;
+      const legSpread = H * 0.16;
+      let larm: [number, number], rarm: [number, number];
+      let lleg: [number, number], rleg: [number, number];
+      let lean = 0;
+      switch (p.pose ?? 'stand') {
+        case 'walk':
+          larm = [-armLen * 0.7, armLen * 0.7];
+          rarm = [armLen * 0.7, armLen * 0.6];
+          lleg = [-legSpread * 1.5, 0];
+          rleg = [legSpread * 1.3, 0];
+          break;
+        case 'run':
+          lean = H * 0.1;
+          larm = [armLen * 0.85, -armLen * 0.1]; // front arm forward
+          rarm = [-armLen * 0.85, armLen * 0.35]; // back arm swung back
+          lleg = [legSpread * 1.9, -H * 0.04]; // front leg forward
+          rleg = [-legSpread * 1.7, H * 0.02]; // back leg trailing
+          break;
+        case 'point':
+          larm = [-armLen * 0.5, armLen * 0.6];
+          rarm = [armLen * 1.15, -armLen * 0.1]; // arm out, pointing right
+          lleg = [-legSpread, 0];
+          rleg = [legSpread, 0];
+          break;
+        case 'arms-up':
+          larm = [-armLen * 0.7, -armLen * 0.95];
+          rarm = [armLen * 0.7, -armLen * 0.95];
+          lleg = [-legSpread, 0];
+          rleg = [legSpread, 0];
+          break;
+        case 'stand':
+        default:
+          larm = [-armLen * 0.75, armLen * 0.55];
+          rarm = [armLen * 0.75, armLen * 0.55];
+          lleg = [-legSpread, 0];
+          rleg = [legSpread, 0];
+      }
+      const headX = cx + lean;
+      const shX = (headX + cx) / 2;
+      const out: ReturnType<Gen['toPaths']> = [];
+      out.push(...gen.toPaths(gen.ellipse(headX, headCy, rh * 2, rh * 2, opts)));
+      out.push(...gen.toPaths(gen.line(headX, shoulderY, cx, hipY, opts))); // spine
+      out.push(...gen.toPaths(gen.line(shX, shoulderY, shX + larm[0], shoulderY + larm[1], opts)));
+      out.push(...gen.toPaths(gen.line(shX, shoulderY, shX + rarm[0], shoulderY + rarm[1], opts)));
+      out.push(...gen.toPaths(gen.line(cx, hipY, cx + lleg[0], footY + lleg[1], opts)));
+      out.push(...gen.toPaths(gen.line(cx, hipY, cx + rleg[0], footY + rleg[1], opts)));
+      return out;
+    }
+    case 'container_fill': {
+      // Container outline + liquid filled from the bottom to fillFrac. The
+      // liquid gets its own solid-fill color; the outline is stroke-only.
+      const shape = p.shape ?? 'tank';
+      const frac = Math.min(1, Math.max(0, p.fillFrac));
+      const liquidTok = p.fillColor ?? (shape === 'battery' ? 'green' : shape === 'thermometer' ? 'red' : 'blue');
+      const liquid = SKETCH_COLORS[liquidTok];
+      const outlineOpts = { ...ROUGH_OPTS, seed, stroke, strokeWidth: sw };
+      const liqOpts = {
+        ...ROUGH_OPTS,
+        seed: seed + 7,
+        stroke: liquid,
+        strokeWidth: 0.6,
+        fill: liquid,
+        fillStyle: 'solid' as const,
+      };
+      const out: ReturnType<Gen['toPaths']> = [];
+      const { x, y, w, h } = p;
+
+      if (shape === 'thermometer') {
+        const cxt = x + w / 2;
+        const bulbR = Math.min(w / 2, h * 0.17);
+        const bulbCy = y + h - bulbR;
+        const tubeW = bulbR * 0.9;
+        const tubeTop = y + bulbR * 0.4;
+        const tubeBot = bulbCy;
+        // liquid first (under the outline): full bulb + tube up to frac
+        out.push(...gen.toPaths(gen.ellipse(cxt, bulbCy, bulbR * 1.7, bulbR * 1.7, liqOpts)));
+        const liqTop = tubeBot - (tubeBot - tubeTop) * frac;
+        if (tubeBot - liqTop > 0.5)
+          out.push(...gen.toPaths(gen.rectangle(cxt - tubeW * 0.35, liqTop, tubeW * 0.7, tubeBot - liqTop, liqOpts)));
+        // outline: tube + bulb
+        out.push(...gen.toPaths(gen.rectangle(cxt - tubeW / 2, tubeTop, tubeW, tubeBot - tubeTop, outlineOpts)));
+        out.push(...gen.toPaths(gen.ellipse(cxt, bulbCy, bulbR * 2, bulbR * 2, outlineOpts)));
+        return out;
+      }
+
+      // rect-bodied shapes (tank / beaker / battery)
+      const inset = Math.min(w, h) * 0.07;
+      const liqH = (h - inset) * frac;
+      if (liqH > 0.5)
+        out.push(...gen.toPaths(gen.rectangle(x + inset, y + h - inset - liqH, w - 2 * inset, liqH, liqOpts)));
+      out.push(...gen.toPaths(gen.rectangle(x, y, w, h, outlineOpts)));
+      if (shape === 'beaker') {
+        // a pour spout on the top-left rim
+        out.push(...gen.toPaths(gen.line(x, y, x - w * 0.1, y - h * 0.06, outlineOpts)));
+        out.push(...gen.toPaths(gen.line(x - w * 0.1, y - h * 0.06, x + w * 0.12, y, outlineOpts)));
+      } else if (shape === 'battery') {
+        // a terminal nub centered on the top
+        const nw = w * 0.28, nh = h * 0.08;
+        out.push(...gen.toPaths(gen.rectangle(x + w / 2 - nw / 2, y - nh, nw, nh, outlineOpts)));
+      }
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':

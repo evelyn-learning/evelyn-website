@@ -85,6 +85,53 @@ export const DOPPLER: SketchPrimitive[] = [
   { type: 'label', x: 45, y: 88, text: 'moving source', fontSize: 5, stroke: 'ink', anchor: 'middle' },
 ];
 
+// SPRING exemplar — teaches: use ONE `spring` primitive for a coil / helix,
+// never a hand-drawn zig-zag pile. A mass hangs from a vertical spring; arrows
+// show it oscillating. (Fixes the scribbled-coil failure.)
+export const SPRING_MASS: SketchPrimitive[] = [
+  { type: 'line', x1: 26, y1: 14, x2: 74, y2: 14, stroke: 'gray', strokeWidth: 1 }, // ceiling
+  { type: 'spring', x1: 50, y1: 14, x2: 50, y2: 58, coils: 6, width: 6, stroke: 'ink', strokeWidth: 1.1 },
+  { type: 'rect', x: 40, y: 58, w: 20, h: 16, stroke: 'blue', fill: 'blue' }, // the mass
+  { type: 'arrow', x1: 78, y1: 50, x2: 78, y2: 66, stroke: 'red', strokeWidth: 1.1 }, // down
+  { type: 'arrow', x1: 86, y1: 66, x2: 86, y2: 50, stroke: 'green', strokeWidth: 1.1 }, // up
+  { type: 'label', x: 50, y: 66, text: 'mass', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+  { type: 'label', x: 82, y: 82, text: 'oscillates', fontSize: 5, stroke: 'red', anchor: 'middle' },
+];
+
+// WAVE exemplar — teaches: use ONE `wave` primitive for a transverse/traveling
+// wave, never a hand-placed wobbly curve. Amplitude + wavelength labels + a
+// propagation arrow. (Fixes the scribbled-sine failure.)
+export const TRANSVERSE_WAVE: SketchPrimitive[] = [
+  { type: 'line', x1: 10, y1: 50, x2: 90, y2: 50, stroke: 'gray', strokeWidth: 0.7 }, // equilibrium axis
+  { type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 14, stroke: 'blue', strokeWidth: 1.3 },
+  { type: 'arrow', x1: 38, y1: 80, x2: 70, y2: 80, stroke: 'ink', strokeWidth: 1.1 }, // travels right
+  { type: 'label', x: 17, y: 28, text: 'amplitude', fontSize: 5, stroke: 'green', anchor: 'middle' },
+  { type: 'label', x: 54, y: 88, text: 'wavelength', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// STICK-FIGURE exemplar — teaches: use ONE `stick_figure` primitive for a
+// person (a skier, runner, observer), never a NULL/abstain or a scribbled body.
+// The figure rides a downhill slope with a motion arrow. (Fixes people NULLing.)
+export const SKIER: SketchPrimitive[] = [
+  { type: 'curve', points: [
+    { x: 8, y: 34 }, { x: 32, y: 46 }, { x: 58, y: 62 }, { x: 86, y: 74 },
+  ], stroke: 'ink', strokeWidth: 1.2 }, // the slope
+  { type: 'line', x1: 6, y1: 86, x2: 94, y2: 86, stroke: 'gray', strokeWidth: 0.8 }, // ground
+  { type: 'stick_figure', x: 40, y: 40, scale: 26, pose: 'run', stroke: 'blue', strokeWidth: 1.3 },
+  { type: 'arrow', x1: 52, y1: 54, x2: 76, y2: 70, stroke: 'red', strokeWidth: 1.2 }, // speeding downhill
+  { type: 'label', x: 24, y: 22, text: 'skier', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 80, y: 84, text: 'downhill', fontSize: 5, stroke: 'red', anchor: 'middle' },
+];
+
+// CONTAINER exemplar — teaches: use ONE `container_fill` primitive for a filled
+// vessel (a beaker, tank, battery, thermometer), never a rect + hand-drawn
+// liquid. A beaker half full of water. (Fixes the messy-fill failure.)
+export const BEAKER_HALF: SketchPrimitive[] = [
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'beaker', fillColor: 'blue', stroke: 'ink', strokeWidth: 1.2 },
+  { type: 'label', x: 50, y: 60, text: 'water', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 50, y: 84, text: 'half full', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -117,5 +164,25 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
       'the Doppler effect: a sound source moving right, wavefronts compressed ahead (higher pitch) and stretched behind (lower pitch)',
     labels: ['high pitch', 'low pitch', 'moving source'],
     primitives: DOPPLER,
+  },
+  {
+    concept: 'a mass hanging from a spring, bouncing up and down (simple harmonic motion)',
+    labels: ['mass', 'oscillates'],
+    primitives: SPRING_MASS,
+  },
+  {
+    concept: 'a transverse wave traveling along a string, showing its amplitude and wavelength',
+    labels: ['amplitude', 'wavelength'],
+    primitives: TRANSVERSE_WAVE,
+  },
+  {
+    concept: 'a skier speeding down a snowy slope',
+    labels: ['skier', 'downhill'],
+    primitives: SKIER,
+  },
+  {
+    concept: 'a beaker about half full of water',
+    labels: ['water', 'half full'],
+    primitives: BEAKER_HALF,
   },
 ];

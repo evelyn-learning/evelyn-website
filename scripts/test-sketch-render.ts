@@ -60,5 +60,64 @@ const conc = buildSketchPaths([
 const pathCount = conc.drawn.reduce((n, d) => n + d.paths.length, 0);
 check('concentric renders ≥ count rings', conc.drawn.length === 1 && pathCount >= 4, `paths=${pathCount}`);
 
+// ── wave expands to a single sampled curve ──
+const wv = buildSketchPaths([
+  { type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 14, damping: 0.5 } as SketchPrimitive,
+]);
+check('wave renders one drawn curve', wv.drawn.length === 1 && wv.drawn[0].paths.length >= 1,
+  `paths=${wv.drawn[0]?.paths.length}`);
+
+// ── spring expands to a single polyline ──
+const sp = buildSketchPaths([
+  { type: 'spring', x1: 50, y1: 14, x2: 50, y2: 60, coils: 6, width: 6 } as SketchPrimitive,
+]);
+check('spring renders one drawn polyline', sp.drawn.length === 1 && sp.drawn[0].paths.length >= 1,
+  `paths=${sp.drawn[0]?.paths.length}`);
+
+// ── stick_figure expands to head + spine + 2 arms + 2 legs (≥6 shapes) ──
+const sf = buildSketchPaths([
+  { type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'run' } as SketchPrimitive,
+]);
+check('stick_figure renders ≥6 sub-paths (head+spine+arms+legs)',
+  sf.drawn.length === 1 && sf.drawn[0].paths.length >= 6, `paths=${sf.drawn[0]?.paths.length}`);
+
+// ── container_fill (beaker) renders outline + liquid + spout ──
+const cf = buildSketchPaths([
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'beaker', fillColor: 'blue' } as SketchPrimitive,
+]);
+check('container_fill beaker renders ≥3 sub-paths', cf.drawn[0].paths.length >= 3, `paths=${cf.drawn[0]?.paths.length}`);
+// an empty container (fillFrac 0) still draws its outline
+const cf0 = buildSketchPaths([
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0, shape: 'tank' } as SketchPrimitive,
+]);
+check('empty container_fill still renders its outline', cf0.drawn[0].paths.length >= 1);
+
+// ── each new primitive's geometry stays within the canvas (with rough jitter tol) ──
+const TOL = 6;
+const nums = (d: string) => (d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+function inBounds(prims: SketchPrimitive[]): boolean {
+  const { drawn } = buildSketchPaths(prims);
+  for (const { paths } of drawn) {
+    for (const pi of paths) {
+      for (const v of nums(pi.d)) {
+        if (v < -TOL || v > W + TOL) return false;
+      }
+    }
+  }
+  return true;
+}
+check('wave stays in bounds', inBounds([
+  { type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 14 } as SketchPrimitive,
+]));
+check('spring stays in bounds', inBounds([
+  { type: 'spring', x1: 50, y1: 14, x2: 50, y2: 60, coils: 6, width: 6 } as SketchPrimitive,
+]));
+check('stick_figure stays in bounds', inBounds([
+  { type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'run' } as SketchPrimitive,
+]));
+check('container_fill stays in bounds', inBounds([
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'thermometer' } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
