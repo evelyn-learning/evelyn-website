@@ -75,11 +75,61 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       return gen.toPaths(gen.polygon(xy(p.points), opts));
     case 'ellipse':
       return gen.toPaths(gen.ellipse(p.cx, p.cy, p.rx * 2, p.ry * 2, opts));
+    case 'concentric': {
+      // `count` rings of radius spacing·k. Each larger ring's center is shifted
+      // BACK along `angle` by squeeze·r, so rings bunch ahead / spread behind —
+      // the moving-source wavefront (Doppler) picture. squeeze 0 = even ripples.
+      const squeeze = Math.min(0.9, Math.max(0, p.squeeze ?? 0));
+      const rad = ((p.angle ?? 0) * Math.PI) / 180;
+      const dx = Math.cos(rad);
+      const dy = Math.sin(rad); // +y is down
+      const out: ReturnType<Gen['toPaths']> = [];
+      for (let k = 1; k <= p.count; k++) {
+        const r = p.spacing * k;
+        const ex = p.cx - dx * squeeze * r;
+        const ey = p.cy - dy * squeeze * r;
+        // per-ring seed so each ring reads as an independent hand-drawn stroke
+        out.push(...gen.toPaths(gen.ellipse(ex, ey, r * 2, r * 2, { ...opts, seed: seed + k })));
+      }
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
       return [];
   }
+}
+
+/** Rough estimate of a label's rendered width in canvas units. */
+const estLabelWidth = (text: string, fontSize: number) => Math.max(8, text.length * fontSize * 0.55);
+
+/**
+ * Nudge a label so its estimated text box stays inside the canvas, so long
+ * labels near an edge don't clip (e.g. "compressed (high pitch)" anchored near
+ * x≈95). Adjusts x per anchor and clamps y by the text height. Best-effort: a
+ * label wider than the canvas is pinned to the edge rather than inverted.
+ */
+function clampLabelPos(
+  x: number,
+  y: number,
+  w: number,
+  fontSize: number,
+  anchor: 'start' | 'middle' | 'end',
+): { x: number; y: number } {
+  const PAD = 2;
+  const lo = PAD;
+  const hi = SKETCH_VIEWBOX.width - PAD;
+  let cx = x;
+  if (anchor === 'start') cx = Math.max(lo, Math.min(x, hi - w));
+  else if (anchor === 'end') cx = Math.min(hi, Math.max(x, lo + w));
+  else {
+    const half = w / 2;
+    // If the label is wider than the usable width, just center it.
+    cx = hi - half < lo + half ? SKETCH_VIEWBOX.width / 2 : Math.max(lo + half, Math.min(x, hi - half));
+  }
+  const halfH = (fontSize * 1.2) / 2;
+  const cy = Math.max(lo + halfH, Math.min(y, SKETCH_VIEWBOX.height - PAD - halfH));
+  return { x: cx, y: cy };
 }
 
 export function buildSketchPaths(primitives: SketchPrimitive[]): {
@@ -92,19 +142,18 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
   primitives.forEach((p, i) => {
     if (p.type === 'label') {
       const fontSize = p.fontSize ?? 5;
+      const anchor = p.anchor ?? 'middle';
+      const w = estLabelWidth(p.text, fontSize);
       const slug = shortLabelSlug(p.text) || `label-${i}`;
+      const { x, y } = clampLabelPos(p.x, p.y, w, fontSize, anchor);
       labels.push({
-        x: p.x,
-        y: p.y,
+        x,
+        y,
         text: p.text,
         fontSize,
-        anchor: p.anchor ?? 'middle',
+        anchor,
         fill: hex(p.stroke),
-        feature: feat(
-          slug,
-          { cx: p.x, cy: p.y, w: Math.max(8, p.text.length * fontSize * 0.55), h: fontSize * 1.2 },
-          SKETCH_VIEWBOX,
-        ),
+        feature: feat(slug, { cx: x, cy: y, w, h: fontSize * 1.2 }, SKETCH_VIEWBOX),
       });
     } else {
       drawn.push({ paths: primitivePaths(gen, p, i + 1) });

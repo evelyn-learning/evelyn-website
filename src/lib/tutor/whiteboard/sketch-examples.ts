@@ -69,6 +69,22 @@ export const STAIRCASE: SketchPrimitive[] = [
   { type: 'label', x: 72, y: 86, text: 'low V', fontSize: 5, stroke: 'blue', anchor: 'start' },
 ];
 
+// WAVEFRONTS exemplar — teaches: use ONE `concentric` primitive for wavefronts /
+// ripples / a moving-source (Doppler) pattern, never a hand-placed pile of
+// circles. squeeze bunches the rings ahead and spreads them behind; a small
+// filled dot marks the source. (Fixes the Doppler blob, 2026-07-01.)
+export const DOPPLER: SketchPrimitive[] = [
+  // the wavefronts: rings that bunch to the right (ahead) and spread to the left
+  { type: 'concentric', cx: 45, cy: 50, count: 4, spacing: 6.5, squeeze: 0.5, angle: 0, stroke: 'blue', strokeWidth: 1.1 },
+  // the moving source
+  { type: 'ellipse', cx: 45, cy: 50, rx: 3, ry: 3, stroke: 'red', fill: 'red' },
+  // its motion (to the right, toward the compressed side)
+  { type: 'arrow', x1: 49, y1: 50, x2: 64, y2: 50, stroke: 'red', strokeWidth: 1.2 },
+  { type: 'label', x: 80, y: 50, text: 'high pitch', fontSize: 5, stroke: 'red', anchor: 'middle' },
+  { type: 'label', x: 14, y: 14, text: 'low pitch', fontSize: 5, stroke: 'green', anchor: 'start' },
+  { type: 'label', x: 45, y: 88, text: 'moving source', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -95,5 +111,11 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a staircase where each step is a drop in voltage, current flowing down from high to low',
     labels: ['high V', 'low V'],
     primitives: STAIRCASE,
+  },
+  {
+    concept:
+      'the Doppler effect: a sound source moving right, wavefronts compressed ahead (higher pitch) and stretched behind (lower pitch)',
+    labels: ['high pitch', 'low pitch', 'moving source'],
+    primitives: DOPPLER,
   },
 ];

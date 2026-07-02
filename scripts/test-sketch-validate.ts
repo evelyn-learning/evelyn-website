@@ -95,5 +95,25 @@ const many = Array.from({ length: 60 }, (_, i) => ({ type: 'line', x1: i % 90, y
 check('primitive count capped at maxPrimitives',
   validateSketch({ primitives: many })!.length === SKETCH_BOUNDS.maxPrimitives);
 
+// ── concentric primitive (wavefronts) ──
+const conc = validateSketch({ primitives: [
+  { type: 'concentric', cx: 45, cy: 50, count: 4, spacing: 6.5, squeeze: 0.5, angle: 0 },
+] }) as any[];
+check('concentric validates', !!conc && conc.length === 1 && conc[0].type === 'concentric');
+check('concentric count clamped to max',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 99, spacing: 5 }] }) as any[])[0].count
+    === SKETCH_BOUNDS.maxConcentricCount);
+check('concentric count clamped to min',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 1, spacing: 5 }] }) as any[])[0].count
+    === SKETCH_BOUNDS.minConcentricCount);
+check('concentric count rounded',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3.7, spacing: 5 }] }) as any[])[0].count === 4);
+check('concentric squeeze clamped to 0.9',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3, spacing: 5, squeeze: 5 }] }) as any[])[0].squeeze === 0.9);
+check('concentric with spacing<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3, spacing: 0 }] }) === null);
+check('concentric missing spacing dropped → null',
+  validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3 }] }) === null);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

@@ -20,8 +20,10 @@ import {
   type SketchPrimitive,
 } from './sketch-schema';
 
-const { minCoord, maxCoord, maxStrokeWidth, maxLabels, maxLabelLen, maxPolyPoints, minPolyPoints } =
-  SKETCH_BOUNDS;
+const {
+  minCoord, maxCoord, maxStrokeWidth, maxLabels, maxLabelLen, maxPolyPoints, minPolyPoints,
+  minConcentricCount, maxConcentricCount,
+} = SKETCH_BOUNDS;
 
 function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -95,6 +97,24 @@ function sanitize(raw: unknown): SketchPrimitive | null {
       if (cx === null || cy === null || rx === null || ry === null) return null;
       if (rx <= 0 || ry <= 0) return null;
       return { type, cx, cy, rx: Math.min(maxCoord, rx), ry: Math.min(maxCoord, ry), ...styled };
+    }
+    case 'concentric': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const spacing = num(p.spacing);
+      let count = num(p.count);
+      if (cx === null || cy === null || spacing === null || count === null) return null;
+      if (spacing <= 0) return null;
+      count = Math.round(Math.min(maxConcentricCount, Math.max(minConcentricCount, count)));
+      const sq = num(p.squeeze);
+      const ang = num(p.angle);
+      return {
+        type,
+        cx, cy, count,
+        spacing: Math.min(maxCoord, spacing),
+        ...(sq !== null ? { squeeze: Math.min(0.9, Math.max(0, sq)) } : {}),
+        ...(ang !== null ? { angle: ang } : {}),
+        ...styled,
+      };
     }
     case 'rect': {
       const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);

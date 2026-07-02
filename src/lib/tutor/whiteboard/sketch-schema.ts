@@ -49,6 +49,8 @@ export const SKETCH_BOUNDS = {
   minCoord: 0,
   maxCoord: 100,
   maxStrokeWidth: 4,
+  minConcentricCount: 2,
+  maxConcentricCount: 8,
 } as const;
 
 export interface Pt {
@@ -72,6 +74,21 @@ export type SketchPrimitive =
   | ({ type: 'ellipse'; cx: number; cy: number; rx: number; ry: number } & Styled)
   | ({ type: 'rect'; x: number; y: number; w: number; h: number; rounded?: boolean } & Styled)
   | ({ type: 'polygon'; points: Pt[] } & Styled)
+  // Parametric composite: a nest of `count` concentric circles around (cx,cy),
+  // radii = spacing, 2·spacing, …. `squeeze` (0..0.9) shifts each larger circle's
+  // center back along `angle` so the rings BUNCH ahead and SPREAD behind — the
+  // canonical moving-source wavefront (Doppler) picture. squeeze 0 = even ripples
+  // / a radial field. angle in degrees, 0 = motion to the right (+x). The doodler
+  // emits ONE of these instead of hand-placing a pile of wobbly ellipses.
+  | ({
+      type: 'concentric';
+      cx: number;
+      cy: number;
+      count: number;
+      spacing: number;
+      squeeze?: number;
+      angle?: number;
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -91,6 +108,7 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'ellipse',
   'rect',
   'polygon',
+  'concentric',
   'label',
 ];
 
@@ -109,9 +127,12 @@ export const SKETCH_TOOL_SCHEMA = {
       description:
         'Set true (and OMIT primitives) when this concept cannot be conveyed by a rough freehand doodle — ' +
         'e.g. it needs precise geometry, an exact graph/curve, a 3D solid (a cone, a sliced solid), a ' +
-        'detailed labeled technical/anatomical diagram, or accurate proportions. A rough doodle of those ' +
-        'reads as a misleading blob, so it is better to draw NOTHING. Only doodle illustrative / ' +
-        'intuition / analogy concepts (a ball on a hill, energy flowing, a simple before→after).',
+        'detailed labeled technical/anatomical diagram, a specific real object that must be recognizable ' +
+        '(a roller coaster, a car, an animal), a repeated/periodic pattern you would fake with many ' +
+        'hand-placed strokes (a lattice, a grating) with no dedicated primitive for it, or accurate ' +
+        'proportions. A rough doodle of those reads as a misleading blob, so it is better to draw NOTHING. ' +
+        'Only doodle illustrative / intuition / analogy concepts (a ball on a hill, energy flowing, a ' +
+        'simple before→after).',
     },
     abstainReason: {
       type: 'string',
@@ -136,6 +157,19 @@ export const SKETCH_TOOL_SCHEMA = {
           w: { type: 'number' }, h: { type: 'number' },
           cx: { type: 'number' }, cy: { type: 'number' },
           rx: { type: 'number' }, ry: { type: 'number' },
+          // concentric (wavefronts): count rings around (cx,cy), radii = spacing·k.
+          count: { type: 'number', description: 'concentric: number of rings (2..8).' },
+          spacing: { type: 'number', description: 'concentric: radius step between rings.' },
+          squeeze: {
+            type: 'number',
+            description:
+              'concentric: 0..0.9 asymmetry. 0 = even ripples / radial field; ~0.5 = strong ' +
+              'moving-source compression (rings bunch ahead, spread behind — the Doppler picture).',
+          },
+          angle: {
+            type: 'number',
+            description: 'concentric: motion direction in degrees; 0 = right (default), 90 = down.',
+          },
           points: {
             type: 'array',
             items: {

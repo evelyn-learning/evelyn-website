@@ -25,6 +25,8 @@ A rough freehand doodle is great for INTUITION and ANALOGY (a ball on a hill, en
 - precise geometry or an exact graph/curve (conic sections, a parabola/ellipse/hyperbola as a curve, a plotted function, a labeled coordinate figure);
 - a 3D solid or a solid being sliced (a cone, a double cone, a cube, a cross-section);
 - a detailed labeled technical or anatomical diagram (a neuron, the brain, a cell, a circuit) where parts must be in the right place;
+- a SPECIFIC real machine, apparatus, vehicle, instrument, animal, or person that has to be recognizable (a roller coaster, a car, a microscope, a skier, a particular animal) — a rough scribble of one of these reads as a mess, not the thing;
+- a repeated or periodic pattern you would have to fake by hand-placing many separate strokes (a crystal lattice, a diffraction grating, a spring/coil, a field of many parallel lines) — UNLESS one of the dedicated primitives below (\`concentric\`) draws that pattern for you, in which case USE that primitive and do NOT abstain;
 - anything where accurate proportions or exact positions carry the meaning.
 Only doodle when a loose, approximate picture genuinely helps. When in doubt between a messy doodle and nothing, abstain.
 
@@ -37,6 +39,7 @@ PRIMITIVES (each has optional stroke/fill color = one of: ink, red, blue, green,
 - ellipse {cx,cy,rx,ry}  — balls, planets, bubbles (rx=ry = circle).
 - rect {x,y,w,h, rounded?}  — boxes, containers (x,y = top-left corner).
 - polygon {points:[{x,y}...]}  — triangles, fragments, cups; needs 3+ points.
+- concentric {cx,cy,count,spacing, squeeze?, angle?}  — a nest of \`count\` rings (radii spacing, 2·spacing, …) for WAVEFRONTS / ripples / a radial field. \`squeeze\` 0 = even rings; \`squeeze\` ~0.4–0.6 with \`angle\` = motion direction (degrees, 0 = right) makes the rings BUNCH ahead and SPREAD behind — a moving source / the Doppler effect. Emit ONE of these; never hand-place a stack of circles.
 - label {x,y,text, fontSize?, anchor?}  — a few words of text (fontSize ~5). Use the tutor's provided labels.
 
 HOUSE STYLE — this is the most important rule:
@@ -48,6 +51,7 @@ HOUSE STYLE — this is the most important rule:
 DRAWING RECIPES — avoid the common mistakes:
 - MOTION / CHANGE OVER TIME: draw the moving object ONCE at its start, then an ARROW showing where it goes. At most ONE more copy at the end position, and keep start and end ALIGNED along the direction of motion (e.g. a falling object: two circles on the SAME vertical line joined by a downward arrow). NEVER scatter three or more copies of the same object around the canvas — that reads as separate objects, not motion.
 - KEEP OBJECTS SIMPLE & RECOGNIZABLE: a ball/cart = ONE plain filled circle, nothing drawn inside it; a box / tank / battery = one plain rectangle; a person = a small stick figure. Do not decorate or add internal strokes.
+- WAVEFRONTS / RIPPLES / DOPPLER: NEVER hand-place a pile of circles or wavy scribbles — that reads as a blob. Use ONE \`concentric\` primitive. For a moving source (the Doppler effect), set \`squeeze\` ~0.5 and \`angle\` to the motion direction (0 = right), mark the source with ONE small filled dot at (cx,cy) and an arrow in the motion direction, and label the compressed (ahead = higher pitch) and stretched (behind = lower pitch) sides.
 - COMPLEX REAL OBJECTS (a roller coaster, a machine, a building): draw only the ESSENTIAL simple form. A roller coaster or a hill is just ONE smooth downward-sloping curve — not a detailed track. A staircase is a few clean square steps made of straight line segments with sharp corners. Do NOT pile overlapping strokes trying to look realistic.
 - Keep every stroke and label inside 5..95, and place labels CLEAR of the drawing so text never overlaps the strokes.
 - SPACE LABELS APART: never place two labels at nearly the same spot — they overprint into unreadable mush. Give each label its own clear area (at least ~12 units apart), and keep each label short (2–4 words). Don't label every element; label only the few that carry the idea.
