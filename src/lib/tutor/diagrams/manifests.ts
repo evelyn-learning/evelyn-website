@@ -221,6 +221,16 @@ import {
   buildCellMembraneManifest,
   solveCellMembrane as solveCellMembraneForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/cell-biology';
+import {
+  buildBohrManifest,
+  solveBohrModel as solveBohrForManifest,
+  buildGalvanicManifest,
+  solveGalvanicCell as solveGalvanicForManifest,
+  buildTitrationManifest,
+  solveTitrationCurve as solveTitrationForManifest,
+  buildLatticeManifest,
+  solveCrystalLattice as solveLatticeForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1414,6 +1424,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'cell_membrane': {
       try { return buildCellMembraneManifest(solveCellMembraneForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'bohr_model': {
+      try { return buildBohrManifest(solveBohrForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'galvanic_cell': {
+      try { return buildGalvanicManifest(solveGalvanicForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'titration_curve': {
+      try { return buildTitrationManifest(solveTitrationForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'crystal_lattice': {
+      try { return buildLatticeManifest(solveLatticeForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

@@ -93,6 +93,50 @@ check('show_diagram cell_membrane mode=active → ok', () => {
   const r = processToolCall('show_diagram', { type: 'cell_membrane', params: { mode: 'active' } });
   assert.equal(r.ok, true);
 });
+check('show_diagram bohr_model (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'bohr_model', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram bohr_model element=Na → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'bohr_model', params: { element: 'Na' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram bohr_model explicit protons/shells → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'bohr_model', params: { protons: 8, neutrons: 8, shells: [2, 6] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram galvanic_cell (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'galvanic_cell', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram galvanic_cell Mg/Ag → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'galvanic_cell', params: { anodeMetal: 'Mg', cathodeMetal: 'Ag' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram titration_curve (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'titration_curve', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram titration_curve type=weak-strong → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'titration_curve', params: { type: 'weak-strong' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram crystal_lattice (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'crystal_lattice', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram crystal_lattice type=fcc → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'crystal_lattice', params: { type: 'fcc' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram crystal_lattice type=bcc → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'crystal_lattice', params: { type: 'bcc' } });
+  assert.equal(r.ok, true);
+});
 
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {

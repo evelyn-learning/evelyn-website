@@ -95,6 +95,12 @@ import {
   CatalogDnaReplicationRenderer,
   CatalogCellMembraneRenderer,
 } from './CatalogCellBiologyRenderers';
+import {
+  CatalogBohrRenderer,
+  CatalogGalvanicRenderer,
+  CatalogTitrationRenderer,
+  CatalogLatticeRenderer,
+} from './CatalogChemistryRenderers';
 
 interface Props {
   kind: string;
@@ -208,6 +214,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'meiosis':                    return <CatalogMeiosisRenderer figure={figure} />;
     case 'dna_replication':            return <CatalogDnaReplicationRenderer figure={figure} />;
     case 'cell_membrane':              return <CatalogCellMembraneRenderer figure={figure} />;
+    // Phase 19 — chemistry
+    case 'bohr_model':                 return <CatalogBohrRenderer figure={figure} />;
+    case 'galvanic_cell':              return <CatalogGalvanicRenderer figure={figure} />;
+    case 'titration_curve':            return <CatalogTitrationRenderer figure={figure} />;
+    case 'crystal_lattice':            return <CatalogLatticeRenderer figure={figure} />;
 
     default:
       return (

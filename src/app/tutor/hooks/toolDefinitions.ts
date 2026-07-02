@@ -436,6 +436,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'doppler_effect', 'standing_wave', 'interference_pattern',
             // Phase 18 — cell biology / genetics
             'mitosis', 'meiosis', 'dna_replication', 'cell_membrane',
+            // Phase 19 — chemistry
+            'bohr_model', 'galvanic_cell', 'titration_curve', 'crystal_lattice',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
