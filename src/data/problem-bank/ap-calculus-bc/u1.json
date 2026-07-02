@@ -1,0 +1,1394 @@
+[
+  {
+    "id": "apcalcbc.introducing-calculus.mcq.01",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The average rate of change of a function $f$ over the interval $[a,b]$ is given by which expression?",
+    "choices": [
+      "$\\frac{f(b)-f(a)}{b-a}$",
+      "$f(b)-f(a)$",
+      "$\\frac{f(b)+f(a)}{2}$",
+      "$f'(b)-f'(a)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Average rate of change is a slope: rise over run.",
+      "Use the two endpoint outputs over the change in input."
+    ]
+  },
+  {
+    "id": "apcalcbc.introducing-calculus.mcq.02",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The instantaneous rate of change of $f$ at $x=c$ is best described as:",
+    "choices": [
+      "The limit of the average rates of change over intervals shrinking toward $c$",
+      "The average rate of change over the whole domain",
+      "Always equal to zero at a single point",
+      "The value $f(c)$ divided by $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Change 'at an instant' is captured by letting the interval shrink to a point.",
+      "It is a limiting process applied to average rates."
+    ]
+  },
+  {
+    "id": "apcalcbc.introducing-calculus.mcq.03",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Why can the instantaneous rate of change at a single point NOT be found by directly substituting one point into the average-rate-of-change formula?",
+    "choices": [
+      "Both the numerator and the denominator become 0, giving the indeterminate form $\\frac{0}{0}$",
+      "The numerator becomes infinite",
+      "The denominator becomes negative",
+      "It actually works perfectly with a single point"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set $a=b=c$ in the difference quotient.",
+      "The gap in inputs closes to zero at the same time as the gap in outputs."
+    ]
+  },
+  {
+    "id": "apcalcbc.introducing-calculus.mcq.04",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table shows the average velocity of an object over intervals $[2,b]$ as $b$ approaches 2: at $b=2.1$ it is 6.1, at $b=2.01$ it is 6.01, and at $b=2.001$ it is 6.001. The best estimate of the instantaneous velocity at $t=2$ is:",
+    "choices": [
+      "6",
+      "6.001",
+      "2",
+      "It cannot be determined from a table"
+    ],
+    "answer": "A",
+    "hints": [
+      "Watch the value the averages settle toward as the interval shrinks.",
+      "The trend approaches a limiting value."
+    ]
+  },
+  {
+    "id": "apcalcbc.introducing-calculus.num.01",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Find the average rate of change of $f(x)=x^2$ over the interval $[2,5]$.",
+    "answer": "7",
+    "hints": [
+      "Compute $\\frac{f(5)-f(2)}{5-2}$.",
+      "$f(5)=25$ and $f(2)=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.introducing-calculus.num.02",
+    "loId": "apcalcbc.introducing-calculus",
+    "cedCode": "AP-CALCBC-1.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "An object has position $s(t)=16t^2$ (feet, with $t$ in seconds). Find its average velocity, in feet per second, over the interval $[1,3]$.",
+    "answer": "64",
+    "hints": [
+      "Average velocity is $\\frac{s(3)-s(1)}{3-1}$.",
+      "$s(3)=144$ and $s(1)=16$."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.mcq.01",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The notation $\\lim_{x\\to c} f(x)=L$ means:",
+    "choices": [
+      "As $x$ gets arbitrarily close to $c$ (but not equal to $c$), $f(x)$ gets arbitrarily close to $L$",
+      "$f(c)=L$ exactly",
+      "$f$ is increasing near $c$",
+      "$L$ is the largest value of $f$ near $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A limit is about the behavior of $f$ near $c$, not the value at $c$.",
+      "The value $f(c)$ need not even exist."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.mcq.02",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The two-sided limit $\\lim_{x\\to c} f(x)$ exists if and only if:",
+    "choices": [
+      "The left-hand and right-hand limits both exist and are equal",
+      "$f(c)$ is defined",
+      "$f$ is continuous at $c$",
+      "The left-hand limit exists"
+    ],
+    "answer": "A",
+    "hints": [
+      "Approaching from both directions must give the same target.",
+      "Existence of the two-sided limit does not require $f(c)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.mcq.03",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which expression represents the left-hand limit of $f$ as $x$ approaches 2?",
+    "choices": [
+      "$\\lim_{x\\to 2^-} f(x)$",
+      "$\\lim_{x\\to 2^+} f(x)$",
+      "$\\lim_{x\\to 2} f(x)$",
+      "$\\lim_{x\\to -2} f(x)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The minus superscript means approaching from values less than 2.",
+      "Left of 2 on the number line."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.mcq.04",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about limits is TRUE?",
+    "choices": [
+      "$\\lim_{x\\to c} f(x)$ can exist even when $f(c)$ is undefined",
+      "If $\\lim_{x\\to c} f(x)=L$, then $f(c)=L$ must hold",
+      "A limit must always equal the function value",
+      "If $f(c)$ is undefined, the limit cannot exist"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think of a function with a hole at $x=c$.",
+      "The limit describes nearby behavior, independent of $f(c)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.num.01",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 3}(2x+1)$.",
+    "answer": "7",
+    "hints": [
+      "The function is a continuous line, so substitute directly.",
+      "Plug in $x=3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.defining-limits.num.02",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For $f(x)=\\begin{cases}x+1,&x<2\\\\3x,&x\\ge 2\\end{cases}$, find $\\lim_{x\\to 2^+} f(x)$.",
+    "answer": "6",
+    "hints": [
+      "From the right, use the piece for $x\\ge 2$.",
+      "Evaluate ${}3x$ at $x=2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.mcq.01",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To estimate $\\lim_{x\\to c} f(x)$ from a table, you should examine the $f$-values as the $x$-values:",
+    "choices": [
+      "Get closer to $c$ from both sides",
+      "Equal $c$ exactly",
+      "Grow without bound",
+      "Move away from $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A limit is about approaching $c$.",
+      "Check inputs just below and just above $c$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.mcq.02",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $f$ has an open circle at $(2,5)$ and a solid dot at $(2,1)$, so $f(2)=1$. What is $\\lim_{x\\to 2} f(x)$?",
+    "choices": [
+      "5",
+      "1",
+      "The limit does not exist",
+      "2"
+    ],
+    "answer": "A",
+    "hints": [
+      "The limit follows the curve toward the point, not the isolated dot.",
+      "The open circle marks the value the curve approaches."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.mcq.03",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As $x\\to 3$ from the left, $f(x)\\to 4$; as $x\\to 3$ from the right, $f(x)\\to 7$. Then $\\lim_{x\\to 3} f(x)$:",
+    "choices": [
+      "Does not exist",
+      "Equals 4",
+      "Equals 7",
+      "Equals 5.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "The two one-sided limits disagree.",
+      "For the two-sided limit to exist, both sides must match."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.mcq.04",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A table of $f(x)=\\frac{\\sin x}{x}$ (with $x$ in radians) shows $f(-0.01)\\approx 1.0000$ and $f(0.01)\\approx 1.0000$, but $f(0)$ is undefined. The table best supports which conclusion?",
+    "choices": [
+      "$\\lim_{x\\to 0} f(x)=1$, even though $f(0)$ is undefined",
+      "The limit does not exist because $f(0)$ is undefined",
+      "$\\lim_{x\\to 0} f(x)=0$",
+      "The function has a jump at $x=0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The values from both sides approach the same number.",
+      "A limit can exist at a point where the function is undefined."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.num.01",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A table for $f(x)=\\frac{x^2-1}{x-1}$ gives $f(0.9)=1.9$, $f(0.99)=1.99$, and $f(1.01)=2.01$. Estimate $\\lim_{x\\to 1} f(x)$.",
+    "answer": "2",
+    "hints": [
+      "The values close in on a single number from both sides.",
+      "Note $\\frac{x^2-1}{x-1}=x+1$ for $x\\ne 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-graphs-tables.num.02",
+    "loId": "apcalcbc.limits-graphs-tables",
+    "cedCode": "AP-CALCBC-1.3-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Values of $g(x)$ near $x=0$ are: $g(-0.01)=2.98$, $g(0.01)=3.02$, and $g(0.001)=3.002$. Estimate $\\lim_{x\\to 0} g(x)$.",
+    "answer": "3",
+    "hints": [
+      "Look at what the outputs converge to as $x\\to 0$.",
+      "Both sides trend toward the same value."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.mcq.01",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluating $\\lim_{x\\to c} f(x)$ by direct substitution is valid when:",
+    "choices": [
+      "$f$ is continuous at $c$",
+      "$f$ is undefined at $c$",
+      "Substitution gives $\\frac{0}{0}$",
+      "It is never valid"
+    ],
+    "answer": "A",
+    "hints": [
+      "Direct substitution works exactly when the value equals the limit.",
+      "That is the definition of continuity at $c$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.mcq.02",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The limit of a product, $\\lim_{x\\to c}\\big[f(x)\\,g(x)\\big]$, equals the product of the limits provided that:",
+    "choices": [
+      "Both individual limits exist",
+      "The function is a polynomial",
+      "$c=0$",
+      "It always holds with no conditions"
+    ],
+    "answer": "A",
+    "hints": [
+      "The limit laws require each piece to have a limit.",
+      "If one factor's limit fails to exist, the law does not apply."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.mcq.03",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Given $\\lim_{x\\to a} f(x)=3$ and $\\lim_{x\\to a} g(x)=0$, what can be said about $\\lim_{x\\to a}\\frac{f(x)}{g(x)}$?",
+    "choices": [
+      "It is not determined by the quotient law, because the denominator's limit is 0",
+      "It equals 0",
+      "It equals 3",
+      "It equals 1"
+    ],
+    "answer": "A",
+    "hints": [
+      "The quotient law requires the denominator's limit to be nonzero.",
+      "A nonzero over zero form points to infinite behavior, not a simple quotient."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.num.01",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 2}(3x^2-x+1)$.",
+    "answer": "11",
+    "hints": [
+      "A polynomial is continuous, so substitute $x=2$.",
+      "${}3(4)-2+1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.num.02",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\lim_{x\\to a} f(x)=4$ and $\\lim_{x\\to a} g(x)=-2$, evaluate $\\lim_{x\\to a}\\big[2f(x)-3g(x)\\big]$.",
+    "answer": "14",
+    "hints": [
+      "Apply the constant-multiple and difference laws.",
+      "${}2(4)-3(-2)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-properties.num.03",
+    "loId": "apcalcbc.limits-algebraic-properties",
+    "cedCode": "AP-CALCBC-1.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 1}\\frac{x^2+3}{x+1}$.",
+    "answer": "2",
+    "hints": [
+      "The denominator's limit is nonzero, so the quotient law applies.",
+      "$\\frac{1+3}{1+1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.mcq.01",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Direct substitution into $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$ gives $\\frac{0}{0}$. The best next technique is to:",
+    "choices": [
+      "Factor the numerator and cancel the common factor",
+      "Rationalize the denominator",
+      "Conclude the limit is 0",
+      "Conclude the limit does not exist"
+    ],
+    "answer": "A",
+    "hints": [
+      "The numerator is a difference of squares.",
+      "Cancel $(x-3)$ before substituting again."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.mcq.02",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\dfrac{\\frac{1}{x+3}-\\frac{1}{3}}{x}$.",
+    "choices": [
+      "$-\\frac{1}{9}$",
+      "$\\frac{1}{9}$",
+      "0",
+      "$-\\frac{1}{3}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Combine the two fractions in the numerator over a common denominator ${}3(x+3)$.",
+      "After simplifying, the numerator has a factor of $x$ that cancels the $x$ below."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.mcq.03",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After rationalizing, $\\lim_{x\\to 0}\\frac{\\sqrt{x+4}-2}{x}$ becomes $\\lim_{x\\to 0}\\frac{1}{\\sqrt{x+4}+2}$. This limit equals:",
+    "choices": [
+      "$\\frac{1}{4}$",
+      "$\\frac{1}{2}$",
+      "0",
+      "1"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute $x=0$ into the simplified form.",
+      "$\\frac{1}{\\sqrt{4}+2}=\\frac{1}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.num.01",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$.",
+    "answer": "6",
+    "hints": [
+      "Factor: $\\frac{(x-3)(x+3)}{x-3}$.",
+      "Cancel and substitute $x=3$ into $x+3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.num.02",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to -1}\\frac{x^2-1}{x+1}$.",
+    "answer": "-2",
+    "hints": [
+      "Factor the numerator as $(x-1)(x+1)$.",
+      "Cancel $(x+1)$ and evaluate $x-1$ at $x=-1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-algebraic-manipulation.num.03",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 4}\\frac{x-4}{\\sqrt{x}-2}$.",
+    "answer": "4",
+    "hints": [
+      "Multiply numerator and denominator by the conjugate $\\sqrt{x}+2$.",
+      "The denominator becomes $x-4$, which cancels, leaving $\\sqrt{x}+2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.mcq.01",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When evaluating a limit, the FIRST procedure you should try is:",
+    "choices": [
+      "Direct substitution",
+      "Factoring",
+      "Rationalizing",
+      "Making a table of thousands of values"
+    ],
+    "answer": "A",
+    "hints": [
+      "Always test whether the function is continuous at the point first.",
+      "If substitution gives a defined value, you are done."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.mcq.02",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Direct substitution into $\\lim_{x\\to 2}\\frac{x^2-4}{x-2}$ produces the form $\\frac{0}{0}$. This tells you that:",
+    "choices": [
+      "The form is indeterminate; you must simplify before concluding",
+      "The limit is 0",
+      "The limit does not exist",
+      "The limit is 1"
+    ],
+    "answer": "A",
+    "hints": [
+      "$\\frac{0}{0}$ is indeterminate, not an answer.",
+      "Algebraic manipulation is needed to reveal the limit."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.mcq.03",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Substituting into $\\lim_{x\\to 2}\\frac{x+1}{x-2}$ gives the form $\\frac{3}{0}$, and the one-sided limits have opposite signs. The two-sided limit:",
+    "choices": [
+      "Does not exist (the function has a vertical asymptote at $x=2$)",
+      "Equals 0",
+      "Equals 3",
+      "Equals $+\\infty$, so it exists"
+    ],
+    "answer": "A",
+    "hints": [
+      "A nonzero-over-zero form signals a vertical asymptote.",
+      "Opposite-sign one-sided infinities mean the two-sided limit does not exist."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.mcq.04",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For which limit is direct substitution alone sufficient to find the value?",
+    "choices": [
+      "$\\lim_{x\\to 1}\\frac{x^2+2}{x+3}$",
+      "$\\lim_{x\\to 2}\\frac{x-2}{x^2-4}$",
+      "$\\lim_{x\\to 0}\\frac{\\sin x}{x}$",
+      "$\\lim_{x\\to 3}\\frac{1}{x-3}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Test each: which one gives a defined, nonzero-denominator value?",
+      "The first evaluates to $\\frac{3}{4}$ directly."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.num.01",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\big(e^{x}+x\\big)$.",
+    "answer": "1",
+    "hints": [
+      "The function is continuous at $x=0$, so substitute.",
+      "$e^{0}=1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-strategy.num.02",
+    "loId": "apcalcbc.limits-strategy",
+    "cedCode": "AP-CALCBC-1.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 5}\\frac{x^2-25}{x-5}$.",
+    "answer": "10",
+    "hints": [
+      "Substitution gives $\\frac{0}{0}$; factor the numerator.",
+      "Cancel $(x-5)$ to get $x+5$, then substitute."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.mcq.01",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Squeeze Theorem lets you conclude $\\lim_{x\\to c} f(x)=L$ when, near $x=c$:",
+    "choices": [
+      "$g(x)\\le f(x)\\le h(x)$ and $\\lim_{x\\to c} g(x)=\\lim_{x\\to c} h(x)=L$",
+      "$f$ is increasing near $c$",
+      "$f$ is continuous at $c$",
+      "$g(x)=h(x)$ for all $x$"
+    ],
+    "answer": "A",
+    "hints": [
+      "$f$ is trapped between two functions.",
+      "Both bounding functions must approach the same value $L$."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.mcq.02",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If $-x^2\\le f(x)\\le x^2$ for all $x$, then $\\lim_{x\\to 0} f(x)$ equals:",
+    "choices": [
+      "0",
+      "1",
+      "It does not exist",
+      "It cannot be determined"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both bounds approach the same value as $x\\to 0$.",
+      "$-x^2\\to 0$ and $x^2\\to 0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.mcq.03",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To evaluate $\\lim_{x\\to 0} x^2\\sin\\!\\left(\\frac{1}{x}\\right)$ using the Squeeze Theorem, the appropriate bounds are:",
+    "choices": [
+      "$-x^2\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le x^2$",
+      "$-1\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le 1$",
+      "$-x\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le x$",
+      "$-|x|\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le |x|$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start from $-1\\le \\sin\\!\\left(\\frac{1}{x}\\right)\\le 1$.",
+      "Multiply through by $x^2$ (which is nonnegative)."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.num.01",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate the special trigonometric limit $\\lim_{x\\to 0}\\frac{\\sin x}{x}$.",
+    "answer": "1",
+    "hints": [
+      "This is a memorized special limit.",
+      "It can be established by the Squeeze Theorem."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.num.02",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0} x^2\\cos\\!\\left(\\frac{1}{x}\\right)$.",
+    "answer": "0",
+    "hints": [
+      "Since $-1\\le\\cos\\!\\left(\\frac{1}{x}\\right)\\le 1$, bound the expression by $\\pm x^2$.",
+      "Both bounds go to 0."
+    ]
+  },
+  {
+    "id": "apcalcbc.squeeze-theorem.num.03",
+    "loId": "apcalcbc.squeeze-theorem",
+    "cedCode": "AP-CALCBC-1.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\frac{\\sin(3x)}{x}$.",
+    "answer": "3",
+    "hints": [
+      "Rewrite as ${}3\\cdot\\frac{\\sin(3x)}{3x}$.",
+      "Use $\\lim_{u\\to 0}\\frac{\\sin u}{u}=1$ with $u=3x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.mcq.01",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A single limit can be investigated using which representations?",
+    "choices": [
+      "Graphs, tables, and algebraic expressions",
+      "Only graphs",
+      "Only algebra",
+      "Only tables"
+    ],
+    "answer": "A",
+    "hints": [
+      "The same limit should agree across representations.",
+      "Graphical, numerical, and analytic approaches all apply."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.mcq.02",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An algebraic evaluation gives $\\lim_{x\\to 2} f(x)=4$. A correct table of values near $x=2$ should show the $f$-values:",
+    "choices": [
+      "Approaching 4 from both sides",
+      "Equal to 2",
+      "Approaching 2",
+      "Growing without bound"
+    ],
+    "answer": "A",
+    "hints": [
+      "Different representations of the same limit must agree.",
+      "The table should confirm the analytic value."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.mcq.03",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows a hole (open circle) at $(3,5)$. The algebraic form of $f$ most likely came from:",
+    "choices": [
+      "A $\\frac{0}{0}$ indeterminate form where a common factor cancels",
+      "A $\\frac{5}{0}$ form",
+      "A continuous polynomial",
+      "A jump piecewise definition"
+    ],
+    "answer": "A",
+    "hints": [
+      "A hole corresponds to a removable form.",
+      "Canceling a common factor leaves a limit but no function value there."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.mcq.04",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A table shows $f(x)\\to 2$ as $x\\to 1^-$ and $f(x)\\to 6$ as $x\\to 1^+$. The graph at $x=1$ therefore shows:",
+    "choices": [
+      "A jump, so the two-sided limit does not exist",
+      "A removable hole",
+      "A vertical asymptote",
+      "Continuity"
+    ],
+    "answer": "A",
+    "hints": [
+      "The one-sided values are finite but unequal.",
+      "Finite disagreeing one-sided limits produce a jump."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.num.01",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Confirm the limit algebraically: evaluate $\\lim_{x\\to 2}\\frac{x^2-4}{x-2}$.",
+    "answer": "4",
+    "hints": [
+      "Factor the difference of squares and cancel $(x-2)$.",
+      "Then substitute $x=2$ into $x+2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-representations.num.02",
+    "loId": "apcalcbc.limits-representations",
+    "cedCode": "AP-CALCBC-1.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A table shows the values of $f$ approaching 5 as $x\\to 3^-$ and also approaching 5 as $x\\to 3^+$, while $f(3)$ is a hole. What is $\\lim_{x\\to 3} f(x)$?",
+    "answer": "5",
+    "hints": [
+      "Both one-sided limits agree.",
+      "The missing function value does not affect the limit."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.mcq.01",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT one of the standard types of discontinuity studied in AP Calculus?",
+    "choices": [
+      "Linear discontinuity",
+      "Jump discontinuity",
+      "Removable discontinuity",
+      "Infinite discontinuity"
+    ],
+    "answer": "A",
+    "hints": [
+      "The three standard types are removable, jump, and infinite.",
+      "One listed option is not a real category."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.mcq.02",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A function has $\\lim_{x\\to 2^-} f(x)=3$ and $\\lim_{x\\to 2^+} f(x)=7$. The discontinuity at $x=2$ is:",
+    "choices": [
+      "A jump discontinuity",
+      "A removable discontinuity",
+      "An infinite discontinuity",
+      "Not a discontinuity"
+    ],
+    "answer": "A",
+    "hints": [
+      "The one-sided limits are finite but unequal.",
+      "That is the signature of a jump."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.mcq.03",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A removable discontinuity at $x=c$ occurs when:",
+    "choices": [
+      "$\\lim_{x\\to c} f(x)$ exists but does not equal $f(c)$ (or $f(c)$ is undefined)",
+      "The one-sided limits are both infinite",
+      "The one-sided limits differ but are finite",
+      "$f$ is continuous at $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A hole is a removable discontinuity.",
+      "The limit exists; only the point value is missing or off."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.mcq.04",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What kind of discontinuity does $f(x)=\\frac{x+2}{x^2-4}$ have at $x=2$?",
+    "choices": [
+      "Infinite discontinuity",
+      "Removable discontinuity",
+      "Jump discontinuity",
+      "No discontinuity"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor: $\\frac{x+2}{(x-2)(x+2)}=\\frac{1}{x-2}$.",
+      "At $x=2$ the simplified form blows up."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.num.01",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "At what $x$-value does $f(x)=\\frac{x^2-9}{x-3}$ have a removable discontinuity?",
+    "answer": "3",
+    "hints": [
+      "The factor $(x-3)$ cancels from top and bottom.",
+      "The hole is where that canceled factor is zero."
+    ]
+  },
+  {
+    "id": "apcalcbc.discontinuity-types.num.02",
+    "loId": "apcalcbc.discontinuity-types",
+    "cedCode": "AP-CALCBC-1.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The function $f(x)=\\frac{x-1}{(x-1)(x+2)}$ has an infinite discontinuity at $x=$ ?",
+    "answer": "-2",
+    "hints": [
+      "The $(x-1)$ factor cancels, leaving $\\frac{1}{x+2}$.",
+      "The remaining zero in the denominator gives the vertical asymptote."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.mcq.01",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which three conditions must all hold for $f$ to be continuous at $x=c$?",
+    "choices": [
+      "$f(c)$ is defined, $\\lim_{x\\to c} f(x)$ exists, and the two are equal",
+      "$f$ is increasing, defined, and positive at $c$",
+      "$f(c)=0$, the limit exists, and $f$ is a polynomial",
+      "The left-hand limit exists and $f(c)$ is defined"
+    ],
+    "answer": "A",
+    "hints": [
+      "Three-part definition of continuity at a point.",
+      "Existence of value, existence of limit, and their agreement."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.mcq.02",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For $f$ to be continuous on the closed interval $[a,b]$, the endpoints require that:",
+    "choices": [
+      "The appropriate one-sided limits equal the endpoint values",
+      "$f$ is differentiable at $a$ and $b$",
+      "$f$ is increasing on $[a,b]$",
+      "$f(a)=f(b)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "At an endpoint you can only approach from inside the interval.",
+      "One-sided continuity is used at $a$ and $b$."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.mcq.03",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which function is continuous for all real numbers?",
+    "choices": [
+      "$f(x)=x^2+3x-1$",
+      "$f(x)=\\frac{1}{x}$",
+      "$f(x)=\\tan x$",
+      "$f(x)=\\frac{x}{x-2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Polynomials are continuous everywhere.",
+      "The other choices have points where the denominator is zero or the function is undefined."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.num.01",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For $f(x)=\\begin{cases}2x+1,&x<1\\\\x^2+k,&x\\ge 1\\end{cases}$, find the value of $k$ that makes $f$ continuous at $x=1$.",
+    "answer": "2",
+    "hints": [
+      "Set the two pieces equal at $x=1$.",
+      "${}2(1)+1 = 1^2+k$."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.num.02",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x)=\\frac{x^2-x-6}{x-3}$ for $x\\ne 3$ and $f(3)=k$. What value of $k$ makes $f$ continuous at $x=3$?",
+    "answer": "5",
+    "hints": [
+      "Factor the numerator as $(x-3)(x+2)$ and cancel.",
+      "$k$ must equal the limit, $x+2$ at $x=3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.continuity.num.03",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For $f(x)=\\begin{cases}ax-1,&x\\le 2\\\\x^2,&x>2\\end{cases}$, find the value of $a$ that makes $f$ continuous at $x=2$.",
+    "answer": "2.5",
+    "hints": [
+      "Match the pieces at $x=2$: $a(2)-1 = 2^2$.",
+      "Solve ${}2a-1=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.mcq.01",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which type of discontinuity can be 'removed' by redefining the function at a single point?",
+    "choices": [
+      "Removable",
+      "Jump",
+      "Infinite",
+      "All types"
+    ],
+    "answer": "A",
+    "hints": [
+      "Only a hole can be patched by one point.",
+      "The name gives it away."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.mcq.02",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To remove a removable discontinuity at $x=c$, you should define $f(c)$ to equal:",
+    "choices": [
+      "$\\lim_{x\\to c} f(x)$",
+      "0",
+      "$f(c-1)$",
+      "The average of the two one-sided limits, which differ"
+    ],
+    "answer": "A",
+    "hints": [
+      "Fill the hole with the value the curve approaches.",
+      "That value is exactly the limit."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.mcq.03",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Why can a jump discontinuity NOT be removed by redefining the function at one point?",
+    "choices": [
+      "The two-sided limit does not exist, so no single value can make $f$ continuous",
+      "The function is undefined everywhere",
+      "The limit is infinite",
+      "It actually can be removed"
+    ],
+    "answer": "A",
+    "hints": [
+      "Removal requires the limit to exist.",
+      "For a jump, the one-sided limits disagree, so the two-sided limit fails to exist."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.num.01",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x)=\\frac{x^2-16}{x-4}$ for $x\\ne 4$. What value should be assigned to $f(4)$ to make $f$ continuous at $x=4$?",
+    "answer": "8",
+    "hints": [
+      "Simplify to $x+4$ for $x\\ne 4$.",
+      "Use the limit: ${}4+4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.num.02",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "To remove the discontinuity of $f(x)=\\frac{\\sin x}{x}$ at $x=0$, what value should be assigned to $f(0)$?",
+    "answer": "1",
+    "hints": [
+      "Use the special limit $\\lim_{x\\to 0}\\frac{\\sin x}{x}$.",
+      "That limit equals 1."
+    ]
+  },
+  {
+    "id": "apcalcbc.removing-discontinuities.num.03",
+    "loId": "apcalcbc.removing-discontinuities",
+    "cedCode": "AP-CALCBC-1.13",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x)=\\frac{x^2-5x+6}{x-2}$ for $x\\ne 2$. What value should be assigned to $f(2)$ to remove the discontinuity?",
+    "answer": "-1",
+    "hints": [
+      "Factor the numerator as $(x-2)(x-3)$ and cancel.",
+      "Evaluate $x-3$ at $x=2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.mcq.01",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The statement $\\lim_{x\\to c} f(x)=\\infty$ means:",
+    "choices": [
+      "$f(x)$ increases without bound as $x$ approaches $c$",
+      "$f(c)=\\infty$",
+      "The limit equals some large finite number",
+      "$f$ is continuous at $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Infinity here describes unbounded growth, not a value.",
+      "The outputs exceed any bound as $x\\to c$."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.mcq.02",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to 2^+}\\frac{1}{x-2}$.",
+    "choices": [
+      "$+\\infty$",
+      "$-\\infty$",
+      "0",
+      "2"
+    ],
+    "answer": "A",
+    "hints": [
+      "As $x\\to 2$ from the right, $x-2$ is a small positive number.",
+      "One over a small positive number is large and positive."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.mcq.03",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rational function has a vertical asymptote at $x=c$ when, at $x=c$:",
+    "choices": [
+      "The denominator is 0 and the numerator is nonzero",
+      "The numerator is 0",
+      "Both numerator and denominator are 0",
+      "The function is defined and continuous"
+    ],
+    "answer": "A",
+    "hints": [
+      "A vertical asymptote comes from a nonzero-over-zero form.",
+      "If both are zero, you may instead have a removable hole."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.mcq.04",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $f(x)=\\frac{x+1}{x-2}$, what is the behavior as $x\\to 2^-$?",
+    "choices": [
+      "$f(x)\\to -\\infty$",
+      "$f(x)\\to +\\infty$",
+      "$f(x)\\to 3$",
+      "$f(x)\\to 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "As $x\\to 2^-$, the numerator approaches 3 (positive).",
+      "The denominator $x-2$ is a small negative number, so the quotient is large and negative."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.num.01",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "At what $x$-value does $f(x)=\\frac{1}{x-4}$ have a vertical asymptote?",
+    "answer": "4",
+    "hints": [
+      "Set the denominator equal to zero.",
+      "$x-4=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.infinite-limits-vertical-asymptotes.num.02",
+    "loId": "apcalcbc.infinite-limits-vertical-asymptotes",
+    "cedCode": "AP-CALCBC-1.14",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "At what $x$-value does $f(x)=\\frac{x}{x+7}$ have a vertical asymptote?",
+    "answer": "-7",
+    "hints": [
+      "Find where the denominator is zero and the numerator is not.",
+      "$x+7=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.mcq.01",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If the degree of the numerator is LESS than the degree of the denominator, then $\\lim_{x\\to\\infty}$ of the rational function is:",
+    "choices": [
+      "0",
+      "1",
+      "$\\infty$",
+      "The ratio of the leading coefficients"
+    ],
+    "answer": "A",
+    "hints": [
+      "The denominator grows faster than the numerator.",
+      "The horizontal asymptote is $y=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.mcq.02",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the degree of the numerator is GREATER than the degree of the denominator, then as $x\\to\\infty$ the rational function:",
+    "choices": [
+      "Grows without bound (there is no horizontal asymptote)",
+      "Approaches 0",
+      "Approaches the ratio of the leading coefficients",
+      "Approaches 1"
+    ],
+    "answer": "A",
+    "hints": [
+      "Numerator dominates.",
+      "There is no finite horizontal asymptote."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.mcq.03",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to\\infty}\\frac{5x}{x^2+1}$.",
+    "choices": [
+      "0",
+      "5",
+      "$\\infty$",
+      "1"
+    ],
+    "answer": "A",
+    "hints": [
+      "The denominator's degree exceeds the numerator's.",
+      "Divide numerator and denominator by $x^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.num.01",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to\\infty}\\frac{3x^2+2}{6x^2-x}$.",
+    "answer": "0.5",
+    "hints": [
+      "Same degree top and bottom, so use the leading coefficients.",
+      "$\\frac{3}{6}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.num.02",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to\\infty}\\frac{2x^3-x}{5x^3+4}$.",
+    "answer": "0.4",
+    "hints": [
+      "Equal degrees, so take the ratio of leading coefficients.",
+      "$\\frac{2}{5}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.limits-at-infinity-horizontal-asymptotes.num.03",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The graph of $f(x)=\\frac{4x+1}{2x-3}$ has a horizontal asymptote at $y=$ ?",
+    "answer": "2",
+    "hints": [
+      "Degrees match, so the asymptote is the leading-coefficient ratio.",
+      "$\\frac{4}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.mcq.01",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Intermediate Value Theorem applies to a function $f$ on $[a,b]$ provided that:",
+    "choices": [
+      "$f$ is continuous on $[a,b]$",
+      "$f$ is increasing on $[a,b]$",
+      "$f$ is differentiable and positive",
+      "$f(a)=f(b)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Continuity on the closed interval is the key hypothesis.",
+      "No differentiability is required."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.mcq.02",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If $f$ is continuous on $[a,b]$ and $N$ is any value between $f(a)$ and $f(b)$, the IVT guarantees that:",
+    "choices": [
+      "There exists at least one $c$ in $(a,b)$ with $f(c)=N$",
+      "There is exactly one $c$ with $f(c)=N$",
+      "$f(c)=N$ for every $c$",
+      "$f$ has a maximum equal to $N$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The IVT guarantees existence, not uniqueness.",
+      "'At least one' is the correct strength."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.mcq.03",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Suppose $f$ is continuous with $f(1)=-3$ and $f(4)=5$. The IVT guarantees that $f$ has:",
+    "choices": [
+      "At least one zero (root) in $(1,4)$",
+      "Exactly one zero in $(1,4)$",
+      "No zeros in $(1,4)$",
+      "A zero at $x=0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The function changes sign between the endpoints.",
+      "$N=0$ lies between $-3$ and 5."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.mcq.04",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For which function does the IVT FAIL to guarantee that all values between the endpoint outputs are attained on $[-1,1]$?",
+    "choices": [
+      "$f(x)=\\frac{1}{x}$, which is discontinuous at $x=0$",
+      "$f(x)=x^3$",
+      "$f(x)=\\sin x$",
+      "$f(x)=x^2+1$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The IVT requires continuity on the whole interval.",
+      "Look for a function with a break inside $[-1,1]$."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.num.01",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x)=x^3+2x-1$. Compute $f(1)$.",
+    "answer": "2",
+    "hints": [
+      "Substitute $x=1$.",
+      "${}1+2-1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.intermediate-value-theorem.num.02",
+    "loId": "apcalcbc.intermediate-value-theorem",
+    "cedCode": "AP-CALCBC-1.16",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A function $f$ is continuous with $f(0)=-1$ and $f(1)=2$. By the IVT, at least how many solutions of $f(x)=0$ are guaranteed on the interval $(0,1)$?",
+    "answer": "1",
+    "hints": [
+      "There is a sign change between the endpoints.",
+      "The IVT guarantees at least one crossing."
+    ]
+  }
+]
