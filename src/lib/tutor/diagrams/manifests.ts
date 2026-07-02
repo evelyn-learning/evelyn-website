@@ -241,6 +241,16 @@ import {
   buildProjectileManifest,
   solveProjectileMotion as solveProjectileForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/em-nuclear-motion';
+import {
+  buildLeafCrossSectionManifest,
+  solveLeafCrossSection as solveLeafForManifest,
+  buildNephronManifest,
+  solveNephron as solveNephronForManifest,
+  buildDigestiveSystemManifest,
+  solveDigestiveSystem as solveDigestiveForManifest,
+  buildCirculatorySystemManifest,
+  solveCirculatorySystem as solveCirculatoryForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1466,6 +1476,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'projectile_motion': {
       try { return buildProjectileManifest(solveProjectileForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'leaf_cross_section': {
+      try { return buildLeafCrossSectionManifest(solveLeafForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'nephron': {
+      try { return buildNephronManifest(solveNephronForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'digestive_system': {
+      try { return buildDigestiveSystemManifest(solveDigestiveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'circulatory_system': {
+      try { return buildCirculatorySystemManifest(solveCirculatoryForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

@@ -440,6 +440,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'bohr_model', 'galvanic_cell', 'titration_curve', 'crystal_lattice',
             // Phase 20 — nuclear / electromagnetism / kinematics
             'nuclear_decay', 'em_induction', 'magnetic_field_current', 'projectile_motion',
+            // Phase 20 — bio anatomy / physiology
+            'leaf_cross_section', 'nephron', 'digestive_system', 'circulatory_system',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

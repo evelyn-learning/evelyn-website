@@ -89,6 +89,7 @@ import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from 
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
+import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -228,6 +229,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'em_induction', displayName: 'Electromagnetic Induction (Faraday / Lenz)', whenToUse: 'Show electromagnetic induction: a bar magnet moving toward or away from a coil, the changing magnetic flux inducing a current, and a galvanometer whose needle deflects. Labels the induced-current direction (opposing the change, Lenz\'s law). Use for Faraday\'s / Lenz\'s law instead of a freehand sketch.', subjects: ['physics'], grades: { from: 9, to: 12 }, paramSchema: 'motion?:in|out (magnet moving toward or away from the coil; default in), title?' },
   { kind: 'magnetic_field_current', displayName: 'Magnetic Field of a Current', whenToUse: 'Show the magnetic field produced by an electric current: either a straight wire (current out of the page) with concentric circular field lines (right-hand rule), or a solenoid with its uniform interior field and N/S poles and the ⊗/⊙ current-direction notation. Use for the magnetic-effect-of-current / right-hand-rule instead of a freehand sketch.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'conductor?:wire|solenoid (default wire), title?' },
   { kind: 'projectile_motion', displayName: 'Projectile Motion (trajectory)', whenToUse: 'Show projectile motion: the parabolic trajectory with the launch angle θ, the launch velocity decomposed into horizontal (vₓ = v·cos θ) and vertical (v_y = v·sin θ) components, the apex (maximum height, where v_y = 0), and the range R marked. Use for 2D kinematics / projectile problems instead of a freehand sketch. Not a general x-y plot (use show_function_graph).', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'angle?:number (launch angle in degrees, 15–75; default 45), showComponents?:boolean (draw the vₓ/v_y decomposition; default true), title?' },
+  // ── Phase 20 — bio anatomy / physiology ────────────────────────────────
+  { kind: 'leaf_cross_section', displayName: 'Leaf Cross-Section', whenToUse: 'Show a transverse section of a leaf: the waxy cuticle, upper and lower epidermis, palisade and spongy mesophyll (with chloroplasts and air spaces), the vascular bundle (xylem / phloem) and the stomata with guard cells, plus optional CO₂-in / O₂-out gas-exchange arrows. Use for leaf structure / photosynthesis adaptations instead of a freehand sketch.', subjects: ['biology'], grades: { from: 6, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — cuticle, upper_epidermis, palisade_mesophyll, spongy_mesophyll, air_space, vascular_bundle, xylem, phloem, lower_epidermis, stoma, guard_cell), showGasExchange?:boolean (CO₂-in / O₂-out arrows; default true), title?' },
+  { kind: 'nephron', displayName: 'Nephron (kidney)', whenToUse: "Show the kidney nephron: Bowman's capsule with the glomerulus, the proximal tubule, the loop of Henle (descending and ascending limbs), the distal tubule and the collecting duct, with optional filtration / reabsorption arrows. Use for osmoregulation / excretion instead of a freehand sketch — a doodled coiled tubule is unreadable.", subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — glomerulus, bowmans_capsule, proximal_tubule, descending_limb, ascending_limb, loop_of_henle, distal_tubule, collecting_duct), showFlow?:boolean (filtration / reabsorption arrows; default true), title?' },
+  { kind: 'digestive_system', displayName: 'Digestive System', whenToUse: 'Show the human digestive (GI) tract in order — mouth, esophagus, stomach, small intestine, large intestine, rectum — plus the accessory organs (liver, gallbladder, pancreas), labeled. Use for digestion teaching instead of a freehand sketch.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (organ ids to emphasize — mouth, esophagus, stomach, liver, gallbladder, pancreas, small_intestine, large_intestine, rectum), title?' },
+  { kind: 'circulatory_system', displayName: 'Circulatory System (double circulation)', whenToUse: 'Show the double circulation as a schematic: the four-chambered heart, the pulmonary loop (heart ⇄ lungs) and the systemic loop (heart ⇄ body), with oxygenated (red) vs deoxygenated (blue) blood and the major vessels (vena cava, pulmonary artery, pulmonary vein, aorta). Use for whole-body blood flow instead of a freehand sketch. For the heart alone, use heart_diagram.', subjects: ['biology'], grades: { from: 6, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — heart, lungs, body, right_atrium, right_ventricle, left_atrium, left_ventricle, vena_cava, pulmonary_artery, pulmonary_vein, aorta, pulmonary_loop, systemic_loop), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -346,6 +352,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   em_induction: solveEMInduction,
   magnetic_field_current: solveMagneticFieldCurrent,
   projectile_motion: solveProjectileMotion,
+  // Phase 20 — bio anatomy / physiology
+  leaf_cross_section: solveLeafCrossSection,
+  nephron: solveNephron,
+  digestive_system: solveDigestiveSystem,
+  circulatory_system: solveCirculatorySystem,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

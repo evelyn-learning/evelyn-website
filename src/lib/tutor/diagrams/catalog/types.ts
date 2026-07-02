@@ -127,7 +127,12 @@ export type DiagramKindId =
   | 'nuclear_decay'
   | 'em_induction'
   | 'magnetic_field_current'
-  | 'projectile_motion';
+  | 'projectile_motion'
+  // Phase 21 — bio anatomy / physiology (life science, Biology, AP Bio)
+  | 'leaf_cross_section'
+  | 'nephron'
+  | 'digestive_system'
+  | 'circulatory_system';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

@@ -177,6 +177,43 @@ check('show_diagram projectile_motion angle=60 → ok', () => {
   const r = processToolCall('show_diagram', { type: 'projectile_motion', params: { angle: 60, showComponents: false } });
   assert.equal(r.ok, true);
 });
+// Phase 20 — bio anatomy / physiology
+check('show_diagram leaf_cross_section (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'leaf_cross_section', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram leaf_cross_section highlight=palisade → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'leaf_cross_section', params: { highlight: ['palisade', 'stoma'], showGasExchange: false } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram nephron (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'nephron', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram nephron highlight=loop_of_henle → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'nephron', params: { highlight: 'loop of henle', showFlow: false } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram digestive_system (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'digestive_system', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram digestive_system highlight=stomach → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'digestive_system', params: { highlight: ['stomach', 'liver'] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram circulatory_system (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'circulatory_system', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram circulatory_system highlight=left_ventricle → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'circulatory_system', params: { highlight: ['left_ventricle', 'aorta'], title: 'Double circulation' } });
+  assert.equal(r.ok, true);
+});
 
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {
