@@ -45,6 +45,30 @@ import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-
 // extract-topic-notes-baselines.ts drafts). FRQ-practice plan deferred (no
 // concept segments → pointers/methods only).
 import { BASELINE_AP_CALCBC_DEFINING_LIMITS } from './seeds/ap-calcbc-u1-defining-limits';
+import { BASELINE_AP_CALCBC_INTRODUCING_CALCULUS } from './seeds/ap-calcbc-u1-introducing-calculus';
+import { BASELINE_AP_CALCBC_LIMITS_GRAPHS_TABLES } from './seeds/ap-calcbc-u1-limits-graphs-tables';
+import { BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_PROPERTIES } from './seeds/ap-calcbc-u1-limits-algebraic-properties';
+import { BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_MANIPULATION } from './seeds/ap-calcbc-u1-limits-algebraic-manipulation';
+import { BASELINE_AP_CALCBC_LIMITS_STRATEGY } from './seeds/ap-calcbc-u1-limits-strategy';
+import { BASELINE_AP_CALCBC_SQUEEZE_THEOREM } from './seeds/ap-calcbc-u1-squeeze-theorem';
+import { BASELINE_AP_CALCBC_LIMITS_REPRESENTATIONS } from './seeds/ap-calcbc-u1-limits-representations';
+import { BASELINE_AP_CALCBC_DISCONTINUITY_TYPES } from './seeds/ap-calcbc-u1-discontinuity-types';
+import { BASELINE_AP_CALCBC_CONTINUITY } from './seeds/ap-calcbc-u1-continuity';
+import { BASELINE_AP_CALCBC_REMOVING_DISCONTINUITIES } from './seeds/ap-calcbc-u1-removing-discontinuities';
+import { BASELINE_AP_CALCBC_INFINITE_LIMITS_ASYMPTOTES } from './seeds/ap-calcbc-u1-infinite-limits-asymptotes';
+import { BASELINE_AP_CALCBC_LIMITS_AT_INFINITY } from './seeds/ap-calcbc-u1-limits-at-infinity';
+import { BASELINE_AP_CALCBC_IVT } from './seeds/ap-calcbc-u1-ivt';
+import { BASELINE_AP_CALCBC_DERIVATIVE_DEFINITION } from './seeds/ap-calcbc-u2-derivative-definition';
+import { BASELINE_AP_CALCBC_ESTIMATING_DERIVATIVES } from './seeds/ap-calcbc-u2-estimating-derivatives';
+import { BASELINE_AP_CALCBC_DIFFERENTIABILITY_CONTINUITY } from './seeds/ap-calcbc-u2-differentiability-continuity';
+import { BASELINE_AP_CALCBC_POWER_RULE_LINEARITY } from './seeds/ap-calcbc-u2-power-rule-linearity';
+import { BASELINE_AP_CALCBC_TRANSCENDENTAL_DERIVATIVES } from './seeds/ap-calcbc-u2-transcendental-derivatives';
+import { BASELINE_AP_CALCBC_PRODUCT_RULE } from './seeds/ap-calcbc-u2-product-rule';
+import { BASELINE_AP_CALCBC_QUOTIENT_RULE } from './seeds/ap-calcbc-u2-quotient-rule';
+import { BASELINE_AP_CALCBC_CHAIN_RULE } from './seeds/ap-calcbc-u3-chain-rule';
+import { BASELINE_AP_CALCBC_IMPLICIT_DIFFERENTIATION } from './seeds/ap-calcbc-u3-implicit-differentiation';
+import { BASELINE_AP_CALCBC_DERIVATIVES_INVERSE } from './seeds/ap-calcbc-u3-derivatives-inverse';
+import { BASELINE_AP_CALCBC_HIGHER_ORDER_DERIVATIVES } from './seeds/ap-calcbc-u3-higher-order-derivatives';
 import { BASELINE_AP_STATS_CATEGORICAL_DATA } from './seeds/ap-stats-u1-categorical-data';
 import { BASELINE_AP_STATS_QUANTITATIVE_GRAPHS } from './seeds/ap-stats-u1-quantitative-graphs';
 import { BASELINE_AP_STATS_DISTRIBUTION_SHAPE } from './seeds/ap-stats-u1-distribution-shape';
@@ -104,6 +128,30 @@ import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
+  BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
+  BASELINE_AP_CALCBC_LIMITS_GRAPHS_TABLES,
+  BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_PROPERTIES,
+  BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_MANIPULATION,
+  BASELINE_AP_CALCBC_LIMITS_STRATEGY,
+  BASELINE_AP_CALCBC_SQUEEZE_THEOREM,
+  BASELINE_AP_CALCBC_LIMITS_REPRESENTATIONS,
+  BASELINE_AP_CALCBC_DISCONTINUITY_TYPES,
+  BASELINE_AP_CALCBC_CONTINUITY,
+  BASELINE_AP_CALCBC_REMOVING_DISCONTINUITIES,
+  BASELINE_AP_CALCBC_INFINITE_LIMITS_ASYMPTOTES,
+  BASELINE_AP_CALCBC_LIMITS_AT_INFINITY,
+  BASELINE_AP_CALCBC_IVT,
+  BASELINE_AP_CALCBC_DERIVATIVE_DEFINITION,
+  BASELINE_AP_CALCBC_ESTIMATING_DERIVATIVES,
+  BASELINE_AP_CALCBC_DIFFERENTIABILITY_CONTINUITY,
+  BASELINE_AP_CALCBC_POWER_RULE_LINEARITY,
+  BASELINE_AP_CALCBC_TRANSCENDENTAL_DERIVATIVES,
+  BASELINE_AP_CALCBC_PRODUCT_RULE,
+  BASELINE_AP_CALCBC_QUOTIENT_RULE,
+  BASELINE_AP_CALCBC_CHAIN_RULE,
+  BASELINE_AP_CALCBC_IMPLICIT_DIFFERENTIATION,
+  BASELINE_AP_CALCBC_DERIVATIVES_INVERSE,
+  BASELINE_AP_CALCBC_HIGHER_ORDER_DERIVATIVES,
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
   BASELINE_AP_MACRO_BANKING_MONEY_CREATION,
