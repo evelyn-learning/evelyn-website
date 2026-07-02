@@ -84,6 +84,11 @@ import { CatalogFieldLinesRenderer } from './CatalogFieldLinesRenderer';
 import { CatalogPhaseDiagramRenderer } from './CatalogPhaseDiagramRenderer';
 import { CatalogHeartRenderer } from './CatalogHeartRenderer';
 import { CatalogCellEnergyRenderer } from './CatalogCellEnergyRenderer';
+import {
+  CatalogDopplerRenderer,
+  CatalogStandingWaveRenderer,
+  CatalogInterferenceRenderer,
+} from './CatalogWavesRenderers';
 
 interface Props {
   kind: string;
@@ -188,6 +193,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'heart_diagram':              return <CatalogHeartRenderer figure={figure} />;
     case 'photosynthesis':
     case 'cellular_respiration':       return <CatalogCellEnergyRenderer figure={figure} />;
+    // Phase 17 — wavefront / 2D wave patterns
+    case 'doppler_effect':             return <CatalogDopplerRenderer figure={figure} />;
+    case 'standing_wave':              return <CatalogStandingWaveRenderer figure={figure} />;
+    case 'interference_pattern':       return <CatalogInterferenceRenderer figure={figure} />;
 
     default:
       return (

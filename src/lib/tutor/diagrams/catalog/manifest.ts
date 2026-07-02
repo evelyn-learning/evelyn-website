@@ -85,6 +85,7 @@ import { solveFieldLines } from './kinds/field-lines';
 import { solvePhaseDiagram } from './kinds/phase-diagram';
 import { solveHeartDiagram } from './kinds/heart';
 import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-energy';
+import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -201,6 +202,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'vsepr_geometry', displayName: 'VSEPR Molecular Geometry', whenToUse: 'Show an idealized 3D molecular shape (VSEPR): linear, trigonal_planar, bent, tetrahedral, trigonal_pyramidal, trigonal_bipyramidal, or octahedral — with wedge/dash bonds, lone pairs, and the bond angle. For electron/molecular geometry teaching. Distinct from show_molecule (a real 2D structure from SMILES); a freehand sketch cannot draw a 3D shape with correct angles.', subjects: ['chemistry'], grades: { from: 9, to: 12 }, paramSchema: 'geometry:linear|trigonal_planar|bent|tetrahedral|trigonal_pyramidal|trigonal_bipyramidal|octahedral, central:string (central atom symbol e.g. "C"), terminal?:string (same symbol on every bond e.g. "H") OR terminals?:[string] (per-position), lonePairs?:number (default per geometry), bondAngle?:string (default per geometry e.g. "109.5°"), title?' },
   { kind: 'vectors_3d', displayName: '3D Vectors / Axes', whenToUse: 'Show a 3D coordinate system (isometric) with vectors, points, an optional line (r = p + t·d) and an optional plane (point + normal). For IB AA / JEE / multivariable 3D vectors & geometry — a 2D vector tool and a freehand sketch cannot represent 3D space.', subjects: ['math'], grades: { from: 10, to: 12 }, paramSchema: 'vectors?:[{to:[x,y,z], from?:[x,y,z] (default origin), label?, color?}], points?:[{at:[x,y,z], label?, color?}], line?:{point:[x,y,z], dir:[x,y,z], label?}, plane?:{point:[x,y,z], normal:[x,y,z], label?}, axisRange?:number (auto from data), title?' },
   { kind: 'solid_3d', displayName: '3D Solid (labeled)', whenToUse: 'Show a labeled 3D solid in oblique projection with dimension labels — a cube, rectangular prism, triangular prism, cylinder, cone, sphere, or square pyramid. Use for volume / surface-area work instead of a freehand sketch (a doodled 3D solid is unreadable).', subjects: ['math'], grades: { from: 4, to: 12 }, paramSchema: 'shape:cube|rectangular_prism|triangular_prism|cylinder|cone|sphere|square_pyramid, dims:{ … shape-specific: cube{side}; rectangular_prism{length,width,height}; triangular_prism{base,triHeight,length}; cylinder{radius,height}; cone{radius,height}; sphere{radius}; square_pyramid{base,height} }, showNet?:boolean (also draw the unfolded net beside the solid, for surface-area work; no net for sphere), title?' },
+
+  // ── Phase 17 — wavefront / 2D wave patterns ────────────────────────────
+  { kind: 'doppler_effect', displayName: 'Doppler Effect (moving source)', whenToUse: 'Show the Doppler effect as concentric wavefronts from a MOVING source: rings bunched ahead (compressed → higher frequency / pitch) and spread behind (stretched → lower frequency / pitch), with the source, motion arrow, and labels. Use this canonical figure instead of a freehand sketch — a rough doodle of nested rings is unreadable. Not for a single transverse wave (use wave_diagram).', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'sourceSpeedFrac?:number (v/c, 0.1–0.85; default 0.5), movingRight?:boolean (default true), showObservers?:boolean (default true), nRings?:number (3–6; default 4), title?' },
+  { kind: 'standing_wave', displayName: 'Standing Wave (string, harmonic n)', whenToUse: 'Show a standing wave on a string fixed at both ends vibrating in harmonic n (1–5): the two-lobe envelope (mirrored sine curves), the nodes (zero displacement) and antinodes (maximum displacement), labeled. Use for harmonics / resonance instead of a freehand sketch.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'harmonic:number (n = 1–5, the number of loops), showNodes?:boolean (default true), title?' },
+  { kind: 'interference_pattern', displayName: 'Two-Source Interference', whenToUse: 'Show two point sources emitting overlapping circular wavefronts, with the constructive (antinodal) lines and destructive (nodal) lines drawn as their true hyperbolas. Use for two-source / double-slit interference and ripple-tank patterns instead of a freehand sketch.', subjects: ['physics'], grades: { from: 9, to: 12 }, paramSchema: 'sourceSep?:number (source separation in px on the diagram; default 3×wavelength), wavelength?:number (px; default 46), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -300,6 +306,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   heart_diagram: solveHeartDiagram,
   photosynthesis: solvePhotosynthesis,
   cellular_respiration: solveCellularRespiration,
+  // Phase 17 — wavefront / 2D wave patterns
+  doppler_effect: solveDopplerEffect,
+  standing_wave: solveStandingWave,
+  interference_pattern: solveInterferencePattern,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

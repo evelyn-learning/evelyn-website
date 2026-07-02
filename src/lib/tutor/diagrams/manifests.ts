@@ -203,6 +203,14 @@ import {
   solvePhotosynthesis as solvePhotoForManifest,
   solveCellularRespiration as solveRespForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/cell-energy';
+import {
+  buildDopplerManifest,
+  solveDopplerEffect as solveDopplerForManifest,
+  buildStandingWaveManifest,
+  solveStandingWave as solveStandingWaveForManifest,
+  buildInterferenceManifest,
+  solveInterferencePattern as solveInterferenceForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/waves';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1368,6 +1376,18 @@ function buildDiagramManifest(cmd: {
     }
     case 'cellular_respiration': {
       try { return buildCellEnergyManifest(solveRespForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'doppler_effect': {
+      try { return buildDopplerManifest(solveDopplerForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'standing_wave': {
+      try { return buildStandingWaveManifest(solveStandingWaveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'interference_pattern': {
+      try { return buildInterferenceManifest(solveInterferenceForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:
