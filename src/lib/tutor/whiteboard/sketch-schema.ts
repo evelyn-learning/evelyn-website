@@ -72,6 +72,17 @@ export const SKETCH_BOUNDS = {
   // dots_cluster: N scattered dots within `spread` of the center
   maxDotsCount: 80,
   maxSpread: 48,
+  // pulley: a wheel + rope draped over the top
+  maxPulleyRadius: 30,
+  // lever: a straight beam resting on a fulcrum
+  maxLeverLength: 92,
+  maxLeverTilt: 40,
+  // gauge: a semicircular dial + needle
+  maxGaugeRadius: 42,
+  // axis: a number line / scale with evenly spaced ticks + optional labels
+  minAxisTicks: 2,
+  maxAxisTicks: 21,
+  maxAxisLabels: 12,
 } as const;
 
 export interface Pt {
@@ -236,6 +247,52 @@ export type SketchPrimitive =
       count: number;
       spread: number;
     } & Styled)
+  // Parametric: a PULLEY — a wheel (rim + hub) at (cx,cy) radius r with a rope
+  // draped over the top hanging straight down each side. `ropeDir` picks which
+  // side(s) the rope hangs ('both' default, or 'left'/'right' for a single load
+  // line). Covers mechanical advantage, a block-and-tackle, lifting a load.
+  | ({
+      type: 'pulley';
+      cx: number;
+      cy: number;
+      r: number;
+      ropeDir?: 'both' | 'left' | 'right';
+    } & Styled)
+  // Parametric: a LEVER — a straight beam of `length` centered at (x,y) resting
+  // on a triangular fulcrum at `pivotFrac` (0..1 along the beam), tipped by
+  // `tilt` degrees (+ = right side down) about the pivot. Covers torque, a
+  // seesaw, moments, mechanical advantage.
+  | ({
+      type: 'lever';
+      x: number;
+      y: number;
+      length: number;
+      pivotFrac: number;
+      tilt?: number;
+    } & Styled)
+  // Parametric: a GAUGE — a semicircular dial at (cx,cy) radius r with tick marks
+  // and a needle pointing to `frac` (0..1 across the left→right sweep). Optional
+  // `label` sits under the dial. Covers a pressure/speed/level meter, "how much".
+  | ({
+      type: 'gauge';
+      cx: number;
+      cy: number;
+      r: number;
+      frac: number;
+      label?: string;
+    } & Styled)
+  // Parametric: an AXIS / number-line from (x1,y1)→(x2,y2) with `ticks` evenly
+  // spaced tick marks and an optional `labels` array placed under successive
+  // ticks. Covers a scale, a number line, a timeline.
+  | ({
+      type: 'axis';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      ticks?: number;
+      labels?: string[];
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -266,6 +323,10 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'arc',
   'blob',
   'dots_cluster',
+  'pulley',
+  'lever',
+  'gauge',
+  'axis',
   'label',
 ];
 
@@ -367,7 +428,7 @@ export const SKETCH_TOOL_SCHEMA = {
           },
           label: {
             type: 'string',
-            description: 'vector / brace: a short text tag placed at the arrow midpoint / brace tip (2–4 words).',
+            description: 'vector / brace / gauge: a short text tag placed at the arrow midpoint / brace tip / under the dial (2–4 words).',
           },
           // grid (cols×rows of cell-sized cells, top-left at x,y)
           cols: { type: 'number', description: 'grid: number of columns (1..24).' },
@@ -391,6 +452,25 @@ export const SKETCH_TOOL_SCHEMA = {
           wobble: { type: 'number', description: 'blob: edge irregularity 0..0.6 (0 = smooth ellipse, ~0.35 = lumpy).' },
           // dots_cluster (count dots scattered within spread of cx,cy)
           spread: { type: 'number', description: 'dots_cluster: scatter radius around the center in canvas units.' },
+          // pulley (wheel + rope over the top, hanging down each side)
+          ropeDir: {
+            type: 'string',
+            enum: ['both', 'left', 'right'],
+            description: 'pulley: which side(s) the rope hangs (default both; left/right = a single load line).',
+          },
+          // lever (beam of `length` centered at x,y on a fulcrum at pivotFrac)
+          length: { type: 'number', description: 'lever: beam length in canvas units.' },
+          pivotFrac: { type: 'number', description: 'lever: fulcrum position 0..1 along the beam (0.5 = center).' },
+          tilt: { type: 'number', description: 'lever: beam tilt in degrees, + = right side down (default 0 = level).' },
+          // gauge (semicircular dial + needle at frac)
+          frac: { type: 'number', description: 'gauge: needle position 0..1 across the left→right sweep (0.7 = 70%).' },
+          // axis (number line from x1,y1→x2,y2 with ticks + optional labels)
+          ticks: { type: 'number', description: 'axis: number of evenly spaced tick marks, 2..21.' },
+          labels: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'axis: short labels placed under successive ticks (e.g. ["0","5","10"]).',
+          },
           points: {
             type: 'array',
             items: {

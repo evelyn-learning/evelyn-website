@@ -50,6 +50,10 @@ PRIMITIVES (each has optional stroke/fill color = one of: ink, red, blue, green,
 - arc {cx,cy,r,startAngle,endAngle}  — a single OPEN arc (degrees, 0 = right, growing clockwise). Use for a pendulum swing, an orbit segment, an angle mark. (For closed rings/ripples use \`concentric\` instead.)
 - blob {cx,cy,rx,ry, wobble?}  — an organic closed WOBBLY loop (\`wobble\` 0..0.6 = lumpiness). Use for a cloud, a gas puff, a region/set — anything that should read as a blob, not a clean ellipse.
 - dots_cluster {cx,cy,count,spread}  — \`count\` small dots scattered within \`spread\` of the center. Use for a QUANTITY of like things: molecules, particles, a population. Emit ONE; never hand-place every dot.
+- pulley {cx,cy,r, ropeDir?}  — a pulley WHEEL (rim + hub) with a rope draped over the top hanging down each side; \`ropeDir\` = both|left|right. Use for a pulley, a block-and-tackle, mechanical advantage, lifting a load. Hang the load (a plain rect) off one rope. Emit ONE; never hand-draw the wheel + ropes.
+- lever {x,y,length,pivotFrac, tilt?}  — a straight BEAM of \`length\` centered at (x,y) on a triangular fulcrum at \`pivotFrac\` (0..1 along the beam); \`tilt\` degrees tips it (+ = right side down). Use for a lever, a seesaw, torque/moments, mechanical advantage. Emit ONE; never hand-draw the beam + triangle.
+- gauge {cx,cy,r,frac, label?}  — a semicircular DIAL with ticks and a needle pointing to \`frac\` (0..1, left→right sweep; 0.7 = 70%). Use for a pressure/speed/level meter, a "how much" reading. Emit ONE; never hand-draw the arc + needle.
+- axis {x1,y1,x2,y2, ticks?, labels?}  — a straight AXIS / number line with \`ticks\` evenly spaced marks and an optional \`labels\` array under successive ticks. Use for a number line, a scale, a timeline. Emit ONE; never hand-place the ticks.
 - label {x,y,text, fontSize?, anchor?}  — a few words of text (fontSize ~5). Use the tutor's provided labels.
 
 HOUSE STYLE — this is the most important rule:
@@ -71,6 +75,9 @@ DRAWING RECIPES — avoid the common mistakes:
 - BRACKETING A SPAN: to say "this stretch = …" (a wavelength, a measurement, a grouped set), use ONE \`brace\` across the two ends with its \`label\` — never hand-draw a curly line.
 - A SWING / ORBIT / ANGLE: for a pendulum swing, an orbit segment, or an angle mark use ONE open \`arc\`. (Rings/ripples are \`concentric\`, not \`arc\`.)
 - A CLOUD / GAS / REGION: for a cloud, a gas puff, or a fuzzy region/set use ONE \`blob\` (add \`wobble\` ~0.3). For a QUANTITY of small like things (molecules, particles, a population) use ONE \`dots_cluster\` — never hand-place many dots.
+- PULLEYS / LEVERS / SIMPLE MACHINES: for a pulley use ONE \`pulley\` (hang the load — a plain rect — off one rope, show the effort with a downward arrow on the other). For a lever / seesaw / moment use ONE \`lever\` (put the load and effort as plain rects at the ends; use \`tilt\` only to show it tipping). Never hand-draw the wheel, ropes, beam or fulcrum.
+- METERS / DIALS: for a pressure/speed/level meter or any "how much" reading use ONE \`gauge\` with the right \`frac\` (0.7 = 70%). Never hand-draw the arc and needle.
+- NUMBER LINES / SCALES / TIMELINES: for a number line, a scale, or a timeline use ONE \`axis\` with \`ticks\` and short \`labels\` under the ticks. Mark a value with a small filled dot on the line. Never hand-place the tick marks.
 - COMPLEX REAL OBJECTS (a roller coaster, a machine, a building): draw only the ESSENTIAL simple form. A roller coaster or a hill is just ONE smooth downward-sloping curve — not a detailed track. A staircase is a few clean square steps made of straight line segments with sharp corners. Do NOT pile overlapping strokes trying to look realistic.
 - Keep every stroke and label inside 5..95, and place labels CLEAR of the drawing so text never overlaps the strokes.
 - SPACE LABELS APART: never place two labels at nearly the same spot — they overprint into unreadable mush. Give each label its own clear area (at least ~12 units apart), and keep each label short (2–4 words). Don't label every element; label only the few that carry the idea.

@@ -27,6 +27,8 @@ const {
   minCoils, maxCoils, maxSpringWidth,
   minStickScale, maxStickScale,
   minGridDim, maxGridDim, maxArcRadius, maxBlobWobble, maxDotsCount, maxSpread,
+  maxPulleyRadius, maxLeverLength, maxLeverTilt, maxGaugeRadius,
+  minAxisTicks, maxAxisTicks, maxAxisLabels,
 } = SKETCH_BOUNDS;
 
 const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
@@ -34,6 +36,7 @@ const CONTAINER_SHAPES = ['beaker', 'tank', 'battery', 'thermometer'] as const;
 const VECTOR_STYLES = ['single', 'double', 'curved', 'block'] as const;
 const GRID_STYLES = ['lines', 'dots', 'boxes'] as const;
 const BRACE_SIDES = ['left', 'right', 'top', 'bottom'] as const;
+const ROPE_DIRS = ['both', 'left', 'right'] as const;
 
 /** A short optional text tag carried by vector/brace (distinct from a `label` primitive). */
 function tag(v: unknown): string | undefined {
@@ -299,6 +302,78 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         type,
         cx, cy, count,
         spread: Math.min(maxSpread, spread),
+        ...styled,
+      };
+    }
+    case 'pulley': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      if (cx === null || cy === null || r === null) return null;
+      if (r <= 0) return null;
+      const ropeDir =
+        typeof p.ropeDir === 'string' && (ROPE_DIRS as readonly string[]).includes(p.ropeDir)
+          ? (p.ropeDir as (typeof ROPE_DIRS)[number])
+          : undefined;
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxPulleyRadius, r),
+        ...(ropeDir ? { ropeDir } : {}),
+        ...styled,
+      };
+    }
+    case 'lever': {
+      const x = coord(p.x), y = coord(p.y);
+      const length = num(p.length);
+      let pivotFrac = num(p.pivotFrac);
+      if (x === null || y === null || length === null || pivotFrac === null) return null;
+      if (length <= 0) return null;
+      pivotFrac = Math.min(1, Math.max(0, pivotFrac));
+      const tilt = num(p.tilt);
+      return {
+        type,
+        x, y,
+        length: Math.min(maxLeverLength, length),
+        pivotFrac,
+        ...(tilt !== null ? { tilt: Math.min(maxLeverTilt, Math.max(-maxLeverTilt, tilt)) } : {}),
+        ...styled,
+      };
+    }
+    case 'gauge': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      let frac = num(p.frac);
+      if (cx === null || cy === null || r === null || frac === null) return null;
+      if (r <= 0) return null;
+      frac = Math.min(1, Math.max(0, frac));
+      const lbl = tag(p.label);
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxGaugeRadius, r),
+        frac,
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'axis': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length axis
+      let ticks = num(p.ticks);
+      if (ticks !== null) ticks = Math.round(Math.min(maxAxisTicks, Math.max(minAxisTicks, ticks)));
+      const labels = Array.isArray(p.labels)
+        ? p.labels
+            .filter((s): s is string => typeof s === 'string')
+            .map((s) => s.trim().slice(0, maxLabelLen))
+            .filter((s) => s.length > 0)
+            .slice(0, maxAxisLabels)
+        : undefined;
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(ticks !== null ? { ticks } : {}),
+        ...(labels && labels.length ? { labels } : {}),
         ...styled,
       };
     }

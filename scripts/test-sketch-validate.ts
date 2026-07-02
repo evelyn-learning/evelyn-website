@@ -12,6 +12,7 @@ import {
   BALL_ON_HILL, GLASS_SHATTER,
   SPRING_MASS, TRANSVERSE_WAVE, SKIER, BEAKER_HALF,
   TORQUE, TEN_FRAME, WAVELENGTH_BRACE, PENDULUM, GAS_CLOUD, MOLECULES_BOX,
+  PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -292,12 +293,90 @@ check('dots_cluster spread<=0 dropped → null',
 check('dots_cluster missing spread dropped → null',
   validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 10 }] }) === null);
 
+// ── pulley primitive (Wave 3) ──
+const pulley = validateSketch({ primitives: [
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'both' },
+] }) as any[];
+check('pulley validates + keeps ropeDir', !!pulley && pulley[0].type === 'pulley' && pulley[0].ropeDir === 'both');
+check('pulley r clamped to max',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxPulleyRadius);
+check('pulley bad ropeDir dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 12, ropeDir: 'up' }] }) as any[])[0].ropeDir === undefined);
+check('pulley coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: -9, cy: 50, r: 12 }] }) as any[])[0].cx === 0);
+check('pulley r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 0 }] }) === null);
+check('pulley missing r dropped → null',
+  validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50 }] }) === null);
+
+// ── lever primitive (Wave 3) ──
+const lever = validateSketch({ primitives: [
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 10 },
+] }) as any[];
+check('lever validates + keeps tilt', !!lever && lever[0].type === 'lever' && lever[0].tilt === 10);
+check('lever length clamped to max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 999, pivotFrac: 0.5 }] }) as any[])[0].length === SKETCH_BOUNDS.maxLeverLength);
+check('lever pivotFrac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 5 }] }) as any[])[0].pivotFrac === 1);
+check('lever negative pivotFrac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: -3 }] }) as any[])[0].pivotFrac === 0);
+check('lever tilt clamped to +max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 0.5, tilt: 999 }] }) as any[])[0].tilt === SKETCH_BOUNDS.maxLeverTilt);
+check('lever tilt clamped to -max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 0.5, tilt: -999 }] }) as any[])[0].tilt === -SKETCH_BOUNDS.maxLeverTilt);
+check('lever length<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 0, pivotFrac: 0.5 }] }) === null);
+check('lever missing pivotFrac dropped → null',
+  validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40 }] }) === null);
+
+// ── gauge primitive (Wave 3) ──
+const gauge = validateSketch({ primitives: [
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.7, label: 'speed' },
+] }) as any[];
+check('gauge validates + keeps label', !!gauge && gauge[0].type === 'gauge' && gauge[0].frac === 0.7 && gauge[0].label === 'speed');
+check('gauge r clamped to max',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 999, frac: 0.5 }] }) as any[])[0].r === SKETCH_BOUNDS.maxGaugeRadius);
+check('gauge frac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: 9 }] }) as any[])[0].frac === 1);
+check('gauge negative frac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: -2 }] }) as any[])[0].frac === 0);
+check('gauge empty label dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: 0.5, label: '   ' }] }) as any[])[0].label === undefined);
+check('gauge r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 0, frac: 0.5 }] }) === null);
+check('gauge missing frac dropped → null',
+  validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30 }] }) === null);
+
+// ── axis primitive (Wave 3) ──
+const axis = validateSketch({ primitives: [
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 11, labels: ['0', '5', '10'] },
+] }) as any[];
+check('axis validates + keeps ticks/labels', !!axis && axis[0].type === 'axis' && axis[0].ticks === 11 && axis[0].labels.length === 3);
+check('axis ticks clamped to max',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 99 }] }) as any[])[0].ticks === SKETCH_BOUNDS.maxAxisTicks);
+check('axis ticks clamped to min',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 0 }] }) as any[])[0].ticks === SKETCH_BOUNDS.minAxisTicks);
+check('axis ticks rounded',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 5.7 }] }) as any[])[0].ticks === 6);
+check('axis labels capped to maxAxisLabels',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, labels: Array.from({ length: 40 }, (_, i) => `${i}`) }] }) as any[])[0].labels.length === SKETCH_BOUNDS.maxAxisLabels);
+check('axis non-string labels filtered out',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, labels: ['a', 5, null, 'b'] }] }) as any[])[0].labels.length === 2);
+check('axis coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'axis', x1: -9, y1: 50, x2: 9999, y2: 50 }] }) as any[])[0].x2 === 100);
+check('axis zero-length dropped → null',
+  validateSketch({ primitives: [{ type: 'axis', x1: 40, y1: 50, x2: 40, y2: 50 }] }) === null);
+check('axis missing endpoint dropped → null',
+  validateSketch({ primitives: [{ type: 'axis', x1: 40, y1: 50, x2: 60 }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
   ['SKIER', SKIER], ['BEAKER_HALF', BEAKER_HALF],
   ['TORQUE', TORQUE], ['TEN_FRAME', TEN_FRAME], ['WAVELENGTH_BRACE', WAVELENGTH_BRACE],
   ['PENDULUM', PENDULUM], ['GAS_CLOUD', GAS_CLOUD], ['MOLECULES_BOX', MOLECULES_BOX],
+  ['PULLEY_LIFT', PULLEY_LIFT], ['LEVER_BALANCE', LEVER_BALANCE],
+  ['SPEEDOMETER', SPEEDOMETER], ['NUMBER_LINE', NUMBER_LINE],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));
