@@ -188,6 +188,51 @@ export const MOLECULES_BOX: SketchPrimitive[] = [
   { type: 'label', x: 50, y: 86, text: 'gas molecules', fontSize: 5, stroke: 'ink', anchor: 'middle' },
 ];
 
+// PULLEY exemplar — teaches: use ONE `pulley` primitive for a wheel + rope
+// (mechanical advantage, lifting a load), never a hand-drawn circle with scribbled
+// ropes. A load hangs on the left rope; a downward pull on the right lifts it.
+export const PULLEY_LIFT: SketchPrimitive[] = [
+  { type: 'line', x1: 20, y1: 12, x2: 80, y2: 12, stroke: 'gray', strokeWidth: 1 }, // overhead support
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'both', stroke: 'ink', strokeWidth: 1.3 },
+  { type: 'rect', x: 29, y: 50, w: 16, h: 13, stroke: 'blue', fill: 'blue' }, // the load on the left rope
+  { type: 'arrow', x1: 63, y1: 44, x2: 63, y2: 66, stroke: 'red', strokeWidth: 1.2 }, // pull down on the right
+  { type: 'label', x: 37, y: 74, text: 'load', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 78, y: 56, text: 'pull', fontSize: 5, stroke: 'red', anchor: 'middle' },
+];
+
+// LEVER exemplar — teaches: use ONE `lever` primitive for a beam on a fulcrum
+// (torque, a seesaw, moments), never a hand-drawn line + triangle. A balanced
+// beam with a load on one end and effort on the other.
+export const LEVER_BALANCE: SketchPrimitive[] = [
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 0, stroke: 'ink', strokeWidth: 1.4 },
+  { type: 'rect', x: 8, y: 44, w: 14, h: 12, stroke: 'blue', fill: 'blue' }, // load on the left end
+  { type: 'rect', x: 78, y: 44, w: 14, h: 12, stroke: 'green', fill: 'green' }, // effort on the right end
+  { type: 'line', x1: 26, y1: 78, x2: 74, y2: 78, stroke: 'gray', strokeWidth: 0.8 }, // ground
+  { type: 'label', x: 15, y: 38, text: 'load', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 85, y: 38, text: 'effort', fontSize: 5, stroke: 'green', anchor: 'middle' },
+  { type: 'label', x: 50, y: 90, text: 'fulcrum', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// GAUGE exemplar — teaches: use ONE `gauge` primitive for a dial/meter with a
+// needle (pressure, speed, level), never a hand-drawn arc + arrow. A speedometer
+// reading about 70%.
+export const SPEEDOMETER: SketchPrimitive[] = [
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.7, stroke: 'ink', strokeWidth: 1.3, label: 'speed' },
+  { type: 'label', x: 14, y: 68, text: 'slow', fontSize: 5, stroke: 'gray', anchor: 'middle' },
+  { type: 'label', x: 86, y: 68, text: 'fast', fontSize: 5, stroke: 'gray', anchor: 'middle' },
+  { type: 'label', x: 70, y: 30, text: '70%', fontSize: 6, stroke: 'red', anchor: 'middle' },
+];
+
+// AXIS exemplar — teaches: use ONE `axis` primitive for a number line / scale /
+// timeline with ticks + labels, never hand-placed tick marks. A 0–10 number line
+// with a point marked at 7.
+export const NUMBER_LINE: SketchPrimitive[] = [
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 11,
+    labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], stroke: 'ink', strokeWidth: 1.3 },
+  { type: 'ellipse', cx: 66, cy: 46, rx: 3, ry: 3, stroke: 'red', fill: 'red' }, // the marked point at 7
+  { type: 'label', x: 66, y: 32, text: 'x = 7', fontSize: 5.5, stroke: 'red', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -270,5 +315,25 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'many gas molecules bouncing around inside a box',
     labels: ['gas molecules'],
     primitives: MOLECULES_BOX,
+  },
+  {
+    concept: 'a pulley lifting a load: pulling down on one rope raises the weight on the other',
+    labels: ['load', 'pull'],
+    primitives: PULLEY_LIFT,
+  },
+  {
+    concept: 'a lever balanced on a fulcrum, with a load on one end and effort on the other',
+    labels: ['load', 'effort', 'fulcrum'],
+    primitives: LEVER_BALANCE,
+  },
+  {
+    concept: 'a speedometer dial reading about 70 percent',
+    labels: ['speed', '70%'],
+    primitives: SPEEDOMETER,
+  },
+  {
+    concept: 'a number line from 0 to 10 with a point marked at 7',
+    labels: ['x = 7'],
+    primitives: NUMBER_LINE,
   },
 ];

@@ -431,6 +431,115 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       }
       return out;
     }
+    case 'pulley': {
+      // A wheel (rim + hub) with a rope draped over the TOP, hanging straight
+      // down each side. The rope sits just outside the rim so it reads as draped
+      // over the wheel rather than merged into it.
+      const r = p.r;
+      const dir = p.ropeDir ?? 'both';
+      const outlineOpts = { ...ROUGH_OPTS, seed, stroke, strokeWidth: sw };
+      const out: ReturnType<Gen['toPaths']> = [];
+      // rim + hub
+      out.push(...gen.toPaths(gen.ellipse(p.cx, p.cy, r * 2, r * 2, outlineOpts)));
+      out.push(...gen.toPaths(gen.ellipse(p.cx, p.cy, r * 0.5, r * 0.5, { ...outlineOpts, fill: stroke, fillStyle: 'solid', seed: seed + 3 })));
+      // rope: an arc over the top from the left tangent to the right tangent
+      const rr = r + 1.4;
+      const hang = Math.max(r * 1.9, 12);
+      const arcPts: [number, number][] = [];
+      const n = 16;
+      for (let i = 0; i <= n; i++) {
+        const a = Math.PI + (Math.PI * i) / n; // 180°→360°, over the top (+y down)
+        arcPts.push([p.cx + rr * Math.cos(a), p.cy + rr * Math.sin(a)]);
+      }
+      const ropeOpts = { ...outlineOpts, seed: seed + 5 };
+      out.push(...gen.toPaths(gen.curve(arcPts, ropeOpts)));
+      if (dir === 'both' || dir === 'left')
+        out.push(...gen.toPaths(gen.line(p.cx - rr, p.cy, p.cx - rr, p.cy + hang, ropeOpts)));
+      if (dir === 'both' || dir === 'right')
+        out.push(...gen.toPaths(gen.line(p.cx + rr, p.cy, p.cx + rr, p.cy + hang, ropeOpts)));
+      return out;
+    }
+    case 'lever': {
+      // A straight beam centered at (x,y), rotated by `tilt` about the fulcrum,
+      // which sits at `pivotFrac` along the beam. A triangular fulcrum (apex at
+      // the pivot) supports it from below.
+      const half = p.length / 2;
+      const pivotX = p.x + (p.pivotFrac - 0.5) * p.length;
+      const pivotY = p.y;
+      const rad = ((p.tilt ?? 0) * Math.PI) / 180;
+      const cos = Math.cos(rad), sin = Math.sin(rad);
+      const rot = (px: number, py: number): [number, number] => {
+        const dx = px - pivotX, dy = py - pivotY;
+        return [pivotX + dx * cos - dy * sin, pivotY + dx * sin + dy * cos];
+      };
+      const left = rot(p.x - half, p.y);
+      const right = rot(p.x + half, p.y);
+      const out: ReturnType<Gen['toPaths']> = [];
+      out.push(...gen.toPaths(gen.line(left[0], left[1], right[0], right[1], opts)));
+      const fh = Math.max(p.length * 0.16, 8);
+      const fw = fh * 0.7;
+      const tri: [number, number][] = [
+        [pivotX, pivotY],
+        [pivotX - fw, pivotY + fh],
+        [pivotX + fw, pivotY + fh],
+      ];
+      out.push(...gen.toPaths(gen.polygon(tri, { ...opts, seed: seed + 4 })));
+      return out;
+    }
+    case 'gauge': {
+      // A semicircular dial (top half), a straight base, evenly spaced ticks and
+      // a needle from the hub to `frac` across the left→right sweep.
+      const r = p.r;
+      const ang = (f: number) => Math.PI + Math.PI * f; // 180°(left)→360°(right), over the top
+      const out: ReturnType<Gen['toPaths']> = [];
+      const arcPts: [number, number][] = [];
+      const n = 20;
+      for (let i = 0; i <= n; i++) {
+        const a = ang(i / n);
+        arcPts.push([p.cx + r * Math.cos(a), p.cy + r * Math.sin(a)]);
+      }
+      out.push(...gen.toPaths(gen.curve(arcPts, opts)));
+      out.push(...gen.toPaths(gen.line(p.cx - r, p.cy, p.cx + r, p.cy, opts)));
+      const ticks = 5;
+      for (let i = 0; i <= ticks; i++) {
+        const a = ang(i / ticks);
+        const c = Math.cos(a), s = Math.sin(a);
+        out.push(...gen.toPaths(gen.line(
+          p.cx + r * 0.82 * c, p.cy + r * 0.82 * s, p.cx + r * c, p.cy + r * s,
+          { ...opts, seed: seed + 10 + i },
+        )));
+      }
+      const na = ang(Math.min(1, Math.max(0, p.frac)));
+      out.push(...gen.toPaths(gen.line(
+        p.cx, p.cy, p.cx + r * 0.72 * Math.cos(na), p.cy + r * 0.72 * Math.sin(na),
+        { ...opts, seed: seed + 2, strokeWidth: sw + 0.4 },
+      )));
+      out.push(...gen.toPaths(gen.ellipse(p.cx, p.cy, r * 0.16, r * 0.16, { ...opts, fill: stroke, fillStyle: 'solid', seed: seed + 6 })));
+      return out;
+    }
+    case 'axis': {
+      // A straight axis with `ticks` evenly spaced perpendicular tick marks. The
+      // optional `labels` ride under successive ticks (placed in buildSketchPaths).
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+      const L = Math.hypot(dx, dy) || 1;
+      let px = -dy / L, py = dx / L; // unit perpendicular
+      if (py < 0) { px = -px; py = -py; } // point toward the label (down) side
+      const out: ReturnType<Gen['toPaths']> = [];
+      out.push(...gen.toPaths(gen.line(p.x1, p.y1, p.x2, p.y2, opts)));
+      const nt = p.ticks ?? 0;
+      const tickLen = 2.6;
+      if (nt >= 2) {
+        for (let i = 0; i < nt; i++) {
+          const t = i / (nt - 1);
+          const tx = p.x1 + dx * t, ty = p.y1 + dy * t;
+          out.push(...gen.toPaths(gen.line(
+            tx - px * tickLen, ty - py * tickLen, tx + px * tickLen, ty + py * tickLen,
+            { ...opts, seed: seed + 20 + i },
+          )));
+        }
+      }
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -504,6 +613,23 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
     } else if (p.type === 'brace' && p.label) {
       const [lx, ly] = braceGeom(p).tip;
       pushLabel(lx, ly, p.label, i, 5, 'middle', p.stroke);
+    } else if (p.type === 'gauge' && p.label) {
+      // sits below the hub, in the empty lower half of the dial
+      pushLabel(p.cx, p.cy + p.r * 0.55, p.label, i, 5, 'middle', p.stroke);
+    } else if (p.type === 'axis' && p.labels && p.labels.length) {
+      // one label under each of the first N ticks (N = labels.length, capped by ticks)
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+      const L = Math.hypot(dx, dy) || 1;
+      let px = -dy / L, py = dx / L;
+      if (py < 0) { px = -px; py = -py; }
+      const nt = p.ticks ?? p.labels.length;
+      const denom = Math.max(1, nt - 1);
+      p.labels.forEach((text, li) => {
+        if (li >= nt) return;
+        const t = nt <= 1 ? 0 : li / denom;
+        const tx = p.x1 + dx * t, ty = p.y1 + dy * t;
+        pushLabel(tx + px * 6, ty + py * 6, text, i * 100 + li, 4.5, 'middle', p.stroke);
+      });
     }
   });
   return { drawn, labels };

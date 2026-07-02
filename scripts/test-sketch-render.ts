@@ -181,7 +181,66 @@ const dc = buildSketchPaths([
 ]);
 check('dots_cluster renders ≥ count dots', dc.drawn[0].paths.length >= 26, `paths=${dc.drawn[0]?.paths.length}`);
 
+// ── pulley: wheel + hub + rope arc + hanging sides ──
+const pul = buildSketchPaths([
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'both' } as SketchPrimitive,
+]);
+check('pulley (both) renders ≥5 sub-paths (rim+hub+arc+2 ropes)',
+  pul.drawn.length === 1 && pul.drawn[0].paths.length >= 5, `paths=${pul.drawn[0]?.paths.length}`);
+const pulL = buildSketchPaths([
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'left' } as SketchPrimitive,
+]);
+check('pulley (left) renders fewer paths than both',
+  pulL.drawn[0].paths.length < pul.drawn[0].paths.length, `left=${pulL.drawn[0].paths.length} both=${pul.drawn[0].paths.length}`);
+
+// ── lever: beam + fulcrum triangle; tilt rotates the beam ──
+const lev = buildSketchPaths([
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 0 } as SketchPrimitive,
+]);
+check('lever renders ≥2 sub-paths (beam + fulcrum)', lev.drawn[0].paths.length >= 2, `paths=${lev.drawn[0]?.paths.length}`);
+const levTilt = buildSketchPaths([
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 20 } as SketchPrimitive,
+]);
+check('lever tilt changes beam geometry', JSON.stringify(lev.drawn) !== JSON.stringify(levTilt.drawn));
+
+// ── gauge: dial arc + base + ticks + needle + hub ──
+const gau = buildSketchPaths([
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.7, label: 'speed' } as SketchPrimitive,
+]);
+check('gauge renders ≥5 sub-paths (arc+base+ticks+needle+hub)', gau.drawn[0].paths.length >= 5, `paths=${gau.drawn[0]?.paths.length}`);
+check('gauge label routes to labels[]', gau.labels.length === 1 && gau.labels[0].text === 'speed');
+// needle position tracks frac
+const gau0 = buildSketchPaths([
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.1 } as SketchPrimitive,
+]);
+check('gauge needle tracks frac', JSON.stringify(gau.drawn) !== JSON.stringify(gau0.drawn));
+
+// ── axis: line + ticks; labels route to labels[] under the ticks ──
+const ax = buildSketchPaths([
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 11, labels: ['0', '1', '2'] } as SketchPrimitive,
+]);
+check('axis renders line + ≥ ticks sub-paths', ax.drawn[0].paths.length >= 1 + 11, `paths=${ax.drawn[0]?.paths.length}`);
+check('axis labels route to labels[]', ax.labels.length === 3 && ax.labels[0].text === '0');
+// labels are capped by the tick count
+const axCap = buildSketchPaths([
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 2, labels: ['a', 'b', 'c', 'd'] } as SketchPrimitive,
+]);
+check('axis labels capped at tick count', axCap.labels.length === 2, `labels=${axCap.labels.length}`);
+
 // ── each new primitive's geometry stays within the canvas ──
+check('pulley stays in bounds', inBounds([
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'both' } as SketchPrimitive,
+]));
+check('lever stays in bounds', inBounds([
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 15 } as SketchPrimitive,
+]));
+check('gauge stays in bounds', inBounds([
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.7 } as SketchPrimitive,
+]));
+check('axis stays in bounds', inBounds([
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 11 } as SketchPrimitive,
+]));
+
 check('vector (curved) stays in bounds', inBounds([
   { type: 'vector', x1: 20, y1: 50, x2: 70, y2: 50, style: 'curved' } as SketchPrimitive,
 ]));
