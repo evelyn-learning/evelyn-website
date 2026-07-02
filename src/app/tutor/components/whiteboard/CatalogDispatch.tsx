@@ -89,6 +89,12 @@ import {
   CatalogStandingWaveRenderer,
   CatalogInterferenceRenderer,
 } from './CatalogWavesRenderers';
+import {
+  CatalogMitosisRenderer,
+  CatalogMeiosisRenderer,
+  CatalogDnaReplicationRenderer,
+  CatalogCellMembraneRenderer,
+} from './CatalogCellBiologyRenderers';
 
 interface Props {
   kind: string;
@@ -197,6 +203,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'doppler_effect':             return <CatalogDopplerRenderer figure={figure} />;
     case 'standing_wave':              return <CatalogStandingWaveRenderer figure={figure} />;
     case 'interference_pattern':       return <CatalogInterferenceRenderer figure={figure} />;
+    // Phase 18 — cell biology / genetics
+    case 'mitosis':                    return <CatalogMitosisRenderer figure={figure} />;
+    case 'meiosis':                    return <CatalogMeiosisRenderer figure={figure} />;
+    case 'dna_replication':            return <CatalogDnaReplicationRenderer figure={figure} />;
+    case 'cell_membrane':              return <CatalogCellMembraneRenderer figure={figure} />;
 
     default:
       return (

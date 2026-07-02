@@ -60,6 +60,39 @@ check('show_diagram interference_pattern (bare) → ok', () => {
   const r = processToolCall('show_diagram', { type: 'interference_pattern', params: {} });
   assert.equal(r.ok, true);
 });
+check('show_diagram mitosis (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'mitosis', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram mitosis phase=metaphase → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'mitosis', params: { phase: 'metaphase' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram meiosis (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'meiosis', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram meiosis stage=crossing_over → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'meiosis', params: { stage: 'crossing over' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram dna_replication (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'dna_replication', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram dna_replication showEnzymes=false → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'dna_replication', params: { showEnzymes: false } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram cell_membrane (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'cell_membrane', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram cell_membrane mode=active → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'cell_membrane', params: { mode: 'active' } });
+  assert.equal(r.ok, true);
+});
 
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {
