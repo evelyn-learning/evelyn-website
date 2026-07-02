@@ -88,6 +88,7 @@ import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-ener
 import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
+import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -221,6 +222,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'galvanic_cell', displayName: 'Galvanic / Voltaic Cell', whenToUse: 'Show an electrochemical (galvanic/voltaic) cell: two half-cells with metal electrodes in their salt solutions, a salt bridge, and the external circuit with a voltmeter and the electron-flow arrow. Labels the anode (−, oxidation, left) and cathode (+, reduction, right) with their half-reactions. Use for electrochemistry / redox instead of a freehand sketch. Default is the Daniell cell (Zn ‖ Cu).', subjects: ['chemistry'], grades: { from: 9, to: 12 }, paramSchema: 'anodeMetal?:string (metal symbol at the anode, e.g. "Zn"; default Zn), cathodeMetal?:string (metal at the cathode, e.g. "Cu"; default Cu — choices: Zn, Cu, Ag, Fe, Mg, Pb, Ni, Al), title?' },
   { kind: 'titration_curve', displayName: 'Titration Curve (pH)', whenToUse: 'Show an acid-base titration curve: pH on the y-axis vs. volume of titrant added on the x-axis, with the sigmoid shape and the equivalence point marked. A weak-strong titration also shows the buffer region and the half-equivalence point where pH = pKa. Use instead of a freehand sketch. Not a general x-y plot (use show_function_graph).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:strong-strong|weak-strong (default strong-strong; weak-strong adds the buffer plateau + half-equivalence pKa), title?' },
   { kind: 'crystal_lattice', displayName: 'Crystal Lattice (unit cell)', whenToUse: 'Show a cubic crystal unit cell in pseudo-3D with its lattice points: simple cubic (sc), body-centred cubic (bcc), or face-centred cubic (fcc). Corner / body-centre / face-centre atoms are colour-coded and the atoms-per-cell count is shown. Use for solid-state / crystal-structure teaching instead of a freehand sketch (a doodled 3D cell is unreadable).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:sc|bcc|fcc (default sc), title?' },
+
+  // ── Phase 20 — bio anatomy / physiology ────────────────────────────────
+  { kind: 'leaf_cross_section', displayName: 'Leaf Cross-Section', whenToUse: 'Show a transverse section of a leaf: the waxy cuticle, upper and lower epidermis, palisade and spongy mesophyll (with chloroplasts and air spaces), the vascular bundle (xylem / phloem) and the stomata with guard cells, plus optional CO₂-in / O₂-out gas-exchange arrows. Use for leaf structure / photosynthesis adaptations instead of a freehand sketch.', subjects: ['biology'], grades: { from: 6, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — cuticle, upper_epidermis, palisade_mesophyll, spongy_mesophyll, air_space, vascular_bundle, xylem, phloem, lower_epidermis, stoma, guard_cell), showGasExchange?:boolean (CO₂-in / O₂-out arrows; default true), title?' },
+  { kind: 'nephron', displayName: 'Nephron (kidney)', whenToUse: "Show the kidney nephron: Bowman's capsule with the glomerulus, the proximal tubule, the loop of Henle (descending and ascending limbs), the distal tubule and the collecting duct, with optional filtration / reabsorption arrows. Use for osmoregulation / excretion instead of a freehand sketch — a doodled coiled tubule is unreadable.", subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — glomerulus, bowmans_capsule, proximal_tubule, descending_limb, ascending_limb, loop_of_henle, distal_tubule, collecting_duct), showFlow?:boolean (filtration / reabsorption arrows; default true), title?' },
+  { kind: 'digestive_system', displayName: 'Digestive System', whenToUse: 'Show the human digestive (GI) tract in order — mouth, esophagus, stomach, small intestine, large intestine, rectum — plus the accessory organs (liver, gallbladder, pancreas), labeled. Use for digestion teaching instead of a freehand sketch.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (organ ids to emphasize — mouth, esophagus, stomach, liver, gallbladder, pancreas, small_intestine, large_intestine, rectum), title?' },
+  { kind: 'circulatory_system', displayName: 'Circulatory System (double circulation)', whenToUse: 'Show the double circulation as a schematic: the four-chambered heart, the pulmonary loop (heart ⇄ lungs) and the systemic loop (heart ⇄ body), with oxygenated (red) vs deoxygenated (blue) blood and the major vessels (vena cava, pulmonary artery, pulmonary vein, aorta). Use for whole-body blood flow instead of a freehand sketch. For the heart alone, use heart_diagram.', subjects: ['biology'], grades: { from: 6, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — heart, lungs, body, right_atrium, right_ventricle, left_atrium, left_ventricle, vena_cava, pulmonary_artery, pulmonary_vein, aorta, pulmonary_loop, systemic_loop), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -334,6 +341,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   galvanic_cell: solveGalvanicCell,
   titration_curve: solveTitrationCurve,
   crystal_lattice: solveCrystalLattice,
+  // Phase 20 — bio anatomy / physiology
+  leaf_cross_section: solveLeafCrossSection,
+  nephron: solveNephron,
+  digestive_system: solveDigestiveSystem,
+  circulatory_system: solveCirculatorySystem,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

@@ -96,6 +96,12 @@ import {
   CatalogCellMembraneRenderer,
 } from './CatalogCellBiologyRenderers';
 import {
+  CatalogLeafCrossSectionRenderer,
+  CatalogNephronRenderer,
+  CatalogDigestiveSystemRenderer,
+  CatalogCirculatorySystemRenderer,
+} from './CatalogBioAnatomyRenderers';
+import {
   CatalogBohrRenderer,
   CatalogGalvanicRenderer,
   CatalogTitrationRenderer,
@@ -219,6 +225,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'galvanic_cell':              return <CatalogGalvanicRenderer figure={figure} />;
     case 'titration_curve':            return <CatalogTitrationRenderer figure={figure} />;
     case 'crystal_lattice':            return <CatalogLatticeRenderer figure={figure} />;
+    // Phase 20 — bio anatomy / physiology
+    case 'leaf_cross_section':         return <CatalogLeafCrossSectionRenderer figure={figure} />;
+    case 'nephron':                    return <CatalogNephronRenderer figure={figure} />;
+    case 'digestive_system':           return <CatalogDigestiveSystemRenderer figure={figure} />;
+    case 'circulatory_system':         return <CatalogCirculatorySystemRenderer figure={figure} />;
 
     default:
       return (

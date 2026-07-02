@@ -122,7 +122,12 @@ export type DiagramKindId =
   | 'bohr_model'
   | 'galvanic_cell'
   | 'titration_curve'
-  | 'crystal_lattice';
+  | 'crystal_lattice'
+  // Phase 20 — bio anatomy / physiology (life science, Biology, AP Bio)
+  | 'leaf_cross_section'
+  | 'nephron'
+  | 'digestive_system'
+  | 'circulatory_system';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

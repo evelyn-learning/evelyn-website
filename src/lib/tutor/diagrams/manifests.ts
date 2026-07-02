@@ -231,6 +231,16 @@ import {
   buildLatticeManifest,
   solveCrystalLattice as solveLatticeForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
+import {
+  buildLeafCrossSectionManifest,
+  solveLeafCrossSection as solveLeafForManifest,
+  buildNephronManifest,
+  solveNephron as solveNephronForManifest,
+  buildDigestiveSystemManifest,
+  solveDigestiveSystem as solveDigestiveForManifest,
+  buildCirculatorySystemManifest,
+  solveCirculatorySystem as solveCirculatoryForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1440,6 +1450,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'crystal_lattice': {
       try { return buildLatticeManifest(solveLatticeForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'leaf_cross_section': {
+      try { return buildLeafCrossSectionManifest(solveLeafForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'nephron': {
+      try { return buildNephronManifest(solveNephronForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'digestive_system': {
+      try { return buildDigestiveSystemManifest(solveDigestiveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'circulatory_system': {
+      try { return buildCirculatorySystemManifest(solveCirculatoryForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

@@ -438,6 +438,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'mitosis', 'meiosis', 'dna_replication', 'cell_membrane',
             // Phase 19 — chemistry
             'bohr_model', 'galvanic_cell', 'titration_curve', 'crystal_lattice',
+            // Phase 20 — bio anatomy / physiology
+            'leaf_cross_section', 'nephron', 'digestive_system', 'circulatory_system',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
