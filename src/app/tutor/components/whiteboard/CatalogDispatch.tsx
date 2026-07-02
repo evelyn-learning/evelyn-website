@@ -101,6 +101,12 @@ import {
   CatalogTitrationRenderer,
   CatalogLatticeRenderer,
 } from './CatalogChemistryRenderers';
+import {
+  CatalogNuclearDecayRenderer,
+  CatalogEMInductionRenderer,
+  CatalogMagneticFieldRenderer,
+  CatalogProjectileRenderer,
+} from './CatalogEMNuclearMotionRenderers';
 
 interface Props {
   kind: string;
@@ -219,6 +225,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'galvanic_cell':              return <CatalogGalvanicRenderer figure={figure} />;
     case 'titration_curve':            return <CatalogTitrationRenderer figure={figure} />;
     case 'crystal_lattice':            return <CatalogLatticeRenderer figure={figure} />;
+    // Phase 20 — nuclear / electromagnetism / kinematics
+    case 'nuclear_decay':              return <CatalogNuclearDecayRenderer figure={figure} />;
+    case 'em_induction':               return <CatalogEMInductionRenderer figure={figure} />;
+    case 'magnetic_field_current':     return <CatalogMagneticFieldRenderer figure={figure} />;
+    case 'projectile_motion':          return <CatalogProjectileRenderer figure={figure} />;
 
     default:
       return (

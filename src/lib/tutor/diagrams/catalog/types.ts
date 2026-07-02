@@ -122,7 +122,12 @@ export type DiagramKindId =
   | 'bohr_model'
   | 'galvanic_cell'
   | 'titration_curve'
-  | 'crystal_lattice';
+  | 'crystal_lattice'
+  // Phase 20 — nuclear / electromagnetism / kinematics (physics)
+  | 'nuclear_decay'
+  | 'em_induction'
+  | 'magnetic_field_current'
+  | 'projectile_motion';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

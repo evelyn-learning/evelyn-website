@@ -88,6 +88,7 @@ import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-ener
 import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
+import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -221,6 +222,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'galvanic_cell', displayName: 'Galvanic / Voltaic Cell', whenToUse: 'Show an electrochemical (galvanic/voltaic) cell: two half-cells with metal electrodes in their salt solutions, a salt bridge, and the external circuit with a voltmeter and the electron-flow arrow. Labels the anode (−, oxidation, left) and cathode (+, reduction, right) with their half-reactions. Use for electrochemistry / redox instead of a freehand sketch. Default is the Daniell cell (Zn ‖ Cu).', subjects: ['chemistry'], grades: { from: 9, to: 12 }, paramSchema: 'anodeMetal?:string (metal symbol at the anode, e.g. "Zn"; default Zn), cathodeMetal?:string (metal at the cathode, e.g. "Cu"; default Cu — choices: Zn, Cu, Ag, Fe, Mg, Pb, Ni, Al), title?' },
   { kind: 'titration_curve', displayName: 'Titration Curve (pH)', whenToUse: 'Show an acid-base titration curve: pH on the y-axis vs. volume of titrant added on the x-axis, with the sigmoid shape and the equivalence point marked. A weak-strong titration also shows the buffer region and the half-equivalence point where pH = pKa. Use instead of a freehand sketch. Not a general x-y plot (use show_function_graph).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:strong-strong|weak-strong (default strong-strong; weak-strong adds the buffer plateau + half-equivalence pKa), title?' },
   { kind: 'crystal_lattice', displayName: 'Crystal Lattice (unit cell)', whenToUse: 'Show a cubic crystal unit cell in pseudo-3D with its lattice points: simple cubic (sc), body-centred cubic (bcc), or face-centred cubic (fcc). Corner / body-centre / face-centre atoms are colour-coded and the atoms-per-cell count is shown. Use for solid-state / crystal-structure teaching instead of a freehand sketch (a doodled 3D cell is unreadable).', subjects: ['chemistry'], grades: { from: 10, to: 12 }, paramSchema: 'type?:sc|bcc|fcc (default sc), title?' },
+
+  // ── Phase 20 — nuclear / electromagnetism / kinematics ─────────────────
+  { kind: 'nuclear_decay', displayName: 'Nuclear Decay (α / β / γ)', whenToUse: 'Show a radioactive decay: the parent nuclide → daughter nuclide + emitted particle, with the mass-number (A) and atomic-number (Z) conservation equations shown, plus a small half-life (N/N₀) decay curve. Modes: alpha, beta-minus, beta-plus, gamma. Use this canonical figure instead of a freehand sketch — the ᴬ_Z notation and the A/Z bookkeeping must be exact.', subjects: ['physics', 'chemistry'], grades: { from: 8, to: 12 }, paramSchema: 'mode?:alpha|beta-minus|beta-plus|gamma (default alpha), showHalfLife?:boolean (default true), title?' },
+  { kind: 'em_induction', displayName: 'Electromagnetic Induction (Faraday / Lenz)', whenToUse: 'Show electromagnetic induction: a bar magnet moving toward or away from a coil, the changing magnetic flux inducing a current, and a galvanometer whose needle deflects. Labels the induced-current direction (opposing the change, Lenz\'s law). Use for Faraday\'s / Lenz\'s law instead of a freehand sketch.', subjects: ['physics'], grades: { from: 9, to: 12 }, paramSchema: 'motion?:in|out (magnet moving toward or away from the coil; default in), title?' },
+  { kind: 'magnetic_field_current', displayName: 'Magnetic Field of a Current', whenToUse: 'Show the magnetic field produced by an electric current: either a straight wire (current out of the page) with concentric circular field lines (right-hand rule), or a solenoid with its uniform interior field and N/S poles and the ⊗/⊙ current-direction notation. Use for the magnetic-effect-of-current / right-hand-rule instead of a freehand sketch.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'conductor?:wire|solenoid (default wire), title?' },
+  { kind: 'projectile_motion', displayName: 'Projectile Motion (trajectory)', whenToUse: 'Show projectile motion: the parabolic trajectory with the launch angle θ, the launch velocity decomposed into horizontal (vₓ = v·cos θ) and vertical (v_y = v·sin θ) components, the apex (maximum height, where v_y = 0), and the range R marked. Use for 2D kinematics / projectile problems instead of a freehand sketch. Not a general x-y plot (use show_function_graph).', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'angle?:number (launch angle in degrees, 15–75; default 45), showComponents?:boolean (draw the vₓ/v_y decomposition; default true), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -334,6 +341,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   galvanic_cell: solveGalvanicCell,
   titration_curve: solveTitrationCurve,
   crystal_lattice: solveCrystalLattice,
+  // Phase 20 — nuclear / electromagnetism / kinematics
+  nuclear_decay: solveNuclearDecay,
+  em_induction: solveEMInduction,
+  magnetic_field_current: solveMagneticFieldCurrent,
+  projectile_motion: solveProjectileMotion,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

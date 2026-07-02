@@ -137,6 +137,46 @@ check('show_diagram crystal_lattice type=bcc → ok', () => {
   const r = processToolCall('show_diagram', { type: 'crystal_lattice', params: { type: 'bcc' } });
   assert.equal(r.ok, true);
 });
+check('show_diagram nuclear_decay (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'nuclear_decay', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram nuclear_decay mode=beta-minus → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'nuclear_decay', params: { mode: 'beta-minus' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram nuclear_decay mode=gamma → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'nuclear_decay', params: { mode: 'gamma' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram em_induction (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'em_induction', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram em_induction motion=out → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'em_induction', params: { motion: 'out' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram magnetic_field_current (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'magnetic_field_current', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram magnetic_field_current conductor=solenoid → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'magnetic_field_current', params: { conductor: 'solenoid' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram projectile_motion (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'projectile_motion', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram projectile_motion angle=60 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'projectile_motion', params: { angle: 60, showComponents: false } });
+  assert.equal(r.ok, true);
+});
 
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {
