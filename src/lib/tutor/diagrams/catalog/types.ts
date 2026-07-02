@@ -108,7 +108,11 @@ export type DiagramKindId =
   // Phase 16 — labeled-bio diagrams
   | 'heart_diagram'
   | 'photosynthesis'
-  | 'cellular_respiration';
+  | 'cellular_respiration'
+  // Phase 17 — wavefront / 2D wave patterns (physics: waves & optics)
+  | 'doppler_effect'
+  | 'standing_wave'
+  | 'interference_pattern';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

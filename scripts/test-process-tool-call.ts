@@ -47,6 +47,19 @@ check('show_stats passes through → ok', () => {
   const r = processToolCall('show_stats', { chartType: 'bar', data: [1, 2, 3] });
   assert.equal(r.ok, true);
 });
+check('show_diagram doppler_effect (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'doppler_effect', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram standing_wave n=3 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'standing_wave', params: { harmonic: 3 } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram interference_pattern (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'interference_pattern', params: {} });
+  assert.equal(r.ok, true);
+});
 
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {
