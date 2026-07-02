@@ -231,6 +231,16 @@ import {
   buildLatticeManifest,
   solveCrystalLattice as solveLatticeForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
+import {
+  buildNuclearDecayManifest,
+  solveNuclearDecay as solveNuclearDecayForManifest,
+  buildEMInductionManifest,
+  solveEMInduction as solveEMInductionForManifest,
+  buildMagneticFieldManifest,
+  solveMagneticFieldCurrent as solveMagneticFieldForManifest,
+  buildProjectileManifest,
+  solveProjectileMotion as solveProjectileForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/em-nuclear-motion';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1440,6 +1450,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'crystal_lattice': {
       try { return buildLatticeManifest(solveLatticeForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'nuclear_decay': {
+      try { return buildNuclearDecayManifest(solveNuclearDecayForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'em_induction': {
+      try { return buildEMInductionManifest(solveEMInductionForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'magnetic_field_current': {
+      try { return buildMagneticFieldManifest(solveMagneticFieldForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'projectile_motion': {
+      try { return buildProjectileManifest(solveProjectileForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:
