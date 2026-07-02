@@ -44,6 +44,7 @@ import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-
 // AP Statistics Unit 1 (CED 1.1–1.10) — calibration unit (hand-curated from
 // extract-topic-notes-baselines.ts drafts). FRQ-practice plan deferred (no
 // concept segments → pointers/methods only).
+import { BASELINE_AP_CALCBC_DEFINING_LIMITS } from './seeds/ap-calcbc-u1-defining-limits';
 import { BASELINE_AP_STATS_CATEGORICAL_DATA } from './seeds/ap-stats-u1-categorical-data';
 import { BASELINE_AP_STATS_QUANTITATIVE_GRAPHS } from './seeds/ap-stats-u1-quantitative-graphs';
 import { BASELINE_AP_STATS_DISTRIBUTION_SHAPE } from './seeds/ap-stats-u1-distribution-shape';
@@ -102,6 +103,7 @@ import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
+  BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
   BASELINE_AP_MACRO_BANKING_MONEY_CREATION,
