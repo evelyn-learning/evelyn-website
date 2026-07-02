@@ -251,6 +251,16 @@ import {
   buildCirculatorySystemManifest,
   solveCirculatorySystem as solveCirculatoryForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
+import {
+  buildDataStructureManifest,
+  solveDataStructure as solveDataStructureForManifest,
+  buildGraphManifest as buildGraphDiagramManifest,
+  solveGraphDiagram as solveGraphForManifest,
+  buildHashTableManifest,
+  solveHashTable as solveHashTableForManifest,
+  buildRecursionTreeManifest,
+  solveRecursionTree as solveRecursionTreeForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/cs-structures';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1492,6 +1502,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'circulatory_system': {
       try { return buildCirculatorySystemManifest(solveCirculatoryForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'data_structure': {
+      try { return buildDataStructureManifest(solveDataStructureForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'graph_diagram': {
+      try { return buildGraphDiagramManifest(solveGraphForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'hash_table': {
+      try { return buildHashTableManifest(solveHashTableForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'recursion_tree': {
+      try { return buildRecursionTreeManifest(solveRecursionTreeForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

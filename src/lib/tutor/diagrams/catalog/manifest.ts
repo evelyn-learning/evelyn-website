@@ -90,6 +90,7 @@ import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } fr
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
+import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -234,6 +235,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'nephron', displayName: 'Nephron (kidney)', whenToUse: "Show the kidney nephron: Bowman's capsule with the glomerulus, the proximal tubule, the loop of Henle (descending and ascending limbs), the distal tubule and the collecting duct, with optional filtration / reabsorption arrows. Use for osmoregulation / excretion instead of a freehand sketch — a doodled coiled tubule is unreadable.", subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — glomerulus, bowmans_capsule, proximal_tubule, descending_limb, ascending_limb, loop_of_henle, distal_tubule, collecting_duct), showFlow?:boolean (filtration / reabsorption arrows; default true), title?' },
   { kind: 'digestive_system', displayName: 'Digestive System', whenToUse: 'Show the human digestive (GI) tract in order — mouth, esophagus, stomach, small intestine, large intestine, rectum — plus the accessory organs (liver, gallbladder, pancreas), labeled. Use for digestion teaching instead of a freehand sketch.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (organ ids to emphasize — mouth, esophagus, stomach, liver, gallbladder, pancreas, small_intestine, large_intestine, rectum), title?' },
   { kind: 'circulatory_system', displayName: 'Circulatory System (double circulation)', whenToUse: 'Show the double circulation as a schematic: the four-chambered heart, the pulmonary loop (heart ⇄ lungs) and the systemic loop (heart ⇄ body), with oxygenated (red) vs deoxygenated (blue) blood and the major vessels (vena cava, pulmonary artery, pulmonary vein, aorta). Use for whole-body blood flow instead of a freehand sketch. For the heart alone, use heart_diagram.', subjects: ['biology'], grades: { from: 6, to: 12 }, paramSchema: 'highlight?:[string] (part ids to emphasize — heart, lungs, body, right_atrium, right_ventricle, left_atrium, left_ventricle, vena_cava, pulmonary_artery, pulmonary_vein, aorta, pulmonary_loop, systemic_loop), title?' },
+
+  // ── Phase 22 — computer science (data structures + algorithms) ─────────
+  { kind: 'data_structure', displayName: 'Data Structure (stack / queue / linked list)', whenToUse: 'Show a linear data structure as a precise labeled figure: a STACK (vertical boxes with the top marked, push/pop, LIFO), a QUEUE (horizontal boxes with front/rear, enqueue/dequeue, FIFO), or a singly LINKED LIST (value+next nodes with pointer arrows ending in null). Use this canonical figure instead of a freehand sketch — boxes, pointers and the top/front/rear labels must line up exactly. For a binary tree use binary_tree; for a graph use graph_diagram.', subjects: ['cs'], grades: { from: 7, to: 12 }, paramSchema: "structure?:stack|queue|linked_list (default stack), items?:[string] (values; default 4 sample values), title?" },
+  { kind: 'graph_diagram', displayName: 'Graph (vertices + edges)', whenToUse: 'Show a graph: vertices as labeled circles on a ring layout and edges as lines (or arrows if directed), with optional edge weights and an optional BFS/DFS traversal-order overlay (numbered badges). Use for graph-theory / graph-algorithm teaching instead of a freehand sketch — a doodled node-and-edge blob is unreadable. Not for a rooted binary tree (use binary_tree) or a flowchart (use flowchart_simple).', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "nodes?:[string] (vertex labels; default A–E), edges?:[[from,to]] (or [from,to,weight]; default sample edges), directed?:boolean (default false), weights?:boolean (default auto), traversal?:bfs|dfs (overlay visit order from the first node), title?" },
+  { kind: 'hash_table', displayName: 'Hash Table (buckets + chaining)', whenToUse: 'Show a hash table: a bucket array (indices 0..size−1) with keys placed by a simple, shown hash function [(Σ char codes) mod size] and separate-chaining collision lists drawn as chained boxes. Use for hashing / collision-resolution teaching instead of a freehand sketch. Empty buckets are marked ∅; collisions are highlighted.', subjects: ['cs'], grades: { from: 9, to: 12 }, paramSchema: "size?:number (buckets, 3–11; default 7), entries?:[[key,value]] (default sample keys that collide), title?" },
+  { kind: 'recursion_tree', displayName: 'Recursion Tree (call tree)', whenToUse: 'Show the call tree of a recursive function: FIBONACCI [fib(n) branching into fib(n−1)+fib(n−2), showing overlapping subproblems] or FACTORIAL [fact(n) → fact(n−1) → … as a chain], with base-case leaves highlighted and optional return values. Use for recursion / divide-and-conquer teaching instead of a freehand sketch — the branching and depth must be exact.', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "kind?:fibonacci|factorial (default fibonacci), n?:number (fibonacci 2–6, factorial 1–7; default 5), showValues?:boolean (return values; default true), title?" },
 ];
 
 /** Solver dispatch table. */
@@ -357,6 +364,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   nephron: solveNephron,
   digestive_system: solveDigestiveSystem,
   circulatory_system: solveCirculatorySystem,
+  // Phase 22 — computer science
+  data_structure: solveDataStructure,
+  graph_diagram: solveGraphDiagram,
+  hash_table: solveHashTable,
+  recursion_tree: solveRecursionTree,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

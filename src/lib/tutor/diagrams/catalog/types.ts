@@ -132,7 +132,12 @@ export type DiagramKindId =
   | 'leaf_cross_section'
   | 'nephron'
   | 'digestive_system'
-  | 'circulatory_system';
+  | 'circulatory_system'
+  // Phase 22 — computer science (data structures + algorithms)
+  | 'data_structure'
+  | 'graph_diagram'
+  | 'hash_table'
+  | 'recursion_tree';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {
