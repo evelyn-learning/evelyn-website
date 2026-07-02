@@ -86,6 +86,7 @@ import { solvePhaseDiagram } from './kinds/phase-diagram';
 import { solveHeartDiagram } from './kinds/heart';
 import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-energy';
 import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
+import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -207,6 +208,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'doppler_effect', displayName: 'Doppler Effect (moving source)', whenToUse: 'Show the Doppler effect as concentric wavefronts from a MOVING source: rings bunched ahead (compressed → higher frequency / pitch) and spread behind (stretched → lower frequency / pitch), with the source, motion arrow, and labels. Use this canonical figure instead of a freehand sketch — a rough doodle of nested rings is unreadable. Not for a single transverse wave (use wave_diagram).', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'sourceSpeedFrac?:number (v/c, 0.1–0.85; default 0.5), movingRight?:boolean (default true), showObservers?:boolean (default true), nRings?:number (3–6; default 4), title?' },
   { kind: 'standing_wave', displayName: 'Standing Wave (string, harmonic n)', whenToUse: 'Show a standing wave on a string fixed at both ends vibrating in harmonic n (1–5): the two-lobe envelope (mirrored sine curves), the nodes (zero displacement) and antinodes (maximum displacement), labeled. Use for harmonics / resonance instead of a freehand sketch.', subjects: ['physics'], grades: { from: 8, to: 12 }, paramSchema: 'harmonic:number (n = 1–5, the number of loops), showNodes?:boolean (default true), title?' },
   { kind: 'interference_pattern', displayName: 'Two-Source Interference', whenToUse: 'Show two point sources emitting overlapping circular wavefronts, with the constructive (antinodal) lines and destructive (nodal) lines drawn as their true hyperbolas. Use for two-source / double-slit interference and ripple-tank patterns instead of a freehand sketch.', subjects: ['physics'], grades: { from: 9, to: 12 }, paramSchema: 'sourceSep?:number (source separation in px on the diagram; default 3×wavelength), wavelength?:number (px; default 46), title?' },
+
+  // ── Phase 18 — cell biology / genetics ─────────────────────────────────
+  { kind: 'mitosis', displayName: 'Mitosis (phases)', whenToUse: 'Show the phases of mitosis (interphase → prophase → metaphase → anaphase → telophase → cytokinesis) as a labeled grid of cells, tracking chromosome behavior and the spindle. Use this canonical figure instead of a freehand sketch — a rough doodle of dividing cells is unreadable. Not for meiosis (use meiosis).', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: 'phase?:interphase|prophase|metaphase|anaphase|telophase|cytokinesis (emphasise one phase; default shows all six), title?' },
+  { kind: 'meiosis', displayName: 'Meiosis (I & II)', whenToUse: 'Show meiosis as a flow from one diploid (2n) cell through Meiosis I and Meiosis II to four haploid (n) cells, with homologous-pair (tetrad) synapsis, crossing over, and the two divisions. Use for meiosis / gamete formation instead of a freehand sketch. Not for mitosis (use mitosis).', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'stage?:meiosis_i|meiosis_ii|crossing_over (emphasise one stage; default shows the whole flow), title?' },
+  { kind: 'dna_replication', displayName: 'DNA Replication Fork', whenToUse: 'Show the DNA replication fork: the parental double helix unwinding, the continuous leading strand and the discontinuous lagging strand made of Okazaki fragments, with the key enzymes (helicase, DNA polymerase, ligase) labeled. Use instead of a freehand sketch — a doodled fork with enzymes is unreadable.', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: 'showEnzymes?:boolean (label helicase / polymerase / ligase; default true), title?' },
+  { kind: 'cell_membrane', displayName: 'Cell Membrane (fluid mosaic)', whenToUse: 'Show the cell membrane as the fluid-mosaic model: the phospholipid bilayer (hydrophilic heads, hydrophobic tails) with embedded channel / carrier / glycoprotein and cholesterol. Optionally illustrate a transport mode with the concentration gradient. Use instead of a freehand sketch.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: 'mode?:diffusion|facilitated|active (add a transport variant with the gradient; default shows the plain labeled bilayer), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -310,6 +317,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   doppler_effect: solveDopplerEffect,
   standing_wave: solveStandingWave,
   interference_pattern: solveInterferencePattern,
+  // Phase 18 — cell biology / genetics
+  mitosis: solveMitosis,
+  meiosis: solveMeiosis,
+  dna_replication: solveDnaReplication,
+  cell_membrane: solveCellMembrane,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

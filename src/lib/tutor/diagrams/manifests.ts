@@ -211,6 +211,16 @@ import {
   buildInterferenceManifest,
   solveInterferencePattern as solveInterferenceForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/waves';
+import {
+  buildMitosisManifest,
+  solveMitosis as solveMitosisForManifest,
+  buildMeiosisManifest,
+  solveMeiosis as solveMeiosisForManifest,
+  buildDnaReplicationManifest,
+  solveDnaReplication as solveDnaReplicationForManifest,
+  buildCellMembraneManifest,
+  solveCellMembrane as solveCellMembraneForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/cell-biology';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1388,6 +1398,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'interference_pattern': {
       try { return buildInterferenceManifest(solveInterferenceForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'mitosis': {
+      try { return buildMitosisManifest(solveMitosisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'meiosis': {
+      try { return buildMeiosisManifest(solveMeiosisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'dna_replication': {
+      try { return buildDnaReplicationManifest(solveDnaReplicationForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'cell_membrane': {
+      try { return buildCellMembraneManifest(solveCellMembraneForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

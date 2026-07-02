@@ -112,7 +112,12 @@ export type DiagramKindId =
   // Phase 17 — wavefront / 2D wave patterns (physics: waves & optics)
   | 'doppler_effect'
   | 'standing_wave'
-  | 'interference_pattern';
+  | 'interference_pattern'
+  // Phase 18 — cell biology / genetics (life science, Biology, AP Bio)
+  | 'mitosis'
+  | 'meiosis'
+  | 'dna_replication'
+  | 'cell_membrane';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

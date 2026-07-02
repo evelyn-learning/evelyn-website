@@ -434,6 +434,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'heart_diagram', 'photosynthesis', 'cellular_respiration',
             // Phase 17 — wavefront / 2D wave patterns
             'doppler_effect', 'standing_wave', 'interference_pattern',
+            // Phase 18 — cell biology / genetics
+            'mitosis', 'meiosis', 'dna_replication', 'cell_membrane',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
