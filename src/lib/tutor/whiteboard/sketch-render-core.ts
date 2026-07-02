@@ -540,6 +540,107 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       }
       return out;
     }
+    case 'coordinate_grid': {
+      // A coordinate plane: faint gridlines, darker axes through the origin with
+      // arrowheads. quadrants 4 → origin centered; 1 → origin at bottom-left.
+      const { x, y, w, h } = p;
+      const quad = p.quadrants ?? 4;
+      const divs = 8;
+      const gridOpts = { ...ROUGH_OPTS, roughness: 0.6, bowing: 0.4, seed, stroke: SKETCH_COLORS.gray, strokeWidth: 0.4 };
+      const axisOpts = { ...ROUGH_OPTS, seed: seed + 1, stroke, strokeWidth: sw };
+      const out: ReturnType<Gen['toPaths']> = [];
+      for (let i = 0; i <= divs; i++) {
+        const gx = x + (w * i) / divs;
+        out.push(...gen.toPaths(gen.line(gx, y, gx, y + h, gridOpts)));
+        const gy = y + (h * i) / divs;
+        out.push(...gen.toPaths(gen.line(x, gy, x + w, gy, gridOpts)));
+      }
+      const ox = quad === 1 ? x : x + w / 2; // origin x
+      const oy = quad === 1 ? y + h : y + h / 2; // origin y (+y down)
+      out.push(...gen.toPaths(gen.line(x, oy, x + w, oy, axisOpts))); // x-axis
+      out.push(...gen.toPaths(gen.line(ox, y, ox, y + h, axisOpts))); // y-axis
+      const head = (tx: number, ty: number, ang: number) => {
+        const L = 3.5, spread = 0.5;
+        for (const s of [ang + Math.PI - spread, ang + Math.PI + spread])
+          out.push(...gen.toPaths(gen.line(tx, ty, tx + L * Math.cos(s), ty + L * Math.sin(s), axisOpts)));
+      };
+      head(x + w, oy, 0); // x-axis points right
+      head(ox, y, -Math.PI / 2); // y-axis points up
+      if (quad === 4) {
+        head(x, oy, Math.PI); // x-axis also points left
+        head(ox, y + h, Math.PI / 2); // y-axis also points down
+      }
+      return out;
+    }
+    case 'orbit': {
+      // A central filled body, an elliptical orbit path, and a satellite dot at
+      // `angle`. The orbit line is thin; the two bodies are solid filled dots.
+      const out: ReturnType<Gen['toPaths']> = [];
+      out.push(...gen.toPaths(gen.ellipse(p.cx, p.cy, p.rx * 2, p.ry * 2, {
+        ...ROUGH_OPTS, roughness: 0.8, seed, stroke, strokeWidth: Math.min(sw, 0.9),
+      })));
+      const bodyR = Math.max(2.5, Math.min(p.rx, p.ry) * 0.22);
+      const bodyColor = fillTok ? SKETCH_COLORS[fillTok] : SKETCH_COLORS.amber; // sun by default
+      out.push(...gen.toPaths(gen.ellipse(p.cx, p.cy, bodyR * 2, bodyR * 2, {
+        ...opts, seed: seed + 2, fill: bodyColor, fillStyle: 'solid', stroke: bodyColor,
+      })));
+      const a = ((p.angle ?? 0) * Math.PI) / 180;
+      const sx = p.cx + p.rx * Math.cos(a), sy = p.cy + p.ry * Math.sin(a);
+      out.push(...gen.toPaths(gen.ellipse(sx, sy, 5, 5, {
+        ...opts, seed: seed + 3, fill: stroke, fillStyle: 'solid', stroke,
+      })));
+      return out;
+    }
+    case 'molecule': {
+      // Ball-and-stick: bonds (single/double/triple lines) UNDER outlined atom
+      // circles, so the element letters (placed in buildSketchPaths) read on top.
+      const out: ReturnType<Gen['toPaths']> = [];
+      const atomR = 4.5;
+      p.bonds.forEach((b, bi) => {
+        const A = p.atoms[b.a], B = p.atoms[b.b];
+        if (!A || !B) return;
+        const dx = B.x - A.x, dy = B.y - A.y;
+        const L = Math.hypot(dx, dy) || 1;
+        const ux = dx / L, uy = dy / L; // along the bond
+        const px = -uy, py = ux; // perpendicular (for double/triple offsets)
+        // shorten so the bond meets the atom rims, not their centers
+        const ax = A.x + ux * atomR, ay = A.y + uy * atomR;
+        const bx = B.x - ux * atomR, by = B.y - uy * atomR;
+        const order = b.order ?? 1;
+        const offs = order >= 3 ? [-1.8, 0, 1.8] : order === 2 ? [-1.3, 1.3] : [0];
+        for (const o of offs)
+          out.push(...gen.toPaths(gen.line(ax + px * o, ay + py * o, bx + px * o, by + py * o, { ...opts, seed: seed + 30 + bi })));
+      });
+      p.atoms.forEach((a, ai) => {
+        out.push(...gen.toPaths(gen.ellipse(a.x, a.y, atomR * 2, atomR * 2, {
+          ...opts, seed: seed + 60 + ai, fill: SKETCH_COLORS.gray, fillStyle: 'solid',
+        })));
+      });
+      return out;
+    }
+    case 'bar_compare': {
+      // A mini bar chart: a baseline + one solid bar per value, heights scaled to
+      // the tallest value. Labels (if any) are placed under each bar in build.
+      const { x, y, w, h } = p;
+      const vals = p.values;
+      const n = vals.length;
+      const maxV = Math.max(...vals, 1e-6);
+      const gap = w * 0.06;
+      const barW = Math.max(1, (w - gap * (n + 1)) / n);
+      const baseY = y + h;
+      const barColor = fillTok ? SKETCH_COLORS[fillTok] : SKETCH_COLORS.blue;
+      const out: ReturnType<Gen['toPaths']> = [];
+      out.push(...gen.toPaths(gen.line(x, baseY, x + w, baseY, { ...ROUGH_OPTS, seed, stroke, strokeWidth: sw })));
+      vals.forEach((v, i) => {
+        const bh = (Math.max(0, v) / maxV) * h;
+        if (bh <= 0.5) return;
+        const bx = x + gap + i * (barW + gap);
+        out.push(...gen.toPaths(gen.rectangle(bx, baseY - bh, barW, bh, {
+          ...opts, seed: seed + 10 + i, fill: barColor, fillStyle: 'solid', stroke,
+        })));
+      });
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -629,6 +730,35 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
         const t = nt <= 1 ? 0 : li / denom;
         const tx = p.x1 + dx * t, ty = p.y1 + dy * t;
         pushLabel(tx + px * 6, ty + py * 6, text, i * 100 + li, 4.5, 'middle', p.stroke);
+      });
+    } else if (p.type === 'coordinate_grid') {
+      // axis captions: xLabel at the right end (above the axis), yLabel at the top.
+      const quad = p.quadrants ?? 4;
+      const ox = quad === 1 ? p.x : p.x + p.w / 2;
+      const oy = quad === 1 ? p.y + p.h : p.y + p.h / 2;
+      if (p.xLabel) pushLabel(p.x + p.w - 1, oy - 4, p.xLabel, i, 4.5, 'end', p.stroke);
+      if (p.yLabel) pushLabel(ox + 4, p.y + 1, p.yLabel, i, 4.5, 'start', p.stroke);
+    } else if (p.type === 'orbit') {
+      // satellite label rides above its dot; center label sits just below the body.
+      const a = ((p.angle ?? 0) * Math.PI) / 180;
+      const sx = p.cx + p.rx * Math.cos(a), sy = p.cy + p.ry * Math.sin(a);
+      if (p.satelliteLabel) pushLabel(sx, sy - 7, p.satelliteLabel, i * 100, 4.5, 'middle', p.stroke);
+      if (p.centerLabel) pushLabel(p.cx, p.cy + 7, p.centerLabel, i * 100 + 1, 4.5, 'middle', p.stroke);
+    } else if (p.type === 'molecule') {
+      // each atom's element letter, centered on its circle
+      p.atoms.forEach((a, ai) => {
+        if (a.label) pushLabel(a.x, a.y, a.label, i * 100 + ai, 5, 'middle', p.stroke);
+      });
+    } else if (p.type === 'bar_compare' && p.labels && p.labels.length) {
+      // one caption centered under each bar
+      const n = p.values.length;
+      const gap = p.w * 0.06;
+      const barW = Math.max(1, (p.w - gap * (n + 1)) / n);
+      const baseY = p.y + p.h;
+      p.labels.forEach((text, li) => {
+        if (li >= n) return;
+        const bx = p.x + gap + li * (barW + gap) + barW / 2;
+        pushLabel(bx, baseY + 5, text, i * 100 + li, 4.5, 'middle', p.stroke);
       });
     }
   });

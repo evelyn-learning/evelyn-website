@@ -83,6 +83,13 @@ export const SKETCH_BOUNDS = {
   minAxisTicks: 2,
   maxAxisTicks: 21,
   maxAxisLabels: 12,
+  // coordinate_grid: a labeled coordinate plane (1 or 4 quadrants); the
+  // gridline density is fixed in the renderer, so no numeric bound needed here.
+  // molecule: a ball-and-stick doodle — atoms linked by bonds
+  maxMoleculeAtoms: 12,
+  maxMoleculeBonds: 16,
+  // bar_compare: a mini side-by-side bar chart
+  maxBars: 10,
 } as const;
 
 export interface Pt {
@@ -293,6 +300,56 @@ export type SketchPrimitive =
       ticks?: number;
       labels?: string[];
     } & Styled)
+  // Parametric: a labeled COORDINATE PLANE filling the box (x,y = top-left; w,h).
+  // `quadrants` 4 = origin centered (all four quadrants); 1 = origin at the
+  // bottom-left (only the +x/+y quadrant). Light gridlines, darker axes with
+  // arrowheads, and optional `xLabel`/`yLabel` axis captions. For plotting /
+  // graphing doodles. ONE primitive draws the whole plane.
+  | ({
+      type: 'coordinate_grid';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      quadrants?: 1 | 4;
+      xLabel?: string;
+      yLabel?: string;
+    } & Styled)
+  // Parametric: an ORBIT — a filled central body at (cx,cy), an elliptical orbit
+  // path (radii rx,ry), and a satellite dot placed at `angle` degrees around it
+  // (0 = right, +y down). Optional `centerLabel` / `satelliteLabel`. For a
+  // planet orbiting the sun, an electron, a satellite. ONE primitive.
+  | ({
+      type: 'orbit';
+      cx: number;
+      cy: number;
+      rx: number;
+      ry: number;
+      angle?: number;
+      satelliteLabel?: string;
+      centerLabel?: string;
+    } & Styled)
+  // Parametric: a simple ball-and-stick MOLECULE — `atoms` are small labeled
+  // circles at (x,y); `bonds` link two atom indices (a,b) with `order` 1|2|3
+  // (single/double/triple lines). For a quick molecular doodle (H₂O, CO₂, a
+  // benzene ring). ONE primitive draws every atom + bond.
+  | ({
+      type: 'molecule';
+      atoms: { x: number; y: number; label?: string }[];
+      bonds: { a: number; b: number; order?: number }[];
+    } & Styled)
+  // Parametric: a mini BAR CHART in the box (x,y = top-left; w,h). `values` set
+  // the bar heights (scaled to the tallest); optional `labels` sit under each
+  // bar. For a quick side-by-side comparison. ONE primitive draws all the bars.
+  | ({
+      type: 'bar_compare';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      values: number[];
+      labels?: string[];
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -327,6 +384,10 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'lever',
   'gauge',
   'axis',
+  'coordinate_grid',
+  'orbit',
+  'molecule',
+  'bar_compare',
   'label',
 ];
 
@@ -386,7 +447,9 @@ export const SKETCH_TOOL_SCHEMA = {
           },
           angle: {
             type: 'number',
-            description: 'concentric: motion direction in degrees; 0 = right (default), 90 = down.',
+            description:
+              'concentric: motion direction in degrees; 0 = right (default), 90 = down. ' +
+              'orbit: satellite position around the path in degrees (0 = right, 90 = down).',
           },
           // wave (transverse sine along x1,y1→x2,y2)
           cycles: { type: 'number', description: 'wave: number of full waves along the segment (0.5..12).' },
@@ -469,7 +532,45 @@ export const SKETCH_TOOL_SCHEMA = {
           labels: {
             type: 'array',
             items: { type: 'string' },
-            description: 'axis: short labels placed under successive ticks (e.g. ["0","5","10"]).',
+            description:
+              'axis: short labels under successive ticks (e.g. ["0","5","10"]). ' +
+              'bar_compare: a short caption under each bar (e.g. ["Mon","Tue","Wed"]).',
+          },
+          // coordinate_grid (a labeled coordinate plane filling x,y,w,h)
+          quadrants: {
+            type: 'number',
+            enum: [1, 4],
+            description: 'coordinate_grid: 4 = origin centered (all quadrants); 1 = origin bottom-left (+x/+y only). Default 4.',
+          },
+          xLabel: { type: 'string', description: 'coordinate_grid: caption at the x-axis (right) end, e.g. "time".' },
+          yLabel: { type: 'string', description: 'coordinate_grid: caption at the y-axis (top) end, e.g. "speed".' },
+          // orbit (central body + elliptical path + satellite at `angle`)
+          satelliteLabel: { type: 'string', description: 'orbit: short label near the satellite dot (e.g. "planet").' },
+          centerLabel: { type: 'string', description: 'orbit: short label near the central body (e.g. "sun").' },
+          // molecule (ball-and-stick: atoms + bonds by index)
+          atoms: {
+            type: 'array',
+            description: 'molecule: atoms as {x,y,label?} on the 0..100 canvas (label = element symbol, e.g. "O").',
+            items: {
+              type: 'object',
+              properties: { x: { type: 'number' }, y: { type: 'number' }, label: { type: 'string' } },
+              required: ['x', 'y'],
+            },
+          },
+          bonds: {
+            type: 'array',
+            description: 'molecule: bonds linking atom indices {a,b, order?} where order 1|2|3 = single/double/triple.',
+            items: {
+              type: 'object',
+              properties: { a: { type: 'number' }, b: { type: 'number' }, order: { type: 'number' } },
+              required: ['a', 'b'],
+            },
+          },
+          // bar_compare (a mini bar chart filling x,y,w,h)
+          values: {
+            type: 'array',
+            items: { type: 'number' },
+            description: 'bar_compare: bar magnitudes, scaled to the tallest (e.g. [3, 7, 5]).',
           },
           points: {
             type: 'array',

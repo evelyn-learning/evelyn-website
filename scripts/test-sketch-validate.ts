@@ -13,6 +13,7 @@ import {
   SPRING_MASS, TRANSVERSE_WAVE, SKIER, BEAKER_HALF,
   TORQUE, TEN_FRAME, WAVELENGTH_BRACE, PENDULUM, GAS_CLOUD, MOLECULES_BOX,
   PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
+  PLOT_POINT, PLANET_ORBIT, WATER_MOLECULE, BAR_HEIGHTS,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -369,6 +370,86 @@ check('axis zero-length dropped → null',
 check('axis missing endpoint dropped → null',
   validateSketch({ primitives: [{ type: 'axis', x1: 40, y1: 50, x2: 60 }] }) === null);
 
+// ── coordinate_grid primitive (Wave 4) ──
+const cgrid = validateSketch({ primitives: [
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 4, xLabel: 'x', yLabel: 'y' },
+] }) as any[];
+check('coordinate_grid validates + keeps quadrants/labels',
+  !!cgrid && cgrid[0].type === 'coordinate_grid' && cgrid[0].quadrants === 4 && cgrid[0].xLabel === 'x' && cgrid[0].yLabel === 'y');
+check('coordinate_grid defaults quadrants to 4',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40 }] }) as any[])[0].quadrants === 4);
+check('coordinate_grid keeps quadrants 1',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40, quadrants: 1 }] }) as any[])[0].quadrants === 1);
+check('coordinate_grid bad quadrants coerced to 4',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40, quadrants: 3 }] }) as any[])[0].quadrants === 4);
+check('coordinate_grid coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: -9, y: 10, w: 40, h: 40 }] }) as any[])[0].x === 0);
+check('coordinate_grid w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 0, h: 40 }] }) === null);
+check('coordinate_grid missing h dropped → null',
+  validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40 }] }) === null);
+
+// ── orbit primitive (Wave 4) ──
+const orbit = validateSketch({ primitives: [
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: -35, centerLabel: 'sun', satelliteLabel: 'planet' },
+] }) as any[];
+check('orbit validates + keeps angle/labels',
+  !!orbit && orbit[0].type === 'orbit' && orbit[0].angle === -35 && orbit[0].centerLabel === 'sun' && orbit[0].satelliteLabel === 'planet');
+check('orbit rx clamped to max',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 999, ry: 20 }] }) as any[])[0].rx === SKETCH_BOUNDS.maxCoord);
+check('orbit empty label dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 30, ry: 20, centerLabel: '   ' }] }) as any[])[0].centerLabel === undefined);
+check('orbit coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: -9, cy: 50, rx: 30, ry: 20 }] }) as any[])[0].cx === 0);
+check('orbit rx<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 0, ry: 20 }] }) === null);
+check('orbit missing ry dropped → null',
+  validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 30 }] }) === null);
+
+// ── molecule primitive (Wave 4) ──
+const mol = validateSketch({ primitives: [
+  { type: 'molecule',
+    atoms: [{ x: 50, y: 46, label: 'O' }, { x: 36, y: 62, label: 'H' }, { x: 64, y: 62, label: 'H' }],
+    bonds: [{ a: 0, b: 1, order: 1 }, { a: 0, b: 2, order: 2 }] },
+] }) as any[];
+check('molecule validates + keeps atoms/bonds',
+  !!mol && mol[0].type === 'molecule' && mol[0].atoms.length === 3 && mol[0].bonds.length === 2 && mol[0].atoms[0].label === 'O');
+check('molecule bond order defaults to 1',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 1 }] }] }) as any[])[0].bonds[0].order === 1);
+check('molecule bond order clamped to 3',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 1, order: 9 }] }] }) as any[])[0].bonds[0].order === 3);
+check('molecule out-of-range bond dropped',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 5 }] }] }) as any[])[0].bonds.length === 0);
+check('molecule self-bond dropped',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 1, b: 1 }] }] }) as any[])[0].bonds.length === 0);
+check('molecule atom coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: -9, y: 20 }, { x: 40, y: 40 }], bonds: [] }] }) as any[])[0].atoms[0].x === 0);
+check('molecule atoms capped at maxMoleculeAtoms',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: Array.from({ length: 30 }, (_, i) => ({ x: i, y: i })), bonds: [] }] }) as any[])[0].atoms.length === SKETCH_BOUNDS.maxMoleculeAtoms);
+check('molecule with no atoms dropped → null',
+  validateSketch({ primitives: [{ type: 'molecule', atoms: [], bonds: [] }] }) === null);
+check('molecule missing atoms/bonds arrays dropped → null',
+  validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }] }] }) === null);
+
+// ── bar_compare primitive (Wave 4) ──
+const bars = validateSketch({ primitives: [
+  { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5], labels: ['A', 'B', 'C'] },
+] }) as any[];
+check('bar_compare validates + keeps values/labels',
+  !!bars && bars[0].type === 'bar_compare' && bars[0].values.length === 3 && bars[0].labels.length === 3);
+check('bar_compare non-number values filtered out',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 'x', null, 5] }] }) as any[])[0].values.length === 2);
+check('bar_compare values capped at maxBars',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: Array.from({ length: 30 }, (_, i) => i + 1) }] }) as any[])[0].values.length === SKETCH_BOUNDS.maxBars);
+check('bar_compare coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: -9, y: 24, w: 60, h: 50, values: [1, 2] }] }) as any[])[0].x === 0);
+check('bar_compare all-nonpositive values dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [0, -3] }] }) === null);
+check('bar_compare empty values dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [] }] }) === null);
+check('bar_compare w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 0, h: 50, values: [3, 7] }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
@@ -377,6 +458,8 @@ for (const [name, prims] of [
   ['PENDULUM', PENDULUM], ['GAS_CLOUD', GAS_CLOUD], ['MOLECULES_BOX', MOLECULES_BOX],
   ['PULLEY_LIFT', PULLEY_LIFT], ['LEVER_BALANCE', LEVER_BALANCE],
   ['SPEEDOMETER', SPEEDOMETER], ['NUMBER_LINE', NUMBER_LINE],
+  ['PLOT_POINT', PLOT_POINT], ['PLANET_ORBIT', PLANET_ORBIT],
+  ['WATER_MOLECULE', WATER_MOLECULE], ['BAR_HEIGHTS', BAR_HEIGHTS],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));
