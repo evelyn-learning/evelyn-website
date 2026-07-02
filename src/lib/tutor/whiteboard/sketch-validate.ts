@@ -26,10 +26,21 @@ const {
   minWaveCycles, maxWaveCycles, maxAmplitude,
   minCoils, maxCoils, maxSpringWidth,
   minStickScale, maxStickScale,
+  minGridDim, maxGridDim, maxArcRadius, maxBlobWobble, maxDotsCount, maxSpread,
 } = SKETCH_BOUNDS;
 
 const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
 const CONTAINER_SHAPES = ['beaker', 'tank', 'battery', 'thermometer'] as const;
+const VECTOR_STYLES = ['single', 'double', 'curved', 'block'] as const;
+const GRID_STYLES = ['lines', 'dots', 'boxes'] as const;
+const BRACE_SIDES = ['left', 'right', 'top', 'bottom'] as const;
+
+/** A short optional text tag carried by vector/brace (distinct from a `label` primitive). */
+function tag(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined;
+  const t = v.trim().slice(0, maxLabelLen);
+  return t || undefined;
+}
 
 function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -190,6 +201,104 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         fillFrac: Math.min(1, Math.max(0, fillFrac)),
         ...(shape ? { shape } : {}),
         ...(fillColor ? { fillColor } : {}),
+        ...styled,
+      };
+    }
+    case 'vector': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length
+      const style =
+        typeof p.style === 'string' && (VECTOR_STYLES as readonly string[]).includes(p.style)
+          ? (p.style as (typeof VECTOR_STYLES)[number])
+          : undefined;
+      const lbl = tag(p.label);
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(style ? { style } : {}),
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'grid': {
+      const x = coord(p.x), y = coord(p.y);
+      const cell = num(p.cell);
+      let cols = num(p.cols), rows = num(p.rows);
+      if (x === null || y === null || cell === null || cols === null || rows === null) return null;
+      if (cell <= 0) return null;
+      cols = Math.round(Math.min(maxGridDim, Math.max(minGridDim, cols)));
+      rows = Math.round(Math.min(maxGridDim, Math.max(minGridDim, rows)));
+      const gstyle =
+        typeof p.style === 'string' && (GRID_STYLES as readonly string[]).includes(p.style)
+          ? (p.style as (typeof GRID_STYLES)[number])
+          : undefined;
+      const fc = num(p.fillCount);
+      return {
+        type,
+        x, y, cols, rows,
+        cell: Math.min(maxCoord, cell),
+        ...(gstyle ? { style: gstyle } : {}),
+        ...(fc !== null ? { fillCount: Math.round(Math.min(cols * rows, Math.max(0, fc))) } : {}),
+        ...styled,
+      };
+    }
+    case 'brace': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length span
+      const side =
+        typeof p.side === 'string' && (BRACE_SIDES as readonly string[]).includes(p.side)
+          ? (p.side as (typeof BRACE_SIDES)[number])
+          : undefined;
+      const lbl = tag(p.label);
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(side ? { side } : {}),
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'arc': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r), startAngle = num(p.startAngle), endAngle = num(p.endAngle);
+      if (cx === null || cy === null || r === null || startAngle === null || endAngle === null) return null;
+      if (r <= 0) return null;
+      if (startAngle === endAngle) return null; // zero sweep
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxArcRadius, r),
+        startAngle, endAngle,
+        ...styled,
+      };
+    }
+    case 'blob': {
+      const cx = coord(p.cx), cy = coord(p.cy), rx = num(p.rx), ry = num(p.ry);
+      if (cx === null || cy === null || rx === null || ry === null) return null;
+      if (rx <= 0 || ry <= 0) return null;
+      const wobble = num(p.wobble);
+      return {
+        type,
+        cx, cy,
+        rx: Math.min(maxCoord, rx),
+        ry: Math.min(maxCoord, ry),
+        ...(wobble !== null ? { wobble: Math.min(maxBlobWobble, Math.max(0, wobble)) } : {}),
+        ...styled,
+      };
+    }
+    case 'dots_cluster': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      let count = num(p.count);
+      const spread = num(p.spread);
+      if (cx === null || cy === null || count === null || spread === null) return null;
+      if (spread <= 0) return null;
+      count = Math.round(Math.min(maxDotsCount, Math.max(1, count)));
+      return {
+        type,
+        cx, cy, count,
+        spread: Math.min(maxSpread, spread),
         ...styled,
       };
     }

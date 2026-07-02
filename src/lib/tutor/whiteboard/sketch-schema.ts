@@ -62,6 +62,16 @@ export const SKETCH_BOUNDS = {
   // stick_figure: a simple person of the given pixel height
   minStickScale: 8,
   maxStickScale: 90,
+  // grid: a regular cols×rows grid (one primitive draws the whole grid)
+  minGridDim: 1,
+  maxGridDim: 24,
+  // arc: a single open arc, radius in canvas units
+  maxArcRadius: 70,
+  // blob: an organic wobbly closed loop; wobble = fraction of the radius
+  maxBlobWobble: 0.6,
+  // dots_cluster: N scattered dots within `spread` of the center
+  maxDotsCount: 80,
+  maxSpread: 48,
 } as const;
 
 export interface Pt {
@@ -150,6 +160,82 @@ export type SketchPrimitive =
       shape?: 'beaker' | 'tank' | 'battery' | 'thermometer';
       fillColor?: SketchColor;
     } & Styled)
+  // Parametric: an arrow along (x1,y1)→(x2,y2) with a head STYLE — `single` a
+  // plain open head; `double` heads at BOTH ends (equilibrium, a span); `curved`
+  // an arc arrow that bulges to one side (rotation, a cycle, "goes around");
+  // `block` a solid filled triangle head (a bold force/vector). Optional `label`
+  // rides the midpoint. Covers forces, torque, cycles, equilibrium, reversible
+  // reactions — richer than the plain `arrow` primitive.
+  | ({
+      type: 'vector';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      style?: 'single' | 'double' | 'curved' | 'block';
+      label?: string;
+    } & Styled)
+  // Parametric: a regular cols×rows grid whose top-left cell corner is (x,y) and
+  // whose cells are `cell` units square. `style` = lines (rules), dots (a dot at
+  // each intersection) or boxes (each cell outlined). `fillCount` drops a filled
+  // counter dot into the first N cells (row-major) — a ten-frame, an array, a
+  // coordinate backdrop. ONE primitive draws the whole grid.
+  | ({
+      type: 'grid';
+      x: number;
+      y: number;
+      cols: number;
+      rows: number;
+      cell: number;
+      style?: 'lines' | 'dots' | 'boxes';
+      fillCount?: number;
+    } & Styled)
+  // Parametric: a curly brace spanning (x1,y1)→(x2,y2), bulging (and pointing its
+  // label) toward `side`. Optional `label` sits at the brace tip. Covers "this
+  // span = …", a measurement, grouping a set of items.
+  | ({
+      type: 'brace';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      side?: 'left' | 'right' | 'top' | 'bottom';
+      label?: string;
+    } & Styled)
+  // Parametric: a single OPEN arc — center (cx,cy), radius r, from `startAngle`
+  // to `endAngle` (degrees, 0 = +x / right, growing clockwise since +y is down).
+  // Covers a pendulum swing, an orbit segment, an angle mark. (concentric already
+  // draws closed rings; this is the open sweep.)
+  | ({
+      type: 'arc';
+      cx: number;
+      cy: number;
+      r: number;
+      startAngle: number;
+      endAngle: number;
+    } & Styled)
+  // Parametric: an organic closed WOBBLY loop around (cx,cy) with radii rx,ry and
+  // an irregular edge (`wobble` 0..0.6 = how lumpy). Covers a cloud, a gas puff,
+  // a region/set, an amoeba-ish shape — anything that should read as "a blob",
+  // not a clean ellipse.
+  | ({
+      type: 'blob';
+      cx: number;
+      cy: number;
+      rx: number;
+      ry: number;
+      wobble?: number;
+    } & Styled)
+  // Parametric: `count` small dots scattered (deterministically) within `spread`
+  // of (cx,cy). Covers a QUANTITY of like things — molecules/particles in a
+  // region, a population, a scatter — without hand-placing every dot.
+  | ({
+      type: 'dots_cluster';
+      cx: number;
+      cy: number;
+      count: number;
+      spread: number;
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -174,6 +260,12 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'spring',
   'stick_figure',
   'container_fill',
+  'vector',
+  'grid',
+  'brace',
+  'arc',
+  'blob',
+  'dots_cluster',
   'label',
 ];
 
@@ -223,7 +315,7 @@ export const SKETCH_TOOL_SCHEMA = {
           cx: { type: 'number' }, cy: { type: 'number' },
           rx: { type: 'number' }, ry: { type: 'number' },
           // concentric (wavefronts): count rings around (cx,cy), radii = spacing·k.
-          count: { type: 'number', description: 'concentric: number of rings (2..8).' },
+          count: { type: 'number', description: 'concentric: number of rings (2..8). dots_cluster: number of dots (1..80).' },
           spacing: { type: 'number', description: 'concentric: radius step between rings.' },
           squeeze: {
             type: 'number',
@@ -264,6 +356,41 @@ export const SKETCH_TOOL_SCHEMA = {
             enum: SKETCH_COLOR_NAMES,
             description: 'container_fill: liquid tint (default blue; battery→green, thermometer→red read well).',
           },
+          // vector (styled arrow along x1,y1→x2,y2) — style + optional label
+          style: {
+            type: 'string',
+            enum: ['single', 'double', 'curved', 'block', 'lines', 'dots', 'boxes'],
+            description:
+              'vector: head style single|double|curved|block (single=plain head, double=heads both ends for ' +
+              'equilibrium, curved=arc arrow for rotation/cycles, block=solid filled head for a bold force). ' +
+              'grid: layout lines|dots|boxes.',
+          },
+          label: {
+            type: 'string',
+            description: 'vector / brace: a short text tag placed at the arrow midpoint / brace tip (2–4 words).',
+          },
+          // grid (cols×rows of cell-sized cells, top-left at x,y)
+          cols: { type: 'number', description: 'grid: number of columns (1..24).' },
+          rows: { type: 'number', description: 'grid: number of rows (1..24). A ten-frame is 2 rows × 5 cols.' },
+          cell: { type: 'number', description: 'grid: side length of each square cell in canvas units.' },
+          fillCount: {
+            type: 'number',
+            description: 'grid: drop a filled counter dot into the first N cells (row-major). e.g. 7 on a ten-frame.',
+          },
+          // brace (curly brace spanning x1,y1→x2,y2)
+          side: {
+            type: 'string',
+            enum: ['left', 'right', 'top', 'bottom'],
+            description: 'brace: which side the brace bulges toward and where its label sits.',
+          },
+          // arc (open arc: center cx,cy, radius r, startAngle→endAngle in degrees)
+          r: { type: 'number', description: 'arc: radius in canvas units.' },
+          startAngle: { type: 'number', description: 'arc: start angle in degrees (0 = right, grows clockwise).' },
+          endAngle: { type: 'number', description: 'arc: end angle in degrees.' },
+          // blob (organic wobbly loop around cx,cy with radii rx,ry)
+          wobble: { type: 'number', description: 'blob: edge irregularity 0..0.6 (0 = smooth ellipse, ~0.35 = lumpy).' },
+          // dots_cluster (count dots scattered within spread of cx,cy)
+          spread: { type: 'number', description: 'dots_cluster: scatter radius around the center in canvas units.' },
           points: {
             type: 'array',
             items: {

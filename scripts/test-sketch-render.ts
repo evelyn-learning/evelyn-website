@@ -119,5 +119,87 @@ check('container_fill stays in bounds', inBounds([
   { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'thermometer' } as SketchPrimitive,
 ]));
 
+// ── vector: line + head; curved/double/block variants render ──
+for (const style of ['single', 'double', 'curved', 'block'] as const) {
+  const v = buildSketchPaths([
+    { type: 'vector', x1: 20, y1: 50, x2: 70, y2: 50, style } as SketchPrimitive,
+  ]);
+  check(`vector (${style}) renders ≥2 sub-paths`, v.drawn.length === 1 && v.drawn[0].paths.length >= 2,
+    `paths=${v.drawn[0]?.paths.length}`);
+}
+// a vector's inline label lands in the labels array (not the drawn paths)
+const vlab = buildSketchPaths([
+  { type: 'vector', x1: 20, y1: 50, x2: 70, y2: 50, style: 'block', label: 'force' } as SketchPrimitive,
+]);
+check('vector label routes to labels[]', vlab.drawn.length === 1 && vlab.labels.length === 1 && vlab.labels[0].text === 'force');
+
+// ── grid: boxes expands to ≥ cols*rows rects; fillCount adds counter dots ──
+const gb = buildSketchPaths([
+  { type: 'grid', x: 20, y: 40, cols: 5, rows: 2, cell: 11, style: 'boxes', fillCount: 7 } as SketchPrimitive,
+]);
+check('grid boxes renders ≥ cols*rows + fillCount sub-paths', gb.drawn[0].paths.length >= 10 + 7,
+  `paths=${gb.drawn[0]?.paths.length}`);
+const gl = buildSketchPaths([
+  { type: 'grid', x: 20, y: 40, cols: 5, rows: 2, cell: 11, style: 'lines' } as SketchPrimitive,
+]);
+check('grid lines renders ≥ (cols+1)+(rows+1) rules', gl.drawn[0].paths.length >= 6 + 3, `paths=${gl.drawn[0]?.paths.length}`);
+const gd = buildSketchPaths([
+  { type: 'grid', x: 20, y: 40, cols: 5, rows: 2, cell: 11, style: 'dots' } as SketchPrimitive,
+]);
+check('grid dots renders a dot per intersection', gd.drawn[0].paths.length >= 6 * 3, `paths=${gd.drawn[0]?.paths.length}`);
+
+// ── brace: one drawn curve; inline label routes to labels[] ──
+const br = buildSketchPaths([
+  { type: 'brace', x1: 14, y1: 56, x2: 50, y2: 56, side: 'bottom', label: 'one wavelength' } as SketchPrimitive,
+]);
+check('brace renders one curve + routes its label', br.drawn.length === 1 && br.drawn[0].paths.length >= 1 && br.labels.length === 1);
+
+// ── arc: one sampled open curve ──
+const ar = buildSketchPaths([
+  { type: 'arc', cx: 50, cy: 14, r: 47, startAngle: 70, endAngle: 110 } as SketchPrimitive,
+]);
+check('arc renders one drawn curve', ar.drawn.length === 1 && ar.drawn[0].paths.length >= 1, `paths=${ar.drawn[0]?.paths.length}`);
+
+// ── blob: filled → polygon, unfilled → closed spline; both render ──
+const bf = buildSketchPaths([
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32, fill: 'gray' } as SketchPrimitive,
+]);
+check('filled blob renders', bf.drawn.length === 1 && bf.drawn[0].paths.length >= 1);
+const bo = buildSketchPaths([
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32 } as SketchPrimitive,
+]);
+check('outline blob renders', bo.drawn.length === 1 && bo.drawn[0].paths.length >= 1);
+// determinism: same input → identical path geometry (stable seed)
+const bo2 = buildSketchPaths([
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32 } as SketchPrimitive,
+]);
+check('blob render is deterministic', JSON.stringify(bo.drawn) === JSON.stringify(bo2.drawn));
+
+// ── dots_cluster: ≥ count sub-paths ──
+const dc = buildSketchPaths([
+  { type: 'dots_cluster', cx: 50, cy: 50, count: 26, spread: 22 } as SketchPrimitive,
+]);
+check('dots_cluster renders ≥ count dots', dc.drawn[0].paths.length >= 26, `paths=${dc.drawn[0]?.paths.length}`);
+
+// ── each new primitive's geometry stays within the canvas ──
+check('vector (curved) stays in bounds', inBounds([
+  { type: 'vector', x1: 20, y1: 50, x2: 70, y2: 50, style: 'curved' } as SketchPrimitive,
+]));
+check('grid stays in bounds', inBounds([
+  { type: 'grid', x: 20, y: 40, cols: 5, rows: 2, cell: 11, style: 'boxes', fillCount: 7 } as SketchPrimitive,
+]));
+check('brace stays in bounds', inBounds([
+  { type: 'brace', x1: 14, y1: 56, x2: 50, y2: 56, side: 'bottom' } as SketchPrimitive,
+]));
+check('arc stays in bounds', inBounds([
+  { type: 'arc', cx: 50, cy: 14, r: 47, startAngle: 70, endAngle: 110 } as SketchPrimitive,
+]));
+check('blob stays in bounds', inBounds([
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32 } as SketchPrimitive,
+]));
+check('dots_cluster stays in bounds', inBounds([
+  { type: 'dots_cluster', cx: 50, cy: 50, count: 26, spread: 22 } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

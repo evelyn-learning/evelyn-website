@@ -132,6 +132,62 @@ export const BEAKER_HALF: SketchPrimitive[] = [
   { type: 'label', x: 50, y: 84, text: 'half full', fontSize: 5, stroke: 'ink', anchor: 'middle' },
 ];
 
+// VECTOR exemplar — teaches: use `vector` (styled arrow) for forces / torque /
+// rotation, never a decorated scribble. A tangential force at the rim (block
+// head) spins a wheel (curved arrow). (Tier-3 vector primitive.)
+export const TORQUE: SketchPrimitive[] = [
+  { type: 'ellipse', cx: 48, cy: 56, rx: 22, ry: 22, stroke: 'ink', strokeWidth: 1.2 }, // the wheel
+  { type: 'ellipse', cx: 48, cy: 56, rx: 1.8, ry: 1.8, stroke: 'ink', fill: 'ink' }, // axle
+  { type: 'vector', x1: 48, y1: 32, x2: 24, y2: 32, style: 'block', stroke: 'red', strokeWidth: 1.3, label: 'force' }, // tangential push (top → left)
+  { type: 'vector', x1: 70, y1: 40, x2: 26, y2: 40, style: 'curved', stroke: 'blue', strokeWidth: 1.2 }, // rotation sweeping over the top
+  { type: 'label', x: 82, y: 46, text: 'spins', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 30, y: 86, text: 'torque = F·r', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// GRID exemplar — teaches: use ONE `grid` with fillCount for a ten-frame /
+// array, never hand-placed boxes + dots. A ten-frame showing 7. (Tier-3 grid.)
+export const TEN_FRAME: SketchPrimitive[] = [
+  { type: 'grid', x: 22, y: 40, cols: 5, rows: 2, cell: 11, style: 'boxes', fillCount: 7, fill: 'red', stroke: 'ink', strokeWidth: 1.1 },
+  { type: 'label', x: 50, y: 26, text: 'seven', fontSize: 5.5, stroke: 'red', anchor: 'middle' },
+  { type: 'label', x: 50, y: 78, text: 'ten-frame', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// BRACE exemplar — teaches: use `brace` to bracket a span and label it, never a
+// hand-drawn curly line. A brace under one full cycle of a wave marks the
+// wavelength. (Tier-3 brace primitive.)
+export const WAVELENGTH_BRACE: SketchPrimitive[] = [
+  { type: 'wave', x1: 14, y1: 38, x2: 86, y2: 38, cycles: 2, amplitude: 12, stroke: 'blue', strokeWidth: 1.3 },
+  { type: 'brace', x1: 14, y1: 56, x2: 50, y2: 56, side: 'bottom', stroke: 'ink', strokeWidth: 1.1, label: 'one wavelength' },
+];
+
+// ARC exemplar — teaches: use `arc` for a single open sweep (a swing, an orbit
+// arc, an angle), distinct from `concentric`'s closed rings. A pendulum's swing.
+export const PENDULUM: SketchPrimitive[] = [
+  { type: 'ellipse', cx: 50, cy: 14, rx: 1.8, ry: 1.8, stroke: 'ink', fill: 'ink' }, // pivot
+  { type: 'line', x1: 50, y1: 14, x2: 34, y2: 58, stroke: 'gray', strokeWidth: 0.8 }, // left extreme (faint)
+  { type: 'line', x1: 50, y1: 14, x2: 66, y2: 58, stroke: 'ink', strokeWidth: 1.1 }, // right extreme (string)
+  { type: 'ellipse', cx: 34, cy: 58, rx: 4.5, ry: 4.5, stroke: 'gray', strokeWidth: 0.8 }, // ghost bob
+  { type: 'ellipse', cx: 66, cy: 58, rx: 5, ry: 5, stroke: 'blue', fill: 'blue' }, // bob
+  { type: 'arc', cx: 50, cy: 14, r: 47, startAngle: 70, endAngle: 110, stroke: 'red', strokeWidth: 1.2 }, // the swing arc
+  { type: 'label', x: 50, y: 76, text: 'swing', fontSize: 5, stroke: 'red', anchor: 'middle' },
+];
+
+// BLOB exemplar — teaches: use `blob` for an organic loop (a cloud, a gas puff,
+// a region/set), never a lumpy hand-drawn curve or a too-clean ellipse.
+export const GAS_CLOUD: SketchPrimitive[] = [
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32, stroke: 'gray', fill: 'gray' },
+  { type: 'label', x: 48, y: 78, text: 'gas cloud', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// DOTS-CLUSTER exemplar — teaches: use ONE `dots_cluster` for a QUANTITY of like
+// things (molecules, particles, a population), never many hand-placed dots. Gas
+// molecules bouncing inside a box. (Tier-3 dots_cluster primitive.)
+export const MOLECULES_BOX: SketchPrimitive[] = [
+  { type: 'rect', x: 18, y: 26, w: 64, h: 48, stroke: 'ink', strokeWidth: 1.2 }, // the container
+  { type: 'dots_cluster', cx: 50, cy: 50, count: 26, spread: 22, stroke: 'blue', fill: 'blue' },
+  { type: 'label', x: 50, y: 86, text: 'gas molecules', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -184,5 +240,35 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a beaker about half full of water',
     labels: ['water', 'half full'],
     primitives: BEAKER_HALF,
+  },
+  {
+    concept: 'torque: a tangential force applied at the rim of a wheel makes it spin about its axle',
+    labels: ['force', 'spins'],
+    primitives: TORQUE,
+  },
+  {
+    concept: 'a ten-frame filled with seven counters',
+    labels: ['seven', 'ten-frame'],
+    primitives: TEN_FRAME,
+  },
+  {
+    concept: 'one full wavelength of a wave, bracketed and labelled',
+    labels: ['one wavelength'],
+    primitives: WAVELENGTH_BRACE,
+  },
+  {
+    concept: 'a pendulum swinging back and forth along its arc',
+    labels: ['swing'],
+    primitives: PENDULUM,
+  },
+  {
+    concept: 'a soft cloud of gas',
+    labels: ['gas cloud'],
+    primitives: GAS_CLOUD,
+  },
+  {
+    concept: 'many gas molecules bouncing around inside a box',
+    labels: ['gas molecules'],
+    primitives: MOLECULES_BOX,
   },
 ];

@@ -40,6 +40,58 @@ const hex = (c: SketchColor | undefined, fallback: SketchColor = 'ink') => SKETC
 
 type Gen = ReturnType<typeof rough.generator>;
 
+/** Small deterministic PRNG (mulberry32) so `blob`/`dots_cluster` jitter is
+ *  STABLE across re-renders (matches the fixed-seed philosophy of this module). */
+function rng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Curly-brace silhouette + tip point for a `brace` primitive. Shared by the
+ *  renderer (draws the curve) and buildSketchPaths (places the label at the tip). */
+function braceGeom(p: {
+  x1: number; y1: number; x2: number; y2: number;
+  side?: 'left' | 'right' | 'top' | 'bottom';
+}): { pts: [number, number][]; tip: [number, number] } {
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const px = -uy, py = ux; // unit perpendicular (left of the direction)
+  const eff = p.side ?? (Math.abs(ux) >= Math.abs(uy) ? 'top' : 'right');
+  // pick the perpendicular sign so the brace bulges toward the requested side
+  const sign =
+    eff === 'top' ? (py < 0 ? 1 : -1)
+    : eff === 'bottom' ? (py > 0 ? 1 : -1)
+    : eff === 'left' ? (px < 0 ? 1 : -1)
+    : (px > 0 ? 1 : -1);
+  const d = Math.min(8, Math.max(3, len * 0.12));
+  // (t along the span, magnitude of the outward bump) — a central nib reads as a brace
+  const prof: [number, number][] = [
+    [0, 0], [0.12, 0.8], [0.28, 1], [0.45, 1], [0.5, 1.7], [0.55, 1], [0.72, 1], [0.88, 0.8], [1, 0],
+  ];
+  const pts = prof.map(
+    ([t, m]) => [p.x1 + dx * t + px * sign * d * m, p.y1 + dy * t + py * sign * d * m] as [number, number],
+  );
+  const mx = p.x1 + dx * 0.5, my = p.y1 + dy * 0.5;
+  const tip: [number, number] = [mx + px * sign * (d * 1.7 + 4), my + py * sign * (d * 1.7 + 4)];
+  return { pts, tip };
+}
+
+/** Where a `vector`'s midpoint label sits — nudged to the upper side of the shaft. */
+function vectorLabelPos(p: { x1: number; y1: number; x2: number; y2: number }): [number, number] {
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const px = -dy / len, py = dx / len;
+  const sign = py > 0 ? -1 : 1; // keep it above the shaft (smaller y)
+  const mx = (p.x1 + p.x2) / 2, my = (p.y1 + p.y2) / 2;
+  return [mx + px * sign * 6, my + py * sign * 6];
+}
+
 function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] {
   const stroke = hex((p as { stroke?: SketchColor }).stroke);
   const fillTok = (p as { fill?: SketchColor }).fill;
@@ -244,6 +296,141 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       }
       return out;
     }
+    case 'vector': {
+      // A styled arrow. `single` open head; `double` heads both ends; `block`
+      // solid filled head; `curved` an arc arrow bulging to one side (rotation).
+      const style = p.style ?? 'single';
+      const out: ReturnType<Gen['toPaths']> = [];
+      // open V-head at (tx,ty) pointing along `ang`
+      const openHead = (tx: number, ty: number, ang: number) => {
+        const L = 5, spread = 0.5;
+        for (const s of [ang + Math.PI - spread, ang + Math.PI + spread])
+          out.push(...gen.toPaths(gen.line(tx, ty, tx + L * Math.cos(s), ty + L * Math.sin(s), opts)));
+      };
+      if (style === 'curved') {
+        // quadratic arc A→B bulging by the perpendicular; head at B along the tangent
+        const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+        const L = Math.hypot(dx, dy) || 1;
+        const px = -dy / L, py = dx / L;
+        const bulge = L * 0.4;
+        const mx = (p.x1 + p.x2) / 2 + px * bulge, my = (p.y1 + p.y2) / 2 + py * bulge;
+        const pts: [number, number][] = [];
+        const n = 14;
+        for (let i = 0; i <= n; i++) {
+          const t = i / n, u = 1 - t;
+          pts.push([
+            u * u * p.x1 + 2 * u * t * mx + t * t * p.x2,
+            u * u * p.y1 + 2 * u * t * my + t * t * p.y2,
+          ]);
+        }
+        out.push(...gen.toPaths(gen.curve(pts, opts)));
+        const prev = pts[pts.length - 2];
+        openHead(p.x2, p.y2, Math.atan2(p.y2 - prev[1], p.x2 - prev[0]));
+        return out;
+      }
+      out.push(...gen.toPaths(gen.line(p.x1, p.y1, p.x2, p.y2, opts)));
+      const ang = Math.atan2(p.y2 - p.y1, p.x2 - p.x1);
+      if (style === 'block') {
+        const L = 5.5, spread = 0.42;
+        const tri: [number, number][] = [
+          [p.x2, p.y2],
+          [p.x2 + L * Math.cos(ang + Math.PI - spread), p.y2 + L * Math.sin(ang + Math.PI - spread)],
+          [p.x2 + L * Math.cos(ang + Math.PI + spread), p.y2 + L * Math.sin(ang + Math.PI + spread)],
+        ];
+        out.push(...gen.toPaths(gen.polygon(tri, { ...opts, fill: stroke, fillStyle: 'solid' })));
+      } else {
+        openHead(p.x2, p.y2, ang);
+        if (style === 'double') openHead(p.x1, p.y1, ang + Math.PI); // head at the tail too
+      }
+      return out;
+    }
+    case 'grid': {
+      // A regular cols×rows grid. `lines` = continuous rules; `dots` = a dot at
+      // each intersection; `boxes` = each cell its own rough rectangle. fillCount
+      // drops a filled counter dot into the first N cells (a ten-frame, an array).
+      const gstyle = p.style ?? 'lines';
+      const gw = p.cols * p.cell, gh = p.rows * p.cell;
+      // The grid STRUCTURE is stroke-only; the `fill` token tints ONLY the
+      // fillCount counter dots (otherwise every cell would flood with fill).
+      const structOpts = { ...ROUGH_OPTS, seed, stroke, strokeWidth: sw };
+      const out: ReturnType<Gen['toPaths']> = [];
+      if (gstyle === 'dots') {
+        for (let r = 0; r <= p.rows; r++)
+          for (let c = 0; c <= p.cols; c++)
+            out.push(...gen.toPaths(gen.ellipse(p.x + c * p.cell, p.y + r * p.cell, 1.4, 1.4, { ...structOpts, fill: stroke, fillStyle: 'solid' })));
+      } else if (gstyle === 'boxes') {
+        for (let r = 0; r < p.rows; r++)
+          for (let c = 0; c < p.cols; c++)
+            out.push(...gen.toPaths(gen.rectangle(p.x + c * p.cell, p.y + r * p.cell, p.cell, p.cell, { ...structOpts, seed: seed + r * p.cols + c })));
+      } else {
+        for (let c = 0; c <= p.cols; c++)
+          out.push(...gen.toPaths(gen.line(p.x + c * p.cell, p.y, p.x + c * p.cell, p.y + gh, structOpts)));
+        for (let r = 0; r <= p.rows; r++)
+          out.push(...gen.toPaths(gen.line(p.x, p.y + r * p.cell, p.x + gw, p.y + r * p.cell, structOpts)));
+      }
+      const fillN = Math.min(p.fillCount ?? 0, p.cols * p.rows);
+      if (fillN > 0) {
+        const cr = p.cell * 0.32;
+        const dotColor = fillTok ? SKETCH_COLORS[fillTok] : stroke;
+        for (let k = 0; k < fillN; k++) {
+          const cc = k % p.cols, rr = Math.floor(k / p.cols);
+          const dxc = p.x + (cc + 0.5) * p.cell, dyc = p.y + (rr + 0.5) * p.cell;
+          out.push(...gen.toPaths(gen.ellipse(dxc, dyc, cr * 2, cr * 2, { ...opts, seed: seed + 100 + k, fill: dotColor, fillStyle: 'solid', stroke: dotColor })));
+        }
+      }
+      return out;
+    }
+    case 'brace': {
+      // One rough curve through the brace silhouette (central nib = the brace).
+      const { pts } = braceGeom(p);
+      return gen.toPaths(gen.curve(pts, opts));
+    }
+    case 'arc': {
+      // Sample an open arc from startAngle→endAngle (degrees, +y down). Sampling
+      // (vs rough.arc) is robust to angle order / wrap and reads hand-drawn.
+      const s = (p.startAngle * Math.PI) / 180;
+      let e = (p.endAngle * Math.PI) / 180;
+      if (e <= s) e += 2 * Math.PI;
+      const n = Math.max(8, Math.round((Math.abs(e - s) / Math.PI) * 16));
+      const pts: [number, number][] = [];
+      for (let i = 0; i <= n; i++) {
+        const a = s + ((e - s) * i) / n;
+        pts.push([p.cx + p.r * Math.cos(a), p.cy + p.r * Math.sin(a)]);
+      }
+      return gen.toPaths(gen.curve(pts, opts));
+    }
+    case 'blob': {
+      // Organic closed loop: an ellipse whose per-vertex radius is jittered by
+      // `wobble`. Filled → rough polygon (a solid cloud/gas puff); unfilled →
+      // a smooth closed spline (a cloud/region outline).
+      const wob = Math.min(0.6, Math.max(0, p.wobble ?? 0.3));
+      const rand = rng(seed * 131 + 7);
+      const n = 14;
+      const pts: [number, number][] = [];
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 2 * Math.PI;
+        const f = 1 + wob * (rand() * 2 - 1);
+        pts.push([p.cx + p.rx * f * Math.cos(a), p.cy + p.ry * f * Math.sin(a)]);
+      }
+      if (fillTok) return gen.toPaths(gen.polygon(pts, opts));
+      return gen.toPaths(gen.curve([...pts, pts[0], pts[1], pts[2]], opts)); // wrap to close the spline
+    }
+    case 'dots_cluster': {
+      // `count` small filled dots scattered uniformly within `spread` of center.
+      const rand = rng(seed * 97 + 13);
+      const dotColor = fillTok ? SKETCH_COLORS[fillTok] : stroke;
+      const dotR = 1.3;
+      const out: ReturnType<Gen['toPaths']> = [];
+      for (let k = 0; k < p.count; k++) {
+        const a = rand() * 2 * Math.PI;
+        const rr = Math.sqrt(rand()) * p.spread; // sqrt → uniform over the disc
+        out.push(...gen.toPaths(gen.ellipse(
+          p.cx + rr * Math.cos(a), p.cy + rr * Math.sin(a), dotR * 2, dotR * 2,
+          { ...opts, seed: seed + k, fill: dotColor, fillStyle: 'solid', stroke: dotColor },
+        )));
+      }
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -290,24 +477,33 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
   const gen = rough.generator();
   const drawn: { paths: PathInfo[] }[] = [];
   const labels: LabelSpec[] = [];
+  const pushLabel = (
+    lx: number, ly: number, text: string, i: number,
+    fontSize = 5, anchor: 'start' | 'middle' | 'end' = 'middle', color?: SketchColor,
+  ) => {
+    const w = estLabelWidth(text, fontSize);
+    const slug = shortLabelSlug(text) || `label-${i}`;
+    const { x, y } = clampLabelPos(lx, ly, w, fontSize, anchor);
+    labels.push({
+      x, y, text, fontSize, anchor,
+      fill: hex(color),
+      feature: feat(slug, { cx: x, cy: y, w, h: fontSize * 1.2 }, SKETCH_VIEWBOX),
+    });
+  };
   primitives.forEach((p, i) => {
     if (p.type === 'label') {
-      const fontSize = p.fontSize ?? 5;
-      const anchor = p.anchor ?? 'middle';
-      const w = estLabelWidth(p.text, fontSize);
-      const slug = shortLabelSlug(p.text) || `label-${i}`;
-      const { x, y } = clampLabelPos(p.x, p.y, w, fontSize, anchor);
-      labels.push({
-        x,
-        y,
-        text: p.text,
-        fontSize,
-        anchor,
-        fill: hex(p.stroke),
-        feature: feat(slug, { cx: x, cy: y, w, h: fontSize * 1.2 }, SKETCH_VIEWBOX),
-      });
-    } else {
-      drawn.push({ paths: primitivePaths(gen, p, i + 1) });
+      pushLabel(p.x, p.y, p.text, i, p.fontSize ?? 5, p.anchor ?? 'middle', p.stroke);
+      return;
+    }
+    drawn.push({ paths: primitivePaths(gen, p, i + 1) });
+    // vector/brace carry an OPTIONAL inline label (distinct from a `label` prim):
+    // place it at the shaft midpoint / brace tip so the tag rides its own figure.
+    if (p.type === 'vector' && p.label) {
+      const [lx, ly] = vectorLabelPos(p);
+      pushLabel(lx, ly, p.label, i, 5, 'middle', p.stroke);
+    } else if (p.type === 'brace' && p.label) {
+      const [lx, ly] = braceGeom(p).tip;
+      pushLabel(lx, ly, p.label, i, 5, 'middle', p.stroke);
     }
   });
   return { drawn, labels };
