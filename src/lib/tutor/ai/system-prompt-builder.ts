@@ -147,6 +147,13 @@ export interface SystemPromptContext {
   entryMode?: 'button' | 'typed-content' | 'typed-greeting';
   /** True for a subscribed student with prior sessions/history. */
   isReturning?: boolean;
+
+  /** Task B5 — self-report two-channel routing clause. Optional/additive
+   *  (same pattern as B4): when absent (every current caller),
+   *  buildSystemPrompt's output is byte-for-byte unchanged. Unlike the
+   *  opener clause this is session-wide, not gated to the opening turn —
+   *  the orchestrator wiring that sets this lands in a later task. */
+  selfReportRouting?: boolean;
 }
 
 /**
@@ -1311,6 +1318,38 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
 }
 
 /**
+ * Pure helper: given a SystemPromptContext, returns the session-wide prose
+ * that routes a student's self-report about themselves down TWO channels,
+ * or `null` when the caller hasn't opted in (`ctx.selfReportRouting` not
+ * `true`). Unlike buildOpenerClause this is not gated to the opening turn —
+ * a student can volunteer information about themselves at any point in the
+ * session — but it's still additive: legacy callers that never set
+ * `selfReportRouting` see no change to buildSystemPrompt's output.
+ *
+ * The two channels: (1) things ABOUT THEM (interests, an upcoming test,
+ * what they enjoy) are for rapport and theming examples; (2) claims about
+ * WHAT THEY ALREADY KNOW are hints to act on, not proof of mastery — a
+ * student can bluff, so a knowledge claim must be confirmed by what they
+ * actually demonstrate before it's treated as learned or used to skip
+ * teaching. This keeps "completion is always earned" intact.
+ *
+ * Generic by design (no topic-specific examples) per
+ * feedback_generic_prompts.
+ */
+export function buildSelfReportClause(ctx: SystemPromptContext): string | null {
+  if (ctx.selfReportRouting !== true) return null;
+
+  return (
+    'When a student tells you about themselves, route it two ways. Things about THEM — ' +
+    'what they enjoy, a test or event coming up, their interests — are for rapport and for ' +
+    "theming your examples to them. Claims about WHAT THEY ALREADY KNOW are hints to act " +
+    "on, NOT proof they've learned it: students can and do over- or under-state what they " +
+    'know. Treat a knowledge claim as something to CONFIRM by what they actually demonstrate ' +
+    'before you count it as learned or skip teaching it.'
+  );
+}
+
+/**
  * Build the complete system prompt
  */
 export function buildSystemPrompt(context: SystemPromptContext): string {
@@ -1550,6 +1589,15 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   const openerClause = buildOpenerClause(context);
   if (openerClause) {
     prompt += `\n\n## This Turn: Session Opener\n${openerClause}\n`;
+  }
+
+  // Task B5 — self-report two-channel routing clause. Additive/gated: only
+  // appended when the caller opts in via ctx.selfReportRouting. Session-wide
+  // (not opener-only), but no current caller sets this field, so this block
+  // is a no-op today and the prompt is byte-identical to before.
+  const selfReportClause = buildSelfReportClause(context);
+  if (selfReportClause) {
+    prompt += `\n\n## Self-Report Routing\n${selfReportClause}\n`;
   }
 
   return prompt;
