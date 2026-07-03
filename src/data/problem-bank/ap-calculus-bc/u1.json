@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "The instantaneous rate of change of $f$ at $x=c$ is best described as:",
     "choices": [
-      "The limit of the average rates of change over intervals shrinking toward $c$",
       "The average rate of change over the whole domain",
+      "The limit of the average rates of change over intervals shrinking toward $c$",
       "Always equal to zero at a single point",
       "The value $f(c)$ divided by $c$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Change 'at an instant' is captured by letting the interval shrink to a point.",
       "It is a limiting process applied to average rates."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "Why can the instantaneous rate of change at a single point NOT be found by directly substituting one point into the average-rate-of-change formula?",
     "choices": [
-      "Both the numerator and the denominator become 0, giving the indeterminate form $\\frac{0}{0}$",
       "The numerator becomes infinite",
       "The denominator becomes negative",
+      "Both the numerator and the denominator become 0, giving the indeterminate form $\\frac{0}{0}$",
       "It actually works perfectly with a single point"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Set $a=b=c$ in the difference quotient.",
       "The gap in inputs closes to zero at the same time as the gap in outputs."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "The table shows the average velocity of an object over intervals $[2,b]$ as $b$ approaches 2: at $b=2.1$ it is 6.1, at $b=2.01$ it is 6.01, and at $b=2.001$ it is 6.001. The best estimate of the instantaneous velocity at $t=2$ is:",
     "choices": [
-      "6",
       "6.001",
       "2",
-      "It cannot be determined from a table"
+      "It cannot be determined from a table",
+      "6"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Watch the value the averages settle toward as the interval shrinks.",
       "The trend approaches a limiting value."
@@ -128,12 +128,12 @@
     "responseFormat": "mcq",
     "problemText": "The two-sided limit $\\lim_{x\\to c} f(x)$ exists if and only if:",
     "choices": [
-      "The left-hand and right-hand limits both exist and are equal",
       "$f(c)$ is defined",
+      "The left-hand and right-hand limits both exist and are equal",
       "$f$ is continuous at $c$",
       "The left-hand limit exists"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Approaching from both directions must give the same target.",
       "Existence of the two-sided limit does not require $f(c)$."
@@ -147,12 +147,12 @@
     "responseFormat": "mcq",
     "problemText": "Which expression represents the left-hand limit of $f$ as $x$ approaches 2?",
     "choices": [
-      "$\\lim_{x\\to 2^-} f(x)$",
       "$\\lim_{x\\to 2^+} f(x)$",
       "$\\lim_{x\\to 2} f(x)$",
+      "$\\lim_{x\\to 2^-} f(x)$",
       "$\\lim_{x\\to -2} f(x)$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The minus superscript means approaching from values less than 2.",
       "Left of 2 on the number line."
@@ -166,12 +166,12 @@
     "responseFormat": "mcq",
     "problemText": "Which statement about limits is TRUE?",
     "choices": [
-      "$\\lim_{x\\to c} f(x)$ can exist even when $f(c)$ is undefined",
       "If $\\lim_{x\\to c} f(x)=L$, then $f(c)=L$ must hold",
       "A limit must always equal the function value",
-      "If $f(c)$ is undefined, the limit cannot exist"
+      "If $f(c)$ is undefined, the limit cannot exist",
+      "$\\lim_{x\\to c} f(x)$ can exist even when $f(c)$ is undefined"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Think of a function with a hole at $x=c$.",
       "The limit describes nearby behavior, independent of $f(c)$."
@@ -211,12 +211,12 @@
     "responseFormat": "mcq",
     "problemText": "To estimate $\\lim_{x\\to c} f(x)$ from a table, you should examine the $f$-values as the $x$-values:",
     "choices": [
-      "Get closer to $c$ from both sides",
       "Equal $c$ exactly",
+      "Get closer to $c$ from both sides",
       "Grow without bound",
       "Move away from $c$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A limit is about approaching $c$.",
       "Check inputs just below and just above $c$."
@@ -230,12 +230,12 @@
     "responseFormat": "mcq",
     "problemText": "The graph of $f$ has an open circle at $(2,5)$ and a solid dot at $(2,1)$, so $f(2)=1$. What is $\\lim_{x\\to 2} f(x)$?",
     "choices": [
-      "5",
       "1",
       "The limit does not exist",
+      "5",
       "2"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The limit follows the curve toward the point, not the isolated dot.",
       "The open circle marks the value the curve approaches."
@@ -249,12 +249,12 @@
     "responseFormat": "mcq",
     "problemText": "As $x\\to 3$ from the left, $f(x)\\to 4$; as $x\\to 3$ from the right, $f(x)\\to 7$. Then $\\lim_{x\\to 3} f(x)$:",
     "choices": [
-      "Does not exist",
       "Equals 4",
       "Equals 7",
-      "Equals 5.5"
+      "Equals 5.5",
+      "Does not exist"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The two one-sided limits disagree.",
       "For the two-sided limit to exist, both sides must match."
@@ -332,12 +332,12 @@
     "responseFormat": "mcq",
     "problemText": "The limit of a product, $\\lim_{x\\to c}\\big[f(x)\\,g(x)\\big]$, equals the product of the limits provided that:",
     "choices": [
-      "Both individual limits exist",
       "The function is a polynomial",
+      "Both individual limits exist",
       "$c=0$",
       "It always holds with no conditions"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The limit laws require each piece to have a limit.",
       "If one factor's limit fails to exist, the law does not apply."
@@ -351,12 +351,12 @@
     "responseFormat": "mcq",
     "problemText": "Given $\\lim_{x\\to a} f(x)=3$ and $\\lim_{x\\to a} g(x)=0$, what can be said about $\\lim_{x\\to a}\\frac{f(x)}{g(x)}$?",
     "choices": [
-      "It is not determined by the quotient law, because the denominator's limit is 0",
       "It equals 0",
       "It equals 3",
+      "It is not determined by the quotient law, because the denominator's limit is 0",
       "It equals 1"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The quotient law requires the denominator's limit to be nonzero.",
       "A nonzero over zero form points to infinite behavior, not a simple quotient."
@@ -428,12 +428,12 @@
     "responseFormat": "mcq",
     "problemText": "Evaluate $\\lim_{x\\to 0}\\dfrac{\\frac{1}{x+3}-\\frac{1}{3}}{x}$.",
     "choices": [
-      "$-\\frac{1}{9}$",
       "$\\frac{1}{9}$",
+      "$-\\frac{1}{9}$",
       "0",
       "$-\\frac{1}{3}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Combine the two fractions in the numerator over a common denominator ${}3(x+3)$.",
       "After simplifying, the numerator has a factor of $x$ that cancels the $x$ below."
@@ -447,12 +447,12 @@
     "responseFormat": "mcq",
     "problemText": "After rationalizing, $\\lim_{x\\to 0}\\frac{\\sqrt{x+4}-2}{x}$ becomes $\\lim_{x\\to 0}\\frac{1}{\\sqrt{x+4}+2}$. This limit equals:",
     "choices": [
-      "$\\frac{1}{4}$",
       "$\\frac{1}{2}$",
       "0",
+      "$\\frac{1}{4}$",
       "1"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Substitute $x=0$ into the simplified form.",
       "$\\frac{1}{\\sqrt{4}+2}=\\frac{1}{4}$."
@@ -505,12 +505,12 @@
     "responseFormat": "mcq",
     "problemText": "When evaluating a limit, the FIRST procedure you should try is:",
     "choices": [
-      "Direct substitution",
       "Factoring",
       "Rationalizing",
-      "Making a table of thousands of values"
+      "Making a table of thousands of values",
+      "Direct substitution"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Always test whether the function is continuous at the point first.",
       "If substitution gives a defined value, you are done."
@@ -543,12 +543,12 @@
     "responseFormat": "mcq",
     "problemText": "Substituting into $\\lim_{x\\to 2}\\frac{x+1}{x-2}$ gives the form $\\frac{3}{0}$, and the one-sided limits have opposite signs. The two-sided limit:",
     "choices": [
-      "Does not exist (the function has a vertical asymptote at $x=2$)",
       "Equals 0",
+      "Does not exist (the function has a vertical asymptote at $x=2$)",
       "Equals 3",
       "Equals $+\\infty$, so it exists"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A nonzero-over-zero form signals a vertical asymptote.",
       "Opposite-sign one-sided infinities mean the two-sided limit does not exist."
@@ -562,12 +562,12 @@
     "responseFormat": "mcq",
     "problemText": "For which limit is direct substitution alone sufficient to find the value?",
     "choices": [
-      "$\\lim_{x\\to 1}\\frac{x^2+2}{x+3}$",
       "$\\lim_{x\\to 2}\\frac{x-2}{x^2-4}$",
       "$\\lim_{x\\to 0}\\frac{\\sin x}{x}$",
+      "$\\lim_{x\\to 1}\\frac{x^2+2}{x+3}$",
       "$\\lim_{x\\to 3}\\frac{1}{x-3}$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Test each: which one gives a defined, nonzero-denominator value?",
       "The first evaluates to $\\frac{3}{4}$ directly."
@@ -626,12 +626,12 @@
     "responseFormat": "mcq",
     "problemText": "If $-x^2\\le f(x)\\le x^2$ for all $x$, then $\\lim_{x\\to 0} f(x)$ equals:",
     "choices": [
-      "0",
       "1",
+      "0",
       "It does not exist",
       "It cannot be determined"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Both bounds approach the same value as $x\\to 0$.",
       "$-x^2\\to 0$ and $x^2\\to 0$."
@@ -645,12 +645,12 @@
     "responseFormat": "mcq",
     "problemText": "To evaluate $\\lim_{x\\to 0} x^2\\sin\\!\\left(\\frac{1}{x}\\right)$ using the Squeeze Theorem, the appropriate bounds are:",
     "choices": [
-      "$-x^2\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le x^2$",
       "$-1\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le 1$",
       "$-x\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le x$",
+      "$-x^2\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le x^2$",
       "$-|x|\\le x^2\\sin\\!\\left(\\frac{1}{x}\\right)\\le |x|$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Start from $-1\\le \\sin\\!\\left(\\frac{1}{x}\\right)\\le 1$.",
       "Multiply through by $x^2$ (which is nonnegative)."
@@ -703,12 +703,12 @@
     "responseFormat": "mcq",
     "problemText": "A single limit can be investigated using which representations?",
     "choices": [
-      "Graphs, tables, and algebraic expressions",
       "Only graphs",
       "Only algebra",
+      "Graphs, tables, and algebraic expressions",
       "Only tables"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The same limit should agree across representations.",
       "Graphical, numerical, and analytic approaches all apply."
@@ -722,12 +722,12 @@
     "responseFormat": "mcq",
     "problemText": "An algebraic evaluation gives $\\lim_{x\\to 2} f(x)=4$. A correct table of values near $x=2$ should show the $f$-values:",
     "choices": [
-      "Approaching 4 from both sides",
       "Equal to 2",
       "Approaching 2",
-      "Growing without bound"
+      "Growing without bound",
+      "Approaching 4 from both sides"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Different representations of the same limit must agree.",
       "The table should confirm the analytic value."
@@ -760,12 +760,12 @@
     "responseFormat": "mcq",
     "problemText": "A table shows $f(x)\\to 2$ as $x\\to 1^-$ and $f(x)\\to 6$ as $x\\to 1^+$. The graph at $x=1$ therefore shows:",
     "choices": [
-      "A jump, so the two-sided limit does not exist",
       "A removable hole",
+      "A jump, so the two-sided limit does not exist",
       "A vertical asymptote",
       "Continuity"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The one-sided values are finite but unequal.",
       "Finite disagreeing one-sided limits produce a jump."
@@ -805,12 +805,12 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following is NOT one of the standard types of discontinuity studied in AP Calculus?",
     "choices": [
-      "Linear discontinuity",
       "Jump discontinuity",
+      "Linear discontinuity",
       "Removable discontinuity",
       "Infinite discontinuity"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The three standard types are removable, jump, and infinite.",
       "One listed option is not a real category."
@@ -824,12 +824,12 @@
     "responseFormat": "mcq",
     "problemText": "A function has $\\lim_{x\\to 2^-} f(x)=3$ and $\\lim_{x\\to 2^+} f(x)=7$. The discontinuity at $x=2$ is:",
     "choices": [
-      "A jump discontinuity",
       "A removable discontinuity",
       "An infinite discontinuity",
+      "A jump discontinuity",
       "Not a discontinuity"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The one-sided limits are finite but unequal.",
       "That is the signature of a jump."
@@ -843,12 +843,12 @@
     "responseFormat": "mcq",
     "problemText": "A removable discontinuity at $x=c$ occurs when:",
     "choices": [
-      "$\\lim_{x\\to c} f(x)$ exists but does not equal $f(c)$ (or $f(c)$ is undefined)",
       "The one-sided limits are both infinite",
       "The one-sided limits differ but are finite",
-      "$f$ is continuous at $c$"
+      "$f$ is continuous at $c$",
+      "$\\lim_{x\\to c} f(x)$ exists but does not equal $f(c)$ (or $f(c)$ is undefined)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "A hole is a removable discontinuity.",
       "The limit exists; only the point value is missing or off."
@@ -907,12 +907,12 @@
     "responseFormat": "mcq",
     "problemText": "Which three conditions must all hold for $f$ to be continuous at $x=c$?",
     "choices": [
-      "$f(c)$ is defined, $\\lim_{x\\to c} f(x)$ exists, and the two are equal",
       "$f$ is increasing, defined, and positive at $c$",
       "$f(c)=0$, the limit exists, and $f$ is a polynomial",
-      "The left-hand limit exists and $f(c)$ is defined"
+      "The left-hand limit exists and $f(c)$ is defined",
+      "$f(c)$ is defined, $\\lim_{x\\to c} f(x)$ exists, and the two are equal"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Three-part definition of continuity at a point.",
       "Existence of value, existence of limit, and their agreement."
@@ -945,12 +945,12 @@
     "responseFormat": "mcq",
     "problemText": "Which function is continuous for all real numbers?",
     "choices": [
-      "$f(x)=x^2+3x-1$",
       "$f(x)=\\frac{1}{x}$",
+      "$f(x)=x^2+3x-1$",
       "$f(x)=\\tan x$",
       "$f(x)=\\frac{x}{x-2}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Polynomials are continuous everywhere.",
       "The other choices have points where the denominator is zero or the function is undefined."
@@ -1003,12 +1003,12 @@
     "responseFormat": "mcq",
     "problemText": "Which type of discontinuity can be 'removed' by redefining the function at a single point?",
     "choices": [
-      "Removable",
       "Jump",
       "Infinite",
-      "All types"
+      "All types",
+      "Removable"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Only a hole can be patched by one point.",
       "The name gives it away."
@@ -1041,12 +1041,12 @@
     "responseFormat": "mcq",
     "problemText": "Why can a jump discontinuity NOT be removed by redefining the function at one point?",
     "choices": [
-      "The two-sided limit does not exist, so no single value can make $f$ continuous",
       "The function is undefined everywhere",
+      "The two-sided limit does not exist, so no single value can make $f$ continuous",
       "The limit is infinite",
       "It actually can be removed"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Removal requires the limit to exist.",
       "For a jump, the one-sided limits disagree, so the two-sided limit fails to exist."
@@ -1099,12 +1099,12 @@
     "responseFormat": "mcq",
     "problemText": "The statement $\\lim_{x\\to c} f(x)=\\infty$ means:",
     "choices": [
-      "$f(x)$ increases without bound as $x$ approaches $c$",
       "$f(c)=\\infty$",
       "The limit equals some large finite number",
-      "$f$ is continuous at $c$"
+      "$f$ is continuous at $c$",
+      "$f(x)$ increases without bound as $x$ approaches $c$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Infinity here describes unbounded growth, not a value.",
       "The outputs exceed any bound as $x\\to c$."
@@ -1137,12 +1137,12 @@
     "responseFormat": "mcq",
     "problemText": "A rational function has a vertical asymptote at $x=c$ when, at $x=c$:",
     "choices": [
-      "The denominator is 0 and the numerator is nonzero",
       "The numerator is 0",
+      "The denominator is 0 and the numerator is nonzero",
       "Both numerator and denominator are 0",
       "The function is defined and continuous"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A vertical asymptote comes from a nonzero-over-zero form.",
       "If both are zero, you may instead have a removable hole."
@@ -1156,12 +1156,12 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x)=\\frac{x+1}{x-2}$, what is the behavior as $x\\to 2^-$?",
     "choices": [
-      "$f(x)\\to -\\infty$",
       "$f(x)\\to +\\infty$",
       "$f(x)\\to 3$",
+      "$f(x)\\to -\\infty$",
       "$f(x)\\to 0$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "As $x\\to 2^-$, the numerator approaches 3 (positive).",
       "The denominator $x-2$ is a small negative number, so the quotient is large and negative."
@@ -1201,12 +1201,12 @@
     "responseFormat": "mcq",
     "problemText": "If the degree of the numerator is LESS than the degree of the denominator, then $\\lim_{x\\to\\infty}$ of the rational function is:",
     "choices": [
-      "0",
       "1",
+      "0",
       "$\\infty$",
       "The ratio of the leading coefficients"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The denominator grows faster than the numerator.",
       "The horizontal asymptote is $y=0$."
@@ -1220,12 +1220,12 @@
     "responseFormat": "mcq",
     "problemText": "If the degree of the numerator is GREATER than the degree of the denominator, then as $x\\to\\infty$ the rational function:",
     "choices": [
-      "Grows without bound (there is no horizontal asymptote)",
       "Approaches 0",
       "Approaches the ratio of the leading coefficients",
+      "Grows without bound (there is no horizontal asymptote)",
       "Approaches 1"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Numerator dominates.",
       "There is no finite horizontal asymptote."
@@ -1239,12 +1239,12 @@
     "responseFormat": "mcq",
     "problemText": "Evaluate $\\lim_{x\\to\\infty}\\frac{5x}{x^2+1}$.",
     "choices": [
-      "0",
       "5",
       "$\\infty$",
-      "1"
+      "1",
+      "0"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The denominator's degree exceeds the numerator's.",
       "Divide numerator and denominator by $x^2$."
@@ -1297,12 +1297,12 @@
     "responseFormat": "mcq",
     "problemText": "The Intermediate Value Theorem applies to a function $f$ on $[a,b]$ provided that:",
     "choices": [
-      "$f$ is continuous on $[a,b]$",
       "$f$ is increasing on $[a,b]$",
       "$f$ is differentiable and positive",
-      "$f(a)=f(b)$"
+      "$f(a)=f(b)$",
+      "$f$ is continuous on $[a,b]$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Continuity on the closed interval is the key hypothesis.",
       "No differentiability is required."
@@ -1335,12 +1335,12 @@
     "responseFormat": "mcq",
     "problemText": "Suppose $f$ is continuous with $f(1)=-3$ and $f(4)=5$. The IVT guarantees that $f$ has:",
     "choices": [
-      "At least one zero (root) in $(1,4)$",
       "Exactly one zero in $(1,4)$",
+      "At least one zero (root) in $(1,4)$",
       "No zeros in $(1,4)$",
       "A zero at $x=0$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The function changes sign between the endpoints.",
       "$N=0$ lies between $-3$ and 5."
@@ -1354,12 +1354,12 @@
     "responseFormat": "mcq",
     "problemText": "For which function does the IVT FAIL to guarantee that all values between the endpoint outputs are attained on $[-1,1]$?",
     "choices": [
-      "$f(x)=\\frac{1}{x}$, which is discontinuous at $x=0$",
       "$f(x)=x^3$",
       "$f(x)=\\sin x$",
+      "$f(x)=\\frac{1}{x}$, which is discontinuous at $x=0$",
       "$f(x)=x^2+1$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The IVT requires continuity on the whole interval.",
       "Look for a function with a break inside $[-1,1]$."

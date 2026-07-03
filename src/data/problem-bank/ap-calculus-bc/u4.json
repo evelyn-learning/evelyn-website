@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "The volume of water in a tank is $V(t)$ liters, where $t$ is in minutes. What is the best interpretation of $V'(5) = -3$?",
     "choices": [
-      "At $t=5$ minutes, the volume is decreasing at a rate of 3 liters per minute",
       "At $t=5$ minutes, the tank holds 3 liters",
       "Over the first 5 minutes, the tank loses 3 liters",
+      "At $t=5$ minutes, the volume is decreasing at a rate of 3 liters per minute",
       "The tank is empty at $t=5$ minutes"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "A derivative is an instantaneous rate of change, not an amount.",
       "The negative sign means the quantity is decreasing; the units are liters per minute."
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "A city's population is $P(t)$ people, where $t$ is measured in years. What are the units of $P'(t)$?",
     "choices": [
-      "People per year",
       "People",
       "Years",
-      "Years per person"
+      "Years per person",
+      "People per year"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "A derivative has units of (output units) divided by (input units).",
       "Output is people; input is years."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "A quantity $Q(t)$ satisfies $Q'(t) > 0$ and $Q''(t) < 0$ for all $t$ in an interval. Which description is correct on that interval?",
     "choices": [
-      "$Q$ is increasing at a decreasing rate",
       "$Q$ is increasing at an increasing rate",
+      "$Q$ is increasing at a decreasing rate",
       "$Q$ is decreasing at a decreasing rate",
       "$Q$ is constant"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The sign of $Q'$ tells you increasing versus decreasing.",
       "The sign of $Q''$ tells you whether the rate itself is growing or shrinking."
@@ -109,12 +109,12 @@
     "responseFormat": "mcq",
     "problemText": "For a particle moving along a line with position $s(t)$, the velocity of the particle is given by:",
     "choices": [
-      "$s'(t)$",
       "$s(t)$",
       "$s''(t)$",
-      "$\\int s(t)\\,dt$"
+      "$\\int s(t)\\,dt$",
+      "$s'(t)$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Velocity is the rate of change of position.",
       "Differentiate position once."
@@ -147,12 +147,12 @@
     "responseFormat": "mcq",
     "problemText": "A particle moving along a line is speeding up exactly when:",
     "choices": [
-      "Velocity and acceleration have the same sign",
       "Velocity and acceleration have opposite signs",
+      "Velocity and acceleration have the same sign",
       "Acceleration is zero",
       "Velocity is zero"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Speed is the magnitude of velocity, $|v|$.",
       "Speed grows when acceleration pushes in the same direction the particle already moves."
@@ -166,12 +166,12 @@
     "responseFormat": "mcq",
     "problemText": "A particle has position $s(t) = {}t^3 - 6t^2 + 9t$ for $t \\ge 0$. At which times is the particle at rest (velocity zero)?",
     "choices": [
-      "$t=1$ and $t=3$",
       "$t=2$ only",
       "$t=0$ and $t=3$",
+      "$t=1$ and $t=3$",
       "$t=1$ only"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Find $v(t) = s'(t) = {}3t^2 - 12t + 9$.",
       "Factor ${}3t^2 - 12t + 9 = {}3(t-1)(t-3)$ and set it equal to zero."
@@ -211,12 +211,12 @@
     "responseFormat": "mcq",
     "problemText": "In a related-rates problem, after identifying the quantities involved, the key step is to:",
     "choices": [
-      "Write an equation relating the variables, then differentiate implicitly with respect to time",
       "Set the derivative equal to zero and solve",
       "Integrate both sides with respect to time",
+      "Write an equation relating the variables, then differentiate implicitly with respect to time",
       "Find the maximum of the quantity"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Related rates connect the time-derivatives of related quantities.",
       "Differentiate a relating equation with respect to $t$."
@@ -230,12 +230,12 @@
     "responseFormat": "mcq",
     "problemText": "A circle's area is $A = \\pi r^2$, where $r$ changes with time. Differentiating with respect to $t$ gives:",
     "choices": [
-      "$\\frac{dA}{dt} = 2\\pi r\\,\\frac{dr}{dt}$",
       "$\\frac{dA}{dt} = 2\\pi r$",
       "$\\frac{dA}{dt} = \\pi r^2\\,\\frac{dr}{dt}$",
-      "$\\frac{dA}{dt} = 2\\pi\\,\\frac{dr}{dt}$"
+      "$\\frac{dA}{dt} = 2\\pi\\,\\frac{dr}{dt}$",
+      "$\\frac{dA}{dt} = 2\\pi r\\,\\frac{dr}{dt}$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Differentiate $\\pi r^2$ using the chain rule, since $r$ depends on $t$.",
       "The derivative of $r^2$ with respect to $t$ is ${}2r\\,\\frac{dr}{dt}$."
@@ -307,12 +307,12 @@
     "responseFormat": "mcq",
     "problemText": "The linearization (tangent-line approximation) of a differentiable function $f$ at $x=a$ is:",
     "choices": [
-      "$L(x) = f(a) + f'(a)(x - a)$",
       "$L(x) = f(a) + f'(a)$",
       "$L(x) = f'(a)(x - a)$",
+      "$L(x) = f(a) + f'(a)(x - a)$",
       "$L(x) = f(a)\\cdot f'(a)(x - a)$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The tangent line passes through $(a, f(a))$ with slope $f'(a)$.",
       "Use point-slope form of the tangent line."
@@ -326,12 +326,12 @@
     "responseFormat": "mcq",
     "problemText": "Use the linearization of $f(x) = \\sqrt{x}$ at $a=25$ to approximate $\\sqrt{27}$.",
     "choices": [
-      "5.2",
       "5.4",
       "5.196",
-      "4.8"
+      "4.8",
+      "5.2"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Here $f(25)=5$ and $f'(x)=\\frac{1}{2\\sqrt{x}}$, so $f'(25)=\\frac{1}{10}$.",
       "Compute $L(27) = 5 + \\frac{1}{10}(27-25)$."
@@ -364,12 +364,12 @@
     "responseFormat": "mcq",
     "problemText": "A differentiable function has $f(2)=3$ and $f'(2)=4$. Use the tangent-line approximation to estimate $f(2.1)$.",
     "choices": [
-      "3.4",
       "3.0",
+      "3.4",
       "7.0",
       "3.04"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Use $L(x) = f(2) + f'(2)(x-2)$.",
       "Compute ${}3 + 4(2.1 - 2)$."
@@ -409,12 +409,12 @@
     "responseFormat": "mcq",
     "problemText": "L'Hopital's rule may be applied directly to a limit that has which indeterminate form?",
     "choices": [
-      "$\\frac{0}{0}$ or $\\frac{\\infty}{\\infty}$",
       "$\\frac{1}{0}$",
       "$\\frac{5}{2}$",
+      "$\\frac{0}{0}$ or $\\frac{\\infty}{\\infty}$",
       "Any limit whatsoever"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The rule requires an indeterminate quotient form.",
       "The two forms it handles directly are zero-over-zero and infinity-over-infinity."
@@ -428,12 +428,12 @@
     "responseFormat": "mcq",
     "problemText": "Evaluate $\\lim_{x\\to 0}\\frac{\\sin x}{x}$ using L'Hopital's rule.",
     "choices": [
-      "1",
       "0",
       "$\\infty$",
-      "The limit does not exist"
+      "The limit does not exist",
+      "1"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Direct substitution gives $\\frac{0}{0}$, so differentiate top and bottom.",
       "You get $\\frac{\\cos x}{1}$; evaluate at $x=0$."

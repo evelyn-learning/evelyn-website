@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "For the parametric curve $x=t^2$, $y=t^3$, find $\\dfrac{dy}{dx}$.",
     "choices": [
-      "$\\dfrac{3t}{2}$",
       "$\\dfrac{2}{3t}$",
+      "$\\dfrac{3t}{2}$",
       "$(3t^2)(2t)$",
       "$\\dfrac{3t^2}{2}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Use $\\dfrac{dy}{dx}=\\dfrac{dy/dt}{dx/dt}$.",
       "Here $\\dfrac{dy}{dt}=3t^2$ and $\\dfrac{dx}{dt}=2t$; simplify the quotient."
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "A curve is given by $x=\\cos t$, $y=\\sin t$. Find $\\dfrac{dy}{dx}$.",
     "choices": [
-      "$-\\cot t$",
       "$\\cot t$",
       "$-\\tan t$",
+      "$-\\cot t$",
       "$\\tan t$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Compute $\\dfrac{dy}{dt}=\\cos t$ and $\\dfrac{dx}{dt}=-\\sin t$.",
       "Then $\\dfrac{dy}{dx}=\\dfrac{\\cos t}{-\\sin t}$."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "A parametric curve has a horizontal tangent line exactly when:",
     "choices": [
-      "$\\dfrac{dy}{dt}=0$ and $\\dfrac{dx}{dt}\\neq0$",
       "$\\dfrac{dx}{dt}=0$ and $\\dfrac{dy}{dt}\\neq0$",
       "$\\dfrac{dy}{dt}=\\dfrac{dx}{dt}$",
-      "$\\dfrac{dx}{dt}=\\dfrac{dy}{dt}=0$"
+      "$\\dfrac{dx}{dt}=\\dfrac{dy}{dt}=0$",
+      "$\\dfrac{dy}{dt}=0$ and $\\dfrac{dx}{dt}\\neq0$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "A horizontal tangent means the slope $\\dfrac{dy}{dx}=0$.",
       "The slope is zero when the numerator $\\dfrac{dy}{dt}$ is zero but the denominator is not."
@@ -109,12 +109,12 @@
     "responseFormat": "mcq",
     "problemText": "Which integral gives the arc length of a parametric curve $x(t)$, $y(t)$ from $t=a$ to $t=b$?",
     "choices": [
-      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dx}{dt}\\right)^2+\\left(\\dfrac{dy}{dt}\\right)^2}\\,dt$",
       "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dx}{dt}\\right)^2-\\left(\\dfrac{dy}{dt}\\right)^2}\\,dt$",
       "$L=\\displaystyle\\int_a^b\\left[\\left(\\dfrac{dx}{dt}\\right)^2+\\left(\\dfrac{dy}{dt}\\right)^2\\right]dt$",
-      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dy}{dx}\\right)^2+1}\\,dt$"
+      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dy}{dx}\\right)^2+1}\\,dt$",
+      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dx}{dt}\\right)^2+\\left(\\dfrac{dy}{dt}\\right)^2}\\,dt$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Arc length adds up tiny hypotenuses $\\sqrt{dx^2+dy^2}$.",
       "Factor $dt$ out to get $\\sqrt{(dx/dt)^2+(dy/dt)^2}\\,dt$."
@@ -147,12 +147,12 @@
     "responseFormat": "mcq",
     "problemText": "For $x=t^2$, $y=t^3$ with $t\\ge0$, the arc-length integrand $\\sqrt{(dx/dt)^2+(dy/dt)^2}$ simplifies to:",
     "choices": [
-      "$t\\sqrt{4+9t^2}$",
       "$\\sqrt{2t+3t^2}$",
+      "$t\\sqrt{4+9t^2}$",
       "$t\\sqrt{2+3t^2}$",
       "$\\sqrt{16t^2+81t^4}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "$\\dfrac{dx}{dt}=2t$ and $\\dfrac{dy}{dt}=3t^2$; square and add before taking the root.",
       "$\\sqrt{4t^2+9t^4}=\\sqrt{t^2(4+9t^2)}=t\\sqrt{4+9t^2}$ for $t\\ge0$."
@@ -205,12 +205,12 @@
     "responseFormat": "mcq",
     "problemText": "For $\\vec r(t)=\\langle t^2,\\ \\sin t\\rangle$, find the velocity $\\vec v(t)=\\vec r\\,'(t)$.",
     "choices": [
-      "$\\langle 2t,\\ \\cos t\\rangle$",
       "$\\langle 2t,\\ -\\cos t\\rangle$",
       "$\\langle 2,\\ \\cos t\\rangle$",
+      "$\\langle 2t,\\ \\cos t\\rangle$",
       "$\\langle 2t,\\ \\sin t\\rangle$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Differentiate each component separately.",
       "$\\dfrac{d}{dt}t^2=2t$ and $\\dfrac{d}{dt}\\sin t=\\cos t$."
@@ -224,12 +224,12 @@
     "responseFormat": "mcq",
     "problemText": "For $\\vec r(t)=\\langle 3t^2,\\ 4t^2\\rangle$, find the speed at $t=1$.",
     "choices": [
-      "$|\\vec v|=10$",
       "$|\\vec v|=\\sqrt{14}$",
       "$|\\vec v|=100$",
-      "$|\\vec v|=14$"
+      "$|\\vec v|=14$",
+      "$|\\vec v|=10$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "$\\vec v(t)=\\langle 6t,\\ 8t\\rangle$, so $\\vec v(1)=\\langle 6,\\ 8\\rangle$.",
       "Speed is $\\sqrt{6^2+8^2}=\\sqrt{100}$."
@@ -262,12 +262,12 @@
     "responseFormat": "mcq",
     "problemText": "The total distance traveled by a particle with position $\\vec r(t)=\\langle x(t),\\ y(t)\\rangle$ from $t=a$ to $t=b$ is:",
     "choices": [
-      "$\\displaystyle\\int_a^b\\sqrt{x'(t)^2+y'(t)^2}\\,dt$",
       "$\\displaystyle\\int_a^b\\vec v(t)\\,dt$",
+      "$\\displaystyle\\int_a^b\\sqrt{x'(t)^2+y'(t)^2}\\,dt$",
       "$\\left|\\vec r(b)-\\vec r(a)\\right|$",
       "$\\vec r(b)-\\vec r(a)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Total distance is the integral of speed, a scalar.",
       "Speed is $|\\vec v(t)|=\\sqrt{x'(t)^2+y'(t)^2}$; the other choices give displacement."
@@ -307,12 +307,12 @@
     "responseFormat": "mcq",
     "problemText": "Convert the polar point with $r=2$ and $\\theta=\\dfrac{\\pi}{3}$ to Cartesian coordinates $(x,y)$.",
     "choices": [
-      "$(1,\\ \\sqrt3)$",
       "$(\\sqrt3,\\ 1)$",
       "$\\left(\\tfrac12,\\ \\tfrac{\\sqrt3}{2}\\right)$",
-      "$(\\sqrt3,\\ -1)$"
+      "$(\\sqrt3,\\ -1)$",
+      "$(1,\\ \\sqrt3)$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Use $x=r\\cos\\theta$ and $y=r\\sin\\theta$.",
       "$\\cos\\tfrac{\\pi}{3}=\\tfrac12$ and $\\sin\\tfrac{\\pi}{3}=\\tfrac{\\sqrt3}{2}$."
@@ -345,12 +345,12 @@
     "responseFormat": "mcq",
     "problemText": "A polar curve $r=f(\\theta)$ can be written parametrically (in $\\theta$) as:",
     "choices": [
-      "$x=f(\\theta)\\cos\\theta,\\quad y=f(\\theta)\\sin\\theta$",
       "$x=f(\\theta)\\sin\\theta,\\quad y=f(\\theta)\\cos\\theta$",
+      "$x=f(\\theta)\\cos\\theta,\\quad y=f(\\theta)\\sin\\theta$",
       "$x=\\cos\\theta,\\quad y=\\sin\\theta$",
       "$x=f(\\theta),\\quad y=\\theta$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Start from $x=r\\cos\\theta$ and $y=r\\sin\\theta$.",
       "Substitute $r=f(\\theta)$ into both."
@@ -364,12 +364,12 @@
     "responseFormat": "mcq",
     "problemText": "For a polar curve $r=f(\\theta)$ (write $r'=\\tfrac{dr}{d\\theta}$), the slope $\\dfrac{dy}{dx}$ equals:",
     "choices": [
-      "$\\dfrac{r'\\sin\\theta+r\\cos\\theta}{r'\\cos\\theta-r\\sin\\theta}$",
       "$\\dfrac{r'\\cos\\theta-r\\sin\\theta}{r'\\sin\\theta+r\\cos\\theta}$",
       "$\\dfrac{r'\\sin\\theta-r\\cos\\theta}{r'\\cos\\theta+r\\sin\\theta}$",
+      "$\\dfrac{r'\\sin\\theta+r\\cos\\theta}{r'\\cos\\theta-r\\sin\\theta}$",
       "$\\dfrac{\\sin\\theta}{\\cos\\theta}$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Differentiate $y=r\\sin\\theta$ and $x=r\\cos\\theta$ with respect to $\\theta$ using the product rule.",
       "$\\dfrac{dy}{dx}=\\dfrac{dy/d\\theta}{dx/d\\theta}$."
@@ -409,12 +409,12 @@
     "responseFormat": "mcq",
     "problemText": "The area enclosed by a polar curve $r(\\theta)$ from $\\theta=\\alpha$ to $\\theta=\\beta$ is:",
     "choices": [
-      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$",
       "$A=\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$",
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$",
       "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta r\\,d\\theta$",
       "$A=\\pi\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Each thin sector is approximately a circular wedge of area $\\tfrac12 r^2\\,d\\theta$.",
       "Add the wedges by integrating $\\tfrac12 r^2$."
@@ -428,12 +428,12 @@
     "responseFormat": "mcq",
     "problemText": "Find the total area enclosed by the polar circle $r=3$.",
     "choices": [
-      "$A=9\\pi$",
       "$A=6\\pi$",
       "$A=3\\pi$",
+      "$A=9\\pi$",
       "$A=18\\pi$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Use $A=\\tfrac12\\int_0^{2\\pi}r^2\\,d\\theta$ with $r=3$.",
       "$A=\\tfrac12(9)(2\\pi)$, which matches $\\pi(3)^2$ for the disk."
@@ -447,12 +447,12 @@
     "responseFormat": "mcq",
     "problemText": "For an outer polar curve $R(\\theta)$ and an inner curve $r(\\theta)$ over $[\\alpha,\\beta]$, the area of the region between them is:",
     "choices": [
-      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$",
       "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R-r\\right)^2 d\\theta$",
       "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R^2+r^2\\right)d\\theta$",
-      "$A=\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$"
+      "$A=\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$",
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Subtract the inner area from the outer area wedge by wedge.",
       "$\\tfrac12 R^2\\,d\\theta-\\tfrac12 r^2\\,d\\theta=\\tfrac12(R^2-r^2)\\,d\\theta$; do not square the difference."

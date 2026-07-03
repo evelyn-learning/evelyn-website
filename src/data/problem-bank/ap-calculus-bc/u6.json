@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "The definite integral $\\int_a^b f(x)\\,dx$ is defined as:",
     "choices": [
-      "The limit of Riemann sums as the number of subintervals approaches infinity",
       "The right Riemann sum computed with exactly one hundred subintervals",
+      "The limit of Riemann sums as the number of subintervals approaches infinity",
       "The average value of $f$ on $[a,b]$",
       "The difference $f(b)-f(a)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The integral is an exact limit, not a fixed-count approximation.",
       "As the subinterval width shrinks to zero, the sum converges to the integral."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "The trapezoidal approximation of $\\int_a^b f(x)\\,dx$ using $n$ equal subintervals is equal to:",
     "choices": [
-      "The average of the left and right Riemann sums",
       "The midpoint Riemann sum",
       "Always the exact value of the integral",
+      "The average of the left and right Riemann sums",
       "The larger of the left and right Riemann sums"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "A trapezoid on each subinterval uses both endpoint heights.",
       "Averaging the left-endpoint and right-endpoint rectangles gives the trapezoid area."
@@ -103,12 +103,12 @@
     "responseFormat": "mcq",
     "problemText": "The value of $\\int_a^a f(x)\\,dx$ is:",
     "choices": [
-      "0",
       "$f(a)$",
+      "0",
       "$a$",
       "Undefined"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The interval has zero width.",
       "There is no area accumulated between $a$ and $a$."
@@ -122,12 +122,12 @@
     "responseFormat": "mcq",
     "problemText": "If $\\int_2^5 f(x)\\,dx = 8$, then $\\int_5^2 f(x)\\,dx$ equals:",
     "choices": [
-      "-8",
       "8",
       "0",
+      "-8",
       "16"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Reversing the limits of integration flips the sign.",
       "$\\int_b^a f = -\\int_a^b f$."
@@ -141,12 +141,12 @@
     "responseFormat": "mcq",
     "problemText": "Which statement correctly applies a property of definite integrals?",
     "choices": [
-      "$\\int_a^b [f(x)+g(x)]\\,dx = \\int_a^b f(x)\\,dx + \\int_a^b g(x)\\,dx$",
       "$\\int_a^b f(x)g(x)\\,dx = \\left(\\int_a^b f\\,dx\\right)\\left(\\int_a^b g\\,dx\\right)$",
       "$\\int_a^b c\\,f(x)\\,dx = c + \\int_a^b f(x)\\,dx$",
-      "$\\int_a^b [f(x)-g(x)]\\,dx = \\int_a^b f\\,dx - \\int_a^b g\\,dx + C$"
+      "$\\int_a^b [f(x)-g(x)]\\,dx = \\int_a^b f\\,dx - \\int_a^b g\\,dx + C$",
+      "$\\int_a^b [f(x)+g(x)]\\,dx = \\int_a^b f(x)\\,dx + \\int_a^b g(x)\\,dx$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The integral of a sum is the sum of the integrals.",
       "Integrals are linear, but they do not distribute over products."
@@ -199,12 +199,12 @@
     "responseFormat": "mcq",
     "problemText": "If $F$ is an antiderivative of $f$, then by the Fundamental Theorem of Calculus $\\int_a^b f(x)\\,dx$ equals:",
     "choices": [
-      "$F(b)-F(a)$",
       "$F(a)-F(b)$",
       "$f(b)-f(a)$",
+      "$F(b)-F(a)$",
       "$F'(b)-F'(a)$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Evaluate the antiderivative at the top limit minus the bottom limit.",
       "The order is upper endpoint value minus lower endpoint value."
@@ -218,12 +218,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\dfrac{d}{dx}\\int_a^x \\sin(t^2)\\,dt$ equals:",
     "choices": [
-      "$\\sin(x^2)$",
       "$\\cos(x^2)$",
       "${2}x\\cos(x^2)$",
-      "$\\sin(t^2)$"
+      "$\\sin(t^2)$",
+      "$\\sin(x^2)$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "By FTC Part 1, differentiating an accumulation function returns the integrand.",
       "Replace $t$ with the upper limit $x$."
@@ -256,12 +256,12 @@
     "responseFormat": "mcq",
     "problemText": "If $g(x)=\\int_0^x f(t)\\,dt$ and $f(t)>0$ for all $t$ in $[0,5]$, then on $[0,5]$ the function $g$ is:",
     "choices": [
-      "Increasing",
       "Decreasing",
+      "Increasing",
       "Constant",
       "Negative"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "By FTC Part 1, $g'(x)=f(x)$.",
       "A positive derivative means the function increases."
@@ -301,12 +301,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int x^3\\,dx$ equals:",
     "choices": [
-      "$\\frac{x^4}{4}+C$",
       "${3}x^2+C$",
       "$\\frac{x^4}{3}+C$",
+      "$\\frac{x^4}{4}+C$",
       "${4}x^4+C$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Reverse the power rule: raise the exponent by one and divide.",
       "The new exponent is ${4}$, so divide by ${4}$."
@@ -320,12 +320,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\frac{1}{x}\\,dx$ equals:",
     "choices": [
-      "$\\ln|x|+C$",
       "$-\\frac{1}{x^2}+C$",
       "$\\ln x+C$",
-      "$\\frac{x^0}{0}+C$"
+      "$\\frac{x^0}{0}+C$",
+      "$\\ln|x|+C$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The power rule fails when the exponent is $-1$.",
       "Use the natural log, and include absolute value for negative $x$."
@@ -358,12 +358,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int e^{2x}\\,dx$ equals:",
     "choices": [
-      "$\\frac{1}{2}e^{2x}+C$",
       "$e^{2x}+C$",
+      "$\\frac{1}{2}e^{2x}+C$",
       "$xe^{2x}+C$",
       "$\\frac{1}{2}e^{x}+C$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The derivative of $e^{2x}$ is ${2}e^{2x}$, so divide to undo the factor.",
       "Divide by the inner coefficient ${2}$."
@@ -422,12 +422,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int (x^2+1)^5\\cdot 2x\\,dx$ equals:",
     "choices": [
-      "$\\frac{(x^2+1)^6}{6}+C$",
       "$\\frac{(x^2+1)^6}{12}+C$",
+      "$\\frac{(x^2+1)^6}{6}+C$",
       "${5}(x^2+1)^4+C$",
       "$\\frac{(x^2+1)^6}{3}+C$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Let $u=x^2+1$, so $du=2x\\,dx$.",
       "Integrate $u^5$ to get $\\frac{u^6}{6}$, then substitute back."
@@ -441,12 +441,12 @@
     "responseFormat": "mcq",
     "problemText": "When evaluating $\\int_0^2 x\\,e^{x^2}\\,dx$ with the substitution $u=x^2$, the new limits of integration become:",
     "choices": [
-      "$u=0$ to $u=4$",
       "$u=0$ to $u=2$",
       "$u=0$ to $u=8$",
+      "$u=0$ to $u=4$",
       "$u=2$ to $u=4$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Substitute each $x$-limit into $u=x^2$.",
       "When $x=0$, $u=0$; when $x=2$, $u=4$."
@@ -460,12 +460,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\tan x\\,dx$, evaluated by writing $\\tan x = \\frac{\\sin x}{\\cos x}$ and substituting $u=\\cos x$, equals:",
     "choices": [
-      "$-\\ln|\\cos x|+C$",
       "$\\ln|\\cos x|+C$",
       "$\\sec^2 x+C$",
-      "$\\ln|\\sin x|+C$"
+      "$\\ln|\\sin x|+C$",
+      "$-\\ln|\\cos x|+C$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "With $u=\\cos x$, $du=-\\sin x\\,dx$, so a negative sign appears.",
       "The integral becomes $-\\int \\frac{1}{u}\\,du = -\\ln|u|$."
@@ -524,12 +524,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\frac{1}{x^2+1}\\,dx$ equals:",
     "choices": [
-      "$\\arctan x+C$",
       "$\\ln(x^2+1)+C$",
+      "$\\arctan x+C$",
       "$\\frac{1}{2}\\ln(x^2+1)+C$",
       "$\\arcsin x+C$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "This is a standard inverse-trig antiderivative.",
       "Recall $\\frac{d}{dx}\\arctan x = \\frac{1}{x^2+1}$."
@@ -543,12 +543,12 @@
     "responseFormat": "mcq",
     "problemText": "Completing the square, $x^2+4x+5$ can be rewritten as:",
     "choices": [
-      "$(x+2)^2+1$",
       "$(x+2)^2-1$",
       "$(x+2)^2+5$",
+      "$(x+2)^2+1$",
       "$(x-2)^2+1$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Take half of the linear coefficient ${4}$ and square it.",
       "$x^2+4x+4 = (x+2)^2$, and ${5}-4=1$ remains."
@@ -620,12 +620,12 @@
     "responseFormat": "mcq",
     "problemText": "For $\\int x\\,e^x\\,dx$, the LIATE heuristic suggests the choice:",
     "choices": [
-      "$u=x,\\ dv=e^x\\,dx$",
       "$u=e^x,\\ dv=x\\,dx$",
+      "$u=x,\\ dv=e^x\\,dx$",
       "$u=xe^x,\\ dv=dx$",
       "$u=1,\\ dv=xe^x\\,dx$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "LIATE ranks the algebraic factor $x$ ahead of the exponential.",
       "Choosing $u=x$ makes $du$ simpler after differentiating."
@@ -639,12 +639,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int x\\,e^x\\,dx$ equals:",
     "choices": [
-      "$xe^x-e^x+C$",
       "$xe^x+e^x+C$",
       "$\\frac{x^2}{2}e^x+C$",
+      "$xe^x-e^x+C$",
       "$xe^x-e^x+x+C$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Use $u=x$, $dv=e^x\\,dx$, so $v=e^x$.",
       "$\\int x e^x\\,dx = xe^x - \\int e^x\\,dx$."
@@ -658,12 +658,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\ln x\\,dx$ equals:",
     "choices": [
-      "$x\\ln x-x+C$",
       "$\\frac{1}{x}+C$",
       "$x\\ln x+x+C$",
-      "$\\ln x-x+C$"
+      "$\\ln x-x+C$",
+      "$x\\ln x-x+C$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Choose $u=\\ln x$ and $dv=dx$, so $du=\\frac{1}{x}\\,dx$ and $v=x$.",
       "$\\int \\ln x\\,dx = x\\ln x - \\int x\\cdot\\frac{1}{x}\\,dx$."
@@ -722,12 +722,12 @@
     "responseFormat": "mcq",
     "problemText": "In the decomposition $\\frac{5}{(x-1)(x+4)}=\\frac{A}{x-1}+\\frac{B}{x+4}$, the value of $A$ is:",
     "choices": [
-      "$A=1$",
       "$A=5$",
+      "$A=1$",
       "$A=\\frac{1}{5}$",
       "$A=-1$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Use the cover-up method: set $x=1$.",
       "Compute $\\frac{5}{1+4}$."
@@ -741,12 +741,12 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\frac{1}{(x-1)(x+1)}\\,dx$ equals:",
     "choices": [
-      "$\\frac{1}{2}\\ln\\left|\\frac{x-1}{x+1}\\right|+C$",
       "$\\ln|(x-1)(x+1)|+C$",
       "$\\frac{1}{2}\\ln|(x-1)(x+1)|+C$",
+      "$\\frac{1}{2}\\ln\\left|\\frac{x-1}{x+1}\\right|+C$",
       "$\\arctan x+C$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Decompose into $\\frac{1}{2}\\left(\\frac{1}{x-1}-\\frac{1}{x+1}\\right)$.",
       "Integrate each term to logs and combine into a single log of a quotient."
@@ -760,12 +760,12 @@
     "responseFormat": "mcq",
     "problemText": "Partial fraction decomposition can be applied directly to a rational function $\\frac{P(x)}{Q(x)}$ when:",
     "choices": [
-      "$\\deg P < \\deg Q$ (a proper rational function)",
       "$\\deg P \\ge \\deg Q$",
       "It can always be applied directly",
-      "$Q(x)$ is an irreducible quadratic"
+      "$Q(x)$ is an irreducible quadratic",
+      "$\\deg P < \\deg Q$ (a proper rational function)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "If the numerator degree is too high, divide first.",
       "The technique needs a proper rational function to start."
@@ -805,12 +805,12 @@
     "responseFormat": "mcq",
     "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x^2}\\,dx$:",
     "choices": [
-      "Converges to 1",
       "Diverges to infinity",
+      "Converges to 1",
       "Converges to 0",
       "Converges to 2"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Rewrite as $\\lim_{b\\to\\infty}\\int_1^b x^{-2}\\,dx$.",
       "The antiderivative $-\\frac{1}{x}$ approaches ${0}$ at infinity, leaving ${0}-(-1)$."
@@ -824,12 +824,12 @@
     "responseFormat": "mcq",
     "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x}\\,dx$:",
     "choices": [
-      "Diverges",
       "Converges to 1",
       "Converges to 0",
+      "Diverges",
       "Converges to $\\ln 2$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The antiderivative is $\\ln x$.",
       "As $b\\to\\infty$, $\\ln b$ grows without bound."
@@ -843,12 +843,12 @@
     "responseFormat": "mcq",
     "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x^p}\\,dx$ converges if and only if:",
     "choices": [
-      "$p>1$",
       "$p<1$",
       "$p=1$",
-      "$p\\ge 0$"
+      "$p\\ge 0$",
+      "$p>1$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "This is the p-test for integrals over $[1,\\infty)$.",
       "Convergence requires the power in the denominator to exceed ${1}$."
@@ -901,12 +901,12 @@
     "responseFormat": "mcq",
     "problemText": "Which technique is most efficient for $\\int x\\,e^x\\,dx$?",
     "choices": [
-      "Integration by parts",
       "u-substitution",
+      "Integration by parts",
       "Partial fractions",
       "Polynomial long division"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The integrand is a product of an algebraic and an exponential factor.",
       "There is no inner-function derivative present for a u-substitution."
@@ -920,12 +920,12 @@
     "responseFormat": "mcq",
     "problemText": "Which technique is most efficient for $\\int \\frac{2x}{x^2+1}\\,dx$?",
     "choices": [
-      "u-substitution with $u=x^2+1$",
       "Integration by parts",
       "Partial fractions",
+      "u-substitution with $u=x^2+1$",
       "Completing the square"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The numerator is the derivative of the denominator.",
       "That pattern signals a substitution giving a natural log."
@@ -939,12 +939,12 @@
     "responseFormat": "mcq",
     "problemText": "Which technique is most efficient for $\\int \\frac{1}{(x-2)(x+3)}\\,dx$?",
     "choices": [
-      "Partial fractions",
       "u-substitution",
       "Integration by parts",
-      "Direct power rule"
+      "Direct power rule",
+      "Partial fractions"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The integrand is a proper rational function with distinct linear factors.",
       "Split it into a sum of simpler fractions first."

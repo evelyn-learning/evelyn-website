@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "The Mean Value Theorem guarantees at least one interior point $c$ at which the tangent line is:",
     "choices": [
-      "Parallel to the secant line joining the endpoints",
       "Horizontal",
+      "Parallel to the secant line joining the endpoints",
       "Perpendicular to the secant line",
       "Tangent to the $x$-axis"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "MVT sets the instantaneous rate equal to the average (secant) rate.",
       "Equal slopes means the tangent and secant are parallel."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "By the Extreme Value Theorem, a function that is continuous on a closed interval $[a,b]$ must:",
     "choices": [
-      "Attain both an absolute maximum and an absolute minimum on $[a,b]$",
       "Be differentiable on $(a,b)$",
       "Have exactly one critical point",
+      "Attain both an absolute maximum and an absolute minimum on $[a,b]$",
       "Be increasing on $[a,b]$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "EVT only needs continuity on a closed, bounded interval.",
       "It guarantees the existence of a global max and a global min."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "On which interval do the hypotheses of the Mean Value Theorem FAIL for $f(x)=|x-2|$?",
     "choices": [
-      "$[0,5]$, because $f$ is not differentiable at $x=2$",
       "$[3,6]$",
       "$[2,7]$",
-      "$[-1,1]$"
+      "$[-1,1]$",
+      "$[0,5]$, because $f$ is not differentiable at $x=2$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "MVT requires differentiability on the whole open interval.",
       "The corner of $|x-2|$ sits at $x=2$; find the interval whose interior contains it."
@@ -109,12 +109,12 @@
     "responseFormat": "mcq",
     "problemText": "A function $f$ is increasing on an interval exactly when, on that interval:",
     "choices": [
-      "$f'(x) > 0$",
       "$f'(x) < 0$",
       "$f'(x) = 0$",
+      "$f'(x) > 0$",
       "$f''(x) > 0$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The sign of the first derivative controls the direction of $f$.",
       "Positive slope means rising."
@@ -128,12 +128,12 @@
     "responseFormat": "mcq",
     "problemText": "At a critical point $c$, if $f'$ changes from negative to positive, then $f$ has a:",
     "choices": [
-      "Local minimum at $c$",
       "Local maximum at $c$",
       "Inflection point at $c$",
-      "Vertical asymptote at $c$"
+      "Vertical asymptote at $c$",
+      "Local minimum at $c$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Falling then rising traces out a valley.",
       "A $-\\to+$ sign change is the First Derivative Test signature of a local min."
@@ -166,12 +166,12 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x)=x^3$, the point $x=0$ is a critical point but NOT a local extremum because:",
     "choices": [
-      "$f'(x)=3x^2$ does not change sign at $x=0$",
       "$f'(0)$ does not exist",
+      "$f'(x)=3x^2$ does not change sign at $x=0$",
       "$f$ is discontinuous at $x=0$",
       "$f'(0)>0$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A critical point is only a candidate for an extremum.",
       "Since ${}3x^2\\ge 0$ on both sides, $f'$ never switches sign."
@@ -211,12 +211,12 @@
     "responseFormat": "mcq",
     "problemText": "The graph of $f$ is concave up on an interval where:",
     "choices": [
-      "$f''(x) > 0$",
       "$f''(x) < 0$",
       "$f'(x) = 0$",
+      "$f''(x) > 0$",
       "$f(x) > 0$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Concavity is governed by the sign of the second derivative.",
       "Concave up means the slope $f'$ is increasing, i.e. $f''>0$."
@@ -230,12 +230,12 @@
     "responseFormat": "mcq",
     "problemText": "An inflection point of $f$ occurs at $x=c$ precisely when:",
     "choices": [
-      "$f''$ changes sign at $c$",
       "$f''(c)=0$, regardless of sign behavior",
       "$f'(c)=0$",
-      "$f$ has a local maximum at $c$"
+      "$f$ has a local maximum at $c$",
+      "$f''$ changes sign at $c$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "An inflection point is where concavity actually changes.",
       "A bare zero of $f''$ without a sign change does not qualify."
@@ -268,12 +268,12 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x)=x^4$ there is NO inflection point at $x=0$ even though $f''(0)=0$. The reason is that:",
     "choices": [
-      "$f''(x)=12x^2$ never changes sign, so concavity does not change",
       "$f''(0)$ is undefined",
+      "$f''(x)=12x^2$ never changes sign, so concavity does not change",
       "$f$ has a local maximum at $x=0$",
       "$f'(0)\\ne 0$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Check the sign of $f''$ on both sides of $x=0$.",
       "Since ${}12x^2\\ge 0$ everywhere, the curve stays concave up."
@@ -313,12 +313,12 @@
     "responseFormat": "mcq",
     "problemText": "If the graph of $f'$ lies above the $x$-axis on an interval, then on that interval $f$ is:",
     "choices": [
-      "Increasing",
       "Decreasing",
       "Concave up",
+      "Increasing",
       "Constant"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Above the axis means $f'>0$.",
       "Positive derivative means $f$ rises."
@@ -332,12 +332,12 @@
     "responseFormat": "mcq",
     "problemText": "Reading the graph of $f'$, a local maximum of $f$ occurs where $f'$:",
     "choices": [
-      "Crosses the $x$-axis from positive to negative",
       "Crosses the $x$-axis from negative to positive",
       "Reaches its own maximum height",
-      "Is farthest below the axis"
+      "Is farthest below the axis",
+      "Crosses the $x$-axis from positive to negative"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "A local max of $f$ is where $f$ stops rising and starts falling.",
       "That is where $f'$ changes from $+$ to $-$."
@@ -370,12 +370,12 @@
     "responseFormat": "mcq",
     "problemText": "The graph of $f'$ is a straight line with positive slope passing through the origin. What is true of $f$?",
     "choices": [
-      "$f$ has a local minimum at $x=0$ and is concave up everywhere",
       "$f$ has a local maximum at $x=0$",
+      "$f$ has a local minimum at $x=0$ and is concave up everywhere",
       "$f$ is concave down everywhere",
       "$f$ is increasing everywhere"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Here $f'<0$ for $x<0$ and $f'>0$ for $x>0$, so $f$ falls then rises.",
       "The slope of $f'$ is constant and positive, so $f''>0$ throughout."
@@ -434,12 +434,12 @@
     "responseFormat": "mcq",
     "problemText": "After finding a critical point of a one-variable objective $A(x)$, how do you confirm it gives a MAXIMUM?",
     "choices": [
-      "Check that $A''<0$ there (or that $A'$ changes from $+$ to $-$)",
       "Check that the constraint equals zero",
+      "Check that $A''<0$ there (or that $A'$ changes from $+$ to $-$)",
       "Confirm the variable is negative",
       "No verification is necessary"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A critical point is not automatically the desired extreme.",
       "Concave down at a critical point signals a maximum."
@@ -453,12 +453,12 @@
     "responseFormat": "mcq",
     "problemText": "To minimize the distance from a fixed point to a curve, it is easiest to instead minimize:",
     "choices": [
-      "The squared distance, which has the same minimizer",
       "The reciprocal of the distance",
       "The distance plus one",
+      "The squared distance, which has the same minimizer",
       "The area under the curve"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Squaring removes the square root, simplifying the derivative.",
       "The squared distance is minimized at the same point as the distance."
@@ -530,12 +530,12 @@
     "responseFormat": "mcq",
     "problemText": "A VERTICAL tangent to an implicit curve occurs where $\\dfrac{dy}{dx}$ is:",
     "choices": [
-      "Undefined, because the denominator is zero and the numerator is nonzero",
       "Equal to zero",
+      "Undefined, because the denominator is zero and the numerator is nonzero",
       "Equal to one",
       "Negative"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A vertical line has undefined slope.",
       "A fraction is undefined when its denominator is zero (numerator nonzero)."
@@ -549,12 +549,12 @@
     "responseFormat": "mcq",
     "problemText": "If both the numerator and denominator of $\\dfrac{dy}{dx}$ are zero at a point on an implicit curve, then at that point:",
     "choices": [
-      "The slope is indeterminate; it is not automatically a horizontal or vertical tangent",
       "The curve definitely has a horizontal tangent",
       "The curve definitely has a vertical tangent",
+      "The slope is indeterminate; it is not automatically a horizontal or vertical tangent",
       "The curve must be discontinuous"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "A $\\tfrac{0}{0}$ form gives no information on its own.",
       "The point could be a crossing, cusp, or corner."

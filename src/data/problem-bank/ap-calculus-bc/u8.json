@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "The average value of a continuous function $f$ on the interval $[a,b]$ is given by which expression?",
     "choices": [
-      "$\\frac{1}{b-a}\\int_a^b f(x)\\,dx$",
       "$\\int_a^b f(x)\\,dx$",
       "$\\frac{f(b)-f(a)}{b-a}$",
-      "$\\frac{1}{2}\\left[f(a)+f(b)\\right]$"
+      "$\\frac{1}{2}\\left[f(a)+f(b)\\right]$",
+      "$\\frac{1}{b-a}\\int_a^b f(x)\\,dx$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Average value scales the accumulated total by the length of the interval.",
       "Divide the definite integral by $b-a$."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "Water flows into a tank at a rate of $R(t)$ gallons per hour. The total amount of water that enters the tank between $t=0$ and $t=5$ hours is:",
     "choices": [
-      "$\\int_0^5 R(t)\\,dt$",
       "$R(5)-R(0)$",
+      "$\\int_0^5 R(t)\\,dt$",
       "$\\frac{1}{5}\\int_0^5 R(t)\\,dt$",
       "$R'(5)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A rate integrated over time gives an accumulated amount.",
       "The units gal/hr times hr, summed, give gallons."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "What is the average value of $f(x)=x^2+1$ on the interval $[0,3]$?",
     "choices": [
-      "4",
       "12",
       "$\\frac{10}{3}$",
+      "4",
       "6"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Compute $\\frac{1}{3-0}\\int_0^3 (x^2+1)\\,dx$.",
       "The integral is $\\left[\\frac{x^3}{3}+x\\right]_0^3=12$; then divide by the length 3."
@@ -111,12 +111,12 @@
     "responseFormat": "mcq",
     "problemText": "If $f(x)\\ge g(x)$ on $[a,b]$, the area of the region between the curves $y=f(x)$ and $y=g(x)$ is:",
     "choices": [
-      "$\\int_a^b \\left[f(x)-g(x)\\right]\\,dx$",
       "$\\int_a^b \\left[f(x)+g(x)\\right]\\,dx$",
       "$\\int_a^b f(x)\\,dx$",
+      "$\\int_a^b \\left[f(x)-g(x)\\right]\\,dx$",
       "$\\int_a^b \\left[g(x)-f(x)\\right]\\,dx$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Integrate top minus bottom.",
       "Since $f$ is the upper curve, subtract $g$ from $f$."
@@ -130,12 +130,12 @@
     "responseFormat": "mcq",
     "problemText": "Find the area of the region bounded by $y=x^2$ and $y=2x$.",
     "choices": [
-      "$\\frac{4}{3}$",
       "$\\frac{8}{3}$",
       "4",
-      "$\\frac{2}{3}$"
+      "$\\frac{2}{3}$",
+      "$\\frac{4}{3}$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The curves meet where $x^2=2x$, at $x=0$ and $x=2$.",
       "On $[0,2]$ the line $y=2x$ is on top: integrate $\\int_0^2 (2x-x^2)\\,dx$."
@@ -229,12 +229,12 @@
     "responseFormat": "mcq",
     "problemText": "A solid has base bounded by $y=\\sqrt{x}$ and the $x$-axis on $[0,4]$. Cross sections perpendicular to the $x$-axis are squares with one side in the base. What is the area of a cross section at position $x$?",
     "choices": [
-      "$x$",
       "$\\sqrt{x}$",
+      "$x$",
       "$x^2$",
       "$\\pi x$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The side length of each square equals the height of the base, $\\sqrt{x}$.",
       "Area of a square is side squared: $(\\sqrt{x})^2$."
@@ -248,12 +248,12 @@
     "responseFormat": "mcq",
     "problemText": "A solid has base bounded by $y=2-x^2$ and the $x$-axis. Cross sections perpendicular to the $x$-axis are semicircles with diameter in the base. Which integral gives the volume?",
     "choices": [
-      "$\\frac{\\pi}{8}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$",
       "$\\frac{\\pi}{2}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$",
       "$\\frac{\\pi}{8}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)\\,dx$",
+      "$\\frac{\\pi}{8}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$",
       "$\\pi\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The diameter is $(2-x^2)$, so the radius is $\\frac{2-x^2}{2}$.",
       "A semicircle's area is $\\frac{1}{2}\\pi r^2 = \\frac{\\pi}{8}(2-x^2)^2$."
@@ -267,12 +267,12 @@
     "responseFormat": "mcq",
     "problemText": "The cross sections of a solid are equilateral triangles with side length $s$. In terms of $s$, the area of each cross section is:",
     "choices": [
-      "$\\frac{\\sqrt{3}}{4}s^2$",
       "$\\frac{1}{2}s^2$",
       "$s^2$",
-      "$\\frac{\\sqrt{3}}{2}s^2$"
+      "$\\frac{\\sqrt{3}}{2}s^2$",
+      "$\\frac{\\sqrt{3}}{4}s^2$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "An equilateral triangle of side $s$ has height $\\frac{\\sqrt{3}}{2}s$.",
       "Area $=\\frac{1}{2}\\cdot s\\cdot\\frac{\\sqrt{3}}{2}s$."
@@ -333,12 +333,12 @@
     "responseFormat": "mcq",
     "problemText": "A region has outer boundary $y=R(x)$ and inner boundary $y=r(x)$ and is revolved about the $x$-axis. By the washer method, the volume is:",
     "choices": [
-      "$\\pi\\int_a^b \\left(\\left[R(x)\\right]^2-\\left[r(x)\\right]^2\\right)\\,dx$",
       "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)^2\\,dx$",
+      "$\\pi\\int_a^b \\left(\\left[R(x)\\right]^2-\\left[r(x)\\right]^2\\right)\\,dx$",
       "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)\\,dx$",
       "$\\pi\\int_a^b \\left[R(x)\\right]^2\\,dx - r(x)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Subtract the inner disc area from the outer disc area.",
       "Square each radius separately; do not square the difference."
@@ -352,12 +352,12 @@
     "responseFormat": "mcq",
     "problemText": "The region bounded by $y=x^2$, $y=0$, and $x=2$ is revolved about the $x$-axis. The volume is:",
     "choices": [
-      "$\\frac{32\\pi}{5}$",
       "$\\frac{8\\pi}{3}$",
       "$\\frac{32\\pi}{3}$",
+      "$\\frac{32\\pi}{5}$",
       "$\\frac{16\\pi}{5}$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Disc radius is $x^2$, so integrate $\\pi\\int_0^2 (x^2)^2\\,dx$.",
       "$\\int_0^2 x^4\\,dx=\\frac{32}{5}$."
@@ -432,12 +432,12 @@
     "responseFormat": "mcq",
     "problemText": "The region bounded by $y=x^2$ and $y=4$ is revolved about the line $y=4$. Which integral gives the volume?",
     "choices": [
-      "$\\pi\\int_{-2}^{2}(4-x^2)^2\\,dx$",
       "$\\pi\\int_{-2}^{2}(x^2-4)\\,dx$",
+      "$\\pi\\int_{-2}^{2}(4-x^2)^2\\,dx$",
       "$\\pi\\int_{-2}^{2}\\left(4^2-(x^2)^2\\right)\\,dx$",
       "$\\pi\\int_{0}^{4}(4-x^2)^2\\,dx$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The region touches the axis $y=4$, so this is a disc (no gap).",
       "Radius is $(4-x^2)$; the curves meet at $x=\\pm 2$."
@@ -451,12 +451,12 @@
     "responseFormat": "mcq",
     "problemText": "A region with $x>-1$ is revolved about the vertical line $x=-1$. The radius from the axis to a point at horizontal position $x$ is:",
     "choices": [
-      "$x+1$",
       "$x-1$",
       "$(1-x)$",
+      "$x+1$",
       "$x$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Radius is the horizontal distance from $x=-1$ to $x$.",
       "Distance is $x-(-1)$."
@@ -470,12 +470,12 @@
     "responseFormat": "mcq",
     "problemText": "The region bounded by $y=x$ and $y=x^2$ on $[0,1]$ is revolved about the line $y=-1$. Which integral gives the volume?",
     "choices": [
-      "$\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)^2\\right]\\,dx$",
       "$\\pi\\int_0^1\\left[(x-1)^2-(x^2-1)^2\\right]\\,dx$",
       "$\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)\\right]\\,dx$",
-      "$\\pi\\int_0^1\\left[(x^2+1)^2-(x+1)^2\\right]\\,dx$"
+      "$\\pi\\int_0^1\\left[(x^2+1)^2-(x+1)^2\\right]\\,dx$",
+      "$\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)^2\\right]\\,dx$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Each radius is measured from $y=-1$: add 1 to each curve's height.",
       "Outer radius uses the upper curve $y=x$, giving $x+1$; inner uses $y=x^2$, giving $x^2+1$."
@@ -517,12 +517,12 @@
     "responseFormat": "mcq",
     "problemText": "The arc length of a smooth curve $y=f(x)$ from $x=a$ to $x=b$ is given by:",
     "choices": [
-      "$\\int_a^b \\sqrt{1+\\left[f'(x)\\right]^2}\\,dx$",
       "$\\int_a^b \\sqrt{1+f(x)^2}\\,dx$",
       "$\\int_a^b \\left(1+\\left[f'(x)\\right]^2\\right)\\,dx$",
+      "$\\int_a^b \\sqrt{1+\\left[f'(x)\\right]^2}\\,dx$",
       "$\\int_a^b \\sqrt{\\left[f'(x)\\right]^2-1}\\,dx$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Each infinitesimal piece is $\\sqrt{dx^2+dy^2}$.",
       "Factor out $dx$ to get $\\sqrt{1+(dy/dx)^2}\\,dx$."
@@ -536,12 +536,12 @@
     "responseFormat": "mcq",
     "problemText": "Which integral gives the arc length of $y=\\sin x$ from $x=0$ to $x=\\pi$?",
     "choices": [
-      "$\\int_0^{\\pi}\\sqrt{1+\\cos^2 x}\\,dx$",
       "$\\int_0^{\\pi}\\sqrt{1+\\sin^2 x}\\,dx$",
       "$\\int_0^{\\pi}\\sqrt{1-\\cos^2 x}\\,dx$",
-      "$\\int_0^{\\pi}\\left(1+\\cos^2 x\\right)\\,dx$"
+      "$\\int_0^{\\pi}\\left(1+\\cos^2 x\\right)\\,dx$",
+      "$\\int_0^{\\pi}\\sqrt{1+\\cos^2 x}\\,dx$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Here $f'(x)=\\cos x$.",
       "Substitute into $\\sqrt{1+\\left[f'(x)\\right]^2}$."

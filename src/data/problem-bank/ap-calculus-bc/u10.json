@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "A geometric series $\\sum a\\,r^{n}$ (with $a\\neq 0$) converges if and only if which condition on the common ratio holds?",
     "choices": [
-      "The ratio satisfies $r>1$",
       "The ratio satisfies $|r|<1$",
+      "The ratio satisfies $r>1$",
       "The ratio satisfies $|r|>1$",
       "The ratio satisfies $r=1$"
     ],
-    "answer": "B",
+    "answer": "A",
     "hints": [
       "A geometric series converges exactly when its terms shrink toward zero.",
       "Powers of a number stay bounded and shrink only when the number has magnitude below one."
@@ -27,11 +27,11 @@
     "problemText": "Which of the following infinite series converges?",
     "choices": [
       "$\\sum_{n=0}^{\\infty}\\left(\\tfrac{3}{2}\\right)^{n}$",
-      "$\\sum_{n=1}^{\\infty} n$",
       "$\\sum_{n=0}^{\\infty}\\left(\\tfrac{2}{3}\\right)^{n}$",
+      "$\\sum_{n=1}^{\\infty} n$",
       "$\\sum_{n=1}^{\\infty}(-1)^{n}$"
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
       "Look for a geometric series whose common ratio has magnitude below one.",
       "For $\\sum(2/3)^n$ the ratio is $r=2/3$, which satisfies $|r|<1$."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "For the series $\\sum_{n=1}^{\\infty}\\dfrac{n}{2n+1}$, what does the $n$th-term test conclude?",
     "choices": [
-      "It diverges, because $\\lim_{n\\to\\infty}\\tfrac{n}{2n+1}=\\tfrac12\\neq 0$",
       "It converges, because the terms are bounded",
       "It converges to $\\tfrac12$",
+      "It diverges, because $\\lim_{n\\to\\infty}\\tfrac{n}{2n+1}=\\tfrac12\\neq 0$",
       "The test is inconclusive because the terms are positive"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Apply the $n$th-term (divergence) test: check the limit of the terms.",
       "Since the terms approach $\\tfrac{1}{2}\\neq 0$, the series cannot converge."
@@ -65,11 +65,11 @@
     "problemText": "The repeating decimal 0.7777... can be written as the geometric series $\\sum_{n=1}^{\\infty} 7\\left(\\tfrac{1}{10}\\right)^{n}$. What is its exact value?",
     "choices": [
       "$\\tfrac{7}{10}$",
-      "$\\tfrac{7}{9}$",
       "$\\tfrac{70}{9}$",
-      "$\\tfrac{1}{7}$"
+      "$\\tfrac{1}{7}$",
+      "$\\tfrac{7}{9}$"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
       "Use the sum formula $\\dfrac{a}{1-r}$ with first term $a=\\tfrac{7}{10}$ and ratio $r=\\tfrac{1}{10}$.",
       "$\\dfrac{7/10}{1-1/10}=\\dfrac{7/10}{9/10}=\\tfrac{7}{9}$."
@@ -129,11 +129,11 @@
     "problemText": "Determine the behavior of $\\sum_{n=1}^{\\infty}\\dfrac{1}{\\sqrt{n}}$.",
     "choices": [
       "It converges by the integral test",
-      "It converges as a geometric series",
       "It diverges, since it is a $p$-series with $p=\\tfrac12\\leq 1$",
+      "It converges as a geometric series",
       "It converges to 2"
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
       "Rewrite $\\dfrac{1}{\\sqrt n}=\\dfrac{1}{n^{1/2}}$ and identify $p$.",
       "Here $p=\\tfrac12$, which is not greater than one, so the series diverges."
@@ -147,12 +147,12 @@
     "responseFormat": "mcq",
     "problemText": "Which comparison correctly shows that $\\sum_{n=1}^{\\infty}\\dfrac{1}{n^{2}+3}$ converges?",
     "choices": [
-      "$\\dfrac{1}{n^{2}+3}<\\dfrac{1}{n^{2}}$, and $\\sum\\dfrac{1}{n^{2}}$ converges",
       "$\\dfrac{1}{n^{2}+3}>\\dfrac{1}{n}$, and $\\sum\\dfrac{1}{n}$ converges",
       "$\\dfrac{1}{n^{2}+3}<\\dfrac{1}{n}$, and $\\sum\\dfrac{1}{n}$ converges",
+      "$\\dfrac{1}{n^{2}+3}<\\dfrac{1}{n^{2}}$, and $\\sum\\dfrac{1}{n^{2}}$ converges",
       "$\\dfrac{1}{n^{2}+3}>\\dfrac{1}{n^{2}}$, and $\\sum\\dfrac{1}{n^{2}}$ diverges"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Use direct comparison with a convergent $p$-series that dominates the terms.",
       "Since $n^{2}+3>n^{2}$, the terms are smaller than $\\tfrac{1}{n^{2}}$, and $\\sum \\tfrac{1}{n^{2}}$ converges ($p=2$)."
@@ -167,11 +167,11 @@
     "problemText": "Use the limit comparison test on $\\sum_{n=1}^{\\infty}\\dfrac{1}{2^{n}+n}$ with $b_{n}=\\dfrac{1}{2^{n}}$. What is the conclusion?",
     "choices": [
       "The limit is $\\infty$, so the series diverges",
-      "The limit is 1, and since $\\sum\\tfrac{1}{2^{n}}$ converges, the series converges",
       "The limit is 0, so the test is inconclusive",
-      "The limit is 1, and since $\\sum\\tfrac{1}{2^{n}}$ diverges, the series diverges"
+      "The limit is 1, and since $\\sum\\tfrac{1}{2^{n}}$ diverges, the series diverges",
+      "The limit is 1, and since $\\sum\\tfrac{1}{2^{n}}$ converges, the series converges"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
       "Compute $\\lim_{n\\to\\infty}\\dfrac{1/(2^{n}+n)}{1/2^{n}}=\\lim\\dfrac{2^{n}}{2^{n}+n}$.",
       "The limit is 1 (finite and positive), and $\\sum 1/2^{n}$ is a convergent geometric series, so both converge."
@@ -185,12 +185,12 @@
     "responseFormat": "mcq",
     "problemText": "The integral test can be applied to $\\sum_{n=1}^{\\infty}\\dfrac{1}{n^{2}}$ using $f(x)=\\dfrac{1}{x^{2}}$. Which requirement must $f$ satisfy on $[1,\\infty)$ for the test to be valid?",
     "choices": [
+      "It must be continuous, positive, and decreasing",
       "It must be increasing and negative",
       "It must be an even function",
-      "It must be constant",
-      "It must be continuous, positive, and decreasing"
+      "It must be constant"
     ],
-    "answer": "D",
+    "answer": "A",
     "hints": [
       "The integral test compares a decreasing positive function to its sampled terms.",
       "$f$ must be continuous, positive, and eventually decreasing on the interval."
@@ -217,12 +217,12 @@
     "responseFormat": "mcq",
     "problemText": "The alternating series test guarantees convergence of $\\sum(-1)^{n} b_{n}$ (with $b_{n}>0$) provided which two conditions hold?",
     "choices": [
-      "The $b_{n}$ decrease in magnitude and $\\lim_{n\\to\\infty} b_{n}=0$",
       "The $b_{n}$ increase and $\\lim_{n\\to\\infty} b_{n}=0$",
       "The $b_{n}$ decrease and $\\lim_{n\\to\\infty} b_{n}=1$",
+      "The $b_{n}$ decrease in magnitude and $\\lim_{n\\to\\infty} b_{n}=0$",
       "The series is geometric with $|r|<1$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The test needs the size of the terms to shrink steadily and vanish.",
       "Require $b_{n}$ eventually decreasing with limit 0."
@@ -237,11 +237,11 @@
     "problemText": "Which statement about the alternating harmonic series $\\sum_{n=1}^{\\infty}\\dfrac{(-1)^{n+1}}{n}$ is correct?",
     "choices": [
       "It diverges by the $n$th-term test",
-      "It converges by the alternating series test",
       "It converges as a geometric series",
-      "It converges because it is a $p$-series with $p=1$"
+      "It converges because it is a $p$-series with $p=1$",
+      "It converges by the alternating series test"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
       "Check that $b_{n}=\\tfrac{1}{n}$ decreases to 0.",
       "Both alternating series test conditions hold, so it converges (conditionally)."
@@ -255,12 +255,12 @@
     "responseFormat": "mcq",
     "problemText": "For a convergent alternating series with sum $S$, the alternating series error bound states that the error $|S-S_{N}|$ is at most:",
     "choices": [
+      "the magnitude of the first omitted term, $b_{N+1}$",
       "the first term $b_{1}$",
       "the partial sum $S_{N}$",
-      "the magnitude of the first omitted term, $b_{N+1}$",
       "zero"
     ],
-    "answer": "C",
+    "answer": "A",
     "hints": [
       "The remainder of an alternating series is controlled by the next term.",
       "$|S-S_{N}|\\leq b_{N+1}$."
@@ -313,12 +313,12 @@
     "responseFormat": "mcq",
     "problemText": "The ratio test evaluates $L=\\lim_{n\\to\\infty}\\left|\\dfrac{a_{n+1}}{a_{n}}\\right|$. The series $\\sum a_{n}$ converges absolutely when:",
     "choices": [
-      "$L<1$",
       "$L>1$",
+      "$L<1$",
       "$L=1$",
       "$L=0$ only"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A ratio limit below one forces the terms to shrink geometrically.",
       "Absolute convergence follows when $L<1$; $L>1$ diverges and $L=1$ is inconclusive."
@@ -333,11 +333,11 @@
     "problemText": "The ratio test is inconclusive precisely when the limit $L$ equals which value?",
     "choices": [
       "0",
-      "1",
       "$\\infty$",
+      "1",
       "$-1$"
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
       "At one particular value the test gives no information.",
       "When $L=1$, the ratio test is inconclusive and another test is needed."
@@ -353,10 +353,10 @@
     "choices": [
       "both $\\sum a_{n}$ and $\\sum|a_{n}|$ converge",
       "both $\\sum a_{n}$ and $\\sum|a_{n}|$ diverge",
-      "$\\sum a_{n}$ converges but $\\sum|a_{n}|$ diverges",
-      "$\\sum a_{n}$ diverges but $\\sum|a_{n}|$ converges"
+      "$\\sum a_{n}$ diverges but $\\sum|a_{n}|$ converges",
+      "$\\sum a_{n}$ converges but $\\sum|a_{n}|$ diverges"
     ],
-    "answer": "C",
+    "answer": "D",
     "hints": [
       "Compare the behavior of the series with and without absolute values.",
       "The alternating harmonic series is the classic example: it converges, but its absolute version (harmonic) diverges."
@@ -415,12 +415,12 @@
     "responseFormat": "mcq",
     "problemText": "The Taylor polynomial $T_{n}(x)$ for $f$ about $x=c$ has $k$th-degree coefficient equal to:",
     "choices": [
-      "$\\dfrac{f^{(k)}(c)}{k!}$",
       "$f^{(k)}(c)$",
+      "$\\dfrac{f^{(k)}(c)}{k!}$",
       "$\\dfrac{f(c)}{k!}$",
       "$k!\\,f^{(k)}(c)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Each coefficient uses a derivative at the center divided by a factorial.",
       "The coefficient of $(x-c)^{k}$ is $\\dfrac{f^{(k)}(c)}{k!}$."
@@ -435,11 +435,11 @@
     "problemText": "Which is the third-degree Taylor polynomial $T_{3}(x)$ for $f(x)=\\ln x$ about $x=1$?",
     "choices": [
       "$(x-1)+\\tfrac12(x-1)^{2}+\\tfrac13(x-1)^{3}$",
-      "$(x-1)-\\tfrac12(x-1)^{2}+\\tfrac13(x-1)^{3}$",
       "$\\,1+(x-1)-\\tfrac12(x-1)^{2}$",
+      "$(x-1)-\\tfrac12(x-1)^{2}+\\tfrac13(x-1)^{3}$",
       "$(x-1)-\\tfrac12(x-1)^{2}-\\tfrac13(x-1)^{3}$"
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
       "Compute $f(1)=0,\\ f'(1)=1,\\ f''(1)=-1,\\ f'''(1)=2$.",
       "Dividing by factorials gives $\\,0+(x-1)-\\tfrac12(x-1)^{2}+\\tfrac13(x-1)^{3}$."
@@ -455,10 +455,10 @@
     "choices": [
       "the value $f(c)$",
       "the $n$th derivative at $c$",
-      "an upper bound for $|f^{(n+1)}|$ on the interval between $c$ and $x$",
-      "the interval length $|x-c|$"
+      "the interval length $|x-c|$",
+      "an upper bound for $|f^{(n+1)}|$ on the interval between $c$ and $x$"
     ],
-    "answer": "C",
+    "answer": "D",
     "hints": [
       "The bound depends on how large the next derivative can get.",
       "$M$ is a bound on $|f^{(n+1)}|$ over the relevant interval."
@@ -512,11 +512,11 @@
     "problemText": "Find the interval of convergence of $\\sum_{n=1}^{\\infty}\\dfrac{x^{n}}{n}$.",
     "choices": [
       "$(-1,1)$",
-      "$[-1,1)$",
       "$(-1,1]$",
+      "$[-1,1)$",
       "$[-1,1]$"
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
       "The ratio test gives radius $R=1$; now test each endpoint.",
       "At $x=1$ the series is the divergent harmonic series; at $x=-1$ it is the convergent alternating harmonic series, so the interval is $[-1,1)$."
@@ -530,12 +530,12 @@
     "responseFormat": "mcq",
     "problemText": "At its center $x=c$, a power series $\\sum a_{n}(x-c)^{n}$ always:",
     "choices": [
-      "converges (its value there is the constant term)",
       "diverges",
       "is undefined",
-      "equals zero"
+      "equals zero",
+      "converges (its value there is the constant term)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Substitute $x=c$: every term with $n\\geq 1$ vanishes.",
       "Only the $n=0$ term survives, so the series converges at its center."
@@ -549,12 +549,12 @@
     "responseFormat": "mcq",
     "problemText": "Which power series has radius of convergence $R=\\infty$?",
     "choices": [
+      "$\\sum_{n=0}^{\\infty} \\dfrac{x^{n}}{n!}$",
       "$\\sum_{n=0}^{\\infty} n!\\,x^{n}$",
       "$\\sum_{n=1}^{\\infty} \\dfrac{x^{n}}{n}$",
-      "$\\sum_{n=0}^{\\infty} \\dfrac{x^{n}}{n!}$",
       "$\\sum_{n=0}^{\\infty} x^{n}$"
     ],
-    "answer": "C",
+    "answer": "A",
     "hints": [
       "Apply the ratio test and look for a limit of zero for every $x$.",
       "For $\\sum x^{n}/n!$ the ratio limit is $\\lim\\dfrac{|x|}{n+1}=0$ for all $x$, so $R=\\infty$."
@@ -607,12 +607,12 @@
     "responseFormat": "mcq",
     "problemText": "The Maclaurin series for $e^{x}$ is:",
     "choices": [
-      "$\\sum_{n=0}^{\\infty}\\dfrac{x^{n}}{n!}$",
       "$\\sum_{n=0}^{\\infty}(-1)^{n}\\dfrac{x^{n}}{n!}$",
+      "$\\sum_{n=0}^{\\infty}\\dfrac{x^{n}}{n!}$",
       "$\\sum_{n=0}^{\\infty} x^{n}$",
       "$\\sum_{n=1}^{\\infty}\\dfrac{x^{n}}{n}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Every derivative of $e^{x}$ at 0 equals 1.",
       "So the coefficient of $x^{n}$ is $\\dfrac{1}{n!}$."
@@ -646,11 +646,11 @@
     "problemText": "Using the substitution $x\\to -x^{2}$ in $\\dfrac{1}{1-x}=\\sum x^{n}$, which series represents $\\dfrac{1}{1+x^{2}}$?",
     "choices": [
       "$\\sum_{n=0}^{\\infty} x^{2n}$",
-      "$\\sum_{n=0}^{\\infty}(-1)^{n}x^{2n}$",
       "$\\sum_{n=0}^{\\infty}(-1)^{n}\\dfrac{x^{2n}}{n!}$",
-      "$\\sum_{n=0}^{\\infty}(-1)^{n}x^{n}$"
+      "$\\sum_{n=0}^{\\infty}(-1)^{n}x^{n}$",
+      "$\\sum_{n=0}^{\\infty}(-1)^{n}x^{2n}$"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
       "Replace $x$ by $-x^{2}$: $\\dfrac{1}{1-(-x^{2})}=\\sum(-x^{2})^{n}$.",
       "$(-x^{2})^{n}=(-1)^{n}x^{2n}$, giving $\\sum(-1)^{n}x^{2n}$."

@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "The rate of change of a quantity $y$ with respect to time $t$ is proportional to $y$ itself. Which differential equation models this statement?",
     "choices": [
-      "$\\frac{dy}{dt}=ky$",
       "$\\frac{dy}{dt}=kt$",
       "$\\frac{dy}{dt}=k$",
+      "$\\frac{dy}{dt}=ky$",
       "$\\frac{dy}{dt}=y+k$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "'Proportional to $y$' means a constant times $y$.",
       "The constant of proportionality is usually written $k$."
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "A population $P$ changes so that its rate of change is proportional to the product of $P$ and $(100-P)$. Which differential equation models this?",
     "choices": [
-      "$\\frac{dP}{dt}=kP(100-P)$",
       "$\\frac{dP}{dt}=kP+100$",
       "$\\frac{dP}{dt}=k(100-P)$",
-      "$\\frac{dP}{dt}=100kP$"
+      "$\\frac{dP}{dt}=100kP$",
+      "$\\frac{dP}{dt}=kP(100-P)$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "'Product of $P$ and $(100-P)$' means multiply the two factors.",
       "Include the proportionality constant $k$ in front of the product."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "Which function is a solution of the differential equation $\\frac{dy}{dx}=y+x$?",
     "choices": [
-      "$y=3e^{x}-x-1$",
       "$y=e^{x}+x$",
+      "$y=3e^{x}-x-1$",
       "$y=x^{2}+1$",
       "$y=e^{x}-x$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Compute $\\frac{dy}{dx}$ for the candidate and simplify $y+x$; they must match.",
       "For $y=3e^{x}-x-1$: $\\frac{dy}{dx}=3e^{x}-1$ and $y+x=3e^{x}-1$."
@@ -128,12 +128,12 @@
     "responseFormat": "mcq",
     "problemText": "For the differential equation $\\frac{dy}{dx}=x$, the slope-field segments are horizontal (slope ${}0$) along which line?",
     "choices": [
-      "the $y$-axis, where $x=0$",
       "the $x$-axis, where $y=0$",
+      "the $y$-axis, where $x=0$",
       "the line $y=x$",
       "nowhere in the plane"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Horizontal segments occur where $\\frac{dy}{dx}=0$.",
       "Set $x=0$."
@@ -147,12 +147,12 @@
     "responseFormat": "mcq",
     "problemText": "A slope field has segments that are identical along any horizontal line (the slope changes only as $y$ changes). Which differential equation could produce it?",
     "choices": [
-      "$\\frac{dy}{dx}=y$",
       "$\\frac{dy}{dx}=x$",
       "$\\frac{dy}{dx}=x+y$",
+      "$\\frac{dy}{dx}=y$",
       "$\\frac{dy}{dx}=xy$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Along a horizontal line $y$ is fixed while $x$ varies.",
       "If the slope does not change with $x$, it must depend only on $y$."
@@ -166,12 +166,12 @@
     "responseFormat": "mcq",
     "problemText": "For $\\frac{dy}{dx}=x-y$, at which point does the slope field have a segment with slope ${}0$?",
     "choices": [
-      "$(2,2)$",
       "$(2,0)$",
       "$(0,2)$",
-      "$(1,3)$"
+      "$(1,3)$",
+      "$(2,2)$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Slope ${}0$ requires $x-y=0$.",
       "Look for the point where $x=y$."
@@ -211,12 +211,12 @@
     "responseFormat": "mcq",
     "problemText": "Euler's method approximates the next point using which update rule?",
     "choices": [
-      "$y_{n+1}=y_{n}+h\\,f(x_{n},y_{n})$",
       "$y_{n+1}=y_{n}\\,f(x_{n},y_{n})$",
       "$y_{n+1}=f(x_{n},y_{n})+h$",
-      "$y_{n+1}=y_{n}+f(x_{n},y_{n})$"
+      "$y_{n+1}=y_{n}+f(x_{n},y_{n})$",
+      "$y_{n+1}=y_{n}+h\\,f(x_{n},y_{n})$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Each step follows the tangent line for one step of width $h$.",
       "Add $h$ times the slope to the current $y$-value."
@@ -249,12 +249,12 @@
     "responseFormat": "mcq",
     "problemText": "When Euler's method with a positive step size is applied to a solution curve that is concave up, the approximation is generally:",
     "choices": [
-      "an underestimate, since the tangent lines lie below the curve",
       "an overestimate, since the tangent lines lie above the curve",
+      "an underestimate, since the tangent lines lie below the curve",
       "exactly correct, regardless of concavity",
       "unrelated to the concavity of the curve"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Sketch a tangent line to a concave-up curve.",
       "For a concave-up curve the tangent line lies below the curve."
@@ -307,12 +307,12 @@
     "responseFormat": "mcq",
     "problemText": "A differential equation $\\frac{dy}{dx}=f(x)g(y)$ is separable because it can be rewritten as:",
     "choices": [
-      "$\\frac{dy}{g(y)}=f(x)\\,dx$",
       "$dy\\,dx=f(x)g(y)$",
       "$\\frac{dy}{f(x)}=g(y)\\,dx$",
-      "$g(y)\\,dy=\\frac{dx}{f(x)}$"
+      "$g(y)\\,dy=\\frac{dx}{f(x)}$",
+      "$\\frac{dy}{g(y)}=f(x)\\,dx$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Collect all the $y$'s with $dy$ and all the $x$'s with $dx$.",
       "Divide both sides by $g(y)$ and multiply by $dx$."
@@ -345,12 +345,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve $\\frac{dy}{dx}=y^{2}$ with the initial condition $y(0)=1$.",
     "choices": [
-      "$y=\\frac{1}{1-x}$",
       "$y=e^{x}$",
+      "$y=\\frac{1}{1-x}$",
       "$y=1+x^{2}$",
       "$y=\\frac{1}{1+x}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Integrate $\\frac{dy}{y^{2}}=dx$ to get $-\\frac{1}{y}=x+C$.",
       "Apply $y(0)=1$ to find $C=-1$, then solve for $y$."
@@ -403,12 +403,12 @@
     "responseFormat": "mcq",
     "problemText": "The general solution of the exponential model $\\frac{dy}{dt}=ky$ is:",
     "choices": [
-      "$y=y_{0}e^{kt}$",
       "$y=y_{0}+kt$",
+      "$y=y_{0}e^{kt}$",
       "$y=kt^{2}$",
       "$y=y_{0}e^{t}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Separating variables gives $\\ln|y|=kt+C$.",
       "Exponentiate to get $y=y_{0}e^{kt}$."
@@ -422,12 +422,12 @@
     "responseFormat": "mcq",
     "problemText": "For the model $\\frac{dy}{dt}=ky$ with $k<0$, the quantity undergoes:",
     "choices": [
-      "exponential decay",
       "exponential growth",
       "linear decay",
+      "exponential decay",
       "constant behavior"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The sign of $k$ controls growth versus decay.",
       "A negative exponent shrinks $e^{kt}$ over time."
@@ -441,12 +441,12 @@
     "responseFormat": "mcq",
     "problemText": "A bacteria culture starts at 100 and doubles each hour, modeled by $y={}100\\cdot 2^{t}$. What does the value ${}100$ represent?",
     "choices": [
-      "the initial amount at $t=0$",
       "the hourly growth rate",
       "the doubling time",
-      "the carrying capacity"
+      "the carrying capacity",
+      "the initial amount at $t=0$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Evaluate the model at $t=0$.",
       "Since ${}2^{0}=1$, $y(0)=100$."
@@ -524,12 +524,12 @@
     "responseFormat": "mcq",
     "problemText": "For a logistic model with carrying capacity $M$, the population grows fastest when $P$ equals:",
     "choices": [
-      "$\\frac{M}{2}$",
       "$M$",
+      "$\\frac{M}{2}$",
       "${}0$",
       "${}2M$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Maximum growth rate occurs at the inflection point of the logistic curve.",
       "That inflection point is at half the carrying capacity."
@@ -543,12 +543,12 @@
     "responseFormat": "mcq",
     "problemText": "For the logistic equation $\\frac{dP}{dt}=0.1P\\left(1-\\frac{P}{800}\\right)$, the carrying capacity is:",
     "choices": [
-      "${}800$",
       "${}0.1$",
       "${}400$",
+      "${}800$",
       "${}80$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Compare with the standard form $kP\\left(1-\\frac{P}{M}\\right)$.",
       "$M$ is the number in the denominator inside the parentheses."
@@ -562,12 +562,12 @@
     "responseFormat": "mcq",
     "problemText": "For $\\frac{dP}{dt}=0.1P\\left(1-\\frac{P}{800}\\right)$, the population grows fastest when $P=$",
     "choices": [
-      "${}400$",
       "${}800$",
       "${}200$",
-      "${}0$"
+      "${}0$",
+      "${}400$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Fastest growth occurs at $P=\\frac{M}{2}$.",
       "Here $M=800$, so compute half of it."

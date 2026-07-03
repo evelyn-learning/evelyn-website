@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "Which expression gives the derivative of a function $f$ at $x = a$?",
     "choices": [
-      "$\\lim_{h \\to 0} \\dfrac{f(a+h) - f(a)}{h}$",
       "$\\lim_{h \\to 0} \\dfrac{f(a+h) - f(a)}{a}$",
       "$\\dfrac{f(a+h) - f(a)}{h}$",
+      "$\\lim_{h \\to 0} \\dfrac{f(a+h) - f(a)}{h}$",
       "$\\lim_{h \\to 0} \\dfrac{f(a) - f(a+h)}{h}$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The derivative is the limit of a difference quotient as the run shrinks to zero.",
       "Divide the change in output by the change in input, which is $h$, then take the limit."
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "Before any limit is taken, the difference quotient $\\dfrac{f(x+h) - f(x)}{h}$ represents which quantity?",
     "choices": [
-      "The average rate of change of $f$ over the interval, i.e. the slope of a secant line",
       "The instantaneous rate of change of $f$ at $x$",
       "The slope of the tangent line to $f$ at $x$",
-      "The exact value of the derivative $f'(x)$"
+      "The exact value of the derivative $f'(x)$",
+      "The average rate of change of $f$ over the interval, i.e. the slope of a secant line"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Nothing has been taken to a limit yet, so this is still an average over a finite interval.",
       "A secant line connects two points a distance $h$ apart."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x) = x^2$, simplifying the difference quotient $\\dfrac{(x+h)^2 - x^2}{h}$ (before letting $h \\to 0$) gives:",
     "choices": [
-      "$\\;2x + h$",
       "$\\;2x$",
+      "$\\;2x + h$",
       "$\\;2x + h^2$",
       "$\\;x + h$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Expand $(x+h)^2 = x^2 + 2xh + h^2$, then subtract $x^2$.",
       "After canceling $x^2$, divide $\\,2xh + h^2$ by $h$; do not drop the $h$ term until the limit is taken."
@@ -119,12 +119,12 @@
     "responseFormat": "mcq",
     "problemText": "A table gives $f$ at $x = 1, 3, 5, 7$. To best estimate the instantaneous rate $f'(5)$ from the table, which pair of points should you use?",
     "choices": [
-      "$x = 3$ and $x = 7$ (a centered pair on both sides of $x = 5$)",
       "$x = 5$ and $x = 7$ only",
+      "$x = 3$ and $x = 7$ (a centered pair on both sides of $x = 5$)",
       "$x = 1$ and $x = 3$ only",
       "Just the single value $f(5)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "A symmetric (centered) difference quotient uses points equally spaced on both sides.",
       "Centered estimates typically beat one-sided ones."
@@ -138,12 +138,12 @@
     "responseFormat": "mcq",
     "problemText": "A table gives population $P$ (in thousands) as a function of time $t$ (in years). An estimate of $P'(5)$ from this table carries which units?",
     "choices": [
-      "Thousands of people per year",
       "Years per thousand people",
       "Thousands of people",
+      "Thousands of people per year",
       "Years"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "A derivative has units of (output units) divided by (input units).",
       "Output is thousands of people; input is years."
@@ -157,12 +157,12 @@
     "responseFormat": "mcq",
     "problemText": "Why is a symmetric (centered) difference quotient usually a more accurate estimate of $f'(a)$ than a one-sided quotient?",
     "choices": [
-      "It averages the behavior on both sides of $a$, canceling much of the leading error",
       "It uses smaller numbers, so rounding is reduced",
       "It always gives the exact derivative",
-      "One-sided quotients are undefined for smooth functions"
+      "One-sided quotients are undefined for smooth functions",
+      "It averages the behavior on both sides of $a$, canceling much of the leading error"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Consider how over- and under-estimates on each side combine.",
       "The centered estimate is the average of the forward and backward slopes."
@@ -214,12 +214,12 @@
     "responseFormat": "mcq",
     "problemText": "If $f$ is differentiable at $x = a$, which statement must be true?",
     "choices": [
-      "$f$ is continuous at $x = a$",
       "$f$ has a corner at $x = a$",
       "$f'(a)$ is undefined",
+      "$f$ is continuous at $x = a$",
       "$f$ must be a linear function"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Differentiability is a stronger condition than continuity.",
       "Differentiable at a point implies continuous there, but not the reverse."
@@ -233,12 +233,12 @@
     "responseFormat": "mcq",
     "problemText": "The function $g(x) = |x|$ is continuous at $x = 0$ but not differentiable there. Which reason best explains this?",
     "choices": [
-      "The slope from the left is $-1$ while the slope from the right is $+1$, so no single tangent slope exists",
       "The function is discontinuous at $x = 0$",
       "The function is undefined at $x = 0$",
-      "The function has a vertical tangent at $x = 0$"
+      "The function has a vertical tangent at $x = 0$",
+      "The slope from the left is $-1$ while the slope from the right is $+1$, so no single tangent slope exists"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Check the one-sided slopes as $x \\to 0$ from each side.",
       "A corner has mismatched left and right slopes."
@@ -271,12 +271,12 @@
     "responseFormat": "mcq",
     "problemText": "Let $f(x) = x^2$ for $x \\le 1$ and $f(x) = ax + b$ for $x > 1$. For $f$ to be differentiable at $x = 1$, the constants must be:",
     "choices": [
-      "$a = 2,\\ b = -1$",
       "$a = 2,\\ b = 1$",
+      "$a = 2,\\ b = -1$",
       "$a = 1,\\ b = 0$",
       "$a = -1,\\ b = 2$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Match the values (continuity): $a + b = 1$.",
       "Match the slopes: the left derivative is $f'(x) = 2x$, so at $x = 1$ we need $a = 2$."
@@ -315,12 +315,12 @@
     "responseFormat": "mcq",
     "problemText": "Find $\\dfrac{d}{dx}\\left(x^5\\right)$.",
     "choices": [
-      "$\\;5x^4$",
       "$\\;5x^5$",
       "$\\;x^4$",
-      "$\\;4x^5$"
+      "$\\;4x^5$",
+      "$\\;5x^4$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Power rule: $\\dfrac{d}{dx} x^n = n x^{n-1}$.",
       "Bring down the exponent and reduce it by one."
@@ -353,12 +353,12 @@
     "responseFormat": "mcq",
     "problemText": "Rewrite $\\sqrt{x}$ as $x^{1/2}$ and differentiate. What is $\\dfrac{d}{dx}\\sqrt{x}$?",
     "choices": [
-      "$\\tfrac{1}{2}x^{-1/2}$",
       "$\\tfrac{1}{2}x^{1/2}$",
+      "$\\tfrac{1}{2}x^{-1/2}$",
       "$\\;2x^{-1/2}$",
       "$\\;x^{-1/2}$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Apply the power rule with $n = \\tfrac{1}{2}$.",
       "The new exponent is $\\tfrac{1}{2} - 1 = -\\tfrac{1}{2}$."
@@ -372,12 +372,12 @@
     "responseFormat": "mcq",
     "problemText": "Rewrite $\\dfrac{4}{x^2}$ as $\\,4x^{-2}$ and differentiate. What is $\\dfrac{d}{dx}\\left(\\dfrac{4}{x^2}\\right)$?",
     "choices": [
-      "$-\\dfrac{8}{x^3}$",
       "$\\dfrac{8}{x^3}$",
       "$-\\dfrac{4}{x^3}$",
+      "$-\\dfrac{8}{x^3}$",
       "$-8x^3$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Differentiate $\\,4x^{-2}$ with the power rule: multiply by $-2$.",
       "$\\,4 \\cdot (-2) x^{-3} = -8x^{-3} = -\\dfrac{8}{x^3}$."
@@ -417,12 +417,12 @@
     "responseFormat": "mcq",
     "problemText": "Find $\\dfrac{d}{dx}\\left(\\sin x\\right)$.",
     "choices": [
-      "$\\cos x$",
       "$-\\cos x$",
       "$-\\sin x$",
+      "$\\cos x$",
       "$\\sin x$"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "This is a standard trig derivative.",
       "The derivative of sine is cosine."
@@ -436,12 +436,12 @@
     "responseFormat": "mcq",
     "problemText": "Find $\\dfrac{d}{dx}\\left(e^x + \\ln x\\right)$.",
     "choices": [
-      "$e^x + \\dfrac{1}{x}$",
       "$e^x + \\ln x$",
       "$xe^{x-1} + \\dfrac{1}{x}$",
-      "$e^x - \\dfrac{1}{x}$"
+      "$e^x - \\dfrac{1}{x}$",
+      "$e^x + \\dfrac{1}{x}$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The derivative of $e^x$ is $e^x$; the derivative of $\\ln x$ is $\\dfrac{1}{x}$.",
       "Do not apply the power rule to $e^x$."
@@ -500,12 +500,12 @@
     "responseFormat": "mcq",
     "problemText": "The product rule states that $(fg)'$ equals:",
     "choices": [
-      "$f'g + fg'$",
       "$f'g'$",
       "$f'g - fg'$",
-      "$fg' - f'g$"
+      "$fg' - f'g$",
+      "$f'g + fg'$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Differentiate each factor in turn and keep the other unchanged.",
       "The two terms are added, not multiplied."
@@ -538,12 +538,12 @@
     "responseFormat": "mcq",
     "problemText": "Find $\\dfrac{d}{dx}\\left(x e^x\\right)$ and write it in factored form.",
     "choices": [
-      "$e^x(1 + x)$",
       "$\\;xe^x$",
+      "$e^x(1 + x)$",
       "$e^x + x$",
       "$e^x(x - 1)$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Apply $f'g + fg'$ with $f = x$ and $g = e^x$.",
       "$\\,1 \\cdot e^x + x \\cdot e^x = e^x(1 + x)$."
@@ -596,12 +596,12 @@
     "responseFormat": "mcq",
     "problemText": "The quotient rule states that $\\left(\\dfrac{f}{g}\\right)'$ equals:",
     "choices": [
-      "$\\dfrac{f'g - fg'}{g^2}$",
       "$\\dfrac{fg' - f'g}{g^2}$",
       "$\\dfrac{f'g - fg'}{g}$",
-      "$\\dfrac{f'}{g'}$"
+      "$\\dfrac{f'}{g'}$",
+      "$\\dfrac{f'g - fg'}{g^2}$"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The numerator is 'low d-high minus high d-low'.",
       "The denominator is the bottom function squared."
@@ -634,12 +634,12 @@
     "responseFormat": "mcq",
     "problemText": "Find $\\dfrac{d}{dx}\\left(\\dfrac{x}{x + 1}\\right)$.",
     "choices": [
-      "$\\dfrac{1}{(x + 1)^2}$",
       "$\\dfrac{2x + 1}{(x + 1)^2}$",
+      "$\\dfrac{1}{(x + 1)^2}$",
       "$-\\dfrac{1}{(x + 1)^2}$",
       "$\\;1$"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Numerator: $f'g - fg' = (1)(x+1) - (x)(1)$.",
       "That simplifies to $\\,1$, over $(x+1)^2$."
