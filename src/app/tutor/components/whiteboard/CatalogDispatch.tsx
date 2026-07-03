@@ -36,6 +36,10 @@ import {
   CatalogEclipseDiagramRenderer,
   CatalogSeasonsDiagramRenderer,
   CatalogPlateTectonicsRenderer,
+  CatalogGeologicCrossSectionRenderer,
+  CatalogHRDiagramRenderer,
+  CatalogVolcanoCrossSectionRenderer,
+  CatalogAtmosphereLayersRenderer,
 } from './CatalogEarthSpaceRenderers';
 import {
   CatalogFlowchartSimpleRenderer,
@@ -84,6 +88,47 @@ import { CatalogFieldLinesRenderer } from './CatalogFieldLinesRenderer';
 import { CatalogPhaseDiagramRenderer } from './CatalogPhaseDiagramRenderer';
 import { CatalogHeartRenderer } from './CatalogHeartRenderer';
 import { CatalogCellEnergyRenderer } from './CatalogCellEnergyRenderer';
+import {
+  CatalogDopplerRenderer,
+  CatalogStandingWaveRenderer,
+  CatalogInterferenceRenderer,
+} from './CatalogWavesRenderers';
+import {
+  CatalogMitosisRenderer,
+  CatalogMeiosisRenderer,
+  CatalogDnaReplicationRenderer,
+  CatalogCellMembraneRenderer,
+} from './CatalogCellBiologyRenderers';
+import {
+  CatalogLeafCrossSectionRenderer,
+  CatalogNephronRenderer,
+  CatalogDigestiveSystemRenderer,
+  CatalogCirculatorySystemRenderer,
+} from './CatalogBioAnatomyRenderers';
+import {
+  CatalogBohrRenderer,
+  CatalogGalvanicRenderer,
+  CatalogTitrationRenderer,
+  CatalogLatticeRenderer,
+} from './CatalogChemistryRenderers';
+import {
+  CatalogNuclearDecayRenderer,
+  CatalogEMInductionRenderer,
+  CatalogMagneticFieldRenderer,
+  CatalogProjectileRenderer,
+} from './CatalogEMNuclearMotionRenderers';
+import {
+  CatalogDataStructureRenderer,
+  CatalogGraphRenderer,
+  CatalogHashTableRenderer,
+  CatalogRecursionTreeRenderer,
+} from './CatalogCSStructuresRenderers';
+import {
+  CatalogProteinSynthesisRenderer,
+  CatalogEnzymeActionRenderer,
+  CatalogCellCycleRenderer,
+  CatalogGeneExpressionRenderer,
+} from './CatalogMolecularBiologyRenderers';
 
 interface Props {
   kind: string;
@@ -130,6 +175,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'eclipse_diagram':          return <CatalogEclipseDiagramRenderer figure={figure} />;
     case 'seasons_diagram':          return <CatalogSeasonsDiagramRenderer figure={figure} />;
     case 'plate_tectonics':          return <CatalogPlateTectonicsRenderer figure={figure} />;
+    case 'geologic_cross_section':   return <CatalogGeologicCrossSectionRenderer figure={figure} />;
+    case 'hr_diagram':               return <CatalogHRDiagramRenderer figure={figure} />;
+    case 'volcano_cross_section':    return <CatalogVolcanoCrossSectionRenderer figure={figure} />;
+    case 'atmosphere_layers':        return <CatalogAtmosphereLayersRenderer figure={figure} />;
     // Phase 5 — CS
     case 'flowchart_simple':         return <CatalogFlowchartSimpleRenderer figure={figure} />;
     case 'state_machine':            return <CatalogStateMachineRenderer figure={figure} />;
@@ -188,6 +237,40 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'heart_diagram':              return <CatalogHeartRenderer figure={figure} />;
     case 'photosynthesis':
     case 'cellular_respiration':       return <CatalogCellEnergyRenderer figure={figure} />;
+    // Phase 17 — wavefront / 2D wave patterns
+    case 'doppler_effect':             return <CatalogDopplerRenderer figure={figure} />;
+    case 'standing_wave':              return <CatalogStandingWaveRenderer figure={figure} />;
+    case 'interference_pattern':       return <CatalogInterferenceRenderer figure={figure} />;
+    // Phase 18 — cell biology / genetics
+    case 'mitosis':                    return <CatalogMitosisRenderer figure={figure} />;
+    case 'meiosis':                    return <CatalogMeiosisRenderer figure={figure} />;
+    case 'dna_replication':            return <CatalogDnaReplicationRenderer figure={figure} />;
+    case 'cell_membrane':              return <CatalogCellMembraneRenderer figure={figure} />;
+    // Phase 19 — chemistry
+    case 'bohr_model':                 return <CatalogBohrRenderer figure={figure} />;
+    case 'galvanic_cell':              return <CatalogGalvanicRenderer figure={figure} />;
+    case 'titration_curve':            return <CatalogTitrationRenderer figure={figure} />;
+    case 'crystal_lattice':            return <CatalogLatticeRenderer figure={figure} />;
+    // Phase 20 — nuclear / electromagnetism / kinematics
+    case 'nuclear_decay':              return <CatalogNuclearDecayRenderer figure={figure} />;
+    case 'em_induction':               return <CatalogEMInductionRenderer figure={figure} />;
+    case 'magnetic_field_current':     return <CatalogMagneticFieldRenderer figure={figure} />;
+    case 'projectile_motion':          return <CatalogProjectileRenderer figure={figure} />;
+    // Phase 20 — bio anatomy / physiology
+    case 'leaf_cross_section':         return <CatalogLeafCrossSectionRenderer figure={figure} />;
+    case 'nephron':                    return <CatalogNephronRenderer figure={figure} />;
+    case 'digestive_system':           return <CatalogDigestiveSystemRenderer figure={figure} />;
+    case 'circulatory_system':         return <CatalogCirculatorySystemRenderer figure={figure} />;
+    // Phase 22 — computer science
+    case 'data_structure':             return <CatalogDataStructureRenderer figure={figure} />;
+    case 'graph_diagram':              return <CatalogGraphRenderer figure={figure} />;
+    case 'hash_table':                 return <CatalogHashTableRenderer figure={figure} />;
+    case 'recursion_tree':             return <CatalogRecursionTreeRenderer figure={figure} />;
+    // Phase 23 — molecular / cell biology
+    case 'protein_synthesis':          return <CatalogProteinSynthesisRenderer figure={figure} />;
+    case 'enzyme_action':              return <CatalogEnzymeActionRenderer figure={figure} />;
+    case 'cell_cycle':                 return <CatalogCellCycleRenderer figure={figure} />;
+    case 'gene_expression':            return <CatalogGeneExpressionRenderer figure={figure} />;
 
     default:
       return (

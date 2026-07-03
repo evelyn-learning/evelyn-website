@@ -51,3 +51,5 @@ data/ap-source-corpus/
 
 # tutor-e2e test artifacts
 artifacts/
+sketch-review/
+.claude/worktrees/

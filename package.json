@@ -37,6 +37,7 @@
     "test:render-judge": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-render-harness/judge.ts",
     "test:board-anchor-assist": "npx tsx scripts/test-board-anchor-assist.ts",
     "test:sketch-validate": "npx tsx scripts/test-sketch-validate.ts",
+    "test:sketch-render": "npx tsx scripts/test-sketch-render.ts",
     "test:resume-cut": "npx tsx scripts/test-resume-from-cut.ts",
     "test:figure-evolve": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-figure-evolve.ts",
     "test:conic-primitives": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-primitives.ts",

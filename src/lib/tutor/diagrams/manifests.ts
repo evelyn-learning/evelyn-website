@@ -93,12 +93,20 @@ import {
   buildEclipseDiagramManifest,
   buildSeasonsDiagramManifest,
   buildPlateTectonicsManifest,
+  buildGeologicCrossSectionManifest,
+  buildHRDiagramManifest,
+  buildVolcanoCrossSectionManifest,
+  buildAtmosphereLayersManifest,
   solvePhasesOfMoon,
   solveSolarSystem,
   solveEarthLayers,
   solveEclipseDiagram,
   solveSeasonsDiagram,
   solvePlateTectonics,
+  solveGeologicCrossSection,
+  solveHRDiagram,
+  solveVolcanoCrossSection,
+  solveAtmosphereLayers,
 } from '@/lib/tutor/diagrams/catalog/kinds/earth-space';
 import {
   // Aliased: the legacy `show_flowchart` tool already imports a
@@ -203,6 +211,74 @@ import {
   solvePhotosynthesis as solvePhotoForManifest,
   solveCellularRespiration as solveRespForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/cell-energy';
+import {
+  buildDopplerManifest,
+  solveDopplerEffect as solveDopplerForManifest,
+  buildStandingWaveManifest,
+  solveStandingWave as solveStandingWaveForManifest,
+  buildInterferenceManifest,
+  solveInterferencePattern as solveInterferenceForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/waves';
+import {
+  buildMitosisManifest,
+  solveMitosis as solveMitosisForManifest,
+  buildMeiosisManifest,
+  solveMeiosis as solveMeiosisForManifest,
+  buildDnaReplicationManifest,
+  solveDnaReplication as solveDnaReplicationForManifest,
+  buildCellMembraneManifest,
+  solveCellMembrane as solveCellMembraneForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/cell-biology';
+import {
+  buildBohrManifest,
+  solveBohrModel as solveBohrForManifest,
+  buildGalvanicManifest,
+  solveGalvanicCell as solveGalvanicForManifest,
+  buildTitrationManifest,
+  solveTitrationCurve as solveTitrationForManifest,
+  buildLatticeManifest,
+  solveCrystalLattice as solveLatticeForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
+import {
+  buildNuclearDecayManifest,
+  solveNuclearDecay as solveNuclearDecayForManifest,
+  buildEMInductionManifest,
+  solveEMInduction as solveEMInductionForManifest,
+  buildMagneticFieldManifest,
+  solveMagneticFieldCurrent as solveMagneticFieldForManifest,
+  buildProjectileManifest,
+  solveProjectileMotion as solveProjectileForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/em-nuclear-motion';
+import {
+  buildLeafCrossSectionManifest,
+  solveLeafCrossSection as solveLeafForManifest,
+  buildNephronManifest,
+  solveNephron as solveNephronForManifest,
+  buildDigestiveSystemManifest,
+  solveDigestiveSystem as solveDigestiveForManifest,
+  buildCirculatorySystemManifest,
+  solveCirculatorySystem as solveCirculatoryForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
+import {
+  buildDataStructureManifest,
+  solveDataStructure as solveDataStructureForManifest,
+  buildGraphManifest as buildGraphDiagramManifest,
+  solveGraphDiagram as solveGraphForManifest,
+  buildHashTableManifest,
+  solveHashTable as solveHashTableForManifest,
+  buildRecursionTreeManifest,
+  solveRecursionTree as solveRecursionTreeForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/cs-structures';
+import {
+  buildProteinSynthesisManifest,
+  solveProteinSynthesis as solveProteinSynthesisForManifest,
+  buildEnzymeActionManifest,
+  solveEnzymeAction as solveEnzymeActionForManifest,
+  buildCellCycleManifest,
+  solveCellCycle as solveCellCycleForManifest,
+  buildGeneExpressionManifest,
+  solveGeneExpression as solveGeneExpressionForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/molecular-biology';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1113,6 +1189,34 @@ function buildDiagramManifest(cmd: {
       } catch { /* fall through */ }
       break;
     }
+    case 'geologic_cross_section': {
+      try {
+        const figure = solveGeologicCrossSection(params);
+        return buildGeologicCrossSectionManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'hr_diagram': {
+      try {
+        const figure = solveHRDiagram(params);
+        return buildHRDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'volcano_cross_section': {
+      try {
+        const figure = solveVolcanoCrossSection(params);
+        return buildVolcanoCrossSectionManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'atmosphere_layers': {
+      try {
+        const figure = solveAtmosphereLayers(params);
+        return buildAtmosphereLayersManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
     // Phase 5 — CS.
     case 'flowchart_simple': {
       try {
@@ -1368,6 +1472,114 @@ function buildDiagramManifest(cmd: {
     }
     case 'cellular_respiration': {
       try { return buildCellEnergyManifest(solveRespForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'doppler_effect': {
+      try { return buildDopplerManifest(solveDopplerForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'standing_wave': {
+      try { return buildStandingWaveManifest(solveStandingWaveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'interference_pattern': {
+      try { return buildInterferenceManifest(solveInterferenceForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'mitosis': {
+      try { return buildMitosisManifest(solveMitosisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'meiosis': {
+      try { return buildMeiosisManifest(solveMeiosisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'dna_replication': {
+      try { return buildDnaReplicationManifest(solveDnaReplicationForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'cell_membrane': {
+      try { return buildCellMembraneManifest(solveCellMembraneForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'bohr_model': {
+      try { return buildBohrManifest(solveBohrForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'galvanic_cell': {
+      try { return buildGalvanicManifest(solveGalvanicForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'titration_curve': {
+      try { return buildTitrationManifest(solveTitrationForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'crystal_lattice': {
+      try { return buildLatticeManifest(solveLatticeForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'nuclear_decay': {
+      try { return buildNuclearDecayManifest(solveNuclearDecayForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'em_induction': {
+      try { return buildEMInductionManifest(solveEMInductionForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'magnetic_field_current': {
+      try { return buildMagneticFieldManifest(solveMagneticFieldForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'projectile_motion': {
+      try { return buildProjectileManifest(solveProjectileForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'leaf_cross_section': {
+      try { return buildLeafCrossSectionManifest(solveLeafForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'nephron': {
+      try { return buildNephronManifest(solveNephronForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'digestive_system': {
+      try { return buildDigestiveSystemManifest(solveDigestiveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'circulatory_system': {
+      try { return buildCirculatorySystemManifest(solveCirculatoryForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'data_structure': {
+      try { return buildDataStructureManifest(solveDataStructureForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'graph_diagram': {
+      try { return buildGraphDiagramManifest(solveGraphForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'hash_table': {
+      try { return buildHashTableManifest(solveHashTableForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'recursion_tree': {
+      try { return buildRecursionTreeManifest(solveRecursionTreeForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'protein_synthesis': {
+      try { return buildProteinSynthesisManifest(solveProteinSynthesisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'enzyme_action': {
+      try { return buildEnzymeActionManifest(solveEnzymeActionForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'cell_cycle': {
+      try { return buildCellCycleManifest(solveCellCycleForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'gene_expression': {
+      try { return buildGeneExpressionManifest(solveGeneExpressionForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

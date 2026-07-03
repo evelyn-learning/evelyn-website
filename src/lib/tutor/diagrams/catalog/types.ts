@@ -108,7 +108,46 @@ export type DiagramKindId =
   // Phase 16 — labeled-bio diagrams
   | 'heart_diagram'
   | 'photosynthesis'
-  | 'cellular_respiration';
+  | 'cellular_respiration'
+  // Phase 17 — wavefront / 2D wave patterns (physics: waves & optics)
+  | 'doppler_effect'
+  | 'standing_wave'
+  | 'interference_pattern'
+  // Phase 18 — cell biology / genetics (life science, Biology, AP Bio)
+  | 'mitosis'
+  | 'meiosis'
+  | 'dna_replication'
+  | 'cell_membrane'
+  // Phase 19 — chemistry (HS / AP / IB chemistry)
+  | 'bohr_model'
+  | 'galvanic_cell'
+  | 'titration_curve'
+  | 'crystal_lattice'
+  // Phase 20 — nuclear / electromagnetism / kinematics (physics)
+  | 'nuclear_decay'
+  | 'em_induction'
+  | 'magnetic_field_current'
+  | 'projectile_motion'
+  // Phase 21 — bio anatomy / physiology (life science, Biology, AP Bio)
+  | 'leaf_cross_section'
+  | 'nephron'
+  | 'digestive_system'
+  | 'circulatory_system'
+  // Phase 22 — computer science (data structures + algorithms)
+  | 'data_structure'
+  | 'graph_diagram'
+  | 'hash_table'
+  | 'recursion_tree'
+  // Phase 23 — earth & space science (geology + astronomy + atmosphere)
+  | 'geologic_cross_section'
+  | 'hr_diagram'
+  | 'volcano_cross_section'
+  | 'atmosphere_layers'
+  // Phase 24 — molecular / cell biology (life science, Biology, AP Bio)
+  | 'protein_synthesis'
+  | 'enzyme_action'
+  | 'cell_cycle'
+  | 'gene_expression';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

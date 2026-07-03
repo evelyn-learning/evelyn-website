@@ -411,6 +411,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'punnett_square', 'life_cycle', 'water_cycle', 'rock_cycle', 'body_system',
             'phases_of_moon', 'solar_system', 'earth_layers', 'eclipse_diagram',
             'seasons_diagram', 'plate_tectonics',
+            'geologic_cross_section', 'hr_diagram', 'volcano_cross_section', 'atmosphere_layers',
             'flowchart_simple', 'state_machine', 'binary_tree', 'truth_table', 'logic_gate',
             'unit_circle', 'transformation', 'inequality_graph',
             'sentence_diagram', 'argument_structure', 'historical_timeline',
@@ -432,6 +433,20 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             // Phase 15 — 3D / spatial figures
             'solid_of_revolution', 'solid_3d', 'vectors_3d', 'vsepr_geometry', 'field_lines', 'phase_diagram',
             'heart_diagram', 'photosynthesis', 'cellular_respiration',
+            // Phase 17 — wavefront / 2D wave patterns
+            'doppler_effect', 'standing_wave', 'interference_pattern',
+            // Phase 18 — cell biology / genetics
+            'mitosis', 'meiosis', 'dna_replication', 'cell_membrane',
+            // Phase 19 — chemistry
+            'bohr_model', 'galvanic_cell', 'titration_curve', 'crystal_lattice',
+            // Phase 20 — nuclear / electromagnetism / kinematics
+            'nuclear_decay', 'em_induction', 'magnetic_field_current', 'projectile_motion',
+            // Phase 20 — bio anatomy / physiology
+            'leaf_cross_section', 'nephron', 'digestive_system', 'circulatory_system',
+            // Phase 22 — computer science (data structures + algorithms)
+            'data_structure', 'graph_diagram', 'hash_table', 'recursion_tree',
+            // Phase 23 — molecular / cell biology (life science, Biology, AP Bio)
+            'protein_synthesis', 'enzyme_action', 'cell_cycle', 'gene_expression',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],
@@ -452,7 +467,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     ? [{
         name: 'show_sketch',
         description:
-          "Draw a quick, rough HAND-DRAWN doodle to make a real-world ANALOGY or concrete mental image click — the kind a teacher scribbles on a whiteboard to build intuition for an abstract idea. You describe WHAT to draw in one line; the system draws it. This tool CANNOT render math accurately — it is freehand and approximate. Do NOT use it for any curve, function, graph, plotted relationship, data trend, or exact geometric figure: those go to show_function_graph / show_geometry / show_diagram, which draw them precisely. It also cannot draw a 3D solid or a sliced solid (a cone, a sliced cone), or a detailed labeled diagram (a neuron, the brain, a cell): use the matching show_diagram catalog kind instead (e.g. conic_sections for the sliced-cone figure, neuron_diagram, brain_regions). A doodled mathematical or technical figure is wrong and misleads the student. Reach for show_sketch only when the depiction is illustrative intuition, not a precise figure.",
+          "Draw a quick, rough HAND-DRAWN doodle to make a real-world ANALOGY or concrete mental image click — the kind a teacher scribbles on a whiteboard to build intuition for an abstract idea. You describe WHAT to draw in one line; the system draws it. This tool CANNOT render math accurately — it is freehand and approximate. Do NOT use it for any curve, function, graph, plotted relationship, data trend, or exact geometric figure: those go to show_function_graph / show_geometry / show_diagram, which draw them precisely. It also cannot draw a 3D solid or a sliced solid (a cone, a sliced cone), or a detailed labeled diagram (a neuron, the brain, a cell): use the matching show_diagram catalog kind instead (e.g. conic_sections for the sliced-cone figure, neuron_diagram, brain_regions). It is ALSO wrong for a physics/technical figure with a canonical form — wavefronts / the Doppler effect, interference, standing waves, field lines, a spring-mass or pulley system, a ray diagram, a circuit: those have precise show_diagram catalog kinds (e.g. doppler_effect, interference_pattern, standing_wave, wave_diagram, field_lines, ray_diagram_lens, spring_mass) that draw them correctly; a freehand scribble of them reads as a blob. And do not sketch a SPECIFIC real object that must be recognizable (a roller coaster, a car, a microscope, an animal). A doodled mathematical or technical figure is wrong and misleads the student. Reach for show_sketch only when the depiction is illustrative intuition or a real-world analogy, not a precise or canonical figure.",
         parameters: {
           type: 'object',
           properties: {

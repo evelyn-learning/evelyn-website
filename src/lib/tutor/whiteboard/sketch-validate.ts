@@ -20,8 +20,31 @@ import {
   type SketchPrimitive,
 } from './sketch-schema';
 
-const { minCoord, maxCoord, maxStrokeWidth, maxLabels, maxLabelLen, maxPolyPoints, minPolyPoints } =
-  SKETCH_BOUNDS;
+const {
+  minCoord, maxCoord, maxStrokeWidth, maxLabels, maxLabelLen, maxPolyPoints, minPolyPoints,
+  minConcentricCount, maxConcentricCount,
+  minWaveCycles, maxWaveCycles, maxAmplitude,
+  minCoils, maxCoils, maxSpringWidth,
+  minStickScale, maxStickScale,
+  minGridDim, maxGridDim, maxArcRadius, maxBlobWobble, maxDotsCount, maxSpread,
+  maxPulleyRadius, maxLeverLength, maxLeverTilt, maxGaugeRadius,
+  minAxisTicks, maxAxisTicks, maxAxisLabels,
+  maxMoleculeAtoms, maxMoleculeBonds, maxBars,
+} = SKETCH_BOUNDS;
+
+const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
+const CONTAINER_SHAPES = ['beaker', 'tank', 'battery', 'thermometer'] as const;
+const VECTOR_STYLES = ['single', 'double', 'curved', 'block'] as const;
+const GRID_STYLES = ['lines', 'dots', 'boxes'] as const;
+const BRACE_SIDES = ['left', 'right', 'top', 'bottom'] as const;
+const ROPE_DIRS = ['both', 'left', 'right'] as const;
+
+/** A short optional text tag carried by vector/brace (distinct from a `label` primitive). */
+function tag(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined;
+  const t = v.trim().slice(0, maxLabelLen);
+  return t || undefined;
+}
 
 function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -95,6 +118,354 @@ function sanitize(raw: unknown): SketchPrimitive | null {
       if (cx === null || cy === null || rx === null || ry === null) return null;
       if (rx <= 0 || ry <= 0) return null;
       return { type, cx, cy, rx: Math.min(maxCoord, rx), ry: Math.min(maxCoord, ry), ...styled };
+    }
+    case 'concentric': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const spacing = num(p.spacing);
+      let count = num(p.count);
+      if (cx === null || cy === null || spacing === null || count === null) return null;
+      if (spacing <= 0) return null;
+      count = Math.round(Math.min(maxConcentricCount, Math.max(minConcentricCount, count)));
+      const sq = num(p.squeeze);
+      const ang = num(p.angle);
+      return {
+        type,
+        cx, cy, count,
+        spacing: Math.min(maxCoord, spacing),
+        ...(sq !== null ? { squeeze: Math.min(0.9, Math.max(0, sq)) } : {}),
+        ...(ang !== null ? { angle: ang } : {}),
+        ...styled,
+      };
+    }
+    case 'wave': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      const cycles = num(p.cycles), amplitude = num(p.amplitude);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (cycles === null || amplitude === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length segment
+      if (amplitude <= 0) return null;
+      const damping = num(p.damping);
+      return {
+        type,
+        x1, y1, x2, y2,
+        cycles: Math.min(maxWaveCycles, Math.max(minWaveCycles, cycles)),
+        amplitude: Math.min(maxAmplitude, amplitude),
+        ...(damping !== null ? { damping: Math.min(1, Math.max(0, damping)) } : {}),
+        ...styled,
+      };
+    }
+    case 'spring': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      let coils = num(p.coils);
+      const width = num(p.width);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (coils === null || width === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length segment
+      if (width <= 0) return null;
+      coils = Math.round(Math.min(maxCoils, Math.max(minCoils, coils)));
+      return {
+        type,
+        x1, y1, x2, y2,
+        coils,
+        width: Math.min(maxSpringWidth, width),
+        ...styled,
+      };
+    }
+    case 'stick_figure': {
+      const x = coord(p.x), y = coord(p.y);
+      const scale = num(p.scale);
+      if (x === null || y === null || scale === null) return null;
+      const pose =
+        typeof p.pose === 'string' && (STICK_POSES as readonly string[]).includes(p.pose)
+          ? (p.pose as (typeof STICK_POSES)[number])
+          : undefined;
+      return {
+        type,
+        x, y,
+        scale: Math.min(maxStickScale, Math.max(minStickScale, scale)),
+        ...(pose ? { pose } : {}),
+        ...styled,
+      };
+    }
+    case 'container_fill': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      const fillFrac = num(p.fillFrac);
+      if (x === null || y === null || w === null || h === null || fillFrac === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const shape =
+        typeof p.shape === 'string' && (CONTAINER_SHAPES as readonly string[]).includes(p.shape)
+          ? (p.shape as (typeof CONTAINER_SHAPES)[number])
+          : undefined;
+      const fillColor = color(p.fillColor);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        fillFrac: Math.min(1, Math.max(0, fillFrac)),
+        ...(shape ? { shape } : {}),
+        ...(fillColor ? { fillColor } : {}),
+        ...styled,
+      };
+    }
+    case 'vector': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length
+      const style =
+        typeof p.style === 'string' && (VECTOR_STYLES as readonly string[]).includes(p.style)
+          ? (p.style as (typeof VECTOR_STYLES)[number])
+          : undefined;
+      const lbl = tag(p.label);
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(style ? { style } : {}),
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'grid': {
+      const x = coord(p.x), y = coord(p.y);
+      const cell = num(p.cell);
+      let cols = num(p.cols), rows = num(p.rows);
+      if (x === null || y === null || cell === null || cols === null || rows === null) return null;
+      if (cell <= 0) return null;
+      cols = Math.round(Math.min(maxGridDim, Math.max(minGridDim, cols)));
+      rows = Math.round(Math.min(maxGridDim, Math.max(minGridDim, rows)));
+      const gstyle =
+        typeof p.style === 'string' && (GRID_STYLES as readonly string[]).includes(p.style)
+          ? (p.style as (typeof GRID_STYLES)[number])
+          : undefined;
+      const fc = num(p.fillCount);
+      return {
+        type,
+        x, y, cols, rows,
+        cell: Math.min(maxCoord, cell),
+        ...(gstyle ? { style: gstyle } : {}),
+        ...(fc !== null ? { fillCount: Math.round(Math.min(cols * rows, Math.max(0, fc))) } : {}),
+        ...styled,
+      };
+    }
+    case 'brace': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length span
+      const side =
+        typeof p.side === 'string' && (BRACE_SIDES as readonly string[]).includes(p.side)
+          ? (p.side as (typeof BRACE_SIDES)[number])
+          : undefined;
+      const lbl = tag(p.label);
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(side ? { side } : {}),
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'arc': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r), startAngle = num(p.startAngle), endAngle = num(p.endAngle);
+      if (cx === null || cy === null || r === null || startAngle === null || endAngle === null) return null;
+      if (r <= 0) return null;
+      if (startAngle === endAngle) return null; // zero sweep
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxArcRadius, r),
+        startAngle, endAngle,
+        ...styled,
+      };
+    }
+    case 'blob': {
+      const cx = coord(p.cx), cy = coord(p.cy), rx = num(p.rx), ry = num(p.ry);
+      if (cx === null || cy === null || rx === null || ry === null) return null;
+      if (rx <= 0 || ry <= 0) return null;
+      const wobble = num(p.wobble);
+      return {
+        type,
+        cx, cy,
+        rx: Math.min(maxCoord, rx),
+        ry: Math.min(maxCoord, ry),
+        ...(wobble !== null ? { wobble: Math.min(maxBlobWobble, Math.max(0, wobble)) } : {}),
+        ...styled,
+      };
+    }
+    case 'dots_cluster': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      let count = num(p.count);
+      const spread = num(p.spread);
+      if (cx === null || cy === null || count === null || spread === null) return null;
+      if (spread <= 0) return null;
+      count = Math.round(Math.min(maxDotsCount, Math.max(1, count)));
+      return {
+        type,
+        cx, cy, count,
+        spread: Math.min(maxSpread, spread),
+        ...styled,
+      };
+    }
+    case 'pulley': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      if (cx === null || cy === null || r === null) return null;
+      if (r <= 0) return null;
+      const ropeDir =
+        typeof p.ropeDir === 'string' && (ROPE_DIRS as readonly string[]).includes(p.ropeDir)
+          ? (p.ropeDir as (typeof ROPE_DIRS)[number])
+          : undefined;
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxPulleyRadius, r),
+        ...(ropeDir ? { ropeDir } : {}),
+        ...styled,
+      };
+    }
+    case 'lever': {
+      const x = coord(p.x), y = coord(p.y);
+      const length = num(p.length);
+      let pivotFrac = num(p.pivotFrac);
+      if (x === null || y === null || length === null || pivotFrac === null) return null;
+      if (length <= 0) return null;
+      pivotFrac = Math.min(1, Math.max(0, pivotFrac));
+      const tilt = num(p.tilt);
+      return {
+        type,
+        x, y,
+        length: Math.min(maxLeverLength, length),
+        pivotFrac,
+        ...(tilt !== null ? { tilt: Math.min(maxLeverTilt, Math.max(-maxLeverTilt, tilt)) } : {}),
+        ...styled,
+      };
+    }
+    case 'gauge': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      let frac = num(p.frac);
+      if (cx === null || cy === null || r === null || frac === null) return null;
+      if (r <= 0) return null;
+      frac = Math.min(1, Math.max(0, frac));
+      const lbl = tag(p.label);
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxGaugeRadius, r),
+        frac,
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'axis': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null; // zero-length axis
+      let ticks = num(p.ticks);
+      if (ticks !== null) ticks = Math.round(Math.min(maxAxisTicks, Math.max(minAxisTicks, ticks)));
+      const labels = Array.isArray(p.labels)
+        ? p.labels
+            .filter((s): s is string => typeof s === 'string')
+            .map((s) => s.trim().slice(0, maxLabelLen))
+            .filter((s) => s.length > 0)
+            .slice(0, maxAxisLabels)
+        : undefined;
+      return {
+        type,
+        x1, y1, x2, y2,
+        ...(ticks !== null ? { ticks } : {}),
+        ...(labels && labels.length ? { labels } : {}),
+        ...styled,
+      };
+    }
+    case 'coordinate_grid': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const quadrants = p.quadrants === 1 ? 1 : 4; // default 4-quadrant plane
+      const xLabel = tag(p.xLabel);
+      const yLabel = tag(p.yLabel);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        quadrants,
+        ...(xLabel ? { xLabel } : {}),
+        ...(yLabel ? { yLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'orbit': {
+      const cx = coord(p.cx), cy = coord(p.cy), rx = num(p.rx), ry = num(p.ry);
+      if (cx === null || cy === null || rx === null || ry === null) return null;
+      if (rx <= 0 || ry <= 0) return null;
+      const angle = num(p.angle);
+      const satelliteLabel = tag(p.satelliteLabel);
+      const centerLabel = tag(p.centerLabel);
+      return {
+        type,
+        cx, cy,
+        rx: Math.min(maxCoord, rx),
+        ry: Math.min(maxCoord, ry),
+        ...(angle !== null ? { angle } : {}),
+        ...(satelliteLabel ? { satelliteLabel } : {}),
+        ...(centerLabel ? { centerLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'molecule': {
+      if (!Array.isArray(p.atoms) || !Array.isArray(p.bonds)) return null;
+      const atoms: { x: number; y: number; label?: string }[] = [];
+      for (const a of p.atoms) {
+        const ax = coord((a as { x?: unknown })?.x);
+        const ay = coord((a as { y?: unknown })?.y);
+        if (ax === null || ay === null) continue;
+        const lbl = tag((a as { label?: unknown })?.label);
+        atoms.push({ x: ax, y: ay, ...(lbl ? { label: lbl } : {}) });
+        if (atoms.length >= maxMoleculeAtoms) break;
+      }
+      if (atoms.length < 1) return null; // need at least one atom to draw
+      const bonds: { a: number; b: number; order?: number }[] = [];
+      for (const b of p.bonds) {
+        const ai = num((b as { a?: unknown })?.a);
+        const bi = num((b as { b?: unknown })?.b);
+        if (ai === null || bi === null) continue;
+        const a2 = Math.round(ai), b2 = Math.round(bi);
+        // drop bonds that reference a missing atom or link an atom to itself
+        if (a2 < 0 || b2 < 0 || a2 >= atoms.length || b2 >= atoms.length || a2 === b2) continue;
+        const ord = num((b as { order?: unknown })?.order);
+        const order = ord === null ? 1 : Math.round(Math.min(3, Math.max(1, ord)));
+        bonds.push({ a: a2, b: b2, order });
+        if (bonds.length >= maxMoleculeBonds) break;
+      }
+      return { type, atoms, bonds, ...styled };
+    }
+    case 'bar_compare': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const values = Array.isArray(p.values)
+        ? p.values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v)).slice(0, maxBars)
+        : null;
+      if (!values || values.length < 1) return null;
+      if (Math.max(...values) <= 0) return null; // nothing to scale against → drop
+      const labels = Array.isArray(p.labels)
+        ? p.labels
+            .filter((s): s is string => typeof s === 'string')
+            .map((s) => s.trim().slice(0, maxLabelLen))
+            .filter((s) => s.length > 0)
+            .slice(0, maxBars)
+        : undefined;
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        values,
+        ...(labels && labels.length ? { labels } : {}),
+        ...styled,
+      };
     }
     case 'rect': {
       const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
