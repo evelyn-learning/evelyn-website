@@ -60,6 +60,39 @@ check('show_diagram interference_pattern (bare) → ok', () => {
   const r = processToolCall('show_diagram', { type: 'interference_pattern', params: {} });
   assert.equal(r.ok, true);
 });
+check('show_diagram geologic_cross_section (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'geologic_cross_section', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram geologic_cross_section reverse, no unconformity → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'geologic_cross_section', params: { faultType: 'reverse', showUnconformity: false } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram hr_diagram (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'hr_diagram', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram hr_diagram highlight=giants → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'hr_diagram', params: { highlight: 'giants' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram volcano_cross_section (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'volcano_cross_section', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram volcano_cross_section showSideVent=false → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'volcano_cross_section', params: { showSideVent: false } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram atmosphere_layers (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'atmosphere_layers', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram atmosphere_layers highlight=stratosphere → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'atmosphere_layers', params: { highlight: 'stratosphere' } });
+  assert.equal(r.ok, true);
+});
 check('show_diagram mitosis (bare) → ok', () => {
   const r = processToolCall('show_diagram', { type: 'mitosis', params: {} });
   assert.equal(r.ok, true);

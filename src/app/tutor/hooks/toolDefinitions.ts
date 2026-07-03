@@ -411,6 +411,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'punnett_square', 'life_cycle', 'water_cycle', 'rock_cycle', 'body_system',
             'phases_of_moon', 'solar_system', 'earth_layers', 'eclipse_diagram',
             'seasons_diagram', 'plate_tectonics',
+            'geologic_cross_section', 'hr_diagram', 'volcano_cross_section', 'atmosphere_layers',
             'flowchart_simple', 'state_machine', 'binary_tree', 'truth_table', 'logic_gate',
             'unit_circle', 'transformation', 'inequality_graph',
             'sentence_diagram', 'argument_structure', 'historical_timeline',
