@@ -20,7 +20,14 @@ import {
 } from '@/lib/tutor/voice/perception-classifier';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, getInitialGreetingPrompt, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import {
+  resolveOpeningBehavior,
+  assembleOpeningInput,
+  detectEntryMode,
+  isPedagogyOpenerFlagValue,
+  type OpeningSignals,
+} from '@/lib/tutor/ai/opening-behavior';
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
@@ -264,6 +271,14 @@ const TUTOR_SKETCH =
 const TUTOR_RESUME_FROM_CLAUSE =
   process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'on'
   || process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'true';
+// Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
+// When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
+// opener/self-report context fields (sessionMode/openingPhase/entryMode/
+// isReturning/selfReportRouting), computed from resolveOpeningBehavior +
+// assembleOpeningInput (opening-behavior.ts). When off, that call is passed
+// EXACTLY as before — no new fields, byte-identical prompt. See
+// project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
+const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.
@@ -5757,6 +5772,17 @@ export function VoiceTutorRealtime({
   // Use a ref to access sendTextMessage without re-creating the listener
   const sendTextMessageRef = useRef<((text: string) => void) | null>(null);
 
+  // Task B2 (flag-gated): whether this student has any prior recorded
+  // sessions, read off the SAME student-profile fetch below (no new
+  // network call) — feeds OpeningSignals.hasPriorSessions. NOTE: this
+  // fetch is async and the mount-time buildInstructions effect below
+  // reads this ref SYNCHRONOUSLY at mount, before the fetch can resolve,
+  // so in practice this reads as its initial `false` on the very first
+  // system-prompt build — a known B2 limitation (see task-B2-report.md).
+  // Left populated regardless, since a caller wiring a later rebuild can
+  // read a settled value from it.
+  const studentHasPriorSessionsRef = useRef(false);
+
   // Load the student profile block at mount when a studentId is
   // configured. The block is a pre-rendered string the brain reads on
   // every turn. Errors are swallowed — a missing profile block is fine
@@ -5774,6 +5800,10 @@ export function VoiceTutorRealtime({
         const data = await res.json();
         if (cancelled) return;
         studentProfileBlockRef.current = data.block ?? '';
+        if (TUTOR_PEDAGOGY_OPENER) {
+          studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
+            && data.profile.recentSessions.length > 0;
+        }
       } catch (err) {
         console.warn('[VoiceTutorRealtime] student profile fetch failed:', err);
       }
@@ -11255,6 +11285,48 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] Module not loaded, using base prompts');
         }
 
+        // Task B2 (flag-gated): opener/self-report context fields (B4/B5)
+        // for buildSystemPrompt, computed from resolveOpeningBehavior. When
+        // TUTOR_PEDAGOGY_OPENER is off, `openerFields` stays `{}` and the
+        // spread below adds nothing — the call is IDENTICAL (same keys,
+        // same values) to the pre-B2 call. See task-B2-report.md for the
+        // per-signal availability notes (isTrial / entryMode / diagnostic
+        // targetKind / hasPriorSessions timing / checkpointStale are not
+        // reliably available at this call site yet and default false /
+        // 'button' / omitted per the B2 brief's conservative-default rule).
+        const openerFields: Partial<SystemPromptContext> = {};
+        if (TUTOR_PEDAGOGY_OPENER) {
+          const sig: OpeningSignals = {
+            // No diagnostic-session concept reaches this component today
+            // (no SessionGoal/prop encodes it) — only lessonNode/freestyle
+            // are reachable via this wiring.
+            targetKind: lessonPlanId ? 'lessonNode' : 'freestyle',
+            // No isTrial signal reaches this component today — see report.
+            isTrial: false,
+            // studentId absent ⇔ demo flow without auth (see the studentId
+            // prop doc comment above) — the existing, already-documented
+            // proxy for "no StudentContext".
+            hasPortalContext: !!studentId,
+            hasPriorSessions: studentHasPriorSessionsRef.current,
+            // resumeState is only ever populated with a FRESH checkpoint
+            // (buildResumeState in portal/resume.ts already filters staleness
+            // before it reaches this prop), so checkpointStale is always
+            // false through this path — the "stale checkpoint" journey is
+            // not reachable via this wiring yet.
+            resume: { hasLiveCheckpoint: !!resumeState, checkpointStale: false },
+          };
+          const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
+          openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
+          openerFields.openingPhase = beh.opener !== 'none';
+          // No first-student-utterance signal reaches this mount-time call
+          // (buildInstructions runs before any student input exists) — see
+          // report. Always resolves 'button', which is the structurally
+          // correct value at this call site today.
+          openerFields.entryMode = detectEntryMode(undefined);
+          openerFields.isReturning = beh.journey === 'subscribed-returning';
+          openerFields.selfReportRouting = true;
+        }
+
         // Build system prompt using existing builder
         const systemPrompt = buildSystemPrompt({
           module: knowledgeModule,
@@ -11267,6 +11339,7 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          ...openerFields,
         });
 
         // Read optional voice personality from env

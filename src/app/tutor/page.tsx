@@ -36,6 +36,12 @@ import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { buildResumeState, type PriorSessionRead } from '@/lib/tutor/portal/resume';
+import {
+  resolveOpeningBehavior,
+  assembleOpeningInput,
+  isPedagogyOpenerFlagValue,
+  type OpeningSignals,
+} from '@/lib/tutor/ai/opening-behavior';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
@@ -49,6 +55,11 @@ type VoiceEngine = 'classic' | 'realtime' | 'realtime-2' | 'realtime-validated' 
 const ENV_VOICE_ENGINE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_ENGINE as VoiceEngine) || 'classic';
 const ENV_OPENAI_VOICE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_OPENAI as OpenAIVoice) || 'alloy';
 const ENV_CLASSIC_VOICE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_CLASSIC as VoiceId) || 'male-1';
+// Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
+// Mirrors the same flag read in VoiceTutorRealtime.tsx (single env var,
+// read independently in each module — no shared runtime state needed).
+// See project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
+const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 
 // Token usage tracking
 interface TokenUsage {
@@ -763,6 +774,12 @@ function TutorPage() {
     const target = pendingAutoStartPlanIdRef.current;
     if (!target) return;
     if (lessonProgress.plan?.id !== target) return;
+    // Task B2 (flag-gated): when the pedagogy opener is on, this injection
+    // is handled by the opener-aware effect below instead (it must not
+    // pre-empt an in-progress proactive opener/calibration exchange). When
+    // the flag is off this line is a no-op (TUTOR_PEDAGOGY_OPENER is
+    // `false`) and everything below executes exactly as before.
+    if (TUTOR_PEDAGOGY_OPENER) return;
     // Plan now reflects the expanded version. Fire once and clear.
     pendingAutoStartPlanIdRef.current = null;
     const handle = realtimeHandleRef.current;
@@ -775,6 +792,45 @@ function TutorPage() {
       '[orchestrator: the lesson plan has just been expanded with the picked LOs. Begin teaching immediately — call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12), then start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
     );
   }, [lessonProgress.plan?.id]);
+
+  // Task B2 (flag-gated) — opener-aware auto-start. Re-implements the same
+  // trigger as the effect above, but (a) only runs when
+  // NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on, and (b) waits until the tutor
+  // has produced its first turn before firing the "Begin teaching
+  // immediately" injection, so it never pre-empts an in-progress proactive
+  // opener/calibration exchange. When the session's resolved opener is
+  // 'none' (e.g. silent pickup / warm-resume / diagnostic — see
+  // resolveOpeningBehavior), there's nothing to wait for and it fires
+  // immediately, matching the flag-off behavior above.
+  useEffect(() => {
+    if (!TUTOR_PEDAGOGY_OPENER) return;
+    const target = pendingAutoStartPlanIdRef.current;
+    if (!target) return;
+    if (lessonProgress.plan?.id !== target) return;
+    const sig: OpeningSignals = {
+      targetKind: selectedLessonPlanId ? 'lessonNode' : 'freestyle',
+      isTrial: false, // no isTrial signal reaches this page today — see task-B2-report.md
+      hasPortalContext: !!studentIdParam,
+      resume: { hasLiveCheckpoint: !!resumeState, checkpointStale: false },
+    };
+    const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
+    if (beh.opener !== 'none') {
+      const tutorHasSpoken = transcript.some((entry) => entry.role === 'tutor');
+      if (!tutorHasSpoken) return; // defer — opener hasn't produced its first line yet
+    }
+    // Plan now reflects the expanded version, and the opener (if any) has
+    // already produced its first line. Fire once and clear.
+    pendingAutoStartPlanIdRef.current = null;
+    const handle = realtimeHandleRef.current;
+    if (!handle) {
+      console.warn('[auto-start] no realtime handle; cannot trigger brain turn');
+      return;
+    }
+    console.log(`[auto-start] firing synthetic start prompt for plan ${target} (pedagogy-opener wiring)`);
+    handle.sendTextMessage(
+      '[orchestrator: the lesson plan has just been expanded with the picked LOs. Begin teaching immediately — call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12), then start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
+    );
+  }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, studentIdParam, resumeState]);
 
   // Send message to tutor API
   const sendMessage = useCallback(

@@ -125,3 +125,87 @@ export function resolveOpeningBehavior(input: OpeningInput): OpeningBehavior {
   // Rule 10: subscribed new, no diagnostic — catch-all.
   return { mode, journey: 'subscribed-new', opener: 'proactive', calibration: 'light' };
 }
+
+/**
+ * ── Task B2 — orchestrator-wiring pure helpers ──────────────────────────
+ * Co-located with resolveOpeningBehavior so the orchestrator (VoiceTutorRealtime
+ * / page.tsx) has a single import for the whole opener decision surface.
+ * Both helpers are pure/total — no I/O, no env reads — so they're fully
+ * unit-testable outside the (un-runnable-here) live app. See
+ * .superpowers/sdd/task-B2-brief.md.
+ */
+
+export type EntryMode = 'button' | 'typed-content' | 'typed-greeting';
+
+// Bare-greeting openers the tutor should treat as "no real content yet" —
+// mirrors the transcript-filter greeting list in spirit but scoped to this
+// decision (a short greeting with no question mark, <= 4 words).
+const BARE_GREETING_RE = /^(hi|hey|hello|yo|hiya|sup|hey there)\b/i;
+const MAX_BARE_GREETING_WORDS = 4;
+
+/**
+ * Classifies how the student entered the session, from the first thing
+ * they typed (if anything) before the tutor's opener fires.
+ *  - no/empty/whitespace-only message -> 'button' (tutor acts first)
+ *  - a short bare greeting (matches BARE_GREETING_RE, <= 4 words, no '?')
+ *    -> 'typed-greeting'
+ *  - anything else -> 'typed-content'
+ */
+export function detectEntryMode(firstStudentMessage?: string | null): EntryMode {
+  const trimmed = firstStudentMessage?.trim();
+  if (!trimmed) return 'button';
+  const wordCount = trimmed.split(/\s+/).length;
+  const isBareGreeting =
+    BARE_GREETING_RE.test(trimmed) &&
+    wordCount <= MAX_BARE_GREETING_WORDS &&
+    !trimmed.includes('?');
+  return isBareGreeting ? 'typed-greeting' : 'typed-content';
+}
+
+/** Orchestrator-supplied signals used to assemble an `OpeningInput`. Every
+ *  field beyond the three the orchestrator always has (targetKind, isTrial,
+ *  hasPortalContext) is optional — `assembleOpeningInput` defaults each
+ *  missing one conservatively (false / no-checkpoint) so a caller that
+ *  can't yet plumb a given signal doesn't have to fake it. */
+export interface OpeningSignals {
+  targetKind: SessionMode;
+  isTrial: boolean;
+  hasPortalContext: boolean;
+  hasPriorSessions?: boolean;
+  diagnosticTaken?: boolean;
+  resume?: { hasLiveCheckpoint: boolean; checkpointStale: boolean };
+  nodeCompleted?: boolean;
+  courseComplete?: boolean;
+}
+
+/**
+ * Thin, pure mapper from orchestrator-signals to the B6 `OpeningInput`.
+ * Missing/unknown booleans default to false (and a missing `resume`
+ * defaults to no checkpoint) — the conservative choice per the B2 brief:
+ * an unknown signal should never cause resolveOpeningBehavior to short-
+ * circuit into a journey the orchestrator can't actually back up.
+ */
+export function assembleOpeningInput(sig: OpeningSignals): OpeningInput {
+  return {
+    targetKind: sig.targetKind,
+    isTrial: sig.isTrial,
+    hasPortalContext: sig.hasPortalContext,
+    hasPriorSessions: sig.hasPriorSessions ?? false,
+    diagnosticTaken: sig.diagnosticTaken ?? false,
+    resume: sig.resume ?? { hasLiveCheckpoint: false, checkpointStale: false },
+    nodeCompleted: sig.nodeCompleted ?? false,
+    courseComplete: sig.courseComplete ?? false,
+  };
+}
+
+/**
+ * Pure predicate for the `NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER` flag value —
+ * mirrors the existing `=== 'true'` flag pattern (VoiceTutorRealtime.tsx)
+ * but also accepts `'on'`. Split out as a pure function purely so the
+ * accepted-value set is unit-testable; the orchestrator still reads
+ * `process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER` itself (this file does
+ * no env I/O).
+ */
+export function isPedagogyOpenerFlagValue(raw: string | undefined): boolean {
+  return raw === 'true' || raw === 'on';
+}
