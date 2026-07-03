@@ -91,6 +91,7 @@ import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLat
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
+import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -241,6 +242,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'graph_diagram', displayName: 'Graph (vertices + edges)', whenToUse: 'Show a graph: vertices as labeled circles on a ring layout and edges as lines (or arrows if directed), with optional edge weights and an optional BFS/DFS traversal-order overlay (numbered badges). Use for graph-theory / graph-algorithm teaching instead of a freehand sketch — a doodled node-and-edge blob is unreadable. Not for a rooted binary tree (use binary_tree) or a flowchart (use flowchart_simple).', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "nodes?:[string] (vertex labels; default A–E), edges?:[[from,to]] (or [from,to,weight]; default sample edges), directed?:boolean (default false), weights?:boolean (default auto), traversal?:bfs|dfs (overlay visit order from the first node), title?" },
   { kind: 'hash_table', displayName: 'Hash Table (buckets + chaining)', whenToUse: 'Show a hash table: a bucket array (indices 0..size−1) with keys placed by a simple, shown hash function [(Σ char codes) mod size] and separate-chaining collision lists drawn as chained boxes. Use for hashing / collision-resolution teaching instead of a freehand sketch. Empty buckets are marked ∅; collisions are highlighted.', subjects: ['cs'], grades: { from: 9, to: 12 }, paramSchema: "size?:number (buckets, 3–11; default 7), entries?:[[key,value]] (default sample keys that collide), title?" },
   { kind: 'recursion_tree', displayName: 'Recursion Tree (call tree)', whenToUse: 'Show the call tree of a recursive function: FIBONACCI [fib(n) branching into fib(n−1)+fib(n−2), showing overlapping subproblems] or FACTORIAL [fact(n) → fact(n−1) → … as a chain], with base-case leaves highlighted and optional return values. Use for recursion / divide-and-conquer teaching instead of a freehand sketch — the branching and depth must be exact.', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "kind?:fibonacci|factorial (default fibonacci), n?:number (fibonacci 2–6, factorial 1–7; default 5), showValues?:boolean (return values; default true), title?" },
+
+  // ── Phase 23 — molecular / cell biology ────────────────────────────────
+  { kind: 'protein_synthesis', displayName: 'Protein Synthesis (central dogma)', whenToUse: 'Show the central dogma as a schematic: transcription (RNA polymerase copying DNA into mRNA inside the nucleus) and translation (a ribosome reading mRNA codons while tRNAs deliver amino acids to build a polypeptide), with DNA, mRNA, ribosome, tRNA, codon/anticodon and polypeptide labeled. Use instead of a freehand sketch for gene expression / protein synthesis.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: "stage?:transcription|translation|both (default both), title?" },
+  { kind: 'enzyme_action', displayName: 'Enzyme Action (lock-and-key / induced fit)', whenToUse: 'Show how an enzyme works: substrate binding the active site → enzyme–substrate complex → products released with the enzyme unchanged, drawn as the lock-and-key or induced-fit model, plus an activation-energy reaction-coordinate inset showing the enzyme lowering Ea. Use instead of a freehand sketch for enzyme / catalysis teaching.', subjects: ['biology', 'chemistry'], grades: { from: 8, to: 12 }, paramSchema: "model?:lock_key|induced_fit (default lock_key), title?" },
+  { kind: 'cell_cycle', displayName: 'Cell Cycle (G1 → S → G2 → M)', whenToUse: 'Show the cell cycle as a labeled ring — interphase (G1, S, G2) plus the M (mitotic) phase — with the G1/S, G2/M and spindle checkpoints marked and the relative phase durations. Use instead of a freehand sketch for cell-cycle / cell-division teaching. For the phases of mitosis themselves use mitosis.', subjects: ['biology'], grades: { from: 8, to: 12 }, paramSchema: "highlight?:G1|S|G2|M (emphasize one phase), title?" },
+  { kind: 'gene_expression', displayName: 'Gene Regulation (lac operon)', whenToUse: 'Show prokaryotic gene regulation via the lac operon: the regulatory gene, promoter, operator and structural genes, shown OFF (no inducer → repressor bound to the operator → RNA polymerase blocked) vs ON (inducer inactivates the repressor → RNA polymerase transcribes the genes). Use instead of a freehand sketch for operon / gene-regulation teaching.', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: "state?:on|off (default off), title?" },
 ];
 
 /** Solver dispatch table. */
@@ -369,6 +376,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   graph_diagram: solveGraphDiagram,
   hash_table: solveHashTable,
   recursion_tree: solveRecursionTree,
+  // Phase 23 — molecular / cell biology
+  protein_synthesis: solveProteinSynthesis,
+  enzyme_action: solveEnzymeAction,
+  cell_cycle: solveCellCycle,
+  gene_expression: solveGeneExpression,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

@@ -296,4 +296,39 @@ check('curve-less conic (no prior) → rejected with hint', () => {
   if (!r.ok) assert.match(r.reason, /base curve|curve step/i);
 });
 
+console.log('process-tool-call: Phase 23 — molecular / cell biology');
+check('show_diagram protein_synthesis (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'protein_synthesis', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram protein_synthesis stage=translation → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'protein_synthesis', params: { stage: 'translation' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram enzyme_action (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'enzyme_action', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram enzyme_action model=induced_fit → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'enzyme_action', params: { model: 'induced_fit' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram cell_cycle (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'cell_cycle', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram cell_cycle highlight=S → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'cell_cycle', params: { highlight: 'S' } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram gene_expression (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'gene_expression', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram gene_expression state=on → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'gene_expression', params: { state: 'on' } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

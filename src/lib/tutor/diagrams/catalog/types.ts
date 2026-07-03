@@ -137,7 +137,12 @@ export type DiagramKindId =
   | 'data_structure'
   | 'graph_diagram'
   | 'hash_table'
-  | 'recursion_tree';
+  | 'recursion_tree'
+  // Phase 23 — molecular / cell biology (life science, Biology, AP Bio)
+  | 'protein_synthesis'
+  | 'enzyme_action'
+  | 'cell_cycle'
+  | 'gene_expression';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {
