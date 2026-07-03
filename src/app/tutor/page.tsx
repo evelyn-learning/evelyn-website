@@ -811,6 +811,11 @@ function TutorPage() {
       targetKind: selectedLessonPlanId ? 'lessonNode' : 'freestyle',
       isTrial: false, // no isTrial signal reaches this page today — see task-B2-report.md
       hasPortalContext: !!studentIdParam,
+      // resumeState is only produced by an authenticated sessionId lookup
+      // (portal/resume.ts), so hasLiveCheckpoint ⇒ a portal-context student;
+      // the demo-logged-out + resume-live combination cannot occur through this
+      // wiring (which would otherwise resolve to resume-live and mislabel the
+      // student 'subscribed' via journey.startsWith('demo-')).
       resume: { hasLiveCheckpoint: !!resumeState, checkpointStale: false },
     };
     const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
