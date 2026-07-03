@@ -442,6 +442,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'nuclear_decay', 'em_induction', 'magnetic_field_current', 'projectile_motion',
             // Phase 20 — bio anatomy / physiology
             'leaf_cross_section', 'nephron', 'digestive_system', 'circulatory_system',
+            // Phase 22 — computer science (data structures + algorithms)
+            'data_structure', 'graph_diagram', 'hash_table', 'recursion_tree',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

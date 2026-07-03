@@ -215,6 +215,51 @@ check('show_diagram circulatory_system highlight=left_ventricle → ok', () => {
   assert.equal(r.ok, true);
 });
 
+// Phase 22 — computer science
+check('show_diagram data_structure (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'data_structure', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram data_structure queue → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'data_structure', params: { structure: 'queue', items: ['1', '2', '3'] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram data_structure linked_list → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'data_structure', params: { structure: 'linked_list', items: ['7', '4', '9'] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram graph_diagram (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'graph_diagram', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram graph_diagram directed+weights+bfs → ok', () => {
+  const r = processToolCall('show_diagram', {
+    type: 'graph_diagram',
+    params: { nodes: ['A', 'B', 'C', 'D'], edges: [['A', 'B', 5], ['A', 'C', 2], ['B', 'D', 1], ['C', 'D', 7]], directed: true, traversal: 'bfs' },
+  });
+  assert.equal(r.ok, true);
+});
+check('show_diagram hash_table (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'hash_table', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram hash_table size+entries → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'hash_table', params: { size: 5, entries: [['cat', '1'], ['dog', '2'], ['ant', '3']] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram recursion_tree (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'recursion_tree', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram recursion_tree factorial n=5 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'recursion_tree', params: { kind: 'factorial', n: 5 } });
+  assert.equal(r.ok, true);
+});
+
 console.log('process-tool-call: validator-layer rejections (the bug-prone path)');
 check('show_table empty rows → rejected', () => {
   const r = processToolCall('show_table', { headers: ['A'], rows: [] });

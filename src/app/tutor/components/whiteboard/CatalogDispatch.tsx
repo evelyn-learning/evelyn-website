@@ -113,6 +113,12 @@ import {
   CatalogMagneticFieldRenderer,
   CatalogProjectileRenderer,
 } from './CatalogEMNuclearMotionRenderers';
+import {
+  CatalogDataStructureRenderer,
+  CatalogGraphRenderer,
+  CatalogHashTableRenderer,
+  CatalogRecursionTreeRenderer,
+} from './CatalogCSStructuresRenderers';
 
 interface Props {
   kind: string;
@@ -241,6 +247,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'nephron':                    return <CatalogNephronRenderer figure={figure} />;
     case 'digestive_system':           return <CatalogDigestiveSystemRenderer figure={figure} />;
     case 'circulatory_system':         return <CatalogCirculatorySystemRenderer figure={figure} />;
+    // Phase 22 — computer science
+    case 'data_structure':             return <CatalogDataStructureRenderer figure={figure} />;
+    case 'graph_diagram':              return <CatalogGraphRenderer figure={figure} />;
+    case 'hash_table':                 return <CatalogHashTableRenderer figure={figure} />;
+    case 'recursion_tree':             return <CatalogRecursionTreeRenderer figure={figure} />;
 
     default:
       return (
