@@ -1,0 +1,998 @@
+[
+  {
+    "id": "apcalcbc.riemann-sums.mcq.01",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For a function that is increasing on $[a,b]$, a right Riemann sum approximation of the area under the curve will:",
+    "choices": [
+      "Overestimate the area under the curve",
+      "Underestimate the area under the curve",
+      "Give the exact area under the curve",
+      "Always equal the left Riemann sum"
+    ],
+    "answer": "A",
+    "hints": [
+      "On each subinterval, the right endpoint of an increasing function is its highest value.",
+      "Rectangles built on the tallest edge poke above the curve."
+    ]
+  },
+  {
+    "id": "apcalcbc.riemann-sums.mcq.02",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The definite integral $\\int_a^b f(x)\\,dx$ is defined as:",
+    "choices": [
+      "The limit of Riemann sums as the number of subintervals approaches infinity",
+      "The right Riemann sum computed with exactly one hundred subintervals",
+      "The average value of $f$ on $[a,b]$",
+      "The difference $f(b)-f(a)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The integral is an exact limit, not a fixed-count approximation.",
+      "As the subinterval width shrinks to zero, the sum converges to the integral."
+    ]
+  },
+  {
+    "id": "apcalcbc.riemann-sums.mcq.03",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The trapezoidal approximation of $\\int_a^b f(x)\\,dx$ using $n$ equal subintervals is equal to:",
+    "choices": [
+      "The average of the left and right Riemann sums",
+      "The midpoint Riemann sum",
+      "Always the exact value of the integral",
+      "The larger of the left and right Riemann sums"
+    ],
+    "answer": "A",
+    "hints": [
+      "A trapezoid on each subinterval uses both endpoint heights.",
+      "Averaging the left-endpoint and right-endpoint rectangles gives the trapezoid area."
+    ]
+  },
+  {
+    "id": "apcalcbc.riemann-sums.num.01",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Estimate $\\int_0^2 x^2\\,dx$ using a right Riemann sum with two equal subintervals of width ${1}$.",
+    "answer": "5",
+    "hints": [
+      "The right endpoints are $x=1$ and $x=2$.",
+      "Add $f(1)\\cdot 1 + f(2)\\cdot 1$ with $f(x)=x^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.riemann-sums.num.02",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A velocity $v(t)$ (in ft/s) is recorded as $v(0)=10$, $v(2)=14$, $v(4)=18$, $v(6)=20$. Use a left Riemann sum with the three subintervals of width ${2}$ to estimate the distance $\\int_0^6 v(t)\\,dt$, in feet.",
+    "answer": "84",
+    "hints": [
+      "Left endpoints are $t=0,2,4$ with heights ${1}0,14,18$.",
+      "Each subinterval has width ${2}$: compute ${2}(10+14+18)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.riemann-sums.num.03",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Using the data $v(0)=10$, $v(2)=14$, $v(4)=18$, $v(6)=20$, apply the trapezoidal rule with the three subintervals of width ${2}$ to estimate $\\int_0^6 v(t)\\,dt$.",
+    "answer": "94",
+    "hints": [
+      "Each trapezoid area is width times the average of its two endpoint heights.",
+      "Compute ${2}\\left(\\frac{10+14}{2}+\\frac{14+18}{2}+\\frac{18+20}{2}\\right)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.mcq.01",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The value of $\\int_a^a f(x)\\,dx$ is:",
+    "choices": [
+      "0",
+      "$f(a)$",
+      "$a$",
+      "Undefined"
+    ],
+    "answer": "A",
+    "hints": [
+      "The interval has zero width.",
+      "There is no area accumulated between $a$ and $a$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.mcq.02",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If $\\int_2^5 f(x)\\,dx = 8$, then $\\int_5^2 f(x)\\,dx$ equals:",
+    "choices": [
+      "-8",
+      "8",
+      "0",
+      "16"
+    ],
+    "answer": "A",
+    "hints": [
+      "Reversing the limits of integration flips the sign.",
+      "$\\int_b^a f = -\\int_a^b f$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.mcq.03",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly applies a property of definite integrals?",
+    "choices": [
+      "$\\int_a^b [f(x)+g(x)]\\,dx = \\int_a^b f(x)\\,dx + \\int_a^b g(x)\\,dx$",
+      "$\\int_a^b f(x)g(x)\\,dx = \\left(\\int_a^b f\\,dx\\right)\\left(\\int_a^b g\\,dx\\right)$",
+      "$\\int_a^b c\\,f(x)\\,dx = c + \\int_a^b f(x)\\,dx$",
+      "$\\int_a^b [f(x)-g(x)]\\,dx = \\int_a^b f\\,dx - \\int_a^b g\\,dx + C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The integral of a sum is the sum of the integrals.",
+      "Integrals are linear, but they do not distribute over products."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.num.01",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\int_0^3 f(x)\\,dx = 5$ and $\\int_3^7 f(x)\\,dx = 4$, find $\\int_0^7 f(x)\\,dx$.",
+    "answer": "9",
+    "hints": [
+      "Use additivity of adjacent intervals.",
+      "$\\int_0^3 + \\int_3^7 = \\int_0^7$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.num.02",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\int_0^6 f(x)\\,dx = 12$ and $\\int_0^6 g(x)\\,dx = 5$, find $\\int_0^6 [2f(x)+g(x)]\\,dx$.",
+    "answer": "29",
+    "hints": [
+      "Pull the constant out and split the sum.",
+      "Compute ${2}(12)+5$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-properties.num.03",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\int_1^5 f(x)\\,dx = 10$ and $\\int_1^3 f(x)\\,dx = 6$, find $\\int_3^5 f(x)\\,dx$.",
+    "answer": "4",
+    "hints": [
+      "Additivity: $\\int_1^3 + \\int_3^5 = \\int_1^5$.",
+      "Subtract: ${1}0-6$."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.mcq.01",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If $F$ is an antiderivative of $f$, then by the Fundamental Theorem of Calculus $\\int_a^b f(x)\\,dx$ equals:",
+    "choices": [
+      "$F(b)-F(a)$",
+      "$F(a)-F(b)$",
+      "$f(b)-f(a)$",
+      "$F'(b)-F'(a)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Evaluate the antiderivative at the top limit minus the bottom limit.",
+      "The order is upper endpoint value minus lower endpoint value."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.mcq.02",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\dfrac{d}{dx}\\int_a^x \\sin(t^2)\\,dt$ equals:",
+    "choices": [
+      "$\\sin(x^2)$",
+      "$\\cos(x^2)$",
+      "${2}x\\cos(x^2)$",
+      "$\\sin(t^2)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "By FTC Part 1, differentiating an accumulation function returns the integrand.",
+      "Replace $t$ with the upper limit $x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.mcq.03",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "$\\dfrac{d}{dx}\\int_0^{x^2} \\cos t\\,dt$ equals:",
+    "choices": [
+      "${2x\\cos\\left(x^{2}\\right)}$",
+      "$\\cos\\left(x^{2}\\right)$",
+      "$\\cos\\left(x^{2}\\right)-1$",
+      "${2x\\sin\\left(x^{2}\\right)}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The upper limit is $x^2$, so apply the chain rule.",
+      "Multiply $\\cos\\left(x^2\\right)$ by the derivative of $x^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.mcq.04",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If $g(x)=\\int_0^x f(t)\\,dt$ and $f(t)>0$ for all $t$ in $[0,5]$, then on $[0,5]$ the function $g$ is:",
+    "choices": [
+      "Increasing",
+      "Decreasing",
+      "Constant",
+      "Negative"
+    ],
+    "answer": "A",
+    "hints": [
+      "By FTC Part 1, $g'(x)=f(x)$.",
+      "A positive derivative means the function increases."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.num.01",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_1^4 (2x)\\,dx$.",
+    "answer": "15",
+    "hints": [
+      "An antiderivative of ${2}x$ is $x^2$.",
+      "Compute ${4}^2 - 1^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.ftc.num.02",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^{\\pi} \\sin x\\,dx$.",
+    "answer": "2",
+    "hints": [
+      "An antiderivative of $\\sin x$ is $-\\cos x$.",
+      "Compute $-\\cos\\pi - (-\\cos 0)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.mcq.01",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "$\\int x^3\\,dx$ equals:",
+    "choices": [
+      "$\\frac{x^4}{4}+C$",
+      "${3}x^2+C$",
+      "$\\frac{x^4}{3}+C$",
+      "${4}x^4+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Reverse the power rule: raise the exponent by one and divide.",
+      "The new exponent is ${4}$, so divide by ${4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.mcq.02",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\frac{1}{x}\\,dx$ equals:",
+    "choices": [
+      "$\\ln|x|+C$",
+      "$-\\frac{1}{x^2}+C$",
+      "$\\ln x+C$",
+      "$\\frac{x^0}{0}+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The power rule fails when the exponent is $-1$.",
+      "Use the natural log, and include absolute value for negative $x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.mcq.03",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\sec^2 x\\,dx$ equals:",
+    "choices": [
+      "$\\tan x+C$",
+      "$\\sec x\\tan x+C$",
+      "$-\\cot x+C$",
+      "$\\frac{\\sec^3 x}{3}+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which function has derivative $\\sec^2 x$.",
+      "Recall $\\frac{d}{dx}\\tan x = \\sec^2 x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.mcq.04",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\int e^{2x}\\,dx$ equals:",
+    "choices": [
+      "$\\frac{1}{2}e^{2x}+C$",
+      "$e^{2x}+C$",
+      "$xe^{2x}+C$",
+      "$\\frac{1}{2}e^{x}+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The derivative of $e^{2x}$ is ${2}e^{2x}$, so divide to undo the factor.",
+      "Divide by the inner coefficient ${2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.num.01",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^2 x^3\\,dx$.",
+    "answer": "4",
+    "hints": [
+      "An antiderivative is $\\frac{x^4}{4}$.",
+      "Compute $\\frac{2^4}{4}-0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.basic-antiderivatives.num.02",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_1^{e} \\frac{1}{x}\\,dx$.",
+    "answer": "1",
+    "hints": [
+      "An antiderivative of $\\frac{1}{x}$ is $\\ln|x|$.",
+      "Compute $\\ln e - \\ln 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.mcq.01",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For $\\int 2x\\cos(x^2)\\,dx$, the best choice of $u$ is:",
+    "choices": [
+      "$u=x^2$",
+      "$u=2x$",
+      "$u=\\cos(x^2)$",
+      "$u=x$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Choose the inner function whose derivative also appears in the integrand.",
+      "Since $\\frac{d}{dx}x^2 = 2x$, the factor ${2}x$ becomes $du$."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.mcq.02",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\int (x^2+1)^5\\cdot 2x\\,dx$ equals:",
+    "choices": [
+      "$\\frac{(x^2+1)^6}{6}+C$",
+      "$\\frac{(x^2+1)^6}{12}+C$",
+      "${5}(x^2+1)^4+C$",
+      "$\\frac{(x^2+1)^6}{3}+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let $u=x^2+1$, so $du=2x\\,dx$.",
+      "Integrate $u^5$ to get $\\frac{u^6}{6}$, then substitute back."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.mcq.03",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When evaluating $\\int_0^2 x\\,e^{x^2}\\,dx$ with the substitution $u=x^2$, the new limits of integration become:",
+    "choices": [
+      "$u=0$ to $u=4$",
+      "$u=0$ to $u=2$",
+      "$u=0$ to $u=8$",
+      "$u=2$ to $u=4$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute each $x$-limit into $u=x^2$.",
+      "When $x=0$, $u=0$; when $x=2$, $u=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.mcq.04",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\tan x\\,dx$, evaluated by writing $\\tan x = \\frac{\\sin x}{\\cos x}$ and substituting $u=\\cos x$, equals:",
+    "choices": [
+      "$-\\ln|\\cos x|+C$",
+      "$\\ln|\\cos x|+C$",
+      "$\\sec^2 x+C$",
+      "$\\ln|\\sin x|+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "With $u=\\cos x$, $du=-\\sin x\\,dx$, so a negative sign appears.",
+      "The integral becomes $-\\int \\frac{1}{u}\\,du = -\\ln|u|$."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.num.01",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^{\\sqrt{\\pi}} 2x\\sin(x^2)\\,dx$.",
+    "answer": "2",
+    "hints": [
+      "Let $u=x^2$, so $du=2x\\,dx$, and the limits become $u=0$ to $u=\\pi$.",
+      "Evaluate $\\int_0^{\\pi}\\sin u\\,du = [-\\cos u]_0^{\\pi}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.u-substitution.num.02",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^1 (2x+1)^3\\,dx$.",
+    "answer": "10",
+    "hints": [
+      "Let $u=2x+1$, so $du=2\\,dx$ and the limits become $u=1$ to $u=3$.",
+      "Evaluate $\\frac{1}{2}\\int_1^3 u^3\\,du = \\frac{1}{2}\\left[\\frac{u^4}{4}\\right]_1^3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.mcq.01",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To integrate $\\int \\frac{x^2}{x^2+1}\\,dx$, the integrand should first be rewritten as:",
+    "choices": [
+      "$-\\frac{1}{x^2+1}+1$",
+      "$x^2-1$",
+      "$\\frac{1}{x^2+1}$",
+      "$x-\\frac{1}{x+1}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The degree of the numerator equals the degree of the denominator, so divide first.",
+      "$\\frac{x^2}{x^2+1} = \\frac{(x^2+1)-1}{x^2+1} = 1-\\frac{1}{x^2+1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.mcq.02",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\frac{1}{x^2+1}\\,dx$ equals:",
+    "choices": [
+      "$\\arctan x+C$",
+      "$\\ln(x^2+1)+C$",
+      "$\\frac{1}{2}\\ln(x^2+1)+C$",
+      "$\\arcsin x+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "This is a standard inverse-trig antiderivative.",
+      "Recall $\\frac{d}{dx}\\arctan x = \\frac{1}{x^2+1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.mcq.03",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Completing the square, $x^2+4x+5$ can be rewritten as:",
+    "choices": [
+      "$(x+2)^2+1$",
+      "$(x+2)^2-1$",
+      "$(x+2)^2+5$",
+      "$(x-2)^2+1$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Take half of the linear coefficient ${4}$ and square it.",
+      "$x^2+4x+4 = (x+2)^2$, and ${5}-4=1$ remains."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.num.01",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^3 \\frac{x^2-1}{x+1}\\,dx$.",
+    "answer": "1.5",
+    "hints": [
+      "Factor the numerator: $\\frac{x^2-1}{x+1} = x-1$.",
+      "Integrate $x-1$ to get $\\frac{x^2}{2}-x$ and evaluate from ${0}$ to ${3}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.num.02",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Completing the square gives $x^2+6x+13 = (x+3)^2+k$. Find the value of $k$.",
+    "answer": "4",
+    "hints": [
+      "Half of ${6}$ is ${3}$, and ${3}^2=9$.",
+      "The constant left over is ${1}3-9$."
+    ]
+  },
+  {
+    "id": "apcalcbc.long-division-completing-square.num.03",
+    "loId": "apcalcbc.long-division-completing-square",
+    "cedCode": "AP-CALCBC-6.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "When $x^2+3x+5$ is divided by $x+1$ using polynomial long division, find the constant remainder.",
+    "answer": "3",
+    "hints": [
+      "The quotient is $x+2$.",
+      "Since $(x+1)(x+2)=x^2+3x+2$, the remainder is ${5}-2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.mcq.01",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The integration by parts formula states that $\\int u\\,dv$ equals:",
+    "choices": [
+      "$uv-\\int v\\,du$",
+      "$uv+\\int v\\,du$",
+      "$\\int v\\,du - uv$",
+      "$uv-\\int u\\,dv$"
+    ],
+    "answer": "A",
+    "hints": [
+      "It comes from reversing the product rule.",
+      "The formula is $uv$ minus the integral of $v\\,du$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.mcq.02",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For $\\int x\\,e^x\\,dx$, the LIATE heuristic suggests the choice:",
+    "choices": [
+      "$u=x,\\ dv=e^x\\,dx$",
+      "$u=e^x,\\ dv=x\\,dx$",
+      "$u=xe^x,\\ dv=dx$",
+      "$u=1,\\ dv=xe^x\\,dx$"
+    ],
+    "answer": "A",
+    "hints": [
+      "LIATE ranks the algebraic factor $x$ ahead of the exponential.",
+      "Choosing $u=x$ makes $du$ simpler after differentiating."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.mcq.03",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "$\\int x\\,e^x\\,dx$ equals:",
+    "choices": [
+      "$xe^x-e^x+C$",
+      "$xe^x+e^x+C$",
+      "$\\frac{x^2}{2}e^x+C$",
+      "$xe^x-e^x+x+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $u=x$, $dv=e^x\\,dx$, so $v=e^x$.",
+      "$\\int x e^x\\,dx = xe^x - \\int e^x\\,dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.mcq.04",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\ln x\\,dx$ equals:",
+    "choices": [
+      "$x\\ln x-x+C$",
+      "$\\frac{1}{x}+C$",
+      "$x\\ln x+x+C$",
+      "$\\ln x-x+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Choose $u=\\ln x$ and $dv=dx$, so $du=\\frac{1}{x}\\,dx$ and $v=x$.",
+      "$\\int \\ln x\\,dx = x\\ln x - \\int x\\cdot\\frac{1}{x}\\,dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.num.01",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^1 x\\,e^x\\,dx$.",
+    "answer": "1",
+    "hints": [
+      "An antiderivative is $xe^x-e^x$.",
+      "Evaluate $(1\\cdot e - e) - (0 - 1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-by-parts.num.02",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "How many successive applications of integration by parts are needed to evaluate $\\int x^3 e^x\\,dx$, reducing the polynomial factor to a constant?",
+    "answer": "3",
+    "hints": [
+      "Each application lowers the power of $x$ by one.",
+      "Starting from $x^3$, count the steps down to $x^0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.mcq.01",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The partial fraction decomposition of $\\frac{1}{(x-1)(x+2)}$ has the form:",
+    "choices": [
+      "$\\frac{A}{x-1}+\\frac{B}{x+2}$",
+      "$\\frac{A}{x-1}\\cdot\\frac{B}{x+2}$",
+      "$\\frac{Ax+B}{(x-1)(x+2)}$",
+      "$A(x-1)+B(x+2)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each distinct linear factor gets its own constant over that factor.",
+      "Write a sum of terms $\\frac{A}{x-1}$ and $\\frac{B}{x+2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.mcq.02",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the decomposition $\\frac{5}{(x-1)(x+4)}=\\frac{A}{x-1}+\\frac{B}{x+4}$, the value of $A$ is:",
+    "choices": [
+      "$A=1$",
+      "$A=5$",
+      "$A=\\frac{1}{5}$",
+      "$A=-1$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the cover-up method: set $x=1$.",
+      "Compute $\\frac{5}{1+4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.mcq.03",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "$\\int \\frac{1}{(x-1)(x+1)}\\,dx$ equals:",
+    "choices": [
+      "$\\frac{1}{2}\\ln\\left|\\frac{x-1}{x+1}\\right|+C$",
+      "$\\ln|(x-1)(x+1)|+C$",
+      "$\\frac{1}{2}\\ln|(x-1)(x+1)|+C$",
+      "$\\arctan x+C$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Decompose into $\\frac{1}{2}\\left(\\frac{1}{x-1}-\\frac{1}{x+1}\\right)$.",
+      "Integrate each term to logs and combine into a single log of a quotient."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.mcq.04",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Partial fraction decomposition can be applied directly to a rational function $\\frac{P(x)}{Q(x)}$ when:",
+    "choices": [
+      "$\\deg P < \\deg Q$ (a proper rational function)",
+      "$\\deg P \\ge \\deg Q$",
+      "It can always be applied directly",
+      "$Q(x)$ is an irreducible quadratic"
+    ],
+    "answer": "A",
+    "hints": [
+      "If the numerator degree is too high, divide first.",
+      "The technique needs a proper rational function to start."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.num.01",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In the decomposition $\\frac{3x+1}{(x-1)(x+1)}=\\frac{A}{x-1}+\\frac{B}{x+1}$, find $A$.",
+    "answer": "2",
+    "hints": [
+      "Cover-up method: set $x=1$.",
+      "Compute $\\frac{3(1)+1}{1+1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.partial-fractions.num.02",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In the decomposition $\\frac{5x-1}{(x+1)(x-2)}=\\frac{A}{x+1}+\\frac{B}{x-2}$, find $B$.",
+    "answer": "3",
+    "hints": [
+      "Cover-up method: set $x=2$.",
+      "Compute $\\frac{5(2)-1}{2+1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.mcq.01",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x^2}\\,dx$:",
+    "choices": [
+      "Converges to 1",
+      "Diverges to infinity",
+      "Converges to 0",
+      "Converges to 2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite as $\\lim_{b\\to\\infty}\\int_1^b x^{-2}\\,dx$.",
+      "The antiderivative $-\\frac{1}{x}$ approaches ${0}$ at infinity, leaving ${0}-(-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.mcq.02",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x}\\,dx$:",
+    "choices": [
+      "Diverges",
+      "Converges to 1",
+      "Converges to 0",
+      "Converges to $\\ln 2$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The antiderivative is $\\ln x$.",
+      "As $b\\to\\infty$, $\\ln b$ grows without bound."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.mcq.03",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The improper integral $\\int_1^{\\infty} \\frac{1}{x^p}\\,dx$ converges if and only if:",
+    "choices": [
+      "$p>1$",
+      "$p<1$",
+      "$p=1$",
+      "$p\\ge 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "This is the p-test for integrals over $[1,\\infty)$.",
+      "Convergence requires the power in the denominator to exceed ${1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.num.01",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_1^{\\infty} \\frac{1}{x^2}\\,dx$.",
+    "answer": "1",
+    "hints": [
+      "Use $\\lim_{b\\to\\infty}\\left[-\\frac{1}{x}\\right]_1^b$.",
+      "The upper term goes to ${0}$, leaving ${0}-(-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.num.02",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_1^{\\infty} \\frac{1}{x^3}\\,dx$.",
+    "answer": "0.5",
+    "hints": [
+      "An antiderivative is $-\\frac{1}{2}x^{-2}$.",
+      "As $b\\to\\infty$ the upper term vanishes, leaving ${0}-\\left(-\\frac{1}{2}\\right)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.improper-integrals.num.03",
+    "loId": "apcalcbc.improper-integrals",
+    "cedCode": "AP-CALCBC-6.13",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^1 \\frac{1}{\\sqrt{x}}\\,dx$, an improper integral because the integrand is discontinuous at $x=0$.",
+    "answer": "2",
+    "hints": [
+      "Write $\\frac{1}{\\sqrt{x}} = x^{-1/2}$ with antiderivative ${2}\\sqrt{x}$.",
+      "Use $\\lim_{a\\to 0^+}\\left[2\\sqrt{x}\\right]_a^1 = 2\\sqrt{1}-0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.mcq.01",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which technique is most efficient for $\\int x\\,e^x\\,dx$?",
+    "choices": [
+      "Integration by parts",
+      "u-substitution",
+      "Partial fractions",
+      "Polynomial long division"
+    ],
+    "answer": "A",
+    "hints": [
+      "The integrand is a product of an algebraic and an exponential factor.",
+      "There is no inner-function derivative present for a u-substitution."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.mcq.02",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which technique is most efficient for $\\int \\frac{2x}{x^2+1}\\,dx$?",
+    "choices": [
+      "u-substitution with $u=x^2+1$",
+      "Integration by parts",
+      "Partial fractions",
+      "Completing the square"
+    ],
+    "answer": "A",
+    "hints": [
+      "The numerator is the derivative of the denominator.",
+      "That pattern signals a substitution giving a natural log."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.mcq.03",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which technique is most efficient for $\\int \\frac{1}{(x-2)(x+3)}\\,dx$?",
+    "choices": [
+      "Partial fractions",
+      "u-substitution",
+      "Integration by parts",
+      "Direct power rule"
+    ],
+    "answer": "A",
+    "hints": [
+      "The integrand is a proper rational function with distinct linear factors.",
+      "Split it into a sum of simpler fractions first."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.mcq.04",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which step should come first when evaluating $\\int \\frac{x^2}{x-1}\\,dx$?",
+    "choices": [
+      "Polynomial long division",
+      "u-substitution",
+      "Integration by parts",
+      "A trigonometric identity"
+    ],
+    "answer": "A",
+    "hints": [
+      "The numerator degree is at least the denominator degree.",
+      "Divide first to get a polynomial plus a proper remainder term."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.num.01",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_2^4 \\frac{x^2-4}{x-2}\\,dx$.",
+    "answer": "10",
+    "hints": [
+      "Factor the numerator: $\\frac{x^2-4}{x-2} = x+2$.",
+      "Integrate $x+2$ to get $\\frac{x^2}{2}+2x$ and evaluate from ${2}$ to ${4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integration-strategy.num.02",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\int_0^3 (2x+1)\\,dx$ by recognizing it needs only a direct antiderivative.",
+    "answer": "12",
+    "hints": [
+      "An antiderivative is $x^2+x$.",
+      "Compute $(3^2+3)-0$."
+    ]
+  }
+]
