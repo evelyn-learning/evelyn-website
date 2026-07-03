@@ -56,7 +56,8 @@
     "test:pedagogy-cli": "npx tsx scripts/tutor/pedagogy-harness/cli.test.ts",
     "test:pedagogy": "npx tsx scripts/tutor/pedagogy-harness/cli.ts",
     "test:pedagogy-b4": "npx tsx scripts/test-opener-calibration-prompt.ts",
-    "test:pedagogy-b5": "npx tsx scripts/test-self-report-clause.ts"
+    "test:pedagogy-b5": "npx tsx scripts/test-self-report-clause.ts",
+    "test:pedagogy-b6": "npx tsx scripts/test-opening-behavior.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
