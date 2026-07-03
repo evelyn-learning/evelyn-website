@@ -260,5 +260,72 @@ check('dots_cluster stays in bounds', inBounds([
   { type: 'dots_cluster', cx: 50, cy: 50, count: 26, spread: 22 } as SketchPrimitive,
 ]));
 
+// ── coordinate_grid: gridlines + 2 axes + arrowheads; labels route to labels[] ──
+const cg = buildSketchPaths([
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 4, xLabel: 'x', yLabel: 'y' } as SketchPrimitive,
+]);
+// 9 vertical + 9 horizontal gridlines + 2 axes + 4 arrowheads(×2 strokes) = many paths
+check('coordinate_grid renders many sub-paths (grid + axes + heads)', cg.drawn[0].paths.length >= 20, `paths=${cg.drawn[0]?.paths.length}`);
+check('coordinate_grid axis labels route to labels[]', cg.labels.length === 2 && cg.labels.some((l) => l.text === 'x') && cg.labels.some((l) => l.text === 'y'));
+// 1-quadrant grid has 2 arrowheads (not 4) → fewer paths than the 4-quadrant one
+const cg1 = buildSketchPaths([
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 1 } as SketchPrimitive,
+]);
+check('coordinate_grid (1-quadrant) renders fewer paths than 4-quadrant',
+  cg1.drawn[0].paths.length < cg.drawn[0].paths.length, `q1=${cg1.drawn[0].paths.length} q4=${cg.drawn[0].paths.length}`);
+
+// ── orbit: path + central body + satellite; labels route to labels[] ──
+const orb = buildSketchPaths([
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: -35, centerLabel: 'sun', satelliteLabel: 'planet' } as SketchPrimitive,
+]);
+check('orbit renders ≥3 sub-paths (path + body + satellite)', orb.drawn[0].paths.length >= 3, `paths=${orb.drawn[0]?.paths.length}`);
+check('orbit labels route to labels[]', orb.labels.length === 2 && orb.labels.some((l) => l.text === 'planet'));
+// satellite position tracks angle
+const orb2 = buildSketchPaths([
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: 120 } as SketchPrimitive,
+]);
+check('orbit satellite tracks angle', JSON.stringify(orb.drawn) !== JSON.stringify(orb2.drawn));
+
+// ── molecule: bonds + atoms; atom letters route to labels[] ──
+const mole = buildSketchPaths([
+  { type: 'molecule',
+    atoms: [{ x: 50, y: 46, label: 'O' }, { x: 36, y: 62, label: 'H' }, { x: 64, y: 62, label: 'H' }],
+    bonds: [{ a: 0, b: 1, order: 1 }, { a: 0, b: 2, order: 1 }] } as SketchPrimitive,
+]);
+check('molecule renders ≥ atoms + bonds sub-paths', mole.drawn[0].paths.length >= 3 + 2, `paths=${mole.drawn[0]?.paths.length}`);
+check('molecule atom letters route to labels[]', mole.labels.length === 3 && mole.labels[0].text === 'O');
+// a double bond draws 2 lines, so more paths than the same single bond
+const molS = buildSketchPaths([
+  { type: 'molecule', atoms: [{ x: 30, y: 50 }, { x: 70, y: 50 }], bonds: [{ a: 0, b: 1, order: 1 }] } as SketchPrimitive,
+]);
+const molD = buildSketchPaths([
+  { type: 'molecule', atoms: [{ x: 30, y: 50 }, { x: 70, y: 50 }], bonds: [{ a: 0, b: 1, order: 2 }] } as SketchPrimitive,
+]);
+check('molecule double bond renders more lines than single', molD.drawn[0].paths.length > molS.drawn[0].paths.length,
+  `single=${molS.drawn[0].paths.length} double=${molD.drawn[0].paths.length}`);
+
+// ── bar_compare: baseline + one bar per value; labels route to labels[] ──
+const bc = buildSketchPaths([
+  { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5], labels: ['A', 'B', 'C'] } as SketchPrimitive,
+]);
+check('bar_compare renders baseline + ≥3 bars', bc.drawn[0].paths.length >= 1 + 3, `paths=${bc.drawn[0]?.paths.length}`);
+check('bar_compare labels route to labels[]', bc.labels.length === 3 && bc.labels[0].text === 'A');
+
+// ── each Wave-4 primitive's geometry stays within the canvas ──
+check('coordinate_grid stays in bounds', inBounds([
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 4 } as SketchPrimitive,
+]));
+check('orbit stays in bounds', inBounds([
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: -35 } as SketchPrimitive,
+]));
+check('molecule stays in bounds', inBounds([
+  { type: 'molecule',
+    atoms: [{ x: 50, y: 46 }, { x: 36, y: 62 }, { x: 64, y: 62 }],
+    bonds: [{ a: 0, b: 1 }, { a: 0, b: 2 }] } as SketchPrimitive,
+]));
+check('bar_compare stays in bounds', inBounds([
+  { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5] } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

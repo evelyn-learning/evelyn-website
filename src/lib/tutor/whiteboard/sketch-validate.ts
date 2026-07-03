@@ -29,6 +29,7 @@ const {
   minGridDim, maxGridDim, maxArcRadius, maxBlobWobble, maxDotsCount, maxSpread,
   maxPulleyRadius, maxLeverLength, maxLeverTilt, maxGaugeRadius,
   minAxisTicks, maxAxisTicks, maxAxisLabels,
+  maxMoleculeAtoms, maxMoleculeBonds, maxBars,
 } = SKETCH_BOUNDS;
 
 const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
@@ -373,6 +374,95 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         type,
         x1, y1, x2, y2,
         ...(ticks !== null ? { ticks } : {}),
+        ...(labels && labels.length ? { labels } : {}),
+        ...styled,
+      };
+    }
+    case 'coordinate_grid': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const quadrants = p.quadrants === 1 ? 1 : 4; // default 4-quadrant plane
+      const xLabel = tag(p.xLabel);
+      const yLabel = tag(p.yLabel);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        quadrants,
+        ...(xLabel ? { xLabel } : {}),
+        ...(yLabel ? { yLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'orbit': {
+      const cx = coord(p.cx), cy = coord(p.cy), rx = num(p.rx), ry = num(p.ry);
+      if (cx === null || cy === null || rx === null || ry === null) return null;
+      if (rx <= 0 || ry <= 0) return null;
+      const angle = num(p.angle);
+      const satelliteLabel = tag(p.satelliteLabel);
+      const centerLabel = tag(p.centerLabel);
+      return {
+        type,
+        cx, cy,
+        rx: Math.min(maxCoord, rx),
+        ry: Math.min(maxCoord, ry),
+        ...(angle !== null ? { angle } : {}),
+        ...(satelliteLabel ? { satelliteLabel } : {}),
+        ...(centerLabel ? { centerLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'molecule': {
+      if (!Array.isArray(p.atoms) || !Array.isArray(p.bonds)) return null;
+      const atoms: { x: number; y: number; label?: string }[] = [];
+      for (const a of p.atoms) {
+        const ax = coord((a as { x?: unknown })?.x);
+        const ay = coord((a as { y?: unknown })?.y);
+        if (ax === null || ay === null) continue;
+        const lbl = tag((a as { label?: unknown })?.label);
+        atoms.push({ x: ax, y: ay, ...(lbl ? { label: lbl } : {}) });
+        if (atoms.length >= maxMoleculeAtoms) break;
+      }
+      if (atoms.length < 1) return null; // need at least one atom to draw
+      const bonds: { a: number; b: number; order?: number }[] = [];
+      for (const b of p.bonds) {
+        const ai = num((b as { a?: unknown })?.a);
+        const bi = num((b as { b?: unknown })?.b);
+        if (ai === null || bi === null) continue;
+        const a2 = Math.round(ai), b2 = Math.round(bi);
+        // drop bonds that reference a missing atom or link an atom to itself
+        if (a2 < 0 || b2 < 0 || a2 >= atoms.length || b2 >= atoms.length || a2 === b2) continue;
+        const ord = num((b as { order?: unknown })?.order);
+        const order = ord === null ? 1 : Math.round(Math.min(3, Math.max(1, ord)));
+        bonds.push({ a: a2, b: b2, order });
+        if (bonds.length >= maxMoleculeBonds) break;
+      }
+      return { type, atoms, bonds, ...styled };
+    }
+    case 'bar_compare': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const values = Array.isArray(p.values)
+        ? p.values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v)).slice(0, maxBars)
+        : null;
+      if (!values || values.length < 1) return null;
+      if (Math.max(...values) <= 0) return null; // nothing to scale against → drop
+      const labels = Array.isArray(p.labels)
+        ? p.labels
+            .filter((s): s is string => typeof s === 'string')
+            .map((s) => s.trim().slice(0, maxLabelLen))
+            .filter((s) => s.length > 0)
+            .slice(0, maxBars)
+        : undefined;
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        values,
         ...(labels && labels.length ? { labels } : {}),
         ...styled,
       };

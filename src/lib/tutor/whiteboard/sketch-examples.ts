@@ -233,6 +233,48 @@ export const NUMBER_LINE: SketchPrimitive[] = [
   { type: 'label', x: 66, y: 32, text: 'x = 7', fontSize: 5.5, stroke: 'red', anchor: 'middle' },
 ];
 
+// COORDINATE-GRID exemplar — teaches: use ONE `coordinate_grid` for a plotting /
+// graphing plane (axes + gridlines + arrowheads), never hand-drawn axes. A point
+// plotted at (2, 3) on a 4-quadrant plane. (Wave-4 coordinate_grid primitive.)
+export const PLOT_POINT: SketchPrimitive[] = [
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 4, xLabel: 'x', yLabel: 'y', stroke: 'ink', strokeWidth: 1.2 },
+  { type: 'ellipse', cx: 65, cy: 23.5, rx: 2.6, ry: 2.6, stroke: 'red', fill: 'red' }, // the plotted point
+  { type: 'label', x: 71, y: 18, text: '(2, 3)', fontSize: 5, stroke: 'red', anchor: 'start' },
+];
+
+// ORBIT exemplar — teaches: use ONE `orbit` for a body circling another (a
+// planet, an electron, a satellite), never a hand-drawn ellipse + dots. A planet
+// on an elliptical orbit around the sun. (Wave-4 orbit primitive.)
+export const PLANET_ORBIT: SketchPrimitive[] = [
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: -35, centerLabel: 'sun', satelliteLabel: 'planet', stroke: 'blue', fill: 'amber', strokeWidth: 1.1 },
+];
+
+// MOLECULE exemplar — teaches: use ONE `molecule` (ball-and-stick) for a quick
+// molecular doodle, never hand-placed circles + lines. Water (H₂O): an oxygen
+// bonded to two hydrogens at the bent angle. (Wave-4 molecule primitive.)
+export const WATER_MOLECULE: SketchPrimitive[] = [
+  {
+    type: 'molecule',
+    atoms: [
+      { x: 50, y: 46, label: 'O' },
+      { x: 36, y: 62, label: 'H' },
+      { x: 64, y: 62, label: 'H' },
+    ],
+    bonds: [{ a: 0, b: 1, order: 1 }, { a: 0, b: 2, order: 1 }],
+    stroke: 'ink',
+    strokeWidth: 1.2,
+  },
+  { type: 'label', x: 50, y: 82, text: 'water (H₂O)', fontSize: 5, stroke: 'blue', anchor: 'middle' },
+];
+
+// BAR-COMPARE exemplar — teaches: use ONE `bar_compare` for a quick side-by-side
+// comparison, never hand-drawn rectangles. Three bars of different heights with
+// captions under each. (Wave-4 bar_compare primitive.)
+export const BAR_HEIGHTS: SketchPrimitive[] = [
+  { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5], labels: ['A', 'B', 'C'], stroke: 'ink', fill: 'blue', strokeWidth: 1.2 },
+  { type: 'label', x: 50, y: 90, text: 'compare heights', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -335,5 +377,25 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a number line from 0 to 10 with a point marked at 7',
     labels: ['x = 7'],
     primitives: NUMBER_LINE,
+  },
+  {
+    concept: 'a point plotted at (2, 3) on an xy coordinate plane',
+    labels: ['(2, 3)'],
+    primitives: PLOT_POINT,
+  },
+  {
+    concept: 'a planet orbiting the sun on an elliptical path',
+    labels: ['sun', 'planet'],
+    primitives: PLANET_ORBIT,
+  },
+  {
+    concept: 'a water molecule: one oxygen bonded to two hydrogens (H₂O)',
+    labels: ['water (H₂O)'],
+    primitives: WATER_MOLECULE,
+  },
+  {
+    concept: 'a bar chart comparing the heights of three bars',
+    labels: ['compare heights'],
+    primitives: BAR_HEIGHTS,
   },
 ];
