@@ -31,6 +31,7 @@ import {
 import {
   solvePhasesOfMoon, solveSolarSystem, solveEarthLayers,
   solveEclipseDiagram, solveSeasonsDiagram, solvePlateTectonics,
+  solveGeologicCrossSection, solveHRDiagram, solveVolcanoCrossSection, solveAtmosphereLayers,
 } from './kinds/earth-space';
 
 import {
@@ -241,6 +242,12 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'graph_diagram', displayName: 'Graph (vertices + edges)', whenToUse: 'Show a graph: vertices as labeled circles on a ring layout and edges as lines (or arrows if directed), with optional edge weights and an optional BFS/DFS traversal-order overlay (numbered badges). Use for graph-theory / graph-algorithm teaching instead of a freehand sketch — a doodled node-and-edge blob is unreadable. Not for a rooted binary tree (use binary_tree) or a flowchart (use flowchart_simple).', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "nodes?:[string] (vertex labels; default A–E), edges?:[[from,to]] (or [from,to,weight]; default sample edges), directed?:boolean (default false), weights?:boolean (default auto), traversal?:bfs|dfs (overlay visit order from the first node), title?" },
   { kind: 'hash_table', displayName: 'Hash Table (buckets + chaining)', whenToUse: 'Show a hash table: a bucket array (indices 0..size−1) with keys placed by a simple, shown hash function [(Σ char codes) mod size] and separate-chaining collision lists drawn as chained boxes. Use for hashing / collision-resolution teaching instead of a freehand sketch. Empty buckets are marked ∅; collisions are highlighted.', subjects: ['cs'], grades: { from: 9, to: 12 }, paramSchema: "size?:number (buckets, 3–11; default 7), entries?:[[key,value]] (default sample keys that collide), title?" },
   { kind: 'recursion_tree', displayName: 'Recursion Tree (call tree)', whenToUse: 'Show the call tree of a recursive function: FIBONACCI [fib(n) branching into fib(n−1)+fib(n−2), showing overlapping subproblems] or FACTORIAL [fact(n) → fact(n−1) → … as a chain], with base-case leaves highlighted and optional return values. Use for recursion / divide-and-conquer teaching instead of a freehand sketch — the branching and depth must be exact.', subjects: ['cs'], grades: { from: 8, to: 12 }, paramSchema: "kind?:fibonacci|factorial (default fibonacci), n?:number (fibonacci 2–6, factorial 1–7; default 5), showValues?:boolean (return values; default true), title?" },
+
+  // ── Phase 23 — earth & space science ───────────────────────────────────
+  { kind: 'geologic_cross_section', displayName: 'Geologic Cross-Section', whenToUse: 'Show a block cross-section of sedimentary rock strata (oldest at the bottom — law of superposition) cut by a fault and an igneous intrusion, with an unconformity (erosional gap). Use for relative-dating / structural-geology teaching (superposition, cross-cutting relationships, faulting, unconformities) instead of a freehand sketch.', subjects: ['earth'], grades: { from: 6, to: 12 }, paramSchema: 'showFault?:boolean (default true), faultType?:normal|reverse (default normal), showUnconformity?:boolean (default true), title?' },
+  { kind: 'hr_diagram', displayName: 'Hertzsprung–Russell Diagram', whenToUse: 'Show the Hertzsprung–Russell (H–R) diagram: stellar luminosity (y, log) vs. surface temperature (x, log, REVERSED so hot is on the left), with the main-sequence diagonal, the giants (upper right), the white dwarfs (lower left), and the Sun marked. Use for stellar-classification / stellar-evolution teaching instead of a freehand sketch or a generic x-y plot.', subjects: ['earth'], grades: { from: 8, to: 12 }, paramSchema: 'highlight?:main_sequence|giants|white_dwarfs|sun (emphasize one region; default none), title?' },
+  { kind: 'volcano_cross_section', displayName: 'Volcano Cross-Section', whenToUse: 'Show a labeled cross-section of a stratovolcano: the magma chamber, the central conduit/vent, the summit crater, the alternating hardened-lava-and-ash layers, and a side (parasitic) vent. Use for volcano-anatomy / volcanism teaching instead of a freehand sketch.', subjects: ['earth'], grades: { from: 4, to: 12 }, paramSchema: 'showSideVent?:boolean (default true), title?' },
+  { kind: 'atmosphere_layers', displayName: "Earth's Atmosphere Layers", whenToUse: "Show Earth's atmosphere layers stacked by altitude — troposphere, stratosphere (with the ozone layer), mesosphere, thermosphere, exosphere — with altitude markers on the left axis and the temperature-vs-altitude profile curve overlaid (the zigzag: cooling, then warming through the ozone, cooling again, then warming in the thermosphere). Use for atmosphere-structure teaching instead of a freehand sketch.", subjects: ['earth'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:troposphere|stratosphere|mesosphere|thermosphere|exosphere (emphasize one layer; default none), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -369,6 +376,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   graph_diagram: solveGraphDiagram,
   hash_table: solveHashTable,
   recursion_tree: solveRecursionTree,
+  // Phase 23 — earth & space science
+  geologic_cross_section: solveGeologicCrossSection,
+  hr_diagram: solveHRDiagram,
+  volcano_cross_section: solveVolcanoCrossSection,
+  atmosphere_layers: solveAtmosphereLayers,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

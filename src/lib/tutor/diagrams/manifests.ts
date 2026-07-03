@@ -93,12 +93,20 @@ import {
   buildEclipseDiagramManifest,
   buildSeasonsDiagramManifest,
   buildPlateTectonicsManifest,
+  buildGeologicCrossSectionManifest,
+  buildHRDiagramManifest,
+  buildVolcanoCrossSectionManifest,
+  buildAtmosphereLayersManifest,
   solvePhasesOfMoon,
   solveSolarSystem,
   solveEarthLayers,
   solveEclipseDiagram,
   solveSeasonsDiagram,
   solvePlateTectonics,
+  solveGeologicCrossSection,
+  solveHRDiagram,
+  solveVolcanoCrossSection,
+  solveAtmosphereLayers,
 } from '@/lib/tutor/diagrams/catalog/kinds/earth-space';
 import {
   // Aliased: the legacy `show_flowchart` tool already imports a
@@ -1168,6 +1176,34 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solvePlateTectonics(params);
         return buildPlateTectonicsManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'geologic_cross_section': {
+      try {
+        const figure = solveGeologicCrossSection(params);
+        return buildGeologicCrossSectionManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'hr_diagram': {
+      try {
+        const figure = solveHRDiagram(params);
+        return buildHRDiagramManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'volcano_cross_section': {
+      try {
+        const figure = solveVolcanoCrossSection(params);
+        return buildVolcanoCrossSectionManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'atmosphere_layers': {
+      try {
+        const figure = solveAtmosphereLayers(params);
+        return buildAtmosphereLayersManifest(figure);
       } catch { /* fall through */ }
       break;
     }

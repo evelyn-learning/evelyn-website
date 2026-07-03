@@ -137,7 +137,12 @@ export type DiagramKindId =
   | 'data_structure'
   | 'graph_diagram'
   | 'hash_table'
-  | 'recursion_tree';
+  | 'recursion_tree'
+  // Phase 23 — earth & space science (geology + astronomy + atmosphere)
+  | 'geologic_cross_section'
+  | 'hr_diagram'
+  | 'volcano_cross_section'
+  | 'atmosphere_layers';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

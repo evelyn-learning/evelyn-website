@@ -36,6 +36,10 @@ import {
   CatalogEclipseDiagramRenderer,
   CatalogSeasonsDiagramRenderer,
   CatalogPlateTectonicsRenderer,
+  CatalogGeologicCrossSectionRenderer,
+  CatalogHRDiagramRenderer,
+  CatalogVolcanoCrossSectionRenderer,
+  CatalogAtmosphereLayersRenderer,
 } from './CatalogEarthSpaceRenderers';
 import {
   CatalogFlowchartSimpleRenderer,
@@ -165,6 +169,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'eclipse_diagram':          return <CatalogEclipseDiagramRenderer figure={figure} />;
     case 'seasons_diagram':          return <CatalogSeasonsDiagramRenderer figure={figure} />;
     case 'plate_tectonics':          return <CatalogPlateTectonicsRenderer figure={figure} />;
+    case 'geologic_cross_section':   return <CatalogGeologicCrossSectionRenderer figure={figure} />;
+    case 'hr_diagram':               return <CatalogHRDiagramRenderer figure={figure} />;
+    case 'volcano_cross_section':    return <CatalogVolcanoCrossSectionRenderer figure={figure} />;
+    case 'atmosphere_layers':        return <CatalogAtmosphereLayersRenderer figure={figure} />;
     // Phase 5 — CS
     case 'flowchart_simple':         return <CatalogFlowchartSimpleRenderer figure={figure} />;
     case 'state_machine':            return <CatalogStateMachineRenderer figure={figure} />;
