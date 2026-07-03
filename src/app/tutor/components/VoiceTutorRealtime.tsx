@@ -28,6 +28,10 @@ import {
   isPedagogyOpenerFlagValue,
   type OpeningSignals,
 } from '@/lib/tutor/ai/opening-behavior';
+import {
+  shouldEmitOpenerFallback,
+  buildOpenerFallbackCommand,
+} from '@/lib/tutor/ai/opener-fallback';
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
@@ -1117,6 +1121,14 @@ export function VoiceTutorRealtime({
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
   const turnNarrationRef = useRef<string[]>([]);
   const boardRenderFiredThisTurnRef = useRef(false);
+  // Task B3 (flag-gated): whether the NEXT callBrainOnce call to complete is
+  // the proactive-opener turn, and how many valid (post-validation) board
+  // renders it dispatches. Only ever written/read when TUTOR_PEDAGOGY_OPENER
+  // is on (see the mount effect that seeds it from `beh.opener !== 'none'`
+  // and the callBrainOnce finally that consumes it). See opener-fallback.ts
+  // + task-B3-brief.md.
+  const openingTurnPendingRef = useRef(false);
+  const openingTurnValidRenderCountRef = useRef(0);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2423,6 +2435,15 @@ export function VoiceTutorRealtime({
     // don't count. Tracked regardless of render-sync on/off.
     if (TUTOR_BOARD_ANCHOR_ASSIST && processed.some(isBoardRenderCommand)) {
       boardRenderFiredThisTurnRef.current = true;
+    }
+    // Task B3 (flag-gated): count valid (post-validation, about-to-render)
+    // board renders this batch contributes toward the opener turn, so the
+    // finally-block check can tell "opener drew nothing" from "opener drew
+    // something". Independent of TUTOR_BOARD_ANCHOR_ASSIST's own counter
+    // above (different flag, different lifetime — this one is read once at
+    // end-of-turn and only while openingTurnPendingRef is armed).
+    if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
+      openingTurnValidRenderCountRef.current += processed.filter(isBoardRenderCommand).length;
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
@@ -6146,6 +6167,11 @@ export function VoiceTutorRealtime({
     // Board-anchor assist: fresh per-turn narration + "brain drew nothing" flag.
     turnNarrationRef.current = [];
     boardRenderFiredThisTurnRef.current = false;
+    // Task B3 (flag-gated): fresh per-turn valid-render counter for the
+    // opener-fallback check. openingTurnPendingRef itself is NOT reset here
+    // (it's a one-shot "is this the opener turn" flag seeded once at mount
+    // and consumed in the finally below, not a per-turn flag).
+    if (TUTOR_PEDAGOGY_OPENER) openingTurnValidRenderCountRef.current = 0;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -9831,6 +9857,26 @@ export function VoiceTutorRealtime({
           }
         }
       }
+      // Task B3 (flag-gated): fail-to-simple opener render fallback. If this
+      // was the proactive-opener turn (openingTurnPendingRef, seeded once at
+      // mount from beh.opener !== 'none') and it dispatched zero valid board
+      // renders across every attempt/retry, paint ONE guaranteed-renderable
+      // fallback (a 'handwrite' line — see opener-fallback.ts for why that
+      // primitive can't be rejected) so the student never faces a blank
+      // board on their first impression. The spoken opener already played
+      // (this runs after the stream/attempt loop, purely visual) — nothing
+      // here touches speech. The pending flag is consumed unconditionally so
+      // this can fire at most once per session, on the opener turn only.
+      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
+        openingTurnPendingRef.current = false;
+        if (shouldEmitOpenerFallback({
+          openingPhase: true,
+          validRendersThisTurn: openingTurnValidRenderCountRef.current,
+        })) {
+          onWhiteboardCommand([buildOpenerFallbackCommand({ topic })]);
+          onDebugEvent?.('opener_fallback_rendered', topic || '(no topic)');
+        }
+      }
       // Render↔speech sync: the stream is done — stop buffering NEW batches.
       // The buffer itself is NOT cleared here: TTS lags the stream, so any
       // remaining buffered renders keep flushing against the still-playing
@@ -11318,6 +11364,11 @@ export function VoiceTutorRealtime({
           const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
           openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
           openerFields.openingPhase = beh.opener !== 'none';
+          // Task B3: arm the fail-to-simple opener render fallback for the
+          // FIRST callBrainOnce turn to complete. Mirrors openerFields
+          // .openingPhase above exactly (same beh.opener !== 'none' check) —
+          // consumed once in callBrainOnce's finally, see opener-fallback.ts.
+          openingTurnPendingRef.current = beh.opener !== 'none';
           // No first-student-utterance signal reaches this mount-time call
           // (buildInstructions runs before any student input exists) — see
           // report. Always resolves 'button', which is the structurally
