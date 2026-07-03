@@ -1,0 +1,500 @@
+[
+  {
+    "id": "apcalcbc.parametric.mcq.01",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For the parametric curve $x=t^2$, $y=t^3$, find $\\dfrac{dy}{dx}$.",
+    "choices": [
+      "$\\dfrac{3t}{2}$",
+      "$\\dfrac{2}{3t}$",
+      "$(3t^2)(2t)$",
+      "$\\dfrac{3t^2}{2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $\\dfrac{dy}{dx}=\\dfrac{dy/dt}{dx/dt}$.",
+      "Here $\\dfrac{dy}{dt}=3t^2$ and $\\dfrac{dx}{dt}=2t$; simplify the quotient."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric.mcq.02",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A curve is given by $x=\\cos t$, $y=\\sin t$. Find $\\dfrac{dy}{dx}$.",
+    "choices": [
+      "$-\\cot t$",
+      "$\\cot t$",
+      "$-\\tan t$",
+      "$\\tan t$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute $\\dfrac{dy}{dt}=\\cos t$ and $\\dfrac{dx}{dt}=-\\sin t$.",
+      "Then $\\dfrac{dy}{dx}=\\dfrac{\\cos t}{-\\sin t}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric.mcq.03",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A parametric curve has a horizontal tangent line exactly when:",
+    "choices": [
+      "$\\dfrac{dy}{dt}=0$ and $\\dfrac{dx}{dt}\\neq0$",
+      "$\\dfrac{dx}{dt}=0$ and $\\dfrac{dy}{dt}\\neq0$",
+      "$\\dfrac{dy}{dt}=\\dfrac{dx}{dt}$",
+      "$\\dfrac{dx}{dt}=\\dfrac{dy}{dt}=0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A horizontal tangent means the slope $\\dfrac{dy}{dx}=0$.",
+      "The slope is zero when the numerator $\\dfrac{dy}{dt}$ is zero but the denominator is not."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric.mcq.04",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $x=t^2$, $y=t^3$ (so $\\dfrac{dy}{dx}=\\dfrac{3t}{2}$), find $\\dfrac{d^2y}{dx^2}$.",
+    "choices": [
+      "$\\dfrac{3}{4t}$",
+      "$\\dfrac{3}{2}$",
+      "$\\dfrac{3t}{4}$",
+      "$\\dfrac{3}{4t^2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $\\dfrac{d^2y}{dx^2}=\\dfrac{\\frac{d}{dt}\\left(\\frac{dy}{dx}\\right)}{dx/dt}$.",
+      "Here $\\dfrac{d}{dt}\\left(\\dfrac{3t}{2}\\right)=\\dfrac{3}{2}$ and $\\dfrac{dx}{dt}=2t$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric.num.01",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For the parametric curve $x=t^2$, $y=t^3$, find the value of $\\dfrac{dy}{dx}$ at $t=4$.",
+    "answer": "6",
+    "hints": [
+      "$\\dfrac{dy}{dx}=\\dfrac{3t^2}{2t}=\\dfrac{3t}{2}$.",
+      "Substitute $t=4$ into $\\dfrac{3t}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric.num.02",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the parametric curve $x=t^2$, $y=t^3-t$, find the value of $\\dfrac{d^2y}{dx^2}$ at $t=1$.",
+    "answer": "1",
+    "hints": [
+      "First $\\dfrac{dy}{dx}=\\dfrac{3t^2-1}{2t}$; then differentiate with respect to $t$ and divide by $\\dfrac{dx}{dt}=2t$.",
+      "You should get $\\dfrac{d^2y}{dx^2}=\\dfrac{3t^2+1}{4t^3}$; evaluate at $t=1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.mcq.01",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which integral gives the arc length of a parametric curve $x(t)$, $y(t)$ from $t=a$ to $t=b$?",
+    "choices": [
+      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dx}{dt}\\right)^2+\\left(\\dfrac{dy}{dt}\\right)^2}\\,dt$",
+      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dx}{dt}\\right)^2-\\left(\\dfrac{dy}{dt}\\right)^2}\\,dt$",
+      "$L=\\displaystyle\\int_a^b\\left[\\left(\\dfrac{dx}{dt}\\right)^2+\\left(\\dfrac{dy}{dt}\\right)^2\\right]dt$",
+      "$L=\\displaystyle\\int_a^b\\sqrt{\\left(\\dfrac{dy}{dx}\\right)^2+1}\\,dt$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Arc length adds up tiny hypotenuses $\\sqrt{dx^2+dy^2}$.",
+      "Factor $dt$ out to get $\\sqrt{(dx/dt)^2+(dy/dt)^2}\\,dt$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.mcq.02",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find the arc length of $x=3\\cos t$, $y=3\\sin t$ for $t$ from $t=0$ to $t=2\\pi$.",
+    "choices": [
+      "$L=6\\pi$",
+      "$L=3\\pi$",
+      "$L=9\\pi$",
+      "$L=2\\pi$"
+    ],
+    "answer": "A",
+    "hints": [
+      "$\\dfrac{dx}{dt}=-3\\sin t$, $\\dfrac{dy}{dt}=3\\cos t$; the integrand simplifies to a constant.",
+      "$\\sqrt{9\\sin^2 t+9\\cos^2 t}=3$, so $L=\\int_0^{2\\pi}3\\,dt$ (the circumference of the circle)."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.mcq.03",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $x=t^2$, $y=t^3$ with $t\\ge0$, the arc-length integrand $\\sqrt{(dx/dt)^2+(dy/dt)^2}$ simplifies to:",
+    "choices": [
+      "$t\\sqrt{4+9t^2}$",
+      "$\\sqrt{2t+3t^2}$",
+      "$t\\sqrt{2+3t^2}$",
+      "$\\sqrt{16t^2+81t^4}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "$\\dfrac{dx}{dt}=2t$ and $\\dfrac{dy}{dt}=3t^2$; square and add before taking the root.",
+      "$\\sqrt{4t^2+9t^4}=\\sqrt{t^2(4+9t^2)}=t\\sqrt{4+9t^2}$ for $t\\ge0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.num.01",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A particle moves along $x=3t$, $y=4t$ for $t$ from $t=0$ to $t=2$. Find the total arc length.",
+    "answer": "10",
+    "hints": [
+      "$\\dfrac{dx}{dt}=3$ and $\\dfrac{dy}{dt}=4$, so the integrand is $\\sqrt{9+16}=5$.",
+      "$L=\\int_0^2 5\\,dt=5\\cdot 2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.num.02",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A curve is given by $x=3t$ and $y=2t^{3/2}$. Find its arc length for $t$ from $t=0$ to $t=3$.",
+    "answer": "14",
+    "hints": [
+      "$\\dfrac{dx}{dt}=3$, $\\dfrac{dy}{dt}=3t^{1/2}$, so the integrand is $\\sqrt{9+9t}=3\\sqrt{1+t}$.",
+      "$\\int_0^3 3\\sqrt{1+t}\\,dt=2(1+t)^{3/2}\\Big|_0^3=2(8-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.parametric-arc-length.num.03",
+    "loId": "apcalcbc.parametric-arc-length",
+    "cedCode": "AP-CALCBC-9.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A particle traces $x=4\\cos t$, $y=4\\sin t$ for $t$ from $t=0$ to $t=\\pi$. The arc length equals $k\\pi$. Find $k$.",
+    "answer": "4",
+    "hints": [
+      "The integrand is $\\sqrt{16\\sin^2 t+16\\cos^2 t}=4$.",
+      "$L=\\int_0^{\\pi}4\\,dt=4\\pi$, so $k=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.mcq.01",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For $\\vec r(t)=\\langle t^2,\\ \\sin t\\rangle$, find the velocity $\\vec v(t)=\\vec r\\,'(t)$.",
+    "choices": [
+      "$\\langle 2t,\\ \\cos t\\rangle$",
+      "$\\langle 2t,\\ -\\cos t\\rangle$",
+      "$\\langle 2,\\ \\cos t\\rangle$",
+      "$\\langle 2t,\\ \\sin t\\rangle$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Differentiate each component separately.",
+      "$\\dfrac{d}{dt}t^2=2t$ and $\\dfrac{d}{dt}\\sin t=\\cos t$."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.mcq.02",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For $\\vec r(t)=\\langle 3t^2,\\ 4t^2\\rangle$, find the speed at $t=1$.",
+    "choices": [
+      "$|\\vec v|=10$",
+      "$|\\vec v|=\\sqrt{14}$",
+      "$|\\vec v|=100$",
+      "$|\\vec v|=14$"
+    ],
+    "answer": "A",
+    "hints": [
+      "$\\vec v(t)=\\langle 6t,\\ 8t\\rangle$, so $\\vec v(1)=\\langle 6,\\ 8\\rangle$.",
+      "Speed is $\\sqrt{6^2+8^2}=\\sqrt{100}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.mcq.03",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle has velocity $\\vec v(t)=\\langle 2t,\\ 3\\rangle$ and position $\\vec r(0)=\\langle 1,\\ 5\\rangle$. Find $\\vec r(t)$.",
+    "choices": [
+      "$\\langle t^2+1,\\ 3t+5\\rangle$",
+      "$\\langle t^2,\\ 3t\\rangle$",
+      "$\\langle 2,\\ 3t+5\\rangle$",
+      "$\\langle t^2+1,\\ 3t\\rangle$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Integrate each component: $\\int 2t\\,dt=t^2+C_1$ and $\\int 3\\,dt=3t+C_2$.",
+      "Use $\\vec r(0)=\\langle 1,\\ 5\\rangle$ to solve $C_1=1$ and $C_2=5$."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.mcq.04",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The total distance traveled by a particle with position $\\vec r(t)=\\langle x(t),\\ y(t)\\rangle$ from $t=a$ to $t=b$ is:",
+    "choices": [
+      "$\\displaystyle\\int_a^b\\sqrt{x'(t)^2+y'(t)^2}\\,dt$",
+      "$\\displaystyle\\int_a^b\\vec v(t)\\,dt$",
+      "$\\left|\\vec r(b)-\\vec r(a)\\right|$",
+      "$\\vec r(b)-\\vec r(a)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Total distance is the integral of speed, a scalar.",
+      "Speed is $|\\vec v(t)|=\\sqrt{x'(t)^2+y'(t)^2}$; the other choices give displacement."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.num.01",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A particle has velocity $\\vec v(t)=\\langle 6t,\\ 8t\\rangle$. Find the total distance traveled for $t$ from $t=0$ to $t=2$.",
+    "answer": "20",
+    "hints": [
+      "Speed is $\\sqrt{(6t)^2+(8t)^2}=\\sqrt{100t^2}=10t$ for $t\\ge0$.",
+      "Total distance is $\\int_0^2 10t\\,dt=5t^2\\big|_0^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.vector-valued.num.02",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For $\\vec r(t)=\\langle t^2,\\ 3t\\rangle$, find the speed at $t=2$.",
+    "answer": "5",
+    "hints": [
+      "$\\vec v(t)=\\langle 2t,\\ 3\\rangle$, so $\\vec v(2)=\\langle 4,\\ 3\\rangle$.",
+      "Speed is $\\sqrt{4^2+3^2}=\\sqrt{25}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.mcq.01",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Convert the polar point with $r=2$ and $\\theta=\\dfrac{\\pi}{3}$ to Cartesian coordinates $(x,y)$.",
+    "choices": [
+      "$(1,\\ \\sqrt3)$",
+      "$(\\sqrt3,\\ 1)$",
+      "$\\left(\\tfrac12,\\ \\tfrac{\\sqrt3}{2}\\right)$",
+      "$(\\sqrt3,\\ -1)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $x=r\\cos\\theta$ and $y=r\\sin\\theta$.",
+      "$\\cos\\tfrac{\\pi}{3}=\\tfrac12$ and $\\sin\\tfrac{\\pi}{3}=\\tfrac{\\sqrt3}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.mcq.02",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Convert the Cartesian point $(-1,\\ 1)$ to polar form $(r,\\theta)$ with $r>0$ and $\\theta\\in[0,2\\pi)$.",
+    "choices": [
+      "$\\left(\\sqrt2,\\ \\tfrac{3\\pi}{4}\\right)$",
+      "$\\left(\\sqrt2,\\ \\tfrac{\\pi}{4}\\right)$",
+      "$\\left(2,\\ \\tfrac{3\\pi}{4}\\right)$",
+      "$\\left(\\sqrt2,\\ -\\tfrac{\\pi}{4}\\right)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "$r=\\sqrt{(-1)^2+1^2}=\\sqrt2$.",
+      "The point is in the second quadrant, so $\\theta=\\tfrac{3\\pi}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.mcq.03",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A polar curve $r=f(\\theta)$ can be written parametrically (in $\\theta$) as:",
+    "choices": [
+      "$x=f(\\theta)\\cos\\theta,\\quad y=f(\\theta)\\sin\\theta$",
+      "$x=f(\\theta)\\sin\\theta,\\quad y=f(\\theta)\\cos\\theta$",
+      "$x=\\cos\\theta,\\quad y=\\sin\\theta$",
+      "$x=f(\\theta),\\quad y=\\theta$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start from $x=r\\cos\\theta$ and $y=r\\sin\\theta$.",
+      "Substitute $r=f(\\theta)$ into both."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.mcq.04",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a polar curve $r=f(\\theta)$ (write $r'=\\tfrac{dr}{d\\theta}$), the slope $\\dfrac{dy}{dx}$ equals:",
+    "choices": [
+      "$\\dfrac{r'\\sin\\theta+r\\cos\\theta}{r'\\cos\\theta-r\\sin\\theta}$",
+      "$\\dfrac{r'\\cos\\theta-r\\sin\\theta}{r'\\sin\\theta+r\\cos\\theta}$",
+      "$\\dfrac{r'\\sin\\theta-r\\cos\\theta}{r'\\cos\\theta+r\\sin\\theta}$",
+      "$\\dfrac{\\sin\\theta}{\\cos\\theta}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Differentiate $y=r\\sin\\theta$ and $x=r\\cos\\theta$ with respect to $\\theta$ using the product rule.",
+      "$\\dfrac{dy}{dx}=\\dfrac{dy/d\\theta}{dx/d\\theta}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.num.01",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The polar point with $r=4$ and $\\theta=\\pi$ has Cartesian coordinates $(x,y)$. Find $x$.",
+    "answer": "-4",
+    "hints": [
+      "Use $x=r\\cos\\theta$.",
+      "$\\cos\\pi=-1$, so $x=4(-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-coordinates.num.02",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the polar curve $r=2\\sin\\theta$, find the slope $\\dfrac{dy}{dx}$ at $\\theta=\\dfrac{\\pi}{8}$.",
+    "answer": "1",
+    "hints": [
+      "With $r=2\\sin\\theta$ and $r'=2\\cos\\theta$, the numerator $r'\\sin\\theta+r\\cos\\theta=2\\sin 2\\theta$ and the denominator $r'\\cos\\theta-r\\sin\\theta=2\\cos 2\\theta$.",
+      "So $\\dfrac{dy}{dx}=\\tan 2\\theta$; at $\\theta=\\tfrac{\\pi}{8}$ this is $\\tan\\tfrac{\\pi}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.mcq.01",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The area enclosed by a polar curve $r(\\theta)$ from $\\theta=\\alpha$ to $\\theta=\\beta$ is:",
+    "choices": [
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$",
+      "$A=\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$",
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta r\\,d\\theta$",
+      "$A=\\pi\\displaystyle\\int_\\alpha^\\beta r^2\\,d\\theta$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each thin sector is approximately a circular wedge of area $\\tfrac12 r^2\\,d\\theta$.",
+      "Add the wedges by integrating $\\tfrac12 r^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.mcq.02",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find the total area enclosed by the polar circle $r=3$.",
+    "choices": [
+      "$A=9\\pi$",
+      "$A=6\\pi$",
+      "$A=3\\pi$",
+      "$A=18\\pi$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $A=\\tfrac12\\int_0^{2\\pi}r^2\\,d\\theta$ with $r=3$.",
+      "$A=\\tfrac12(9)(2\\pi)$, which matches $\\pi(3)^2$ for the disk."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.mcq.03",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For an outer polar curve $R(\\theta)$ and an inner curve $r(\\theta)$ over $[\\alpha,\\beta]$, the area of the region between them is:",
+    "choices": [
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$",
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R-r\\right)^2 d\\theta$",
+      "$A=\\dfrac12\\displaystyle\\int_\\alpha^\\beta\\left(R^2+r^2\\right)d\\theta$",
+      "$A=\\displaystyle\\int_\\alpha^\\beta\\left(R^2-r^2\\right)d\\theta$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the inner area from the outer area wedge by wedge.",
+      "$\\tfrac12 R^2\\,d\\theta-\\tfrac12 r^2\\,d\\theta=\\tfrac12(R^2-r^2)\\,d\\theta$; do not square the difference."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.num.01",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The area enclosed by the polar curve $r=4$ equals $k\\pi$. Find $k$.",
+    "answer": "16",
+    "hints": [
+      "$A=\\tfrac12\\int_0^{2\\pi}4^2\\,d\\theta$.",
+      "$A=\\tfrac12(16)(2\\pi)=16\\pi$, so $k=16$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.num.02",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The area enclosed by the cardioid $r=1+\\cos\\theta$ equals $k\\pi$. Find $k$.",
+    "answer": "1.5",
+    "hints": [
+      "$A=\\tfrac12\\int_0^{2\\pi}(1+\\cos\\theta)^2\\,d\\theta$; expand $(1+\\cos\\theta)^2=1+2\\cos\\theta+\\cos^2\\theta$.",
+      "Over one full turn $\\int_0^{2\\pi}(1+2\\cos\\theta+\\cos^2\\theta)\\,d\\theta=3\\pi$, so $A=\\tfrac{3\\pi}{2}$ and $k=\\tfrac32$."
+    ]
+  },
+  {
+    "id": "apcalcbc.polar-area.num.03",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A polar curve satisfies $r=\\sqrt{\\theta}$. Evaluate the swept area $\\tfrac12\\displaystyle\\int_0^2 r^2\\,d\\theta$ for $\\theta$ from $\\theta=0$ to $\\theta=2$.",
+    "answer": "1",
+    "hints": [
+      "Since $r^2=\\theta$, the integral is $\\tfrac12\\int_0^2\\theta\\,d\\theta$.",
+      "$\\tfrac12\\cdot\\tfrac{\\theta^2}{2}\\big|_0^2=\\tfrac12\\cdot 2$."
+    ]
+  }
+]
