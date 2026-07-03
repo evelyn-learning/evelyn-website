@@ -54,7 +54,8 @@
     "test:pedagogy-driver": "npx tsx scripts/tutor/pedagogy-harness/run-harness.smoke.ts",
     "test:pedagogy-gates": "npx tsx scripts/tutor/pedagogy-harness/eval.test.ts",
     "test:pedagogy-cli": "npx tsx scripts/tutor/pedagogy-harness/cli.test.ts",
-    "test:pedagogy": "npx tsx scripts/tutor/pedagogy-harness/cli.ts"
+    "test:pedagogy": "npx tsx scripts/tutor/pedagogy-harness/cli.ts",
+    "test:pedagogy-b4": "npx tsx scripts/test-opener-calibration-prompt.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

@@ -130,6 +130,23 @@ export interface SystemPromptContext {
    *  engine sets this — all other engines and text chat leave it
    *  undefined, so their prompt stays byte-identical. */
   realtimeV2?: boolean;
+
+  /** Opener + calibration (Task B4). All optional and additive — the
+   *  orchestrator wiring that populates these lands in a later task
+   *  (B2/B6). When `openingPhase` is absent (every current caller),
+   *  buildSystemPrompt's output is byte-for-byte unchanged.
+   *
+   *  'demo' = unauthenticated/trial session; 'subscribed' = signed-in
+   *  student with an account. Undefined is treated like 'demo'. */
+  sessionMode?: 'demo' | 'subscribed';
+  /** True on the turn that opens the session — gates buildOpenerClause. */
+  openingPhase?: boolean;
+  /** How the session started: a UI button press, the student typing a
+   *  real question/statement first, or the student typing just a bare
+   *  greeting ('hi'). */
+  entryMode?: 'button' | 'typed-content' | 'typed-greeting';
+  /** True for a subscribed student with prior sessions/history. */
+  isReturning?: boolean;
 }
 
 /**
@@ -1233,6 +1250,67 @@ Every academic response includes a whiteboard tool call — never explain withou
 `;
 
 /**
+ * Task B4 — opener + calibration clause.
+ *
+ * Pure helper: given a SystemPromptContext, returns the prose the brain
+ * should follow for THIS turn's opener, or `null` when this turn isn't
+ * the session opener (`ctx.openingPhase` falsy). `null` means "say
+ * nothing new" — the existing boring-greeting instructions elsewhere in
+ * BASE_PROMPT are the only guidance, exactly as today.
+ *
+ * Selection order:
+ *  1. entryMode 'typed-content' — the student already typed a real
+ *     question/statement, so respond to THAT instead of running any
+ *     opener script, regardless of demo/subscribed or isReturning.
+ *  2. sessionMode 'subscribed' && isReturning — warm resume from history,
+ *     no re-calibration.
+ *  3. everything else (demo, first-ever subscribed session, or
+ *     entryMode 'typed-greeting') — the full act-first + calibrate opener.
+ *
+ * Generic by design (no topic-specific examples) per
+ * feedback_generic_prompts.
+ */
+export function buildOpenerClause(ctx: SystemPromptContext): string | null {
+  if (!ctx.openingPhase) return null;
+
+  const noNameClause = ctx.studentName
+    ? ''
+    : ' No student name is available — greet warmly without a name; never speak a placeholder value (e.g. "Trial student") as if it were the student\'s name.';
+
+  if (ctx.entryMode === 'typed-content') {
+    return (
+      'The student opened with their own words — respond to THAT directly and put ' +
+      "something relevant on the board; weave in only the calibration you still need " +
+      "(don't re-ask what they've told you), never a canned 'tell me about yourself' reset." +
+      noNameClause
+    );
+  }
+
+  const isReturningSubscribed = ctx.sessionMode === 'subscribed' && ctx.isReturning === true;
+
+  if (isReturningSubscribed) {
+    return (
+      'Open warm and personal from what you already know about them — vary it every time ' +
+      "(a social thread you haven't used recently, a callback to last session, or their " +
+      'overall progress arc). NEVER repeat an opener or the same KIND of opener twice in a ' +
+      'row. Do NOT ask a returning student what they already know — you have their history; ' +
+      'use it.' + noNameClause
+    );
+  }
+
+  // Default: demo, first-ever subscribed session, or entryMode 'typed-greeting'
+  // — treated as the full opener per the brief.
+  return (
+    'Open by ACTING FIRST: put one intriguing, level-appropriate thing about the topic on ' +
+    'the board, greet them by name if you have it, then get to know them briefly like a real ' +
+    "teacher would — roughly where they're at with this topic, their grade if unclear, and " +
+    'what they\'re hoping to get from this session (just exploring, thinking about joining, ' +
+    'curious how an AI teaches). Have a short human exchange, THEN teach, informed by it. ' +
+    "NEVER open with 'Today we are going to learn…' or a bare bold title." + noNameClause
+  );
+}
+
+/**
  * Build the complete system prompt
  */
 export function buildSystemPrompt(context: SystemPromptContext): string {
@@ -1462,6 +1540,16 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     prompt += `- Before checking/validating: 'Let me double-check that'\n`;
     prompt += `- Before generating a problem: 'Let me put together a problem for you'\n`;
     prompt += `Keep preambles under 8 words. Never use them on simple acknowledgments or short answers — only when the response will take noticeable time.\n`;
+  }
+
+  // Task B4 — opener + calibration clause. Additive/gated: only appended
+  // when the caller opts in via ctx.openingPhase. The orchestrator wiring
+  // that populates openingPhase/sessionMode/entryMode/isReturning lands in
+  // a later task (B2/B6) — no current caller sets openingPhase, so this
+  // block is a no-op today and the prompt is byte-identical to before.
+  const openerClause = buildOpenerClause(context);
+  if (openerClause) {
+    prompt += `\n\n## This Turn: Session Opener\n${openerClause}\n`;
   }
 
   return prompt;
