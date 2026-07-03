@@ -32,7 +32,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ProblemBank } from '../src/models/ProblemBank';
 
 const VERIFIER_MODEL = 'claude-sonnet-5';
-const TOPIC = 'ap-statistics';
+// topic/topicId are derived from the --course dir name at upsert (the course
+// dir matches the engine topic, e.g. ap-statistics, ap-calculus-bc).
 const SOURCE = { name: 'Evelyn (original)' };
 const LICENSE = 'internal-original';
 
@@ -124,9 +125,19 @@ interface VerifyResult {
   note?: string;
 }
 
+/** Parse a numeric answer that may be a decimal, a fraction (a/b), or a percent
+ *  — so the verifier treats "2/5", "0.4", and "40%" as equal (the model often
+ *  returns a fraction where the key is a decimal). */
+function parseNum(s: string): number {
+  const t = s.trim().replace(/[,$\s]/g, '');
+  if (/%$/.test(t)) { const n = parseFloat(t); return Number.isFinite(n) ? n / 100 : NaN; }
+  const frac = t.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+  if (frac) { const d = parseFloat(frac[2]); return d !== 0 ? parseFloat(frac[1]) / d : NaN; }
+  return parseFloat(t);
+}
 function numericMatch(expected: string, got: string): boolean {
-  const a = parseFloat(got);
-  const b = parseFloat(expected);
+  const a = parseNum(got);
+  const b = parseNum(expected);
   if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
   const tol = Math.max(0.01, Math.abs(b) * 0.01);
   return Math.abs(a - b) <= tol;
@@ -147,9 +158,9 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem): Promise<VerifyR
     model: VERIFIER_MODEL,
     max_tokens: 4000,
     thinking: { type: 'adaptive' },
-    output_config: { effort: 'low' },
+    output_config: { effort: 'high' },
     system:
-      'You are an expert AP Statistics grader verifying an answer key. Solve from scratch; do not assume the provided key is correct. Output only the requested JSON.',
+      'You are an expert AP exam grader (math, calculus, statistics) verifying an answer key. Solve from scratch; do not assume the provided key is correct. Output only the requested JSON.',
     messages: [{ role: 'user', content: `${instruction}\n\nQuestion:\n${item.problemText}${choicesBlock}` }],
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -284,8 +295,8 @@ async function main() {
       {
         $set: {
           id: item.id,
-          topic: TOPIC,
-          topicId: TOPIC,
+          topic: opts.course,
+          topicId: opts.course,
           loId: item.loId,
           cedCode: item.cedCode,
           difficulty: item.difficulty,
@@ -305,7 +316,7 @@ async function main() {
     up++;
   }
   await mongoose.disconnect();
-  console.log(`\n✓ Upserted ${up} items into ProblemBank (topic=${TOPIC}).`);
+  console.log(`\n✓ Upserted ${up} items into ProblemBank (topic=${opts.course}).`);
 }
 
 main().catch((e) => {

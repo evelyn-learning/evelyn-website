@@ -1,0 +1,602 @@
+[
+  {
+    "id": "apcalcbc.modeling-verifying-de.mcq.01",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The rate of change of a quantity $y$ with respect to time $t$ is proportional to $y$ itself. Which differential equation models this statement?",
+    "choices": [
+      "$\\frac{dy}{dt}=kt$",
+      "$\\frac{dy}{dt}=k$",
+      "$\\frac{dy}{dt}=ky$",
+      "$\\frac{dy}{dt}=y+k$"
+    ],
+    "answer": "C",
+    "hints": [
+      "'Proportional to $y$' means a constant times $y$.",
+      "The constant of proportionality is usually written $k$."
+    ]
+  },
+  {
+    "id": "apcalcbc.modeling-verifying-de.mcq.02",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A population $P$ changes so that its rate of change is proportional to the product of $P$ and $(100-P)$. Which differential equation models this?",
+    "choices": [
+      "$\\frac{dP}{dt}=kP+100$",
+      "$\\frac{dP}{dt}=k(100-P)$",
+      "$\\frac{dP}{dt}=100kP$",
+      "$\\frac{dP}{dt}=kP(100-P)$"
+    ],
+    "answer": "D",
+    "hints": [
+      "'Product of $P$ and $(100-P)$' means multiply the two factors.",
+      "Include the proportionality constant $k$ in front of the product."
+    ]
+  },
+  {
+    "id": "apcalcbc.modeling-verifying-de.mcq.03",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which function is a solution of the differential equation $\\frac{dy}{dx}=2y$?",
+    "choices": [
+      "$y=e^{2x}$",
+      "$y=2x$",
+      "$y=x^{2}$",
+      "$y=e^{x/2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute each candidate and compare $\\frac{dy}{dx}$ with ${}2y$.",
+      "For $y=e^{2x}$, $\\frac{dy}{dx}=2e^{2x}=2y$."
+    ]
+  },
+  {
+    "id": "apcalcbc.modeling-verifying-de.mcq.04",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which function is a solution of the differential equation $\\frac{dy}{dx}=y+x$?",
+    "choices": [
+      "$y=e^{x}+x$",
+      "$y=3e^{x}-x-1$",
+      "$y=x^{2}+1$",
+      "$y=e^{x}-x$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compute $\\frac{dy}{dx}$ for the candidate and simplify $y+x$; they must match.",
+      "For $y=3e^{x}-x-1$: $\\frac{dy}{dx}=3e^{x}-1$ and $y+x=3e^{x}-1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.modeling-verifying-de.num.01",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The function $y=e^{3x}$ is a solution of $\\frac{dy}{dx}=ky$. Find the value of $k$.",
+    "answer": "3",
+    "hints": [
+      "Differentiate $y=e^{3x}$.",
+      "Match $\\frac{dy}{dx}=3e^{3x}$ with $ky=ke^{3x}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.modeling-verifying-de.num.02",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For what value of $n$ is $y=x^{n}$ a solution of the differential equation $x\\frac{dy}{dx}=4y$?",
+    "answer": "4",
+    "hints": [
+      "Differentiate $y=x^{n}$ and multiply by $x$.",
+      "Set $nx^{n}=4x^{n}$ and compare."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.mcq.01",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a slope field for $\\frac{dy}{dx}=f(x,y)$, the short segment drawn at a point $(x,y)$ has slope equal to:",
+    "choices": [
+      "$f(x,y)$",
+      "the value of $y$",
+      "the value of $x$",
+      "always ${}0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A slope field pictures the slope the DE assigns at each point.",
+      "Evaluate the right-hand side $f(x,y)$ at that point."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.mcq.02",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the differential equation $\\frac{dy}{dx}=x$, the slope-field segments are horizontal (slope ${}0$) along which line?",
+    "choices": [
+      "the $x$-axis, where $y=0$",
+      "the $y$-axis, where $x=0$",
+      "the line $y=x$",
+      "nowhere in the plane"
+    ],
+    "answer": "B",
+    "hints": [
+      "Horizontal segments occur where $\\frac{dy}{dx}=0$.",
+      "Set $x=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.mcq.03",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A slope field has segments that are identical along any horizontal line (the slope changes only as $y$ changes). Which differential equation could produce it?",
+    "choices": [
+      "$\\frac{dy}{dx}=x$",
+      "$\\frac{dy}{dx}=x+y$",
+      "$\\frac{dy}{dx}=y$",
+      "$\\frac{dy}{dx}=xy$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Along a horizontal line $y$ is fixed while $x$ varies.",
+      "If the slope does not change with $x$, it must depend only on $y$."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.mcq.04",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $\\frac{dy}{dx}=x-y$, at which point does the slope field have a segment with slope ${}0$?",
+    "choices": [
+      "$(2,0)$",
+      "$(0,2)$",
+      "$(1,3)$",
+      "$(2,2)$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Slope ${}0$ requires $x-y=0$.",
+      "Look for the point where $x=y$."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.num.01",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For the slope field of $\\frac{dy}{dx}=2x-1$, find the slope of the segment at the point $(3,5)$.",
+    "answer": "5",
+    "hints": [
+      "Substitute the coordinates into $\\frac{dy}{dx}$.",
+      "Compute ${}2(3)-1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.slope-fields.num.02",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For $\\frac{dy}{dx}=\\frac{x}{y}$, find the slope of the slope-field segment at the point $(6,2)$.",
+    "answer": "3",
+    "hints": [
+      "Plug $x=6$ and $y=2$ into the right-hand side.",
+      "Compute $\\frac{6}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.mcq.01",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Euler's method approximates the next point using which update rule?",
+    "choices": [
+      "$y_{n+1}=y_{n}\\,f(x_{n},y_{n})$",
+      "$y_{n+1}=f(x_{n},y_{n})+h$",
+      "$y_{n+1}=y_{n}+f(x_{n},y_{n})$",
+      "$y_{n+1}=y_{n}+h\\,f(x_{n},y_{n})$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Each step follows the tangent line for one step of width $h$.",
+      "Add $h$ times the slope to the current $y$-value."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.mcq.02",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Given $\\frac{dy}{dx}=x+y$ with $y(0)=1$ and step size $h=0.1$, use one step of Euler's method to approximate $y(0.1)$.",
+    "choices": [
+      "${}1.1$",
+      "${}1.0$",
+      "${}1.2$",
+      "${}0.9$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The slope at $(0,1)$ is ${}0+1=1$.",
+      "$y_{1}=1+0.1(1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.mcq.03",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When Euler's method with a positive step size is applied to a solution curve that is concave up, the approximation is generally:",
+    "choices": [
+      "an overestimate, since the tangent lines lie above the curve",
+      "an underestimate, since the tangent lines lie below the curve",
+      "exactly correct, regardless of concavity",
+      "unrelated to the concavity of the curve"
+    ],
+    "answer": "B",
+    "hints": [
+      "Sketch a tangent line to a concave-up curve.",
+      "For a concave-up curve the tangent line lies below the curve."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.num.01",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\frac{dy}{dx}=2x$ with $y(1)=3$, use one step of Euler's method with $h=0.5$ to approximate $y(1.5)$.",
+    "answer": "4",
+    "hints": [
+      "The slope at $(1,3)$ is ${}2(1)=2$.",
+      "$y_{1}=3+0.5(2)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.num.02",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\frac{dy}{dx}=x+y$ with $y(0)=1$, use two steps of Euler's method with $h=0.1$ to approximate $y(0.2)$.",
+    "answer": "1.22",
+    "hints": [
+      "First step: $y_{1}=1+0.1(0+1)=1.1$ at $x=0.1$.",
+      "Second step: $y_{2}=1.1+0.1(0.1+1.1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.eulers-method.num.03",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Given $\\frac{dy}{dx}=y$ with $y(0)=2$, use one step of Euler's method with $h=0.1$ to approximate $y(0.1)$.",
+    "answer": "2.2",
+    "hints": [
+      "The slope at $(0,2)$ equals $y=2$.",
+      "$y_{1}=2+0.1(2)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.mcq.01",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A differential equation $\\frac{dy}{dx}=f(x)g(y)$ is separable because it can be rewritten as:",
+    "choices": [
+      "$dy\\,dx=f(x)g(y)$",
+      "$\\frac{dy}{f(x)}=g(y)\\,dx$",
+      "$g(y)\\,dy=\\frac{dx}{f(x)}$",
+      "$\\frac{dy}{g(y)}=f(x)\\,dx$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Collect all the $y$'s with $dy$ and all the $x$'s with $dx$.",
+      "Divide both sides by $g(y)$ and multiply by $dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.mcq.02",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Separating variables and integrating $\\frac{dy}{dx}=2xy$ gives which general solution?",
+    "choices": [
+      "$y=Ce^{x^{2}}$",
+      "$y=e^{2x}+C$",
+      "$y=x^{2}+C$",
+      "$y=Ce^{2x}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write $\\frac{dy}{y}=2x\\,dx$ and integrate both sides.",
+      "$\\ln|y|=x^{2}+C$, then exponentiate."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.mcq.03",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve $\\frac{dy}{dx}=y^{2}$ with the initial condition $y(0)=1$.",
+    "choices": [
+      "$y=e^{x}$",
+      "$y=\\frac{1}{1-x}$",
+      "$y=1+x^{2}$",
+      "$y=\\frac{1}{1+x}$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Integrate $\\frac{dy}{y^{2}}=dx$ to get $-\\frac{1}{y}=x+C$.",
+      "Apply $y(0)=1$ to find $C=-1$, then solve for $y$."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.num.01",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Solve $\\frac{dy}{dx}=3x^{2}$ with $y(0)=2$. Find $y(1)$.",
+    "answer": "3",
+    "hints": [
+      "Integrate to get $y=x^{3}+C$.",
+      "Use $y(0)=2$ to find $C=2$, then evaluate at $x=1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.num.02",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve $\\frac{dy}{dx}=\\frac{y}{x}$ for $x>0$ with $y(1)=3$. Find $y(2)$.",
+    "answer": "6",
+    "hints": [
+      "Separate: $\\frac{dy}{y}=\\frac{dx}{x}$, giving $\\ln y=\\ln x+C$.",
+      "So $y=Ax$; use $y(1)=3$ to find $A=3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.separation-of-variables.num.03",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Solve $\\frac{dy}{dx}=\\frac{x}{y}$ with $y(0)=4$ (taking $y>0$). Find the value of $y$ when $x=3$.",
+    "answer": "5",
+    "hints": [
+      "Separate: $y\\,dy=x\\,dx$, so $y^{2}=x^{2}+C$.",
+      "Use $y(0)=4$ to get $C=16$, then set $x=3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.mcq.01",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The general solution of the exponential model $\\frac{dy}{dt}=ky$ is:",
+    "choices": [
+      "$y=y_{0}+kt$",
+      "$y=y_{0}e^{kt}$",
+      "$y=kt^{2}$",
+      "$y=y_{0}e^{t}$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Separating variables gives $\\ln|y|=kt+C$.",
+      "Exponentiate to get $y=y_{0}e^{kt}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.mcq.02",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the model $\\frac{dy}{dt}=ky$ with $k<0$, the quantity undergoes:",
+    "choices": [
+      "exponential growth",
+      "linear decay",
+      "exponential decay",
+      "constant behavior"
+    ],
+    "answer": "C",
+    "hints": [
+      "The sign of $k$ controls growth versus decay.",
+      "A negative exponent shrinks $e^{kt}$ over time."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.mcq.03",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bacteria culture starts at 100 and doubles each hour, modeled by $y={}100\\cdot 2^{t}$. What does the value ${}100$ represent?",
+    "choices": [
+      "the hourly growth rate",
+      "the doubling time",
+      "the carrying capacity",
+      "the initial amount at $t=0$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Evaluate the model at $t=0$.",
+      "Since ${}2^{0}=1$, $y(0)=100$."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.mcq.04",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A substance decays according to $y=y_{0}e^{-0.2t}$. Its half-life is found by solving which equation?",
+    "choices": [
+      "$\\frac{1}{2}=e^{-0.2t}$",
+      "${}2=e^{-0.2t}$",
+      "${}0=e^{-0.2t}$",
+      "$\\frac{1}{2}=-0.2t$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Half-life is when the amount is half of $y_{0}$.",
+      "Set $\\frac{y_{0}}{2}=y_{0}e^{-0.2t}$ and cancel $y_{0}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.num.01",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population grows exponentially as $P={}500\\,e^{0.04t}$. Find the initial population (at $t=0$).",
+    "answer": "500",
+    "hints": [
+      "Substitute $t=0$.",
+      "Since $e^{0}=1$, the initial value is the coefficient."
+    ]
+  },
+  {
+    "id": "apcalcbc.exponential-models.num.02",
+    "loId": "apcalcbc.exponential-models",
+    "cedCode": "AP-CALCBC-7.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A bacteria population follows $P={}200\\cdot 2^{t/3}$ with $t$ in hours. Find the population at $t=6$ hours.",
+    "answer": "800",
+    "hints": [
+      "At $t=6$, the exponent is $\\frac{6}{3}=2$.",
+      "Compute ${}200\\cdot 2^{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.mcq.01",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the logistic model $\\frac{dP}{dt}=kP\\left(1-\\frac{P}{M}\\right)$, the constant $M$ represents:",
+    "choices": [
+      "the carrying capacity",
+      "the initial population",
+      "the growth-rate constant",
+      "the doubling time"
+    ],
+    "answer": "A",
+    "hints": [
+      "$M$ is the population level the model approaches but cannot exceed.",
+      "As $t\\to\\infty$, $P\\to M$."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.mcq.02",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a logistic model with carrying capacity $M$, the population grows fastest when $P$ equals:",
+    "choices": [
+      "$M$",
+      "$\\frac{M}{2}$",
+      "${}0$",
+      "${}2M$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Maximum growth rate occurs at the inflection point of the logistic curve.",
+      "That inflection point is at half the carrying capacity."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.mcq.03",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the logistic equation $\\frac{dP}{dt}=0.1P\\left(1-\\frac{P}{800}\\right)$, the carrying capacity is:",
+    "choices": [
+      "${}0.1$",
+      "${}400$",
+      "${}800$",
+      "${}80$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare with the standard form $kP\\left(1-\\frac{P}{M}\\right)$.",
+      "$M$ is the number in the denominator inside the parentheses."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.mcq.04",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $\\frac{dP}{dt}=0.1P\\left(1-\\frac{P}{800}\\right)$, the population grows fastest when $P=$",
+    "choices": [
+      "${}800$",
+      "${}200$",
+      "${}0$",
+      "${}400$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Fastest growth occurs at $P=\\frac{M}{2}$.",
+      "Here $M=800$, so compute half of it."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.num.01",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For $\\frac{dP}{dt}=0.03P\\left(1-\\frac{P}{1200}\\right)$, what is the carrying capacity?",
+    "answer": "1200",
+    "hints": [
+      "Match to the standard form $kP\\left(1-\\frac{P}{M}\\right)$.",
+      "$M$ is the value in the denominator."
+    ]
+  },
+  {
+    "id": "apcalcbc.logistic-models.num.02",
+    "loId": "apcalcbc.logistic-models",
+    "cedCode": "AP-CALCBC-7.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the logistic model $\\frac{dP}{dt}=kP\\left(1-\\frac{P}{600}\\right)$, at what population $P$ does the population grow fastest?",
+    "answer": "300",
+    "hints": [
+      "Maximum growth occurs at $P=\\frac{M}{2}$.",
+      "Here $M=600$, so compute $\\frac{600}{2}$."
+    ]
+  }
+]

@@ -1,0 +1,687 @@
+[
+  {
+    "id": "apcalcbc.derivative-definition.mcq.01",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which expression gives the derivative of a function $f$ at $x = a$?",
+    "choices": [
+      "$\\lim_{h \\to 0} \\dfrac{f(a+h) - f(a)}{a}$",
+      "$\\dfrac{f(a+h) - f(a)}{h}$",
+      "$\\lim_{h \\to 0} \\dfrac{f(a+h) - f(a)}{h}$",
+      "$\\lim_{h \\to 0} \\dfrac{f(a) - f(a+h)}{h}$"
+    ],
+    "answer": "C",
+    "hints": [
+      "The derivative is the limit of a difference quotient as the run shrinks to zero.",
+      "Divide the change in output by the change in input, which is $h$, then take the limit."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.mcq.02",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Before any limit is taken, the difference quotient $\\dfrac{f(x+h) - f(x)}{h}$ represents which quantity?",
+    "choices": [
+      "The instantaneous rate of change of $f$ at $x$",
+      "The slope of the tangent line to $f$ at $x$",
+      "The exact value of the derivative $f'(x)$",
+      "The average rate of change of $f$ over the interval, i.e. the slope of a secant line"
+    ],
+    "answer": "D",
+    "hints": [
+      "Nothing has been taken to a limit yet, so this is still an average over a finite interval.",
+      "A secant line connects two points a distance $h$ apart."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.mcq.03",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which limit is the alternate (point) form of the derivative $f'(a)$?",
+    "choices": [
+      "$\\lim_{x \\to a} \\dfrac{f(x) - f(a)}{x - a}$",
+      "$\\lim_{x \\to a} \\dfrac{f(x) - f(a)}{x + a}$",
+      "$\\lim_{x \\to a} \\dfrac{f(x) + f(a)}{x - a}$",
+      "$\\lim_{x \\to 0} \\dfrac{f(x) - f(a)}{x - a}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "As $x$ approaches $a$, the secant slope through $(a, f(a))$ and $(x, f(x))$ approaches the tangent slope.",
+      "The denominator must be the run $x - a$, and $x$ must approach $a$."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.mcq.04",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For $f(x) = x^2$, simplifying the difference quotient $\\dfrac{(x+h)^2 - x^2}{h}$ (before letting $h \\to 0$) gives:",
+    "choices": [
+      "$\\;2x$",
+      "$\\;2x + h$",
+      "$\\;2x + h^2$",
+      "$\\;x + h$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Expand $(x+h)^2 = x^2 + 2xh + h^2$, then subtract $x^2$.",
+      "After canceling $x^2$, divide $\\,2xh + h^2$ by $h$; do not drop the $h$ term until the limit is taken."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.num.01",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = x^2 - 5x$. Using the limit definition, the derivative simplifies to $f'(x) = 2x - 5$. Find $f'(1)$.",
+    "answer": "-3",
+    "hints": [
+      "Substitute $x = 1$ into $\\,2x - 5$."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.num.02",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = 4 - x^2$. Using the limit definition gives $f'(x) = -2x$. Find the slope of the tangent line at $x = 3$.",
+    "answer": "-6",
+    "hints": [
+      "Evaluate $-2x$ at $x = 3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-definition.num.03",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For $f(x) = x^2$, the difference quotient at $x = 2$ simplifies to $\\,4 + h$. As $h \\to 0$, what is $f'(2)$?",
+    "answer": "4",
+    "hints": [
+      "Let $h \\to 0$ in the simplified expression $\\,4 + h$."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.mcq.01",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A table gives $f$ at $x = 1, 3, 5, 7$. To best estimate the instantaneous rate $f'(5)$ from the table, which pair of points should you use?",
+    "choices": [
+      "$x = 5$ and $x = 7$ only",
+      "$x = 3$ and $x = 7$ (a centered pair on both sides of $x = 5$)",
+      "$x = 1$ and $x = 3$ only",
+      "Just the single value $f(5)$"
+    ],
+    "answer": "B",
+    "hints": [
+      "A symmetric (centered) difference quotient uses points equally spaced on both sides.",
+      "Centered estimates typically beat one-sided ones."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.mcq.02",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A table gives population $P$ (in thousands) as a function of time $t$ (in years). An estimate of $P'(5)$ from this table carries which units?",
+    "choices": [
+      "Years per thousand people",
+      "Thousands of people",
+      "Thousands of people per year",
+      "Years"
+    ],
+    "answer": "C",
+    "hints": [
+      "A derivative has units of (output units) divided by (input units).",
+      "Output is thousands of people; input is years."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.mcq.03",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Why is a symmetric (centered) difference quotient usually a more accurate estimate of $f'(a)$ than a one-sided quotient?",
+    "choices": [
+      "It uses smaller numbers, so rounding is reduced",
+      "It always gives the exact derivative",
+      "One-sided quotients are undefined for smooth functions",
+      "It averages the behavior on both sides of $a$, canceling much of the leading error"
+    ],
+    "answer": "D",
+    "hints": [
+      "Consider how over- and under-estimates on each side combine.",
+      "The centered estimate is the average of the forward and backward slopes."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.num.01",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A table gives $f(1) = 4,\\ f(3) = 10,\\ f(5) = 20,\\ f(7) = 28$. Use the symmetric difference quotient with $x = 3$ and $x = 7$ to estimate $f'(5)$.",
+    "answer": "4.5",
+    "hints": [
+      "Compute $\\dfrac{f(7) - f(3)}{7 - 3}$.",
+      "That is $\\dfrac{28 - 10}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.num.02",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Using the same table $f(1) = 4,\\ f(3) = 10,\\ f(5) = 20,\\ f(7) = 28$, estimate $f'(1)$ with a forward difference using $x = 1$ and $x = 3$.",
+    "answer": "3",
+    "hints": [
+      "Compute $\\dfrac{f(3) - f(1)}{3 - 1}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.estimating-derivatives.num.03",
+    "loId": "apcalcbc.estimating-derivatives",
+    "cedCode": "AP-CALCBC-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the table $f(1) = 4,\\ f(3) = 10,\\ f(5) = 20,\\ f(7) = 28$, find the average rate of change of $f$ over the interval $[1, 7]$.",
+    "answer": "4",
+    "hints": [
+      "Average rate of change is $\\dfrac{f(7) - f(1)}{7 - 1}$.",
+      "That is $\\dfrac{28 - 4}{6}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.mcq.01",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If $f$ is differentiable at $x = a$, which statement must be true?",
+    "choices": [
+      "$f$ has a corner at $x = a$",
+      "$f'(a)$ is undefined",
+      "$f$ is continuous at $x = a$",
+      "$f$ must be a linear function"
+    ],
+    "answer": "C",
+    "hints": [
+      "Differentiability is a stronger condition than continuity.",
+      "Differentiable at a point implies continuous there, but not the reverse."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.mcq.02",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The function $g(x) = |x|$ is continuous at $x = 0$ but not differentiable there. Which reason best explains this?",
+    "choices": [
+      "The function is discontinuous at $x = 0$",
+      "The function is undefined at $x = 0$",
+      "The function has a vertical tangent at $x = 0$",
+      "The slope from the left is $-1$ while the slope from the right is $+1$, so no single tangent slope exists"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check the one-sided slopes as $x \\to 0$ from each side.",
+      "A corner has mismatched left and right slopes."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.mcq.03",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $h$ has a sharp corner at $x = 2$ but no break there. Which statement is true at $x = 2$?",
+    "choices": [
+      "$h$ is continuous but not differentiable at $x = 2$",
+      "$h$ is differentiable but not continuous at $x = 2$",
+      "$h$ is neither continuous nor differentiable at $x = 2$",
+      "$h$ is both continuous and differentiable at $x = 2$"
+    ],
+    "answer": "A",
+    "hints": [
+      "No break means continuous; a corner blocks a unique tangent line.",
+      "Corners fail differentiability even when the graph is unbroken."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.mcq.04",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x) = x^2$ for $x \\le 1$ and $f(x) = ax + b$ for $x > 1$. For $f$ to be differentiable at $x = 1$, the constants must be:",
+    "choices": [
+      "$a = 2,\\ b = 1$",
+      "$a = 2,\\ b = -1$",
+      "$a = 1,\\ b = 0$",
+      "$a = -1,\\ b = 2$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Match the values (continuity): $a + b = 1$.",
+      "Match the slopes: the left derivative is $f'(x) = 2x$, so at $x = 1$ we need $a = 2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.num.01",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = x^2$ for $x \\le 1$ and $f(x) = ax + b$ for $x > 1$. For $f$ to be differentiable at $x = 1$, find $a$.",
+    "answer": "2",
+    "hints": [
+      "The slopes must agree: the left piece has derivative $f'(x) = 2x$; evaluate it at $x = 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.differentiability-continuity.num.02",
+    "loId": "apcalcbc.differentiability-continuity",
+    "cedCode": "AP-CALCBC-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = x^2$ for $x \\le 1$ and $f(x) = ax + b$ for $x > 1$ with $a = 2$. For $f$ to be continuous (and thus differentiable) at $x = 1$, find $b$.",
+    "answer": "-1",
+    "hints": [
+      "Continuity requires $a + b = 1$ since the left piece gives $f(1) = 1$.",
+      "Solve $b + 2 = 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.mcq.01",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(x^5\\right)$.",
+    "choices": [
+      "$\\;5x^5$",
+      "$\\;x^4$",
+      "$\\;4x^5$",
+      "$\\;5x^4$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Power rule: $\\dfrac{d}{dx} x^n = n x^{n-1}$.",
+      "Bring down the exponent and reduce it by one."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.mcq.02",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(3x^4 - 2x + 7\\right)$.",
+    "choices": [
+      "$\\;12x^3 - 2$",
+      "$\\;12x^3 - 2 + 7$",
+      "$\\;12x^3 - 2x$",
+      "$\\;7x^3 - 2$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Differentiate term by term using linearity.",
+      "A constant term has derivative zero, so the last term drops out."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.mcq.03",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rewrite $\\sqrt{x}$ as $x^{1/2}$ and differentiate. What is $\\dfrac{d}{dx}\\sqrt{x}$?",
+    "choices": [
+      "$\\tfrac{1}{2}x^{1/2}$",
+      "$\\tfrac{1}{2}x^{-1/2}$",
+      "$\\;2x^{-1/2}$",
+      "$\\;x^{-1/2}$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the power rule with $n = \\tfrac{1}{2}$.",
+      "The new exponent is $\\tfrac{1}{2} - 1 = -\\tfrac{1}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.mcq.04",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rewrite $\\dfrac{4}{x^2}$ as $\\,4x^{-2}$ and differentiate. What is $\\dfrac{d}{dx}\\left(\\dfrac{4}{x^2}\\right)$?",
+    "choices": [
+      "$\\dfrac{8}{x^3}$",
+      "$-\\dfrac{4}{x^3}$",
+      "$-\\dfrac{8}{x^3}$",
+      "$-8x^3$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Differentiate $\\,4x^{-2}$ with the power rule: multiply by $-2$.",
+      "$\\,4 \\cdot (-2) x^{-3} = -8x^{-3} = -\\dfrac{8}{x^3}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.num.01",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = 2x^3 - 5x^2 + 4x - 9$. Find $f'(1)$.",
+    "answer": "0",
+    "hints": [
+      "Differentiate to get $f'(x) = 6x^2 - 10x + 4$.",
+      "Then substitute $x = 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.power-rule.num.02",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = x^3 - 6x^2 + 9x$. The equation $f'(x) = 0$ has two solutions. Find the smaller one.",
+    "answer": "1",
+    "hints": [
+      "$f'(x) = 3x^2 - 12x + 9 = 3(x-1)(x-3)$.",
+      "Set each factor to zero and take the smaller root."
+    ]
+  },
+  {
+    "id": "apcalcbc.transcendental-derivatives.mcq.01",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(\\sin x\\right)$.",
+    "choices": [
+      "$-\\cos x$",
+      "$-\\sin x$",
+      "$\\cos x$",
+      "$\\sin x$"
+    ],
+    "answer": "C",
+    "hints": [
+      "This is a standard trig derivative.",
+      "The derivative of sine is cosine."
+    ]
+  },
+  {
+    "id": "apcalcbc.transcendental-derivatives.mcq.02",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(e^x + \\ln x\\right)$.",
+    "choices": [
+      "$e^x + \\ln x$",
+      "$xe^{x-1} + \\dfrac{1}{x}$",
+      "$e^x - \\dfrac{1}{x}$",
+      "$e^x + \\dfrac{1}{x}$"
+    ],
+    "answer": "D",
+    "hints": [
+      "The derivative of $e^x$ is $e^x$; the derivative of $\\ln x$ is $\\dfrac{1}{x}$.",
+      "Do not apply the power rule to $e^x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.transcendental-derivatives.mcq.03",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(3\\sin x - 2\\cos x\\right)$.",
+    "choices": [
+      "$\\;3\\cos x + 2\\sin x$",
+      "$\\;3\\cos x - 2\\sin x$",
+      "$-3\\cos x + 2\\sin x$",
+      "$\\;3\\cos x + 2\\cos x$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The derivative of $\\cos x$ is $-\\sin x$, so $-2\\cos x$ differentiates to $+2\\sin x$.",
+      "Combine $\\,3\\cos x$ with $+2\\sin x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.transcendental-derivatives.num.01",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = e^x$. Find $f'(0)$.",
+    "answer": "1",
+    "hints": [
+      "$f'(x) = e^x$.",
+      "Evaluate $e^0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.transcendental-derivatives.num.02",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = \\ln x$. Find $f'(4)$. Give your answer as a decimal.",
+    "answer": "0.25",
+    "hints": [
+      "$f'(x) = \\dfrac{1}{x}$.",
+      "Evaluate $\\dfrac{1}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.mcq.01",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The product rule states that $(fg)'$ equals:",
+    "choices": [
+      "$f'g'$",
+      "$f'g - fg'$",
+      "$fg' - f'g$",
+      "$f'g + fg'$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Differentiate each factor in turn and keep the other unchanged.",
+      "The two terms are added, not multiplied."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.mcq.02",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(x^2 \\sin x\\right)$.",
+    "choices": [
+      "$\\;2x\\sin x + x^2\\cos x$",
+      "$\\;2x\\cos x$",
+      "$\\;2x\\sin x - x^2\\cos x$",
+      "$\\;x^2\\cos x$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let $f = x^2$ and $g = \\sin x$; apply $f'g + fg'$.",
+      "$f' = 2x$ and $g' = \\cos x$."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.mcq.03",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(x e^x\\right)$ and write it in factored form.",
+    "choices": [
+      "$\\;xe^x$",
+      "$e^x(1 + x)$",
+      "$e^x + x$",
+      "$e^x(x - 1)$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply $f'g + fg'$ with $f = x$ and $g = e^x$.",
+      "$\\,1 \\cdot e^x + x \\cdot e^x = e^x(1 + x)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.num.01",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $h(x) = (2x + 1)(x - 3)$. Using the product rule, find $h'(2)$.",
+    "answer": "3",
+    "hints": [
+      "$h'(x) = 2(x - 3) + (2x + 1)(1) = 4x - 5$.",
+      "Evaluate at $x = 2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.num.02",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $p(x) = x^2 e^x$. Find $p'(0)$.",
+    "answer": "0",
+    "hints": [
+      "$p'(x) = 2x e^x + x^2 e^x$.",
+      "Every term has a factor of $x$, so it vanishes at $x = 0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.product-rule.num.03",
+    "loId": "apcalcbc.product-rule",
+    "cedCode": "AP-CALCBC-2.8",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Functions $u$ and $v$ are differentiable with $u(2) = 3,\\ u'(2) = -1,\\ v(2) = 4,\\ v'(2) = 5$. Find $(uv)'(2)$.",
+    "answer": "11",
+    "hints": [
+      "$(uv)' = u'v + uv'$.",
+      "Compute $(-1)(4) + (3)(5)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.mcq.01",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The quotient rule states that $\\left(\\dfrac{f}{g}\\right)'$ equals:",
+    "choices": [
+      "$\\dfrac{fg' - f'g}{g^2}$",
+      "$\\dfrac{f'g - fg'}{g}$",
+      "$\\dfrac{f'}{g'}$",
+      "$\\dfrac{f'g - fg'}{g^2}$"
+    ],
+    "answer": "D",
+    "hints": [
+      "The numerator is 'low d-high minus high d-low'.",
+      "The denominator is the bottom function squared."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.mcq.02",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(\\tan x\\right)$.",
+    "choices": [
+      "$\\sec^2 x$",
+      "$-\\csc^2 x$",
+      "$\\sec x \\tan x$",
+      "$\\cot x$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write $\\tan x = \\dfrac{\\sin x}{\\cos x}$ and apply the quotient rule.",
+      "The result simplifies using $\\sin^2 x + \\cos^2 x = 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.mcq.03",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(\\dfrac{x}{x + 1}\\right)$.",
+    "choices": [
+      "$\\dfrac{2x + 1}{(x + 1)^2}$",
+      "$\\dfrac{1}{(x + 1)^2}$",
+      "$-\\dfrac{1}{(x + 1)^2}$",
+      "$\\;1$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Numerator: $f'g - fg' = (1)(x+1) - (x)(1)$.",
+      "That simplifies to $\\,1$, over $(x+1)^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.num.01",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Functions $u$ and $v$ satisfy $u(1) = 2,\\ u'(1) = 3,\\ v(1) = 4,\\ v'(1) = 1$. Find $\\left(\\dfrac{u}{v}\\right)'(1)$. Give a decimal.",
+    "answer": "0.625",
+    "hints": [
+      "$\\left(\\dfrac{u}{v}\\right)' = \\dfrac{u'v - uv'}{v^2}$.",
+      "Compute $\\dfrac{(3)(4) - (2)(1)}{4^2} = \\dfrac{10}{16}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.num.02",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Let $g(x) = \\dfrac{2x + 1}{x}$. Using the quotient rule, find $g'(1)$.",
+    "answer": "-1",
+    "hints": [
+      "$g'(x) = \\dfrac{(2)(x) - (2x+1)(1)}{x^2} = \\dfrac{-1}{x^2}$.",
+      "Evaluate at $x = 1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.quotient-rule.num.03",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Let $f(x) = \\dfrac{x - 1}{x + 1}$. Find $f'(0)$.",
+    "answer": "2",
+    "hints": [
+      "Numerator: $(1)(x+1) - (x-1)(1) = 2$, so $f'(x) = \\dfrac{2}{(x+1)^2}$.",
+      "Evaluate at $x = 0$."
+    ]
+  }
+]

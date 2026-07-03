@@ -1,0 +1,611 @@
+[
+  {
+    "id": "apcalcbc.integral-applications.mcq.01",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The average value of a continuous function $f$ on the interval $[a,b]$ is given by which expression?",
+    "choices": [
+      "$\\int_a^b f(x)\\,dx$",
+      "$\\frac{f(b)-f(a)}{b-a}$",
+      "$\\frac{1}{2}\\left[f(a)+f(b)\\right]$",
+      "$\\frac{1}{b-a}\\int_a^b f(x)\\,dx$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Average value scales the accumulated total by the length of the interval.",
+      "Divide the definite integral by $b-a$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-applications.mcq.02",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle moves along a line with velocity $v(t)$ on $[a,b]$. The total distance traveled is given by which expression?",
+    "choices": [
+      "$\\int_a^b |v(t)|\\,dt$",
+      "$\\int_a^b v(t)\\,dt$",
+      "$\\left|\\int_a^b v(t)\\,dt\\right|$",
+      "$\\int_a^b v'(t)\\,dt$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Displacement can cancel; distance never decreases.",
+      "Integrate the speed, which is the absolute value of velocity."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-applications.mcq.03",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Water flows into a tank at a rate of $R(t)$ gallons per hour. The total amount of water that enters the tank between $t=0$ and $t=5$ hours is:",
+    "choices": [
+      "$R(5)-R(0)$",
+      "$\\int_0^5 R(t)\\,dt$",
+      "$\\frac{1}{5}\\int_0^5 R(t)\\,dt$",
+      "$R'(5)$"
+    ],
+    "answer": "B",
+    "hints": [
+      "A rate integrated over time gives an accumulated amount.",
+      "The units gal/hr times hr, summed, give gallons."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-applications.mcq.04",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the average value of $f(x)=x^2+1$ on the interval $[0,3]$?",
+    "choices": [
+      "12",
+      "$\\frac{10}{3}$",
+      "4",
+      "6"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compute $\\frac{1}{3-0}\\int_0^3 (x^2+1)\\,dx$.",
+      "The integral is $\\left[\\frac{x^3}{3}+x\\right]_0^3=12$; then divide by the length 3."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-applications.num.01",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the average value of $f(x)=3x^2$ on the interval $[1,3]$.",
+    "choices": [],
+    "answer": "13",
+    "hints": [
+      "Average value is $\\frac{1}{3-1}\\int_1^3 3x^2\\,dx$.",
+      "$\\int 3x^2\\,dx = x^3$, so evaluate $\\frac{1}{2}\\left[x^3\\right]_1^3$."
+    ]
+  },
+  {
+    "id": "apcalcbc.integral-applications.num.02",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Water flows into a tank at a rate $R(t)=6t+2$ gallons per hour for $t$ in $[0,4]$. How many gallons enter the tank during these 4 hours?",
+    "choices": [],
+    "answer": "56",
+    "hints": [
+      "Total amount is $\\int_0^4 (6t+2)\\,dt$.",
+      "The antiderivative $F(t)=3t^2+2t$; evaluate from $t=0$ to $t=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.mcq.01",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If $f(x)\\ge g(x)$ on $[a,b]$, the area of the region between the curves $y=f(x)$ and $y=g(x)$ is:",
+    "choices": [
+      "$\\int_a^b \\left[f(x)+g(x)\\right]\\,dx$",
+      "$\\int_a^b f(x)\\,dx$",
+      "$\\int_a^b \\left[f(x)-g(x)\\right]\\,dx$",
+      "$\\int_a^b \\left[g(x)-f(x)\\right]\\,dx$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Integrate top minus bottom.",
+      "Since $f$ is the upper curve, subtract $g$ from $f$."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.mcq.02",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find the area of the region bounded by $y=x^2$ and $y=2x$.",
+    "choices": [
+      "$\\frac{8}{3}$",
+      "4",
+      "$\\frac{2}{3}$",
+      "$\\frac{4}{3}$"
+    ],
+    "answer": "D",
+    "hints": [
+      "The curves meet where $x^2=2x$, at $x=0$ and $x=2$.",
+      "On $[0,2]$ the line $y=2x$ is on top: integrate $\\int_0^2 (2x-x^2)\\,dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.mcq.03",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which integral gives the area of the region enclosed by $x=y^2$ and $x=y+2$?",
+    "choices": [
+      "$\\int_{-1}^{2}\\left[(y+2)-y^2\\right]\\,dy$",
+      "$\\int_{-1}^{2}\\left[y^2-(y+2)\\right]\\,dy$",
+      "$\\int_{0}^{2}\\left[(y+2)-y^2\\right]\\,dy$",
+      "$\\int_{-1}^{2}\\left[(y+2)-y^2\\right]\\,dx$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Solve $y^2=y+2$ to get the $y$-limits $y=-1$ and $y=2$.",
+      "Integrate right minus left with respect to $y$; the line $x=y+2$ is to the right."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.num.01",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the area of the region between $y=x^3$ and $y=x$ on $[0,1]$. Give a decimal.",
+    "choices": [],
+    "answer": "0.25",
+    "hints": [
+      "On $[0,1]$, $x\\ge x^3$, so integrate $\\int_0^1 (x-x^3)\\,dx$.",
+      "The antiderivative is $\\frac{x^2}{2}-\\frac{x^4}{4}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.num.02",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the area of the region enclosed by $x=y^2$ and $x=y+2$. Give a decimal.",
+    "choices": [],
+    "answer": "4.5",
+    "hints": [
+      "Integrate $\\int_{-1}^{2}\\left[(y+2)-y^2\\right]\\,dy$.",
+      "Antiderivative: $\\frac{y^2}{2}+2y-\\frac{y^3}{3}$, evaluated from $y=-1$ to $y=2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.area-between-curves.num.03",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the area of the region between $y=\\sqrt{x}$ and $y=x$ on $[0,1]$. Round to 3 decimal places.",
+    "choices": [],
+    "answer": "0.167",
+    "hints": [
+      "On $[0,1]$, $\\sqrt{x}\\ge x$, so integrate $\\int_0^1 (\\sqrt{x}-x)\\,dx$.",
+      "The value is $\\frac{2}{3}-\\frac{1}{2}=\\frac{1}{6}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.mcq.01",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A solid has cross-sectional area $A(x)$ for cross sections perpendicular to the $x$-axis. The volume of the solid on $[a,b]$ is:",
+    "choices": [
+      "$\\int_a^b A(x)\\,dx$",
+      "$\\pi\\int_a^b A(x)\\,dx$",
+      "$\\int_a^b \\left[A(x)\\right]^2\\,dx$",
+      "$\\int_a^b A'(x)\\,dx$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Volume is the accumulation of thin slabs of area $A(x)$ and thickness $dx$.",
+      "No factor of $\\pi$ unless the cross section is a circle."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.mcq.02",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A solid has base bounded by $y=\\sqrt{x}$ and the $x$-axis on $[0,4]$. Cross sections perpendicular to the $x$-axis are squares with one side in the base. What is the area of a cross section at position $x$?",
+    "choices": [
+      "$\\sqrt{x}$",
+      "$x$",
+      "$x^2$",
+      "$\\pi x$"
+    ],
+    "answer": "B",
+    "hints": [
+      "The side length of each square equals the height of the base, $\\sqrt{x}$.",
+      "Area of a square is side squared: $(\\sqrt{x})^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.mcq.03",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A solid has base bounded by $y=2-x^2$ and the $x$-axis. Cross sections perpendicular to the $x$-axis are semicircles with diameter in the base. Which integral gives the volume?",
+    "choices": [
+      "$\\frac{\\pi}{2}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$",
+      "$\\frac{\\pi}{8}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)\\,dx$",
+      "$\\frac{\\pi}{8}\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$",
+      "$\\pi\\int_{-\\sqrt{2}}^{\\sqrt{2}}(2-x^2)^2\\,dx$"
+    ],
+    "answer": "C",
+    "hints": [
+      "The diameter is $(2-x^2)$, so the radius is $\\frac{2-x^2}{2}$.",
+      "A semicircle's area is $\\frac{1}{2}\\pi r^2 = \\frac{\\pi}{8}(2-x^2)^2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.mcq.04",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The cross sections of a solid are equilateral triangles with side length $s$. In terms of $s$, the area of each cross section is:",
+    "choices": [
+      "$\\frac{1}{2}s^2$",
+      "$s^2$",
+      "$\\frac{\\sqrt{3}}{2}s^2$",
+      "$\\frac{\\sqrt{3}}{4}s^2$"
+    ],
+    "answer": "D",
+    "hints": [
+      "An equilateral triangle of side $s$ has height $\\frac{\\sqrt{3}}{2}s$.",
+      "Area $=\\frac{1}{2}\\cdot s\\cdot\\frac{\\sqrt{3}}{2}s$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.num.01",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A solid has base bounded by $y=\\sqrt{x}$ and the $x$-axis on $[0,4]$. Cross sections perpendicular to the $x$-axis are squares with one side in the base. Find the volume.",
+    "choices": [],
+    "answer": "8",
+    "hints": [
+      "Each square has area $(\\sqrt{x})^2=x$.",
+      "Integrate $\\int_0^4 x\\,dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-cross-sections.num.02",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A solid has base bounded by $y=\\sqrt{x}$ and the $x$-axis on $[0,4]$. Cross sections perpendicular to the $x$-axis are equilateral triangles with one side in the base. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "3.464",
+    "hints": [
+      "The side length is $\\sqrt{x}$, so the area is $\\frac{\\sqrt{3}}{4}(\\sqrt{x})^2=\\frac{\\sqrt{3}}{4}x$.",
+      "The volume is $\\frac{\\sqrt{3}}{4}\\int_0^4 x\\,dx = 2\\sqrt{3}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.mcq.01",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The region under $y=f(x)$ from $x=a$ to $x=b$ (with $f\\ge 0$) is revolved about the $x$-axis. By the disc method, the volume is:",
+    "choices": [
+      "$\\pi\\int_a^b \\left[f(x)\\right]^2\\,dx$",
+      "$\\pi\\int_a^b f(x)\\,dx$",
+      "$\\pi\\int_a^b 2f(x)\\,dx$",
+      "$\\pi\\int_a^b \\left[f(x)\\right]^2\\,dx - \\pi\\int_a^b f(x)\\,dx$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each disc has radius $f(x)$ and area $\\pi\\left[f(x)\\right]^2$.",
+      "Integrate the disc areas along the axis."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.mcq.02",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region has outer boundary $y=R(x)$ and inner boundary $y=r(x)$ and is revolved about the $x$-axis. By the washer method, the volume is:",
+    "choices": [
+      "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)^2\\,dx$",
+      "$\\pi\\int_a^b \\left(\\left[R(x)\\right]^2-\\left[r(x)\\right]^2\\right)\\,dx$",
+      "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)\\,dx$",
+      "$\\pi\\int_a^b \\left[R(x)\\right]^2\\,dx - r(x)$"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract the inner disc area from the outer disc area.",
+      "Square each radius separately; do not square the difference."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.mcq.03",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The region bounded by $y=x^2$, $y=0$, and $x=2$ is revolved about the $x$-axis. The volume is:",
+    "choices": [
+      "$\\frac{8\\pi}{3}$",
+      "$\\frac{32\\pi}{3}$",
+      "$\\frac{32\\pi}{5}$",
+      "$\\frac{16\\pi}{5}$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Disc radius is $x^2$, so integrate $\\pi\\int_0^2 (x^2)^2\\,dx$.",
+      "$\\int_0^2 x^4\\,dx=\\frac{32}{5}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.num.01",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The region bounded by $y=\\sqrt{x}$, $y=0$, and $x=1$ is revolved about the $x$-axis. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "1.571",
+    "hints": [
+      "Disc radius is $\\sqrt{x}$, so the volume is $\\pi\\int_0^1 x\\,dx$.",
+      "The integral equals $\\frac{1}{2}$, giving $\\frac{\\pi}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.num.02",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The region between $y=x$ and $y=x^2$ on $[0,1]$ is revolved about the $x$-axis. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "0.419",
+    "hints": [
+      "Outer radius is $x$, inner radius is $x^2$: $\\pi\\int_0^1 (x^2-x^4)\\,dx$.",
+      "The integral equals $\\frac{2}{15}$, giving $\\frac{2\\pi}{15}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.volumes-revolution.num.03",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The region in the first quadrant bounded by $y=x^2$ and $y=4$ is revolved about the $y$-axis. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "25.133",
+    "hints": [
+      "Use discs in $y$: $x=\\sqrt{y}$, so radius is $\\sqrt{y}$ and the volume is $\\pi\\int_0^4 y\\,dy$.",
+      "The integral equals 8, giving $V=8\\pi$."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.mcq.01",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region lying below the line $y=4$ is revolved about that line. The radius from the axis $y=4$ to a curve $y=h(x)$ is:",
+    "choices": [
+      "$(4-h(x))$",
+      "$(h(x)-4)$",
+      "$(h(x)+4)$",
+      "$(4+h(x))$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Radius is the distance from the axis to the curve.",
+      "Since the axis is above the region, subtract the curve's height from 4."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.mcq.02",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The region bounded by $y=x^2$ and $y=4$ is revolved about the line $y=4$. Which integral gives the volume?",
+    "choices": [
+      "$\\pi\\int_{-2}^{2}(x^2-4)\\,dx$",
+      "$\\pi\\int_{-2}^{2}(4-x^2)^2\\,dx$",
+      "$\\pi\\int_{-2}^{2}\\left(4^2-(x^2)^2\\right)\\,dx$",
+      "$\\pi\\int_{0}^{4}(4-x^2)^2\\,dx$"
+    ],
+    "answer": "B",
+    "hints": [
+      "The region touches the axis $y=4$, so this is a disc (no gap).",
+      "Radius is $(4-x^2)$; the curves meet at $x=\\pm 2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.mcq.03",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A region with $x>-1$ is revolved about the vertical line $x=-1$. The radius from the axis to a point at horizontal position $x$ is:",
+    "choices": [
+      "$x-1$",
+      "$(1-x)$",
+      "$x+1$",
+      "$x$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Radius is the horizontal distance from $x=-1$ to $x$.",
+      "Distance is $x-(-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.mcq.04",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The region bounded by $y=x$ and $y=x^2$ on $[0,1]$ is revolved about the line $y=-1$. Which integral gives the volume?",
+    "choices": [
+      "$\\pi\\int_0^1\\left[(x-1)^2-(x^2-1)^2\\right]\\,dx$",
+      "$\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)\\right]\\,dx$",
+      "$\\pi\\int_0^1\\left[(x^2+1)^2-(x+1)^2\\right]\\,dx$",
+      "$\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)^2\\right]\\,dx$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Each radius is measured from $y=-1$: add 1 to each curve's height.",
+      "Outer radius uses the upper curve $y=x$, giving $x+1$; inner uses $y=x^2$, giving $x^2+1$."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.num.01",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The region bounded by $y=x^2$ and $y=4$ is revolved about the line $y=4$. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "107.233",
+    "hints": [
+      "This is a disc with radius $(4-x^2)$: $\\pi\\int_{-2}^{2}(4-x^2)^2\\,dx$.",
+      "The integral equals $\\frac{512}{15}$, giving $\\frac{512\\pi}{15}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.washer-other-axes.num.02",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "The region bounded by $y=x$ and $y=x^2$ on $[0,1]$ is revolved about the line $y=-1$. Find the volume, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "1.466",
+    "hints": [
+      "Outer radius is $x+1$, inner radius is $x^2+1$: $\\pi\\int_0^1\\left[(x+1)^2-(x^2+1)^2\\right]\\,dx$.",
+      "The integrand simplifies to $(2x-x^2-x^4)$; the integral equals $\\frac{7}{15}$, giving $\\frac{7\\pi}{15}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.mcq.01",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The arc length of a smooth curve $y=f(x)$ from $x=a$ to $x=b$ is given by:",
+    "choices": [
+      "$\\int_a^b \\sqrt{1+f(x)^2}\\,dx$",
+      "$\\int_a^b \\left(1+\\left[f'(x)\\right]^2\\right)\\,dx$",
+      "$\\int_a^b \\sqrt{1+\\left[f'(x)\\right]^2}\\,dx$",
+      "$\\int_a^b \\sqrt{\\left[f'(x)\\right]^2-1}\\,dx$"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each infinitesimal piece is $\\sqrt{dx^2+dy^2}$.",
+      "Factor out $dx$ to get $\\sqrt{1+(dy/dx)^2}\\,dx$."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.mcq.02",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which integral gives the arc length of $y=\\sin x$ from $x=0$ to $x=\\pi$?",
+    "choices": [
+      "$\\int_0^{\\pi}\\sqrt{1+\\sin^2 x}\\,dx$",
+      "$\\int_0^{\\pi}\\sqrt{1-\\cos^2 x}\\,dx$",
+      "$\\int_0^{\\pi}\\left(1+\\cos^2 x\\right)\\,dx$",
+      "$\\int_0^{\\pi}\\sqrt{1+\\cos^2 x}\\,dx$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Here $f'(x)=\\cos x$.",
+      "Substitute into $\\sqrt{1+\\left[f'(x)\\right]^2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.mcq.03",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find the arc length of $y=\\frac{2}{3}x^{3/2}$ from $x=0$ to $x=3$.",
+    "choices": [
+      "$\\frac{14}{3}$",
+      "$\\frac{7}{3}$",
+      "14",
+      "$\\frac{28}{3}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Here $f'(x)=x^{1/2}$, so $\\left[f'(x)\\right]^2=x$ and the integrand is $\\sqrt{1+x}$.",
+      "$\\int_0^3 \\sqrt{1+x}\\,dx=\\left[\\frac{2}{3}(1+x)^{3/2}\\right]_0^3=\\frac{2}{3}(8-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.num.01",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the arc length of $y=x^{3/2}$ from $x=0$ to $x=4$, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "9.073",
+    "hints": [
+      "Here $f'(x)=\\frac{3}{2}x^{1/2}$, so $\\left[f'(x)\\right]^2=\\frac{9}{4}x$.",
+      "$\\int_0^4 \\sqrt{1+\\frac{9}{4}x}\\,dx=\\frac{8}{27}\\left(10^{3/2}-1\\right)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.num.02",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the arc length of $y=\\frac{4}{3}x$ from $x=0$ to $x=3$.",
+    "choices": [],
+    "answer": "5",
+    "hints": [
+      "The slope is constant: $f'(x)=\\frac{4}{3}$, so the integrand is $\\sqrt{1+\\frac{16}{9}}=\\frac{5}{3}$.",
+      "$\\int_0^3 \\frac{5}{3}\\,dx=5$ (a 3-4-5 right triangle)."
+    ]
+  },
+  {
+    "id": "apcalcbc.arc-length.num.03",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the arc length of $y=x^{3/2}$ from $x=0$ to $x=5$, rounded to 3 decimal places.",
+    "choices": [],
+    "answer": "12.407",
+    "hints": [
+      "Here $\\left[f'(x)\\right]^2=\\frac{9}{4}x$, so the integrand is $\\sqrt{1+\\frac{9}{4}x}$.",
+      "$\\int_0^5 \\sqrt{1+\\frac{9}{4}x}\\,dx=\\frac{8}{27}\\left(12.25^{3/2}-1\\right)$."
+    ]
+  }
+]

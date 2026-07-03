@@ -1,0 +1,500 @@
+[
+  {
+    "id": "apcalcbc.derivative-in-context.mcq.01",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The volume of water in a tank is $V(t)$ liters, where $t$ is in minutes. What is the best interpretation of $V'(5) = -3$?",
+    "choices": [
+      "At $t=5$ minutes, the tank holds 3 liters",
+      "Over the first 5 minutes, the tank loses 3 liters",
+      "At $t=5$ minutes, the volume is decreasing at a rate of 3 liters per minute",
+      "The tank is empty at $t=5$ minutes"
+    ],
+    "answer": "C",
+    "hints": [
+      "A derivative is an instantaneous rate of change, not an amount.",
+      "The negative sign means the quantity is decreasing; the units are liters per minute."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-in-context.mcq.02",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A city's population is $P(t)$ people, where $t$ is measured in years. What are the units of $P'(t)$?",
+    "choices": [
+      "People",
+      "Years",
+      "Years per person",
+      "People per year"
+    ],
+    "answer": "D",
+    "hints": [
+      "A derivative has units of (output units) divided by (input units).",
+      "Output is people; input is years."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-in-context.mcq.03",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The cost, in dollars, to produce $x$ widgets is $C(x)$, and $C'(200) = 4.5$. Which statement is the best interpretation?",
+    "choices": [
+      "Producing one more widget beyond 200 costs approximately 4.50 dollars (the marginal cost)",
+      "It costs 4.50 dollars to produce 200 widgets",
+      "The total cost of 200 widgets is 4.50 dollars",
+      "Each of the 200 widgets costs 4.50 dollars"
+    ],
+    "answer": "A",
+    "hints": [
+      "$C'(200)$ is the instantaneous rate of change of cost at $x=200$.",
+      "Marginal cost approximates the cost of the next single unit."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-in-context.mcq.04",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quantity $Q(t)$ satisfies $Q'(t) > 0$ and $Q''(t) < 0$ for all $t$ in an interval. Which description is correct on that interval?",
+    "choices": [
+      "$Q$ is increasing at an increasing rate",
+      "$Q$ is increasing at a decreasing rate",
+      "$Q$ is decreasing at a decreasing rate",
+      "$Q$ is constant"
+    ],
+    "answer": "B",
+    "hints": [
+      "The sign of $Q'$ tells you increasing versus decreasing.",
+      "The sign of $Q''$ tells you whether the rate itself is growing or shrinking."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-in-context.num.01",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A balloon's volume is $V(t)$ cubic centimeters at time $t$ seconds. Between $t=2$ and $t=2.5$ the volume changes from 40 to 46 cubic centimeters. Use this to estimate $V'(2)$, in cubic centimeters per second.",
+    "answer": "12",
+    "hints": [
+      "Estimate the instantaneous rate with an average rate of change.",
+      "Compute $\\frac{46-40}{2.5-2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.derivative-in-context.num.02",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The cost, in dollars, of producing $x$ units is $C(x) = {}0.5x^2 + 10x$. Find the marginal cost $C'(20)$, in dollars per unit.",
+    "answer": "30",
+    "hints": [
+      "Differentiate: $C'(x) = x + 10$.",
+      "Evaluate at $x=20$."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.mcq.01",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For a particle moving along a line with position $s(t)$, the velocity of the particle is given by:",
+    "choices": [
+      "$s(t)$",
+      "$s''(t)$",
+      "$\\int s(t)\\,dt$",
+      "$s'(t)$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Velocity is the rate of change of position.",
+      "Differentiate position once."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.mcq.02",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle moves along a horizontal line with velocity $v(t)$. The particle is moving to the LEFT precisely when:",
+    "choices": [
+      "$v(t) < 0$",
+      "$v(t) > 0$",
+      "$v(t) = 0$",
+      "$a(t) < 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign of velocity gives the direction of motion.",
+      "Negative velocity means motion in the negative direction."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.mcq.03",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle moving along a line is speeding up exactly when:",
+    "choices": [
+      "Velocity and acceleration have opposite signs",
+      "Velocity and acceleration have the same sign",
+      "Acceleration is zero",
+      "Velocity is zero"
+    ],
+    "answer": "B",
+    "hints": [
+      "Speed is the magnitude of velocity, $|v|$.",
+      "Speed grows when acceleration pushes in the same direction the particle already moves."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.mcq.04",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A particle has position $s(t) = {}t^3 - 6t^2 + 9t$ for $t \\ge 0$. At which times is the particle at rest (velocity zero)?",
+    "choices": [
+      "$t=2$ only",
+      "$t=0$ and $t=3$",
+      "$t=1$ and $t=3$",
+      "$t=1$ only"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find $v(t) = s'(t) = {}3t^2 - 12t + 9$.",
+      "Factor ${}3t^2 - 12t + 9 = {}3(t-1)(t-3)$ and set it equal to zero."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.num.01",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A particle moves with position $s(t) = {}t^2 - 4t + 3$ (meters, $t$ in seconds). Find its velocity, in meters per second, at $t=5$.",
+    "answer": "6",
+    "hints": [
+      "Velocity is $v(t) = s'(t) = {}2t - 4$.",
+      "Evaluate at $t=5$."
+    ]
+  },
+  {
+    "id": "apcalcbc.straight-line-motion.num.02",
+    "loId": "apcalcbc.straight-line-motion",
+    "cedCode": "AP-CALCBC-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A particle has position $s(t) = {}t^3 - 3t^2$ (meters, $t$ in seconds). Find the particle's speed, in meters per second, at $t=1$.",
+    "answer": "3",
+    "hints": [
+      "Compute $v(t) = {}3t^2 - 6t$ and evaluate at $t=1$.",
+      "Speed is the absolute value of velocity."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.mcq.01",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a related-rates problem, after identifying the quantities involved, the key step is to:",
+    "choices": [
+      "Set the derivative equal to zero and solve",
+      "Integrate both sides with respect to time",
+      "Write an equation relating the variables, then differentiate implicitly with respect to time",
+      "Find the maximum of the quantity"
+    ],
+    "answer": "C",
+    "hints": [
+      "Related rates connect the time-derivatives of related quantities.",
+      "Differentiate a relating equation with respect to $t$."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.mcq.02",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circle's area is $A = \\pi r^2$, where $r$ changes with time. Differentiating with respect to $t$ gives:",
+    "choices": [
+      "$\\frac{dA}{dt} = 2\\pi r$",
+      "$\\frac{dA}{dt} = \\pi r^2\\,\\frac{dr}{dt}$",
+      "$\\frac{dA}{dt} = 2\\pi\\,\\frac{dr}{dt}$",
+      "$\\frac{dA}{dt} = 2\\pi r\\,\\frac{dr}{dt}$"
+    ],
+    "answer": "D",
+    "hints": [
+      "Differentiate $\\pi r^2$ using the chain rule, since $r$ depends on $t$.",
+      "The derivative of $r^2$ with respect to $t$ is ${}2r\\,\\frac{dr}{dt}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.mcq.03",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 10-foot ladder leans against a wall. Its base is pulled away from the wall at 2 feet per second. When the base is 6 feet from the wall (so the top is 8 feet up), how fast is the top sliding down the wall?",
+    "choices": [
+      "1.5 feet per second",
+      "2 feet per second",
+      "2.67 feet per second",
+      "0.75 feet per second"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use $x^2 + y^2 = 100$ and differentiate: $x\\frac{dx}{dt} + y\\frac{dy}{dt} = 0$.",
+      "Substitute $x=6$, $y=8$, $\\frac{dx}{dt}=2$ and solve for $\\frac{dy}{dt}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.num.01",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A 10-foot ladder leans against a wall. The base is pulled away at 4 feet per second. When the base is 6 feet from the wall (top is 8 feet up), how fast, in feet per second, is the top of the ladder moving? Give the speed (a positive number).",
+    "answer": "3",
+    "hints": [
+      "Differentiate $x^2 + y^2 = 100$ to get $x\\frac{dx}{dt} + y\\frac{dy}{dt}=0$.",
+      "With $x=6$, $y=8$, $\\frac{dx}{dt}=4$, solve for the magnitude of $\\frac{dy}{dt}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.num.02",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The side of a square increases at 2 centimeters per second. When the side length is 5 centimeters, how fast, in square centimeters per second, is the area increasing?",
+    "answer": "20",
+    "hints": [
+      "Area is $A = x^2$, so $\\frac{dA}{dt} = 2x\\,\\frac{dx}{dt}$.",
+      "Substitute $x=5$ and $\\frac{dx}{dt}=2$."
+    ]
+  },
+  {
+    "id": "apcalcbc.related-rates.num.03",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Two cars leave the same point at the same time; one travels north at 30 miles per hour and the other travels east at 40 miles per hour. One hour later, how fast, in miles per hour, is the distance between them increasing?",
+    "answer": "50",
+    "hints": [
+      "Let $D^2 = x^2 + y^2$; then $D\\frac{dD}{dt} = x\\frac{dx}{dt} + y\\frac{dy}{dt}$.",
+      "After 1 hour, $x=40$, $y=30$, $D=50$; substitute the speeds and solve for $\\frac{dD}{dt}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.mcq.01",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The linearization (tangent-line approximation) of a differentiable function $f$ at $x=a$ is:",
+    "choices": [
+      "$L(x) = f(a) + f'(a)$",
+      "$L(x) = f'(a)(x - a)$",
+      "$L(x) = f(a) + f'(a)(x - a)$",
+      "$L(x) = f(a)\\cdot f'(a)(x - a)$"
+    ],
+    "answer": "C",
+    "hints": [
+      "The tangent line passes through $(a, f(a))$ with slope $f'(a)$.",
+      "Use point-slope form of the tangent line."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.mcq.02",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Use the linearization of $f(x) = \\sqrt{x}$ at $a=25$ to approximate $\\sqrt{27}$.",
+    "choices": [
+      "5.4",
+      "5.196",
+      "4.8",
+      "5.2"
+    ],
+    "answer": "D",
+    "hints": [
+      "Here $f(25)=5$ and $f'(x)=\\frac{1}{2\\sqrt{x}}$, so $f'(25)=\\frac{1}{10}$.",
+      "Compute $L(27) = 5 + \\frac{1}{10}(27-25)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.mcq.03",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If $f$ is concave up on an interval containing $a$, then the tangent-line approximation of $f(x)$ for $x$ near $a$ is:",
+    "choices": [
+      "An underestimate of $f(x)$",
+      "An overestimate of $f(x)$",
+      "Exactly equal to $f(x)$",
+      "Impossible to compare with $f(x)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "For a concave-up curve, the tangent line lies below the graph.",
+      "A tangent line below the curve gives values less than the true $f(x)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.mcq.04",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A differentiable function has $f(2)=3$ and $f'(2)=4$. Use the tangent-line approximation to estimate $f(2.1)$.",
+    "choices": [
+      "3.0",
+      "3.4",
+      "7.0",
+      "3.04"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use $L(x) = f(2) + f'(2)(x-2)$.",
+      "Compute ${}3 + 4(2.1 - 2)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.num.01",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A differentiable function has $f(1)=2$ and $f'(1)=5$. Use the linearization at $a=1$ to estimate $f(1.2)$.",
+    "answer": "3",
+    "hints": [
+      "Use $L(x) = f(1) + f'(1)(x-1)$.",
+      "Compute ${}2 + 5(1.2 - 1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.linearization.num.02",
+    "loId": "apcalcbc.linearization",
+    "cedCode": "AP-CALCBC-4.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Use the linearization of $f(x) = \\sqrt{x}$ at $a=4$ to approximate $\\sqrt{4.1}$. Give the decimal approximation.",
+    "answer": "2.025",
+    "hints": [
+      "Here $f(4)=2$ and $f'(x) = \\frac{1}{2\\sqrt{x}}$, so $f'(4)=\\frac{1}{4}$.",
+      "Compute ${}2 + \\frac{1}{4}(4.1 - 4)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.mcq.01",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "L'Hopital's rule may be applied directly to a limit that has which indeterminate form?",
+    "choices": [
+      "$\\frac{1}{0}$",
+      "$\\frac{5}{2}$",
+      "$\\frac{0}{0}$ or $\\frac{\\infty}{\\infty}$",
+      "Any limit whatsoever"
+    ],
+    "answer": "C",
+    "hints": [
+      "The rule requires an indeterminate quotient form.",
+      "The two forms it handles directly are zero-over-zero and infinity-over-infinity."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.mcq.02",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\frac{\\sin x}{x}$ using L'Hopital's rule.",
+    "choices": [
+      "0",
+      "$\\infty$",
+      "The limit does not exist",
+      "1"
+    ],
+    "answer": "D",
+    "hints": [
+      "Direct substitution gives $\\frac{0}{0}$, so differentiate top and bottom.",
+      "You get $\\frac{\\cos x}{1}$; evaluate at $x=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.mcq.03",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To evaluate $\\lim_{x\\to 0^+} x\\ln x$ with L'Hopital's rule, the product (an ${}0\\cdot\\infty$ form) should first be rewritten as:",
+    "choices": [
+      "$\\lim_{x\\to 0^+}\\frac{\\ln x}{1/x}$",
+      "$\\lim_{x\\to 0^+}\\frac{x}{\\ln x}$",
+      "$\\lim_{x\\to 0^+}\\frac{1/x}{\\ln x}$",
+      "$\\lim_{x\\to 0^+}\\frac{1}{x\\ln x}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Convert the product into a quotient so the rule applies.",
+      "Write $x\\ln x = \\frac{\\ln x}{1/x}$, which has the form $\\frac{-\\infty}{\\infty}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.num.01",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\frac{\\sin(3x)}{x}$.",
+    "answer": "3",
+    "hints": [
+      "The form is $\\frac{0}{0}$; differentiate numerator and denominator.",
+      "The derivative of $\\sin(3x)$ is ${}3\\cos(3x)$; evaluate the quotient at $x=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.num.02",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0}\\frac{1-\\cos x}{x^2}$.",
+    "answer": "0.5",
+    "hints": [
+      "Direct substitution gives $\\frac{0}{0}$; apply L'Hopital's rule.",
+      "You may need to apply it twice: $\\frac{\\sin x}{2x}$, then $\\frac{\\cos x}{2}$."
+    ]
+  },
+  {
+    "id": "apcalcbc.lhopital.num.03",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate $\\lim_{x\\to 0^+} x\\ln x$.",
+    "answer": "0",
+    "hints": [
+      "Rewrite the ${}0\\cdot\\infty$ product as $\\frac{\\ln x}{1/x}$, an $\\frac{-\\infty}{\\infty}$ form.",
+      "Apply L'Hopital's rule; the result simplifies to $-x$, which approaches 0."
+    ]
+  }
+]

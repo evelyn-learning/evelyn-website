@@ -44,6 +44,76 @@ import { BASELINE_AP_MACRO_MONETARY_POLICY } from './seeds/ap-macro-u4-monetary-
 // AP Statistics Unit 1 (CED 1.1–1.10) — calibration unit (hand-curated from
 // extract-topic-notes-baselines.ts drafts). FRQ-practice plan deferred (no
 // concept segments → pointers/methods only).
+import { BASELINE_AP_CALCBC_DEFINING_LIMITS } from './seeds/ap-calcbc-u1-defining-limits';
+import { BASELINE_AP_CALCBC_INTRODUCING_CALCULUS } from './seeds/ap-calcbc-u1-introducing-calculus';
+import { BASELINE_AP_CALCBC_LIMITS_GRAPHS_TABLES } from './seeds/ap-calcbc-u1-limits-graphs-tables';
+import { BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_PROPERTIES } from './seeds/ap-calcbc-u1-limits-algebraic-properties';
+import { BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_MANIPULATION } from './seeds/ap-calcbc-u1-limits-algebraic-manipulation';
+import { BASELINE_AP_CALCBC_LIMITS_STRATEGY } from './seeds/ap-calcbc-u1-limits-strategy';
+import { BASELINE_AP_CALCBC_SQUEEZE_THEOREM } from './seeds/ap-calcbc-u1-squeeze-theorem';
+import { BASELINE_AP_CALCBC_LIMITS_REPRESENTATIONS } from './seeds/ap-calcbc-u1-limits-representations';
+import { BASELINE_AP_CALCBC_DISCONTINUITY_TYPES } from './seeds/ap-calcbc-u1-discontinuity-types';
+import { BASELINE_AP_CALCBC_CONTINUITY } from './seeds/ap-calcbc-u1-continuity';
+import { BASELINE_AP_CALCBC_REMOVING_DISCONTINUITIES } from './seeds/ap-calcbc-u1-removing-discontinuities';
+import { BASELINE_AP_CALCBC_INFINITE_LIMITS_ASYMPTOTES } from './seeds/ap-calcbc-u1-infinite-limits-asymptotes';
+import { BASELINE_AP_CALCBC_LIMITS_AT_INFINITY } from './seeds/ap-calcbc-u1-limits-at-infinity';
+import { BASELINE_AP_CALCBC_IVT } from './seeds/ap-calcbc-u1-ivt';
+import { BASELINE_AP_CALCBC_DERIVATIVE_DEFINITION } from './seeds/ap-calcbc-u2-derivative-definition';
+import { BASELINE_AP_CALCBC_ESTIMATING_DERIVATIVES } from './seeds/ap-calcbc-u2-estimating-derivatives';
+import { BASELINE_AP_CALCBC_DIFFERENTIABILITY_CONTINUITY } from './seeds/ap-calcbc-u2-differentiability-continuity';
+import { BASELINE_AP_CALCBC_POWER_RULE_LINEARITY } from './seeds/ap-calcbc-u2-power-rule-linearity';
+import { BASELINE_AP_CALCBC_TRANSCENDENTAL_DERIVATIVES } from './seeds/ap-calcbc-u2-transcendental-derivatives';
+import { BASELINE_AP_CALCBC_PRODUCT_RULE } from './seeds/ap-calcbc-u2-product-rule';
+import { BASELINE_AP_CALCBC_QUOTIENT_RULE } from './seeds/ap-calcbc-u2-quotient-rule';
+import { BASELINE_AP_CALCBC_CHAIN_RULE } from './seeds/ap-calcbc-u3-chain-rule';
+import { BASELINE_AP_CALCBC_IMPLICIT_DIFFERENTIATION } from './seeds/ap-calcbc-u3-implicit-differentiation';
+import { BASELINE_AP_CALCBC_DERIVATIVES_INVERSE } from './seeds/ap-calcbc-u3-derivatives-inverse';
+import { BASELINE_AP_CALCBC_HIGHER_ORDER_DERIVATIVES } from './seeds/ap-calcbc-u3-higher-order-derivatives';
+import { BASELINE_AP_CALCBC_DERIVATIVE_IN_CONTEXT } from './seeds/ap-calcbc-u4-derivative-context';
+import { BASELINE_AP_CALCBC_LHOPITAL } from './seeds/ap-calcbc-u4-lhopital';
+import { BASELINE_AP_CALCBC_LINEARIZATION } from './seeds/ap-calcbc-u4-linearization';
+import { BASELINE_AP_CALCBC_STRAIGHT_LINE_MOTION } from './seeds/ap-calcbc-u4-motion';
+import { BASELINE_AP_CALCBC_RELATED_RATES } from './seeds/ap-calcbc-u4-related-rates';
+import { BASELINE_AP_CALCBC_CONCAVITY_SECOND_DERIVATIVE } from './seeds/ap-calcbc-u5-concavity-second-derivative';
+import { BASELINE_AP_CALCBC_FIRST_DERIVATIVE_ANALYSIS } from './seeds/ap-calcbc-u5-first-derivative-analysis';
+import { BASELINE_AP_CALCBC_GRAPHING_F_FP_FPP } from './seeds/ap-calcbc-u5-graphing-f-fp-fpp';
+import { BASELINE_AP_CALCBC_IMPLICIT_BEHAVIORS } from './seeds/ap-calcbc-u5-implicit-behaviors';
+import { BASELINE_AP_CALCBC_MVT_EVT } from './seeds/ap-calcbc-u5-mvt-evt';
+import { BASELINE_AP_CALCBC_OPTIMIZATION } from './seeds/ap-calcbc-u5-optimization';
+import { BASELINE_AP_CALCBC_BASIC_ANTIDERIVATIVES } from './seeds/ap-calcbc-u6-basic-antiderivatives';
+import { BASELINE_AP_CALCBC_FTC } from './seeds/ap-calcbc-u6-ftc';
+import { BASELINE_AP_CALCBC_IMPROPER_INTEGRALS } from './seeds/ap-calcbc-u6-improper-integrals';
+import { BASELINE_AP_CALCBC_INTEGRAL_PROPERTIES } from './seeds/ap-calcbc-u6-integral-properties';
+import { BASELINE_AP_CALCBC_INTEGRATION_BY_PARTS } from './seeds/ap-calcbc-u6-integration-by-parts';
+import { BASELINE_AP_CALCBC_INTEGRATION_STRATEGY } from './seeds/ap-calcbc-u6-integration-strategy';
+import { BASELINE_AP_CALCBC_LONG_DIVISION_COMPLETING_SQUARE } from './seeds/ap-calcbc-u6-long-division-completing-square';
+import { BASELINE_AP_CALCBC_PARTIAL_FRACTIONS } from './seeds/ap-calcbc-u6-partial-fractions';
+import { BASELINE_AP_CALCBC_RIEMANN_SUMS } from './seeds/ap-calcbc-u6-riemann-sums';
+import { BASELINE_AP_CALCBC_U_SUBSTITUTION } from './seeds/ap-calcbc-u6-u-substitution';
+import { BASELINE_AP_CALCBC_EULERS_METHOD } from './seeds/ap-calcbc-u7-eulers-method';
+import { BASELINE_AP_CALCBC_EXPONENTIAL_MODELS } from './seeds/ap-calcbc-u7-exponential-models';
+import { BASELINE_AP_CALCBC_LOGISTIC_MODELS } from './seeds/ap-calcbc-u7-logistic-models';
+import { BASELINE_AP_CALCBC_MODELING_VERIFYING_DE } from './seeds/ap-calcbc-u7-modeling-verifying';
+import { BASELINE_AP_CALCBC_SEPARATION_OF_VARIABLES } from './seeds/ap-calcbc-u7-separation-of-variables';
+import { BASELINE_AP_CALCBC_SLOPE_FIELDS } from './seeds/ap-calcbc-u7-slope-fields';
+import { BASELINE_AP_CALCBC_APPLICATIONS } from './seeds/ap-calcbc-u8-applications';
+import { BASELINE_AP_CALCBC_ARC_LENGTH } from './seeds/ap-calcbc-u8-arc-length';
+import { BASELINE_AP_CALCBC_AREA_BETWEEN_CURVES } from './seeds/ap-calcbc-u8-area-between-curves';
+import { BASELINE_AP_CALCBC_VOLUMES_CROSS_SECTIONS } from './seeds/ap-calcbc-u8-volumes-cross-sections';
+import { BASELINE_AP_CALCBC_VOLUMES_REVOLUTION } from './seeds/ap-calcbc-u8-volumes-revolution';
+import { BASELINE_AP_CALCBC_WASHER_OTHER_AXES } from './seeds/ap-calcbc-u8-washer-other-axes';
+import { BASELINE_AP_CALCBC_PARAMETRIC_ARC_LENGTH } from './seeds/ap-calcbc-u9-parametric-arc-length';
+import { BASELINE_AP_CALCBC_PARAMETRIC } from './seeds/ap-calcbc-u9-parametric';
+import { BASELINE_AP_CALCBC_POLAR_AREA } from './seeds/ap-calcbc-u9-polar-area';
+import { BASELINE_AP_CALCBC_POLAR_COORDINATES } from './seeds/ap-calcbc-u9-polar-coordinates';
+import { BASELINE_AP_CALCBC_VECTOR_VALUED } from './seeds/ap-calcbc-u9-vector-valued';
+import { BASELINE_AP_CALCBC_ALTERNATING_SERIES } from './seeds/ap-calcbc-u10-alternating-series';
+import { BASELINE_AP_CALCBC_CONVERGENCE_TESTS } from './seeds/ap-calcbc-u10-convergence-tests';
+import { BASELINE_AP_CALCBC_MACLAURIN_SERIES } from './seeds/ap-calcbc-u10-maclaurin-series';
+import { BASELINE_AP_CALCBC_POWER_SERIES } from './seeds/ap-calcbc-u10-power-series';
+import { BASELINE_AP_CALCBC_RATIO_TEST } from './seeds/ap-calcbc-u10-ratio-test';
+import { BASELINE_AP_CALCBC_SERIES_CONVERGENCE } from './seeds/ap-calcbc-u10-series-convergence';
+import { BASELINE_AP_CALCBC_TAYLOR_POLYNOMIAL } from './seeds/ap-calcbc-u10-taylor-polynomial';
 import { BASELINE_AP_STATS_CATEGORICAL_DATA } from './seeds/ap-stats-u1-categorical-data';
 import { BASELINE_AP_STATS_QUANTITATIVE_GRAPHS } from './seeds/ap-stats-u1-quantitative-graphs';
 import { BASELINE_AP_STATS_DISTRIBUTION_SHAPE } from './seeds/ap-stats-u1-distribution-shape';
@@ -102,6 +172,76 @@ import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
+  BASELINE_AP_CALCBC_DEFINING_LIMITS,
+  BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
+  BASELINE_AP_CALCBC_LIMITS_GRAPHS_TABLES,
+  BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_PROPERTIES,
+  BASELINE_AP_CALCBC_LIMITS_ALGEBRAIC_MANIPULATION,
+  BASELINE_AP_CALCBC_LIMITS_STRATEGY,
+  BASELINE_AP_CALCBC_SQUEEZE_THEOREM,
+  BASELINE_AP_CALCBC_LIMITS_REPRESENTATIONS,
+  BASELINE_AP_CALCBC_DISCONTINUITY_TYPES,
+  BASELINE_AP_CALCBC_CONTINUITY,
+  BASELINE_AP_CALCBC_REMOVING_DISCONTINUITIES,
+  BASELINE_AP_CALCBC_INFINITE_LIMITS_ASYMPTOTES,
+  BASELINE_AP_CALCBC_LIMITS_AT_INFINITY,
+  BASELINE_AP_CALCBC_IVT,
+  BASELINE_AP_CALCBC_DERIVATIVE_DEFINITION,
+  BASELINE_AP_CALCBC_ESTIMATING_DERIVATIVES,
+  BASELINE_AP_CALCBC_DIFFERENTIABILITY_CONTINUITY,
+  BASELINE_AP_CALCBC_POWER_RULE_LINEARITY,
+  BASELINE_AP_CALCBC_TRANSCENDENTAL_DERIVATIVES,
+  BASELINE_AP_CALCBC_PRODUCT_RULE,
+  BASELINE_AP_CALCBC_QUOTIENT_RULE,
+  BASELINE_AP_CALCBC_CHAIN_RULE,
+  BASELINE_AP_CALCBC_IMPLICIT_DIFFERENTIATION,
+  BASELINE_AP_CALCBC_DERIVATIVES_INVERSE,
+  BASELINE_AP_CALCBC_HIGHER_ORDER_DERIVATIVES,
+  BASELINE_AP_CALCBC_DERIVATIVE_IN_CONTEXT,
+  BASELINE_AP_CALCBC_LHOPITAL,
+  BASELINE_AP_CALCBC_LINEARIZATION,
+  BASELINE_AP_CALCBC_STRAIGHT_LINE_MOTION,
+  BASELINE_AP_CALCBC_RELATED_RATES,
+  BASELINE_AP_CALCBC_CONCAVITY_SECOND_DERIVATIVE,
+  BASELINE_AP_CALCBC_FIRST_DERIVATIVE_ANALYSIS,
+  BASELINE_AP_CALCBC_GRAPHING_F_FP_FPP,
+  BASELINE_AP_CALCBC_IMPLICIT_BEHAVIORS,
+  BASELINE_AP_CALCBC_MVT_EVT,
+  BASELINE_AP_CALCBC_OPTIMIZATION,
+  BASELINE_AP_CALCBC_BASIC_ANTIDERIVATIVES,
+  BASELINE_AP_CALCBC_FTC,
+  BASELINE_AP_CALCBC_IMPROPER_INTEGRALS,
+  BASELINE_AP_CALCBC_INTEGRAL_PROPERTIES,
+  BASELINE_AP_CALCBC_INTEGRATION_BY_PARTS,
+  BASELINE_AP_CALCBC_INTEGRATION_STRATEGY,
+  BASELINE_AP_CALCBC_LONG_DIVISION_COMPLETING_SQUARE,
+  BASELINE_AP_CALCBC_PARTIAL_FRACTIONS,
+  BASELINE_AP_CALCBC_RIEMANN_SUMS,
+  BASELINE_AP_CALCBC_U_SUBSTITUTION,
+  BASELINE_AP_CALCBC_EULERS_METHOD,
+  BASELINE_AP_CALCBC_EXPONENTIAL_MODELS,
+  BASELINE_AP_CALCBC_LOGISTIC_MODELS,
+  BASELINE_AP_CALCBC_MODELING_VERIFYING_DE,
+  BASELINE_AP_CALCBC_SEPARATION_OF_VARIABLES,
+  BASELINE_AP_CALCBC_SLOPE_FIELDS,
+  BASELINE_AP_CALCBC_APPLICATIONS,
+  BASELINE_AP_CALCBC_ARC_LENGTH,
+  BASELINE_AP_CALCBC_AREA_BETWEEN_CURVES,
+  BASELINE_AP_CALCBC_VOLUMES_CROSS_SECTIONS,
+  BASELINE_AP_CALCBC_VOLUMES_REVOLUTION,
+  BASELINE_AP_CALCBC_WASHER_OTHER_AXES,
+  BASELINE_AP_CALCBC_PARAMETRIC_ARC_LENGTH,
+  BASELINE_AP_CALCBC_PARAMETRIC,
+  BASELINE_AP_CALCBC_POLAR_AREA,
+  BASELINE_AP_CALCBC_POLAR_COORDINATES,
+  BASELINE_AP_CALCBC_VECTOR_VALUED,
+  BASELINE_AP_CALCBC_ALTERNATING_SERIES,
+  BASELINE_AP_CALCBC_CONVERGENCE_TESTS,
+  BASELINE_AP_CALCBC_MACLAURIN_SERIES,
+  BASELINE_AP_CALCBC_POWER_SERIES,
+  BASELINE_AP_CALCBC_RATIO_TEST,
+  BASELINE_AP_CALCBC_SERIES_CONVERGENCE,
+  BASELINE_AP_CALCBC_TAYLOR_POLYNOMIAL,
   BASELINE_AP_MACRO_LOANABLE_FUNDS,
   BASELINE_AP_MACRO_FUNCTIONS_OF_MONEY,
   BASELINE_AP_MACRO_BANKING_MONEY_CREATION,
