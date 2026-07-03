@@ -49,7 +49,9 @@
     "test:graph-math": "npx tsx scripts/test-graph-math.ts",
     "test:pedagogy-personas": "npx tsx scripts/tutor/pedagogy-harness/fixtures/personas/personas.test.ts",
     "test:pedagogy-sim": "npx tsx scripts/tutor/pedagogy-harness/student-simulator.test.ts",
-    "test:pedagogy-sim-live": "npx tsx scripts/tutor/pedagogy-harness/student-simulator.live.ts"
+    "test:pedagogy-sim-live": "npx tsx scripts/tutor/pedagogy-harness/student-simulator.live.ts",
+    "test:pedagogy-driver-unit": "npx tsx scripts/tutor/pedagogy-harness/run-harness.test.ts",
+    "test:pedagogy-driver": "npx tsx scripts/tutor/pedagogy-harness/run-harness.smoke.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
