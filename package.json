@@ -46,7 +46,8 @@
     "test:tutor-e2e": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-e2e/run.ts",
     "test:tutor-judge": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-e2e/judge.ts",
     "deploy": "./scripts/deploy.sh",
-    "test:graph-math": "npx tsx scripts/test-graph-math.ts"
+    "test:graph-math": "npx tsx scripts/test-graph-math.ts",
+    "test:pedagogy-personas": "npx tsx scripts/tutor/pedagogy-harness/fixtures/personas/personas.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

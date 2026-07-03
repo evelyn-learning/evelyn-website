@@ -1,0 +1,12 @@
+{
+  "id": "leo",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "9",
+    "topic": "Quadratics",
+    "claim": "I know all this, just give me hard problems",
+    "actualLevel": "shaky: mis-signs when factoring, can't complete the square",
+    "intent": "curious-about-ai",
+    "style": "overconfident"
+  }
+}

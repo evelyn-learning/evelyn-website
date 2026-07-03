@@ -1,0 +1,21 @@
+{
+  "id": "sam",
+  "mode": "demo",
+  "studentContext": {
+    "studentId": "sam-trial-01",
+    "isTrial": true,
+    "courseId": "calculus",
+    "profile": { "name": "Trial student", "grade": "unknown" },
+    "preferences": { "socialMemoryLevel": "off" },
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.calculus.limits-intro.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" }
+  },
+  "simProfile": {
+    "grade": "11",
+    "topic": "Calculus (Limits)",
+    "claim": "this is cool",
+    "actualLevel": "solid precalc, new to limits",
+    "intent": "considering-enrolling",
+    "style": "chatty"
+  }
+}

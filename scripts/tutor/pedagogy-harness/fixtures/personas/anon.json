@@ -1,0 +1,12 @@
+{
+  "id": "anon",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "8",
+    "topic": "Ratios",
+    "claim": "not sure",
+    "actualLevel": "knows equivalent fractions",
+    "intent": "curious-about-ai",
+    "style": "anxious-terse"
+  }
+}

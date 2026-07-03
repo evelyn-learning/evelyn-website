@@ -1,0 +1,12 @@
+{
+  "id": "aria",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "6",
+    "topic": "Fractions",
+    "claim": "I don't really know any of this",
+    "actualLevel": "genuine beginner, knows whole-number division only",
+    "intent": "exploring",
+    "style": "shy-terse"
+  }
+}

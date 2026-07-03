@@ -1,0 +1,72 @@
+{
+  "id": "kai",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "kai-s4",
+    "isTrial": false,
+    "courseId": "algebra-1",
+    "profile": { "name": "Kai", "grade": "9" },
+    "preferences": { "socialMemoryLevel": "light" },
+    "socialMemory": [
+      {
+        "id": "thread-kai-chess",
+        "note": "plays chess club on Tuesdays",
+        "kind": "interest",
+        "capturedAt": "2026-05-20T00:00:00.000Z"
+      }
+    ],
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.algebra1.linear-inequalities.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 4,
+      "unitsTotal": 8,
+      "percentComplete": 50,
+      "weeksElapsed": 6,
+      "paceNote": "on pace"
+    }
+  },
+  "profile": {
+    "id": "kai-s4",
+    "name": "Kai",
+    "grade": "9",
+    "mastery": {
+      "algebra1.linear-inequalities.solving": {
+        "loId": "algebra1.linear-inequalities.solving",
+        "score": 0.85,
+        "exposures": 3,
+        "lastTouchedAt": "2026-06-28T00:00:00.000Z",
+        "confidence": "high"
+      }
+    },
+    "gaps": [
+      {
+        "id": "gap_kai_flip-sign",
+        "kind": "lo",
+        "loId": "algebra1.linear-inequalities.solving",
+        "status": "confirmed",
+        "confidence": 0.8,
+        "evidence": {
+          "signals": ["MISCONCEPTION_DETECTED", "INCORRECT_STREAK_2_PLUS"],
+          "observation": "Forgets to flip the inequality sign when dividing by a negative.",
+          "studentQuotes": ["wait do I flip it or not"]
+        },
+        "sessionIds": ["s-kai-1", "s-kai-2"],
+        "firstSeenAt": "2026-06-10T00:00:00.000Z",
+        "lastSeenAt": "2026-06-28T00:00:00.000Z"
+      }
+    ],
+    "recentSessions": [],
+    "preferences": { "socialMemoryLevel": "light" },
+    "createdAt": "2026-05-01T00:00:00.000Z",
+    "updatedAt": "2026-06-28T00:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "simProfile": {
+    "grade": "9",
+    "topic": "Linear Inequalities",
+    "claim": "pretty good at this, sign-flipping trips me up sometimes",
+    "actualLevel": "strong overall, confirmed gap on flipping the inequality sign",
+    "intent": "enrolled",
+    "style": "cooperative"
+  }
+}
