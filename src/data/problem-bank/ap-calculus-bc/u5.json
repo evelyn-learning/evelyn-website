@@ -1,0 +1,602 @@
+[
+  {
+    "id": "apcalcbc.mvt-evt.mcq.01",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Mean Value Theorem applies to $f$ on $[a,b]$ provided that $f$ is:",
+    "choices": [
+      "Continuous on $[a,b]$ and differentiable on $(a,b)$",
+      "Continuous on $(a,b)$ only",
+      "Differentiable on $[a,b]$ and increasing",
+      "Continuous with $f(a)=f(b)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "MVT needs both continuity on the closed interval and differentiability on the open interval.",
+      "Equal endpoints is the extra hypothesis for Rolle's Theorem, not MVT."
+    ]
+  },
+  {
+    "id": "apcalcbc.mvt-evt.mcq.02",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Mean Value Theorem guarantees at least one interior point $c$ at which the tangent line is:",
+    "choices": [
+      "Parallel to the secant line joining the endpoints",
+      "Horizontal",
+      "Perpendicular to the secant line",
+      "Tangent to the $x$-axis"
+    ],
+    "answer": "A",
+    "hints": [
+      "MVT sets the instantaneous rate equal to the average (secant) rate.",
+      "Equal slopes means the tangent and secant are parallel."
+    ]
+  },
+  {
+    "id": "apcalcbc.mvt-evt.mcq.03",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "By the Extreme Value Theorem, a function that is continuous on a closed interval $[a,b]$ must:",
+    "choices": [
+      "Attain both an absolute maximum and an absolute minimum on $[a,b]$",
+      "Be differentiable on $(a,b)$",
+      "Have exactly one critical point",
+      "Be increasing on $[a,b]$"
+    ],
+    "answer": "A",
+    "hints": [
+      "EVT only needs continuity on a closed, bounded interval.",
+      "It guarantees the existence of a global max and a global min."
+    ]
+  },
+  {
+    "id": "apcalcbc.mvt-evt.mcq.04",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On which interval do the hypotheses of the Mean Value Theorem FAIL for $f(x)=|x-2|$?",
+    "choices": [
+      "$[0,5]$, because $f$ is not differentiable at $x=2$",
+      "$[3,6]$",
+      "$[2,7]$",
+      "$[-1,1]$"
+    ],
+    "answer": "A",
+    "hints": [
+      "MVT requires differentiability on the whole open interval.",
+      "The corner of $|x-2|$ sits at $x=2$; find the interval whose interior contains it."
+    ]
+  },
+  {
+    "id": "apcalcbc.mvt-evt.num.01",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the value of $c$ guaranteed by the Mean Value Theorem for $f(x)=x^2$ on $[2,6]$.",
+    "answer": "4",
+    "hints": [
+      "Compute the secant slope $\\dfrac{f(6)-f(2)}{6-2}$.",
+      "Set $f'(c)=2c$ equal to that slope and solve."
+    ]
+  },
+  {
+    "id": "apcalcbc.mvt-evt.num.02",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For $f(x)=x^2-6x+5$ on $[1,5]$, Rolle's Theorem guarantees a $c$ with $f'(c)=0$. Find $c$.",
+    "answer": "3",
+    "hints": [
+      "Check that $f(1)=f(5)=0$, so Rolle's Theorem applies.",
+      "Solve $f'(x)=2x-6=0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.mcq.01",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A function $f$ is increasing on an interval exactly when, on that interval:",
+    "choices": [
+      "$f'(x) > 0$",
+      "$f'(x) < 0$",
+      "$f'(x) = 0$",
+      "$f''(x) > 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign of the first derivative controls the direction of $f$.",
+      "Positive slope means rising."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.mcq.02",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a critical point $c$, if $f'$ changes from negative to positive, then $f$ has a:",
+    "choices": [
+      "Local minimum at $c$",
+      "Local maximum at $c$",
+      "Inflection point at $c$",
+      "Vertical asymptote at $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Falling then rising traces out a valley.",
+      "A $-\\to+$ sign change is the First Derivative Test signature of a local min."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.mcq.03",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Given $f'(x)=(x-1)(x-4)$, on which interval is $f$ decreasing?",
+    "choices": [
+      "$(1,4)$",
+      "$(-\\infty,1)$",
+      "$(4,\\infty)$",
+      "$(-\\infty,\\infty)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A product of two factors is negative between its roots.",
+      "$f$ decreases where $f'<0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.mcq.04",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $f(x)=x^3$, the point $x=0$ is a critical point but NOT a local extremum because:",
+    "choices": [
+      "$f'(x)=3x^2$ does not change sign at $x=0$",
+      "$f'(0)$ does not exist",
+      "$f$ is discontinuous at $x=0$",
+      "$f'(0)>0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A critical point is only a candidate for an extremum.",
+      "Since ${}3x^2\\ge 0$ on both sides, $f'$ never switches sign."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.num.01",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the local maximum VALUE of $f(x)=x^3-3x$.",
+    "answer": "2",
+    "hints": [
+      "Solve $f'(x)=3x^2-3=0$ to get $x=\\pm 1$; the local max is where $f'$ goes $+\\to-$, at $x=-1$.",
+      "Evaluate $f(-1)$."
+    ]
+  },
+  {
+    "id": "apcalcbc.first-derivative-analysis.num.02",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the absolute maximum value of $f(x)=2x^3-9x^2+12x$ on the closed interval $[0,3]$.",
+    "answer": "9",
+    "hints": [
+      "Critical points: $f'(x)=6x^2-18x+12=6(x-1)(x-2)=0$ gives $x=1,2$.",
+      "Compare $f(0),f(1),f(2),f(3)$ and take the largest."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.mcq.01",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $f$ is concave up on an interval where:",
+    "choices": [
+      "$f''(x) > 0$",
+      "$f''(x) < 0$",
+      "$f'(x) = 0$",
+      "$f(x) > 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Concavity is governed by the sign of the second derivative.",
+      "Concave up means the slope $f'$ is increasing, i.e. $f''>0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.mcq.02",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An inflection point of $f$ occurs at $x=c$ precisely when:",
+    "choices": [
+      "$f''$ changes sign at $c$",
+      "$f''(c)=0$, regardless of sign behavior",
+      "$f'(c)=0$",
+      "$f$ has a local maximum at $c$"
+    ],
+    "answer": "A",
+    "hints": [
+      "An inflection point is where concavity actually changes.",
+      "A bare zero of $f''$ without a sign change does not qualify."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.mcq.03",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a critical point $c$ where $f'(c)=0$, if $f''(c)<0$, the Second Derivative Test concludes that $f$ has a:",
+    "choices": [
+      "Local maximum at $c$",
+      "Local minimum at $c$",
+      "Inflection point at $c$",
+      "Result that is inconclusive"
+    ],
+    "answer": "A",
+    "hints": [
+      "Concave down at a horizontal tangent looks like a hilltop.",
+      "$f''(c)<0$ points to a local max."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.mcq.04",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $f(x)=x^4$ there is NO inflection point at $x=0$ even though $f''(0)=0$. The reason is that:",
+    "choices": [
+      "$f''(x)=12x^2$ never changes sign, so concavity does not change",
+      "$f''(0)$ is undefined",
+      "$f$ has a local maximum at $x=0$",
+      "$f'(0)\\ne 0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the sign of $f''$ on both sides of $x=0$.",
+      "Since ${}12x^2\\ge 0$ everywhere, the curve stays concave up."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.num.01",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Find the $x$-coordinate of the inflection point of $f(x)=x^3-6x^2+2x$.",
+    "answer": "2",
+    "hints": [
+      "Compute $f''(x)=6x-12$.",
+      "Set $f''(x)=0$; the sign of $f''$ changes there."
+    ]
+  },
+  {
+    "id": "apcalcbc.concavity-second-derivative.num.02",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Using the Second Derivative Test, find the $x$-coordinate of the local minimum of $f(x)=x^3-3x^2-9x$.",
+    "answer": "3",
+    "hints": [
+      "Critical points: $f'(x)=3x^2-6x-9=3(x-3)(x+1)=0$ gives $x=3,-1$.",
+      "With $f''(x)=6x-6$, the local min is where $f''>0$."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.mcq.01",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If the graph of $f'$ lies above the $x$-axis on an interval, then on that interval $f$ is:",
+    "choices": [
+      "Increasing",
+      "Decreasing",
+      "Concave up",
+      "Constant"
+    ],
+    "answer": "A",
+    "hints": [
+      "Above the axis means $f'>0$.",
+      "Positive derivative means $f$ rises."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.mcq.02",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Reading the graph of $f'$, a local maximum of $f$ occurs where $f'$:",
+    "choices": [
+      "Crosses the $x$-axis from positive to negative",
+      "Crosses the $x$-axis from negative to positive",
+      "Reaches its own maximum height",
+      "Is farthest below the axis"
+    ],
+    "answer": "A",
+    "hints": [
+      "A local max of $f$ is where $f$ stops rising and starts falling.",
+      "That is where $f'$ changes from $+$ to $-$."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.mcq.03",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An inflection point of $f$ corresponds to a point on the graph of $f'$ where $f'$ has:",
+    "choices": [
+      "A local maximum or minimum (a turning point)",
+      "An $x$-intercept",
+      "A positive value",
+      "A vertical asymptote"
+    ],
+    "answer": "A",
+    "hints": [
+      "Concavity of $f$ is the slope of $f'$, and inflection is where that slope changes sign.",
+      "The slope of $f'$ changes sign at a turning point of $f'$."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.mcq.04",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $f'$ is a straight line with positive slope passing through the origin. What is true of $f$?",
+    "choices": [
+      "$f$ has a local minimum at $x=0$ and is concave up everywhere",
+      "$f$ has a local maximum at $x=0$",
+      "$f$ is concave down everywhere",
+      "$f$ is increasing everywhere"
+    ],
+    "answer": "A",
+    "hints": [
+      "Here $f'<0$ for $x<0$ and $f'>0$ for $x>0$, so $f$ falls then rises.",
+      "The slope of $f'$ is constant and positive, so $f''>0$ throughout."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.num.01",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The graph of $f'$ crosses the $x$-axis only at $x=3$, changing from negative to positive there. At what $x$-value does $f$ have a local minimum?",
+    "answer": "3",
+    "hints": [
+      "A local min of $f$ is where $f'$ goes from $-$ to $+$.",
+      "That happens at the single crossing."
+    ]
+  },
+  {
+    "id": "apcalcbc.graphing-f-fp-fpp.num.02",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The graph of $f'$ has $x$-intercepts at $x=-2$, $x=1$, and $x=4$, and $f'$ changes sign at each one. How many local extrema does $f$ have?",
+    "answer": "3",
+    "hints": [
+      "Each sign change of $f'$ produces one local extremum of $f$.",
+      "Count the sign changes."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.mcq.01",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In an optimization problem where two variables are linked by a constraint, the essential first step before differentiating is to:",
+    "choices": [
+      "Use the constraint to rewrite the objective as a function of one variable",
+      "Differentiate both variables separately",
+      "Set both variables equal to zero",
+      "Integrate the objective function"
+    ],
+    "answer": "A",
+    "hints": [
+      "You cannot differentiate a two-variable objective directly.",
+      "The constraint lets you eliminate one variable."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.mcq.02",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After finding a critical point of a one-variable objective $A(x)$, how do you confirm it gives a MAXIMUM?",
+    "choices": [
+      "Check that $A''<0$ there (or that $A'$ changes from $+$ to $-$)",
+      "Check that the constraint equals zero",
+      "Confirm the variable is negative",
+      "No verification is necessary"
+    ],
+    "answer": "A",
+    "hints": [
+      "A critical point is not automatically the desired extreme.",
+      "Concave down at a critical point signals a maximum."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.mcq.03",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To minimize the distance from a fixed point to a curve, it is easiest to instead minimize:",
+    "choices": [
+      "The squared distance, which has the same minimizer",
+      "The reciprocal of the distance",
+      "The distance plus one",
+      "The area under the curve"
+    ],
+    "answer": "A",
+    "hints": [
+      "Squaring removes the square root, simplifying the derivative.",
+      "The squared distance is minimized at the same point as the distance."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.num.01",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A farmer uses 100 ft of fencing to enclose a rectangular plot along a straight river, with no fence on the river side. Find the maximum enclosed area, in square feet.",
+    "answer": "1250",
+    "hints": [
+      "With depth $x$ and length $y$, only three sides are fenced: $y+2x=100$.",
+      "Maximize $A=x(100-2x)$; the critical point is $x=25$."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.num.02",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Among all rectangles with perimeter 40 units, find the largest possible area, in square units.",
+    "answer": "100",
+    "hints": [
+      "With $x+y=20$, maximize $A=x(20-x)$.",
+      "The maximum occurs at the square, $x=y=10$."
+    ]
+  },
+  {
+    "id": "apcalcbc.optimization.num.03",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Find the value of $x>0$ that minimizes $f(x)=x+\\dfrac{9}{x}$.",
+    "answer": "3",
+    "hints": [
+      "Set $f'(x)=1-\\dfrac{9}{x^2}=0$.",
+      "Solve $x^2=9$ and keep the positive root."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.mcq.01",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For an implicit curve with $\\dfrac{dy}{dx}=\\dfrac{N(x,y)}{D(x,y)}$, a HORIZONTAL tangent occurs where:",
+    "choices": [
+      "$N(x,y)=0$ and $D(x,y)\\ne 0$",
+      "$D(x,y)=0$ and $N(x,y)\\ne 0$",
+      "$N(x,y)=D(x,y)$",
+      "$N(x,y)=0$ and $D(x,y)=0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "A horizontal tangent means the slope is zero.",
+      "A fraction is zero when its numerator is zero and denominator is not."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.mcq.02",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A VERTICAL tangent to an implicit curve occurs where $\\dfrac{dy}{dx}$ is:",
+    "choices": [
+      "Undefined, because the denominator is zero and the numerator is nonzero",
+      "Equal to zero",
+      "Equal to one",
+      "Negative"
+    ],
+    "answer": "A",
+    "hints": [
+      "A vertical line has undefined slope.",
+      "A fraction is undefined when its denominator is zero (numerator nonzero)."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.mcq.03",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If both the numerator and denominator of $\\dfrac{dy}{dx}$ are zero at a point on an implicit curve, then at that point:",
+    "choices": [
+      "The slope is indeterminate; it is not automatically a horizontal or vertical tangent",
+      "The curve definitely has a horizontal tangent",
+      "The curve definitely has a vertical tangent",
+      "The curve must be discontinuous"
+    ],
+    "answer": "A",
+    "hints": [
+      "A $\\tfrac{0}{0}$ form gives no information on its own.",
+      "The point could be a crossing, cusp, or corner."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.num.01",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The circle $x^2+y^2=25$ has $\\dfrac{dy}{dx}=-\\dfrac{x}{y}$. Find the positive $y$-value at which the circle has a horizontal tangent.",
+    "answer": "5",
+    "hints": [
+      "A horizontal tangent needs the numerator $-x=0$, so $x=0$.",
+      "Substitute $x=0$ into $x^2+y^2=25$ and take the positive root."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.num.02",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For the circle $x^2+y^2=25$, find the slope $\\dfrac{dy}{dx}$ at the point $(3,4)$.",
+    "answer": "-0.75",
+    "hints": [
+      "Implicit differentiation gives $\\dfrac{dy}{dx}=-\\dfrac{x}{y}$.",
+      "Substitute $x=3$, $y=4$."
+    ]
+  },
+  {
+    "id": "apcalcbc.implicit-behaviors.num.03",
+    "loId": "apcalcbc.implicit-behaviors",
+    "cedCode": "AP-CALCBC-5.12",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "For the curve $xy=4$, find $\\dfrac{dy}{dx}$ at the point $(2,2)$.",
+    "answer": "-1",
+    "hints": [
+      "Differentiate implicitly: $y+x\\dfrac{dy}{dx}=0$, so $\\dfrac{dy}{dx}=-\\dfrac{y}{x}$.",
+      "Substitute $x=2$, $y=2$."
+    ]
+  }
+]
