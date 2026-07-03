@@ -92,6 +92,7 @@ import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLat
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
+import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -248,6 +249,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'hr_diagram', displayName: 'Hertzsprung–Russell Diagram', whenToUse: 'Show the Hertzsprung–Russell (H–R) diagram: stellar luminosity (y, log) vs. surface temperature (x, log, REVERSED so hot is on the left), with the main-sequence diagonal, the giants (upper right), the white dwarfs (lower left), and the Sun marked. Use for stellar-classification / stellar-evolution teaching instead of a freehand sketch or a generic x-y plot.', subjects: ['earth'], grades: { from: 8, to: 12 }, paramSchema: 'highlight?:main_sequence|giants|white_dwarfs|sun (emphasize one region; default none), title?' },
   { kind: 'volcano_cross_section', displayName: 'Volcano Cross-Section', whenToUse: 'Show a labeled cross-section of a stratovolcano: the magma chamber, the central conduit/vent, the summit crater, the alternating hardened-lava-and-ash layers, and a side (parasitic) vent. Use for volcano-anatomy / volcanism teaching instead of a freehand sketch.', subjects: ['earth'], grades: { from: 4, to: 12 }, paramSchema: 'showSideVent?:boolean (default true), title?' },
   { kind: 'atmosphere_layers', displayName: "Earth's Atmosphere Layers", whenToUse: "Show Earth's atmosphere layers stacked by altitude — troposphere, stratosphere (with the ozone layer), mesosphere, thermosphere, exosphere — with altitude markers on the left axis and the temperature-vs-altitude profile curve overlaid (the zigzag: cooling, then warming through the ozone, cooling again, then warming in the thermosphere). Use for atmosphere-structure teaching instead of a freehand sketch.", subjects: ['earth'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:troposphere|stratosphere|mesosphere|thermosphere|exosphere (emphasize one layer; default none), title?' },
+  // ── Phase 23 — molecular / cell biology ────────────────────────────────
+  { kind: 'protein_synthesis', displayName: 'Protein Synthesis (central dogma)', whenToUse: 'Show the central dogma as a schematic: transcription (RNA polymerase copying DNA into mRNA inside the nucleus) and translation (a ribosome reading mRNA codons while tRNAs deliver amino acids to build a polypeptide), with DNA, mRNA, ribosome, tRNA, codon/anticodon and polypeptide labeled. Use instead of a freehand sketch for gene expression / protein synthesis.', subjects: ['biology'], grades: { from: 7, to: 12 }, paramSchema: "stage?:transcription|translation|both (default both), title?" },
+  { kind: 'enzyme_action', displayName: 'Enzyme Action (lock-and-key / induced fit)', whenToUse: 'Show how an enzyme works: substrate binding the active site → enzyme–substrate complex → products released with the enzyme unchanged, drawn as the lock-and-key or induced-fit model, plus an activation-energy reaction-coordinate inset showing the enzyme lowering Ea. Use instead of a freehand sketch for enzyme / catalysis teaching.', subjects: ['biology', 'chemistry'], grades: { from: 8, to: 12 }, paramSchema: "model?:lock_key|induced_fit (default lock_key), title?" },
+  { kind: 'cell_cycle', displayName: 'Cell Cycle (G1 → S → G2 → M)', whenToUse: 'Show the cell cycle as a labeled ring — interphase (G1, S, G2) plus the M (mitotic) phase — with the G1/S, G2/M and spindle checkpoints marked and the relative phase durations. Use instead of a freehand sketch for cell-cycle / cell-division teaching. For the phases of mitosis themselves use mitosis.', subjects: ['biology'], grades: { from: 8, to: 12 }, paramSchema: "highlight?:G1|S|G2|M (emphasize one phase), title?" },
+  { kind: 'gene_expression', displayName: 'Gene Regulation (lac operon)', whenToUse: 'Show prokaryotic gene regulation via the lac operon: the regulatory gene, promoter, operator and structural genes, shown OFF (no inducer → repressor bound to the operator → RNA polymerase blocked) vs ON (inducer inactivates the repressor → RNA polymerase transcribes the genes). Use instead of a freehand sketch for operon / gene-regulation teaching.', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: "state?:on|off (default off), title?" },
 ];
 
 /** Solver dispatch table. */
@@ -381,6 +387,11 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   hr_diagram: solveHRDiagram,
   volcano_cross_section: solveVolcanoCrossSection,
   atmosphere_layers: solveAtmosphereLayers,
+  // Phase 23 — molecular / cell biology
+  protein_synthesis: solveProteinSynthesis,
+  enzyme_action: solveEnzymeAction,
+  cell_cycle: solveCellCycle,
+  gene_expression: solveGeneExpression,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

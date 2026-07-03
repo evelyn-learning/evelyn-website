@@ -445,6 +445,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'leaf_cross_section', 'nephron', 'digestive_system', 'circulatory_system',
             // Phase 22 — computer science (data structures + algorithms)
             'data_structure', 'graph_diagram', 'hash_table', 'recursion_tree',
+            // Phase 23 — molecular / cell biology (life science, Biology, AP Bio)
+            'protein_synthesis', 'enzyme_action', 'cell_cycle', 'gene_expression',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

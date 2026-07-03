@@ -142,7 +142,12 @@ export type DiagramKindId =
   | 'geologic_cross_section'
   | 'hr_diagram'
   | 'volcano_cross_section'
-  | 'atmosphere_layers';
+  | 'atmosphere_layers'
+  // Phase 24 — molecular / cell biology (life science, Biology, AP Bio)
+  | 'protein_synthesis'
+  | 'enzyme_action'
+  | 'cell_cycle'
+  | 'gene_expression';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

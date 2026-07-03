@@ -123,6 +123,12 @@ import {
   CatalogHashTableRenderer,
   CatalogRecursionTreeRenderer,
 } from './CatalogCSStructuresRenderers';
+import {
+  CatalogProteinSynthesisRenderer,
+  CatalogEnzymeActionRenderer,
+  CatalogCellCycleRenderer,
+  CatalogGeneExpressionRenderer,
+} from './CatalogMolecularBiologyRenderers';
 
 interface Props {
   kind: string;
@@ -260,6 +266,11 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'graph_diagram':              return <CatalogGraphRenderer figure={figure} />;
     case 'hash_table':                 return <CatalogHashTableRenderer figure={figure} />;
     case 'recursion_tree':             return <CatalogRecursionTreeRenderer figure={figure} />;
+    // Phase 23 — molecular / cell biology
+    case 'protein_synthesis':          return <CatalogProteinSynthesisRenderer figure={figure} />;
+    case 'enzyme_action':              return <CatalogEnzymeActionRenderer figure={figure} />;
+    case 'cell_cycle':                 return <CatalogCellCycleRenderer figure={figure} />;
+    case 'gene_expression':            return <CatalogGeneExpressionRenderer figure={figure} />;
 
     default:
       return (

@@ -269,6 +269,16 @@ import {
   buildRecursionTreeManifest,
   solveRecursionTree as solveRecursionTreeForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/cs-structures';
+import {
+  buildProteinSynthesisManifest,
+  solveProteinSynthesis as solveProteinSynthesisForManifest,
+  buildEnzymeActionManifest,
+  solveEnzymeAction as solveEnzymeActionForManifest,
+  buildCellCycleManifest,
+  solveCellCycle as solveCellCycleForManifest,
+  buildGeneExpressionManifest,
+  solveGeneExpression as solveGeneExpressionForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/molecular-biology';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1554,6 +1564,22 @@ function buildDiagramManifest(cmd: {
     }
     case 'recursion_tree': {
       try { return buildRecursionTreeManifest(solveRecursionTreeForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'protein_synthesis': {
+      try { return buildProteinSynthesisManifest(solveProteinSynthesisForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'enzyme_action': {
+      try { return buildEnzymeActionManifest(solveEnzymeActionForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'cell_cycle': {
+      try { return buildCellCycleManifest(solveCellCycleForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'gene_expression': {
+      try { return buildGeneExpressionManifest(solveGeneExpressionForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:
