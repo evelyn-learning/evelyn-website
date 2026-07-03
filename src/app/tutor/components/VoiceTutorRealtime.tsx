@@ -1129,6 +1129,16 @@ export function VoiceTutorRealtime({
   // + task-B3-brief.md.
   const openingTurnPendingRef = useRef(false);
   const openingTurnValidRenderCountRef = useRef(0);
+  // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
+  // effect (below) re-runs mid-session whenever studentPreferences changes
+  // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
+  // openingTurnPendingRef after the real opener turn already consumed it —
+  // firing a spurious fallback render on an unrelated later turn. This latch
+  // ensures the pending flag is armed at most once per component mount
+  // (== once per session, since VoiceTutorRealtime remounts via
+  // key={sessionId} in page.tsx for every new session, giving this ref a
+  // fresh false value for free — see page.tsx ~2224).
+  const openingTurnArmedRef = useRef(false);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -11368,7 +11378,15 @@ export function VoiceTutorRealtime({
           // FIRST callBrainOnce turn to complete. Mirrors openerFields
           // .openingPhase above exactly (same beh.opener !== 'none' check) —
           // consumed once in callBrainOnce's finally, see opener-fallback.ts.
-          openingTurnPendingRef.current = beh.opener !== 'none';
+          // Review fix: this effect re-runs mid-session on a studentPreferences
+          // change (see the dep array below), so gate the arm behind the
+          // openingTurnArmedRef latch — only the FIRST run this mount may arm
+          // the pending flag; later re-runs (mid-session settings changes)
+          // must not re-arm it after the opener turn already consumed it.
+          if (!openingTurnArmedRef.current) {
+            openingTurnPendingRef.current = beh.opener !== 'none';
+            openingTurnArmedRef.current = true;
+          }
           // No first-student-utterance signal reaches this mount-time call
           // (buildInstructions runs before any student input exists) — see
           // report. Always resolves 'button', which is the structurally
