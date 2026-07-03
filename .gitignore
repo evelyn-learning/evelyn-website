@@ -53,3 +53,4 @@ data/ap-source-corpus/
 artifacts/
 sketch-review/
 .claude/worktrees/
+.superpowers/
