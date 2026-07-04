@@ -5,6 +5,7 @@
  * ('demo' | 'subscribed'). When present it appends a mode-specific framing
  * clause after the advance/mark trailer:
  *   - subscribed: seed-not-script + LO coverage contract + prerequisite hint
+ *     + (Task C2) confirm directive — never mark learned without seeing it
  *   - demo: raw-material-only + prerequisite hint (NO coverage contract)
  * When ABSENT the rendered block must be byte-identical to the pre-C1
  * output (the flag-off guarantee — the client only sets the field when
@@ -74,6 +75,12 @@ const SUBSCRIBED_MARKERS = [
 const DEMO_MARKER = 'raw material only — no obligation';
 const PREREQ_HINT =
   'To meet a student below the topic, step down to the nearest prerequisite';
+// Task C2: confirm directive — SUBSCRIBED branch only (pairs with the
+// client-side completion gate in completion-gate.ts).
+const CONFIRM_DIRECTIVE_MARKERS = [
+  `Never skip a to-be-learned objective on a student's say-so`,
+  'marking something learned without seeing it is not',
+];
 
 // Legacy markers that must survive in EVERY mode (and unchanged with mode absent).
 const LEGACY_MARKERS = [
@@ -92,7 +99,7 @@ function main() {
 
   // -- 1. sessionMode absent: byte-identical / flag-off guarantee ----------
   test('absent mode: contains NO new framing strings', () => {
-    for (const m of [...SUBSCRIBED_MARKERS, DEMO_MARKER, PREREQ_HINT]) {
+    for (const m of [...SUBSCRIBED_MARKERS, DEMO_MARKER, PREREQ_HINT, ...CONFIRM_DIRECTIVE_MARKERS]) {
       assert.ok(!offOutput.includes(m), `unexpected new marker in mode-absent output: "${m}"`);
     }
   });
@@ -136,6 +143,21 @@ function main() {
 
   test('subscribed: demo framing NOT present', () => {
     assert.ok(!subOutput.includes(DEMO_MARKER));
+  });
+
+  // -- 2b. Task C2 confirm directive (subscribed only) -----------------------
+  test('subscribed: confirm directive present (Task C2)', () => {
+    for (const m of CONFIRM_DIRECTIVE_MARKERS) {
+      assert.ok(subOutput.includes(m), `missing confirm-directive marker: "${m}"`);
+    }
+    assert.ok(subOutput.includes('confirm fast — one quick problem — then move on'));
+  });
+
+  test('confirm directive NOT present for demo or absent mode', () => {
+    for (const m of CONFIRM_DIRECTIVE_MARKERS) {
+      assert.ok(!demoOutput.includes(m), `unexpected confirm-directive marker in demo output: "${m}"`);
+      assert.ok(!offOutput.includes(m), `unexpected confirm-directive marker in mode-absent output: "${m}"`);
+    }
   });
 
   // -- 3. demo framing ------------------------------------------------------
@@ -192,7 +214,7 @@ function main() {
       return kept.join('\n');
     };
     assert.equal(
-      stripFraming(subOutput, ['seed, not a script', PREREQ_HINT]),
+      stripFraming(subOutput, ['seed, not a script', PREREQ_HINT, 'Never skip a to-be-learned objective']),
       offOutput,
       'subscribed output minus framing should equal mode-absent output',
     );

@@ -457,6 +457,10 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
           ``,
           `This plan is a seed, not a script. You may reorder, compress what they already show they know, detour through a prerequisite, swap in an example themed to their interests, or explain a different way — freely. But the plan's learning objectives are your coverage contract: by the end, each core LO must be genuinely taught or demonstrated, because that is how progress is recorded. Freedom over the *path*; faithfulness to the *destination*.`,
           prerequisiteHint,
+          // Task C2: confirm directive — pairs with the client-side
+          // completion gate (completion-gate.ts): compressing is welcome,
+          // but a mark without a demonstrated attempt records nothing.
+          `Never skip a to-be-learned objective on a student's say-so. If they claim they already know it, confirm fast — one quick problem — then move on. Going fast is fine; marking something learned without seeing it is not.`,
         ]
       : ctx.sessionMode === 'demo'
         ? [

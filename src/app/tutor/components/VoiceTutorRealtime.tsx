@@ -33,6 +33,10 @@ import {
   shouldEmitOpenerFallback,
   buildOpenerFallbackCommand,
 } from '@/lib/tutor/ai/opener-fallback';
+import {
+  resolveCompletionOutcome,
+  shouldFireRecapMilestone,
+} from '@/lib/tutor/ai/completion-gate';
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
@@ -1162,6 +1166,21 @@ export function VoiceTutorRealtime({
   // TUTOR_PEDAGOGY_OPENER is on; flag off ⇒ stays null ⇒ the sessionMode
   // field is never present on the wire ⇒ server output byte-identical.
   const sessionModeRef = useRef<'demo' | 'subscribed' | null>(null);
+  // Task C2 (flag-gated): compress-and-confirm completion gate. Segments the
+  // student DEMONSTRATED this session — populated at the post-stream
+  // affirmation site (same guard placement as the pacing correct-streak
+  // increment, so it inherits its exclusions: pure acks, help requests,
+  // too-short turns, and judge-kill/restatement retries never count). Read
+  // by the markSegmentComplete handler via resolveCompletionOutcome and by
+  // the recap_reached milestone via shouldFireRecapMilestone — see
+  // completion-gate.ts. Only ever written when TUTOR_PEDAGOGY_OPENER is on.
+  // Fresh per session via key={sessionId} remount; no manual reset needed.
+  const demonstratedSegmentsRef = useRef<Set<string>>(new Set());
+  // Whether the completion gate is active this session: TUTOR_PEDAGOGY_OPENER
+  // && lessonNode target (lessonPlanId present). Seeded under the SAME
+  // openingTurnArmedRef one-shot latch as sessionModeRef. Flag off ⇒ stays
+  // false ⇒ resolveCompletionOutcome reproduces today's behavior exactly.
+  const completionGateActiveRef = useRef(false);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2246,7 +2265,16 @@ export function VoiceTutorRealtime({
     // opening directive so it stops riding along in the brain body.
     if (TUTOR_PEDAGOGY_OPENER) openingDirectiveRef.current = null;
     // Reaching the recap segment is a milestone (value-boxed progress).
-    if (getSegment(plan, next)?.kind === 'recap') emitMilestone('recap_reached');
+    // Task C2: with the completion gate active, arriving at recap only
+    // counts if at least one segment was demonstrated this session (gate
+    // inactive ⇒ shouldFireRecapMilestone is always true — today's behavior).
+    if (getSegment(plan, next)?.kind === 'recap'
+        && shouldFireRecapMilestone({
+          gateActive: completionGateActiveRef.current,
+          demonstratedCount: demonstratedSegmentsRef.current.size,
+        })) {
+      emitMilestone('recap_reached');
+    }
     // Re-entered the plan — drop the stashed pre-free segment.
     segmentBeforeFreeRef.current = '';
     // Mirror into the catalog so subsequent appends stamp the new
@@ -3925,17 +3953,30 @@ export function VoiceTutorRealtime({
         // Report pedagogical milestones on GENUINE completion. (Skips
         // auto-mark via applyResolvedAdvance and deliberately do NOT fire a
         // milestone — the conversion wall must be value-boxed on real work.)
-        if (typeof c.segmentId === 'string' && c.segmentId) {
-          const planNow = lessonPlanRef.current;
-          const doneSeg = planNow ? getSegment(planNow, c.segmentId) : undefined;
-          if (doneSeg?.kind === 'concept') {
-            emitMilestone('first_concept_complete');
-          } else if (doneSeg?.kind === 'try_yourself') {
-            // Treat completion as success unless an explicit non-positive
-            // mastery delta marks it a miss.
-            const md = typeof c.masteryDelta === 'number' ? c.masteryDelta : undefined;
-            if (md === undefined || md > 0) emitMilestone('first_try_yourself_success');
-          }
+        // Task C2: milestone + mastery-push decisions are routed through
+        // resolveCompletionOutcome (completion-gate.ts). Gate inactive
+        // (flag off, or freestyle session) ⇒ the helper reproduces the
+        // pre-C2 inline logic exactly. Gate active ⇒ both additionally
+        // require the student to have DEMONSTRATED the segment (see
+        // demonstratedSegmentsRef). The completedSegmentIdsRef add above
+        // stays unconditional in both modes — a gated segment is still
+        // "visited" for the progress strip.
+        const planNow = lessonPlanRef.current;
+        const hasSegId = typeof c.segmentId === 'string' && !!c.segmentId;
+        const doneSeg = hasSegId && planNow ? getSegment(planNow, c.segmentId) : undefined;
+        // Treat completion as success unless an explicit non-positive
+        // mastery delta marks it a miss (try_yourself milestone only).
+        const md = typeof c.masteryDelta === 'number' ? c.masteryDelta : undefined;
+        const outcome = resolveCompletionOutcome({
+          gateActive: completionGateActiveRef.current,
+          segmentKind: doneSeg?.kind,
+          masteryDelta: md,
+          demonstrated: hasSegId && demonstratedSegmentsRef.current.has(c.segmentId),
+        });
+        if (outcome.milestone) emitMilestone(outcome.milestone);
+        if (outcome.visitedNotMastered) {
+          console.log(`[VoiceTutorRealtime] completion gated: seg="${c.segmentId}" visited, not mastered (no demonstrated attempt)`);
+          onDebugEvent?.('completion_gated', `seg="${c.segmentId}" visited, not mastered (no demonstrated attempt)`);
         }
         // Pacing v2 — Phase 1 (inert): segment-mastered booster.
         // When mark_segment_complete fires AND the student's correct-streak
@@ -3958,10 +3999,12 @@ export function VoiceTutorRealtime({
         // commits at end-of-session. We tag it with the lesson plan's
         // first LO when available — the segment itself doesn't carry an
         // LO id directly, but the plan is the proximate scope.
-        const plan = lessonPlanRef.current;
-        const loId = plan?.los?.[0]?.id;
-        if (loId && typeof c.masteryDelta === 'number') {
-          sessionAccumRef.current.masteryDeltas.push({ loId, delta: c.masteryDelta });
+        // Task C2: outcome.recordMastery ⇔ typeof c.masteryDelta === 'number'
+        // when the gate is inactive (pre-C2 condition, verbatim); the loId
+        // presence check stays here in the caller.
+        const loId = planNow?.los?.[0]?.id;
+        if (loId && outcome.recordMastery && md !== undefined) {
+          sessionAccumRef.current.masteryDeltas.push({ loId, delta: md });
           sessionAccumRef.current.losTouched.add(loId);
         }
         continue;
@@ -9596,6 +9639,14 @@ export function VoiceTutorRealtime({
             const priorCount = studentStreakRef.current.segId === ver.segId
               ? studentStreakRef.current.count : 0;
             studentStreakRef.current = { segId: ver.segId, count: priorCount + 1 };
+            // Task C2 (flag-gated): a brain-affirmed genuine verification
+            // turn IS the "student demonstrated this segment" signal for the
+            // completion gate. Same guard placement as the streak increment
+            // so it inherits every existing exclusion (pure acks, help
+            // requests, too-short turns, judge-kill/restatement retries).
+            if (TUTOR_PEDAGOGY_OPENER && ver.segId) {
+              demonstratedSegmentsRef.current.add(ver.segId);
+            }
             if (studentIncorrectStreakRef.current.segId === ver.segId
                 && studentIncorrectStreakRef.current.count > 0) {
               studentIncorrectStreakRef.current = { segId: ver.segId, count: 0 };
@@ -11461,6 +11512,12 @@ export function VoiceTutorRealtime({
             // Same one-shot latch — a mid-session prompt rebuild must not
             // re-resolve/flip the mode after the session started.
             sessionModeRef.current = openerFields.sessionMode ?? null;
+            // Task C2: arm the completion gate for lessonNode sessions only
+            // (lessonPlanId presence == 'lessonNode' targetKind, see sig
+            // above). Freestyle/free-conversation sessions keep today's
+            // behavior — their milestones/mastery are already no-ops
+            // without a plan.
+            completionGateActiveRef.current = TUTOR_PEDAGOGY_OPENER && !!lessonPlanId;
             // Seed the per-turn opening directive under the SAME one-shot
             // latch (a mid-session prompt rebuild must not resurrect a
             // retired directive — the exact bug pattern the B3 review
