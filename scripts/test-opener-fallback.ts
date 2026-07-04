@@ -68,6 +68,23 @@ function main() {
     shouldEmitOpenerFallback(input);
     assert.deepEqual(input, snapshot);
   });
+  // Resume-duplicate regression (live 2026-07-04): a RELOADED session restores
+  // the board from the checkpoint — including the original fallback line — and
+  // resume-live re-arms the opener pending flag ('pickup' opener). The pickup
+  // turn draws nothing, so without a board-state check the fallback fired a
+  // SECOND identical handwrite. A non-blank board must suppress the fallback.
+  test('opening + 0 renders + non-empty board -> false (resume duplicate)', () => {
+    assert.equal(
+      shouldEmitOpenerFallback({ openingPhase: true, validRendersThisTurn: 0, boardItemCount: 3 }),
+      false,
+    );
+  });
+  test('opening + 0 renders + explicitly blank board -> true', () => {
+    assert.equal(
+      shouldEmitOpenerFallback({ openingPhase: true, validRendersThisTurn: 0, boardItemCount: 0 }),
+      true,
+    );
+  });
 
   // ── buildOpenerFallbackCommand: shape ──────────────────────────────────
   test('with topic: returns a well-formed handwrite command', () => {

@@ -10231,6 +10231,15 @@ export function VoiceTutorRealtime({
         if (shouldEmitOpenerFallback({
           openingPhase: true,
           validRendersThisTurn: openingTurnValidRenderCountRef.current,
+          // Blank-board guard: a resumed session restores the board (incl.
+          // the original fallback line) before this opener turn runs — a
+          // populated board must suppress the fallback or it duplicates
+          // (live 2026-07-04 reload repro). whiteboardCommandsRef (not the
+          // catalog) is the signal: it receives EVERY restored command at
+          // rehydration, including handwrites, which never become catalog
+          // items — so a board holding only the original fallback line
+          // still counts as non-blank.
+          boardItemCount: whiteboardCommandsRef.current.length,
         })) {
           onWhiteboardCommand([buildOpenerFallbackCommand({ topic })]);
           onDebugEvent?.('opener_fallback_rendered', topic || '(no topic)');

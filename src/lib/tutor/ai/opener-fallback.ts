@@ -43,14 +43,29 @@ import type { WhiteboardCommand } from '../../knowledge/types';
 
 /**
  * True iff the opening turn (openingPhase) produced zero valid whiteboard
- * renders — the trigger condition for emitting the fallback card. Pure;
- * the orchestrator is responsible for computing both inputs.
+ * renders AND the board is actually blank — the trigger condition for
+ * emitting the fallback card. Pure; the orchestrator is responsible for
+ * computing the inputs.
+ *
+ * boardItemCount guards the RESUME case (live duplicate, 2026-07-04): a
+ * reloaded session restores the board from the checkpoint — including the
+ * original fallback line — and resume-live re-arms the opener pending flag
+ * (its 'pickup' opener is !== 'none'). The pickup turn typically draws
+ * nothing, so without this check the fallback fired a second identical
+ * handwrite onto the restored board. The fallback exists to prevent a BLANK
+ * first impression; a populated board disqualifies it by definition.
+ * Optional so board-state-unaware callers keep the historical behavior.
  */
 export function shouldEmitOpenerFallback(input: {
   openingPhase: boolean;
   validRendersThisTurn: number;
+  boardItemCount?: number;
 }): boolean {
-  return input.openingPhase === true && input.validRendersThisTurn === 0;
+  return (
+    input.openingPhase === true &&
+    input.validRendersThisTurn === 0 &&
+    (input.boardItemCount ?? 0) === 0
+  );
 }
 
 /**
