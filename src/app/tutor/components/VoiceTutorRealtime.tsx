@@ -165,6 +165,11 @@ export interface RealtimeHandle {
    *  cues like "slow down" / "faster" go through the boredom-cue
    *  regex inside callBrainOnce and call stepPaceBias internally. */
   stepPaceBias: (delta: -1 | 1) => void;
+  /** Caption word-sync: poll the audio-locked caption reveal. Returns null
+   *  when unsupported (non-claude-brain engines) — caller falls back to the
+   *  legacy typewriter. live:false = supported but nothing being spoken
+   *  (finalized turn / reload) — caller shows the full text instantly. */
+  getSpokenCaption: () => SpokenCaption | null;
   /** Resume first-interaction: the gesture that unlocks TTS audio AND kicks
    *  the brain to continue a rehydrated session. Wired to the "Continue
    *  lesson" overlay (and mirrored by the mic dock's resume tap). No-op once
@@ -238,6 +243,7 @@ import { validateManipulative } from '@/lib/tutor/diagrams/manipulative-validato
 import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
+import { CaptionSyncTracker, type SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 
 // ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
 // Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
@@ -1188,6 +1194,11 @@ export function VoiceTutorRealtime({
   // assignment, dedup catalog, page-grouping, brain-feedback return) ran
   // synchronously inside handleWhiteboardCommand — only the pixels wait.
   // See project_tutor_render_speech_sync.
+  // Caption word-sync: display↔speech sentence registry + reveal state.
+  // Fed per-attempt from the brain stream loop; read via the handle's
+  // getSpokenCaption poll. See caption-sync.ts.
+  const captionSyncRef = useRef(new CaptionSyncTracker());
+
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
     anchorM: number;
@@ -7196,6 +7207,9 @@ export function VoiceTutorRealtime({
         // actually voiced, the retry replaces it). Per-attempt (resets with
         // attemptText). Normal turns: chatRevealText == attemptText.
         let chatRevealText = '';
+        // Caption word-sync: fresh registry per attempt. Same key as the
+        // streaming chat entry so a kill→retry naturally re-keys the caption.
+        captionSyncRef.current.beginAttempt(`tutor-streaming-${t0}-${attempt}`);
         // Once a tool call in this attempt is rejected, the attempt is
         // doomed and we'll retry. Stop voicing further sentences from
         // this attempt (otherwise the student hears both the bad voice-
@@ -7910,6 +7924,11 @@ export function VoiceTutorRealtime({
                     // voiced content and the retry replaces it (no flash of
                     // wrong/post-kill text). Mirrors the attemptText concat.
                     chatRevealText += (chatRevealText ? ' ' : '') + trimmedSentence;
+                    // Caption word-sync: pair the display form with the speech
+                    // form the audio layer will report back. Registered only
+                    // while the attempt is alive — post-kill sentences never
+                    // reach TTS, so the caption freezes at voiced content.
+                    captionSyncRef.current.registerSentence(sentenceForSpeech, trimmedSentence);
                     // FIX A — fast opener. The brain is prompted to open
                     // every turn with a short content-free runway phrase
                     // (TURN_OPENER_RULE). Voice that sentence-0 the moment
@@ -10222,6 +10241,7 @@ export function VoiceTutorRealtime({
       // remaining buffered renders keep flushing against the still-playing
       // audio (sentence-start / drain / cap) after this call returns.
       renderSyncActiveRef.current = false;
+      captionSyncRef.current.markStreamEnd();
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord]);
 
@@ -10830,20 +10850,22 @@ export function VoiceTutorRealtime({
     // 'sentence-start' = a new sentence's audio began (the prior one
     // completed) → release renders anchored to that prior sentence.
     // 'drain' = all dispatched audio has played → release the tail.
-    onTtsPlaybackProgress: TUTOR_RENDER_SYNC
-      ? (event) => {
-          if (event === 'sentence-start') {
-            ttsPlaybackStartedCountRef.current++;
-            // Progress happened → reset the stall timer so it can't fire
-            // while sentences are steadily playing toward an anchor.
-            if (renderBufferRef.current.length > 0) armRenderStall();
-            flushReadyRenders();
-          } else {
-            // Turn audio drained → release the tail; no stall re-arm needed.
-            flushReadyRenders({ drainAll: true });
-          }
-        }
-      : undefined,
+    onTtsPlaybackProgress: (event) => {
+      // Caption word-sync: a drain AFTER stream-end finalizes the caption
+      // (the tracker ignores mid-stream drains itself).
+      if (event === 'drain') captionSyncRef.current.notifyDrain();
+      if (!TUTOR_RENDER_SYNC) return;
+      if (event === 'sentence-start') {
+        ttsPlaybackStartedCountRef.current++;
+        // Progress happened → reset the stall timer so it can't fire
+        // while sentences are steadily playing toward an anchor.
+        if (renderBufferRef.current.length > 0) armRenderStall();
+        flushReadyRenders();
+      } else {
+        // Turn audio drained → release the tail; no stall re-arm needed.
+        flushReadyRenders({ drainAll: true });
+      }
+    },
   });
 
   // Wire up refs so callbacks can access hook functions
@@ -11678,12 +11700,16 @@ export function VoiceTutorRealtime({
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         resumeContinue: () => resumeContinueRef.current(),
+        getSpokenCaption: () => {
+          if (!claudeBrainMode) return null;
+          return captionSyncRef.current.poll(realtime.getSpokenProgress());
+        },
       };
     }
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias]);
+  }, [handleRef, realtime, stepPaceBias, claudeBrainMode]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds
