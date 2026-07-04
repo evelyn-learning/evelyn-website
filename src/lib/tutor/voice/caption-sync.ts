@@ -94,7 +94,10 @@ export class CaptionSyncTracker {
   }
 
   registerSentence(speech: string, display: string): void {
-    this.pairs.push({ speech, display: stripMarkdownEmphasis(display).trim() });
+    // The audio layer reports the TRIMMED dispatch string when labeling
+    // chunks, but TTS normalization (e.g. em-dash → ', ') can leave a
+    // trailing space on `speech` — trim so poll()'s exact match still hits.
+    this.pairs.push({ speech: speech.trim(), display: stripMarkdownEmphasis(display).trim() });
   }
 
   markStreamEnd(): void {

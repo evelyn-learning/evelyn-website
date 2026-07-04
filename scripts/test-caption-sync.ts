@@ -171,5 +171,14 @@ check('strips **bold** and *italic*',
   check('5th silent poll finalizes to full text', fifth.live === false && fifth.text === 'Short spoken bit.');
 }
 
+// ── 15. registration trims the speech key (em-dash-tail normalization) ──
+{
+  const t = new CaptionSyncTracker();
+  t.beginAttempt('turn-14-0');
+  t.registerSentence('Watch this, ', 'Watch this —');
+  const c = t.poll(prog('Watch this,', 5, 5));
+  check('trailing-space speech key still exact-matches the trimmed report', c.text === 'Watch this —');
+}
+
 console.log(`\ncaption-sync: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

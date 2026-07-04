@@ -396,6 +396,11 @@ export default function SessionStage(props: SessionStageProps) {
           (one ~80px row), so the from-bottom offset is larger below md to clear
           it — otherwise the caption tucks behind the dock and the tutor's live
           sentence is hidden. Both honor the bottom safe-area inset. */}
+      {/* This gate is load-bearing for CaptionTicker's poll probe: the ticker
+          must not mount before VoiceTutorRealtime's handle-population effect
+          has run. Today that's guaranteed because liveCaption is empty until
+          the first transcript entry, which can only exist after the first
+          commit. If this gate is ever removed, add a re-probe to CaptionTicker. */}
       {liveCaption && (
         <div className="relative z-30 shrink-0 order-3 mx-auto mb-1.5 w-[min(96vw,640px)] px-2">
           <div className="ss-cap w-full rounded-2xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
@@ -510,8 +515,12 @@ function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: () => Sp
   useEffect(() => {
     if (!getSpoken) { setPolling(false); return; }
     // Probe once: null = unsupported engine → typewriter path below.
-    if (getSpoken() === null) { setPolling(false); setPolled(null); return; }
+    const probe = getSpoken();
+    if (probe === null) { setPolling(false); setPolled(null); return; }
     setPolling(true);
+    // Seed from the probe so the first ~100ms doesn't flash the full text
+    // (shown falls back to `text` while polled is null).
+    setPolled(probe.live ? probe.text : null);
     const id = setInterval(() => {
       const c = getSpoken();
       if (c === null) return; // engine flipped mid-session — hold last
