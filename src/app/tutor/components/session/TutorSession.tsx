@@ -85,6 +85,12 @@ export interface TutorSessionProps {
    *  VoiceTutorRealtime to avoid drift. Only consumed when
    *  TUTOR_PEDAGOGY_OPENER is on. */
   checkpointStale?: VTRProps['checkpointStale'];
+  /** Teacher persona — the session is taught AS this specific teacher
+   *  (demo picker on /tutor; the embed's `teacher` token field for
+   *  enrolled sessions). Forwarded to the runtime, typed from
+   *  VoiceTutorRealtime to avoid drift. Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. */
+  teacherPersona?: VTRProps['teacherPersona'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -143,7 +149,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
     socialMemory, progressDigest, lastOpener, onOpenerRecord, isTrial,
-    targetKind, checkpointStale,
+    targetKind, checkpointStale, teacherPersona,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -350,6 +356,7 @@ export default function TutorSession(props: TutorSessionProps) {
         isTrial={isTrial}
         targetKind={targetKind}
         checkpointStale={checkpointStale}
+        teacherPersona={teacherPersona}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}

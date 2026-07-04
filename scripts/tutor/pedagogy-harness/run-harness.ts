@@ -117,6 +117,10 @@ export const DEMO_PICKER_START: Record<
   // nina reuses anon's ratios plan DELIBERATELY — it's the exact plan the
   // Store-B misquote-adoption bug was observed on (2026-07-03).
   nina: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
+  // tara (parent sitting in on a demo, T2 identity-bounds row) reuses the
+  // same real ratios plan — her child is grade 6 and the row only needs a
+  // real, startable plan.
+  tara: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
   sam: { subject: 'math', level: 'college', topic: 'calculus-1', lessonPlanId: 'evelyn.g12.math.calc.limits.v1' },
 };
 
@@ -197,6 +201,10 @@ export interface TestStartConfig {
    *  through to the engine's transient-context block as a do-NOT-repeat
    *  directive. Set by `runReplayScenario` for session 2 only. */
   lastOpener?: OpenerRecord;
+  /** Teacher persona pin (T-rows): resolved by the /tutor page against
+   *  DEMO_TEACHERS (src/lib/tutor/ai/teacher-persona.ts). Unknown id ⇒
+   *  ignored page-side (default = first teacher). */
+  teacherId?: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -264,6 +272,7 @@ export interface PickerStartOpts {
   resumeVariant?: 'fresh' | 'stale';
   sessionMaxMinutes?: number;
   targetKind?: TestStartConfig['targetKind'];
+  teacherId?: TestStartConfig['teacherId'];
 }
 
 /** Applies the branch-independent driver overrides onto a built start
@@ -271,6 +280,7 @@ export interface PickerStartOpts {
 function withDriverOverrides(start: TestStartConfig, opts?: PickerStartOpts): TestStartConfig {
   if (opts?.sessionMaxMinutes !== undefined) start.sessionMaxMinutes = opts.sessionMaxMinutes;
   if (opts?.targetKind) start.targetKind = opts.targetKind;
+  if (opts?.teacherId) start.teacherId = opts.teacherId;
   return start;
 }
 
@@ -390,6 +400,8 @@ export interface RunScenarioOpts {
   /** Explicit targetKind → __tutorTestStart.targetKind (S5 runs diego's
    *  diagnostic variant with 'diagnostic'). */
   targetKind?: TestStartConfig['targetKind'];
+  /** Teacher persona pin → __tutorTestStart.teacherId (T1/T2 rows). */
+  teacherId?: TestStartConfig['teacherId'];
   /** Opener-recency (part A): injected as __tutorTestStart's lastOpener
    *  (the previous session's opener record). Only `runReplayScenario`
    *  sets this — and only on its SECOND session. */
@@ -405,6 +417,7 @@ export async function runScenario(
     resumeVariant: opts.resumeVariant,
     sessionMaxMinutes: opts.sessionMaxMinutes,
     targetKind: opts.targetKind,
+    teacherId: opts.teacherId,
   });
   if (opts.lastOpener) start.lastOpener = opts.lastOpener;
 

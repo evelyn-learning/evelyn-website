@@ -46,6 +46,7 @@ import {
 } from '@/lib/tutor/ai/opening-behavior';
 import { shouldShowDemoCta } from '@/lib/tutor/demo-cta';
 import { detectDemoIntent } from '@/lib/tutor/demo-intent';
+import { DEMO_TEACHERS } from '@/lib/tutor/ai/teacher-persona';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -275,6 +276,22 @@ function TutorPage() {
     ? (baseVoiceEngine === 'realtime-2' ? 'realtime-2' : 'claude-brain')
     : baseVoiceEngine;
   const selectedOpenAIVoice: OpenAIVoice = ENV_OPENAI_VOICE;
+  // Teacher persona (demo picker) — flag-gated on TUTOR_PEDAGOGY_OPENER.
+  // Default = first house teacher; the setup stage renders a "Your teacher"
+  // selector (flag-on only) and the dev __tutorTestStart hook can pin one
+  // via cfg.teacherId. Flag off ⇒ selectedTeacher is never passed anywhere
+  // and effectiveOpenAIVoice === selectedOpenAIVoice (markup unchanged).
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
+  const selectedTeacher = useMemo(
+    () => DEMO_TEACHERS.find((t) => t.id === selectedTeacherId) ?? DEMO_TEACHERS[0],
+    [selectedTeacherId],
+  );
+  // When the chosen teacher maps to an OpenAI Realtime voice, the session
+  // speaks in THAT voice (flag-on only).
+  const effectiveOpenAIVoice: OpenAIVoice =
+    TUTOR_PEDAGOGY_OPENER && selectedTeacher.voice?.provider === 'openai'
+      ? (selectedTeacher.voice.voiceId as OpenAIVoice)
+      : selectedOpenAIVoice;
 
   // Session state
   // Reuse the URL's sid on reload so the engine session id is stable; else mint.
@@ -1175,6 +1192,9 @@ function TutorPage() {
       //                     a checkpoint existed but was too old to restore.
       //                     Pass WITHOUT `resume` (mutually exclusive — a
       //                     seeded resume wins, see deriveResumeSignal).
+      //   teacherId       → pins a demo teacher persona (resolved against
+      //                     DEMO_TEACHERS; unknown id ⇒ ignored, keeping
+      //                     the default = first teacher).
       studentId?: string;
       socialMemory?: SocialThread[];
       progressDigest?: ProgressDigest;
@@ -1183,6 +1203,7 @@ function TutorPage() {
       sessionMaxMinutes?: number;
       targetKind?: SessionMode;
       checkpointStale?: boolean;
+      teacherId?: string;
     }) => {
       setSelectedSubject(cfg.subject);
       setSelectedLevel(cfg.level);
@@ -1203,6 +1224,12 @@ function TutorPage() {
       setTestSessionMaxMinutes(cfg.sessionMaxMinutes ?? 30);
       setTestTargetKind(cfg.targetKind);
       setTestCheckpointStale(cfg.checkpointStale === true);
+      // Teacher persona pin: unknown ids are IGNORED (selection keeps its
+      // current value — the default first teacher) rather than erroring.
+      if (cfg.teacherId) {
+        const t = DEMO_TEACHERS.find((d) => d.id === cfg.teacherId);
+        if (t) setSelectedTeacherId(t.id);
+      }
       // Fresh capture slot per started session — a replay's session 2 must
       // not read session 1's stale record out of __tutorTestState.
       testOpenerRecordRef.current = null;
@@ -1824,6 +1851,48 @@ function TutorPage() {
             inputMode={inputMode}
           />
 
+          {/* Your teacher — demo persona picker (flag-gated; radio-card style
+              matching the setup card). Selection feeds the teacherPersona
+              prop + the session voice at both render sites. */}
+          {TUTOR_PEDAGOGY_OPENER && (
+            <div className="mt-6 bg-white rounded-xl shadow-lg p-5 sm:p-6">
+              <h2 className="text-lg font-semibold text-gray-900">Your teacher</h2>
+              <p className="text-xs text-gray-500 mt-1 mb-4">Pick who you&apos;d like to learn with today.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Your teacher">
+                {DEMO_TEACHERS.map((t) => {
+                  const isSel = t.id === selectedTeacherId;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSel}
+                      onClick={() => setSelectedTeacherId(t.id)}
+                      className={`text-left rounded-xl border-2 p-4 transition-colors ${
+                        isSel
+                          ? 'border-blue-500 bg-blue-50/60'
+                          : 'border-gray-200 bg-white hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-gray-900">{t.name}</span>
+                        <span
+                          className={`shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
+                            isSel ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'
+                          }`}
+                          aria-hidden
+                        >
+                          {isSel && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1.5 leading-snug">{t.intro}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Info */}
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>Sessions are 30 minutes. You can end early anytime.</p>
@@ -1860,7 +1929,9 @@ function TutorPage() {
         sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
         sessionGoal={sessionGoal}
         lessonPlanId={selectedLessonPlanId || undefined}
-        voice={selectedOpenAIVoice}
+        // Teacher persona voice wins when the flag is on (effectiveOpenAIVoice
+        // === selectedOpenAIVoice when the flag is off — markup unchanged).
+        voice={effectiveOpenAIVoice}
         voiceEngine={voiceEngine}
         ttsProvider={ttsProvider}
         // Dev-hook override, default 30 — identical to the literal the page
@@ -1875,6 +1946,7 @@ function TutorPage() {
         lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
         targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
         checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
+        teacherPersona={TUTOR_PEDAGOGY_OPENER ? selectedTeacher : undefined}
         onOpenerRecord={handleOpenerRecord}
         topicDisplayName={topicDisplayName}
         availableLessonPlans={availableLessonPlans}
@@ -2399,9 +2471,12 @@ function TutorPage() {
                   lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
                   targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
                   checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
+                  teacherPersona={TUTOR_PEDAGOGY_OPENER ? selectedTeacher : undefined}
                   onOpenerRecord={handleOpenerRecord}
                   onResumeAwaitingTapChange={setAwaitingResume}
-                  voice={selectedOpenAIVoice}
+                  // Teacher persona voice wins when the flag is on (identical
+                  // to selectedOpenAIVoice when the flag is off).
+                  voice={effectiveOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
                   onUsageUpdate={handleRealtimeUsage}

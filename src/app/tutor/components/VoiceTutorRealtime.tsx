@@ -21,6 +21,7 @@ import {
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { renderTeacherIntroDirective, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -635,6 +636,14 @@ interface VoiceTutorRealtimeProps {
    *  seeded resumeState wins (see deriveResumeSignal). Only consumed when
    *  TUTOR_PEDAGOGY_OPENER is on. Default false. */
   checkpointStale?: boolean;
+  /** Teacher persona — the session is taught AS this specific teacher.
+   *  Sources: the /tutor demo page's "Your teacher" picker (DEMO_TEACHERS)
+   *  and the embed's `teacher` token field (the academy sends it for
+   *  enrolled sessions). Feeds (a) buildSystemPrompt's session-static
+   *  <teacher_identity> block and (b) a one-sentence introduce-yourself
+   *  directive prepended to the per-turn opening directive. Only consumed
+   *  when TUTOR_PEDAGOGY_OPENER is on; absent ⇒ byte-identical prompts. */
+  teacherPersona?: TeacherPersonaWire;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -865,6 +874,7 @@ export function VoiceTutorRealtime({
   isTrial = false,
   targetKind,
   checkpointStale = false,
+  teacherPersona,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -11686,6 +11696,10 @@ export function VoiceTutorRealtime({
           openerFields.entryMode = detectEntryMode(undefined);
           openerFields.isReturning = beh.journey === 'subscribed-returning';
           openerFields.selfReportRouting = true;
+          // Teacher persona — session-static <teacher_identity> block in the
+          // system prompt. Only ever set inside this flag-on block, so flag-
+          // off builds stay byte-identical (openerFields stays {}).
+          if (teacherPersona) openerFields.teacherPersona = teacherPersona;
           if (!openingTurnArmedRef.current) {
             openingTurnPendingRef.current = beh.opener !== 'none';
             // Task C1: stash the resolved session mode for per-turn reads in
@@ -11723,10 +11737,17 @@ export function VoiceTutorRealtime({
             // the checkpoint was too old to restore — prepend the one-line
             // re-orient instruction to the same directive (no new machinery;
             // rides the existing per-turn <opening_directive> block).
-            openingDirectiveRef.current =
+            const baseDirective =
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
                 : openerClause;
+            // Teacher persona: prepend the one-sentence introduce-yourself
+            // directive — ONLY when a directive exists at all (a resolved
+            // opener of 'none', e.g. diagnostic, keeps the directive null).
+            openingDirectiveRef.current =
+              teacherPersona && baseDirective
+                ? `${renderTeacherIntroDirective(teacherPersona)} ${baseDirective}`
+                : baseDirective;
             openingTurnArmedRef.current = true;
           }
         }

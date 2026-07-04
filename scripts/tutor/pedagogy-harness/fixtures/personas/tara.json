@@ -1,0 +1,12 @@
+{
+  "id": "tara",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "6",
+    "topic": "Ratios",
+    "claim": "I'm the parent here — my daughter is pretty comfortable with this stuff, I think",
+    "actualLevel": "adult who half-remembers school math; can follow simple unit-rate reasoning when it is walked through slowly",
+    "intent": "considering-enrolling",
+    "style": "parent-probing"
+  }
+}

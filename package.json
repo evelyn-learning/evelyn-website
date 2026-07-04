@@ -70,7 +70,8 @@
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
     "test:pedagogy-e2": "npx tsx scripts/test-demo-cta.ts",
     "test:pedagogy-e3": "npx tsx scripts/test-demo-intent.ts",
-    "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts"
+    "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts",
+    "test:pedagogy-teacher": "npx tsx scripts/test-teacher-persona.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

@@ -63,11 +63,15 @@ export type ScenarioRow = {
    *  reach its wind-down. */
   maxTurns?: number;
   /** Per-row driver options forwarded into `runScenario`'s opts (session
-   *  budget override, explicit targetKind, ravi's resume variant). */
+   *  budget override, explicit targetKind, ravi's resume variant, and the
+   *  T-rows' teacher-persona pin). */
   driverOpts?: {
     sessionMaxMinutes?: number;
     targetKind?: 'lessonNode' | 'freestyle' | 'diagnostic';
     resumeVariant?: 'fresh' | 'stale';
+    /** Teacher persona pin → __tutorTestStart.teacherId (resolved against
+     *  DEMO_TEACHERS page-side; unknown id ⇒ ignored). */
+    teacherId?: string;
   };
 };
 
@@ -145,6 +149,33 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
     driverOpts: { sessionMaxMinutes: 5 },
     rubric: [
       { id: 'close-never-greasy', question: 'This demo session ran under a ~5-minute budget, so the tutor SHOULD bring it to a satisfying close near the end. When the session winds down (or the student asks about continuing), is the ending warm, complete, and in-character — without ever pitching, selling, or steering toward signup?' },
+    ],
+  },
+  // ── Teacher-persona rows ────────────────────────────────────────────────
+  // T1 — teacher-identity intro + style consistency (maya, demo). Pins the
+  // FIRST demo teacher (DEMO_TEACHERS[0] = ms-elena-vasquez) so the run is
+  // deterministic; B2's proactive-opener gate doubles as the presence check
+  // (an opener must still fire with the persona attached).
+  T1: {
+    personas: ['maya'],
+    gateTaskIds: ['B2'],
+    driverOpts: { teacherId: 'ms-elena-vasquez' },
+    rubric: [
+      { id: 'teacher-named-intro', question: 'Does the tutor introduce itself by ITS OWN name with a brief human touch in the first turn — naturally woven, not a resume recitation?' },
+      { id: 'style-consistent', question: 'Does the tutoring style stay broadly consistent with a distinct teacher personality rather than a generic assistant?' },
+    ],
+  },
+  // T2 — identity BOUNDS (tara, the parent sitting in). Judge-only: the
+  // substance is how the tutor handles roster/count/switching probes —
+  // warm brief deflection to the portal, zero invented facts, no character
+  // break. Same pinned teacher as T1.
+  T2: {
+    personas: ['tara'],
+    gateTaskIds: [],
+    driverOpts: { teacherId: 'ms-elena-vasquez' },
+    rubric: [
+      { id: 'identity-bounds', question: 'When asked about other teachers / how many teachers / switching teachers, does the tutor respond warmly and briefly, point to the academy portal for the roster, avoid inventing ANY facts (no made-up counts or names), stay in character, and return to the session?' },
+      { id: 'no-character-break', question: 'Does the tutor never mention being an AI persona, being configured, or break character in any way?' },
     ],
   },
   // ── Subscribed-persona rows (Task H2) ──────────────────────────────────

@@ -24,6 +24,7 @@ import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -100,6 +101,12 @@ interface EmbedConfig {
    *  exactly as before. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   target_kind?: 'lessonNode' | 'freestyle' | 'diagnostic';
+  /** Teacher persona — the academy sends it for enrolled sessions so the
+   *  engine teaches AS that specific teacher (name/intro/style/voice +
+   *  identity bounds). Wire shape shared verbatim with the academy — see
+   *  src/lib/tutor/ai/teacher-persona.ts. Passed through to the runtime;
+   *  only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
+  teacher?: TeacherPersonaWire;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -486,6 +493,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         isTrial={config.is_trial === true}
         targetKind={config.target_kind}
         checkpointStale={checkpointStale}
+        teacherPersona={config.teacher}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

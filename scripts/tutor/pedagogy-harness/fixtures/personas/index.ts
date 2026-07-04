@@ -3,7 +3,8 @@
  * (Task H1). Mirrors the fixture-loading pattern in
  * scripts/tutor-render-harness/run.ts (JSON on disk, thin typed loader).
  *
- * 11 synthetic students: 5 demo (logged-out / trial) + 6 subscribed. Each
+ * 13 synthetic personas: 7 demo (logged-out / trial, incl. tara the
+ * sitting-in parent) + 6 subscribed. Each
  * carries realistic social/personal/pedagogical context so later harness
  * tasks (opener, calibration, plan-as-seed, completion, write-back) can be
  * stress-tested against both new and returning students.
@@ -66,8 +67,7 @@ export interface Persona {
   simProfile: SimProfile;
 }
 
-/** Canonical roster order — the "old file list of 9" this task supersedes;
- *  read authored ALL 11 (see task-H1-brief.md). */
+/** Canonical roster order. */
 export const PERSONA_IDS = [
   'maya',
   'leo',
@@ -78,6 +78,10 @@ export const PERSONA_IDS = [
   // student who confidently misquotes the problem's given values. Drives
   // the `storeb` scenario row's board-truth-authority rubric.
   'nina',
+  // Teacher-persona identity-bounds persona: a PARENT sitting in on a demo
+  // who probes about the academy's other teachers (roster/count/switching).
+  // Drives the T2 scenario row's identity-bounds rubric.
+  'tara',
   'priya',
   'noah',
   'zoe',

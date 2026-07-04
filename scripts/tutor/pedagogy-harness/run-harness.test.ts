@@ -40,7 +40,7 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam'];
+const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam', 'nina', 'tara'];
 const SUBSCRIBED_IDS = ['priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
 
 // ── personaToPickerStart: DEMO personas ─────────────────────────────────
@@ -163,11 +163,24 @@ test("personaToPickerStart(diego, targetKind 'diagnostic'): explicit targetKind 
   assert.equal(cfg.studentId, 'pedagogy-diego', 'subscribed extras untouched');
 });
 
+test('personaToPickerStart(maya, teacherId): teacher pin reaches the start config (T1 — same plumbing as sessionMaxMinutes)', () => {
+  const cfg = personaToPickerStart(loadPersona('maya'), { teacherId: 'ms-elena-vasquez' });
+  assert.equal(cfg.teacherId, 'ms-elena-vasquez');
+  assert.equal(cfg.lessonPlanId, DEMO_PICKER_START.maya.lessonPlanId, 'picker fields untouched');
+});
+
+test('personaToPickerStart(tara, teacherId): teacher pin works for the parent-probing demo persona (T2)', () => {
+  const cfg = personaToPickerStart(loadPersona('tara'), { teacherId: 'ms-elena-vasquez' });
+  assert.equal(cfg.teacherId, 'ms-elena-vasquez');
+  assert.equal(cfg.studentName, 'Tara', 'demo fallback name derived from the id');
+});
+
 test('personaToPickerStart: overrides are absent (not defaulted) when not requested — page defaults own them', () => {
   for (const id of ['maya', 'diego', 'ravi']) {
     const cfg = personaToPickerStart(loadPersona(id));
     assert.equal(cfg.sessionMaxMinutes, undefined, `${id}: no budget override`);
     assert.equal(cfg.targetKind, undefined, `${id}: no targetKind override`);
+    assert.equal(cfg.teacherId, undefined, `${id}: no teacher pin`);
   }
 });
 
