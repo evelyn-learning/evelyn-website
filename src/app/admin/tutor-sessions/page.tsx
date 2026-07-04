@@ -5,15 +5,40 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TutorSession } from "@/models";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers } from "lucide-react";
+import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
+import { buildSessionFilter, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
 
-async function getSessions() {
+const PAGE_SIZE = 50;
+
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function param(sp: Record<string, string | string[] | undefined>, key: string): string | undefined {
+  const v = sp[key];
+  return typeof v === 'string' && v ? v : undefined;
+}
+
+async function getSessions(filters: SessionFilterParams, page: number) {
   await connectDB();
-  const sessions = await TutorSession.find()
-    .select('-transcript -whiteboardCommands -debugEvents -tokenUsage')
-    .sort({ startedAt: -1 })
-    .limit(100)
-    .lean();
-  return JSON.parse(JSON.stringify(sessions));
+  const query = buildSessionFilter(filters);
+  const [sessions, total, partners, hosts] = await Promise.all([
+    TutorSession.find(query)
+      .select('-transcript -whiteboardCommands -debugEvents -tokenUsage')
+      .sort({ startedAt: -1 })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .lean(),
+    TutorSession.countDocuments(query),
+    TutorSession.distinct('sourcePartnerId', { sourcePartnerId: { $nin: [null, ''] } }),
+    TutorSession.distinct('sourceHost', { sourceHost: { $nin: [null, ''] } }),
+  ]);
+  return {
+    sessions: JSON.parse(JSON.stringify(sessions)),
+    total,
+    partners: partners.sort(),
+    hosts: hosts.sort(),
+  };
 }
 
 function formatDuration(seconds?: number): string {
@@ -39,11 +64,49 @@ const modeLabels: Record<string, string> = {
   voice: 'Voice',
 };
 
-export default async function TutorSessionsPage() {
+const SOURCE_CHIPS: { value: string | undefined; label: string }[] = [
+  { value: undefined, label: 'All' },
+  { value: 'tutor', label: 'Website' },
+  { value: 'embed', label: 'Portal' },
+  { value: 'showcase', label: 'Showcase' },
+  { value: 'test', label: 'Tests' },
+];
+
+const RANGE_CHIPS: { value: string | undefined; label: string }[] = [
+  { value: undefined, label: 'All time' },
+  { value: 'today', label: 'Today' },
+  { value: '7d', label: '7 days' },
+  { value: '30d', label: '30 days' },
+];
+
+/** Build an href preserving current filters, overriding the given keys.
+ *  Setting a key to undefined removes it. Page resets unless explicitly set. */
+function filterHref(current: SessionFilterParams & { page?: string }, overrides: Record<string, string | undefined>): string {
+  const merged: Record<string, string | undefined> = { ...current, page: undefined, ...overrides };
+  const qs = Object.entries(merged)
+    .filter(([, v]) => v !== undefined && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(v as string)}`)
+    .join('&');
+  return qs ? `/admin/tutor-sessions?${qs}` : '/admin/tutor-sessions';
+}
+
+export default async function TutorSessionsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/admin/login");
 
-  const sessions = await getSessions();
+  const sp = await searchParams;
+  const filters: SessionFilterParams = {
+    src: param(sp, 'src'),
+    partner: param(sp, 'partner'),
+    host: param(sp, 'host'),
+    audio: param(sp, 'audio'),
+    range: param(sp, 'range'),
+  };
+  const page = Math.max(1, parseInt(param(sp, 'page') || '1', 10) || 1);
+  const { sessions, total, partners, hosts } = await getSessions(filters, page);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const now = new Date();
+  const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -55,16 +118,87 @@ export default async function TutorSessionsPage() {
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Tutor Sessions</h1>
             <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-              {sessions.length} sessions
+              {total} sessions
             </span>
           </div>
         </div>
       </header>
 
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {SOURCE_CHIPS.map((c) => (
+            <Link
+              key={c.label}
+              href={filterHref(filters, { src: c.value })}
+              className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                filters.src === c.value || (!filters.src && !c.value)
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {c.label}
+            </Link>
+          ))}
+          <span className="mx-1 h-4 w-px bg-gray-300" />
+          {RANGE_CHIPS.map((c) => (
+            <Link
+              key={c.label}
+              href={filterHref(filters, { range: c.value })}
+              className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                filters.range === c.value || (!filters.range && !c.value)
+                  ? 'bg-gray-800 text-white border-gray-800'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {c.label}
+            </Link>
+          ))}
+          <span className="mx-1 h-4 w-px bg-gray-300" />
+          <Link
+            href={filterHref(filters, { audio: filters.audio === '1' ? undefined : '1' })}
+            className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+              filters.audio === '1'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Has audio
+          </Link>
+        </div>
+        {(partners.length > 0 || hosts.length > 0) && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {partners.length > 0 && (
+              <span className="flex flex-wrap items-center gap-1 text-gray-400">
+                Partner:
+                {partners.map((p: string) => (
+                  <Link key={p} href={filterHref(filters, { partner: filters.partner === p ? undefined : p })}
+                    className={`rounded px-2 py-0.5 border ${filters.partner === p ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
+                    {p}
+                  </Link>
+                ))}
+              </span>
+            )}
+            {hosts.length > 0 && (
+              <span className="flex flex-wrap items-center gap-1 text-gray-400">
+                Host:
+                {hosts.map((h: string) => (
+                  <Link key={h} href={filterHref(filters, { host: filters.host === h ? undefined : h })}
+                    className={`rounded px-2 py-0.5 border ${filters.host === h ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
+                    {h.replace(/^https?:\/\//, '')}
+                  </Link>
+                ))}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {sessions.length === 0 ? (
           <div className="rounded-xl bg-white p-12 text-center shadow">
-            <p className="text-gray-500">No tutor sessions found.</p>
+            <p className="text-gray-500">
+              {hasActiveFilters ? 'No sessions match these filters.' : 'No tutor sessions found.'}
+            </p>
           </div>
         ) : (
           <div className="rounded-xl bg-white shadow overflow-hidden">
@@ -96,12 +230,23 @@ export default async function TutorSessionsPage() {
                     <tr key={s.sessionId as string} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         <div>{(s.studentName as string) || <span className="text-gray-400">Anonymous</span>}</div>
-                        {s.source && String(s.source) !== 'tutor' ? (
-                          <span className={`inline-flex mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                            String(s.source) === 'embed' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
-                          }`}>
-                            {String(s.source) === 'embed' ? 'Portal' : String(s.source)}
-                          </span>
+                        {(s.source && String(s.source) !== 'tutor') || s.sourcePartnerId ? (
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {String(s.source) !== 'tutor' && (
+                              <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                                String(s.source) === 'embed' ? 'bg-indigo-50 text-indigo-600'
+                                : String(s.source) === 'test' ? 'bg-purple-50 text-purple-600'
+                                : 'bg-amber-50 text-amber-600'
+                              }`}>
+                                {String(s.source) === 'embed' ? 'Portal' : String(s.source) === 'test' ? 'Test' : String(s.source)}
+                              </span>
+                            )}
+                            {s.sourcePartnerId ? (
+                              <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-600">
+                                {String(s.sourcePartnerId)}
+                              </span>
+                            ) : null}
+                          </div>
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
@@ -134,10 +279,8 @@ export default async function TutorSessionsPage() {
                           {s.status as string}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {new Date(s.startedAt as string).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
+                      <td className="px-4 py-3 text-sm text-gray-500" title={new Date(s.startedAt as string).toLocaleString('en-US')}>
+                        {formatRelativeTime(s.startedAt as string, now)}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <Link
@@ -152,6 +295,19 @@ export default async function TutorSessionsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-1 py-4 text-sm text-gray-500">
+            <span>Page {page} of {totalPages} · {total} sessions</span>
+            <div className="flex gap-2">
+              {page > 1 && (
+                <Link href={filterHref(filters, { page: String(page - 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">← Newer</Link>
+              )}
+              {page < totalPages && (
+                <Link href={filterHref(filters, { page: String(page + 1) })} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50">Older →</Link>
+              )}
             </div>
           </div>
         )}
