@@ -62,7 +62,10 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
   // Curated debug markers — only categorized events reach the bar; the full
   // stream lives in the toggleable lane below.
   const debugEvents = useMemo(() => events.filter((e) => e.type === 'debug'), [events]);
-  const markers = useMemo(() => curateEvents(debugEvents), [debugEvents]);
+  const markers = useMemo(
+    () => (totalDurationMs > 0 ? curateEvents(debugEvents) : []),
+    [debugEvents, totalDurationMs],
+  );
 
   // Speaker segments with the 20s gap cap (silence renders as neutral track).
   const segments = useMemo(() => {
