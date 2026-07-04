@@ -1734,6 +1734,7 @@ function TutorPage() {
         onLessonPlanIdChange={setSelectedLessonPlanId}
         onLessonProgressChange={setLessonProgress}
         onCompletedSegmentsChange={setCompletedSegmentIds}
+        handleRef={realtimeHandleRef}
       />
     );
   }

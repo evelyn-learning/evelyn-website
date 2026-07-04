@@ -169,10 +169,25 @@ async function runTaskId(taskId: string, row: ScenarioRow, baseUrl: string): Pro
   for (const personaId of row.personas) {
     const persona = loadPersona(personaId);
     log(`${taskId} / ${personaId}: running live scenario (maxTurns=${DEFAULT_MAX_TURNS})…`);
-    const bundle = await runScenario(persona, { maxTurns: DEFAULT_MAX_TURNS, taskId, baseUrl });
-    const gates = row.gateTaskIds.flatMap((gateTaskId) => runGates(bundle, gateTaskId));
-    const judge = row.rubric.length ? await judgeBundle(bundle, row.rubric) : undefined;
-    results.push({ taskId, persona: personaId, gates, judge });
+    // A scenario that dies mid-run (e.g. the session never produces a tutor
+    // turn) must still land in the report — before this catch, a throw here
+    // aborted the whole CLI with NO report.md, leaving nothing but a stray
+    // screenshot dir to diagnose from (observed 2026-07-03: three failed
+    // maya runs left zero reports).
+    try {
+      const bundle = await runScenario(persona, { maxTurns: DEFAULT_MAX_TURNS, taskId, baseUrl });
+      const gates = row.gateTaskIds.flatMap((gateTaskId) => runGates(bundle, gateTaskId));
+      const judge = row.rubric.length ? await judgeBundle(bundle, row.rubric) : undefined;
+      results.push({ taskId, persona: personaId, gates, judge });
+    } catch (err) {
+      log(`${taskId} / ${personaId}: RUN FAILED — ${(err as Error).message}`);
+      results.push({
+        taskId,
+        persona: personaId,
+        gates: [],
+        anomalies: [`RUN FAILED (no gates/judge evaluated): ${(err as Error).message}`],
+      });
+    }
   }
   return results;
 }

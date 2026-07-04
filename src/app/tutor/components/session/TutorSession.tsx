@@ -17,7 +17,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
-import { useState, useCallback, useRef, type ComponentProps, type ReactNode } from 'react';
+import { useState, useCallback, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import Script from 'next/script';
 import { Play } from 'lucide-react';
 import { TranscriptView } from '../TranscriptView';
@@ -67,6 +67,15 @@ export interface TutorSessionProps {
 
   // Required lifecycle
   onEndSession: () => void;
+
+  /** Share the parent's RealtimeHandle ref instead of an internal one. The
+   *  standalone /tutor page needs this: its auto-start injection, end-session
+   *  summary, topic-swap speech, and dev e2e hooks (__tutorSendText /
+   *  __tutorTestState.connected) all read the PAGE-level ref — with an
+   *  internal-only ref they silently no-op under the new session UI
+   *  (observed 2026-07-03: every live harness run dropped its kickoff with
+   *  "handle not ready"). Omit (embed) to use the internal ref. */
+  handleRef?: MutableRefObject<RealtimeHandle | null>;
 
   // Optional integration callbacks (typed from VoiceTutorRealtime to avoid drift)
   onMilestone?: VTRProps['onMilestone'];
@@ -135,7 +144,10 @@ export default function TutorSession(props: TutorSessionProps) {
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
 
   const micLevelRef = useRef(0);
-  const realtimeHandleRef = useRef<RealtimeHandle | null>(null);
+  const localHandleRef = useRef<RealtimeHandle | null>(null);
+  // Parent-shared when provided (see TutorSessionProps.handleRef); both are
+  // stable useRef objects so this never changes identity across renders.
+  const realtimeHandleRef = props.handleRef ?? localHandleRef;
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
