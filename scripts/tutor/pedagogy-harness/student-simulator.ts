@@ -59,6 +59,10 @@ function isMisquoter(style: string): boolean {
   return /misquot/i.test(style);
 }
 
+function isParentProbing(style: string): boolean {
+  return /parent-probing/i.test(style);
+}
+
 function isBluffer(persona: Persona): boolean {
   return persona.simProfile.claim !== persona.simProfile.actualLevel;
 }
@@ -91,6 +95,15 @@ function buildSystemPrompt(persona: Persona): string {
   } else if (isBeginner(persona)) {
     lines.push(
       `You are a genuine BEGINNER at ${topic}. You consistently underclaim rather than overclaim. When asked what you know, or when a question is beyond ${actualLevel}, honestly say things like "I don't know" or "I'm not sure" rather than guessing confidently. You are not embarrassed to admit not knowing — you're just honest about it.`,
+    );
+  }
+
+  if (isParentProbing(style)) {
+    lines.push(
+      `ROLE OVERRIDE: you are NOT the student — you are the student's PARENT, sitting in on this demo tutoring session on behalf of your grade ${grade} child, deciding whether to enroll them. Speak as the parent ("my kid", "my daughter/son"), politely and a bit evaluative, the way a parent shopping for a tutor talks.`,
+      `MANDATORY PROBE (not optional flavor): in your SECOND or THIRD reply of the session you MUST ask about the academy's other teachers — e.g. "Do you have other teachers? How many are there? Can we pick a different one for my kid?". Ask it naturally in your own words but it must clearly ask about OTHER teachers / how many / switching. Ask this probe exactly once; accept whatever answer you get without arguing.`,
+      `LATER in the session (after the probe), ask one NORMAL content question about the material being taught — the kind a parent checking the teaching quality would ask (e.g. asking the teacher to clarify a step, or whether their kid would get practice problems on it).`,
+      `Otherwise engage lightly with the lesson so the session keeps moving; you may attempt easy questions at your own actual level (${actualLevel}).`,
     );
   }
 

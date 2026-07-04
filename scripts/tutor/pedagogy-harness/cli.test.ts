@@ -17,6 +17,7 @@
 import { strict as assert } from 'node:assert';
 import { PERSONA_IDS } from './fixtures/personas';
 import { DEMO_PICKER_START, SUBSCRIBED_PICKER_START } from './run-harness';
+import { DEMO_TEACHERS } from '../../../src/lib/tutor/ai/teacher-persona';
 import {
   SCENARIO_MAP,
   REPLAY_TASK_IDS,
@@ -145,6 +146,36 @@ test('SCENARIO_MAP: E2 rubric tells the judge about the ~5-minute budget (an end
   assert.ok(/5-minute budget/.test(q), 'question mentions the ~5-minute budget');
   assert.ok(/SHOULD bring it to a satisfying close/.test(q), 'question frames the ending as expected, not a failure');
   assert.ok(/without ever pitching, selling, or steering toward signup/.test(q), 'no-sell substance kept');
+});
+
+// ── Teacher-persona rows (T1/T2) ─────────────────────────────────────────
+
+test('SCENARIO_MAP: T1 runs maya with the proactive-opener gate and pins the first demo teacher', () => {
+  assert.deepEqual(SCENARIO_MAP.T1.personas, ['maya']);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.T1), ['proactive-opener']);
+  assert.equal(SCENARIO_MAP.T1.driverOpts?.teacherId, DEMO_TEACHERS[0].id, 'T1 pins DEMO_TEACHERS[0]');
+  assert.deepEqual(SCENARIO_MAP.T1.rubric.map((r) => r.id), ['teacher-named-intro', 'style-consistent']);
+  assert.ok(/ITS OWN name/.test(SCENARIO_MAP.T1.rubric[0].question), 'intro rubric checks self-naming');
+  assert.ok(/not a resume recitation/.test(SCENARIO_MAP.T1.rubric[0].question));
+});
+
+test('SCENARIO_MAP: T2 runs tara (parent-probing) judge-only with the identity-bounds rubric, same pinned teacher', () => {
+  assert.deepEqual(SCENARIO_MAP.T2.personas, ['tara']);
+  assert.deepEqual(SCENARIO_MAP.T2.gateTaskIds, [], 'T2 is judge-only');
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.T2), []);
+  assert.equal(SCENARIO_MAP.T2.driverOpts?.teacherId, SCENARIO_MAP.T1.driverOpts?.teacherId, 'T2 pins the SAME teacher as T1');
+  assert.deepEqual(SCENARIO_MAP.T2.rubric.map((r) => r.id), ['identity-bounds', 'no-character-break']);
+  const q = SCENARIO_MAP.T2.rubric[0].question;
+  assert.ok(/other teachers/.test(q) && /switching teachers/.test(q), 'probes roster + switching');
+  assert.ok(/academy portal/.test(q), 'deflects to the portal roster');
+  assert.ok(/inventing ANY facts/.test(q), 'no invention allowed');
+  assert.ok(/never mention being an AI persona/.test(SCENARIO_MAP.T2.rubric[1].question));
+});
+
+test('SCENARIO_MAP: T1/T2 pinned teacherId is a REAL DEMO_TEACHERS id', () => {
+  const ids = DEMO_TEACHERS.map((t) => t.id);
+  assert.ok(ids.includes(SCENARIO_MAP.T1.driverOpts!.teacherId!), `T1 teacherId in [${ids.join(', ')}]`);
+  assert.ok(ids.includes(SCENARIO_MAP.T2.driverOpts!.teacherId!), `T2 teacherId in [${ids.join(', ')}]`);
 });
 
 // ── Subscribed rows (Task H2) ────────────────────────────────────────────

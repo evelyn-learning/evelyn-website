@@ -85,6 +85,19 @@ async function main() {
     assert.ok(/bor(e|ing)|lectur/i.test(sys), 'instructs disengage on a boring opener / long lecture');
   });
 
+  await test('tara (parent-probing): system prompt carries the parent role override + mandatory other-teachers probe on turn 2/3 + later content question', async () => {
+    const tara = loadPersona('tara');
+    const stub = echoSystemStub();
+    await simulateStudent(tara, 'Hi there! Ready to look at ratios together?', [], { complete: stub.complete });
+    const sys = stub.calls[0].system;
+    assert.ok(/ROLE OVERRIDE/.test(sys), 'parent role override present');
+    assert.ok(/PARENT/.test(sys) && /on behalf of your grade 6 child/.test(sys), 'speaks as the parent of the grade-6 child');
+    assert.ok(/SECOND or THIRD reply/.test(sys), 'probe pinned to turn 2 or 3');
+    assert.ok(/Do you have other teachers\? How many are there\? Can we pick a different one for my kid\?/.test(sys), 'carries the canonical probe wording');
+    assert.ok(/exactly once/.test(sys), 'probe fires once');
+    assert.ok(/LATER in the session/.test(sys) && /NORMAL content question/.test(sys), 'later normal content question mandated');
+  });
+
   // ── (b) [[END]] parsing ────────────────────────────────────────────────
   await test('[[END]] in the stub output yields ended:true and is stripped from text', async () => {
     const anon = loadPersona('anon');

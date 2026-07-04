@@ -7,7 +7,7 @@
  * Run: npm run test:pedagogy-personas
  *
  * Covers:
- *   - all 11 personas load and carry the required Persona fields
+ *   - all 13 personas load and carry the required Persona fields
  *   - every subscribed persona's studentContext (+ sam's trial one, +
  *     diego's diagnostic variant) PARSES against the real portal-contract
  *     StudentContextSchema (@evelyn/portal-contract/v1, v1.5.0)
@@ -34,15 +34,15 @@ function test(name: string, fn: () => void) {
   }
 }
 
-const ALL_IDS = ['maya', 'leo', 'aria', 'sam', 'anon', 'nina', 'priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
-const DEMO_LOGGED_OUT = ['maya', 'leo', 'aria', 'anon', 'nina'];
+const ALL_IDS = ['maya', 'leo', 'aria', 'sam', 'anon', 'nina', 'tara', 'priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
+const DEMO_LOGGED_OUT = ['maya', 'leo', 'aria', 'anon', 'nina', 'tara'];
 const SUBSCRIBED = ['priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
 const SIM_PROFILE_STRING_FIELDS = ['grade', 'topic', 'claim', 'actualLevel', 'intent', 'style'] as const;
 
 // ── Roster ───────────────────────────────────────────────────────────────
-test('allPersonas() returns exactly the 12 authored personas', () => {
+test('allPersonas() returns exactly the 13 authored personas', () => {
   const all = allPersonas();
-  assert.equal(all.length, 12, `expected 12 personas, got ${all.length}`);
+  assert.equal(all.length, 13, `expected 13 personas, got ${all.length}`);
   assert.deepEqual(all.map((p) => p.id).sort(), [...ALL_IDS].sort());
 });
 
@@ -118,6 +118,14 @@ test('zoe: socialMemoryLevel is "off" and NO social threads are present at all',
   const parsed = StudentContextSchema.parse(p.studentContext);
   assert.equal(parsed.preferences.socialMemoryLevel, 'off');
   assert.equal(parsed.socialMemory, undefined, 'no socialMemory threads present (parental opt-out)');
+});
+
+// ── tara: parent-probing demo persona (teacher identity bounds, T2) ──────
+test("tara: demo parent persona — style 'parent-probing', intent 'considering-enrolling'", () => {
+  const p = loadPersona('tara') as any;
+  assert.equal(p.mode, 'demo');
+  assert.equal(p.simProfile.style, 'parent-probing');
+  assert.equal(p.simProfile.intent, 'considering-enrolling');
 });
 
 // ── kai: confirmed gap + high-confidence mastery ────────────────────────

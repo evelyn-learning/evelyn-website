@@ -117,6 +117,10 @@ export const DEMO_PICKER_START: Record<
   // nina reuses anon's ratios plan DELIBERATELY — it's the exact plan the
   // Store-B misquote-adoption bug was observed on (2026-07-03).
   nina: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
+  // tara (parent sitting in on a demo, T2 identity-bounds row) reuses the
+  // same real ratios plan — her child is grade 6 and the row only needs a
+  // real, startable plan.
+  tara: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
   sam: { subject: 'math', level: 'college', topic: 'calculus-1', lessonPlanId: 'evelyn.g12.math.calc.limits.v1' },
 };
 
@@ -197,6 +201,10 @@ export interface TestStartConfig {
    *  through to the engine's transient-context block as a do-NOT-repeat
    *  directive. Set by `runReplayScenario` for session 2 only. */
   lastOpener?: OpenerRecord;
+  /** Teacher persona pin (T-rows): resolved by the /tutor page against
+   *  DEMO_TEACHERS (src/lib/tutor/ai/teacher-persona.ts). Unknown id ⇒
+   *  ignored page-side (default = first teacher). */
+  teacherId?: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -264,6 +272,7 @@ export interface PickerStartOpts {
   resumeVariant?: 'fresh' | 'stale';
   sessionMaxMinutes?: number;
   targetKind?: TestStartConfig['targetKind'];
+  teacherId?: TestStartConfig['teacherId'];
 }
 
 /** Applies the branch-independent driver overrides onto a built start
@@ -271,6 +280,7 @@ export interface PickerStartOpts {
 function withDriverOverrides(start: TestStartConfig, opts?: PickerStartOpts): TestStartConfig {
   if (opts?.sessionMaxMinutes !== undefined) start.sessionMaxMinutes = opts.sessionMaxMinutes;
   if (opts?.targetKind) start.targetKind = opts.targetKind;
+  if (opts?.teacherId) start.teacherId = opts.teacherId;
   return start;
 }
 
@@ -352,6 +362,10 @@ export function assembleBundle(
 }
 
 interface DebugEvent { type: string; message: string; timestamp: string; data?: Record<string, unknown> }
+/** One transcript entry as exposed by `__tutorTestState`. `streaming` marks
+ *  a tutor bubble whose sentences are still arriving (text is a PARTIAL);
+ *  `revising` marks a killed attempt's dimmed bubble awaiting its retry. */
+export interface TranscriptEntryLite { role: string; text: string; streaming?: boolean; revising?: boolean }
 interface TestState {
   stage: string;
   brainBusy: boolean;
@@ -360,7 +374,7 @@ interface TestState {
   turnsCompleted: number;
   error: string | null;
   debugEvents?: DebugEvent[];
-  transcript?: Array<{ role: string; text: string }>;
+  transcript?: TranscriptEntryLite[];
   /** Opener-recency (part A): the session's own captured opener record
    *  (null until the opener turn's text finalizes / flag off). */
   sessionOpenerRecord?: OpenerRecord | null;
@@ -368,6 +382,38 @@ interface TestState {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function log(msg: string) { console.log(`[pedagogy-harness] ${msg}`); }
+
+/**
+ * Pure turn-sync capture: the NEXT tutor turn to hand the student-simulator,
+ * or null if it hasn't fully landed yet.
+ *
+ * Root-cause fix for the T1 "duplicate turn 2–3" (2026-07-04): the old
+ * last-tutor-entry read had no NEW-entry requirement and no finalized
+ * requirement, so a long turn (streaming bubble still filling while its TTS
+ * played) was captured TWICE — first as a partial, then re-read as "the next
+ * turn" once finalized. The engine never dropped anything (verified with
+ * repro-midtts-send.ts: mid-stream sends queue + drain correctly); the
+ * duplicate was purely this capture logic.
+ *
+ * Semantics: consider tutor-role entries, EXCLUDING `revising` bubbles (a
+ * killed attempt kept dimmed for the retry hand-off — transient, removed
+ * when the retry streams in). There must be at least one such entry past
+ * `consumedTutorCount`, and the NEWEST one must be finalized (not
+ * `streaming`) with non-empty text — a chained multi-entry turn (render →
+ * scribble) is consumed whole, returning the last entry's text. Returns the
+ * new consumed count alongside the text.
+ */
+export function nextTutorTurnText(
+  transcript: TranscriptEntryLite[] | undefined,
+  consumedTutorCount: number,
+): { text: string; tutorCount: number } | null {
+  const tutors = (transcript ?? []).filter((e) => e.role === 'tutor' && !e.revising);
+  if (tutors.length <= consumedTutorCount) return null;
+  const newest = tutors[tutors.length - 1];
+  if (newest.streaming) return null;
+  if (!newest.text || !newest.text.trim()) return null;
+  return { text: newest.text, tutorCount: tutors.length };
+}
 
 /**
  * Drives a real claude-brain session for `persona` (demo AND subscribed —
@@ -390,6 +436,8 @@ export interface RunScenarioOpts {
   /** Explicit targetKind → __tutorTestStart.targetKind (S5 runs diego's
    *  diagnostic variant with 'diagnostic'). */
   targetKind?: TestStartConfig['targetKind'];
+  /** Teacher persona pin → __tutorTestStart.teacherId (T1/T2 rows). */
+  teacherId?: TestStartConfig['teacherId'];
   /** Opener-recency (part A): injected as __tutorTestStart's lastOpener
    *  (the previous session's opener record). Only `runReplayScenario`
    *  sets this — and only on its SECOND session. */
@@ -405,6 +453,7 @@ export async function runScenario(
     resumeVariant: opts.resumeVariant,
     sessionMaxMinutes: opts.sessionMaxMinutes,
     targetKind: opts.targetKind,
+    teacherId: opts.teacherId,
   });
   if (opts.lastOpener) start.lastOpener = opts.lastOpener;
 
@@ -419,7 +468,16 @@ export async function runScenario(
   });
   const context = await browser.newContext({ permissions: ['microphone'], viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
-  page.on('console', (m: ConsoleMessage) => { if (m.type() === 'error') log(`[browser console error] ${m.text().slice(0, 200)}`); });
+  // Persist the FULL browser console to the bundle (mirrors tutor-e2e/run.ts).
+  // The T1 duplicate-turn investigation (2026-07-04) had only screenshots to
+  // go on because dropped-dispatch warnings live in console.warn/log lines
+  // that were never captured.
+  const consoleLines: string[] = [];
+  page.on('console', (m: ConsoleMessage) => {
+    consoleLines.push(`[${new Date().toISOString()}] [${m.type()}] ${m.text()}`);
+    if (m.type() === 'error') log(`[browser console error] ${m.text().slice(0, 200)}`);
+  });
+  page.on('pageerror', (e) => { consoleLines.push(`[${new Date().toISOString()}] [pageerror] ${e.message}`); });
 
   const getState = () => page.evaluate(() => window.__tutorTestState() as TestState);
 
@@ -472,20 +530,29 @@ export async function runScenario(
   // "successfully" even if brainBusy never went true within its 30s start
   // window — it just falls through to the quiescence check, which is
   // trivially satisfied once QUIET_MS elapses with brainBusy stuck false.
-  // That's a real hazard (seen live in this task's own smoke run: the
-  // kickoff's __tutorSendText fired while the realtime handle wasn't fully
-  // ready, so no brain turn ever started, yet waitForTurn returned clean).
-  // Rather than hand an empty tutorText to simulateStudent (which crashes
-  // deep in the Anthropic SDK with a confusing "messages.0: user messages
-  // must have non-empty content" 400), poll a bit longer for a genuine
-  // non-empty tutor transcript entry and fail loudly with a diagnosable
-  // error (naming the persona + screenshot) if it truly never arrives.
-  async function waitForNonEmptyTutorText(extraTimeoutMs: number, what: string): Promise<string> {
+  // That's a real hazard two ways:
+  //  - the kickoff's __tutorSendText can fire while the realtime handle
+  //    isn't fully ready → no brain turn ever starts, yet waitForTurn
+  //    returns clean (seen live in this task's own smoke run);
+  //  - brainBusy is the COMPOSING indicator (drops at the first streamed
+  //    sentence), so on a LONG turn waitForTurn returns while the turn is
+  //    still streaming — the old "read the last tutor entry" capture then
+  //    grabbed a partial and re-captured the same turn next iteration (the
+  //    T1 duplicate-turn 2–3, 2026-07-04).
+  // So the authoritative gate is `nextTutorTurnText`: a NEW, FINALIZED,
+  // non-empty tutor entry past the consumed pointer. Fail loudly upstream
+  // (naming the persona + screenshot) if none ever arrives — never hand an
+  // empty tutorText to simulateStudent (it crashes deep in the Anthropic
+  // SDK with a confusing "messages.0 must have non-empty content" 400).
+  let consumedTutorCount = 0;
+  async function waitForNextTutorTurn(extraTimeoutMs: number): Promise<string> {
     const deadline = Date.now() + extraTimeoutMs;
     while (Date.now() < deadline) {
-      const tr = (await getState()).transcript ?? [];
-      const lastTutor = [...tr].reverse().find((e) => e.role === 'tutor');
-      if (lastTutor?.text && lastTutor.text.trim().length > 0) return lastTutor.text;
+      const next = nextTutorTurnText((await getState()).transcript, consumedTutorCount);
+      if (next) {
+        consumedTutorCount = next.tutorCount;
+        return next.text;
+      }
       await sleep(1000);
     }
     return '';
@@ -524,7 +591,7 @@ export async function runScenario(
     debugSince = 0; // tool calls from the kickoff turn attribute to turn 0 below
 
     for (let i = 0; i < opts.maxTurns; i++) {
-      const tutorText = await waitForNonEmptyTutorText(30_000, `turn ${i} tutor text`);
+      const tutorText = await waitForNextTutorTurn(i === 0 ? 30_000 : 90_000);
       const toolCalls = await collectNewToolCalls();
       const boardState = await shot(`turn-${i}`);
 
@@ -557,8 +624,19 @@ export async function runScenario(
     // fabricated: absent when the engine didn't capture one.
     const finalState = await getState();
     if (finalState.sessionOpenerRecord) bundle.sessionOpenerRecord = finalState.sessionOpenerRecord;
+    // Persist the raw session evidence alongside the screenshots: the full
+    // in-page transcript (what the judge's turn texts were derived from) and
+    // the debug-event stream (tool calls, kill-recovery, dispatch drops).
+    try {
+      fs.writeFileSync(path.join(outDir, 'transcript.json'), JSON.stringify(finalState.transcript ?? [], null, 2));
+      fs.writeFileSync(path.join(outDir, 'debug-events.json'), JSON.stringify(finalState.debugEvents ?? [], null, 2));
+      fs.writeFileSync(path.join(outDir, 'bundle-turns.json'), JSON.stringify(bundle.turns.map((t) => ({ index: t.index, tutorText: t.tutorText, studentReply: t.studentReply })), null, 2));
+    } catch (e) {
+      log(`bundle evidence dump failed (non-fatal): ${(e as Error).message}`);
+    }
     return bundle;
   } finally {
+    try { fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n')); } catch { /* non-fatal */ }
     await browser.close();
   }
 }

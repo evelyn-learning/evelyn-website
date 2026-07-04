@@ -20,6 +20,7 @@ import { resolveToolSubjects, type CatalogSubject } from './tool-subject-taxonom
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
 import { renderBrandingBlock } from './branding/render';
+import { renderTeacherPersonaBlock, type TeacherPersonaWire } from './teacher-persona';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -154,6 +155,15 @@ export interface SystemPromptContext {
    *  opener clause this is session-wide, not gated to the opening turn —
    *  the orchestrator wiring that sets this lands in a later task. */
   selfReportRouting?: boolean;
+
+  /** Teacher persona — the session is taught AS this specific teacher
+   *  (name, intro, style, identity bounds). Optional/additive (same
+   *  pattern as B4/B5): absent ⇒ buildSystemPrompt's output is
+   *  byte-for-byte unchanged. Session-static (never changes mid-session)
+   *  so the rendered block sits in the cacheable prompt prefix. Only the
+   *  flag-gated orchestrator (VoiceTutorRealtime under
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER) populates it. */
+  teacherPersona?: TeacherPersonaWire;
 }
 
 /**
@@ -1619,6 +1629,14 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   const selfReportClause = buildSelfReportClause(context);
   if (selfReportClause) {
     prompt += `\n\n## Self-Report Routing\n${selfReportClause}\n`;
+  }
+
+  // Teacher persona — additive/gated exactly like the opener/self-report
+  // clauses above: only appended when the caller passes a persona. Absent
+  // (every flag-off caller) ⇒ the prompt is byte-identical to before.
+  // Session-static, so it stays cache-safe in the prompt prefix.
+  if (context.teacherPersona) {
+    prompt += `\n\n## Teacher Identity\n${renderTeacherPersonaBlock(context.teacherPersona)}\n`;
   }
 
   return prompt;

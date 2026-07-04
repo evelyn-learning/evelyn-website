@@ -23,6 +23,15 @@ function buildDemoToken() {
 export function EngineSelector() {
   const engine = voiceEngines[0]!;
   const demoToken = useMemo(() => buildDemoToken(), []);
+  // The bare `/embed` path only exists on the tutor.* hosts, where
+  // src/middleware.ts rewrites `/*` → `/tutor-portal/*`. When this page is
+  // opened directly at `/tutor-portal/demo` (plain localhost or the main
+  // domain), the middleware doesn't fire and `/embed` 404s inside the
+  // iframe — so use the full route there instead.
+  const embedBase = useMemo(() => {
+    if (typeof window === 'undefined') return '/tutor-portal';
+    return window.location.hostname.startsWith('tutor.') ? '' : '/tutor-portal';
+  }, []);
 
   return (
     <div>
@@ -58,7 +67,7 @@ export function EngineSelector() {
           <div className="w-14" />
         </div>
         <iframe
-          src={`/embed?token=${demoToken}`}
+          src={`${embedBase}/embed?token=${demoToken}`}
           width="100%"
           height="760"
           allow="microphone; camera; autoplay"

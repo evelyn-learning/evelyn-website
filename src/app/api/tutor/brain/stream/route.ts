@@ -55,6 +55,11 @@ interface BrainStreamRequestBody {
    *  phase is active. Surfaces as `<opening_directive>` in the user
    *  content. See BrainTurnInput.openingDirective. */
   openingDirective?: string;
+  /** Teacher-persona mid-session style salience
+   *  (NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact per-turn style reminder,
+   *  attached only AFTER the opening directive retires. Surfaces as
+   *  `<teacher_style>` in the user content. See BrainTurnInput.styleReminder. */
+  styleReminder?: string;
   /** Task E1 (pedagogy, NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): budget-aware
    *  satisfying stop for DEMO sessions. Bounds-checked below (mode enum,
    *  finite non-negative numbers) — anything malformed collapses to
@@ -436,6 +441,13 @@ export async function POST(req: NextRequest) {
       if (body.openingDirective) {
         console.log(`[opener] opening_directive attached (${String(body.openingDirective.length)} chars)`);
       }
+      // Teacher-persona style salience: which turns carry the reminder.
+      // Must be ABSENT while the opening directive rides and PRESENT on
+      // every teacher-session turn after — this line is how a live run
+      // proves the hand-off happened server-side.
+      if (body.styleReminder) {
+        console.log(`[teacher-style] style_reminder attached (${String(body.styleReminder.length)} chars)`);
+      }
       // Task E1 (pedagogy): sanitize demoStop. Mode enum + finite,
       // non-negative numbers only; anything else ⇒ undefined (no block).
       // Grep-able one-liner per turn so a live run can prove the demo-only
@@ -476,6 +488,11 @@ export async function POST(req: NextRequest) {
           openingDirective:
             typeof body.openingDirective === 'string' && body.openingDirective.length <= 2000
               ? body.openingDirective
+              : undefined,
+          // Teacher style reminder: same string-typed + bounded defense.
+          styleReminder:
+            typeof body.styleReminder === 'string' && body.styleReminder.length <= 2000
+              ? body.styleReminder
               : undefined,
           // Task E1: sanitized above (mode enum + finite ≥0 numbers, else
           // undefined). Surfaces as `<demo_stop>` in the user content.

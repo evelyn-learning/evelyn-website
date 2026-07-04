@@ -21,6 +21,7 @@ import {
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -635,6 +636,14 @@ interface VoiceTutorRealtimeProps {
    *  seeded resumeState wins (see deriveResumeSignal). Only consumed when
    *  TUTOR_PEDAGOGY_OPENER is on. Default false. */
   checkpointStale?: boolean;
+  /** Teacher persona — the session is taught AS this specific teacher.
+   *  Sources: the /tutor demo page's "Your teacher" picker (DEMO_TEACHERS)
+   *  and the embed's `teacher` token field (the academy sends it for
+   *  enrolled sessions). Feeds (a) buildSystemPrompt's session-static
+   *  <teacher_identity> block and (b) a one-sentence introduce-yourself
+   *  directive prepended to the per-turn opening directive. Only consumed
+   *  when TUTOR_PEDAGOGY_OPENER is on; absent ⇒ byte-identical prompts. */
+  teacherPersona?: TeacherPersonaWire;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -865,6 +874,7 @@ export function VoiceTutorRealtime({
   isTrial = false,
   targetKind,
   checkpointStale = false,
+  teacherPersona,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -1096,6 +1106,17 @@ export function VoiceTutorRealtime({
   // seemingly-dead start button). We suppress perception-initiated cancels
   // until the first brain turn completes; flips true at the first "turn ok".
   const tutorFirstTurnDoneRef = useRef<boolean>(false);
+  // Opening-turn audio shield (2026-07-04): tutorFirstTurnDoneRef flips when
+  // the first brain turn's TEXT completes, but its TTS audio can keep
+  // playing for tens of seconds (long teacher-intro openers). Perception
+  // cancels honoured in that window abort the opener audio mid-sentence on
+  // phantom self-echo transcripts. This latch flips only when the first
+  // turn's AUDIO is done: the realtime state leaves 'speaking' after having
+  // been 'speaking' post-text-done — with a hard 90s cap from text-done as
+  // the no-audio fallback (muted/headless runs where TTS never plays).
+  const firstTurnAudioDoneRef = useRef<boolean>(false);
+  const firstTurnSawSpeakingRef = useRef<boolean>(false);
+  const tutorFirstTurnDoneAtRef = useRef<number>(0);
   // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
   // flag. If perception WS misses a speech_stopped event (network blip,
   // server bug), the flag would stay stuck → all subsequent brain
@@ -1208,6 +1229,16 @@ export function VoiceTutorRealtime({
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
+  // Teacher-persona mid-session style salience (2026-07-04): the compact
+  // per-turn <teacher_style> body (renderTeacherStyleReminder output),
+  // seeded once under the same one-shot latch as the opening directive.
+  // callBrainOnce attaches it ONLY on turns where the opening directive is
+  // NOT riding — the directive already carries identity salience, so the
+  // reminder takes over exactly at retirement and never retires itself
+  // (style must persist all session; the T1 judge kept scoring
+  // style-consistent 4/5 "not strongly distinctive beyond the opening").
+  // null ⇒ flag off / no persona / diagnostic session ⇒ never attached.
+  const teacherStyleReminderRef = useRef<string | null>(null);
   // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
   // effect (below) re-runs mid-session whenever studentPreferences changes
   // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
@@ -6930,6 +6961,19 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Teacher-persona mid-session style salience: attach the compact
+        // <teacher_style> reminder on every turn where the opening
+        // directive is NOT riding (it takes over exactly at retirement —
+        // while the directive rides, identity is already salient). Never
+        // retires: style must stay audible all session. Flag off / no
+        // persona / diagnostic ⇒ ref is null ⇒ field stays undefined ⇒
+        // request byte-identical.
+        let styleReminder: string | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && teacherStyleReminderRef.current && !openingDirective) {
+          styleReminder = teacherStyleReminderRef.current;
+          console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
+        }
+
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
         // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
         // undefined and JSON.stringify omits it (request byte-identical).
@@ -6996,6 +7040,9 @@ export function VoiceTutorRealtime({
             // Pedagogy opener: opening-phase directive (undefined once
             // retired / when the flag is off — see the block above).
             openingDirective,
+            // Teacher-persona style salience: per-turn reminder, present
+            // exactly when the opening directive is NOT (see block above).
+            styleReminder,
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
@@ -9771,9 +9818,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('opener_record_captured', `[${sessionOpenerRecordRef.current.kind}] ${sessionOpenerRecordRef.current.digest.slice(0, 60)}`);
         onOpenerRecord?.(sessionOpenerRecordRef.current);
       }
-      // Opening-turn barge-in guard: the first brain turn has now landed, so
-      // perception-initiated cancels are safe to honour from here on.
+      // Opening-turn barge-in guard: the first brain turn's TEXT stream has
+      // now landed. NOTE this is NOT "safe to cancel from here on": the TTS
+      // audio for a long opener keeps playing for tens of seconds after this
+      // point, and phantom perception transcripts (the mic hearing the
+      // tutor's own voice through speakers) were observed cancelling that
+      // still-playing audio mid-sentence (2026-07-04, teacher-intro opener:
+      // audio died at "…teaching AP Calc for year—" while captions ran on).
+      // The cancel sites therefore ALSO wait for firstTurnAudioDoneRef —
+      // see the state-watcher effect near the perception wiring.
       tutorFirstTurnDoneRef.current = true;
+      tutorFirstTurnDoneAtRef.current = Date.now();
 
       // Pacing v2 — Phase 1 (inert): streak update from brain
       // affirmation/correction. Runs ONCE per brain turn at end-of-stream
@@ -10830,6 +10885,39 @@ export function VoiceTutorRealtime({
   // When the user starts speaking BEFORE the tutor TTS begins,
   // perception's speech_started fires during 'listening' — the cancel
   // gate misses. But if production state later TRANSITIONS to 'speaking'
+  // Opening-turn audio shield (2026-07-04). "Fully delivered" = the first
+  // brain turn's TEXT stream completed AND its TTS audio finished playing
+  // (or the 90s no-audio cap passed — muted/headless runs where TTS never
+  // starts). Both perception cancel sites gate on this instead of the bare
+  // text-done flag: a long teacher-intro opener keeps speaking for tens of
+  // seconds after text-done, and phantom self-echo transcripts (the mic
+  // hearing the tutor through speakers) were cancelling that audio
+  // mid-sentence while the captions ran on.
+  const FIRST_TURN_AUDIO_CAP_MS = 90_000;
+  const openingTurnFullyDelivered = useCallback(() => {
+    if (!tutorFirstTurnDoneRef.current) return false;
+    if (firstTurnAudioDoneRef.current) return true;
+    return tutorFirstTurnDoneAtRef.current > 0
+      && Date.now() - tutorFirstTurnDoneAtRef.current > FIRST_TURN_AUDIO_CAP_MS;
+  }, []);
+  // Latch the audio-done flag: state leaves 'speaking' after having been
+  // 'speaking', with the first turn's text already done. (If the audio
+  // finished before text-done, the leave-'speaking' transition after the
+  // next state change latches it; the 90s cap is the final backstop.)
+  useEffect(() => {
+    if (firstTurnAudioDoneRef.current) return;
+    if (realtime.state === 'speaking') {
+      firstTurnSawSpeakingRef.current = true;
+      return;
+    }
+    if (tutorFirstTurnDoneRef.current && firstTurnSawSpeakingRef.current) {
+      firstTurnAudioDoneRef.current = true;
+      console.log('[PERCEPTION] opening-turn audio delivered — cancels now honoured');
+      onDebugEvent?.('perception_opening_audio_done', realtime.state);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtime.state]);
+
   // (or 'processing' for Stage 2) while the student is still mid-utterance,
   // fire the cancel retroactively so the eventual perception transcript
   // dispatches normally. Without this, the corrected answer in a long
@@ -10846,8 +10934,10 @@ export function VoiceTutorRealtime({
     const canRetroStage3 = perceptionStage >= 3 && toState === 'speaking';
     if (!canRetroStage2 && !canRetroStage3) return;
     // Opening-turn guard: don't let ambient noise retro-cancel the synthetic
-    // kickoff turn before the tutor has delivered anything.
-    if (!tutorFirstTurnDoneRef.current) {
+    // kickoff turn before the tutor has FULLY delivered it — text AND audio.
+    // (2026-07-04: phantom self-echo transcripts were cancelling the long
+    // teacher-intro opener's still-playing audio after the text stream done.)
+    if (!openingTurnFullyDelivered()) {
       console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
       onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
       return;
@@ -11287,7 +11377,10 @@ export function VoiceTutorRealtime({
       const canStage3 = perceptionStage >= 3 && prodState === 'speaking';
       // Opening-turn guard: suppress barge-in on the synthetic kickoff turn —
       // ambient noise here would abort the lesson before it ever started.
-      if ((canStage2 || canStage3) && !tutorFirstTurnDoneRef.current) {
+      // Covers text AND audio delivery (see firstTurnAudioDoneRef): the
+      // opener's TTS keeps playing long after the text stream completes,
+      // and self-echo phantoms were aborting it mid-sentence (2026-07-04).
+      if ((canStage2 || canStage3) && !openingTurnFullyDelivered()) {
         console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
         onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
         return;
@@ -11686,6 +11779,10 @@ export function VoiceTutorRealtime({
           openerFields.entryMode = detectEntryMode(undefined);
           openerFields.isReturning = beh.journey === 'subscribed-returning';
           openerFields.selfReportRouting = true;
+          // Teacher persona — session-static <teacher_identity> block in the
+          // system prompt. Only ever set inside this flag-on block, so flag-
+          // off builds stay byte-identical (openerFields stays {}).
+          if (teacherPersona) openerFields.teacherPersona = teacherPersona;
           if (!openingTurnArmedRef.current) {
             openingTurnPendingRef.current = beh.opener !== 'none';
             // Task C1: stash the resolved session mode for per-turn reads in
@@ -11723,10 +11820,26 @@ export function VoiceTutorRealtime({
             // the checkpoint was too old to restore — prepend the one-line
             // re-orient instruction to the same directive (no new machinery;
             // rides the existing per-turn <opening_directive> block).
-            openingDirectiveRef.current =
+            const baseDirective =
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
                 : openerClause;
+            // Teacher persona: prepend the one-sentence introduce-yourself
+            // directive — ONLY when a directive exists at all (a resolved
+            // opener of 'none', e.g. diagnostic, keeps the directive null).
+            openingDirectiveRef.current =
+              teacherPersona && baseDirective
+                ? `${renderTeacherIntroDirective(teacherPersona)} ${baseDirective}`
+                : baseDirective;
+            // Mid-session style salience: seed the session-static
+            // <teacher_style> body under the same one-shot latch.
+            // Diagnostic sessions stay outside the persona theatrics —
+            // same targetKind gate as the completion gate above. null
+            // (no persona / no audible style markers) ⇒ never attached.
+            teacherStyleReminderRef.current =
+              teacherPersona && sig.targetKind !== 'diagnostic'
+                ? renderTeacherStyleReminder(teacherPersona)
+                : null;
             openingTurnArmedRef.current = true;
           }
         }

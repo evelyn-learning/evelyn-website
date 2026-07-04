@@ -18,12 +18,14 @@ import {
   assembleBundle,
   openerRecordFromBundle,
   runReplayScenario,
+  nextTutorTurnText,
   DEMO_PICKER_START,
   SUBSCRIBED_PICKER_START,
   refreshThreadRecency,
   type RawCapturedTurn,
   type Bundle,
   type RunScenarioOpts,
+  type TranscriptEntryLite,
 } from './run-harness';
 import type { Persona } from './fixtures/personas';
 
@@ -40,7 +42,7 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam'];
+const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam', 'nina', 'tara'];
 const SUBSCRIBED_IDS = ['priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
 
 // ── personaToPickerStart: DEMO personas ─────────────────────────────────
@@ -163,11 +165,24 @@ test("personaToPickerStart(diego, targetKind 'diagnostic'): explicit targetKind 
   assert.equal(cfg.studentId, 'pedagogy-diego', 'subscribed extras untouched');
 });
 
+test('personaToPickerStart(maya, teacherId): teacher pin reaches the start config (T1 — same plumbing as sessionMaxMinutes)', () => {
+  const cfg = personaToPickerStart(loadPersona('maya'), { teacherId: 'ms-elena-vasquez' });
+  assert.equal(cfg.teacherId, 'ms-elena-vasquez');
+  assert.equal(cfg.lessonPlanId, DEMO_PICKER_START.maya.lessonPlanId, 'picker fields untouched');
+});
+
+test('personaToPickerStart(tara, teacherId): teacher pin works for the parent-probing demo persona (T2)', () => {
+  const cfg = personaToPickerStart(loadPersona('tara'), { teacherId: 'ms-elena-vasquez' });
+  assert.equal(cfg.teacherId, 'ms-elena-vasquez');
+  assert.equal(cfg.studentName, 'Tara', 'demo fallback name derived from the id');
+});
+
 test('personaToPickerStart: overrides are absent (not defaulted) when not requested — page defaults own them', () => {
   for (const id of ['maya', 'diego', 'ravi']) {
     const cfg = personaToPickerStart(loadPersona(id));
     assert.equal(cfg.sessionMaxMinutes, undefined, `${id}: no budget override`);
     assert.equal(cfg.targetKind, undefined, `${id}: no targetKind override`);
+    assert.equal(cfg.teacherId, undefined, `${id}: no teacher pin`);
   }
 });
 
@@ -325,6 +340,55 @@ await testAsync('runReplayScenario: a caller-supplied lastOpener in opts is IGNO
   await runReplayScenario(loadPersona('priya'), { maxTurns: 2, lastOpener: { kind: 'x', digest: 'y' } }, fakeRunner);
   assert.equal(calls[0].lastOpener, undefined, 'session 1 never carries a lastOpener');
   assert.notDeepEqual(calls[1].lastOpener, { kind: 'x', digest: 'y' }, 'session 2 uses the derived record, not the stray opts one');
+});
+
+// ── nextTutorTurnText: turn-sync capture (T1 duplicate-turn fix) ────────
+// Regression for the 2026-07-04 T1 run: the old last-entry read captured
+// the SAME long tutor turn twice (streaming partial at turn N, finalized
+// text at turn N+1) because nothing required a NEW entry or a FINALIZED
+// one. These pin the new semantics.
+const tut = (text: string, extra?: Partial<TranscriptEntryLite>): TranscriptEntryLite => ({ role: 'tutor', text, ...extra });
+const stu = (text: string): TranscriptEntryLite => ({ role: 'student', text });
+
+test('nextTutorTurnText: null when there is no tutor entry beyond the consumed count', () => {
+  assert.equal(nextTutorTurnText([tut('opener'), stu('hi')], 1), null);
+  assert.equal(nextTutorTurnText([], 0), null);
+  assert.equal(nextTutorTurnText(undefined, 0), null);
+});
+
+test('nextTutorTurnText: null while the newest tutor entry is still streaming (no partial capture)', () => {
+  const tr = [tut('opener'), stu('hi'), tut('long turn still stre', { streaming: true })];
+  assert.equal(nextTutorTurnText(tr, 1), null);
+});
+
+test('nextTutorTurnText: captures the entry once it finalizes in place', () => {
+  const tr = [tut('opener'), stu('hi'), tut('long turn, complete now.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'long turn, complete now.', tutorCount: 2 });
+});
+
+test('nextTutorTurnText: REGRESSION — same transcript re-read after consuming returns null, never a duplicate', () => {
+  const tr = [tut('opener'), stu('hi'), tut('turn two.')];
+  const first = nextTutorTurnText(tr, 1);
+  assert.ok(first);
+  assert.equal(nextTutorTurnText(tr, first!.tutorCount), null, 're-read must not re-capture the same turn');
+});
+
+test('nextTutorTurnText: chained multi-entry turn consumes all and returns the LAST finalized text', () => {
+  const tr = [tut('opener'), stu('hi'), tut('render turn.'), tut('scribble follow-up.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'scribble follow-up.', tutorCount: 3 });
+});
+
+test('nextTutorTurnText: revising (killed, dimmed) bubbles are ignored — not captured, not counted', () => {
+  const tr = [tut('opener'), stu('hi'), tut('wrong attempt', { revising: true }), tut('corrected turn.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'corrected turn.', tutorCount: 2 });
+  // A lone revising bubble with the retry still streaming: nothing to capture.
+  const mid = [tut('opener'), stu('hi'), tut('wrong attempt', { revising: true }), tut('retry stre', { streaming: true })];
+  assert.equal(nextTutorTurnText(mid, 1), null);
+});
+
+test('nextTutorTurnText: empty finalized tutor text is not captured (waits — loud timeout upstream)', () => {
+  const tr = [tut('opener'), stu('hi'), tut('   ')];
+  assert.equal(nextTutorTurnText(tr, 1), null);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
