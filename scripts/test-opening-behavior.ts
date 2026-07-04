@@ -10,6 +10,8 @@
 import { strict as assert } from 'node:assert';
 import {
   resolveOpeningBehavior,
+  shouldRetireOpeningDirective,
+  OPENING_DIRECTIVE_MAX_BRAIN_TURNS,
   type OpeningInput,
   type OpeningBehavior,
 } from '../src/lib/tutor/ai/opening-behavior';
@@ -240,6 +242,65 @@ function main() {
       assert.ok(result.opener, 'opener must be defined');
       assert.ok(result.calibration, 'calibration must be defined');
     }
+  });
+
+  // ── shouldRetireOpeningDirective — per-turn opening-directive lifecycle
+  //    (flag-ON follow-up #1: the opener clause must NOT persist all
+  //    session; it retires on lesson advance or at the brain-turn ceiling).
+  test('directive stays active before the ceiling with no advance', () => {
+    assert.equal(
+      shouldRetireOpeningDirective({ lessonAdvanced: false, brainTurnsCompleted: 0 }),
+      false,
+    );
+    assert.equal(
+      shouldRetireOpeningDirective({
+        lessonAdvanced: false,
+        brainTurnsCompleted: OPENING_DIRECTIVE_MAX_BRAIN_TURNS - 1,
+      }),
+      false,
+    );
+  });
+
+  test('lesson advance retires the directive immediately (even at turn 0)', () => {
+    assert.equal(
+      shouldRetireOpeningDirective({ lessonAdvanced: true, brainTurnsCompleted: 0 }),
+      true,
+    );
+  });
+
+  test('the brain-turn ceiling retires the directive without an advance', () => {
+    assert.equal(
+      shouldRetireOpeningDirective({
+        lessonAdvanced: false,
+        brainTurnsCompleted: OPENING_DIRECTIVE_MAX_BRAIN_TURNS,
+      }),
+      true,
+    );
+    assert.equal(
+      shouldRetireOpeningDirective({
+        lessonAdvanced: false,
+        brainTurnsCompleted: OPENING_DIRECTIVE_MAX_BRAIN_TURNS + 5,
+      }),
+      true,
+    );
+  });
+
+  test('maxBrainTurns override is respected', () => {
+    assert.equal(
+      shouldRetireOpeningDirective({ lessonAdvanced: false, brainTurnsCompleted: 1, maxBrainTurns: 2 }),
+      false,
+    );
+    assert.equal(
+      shouldRetireOpeningDirective({ lessonAdvanced: false, brainTurnsCompleted: 2, maxBrainTurns: 2 }),
+      true,
+    );
+  });
+
+  test('ceiling covers the opener turn plus at least two calibration exchanges', () => {
+    // The locked design calls for a SHORT multi-turn calibration (roughly
+    // 1-3 exchanges) — a ceiling below 3 would collapse it right back to
+    // the single-turn behavior this change exists to fix.
+    assert.ok(OPENING_DIRECTIVE_MAX_BRAIN_TURNS >= 3);
   });
 
   // ── Summary ────────────────────────────────────────────────────────────

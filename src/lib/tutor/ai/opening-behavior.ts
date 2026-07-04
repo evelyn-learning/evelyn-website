@@ -209,3 +209,30 @@ export function assembleOpeningInput(sig: OpeningSignals): OpeningInput {
 export function isPedagogyOpenerFlagValue(raw: string | undefined): boolean {
   return raw === 'true' || raw === 'on';
 }
+
+/**
+ * How many brain turns the per-turn `<opening_directive>` block rides along
+ * for before the orchestrator stops sending it: the opener turn itself plus
+ * up to three calibration exchanges. A defensive CEILING only — the intended
+ * end of the opening phase is the brain calling advance_lesson (teaching
+ * started), which retires the directive immediately. Per the locked design
+ * (no calibration state machine), the brain owns the transition; this cap
+ * just guarantees the directive can't outlive a session where the brain
+ * lingers in the intro without ever advancing.
+ */
+export const OPENING_DIRECTIVE_MAX_BRAIN_TURNS = 4;
+
+/**
+ * Pure: should the orchestrator STOP attaching the per-turn opening
+ * directive? True once the lesson has advanced past the intro (the brain
+ * transitioned into teaching) OR once `brainTurnsCompleted` (count of brain
+ * turns that already carried the directive) reaches the ceiling.
+ */
+export function shouldRetireOpeningDirective(s: {
+  lessonAdvanced: boolean;
+  brainTurnsCompleted: number;
+  maxBrainTurns?: number;
+}): boolean {
+  const cap = s.maxBrainTurns ?? OPENING_DIRECTIVE_MAX_BRAIN_TURNS;
+  return s.lessonAdvanced || s.brainTurnsCompleted >= cap;
+}

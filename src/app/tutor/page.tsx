@@ -832,8 +832,14 @@ function TutorPage() {
       return;
     }
     console.log(`[auto-start] firing synthetic start prompt for plan ${target} (pedagogy-opener wiring)`);
+    // Flag-ON follow-up #2 (whole-branch review): the flag-off text ordered
+    // "Begin teaching immediately", which collapsed the multi-turn opening/
+    // calibration exchange into one turn. This variant hands the TIMING to
+    // the brain (decision #11 — no orchestrator state machine): finish the
+    // opening exchange first, then advance. The brain holds the exchange
+    // in-context and knows when calibration has run its course.
     handle.sendTextMessage(
-      '[orchestrator: the lesson plan has just been expanded with the picked LOs. Begin teaching immediately — call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12), then start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
+      '[orchestrator: the lesson plan has just been expanded with the picked LOs. If you are still in your opening/calibration exchange, continue it naturally first — keep it brief, at most a couple more short exchanges. As soon as it has run its course, transition into teaching: call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12) and start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
     );
   }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, studentIdParam, resumeState]);
 

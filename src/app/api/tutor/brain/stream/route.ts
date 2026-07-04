@@ -50,6 +50,11 @@ interface BrainStreamRequestBody {
   lessonPlanContext?: BrainTurnInput['lessonPlanContext'];
   /** Pre-rendered student profile block (cross-session memory). */
   studentProfileBlock?: string;
+  /** Pedagogy opener (NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): per-turn
+   *  opening-phase directive; present only while the client's opening
+   *  phase is active. Surfaces as `<opening_directive>` in the user
+   *  content. See BrainTurnInput.openingDirective. */
+  openingDirective?: string;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -418,6 +423,13 @@ export async function POST(req: NextRequest) {
             ? ` excluded=[${toolFilter.excluded.join(',')}]`
             : ''),
       );
+      // Pedagogy opener: which turns carry the opening directive. The
+      // directive must appear on the first few turns of a flag-ON session
+      // and then STOP (advance_lesson or turn ceiling) — this line is how a
+      // live run proves the retirement actually happened server-side.
+      if (body.openingDirective) {
+        console.log(`[opener] opening_directive attached (${String(body.openingDirective.length)} chars)`);
+      }
 
       try {
         for await (const ev of runTutorTurn({
@@ -428,6 +440,12 @@ export async function POST(req: NextRequest) {
           whiteboardPages: body.whiteboardPages,
           lessonPlanContext: body.lessonPlanContext,
           studentProfileBlock: body.studentProfileBlock,
+          // Opening-phase directive: string-typed + bounded (defense against
+          // a malformed client resending an unbounded blob every turn).
+          openingDirective:
+            typeof body.openingDirective === 'string' && body.openingDirective.length <= 2000
+              ? body.openingDirective
+              : undefined,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

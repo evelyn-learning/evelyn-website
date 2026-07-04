@@ -70,6 +70,15 @@ export interface BrainTurnInput {
    *  persistent student id. The brain reads it for past mastery, open
    *  gaps, and recent-session continuity. */
   studentProfileBlock?: string;
+  /** Pedagogy-opener initiative (flag NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER):
+   *  the opener/calibration directive for the session's OPENING PHASE only
+   *  (buildOpenerClause output). Sent per-turn by the orchestrator while
+   *  the opening is active and dropped once the brain advances the lesson
+   *  (or a small turn ceiling passes) — it lives in the per-turn user
+   *  content, NOT the cached system prompt, precisely so its appearance
+   *  and retirement never invalidate the byte-stable cached prefix.
+   *  Surfaces as an `<opening_directive>` block. */
+  openingDirective?: string;
   /** Targets the brain passed to tutor_scribble last turn that the
    *  runtime silently dropped (no_match / whole-item alias / iframe).
    *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
@@ -868,6 +877,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // than as a separate "system" injection) lets prompt caching segment the
   // stable preamble from the volatile per-turn payload.
   const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
+  // Pedagogy opener: per-turn opening-phase directive (see BrainTurnInput
+  // doc). Placed ahead of the lesson blocks — it governs HOW this turn
+  // opens/calibrates before the plan mandates kick in.
+  const openingDirectiveBlock = input.openingDirective
+    ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -893,6 +907,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
+    openingDirectiveBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
@@ -1022,6 +1037,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     currentSegmentId: input.lessonPlanContext?.currentSegmentId,
   });
   const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
+  // Pedagogy opener: per-turn opening-phase directive (see BrainTurnInput
+  // doc). Placed ahead of the lesson blocks — it governs HOW this turn
+  // opens/calibrates before the plan mandates kick in.
+  const openingDirectiveBlock = input.openingDirective
+    ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1047,6 +1067,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
+    openingDirectiveBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +

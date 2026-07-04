@@ -20,12 +20,13 @@ import {
 } from '@/lib/tutor/voice/perception-classifier';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, getInitialGreetingPrompt, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
   detectEntryMode,
   isPedagogyOpenerFlagValue,
+  shouldRetireOpeningDirective,
   type OpeningSignals,
 } from '@/lib/tutor/ai/opening-behavior';
 import {
@@ -1129,6 +1130,20 @@ export function VoiceTutorRealtime({
   // + task-B3-brief.md.
   const openingTurnPendingRef = useRef(false);
   const openingTurnValidRenderCountRef = useRef(0);
+  // Per-turn opening directive (flag-ON follow-up #1 from the whole-branch
+  // review): the B4 opener clause used to be baked into the SESSION-STATIC
+  // system prompt (a byte-stable 1h-cached prefix — see runBrainTurn's
+  // cache_control), so it persisted ALL session. It now rides along in the
+  // per-turn user content as `<opening_directive>` while the opening phase
+  // is active, then retires — WITHOUT ever touching the cached prefix.
+  // Retirement (see callBrainOnce + applyResolvedAdvance): the brain
+  // advancing the lesson (teaching started), or the
+  // OPENING_DIRECTIVE_MAX_BRAIN_TURNS ceiling. Seeded once per mount in
+  // buildInstructions under the same openingTurnArmedRef latch as the
+  // fallback arm (a mid-session studentPreferences rebuild must not
+  // resurrect a retired directive). Fresh per session via key={sessionId}.
+  const openingDirectiveRef = useRef<string | null>(null);
+  const openingDirectiveBrainTurnsRef = useRef(0);
   // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
   // effect (below) re-runs mid-session whenever studentPreferences changes
   // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
@@ -2217,6 +2232,11 @@ export function VoiceTutorRealtime({
     }
     currentSegmentIdRef.current = next;
     setActiveSegmentId(next);
+    // Pedagogy opener: the brain advancing the lesson IS the "opening phase
+    // over, teaching started" signal (decision #11 — the brain owns the
+    // transition; the orchestrator only observes it). Retire the per-turn
+    // opening directive so it stops riding along in the brain body.
+    if (TUTOR_PEDAGOGY_OPENER) openingDirectiveRef.current = null;
     // Reaching the recap segment is a milestone (value-boxed progress).
     if (getSegment(plan, next)?.kind === 'recap') emitMilestone('recap_reached');
     // Re-entered the plan — drop the stashed pre-free segment.
@@ -6723,6 +6743,27 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Pedagogy opener: attach the per-turn `<opening_directive>` while
+        // the opening phase is active. Retirement here is the TURN CEILING
+        // only (OPENING_DIRECTIVE_MAX_BRAIN_TURNS); the intended retirement
+        // — the brain calling advance_lesson — clears the ref in
+        // applyResolvedAdvance. Flag off ⇒ ref is never seeded ⇒ the field
+        // stays undefined and JSON.stringify omits it (request byte-identical).
+        let openingDirective: string | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && openingDirectiveRef.current) {
+          if (
+            shouldRetireOpeningDirective({
+              lessonAdvanced: false,
+              brainTurnsCompleted: openingDirectiveBrainTurnsRef.current,
+            })
+          ) {
+            openingDirectiveRef.current = null;
+          } else {
+            openingDirective = openingDirectiveRef.current;
+            openingDirectiveBrainTurnsRef.current += 1;
+          }
+        }
+
         // Stage 2 perception cancellation surface. Create an
         // AbortController for this brain call and expose it via
         // inFlightBrainAbortRef so the perception layer's
@@ -6753,6 +6794,9 @@ export function VoiceTutorRealtime({
             whiteboardPages: catalogRef.current.getPages(),
             lessonPlanContext,
             studentProfileBlock: studentProfileBlockRef.current || undefined,
+            // Pedagogy opener: opening-phase directive (undefined once
+            // retired / when the flag is off — see the block above).
+            openingDirective,
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -11373,20 +11417,19 @@ export function VoiceTutorRealtime({
           };
           const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
           openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
-          openerFields.openingPhase = beh.opener !== 'none';
+          // NOTE: openingPhase is deliberately NOT set here anymore (flag-ON
+          // follow-up #1): the static system prompt is a byte-stable cached
+          // prefix reused every turn, so an opener clause baked into it
+          // persisted ALL session. The clause now travels per-turn instead —
+          // see openingDirectiveRef below + the callBrainOnce body field.
           // Task B3: arm the fail-to-simple opener render fallback for the
-          // FIRST callBrainOnce turn to complete. Mirrors openerFields
-          // .openingPhase above exactly (same beh.opener !== 'none' check) —
-          // consumed once in callBrainOnce's finally, see opener-fallback.ts.
+          // FIRST callBrainOnce turn to complete. Consumed once in
+          // callBrainOnce's finally, see opener-fallback.ts.
           // Review fix: this effect re-runs mid-session on a studentPreferences
           // change (see the dep array below), so gate the arm behind the
           // openingTurnArmedRef latch — only the FIRST run this mount may arm
           // the pending flag; later re-runs (mid-session settings changes)
           // must not re-arm it after the opener turn already consumed it.
-          if (!openingTurnArmedRef.current) {
-            openingTurnPendingRef.current = beh.opener !== 'none';
-            openingTurnArmedRef.current = true;
-          }
           // No first-student-utterance signal reaches this mount-time call
           // (buildInstructions runs before any student input exists) — see
           // report. Always resolves 'button', which is the structurally
@@ -11394,6 +11437,22 @@ export function VoiceTutorRealtime({
           openerFields.entryMode = detectEntryMode(undefined);
           openerFields.isReturning = beh.journey === 'subscribed-returning';
           openerFields.selfReportRouting = true;
+          if (!openingTurnArmedRef.current) {
+            openingTurnPendingRef.current = beh.opener !== 'none';
+            // Seed the per-turn opening directive under the SAME one-shot
+            // latch (a mid-session prompt rebuild must not resurrect a
+            // retired directive — the exact bug pattern the B3 review
+            // caught for the fallback arm).
+            openingDirectiveRef.current = buildOpenerClause({
+              ...openerFields,
+              openingPhase: beh.opener !== 'none',
+              studentName,
+              subject,
+              topic,
+              level,
+            } as SystemPromptContext);
+            openingTurnArmedRef.current = true;
+          }
         }
 
         // Build system prompt using existing builder
