@@ -84,16 +84,23 @@ export default function ReplayPlayer({
   const [visibleWbCount, setVisibleWbCount] = useState(0);
 
   // Audio playback state
-  const [audioLoaded, setAudioLoaded] = useState(false);
-  const [audioLoading, setAudioLoading] = useState(false);
+  type AudioState = 'idle' | 'loading' | 'ready' | 'none' | 'error';
+  const [audioState, setAudioState] = useState<AudioState>('idle');
+  // Ref mirror so playback callbacks never read a stale closure — the exact
+  // bug that made play-before-load permanently silent (2026-07-04).
+  const audioStateRef = useRef<AudioState>('idle');
+  const setAudioStateBoth = useCallback((s: AudioState) => {
+    audioStateRef.current = s;
+    setAudioState(s);
+  }, []);
   const [studentMuted, setStudentMuted] = useState(false);
   const [tutorMuted, setTutorMuted] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   // Raw decoded samples + capture sample rate, set during loadAudio. The
   // playable AudioBuffer is materialized lazily in the shared playback
   // context the first time we actually start a source.
-  const studentRawRef = useRef<{ float32: Float32Array; sampleRate: number; originOffsetMs: number } | null>(null);
-  const tutorRawRef = useRef<{ float32: Float32Array; sampleRate: number; originOffsetMs: number } | null>(null);
+  const studentRawRef = useRef<{ float32: Float32Array; sampleRate: number } | null>(null);
+  const tutorRawRef = useRef<{ float32: Float32Array; sampleRate: number } | null>(null);
   const studentBufferRef = useRef<AudioBuffer | null>(null);
   const tutorBufferRef = useRef<AudioBuffer | null>(null);
   const studentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -248,20 +255,18 @@ export default function ReplayPlayer({
 
   // Audio: load files when modal opens — try regardless of hasAudio flag
   // (flag may not be set due to race condition on session end)
+  // Distinguishes: ready (≥1 non-empty track), none (both tracks
+  // absent/empty — nothing was recorded), error (network/exception —
+  // retryable via the status pill).
   const loadAudio = useCallback(async () => {
-    if (!sessionId || audioLoaded || audioLoading) return;
-    setAudioLoading(true);
+    if (!sessionId) { setAudioStateBoth('none'); return; }
+    if (audioStateRef.current === 'loading' || audioStateRef.current === 'ready') return;
+    setAudioStateBoth('loading');
     try {
       const [studentResp, tutorResp] = await Promise.all([
         fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=student`),
         fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=tutor`),
       ]);
-
-      // Trust the per-track sample rate and origin offset reported by the API
-      // (from meta.json) rather than hardcoding. Origin offset is the wallclock
-      // delta between session.startedAt and the first sample of the file —
-      // necessary because student.pcm16 starts when the mic was activated,
-      // not when the session began.
       const intHeader = (resp: Response, name: string, fallback: number) =>
         parseInt(resp.headers.get(name) || String(fallback), 10) || fallback;
 
@@ -271,7 +276,6 @@ export default function ReplayPlayer({
           studentRawRef.current = {
             float32: pcm16ToFloat32(buf),
             sampleRate: intHeader(studentResp, 'X-Sample-Rate', 24000),
-            originOffsetMs: intHeader(studentResp, 'X-Origin-Offset-Ms', 0),
           };
         }
       }
@@ -281,25 +285,22 @@ export default function ReplayPlayer({
           tutorRawRef.current = {
             float32: pcm16ToFloat32(buf),
             sampleRate: intHeader(tutorResp, 'X-Sample-Rate', 24000),
-            originOffsetMs: intHeader(tutorResp, 'X-Origin-Offset-Ms', 0),
           };
         }
       }
-
-      setAudioLoaded(true);
+      setAudioStateBoth(studentRawRef.current || tutorRawRef.current ? 'ready' : 'none');
     } catch (err) {
       console.error('[ReplayPlayer] Audio load error:', err);
-    } finally {
-      setAudioLoading(false);
+      setAudioStateBoth('error');
     }
-  }, [sessionId, audioLoaded, audioLoading]);
+  }, [sessionId, setAudioStateBoth]);
 
   // Audio: start playback from offset.
   // Async because the AudioContext may be born `suspended` (autoplay policy)
   // and we MUST await `resume()` before calling `source.start()`, otherwise
   // the first play silently drops audio until the next user interaction.
   const startAudioPlayback = useCallback(async (offsetMs: number, playbackRate: number) => {
-    if (!audioLoaded) return;
+    if (audioStateRef.current !== 'ready') return;
 
     // Create or resume the shared playback AudioContext
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
@@ -345,46 +346,41 @@ export default function ReplayPlayer({
     try { studentSourceRef.current?.stop(); } catch {}
     try { tutorSourceRef.current?.stop(); } catch {}
 
-    // Schedule a track. The audio file's sample 0 corresponds to wallclock
-    // (sessionStart + originOffsetMs). At timeline position `offsetMs`:
-    //  - if offsetMs >= originOffsetMs: start immediately at buffer offset
-    //    (offsetMs - originOffsetMs).
-    //  - else: schedule the source to start (originOffsetMs - offsetMs)/rate
-    //    seconds in the future at buffer offset 0 (i.e. wait for the track
-    //    to "kick in" relative to the session timeline).
+    // Schedule a track at buffer offset `offsetMs` (origin offset is always
+    // 0 — capture-side leading-silence padding already aligns sample 0 with
+    // session start — so there is no future-scheduling case to handle here).
     const scheduleTrack = (
       buffer: AudioBuffer | null,
       gain: GainNode | null,
-      originOffsetMs: number,
     ): AudioBufferSourceNode | null => {
       if (!buffer || !gain) return null;
-      const trackDeltaMs = offsetMs - originOffsetMs;
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.playbackRate.value = playbackRate;
       source.connect(gain);
-      if (trackDeltaMs >= 0) {
-        const bufferOffsetSec = trackDeltaMs / 1000;
-        if (bufferOffsetSec >= buffer.duration) return null; // past end of track
-        source.start(0, bufferOffsetSec);
-      } else {
-        const delaySec = (-trackDeltaMs / 1000) / playbackRate;
-        source.start(ctx.currentTime + delaySec, 0);
-      }
+      const bufferOffsetSec = offsetMs / 1000;
+      if (bufferOffsetSec >= buffer.duration) return null; // past end of track
+      source.start(0, bufferOffsetSec);
       return source;
     };
 
-    studentSourceRef.current = scheduleTrack(
-      studentBufferRef.current,
-      studentGainRef.current,
-      studentRawRef.current?.originOffsetMs ?? 0,
-    );
-    tutorSourceRef.current = scheduleTrack(
-      tutorBufferRef.current,
-      tutorGainRef.current,
-      tutorRawRef.current?.originOffsetMs ?? 0,
-    );
-  }, [audioLoaded, studentMuted, tutorMuted]);
+    studentSourceRef.current = scheduleTrack(studentBufferRef.current, studentGainRef.current);
+    tutorSourceRef.current = scheduleTrack(tutorBufferRef.current, tutorGainRef.current);
+  }, [studentMuted, tutorMuted]);
+
+  // HOT-ATTACH (the core bug fix): if audio finishes loading while the
+  // visual replay is already playing, start it at the current position —
+  // previously the user had to rewind/pause+play to get sound.
+  // startAudioPlayback rides a ref so this effect fires ONLY on the
+  // loading→ready transition — with the callback in the dep array, every
+  // mute toggle would recreate it and needlessly restart the sources.
+  const startAudioPlaybackRef = useRef(startAudioPlayback);
+  startAudioPlaybackRef.current = startAudioPlayback;
+  useEffect(() => {
+    if (audioState === 'ready' && playingRef.current) {
+      startAudioPlaybackRef.current(currentTimeMsRef.current, speedRef.current);
+    }
+  }, [audioState]);
 
   // Audio: stop playback
   const stopAudioPlayback = useCallback(() => {
@@ -590,34 +586,48 @@ export default function ReplayPlayer({
               ))}
             </div>
 
-            {/* Audio mute controls */}
-            {audioLoaded && (
-              <div className="flex items-center gap-2 border-l pl-3 ml-2">
+            {/* Audio status pill */}
+            <div className="flex items-center gap-2 border-l pl-3 ml-2">
+              {audioState === 'loading' && (
+                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">Audio loading…</span>
+              )}
+              {audioState === 'none' && (
+                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-400">No audio recorded</span>
+              )}
+              {audioState === 'error' && (
                 <button
-                  onClick={() => setStudentMuted(!studentMuted)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    studentMuted ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'
-                  }`}
-                  title={studentMuted ? 'Unmute student' : 'Mute student'}
+                  onClick={() => { setAudioStateBoth('idle'); loadAudio(); }}
+                  className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
                 >
-                  {studentMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                  Student
+                  Audio failed — Retry
                 </button>
-                <button
-                  onClick={() => setTutorMuted(!tutorMuted)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    tutorMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                  }`}
-                  title={tutorMuted ? 'Unmute tutor' : 'Mute tutor'}
-                >
-                  {tutorMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                  Tutor
-                </button>
-              </div>
-            )}
-            {audioLoading && (
-              <span className="text-xs text-gray-400">Loading audio...</span>
-            )}
+              )}
+              {audioState === 'ready' && (
+                <>
+                  <span className="rounded-full bg-green-50 px-2 py-1 text-xs text-green-600">Audio on</span>
+                  <button
+                    onClick={() => setStudentMuted(!studentMuted)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      studentMuted ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'
+                    }`}
+                    title={studentMuted ? 'Unmute student' : 'Mute student'}
+                  >
+                    {studentMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                    Student
+                  </button>
+                  <button
+                    onClick={() => setTutorMuted(!tutorMuted)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      tutorMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                    }`}
+                    title={tutorMuted ? 'Unmute tutor' : 'Mute tutor'}
+                  >
+                    {tutorMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                    Tutor
+                  </button>
+                </>
+              )}
+            </div>
 
             <div className="text-sm text-gray-500 font-mono">
               {formatTime(currentTimeMs)} / {formatTime(totalDurationMs)}
