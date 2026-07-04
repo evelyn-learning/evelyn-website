@@ -1,7 +1,9 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
-import { MicOff, Upload, AlertTriangle } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { MicOff, Upload, AlertTriangle, Zap, Ear, ListTree } from 'lucide-react';
+import { curateEvents, categorizeEvent, EVENT_CATEGORIES, type EventCategory } from '@/lib/tutor/recordings/timeline-events';
+import { buildSpeakerSegments } from '@/lib/tutor/recordings/segments';
 
 export interface TimelineEvent {
   type: 'transcript' | 'whiteboard' | 'debug';
@@ -28,8 +30,18 @@ function formatTime(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+const CATEGORY_ICONS: Record<EventCategory['key'], typeof MicOff> = {
+  kill: Zap,
+  perception: Ear,
+  mic: MicOff,
+  upload: Upload,
+  error: AlertTriangle,
+};
+
 export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs, onSeek }: ReplayTimelineProps) {
   const barRef = useRef<HTMLDivElement>(null);
+  const [showAllEvents, setShowAllEvents] = useState(false);
+  const laneRef = useRef<HTMLDivElement>(null);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!barRef.current || totalDurationMs <= 0) return;
@@ -47,24 +59,48 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
 
   const progressPct = totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0;
 
-  // Collect debug event markers
-  const debugMarkers = events.filter(e => e.type === 'debug' && totalDurationMs > 0);
+  // Curated debug markers — only categorized events reach the bar; the full
+  // stream lives in the toggleable lane below.
+  const debugEvents = useMemo(() => events.filter((e) => e.type === 'debug'), [events]);
+  const markers = useMemo(() => curateEvents(debugEvents), [debugEvents]);
 
-  // Build conversation segments (student/tutor speaking blocks)
-  const transcriptEvents = events.filter(e => e.type === 'transcript');
-  const segments: { start: number; end: number; role: string }[] = [];
-  for (let i = 0; i < transcriptEvents.length; i++) {
-    const ev = transcriptEvents[i];
-    const nextEv = transcriptEvents[i + 1];
-    const endMs = nextEv ? nextEv.offsetMs : totalDurationMs;
-    segments.push({ start: ev.offsetMs, end: endMs, role: ev.data.role as string });
-  }
+  // Speaker segments with the 20s gap cap (silence renders as neutral track).
+  const segments = useMemo(() => {
+    const entries = events
+      .filter((e) => e.type === 'transcript')
+      .map((e) => ({ offsetMs: e.offsetMs, role: (e.data.role as string) || 'tutor' }));
+    return buildSpeakerSegments(entries, totalDurationMs);
+  }, [events, totalDurationMs]);
+
+  // Auto-follow: keep the last-passed event visible in the lane.
+  const lastPassedIndex = useMemo(() => {
+    let idx = -1;
+    for (let i = 0; i < debugEvents.length; i++) {
+      if (debugEvents[i].offsetMs <= currentTimeMs) idx = i;
+      else break;
+    }
+    return idx;
+  }, [debugEvents, currentTimeMs]);
+  useEffect(() => {
+    if (!showAllEvents || lastPassedIndex < 0 || !laneRef.current) return;
+    const row = laneRef.current.querySelector<HTMLElement>(`[data-evt-idx="${lastPassedIndex}"]`);
+    row?.scrollIntoView({ block: 'nearest' });
+  }, [showAllEvents, lastPassedIndex]);
 
   return (
     <div className="space-y-1">
-      {/* Time display */}
-      <div className="flex justify-between text-[11px] text-gray-400 font-mono px-0.5">
+      {/* Time display + lane toggle */}
+      <div className="flex justify-between items-center text-[11px] text-gray-400 font-mono px-0.5">
         <span>{formatTime(currentTimeMs)}</span>
+        <button
+          onClick={() => setShowAllEvents((v) => !v)}
+          className={`flex items-center gap-1 rounded px-1.5 py-0.5 font-sans text-[10px] font-medium transition-colors ${
+            showAllEvents ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+          }`}
+        >
+          <ListTree className="w-3 h-3" />
+          {showAllEvents ? 'Hide events' : `All events (${debugEvents.length})`}
+        </button>
         <span>{formatTime(totalDurationMs)}</span>
       </div>
 
@@ -75,57 +111,42 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
         onClick={handleClick}
         onMouseMove={handleDrag}
       >
-        {/* Conversation segments */}
-        {segments.map((seg, i) => {
-          const leftPct = (seg.start / totalDurationMs) * 100;
-          const widthPct = ((seg.end - seg.start) / totalDurationMs) * 100;
-          return (
-            <div
-              key={i}
-              className={`absolute top-0 h-full ${
-                seg.role === 'student' ? 'bg-blue-100' : seg.role === 'tutor' ? 'bg-gray-300' : 'bg-yellow-100'
-              }`}
-              style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-            />
-          );
-        })}
+        {segments.map((seg, i) => (
+          <div
+            key={i}
+            className={`absolute top-0 h-full ${
+              seg.role === 'student' ? 'bg-blue-100' : seg.role === 'tutor' ? 'bg-gray-300' : 'bg-yellow-100'
+            }`}
+            style={{ left: `${(seg.start / totalDurationMs) * 100}%`, width: `${((seg.end - seg.start) / totalDurationMs) * 100}%` }}
+          />
+        ))}
 
-        {/* Progress fill */}
         <div
           className="absolute top-0 left-0 h-full bg-blue-500/30 rounded-l-full transition-[width] duration-75"
           style={{ width: `${progressPct}%` }}
         />
 
-        {/* Debug event markers */}
-        {debugMarkers.map((ev, i) => {
-          const leftPct = (ev.offsetMs / totalDurationMs) * 100;
-          const debugType = ev.data.type as string;
-          const isMute = debugType === 'mic_mute' || debugType === 'mic_unmute';
-          const isUpload = debugType === 'image_upload';
-          const isError = debugType === 'error' || debugType === 'tool_call_error';
-
+        {markers.map((ev, i) => {
+          const Icon = CATEGORY_ICONS[ev.category.key];
           return (
-            <div
-              key={`debug-${i}`}
+            <button
+              key={`marker-${i}`}
+              type="button"
               className="absolute top-0.5 -translate-x-1/2 group"
-              style={{ left: `${leftPct}%` }}
-              title={`${debugType}: ${ev.data.message || ''}`}
+              style={{ left: `${(ev.offsetMs / totalDurationMs) * 100}%` }}
+              onClick={(e) => { e.stopPropagation(); onSeek(ev.offsetMs); }}
+              title={`${ev.data.type}: ${(ev.data.message as string) || ''}`}
             >
-              <div className={`w-3 h-3 rounded-full flex items-center justify-center ${
-                isError ? 'bg-red-400' : isMute ? 'bg-orange-400' : isUpload ? 'bg-green-400' : 'bg-gray-400'
-              }`}>
-                {isMute && <MicOff className="w-2 h-2 text-white" />}
-                {isUpload && <Upload className="w-2 h-2 text-white" />}
-                {isError && <AlertTriangle className="w-2 h-2 text-white" />}
+              <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${ev.category.color}`}>
+                <Icon className="w-2 h-2 text-white" />
               </div>
               <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-gray-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-50">
-                {debugType}: {(ev.data.message as string || '').slice(0, 60)}
+                {formatTime(ev.offsetMs)} · {ev.data.type}: {((ev.data.message as string) || '').slice(0, 60)}
               </div>
-            </div>
+            </button>
           );
         })}
 
-        {/* Playhead */}
         <div
           className="absolute top-0 h-full w-0.5 bg-blue-600 transition-[left] duration-75"
           style={{ left: `${progressPct}%` }}
@@ -134,13 +155,45 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-4 text-[10px] text-gray-400 px-0.5">
+      {/* Legend — one entry per curated category + speakers */}
+      <div className="flex flex-wrap gap-3 text-[10px] text-gray-400 px-0.5">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-100 border border-blue-200" /> Student</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-gray-300" /> Tutor</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400" /> Mic event</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400" /> Upload</span>
+        {EVENT_CATEGORIES.map((c) => (
+          <span key={c.key} className="flex items-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${c.color}`} /> {c.label}
+          </span>
+        ))}
       </div>
+
+      {/* All-events lane */}
+      {showAllEvents && (
+        <div ref={laneRef} className="max-h-36 overflow-y-auto rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+          {debugEvents.map((ev, i) => {
+            const cat = ev.data.type ? categorizeEvent(ev.data.type) : null;
+            return (
+              <button
+                key={`lane-${i}`}
+                type="button"
+                data-evt-idx={i}
+                onClick={() => onSeek(ev.offsetMs)}
+                className={`w-full flex items-center gap-2 px-2 py-1 text-left text-[11px] hover:bg-blue-50 ${
+                  i === lastPassedIndex ? 'bg-blue-50/70' : ''
+                }`}
+              >
+                <span className="font-mono text-gray-400 shrink-0">{formatTime(ev.offsetMs)}</span>
+                <span className={`shrink-0 rounded px-1 text-[10px] font-medium ${cat ? `${cat.color} text-white` : 'bg-gray-100 text-gray-500'}`}>
+                  {ev.data.type}
+                </span>
+                <span className="truncate text-gray-600">{(ev.data.message as string) || ''}</span>
+              </button>
+            );
+          })}
+          {debugEvents.length === 0 && (
+            <div className="px-2 py-2 text-[11px] text-gray-400">No debug events in this session.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
