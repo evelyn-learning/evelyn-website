@@ -391,6 +391,9 @@ function TutorPage() {
   const debugEventsRef = useRef<DebugEvent[]>([]);
   const lastSavedDebugCountRef = useRef(0);
   const sessionEndedRef = useRef(false);
+  // Recordings source tagging: __tutorTestStart marks the session as a
+  // harness run so it persists source:'test' instead of polluting 'tutor'.
+  const testSessionRef = useRef(false);
   // e2e: always-fresh mirror of the full transcript (the turn-ok console log
   // truncates spoken text to ~80 chars; the Phase-2 judge needs the FULL
   // narration). A ref because a tutor turn is one entry whose text grows
@@ -462,7 +465,7 @@ function TutorPage() {
       sessionGoal,
       inputMode,
       voiceEngine: inputMode === 'voice' ? voiceEngine : undefined,
-      source: 'tutor',
+      source: testSessionRef.current ? 'test' : 'tutor',
       studentName: studentName || undefined,
       startedAt: startTime.toISOString(),
       endedAt: status !== 'active' ? now.toISOString() : undefined,
@@ -1205,6 +1208,7 @@ function TutorPage() {
       checkpointStale?: boolean;
       teacherId?: string;
     }) => {
+      testSessionRef.current = true;
       setSelectedSubject(cfg.subject);
       setSelectedLevel(cfg.level);
       setSelectedTopicId(cfg.topic);

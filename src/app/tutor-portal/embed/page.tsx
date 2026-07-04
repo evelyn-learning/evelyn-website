@@ -153,6 +153,18 @@ function parseToken(tokenParam: string | null): EmbedConfig | null {
   }
 }
 
+/** Origin of the page embedding this iframe. ancestorOrigins is the
+ *  reliable signal in Chromium/Safari; referrer is the Firefox fallback.
+ *  Returns undefined outside an iframe or when both are unavailable. */
+function getEmbeddingHost(): string | undefined {
+  try {
+    const ancestors = window.location.ancestorOrigins;
+    if (ancestors && ancestors.length > 0) return ancestors[0];
+    if (document.referrer) return new URL(document.referrer).origin;
+  } catch { /* cross-origin quirks — omit */ }
+  return undefined;
+}
+
 function mapEngine(_engine?: string): InternalEngine {
   // All embeds run on claude-brain. The token's `engine` field is
   // ignored for routing — only kept on the type for backwards
@@ -280,6 +292,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       inputMode,
       voiceEngine,
       source: 'embed',
+      sourcePartnerId: config?.partner_id || undefined,
+      sourceHost: getEmbeddingHost(),
       studentName: studentName || undefined,
       startedAt: sessionStartRef.current.toISOString(),
       endedAt: now.toISOString(),
@@ -371,6 +385,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         sessionId,
         subject, topic, level, sessionGoal, inputMode,
         voiceEngine, source: 'embed',
+        sourcePartnerId: config?.partner_id || undefined,
+        sourceHost: getEmbeddingHost(),
         studentName: studentName || undefined,
         startedAt: sessionStartRef.current.toISOString(),
         lessonProgress: {

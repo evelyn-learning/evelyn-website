@@ -98,6 +98,8 @@ export async function POST(req: NextRequest) {
     if (body.inputMode) setOnInsertFields.inputMode = body.inputMode;
     if (body.startedAt) setOnInsertFields.startedAt = body.startedAt;
     if (body.source) setOnInsertFields.source = body.source;
+    if (body.sourcePartnerId) setOnInsertFields.sourcePartnerId = body.sourcePartnerId;
+    if (body.sourceHost) setOnInsertFields.sourceHost = body.sourceHost;
 
     // Fields that can be updated on every upsert
     if (body.studentName !== undefined)

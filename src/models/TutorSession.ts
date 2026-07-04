@@ -57,7 +57,11 @@ export interface ITutorSession extends Document {
   estimatedCost: number;
   status: "active" | "completed" | "abandoned";
   hasAudio?: boolean;
-  source?: "tutor" | "embed" | "showcase";
+  source?: "tutor" | "embed" | "showcase" | "test";
+  /** Embed token partner_id — which partner platform hosted the session. */
+  sourcePartnerId?: string;
+  /** Origin of the page embedding the tutor iframe (ancestorOrigins/referrer). */
+  sourceHost?: string;
   // Topics the student struggled with this session, ordered by frequency.
   // Populated on session end from the weakness tracker. Future sessions
   // can use this to surface targeted review at the start.
@@ -264,8 +268,14 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     source: {
       type: String,
-      enum: ["tutor", "embed", "showcase"],
+      enum: ["tutor", "embed", "showcase", "test"],
       default: "tutor",
+    },
+    sourcePartnerId: {
+      type: String,
+    },
+    sourceHost: {
+      type: String,
     },
     weakTopics: {
       type: [{ topic: String, count: Number }],
