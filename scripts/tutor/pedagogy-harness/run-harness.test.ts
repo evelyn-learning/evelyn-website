@@ -18,12 +18,14 @@ import {
   assembleBundle,
   openerRecordFromBundle,
   runReplayScenario,
+  nextTutorTurnText,
   DEMO_PICKER_START,
   SUBSCRIBED_PICKER_START,
   refreshThreadRecency,
   type RawCapturedTurn,
   type Bundle,
   type RunScenarioOpts,
+  type TranscriptEntryLite,
 } from './run-harness';
 import type { Persona } from './fixtures/personas';
 
@@ -338,6 +340,55 @@ await testAsync('runReplayScenario: a caller-supplied lastOpener in opts is IGNO
   await runReplayScenario(loadPersona('priya'), { maxTurns: 2, lastOpener: { kind: 'x', digest: 'y' } }, fakeRunner);
   assert.equal(calls[0].lastOpener, undefined, 'session 1 never carries a lastOpener');
   assert.notDeepEqual(calls[1].lastOpener, { kind: 'x', digest: 'y' }, 'session 2 uses the derived record, not the stray opts one');
+});
+
+// ── nextTutorTurnText: turn-sync capture (T1 duplicate-turn fix) ────────
+// Regression for the 2026-07-04 T1 run: the old last-entry read captured
+// the SAME long tutor turn twice (streaming partial at turn N, finalized
+// text at turn N+1) because nothing required a NEW entry or a FINALIZED
+// one. These pin the new semantics.
+const tut = (text: string, extra?: Partial<TranscriptEntryLite>): TranscriptEntryLite => ({ role: 'tutor', text, ...extra });
+const stu = (text: string): TranscriptEntryLite => ({ role: 'student', text });
+
+test('nextTutorTurnText: null when there is no tutor entry beyond the consumed count', () => {
+  assert.equal(nextTutorTurnText([tut('opener'), stu('hi')], 1), null);
+  assert.equal(nextTutorTurnText([], 0), null);
+  assert.equal(nextTutorTurnText(undefined, 0), null);
+});
+
+test('nextTutorTurnText: null while the newest tutor entry is still streaming (no partial capture)', () => {
+  const tr = [tut('opener'), stu('hi'), tut('long turn still stre', { streaming: true })];
+  assert.equal(nextTutorTurnText(tr, 1), null);
+});
+
+test('nextTutorTurnText: captures the entry once it finalizes in place', () => {
+  const tr = [tut('opener'), stu('hi'), tut('long turn, complete now.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'long turn, complete now.', tutorCount: 2 });
+});
+
+test('nextTutorTurnText: REGRESSION — same transcript re-read after consuming returns null, never a duplicate', () => {
+  const tr = [tut('opener'), stu('hi'), tut('turn two.')];
+  const first = nextTutorTurnText(tr, 1);
+  assert.ok(first);
+  assert.equal(nextTutorTurnText(tr, first!.tutorCount), null, 're-read must not re-capture the same turn');
+});
+
+test('nextTutorTurnText: chained multi-entry turn consumes all and returns the LAST finalized text', () => {
+  const tr = [tut('opener'), stu('hi'), tut('render turn.'), tut('scribble follow-up.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'scribble follow-up.', tutorCount: 3 });
+});
+
+test('nextTutorTurnText: revising (killed, dimmed) bubbles are ignored — not captured, not counted', () => {
+  const tr = [tut('opener'), stu('hi'), tut('wrong attempt', { revising: true }), tut('corrected turn.')];
+  assert.deepEqual(nextTutorTurnText(tr, 1), { text: 'corrected turn.', tutorCount: 2 });
+  // A lone revising bubble with the retry still streaming: nothing to capture.
+  const mid = [tut('opener'), stu('hi'), tut('wrong attempt', { revising: true }), tut('retry stre', { streaming: true })];
+  assert.equal(nextTutorTurnText(mid, 1), null);
+});
+
+test('nextTutorTurnText: empty finalized tutor text is not captured (waits — loud timeout upstream)', () => {
+  const tr = [tut('opener'), stu('hi'), tut('   ')];
+  assert.equal(nextTutorTurnText(tr, 1), null);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

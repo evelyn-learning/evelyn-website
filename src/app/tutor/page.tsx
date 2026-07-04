@@ -1258,7 +1258,10 @@ function TutorPage() {
       // POST 500s under the e2e harness, so expose it directly for capture.
       debugEvents: debugEventsRef.current,
       // e2e: FULL per-turn transcript (untruncated) for the Phase-2 judge.
-      transcript: transcriptStateRef.current.map((e) => ({ role: e.role, text: e.text })),
+      // `streaming`/`revising` ride along so harness drivers can tell a
+      // finalized tutor turn from an in-flight partial / killed-attempt
+      // bubble (the T1 duplicate-turn capture bug, 2026-07-04).
+      transcript: transcriptStateRef.current.map((e) => ({ role: e.role, text: e.text, streaming: e.streaming === true, revising: e.revising === true })),
       // Opener-recency (part A): this session's OWN captured opener record
       // (kind + first ~160 chars of the opener turn's text), or null if the
       // opener turn hasn't completed / flag off. The harness's replay driver
