@@ -34,15 +34,15 @@ function test(name: string, fn: () => void) {
   }
 }
 
-const ALL_IDS = ['maya', 'leo', 'aria', 'sam', 'anon', 'priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
-const DEMO_LOGGED_OUT = ['maya', 'leo', 'aria', 'anon'];
+const ALL_IDS = ['maya', 'leo', 'aria', 'sam', 'anon', 'nina', 'priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
+const DEMO_LOGGED_OUT = ['maya', 'leo', 'aria', 'anon', 'nina'];
 const SUBSCRIBED = ['priya', 'noah', 'zoe', 'kai', 'diego', 'ravi'];
 const SIM_PROFILE_STRING_FIELDS = ['grade', 'topic', 'claim', 'actualLevel', 'intent', 'style'] as const;
 
 // ── Roster ───────────────────────────────────────────────────────────────
-test('allPersonas() returns exactly the 11 authored personas', () => {
+test('allPersonas() returns exactly the 12 authored personas', () => {
   const all = allPersonas();
-  assert.equal(all.length, 11, `expected 11 personas, got ${all.length}`);
+  assert.equal(all.length, 12, `expected 12 personas, got ${all.length}`);
   assert.deepEqual(all.map((p) => p.id).sort(), [...ALL_IDS].sort());
 });
 

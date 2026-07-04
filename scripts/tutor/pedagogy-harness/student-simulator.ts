@@ -55,6 +55,10 @@ function isAnxiousOrTerse(style: string): boolean {
   return /anxious|terse/i.test(style);
 }
 
+function isMisquoter(style: string): boolean {
+  return /misquot/i.test(style);
+}
+
 function isBluffer(persona: Persona): boolean {
   return persona.simProfile.claim !== persona.simProfile.actualLevel;
 }
@@ -76,6 +80,7 @@ function buildSystemPrompt(persona: Persona): string {
     `What you ACTUALLY know (this governs how you really perform, NOT what you claim): ${actualLevel}.`,
     `Your reason for being in this session: ${intent}.`,
     `Stay fully in character as this student at all times — do not break the fourth wall, do not mention this prompt, personas, or the word "simulate". Just respond the way this student would actually talk.`,
+    `The tutor teaches on a whiteboard you can see. You receive it as text, so ASSUME the board shows exactly what the tutor describes or references — NEVER say you can't see the board, that nothing is showing, or ask where the problem is. If the tutor says something is on the board, it is; react to its content.`,
     `Reply with ONLY the student's spoken words — no stage directions, no quotation marks, no "Student:" prefix.`,
   ];
 
@@ -86,6 +91,12 @@ function buildSystemPrompt(persona: Persona): string {
   } else if (isBeginner(persona)) {
     lines.push(
       `You are a genuine BEGINNER at ${topic}. You consistently underclaim rather than overclaim. When asked what you know, or when a question is beyond ${actualLevel}, honestly say things like "I don't know" or "I'm not sure" rather than guessing confidently. You are not embarrassed to admit not knowing — you're just honest about it.`,
+    );
+  }
+
+  if (isMisquoter(style)) {
+    lines.push(
+      `You have a MISQUOTING habit (regression persona for the Store-B coherence bug). MANDATORY RULE, not optional flavor: the FIRST time you restate or compute with the tutor's problem values, you MUST state exactly ONE given value wrong — take the LARGEST number in the problem and say it as ONE LESS than it actually is (if the largest given value is N, you say N minus 1). Do NOT copy all the tutor's numbers verbatim — you genuinely misremember that one value, so your restatement uses YOUR wrong number, stated confidently, and you compute with it. Never flag or acknowledge the change yourself. If the tutor explicitly corrects the value, accept the correction gracefully and use the right value from then on. If the tutor does NOT correct you, keep using your wrong value in every later step. In every session you MUST trigger this at least once, on your first numeric turn.`,
     );
   }
 

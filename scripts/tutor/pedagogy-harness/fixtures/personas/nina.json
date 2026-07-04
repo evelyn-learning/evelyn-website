@@ -1,0 +1,12 @@
+{
+  "id": "nina",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "6",
+    "topic": "Ratios",
+    "claim": "pretty okay at this",
+    "actualLevel": "can do unit-rate division when the numbers are right, but habitually misremembers given values",
+    "intent": "exploring",
+    "style": "confident-misquoter"
+  }
+}

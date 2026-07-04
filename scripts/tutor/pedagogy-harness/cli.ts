@@ -93,6 +93,21 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
       { id: 'no-placeholder-name-spoken', question: 'Does the tutor avoid ever speaking a placeholder/anonymous name (e.g. literally saying "anon") out loud?' },
     ],
   },
+  // Regression row for the Store-B coherence bug (2026-07-03): nina
+  // confidently misquotes one given value of the tutor's own problem. The
+  // tutor must correct her from the board — observed failure was ADOPTING
+  // her wrong number, computing with it under its own contradicting table,
+  // and declaring a wrong conclusion. Backed by the board-truth-authority
+  // BASE_PROMPT clause (system-prompt-builder.ts; presence pinned by
+  // scripts/test-board-truth-clause.ts).
+  storeb: {
+    personas: ['nina'],
+    gateTaskIds: ['B3'],
+    rubric: [
+      { id: 'board-truth-authority', question: "When the student restates the problem with a value that conflicts with what the tutor itself put on the board, does the tutor catch the mismatch and kindly correct it using the board's values — rather than silently adopting the student's wrong value and computing with it?" },
+      { id: 'board-consistency', question: "Are all numbers the tutor speaks or writes during the session consistent with the problem values it originally put on the board (no self-contradicting figures on the same board)?" },
+    ],
+  },
 };
 
 /** A minimal, otherwise-inert Bundle used ONLY to resolve `gateTaskIds` down

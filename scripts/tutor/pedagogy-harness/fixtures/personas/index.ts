@@ -74,6 +74,10 @@ export const PERSONA_IDS = [
   'aria',
   'sam',
   'anon',
+  // Regression persona for the Store-B coherence bug (2026-07-03): a
+  // student who confidently misquotes the problem's given values. Drives
+  // the `storeb` scenario row's board-truth-authority rubric.
+  'nina',
   'priya',
   'noah',
   'zoe',

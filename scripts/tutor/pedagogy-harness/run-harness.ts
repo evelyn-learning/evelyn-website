@@ -84,6 +84,9 @@ export const DEMO_PICKER_START: Record<
   leo: { subject: 'math', level: '9-10', topic: 'quadratic-equations', lessonPlanId: 'evelyn.g9.math.algebra.quadratics-intro.v1' },
   aria: { subject: 'math', level: '6-8', topic: 'integers-rational', lessonPlanId: 'evelyn.g6.math.fractions.add-unlike-denoms.v1' },
   anon: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
+  // nina reuses anon's ratios plan DELIBERATELY — it's the exact plan the
+  // Store-B misquote-adoption bug was observed on (2026-07-03).
+  nina: { subject: 'math', level: '6-8', topic: 'ratios-proportions', lessonPlanId: 'evelyn.g6.math.ratios-rates.v1' },
   sam: { subject: 'math', level: 'college', topic: 'calculus-1', lessonPlanId: 'evelyn.g12.math.calc.limits.v1' },
 };
 

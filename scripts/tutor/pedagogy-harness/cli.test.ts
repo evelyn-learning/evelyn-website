@@ -67,8 +67,9 @@ for (const [taskId, row] of Object.entries(SCENARIO_MAP)) {
   });
 
   test(`SCENARIO_MAP[${taskId}]: every persona is a DEMO persona (subscribed is Phase-D-deferred)`, () => {
-    // DEMO personas per run-harness.ts's DEMO_PICKER_START / H1 fixtures.
-    const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam'];
+    // DEMO personas per run-harness.ts's DEMO_PICKER_START / H1 fixtures
+    // (nina = the Store-B misquote regression persona, added 2026-07-03).
+    const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam', 'nina'];
     for (const personaId of row.personas) {
       assert.ok(DEMO_IDS.includes(personaId), `"${personaId}" (in ${taskId}) must be a DEMO persona, not subscribed`);
     }
