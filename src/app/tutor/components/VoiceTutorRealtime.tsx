@@ -33,7 +33,7 @@ import {
   shouldEmitOpenerFallback,
   buildOpenerFallbackCommand,
 } from '@/lib/tutor/ai/opener-fallback';
-import { renderTransientContextBlock } from '@/lib/tutor/student-profile/transient-context';
+import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import {
   resolveCompletionOutcome,
@@ -594,6 +594,19 @@ interface VoiceTutorRealtimeProps {
   /** Task D1b — portal-computed enrollment/progress digest (same carrier,
    *  same transient semantics as `socialMemory`). */
   progressDigest?: ProgressDigest;
+  /** Opener-recency (part A) — the PREVIOUS session's opener record (same
+   *  transient carrier/semantics as socialMemory/progressDigest). Rendered
+   *  into the <student_context_transient> block as a do-NOT-repeat
+   *  directive so this session's opener varies in kind AND content. Only
+   *  consumed when TUTOR_PEDAGOGY_OPENER is on. */
+  lastOpener?: LastOpenerRecord;
+  /** Opener-recency (part A) — fires at most ONCE per session, when this
+   *  session's OWN opener record is captured (the opener turn's finalized
+   *  tutor text + the resolved opener kind). Dev/e2e consumer today (the
+   *  /tutor page stashes it for __tutorTestState); the production
+   *  outbound loop (part B) will consume the same callback later. Only
+   *  ever fired when TUTOR_PEDAGOGY_OPENER is on. */
+  onOpenerRecord?: (record: LastOpenerRecord) => void;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -819,6 +832,8 @@ export function VoiceTutorRealtime({
   studentId,
   socialMemory,
   progressDigest,
+  lastOpener,
+  onOpenerRecord,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -1360,10 +1375,19 @@ export function VoiceTutorRealtime({
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
-      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest)
-        ? renderTransientContextBlock({ socialMemory, progressDigest })
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener })
         : null;
   }
+  // Opener-recency (part A) — THIS session's own opener record, captured
+  // once when the opener turn's text finalizes in callBrainOnce (see the
+  // capture site near `const fullText = …`). kind is stashed at seed time
+  // (beh.opener, same one-shot latch as sessionModeRef) because the
+  // resolved OpeningBehavior isn't in scope at capture time. Only ever
+  // written when TUTOR_PEDAGOGY_OPENER is on; fresh per session via
+  // key={sessionId} remount.
+  const sessionOpenerKindRef = useRef<string | null>(null);
+  const sessionOpenerRecordRef = useRef<LastOpenerRecord | null>(null);
   const sessionAccumRef = useRef<{
     losTouched: Set<string>;
     masteryDeltas: Array<{ loId: string; delta: number }>;
@@ -9656,6 +9680,27 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      // Opener-recency (part A): capture THIS session's opener record once,
+      // on the opener turn. openingTurnPendingRef is still armed here — it's
+      // consumed unconditionally in the finally below, but the finally can't
+      // see the turn's text (aggregatedFullText/fullText are declared inside
+      // this try block), so the capture lives at the point where fullText is
+      // finalized instead. Skipped when the opener turn produced no text
+      // (aborted/empty stream) — there's no opener content to avoid
+      // repeating next session. Fires the optional callback exactly once.
+      if (
+        TUTOR_PEDAGOGY_OPENER
+        && openingTurnPendingRef.current
+        && !sessionOpenerRecordRef.current
+        && fullText
+      ) {
+        sessionOpenerRecordRef.current = {
+          kind: sessionOpenerKindRef.current ?? 'proactive',
+          digest: fullText.slice(0, 160),
+        };
+        onDebugEvent?.('opener_record_captured', `[${sessionOpenerRecordRef.current.kind}] ${sessionOpenerRecordRef.current.digest.slice(0, 60)}`);
+        onOpenerRecord?.(sessionOpenerRecordRef.current);
+      }
       // Opening-turn barge-in guard: the first brain turn has now landed, so
       // perception-initiated cancels are safe to honour from here on.
       tutorFirstTurnDoneRef.current = true;
@@ -10053,7 +10098,7 @@ export function VoiceTutorRealtime({
       // audio (sentence-start / drain / cap) after this call returns.
       renderSyncActiveRef.current = false;
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
@@ -11572,6 +11617,11 @@ export function VoiceTutorRealtime({
             // Same one-shot latch — a mid-session prompt rebuild must not
             // re-resolve/flip the mode after the session started.
             sessionModeRef.current = openerFields.sessionMode ?? null;
+            // Opener-recency (part A): stash the resolved opener KIND for
+            // the capture site in callBrainOnce (the record's `kind` field).
+            // Same one-shot latch — the kind must reflect the behavior the
+            // session actually opened with, never a mid-session re-resolve.
+            sessionOpenerKindRef.current = beh.opener;
             // Task C2: arm the completion gate for lessonNode sessions only
             // (lessonPlanId presence == 'lessonNode' targetKind, see sig
             // above). Freestyle/free-conversation sessions keep today's

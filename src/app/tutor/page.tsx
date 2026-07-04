@@ -44,6 +44,7 @@ import {
 } from '@/lib/tutor/ai/opening-behavior';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
+import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
@@ -159,6 +160,15 @@ function TutorPage() {
   const [testStudentIdOverride, setTestStudentIdOverride] = useState<string | undefined>(undefined);
   const [testSocialMemory, setTestSocialMemory] = useState<SocialThread[] | undefined>(undefined);
   const [testProgressDigest, setTestProgressDigest] = useState<ProgressDigest | undefined>(undefined);
+  // Opener-recency (part A): testLastOpener rides the same dev-only carrier
+  // as testSocialMemory (the __tutorTestStart hook is its only writer);
+  // testOpenerRecordRef stashes the session's OWN captured opener record
+  // (VoiceTutorRealtime's onOpenerRecord callback) for __tutorTestState.
+  const [testLastOpener, setTestLastOpener] = useState<LastOpenerRecord | undefined>(undefined);
+  const testOpenerRecordRef = useRef<LastOpenerRecord | null>(null);
+  const handleOpenerRecord = useCallback((rec: LastOpenerRecord) => {
+    testOpenerRecordRef.current = rec;
+  }, []);
   const effectiveStudentId = testStudentIdOverride ?? studentIdParam;
   // /tutor?sid=<sessionId> — a stable session id carried in the URL so a
   // reload reconnects to the same engine session instead of minting a fresh
@@ -1128,9 +1138,13 @@ function TutorPage() {
       //                     filtering, mirroring portal/resume.ts). Feeds the
       //                     same setResumeState path the ?sid= reload-resume
       //                     flow uses.
+      //   lastOpener      → opener-recency (part A): the PREVIOUS session's
+      //                     opener record, rendered into the transient
+      //                     context block as a do-NOT-repeat directive.
       studentId?: string;
       socialMemory?: SocialThread[];
       progressDigest?: ProgressDigest;
+      lastOpener?: LastOpenerRecord;
       resume?: TutorResumeState;
     }) => {
       setSelectedSubject(cfg.subject);
@@ -1148,6 +1162,10 @@ function TutorPage() {
       setTestStudentIdOverride(cfg.studentId || undefined);
       setTestSocialMemory(cfg.socialMemory);
       setTestProgressDigest(cfg.progressDigest);
+      setTestLastOpener(cfg.lastOpener);
+      // Fresh capture slot per started session — a replay's session 2 must
+      // not read session 1's stale record out of __tutorTestState.
+      testOpenerRecordRef.current = null;
       // Stashed, not set: handleStartSession resets resumeState to null in
       // its fresh-start prelude; the deferred-start effect re-applies this
       // right after (see pendingTestResumeRef).
@@ -1174,6 +1192,11 @@ function TutorPage() {
       debugEvents: debugEventsRef.current,
       // e2e: FULL per-turn transcript (untruncated) for the Phase-2 judge.
       transcript: transcriptStateRef.current.map((e) => ({ role: e.role, text: e.text })),
+      // Opener-recency (part A): this session's OWN captured opener record
+      // (kind + first ~160 chars of the opener turn's text), or null if the
+      // opener turn hasn't completed / flag off. The harness's replay driver
+      // reads this to build session 2's lastOpener.
+      sessionOpenerRecord: testOpenerRecordRef.current,
     });
     return () => { delete w.__tutorTestStart; delete w.__tutorSendText; delete w.__tutorTestState; };
   }, [stage, isProcessing, transcript.length, error, canStartSession, handleStartSession]);
@@ -1794,6 +1817,8 @@ function TutorPage() {
         // undefined exactly as before.
         socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
         progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
+        lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+        onOpenerRecord={handleOpenerRecord}
         topicDisplayName={topicDisplayName}
         availableLessonPlans={availableLessonPlans}
         onEndSession={handleEndSession}
@@ -2314,6 +2339,8 @@ function TutorPage() {
                   // sessions pass undefined exactly as before.
                   socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
                   progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
+                  lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+                  onOpenerRecord={handleOpenerRecord}
                   onResumeAwaitingTapChange={setAwaitingResume}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}

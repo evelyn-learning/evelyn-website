@@ -23,10 +23,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { loadPersona } from './fixtures/personas';
-import { runScenario, type Bundle } from './run-harness';
+import { runScenario, runReplayScenario, type Bundle } from './run-harness';
 import { runGates } from './assertions';
 import { judgeBundle, type RubricItem } from './judge';
 import { renderReport, type ScenarioResult } from './report';
+
+/** S1's warm-resume rubric — shared with S1R (the opener-recency replay
+ *  row), which re-attaches these to session 2's judgement so we verify
+ *  warmth SURVIVED the forced variation. */
+const S1_RUBRIC: RubricItem[] = [
+  { id: 'warm-resume-opener', question: 'Does the opener open warm and personal from known context — a social thread, last-session callback, or progress arc — WITHOUT re-asking what the student already knows?' },
+  { id: 'no-spiderman-if-recent', question: "Priya's Spider-Man thread is marked recently used (lastReferencedAt near now) — does the tutor AVOID leading with Spider-Man and pick different material?" },
+  { id: 'progress-arc-available', question: 'If the tutor references her progress, is it warm and accurate (from the digest), never guilt?' },
+];
 
 export type ScenarioRow = {
   /** Fixture persona ids (Task H1) this taskId's scenarios run against.
@@ -125,11 +134,22 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
   S1: {
     personas: ['priya'],
     gateTaskIds: ['B2'],
-    rubric: [
-      { id: 'warm-resume-opener', question: 'Does the opener open warm and personal from known context — a social thread, last-session callback, or progress arc — WITHOUT re-asking what the student already knows?' },
-      { id: 'no-spiderman-if-recent', question: "Priya's Spider-Man thread is marked recently used (lastReferencedAt near now) — does the tutor AVOID leading with Spider-Man and pick different material?" },
-      { id: 'progress-arc-available', question: 'If the tutor references her progress, is it warm and accurate (from the digest), never guilt?' },
-    ],
+    rubric: S1_RUBRIC,
+  },
+  // S1R — opener-recency TRUE REPLAY (part A). Runs priya TWICE via
+  // runReplayScenario: session 1 normal, session 2 with a `lastOpener`
+  // record derived from session 1's bundle (openerRecordFromBundle).
+  // Judge-only, and judged on SESSION 2's bundle with a rubric that is
+  // partly DYNAMIC: `buildReplayRubric` prepends an
+  // opener-differs-from-last item interpolating session 1's opener digest
+  // (a static SCENARIO_MAP question can't know it), then re-attaches the
+  // S1 warm-resume items. The static rubric below is what --list shows and
+  // what the S1 re-attachment uses; runTaskId special-cases this row (see
+  // REPLAY_TASK_IDS / runReplayTaskId).
+  S1R: {
+    personas: ['priya'],
+    gateTaskIds: [],
+    rubric: S1_RUBRIC,
   },
   // S3 — social-memory opt-out (zoe, socialMemoryLevel 'off'). Her fixture
   // carries NO socialMemory threads (the portal resolves the opt-out into
@@ -231,6 +251,70 @@ async function probeDevServer(baseUrl: string): Promise<boolean> {
 
 function log(msg: string) { console.log(`[test:pedagogy] ${msg}`); }
 
+/** TaskIds routed through `runReplayTaskId` (two sequential sessions +
+ *  dynamic rubric) instead of the single-session `runTaskId` path. */
+export const REPLAY_TASK_IDS = new Set(['S1R']);
+
+/**
+ * Pure: builds the SESSION-2 rubric for a replay row — the dynamic
+ * `opener-differs-from-last` item (interpolating session 1's opener digest,
+ * which no static SCENARIO_MAP question can know) prepended to the row's
+ * static rubric (the re-attached S1 warm-resume items).
+ */
+export function buildReplayRubric(base: RubricItem[], session1OpenerDigest: string): RubricItem[] {
+  return [
+    {
+      id: 'opener-differs-from-last',
+      question:
+        `The previous session opened with: "${session1OpenerDigest}". Does THIS session's opening differ meaningfully ` +
+        'in BOTH kind and content/theming (not just reworded — a different opening move and different material)?',
+    },
+    ...base,
+  ];
+}
+
+/** Opener-recency replay path (S1R): `runReplayScenario` runs the persona
+ *  twice (session 2 carries session 1's lastOpener record); gates are
+ *  skipped (judge-only rows) and the judge evaluates SESSION 2's bundle
+ *  against `buildReplayRubric`. Both sessions' turn-0 texts land in
+ *  `anomalies` for human side-by-side comparison in the report. */
+async function runReplayTaskId(taskId: string, row: ScenarioRow, baseUrl: string): Promise<ScenarioResult[]> {
+  const results: ScenarioResult[] = [];
+  for (const personaId of row.personas) {
+    const persona = loadPersona(personaId);
+    log(`${taskId} / ${personaId}: running REPLAY scenario (2 sessions, maxTurns=${DEFAULT_MAX_TURNS} each)…`);
+    try {
+      const { session1, session2, lastOpener } = await runReplayScenario(persona, {
+        maxTurns: DEFAULT_MAX_TURNS,
+        taskId,
+        baseUrl,
+      });
+      const rubric = buildReplayRubric(row.rubric, lastOpener.digest);
+      const judge = await judgeBundle(session2, rubric);
+      results.push({
+        taskId,
+        persona: personaId,
+        gates: [],
+        judge,
+        anomalies: [
+          `[replay context, not an anomaly] injected lastOpener: [${lastOpener.kind}] ${lastOpener.digest}`,
+          `[replay context, not an anomaly] S1 turn-0: ${session1.turns[0]?.tutorText ?? '(no turns)'}`,
+          `[replay context, not an anomaly] S2 turn-0: ${session2.turns[0]?.tutorText ?? '(no turns)'}`,
+        ],
+      });
+    } catch (err) {
+      log(`${taskId} / ${personaId}: RUN FAILED — ${(err as Error).message}`);
+      results.push({
+        taskId,
+        persona: personaId,
+        gates: [],
+        anomalies: [`RUN FAILED (no gates/judge evaluated): ${(err as Error).message}`],
+      });
+    }
+  }
+  return results;
+}
+
 /** Runs every persona in `row` for `taskId` against a live session,
  *  evaluates L1 gates + L2 judge, and returns one `ScenarioResult` per
  *  persona. */
@@ -305,7 +389,9 @@ async function main(): Promise<void> {
   log(`dev server reachable at ${baseUrl} — running ${taskIds.length} taskId(s): ${taskIds.join(', ')}`);
   for (const taskId of taskIds!) {
     const row = SCENARIO_MAP[taskId];
-    const results = await runTaskId(taskId, row, baseUrl);
+    const results = REPLAY_TASK_IDS.has(taskId)
+      ? await runReplayTaskId(taskId, row, baseUrl)
+      : await runTaskId(taskId, row, baseUrl);
     const { outPath, summary } = writeReport(taskId, results);
     console.log(`${outPath} — ${summary}`);
   }

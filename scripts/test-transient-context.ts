@@ -13,6 +13,8 @@ import {
 } from '../src/lib/tutor/student-profile/render';
 import {
   renderTransientContextBlock,
+  LAST_OPENER_DIGEST_MAX_CHARS,
+  type LastOpenerRecord,
 } from '../src/lib/tutor/student-profile/transient-context';
 import {
   STUDENT_PROFILE_SCHEMA_VERSION,
@@ -64,6 +66,10 @@ const DIGEST_FULL: ProgressDigest = {
   percentComplete: 66.67,
   weeksElapsed: 4,
   paceNote: 'steady weekly pace',
+};
+const LAST_OPENER: LastOpenerRecord = {
+  kind: 'warm-resume',
+  digest: '"Good to have you back! Last session you were solid on substitution…" + a cinema-tickets system problem',
 };
 
 function main() {
@@ -183,6 +189,66 @@ function main() {
       assert.ok(out!.includes('never mention that any of this information is stored'));
       assert.ok(out!.includes('NEVER guilt'));
     }
+  });
+
+  // ── 1c: lastOpener (opener-recency part A) ────────────────────────────
+  console.log('\nrenderTransientContextBlock — lastOpener:');
+
+  test('lastOpener alone renders the block (line + extended instruction)', () => {
+    const out = renderTransientContextBlock({ lastOpener: LAST_OPENER });
+    const expected = [
+      '<student_context_transient>',
+      `last session's opener (do NOT repeat): [warm-resume] ${LAST_OPENER.digest}`,
+      '',
+      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session differently from the last opener above — a different kind of opening AND different content/theming; a repeat reads as scripted.',
+      '</student_context_transient>',
+    ].join('\n');
+    assert.equal(out, expected);
+  });
+
+  test('all three inputs render in order: progress, threads, lastOpener, instruction', () => {
+    const out = renderTransientContextBlock({
+      socialMemory: [THREAD_FULL],
+      progressDigest: DIGEST_FULL,
+      lastOpener: LAST_OPENER,
+    });
+    assert.ok(out);
+    const ls = out!.split('\n');
+    const iProgress = ls.findIndex((l) => l.startsWith('progress:'));
+    const iThread = ls.findIndex((l) => l.startsWith('- [interest]'));
+    const iOpener = ls.findIndex((l) => l.startsWith("last session's opener"));
+    const iInstr = ls.findIndex((l) => l.startsWith('Use the above'));
+    assert.ok(iProgress >= 0 && iThread > iProgress && iOpener > iThread && iInstr > iOpener,
+      `order violated: progress=${iProgress} thread=${iThread} opener=${iOpener} instr=${iInstr}`);
+    assert.ok(out!.includes('a repeat reads as scripted'));
+  });
+
+  test('lastOpener absent ⇒ prior output byte-identical (no opener line, no extra sentence)', () => {
+    const out = renderTransientContextBlock({
+      socialMemory: [THREAD_FULL, THREAD_BARE],
+      progressDigest: DIGEST_FULL,
+    });
+    assert.ok(!out!.includes("last session's opener"));
+    assert.ok(!out!.includes('a repeat reads as scripted'));
+    // Instruction paragraph ends exactly where the pre-part-A block did.
+    assert.ok(out!.includes('stored or remembered in notes.\n</student_context_transient>'));
+  });
+
+  test(`digest > ${LAST_OPENER_DIGEST_MAX_CHARS} chars is TRUNCATED with an ellipsis (documented choice: truncate, not reject)`, () => {
+    const longDigest = 'x'.repeat(LAST_OPENER_DIGEST_MAX_CHARS + 57);
+    const out = renderTransientContextBlock({ lastOpener: { kind: 'proactive', digest: longDigest } });
+    const line = out!.split('\n').find((l) => l.startsWith("last session's opener"))!;
+    assert.ok(line.includes(`[proactive] ${'x'.repeat(LAST_OPENER_DIGEST_MAX_CHARS)}…`));
+    assert.ok(!line.includes('x'.repeat(LAST_OPENER_DIGEST_MAX_CHARS + 1)), 'digest clipped at the max');
+  });
+
+  test('lastOpener with an empty/whitespace digest is treated as absent', () => {
+    assert.equal(renderTransientContextBlock({ lastOpener: { kind: 'proactive', digest: '   ' } }), null);
+    const out = renderTransientContextBlock({
+      progressDigest: DIGEST_FULL,
+      lastOpener: { kind: 'proactive', digest: '' },
+    });
+    assert.ok(out && !out.includes("last session's opener") && !out.includes('a repeat reads as scripted'));
   });
 
   test('no null/undefined leakage in rendered output', () => {

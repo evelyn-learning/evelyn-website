@@ -16,11 +16,16 @@ import { loadPersona, PERSONA_IDS } from './fixtures/personas';
 import {
   personaToPickerStart,
   assembleBundle,
+  openerRecordFromBundle,
+  runReplayScenario,
   DEMO_PICKER_START,
   SUBSCRIBED_PICKER_START,
   refreshThreadRecency,
   type RawCapturedTurn,
+  type Bundle,
+  type RunScenarioOpts,
 } from './run-harness';
+import type { Persona } from './fixtures/personas';
 
 let passed = 0;
 let failed = 0;
@@ -210,5 +215,93 @@ test('assembleBundle: taskId flows through meta when provided', () => {
   assert.equal(bundle.meta.taskId, 'H4-smoke');
 });
 
+// ── Opener-recency (part A): openerRecordFromBundle + runReplayScenario ──
+
+async function testAsync(name: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+    console.log(`  ✓ ${name}`);
+    passed++;
+  } catch (err) {
+    console.log(`  ✗ ${name}\n      ${(err as Error).message}`);
+    failed++;
+  }
+}
+
+function makeBundle(overrides: Partial<Bundle> = {}): Bundle {
+  return {
+    persona: { id: 'priya', mode: 'subscribed' },
+    turns: [
+      { index: 0, tutorText: 'Good to have you back! Last session you were solid on substitution — cinema tickets today.', toolCalls: [], studentReply: 'hi', ended: false },
+      { index: 1, tutorText: 'Try 2x + y = 10.', toolCalls: [], studentReply: 'ok', ended: false },
+    ],
+    meta: { baseUrl: 'http://localhost:3006', maxTurns: 6 },
+    ...overrides,
+  };
+}
+
+test('openerRecordFromBundle: digest = first 160 chars of turn-0 tutorText', () => {
+  const longText = 'A'.repeat(300);
+  const bundle = makeBundle({ turns: [{ index: 0, tutorText: longText, toolCalls: [], studentReply: 'x', ended: false }] });
+  const rec = openerRecordFromBundle(bundle);
+  assert.equal(rec.digest, 'A'.repeat(160));
+});
+
+test('openerRecordFromBundle: kind from the captured sessionOpenerRecord when present', () => {
+  const bundle = makeBundle({ sessionOpenerRecord: { kind: 'warm-resume', digest: 'captured digest' } });
+  const rec = openerRecordFromBundle(bundle);
+  assert.equal(rec.kind, 'warm-resume');
+  assert.ok(rec.digest.startsWith('Good to have you back!'), 'digest still comes from turn-0 tutorText (always available), not the captured record');
+});
+
+test("openerRecordFromBundle: kind defaults to 'proactive' when no capture landed", () => {
+  const rec = openerRecordFromBundle(makeBundle());
+  assert.equal(rec.kind, 'proactive');
+});
+
+test('openerRecordFromBundle: empty-turns bundle yields an empty digest (never throws)', () => {
+  const rec = openerRecordFromBundle(makeBundle({ turns: [] }));
+  assert.deepEqual(rec, { kind: 'proactive', digest: '' });
+});
+
+// tsx compiles this file as CJS (no top-level await) — run the async tests
+// inside an IIFE and print the summary after they settle.
+void (async () => {
+await testAsync('runReplayScenario: runs twice sequentially, passing lastOpener on the SECOND call only (derived from session 1)', async () => {
+  const calls: Array<{ opts: RunScenarioOpts }> = [];
+  const s1 = makeBundle({ sessionOpenerRecord: { kind: 'warm-resume', digest: 'cap' } });
+  const s2 = makeBundle({ turns: [{ index: 0, tutorText: 'Fresh angle today — a quick sketch first.', toolCalls: [], studentReply: 'ok', ended: false }] });
+  const fakeRunner = async (_persona: Persona, opts: RunScenarioOpts): Promise<Bundle> => {
+    calls.push({ opts });
+    return calls.length === 1 ? s1 : s2;
+  };
+  const persona = loadPersona('priya');
+  const out = await runReplayScenario(persona, { maxTurns: 6, taskId: 'S1R' }, fakeRunner);
+
+  assert.equal(calls.length, 2, 'exactly two sessions');
+  assert.equal(calls[0].opts.lastOpener, undefined, 'session 1 gets NO lastOpener');
+  assert.deepEqual(
+    calls[1].opts.lastOpener,
+    { kind: 'warm-resume', digest: s1.turns[0].tutorText.slice(0, 160) },
+    'session 2 gets the record derived from session 1 (captured kind + turn-0 digest)',
+  );
+  assert.equal(calls[1].opts.maxTurns, 6, 'other opts flow through to session 2');
+  assert.equal(out.session1, s1);
+  assert.equal(out.session2, s2);
+  assert.deepEqual(out.lastOpener, calls[1].opts.lastOpener);
+});
+
+await testAsync('runReplayScenario: a caller-supplied lastOpener in opts is IGNORED for session 1 (explicitly stripped)', async () => {
+  const calls: RunScenarioOpts[] = [];
+  const fakeRunner = async (_p: Persona, opts: RunScenarioOpts): Promise<Bundle> => {
+    calls.push(opts);
+    return makeBundle();
+  };
+  await runReplayScenario(loadPersona('priya'), { maxTurns: 2, lastOpener: { kind: 'x', digest: 'y' } }, fakeRunner);
+  assert.equal(calls[0].lastOpener, undefined, 'session 1 never carries a lastOpener');
+  assert.notDeepEqual(calls[1].lastOpener, { kind: 'x', digest: 'y' }, 'session 2 uses the derived record, not the stray opts one');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
+})();

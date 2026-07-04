@@ -64,6 +64,13 @@ export interface TutorSessionProps {
    *  typed from VoiceTutorRealtime to avoid drift. */
   socialMemory?: VTRProps['socialMemory'];
   progressDigest?: VTRProps['progressDigest'];
+  /** Opener-recency (part A) — previous session's opener record (same
+   *  transient carrier as socialMemory/progressDigest). Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. */
+  lastOpener?: VTRProps['lastOpener'];
+  /** Opener-recency (part A) — fires once when this session's own opener
+   *  record is captured. Forwarded to the runtime. */
+  onOpenerRecord?: VTRProps['onOpenerRecord'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -121,7 +128,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest,
+    socialMemory, progressDigest, lastOpener, onOpenerRecord,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -323,6 +330,8 @@ export default function TutorSession(props: TutorSessionProps) {
         studentId={studentId}
         socialMemory={socialMemory}
         progressDigest={progressDigest}
+        lastOpener={lastOpener}
+        onOpenerRecord={onOpenerRecord}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}

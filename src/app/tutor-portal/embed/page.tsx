@@ -73,6 +73,12 @@ interface EmbedConfig {
    *  social_memory before minting the token. */
   social_memory?: SocialThread[];
   progress_digest?: ProgressDigest;
+  /** Opener-recency (part A) — the PREVIOUS session's opener record (kind +
+   *  a short content digest, ≤200 chars rendered). Same transient carrier
+   *  semantics as social_memory: read for THIS session only, never
+   *  persisted engine-side. The portal derives it from the prior session's
+   *  captured opener record (outbound loop = part B, not built yet). */
+  last_opener?: { kind: string; digest: string };
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -415,6 +421,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         sessionMaxMinutes={maxDuration}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
+        lastOpener={config.last_opener}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

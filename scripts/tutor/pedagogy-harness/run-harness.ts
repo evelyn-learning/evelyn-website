@@ -65,6 +65,14 @@ export type BundleTurn = {
   ended: boolean;
 };
 
+/** Opener-recency (part A) — the wire shape shared by the engine's
+ *  LastOpenerRecord (src/lib/tutor/student-profile/transient-context.ts),
+ *  the __tutorTestStart cfg field, and __tutorTestState's
+ *  sessionOpenerRecord. Redeclared (not imported) to keep this script's
+ *  imports to the contract package + local files, matching the existing
+ *  pattern. */
+export type OpenerRecord = { kind: string; digest: string };
+
 export type Bundle = {
   persona: { id: string; mode: 'demo' | 'subscribed' };
   turns: BundleTurn[];
@@ -74,6 +82,11 @@ export type Bundle = {
    *  only exists portal-side (src/lib/tutor/portal/session-result.ts). Left
    *  undefined rather than fabricated; a real hook is future work. */
   sessionResult?: unknown;
+  /** Opener-recency (part A): the session's OWN captured opener record, as
+   *  read from __tutorTestState at end-of-run (the engine captures it when
+   *  the opener turn's text finalizes). Absent when the flag is off or the
+   *  opener turn never completed — never fabricated. */
+  sessionOpenerRecord?: OpenerRecord;
   meta: { taskId?: string; baseUrl: string; maxTurns: number };
 };
 
@@ -161,6 +174,10 @@ export interface TestStartConfig {
     transcript: unknown[];
     whiteboardCommands: unknown[];
   };
+  /** Opener-recency (part A): the PREVIOUS session's opener record, passed
+   *  through to the engine's transient-context block as a do-NOT-repeat
+   *  directive. Set by `runReplayScenario` for session 2 only. */
+  lastOpener?: OpenerRecord;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -300,6 +317,9 @@ interface TestState {
   error: string | null;
   debugEvents?: DebugEvent[];
   transcript?: Array<{ role: string; text: string }>;
+  /** Opener-recency (part A): the session's own captured opener record
+   *  (null until the opener turn's text finalizes / flag off). */
+  sessionOpenerRecord?: OpenerRecord | null;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -315,12 +335,24 @@ function log(msg: string) { console.log(`[pedagogy-harness] ${msg}`); }
  * (`npm run test:pedagogy-seed`) — without it the session still runs, just
  * without cross-session memory (profile fetch finds nothing).
  */
+export interface RunScenarioOpts {
+  maxTurns: number;
+  taskId?: string;
+  baseUrl?: string;
+  resumeVariant?: 'fresh' | 'stale';
+  /** Opener-recency (part A): injected as __tutorTestStart's lastOpener
+   *  (the previous session's opener record). Only `runReplayScenario`
+   *  sets this — and only on its SECOND session. */
+  lastOpener?: OpenerRecord;
+}
+
 export async function runScenario(
   persona: Persona,
-  opts: { maxTurns: number; taskId?: string; baseUrl?: string; resumeVariant?: 'fresh' | 'stale' },
+  opts: RunScenarioOpts,
 ): Promise<Bundle> {
   const baseUrl = opts.baseUrl ?? process.env.TUTOR_E2E_URL ?? 'http://localhost:3006';
   const start = personaToPickerStart(persona, { resumeVariant: opts.resumeVariant });
+  if (opts.lastOpener) start.lastOpener = opts.lastOpener;
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const outDir = path.join(process.cwd(), 'artifacts', 'pedagogy-harness', `${persona.id}-${stamp}`);
@@ -464,8 +496,54 @@ export async function runScenario(
       await sleep(SETTLE_MS);
     }
 
-    return assembleBundle(persona, rawTurns, { taskId: opts.taskId, baseUrl, maxTurns: opts.maxTurns });
+    const bundle = assembleBundle(persona, rawTurns, { taskId: opts.taskId, baseUrl, maxTurns: opts.maxTurns });
+    // Opener-recency (part A): read the session's own captured opener
+    // record (page's __tutorTestState.sessionOpenerRecord) onto the bundle
+    // — the replay driver derives session 2's lastOpener from it. Never
+    // fabricated: absent when the engine didn't capture one.
+    const finalState = await getState();
+    if (finalState.sessionOpenerRecord) bundle.sessionOpenerRecord = finalState.sessionOpenerRecord;
+    return bundle;
   } finally {
     await browser.close();
   }
+}
+
+/**
+ * Opener-recency (part A) — pure: derives the `lastOpener` record to inject
+ * into a FOLLOW-UP session from a completed session's bundle.
+ *  - kind: the engine-captured record's kind when the bundle carries one
+ *    (__tutorTestState.sessionOpenerRecord), else 'proactive' (the most
+ *    common resolved kind — a safe default when the capture didn't land).
+ *  - digest: the first 160 chars of turn 0's tutorText — ALWAYS available
+ *    in a bundle with turns (unlike the captured record), which keeps the
+ *    replay usable even when the engine-side capture was skipped.
+ */
+export function openerRecordFromBundle(bundle: Bundle): OpenerRecord {
+  return {
+    kind: bundle.sessionOpenerRecord?.kind ?? 'proactive',
+    digest: (bundle.turns[0]?.tutorText ?? '').slice(0, 160),
+  };
+}
+
+/** Injectable runner seam so `runReplayScenario`'s two-call orchestration is
+ *  unit-testable without a browser (see run-harness.test.ts). */
+export type ScenarioRunner = (persona: Persona, opts: RunScenarioOpts) => Promise<Bundle>;
+
+/**
+ * Opener-recency (part A) — TRUE REPLAY: runs `runScenario` TWICE
+ * sequentially for the same persona. Session 1 runs normally; session 2
+ * runs with `lastOpener` injected (built from session 1's bundle via
+ * `openerRecordFromBundle`), exercising the engine's do-NOT-repeat
+ * directive end-to-end. Returns both bundles + the injected record.
+ */
+export async function runReplayScenario(
+  persona: Persona,
+  opts: RunScenarioOpts,
+  runner: ScenarioRunner = runScenario,
+): Promise<{ session1: Bundle; session2: Bundle; lastOpener: OpenerRecord }> {
+  const session1 = await runner(persona, { ...opts, lastOpener: undefined });
+  const lastOpener = openerRecordFromBundle(session1);
+  const session2 = await runner(persona, { ...opts, lastOpener });
+  return { session1, session2, lastOpener };
 }

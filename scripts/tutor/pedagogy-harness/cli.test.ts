@@ -19,6 +19,8 @@ import { PERSONA_IDS } from './fixtures/personas';
 import { DEMO_PICKER_START, SUBSCRIBED_PICKER_START } from './run-harness';
 import {
   SCENARIO_MAP,
+  REPLAY_TASK_IDS,
+  buildReplayRubric,
   gateIdsForRow,
   formatList,
   resolveTaskIds,
@@ -136,6 +138,45 @@ test('SCENARIO_MAP: S1 runs priya with the proactive-opener gate + the 3 warm-re
     SCENARIO_MAP.S1.rubric.map((r) => r.id),
     ['warm-resume-opener', 'no-spiderman-if-recent', 'progress-arc-available'],
   );
+});
+
+// ── Opener-recency replay row (part A) ──────────────────────────────────
+
+test('SCENARIO_MAP: S1R runs priya, judge-only (replay rows carry no L1 gates)', () => {
+  assert.deepEqual(SCENARIO_MAP.S1R.personas, ['priya']);
+  assert.deepEqual(SCENARIO_MAP.S1R.gateTaskIds, []);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S1R), []);
+});
+
+test('SCENARIO_MAP: S1R re-attaches the S1 warm-resume rubric items (statically)', () => {
+  assert.deepEqual(
+    SCENARIO_MAP.S1R.rubric.map((r) => r.id),
+    ['warm-resume-opener', 'no-spiderman-if-recent', 'progress-arc-available'],
+  );
+  assert.deepEqual(SCENARIO_MAP.S1R.rubric, SCENARIO_MAP.S1.rubric, 'S1R shares S1\'s rubric items');
+});
+
+test('REPLAY_TASK_IDS: S1R is routed through the replay path, and every replay id is a real row', () => {
+  assert.ok(REPLAY_TASK_IDS.has('S1R'));
+  for (const id of REPLAY_TASK_IDS) {
+    assert.ok(id in SCENARIO_MAP, `replay taskId "${id}" is a SCENARIO_MAP row`);
+    assert.deepEqual(SCENARIO_MAP[id].gateTaskIds, [], `replay taskId "${id}" is judge-only (runReplayTaskId never runs gates)`);
+  }
+});
+
+test('buildReplayRubric: prepends opener-differs-from-last with session 1\'s digest interpolated', () => {
+  const digest = 'Good to have you back! Last session you were solid on substitution — cinema tickets.';
+  const rubric = buildReplayRubric(SCENARIO_MAP.S1R.rubric, digest);
+  assert.equal(rubric[0].id, 'opener-differs-from-last');
+  assert.ok(rubric[0].question.includes(`The previous session opened with: "${digest}"`), 'digest interpolated verbatim');
+  assert.ok(/BOTH kind and content\/theming/.test(rubric[0].question), 'asks for kind AND content variation');
+  assert.deepEqual(rubric.slice(1), SCENARIO_MAP.S1R.rubric, 'base items re-attached unchanged, in order');
+});
+
+test('buildReplayRubric: pure — does not mutate the base rubric', () => {
+  const base = [...SCENARIO_MAP.S1R.rubric];
+  buildReplayRubric(SCENARIO_MAP.S1R.rubric, 'x');
+  assert.deepEqual(SCENARIO_MAP.S1R.rubric, base);
 });
 
 test('SCENARIO_MAP: S3 runs zoe (social-memory opt-out) with the zero-social-render rubric', () => {
