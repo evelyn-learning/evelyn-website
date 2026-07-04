@@ -33,6 +33,8 @@ import {
   shouldEmitOpenerFallback,
   buildOpenerFallbackCommand,
 } from '@/lib/tutor/ai/opener-fallback';
+import { renderTransientContextBlock } from '@/lib/tutor/student-profile/transient-context';
+import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import {
   resolveCompletionOutcome,
   shouldFireRecapMilestone,
@@ -582,6 +584,16 @@ interface VoiceTutorRealtimeProps {
    *  sessions) and end-of-session deltas are committed. Demo flows
    *  without auth omit this — the session is ephemeral. */
   studentId?: string;
+  /** Task D1b (pedagogy opener) — TRANSIENT session-scoped social threads
+   *  from the portal's StudentContext (embed carrier). Read once at mount,
+   *  rendered into a <student_context_transient> block appended to the
+   *  per-turn studentProfileBlock. NEVER persisted engine-side. Only
+   *  consumed when TUTOR_PEDAGOGY_OPENER is on; the main /tutor page has no
+   *  source for these today and simply omits them. */
+  socialMemory?: SocialThread[];
+  /** Task D1b — portal-computed enrollment/progress digest (same carrier,
+   *  same transient semantics as `socialMemory`). */
+  progressDigest?: ProgressDigest;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -805,6 +817,8 @@ export function VoiceTutorRealtime({
   sessionGoal,
   lessonPlanId,
   studentId,
+  socialMemory,
+  progressDigest,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -1337,6 +1351,19 @@ export function VoiceTutorRealtime({
   // collects session events (mastery deltas from mark_segment_complete,
   // gaps from record_gap, LOs touched) and commits them at session end.
   const studentProfileBlockRef = useRef<string>('');
+  // Task D1b — transient social/progress context block. Computed ONCE per
+  // mount (session-scoped, immutable for the session, never persisted).
+  // Flag off or props absent ⇒ stays null ⇒ the per-turn compose below is
+  // byte-identical to the old `studentProfileBlockRef.current || undefined`.
+  const transientContextBlockRef = useRef<string | null>(null);
+  const transientContextComputedRef = useRef(false);
+  if (!transientContextComputedRef.current) {
+    transientContextComputedRef.current = true;
+    transientContextBlockRef.current =
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest)
+        ? renderTransientContextBlock({ socialMemory, progressDigest })
+        : null;
+  }
   const sessionAccumRef = useRef<{
     losTouched: Set<string>;
     masteryDeltas: Array<{ loId: string; delta: number }>;
@@ -6853,7 +6880,14 @@ export function VoiceTutorRealtime({
             whiteboardSnapshot: catalogRef.current.getSnapshot(),
             whiteboardPages: catalogRef.current.getPages(),
             lessonPlanContext,
-            studentProfileBlock: studentProfileBlockRef.current || undefined,
+            // D1b: append the transient context block (null when the
+            // pedagogy-opener flag is off / no portal context) WITHOUT
+            // mutating studentProfileBlockRef. Flag off ⇒ exactly the old
+            // `studentProfileBlockRef.current || undefined` value.
+            studentProfileBlock:
+              [studentProfileBlockRef.current, transientContextBlockRef.current]
+                .filter(Boolean)
+                .join('\n\n') || undefined,
             // Pedagogy opener: opening-phase directive (undefined once
             // retired / when the flag is off — see the block above).
             openingDirective,

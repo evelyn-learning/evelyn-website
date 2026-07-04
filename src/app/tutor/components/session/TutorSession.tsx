@@ -58,6 +58,12 @@ export interface TutorSessionProps {
   sessionMaxMinutes: number;
   /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
   resumeState?: VTRProps['resumeState'];
+  /** Task D1b — transient session-scoped social threads / progress digest
+   *  from the portal's StudentContext (embed passes them; the standalone
+   *  /tutor page has no source and omits both). Forwarded to the runtime,
+   *  typed from VoiceTutorRealtime to avoid drift. */
+  socialMemory?: VTRProps['socialMemory'];
+  progressDigest?: VTRProps['progressDigest'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -115,6 +121,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
+    socialMemory, progressDigest,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -314,6 +321,8 @@ export default function TutorSession(props: TutorSessionProps) {
         level={level}
         studentName={studentName || undefined}
         studentId={studentId}
+        socialMemory={socialMemory}
+        progressDigest={progressDigest}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}

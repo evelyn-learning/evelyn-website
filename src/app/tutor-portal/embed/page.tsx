@@ -19,7 +19,7 @@ import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState } from '@/app/tutor/components/VoiceTutorRealtime';
-import type { SessionResult, LessonProgress } from '@evelyn/portal-contract/v1';
+import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { buildResumeState } from '@/lib/tutor/portal/resume';
@@ -67,6 +67,12 @@ interface EmbedConfig {
    *  rehydrates position + transcript + whiteboard and continues without
    *  auto-opening the mic. Otherwise starts fresh on the same lesson. */
   resume?: boolean;
+  /** Task D1b — TRANSIENT session-scoped context from the portal's
+   *  StudentContext. Read for THIS session only, never persisted engine-side.
+   *  The academy resolves parental opt-out / trial to an absent/empty
+   *  social_memory before minting the token. */
+  social_memory?: SocialThread[];
+  progress_digest?: ProgressDigest;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -407,6 +413,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         voice={openAIVoice}
         voiceEngine="claude-brain"
         sessionMaxMinutes={maxDuration}
+        socialMemory={config.social_memory}
+        progressDigest={config.progress_digest}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

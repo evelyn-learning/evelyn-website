@@ -63,7 +63,9 @@
     "test:pedagogy-board-truth": "npx tsx scripts/test-board-truth-clause.ts",
     "test:pedagogy-c1": "npx tsx scripts/test-plan-seed-framing.ts",
     "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
-    "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts"
+    "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts",
+    "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
+    "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

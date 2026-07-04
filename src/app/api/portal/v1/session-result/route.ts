@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { SessionEmitRequestSchema } from '@evelyn/portal-contract/v1';
-import { emitSessionResult } from '@/lib/tutor/portal/session-result';
+import { emitSessionResult, extractSocialCarrier } from '@/lib/tutor/portal/session-result';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
 export const POST = withPortalAuth(async (_req, auth) => {
@@ -16,6 +16,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const result = await emitSessionResult(parsed.data);
+  // Task D3 — ADDITIVE loose carrier (transcript + inbound socialMemory
+  // threads) read off the raw body; not yet in SessionEmitRequestSchema
+  // (zod strips unknown keys). Absent/malformed ⇒ undefined ⇒ no social
+  // extraction, socialMemoryDelta omitted. This authed-portal route is
+  // subscribed-only territory: demo/logged-out sessions never reach it, and
+  // the academy sends no transcript carrier for trial / opted-out students.
+  const social = extractSocialCarrier(auth.body);
+  const result = await emitSessionResult(parsed.data, social ? { social } : {});
   return NextResponse.json(stripNullsDeep(result));
 });

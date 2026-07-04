@@ -21,6 +21,7 @@ import {
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
+import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionSummary, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 
@@ -29,7 +30,11 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   const profile = await getOrCreateStudentProfile(id);
   return NextResponse.json({
     profile,
-    block: renderStudentProfileBlock(profile),
+    // Task D1: interests ride the preferences line only behind the pedagogy
+    // opener flag — flag off ⇒ byte-identical block to the pre-D1 output.
+    block: renderStudentProfileBlock(profile, {
+      includeInterests: isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER),
+    }),
   });
 }
 
