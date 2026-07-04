@@ -23,6 +23,11 @@ import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { buildResumeState } from '@/lib/tutor/portal/resume';
+import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+
+// Opener-recency / extraction-carrier gate (mirrors the same flag read in
+// VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
+const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 
 /** The contract's milestone enum (derived from SessionResult — the package
  *  exports the type via this field rather than a standalone alias). */
@@ -281,6 +286,17 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     if (MILESTONE_RANK[m] > MILESTONE_RANK[milestoneRef.current]) milestoneRef.current = m;
   }, []);
 
+  // Opener-recency loop (part B): the runtime reports which opener it used
+  // this session (kind + digest, captured once on the opener turn — only
+  // fires when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on). Reported to the
+  // portal in session_ended as `opener_record`; the academy stores it and
+  // round-trips it back as the next session's EmbedConfig.last_opener so
+  // the tutor never opens the same way twice in a row.
+  const openerRecordRef = useRef<{ kind: string; digest: string } | null>(null);
+  const handleOpenerRecord = useCallback((rec: { kind: string; digest: string }) => {
+    openerRecordRef.current = rec;
+  }, []);
+
   // Lesson-phase progress (contract v1.2.0). The two source callbacks fire
   // independently — onLessonProgressChange carries {plan, currentSegmentId}
   // (on plan load + each advance), onCompletedSegmentsChange carries the
@@ -353,9 +369,28 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         // Final lesson position (contract v1.2.0). Omitted for free-conversation
         // sessions with no plan (lessonProgressRef stays null).
         ...(lessonProgressRef.current ? { lesson_progress: lessonProgressRef.current } : {}),
+        // Opener-recency loop (part B): which opener the tutor used this
+        // session — the academy stores it and round-trips it as the next
+        // session's last_opener. Only present when the pedagogy flag is on
+        // (capture is flag-gated in the runtime).
+        ...(openerRecordRef.current ? { opener_record: openerRecordRef.current } : {}),
+        // Social-extraction carrier (Task D3 loop): a role/text transcript
+        // (capped to the last 200 entries) the academy forwards on its
+        // session-result emit so server-side thread extraction can run.
+        // The academy applies the consent guards (non-trial, memory level,
+        // parental opt-out) before forwarding; sending here is inert until
+        // it does. Gated on the same pedagogy flag as the capture.
+        ...(TUTOR_PEDAGOGY_OPENER_EMBED
+          ? {
+              transcript: transcript.slice(-200).map((t) => ({
+                role: t.role === 'tutor' ? ('tutor' as const) : ('student' as const),
+                text: t.text,
+              })),
+            }
+          : {}),
       },
     }, '*');
-  }, [saveSession, sessionId, transcript.length, whiteboardCommands.length]);
+  }, [saveSession, sessionId, transcript, whiteboardCommands.length]);
 
   // Save as abandoned on page unload
   useEffect(() => {
@@ -422,6 +457,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
+        onOpenerRecord={handleOpenerRecord}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

@@ -185,7 +185,13 @@ async function main() {
     assert.equal(calls.length, 0);
   });
 
-  await test('idempotent replay (second terminal emit) → no delta, extractor not re-run', async () => {
+  await test('idempotent replay STILL extracts (live-flow ordering: runtime commit lands first)', async () => {
+    // In production the engine runtime commits the session (same client
+    // sessionId) BEFORE the academy's session-ended emit arrives — so the
+    // replay branch is the NORMAL path for that emit. The pedagogical
+    // deltas stay a no-op snapshot, but the social carrier must still be
+    // extracted or the loop is dead in the live flow. Repeats are safe:
+    // the academy dedupes threads and recency bumps are idempotent.
     const req = freshReq();
     await subscribe(req.studentId);
     const { stub, calls } = makeStub(ONE_SUGGESTION);
@@ -193,8 +199,9 @@ async function main() {
     const first = await emitSessionResult(req, { social });
     assert.ok(first.socialMemoryDelta, 'first emit carries the delta');
     const replay = await emitSessionResult(req, { social });
-    assert.ok(!('socialMemoryDelta' in replay), 'replay is a no-delta snapshot');
-    assert.equal(calls.length, 1, 'extractor ran exactly once');
+    assert.ok(replay.socialMemoryDelta, 'replay emit ALSO carries the delta (ordering fix)');
+    assert.deepEqual(replay.learningStateDelta.gaps, { new: [], promoted: [], resolved: [] }, 'pedagogical deltas stay a no-op snapshot on replay');
+    assert.equal(calls.length, 2, 'extractor ran on both emits');
   });
 
   await test('extractor throwing never breaks the emit (defensive wrap)', async () => {

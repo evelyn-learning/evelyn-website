@@ -235,9 +235,21 @@ export async function emitSessionResult(
 
   // Idempotency: a terminal session already recorded → return a no-delta snapshot.
   if (profile.recentSessions.some((s) => s.sessionId === req.sessionId)) {
+    // Task D3 ordering fix: in the LIVE flow the engine runtime's own
+    // commit (client → /api/tutor/student-profile, same client sessionId)
+    // lands BEFORE the academy's session-ended emit — so this replay branch
+    // is the NORMAL path for that emit, not an exceptional retry. Social
+    // extraction must still run here or the carrier is dead in production.
+    // Safe to repeat: the academy's addThreads dedupes by note and
+    // markReferenced recency bumps are idempotent in effect.
+    const replaySocialDelta = await buildSocialMemoryDelta(
+      opts.social,
+      profile.preferences.socialMemoryLevel,
+    );
     return {
       ...base,
       learningStateDelta: { gaps: { new: [], promoted: [], resolved: [] }, mastery: masterySnapshot(profile, req.losTouched) },
+      ...(replaySocialDelta ? { socialMemoryDelta: replaySocialDelta } : {}),
     };
   }
 
@@ -311,10 +323,11 @@ export async function emitSessionResult(
     if (g.status === 'resolved' && prev !== 'resolved') resolved.push(g.id);
   }
 
-  // Task D3 — social-memory delta (fresh terminal commits only; checkpoint
-  // and idempotent-replay paths returned above without extraction). The
-  // socialMemoryLevel guard reads the PERSISTED preference stamped by the
-  // context-ingest route (/api/portal/v1/context).
+  // Task D3 — social-memory delta (checkpoint path returns above without
+  // extraction; the idempotent-replay path above ALSO extracts — see the
+  // ordering-fix comment there). The socialMemoryLevel guard reads the
+  // PERSISTED preference stamped by the context-ingest route
+  // (/api/portal/v1/context).
   const socialMemoryDelta = await buildSocialMemoryDelta(
     opts.social,
     saved.preferences.socialMemoryLevel,
