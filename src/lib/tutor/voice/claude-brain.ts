@@ -93,6 +93,15 @@ export interface BrainTurnInput {
   demoStop?:
     | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
     | { mode: 'milestone' };
+  /** Teacher-persona mid-session style salience (flag
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
+   *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
+   *  domains + audibility line). The orchestrator attaches it on every
+   *  brain turn AFTER the opening directive retires — while the directive
+   *  rides, identity is already salient. Absent ⇒ no `<teacher_style>`
+   *  block ⇒ userContent byte-identical. Lives in per-turn user content,
+   *  NEVER the cached system prefix. */
+  styleReminder?: string;
   /** Targets the brain passed to tutor_scribble last turn that the
    *  runtime silently dropped (no_match / whole-item alias / iframe).
    *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
@@ -955,6 +964,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Teacher-persona mid-session style salience: '' when absent.
+  const styleReminderBlock = input.styleReminder
+    ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
@@ -983,6 +995,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    styleReminderBlock +
     demoStopBlock +
     lessonBlock +
     truthBlock +
@@ -1118,6 +1131,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Teacher-persona mid-session style salience: '' when absent.
+  const styleReminderBlock = input.styleReminder
+    ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
@@ -1146,6 +1162,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    styleReminderBlock +
     demoStopBlock +
     lessonBlock +
     truthBlock +

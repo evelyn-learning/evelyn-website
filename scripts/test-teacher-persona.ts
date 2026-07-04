@@ -14,6 +14,7 @@ import {
   TEACHER_IDENTITY_BOUNDS_CLAUSE,
   renderTeacherPersonaBlock,
   renderTeacherIntroDirective,
+  renderTeacherStyleReminder,
   type TeacherPersonaWire,
 } from '../src/lib/tutor/ai/teacher-persona';
 import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
@@ -151,6 +152,66 @@ function main() {
     assert.match(d, /beats any credential/);
     assert.match(d, /Never recite years of experience, qualifications, or subject lists/);
     assert.match(d, /a hello, not a resume/);
+  });
+
+  // ── renderTeacherStyleReminder (mid-session style salience, 2026-07-04) ──
+  // The per-turn <teacher_style> body: audible markers only (pace, ≤2
+  // catchphrases, ≤3 analogy domains) + the audibility line. Judge kept
+  // scoring style-consistent 4/5 ("not strongly distinctive beyond the
+  // opening") once the opening directive retired.
+  test('style reminder: distills pace + catchphrases + analogy domains with the audibility line', () => {
+    const r = renderTeacherStyleReminder(FULL_PERSONA);
+    assert.ok(r, 'full persona yields a reminder');
+    assert.match(r!, /Stay unmistakably Dr\. Test Teacher this turn/);
+    assert.match(r!, /brisk/);
+    assert.ok(r!.includes('"CATCH-ONE"') && r!.includes('"CATCH-TWO"'), 'both catchphrases quoted');
+    assert.ok(r!.includes('DOMAIN-A') && r!.includes('DOMAIN-B'), 'analogy domains listed');
+    assert.match(r!, /never generic, never scripted/);
+  });
+
+  // Live-run iteration (2026-07-04 T1 run 1): listing the catchphrases every
+  // turn made the brain repeat "look at that, you did it!" verbatim in
+  // back-to-back exchanges — judge: "feels slightly formulaic". The
+  // catchphrase bit must carry its own anti-repetition guard.
+  test('style reminder: catchphrases carry the seasoning + no-back-to-back guard', () => {
+    const r = renderTeacherStyleReminder(FULL_PERSONA)!;
+    assert.match(r, /seasoning/);
+    assert.match(r, /at most one per turn/);
+    assert.match(r, /never the same one twice in a row/);
+  });
+
+  test('style reminder: caps at 2 catchphrases and 3 analogy domains', () => {
+    const crowded: TeacherPersonaWire = {
+      ...FULL_PERSONA,
+      style: {
+        ...FULL_PERSONA.style,
+        catchphrases: ['C1', 'C2', 'C3-OVERFLOW'],
+        analogyDomains: ['D1', 'D2', 'D3', 'D4-OVERFLOW'],
+      },
+    };
+    const r = renderTeacherStyleReminder(crowded)!;
+    assert.ok(r.includes('"C1"') && r.includes('"C2"'), 'first two catchphrases kept');
+    assert.ok(!r.includes('C3-OVERFLOW'), 'third catchphrase dropped');
+    assert.ok(r.includes('D3'), 'first three domains kept');
+    assert.ok(!r.includes('D4-OVERFLOW'), 'fourth domain dropped');
+  });
+
+  test('style reminder: null when no style at all, and null when no audible marker is present', () => {
+    assert.equal(renderTeacherStyleReminder(MINIMAL_PERSONA), null, 'style-less persona ⇒ null');
+    const proseOnly: TeacherPersonaWire = {
+      ...MINIMAL_PERSONA,
+      style: { teaching: 'prose only', errorResponse: 'prose', boardHabits: 'prose' },
+    };
+    assert.equal(renderTeacherStyleReminder(proseOnly), null, 'no pace/catchphrases/domains ⇒ null');
+  });
+
+  test('style reminder: every DEMO_TEACHER yields a reminder ≤ 400 chars (per-turn token budget)', () => {
+    for (const t of DEMO_TEACHERS) {
+      const r = renderTeacherStyleReminder(t);
+      assert.ok(r, `${t.id} has audible markers`);
+      assert.ok(r!.length <= 400, `${t.id} reminder is ${r!.length} chars (max 400)`);
+      assert.ok(r!.includes(t.name), `${t.id} reminder names the teacher`);
+    }
   });
 
   // ── buildSystemPrompt gating ────────────────────────────────────────────

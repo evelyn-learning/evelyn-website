@@ -245,3 +245,43 @@ export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
     `a hello, not a resume. Then get into the opener.`
   );
 }
+
+/**
+ * Pure: the per-turn `<teacher_style>` body (mid-session style salience,
+ * 2026-07-04). Once the opening directive retires (≤4 brain turns), only
+ * the static <teacher_identity> block carries the persona, and its
+ * salience loses to the live conversation — the T1 judge kept scoring
+ * style-consistent 4/5 ("present but not strongly distinctive beyond the
+ * opening"). This distills just the AUDIBLE markers — pace, ≤2
+ * catchphrases, ≤3 analogy domains — into a compact reminder the
+ * orchestrator attaches to every brain turn after the opening directive
+ * retires. Error-response / questioning / board habits stay static-only
+ * (per-turn token budget ~70 tok; DEMO_TEACHERS pinned ≤400 chars).
+ *
+ * Returns null when none of the three markers is present — no block,
+ * fail-soft (real onboarded teachers may have sparse style fields).
+ */
+export function renderTeacherStyleReminder(t: TeacherPersonaWire): string | null {
+  const s = t.style;
+  if (!s) return null;
+  const bits: string[] = [];
+  if (s.pace) bits.push(`keep your ${s.pace} pace`);
+  if (s.analogyDomains && s.analogyDomains.length > 0) {
+    bits.push(`reach for analogies from ${s.analogyDomains.slice(0, 3).join(' / ')}`);
+  }
+  if (s.catchphrases && s.catchphrases.length > 0) {
+    // Live-run lesson (2026-07-04): listing catchphrases per turn without a
+    // repetition guard made the brain say the SAME one verbatim in
+    // back-to-back exchanges — "slightly formulaic" per the judge. They are
+    // seasoning, not a per-turn quota.
+    bits.push(
+      `your catchphrases (${s.catchphrases.slice(0, 2).map((c) => `"${c}"`).join(' / ')}) are seasoning: ` +
+      `at most one per turn, never the same one twice in a row`,
+    );
+  }
+  if (bits.length === 0) return null;
+  return (
+    `Stay unmistakably ${t.name} this turn — ${bits.join('; ')}. ` +
+    `Any two consecutive turns should sound like you — never generic, never scripted.`
+  );
+}

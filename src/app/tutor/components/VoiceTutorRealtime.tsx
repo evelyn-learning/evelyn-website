@@ -21,7 +21,7 @@ import {
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
-import { renderTeacherIntroDirective, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -1229,6 +1229,16 @@ export function VoiceTutorRealtime({
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
+  // Teacher-persona mid-session style salience (2026-07-04): the compact
+  // per-turn <teacher_style> body (renderTeacherStyleReminder output),
+  // seeded once under the same one-shot latch as the opening directive.
+  // callBrainOnce attaches it ONLY on turns where the opening directive is
+  // NOT riding — the directive already carries identity salience, so the
+  // reminder takes over exactly at retirement and never retires itself
+  // (style must persist all session; the T1 judge kept scoring
+  // style-consistent 4/5 "not strongly distinctive beyond the opening").
+  // null ⇒ flag off / no persona / diagnostic session ⇒ never attached.
+  const teacherStyleReminderRef = useRef<string | null>(null);
   // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
   // effect (below) re-runs mid-session whenever studentPreferences changes
   // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
@@ -6951,6 +6961,19 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Teacher-persona mid-session style salience: attach the compact
+        // <teacher_style> reminder on every turn where the opening
+        // directive is NOT riding (it takes over exactly at retirement —
+        // while the directive rides, identity is already salient). Never
+        // retires: style must stay audible all session. Flag off / no
+        // persona / diagnostic ⇒ ref is null ⇒ field stays undefined ⇒
+        // request byte-identical.
+        let styleReminder: string | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && teacherStyleReminderRef.current && !openingDirective) {
+          styleReminder = teacherStyleReminderRef.current;
+          console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
+        }
+
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
         // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
         // undefined and JSON.stringify omits it (request byte-identical).
@@ -7017,6 +7040,9 @@ export function VoiceTutorRealtime({
             // Pedagogy opener: opening-phase directive (undefined once
             // retired / when the flag is off — see the block above).
             openingDirective,
+            // Teacher-persona style salience: per-turn reminder, present
+            // exactly when the opening directive is NOT (see block above).
+            styleReminder,
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
@@ -11805,6 +11831,15 @@ export function VoiceTutorRealtime({
               teacherPersona && baseDirective
                 ? `${renderTeacherIntroDirective(teacherPersona)} ${baseDirective}`
                 : baseDirective;
+            // Mid-session style salience: seed the session-static
+            // <teacher_style> body under the same one-shot latch.
+            // Diagnostic sessions stay outside the persona theatrics —
+            // same targetKind gate as the completion gate above. null
+            // (no persona / no audible style markers) ⇒ never attached.
+            teacherStyleReminderRef.current =
+              teacherPersona && sig.targetKind !== 'diagnostic'
+                ? renderTeacherStyleReminder(teacherPersona)
+                : null;
             openingTurnArmedRef.current = true;
           }
         }
