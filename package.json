@@ -62,7 +62,8 @@
     "test:pedagogy-b3": "npx tsx scripts/test-opener-fallback.ts",
     "test:pedagogy-board-truth": "npx tsx scripts/test-board-truth-clause.ts",
     "test:pedagogy-c1": "npx tsx scripts/test-plan-seed-framing.ts",
-    "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts"
+    "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
+    "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
