@@ -1326,6 +1326,19 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
 }
 
 /**
+ * Stale-checkpoint re-orient nuance (resume-stale journey, opening-behavior
+ * rule 3): prepended to the opening directive by the orchestrator when the
+ * student HAD started this lesson but the checkpoint is too old to restore
+ * (resolveOpeningBehavior journey === 'resume-stale'). One sentence, no new
+ * machinery — the directive's opener clause (buildOpenerClause) still
+ * follows it. Generic by design per feedback_generic_prompts.
+ */
+export const STALE_CHECKPOINT_REORIENT_CLAUSE =
+  'This student was mid-way through this lesson a while ago but the checkpoint is too old to ' +
+  "restore — re-orient them briefly (one line of 'we were working on X') before the opener; " +
+  'do not run full get-to-know-you calibration.';
+
+/**
  * Pure helper: given a SystemPromptContext, returns the session-wide prose
  * that routes a student's self-report about themselves down TWO channels,
  * or `null` when the caller hasn't opted in (`ctx.selfReportRouting` not

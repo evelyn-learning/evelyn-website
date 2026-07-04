@@ -29,12 +29,16 @@
  *     the fixture's TRANSIENT socialMemory/progressDigest, and (ravi) a
  *     pre-built resume checkpoint.
  *   - diego's DIAGNOSTIC variant (studentContextDiagnostic,
- *     target.kind='diagnostic') is NOT wired: no diagnostic signal is
- *     plumbed through the engine wiring today (per task-B2-report.md —
- *     OpeningSignals.targetKind only resolves lessonNode/freestyle at the
- *     component call sites). He runs as a NORMAL lessonNode session; the
- *     diagnostic no-op verification is deferred until the signal lands.
- *     We do NOT fake the signal.
+ *     target.kind='diagnostic') is NOW WIRED: the engine grew an explicit
+ *     targetKind signal (__tutorTestStart.targetKind → VoiceTutorRealtime
+ *     prop → OpeningSignals.targetKind; production twin = the embed's
+ *     EmbedConfig.target_kind). The S5 row runs him with
+ *     opts.targetKind='diagnostic' — the same real signal the academy's
+ *     diagnostic embeds send, not a fake.
+ *   - ravi's STALE-checkpoint variant now passes the real checkpointStale
+ *     marker (no resume seed + checkpointStale:true — mirroring
+ *     portal/resume.ts's resolveResumeOutcome), so the resume-stale
+ *     journey (light re-orient) is live-testable via the S6S row.
  */
 import { chromium, type ConsoleMessage } from 'playwright';
 import * as fs from 'fs';
@@ -131,10 +135,9 @@ const DEMO_PERSONA_IDS = new Set(Object.keys(DEMO_PICKER_START));
  *   - zoe    (Triangle Congruence, g9)    → g10 triangle-congruence plan
  *   - kai    (Linear Inequalities, g9)    → g9 inequalities plan
  *   - diego  (Quadratics, g10)            → g9 quadratics-intro plan.
- *     NORMAL lessonNode session ONLY — his diagnostic variant
- *     (studentContextDiagnostic, target.kind='diagnostic') has no reachable
- *     wiring today (no diagnostic signal is plumbed; see header SCOPE note)
- *     and is NOT faked.
+ *     Runs as a normal lessonNode session by default; the S5 row adds
+ *     opts.targetKind='diagnostic' (the now-plumbed engine signal — see
+ *     header SCOPE note) to exercise his diagnostic variant.
  *   - ravi   (Cellular Respiration, g11)  → hs cellular-respiration plan
  */
 export const SUBSCRIBED_PICKER_START: Record<
@@ -167,13 +170,29 @@ export interface TestStartConfig {
   progressDigest?: ProgressDigest;
   /** Pre-built TutorResumeState (post-buildResumeState shape). Staleness
    *  is filtered HERE in the driver (same isCheckpointResumable rule the
-   *  production path applies before resumeState ever exists). */
+   *  production path applies before resumeState ever exists); a filtered
+   *  (stale) checkpoint sets `checkpointStale` instead — mirroring
+   *  portal/resume.ts's resolveResumeOutcome. */
   resume?: {
     currentSegmentId: string;
     completedSegmentIds: string[];
     transcript: unknown[];
     whiteboardCommands: unknown[];
   };
+  /** Stale-checkpoint marker (resume-stale journey): a checkpoint existed
+   *  but was too old to restore. Set by the driver when the requested
+   *  resumeVariant's checkpoint fails isCheckpointResumable (never together
+   *  with `resume`). */
+  checkpointStale?: boolean;
+  /** Session budget override (page-side default 30 — the production
+   *  literal). The E2 soft-close row shrinks it to ~5 so the wind-down is
+   *  actually reachable within a short live run. */
+  sessionMaxMinutes?: number;
+  /** Explicit OpeningSignals.targetKind (production twin: the embed's
+   *  EmbedConfig.target_kind). 'diagnostic' = opener/calibration no-op +
+   *  completion-gate/demo-stop off. Omitted = derived from lessonPlanId
+   *  presence, exactly as before. */
+  targetKind?: 'lessonNode' | 'freestyle' | 'diagnostic';
   /** Opener-recency (part A): the PREVIOUS session's opener record, passed
    *  through to the engine's transient-context block as a do-NOT-repeat
    *  directive. Set by `runReplayScenario` for session 2 only. */
@@ -230,23 +249,43 @@ interface StudentContextView {
  *     (`opts.resumeVariant`, default 'fresh'). The driver applies the SAME
  *     staleness filter production applies (isCheckpointResumable /
  *     RESUME_MAX_AGE_MS via portal/resume.ts), so the 'stale' variant
- *     yields NO resume — a cold start, which is exactly what production
- *     does with a stale checkpoint. The fixtures carry no prior
- *     transcript/whiteboard, so the checkpoint seeds POSITION only
- *     (empty transcript/whiteboardCommands arrays).
+ *     yields NO resume seed — instead it sets `checkpointStale: true`,
+ *     which is exactly what production now derives from a stale checkpoint
+ *     (resolveResumeOutcome → the resume-stale light-re-orient journey).
+ *     The fixtures carry no prior transcript/whiteboard, so the fresh
+ *     checkpoint seeds POSITION only (empty transcript/whiteboardCommands
+ *     arrays).
+ *
+ * `opts.sessionMaxMinutes` / `opts.targetKind` are plain start-config
+ * overrides applied to BOTH branches (demo + subscribed) — see their
+ * TestStartConfig docs.
  */
+export interface PickerStartOpts {
+  resumeVariant?: 'fresh' | 'stale';
+  sessionMaxMinutes?: number;
+  targetKind?: TestStartConfig['targetKind'];
+}
+
+/** Applies the branch-independent driver overrides onto a built start
+ *  config. Mutates + returns `start` (a fresh object at both call sites). */
+function withDriverOverrides(start: TestStartConfig, opts?: PickerStartOpts): TestStartConfig {
+  if (opts?.sessionMaxMinutes !== undefined) start.sessionMaxMinutes = opts.sessionMaxMinutes;
+  if (opts?.targetKind) start.targetKind = opts.targetKind;
+  return start;
+}
+
 export function personaToPickerStart(
   persona: Persona,
-  opts?: { resumeVariant?: 'fresh' | 'stale' },
+  opts?: PickerStartOpts,
 ): TestStartConfig {
   const fallbackName = persona.id.charAt(0).toUpperCase() + persona.id.slice(1);
 
   if (persona.mode === 'demo' && DEMO_PERSONA_IDS.has(persona.id)) {
     const cfg = DEMO_PICKER_START[persona.id];
-    return {
+    return withDriverOverrides({
       ...cfg,
       studentName: persona.id === 'anon' ? undefined : fallbackName,
-    };
+    }, opts);
   }
 
   if (persona.mode === 'subscribed' && SUBSCRIBED_PERSONA_IDS.has(persona.id)) {
@@ -271,9 +310,14 @@ export function personaToPickerStart(
           transcript: [],
           whiteboardCommands: [],
         };
+      } else {
+        // The checkpoint EXISTED but is outside RESUME_MAX_AGE_MS — same
+        // outcome production's resolveResumeOutcome reports: no resume
+        // seed, checkpointStale marker on (the resume-stale journey).
+        start.checkpointStale = true;
       }
     }
-    return start;
+    return withDriverOverrides(start, opts);
   }
 
   throw new Error(
@@ -340,6 +384,12 @@ export interface RunScenarioOpts {
   taskId?: string;
   baseUrl?: string;
   resumeVariant?: 'fresh' | 'stale';
+  /** Session budget override → __tutorTestStart.sessionMaxMinutes (page
+   *  default 30). E2's soft-close row shrinks it to ~5. */
+  sessionMaxMinutes?: number;
+  /** Explicit targetKind → __tutorTestStart.targetKind (S5 runs diego's
+   *  diagnostic variant with 'diagnostic'). */
+  targetKind?: TestStartConfig['targetKind'];
   /** Opener-recency (part A): injected as __tutorTestStart's lastOpener
    *  (the previous session's opener record). Only `runReplayScenario`
    *  sets this — and only on its SECOND session. */
@@ -351,7 +401,11 @@ export async function runScenario(
   opts: RunScenarioOpts,
 ): Promise<Bundle> {
   const baseUrl = opts.baseUrl ?? process.env.TUTOR_E2E_URL ?? 'http://localhost:3006';
-  const start = personaToPickerStart(persona, { resumeVariant: opts.resumeVariant });
+  const start = personaToPickerStart(persona, {
+    resumeVariant: opts.resumeVariant,
+    sessionMaxMinutes: opts.sessionMaxMinutes,
+    targetKind: opts.targetKind,
+  });
   if (opts.lastOpener) start.lastOpener = opts.lastOpener;
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

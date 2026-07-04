@@ -135,6 +135,18 @@ test('SCENARIO_MAP: E2 exercises no-sell-phrase for maya (demo soft close) with 
   assert.deepEqual(SCENARIO_MAP.E2.rubric.map((r) => r.id), ['close-never-greasy']);
 });
 
+test('SCENARIO_MAP: E2 shrinks the session budget to 5 minutes and raises the turn budget to 8 (live-testable close)', () => {
+  assert.equal(SCENARIO_MAP.E2.driverOpts?.sessionMaxMinutes, 5, 'driver override reaches the row');
+  assert.equal(SCENARIO_MAP.E2.maxTurns, 8, 'enough turns to actually reach the wind-down');
+});
+
+test('SCENARIO_MAP: E2 rubric tells the judge about the ~5-minute budget (an ending SHOULD occur)', () => {
+  const q = SCENARIO_MAP.E2.rubric[0].question;
+  assert.ok(/5-minute budget/.test(q), 'question mentions the ~5-minute budget');
+  assert.ok(/SHOULD bring it to a satisfying close/.test(q), 'question frames the ending as expected, not a failure');
+  assert.ok(/without ever pitching, selling, or steering toward signup/.test(q), 'no-sell substance kept');
+});
+
 // ── Subscribed rows (Task H2) ────────────────────────────────────────────
 
 test('SCENARIO_MAP: S1 runs priya with the proactive-opener gate + the 3 warm-resume rubric items', () => {
@@ -195,6 +207,26 @@ test('SCENARIO_MAP: S6 runs ravi judge-only (silent pickup — no proactive-open
   assert.deepEqual(SCENARIO_MAP.S6.gateTaskIds, []);
   assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S6), []);
   assert.deepEqual(SCENARIO_MAP.S6.rubric.map((r) => r.id), ['pickup-continuity']);
+  assert.equal(SCENARIO_MAP.S6.driverOpts?.resumeVariant, undefined, 'S6 keeps the driver default (fresh)');
+});
+
+test("SCENARIO_MAP: S5 runs diego's diagnostic variant judge-only with targetKind 'diagnostic'", () => {
+  assert.deepEqual(SCENARIO_MAP.S5.personas, ['diego']);
+  assert.deepEqual(SCENARIO_MAP.S5.gateTaskIds, [], 'judge-only — the proactive-opener gate would be exactly wrong');
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S5), []);
+  assert.equal(SCENARIO_MAP.S5.driverOpts?.targetKind, 'diagnostic');
+  assert.deepEqual(SCENARIO_MAP.S5.rubric.map((r) => r.id), ['diagnostic-no-opener']);
+  assert.ok(/WITHOUT a proactive opener/.test(SCENARIO_MAP.S5.rubric[0].question));
+});
+
+test("SCENARIO_MAP: S6S runs ravi's STALE-checkpoint variant judge-only (light re-orient)", () => {
+  assert.deepEqual(SCENARIO_MAP.S6S.personas, ['ravi']);
+  assert.deepEqual(SCENARIO_MAP.S6S.gateTaskIds, []);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S6S), []);
+  assert.equal(SCENARIO_MAP.S6S.driverOpts?.resumeVariant, 'stale');
+  assert.deepEqual(SCENARIO_MAP.S6S.rubric.map((r) => r.id), ['stale-reorient-light']);
+  assert.ok(/one-line re-orientation/.test(SCENARIO_MAP.S6S.rubric[0].question));
+  assert.ok(/pretending to restore/.test(SCENARIO_MAP.S6S.rubric[0].question));
 });
 
 // ── formatList ────────────────────────────────────────────────────────

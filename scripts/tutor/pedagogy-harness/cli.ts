@@ -58,6 +58,17 @@ export type ScenarioRow = {
   gateTaskIds: string[];
   /** Layer-2 advisory rubric questions for `judgeBundle`. */
   rubric: RubricItem[];
+  /** Per-row turn budget override (default DEFAULT_MAX_TURNS). E2 needs
+   *  more room than the default so a shrunk session budget can actually
+   *  reach its wind-down. */
+  maxTurns?: number;
+  /** Per-row driver options forwarded into `runScenario`'s opts (session
+   *  budget override, explicit targetKind, ravi's resume variant). */
+  driverOpts?: {
+    sessionMaxMinutes?: number;
+    targetKind?: 'lessonNode' | 'freestyle' | 'diagnostic';
+    resumeVariant?: 'fresh' | 'stale';
+  };
 };
 
 /**
@@ -123,12 +134,17 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
   // E2 — soft conversion close (demo). L1: the no-sell-phrase gate (the
   // brain never initiates a sell — the UI owns the CTA); L2: the close is
   // warm and in-character even when the session winds down or the student
-  // asks about continuing.
+  // asks about continuing. The driver shrinks the session budget to ~5
+  // minutes (sessionMaxMinutes override → the demo-stop time clock) and
+  // raises the turn budget to 8, so the wind-down is actually reachable
+  // within a live run instead of being 25 minutes away.
   E2: {
     personas: ['maya'],
     gateTaskIds: ['E2'],
+    maxTurns: 8,
+    driverOpts: { sessionMaxMinutes: 5 },
     rubric: [
-      { id: 'close-never-greasy', question: 'If the session approaches an end or the student asks about continuing, is the tutor warm and in-character without ever pitching, selling, or steering toward signup?' },
+      { id: 'close-never-greasy', question: 'This demo session ran under a ~5-minute budget, so the tutor SHOULD bring it to a satisfying close near the end. When the session winds down (or the student asks about continuing), is the ending warm, complete, and in-character — without ever pitching, selling, or steering toward signup?' },
     ],
   },
   // ── Subscribed-persona rows (Task H2) ──────────────────────────────────
@@ -179,19 +195,44 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
       { id: 'zero-social-render', question: "Does the session contain NO reference to any stored SOCIAL/personal detail about the student's life outside learning (interests, hobbies, upcoming personal events, family/pets) — consistent with social-memory level 'off'? IMPORTANT: pedagogical memory (what they learned, were good at, or struggled with in prior sessions) is NOT social memory and is expected/fine for a returning student — do not penalize it." },
     ],
   },
+  // S5 — diagnostic no-op (diego's studentContextDiagnostic variant,
+  // target.kind='diagnostic'). Judge-only: rule 1 of resolveOpeningBehavior
+  // resolves opener 'none' + calibration 'none', so the proactive-opener
+  // gate would be exactly wrong here. The driver passes the REAL
+  // targetKind signal ('diagnostic' → __tutorTestStart.targetKind → the
+  // VoiceTutorRealtime prop; production twin = EmbedConfig.target_kind).
+  S5: {
+    personas: ['diego'],
+    gateTaskIds: [],
+    driverOpts: { targetKind: 'diagnostic' },
+    rubric: [
+      { id: 'diagnostic-no-opener', question: 'Does the session start WITHOUT a proactive opener monologue or get-to-know-you calibration — appropriate for an assessment context where the student should be presented the assessment task directly and low-pressure?' },
+    ],
+  },
   // S6 — mid-lesson pickup (ravi, FRESH checkpoint variant — the driver's
   // default resumeVariant). Judge-only: the resume-live journey resolves
   // opener 'none' (silent pickup), so the proactive-opener gate would be
-  // wrong here. The STALE-checkpoint variant is not a separate row — the
-  // driver's production-faithful staleness filter reduces it to a plain
-  // cold start (no resume injected), indistinguishable from a normal run
-  // through this wiring; verifying stale-checkpoint MESSAGING is deferred
-  // until a checkpointStale signal is actually plumbed (see B2 report).
+  // wrong here. The STALE-checkpoint variant is S6S below.
   S6: {
     personas: ['ravi'],
     gateTaskIds: [],
     rubric: [
       { id: 'pickup-continuity', question: 'Does the session open as a continuation — picking up where it left off — rather than a cold restart or full calibration?' },
+    ],
+  },
+  // S6S — STALE-checkpoint variant (ravi). The driver's staleness filter
+  // still yields NO resume seed (production-faithful), but now ALSO passes
+  // the checkpointStale marker (mirroring portal/resume.ts's
+  // resolveResumeOutcome), so the resume-stale journey fires: a one-line
+  // re-orientation ("we were working on X") before the opener, without a
+  // full get-to-know-you calibration and without pretending to restore the
+  // old session. Judge-only for the same reason as S6.
+  S6S: {
+    personas: ['ravi'],
+    gateTaskIds: [],
+    driverOpts: { resumeVariant: 'stale' },
+    rubric: [
+      { id: 'stale-reorient-light', question: 'Does the session acknowledge briefly that the student had started this lesson before (a light one-line re-orientation) WITHOUT either a full cold-start get-to-know-you calibration or pretending to restore the old session?' },
     ],
   },
 };
@@ -245,7 +286,8 @@ export function resolveTaskIds(map: Record<string, ScenarioRow>, arg: string): s
 
 const DEFAULT_BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
 /** Turns per live scenario run — enough to exercise opener + a couple of
- *  calibration/teaching exchanges without an unbounded session. */
+ *  calibration/teaching exchanges without an unbounded session. Rows that
+ *  need more room override via `ScenarioRow.maxTurns` (e.g. E2). */
 const DEFAULT_MAX_TURNS = 6;
 
 /** Reachability probe (mirrors run-harness.smoke.ts's pattern — a bare
@@ -291,14 +333,16 @@ export function buildReplayRubric(base: RubricItem[], session1OpenerDigest: stri
  *  `anomalies` for human side-by-side comparison in the report. */
 async function runReplayTaskId(taskId: string, row: ScenarioRow, baseUrl: string): Promise<ScenarioResult[]> {
   const results: ScenarioResult[] = [];
+  const maxTurns = row.maxTurns ?? DEFAULT_MAX_TURNS;
   for (const personaId of row.personas) {
     const persona = loadPersona(personaId);
-    log(`${taskId} / ${personaId}: running REPLAY scenario (2 sessions, maxTurns=${DEFAULT_MAX_TURNS} each)…`);
+    log(`${taskId} / ${personaId}: running REPLAY scenario (2 sessions, maxTurns=${maxTurns} each)…`);
     try {
       const { session1, session2, lastOpener } = await runReplayScenario(persona, {
-        maxTurns: DEFAULT_MAX_TURNS,
+        maxTurns,
         taskId,
         baseUrl,
+        ...(row.driverOpts ?? {}),
       });
       const rubric = buildReplayRubric(row.rubric, lastOpener.digest);
       const judge = await judgeBundle(session2, rubric);
@@ -331,16 +375,17 @@ async function runReplayTaskId(taskId: string, row: ScenarioRow, baseUrl: string
  *  persona. */
 async function runTaskId(taskId: string, row: ScenarioRow, baseUrl: string): Promise<ScenarioResult[]> {
   const results: ScenarioResult[] = [];
+  const maxTurns = row.maxTurns ?? DEFAULT_MAX_TURNS;
   for (const personaId of row.personas) {
     const persona = loadPersona(personaId);
-    log(`${taskId} / ${personaId}: running live scenario (maxTurns=${DEFAULT_MAX_TURNS})…`);
+    log(`${taskId} / ${personaId}: running live scenario (maxTurns=${maxTurns})…`);
     // A scenario that dies mid-run (e.g. the session never produces a tutor
     // turn) must still land in the report — before this catch, a throw here
     // aborted the whole CLI with NO report.md, leaving nothing but a stray
     // screenshot dir to diagnose from (observed 2026-07-03: three failed
     // maya runs left zero reports).
     try {
-      const bundle = await runScenario(persona, { maxTurns: DEFAULT_MAX_TURNS, taskId, baseUrl });
+      const bundle = await runScenario(persona, { maxTurns, taskId, baseUrl, ...(row.driverOpts ?? {}) });
       const gates = row.gateTaskIds.flatMap((gateTaskId) => runGates(bundle, gateTaskId));
       const judge = row.rubric.length ? await judgeBundle(bundle, row.rubric) : undefined;
       results.push({ taskId, persona: personaId, gates, judge });

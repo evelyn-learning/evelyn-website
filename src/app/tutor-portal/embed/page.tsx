@@ -22,7 +22,7 @@ import { type TutorMilestone, type TutorResumeState } from '@/app/tutor/componen
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
-import { buildResumeState } from '@/lib/tutor/portal/resume';
+import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
@@ -92,6 +92,14 @@ interface EmbedConfig {
    *  token; absent/false = not a trial. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   is_trial?: boolean;
+  /** Explicit session-target kind for the opening behavior. 'diagnostic'
+   *  makes the opener/calibration no-op AND keeps the completion-gate/
+   *  demo-stop machinery off the session — the academy's diagnostic
+   *  (assessment) embeds should send it when minting the token. Absent =
+   *  derived from curriculum_module presence (lessonNode vs freestyle),
+   *  exactly as before. Only consumed when
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
+  target_kind?: 'lessonNode' | 'freestyle' | 'diagnostic';
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -215,6 +223,12 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const wantsResume = !!(config.resume && config.session_id);
   const [resumeReady, setResumeReady] = useState(!wantsResume);
   const [resumeState, setResumeState] = useState<TutorResumeState | null>(null);
+  // Stale-checkpoint marker (resume-stale opening journey): the checkpoint
+  // EXISTED but fell outside RESUME_MAX_AGE_MS, so `resumeState` stays null
+  // (cold start) and the runtime gets a light re-orient directive instead.
+  // Mutually exclusive with a non-null resumeState (resolveResumeOutcome
+  // never returns both). Only consumed when the pedagogy flag is on.
+  const [checkpointStale, setCheckpointStale] = useState(false);
   useEffect(() => {
     if (!wantsResume) return;
     let cancelled = false;
@@ -222,8 +236,11 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       try {
         const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sessionId)}`);
         if (res.ok) {
-          const rs = buildResumeState(await res.json());
-          if (!cancelled && rs) setResumeState(rs);
+          const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(await res.json());
+          if (!cancelled) {
+            if (rs) setResumeState(rs);
+            if (hadStaleCheckpoint) setCheckpointStale(true);
+          }
         }
       } catch {
         /* fresh start on any read error */
@@ -467,6 +484,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         lastOpener={config.last_opener}
         onOpenerRecord={handleOpenerRecord}
         isTrial={config.is_trial === true}
+        targetKind={config.target_kind}
+        checkpointStale={checkpointStale}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

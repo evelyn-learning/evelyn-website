@@ -75,6 +75,16 @@ export interface TutorSessionProps {
    *  flow). Forwarded to the runtime, typed from VoiceTutorRealtime to
    *  avoid drift. Only consumed when TUTOR_PEDAGOGY_OPENER is on. */
   isTrial?: VTRProps['isTrial'];
+  /** Explicit session-target kind (embed `target_kind` / dev hook) —
+   *  'diagnostic' makes the opening behavior no-op. Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. Only consumed
+   *  when TUTOR_PEDAGOGY_OPENER is on. */
+  targetKind?: VTRProps['targetKind'];
+  /** Stale-checkpoint marker (a checkpoint existed but was too old to
+   *  restore — resume-stale journey). Forwarded to the runtime, typed from
+   *  VoiceTutorRealtime to avoid drift. Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. */
+  checkpointStale?: VTRProps['checkpointStale'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -133,6 +143,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
     socialMemory, progressDigest, lastOpener, onOpenerRecord, isTrial,
+    targetKind, checkpointStale,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -337,6 +348,8 @@ export default function TutorSession(props: TutorSessionProps) {
         lastOpener={lastOpener}
         onOpenerRecord={onOpenerRecord}
         isTrial={isTrial}
+        targetKind={targetKind}
+        checkpointStale={checkpointStale}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}

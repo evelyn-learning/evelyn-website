@@ -199,6 +199,29 @@ export function assembleOpeningInput(sig: OpeningSignals): OpeningInput {
 }
 
 /**
+ * Pure: derives `OpeningSignals.resume` from what the orchestrator actually
+ * holds — a seeded resume snapshot (fresh checkpoint) and/or the
+ * stale-checkpoint marker (portal/resume.ts's resolveResumeOutcome, or the
+ * dev-hook/embed `checkpointStale` carrier).
+ *
+ * Precedence: an actually-seeded resume snapshot IS a live checkpoint and
+ * wins over a stray stale flag (the two are mutually exclusive at every
+ * real call site — resolveResumeOutcome never returns both). A stale marker
+ * alone maps to `{ hasLiveCheckpoint: true, checkpointStale: true }`, which
+ * is exactly what resolveOpeningBehavior's rule 3 (resume-stale: cold
+ * restart + light re-orient) keys on — `hasLiveCheckpoint` in OpeningInput
+ * means "a checkpoint exists", with `checkpointStale` qualifying it.
+ */
+export function deriveResumeSignal(
+  hasResumeState: boolean,
+  checkpointStale?: boolean,
+): { hasLiveCheckpoint: boolean; checkpointStale: boolean } {
+  if (hasResumeState) return { hasLiveCheckpoint: true, checkpointStale: false };
+  const stale = checkpointStale === true;
+  return { hasLiveCheckpoint: stale, checkpointStale: stale };
+}
+
+/**
  * Pure predicate for the `NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER` flag value —
  * mirrors the existing `=== 'true'` flag pattern (VoiceTutorRealtime.tsx)
  * but also accepts `'on'`. Split out as a pure function purely so the

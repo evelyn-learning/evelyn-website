@@ -20,14 +20,16 @@ import {
 } from '@/lib/tutor/voice/perception-classifier';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
   detectEntryMode,
+  deriveResumeSignal,
   isPedagogyOpenerFlagValue,
   shouldRetireOpeningDirective,
   type OpeningSignals,
+  type SessionMode,
 } from '@/lib/tutor/ai/opening-behavior';
 import {
   shouldEmitOpenerFallback,
@@ -614,6 +616,25 @@ interface VoiceTutorRealtimeProps {
    *  Only consumed when TUTOR_PEDAGOGY_OPENER is on. Default false — the
    *  main /tutor page has no trial concept and omits it. */
   isTrial?: boolean;
+  /** Explicit session-target kind for the opening-behavior resolution
+   *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
+   *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
+   *  makes resolveOpeningBehavior's rule 1 fire (opener/calibration no-op)
+   *  and ALSO keeps the completion gate + demo-stop machinery off an
+   *  assessment session. Sources: the embed's `target_kind` token field
+   *  (production — the academy's diagnostic embeds) and the dev-only
+   *  __tutorTestStart hook (pedagogy harness). Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. */
+  targetKind?: SessionMode;
+  /** Stale-checkpoint marker (OpeningSignals.resume.checkpointStale): the
+   *  student HAD a lesson checkpoint but it fell outside RESUME_MAX_AGE_MS,
+   *  so no `resumeState` was seeded and the session cold-starts. Activates
+   *  the resume-stale journey (light re-orient, no full calibration).
+   *  Mutually exclusive with `resumeState` at every real source
+   *  (portal/resume.ts's resolveResumeOutcome); if both ever arrive, the
+   *  seeded resumeState wins (see deriveResumeSignal). Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. Default false. */
+  checkpointStale?: boolean;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -842,6 +863,8 @@ export function VoiceTutorRealtime({
   lastOpener,
   onOpenerRecord,
   isTrial = false,
+  targetKind,
+  checkpointStale = false,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -11598,10 +11621,11 @@ export function VoiceTutorRealtime({
         // TUTOR_PEDAGOGY_OPENER is off, `openerFields` stays `{}` and the
         // spread below adds nothing — the call is IDENTICAL (same keys,
         // same values) to the pre-B2 call. See task-B2-report.md for the
-        // per-signal availability notes (isTrial / entryMode / diagnostic
-        // targetKind / hasPriorSessions timing / checkpointStale are not
-        // reliably available at this call site yet and default false /
-        // 'button' / omitted per the B2 brief's conservative-default rule).
+        // per-signal availability notes (entryMode is not reliably
+        // available at this call site and defaults 'button' per the B2
+        // brief's conservative-default rule; isTrial/targetKind/
+        // checkpointStale now arrive as props from the embed token + dev
+        // hook and default false / derived / false).
         const openerFields: Partial<SystemPromptContext> = {};
         // Task H2 race fix (flag-gated): for studentId sessions, the opening
         // seed must WAIT for the profile fetch to settle — otherwise
@@ -11617,10 +11641,11 @@ export function VoiceTutorRealtime({
         const openerSignalsReady = !studentId || profileFetchSettled;
         if (TUTOR_PEDAGOGY_OPENER && openerSignalsReady) {
           const sig: OpeningSignals = {
-            // No diagnostic-session concept reaches this component today
-            // (no SessionGoal/prop encodes it) — only lessonNode/freestyle
-            // are reachable via this wiring.
-            targetKind: lessonPlanId ? 'lessonNode' : 'freestyle',
+            // Explicit targetKind prop when the caller supplies one (embed
+            // `target_kind` / dev hook — 'diagnostic' is only reachable that
+            // way); else derived exactly as before: lessonPlanId presence ⇒
+            // 'lessonNode', else 'freestyle'.
+            targetKind: targetKind ?? (lessonPlanId ? 'lessonNode' : 'freestyle'),
             // Task E1: the embed's is_trial signal (EmbedConfig →
             // TutorSession → isTrial prop). The main /tutor page has no
             // trial concept and leaves the prop at its false default.
@@ -11631,11 +11656,13 @@ export function VoiceTutorRealtime({
             hasPortalContext: !!studentId,
             hasPriorSessions: studentHasPriorSessionsRef.current,
             // resumeState is only ever populated with a FRESH checkpoint
-            // (buildResumeState in portal/resume.ts already filters staleness
-            // before it reaches this prop), so checkpointStale is always
-            // false through this path — the "stale checkpoint" journey is
-            // not reachable via this wiring yet.
-            resume: { hasLiveCheckpoint: !!resumeState, checkpointStale: false },
+            // (portal/resume.ts filters staleness before it reaches this
+            // prop); a checkpoint that EXISTED but was too old arrives as
+            // the checkpointStale prop instead (resolveResumeOutcome / dev
+            // hook), which deriveResumeSignal maps to the resume-stale
+            // journey. A seeded resumeState always wins over a stray stale
+            // flag.
+            resume: deriveResumeSignal(!!resumeState, checkpointStale),
           };
           const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
           openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
@@ -11672,16 +11699,19 @@ export function VoiceTutorRealtime({
             // session actually opened with, never a mid-session re-resolve.
             sessionOpenerKindRef.current = beh.opener;
             // Task C2: arm the completion gate for lessonNode sessions only
-            // (lessonPlanId presence == 'lessonNode' targetKind, see sig
-            // above). Freestyle/free-conversation sessions keep today's
-            // behavior — their milestones/mastery are already no-ops
-            // without a plan.
-            completionGateActiveRef.current = TUTOR_PEDAGOGY_OPENER && !!lessonPlanId;
+            // (never for freestyle OR diagnostic). Freestyle/free-
+            // conversation sessions keep today's behavior — their
+            // milestones/mastery are already no-ops without a plan. A
+            // diagnostic session may CARRY a lessonPlanId, but assessment
+            // sessions must stay outside the demo/completion machinery, so
+            // the resolved targetKind gates it too.
+            completionGateActiveRef.current =
+              TUTOR_PEDAGOGY_OPENER && !!lessonPlanId && sig.targetKind !== 'diagnostic';
             // Seed the per-turn opening directive under the SAME one-shot
             // latch (a mid-session prompt rebuild must not resurrect a
             // retired directive — the exact bug pattern the B3 review
             // caught for the fallback arm).
-            openingDirectiveRef.current = buildOpenerClause({
+            const openerClause = buildOpenerClause({
               ...openerFields,
               openingPhase: beh.opener !== 'none',
               studentName,
@@ -11689,6 +11719,14 @@ export function VoiceTutorRealtime({
               topic,
               level,
             } as SystemPromptContext);
+            // Resume-stale nuance: the student HAD started this lesson but
+            // the checkpoint was too old to restore — prepend the one-line
+            // re-orient instruction to the same directive (no new machinery;
+            // rides the existing per-turn <opening_directive> block).
+            openingDirectiveRef.current =
+              beh.journey === 'resume-stale' && openerClause
+                ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
+                : openerClause;
             openingTurnArmedRef.current = true;
           }
         }

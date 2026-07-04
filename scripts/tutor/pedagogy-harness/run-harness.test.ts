@@ -121,7 +121,7 @@ test('personaToPickerStart(zoe): opt-out fixture forwards NO socialMemory but ke
   assert.equal(cfg.progressDigest?.unitsCompleted, 3);
 });
 
-test('personaToPickerStart(ravi, fresh — the default): injects a position-only resume checkpoint', () => {
+test('personaToPickerStart(ravi, fresh — the default): injects a position-only resume checkpoint, no stale marker', () => {
   const ravi = loadPersona('ravi');
   const cfg = personaToPickerStart(ravi); // default variant = 'fresh'
   assert.ok(cfg.resume, 'fresh checkpoint injected');
@@ -129,20 +129,45 @@ test('personaToPickerStart(ravi, fresh — the default): injects a position-only
   assert.deepEqual(cfg.resume!.completedSegmentIds, ['hook', 'concept-1']);
   assert.deepEqual(cfg.resume!.transcript, [], 'fixtures carry no transcript — position-only seed');
   assert.deepEqual(cfg.resume!.whiteboardCommands, []);
+  assert.equal(cfg.checkpointStale, undefined, 'fresh checkpoint is not stale');
 });
 
-test('personaToPickerStart(ravi, stale): staleness filter yields NO resume (production-faithful cold start)', () => {
+test('personaToPickerStart(ravi, stale): NO resume seed + checkpointStale marker (resolveResumeOutcome-faithful)', () => {
   const ravi = loadPersona('ravi');
   assert.ok(ravi.staleResumeState, 'fixture sanity: stale checkpoint exists');
   const cfg = personaToPickerStart(ravi, { resumeVariant: 'stale' });
   assert.equal(cfg.resume, undefined, 'stale checkpoint filtered exactly like buildResumeState would');
+  assert.equal(cfg.checkpointStale, true, 'stale marker set — the resume-stale journey signal');
   assert.equal(cfg.studentId, 'pedagogy-ravi', 'everything else still flows');
 });
 
-test('personaToPickerStart: non-ravi subscribed personas get no resume', () => {
+test('personaToPickerStart: non-ravi subscribed personas get no resume and no stale marker', () => {
   for (const id of ['priya', 'noah', 'zoe', 'kai', 'diego']) {
     const cfg = personaToPickerStart(loadPersona(id));
     assert.equal(cfg.resume, undefined, `${id} has no checkpoint fixture`);
+    assert.equal(cfg.checkpointStale, undefined, `${id}: no checkpoint ⇒ no stale marker`);
+  }
+});
+
+// ── Driver overrides (sessionMaxMinutes / targetKind → __tutorTestStart) ─
+
+test('personaToPickerStart(maya, sessionMaxMinutes 5): budget override reaches the start config (demo branch — E2)', () => {
+  const cfg = personaToPickerStart(loadPersona('maya'), { sessionMaxMinutes: 5 });
+  assert.equal(cfg.sessionMaxMinutes, 5);
+  assert.equal(cfg.lessonPlanId, DEMO_PICKER_START.maya.lessonPlanId, 'picker fields untouched');
+});
+
+test("personaToPickerStart(diego, targetKind 'diagnostic'): explicit targetKind reaches the start config (S5)", () => {
+  const cfg = personaToPickerStart(loadPersona('diego'), { targetKind: 'diagnostic' });
+  assert.equal(cfg.targetKind, 'diagnostic');
+  assert.equal(cfg.studentId, 'pedagogy-diego', 'subscribed extras untouched');
+});
+
+test('personaToPickerStart: overrides are absent (not defaulted) when not requested — page defaults own them', () => {
+  for (const id of ['maya', 'diego', 'ravi']) {
+    const cfg = personaToPickerStart(loadPersona(id));
+    assert.equal(cfg.sessionMaxMinutes, undefined, `${id}: no budget override`);
+    assert.equal(cfg.targetKind, undefined, `${id}: no targetKind override`);
   }
 });
 

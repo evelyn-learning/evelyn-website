@@ -39,8 +39,10 @@ import { buildResumeState, type PriorSessionRead } from '@/lib/tutor/portal/resu
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
+  deriveResumeSignal,
   isPedagogyOpenerFlagValue,
   type OpeningSignals,
+  type SessionMode,
 } from '@/lib/tutor/ai/opening-behavior';
 import { shouldShowDemoCta } from '@/lib/tutor/demo-cta';
 import { detectDemoIntent } from '@/lib/tutor/demo-intent';
@@ -167,6 +169,20 @@ function TutorPage() {
   // testOpenerRecordRef stashes the session's OWN captured opener record
   // (VoiceTutorRealtime's onOpenerRecord callback) for __tutorTestState.
   const [testLastOpener, setTestLastOpener] = useState<LastOpenerRecord | undefined>(undefined);
+  // Harness overrides for signals the standalone page has no production
+  // source for (same dev-only carrier as testSocialMemory — the
+  // __tutorTestStart hook is the only writer, so production markup is
+  // unchanged at the defaults):
+  //   - testSessionMaxMinutes → the sessionMaxMinutes prop at both render
+  //     sites (default 30 = the literal the page always passed), so the E2
+  //     soft-close row can run against a live-testable ~5-minute budget.
+  //   - testTargetKind → explicit OpeningSignals.targetKind ('diagnostic'
+  //     is only reachable this way on this page; embeds use target_kind).
+  //   - testCheckpointStale → OpeningSignals.resume.checkpointStale (the
+  //     resume-stale journey; embeds derive it via resolveResumeOutcome).
+  const [testSessionMaxMinutes, setTestSessionMaxMinutes] = useState(30);
+  const [testTargetKind, setTestTargetKind] = useState<SessionMode | undefined>(undefined);
+  const [testCheckpointStale, setTestCheckpointStale] = useState(false);
   const testOpenerRecordRef = useRef<LastOpenerRecord | null>(null);
   const handleOpenerRecord = useCallback((rec: LastOpenerRecord) => {
     testOpenerRecordRef.current = rec;
@@ -836,7 +852,9 @@ function TutorPage() {
     if (!target) return;
     if (lessonProgress.plan?.id !== target) return;
     const sig: OpeningSignals = {
-      targetKind: selectedLessonPlanId ? 'lessonNode' : 'freestyle',
+      // testTargetKind: dev-hook override (undefined in production) so this
+      // effect resolves the SAME journey the runtime's buildInstructions does.
+      targetKind: testTargetKind ?? (selectedLessonPlanId ? 'lessonNode' : 'freestyle'),
       isTrial: false, // no isTrial signal reaches this page today — see task-B2-report.md
       hasPortalContext: !!effectiveStudentId,
       // resumeState is only produced by an authenticated sessionId lookup
@@ -844,7 +862,10 @@ function TutorPage() {
       // the demo-logged-out + resume-live combination cannot occur through this
       // wiring (which would otherwise resolve to resume-live and mislabel the
       // student 'subscribed' via journey.startsWith('demo-')).
-      resume: { hasLiveCheckpoint: !!resumeState, checkpointStale: false },
+      // testCheckpointStale (dev hook, false in production) maps the
+      // stale-checkpoint marker in via the same deriveResumeSignal rule the
+      // runtime uses (a seeded resumeState wins over a stray stale flag).
+      resume: deriveResumeSignal(!!resumeState, testCheckpointStale),
     };
     const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
     if (beh.opener !== 'none') {
@@ -869,7 +890,7 @@ function TutorPage() {
     handle.sendTextMessage(
       '[orchestrator: the lesson plan has just been expanded with the picked LOs. If you are still in your opening/calibration exchange, continue it naturally first — keep it brief, at most a couple more short exchanges. As soon as it has run its course, transition into teaching: call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12) and start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
     );
-  }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, effectiveStudentId, resumeState]);
+  }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, effectiveStudentId, resumeState, testTargetKind, testCheckpointStale]);
 
   // Send message to tutor API
   const sendMessage = useCallback(
@@ -1143,11 +1164,25 @@ function TutorPage() {
       //   lastOpener      → opener-recency (part A): the PREVIOUS session's
       //                     opener record, rendered into the transient
       //                     context block as a do-NOT-repeat directive.
+      //   sessionMaxMinutes → the sessionMaxMinutes prop at both render
+      //                     sites (default 30 — the value the page always
+      //                     passed). Lets the E2 soft-close row run with a
+      //                     live-testable ~5-minute budget.
+      //   targetKind      → explicit OpeningSignals.targetKind
+      //                     ('diagnostic' journeys are only reachable via
+      //                     this / the embed's target_kind).
+      //   checkpointStale → stale-checkpoint marker (resume-stale journey):
+      //                     a checkpoint existed but was too old to restore.
+      //                     Pass WITHOUT `resume` (mutually exclusive — a
+      //                     seeded resume wins, see deriveResumeSignal).
       studentId?: string;
       socialMemory?: SocialThread[];
       progressDigest?: ProgressDigest;
       lastOpener?: LastOpenerRecord;
       resume?: TutorResumeState;
+      sessionMaxMinutes?: number;
+      targetKind?: SessionMode;
+      checkpointStale?: boolean;
     }) => {
       setSelectedSubject(cfg.subject);
       setSelectedLevel(cfg.level);
@@ -1165,6 +1200,9 @@ function TutorPage() {
       setTestSocialMemory(cfg.socialMemory);
       setTestProgressDigest(cfg.progressDigest);
       setTestLastOpener(cfg.lastOpener);
+      setTestSessionMaxMinutes(cfg.sessionMaxMinutes ?? 30);
+      setTestTargetKind(cfg.targetKind);
+      setTestCheckpointStale(cfg.checkpointStale === true);
       // Fresh capture slot per started session — a replay's session 2 must
       // not read session 1's stale record out of __tutorTestState.
       testOpenerRecordRef.current = null;
@@ -1825,7 +1863,9 @@ function TutorPage() {
         voice={selectedOpenAIVoice}
         voiceEngine={voiceEngine}
         ttsProvider={ttsProvider}
-        sessionMaxMinutes={30}
+        // Dev-hook override, default 30 — identical to the literal the page
+        // always passed (production markup unchanged).
+        sessionMaxMinutes={testSessionMaxMinutes}
         resumeState={resumeState}
         // Task H2 (dev-only source): transient context injected via the
         // __tutorTestStart hook. Flag-gated so flag-off sessions pass
@@ -1833,6 +1873,8 @@ function TutorPage() {
         socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
         progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
         lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+        targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
+        checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
         onOpenerRecord={handleOpenerRecord}
         topicDisplayName={topicDisplayName}
         availableLessonPlans={availableLessonPlans}
@@ -2355,6 +2397,8 @@ function TutorPage() {
                   socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
                   progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
                   lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+                  targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
+                  checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
                   onOpenerRecord={handleOpenerRecord}
                   onResumeAwaitingTapChange={setAwaitingResume}
                   voice={selectedOpenAIVoice}
@@ -2385,7 +2429,9 @@ function TutorPage() {
                   onProposePlanSwap={handleProposePlanSwap}
                   onConfirmPlanLos={handleConfirmPlanLos}
                   onCompletedSegmentsChange={setCompletedSegmentIds}
-                  sessionMaxMinutes={30}
+                  // Dev-hook override, default 30 — identical to the literal
+                  // the page always passed (production markup unchanged).
+                  sessionMaxMinutes={testSessionMaxMinutes}
                 />
               ) : voiceEngine === 'gemini-live' ? (
                 <VoiceTutorGemini

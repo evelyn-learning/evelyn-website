@@ -11,6 +11,7 @@ import { strict as assert } from 'node:assert';
 import {
   buildOpenerClause,
   buildSystemPrompt,
+  STALE_CHECKPOINT_REORIENT_CLAUSE,
   type SystemPromptContext,
 } from '../src/lib/tutor/ai/system-prompt-builder';
 
@@ -174,6 +175,20 @@ function main() {
     });
     assert.ok(clause, 'clause should not be null');
     assert.doesNotMatch(clause!, /never speak a placeholder/i);
+  });
+
+  // ── stale-checkpoint re-orient nuance (resume-stale journey) ─────────────
+  test('STALE_CHECKPOINT_REORIENT_CLAUSE: one-line re-orient before the opener, no full calibration, no restore-pretend', () => {
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /mid-way through this lesson a while ago/);
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /too old to\s?restore/);
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /re-orient them briefly/);
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /'we were working on X'/);
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /before the opener/);
+    assert.match(STALE_CHECKPOINT_REORIENT_CLAUSE, /do not run full get-to-know-you calibration/);
+  });
+
+  test('STALE_CHECKPOINT_REORIENT_CLAUSE: generic (names no topic/subject) per feedback_generic_prompts', () => {
+    assert.doesNotMatch(STALE_CHECKPOINT_REORIENT_CLAUSE, /quadratic|fraction|biology|respiration|algebra/i);
   });
 
   // ── buildSystemPrompt wiring ──────────────────────────────────────────────
