@@ -134,12 +134,23 @@ function main() {
   });
 
   // ── renderTeacherIntroDirective ─────────────────────────────────────────
-  test('intro directive: one sentence naming the teacher, weaving the intro, banning resume recitation', () => {
+  test('intro directive: names the teacher, grounds on the intro, moves straight into the opener', () => {
     const d = renderTeacherIntroDirective(FULL_PERSONA);
     assert.match(d, /Introduce yourself naturally as Dr\. Test Teacher in your first turn/);
     assert.ok(d.includes(FULL_PERSONA.intro), 'compressed identity source = the intro text');
-    assert.match(d, /never a resume recitation/);
-    assert.match(d, /then get into the opener\.$/);
+    assert.match(d, /then get into the opener/i);
+  });
+
+  // T1 phrasing polish (2026-07-04): the judge kept hearing "I taught for
+  // twelve years"-style credential lines ("edges toward resume territory").
+  // The directive must steer to ONE vivid human detail and explicitly ban
+  // credential recitation — pin the load-bearing phrases.
+  test('intro directive: prefers one vivid human detail and bans credential recitation', () => {
+    const d = renderTeacherIntroDirective(FULL_PERSONA);
+    assert.match(d, /at most ONE human detail/i);
+    assert.match(d, /beats any credential/);
+    assert.match(d, /Never recite years of experience, qualifications, or subject lists/);
+    assert.match(d, /a hello, not a resume/);
   });
 
   // ── buildSystemPrompt gating ────────────────────────────────────────────

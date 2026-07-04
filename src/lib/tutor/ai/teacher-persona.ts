@@ -227,10 +227,21 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
  * orchestrator prepends this to the opener clause when a teacher persona
  * is present — only when a directive exists at all (a resolved opener of
  * 'none', e.g. diagnostic, stays none).
+ *
+ * Phrasing polish (2026-07-04): the earlier "never a resume recitation"
+ * nudge under-delivered — with the raw intro embedded, the brain kept
+ * paraphrasing its credential ("I taught elementary school for twelve
+ * years…"), which the T1 judge flagged as "edges toward resume territory".
+ * Teacher intros (house AND future onboarded ones) naturally lead with
+ * credentials, so the directive now does the selection for the brain:
+ * ONE vivid human detail, credentials explicitly off the table. Generic
+ * across personas — no teacher-specific wording here.
  */
 export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
   return (
-    `Introduce yourself naturally as ${t.name} in your first turn — one warm line weaving in who you are ` +
-    `(${t.intro}), never a resume recitation — then get into the opener.`
+    `Introduce yourself naturally as ${t.name} in your first turn — one warm line with at most ONE human ` +
+    `detail drawn from who you are (${t.intro}); a vivid personal touch — a habit, an object, a story — ` +
+    `beats any credential. Never recite years of experience, qualifications, or subject lists: it's ` +
+    `a hello, not a resume. Then get into the opener.`
   );
 }
