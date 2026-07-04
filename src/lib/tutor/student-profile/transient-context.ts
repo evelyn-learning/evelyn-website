@@ -79,9 +79,21 @@ const USAGE_INSTRUCTION =
 
 /** Appended to USAGE_INSTRUCTION only when a lastOpener record renders —
  *  keeps the no-lastOpener output byte-identical to the pre-part-A block.
- *  Generic wording only (the digest itself is data, not instruction). */
+ *  Generic wording only (the digest itself is data, not instruction).
+ *  Tuned 2026-07-04 after the first live true-replay: the original
+ *  one-liner ("open differently — different kind and content") produced a
+ *  reworded copy of the same opener (same callback theme, same puzzle,
+ *  colder greeting — judge 2/5). The brain needs (a) the KINDS named so
+ *  "different kind" is actionable, (b) an explicit note that authored plan
+ *  content may repeat but the WAY IN must not, and (c) warmth declared
+ *  non-negotiable so variation isn't traded against it. */
 const LAST_OPENER_INSTRUCTION =
-  'Open THIS session differently from the last opener above — a different kind of opening AND different content/theming; a repeat reads as scripted.';
+  'Open THIS session with a DIFFERENT KIND of opening than the last one above. Opening kinds: ' +
+  'a last-session callback ("we nailed X, today Y"), a progress-arc note ("X units in"), a ' +
+  'social/interest hook, a cold intriguing puzzle or claim, or a what-if scenario. If the last ' +
+  'opener was one of these, pick ANOTHER this time — do not re-run the same move in new words. ' +
+  "The lesson's authored problem may be the same; your way IN must not be. Keep it warm either " +
+  'way — dropping the greeting or jumping in colder is NOT acceptable variation.';
 
 function renderLastOpenerLine(lo: LastOpenerRecord): string {
   const d = lo.digest.trim();

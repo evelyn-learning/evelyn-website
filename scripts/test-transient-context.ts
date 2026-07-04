@@ -200,7 +200,7 @@ function main() {
       '<student_context_transient>',
       `last session's opener (do NOT repeat): [warm-resume] ${LAST_OPENER.digest}`,
       '',
-      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session differently from the last opener above — a different kind of opening AND different content/theming; a repeat reads as scripted.',
+      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session with a DIFFERENT KIND of opening than the last one above. Opening kinds: a last-session callback (\"we nailed X, today Y\"), a progress-arc note (\"X units in\"), a social/interest hook, a cold intriguing puzzle or claim, or a what-if scenario. If the last opener was one of these, pick ANOTHER this time — do not re-run the same move in new words. The lesson\'s authored problem may be the same; your way IN must not be. Keep it warm either way — dropping the greeting or jumping in colder is NOT acceptable variation.',
       '</student_context_transient>',
     ].join('\n');
     assert.equal(out, expected);
@@ -220,7 +220,7 @@ function main() {
     const iInstr = ls.findIndex((l) => l.startsWith('Use the above'));
     assert.ok(iProgress >= 0 && iThread > iProgress && iOpener > iThread && iInstr > iOpener,
       `order violated: progress=${iProgress} thread=${iThread} opener=${iOpener} instr=${iInstr}`);
-    assert.ok(out!.includes('a repeat reads as scripted'));
+    assert.ok(out!.includes('do not re-run the same move in new words'));
   });
 
   test('lastOpener absent ⇒ prior output byte-identical (no opener line, no extra sentence)', () => {
@@ -229,7 +229,7 @@ function main() {
       progressDigest: DIGEST_FULL,
     });
     assert.ok(!out!.includes("last session's opener"));
-    assert.ok(!out!.includes('a repeat reads as scripted'));
+    assert.ok(!out!.includes('do not re-run the same move in new words'));
     // Instruction paragraph ends exactly where the pre-part-A block did.
     assert.ok(out!.includes('stored or remembered in notes.\n</student_context_transient>'));
   });
@@ -248,7 +248,7 @@ function main() {
       progressDigest: DIGEST_FULL,
       lastOpener: { kind: 'proactive', digest: '' },
     });
-    assert.ok(out && !out.includes("last session's opener") && !out.includes('a repeat reads as scripted'));
+    assert.ok(out && !out.includes("last session's opener") && !out.includes('do not re-run the same move in new words'));
   });
 
   test('no null/undefined leakage in rendered output', () => {
