@@ -13,9 +13,16 @@
  * `sessionId` (a second terminal emit returns a no-delta snapshot). The
  * internal `/api/tutor/student-profile` flow is left completely untouched.
  *
- * `socialMemoryDelta` is intentionally omitted until the Phase-2 social-memory
- * behavior ships (the contract field exists so the portal integrates now).
+ * `socialMemoryDelta` (Task D3, flag-gated behind NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER):
+ * on a fresh TERMINAL commit, when the caller supplies a transcript via
+ * `opts.social`, the D2 extractor produces suggested new threads + referenced
+ * existing-thread ids and the delta is attached to the result. Engine SUGGESTS;
+ * the academy is the system of record (assigns/persists threads, dedupes
+ * repeats). Guards: see `buildSocialMemoryDelta` below. Flag off / no
+ * transcript carrier / empty extraction ⇒ the field is omitted entirely.
  */
+
+import { randomUUID } from 'crypto';
 
 import {
   getOrCreateStudentProfile,
@@ -32,11 +39,16 @@ import type { StudentProfile, GapEntry } from '@/lib/tutor/student-profile/types
 import {
   ShowQuizPayloadSchema,
   ShowConceptMapPayloadSchema,
+  SocialThreadSchema,
   type SessionEmitRequest,
   type SessionResult,
   type ShowQuizPayload,
   type ShowConceptMapPayload,
+  type SocialThread,
+  type SocialMemoryDelta,
 } from '@evelyn/portal-contract/v1';
+import { extractSocialThreads } from './extract-social-threads';
+import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -71,9 +83,120 @@ export function extractRenderedArtifacts(commands: unknown): {
   return { quizzes, conceptMaps };
 }
 
+/** Transcript turn shape shared with the D2 extractor. */
+export type SocialTranscriptTurn = { role: 'tutor' | 'student'; text: string };
+
+/** Task D3 — social-extraction inputs, supplied by the CALLER (the emit
+ *  route reads them as loose additive body fields; see
+ *  `extractSocialCarrier`). Absent ⇒ no extraction, field omitted. */
+export interface SocialEmitOptions {
+  /** Full session transcript (the extractor's input). */
+  transcript: SocialTranscriptTurn[];
+  /** Threads that came IN with this session's StudentContext — the
+   *  dedupe/referenced-filter baseline. The engine never stores threads
+   *  (context ingest only echoes them), so when the caller can't supply
+   *  them the default `[]` means referenced-detection yields nothing and
+   *  new-thread dedupe falls to the academy's addThreads (system of
+   *  record) — a documented, safe degradation. */
+  existingThreads?: SocialThread[];
+  /** Injectable extractor (tests); defaults to the real D2 Haiku pass. */
+  extract?: typeof extractSocialThreads;
+}
+
 export interface EmitOptions {
   /** Optional loader for logged artifacts when the request omits them. */
   loadArtifacts?: (sessionId: string) => Promise<unknown>;
+  /** Task D3 — see SocialEmitOptions. */
+  social?: SocialEmitOptions;
+}
+
+/**
+ * Task D3 — defensively pull the ADDITIVE loose social-carrier fields off a
+ * raw emit-request body. `transcript` + `socialMemory` are not (yet) part of
+ * the contract's SessionEmitRequestSchema — zod strips unknown keys, so the
+ * academy can send them today without breaking parse; a future contract
+ * minor formalizes them. Malformed/absent input ⇒ undefined (no extraction).
+ * Pure.
+ */
+export function extractSocialCarrier(body: unknown): SocialEmitOptions | undefined {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return undefined;
+  const raw = body as Record<string, unknown>;
+
+  if (!Array.isArray(raw.transcript)) return undefined;
+  const transcript: SocialTranscriptTurn[] = [];
+  for (const t of raw.transcript) {
+    if (!t || typeof t !== 'object') continue;
+    const role = (t as Record<string, unknown>).role;
+    const text = (t as Record<string, unknown>).text;
+    if ((role === 'tutor' || role === 'student') && typeof text === 'string' && text.trim()) {
+      transcript.push({ role, text });
+    }
+  }
+  if (transcript.length === 0) return undefined;
+
+  const existingThreads: SocialThread[] = [];
+  if (Array.isArray(raw.socialMemory)) {
+    for (const item of raw.socialMemory) {
+      const parsed = SocialThreadSchema.safeParse(item);
+      if (parsed.success) existingThreads.push(parsed.data);
+    }
+  }
+  return { transcript, existingThreads };
+}
+
+/**
+ * Task D3 — run the D2 social-thread extraction and shape the contract
+ * `SocialMemoryDelta`, or return undefined (field omitted) when any guard
+ * trips:
+ *   - flag off (isPedagogyOpenerFlagValue on NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
+ *   - no transcript carrier (`opts.social` absent — demo/logged-out sessions
+ *     never reach this authed-portal path at all, and the internal
+ *     /api/tutor/student-profile commit is untouched, so the extractor can
+ *     never run for them);
+ *   - persisted socialMemoryLevel is 'off' OR was never set. The contract
+ *     defaults the level to 'off' and the context-ingest route always stamps
+ *     it, so "never set" means no portal context was ever ingested for this
+ *     student — treat as opted out. Belt-and-suspenders: the academy already
+ *     resolves parental opt-out AND trial to no-carrier/empty threads
+ *     (SessionEmitRequest has no isTrial discriminator, so trial gating is
+ *     the academy's job — it simply doesn't send the transcript carrier for
+ *     trial sessions);
+ *   - extraction returned nothing (empty delta is NOT sent as {new:[],referenced:[]});
+ *   - any unexpected failure (never breaks the result emit).
+ *
+ * Suggested candidates are mapped to full contract SocialThread shape
+ * (SocialMemoryDeltaSchema.new requires id + capturedAt): ids are synthesized
+ * (`thr_<uuid>`) and capturedAt = now — the academy's addThreads is the
+ * system of record and its dedupe handles repeats. No nulls anywhere on the
+ * wire (contract optionals are .optional(), not .nullable()).
+ */
+async function buildSocialMemoryDelta(
+  social: SocialEmitOptions | undefined,
+  socialMemoryLevel: 'off' | 'light' | 'warm' | undefined,
+): Promise<SocialMemoryDelta | undefined> {
+  if (!isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER)) return undefined;
+  if (!social || social.transcript.length === 0) return undefined;
+  if (socialMemoryLevel === undefined || socialMemoryLevel === 'off') return undefined;
+  try {
+    const extract = social.extract ?? extractSocialThreads;
+    const existing = social.existingThreads ?? [];
+    // D2's extractor never throws by contract; the wrap is defensive.
+    const { suggestedThreads, referencedThreadIds } = await extract(social.transcript, existing);
+    if (suggestedThreads.length === 0 && referencedThreadIds.length === 0) return undefined;
+    const capturedAt = new Date().toISOString();
+    return {
+      new: suggestedThreads.map((c): SocialThread => ({
+        id: `thr_${randomUUID()}`,
+        note: c.note,
+        kind: c.kind,
+        capturedAt,
+      })),
+      referenced: referencedThreadIds,
+    };
+  } catch {
+    // Session-end path — never break the result emit.
+    return undefined;
+  }
 }
 
 function masterySnapshot(profile: StudentProfile, losTouched: string[]) {
@@ -112,9 +235,21 @@ export async function emitSessionResult(
 
   // Idempotency: a terminal session already recorded → return a no-delta snapshot.
   if (profile.recentSessions.some((s) => s.sessionId === req.sessionId)) {
+    // Task D3 ordering fix: in the LIVE flow the engine runtime's own
+    // commit (client → /api/tutor/student-profile, same client sessionId)
+    // lands BEFORE the academy's session-ended emit — so this replay branch
+    // is the NORMAL path for that emit, not an exceptional retry. Social
+    // extraction must still run here or the carrier is dead in production.
+    // Safe to repeat: the academy's addThreads dedupes by note and
+    // markReferenced recency bumps are idempotent in effect.
+    const replaySocialDelta = await buildSocialMemoryDelta(
+      opts.social,
+      profile.preferences.socialMemoryLevel,
+    );
     return {
       ...base,
       learningStateDelta: { gaps: { new: [], promoted: [], resolved: [] }, mastery: masterySnapshot(profile, req.losTouched) },
+      ...(replaySocialDelta ? { socialMemoryDelta: replaySocialDelta } : {}),
     };
   }
 
@@ -188,11 +323,23 @@ export async function emitSessionResult(
     if (g.status === 'resolved' && prev !== 'resolved') resolved.push(g.id);
   }
 
+  // Task D3 — social-memory delta (checkpoint path returns above without
+  // extraction; the idempotent-replay path above ALSO extracts — see the
+  // ordering-fix comment there). The socialMemoryLevel guard reads the
+  // PERSISTED preference stamped by the context-ingest route
+  // (/api/portal/v1/context).
+  const socialMemoryDelta = await buildSocialMemoryDelta(
+    opts.social,
+    saved.preferences.socialMemoryLevel,
+  );
+
   return {
     ...base,
     learningStateDelta: {
       gaps: { new: newGaps, promoted, resolved },
       mastery: masterySnapshot(saved, req.losTouched),
     },
+    // Omit entirely (never {new:[],referenced:[]}) when nothing was extracted.
+    ...(socialMemoryDelta ? { socialMemoryDelta } : {}),
   };
 }

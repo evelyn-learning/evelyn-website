@@ -1,0 +1,12 @@
+{
+  "id": "maya",
+  "mode": "demo",
+  "simProfile": {
+    "grade": "9",
+    "topic": "Quadratics",
+    "claim": "know a little, I remember factoring",
+    "actualLevel": "can factor simple trinomials, hasn't seen the quadratic formula",
+    "intent": "exploring",
+    "style": "cooperative"
+  }
+}

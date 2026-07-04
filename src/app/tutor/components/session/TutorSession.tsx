@@ -17,7 +17,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
-import { useState, useCallback, useRef, type ComponentProps, type ReactNode } from 'react';
+import { useState, useCallback, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import Script from 'next/script';
 import { Play } from 'lucide-react';
 import { TranscriptView } from '../TranscriptView';
@@ -58,6 +58,33 @@ export interface TutorSessionProps {
   sessionMaxMinutes: number;
   /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
   resumeState?: VTRProps['resumeState'];
+  /** Task D1b — transient session-scoped social threads / progress digest
+   *  from the portal's StudentContext (embed passes them; the standalone
+   *  /tutor page has no source and omits both). Forwarded to the runtime,
+   *  typed from VoiceTutorRealtime to avoid drift. */
+  socialMemory?: VTRProps['socialMemory'];
+  progressDigest?: VTRProps['progressDigest'];
+  /** Opener-recency (part A) — previous session's opener record (same
+   *  transient carrier as socialMemory/progressDigest). Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. */
+  lastOpener?: VTRProps['lastOpener'];
+  /** Opener-recency (part A) — fires once when this session's own opener
+   *  record is captured. Forwarded to the runtime. */
+  onOpenerRecord?: VTRProps['onOpenerRecord'];
+  /** Task E1 (pedagogy) — the embed's `is_trial` signal (academy trial
+   *  flow). Forwarded to the runtime, typed from VoiceTutorRealtime to
+   *  avoid drift. Only consumed when TUTOR_PEDAGOGY_OPENER is on. */
+  isTrial?: VTRProps['isTrial'];
+  /** Explicit session-target kind (embed `target_kind` / dev hook) —
+   *  'diagnostic' makes the opening behavior no-op. Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. Only consumed
+   *  when TUTOR_PEDAGOGY_OPENER is on. */
+  targetKind?: VTRProps['targetKind'];
+  /** Stale-checkpoint marker (a checkpoint existed but was too old to
+   *  restore — resume-stale journey). Forwarded to the runtime, typed from
+   *  VoiceTutorRealtime to avoid drift. Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. */
+  checkpointStale?: VTRProps['checkpointStale'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -67,6 +94,15 @@ export interface TutorSessionProps {
 
   // Required lifecycle
   onEndSession: () => void;
+
+  /** Share the parent's RealtimeHandle ref instead of an internal one. The
+   *  standalone /tutor page needs this: its auto-start injection, end-session
+   *  summary, topic-swap speech, and dev e2e hooks (__tutorSendText /
+   *  __tutorTestState.connected) all read the PAGE-level ref — with an
+   *  internal-only ref they silently no-op under the new session UI
+   *  (observed 2026-07-03: every live harness run dropped its kickoff with
+   *  "handle not ready"). Omit (embed) to use the internal ref. */
+  handleRef?: MutableRefObject<RealtimeHandle | null>;
 
   // Optional integration callbacks (typed from VoiceTutorRealtime to avoid drift)
   onMilestone?: VTRProps['onMilestone'];
@@ -106,6 +142,8 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
+    socialMemory, progressDigest, lastOpener, onOpenerRecord, isTrial,
+    targetKind, checkpointStale,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -135,7 +173,10 @@ export default function TutorSession(props: TutorSessionProps) {
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
 
   const micLevelRef = useRef(0);
-  const realtimeHandleRef = useRef<RealtimeHandle | null>(null);
+  const localHandleRef = useRef<RealtimeHandle | null>(null);
+  // Parent-shared when provided (see TutorSessionProps.handleRef); both are
+  // stable useRef objects so this never changes identity across renders.
+  const realtimeHandleRef = props.handleRef ?? localHandleRef;
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
@@ -302,6 +343,13 @@ export default function TutorSession(props: TutorSessionProps) {
         level={level}
         studentName={studentName || undefined}
         studentId={studentId}
+        socialMemory={socialMemory}
+        progressDigest={progressDigest}
+        lastOpener={lastOpener}
+        onOpenerRecord={onOpenerRecord}
+        isTrial={isTrial}
+        targetKind={targetKind}
+        checkpointStale={checkpointStale}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}

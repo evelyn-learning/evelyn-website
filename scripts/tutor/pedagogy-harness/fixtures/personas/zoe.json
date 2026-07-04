@@ -1,0 +1,48 @@
+{
+  "id": "zoe",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "zoe-s3",
+    "isTrial": false,
+    "courseId": "geometry",
+    "profile": { "name": "Zoe", "grade": "9" },
+    "preferences": { "socialMemoryLevel": "off" },
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.geometry.triangle-congruence.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 3,
+      "unitsTotal": 10,
+      "percentComplete": 30,
+      "weeksElapsed": 4,
+      "paceNote": "on pace"
+    }
+  },
+  "profile": {
+    "id": "zoe-s3",
+    "name": "Zoe",
+    "grade": "9",
+    "mastery": {
+      "geometry.triangle-congruence.sss": {
+        "loId": "geometry.triangle-congruence.sss",
+        "score": 0.68,
+        "exposures": 3,
+        "lastTouchedAt": "2026-06-15T00:00:00.000Z",
+        "confidence": "medium"
+      }
+    },
+    "gaps": [],
+    "recentSessions": [],
+    "preferences": { "socialMemoryLevel": "off" },
+    "createdAt": "2026-03-01T00:00:00.000Z",
+    "updatedAt": "2026-06-15T00:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "simProfile": {
+    "grade": "9",
+    "topic": "Triangle Congruence",
+    "claim": "I've covered this before",
+    "actualLevel": "solid on SSS/SAS, forgets the ASA conditions",
+    "intent": "enrolled",
+    "style": "cooperative"
+  }
+}

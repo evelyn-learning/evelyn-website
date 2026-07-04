@@ -70,6 +70,29 @@ export interface BrainTurnInput {
    *  persistent student id. The brain reads it for past mastery, open
    *  gaps, and recent-session continuity. */
   studentProfileBlock?: string;
+  /** Pedagogy-opener initiative (flag NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER):
+   *  the opener/calibration directive for the session's OPENING PHASE only
+   *  (buildOpenerClause output). Sent per-turn by the orchestrator while
+   *  the opening is active and dropped once the brain advances the lesson
+   *  (or a small turn ceiling passes) — it lives in the per-turn user
+   *  content, NOT the cached system prompt, precisely so its appearance
+   *  and retirement never invalidate the byte-stable cached prefix.
+   *  Surfaces as an `<opening_directive>` block. */
+  openingDirective?: string;
+  /** Task E1 (pedagogy, flag NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): budget-aware
+   *  satisfying stop for DEMO sessions only. The client sends it per-turn
+   *  (never when the flag is off or the session resolved 'subscribed');
+   *  absent ⇒ no `<demo_stop>` block ⇒ userContent byte-identical.
+   *  - mode 'time' (standalone /tutor demo): remaining-minutes pacing so the
+   *    session lands one earned "I get it now" moment AND a clean stop
+   *    before the budget runs out.
+   *  - mode 'milestone' (academy trial embed, is_trial=true): the win is
+   *    boxed to completing the first concept, not a clock.
+   *  Lives in the volatile per-turn user content (minutesElapsed changes
+   *  every turn) — NEVER in the byte-stable cached system prefix. */
+  demoStop?:
+    | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
+    | { mode: 'milestone' };
   /** Targets the brain passed to tutor_scribble last turn that the
    *  runtime silently dropped (no_match / whole-item alias / iframe).
    *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
@@ -219,6 +242,13 @@ export interface LessonPlanContext {
    *  audible to the student. Surfacing the list lets the brain skip
    *  the call in the first place. */
   completedSegmentIds?: string[];
+  /** Task C1 (pedagogy): session mode controls how the plan is FRAMED to
+   *  the brain — 'subscribed' = seed-not-script with the LOs as a coverage
+   *  contract; 'demo' = raw material, no coverage obligation. ABSENT ⇒ no
+   *  framing clause is rendered and formatLessonPlanContext output is
+   *  byte-identical to the pre-C1 block (the flag-off guarantee: the
+   *  client only sets this when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on). */
+  sessionMode?: 'demo' | 'subscribed';
 }
 
 export interface BrainToolCall {
@@ -428,6 +458,39 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
         `PROBLEM-LOCK for this segment: render the EXACT problem / question text from the segment above on the whiteboard before asking the student. Do not paraphrase, change numbers, or substitute a different problem. The student answers against the rendered version. If you depart from the script's text — even with the same intent — the validation gate compares against what you rendered, not what you remembered.`,
       ]
     : [];
+  // Task C1 (pedagogy): plan-as-seed framing by session mode. Rendered
+  // ONLY when ctx.sessionMode is present (client sets it only under
+  // NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER) — absent ⇒ empty array ⇒ output
+  // byte-identical to the pre-C1 block. The prerequisite-seeding hint is
+  // a pedagogy-METHOD example (allowed per feedback_generic_prompts);
+  // do not add topic-specific TEACHING examples here.
+  const prerequisiteHint = `To meet a student below the topic, step down to the nearest prerequisite (use the plan's prerequisites and the taxonomy as hints) and build up — e.g. multiply two linear factors before naming it a quadratic.`;
+  const planFraming =
+    ctx.sessionMode === 'subscribed'
+      ? [
+          ``,
+          `This plan is a seed, not a script. You may reorder, compress what they already show they know, detour through a prerequisite, swap in an example themed to their interests, or explain a different way — freely. But the plan's learning objectives are your coverage contract: by the end, each core LO must be genuinely taught or demonstrated, because that is how progress is recorded. Freedom over the *path*; faithfulness to the *destination*.`,
+          prerequisiteHint,
+          // Task C2: confirm directive — pairs with the client-side
+          // completion gate (completion-gate.ts): compressing is welcome,
+          // but a mark without a demonstrated attempt records nothing.
+          `Never skip a to-be-learned objective on a student's say-so. If they claim they already know it, confirm fast — one quick problem — then move on. Going fast is fine; marking something learned without seeing it is not.`,
+        ]
+      : ctx.sessionMode === 'demo'
+        ? [
+            ``,
+            `This plan is raw material only — no obligation to cover it. Spend the time on whatever teaches this student best and shows what great teaching feels like.`,
+            prerequisiteHint,
+            // Task E2 (pedagogy): soft conversion close — demo sessions
+            // only, session-wide (rides the same sessionMode gate as the
+            // raw-material framing, so flag-off / subscribed output is
+            // untouched). The quoted banned examples are kept aligned with
+            // the harness gate's BANNED_SELL_PHRASES list
+            // (scripts/tutor/pedagogy-harness/assertions.ts) — this text is
+            // PROMPT-side and never spoken; the gate scans tutor SPEECH.
+            `When the session winds down, close warm and in-character — land the learning, celebrate the win, say a real goodbye. NEVER pitch, upsell, or steer toward signing up — no "sign up", "subscribe", "upgrade", "unlock", no pricing talk. If the student explicitly asks how to continue or get more sessions, answer plainly and briefly, then hand off — the page around you owns that conversation.`,
+          ]
+        : [];
   return [
     `plan: ${plan.title} — grade ${plan.grade}, ${plan.subject} (${plan.estimatedMinutes} min)`,
     `learning objectives:`,
@@ -443,6 +506,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     `Stay within the current segment until its goal is met. Move on with`,
     `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,
     `Mark progress with mark_segment_complete({ segmentId, masteryDelta? }).`,
+    ...planFraming,
     completedNote,
   ].join('\n');
 }
@@ -784,6 +848,24 @@ function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): stri
 }
 
 /**
+ * Render the `<demo_stop>` block (Task E1 — budget-aware satisfying stop,
+ * demo sessions only). Empty string when input is absent — the flag-off /
+ * subscribed-session guarantee: `userContent` composition concatenates this
+ * result, so '' leaves the prompt byte-identical.
+ *
+ * Exported for the standalone unit suite (scripts/test-demo-stop.ts) so the
+ * block text is testable without running a whole brain turn.
+ */
+export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
+  if (!input) return '';
+  const body =
+    input.mode === 'time'
+      ? `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
+      : `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
+  return `<demo_stop>\n${body}\n</demo_stop>\n\n`;
+}
+
+/**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
  * accumulated across however many round-trips Sonnet needed.
@@ -868,6 +950,13 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // than as a separate "system" injection) lets prompt caching segment the
   // stable preamble from the volatile per-turn payload.
   const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
+  // Pedagogy opener: per-turn opening-phase directive (see BrainTurnInput
+  // doc). Placed ahead of the lesson blocks — it governs HOW this turn
+  // opens/calibrates before the plan mandates kick in.
+  const openingDirectiveBlock = input.openingDirective
+    ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
+  const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -893,6 +982,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
+    openingDirectiveBlock +
+    demoStopBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
@@ -1022,6 +1113,13 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     currentSegmentId: input.lessonPlanContext?.currentSegmentId,
   });
   const profileBlock = input.studentProfileBlock ? `${input.studentProfileBlock}\n\n` : '';
+  // Pedagogy opener: per-turn opening-phase directive (see BrainTurnInput
+  // doc). Placed ahead of the lesson blocks — it governs HOW this turn
+  // opens/calibrates before the plan mandates kick in.
+  const openingDirectiveBlock = input.openingDirective
+    ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
+  const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1047,6 +1145,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
   const userContent =
     profileBlock +
+    openingDirectiveBlock +
+    demoStopBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +

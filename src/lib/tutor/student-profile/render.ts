@@ -17,7 +17,18 @@ const SCORE_LABEL = (s: number): string =>
     : s >= 0.2 ? 'weak'
     : 'unseen';
 
-export function renderStudentProfileBlock(profile: StudentProfile | null): string {
+export interface RenderStudentProfileOptions {
+  /** Task D1 (pedagogy opener): include `prefs.interests` in the preferences
+   *  line so the brain can theme examples. Default/absent ⇒ output is
+   *  byte-identical to the pre-D1 rendering (interests deliberately omitted).
+   *  Pure — the CALLER reads the flag env (isPedagogyOpenerFlagValue). */
+  includeInterests?: boolean;
+}
+
+export function renderStudentProfileBlock(
+  profile: StudentProfile | null,
+  opts?: RenderStudentProfileOptions,
+): string {
   if (!profile) return '';
   const lines: string[] = [`<student_profile>`];
   if (profile.name) lines.push(`name: ${profile.name}`);
@@ -32,6 +43,9 @@ export function renderStudentProfileBlock(profile: StudentProfile | null): strin
   if (prefs.pacing) prefBits.push(`pacing=${prefs.pacing}`);
   if (prefs.modality) prefBits.push(`modality=${prefs.modality}`);
   if (prefs.tone) prefBits.push(`tone=${prefs.tone}`);
+  if (opts?.includeInterests && prefs.interests?.length) {
+    prefBits.push(`interests=${prefs.interests.join('/')}`);
+  }
   if (prefBits.length) lines.push(`preferences: ${prefBits.join(', ')}`);
 
   // Top mastery — most-recently-touched first.

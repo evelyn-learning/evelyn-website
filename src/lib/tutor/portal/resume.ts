@@ -70,3 +70,33 @@ export function buildResumeState(data: PriorSessionRead | null | undefined): Tut
     whiteboardCommands,
   };
 }
+
+/** `resolveResumeOutcome`'s result: the buildResumeState snapshot (or null)
+ *  PLUS whether a checkpoint existed but was too old to restore. */
+export interface ResumeOutcome {
+  state: TutorResumeState | null;
+  /** True when the prior session HAD a lesson checkpoint but it fell outside
+   *  RESUME_MAX_AGE_MS (or carried no valid updatedAt), so `state` is null
+   *  and the session cold-starts. Distinguishes "stale checkpoint" from "no
+   *  checkpoint at all" — buildResumeState alone collapses both to null,
+   *  which made the resume-stale opening journey (opening-behavior.ts rule 3,
+   *  OpeningSignals.resume.checkpointStale) unreachable. */
+  hadStaleCheckpoint: boolean;
+}
+
+/**
+ * Additive wrapper over buildResumeState (same input, same staleness rule —
+ * buildResumeState's signature/behavior is untouched) that ALSO reports
+ * whether a checkpoint existed but was stale. Callers that need the
+ * stale-checkpoint opening signal (light re-orient, no full calibration)
+ * use this; callers that only need the snapshot keep buildResumeState.
+ */
+export function resolveResumeOutcome(data: PriorSessionRead | null | undefined): ResumeOutcome {
+  const state = buildResumeState(data);
+  const cp = data?.lessonProgress;
+  // "Existed but stale": a positioned checkpoint (lessonPlanId present) that
+  // buildResumeState refused. A missing/invalid updatedAt counts as stale —
+  // the checkpoint exists but cannot be proven fresh, so it isn't restored.
+  const hadStaleCheckpoint = !state && !!cp?.lessonPlanId && !isCheckpointResumable(cp.updatedAt);
+  return { state, hadStaleCheckpoint };
+}

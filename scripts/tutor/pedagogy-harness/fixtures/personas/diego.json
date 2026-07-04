@@ -1,0 +1,90 @@
+{
+  "id": "diego",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "diego-s5",
+    "isTrial": false,
+    "courseId": "algebra-2",
+    "profile": { "name": "Diego", "grade": "10" },
+    "preferences": { "socialMemoryLevel": "light" },
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.algebra2.quadratics.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 0,
+      "unitsTotal": 8,
+      "percentComplete": 0,
+      "weeksElapsed": 1,
+      "paceNote": "just started"
+    }
+  },
+  "studentContextDiagnostic": {
+    "studentId": "diego-s5",
+    "isTrial": false,
+    "courseId": "algebra-2",
+    "profile": { "name": "Diego", "grade": "10" },
+    "preferences": { "socialMemoryLevel": "light" },
+    "target": {
+      "kind": "diagnostic",
+      "loIds": ["algebra2.quadratics.factoring", "algebra2.quadratics.quadratic-formula"]
+    },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 0,
+      "unitsTotal": 8,
+      "percentComplete": 0,
+      "weeksElapsed": 1,
+      "paceNote": "just started"
+    }
+  },
+  "profile": {
+    "id": "diego-s5",
+    "name": "Diego",
+    "grade": "10",
+    "mastery": {
+      "algebra2.quadratics.factoring": {
+        "loId": "algebra2.quadratics.factoring",
+        "score": 0.55,
+        "exposures": 1,
+        "lastTouchedAt": "2026-06-29T00:00:00.000Z",
+        "confidence": "low"
+      },
+      "algebra2.quadratics.quadratic-formula": {
+        "loId": "algebra2.quadratics.quadratic-formula",
+        "score": 0.42,
+        "exposures": 1,
+        "lastTouchedAt": "2026-06-29T00:00:00.000Z",
+        "confidence": "low"
+      }
+    },
+    "gaps": [
+      {
+        "id": "gap_diego_qf",
+        "kind": "lo",
+        "loId": "algebra2.quadratics.quadratic-formula",
+        "status": "candidate",
+        "confidence": 0.25,
+        "evidence": {
+          "signals": ["INCORRECT_AFTER_HINT"],
+          "observation": "Missed the sign under the radical on the placement diagnostic.",
+          "studentQuotes": []
+        },
+        "sessionIds": ["s-diego-diag-1"],
+        "firstSeenAt": "2026-06-29T00:00:00.000Z",
+        "lastSeenAt": "2026-06-29T00:00:00.000Z"
+      }
+    ],
+    "recentSessions": [],
+    "preferences": { "socialMemoryLevel": "light" },
+    "createdAt": "2026-06-29T00:00:00.000Z",
+    "updatedAt": "2026-06-29T00:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "simProfile": {
+    "grade": "10",
+    "topic": "Quadratics",
+    "claim": "just started, took the placement quiz",
+    "actualLevel": "low-exposure signal from the diagnostic — shaky on the quadratic formula",
+    "intent": "enrolled",
+    "style": "cooperative"
+  }
+}

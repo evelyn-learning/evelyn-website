@@ -130,6 +130,30 @@ export interface SystemPromptContext {
    *  engine sets this — all other engines and text chat leave it
    *  undefined, so their prompt stays byte-identical. */
   realtimeV2?: boolean;
+
+  /** Opener + calibration (Task B4). All optional and additive — the
+   *  orchestrator wiring that populates these lands in a later task
+   *  (B2/B6). When `openingPhase` is absent (every current caller),
+   *  buildSystemPrompt's output is byte-for-byte unchanged.
+   *
+   *  'demo' = unauthenticated/trial session; 'subscribed' = signed-in
+   *  student with an account. Undefined is treated like 'demo'. */
+  sessionMode?: 'demo' | 'subscribed';
+  /** True on the turn that opens the session — gates buildOpenerClause. */
+  openingPhase?: boolean;
+  /** How the session started: a UI button press, the student typing a
+   *  real question/statement first, or the student typing just a bare
+   *  greeting ('hi'). */
+  entryMode?: 'button' | 'typed-content' | 'typed-greeting';
+  /** True for a subscribed student with prior sessions/history. */
+  isReturning?: boolean;
+
+  /** Task B5 — self-report two-channel routing clause. Optional/additive
+   *  (same pattern as B4): when absent (every current caller),
+   *  buildSystemPrompt's output is byte-for-byte unchanged. Unlike the
+   *  opener clause this is session-wide, not gated to the opening turn —
+   *  the orchestrator wiring that sets this lands in a later task. */
+  selfReportRouting?: boolean;
 }
 
 /**
@@ -501,6 +525,8 @@ For physics, math, biology, and chemistry visuals, use the structured tools list
 **Narrate the authored card, not an improvised version.** When you call \`show_segment_card\` for a segment with an authored problem, your SPOKEN narration MUST match the authored question on the rendered card. The card is what the student sees; the narration is what the student hears. If the two disagree, the student gets confused about which question to answer. Read the authored text from the segment context and reference IT in speech. Do not improvise a different question for the same segment. If you want to ask something the authored card doesn't cover, \`advance_lesson\` to a different segment first or use \`show_problem\` for an ad-hoc question outside the plan.
 
 **Use the authored card's literal tokens.** When a segment has authored problem text, your narration must reuse the EXACT names, labels, identifiers, and numerical values from that text — never paraphrase them into different ones. If the authored card uses one set of labels and you speak a different set, the student sees one thing on the board and hears another, which breaks the lesson. This applies whether you call \`show_segment_card\` (the runtime renders the authored card) OR \`show_problem\` (which the runtime auto-substitutes to the authored card when authored text exists for that segment). Before narrating, look at the segment's authored problem in the context block and copy its concrete tokens verbatim into your speech.
+
+**Board values are canonical — correct a student's misquote, never adopt it.** The same rule applies in reverse: when a STUDENT restates a problem, figure, or given and their numbers or labels conflict with what is actually on the board (the board snapshot / authored text in your context), do NOT silently switch to their version. Check their restatement against the board, point out the mismatch briefly and kindly, and continue with the board's values. Silently computing with a student's misremembered value produces a conclusion that contradicts what they can see on the board — from that point every answer, check, and comparison is wrong twice over. A student's restatement is a thing to VERIFY against the board, not a replacement source of truth. (This is about misquotes of the CURRENT problem — a student explicitly bringing a NEW problem of their own is different and welcome.)
 
 **Worked-example segments require an INTERACTIVE walkthrough, not a static dump.** When the active segment is a \`worked_example\` (it has a \`steps\` array in its authored content), your job is to walk the student through each step one at a time:
 - Render the authored card via \`show_segment_card\`.
@@ -1233,6 +1259,118 @@ Every academic response includes a whiteboard tool call — never explain withou
 `;
 
 /**
+ * Task B4 — opener + calibration clause.
+ *
+ * Pure helper: given a SystemPromptContext, returns the prose the brain
+ * should follow for THIS turn's opener, or `null` when this turn isn't
+ * the session opener (`ctx.openingPhase` falsy). `null` means "say
+ * nothing new" — the existing boring-greeting instructions elsewhere in
+ * BASE_PROMPT are the only guidance, exactly as today.
+ *
+ * Selection order:
+ *  1. entryMode 'typed-content' — the student already typed a real
+ *     question/statement, so respond to THAT instead of running any
+ *     opener script, regardless of demo/subscribed or isReturning.
+ *  2. sessionMode 'subscribed' && isReturning — warm resume from history,
+ *     no re-calibration.
+ *  3. everything else (demo, first-ever subscribed session, or
+ *     entryMode 'typed-greeting') — the full act-first + calibrate opener.
+ *
+ * Generic by design (no topic-specific examples) per
+ * feedback_generic_prompts.
+ */
+export function buildOpenerClause(ctx: SystemPromptContext): string | null {
+  if (!ctx.openingPhase) return null;
+
+  const noNameClause = ctx.studentName
+    ? ''
+    : ' No student name is available — greet warmly without a name; never speak a placeholder value (e.g. "Trial student") as if it were the student\'s name.';
+
+  if (ctx.entryMode === 'typed-content') {
+    return (
+      'The student opened with their own words — respond to THAT directly and put ' +
+      "something relevant on the board; weave in only the calibration you still need " +
+      "(don't re-ask what they've told you), never a canned 'tell me about yourself' reset." +
+      noNameClause
+    );
+  }
+
+  const isReturningSubscribed = ctx.sessionMode === 'subscribed' && ctx.isReturning === true;
+
+  if (isReturningSubscribed) {
+    return (
+      'Open warm and personal from what you already know about them — vary it every time ' +
+      "(a social thread you haven't used recently, a callback to last session, or their " +
+      'overall progress arc). NEVER repeat an opener or the same KIND of opener twice in a ' +
+      'row. Do NOT ask a returning student what they already know — you have their history; ' +
+      'use it.' + noNameClause
+    );
+  }
+
+  // Default: demo, first-ever subscribed session, or entryMode 'typed-greeting'
+  // — treated as the full opener per the brief.
+  return (
+    'Open by ACTING FIRST: put one intriguing, level-appropriate thing about the topic on ' +
+    'the board, greet them by name if you have it, then get to know them briefly like a real ' +
+    "teacher would — roughly where they're at with this topic, their grade if unclear, and " +
+    'what they\'re hoping to get from this session (just exploring, thinking about joining, ' +
+    'curious how an AI teaches). Have a short human exchange, THEN teach, informed by it. ' +
+    "NEVER open with 'Today we are going to learn…' or a bare bold title. " +
+    'Start IN the substance, not with a curtain-raiser: stock lead-ins like ' +
+    '"here\'s a little puzzle to kick us off", "let\'s dive in", "before we start", or ' +
+    '"don\'t worry about getting it right" read as the same script every session — skip the ' +
+    'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
+    'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
+    'scenario, a what-would-happen-if.' + noNameClause
+  );
+}
+
+/**
+ * Stale-checkpoint re-orient nuance (resume-stale journey, opening-behavior
+ * rule 3): prepended to the opening directive by the orchestrator when the
+ * student HAD started this lesson but the checkpoint is too old to restore
+ * (resolveOpeningBehavior journey === 'resume-stale'). One sentence, no new
+ * machinery — the directive's opener clause (buildOpenerClause) still
+ * follows it. Generic by design per feedback_generic_prompts.
+ */
+export const STALE_CHECKPOINT_REORIENT_CLAUSE =
+  'This student was mid-way through this lesson a while ago but the checkpoint is too old to ' +
+  "restore — re-orient them briefly (one line of 'we were working on X') before the opener; " +
+  'do not run full get-to-know-you calibration.';
+
+/**
+ * Pure helper: given a SystemPromptContext, returns the session-wide prose
+ * that routes a student's self-report about themselves down TWO channels,
+ * or `null` when the caller hasn't opted in (`ctx.selfReportRouting` not
+ * `true`). Unlike buildOpenerClause this is not gated to the opening turn —
+ * a student can volunteer information about themselves at any point in the
+ * session — but it's still additive: legacy callers that never set
+ * `selfReportRouting` see no change to buildSystemPrompt's output.
+ *
+ * The two channels: (1) things ABOUT THEM (interests, an upcoming test,
+ * what they enjoy) are for rapport and theming examples; (2) claims about
+ * WHAT THEY ALREADY KNOW are hints to act on, not proof of mastery — a
+ * student can bluff, so a knowledge claim must be confirmed by what they
+ * actually demonstrate before it's treated as learned or used to skip
+ * teaching. This keeps "completion is always earned" intact.
+ *
+ * Generic by design (no topic-specific examples) per
+ * feedback_generic_prompts.
+ */
+export function buildSelfReportClause(ctx: SystemPromptContext): string | null {
+  if (ctx.selfReportRouting !== true) return null;
+
+  return (
+    'When a student tells you about themselves, route it two ways. Things about THEM — ' +
+    'what they enjoy, a test or event coming up, their interests — are for rapport and for ' +
+    "theming your examples to them. Claims about WHAT THEY ALREADY KNOW are hints to act " +
+    "on, NOT proof they've learned it: students can and do over- or under-state what they " +
+    'know. Treat a knowledge claim as something to CONFIRM by what they actually demonstrate ' +
+    'before you count it as learned or skip teaching it.'
+  );
+}
+
+/**
  * Build the complete system prompt
  */
 export function buildSystemPrompt(context: SystemPromptContext): string {
@@ -1462,6 +1600,25 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     prompt += `- Before checking/validating: 'Let me double-check that'\n`;
     prompt += `- Before generating a problem: 'Let me put together a problem for you'\n`;
     prompt += `Keep preambles under 8 words. Never use them on simple acknowledgments or short answers — only when the response will take noticeable time.\n`;
+  }
+
+  // Task B4 — opener + calibration clause. Additive/gated: only appended
+  // when the caller opts in via ctx.openingPhase. The orchestrator wiring
+  // that populates openingPhase/sessionMode/entryMode/isReturning lands in
+  // a later task (B2/B6) — no current caller sets openingPhase, so this
+  // block is a no-op today and the prompt is byte-identical to before.
+  const openerClause = buildOpenerClause(context);
+  if (openerClause) {
+    prompt += `\n\n## This Turn: Session Opener\n${openerClause}\n`;
+  }
+
+  // Task B5 — self-report two-channel routing clause. Additive/gated: only
+  // appended when the caller opts in via ctx.selfReportRouting. Session-wide
+  // (not opener-only), but no current caller sets this field, so this block
+  // is a no-op today and the prompt is byte-identical to before.
+  const selfReportClause = buildSelfReportClause(context);
+  if (selfReportClause) {
+    prompt += `\n\n## Self-Report Routing\n${selfReportClause}\n`;
   }
 
   return prompt;

@@ -20,7 +20,27 @@ import {
 } from '@/lib/tutor/voice/perception-classifier';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import {
+  resolveOpeningBehavior,
+  assembleOpeningInput,
+  detectEntryMode,
+  deriveResumeSignal,
+  isPedagogyOpenerFlagValue,
+  shouldRetireOpeningDirective,
+  type OpeningSignals,
+  type SessionMode,
+} from '@/lib/tutor/ai/opening-behavior';
+import {
+  shouldEmitOpenerFallback,
+  buildOpenerFallbackCommand,
+} from '@/lib/tutor/ai/opener-fallback';
+import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
+import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
+import {
+  resolveCompletionOutcome,
+  shouldFireRecapMilestone,
+} from '@/lib/tutor/ai/completion-gate';
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
@@ -264,6 +284,14 @@ const TUTOR_SKETCH =
 const TUTOR_RESUME_FROM_CLAUSE =
   process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'on'
   || process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'true';
+// Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
+// When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
+// opener/self-report context fields (sessionMode/openingPhase/entryMode/
+// isReturning/selfReportRouting), computed from resolveOpeningBehavior +
+// assembleOpeningInput (opening-behavior.ts). When off, that call is passed
+// EXACTLY as before — no new fields, byte-identical prompt. See
+// project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
+const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.
@@ -558,6 +586,55 @@ interface VoiceTutorRealtimeProps {
    *  sessions) and end-of-session deltas are committed. Demo flows
    *  without auth omit this — the session is ephemeral. */
   studentId?: string;
+  /** Task D1b (pedagogy opener) — TRANSIENT session-scoped social threads
+   *  from the portal's StudentContext (embed carrier). Read once at mount,
+   *  rendered into a <student_context_transient> block appended to the
+   *  per-turn studentProfileBlock. NEVER persisted engine-side. Only
+   *  consumed when TUTOR_PEDAGOGY_OPENER is on; the main /tutor page has no
+   *  source for these today and simply omits them. */
+  socialMemory?: SocialThread[];
+  /** Task D1b — portal-computed enrollment/progress digest (same carrier,
+   *  same transient semantics as `socialMemory`). */
+  progressDigest?: ProgressDigest;
+  /** Opener-recency (part A) — the PREVIOUS session's opener record (same
+   *  transient carrier/semantics as socialMemory/progressDigest). Rendered
+   *  into the <student_context_transient> block as a do-NOT-repeat
+   *  directive so this session's opener varies in kind AND content. Only
+   *  consumed when TUTOR_PEDAGOGY_OPENER is on. */
+  lastOpener?: LastOpenerRecord;
+  /** Opener-recency (part A) — fires at most ONCE per session, when this
+   *  session's OWN opener record is captured (the opener turn's finalized
+   *  tutor text + the resolved opener kind). Dev/e2e consumer today (the
+   *  /tutor page stashes it for __tutorTestState); the production
+   *  outbound loop (part B) will consume the same callback later. Only
+   *  ever fired when TUTOR_PEDAGOGY_OPENER is on. */
+  onOpenerRecord?: (record: LastOpenerRecord) => void;
+  /** Task E1 (pedagogy opener) — the embed's `is_trial` signal (academy
+   *  trial flow). Feeds the OpeningSignals construction in buildInstructions
+   *  (activates the demo-trial journey B6 already resolves) AND selects the
+   *  milestone-mode `<demo_stop>` directive instead of the time-budget one.
+   *  Only consumed when TUTOR_PEDAGOGY_OPENER is on. Default false — the
+   *  main /tutor page has no trial concept and omits it. */
+  isTrial?: boolean;
+  /** Explicit session-target kind for the opening-behavior resolution
+   *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
+   *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
+   *  makes resolveOpeningBehavior's rule 1 fire (opener/calibration no-op)
+   *  and ALSO keeps the completion gate + demo-stop machinery off an
+   *  assessment session. Sources: the embed's `target_kind` token field
+   *  (production — the academy's diagnostic embeds) and the dev-only
+   *  __tutorTestStart hook (pedagogy harness). Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. */
+  targetKind?: SessionMode;
+  /** Stale-checkpoint marker (OpeningSignals.resume.checkpointStale): the
+   *  student HAD a lesson checkpoint but it fell outside RESUME_MAX_AGE_MS,
+   *  so no `resumeState` was seeded and the session cold-starts. Activates
+   *  the resume-stale journey (light re-orient, no full calibration).
+   *  Mutually exclusive with `resumeState` at every real source
+   *  (portal/resume.ts's resolveResumeOutcome); if both ever arrive, the
+   *  seeded resumeState wins (see deriveResumeSignal). Only consumed when
+   *  TUTOR_PEDAGOGY_OPENER is on. Default false. */
+  checkpointStale?: boolean;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -781,6 +858,13 @@ export function VoiceTutorRealtime({
   sessionGoal,
   lessonPlanId,
   studentId,
+  socialMemory,
+  progressDigest,
+  lastOpener,
+  onOpenerRecord,
+  isTrial = false,
+  targetKind,
+  checkpointStale = false,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -1102,6 +1186,61 @@ export function VoiceTutorRealtime({
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
   const turnNarrationRef = useRef<string[]>([]);
   const boardRenderFiredThisTurnRef = useRef(false);
+  // Task B3 (flag-gated): whether the NEXT callBrainOnce call to complete is
+  // the proactive-opener turn, and how many valid (post-validation) board
+  // renders it dispatches. Only ever written/read when TUTOR_PEDAGOGY_OPENER
+  // is on (see the mount effect that seeds it from `beh.opener !== 'none'`
+  // and the callBrainOnce finally that consumes it). See opener-fallback.ts
+  // + task-B3-brief.md.
+  const openingTurnPendingRef = useRef(false);
+  const openingTurnValidRenderCountRef = useRef(0);
+  // Per-turn opening directive (flag-ON follow-up #1 from the whole-branch
+  // review): the B4 opener clause used to be baked into the SESSION-STATIC
+  // system prompt (a byte-stable 1h-cached prefix — see runBrainTurn's
+  // cache_control), so it persisted ALL session. It now rides along in the
+  // per-turn user content as `<opening_directive>` while the opening phase
+  // is active, then retires — WITHOUT ever touching the cached prefix.
+  // Retirement (see callBrainOnce + applyResolvedAdvance): the brain
+  // advancing the lesson (teaching started), or the
+  // OPENING_DIRECTIVE_MAX_BRAIN_TURNS ceiling. Seeded once per mount in
+  // buildInstructions under the same openingTurnArmedRef latch as the
+  // fallback arm (a mid-session studentPreferences rebuild must not
+  // resurrect a retired directive). Fresh per session via key={sessionId}.
+  const openingDirectiveRef = useRef<string | null>(null);
+  const openingDirectiveBrainTurnsRef = useRef(0);
+  // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
+  // effect (below) re-runs mid-session whenever studentPreferences changes
+  // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
+  // openingTurnPendingRef after the real opener turn already consumed it —
+  // firing a spurious fallback render on an unrelated later turn. This latch
+  // ensures the pending flag is armed at most once per component mount
+  // (== once per session, since VoiceTutorRealtime remounts via
+  // key={sessionId} in page.tsx for every new session, giving this ref a
+  // fresh false value for free — see page.tsx ~2224).
+  const openingTurnArmedRef = useRef(false);
+  // Task C1 (flag-gated): the session mode resolved by resolveOpeningBehavior
+  // ('demo' | 'subscribed'), stashed at mount time under the SAME one-shot
+  // latch above so callBrainOnce can attach it per-turn to lessonPlanContext
+  // (plan-as-seed framing). buildInstructions runs at mount; callBrainOnce
+  // needs the value on every turn — hence the ref. Only ever written when
+  // TUTOR_PEDAGOGY_OPENER is on; flag off ⇒ stays null ⇒ the sessionMode
+  // field is never present on the wire ⇒ server output byte-identical.
+  const sessionModeRef = useRef<'demo' | 'subscribed' | null>(null);
+  // Task C2 (flag-gated): compress-and-confirm completion gate. Segments the
+  // student DEMONSTRATED this session — populated at the post-stream
+  // affirmation site (same guard placement as the pacing correct-streak
+  // increment, so it inherits its exclusions: pure acks, help requests,
+  // too-short turns, and judge-kill/restatement retries never count). Read
+  // by the markSegmentComplete handler via resolveCompletionOutcome and by
+  // the recap_reached milestone via shouldFireRecapMilestone — see
+  // completion-gate.ts. Only ever written when TUTOR_PEDAGOGY_OPENER is on.
+  // Fresh per session via key={sessionId} remount; no manual reset needed.
+  const demonstratedSegmentsRef = useRef<Set<string>>(new Set());
+  // Whether the completion gate is active this session: TUTOR_PEDAGOGY_OPENER
+  // && lessonNode target (lessonPlanId present). Seeded under the SAME
+  // openingTurnArmedRef one-shot latch as sessionModeRef. Flag off ⇒ stays
+  // false ⇒ resolveCompletionOutcome reproduces today's behavior exactly.
+  const completionGateActiveRef = useRef(false);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1258,6 +1397,28 @@ export function VoiceTutorRealtime({
   // collects session events (mastery deltas from mark_segment_complete,
   // gaps from record_gap, LOs touched) and commits them at session end.
   const studentProfileBlockRef = useRef<string>('');
+  // Task D1b — transient social/progress context block. Computed ONCE per
+  // mount (session-scoped, immutable for the session, never persisted).
+  // Flag off or props absent ⇒ stays null ⇒ the per-turn compose below is
+  // byte-identical to the old `studentProfileBlockRef.current || undefined`.
+  const transientContextBlockRef = useRef<string | null>(null);
+  const transientContextComputedRef = useRef(false);
+  if (!transientContextComputedRef.current) {
+    transientContextComputedRef.current = true;
+    transientContextBlockRef.current =
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener })
+        : null;
+  }
+  // Opener-recency (part A) — THIS session's own opener record, captured
+  // once when the opener turn's text finalizes in callBrainOnce (see the
+  // capture site near `const fullText = …`). kind is stashed at seed time
+  // (beh.opener, same one-shot latch as sessionModeRef) because the
+  // resolved OpeningBehavior isn't in scope at capture time. Only ever
+  // written when TUTOR_PEDAGOGY_OPENER is on; fresh per session via
+  // key={sessionId} remount.
+  const sessionOpenerKindRef = useRef<string | null>(null);
+  const sessionOpenerRecordRef = useRef<LastOpenerRecord | null>(null);
   const sessionAccumRef = useRef<{
     losTouched: Set<string>;
     masteryDeltas: Array<{ loId: string; delta: number }>;
@@ -1513,6 +1674,16 @@ export function VoiceTutorRealtime({
   const lastFatigueInjectionAtRef = useRef(0);
   const sessionStartMsRef = useRef<number>(Date.now());
   const longSessionCheckFiredRef = useRef(false);
+  // Task E1 (pedagogy): wallclock ms when the session ACTUALLY started —
+  // the student's first Start/mic tap or resume-continue (the same moments
+  // that fire onSessionStarted, which drives the visible SessionControls
+  // timer). sessionStartMsRef above is MOUNT time and is reset by session
+  // rotation; the demo-stop clock must count teaching time from the real
+  // start, so it gets its own ref. null until the session starts (the
+  // demo-stop computation falls back to mount time — a conservative
+  // overestimate of elapsed for the pre-start edge case). Only ever
+  // written when TUTOR_PEDAGOGY_OPENER is on.
+  const voiceSessionStartedAtMsRef = useRef<number | null>(null);
 
   // Pacing v2 — Phase 1 (inert): student-aware difficulty/depth
   // modulation signals. These refs accumulate signals from the student's
@@ -2180,8 +2351,22 @@ export function VoiceTutorRealtime({
     }
     currentSegmentIdRef.current = next;
     setActiveSegmentId(next);
+    // Pedagogy opener: the brain advancing the lesson IS the "opening phase
+    // over, teaching started" signal (decision #11 — the brain owns the
+    // transition; the orchestrator only observes it). Retire the per-turn
+    // opening directive so it stops riding along in the brain body.
+    if (TUTOR_PEDAGOGY_OPENER) openingDirectiveRef.current = null;
     // Reaching the recap segment is a milestone (value-boxed progress).
-    if (getSegment(plan, next)?.kind === 'recap') emitMilestone('recap_reached');
+    // Task C2: with the completion gate active, arriving at recap only
+    // counts if at least one segment was demonstrated this session (gate
+    // inactive ⇒ shouldFireRecapMilestone is always true — today's behavior).
+    if (getSegment(plan, next)?.kind === 'recap'
+        && shouldFireRecapMilestone({
+          gateActive: completionGateActiveRef.current,
+          demonstratedCount: demonstratedSegmentsRef.current.size,
+        })) {
+      emitMilestone('recap_reached');
+    }
     // Re-entered the plan — drop the stashed pre-free segment.
     segmentBeforeFreeRef.current = '';
     // Mirror into the catalog so subsequent appends stamp the new
@@ -2408,6 +2593,15 @@ export function VoiceTutorRealtime({
     // don't count. Tracked regardless of render-sync on/off.
     if (TUTOR_BOARD_ANCHOR_ASSIST && processed.some(isBoardRenderCommand)) {
       boardRenderFiredThisTurnRef.current = true;
+    }
+    // Task B3 (flag-gated): count valid (post-validation, about-to-render)
+    // board renders this batch contributes toward the opener turn, so the
+    // finally-block check can tell "opener drew nothing" from "opener drew
+    // something". Independent of TUTOR_BOARD_ANCHOR_ASSIST's own counter
+    // above (different flag, different lifetime — this one is read once at
+    // end-of-turn and only while openingTurnPendingRef is armed).
+    if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
+      openingTurnValidRenderCountRef.current += processed.filter(isBoardRenderCommand).length;
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
@@ -3851,17 +4045,30 @@ export function VoiceTutorRealtime({
         // Report pedagogical milestones on GENUINE completion. (Skips
         // auto-mark via applyResolvedAdvance and deliberately do NOT fire a
         // milestone — the conversion wall must be value-boxed on real work.)
-        if (typeof c.segmentId === 'string' && c.segmentId) {
-          const planNow = lessonPlanRef.current;
-          const doneSeg = planNow ? getSegment(planNow, c.segmentId) : undefined;
-          if (doneSeg?.kind === 'concept') {
-            emitMilestone('first_concept_complete');
-          } else if (doneSeg?.kind === 'try_yourself') {
-            // Treat completion as success unless an explicit non-positive
-            // mastery delta marks it a miss.
-            const md = typeof c.masteryDelta === 'number' ? c.masteryDelta : undefined;
-            if (md === undefined || md > 0) emitMilestone('first_try_yourself_success');
-          }
+        // Task C2: milestone + mastery-push decisions are routed through
+        // resolveCompletionOutcome (completion-gate.ts). Gate inactive
+        // (flag off, or freestyle session) ⇒ the helper reproduces the
+        // pre-C2 inline logic exactly. Gate active ⇒ both additionally
+        // require the student to have DEMONSTRATED the segment (see
+        // demonstratedSegmentsRef). The completedSegmentIdsRef add above
+        // stays unconditional in both modes — a gated segment is still
+        // "visited" for the progress strip.
+        const planNow = lessonPlanRef.current;
+        const hasSegId = typeof c.segmentId === 'string' && !!c.segmentId;
+        const doneSeg = hasSegId && planNow ? getSegment(planNow, c.segmentId) : undefined;
+        // Treat completion as success unless an explicit non-positive
+        // mastery delta marks it a miss (try_yourself milestone only).
+        const md = typeof c.masteryDelta === 'number' ? c.masteryDelta : undefined;
+        const outcome = resolveCompletionOutcome({
+          gateActive: completionGateActiveRef.current,
+          segmentKind: doneSeg?.kind,
+          masteryDelta: md,
+          demonstrated: hasSegId && demonstratedSegmentsRef.current.has(c.segmentId),
+        });
+        if (outcome.milestone) emitMilestone(outcome.milestone);
+        if (outcome.visitedNotMastered) {
+          console.log(`[VoiceTutorRealtime] completion gated: seg="${c.segmentId}" visited, not mastered (no demonstrated attempt)`);
+          onDebugEvent?.('completion_gated', `seg="${c.segmentId}" visited, not mastered (no demonstrated attempt)`);
         }
         // Pacing v2 — Phase 1 (inert): segment-mastered booster.
         // When mark_segment_complete fires AND the student's correct-streak
@@ -3884,10 +4091,12 @@ export function VoiceTutorRealtime({
         // commits at end-of-session. We tag it with the lesson plan's
         // first LO when available — the segment itself doesn't carry an
         // LO id directly, but the plan is the proximate scope.
-        const plan = lessonPlanRef.current;
-        const loId = plan?.los?.[0]?.id;
-        if (loId && typeof c.masteryDelta === 'number') {
-          sessionAccumRef.current.masteryDeltas.push({ loId, delta: c.masteryDelta });
+        // Task C2: outcome.recordMastery ⇔ typeof c.masteryDelta === 'number'
+        // when the gate is inactive (pre-C2 condition, verbatim); the loId
+        // presence check stays here in the caller.
+        const loId = planNow?.los?.[0]?.id;
+        if (loId && outcome.recordMastery && md !== undefined) {
+          sessionAccumRef.current.masteryDeltas.push({ loId, delta: md });
           sessionAccumRef.current.losTouched.add(loId);
         }
         continue;
@@ -5757,6 +5966,23 @@ export function VoiceTutorRealtime({
   // Use a ref to access sendTextMessage without re-creating the listener
   const sendTextMessageRef = useRef<((text: string) => void) | null>(null);
 
+  // Task B2 (flag-gated): whether this student has any prior recorded
+  // sessions, read off the SAME student-profile fetch below (no new
+  // network call) — feeds OpeningSignals.hasPriorSessions.
+  const studentHasPriorSessionsRef = useRef(false);
+  // Task H2 race fix (flag-gated, was the documented B2 limitation): the
+  // profile fetch below is async, but the mount-time buildInstructions
+  // effect used to read studentHasPriorSessionsRef SYNCHRONOUSLY at mount —
+  // always seeing its initial `false`, which made the warm-resume
+  // (subscribed-returning) journey unreachable. This state flips true when
+  // the fetch SETTLES (success, non-ok, or error — fail-open) for
+  // studentId sessions; buildInstructions gates its one-shot opening seed
+  // on it and re-runs via its dep array once settled. Anonymous sessions
+  // (no studentId) never consult it (they seed immediately), and with
+  // TUTOR_PEDAGOGY_OPENER off it is never set, so the dep never changes
+  // and flag-off timing is byte-identical to before.
+  const [profileFetchSettled, setProfileFetchSettled] = useState(false);
+
   // Load the student profile block at mount when a studentId is
   // configured. The block is a pre-rendered string the brain reads on
   // every turn. Errors are swallowed — a missing profile block is fine
@@ -5774,8 +6000,20 @@ export function VoiceTutorRealtime({
         const data = await res.json();
         if (cancelled) return;
         studentProfileBlockRef.current = data.block ?? '';
+        if (TUTOR_PEDAGOGY_OPENER) {
+          studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
+            && data.profile.recentSessions.length > 0;
+        }
       } catch (err) {
         console.warn('[VoiceTutorRealtime] student profile fetch failed:', err);
+      } finally {
+        // H2 race fix: signal settle on EVERY outcome (ok / non-ok / thrown)
+        // so a failed fetch still lets the opening seed proceed with the
+        // conservative default (hasPriorSessions=false) instead of stalling
+        // the opener forever. Flag-gated so flag-off render timing is
+        // untouched (the state would otherwise still trigger the
+        // buildInstructions dep re-run below).
+        if (!cancelled && TUTOR_PEDAGOGY_OPENER) setProfileFetchSettled(true);
       }
     })();
     return () => { cancelled = true; };
@@ -6116,6 +6354,11 @@ export function VoiceTutorRealtime({
     // Board-anchor assist: fresh per-turn narration + "brain drew nothing" flag.
     turnNarrationRef.current = [];
     boardRenderFiredThisTurnRef.current = false;
+    // Task B3 (flag-gated): fresh per-turn valid-render counter for the
+    // opener-fallback check. openingTurnPendingRef itself is NOT reset here
+    // (it's a one-shot "is this the opener turn" flag seeded once at mount
+    // and consumed in the finally below, not a per-turn flag).
+    if (TUTOR_PEDAGOGY_OPENER) openingTurnValidRenderCountRef.current = 0;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -6633,9 +6876,18 @@ export function VoiceTutorRealtime({
         // picked up on the next call). Free-conversation sessions omit
         // this — `lessonPlanRef.current` is null.
         const plan = lessonPlanRef.current;
-        const lessonPlanContext = plan && currentSegmentIdRef.current
+        const baseLessonPlanContext = plan && currentSegmentIdRef.current
           ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
           : undefined;
+        // Task C1 (flag-gated): attach the resolved session mode so
+        // formatLessonPlanContext renders the plan-as-seed framing
+        // ('subscribed' = seed + LO coverage contract; 'demo' = raw
+        // material). Flag off ⇒ sessionModeRef stays null ⇒ the field is
+        // never present ⇒ server-side block byte-identical to pre-C1.
+        const lessonPlanContext =
+          baseLessonPlanContext && TUTOR_PEDAGOGY_OPENER && sessionModeRef.current
+            ? { ...baseLessonPlanContext, sessionMode: sessionModeRef.current }
+            : baseLessonPlanContext;
 
         // Student-problem grounding (coherence fix): if the student brought
         // their OWN concrete problem (request-framed, concrete, divergent from
@@ -6654,6 +6906,53 @@ export function VoiceTutorRealtime({
             currentProblemRef.current = { statement: brought, kind: 'generic', source: 'student' };
             console.log(`[VoiceTutorRealtime] student-brought problem detected → grounding on it: "${brought.slice(0, 80)}"`);
             onDebugEvent?.('student_problem_detected', brought.slice(0, 90));
+          }
+        }
+
+        // Pedagogy opener: attach the per-turn `<opening_directive>` while
+        // the opening phase is active. Retirement here is the TURN CEILING
+        // only (OPENING_DIRECTIVE_MAX_BRAIN_TURNS); the intended retirement
+        // — the brain calling advance_lesson — clears the ref in
+        // applyResolvedAdvance. Flag off ⇒ ref is never seeded ⇒ the field
+        // stays undefined and JSON.stringify omits it (request byte-identical).
+        let openingDirective: string | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && openingDirectiveRef.current) {
+          if (
+            shouldRetireOpeningDirective({
+              lessonAdvanced: false,
+              brainTurnsCompleted: openingDirectiveBrainTurnsRef.current,
+            })
+          ) {
+            openingDirectiveRef.current = null;
+          } else {
+            openingDirective = openingDirectiveRef.current;
+            openingDirectiveBrainTurnsRef.current += 1;
+          }
+        }
+
+        // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
+        // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
+        // undefined and JSON.stringify omits it (request byte-identical).
+        // Subscribed sessions never carry it either — their pacing is owned
+        // by the plan + pacing v2. mode 'milestone' when the embed's
+        // is_trial signal is present (win boxed to the first completed
+        // concept); else 'time' with the session's minute budget and whole
+        // minutes elapsed since the student actually started (mic tap /
+        // resume-continue; falls back to mount time before that).
+        let demoStop:
+          | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
+          | { mode: 'milestone' }
+          | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && sessionModeRef.current === 'demo') {
+          if (isTrial) {
+            demoStop = { mode: 'milestone' };
+          } else {
+            const startedAtMs = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
+            demoStop = {
+              mode: 'time',
+              budgetMinutes: sessionMaxMinutes,
+              minutesElapsed: Math.max(0, Math.floor((Date.now() - startedAtMs) / 60000)),
+            };
           }
         }
 
@@ -6686,7 +6985,20 @@ export function VoiceTutorRealtime({
             whiteboardSnapshot: catalogRef.current.getSnapshot(),
             whiteboardPages: catalogRef.current.getPages(),
             lessonPlanContext,
-            studentProfileBlock: studentProfileBlockRef.current || undefined,
+            // D1b: append the transient context block (null when the
+            // pedagogy-opener flag is off / no portal context) WITHOUT
+            // mutating studentProfileBlockRef. Flag off ⇒ exactly the old
+            // `studentProfileBlockRef.current || undefined` value.
+            studentProfileBlock:
+              [studentProfileBlockRef.current, transientContextBlockRef.current]
+                .filter(Boolean)
+                .join('\n\n') || undefined,
+            // Pedagogy opener: opening-phase directive (undefined once
+            // retired / when the flag is off — see the block above).
+            openingDirective,
+            // Task E1: demo-only budget-aware stop (undefined when the flag
+            // is off or the session is subscribed — see the block above).
+            demoStop,
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -9438,6 +9750,27 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      // Opener-recency (part A): capture THIS session's opener record once,
+      // on the opener turn. openingTurnPendingRef is still armed here — it's
+      // consumed unconditionally in the finally below, but the finally can't
+      // see the turn's text (aggregatedFullText/fullText are declared inside
+      // this try block), so the capture lives at the point where fullText is
+      // finalized instead. Skipped when the opener turn produced no text
+      // (aborted/empty stream) — there's no opener content to avoid
+      // repeating next session. Fires the optional callback exactly once.
+      if (
+        TUTOR_PEDAGOGY_OPENER
+        && openingTurnPendingRef.current
+        && !sessionOpenerRecordRef.current
+        && fullText
+      ) {
+        sessionOpenerRecordRef.current = {
+          kind: sessionOpenerKindRef.current ?? 'proactive',
+          digest: fullText.slice(0, 160),
+        };
+        onDebugEvent?.('opener_record_captured', `[${sessionOpenerRecordRef.current.kind}] ${sessionOpenerRecordRef.current.digest.slice(0, 60)}`);
+        onOpenerRecord?.(sessionOpenerRecordRef.current);
+      }
       // Opening-turn barge-in guard: the first brain turn has now landed, so
       // perception-initiated cancels are safe to honour from here on.
       tutorFirstTurnDoneRef.current = true;
@@ -9469,6 +9802,14 @@ export function VoiceTutorRealtime({
             const priorCount = studentStreakRef.current.segId === ver.segId
               ? studentStreakRef.current.count : 0;
             studentStreakRef.current = { segId: ver.segId, count: priorCount + 1 };
+            // Task C2 (flag-gated): a brain-affirmed genuine verification
+            // turn IS the "student demonstrated this segment" signal for the
+            // completion gate. Same guard placement as the streak increment
+            // so it inherits every existing exclusion (pure acks, help
+            // requests, too-short turns, judge-kill/restatement retries).
+            if (TUTOR_PEDAGOGY_OPENER && ver.segId) {
+              demonstratedSegmentsRef.current.add(ver.segId);
+            }
             if (studentIncorrectStreakRef.current.segId === ver.segId
                 && studentIncorrectStreakRef.current.count > 0) {
               studentIncorrectStreakRef.current = { segId: ver.segId, count: 0 };
@@ -9801,13 +10142,33 @@ export function VoiceTutorRealtime({
           }
         }
       }
+      // Task B3 (flag-gated): fail-to-simple opener render fallback. If this
+      // was the proactive-opener turn (openingTurnPendingRef, seeded once at
+      // mount from beh.opener !== 'none') and it dispatched zero valid board
+      // renders across every attempt/retry, paint ONE guaranteed-renderable
+      // fallback (a 'handwrite' line — see opener-fallback.ts for why that
+      // primitive can't be rejected) so the student never faces a blank
+      // board on their first impression. The spoken opener already played
+      // (this runs after the stream/attempt loop, purely visual) — nothing
+      // here touches speech. The pending flag is consumed unconditionally so
+      // this can fire at most once per session, on the opener turn only.
+      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
+        openingTurnPendingRef.current = false;
+        if (shouldEmitOpenerFallback({
+          openingPhase: true,
+          validRendersThisTurn: openingTurnValidRenderCountRef.current,
+        })) {
+          onWhiteboardCommand([buildOpenerFallbackCommand({ topic })]);
+          onDebugEvent?.('opener_fallback_rendered', topic || '(no topic)');
+        }
+      }
       // Render↔speech sync: the stream is done — stop buffering NEW batches.
       // The buffer itself is NOT cleared here: TTS lags the stream, so any
       // remaining buffered renders keep flushing against the still-playing
       // audio (sentence-start / drain / cap) after this call returns.
       renderSyncActiveRef.current = false;
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
@@ -11255,6 +11616,121 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] Module not loaded, using base prompts');
         }
 
+        // Task B2 (flag-gated): opener/self-report context fields (B4/B5)
+        // for buildSystemPrompt, computed from resolveOpeningBehavior. When
+        // TUTOR_PEDAGOGY_OPENER is off, `openerFields` stays `{}` and the
+        // spread below adds nothing — the call is IDENTICAL (same keys,
+        // same values) to the pre-B2 call. See task-B2-report.md for the
+        // per-signal availability notes (entryMode is not reliably
+        // available at this call site and defaults 'button' per the B2
+        // brief's conservative-default rule; isTrial/targetKind/
+        // checkpointStale now arrive as props from the embed token + dev
+        // hook and default false / derived / false).
+        const openerFields: Partial<SystemPromptContext> = {};
+        // Task H2 race fix (flag-gated): for studentId sessions, the opening
+        // seed must WAIT for the profile fetch to settle — otherwise
+        // studentHasPriorSessionsRef reads its initial `false` and the
+        // warm-resume (subscribed-returning) journey is unreachable. Until
+        // it settles we skip the whole flag-on block (this run builds a
+        // prompt identical to the flag-off build) and the profileFetchSettled
+        // dep re-runs this effect once settled. The one-shot latch
+        // (openingTurnArmedRef) is untouched by the skip path, so it arms
+        // exactly once: immediately for anonymous sessions, and on the
+        // post-settle run for studentId sessions. Later re-runs (mid-session
+        // preference changes) still hit the armed latch and cannot re-arm.
+        const openerSignalsReady = !studentId || profileFetchSettled;
+        if (TUTOR_PEDAGOGY_OPENER && openerSignalsReady) {
+          const sig: OpeningSignals = {
+            // Explicit targetKind prop when the caller supplies one (embed
+            // `target_kind` / dev hook — 'diagnostic' is only reachable that
+            // way); else derived exactly as before: lessonPlanId presence ⇒
+            // 'lessonNode', else 'freestyle'.
+            targetKind: targetKind ?? (lessonPlanId ? 'lessonNode' : 'freestyle'),
+            // Task E1: the embed's is_trial signal (EmbedConfig →
+            // TutorSession → isTrial prop). The main /tutor page has no
+            // trial concept and leaves the prop at its false default.
+            isTrial,
+            // studentId absent ⇔ demo flow without auth (see the studentId
+            // prop doc comment above) — the existing, already-documented
+            // proxy for "no StudentContext".
+            hasPortalContext: !!studentId,
+            hasPriorSessions: studentHasPriorSessionsRef.current,
+            // resumeState is only ever populated with a FRESH checkpoint
+            // (portal/resume.ts filters staleness before it reaches this
+            // prop); a checkpoint that EXISTED but was too old arrives as
+            // the checkpointStale prop instead (resolveResumeOutcome / dev
+            // hook), which deriveResumeSignal maps to the resume-stale
+            // journey. A seeded resumeState always wins over a stray stale
+            // flag.
+            resume: deriveResumeSignal(!!resumeState, checkpointStale),
+          };
+          const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
+          openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
+          // NOTE: openingPhase is deliberately NOT set here anymore (flag-ON
+          // follow-up #1): the static system prompt is a byte-stable cached
+          // prefix reused every turn, so an opener clause baked into it
+          // persisted ALL session. The clause now travels per-turn instead —
+          // see openingDirectiveRef below + the callBrainOnce body field.
+          // Task B3: arm the fail-to-simple opener render fallback for the
+          // FIRST callBrainOnce turn to complete. Consumed once in
+          // callBrainOnce's finally, see opener-fallback.ts.
+          // Review fix: this effect re-runs mid-session on a studentPreferences
+          // change (see the dep array below), so gate the arm behind the
+          // openingTurnArmedRef latch — only the FIRST run this mount may arm
+          // the pending flag; later re-runs (mid-session settings changes)
+          // must not re-arm it after the opener turn already consumed it.
+          // No first-student-utterance signal reaches this mount-time call
+          // (buildInstructions runs before any student input exists) — see
+          // report. Always resolves 'button', which is the structurally
+          // correct value at this call site today.
+          openerFields.entryMode = detectEntryMode(undefined);
+          openerFields.isReturning = beh.journey === 'subscribed-returning';
+          openerFields.selfReportRouting = true;
+          if (!openingTurnArmedRef.current) {
+            openingTurnPendingRef.current = beh.opener !== 'none';
+            // Task C1: stash the resolved session mode for per-turn reads in
+            // callBrainOnce (plan-as-seed framing on lessonPlanContext).
+            // Same one-shot latch — a mid-session prompt rebuild must not
+            // re-resolve/flip the mode after the session started.
+            sessionModeRef.current = openerFields.sessionMode ?? null;
+            // Opener-recency (part A): stash the resolved opener KIND for
+            // the capture site in callBrainOnce (the record's `kind` field).
+            // Same one-shot latch — the kind must reflect the behavior the
+            // session actually opened with, never a mid-session re-resolve.
+            sessionOpenerKindRef.current = beh.opener;
+            // Task C2: arm the completion gate for lessonNode sessions only
+            // (never for freestyle OR diagnostic). Freestyle/free-
+            // conversation sessions keep today's behavior — their
+            // milestones/mastery are already no-ops without a plan. A
+            // diagnostic session may CARRY a lessonPlanId, but assessment
+            // sessions must stay outside the demo/completion machinery, so
+            // the resolved targetKind gates it too.
+            completionGateActiveRef.current =
+              TUTOR_PEDAGOGY_OPENER && !!lessonPlanId && sig.targetKind !== 'diagnostic';
+            // Seed the per-turn opening directive under the SAME one-shot
+            // latch (a mid-session prompt rebuild must not resurrect a
+            // retired directive — the exact bug pattern the B3 review
+            // caught for the fallback arm).
+            const openerClause = buildOpenerClause({
+              ...openerFields,
+              openingPhase: beh.opener !== 'none',
+              studentName,
+              subject,
+              topic,
+              level,
+            } as SystemPromptContext);
+            // Resume-stale nuance: the student HAD started this lesson but
+            // the checkpoint was too old to restore — prepend the one-line
+            // re-orient instruction to the same directive (no new machinery;
+            // rides the existing per-turn <opening_directive> block).
+            openingDirectiveRef.current =
+              beh.journey === 'resume-stale' && openerClause
+                ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
+                : openerClause;
+            openingTurnArmedRef.current = true;
+          }
+        }
+
         // Build system prompt using existing builder
         const systemPrompt = buildSystemPrompt({
           module: knowledgeModule,
@@ -11267,6 +11743,7 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          ...openerFields,
         });
 
         // Read optional voice personality from env
@@ -11316,7 +11793,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // (or via the in-session chip in Stage 4) rebuilds the system prompt
     // with the new humor level. Object identity is stable until the user
     // mutates a field, so this doesn't cause spurious rebuilds.
-  }, [subject, topic, level, studentName, sessionGoal, studentPreferences]);
+    // profileFetchSettled (H2 race fix) re-runs the build once the student
+    // profile fetch settles so the opening seed sees the real
+    // hasPriorSessions value; it only ever flips when TUTOR_PEDAGOGY_OPENER
+    // is on AND studentId is set, so flag-off / anonymous timing is
+    // unchanged. All opening refs are latched one-shot, so the re-run is
+    // safe (see openerSignalsReady above).
+  }, [subject, topic, level, studentName, sessionGoal, studentPreferences, profileFetchSettled]);
 
   // Kick the ephemeral-token fetch immediately on mount so it runs in parallel
   // with buildInstructions — that alone saves ~500–1500 ms, and it is safe to
@@ -11359,6 +11842,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
     setHasStarted(true);
+    // Task E1: stamp the actual session start for the demo-stop clock.
+    if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+      voiceSessionStartedAtMsRef.current = Date.now();
+    }
     onSessionStarted?.();
     setIsWarmingUp(true); // the brain is composing the resume turn now
     realtime.unlockAudio();
@@ -11403,6 +11890,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
+        // Task E1: stamp the actual session start for the demo-stop clock.
+        if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+          voiceSessionStartedAtMsRef.current = Date.now();
+        }
         // Session has truly begun now (student tapped the mic) — start the
         // session timer from here, not from page mount.
         onSessionStarted?.();

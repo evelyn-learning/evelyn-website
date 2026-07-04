@@ -19,10 +19,15 @@ import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState } from '@/app/tutor/components/VoiceTutorRealtime';
-import type { SessionResult, LessonProgress } from '@evelyn/portal-contract/v1';
+import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
-import { buildResumeState } from '@/lib/tutor/portal/resume';
+import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
+import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+
+// Opener-recency / extraction-carrier gate (mirrors the same flag read in
+// VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
+const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 
 /** The contract's milestone enum (derived from SessionResult — the package
  *  exports the type via this field rather than a standalone alias). */
@@ -67,6 +72,34 @@ interface EmbedConfig {
    *  rehydrates position + transcript + whiteboard and continues without
    *  auto-opening the mic. Otherwise starts fresh on the same lesson. */
   resume?: boolean;
+  /** Task D1b — TRANSIENT session-scoped context from the portal's
+   *  StudentContext. Read for THIS session only, never persisted engine-side.
+   *  The academy resolves parental opt-out / trial to an absent/empty
+   *  social_memory before minting the token. */
+  social_memory?: SocialThread[];
+  progress_digest?: ProgressDigest;
+  /** Opener-recency (part A) — the PREVIOUS session's opener record (kind +
+   *  a short content digest, ≤200 chars rendered). Same transient carrier
+   *  semantics as social_memory: read for THIS session only, never
+   *  persisted engine-side. The portal derives it from the prior session's
+   *  captured opener record (outbound loop = part B, not built yet). */
+  last_opener?: { kind: string; digest: string };
+  /** Task E1 (pedagogy) — the academy's trial-flow marker. When true the
+   *  engine resolves the demo-trial journey (opening behavior) and the
+   *  brain receives the milestone-mode `<demo_stop>` directive (win boxed
+   *  to completing the first concept) instead of the time-budget one.
+   *  The academy's trial embed must set is_trial=true when minting the
+   *  token; absent/false = not a trial. Only consumed when
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
+  is_trial?: boolean;
+  /** Explicit session-target kind for the opening behavior. 'diagnostic'
+   *  makes the opener/calibration no-op AND keeps the completion-gate/
+   *  demo-stop machinery off the session — the academy's diagnostic
+   *  (assessment) embeds should send it when minting the token. Absent =
+   *  derived from curriculum_module presence (lessonNode vs freestyle),
+   *  exactly as before. Only consumed when
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
+  target_kind?: 'lessonNode' | 'freestyle' | 'diagnostic';
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -190,6 +223,12 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const wantsResume = !!(config.resume && config.session_id);
   const [resumeReady, setResumeReady] = useState(!wantsResume);
   const [resumeState, setResumeState] = useState<TutorResumeState | null>(null);
+  // Stale-checkpoint marker (resume-stale opening journey): the checkpoint
+  // EXISTED but fell outside RESUME_MAX_AGE_MS, so `resumeState` stays null
+  // (cold start) and the runtime gets a light re-orient directive instead.
+  // Mutually exclusive with a non-null resumeState (resolveResumeOutcome
+  // never returns both). Only consumed when the pedagogy flag is on.
+  const [checkpointStale, setCheckpointStale] = useState(false);
   useEffect(() => {
     if (!wantsResume) return;
     let cancelled = false;
@@ -197,8 +236,11 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       try {
         const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sessionId)}`);
         if (res.ok) {
-          const rs = buildResumeState(await res.json());
-          if (!cancelled && rs) setResumeState(rs);
+          const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(await res.json());
+          if (!cancelled) {
+            if (rs) setResumeState(rs);
+            if (hadStaleCheckpoint) setCheckpointStale(true);
+          }
         }
       } catch {
         /* fresh start on any read error */
@@ -267,6 +309,17 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const milestoneRef = useRef<SessionMilestone>('none');
   const handleMilestone = useCallback((m: TutorMilestone) => {
     if (MILESTONE_RANK[m] > MILESTONE_RANK[milestoneRef.current]) milestoneRef.current = m;
+  }, []);
+
+  // Opener-recency loop (part B): the runtime reports which opener it used
+  // this session (kind + digest, captured once on the opener turn — only
+  // fires when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on). Reported to the
+  // portal in session_ended as `opener_record`; the academy stores it and
+  // round-trips it back as the next session's EmbedConfig.last_opener so
+  // the tutor never opens the same way twice in a row.
+  const openerRecordRef = useRef<{ kind: string; digest: string } | null>(null);
+  const handleOpenerRecord = useCallback((rec: { kind: string; digest: string }) => {
+    openerRecordRef.current = rec;
   }, []);
 
   // Lesson-phase progress (contract v1.2.0). The two source callbacks fire
@@ -341,9 +394,28 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         // Final lesson position (contract v1.2.0). Omitted for free-conversation
         // sessions with no plan (lessonProgressRef stays null).
         ...(lessonProgressRef.current ? { lesson_progress: lessonProgressRef.current } : {}),
+        // Opener-recency loop (part B): which opener the tutor used this
+        // session — the academy stores it and round-trips it as the next
+        // session's last_opener. Only present when the pedagogy flag is on
+        // (capture is flag-gated in the runtime).
+        ...(openerRecordRef.current ? { opener_record: openerRecordRef.current } : {}),
+        // Social-extraction carrier (Task D3 loop): a role/text transcript
+        // (capped to the last 200 entries) the academy forwards on its
+        // session-result emit so server-side thread extraction can run.
+        // The academy applies the consent guards (non-trial, memory level,
+        // parental opt-out) before forwarding; sending here is inert until
+        // it does. Gated on the same pedagogy flag as the capture.
+        ...(TUTOR_PEDAGOGY_OPENER_EMBED
+          ? {
+              transcript: transcript.slice(-200).map((t) => ({
+                role: t.role === 'tutor' ? ('tutor' as const) : ('student' as const),
+                text: t.text,
+              })),
+            }
+          : {}),
       },
     }, '*');
-  }, [saveSession, sessionId, transcript.length, whiteboardCommands.length]);
+  }, [saveSession, sessionId, transcript, whiteboardCommands.length]);
 
   // Save as abandoned on page unload
   useEffect(() => {
@@ -407,6 +479,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         voice={openAIVoice}
         voiceEngine="claude-brain"
         sessionMaxMinutes={maxDuration}
+        socialMemory={config.social_memory}
+        progressDigest={config.progress_digest}
+        lastOpener={config.last_opener}
+        onOpenerRecord={handleOpenerRecord}
+        isTrial={config.is_trial === true}
+        targetKind={config.target_kind}
+        checkpointStale={checkpointStale}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

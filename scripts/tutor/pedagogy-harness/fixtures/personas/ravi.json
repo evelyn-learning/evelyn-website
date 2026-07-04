@@ -1,0 +1,58 @@
+{
+  "id": "ravi",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "ravi-s6",
+    "isTrial": false,
+    "courseId": "biology",
+    "profile": { "name": "Ravi", "grade": "11" },
+    "preferences": { "socialMemoryLevel": "light" },
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.biology.cell-respiration.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 5,
+      "unitsTotal": 10,
+      "percentComplete": 50,
+      "weeksElapsed": 10,
+      "paceNote": "on pace"
+    }
+  },
+  "profile": {
+    "id": "ravi-s6",
+    "name": "Ravi",
+    "grade": "11",
+    "mastery": {
+      "biology.cell-respiration.glycolysis": {
+        "loId": "biology.cell-respiration.glycolysis",
+        "score": 0.6,
+        "exposures": 2,
+        "lastTouchedAt": "2026-07-02T18:00:00.000Z",
+        "confidence": "medium"
+      }
+    },
+    "gaps": [],
+    "recentSessions": [],
+    "preferences": { "socialMemoryLevel": "light" },
+    "createdAt": "2026-05-01T00:00:00.000Z",
+    "updatedAt": "2026-07-02T18:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "resumeState": {
+    "currentSegmentId": "concept-2",
+    "completedSegmentIds": ["hook", "concept-1"],
+    "updatedAtISO": "2026-07-02T18:00:00.000Z"
+  },
+  "staleResumeState": {
+    "currentSegmentId": "concept-2",
+    "completedSegmentIds": ["hook", "concept-1"],
+    "updatedAtISO": "2026-05-15T18:00:00.000Z"
+  },
+  "simProfile": {
+    "grade": "11",
+    "topic": "Cellular Respiration",
+    "claim": "was in the middle of a lesson, ready to pick back up",
+    "actualLevel": "solid on glycolysis, hasn't reached the Krebs cycle yet",
+    "intent": "enrolled",
+    "style": "cooperative"
+  }
+}

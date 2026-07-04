@@ -1,0 +1,21 @@
+{
+  "id": "noah",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "noah-s2",
+    "isTrial": false,
+    "courseId": "algebra-1",
+    "profile": { "name": "Noah", "grade": "9" },
+    "preferences": { "socialMemoryLevel": "light" },
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.algebra1.linear-equations.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" }
+  },
+  "simProfile": {
+    "grade": "9",
+    "topic": "Linear Equations",
+    "claim": "never used this before, just signed up",
+    "actualLevel": "starting fresh, has the usual grade-8 algebra basics",
+    "intent": "enrolled",
+    "style": "cooperative"
+  }
+}

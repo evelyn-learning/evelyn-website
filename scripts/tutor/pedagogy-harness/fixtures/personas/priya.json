@@ -1,0 +1,76 @@
+{
+  "id": "priya",
+  "mode": "subscribed",
+  "studentContext": {
+    "studentId": "priya-s1",
+    "isTrial": false,
+    "courseId": "algebra-2",
+    "profile": { "name": "Priya", "grade": "10" },
+    "preferences": { "socialMemoryLevel": "light", "interests": ["football"] },
+    "socialMemory": [
+      {
+        "id": "thread-priya-football",
+        "note": "plays for the school football team",
+        "kind": "interest",
+        "capturedAt": "2026-05-01T00:00:00.000Z"
+      },
+      {
+        "id": "thread-priya-bio-test",
+        "note": "has a biology test on Friday",
+        "kind": "event",
+        "capturedAt": "2026-06-30T00:00:00.000Z"
+      },
+      {
+        "id": "thread-priya-spiderman",
+        "note": "loves Spider-Man",
+        "kind": "interest",
+        "capturedAt": "2026-05-10T00:00:00.000Z",
+        "lastReferencedAt": "2026-06-30T15:00:00.000Z"
+      }
+    ],
+    "target": { "kind": "lessonNode", "lessonNodeId": "evelyn.algebra2.systems-of-equations.v1" },
+    "sessionConfig": { "voiceEngine": "claude-brain" },
+    "progressDigest": {
+      "unitsCompleted": 6,
+      "unitsTotal": 9,
+      "percentComplete": 67,
+      "weeksElapsed": 8,
+      "paceNote": "ahead of pace"
+    }
+  },
+  "profile": {
+    "id": "priya-s1",
+    "name": "Priya",
+    "grade": "10",
+    "mastery": {
+      "algebra2.systems-of-equations.substitution": {
+        "loId": "algebra2.systems-of-equations.substitution",
+        "score": 0.72,
+        "exposures": 4,
+        "lastTouchedAt": "2026-06-20T15:00:00.000Z",
+        "confidence": "high"
+      },
+      "algebra2.systems-of-equations.elimination": {
+        "loId": "algebra2.systems-of-equations.elimination",
+        "score": 0.55,
+        "exposures": 2,
+        "lastTouchedAt": "2026-06-25T15:00:00.000Z",
+        "confidence": "medium"
+      }
+    },
+    "gaps": [],
+    "recentSessions": [],
+    "preferences": { "socialMemoryLevel": "light", "interests": ["football"] },
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "updatedAt": "2026-06-30T15:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "simProfile": {
+    "grade": "10",
+    "topic": "Systems of Equations",
+    "claim": "I've done this before, pretty confident",
+    "actualLevel": "solid on substitution, shakier on elimination",
+    "intent": "enrolled",
+    "style": "chatty"
+  }
+}
