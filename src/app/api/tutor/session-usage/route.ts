@@ -98,8 +98,12 @@ export async function POST(req: NextRequest) {
     if (body.inputMode) setOnInsertFields.inputMode = body.inputMode;
     if (body.startedAt) setOnInsertFields.startedAt = body.startedAt;
     if (body.source) setOnInsertFields.source = body.source;
-    if (body.sourcePartnerId) setOnInsertFields.sourcePartnerId = body.sourcePartnerId;
-    if (body.sourceHost) setOnInsertFields.sourceHost = body.sourceHost;
+    // Unauthenticated endpoint → clamp these free-text identity strings (they
+    // render in the admin UI and feed distinct() filter chips).
+    if (body.sourcePartnerId && typeof body.sourcePartnerId === 'string')
+      setOnInsertFields.sourcePartnerId = body.sourcePartnerId.slice(0, 200);
+    if (body.sourceHost && typeof body.sourceHost === 'string')
+      setOnInsertFields.sourceHost = body.sourceHost.slice(0, 200);
 
     // Fields that can be updated on every upsert
     if (body.studentName !== undefined)
