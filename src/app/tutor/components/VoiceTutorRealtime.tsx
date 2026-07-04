@@ -1106,6 +1106,17 @@ export function VoiceTutorRealtime({
   // seemingly-dead start button). We suppress perception-initiated cancels
   // until the first brain turn completes; flips true at the first "turn ok".
   const tutorFirstTurnDoneRef = useRef<boolean>(false);
+  // Opening-turn audio shield (2026-07-04): tutorFirstTurnDoneRef flips when
+  // the first brain turn's TEXT completes, but its TTS audio can keep
+  // playing for tens of seconds (long teacher-intro openers). Perception
+  // cancels honoured in that window abort the opener audio mid-sentence on
+  // phantom self-echo transcripts. This latch flips only when the first
+  // turn's AUDIO is done: the realtime state leaves 'speaking' after having
+  // been 'speaking' post-text-done — with a hard 90s cap from text-done as
+  // the no-audio fallback (muted/headless runs where TTS never plays).
+  const firstTurnAudioDoneRef = useRef<boolean>(false);
+  const firstTurnSawSpeakingRef = useRef<boolean>(false);
+  const tutorFirstTurnDoneAtRef = useRef<number>(0);
   // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
   // flag. If perception WS misses a speech_stopped event (network blip,
   // server bug), the flag would stay stuck → all subsequent brain
@@ -9781,9 +9792,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('opener_record_captured', `[${sessionOpenerRecordRef.current.kind}] ${sessionOpenerRecordRef.current.digest.slice(0, 60)}`);
         onOpenerRecord?.(sessionOpenerRecordRef.current);
       }
-      // Opening-turn barge-in guard: the first brain turn has now landed, so
-      // perception-initiated cancels are safe to honour from here on.
+      // Opening-turn barge-in guard: the first brain turn's TEXT stream has
+      // now landed. NOTE this is NOT "safe to cancel from here on": the TTS
+      // audio for a long opener keeps playing for tens of seconds after this
+      // point, and phantom perception transcripts (the mic hearing the
+      // tutor's own voice through speakers) were observed cancelling that
+      // still-playing audio mid-sentence (2026-07-04, teacher-intro opener:
+      // audio died at "…teaching AP Calc for year—" while captions ran on).
+      // The cancel sites therefore ALSO wait for firstTurnAudioDoneRef —
+      // see the state-watcher effect near the perception wiring.
       tutorFirstTurnDoneRef.current = true;
+      tutorFirstTurnDoneAtRef.current = Date.now();
 
       // Pacing v2 — Phase 1 (inert): streak update from brain
       // affirmation/correction. Runs ONCE per brain turn at end-of-stream
@@ -10840,6 +10859,39 @@ export function VoiceTutorRealtime({
   // When the user starts speaking BEFORE the tutor TTS begins,
   // perception's speech_started fires during 'listening' — the cancel
   // gate misses. But if production state later TRANSITIONS to 'speaking'
+  // Opening-turn audio shield (2026-07-04). "Fully delivered" = the first
+  // brain turn's TEXT stream completed AND its TTS audio finished playing
+  // (or the 90s no-audio cap passed — muted/headless runs where TTS never
+  // starts). Both perception cancel sites gate on this instead of the bare
+  // text-done flag: a long teacher-intro opener keeps speaking for tens of
+  // seconds after text-done, and phantom self-echo transcripts (the mic
+  // hearing the tutor through speakers) were cancelling that audio
+  // mid-sentence while the captions ran on.
+  const FIRST_TURN_AUDIO_CAP_MS = 90_000;
+  const openingTurnFullyDelivered = useCallback(() => {
+    if (!tutorFirstTurnDoneRef.current) return false;
+    if (firstTurnAudioDoneRef.current) return true;
+    return tutorFirstTurnDoneAtRef.current > 0
+      && Date.now() - tutorFirstTurnDoneAtRef.current > FIRST_TURN_AUDIO_CAP_MS;
+  }, []);
+  // Latch the audio-done flag: state leaves 'speaking' after having been
+  // 'speaking', with the first turn's text already done. (If the audio
+  // finished before text-done, the leave-'speaking' transition after the
+  // next state change latches it; the 90s cap is the final backstop.)
+  useEffect(() => {
+    if (firstTurnAudioDoneRef.current) return;
+    if (realtime.state === 'speaking') {
+      firstTurnSawSpeakingRef.current = true;
+      return;
+    }
+    if (tutorFirstTurnDoneRef.current && firstTurnSawSpeakingRef.current) {
+      firstTurnAudioDoneRef.current = true;
+      console.log('[PERCEPTION] opening-turn audio delivered — cancels now honoured');
+      onDebugEvent?.('perception_opening_audio_done', realtime.state);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtime.state]);
+
   // (or 'processing' for Stage 2) while the student is still mid-utterance,
   // fire the cancel retroactively so the eventual perception transcript
   // dispatches normally. Without this, the corrected answer in a long
@@ -10856,8 +10908,10 @@ export function VoiceTutorRealtime({
     const canRetroStage3 = perceptionStage >= 3 && toState === 'speaking';
     if (!canRetroStage2 && !canRetroStage3) return;
     // Opening-turn guard: don't let ambient noise retro-cancel the synthetic
-    // kickoff turn before the tutor has delivered anything.
-    if (!tutorFirstTurnDoneRef.current) {
+    // kickoff turn before the tutor has FULLY delivered it — text AND audio.
+    // (2026-07-04: phantom self-echo transcripts were cancelling the long
+    // teacher-intro opener's still-playing audio after the text stream done.)
+    if (!openingTurnFullyDelivered()) {
       console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
       onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
       return;
@@ -11297,7 +11351,10 @@ export function VoiceTutorRealtime({
       const canStage3 = perceptionStage >= 3 && prodState === 'speaking';
       // Opening-turn guard: suppress barge-in on the synthetic kickoff turn —
       // ambient noise here would abort the lesson before it ever started.
-      if ((canStage2 || canStage3) && !tutorFirstTurnDoneRef.current) {
+      // Covers text AND audio delivery (see firstTurnAudioDoneRef): the
+      // opener's TTS keeps playing long after the text stream completes,
+      // and self-echo phantoms were aborting it mid-sentence (2026-07-04).
+      if ((canStage2 || canStage3) && !openingTurnFullyDelivered()) {
         console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
         onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
         return;
