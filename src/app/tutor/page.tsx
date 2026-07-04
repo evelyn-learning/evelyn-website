@@ -1086,7 +1086,13 @@ function TutorPage() {
       setSelectedTopicId(cfg.topic);
       setSelectedLessonPlanId(cfg.lessonPlanId || '');
       setInputMode('voice');
-      setStudentName(cfg.studentName || 'Test Student');
+      // Pass an omitted studentName through as EMPTY, not a placeholder:
+      // the pedagogy harness's anon persona is intentionally nameless, and
+      // a 'Test Student' default here reached the brain as if it were the
+      // student's real name (observed live 2026-07-03: "Hey Test Student!").
+      // Callers that want a name (scripts/tutor-e2e/run.ts) pass one
+      // explicitly; canStartSession does not require a name.
+      setStudentName(cfg.studentName || '');
       turnsCompletedRef.current = 0;
       pendingTestStartRef.current = true;
       console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg));
