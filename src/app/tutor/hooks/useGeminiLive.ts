@@ -23,6 +23,7 @@ import { WHITEBOARD_TOOLS, toGeminiTools, mapFunctionCallToCommand } from './too
 export type { RealtimeUsage, RealtimeConfig, RealtimeState, RealtimeResult } from './useOpenAIRealtime';
 
 import type { RealtimeConfig, RealtimeState, RealtimeResult, RealtimeUsage } from './useOpenAIRealtime';
+import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // Gemini voice options
 export type GeminiVoice = 'Aoede' | 'Charon' | 'Fenrir' | 'Kore' | 'Puck';
@@ -740,6 +741,9 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     // Resume-from-cut (P5) is claude-brain/relay-only; Gemini drives its own
     // native audio, so there's no chunk-level playback fraction to report.
     getCurrentSentenceFraction: () => 0,
+    // Caption word-sync is claude-brain/relay-only; Gemini drives its own
+    // native audio with no sentence-level chunk queue to clock.
+    getSpokenProgress: (): SpokenProgress => ({ sentence: null, elapsedSec: 0, arrivedTotalSec: 0, playing: false }),
     // Stage 4 thinking-indicator stub. Gemini Live drives its own status
     // (native audio in/out), so the orchestrator-driven 'processing' signal
     // is a no-op here.

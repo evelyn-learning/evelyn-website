@@ -14,6 +14,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDefinition } from './toolDefinitions';
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
@@ -287,6 +288,8 @@ export interface RealtimeResult {
   resumeSpeakText: (sentences: string[]) => void;
   /** Resume-from-cut (P5): fraction (0..1) of the current sentence's audio played. */
   getCurrentSentenceFraction: () => number;
+  /** Caption word-sync: live playback progress of the sentence playing NOW. */
+  getSpokenProgress: () => SpokenProgress;
   /**
    * Stage 4 regression fix (2026-06-16). Drive the 'processing'
    * ("Thinking…") indicator from the claude-brain orchestrator. With the
@@ -713,6 +716,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // queued-but-unplayed chunks of the same sentence it yields the fraction
   // spoken at a noise cut. See getCurrentSentenceFraction.
   const currentSentencePlayedSecRef = useRef(0);
+  // Caption word-sync: live playback clock for the CURRENT sentence, read by
+  // getSpokenProgress(). Parallel to (never replacing) the resume-from-cut
+  // accounting above: playedBeforeChunkSecRef counts COMPLETED chunks of the
+  // current sentence; the in-flight chunk's progress is derived from
+  // AudioContext.currentTime at read time.
+  const chunkStartCtxTimeRef = useRef(0);
+  const currentChunkDurSecRef = useRef(0);
+  const playedBeforeChunkSecRef = useRef(0);
   // Render↔speech sync: ref-mirror the playback-progress callback so
   // playNextAudio can fire it without re-creating on every render.
   const onTtsPlaybackProgressRef = useRef(onTtsPlaybackProgress);
@@ -812,6 +823,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // resume audio that already played out.
       currentSpeakTextRef.current = null;
       currentSentencePlayedSecRef.current = 0;
+      playedBeforeChunkSecRef.current = 0;
+      currentChunkDurSecRef.current = 0;
       // openai-mini path has no response.done event to drive the queue,
       // so drain the next sentence here when the audio finishes. The
       // realtime path leaves this branch alone — its drain runs from
@@ -882,13 +895,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       if (sentText !== currentSpeakTextRef.current) {
         onTtsPlaybackProgressRef.current?.('sentence-start');
         currentSentencePlayedSecRef.current = chunkSec;
+        playedBeforeChunkSecRef.current = 0;                                  // caption clock: new sentence
       } else {
         currentSentencePlayedSecRef.current += chunkSec;
+        playedBeforeChunkSecRef.current += currentChunkDurSecRef.current;     // caption clock: prior chunk done
       }
       currentSpeakTextRef.current = sentText;
     } else {
       currentSentencePlayedSecRef.current += chunkSec;
+      playedBeforeChunkSecRef.current += currentChunkDurSecRef.current;       // caption clock: unlabeled chunk
     }
+    currentChunkDurSecRef.current = chunkSec;                                 // caption clock
+    chunkStartCtxTimeRef.current = ctx.currentTime;                          // caption clock
     const buffer = ctx.createBuffer(1, chunk.length, 24000);
     buffer.getChannelData(0).set(chunk);
 
@@ -2711,6 +2729,43 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     return total > 0 ? Math.min(1, played / total) : 0;
   }, []);
 
+  // Caption word-sync: live progress of the sentence the student is hearing
+  // RIGHT NOW. elapsed = completed chunks + the in-flight chunk's wall-clock
+  // progress (capped at its duration). arrivedTotal additionally counts
+  // queued-but-unplayed chunks of the SAME sentence — exact on the
+  // openai-mini path (one chunk = one sentence), a growing lower bound on
+  // the Realtime path (the consumer floors it with a char-rate estimate).
+  const getSpokenProgress = useCallback((): SpokenProgress => {
+    const sentence = currentSpeakTextRef.current;
+    if (!sentence || !isPlayingRef.current) {
+      return { sentence: null, elapsedSec: 0, arrivedTotalSec: 0, playing: false };
+    }
+    let inFlight = 0;
+    try {
+      const ctx = getAudioContext();
+      inFlight = Math.max(0, Math.min(
+        ctx.currentTime - chunkStartCtxTimeRef.current,
+        currentChunkDurSecRef.current,
+      ));
+    } catch {
+      inFlight = currentChunkDurSecRef.current;
+    }
+    const elapsedSec = playedBeforeChunkSecRef.current + inFlight;
+    let queuedSec = 0;
+    const q = audioQueueRef.current;
+    const labels = audioQueueSentenceRef.current;
+    for (let i = 0; i < q.length; i++) {
+      if (labels[i] === sentence) queuedSec += q[i].length / 24000;
+    }
+    const remainingInChunk = currentChunkDurSecRef.current - inFlight;
+    return {
+      sentence,
+      elapsedSec,
+      arrivedTotalSec: elapsedSec + remainingInChunk + queuedSec,
+      playing: true,
+    };
+  }, []);
+
   // Voice Perception Q9 (2026-06-16): enter the 'interrupted' transient
   // signal for 300ms. Restarts the window cleanly if called again before
   // the timer fires.
@@ -2754,6 +2809,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     peekSpeechQueue,
     resumeSpeakText,
     getCurrentSentenceFraction,
+    getSpokenProgress,
     signalBrainThinking,
     unlockAudio,
   };
