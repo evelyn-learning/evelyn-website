@@ -30,8 +30,10 @@ import { renderReport, type ScenarioResult } from './report';
 
 export type ScenarioRow = {
   /** Fixture persona ids (Task H1) this taskId's scenarios run against.
-   *  DEMO personas only — subscribed personas' `runScenario` throws a
-   *  Phase-D deferral (see run-harness.ts's `personaToPickerStart`). */
+   *  Demo AND subscribed ids are supported (Task H2) — subscribed personas
+   *  map through run-harness.ts's SUBSCRIBED_PICKER_START and need the
+   *  engine profile seed (`npm run test:pedagogy-seed`) for their
+   *  cross-session memory to exist. */
   personas: string[];
   /**
    * assertions.ts's `runGates(bundle, taskId)` keys its gate registry by
@@ -51,8 +53,9 @@ export type ScenarioRow = {
 
 /**
  * Scenario Matrix rows (docs/superpowers/plans/2026-07-02-tutor-pedagogy-
- * opener-calibration.md) this task wires up — DEMO personas only, per the
- * task-H6-brief.md table.
+ * opener-calibration.md). B-rows = the original H6 demo-persona set;
+ * S-rows = subscribed-persona rows added by Task H2 (need
+ * `npm run test:pedagogy-seed` first).
  */
 export const SCENARIO_MAP: Record<string, ScenarioRow> = {
   B2: {
@@ -106,6 +109,52 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
     rubric: [
       { id: 'board-truth-authority', question: "When the student restates the problem with a value that conflicts with what the tutor itself put on the board, does the tutor catch the mismatch and kindly correct it using the board's values — rather than silently adopting the student's wrong value and computing with it?" },
       { id: 'board-consistency', question: "Are all numbers the tutor speaks or writes during the session consistent with the problem values it originally put on the board (no self-contradicting figures on the same board)?" },
+    ],
+  },
+  // ── Subscribed-persona rows (Task H2) ──────────────────────────────────
+  // These require the engine profile seed: `npm run test:pedagogy-seed`
+  // (writes pedagogy-<id> StudentProfiles; see seed-subscribed.ts).
+  //
+  // S1 — warm-resume opener for a returning subscribed student (priya).
+  // Gate reuses B2's proactive-opener as a presence proxy (there is no
+  // dedicated warm-resume gate yet); the substance is in the rubric.
+  // priya's Spider-Man thread carries lastReferencedAt, which the driver
+  // REFRESHES to ~yesterday at start-build time (run-harness.ts's
+  // refreshThreadRecency) so "recently used" stays true whenever this row
+  // runs — that's what makes no-spiderman-if-recent a real test.
+  S1: {
+    personas: ['priya'],
+    gateTaskIds: ['B2'],
+    rubric: [
+      { id: 'warm-resume-opener', question: 'Does the opener open warm and personal from known context — a social thread, last-session callback, or progress arc — WITHOUT re-asking what the student already knows?' },
+      { id: 'no-spiderman-if-recent', question: "Priya's Spider-Man thread is marked recently used (lastReferencedAt near now) — does the tutor AVOID leading with Spider-Man and pick different material?" },
+      { id: 'progress-arc-available', question: 'If the tutor references her progress, is it warm and accurate (from the digest), never guilt?' },
+    ],
+  },
+  // S3 — social-memory opt-out (zoe, socialMemoryLevel 'off'). Her fixture
+  // carries NO socialMemory threads (the portal resolves the opt-out into
+  // an absent list before the engine ever sees it), so the session must
+  // contain zero stored-personal-detail references.
+  S3: {
+    personas: ['zoe'],
+    gateTaskIds: ['B2'],
+    rubric: [
+      { id: 'zero-social-render', question: "Does the session contain NO reference to any stored personal/social detail — consistent with memory level 'off'?" },
+    ],
+  },
+  // S6 — mid-lesson pickup (ravi, FRESH checkpoint variant — the driver's
+  // default resumeVariant). Judge-only: the resume-live journey resolves
+  // opener 'none' (silent pickup), so the proactive-opener gate would be
+  // wrong here. The STALE-checkpoint variant is not a separate row — the
+  // driver's production-faithful staleness filter reduces it to a plain
+  // cold start (no resume injected), indistinguishable from a normal run
+  // through this wiring; verifying stale-checkpoint MESSAGING is deferred
+  // until a checkpointStale signal is actually plumbed (see B2 report).
+  S6: {
+    personas: ['ravi'],
+    gateTaskIds: [],
+    rubric: [
+      { id: 'pickup-continuity', question: 'Does the session open as a continuation — picking up where it left off — rather than a cold restart or full calibration?' },
     ],
   },
 };

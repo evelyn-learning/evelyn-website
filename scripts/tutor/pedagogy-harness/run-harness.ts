@@ -16,19 +16,32 @@
  * plumbing pattern: window.__tutorTestStart / __tutorSendText /
  * __tutorTestState, and the busy→quiet turn-sync bracket.
  *
- * SCOPE (see task-H4-brief.md "Session start per persona"):
- *   - DEMO personas (maya, leo, aria, anon, sam): fully supported via the
- *     picker-start path (`personaToPickerStart`).
- *   - SUBSCRIBED personas (priya, noah, zoe, kai, diego, ravi): DEFERRED.
- *     `personaToPickerStart` throws a clear message for these — see the
- *     function doc for why (real DB-backed StudentProfile + portal context
- *     seeding is required, not just a picker start; that's Phase D work,
- *     not this task). `runScenario` surfaces the same error.
+ * SCOPE (updated by Task H2 — subscribed-persona enablement):
+ *   - DEMO personas (maya, leo, aria, anon, sam, nina): picker-start path
+ *     (`personaToPickerStart` → DEMO_PICKER_START), unchanged.
+ *   - SUBSCRIBED personas (priya, noah, zoe, kai, diego, ravi): now
+ *     supported. Each maps to a real seed-catalog plan
+ *     (SUBSCRIBED_PICKER_START) PLUS the subscribed extras the /tutor
+ *     page's extended __tutorTestStart hook accepts: a NAMESPACED
+ *     studentId (`pedagogy-<id>`, seeded into the engine DB by
+ *     ./seed-subscribed.ts — run `npm run test:pedagogy-seed` first or the
+ *     profile-block fetch 404s and the session runs memory-less),
+ *     the fixture's TRANSIENT socialMemory/progressDigest, and (ravi) a
+ *     pre-built resume checkpoint.
+ *   - diego's DIAGNOSTIC variant (studentContextDiagnostic,
+ *     target.kind='diagnostic') is NOT wired: no diagnostic signal is
+ *     plumbed through the engine wiring today (per task-B2-report.md —
+ *     OpeningSignals.targetKind only resolves lessonNode/freestyle at the
+ *     component call sites). He runs as a NORMAL lessonNode session; the
+ *     diagnostic no-op verification is deferred until the signal lands.
+ *     We do NOT fake the signal.
  */
 import { chromium, type ConsoleMessage } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Persona } from './fixtures/personas';
+import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
+import { isCheckpointResumable } from '../../../src/lib/tutor/portal/resume';
+import type { Persona, ResumeStateFixture } from './fixtures/personas';
 import { simulateStudent, type SimTurn } from './student-simulator';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,46 +103,166 @@ export const DEMO_PICKER_START: Record<
   sam: { subject: 'math', level: 'college', topic: 'calculus-1', lessonPlanId: 'evelyn.g12.math.calc.limits.v1' },
 };
 
-/** Personas whose picker-start is genuinely tractable in this task (they
- *  are logged-out / picker-driven, no durable engine-side state needed). */
+/** Personas whose picker-start needs no engine-side state (logged-out /
+ *  picker-driven). */
 const DEMO_PERSONA_IDS = new Set(Object.keys(DEMO_PICKER_START));
 
 /**
- * Pure: maps a fixture persona to the `__tutorTestStart` picker config.
+ * Task H2: picker-start config for each SUBSCRIBED persona. Same
+ * real-seed-catalog rule as DEMO_PICKER_START (every lessonPlanId verified
+ * against getPlanIndex(), cells from resolve-cell.ts; the plan only has to
+ * be a real, startable match for the fixture's topic — not a perfect one):
+ *   - priya  (Systems of Equations, g10)  → g9 systems-linear plan
+ *   - noah   (Linear Equations, g9)       → g8 linear-equations plan
+ *     (closest real catalog match — lives in the 6-8 cell)
+ *   - zoe    (Triangle Congruence, g9)    → g10 triangle-congruence plan
+ *   - kai    (Linear Inequalities, g9)    → g9 inequalities plan
+ *   - diego  (Quadratics, g10)            → g9 quadratics-intro plan.
+ *     NORMAL lessonNode session ONLY — his diagnostic variant
+ *     (studentContextDiagnostic, target.kind='diagnostic') has no reachable
+ *     wiring today (no diagnostic signal is plumbed; see header SCOPE note)
+ *     and is NOT faked.
+ *   - ravi   (Cellular Respiration, g11)  → hs cellular-respiration plan
+ */
+export const SUBSCRIBED_PICKER_START: Record<
+  string,
+  { subject: string; level: string; topic: string; lessonPlanId: string }
+> = {
+  priya: { subject: 'math', level: '9-10', topic: 'systems-of-equations', lessonPlanId: 'evelyn.g9.math.algebra.systems-linear.v1' },
+  noah: { subject: 'math', level: '6-8', topic: 'expressions-equations', lessonPlanId: 'evelyn.g8.math.algebra.linear-equations.v1' },
+  zoe: { subject: 'math', level: '9-10', topic: 'geometry', lessonPlanId: 'evelyn.g10.math.geometry.triangle-congruence.v1' },
+  kai: { subject: 'math', level: '9-10', topic: 'algebra-1', lessonPlanId: 'evelyn.g9.math.algebra.inequalities.v1' },
+  diego: { subject: 'math', level: '9-10', topic: 'quadratic-equations', lessonPlanId: 'evelyn.g9.math.algebra.quadratics-intro.v1' },
+  ravi: { subject: 'science', level: '9-10', topic: 'biology', lessonPlanId: 'evelyn.hs.science.biology.cellular-respiration.v1' },
+};
+
+const SUBSCRIBED_PERSONA_IDS = new Set(Object.keys(SUBSCRIBED_PICKER_START));
+
+/** The full `__tutorTestStart` config the driver sends — picker fields for
+ *  everyone, plus the Task-H2 subscribed extras (see the hook's cfg doc in
+ *  src/app/tutor/page.tsx). */
+export interface TestStartConfig {
+  subject: string;
+  level: string;
+  topic: string;
+  lessonPlanId: string;
+  studentName?: string;
+  /** Namespaced engine id `pedagogy-<personaId>` — MUST match what
+   *  ./seed-subscribed.ts wrote or the profile fetch finds nothing. */
+  studentId?: string;
+  socialMemory?: SocialThread[];
+  progressDigest?: ProgressDigest;
+  /** Pre-built TutorResumeState (post-buildResumeState shape). Staleness
+   *  is filtered HERE in the driver (same isCheckpointResumable rule the
+   *  production path applies before resumeState ever exists). */
+  resume?: {
+    currentSegmentId: string;
+    completedSegmentIds: string[];
+    transcript: unknown[];
+    whiteboardCommands: unknown[];
+  };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+
+/** Fixture timestamps age with the calendar, so a thread authored as
+ *  "recently used" (priya's Spider-Man `lastReferencedAt`) would silently
+ *  stop being recent months from now — and the S1 no-spiderman-if-recent
+ *  rubric would test nothing. Refresh any PRESENT lastReferencedAt to
+ *  ~yesterday relative to the run; threads without the field stay
+ *  untouched (they were never "recently used"). */
+export function refreshThreadRecency(threads: SocialThread[], now: number = Date.now()): SocialThread[] {
+  return threads.map((t) =>
+    t.lastReferencedAt ? { ...t, lastReferencedAt: new Date(now - DAY_MS).toISOString() } : t,
+  );
+}
+
+/** Same calendar-aging rationale for ravi's FRESH checkpoint fixture: its
+ *  authored updatedAtISO drifts out of the RESUME_MAX_AGE_MS window over
+ *  time, so the fresh variant refreshes it to ~1h ago. The STALE variant is
+ *  deliberately NOT refreshed — it only gets older, which is the point. */
+function refreshFreshCheckpoint(cp: ResumeStateFixture, now: number = Date.now()): ResumeStateFixture {
+  return { ...cp, updatedAtISO: new Date(now - HOUR_MS).toISOString() };
+}
+
+/** Minimal typed view of the fixture's `studentContext` (validated in full
+ *  against the contract schema by personas.test.ts — this cast just reads
+ *  the three fields the driver forwards). */
+interface StudentContextView {
+  profile?: { name?: string };
+  socialMemory?: SocialThread[];
+  progressDigest?: ProgressDigest;
+}
+
+/**
+ * Pure: maps a fixture persona to the `__tutorTestStart` config.
  *
  * DEMO personas → a real (subject, level, topic, lessonPlanId) from
  * DEMO_PICKER_START + a studentName derived from the persona id (omitted
- * for `anon`, matching its logged-out/anonymous fixture).
+ * for `anon`, matching its logged-out/anonymous fixture). No subscribed
+ * extras — byte-identical to the pre-H2 behavior.
  *
- * SUBSCRIBED personas → throws. Making a subscribed persona's session
- * actually REFLECT its fixture (mastery/gaps/socialMemory/progressDigest)
- * requires a real DB-backed StudentProfile (src/lib/tutor/student-profile/
- * store.ts's getOrCreateStudentProfile, Mongo-backed) plus a portal context
- * record, seeded BEFORE the session starts and reachable via
- * /tutor?studentId=<id>. That's a real seeding pipeline, not a picker-start
- * mapping — deferred to Phase D per the task brief ("if it balloons,
- * implement DEMO fully, stub subscribed"). A bare picker-start (subject/
- * level/topic only, no studentId) would silently start an ANONYMOUS session
- * that ignores the persona's fixture entirely, which is worse than failing
- * loudly — hence the throw.
+ * SUBSCRIBED personas (Task H2 — the old Phase-D deferral throw is gone) →
+ * SUBSCRIBED_PICKER_START + the subscribed extras:
+ *   - studentId `pedagogy-<id>` (the namespaced engine profile seeded by
+ *     ./seed-subscribed.ts — run `npm run test:pedagogy-seed` first),
+ *   - the fixture's transient socialMemory (recency-refreshed, see
+ *     refreshThreadRecency) + progressDigest,
+ *   - ravi only: a resume checkpoint built from the requested variant
+ *     (`opts.resumeVariant`, default 'fresh'). The driver applies the SAME
+ *     staleness filter production applies (isCheckpointResumable /
+ *     RESUME_MAX_AGE_MS via portal/resume.ts), so the 'stale' variant
+ *     yields NO resume — a cold start, which is exactly what production
+ *     does with a stale checkpoint. The fixtures carry no prior
+ *     transcript/whiteboard, so the checkpoint seeds POSITION only
+ *     (empty transcript/whiteboardCommands arrays).
  */
 export function personaToPickerStart(
   persona: Persona,
-): { subject: string; level: string; topic: string; lessonPlanId: string; studentName?: string } {
-  if (persona.mode !== 'demo' || !DEMO_PERSONA_IDS.has(persona.id)) {
-    throw new Error(
-      `personaToPickerStart: subscribed-context injection for "${persona.id}" is DEFERRED to Phase D ` +
-        '(needs a real academy/engine StudentProfile + portal-context seed matching the fixture — not ' +
-        'just a picker start; see /tutor?studentId= + src/lib/tutor/student-profile/store.ts). Use one of ' +
-        `the DEMO personas (${[...DEMO_PERSONA_IDS].join(', ')}) with runScenario() instead.`,
-    );
+  opts?: { resumeVariant?: 'fresh' | 'stale' },
+): TestStartConfig {
+  const fallbackName = persona.id.charAt(0).toUpperCase() + persona.id.slice(1);
+
+  if (persona.mode === 'demo' && DEMO_PERSONA_IDS.has(persona.id)) {
+    const cfg = DEMO_PICKER_START[persona.id];
+    return {
+      ...cfg,
+      studentName: persona.id === 'anon' ? undefined : fallbackName,
+    };
   }
-  const cfg = DEMO_PICKER_START[persona.id];
-  if (!cfg) throw new Error(`personaToPickerStart: no picker-start mapping for demo persona "${persona.id}"`);
-  return {
-    ...cfg,
-    studentName: persona.id === 'anon' ? undefined : persona.id.charAt(0).toUpperCase() + persona.id.slice(1),
-  };
+
+  if (persona.mode === 'subscribed' && SUBSCRIBED_PERSONA_IDS.has(persona.id)) {
+    const cfg = SUBSCRIBED_PICKER_START[persona.id];
+    const ctx = (persona.studentContext ?? {}) as StudentContextView;
+    const start: TestStartConfig = {
+      ...cfg,
+      studentName: ctx.profile?.name ?? fallbackName,
+      studentId: `pedagogy-${persona.id}`,
+    };
+    if (ctx.socialMemory?.length) start.socialMemory = refreshThreadRecency(ctx.socialMemory);
+    if (ctx.progressDigest) start.progressDigest = ctx.progressDigest;
+
+    const variant = opts?.resumeVariant ?? 'fresh';
+    const rawCp = variant === 'stale' ? persona.staleResumeState : persona.resumeState;
+    if (rawCp) {
+      const cp = variant === 'fresh' ? refreshFreshCheckpoint(rawCp) : rawCp;
+      if (isCheckpointResumable(cp.updatedAtISO)) {
+        start.resume = {
+          currentSegmentId: cp.currentSegmentId,
+          completedSegmentIds: [...cp.completedSegmentIds],
+          transcript: [],
+          whiteboardCommands: [],
+        };
+      }
+    }
+    return start;
+  }
+
+  throw new Error(
+    `personaToPickerStart: no picker-start mapping for persona "${persona.id}" (mode=${persona.mode}). ` +
+      `Known: demo=[${[...DEMO_PERSONA_IDS].join(', ')}], subscribed=[${[...SUBSCRIBED_PERSONA_IDS].join(', ')}].`,
+  );
 }
 
 /** One turn's raw captured data, pre-index — what the driver loop collects
@@ -173,17 +306,21 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function log(msg: string) { console.log(`[pedagogy-harness] ${msg}`); }
 
 /**
- * Drives a real claude-brain session for `persona` (DEMO only — see
- * `personaToPickerStart`), looping the Haiku student-simulator against the
- * tutor's turns until `opts.maxTurns` or the simulator's disengage
+ * Drives a real claude-brain session for `persona` (demo AND subscribed —
+ * see `personaToPickerStart`), looping the Haiku student-simulator against
+ * the tutor's turns until `opts.maxTurns` or the simulator's disengage
  * sentinel, and returns the captured `Bundle`.
+ *
+ * Subscribed personas additionally need their engine profile seeded first
+ * (`npm run test:pedagogy-seed`) — without it the session still runs, just
+ * without cross-session memory (profile fetch finds nothing).
  */
 export async function runScenario(
   persona: Persona,
-  opts: { maxTurns: number; taskId?: string; baseUrl?: string },
+  opts: { maxTurns: number; taskId?: string; baseUrl?: string; resumeVariant?: 'fresh' | 'stale' },
 ): Promise<Bundle> {
   const baseUrl = opts.baseUrl ?? process.env.TUTOR_E2E_URL ?? 'http://localhost:3006';
-  const start = personaToPickerStart(persona); // throws for subscribed personas — by design
+  const start = personaToPickerStart(persona, { resumeVariant: opts.resumeVariant });
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const outDir = path.join(process.cwd(), 'artifacts', 'pedagogy-harness', `${persona.id}-${stamp}`);
@@ -287,10 +424,16 @@ export async function runScenario(
     await sleep(3000); // WS settle
 
     // Kickoff — same synthetic bracketed transcript run.ts uses (silent,
-    // triggers the tutor's opener without a real mic click).
-    log('kickoff: [start lesson]');
-    await page.evaluate(() => window.__tutorSendText('[start lesson]'));
-    await waitForTurn(120_000, '[start lesson]');
+    // triggers the tutor's opener without a real mic click). For a resume
+    // session (ravi fresh-checkpoint variant) send the SAME synthetic
+    // resume message the /tutor page's resumeContinue path uses, so the
+    // brain picks up mid-lesson instead of being told to "start".
+    const kickoff = start.resume
+      ? '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]'
+      : '[start lesson]';
+    log(`kickoff: ${kickoff}`);
+    await page.evaluate((text) => window.__tutorSendText(text), kickoff);
+    await waitForTurn(120_000, kickoff);
     await sleep(SETTLE_MS);
     debugSince = 0; // tool calls from the kickoff turn attribute to turn 0 below
 

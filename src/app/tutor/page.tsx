@@ -45,6 +45,7 @@ import {
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
+import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 
@@ -144,6 +145,21 @@ function TutorPage() {
   // get captured in the brain layer but never persist. The settings page
   // at /tutor/settings already uses this same param shape.
   const studentIdParam = searchParams.get('studentId') || undefined;
+  // Task H2 (dev-only): the pedagogy-harness driver can override/augment the
+  // subscribed-session identity via the NODE_ENV-guarded __tutorTestStart
+  // hook below, without needing a page navigation. These are only ever set
+  // by that hook (never by production UI), so in production builds they stay
+  // at their initial values and `effectiveStudentId === studentIdParam`.
+  //   - testStudentIdOverride → flows everywhere studentIdParam used to
+  //     (profile-block fetch, opener hasPortalContext, session-end commits).
+  //   - testSocialMemory / testProgressDigest → the TRANSIENT context props
+  //     (Task D1b, embed carrier) which the main page has no source for —
+  //     passed to both VoiceTutorRealtime render sites, gated on
+  //     TUTOR_PEDAGOGY_OPENER so flag-off sessions are unchanged.
+  const [testStudentIdOverride, setTestStudentIdOverride] = useState<string | undefined>(undefined);
+  const [testSocialMemory, setTestSocialMemory] = useState<SocialThread[] | undefined>(undefined);
+  const [testProgressDigest, setTestProgressDigest] = useState<ProgressDigest | undefined>(undefined);
+  const effectiveStudentId = testStudentIdOverride ?? studentIdParam;
   // /tutor?sid=<sessionId> — a stable session id carried in the URL so a
   // reload reconnects to the same engine session instead of minting a fresh
   // one. Written on session start (window.history.replaceState); read here to
@@ -810,7 +826,7 @@ function TutorPage() {
     const sig: OpeningSignals = {
       targetKind: selectedLessonPlanId ? 'lessonNode' : 'freestyle',
       isTrial: false, // no isTrial signal reaches this page today — see task-B2-report.md
-      hasPortalContext: !!studentIdParam,
+      hasPortalContext: !!effectiveStudentId,
       // resumeState is only produced by an authenticated sessionId lookup
       // (portal/resume.ts), so hasLiveCheckpoint ⇒ a portal-context student;
       // the demo-logged-out + resume-live combination cannot occur through this
@@ -841,7 +857,7 @@ function TutorPage() {
     handle.sendTextMessage(
       '[orchestrator: the lesson plan has just been expanded with the picked LOs. If you are still in your opening/calibration exchange, continue it naturally first — keep it brief, at most a couple more short exchanges. As soon as it has run its course, transition into teaching: call advance_lesson to move from the intro segment to the first LO\'s first segment (the hook or concept depending on Rule 12) and start the lesson. Do NOT re-acknowledge the pick or re-list LOs; the student has already moved past that step.]',
     );
-  }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, studentIdParam, resumeState]);
+  }, [lessonProgress.plan?.id, transcript, selectedLessonPlanId, effectiveStudentId, resumeState]);
 
   // Send message to tutor API
   const sendMessage = useCallback(
@@ -1052,14 +1068,22 @@ function TutorPage() {
   // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
   // NODE_ENV-guarded window hooks so the tutor-e2e harness can drive a real
   // claude-brain session through the TYPED-INPUT path (no mic/voice needed):
-  //   __tutorTestStart({subject, level, topic, lessonPlanId, studentName?})
+  //   __tutorTestStart({subject, level, topic, lessonPlanId, studentName?,
+  //                     studentId?, socialMemory?, progressDigest?, resume?})
   //       — set the picker selections + start the session. Selecting a
   //         lessonPlanId flips voiceEngine→claude-brain automatically.
+  //         The optional subscribed-persona fields (Task H2) are documented
+  //         on the cfg type below.
   //   __tutorSendText(text) — dispatch a student turn (= typed input).
   //   __tutorTestState() — poll observable state for turn-synchronization.
   // See project_tutor_test_automation. Counterpart dev triggers
   // (__tutorForceKill, __tutorRenderBuffer, …) live in VoiceTutorRealtime.
   const pendingTestStartRef = useRef(false);
+  // Task H2: resume checkpoint injected via __tutorTestStart. Applied AFTER
+  // handleStartSession's own `setResumeState(null)` reset (both land in the
+  // same batch below; the later write wins) — setting it directly in the
+  // hook would be wiped by that reset.
+  const pendingTestResumeRef = useRef<TutorResumeState | null>(null);
   const turnsCompletedRef = useRef(0);
   const prevBrainBusyRef = useRef(false);
   useEffect(() => {
@@ -1074,13 +1098,41 @@ function TutorPage() {
     if (pendingTestStartRef.current && canStartSession && stage === 'setup') {
       pendingTestStartRef.current = false;
       void handleStartSession();
+      // Task H2: apply an injected resume checkpoint AFTER the start reset
+      // (handleStartSession's sync prelude runs to completion — including
+      // its setResumeState(null) — before control returns here, so this
+      // later write wins within the same batch).
+      if (pendingTestResumeRef.current) {
+        setResumeState(pendingTestResumeRef.current);
+        pendingTestResumeRef.current = null;
+      }
     }
   }, [canStartSession, stage, handleStartSession]);
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
-    w.__tutorTestStart = (cfg: { subject: string; level: string; topic: string; lessonPlanId?: string; studentName?: string }) => {
+    w.__tutorTestStart = (cfg: {
+      subject: string; level: string; topic: string; lessonPlanId?: string; studentName?: string;
+      // Task H2 — subscribed-persona injection for the pedagogy harness.
+      // These reach the SAME paths a real subscribed session uses:
+      //   studentId       → effectiveStudentId (profile-block fetch, opener
+      //                     hasPortalContext, session-end commits) — the
+      //                     ?studentId= query-param-equivalent flow.
+      //   socialMemory /
+      //   progressDigest  → the transient-context props (Task D1b, embed
+      //                     carrier) passed at both VoiceTutorRealtime render
+      //                     sites, flag-gated on TUTOR_PEDAGOGY_OPENER.
+      //   resume          → a PRE-BUILT TutorResumeState (post-buildResumeState
+      //                     shape — the caller is responsible for staleness
+      //                     filtering, mirroring portal/resume.ts). Feeds the
+      //                     same setResumeState path the ?sid= reload-resume
+      //                     flow uses.
+      studentId?: string;
+      socialMemory?: SocialThread[];
+      progressDigest?: ProgressDigest;
+      resume?: TutorResumeState;
+    }) => {
       setSelectedSubject(cfg.subject);
       setSelectedLevel(cfg.level);
       setSelectedTopicId(cfg.topic);
@@ -1093,9 +1145,16 @@ function TutorPage() {
       // Callers that want a name (scripts/tutor-e2e/run.ts) pass one
       // explicitly; canStartSession does not require a name.
       setStudentName(cfg.studentName || '');
+      setTestStudentIdOverride(cfg.studentId || undefined);
+      setTestSocialMemory(cfg.socialMemory);
+      setTestProgressDigest(cfg.progressDigest);
+      // Stashed, not set: handleStartSession resets resumeState to null in
+      // its fresh-start prelude; the deferred-start effect re-applies this
+      // right after (see pendingTestResumeRef).
+      pendingTestResumeRef.current = cfg.resume ?? null;
       turnsCompletedRef.current = 0;
       pendingTestStartRef.current = true;
-      console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg));
+      console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg).slice(0, 400));
     };
     w.__tutorSendText = (text: string) => {
       if (!realtimeHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
@@ -1720,7 +1779,7 @@ function TutorPage() {
         topic={selectedTopicId}
         level={selectedLevel}
         studentName={studentName || undefined}
-        studentId={studentIdParam}
+        studentId={effectiveStudentId}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
         sessionGoal={sessionGoal}
@@ -1730,6 +1789,11 @@ function TutorPage() {
         ttsProvider={ttsProvider}
         sessionMaxMinutes={30}
         resumeState={resumeState}
+        // Task H2 (dev-only source): transient context injected via the
+        // __tutorTestStart hook. Flag-gated so flag-off sessions pass
+        // undefined exactly as before.
+        socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
+        progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
         topicDisplayName={topicDisplayName}
         availableLessonPlans={availableLessonPlans}
         onEndSession={handleEndSession}
@@ -2239,12 +2303,17 @@ function TutorPage() {
                   topic={selectedTopicId}
                   level={selectedLevel}
                   studentName={studentName || undefined}
-                  studentId={studentIdParam}
+                  studentId={effectiveStudentId}
                   sessionId={sessionId}
                   sessionStartedAtMs={sessionStartTimeRef.current?.getTime()}
                   sessionGoal={sessionGoal}
                   lessonPlanId={selectedLessonPlanId || undefined}
                   resumeState={resumeState}
+                  // Task H2 (dev-only source): transient context injected via
+                  // the __tutorTestStart hook. Flag-gated so flag-off
+                  // sessions pass undefined exactly as before.
+                  socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
+                  progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
                   onResumeAwaitingTapChange={setAwaitingResume}
                   voice={selectedOpenAIVoice}
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}

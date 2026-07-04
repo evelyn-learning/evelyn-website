@@ -51,6 +51,7 @@
     "test:pedagogy-sim": "npx tsx scripts/tutor/pedagogy-harness/student-simulator.test.ts",
     "test:pedagogy-sim-live": "npx tsx scripts/tutor/pedagogy-harness/student-simulator.live.ts",
     "test:pedagogy-driver-unit": "npx tsx scripts/tutor/pedagogy-harness/run-harness.test.ts",
+    "test:pedagogy-seed": "npx tsx scripts/tutor/pedagogy-harness/seed-subscribed.ts",
     "test:pedagogy-driver": "npx tsx scripts/tutor/pedagogy-harness/run-harness.smoke.ts",
     "test:pedagogy-gates": "npx tsx scripts/tutor/pedagogy-harness/eval.test.ts",
     "test:pedagogy-cli": "npx tsx scripts/tutor/pedagogy-harness/cli.test.ts",

@@ -5903,14 +5903,20 @@ export function VoiceTutorRealtime({
 
   // Task B2 (flag-gated): whether this student has any prior recorded
   // sessions, read off the SAME student-profile fetch below (no new
-  // network call) — feeds OpeningSignals.hasPriorSessions. NOTE: this
-  // fetch is async and the mount-time buildInstructions effect below
-  // reads this ref SYNCHRONOUSLY at mount, before the fetch can resolve,
-  // so in practice this reads as its initial `false` on the very first
-  // system-prompt build — a known B2 limitation (see task-B2-report.md).
-  // Left populated regardless, since a caller wiring a later rebuild can
-  // read a settled value from it.
+  // network call) — feeds OpeningSignals.hasPriorSessions.
   const studentHasPriorSessionsRef = useRef(false);
+  // Task H2 race fix (flag-gated, was the documented B2 limitation): the
+  // profile fetch below is async, but the mount-time buildInstructions
+  // effect used to read studentHasPriorSessionsRef SYNCHRONOUSLY at mount —
+  // always seeing its initial `false`, which made the warm-resume
+  // (subscribed-returning) journey unreachable. This state flips true when
+  // the fetch SETTLES (success, non-ok, or error — fail-open) for
+  // studentId sessions; buildInstructions gates its one-shot opening seed
+  // on it and re-runs via its dep array once settled. Anonymous sessions
+  // (no studentId) never consult it (they seed immediately), and with
+  // TUTOR_PEDAGOGY_OPENER off it is never set, so the dep never changes
+  // and flag-off timing is byte-identical to before.
+  const [profileFetchSettled, setProfileFetchSettled] = useState(false);
 
   // Load the student profile block at mount when a studentId is
   // configured. The block is a pre-rendered string the brain reads on
@@ -5935,6 +5941,14 @@ export function VoiceTutorRealtime({
         }
       } catch (err) {
         console.warn('[VoiceTutorRealtime] student profile fetch failed:', err);
+      } finally {
+        // H2 race fix: signal settle on EVERY outcome (ok / non-ok / thrown)
+        // so a failed fetch still lets the opening seed proceed with the
+        // conservative default (hasPriorSessions=false) instead of stalling
+        // the opener forever. Flag-gated so flag-off render timing is
+        // untouched (the state would otherwise still trigger the
+        // buildInstructions dep re-run below).
+        if (!cancelled && TUTOR_PEDAGOGY_OPENER) setProfileFetchSettled(true);
       }
     })();
     return () => { cancelled = true; };
@@ -11497,7 +11511,19 @@ export function VoiceTutorRealtime({
         // reliably available at this call site yet and default false /
         // 'button' / omitted per the B2 brief's conservative-default rule).
         const openerFields: Partial<SystemPromptContext> = {};
-        if (TUTOR_PEDAGOGY_OPENER) {
+        // Task H2 race fix (flag-gated): for studentId sessions, the opening
+        // seed must WAIT for the profile fetch to settle — otherwise
+        // studentHasPriorSessionsRef reads its initial `false` and the
+        // warm-resume (subscribed-returning) journey is unreachable. Until
+        // it settles we skip the whole flag-on block (this run builds a
+        // prompt identical to the flag-off build) and the profileFetchSettled
+        // dep re-runs this effect once settled. The one-shot latch
+        // (openingTurnArmedRef) is untouched by the skip path, so it arms
+        // exactly once: immediately for anonymous sessions, and on the
+        // post-settle run for studentId sessions. Later re-runs (mid-session
+        // preference changes) still hit the armed latch and cannot re-arm.
+        const openerSignalsReady = !studentId || profileFetchSettled;
+        if (TUTOR_PEDAGOGY_OPENER && openerSignalsReady) {
           const sig: OpeningSignals = {
             // No diagnostic-session concept reaches this component today
             // (no SessionGoal/prop encodes it) — only lessonNode/freestyle
@@ -11630,7 +11656,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // (or via the in-session chip in Stage 4) rebuilds the system prompt
     // with the new humor level. Object identity is stable until the user
     // mutates a field, so this doesn't cause spurious rebuilds.
-  }, [subject, topic, level, studentName, sessionGoal, studentPreferences]);
+    // profileFetchSettled (H2 race fix) re-runs the build once the student
+    // profile fetch settles so the opening seed sees the real
+    // hasPriorSessions value; it only ever flips when TUTOR_PEDAGOGY_OPENER
+    // is on AND studentId is set, so flag-off / anonymous timing is
+    // unchanged. All opening refs are latched one-shot, so the re-run is
+    // safe (see openerSignalsReady above).
+  }, [subject, topic, level, studentName, sessionGoal, studentPreferences, profileFetchSettled]);
 
   // Kick the ephemeral-token fetch immediately on mount so it runs in parallel
   // with buildInstructions — that alone saves ~500–1500 ms, and it is safe to

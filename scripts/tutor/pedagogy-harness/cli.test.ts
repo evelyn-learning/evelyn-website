@@ -16,6 +16,7 @@
  */
 import { strict as assert } from 'node:assert';
 import { PERSONA_IDS } from './fixtures/personas';
+import { DEMO_PICKER_START, SUBSCRIBED_PICKER_START } from './run-harness';
 import {
   SCENARIO_MAP,
   gateIdsForRow,
@@ -66,12 +67,17 @@ for (const [taskId, row] of Object.entries(SCENARIO_MAP)) {
     }
   });
 
-  test(`SCENARIO_MAP[${taskId}]: every persona is a DEMO persona (subscribed is Phase-D-deferred)`, () => {
-    // DEMO personas per run-harness.ts's DEMO_PICKER_START / H1 fixtures
-    // (nina = the Store-B misquote regression persona, added 2026-07-03).
-    const DEMO_IDS = ['maya', 'leo', 'aria', 'anon', 'sam', 'nina'];
+  test(`SCENARIO_MAP[${taskId}]: every persona is DRIVER-SUPPORTED (demo picker map or subscribed picker map)`, () => {
+    // Task H2 rework of the old "must be a DEMO persona" test: subscribed
+    // personas are now runnable, but ONLY the ones the driver actually maps
+    // (SUBSCRIBED_PICKER_START). A persona id in neither map would make
+    // runScenario throw at start — this keeps the scenario map honest
+    // against the driver's real coverage instead of a hardcoded id list.
     for (const personaId of row.personas) {
-      assert.ok(DEMO_IDS.includes(personaId), `"${personaId}" (in ${taskId}) must be a DEMO persona, not subscribed`);
+      assert.ok(
+        personaId in DEMO_PICKER_START || personaId in SUBSCRIBED_PICKER_START,
+        `"${personaId}" (in ${taskId}) must be driver-supported — present in DEMO_PICKER_START or SUBSCRIBED_PICKER_START`,
+      );
     }
   });
 
@@ -119,6 +125,29 @@ test('SCENARIO_MAP: B5 has no L1 gates (leo, "I know it" is judge-only territory
 test('SCENARIO_MAP: B6 exercises proactive-opener for maya (demo path)', () => {
   assert.deepEqual(SCENARIO_MAP.B6.personas, ['maya']);
   assert.deepEqual(gateIdsForRow(SCENARIO_MAP.B6), ['proactive-opener']);
+});
+
+// ── Subscribed rows (Task H2) ────────────────────────────────────────────
+
+test('SCENARIO_MAP: S1 runs priya with the proactive-opener gate + the 3 warm-resume rubric items', () => {
+  assert.deepEqual(SCENARIO_MAP.S1.personas, ['priya']);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S1), ['proactive-opener']);
+  assert.deepEqual(
+    SCENARIO_MAP.S1.rubric.map((r) => r.id),
+    ['warm-resume-opener', 'no-spiderman-if-recent', 'progress-arc-available'],
+  );
+});
+
+test('SCENARIO_MAP: S3 runs zoe (social-memory opt-out) with the zero-social-render rubric', () => {
+  assert.deepEqual(SCENARIO_MAP.S3.personas, ['zoe']);
+  assert.deepEqual(SCENARIO_MAP.S3.rubric.map((r) => r.id), ['zero-social-render']);
+});
+
+test('SCENARIO_MAP: S6 runs ravi judge-only (silent pickup — no proactive-opener gate)', () => {
+  assert.deepEqual(SCENARIO_MAP.S6.personas, ['ravi']);
+  assert.deepEqual(SCENARIO_MAP.S6.gateTaskIds, []);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S6), []);
+  assert.deepEqual(SCENARIO_MAP.S6.rubric.map((r) => r.id), ['pickup-continuity']);
 });
 
 // ── formatList ────────────────────────────────────────────────────────

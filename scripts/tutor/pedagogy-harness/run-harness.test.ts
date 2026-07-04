@@ -13,7 +13,14 @@
  */
 import { strict as assert } from 'node:assert';
 import { loadPersona, PERSONA_IDS } from './fixtures/personas';
-import { personaToPickerStart, assembleBundle, DEMO_PICKER_START, type RawCapturedTurn } from './run-harness';
+import {
+  personaToPickerStart,
+  assembleBundle,
+  DEMO_PICKER_START,
+  SUBSCRIBED_PICKER_START,
+  refreshThreadRecency,
+  type RawCapturedTurn,
+} from './run-harness';
 
 let passed = 0;
 let failed = 0;
@@ -59,26 +66,106 @@ for (const id of ['maya', 'leo', 'aria', 'sam']) {
   });
 }
 
-// ── personaToPickerStart: SUBSCRIBED personas throw a clear deferral ────
+// ── personaToPickerStart: SUBSCRIBED personas (Task H2) ─────────────────
 for (const id of SUBSCRIBED_IDS) {
-  test(`personaToPickerStart(${id}): throws a clear "deferred" error (subscribed-context injection out of scope)`, () => {
+  test(`personaToPickerStart(${id}): no throw; returns a real plan + namespaced studentId pedagogy-${id}`, () => {
     const persona = loadPersona(id);
     assert.equal(persona.mode, 'subscribed', 'fixture sanity: this persona really is subscribed');
-    assert.throws(
-      () => personaToPickerStart(persona),
-      (err: unknown) => {
-        const msg = (err as Error).message;
-        return /deferred/i.test(msg) && /Phase D/i.test(msg) && msg.includes(id);
-      },
-      'error message names the persona and says DEFERRED / Phase D',
-    );
+    const cfg = personaToPickerStart(persona);
+    assert.equal(cfg.subject, SUBSCRIBED_PICKER_START[id].subject);
+    assert.equal(cfg.level, SUBSCRIBED_PICKER_START[id].level);
+    assert.equal(cfg.topic, SUBSCRIBED_PICKER_START[id].topic);
+    assert.equal(cfg.lessonPlanId, SUBSCRIBED_PICKER_START[id].lessonPlanId);
+    assert.ok(cfg.lessonPlanId.startsWith('evelyn.'), 'lessonPlanId looks like a real catalog id');
+    assert.equal(cfg.studentId, `pedagogy-${id}`, 'studentId is the namespaced seed id');
+  });
+
+  test(`personaToPickerStart(${id}): studentName comes from the fixture's studentContext profile`, () => {
+    const persona = loadPersona(id);
+    const ctx = persona.studentContext as { profile?: { name?: string } };
+    const cfg = personaToPickerStart(persona);
+    assert.equal(cfg.studentName, ctx.profile?.name, 'name passthrough (e.g. "Priya", not "priya")');
   });
 }
 
-test('personaToPickerStart: every DEMO_PICKER_START key is a known persona id', () => {
-  for (const id of Object.keys(DEMO_PICKER_START)) {
+test('personaToPickerStart(priya): socialMemory threads pass through, with lastReferencedAt refreshed recent', () => {
+  const priya = loadPersona('priya');
+  const cfg = personaToPickerStart(priya);
+  assert.ok(cfg.socialMemory && cfg.socialMemory.length === 3, 'all 3 fixture threads forwarded');
+  const spiderman = cfg.socialMemory!.find((t) => t.id === 'thread-priya-spiderman');
+  assert.ok(spiderman, 'Spider-Man thread present');
+  assert.ok(spiderman!.lastReferencedAt, 'recently-used marker preserved');
+  const ageMs = Date.now() - new Date(spiderman!.lastReferencedAt!).getTime();
+  assert.ok(ageMs > 0 && ageMs < 3 * 24 * 60 * 60 * 1000, 'lastReferencedAt refreshed to near-now (≈yesterday), not the aging fixture date');
+  const football = cfg.socialMemory!.find((t) => t.id === 'thread-priya-football');
+  assert.equal(football?.lastReferencedAt, undefined, 'threads without lastReferencedAt stay untouched');
+});
+
+test('personaToPickerStart(priya): progressDigest passes through from the fixture', () => {
+  const priya = loadPersona('priya');
+  const cfg = personaToPickerStart(priya);
+  assert.equal(cfg.progressDigest?.unitsCompleted, 6);
+  assert.equal(cfg.progressDigest?.unitsTotal, 9);
+  assert.equal(cfg.progressDigest?.paceNote, 'ahead of pace');
+});
+
+test('personaToPickerStart(zoe): opt-out fixture forwards NO socialMemory but keeps the digest', () => {
+  const zoe = loadPersona('zoe');
+  const cfg = personaToPickerStart(zoe);
+  assert.equal(cfg.socialMemory, undefined, "zoe's fixture has no threads (portal resolves 'off' to absent)");
+  assert.equal(cfg.progressDigest?.unitsCompleted, 3);
+});
+
+test('personaToPickerStart(ravi, fresh — the default): injects a position-only resume checkpoint', () => {
+  const ravi = loadPersona('ravi');
+  const cfg = personaToPickerStart(ravi); // default variant = 'fresh'
+  assert.ok(cfg.resume, 'fresh checkpoint injected');
+  assert.equal(cfg.resume!.currentSegmentId, 'concept-2');
+  assert.deepEqual(cfg.resume!.completedSegmentIds, ['hook', 'concept-1']);
+  assert.deepEqual(cfg.resume!.transcript, [], 'fixtures carry no transcript — position-only seed');
+  assert.deepEqual(cfg.resume!.whiteboardCommands, []);
+});
+
+test('personaToPickerStart(ravi, stale): staleness filter yields NO resume (production-faithful cold start)', () => {
+  const ravi = loadPersona('ravi');
+  assert.ok(ravi.staleResumeState, 'fixture sanity: stale checkpoint exists');
+  const cfg = personaToPickerStart(ravi, { resumeVariant: 'stale' });
+  assert.equal(cfg.resume, undefined, 'stale checkpoint filtered exactly like buildResumeState would');
+  assert.equal(cfg.studentId, 'pedagogy-ravi', 'everything else still flows');
+});
+
+test('personaToPickerStart: non-ravi subscribed personas get no resume', () => {
+  for (const id of ['priya', 'noah', 'zoe', 'kai', 'diego']) {
+    const cfg = personaToPickerStart(loadPersona(id));
+    assert.equal(cfg.resume, undefined, `${id} has no checkpoint fixture`);
+  }
+});
+
+test('personaToPickerStart: DEMO personas carry NO subscribed extras (unchanged pre-H2 shape)', () => {
+  for (const id of DEMO_IDS) {
+    const cfg = personaToPickerStart(loadPersona(id));
+    assert.equal(cfg.studentId, undefined, `${id}: no studentId`);
+    assert.equal(cfg.socialMemory, undefined, `${id}: no socialMemory`);
+    assert.equal(cfg.progressDigest, undefined, `${id}: no progressDigest`);
+    assert.equal(cfg.resume, undefined, `${id}: no resume`);
+  }
+});
+
+test('refreshThreadRecency: pure w.r.t. its input (does not mutate the given threads)', () => {
+  const threads = [{ id: 't1', note: 'x', capturedAt: '2026-01-01T00:00:00.000Z', lastReferencedAt: '2026-01-02T00:00:00.000Z' }];
+  const out = refreshThreadRecency(threads, Date.parse('2026-07-03T00:00:00.000Z'));
+  assert.equal(threads[0].lastReferencedAt, '2026-01-02T00:00:00.000Z', 'input untouched');
+  assert.equal(out[0].lastReferencedAt, '2026-07-02T00:00:00.000Z', 'output refreshed to now - 1 day');
+});
+
+test('personaToPickerStart: every DEMO_PICKER_START + SUBSCRIBED_PICKER_START key is a known persona id', () => {
+  for (const id of [...Object.keys(DEMO_PICKER_START), ...Object.keys(SUBSCRIBED_PICKER_START)]) {
     assert.ok((PERSONA_IDS as readonly string[]).includes(id), `${id} is a real persona id`);
   }
+});
+
+test('SUBSCRIBED_PICKER_START: covers exactly the 6 subscribed personas', () => {
+  assert.deepEqual(new Set(Object.keys(SUBSCRIBED_PICKER_START)), new Set(SUBSCRIBED_IDS));
 });
 
 // ── assembleBundle ────────────────────────────────────────────────────
