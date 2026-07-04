@@ -120,6 +120,17 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
       { id: 'board-consistency', question: "Are all numbers the tutor speaks or writes during the session consistent with the problem values it originally put on the board (no self-contradicting figures on the same board)?" },
     ],
   },
+  // E2 — soft conversion close (demo). L1: the no-sell-phrase gate (the
+  // brain never initiates a sell — the UI owns the CTA); L2: the close is
+  // warm and in-character even when the session winds down or the student
+  // asks about continuing.
+  E2: {
+    personas: ['maya'],
+    gateTaskIds: ['E2'],
+    rubric: [
+      { id: 'close-never-greasy', question: 'If the session approaches an end or the student asks about continuing, is the tutor warm and in-character without ever pitching, selling, or steering toward signup?' },
+    ],
+  },
   // ── Subscribed-persona rows (Task H2) ──────────────────────────────────
   // These require the engine profile seed: `npm run test:pedagogy-seed`
   // (writes pedagogy-<id> StudentProfiles; see seed-subscribed.ts).

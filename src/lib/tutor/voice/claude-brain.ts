@@ -79,6 +79,20 @@ export interface BrainTurnInput {
    *  and retirement never invalidate the byte-stable cached prefix.
    *  Surfaces as an `<opening_directive>` block. */
   openingDirective?: string;
+  /** Task E1 (pedagogy, flag NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): budget-aware
+   *  satisfying stop for DEMO sessions only. The client sends it per-turn
+   *  (never when the flag is off or the session resolved 'subscribed');
+   *  absent ⇒ no `<demo_stop>` block ⇒ userContent byte-identical.
+   *  - mode 'time' (standalone /tutor demo): remaining-minutes pacing so the
+   *    session lands one earned "I get it now" moment AND a clean stop
+   *    before the budget runs out.
+   *  - mode 'milestone' (academy trial embed, is_trial=true): the win is
+   *    boxed to completing the first concept, not a clock.
+   *  Lives in the volatile per-turn user content (minutesElapsed changes
+   *  every turn) — NEVER in the byte-stable cached system prefix. */
+  demoStop?:
+    | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
+    | { mode: 'milestone' };
   /** Targets the brain passed to tutor_scribble last turn that the
    *  runtime silently dropped (no_match / whole-item alias / iframe).
    *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
@@ -467,6 +481,14 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
             ``,
             `This plan is raw material only — no obligation to cover it. Spend the time on whatever teaches this student best and shows what great teaching feels like.`,
             prerequisiteHint,
+            // Task E2 (pedagogy): soft conversion close — demo sessions
+            // only, session-wide (rides the same sessionMode gate as the
+            // raw-material framing, so flag-off / subscribed output is
+            // untouched). The quoted banned examples are kept aligned with
+            // the harness gate's BANNED_SELL_PHRASES list
+            // (scripts/tutor/pedagogy-harness/assertions.ts) — this text is
+            // PROMPT-side and never spoken; the gate scans tutor SPEECH.
+            `When the session winds down, close warm and in-character — land the learning, celebrate the win, say a real goodbye. NEVER pitch, upsell, or steer toward signing up — no "sign up", "subscribe", "upgrade", "unlock", no pricing talk. If the student explicitly asks how to continue or get more sessions, answer plainly and briefly, then hand off — the page around you owns that conversation.`,
           ]
         : [];
   return [
@@ -826,6 +848,24 @@ function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): stri
 }
 
 /**
+ * Render the `<demo_stop>` block (Task E1 — budget-aware satisfying stop,
+ * demo sessions only). Empty string when input is absent — the flag-off /
+ * subscribed-session guarantee: `userContent` composition concatenates this
+ * result, so '' leaves the prompt byte-identical.
+ *
+ * Exported for the standalone unit suite (scripts/test-demo-stop.ts) so the
+ * block text is testable without running a whole brain turn.
+ */
+export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
+  if (!input) return '';
+  const body =
+    input.mode === 'time'
+      ? `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
+      : `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
+  return `<demo_stop>\n${body}\n</demo_stop>\n\n`;
+}
+
+/**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
  * accumulated across however many round-trips Sonnet needed.
@@ -915,6 +955,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
+  const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -941,6 +983,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    demoStopBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
@@ -1075,6 +1118,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
+  const demoStopBlock = formatDemoStopBlock(input.demoStop);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1101,6 +1146,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    demoStopBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +

@@ -129,6 +129,12 @@ test('SCENARIO_MAP: B6 exercises proactive-opener for maya (demo path)', () => {
   assert.deepEqual(gateIdsForRow(SCENARIO_MAP.B6), ['proactive-opener']);
 });
 
+test('SCENARIO_MAP: E2 exercises no-sell-phrase for maya (demo soft close) with the close-never-greasy rubric', () => {
+  assert.deepEqual(SCENARIO_MAP.E2.personas, ['maya']);
+  assert.deepEqual(gateIdsForRow(SCENARIO_MAP.E2), ['no-sell-phrase']);
+  assert.deepEqual(SCENARIO_MAP.E2.rubric.map((r) => r.id), ['close-never-greasy']);
+});
+
 // ── Subscribed rows (Task H2) ────────────────────────────────────────────
 
 test('SCENARIO_MAP: S1 runs priya with the proactive-opener gate + the 3 warm-resume rubric items', () => {

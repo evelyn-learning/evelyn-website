@@ -55,6 +55,12 @@ interface BrainStreamRequestBody {
    *  phase is active. Surfaces as `<opening_directive>` in the user
    *  content. See BrainTurnInput.openingDirective. */
   openingDirective?: string;
+  /** Task E1 (pedagogy, NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): budget-aware
+   *  satisfying stop for DEMO sessions. Bounds-checked below (mode enum,
+   *  finite non-negative numbers) — anything malformed collapses to
+   *  undefined so a bad client can never inject an arbitrary blob.
+   *  See BrainTurnInput.demoStop. */
+  demoStop?: BrainTurnInput['demoStop'];
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -430,6 +436,31 @@ export async function POST(req: NextRequest) {
       if (body.openingDirective) {
         console.log(`[opener] opening_directive attached (${String(body.openingDirective.length)} chars)`);
       }
+      // Task E1 (pedagogy): sanitize demoStop. Mode enum + finite,
+      // non-negative numbers only; anything else ⇒ undefined (no block).
+      // Grep-able one-liner per turn so a live run can prove the demo-only
+      // gating + the elapsed clock actually reached the brain.
+      const demoStop: BrainTurnInput['demoStop'] = (() => {
+        const ds = body.demoStop;
+        if (!ds || typeof ds !== 'object') return undefined;
+        if (ds.mode === 'milestone') return { mode: 'milestone' as const };
+        if (ds.mode === 'time') {
+          const { budgetMinutes, minutesElapsed } = ds as { budgetMinutes?: unknown; minutesElapsed?: unknown };
+          if (
+            typeof budgetMinutes === 'number' && Number.isFinite(budgetMinutes) && budgetMinutes >= 0 &&
+            typeof minutesElapsed === 'number' && Number.isFinite(minutesElapsed) && minutesElapsed >= 0
+          ) {
+            return { mode: 'time' as const, budgetMinutes, minutesElapsed };
+          }
+        }
+        return undefined;
+      })();
+      if (demoStop) {
+        console.log(
+          `[demo-stop] attached mode=${demoStop.mode}` +
+            (demoStop.mode === 'time' ? ` elapsed=${demoStop.minutesElapsed}/${demoStop.budgetMinutes}min` : ''),
+        );
+      }
 
       try {
         for await (const ev of runTutorTurn({
@@ -446,6 +477,9 @@ export async function POST(req: NextRequest) {
             typeof body.openingDirective === 'string' && body.openingDirective.length <= 2000
               ? body.openingDirective
               : undefined,
+          // Task E1: sanitized above (mode enum + finite ≥0 numbers, else
+          // undefined). Surfaces as `<demo_stop>` in the user content.
+          demoStop,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

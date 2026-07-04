@@ -42,6 +42,8 @@ import {
   isPedagogyOpenerFlagValue,
   type OpeningSignals,
 } from '@/lib/tutor/ai/opening-behavior';
+import { shouldShowDemoCta } from '@/lib/tutor/demo-cta';
+import { detectDemoIntent } from '@/lib/tutor/demo-intent';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -1498,11 +1500,24 @@ function TutorPage() {
       messagesExchanged: transcript.length,
       sessionGoal
     });
+    // Task E3 (pedagogy, flag-gated): demo-intent capture — ANALYTICS ONLY.
+    // Demo (logged-out) sessions only; runs the conservative detector over
+    // the student's own words and, when something clearly matched, attaches
+    // one label through the page's existing demo tracker. NEVER writes to
+    // any student profile/record — demo sessions stay zero-persistence.
+    if (TUTOR_PEDAGOGY_OPENER && !effectiveStudentId) {
+      const intent = detectDemoIntent(
+        transcript.filter((e) => e.role === 'student').map((e) => e.text),
+      );
+      if (intent) {
+        trackInteraction('click', `demo_intent_${intent}`, { intent });
+      }
+    }
     // Save session as completed to DB
     sessionEndedRef.current = true;
     saveSessionUsage('completed');
     setStage('summary');
-  }, [onComplete, selectedTopicId, transcript.length, sessionGoal, saveSessionUsage]);
+  }, [onComplete, selectedTopicId, transcript, sessionGoal, saveSessionUsage, effectiveStudentId, trackInteraction]);
 
   // Upload homework and extract problems
   const handleUploadHomework = useCallback(async (imageData: string, mimeType: string) => {
@@ -2556,6 +2571,30 @@ function TutorPage() {
             <p className="text-sm text-blue-800">
               When you&apos;re ready, the natural next step is one of: <span className="font-medium">{lessonProgress.plan.followUps.join(', ')}</span>
             </p>
+          </div>
+        )}
+
+        {/* Task E2 (pedagogy, flag-gated): demo-only enrol CTA. The tutor
+            itself never sells (close directive keeps the goodbye in-character);
+            THIS card owns the conversion ask, and only on the demo end
+            surface. shouldShowDemoCta is false whenever the flag is off or a
+            studentId is present, so those renders are byte-identical. The
+            site has no /academy or enrolment route today — /contact is its
+            conversion path; data-cta marks the link for analytics/repointing
+            once a real enrolment page exists. */}
+        {shouldShowDemoCta({ flagOn: TUTOR_PEDAGOGY_OPENER, studentId: effectiveStudentId, sessionEnded: stage === 'summary' }) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6 text-center">
+            <h2 className="text-base font-semibold text-blue-900 mb-1">Enjoyed this?</h2>
+            <p className="text-sm text-blue-800 mb-4">
+              Real sessions remember your progress, adapt to you, and build week over week.
+            </p>
+            <Link
+              href="/contact"
+              data-cta="tutor-demo-enrol"
+              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Set up real sessions
+            </Link>
           </div>
         )}
 

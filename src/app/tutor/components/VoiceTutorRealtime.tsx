@@ -607,6 +607,13 @@ interface VoiceTutorRealtimeProps {
    *  outbound loop (part B) will consume the same callback later. Only
    *  ever fired when TUTOR_PEDAGOGY_OPENER is on. */
   onOpenerRecord?: (record: LastOpenerRecord) => void;
+  /** Task E1 (pedagogy opener) — the embed's `is_trial` signal (academy
+   *  trial flow). Feeds the OpeningSignals construction in buildInstructions
+   *  (activates the demo-trial journey B6 already resolves) AND selects the
+   *  milestone-mode `<demo_stop>` directive instead of the time-budget one.
+   *  Only consumed when TUTOR_PEDAGOGY_OPENER is on. Default false — the
+   *  main /tutor page has no trial concept and omits it. */
+  isTrial?: boolean;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
@@ -834,6 +841,7 @@ export function VoiceTutorRealtime({
   progressDigest,
   lastOpener,
   onOpenerRecord,
+  isTrial = false,
   voice = 'shimmer',
   onTranscriptUpdate,
   onWhiteboardCommand,
@@ -1643,6 +1651,16 @@ export function VoiceTutorRealtime({
   const lastFatigueInjectionAtRef = useRef(0);
   const sessionStartMsRef = useRef<number>(Date.now());
   const longSessionCheckFiredRef = useRef(false);
+  // Task E1 (pedagogy): wallclock ms when the session ACTUALLY started —
+  // the student's first Start/mic tap or resume-continue (the same moments
+  // that fire onSessionStarted, which drives the visible SessionControls
+  // timer). sessionStartMsRef above is MOUNT time and is reset by session
+  // rotation; the demo-stop clock must count teaching time from the real
+  // start, so it gets its own ref. null until the session starts (the
+  // demo-stop computation falls back to mount time — a conservative
+  // overestimate of elapsed for the pre-start edge case). Only ever
+  // written when TUTOR_PEDAGOGY_OPENER is on.
+  const voiceSessionStartedAtMsRef = useRef<number | null>(null);
 
   // Pacing v2 — Phase 1 (inert): student-aware difficulty/depth
   // modulation signals. These refs accumulate signals from the student's
@@ -6889,6 +6907,32 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
+        // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
+        // undefined and JSON.stringify omits it (request byte-identical).
+        // Subscribed sessions never carry it either — their pacing is owned
+        // by the plan + pacing v2. mode 'milestone' when the embed's
+        // is_trial signal is present (win boxed to the first completed
+        // concept); else 'time' with the session's minute budget and whole
+        // minutes elapsed since the student actually started (mic tap /
+        // resume-continue; falls back to mount time before that).
+        let demoStop:
+          | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
+          | { mode: 'milestone' }
+          | undefined;
+        if (TUTOR_PEDAGOGY_OPENER && sessionModeRef.current === 'demo') {
+          if (isTrial) {
+            demoStop = { mode: 'milestone' };
+          } else {
+            const startedAtMs = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
+            demoStop = {
+              mode: 'time',
+              budgetMinutes: sessionMaxMinutes,
+              minutesElapsed: Math.max(0, Math.floor((Date.now() - startedAtMs) / 60000)),
+            };
+          }
+        }
+
         // Stage 2 perception cancellation surface. Create an
         // AbortController for this brain call and expose it via
         // inFlightBrainAbortRef so the perception layer's
@@ -6929,6 +6973,9 @@ export function VoiceTutorRealtime({
             // Pedagogy opener: opening-phase directive (undefined once
             // retired / when the flag is off — see the block above).
             openingDirective,
+            // Task E1: demo-only budget-aware stop (undefined when the flag
+            // is off or the session is subscribed — see the block above).
+            demoStop,
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -11574,8 +11621,10 @@ export function VoiceTutorRealtime({
             // (no SessionGoal/prop encodes it) — only lessonNode/freestyle
             // are reachable via this wiring.
             targetKind: lessonPlanId ? 'lessonNode' : 'freestyle',
-            // No isTrial signal reaches this component today — see report.
-            isTrial: false,
+            // Task E1: the embed's is_trial signal (EmbedConfig →
+            // TutorSession → isTrial prop). The main /tutor page has no
+            // trial concept and leaves the prop at its false default.
+            isTrial,
             // studentId absent ⇔ demo flow without auth (see the studentId
             // prop doc comment above) — the existing, already-documented
             // proxy for "no StudentContext".
@@ -11755,6 +11804,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
     setHasStarted(true);
+    // Task E1: stamp the actual session start for the demo-stop clock.
+    if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+      voiceSessionStartedAtMsRef.current = Date.now();
+    }
     onSessionStarted?.();
     setIsWarmingUp(true); // the brain is composing the resume turn now
     realtime.unlockAudio();
@@ -11799,6 +11852,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
+        // Task E1: stamp the actual session start for the demo-stop clock.
+        if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+          voiceSessionStartedAtMsRef.current = Date.now();
+        }
         // Session has truly begun now (student tapped the mic) — start the
         // session timer from here, not from page mount.
         onSessionStarted?.();

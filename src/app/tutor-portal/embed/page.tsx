@@ -84,6 +84,14 @@ interface EmbedConfig {
    *  persisted engine-side. The portal derives it from the prior session's
    *  captured opener record (outbound loop = part B, not built yet). */
   last_opener?: { kind: string; digest: string };
+  /** Task E1 (pedagogy) — the academy's trial-flow marker. When true the
+   *  engine resolves the demo-trial journey (opening behavior) and the
+   *  brain receives the milestone-mode `<demo_stop>` directive (win boxed
+   *  to completing the first concept) instead of the time-budget one.
+   *  The academy's trial embed must set is_trial=true when minting the
+   *  token; absent/false = not a trial. Only consumed when
+   *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
+  is_trial?: boolean;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -458,6 +466,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
         onOpenerRecord={handleOpenerRecord}
+        isTrial={config.is_trial === true}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

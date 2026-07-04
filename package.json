@@ -66,7 +66,10 @@
     "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
     "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
-    "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts"
+    "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
+    "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
+    "test:pedagogy-e2": "npx tsx scripts/test-demo-cta.ts",
+    "test:pedagogy-e3": "npx tsx scripts/test-demo-intent.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

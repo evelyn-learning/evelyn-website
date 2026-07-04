@@ -81,6 +81,15 @@ const CONFIRM_DIRECTIVE_MARKERS = [
   `Never skip a to-be-learned objective on a student's say-so`,
   'marking something learned without seeing it is not',
 ];
+// Task E2: soft conversion close — DEMO branch only. The quoted banned
+// examples stay aligned with the harness gate's BANNED_SELL_PHRASES
+// (scripts/tutor/pedagogy-harness/assertions.ts): sign up / subscribe /
+// upgrade (+ unlock, + no pricing talk).
+const CLOSE_DIRECTIVE_MARKERS = [
+  'When the session winds down, close warm and in-character',
+  'NEVER pitch, upsell, or steer toward signing up',
+  'the page around you owns that conversation',
+];
 
 // Legacy markers that must survive in EVERY mode (and unchanged with mode absent).
 const LEGACY_MARKERS = [
@@ -99,7 +108,7 @@ function main() {
 
   // -- 1. sessionMode absent: byte-identical / flag-off guarantee ----------
   test('absent mode: contains NO new framing strings', () => {
-    for (const m of [...SUBSCRIBED_MARKERS, DEMO_MARKER, PREREQ_HINT, ...CONFIRM_DIRECTIVE_MARKERS]) {
+    for (const m of [...SUBSCRIBED_MARKERS, DEMO_MARKER, PREREQ_HINT, ...CONFIRM_DIRECTIVE_MARKERS, ...CLOSE_DIRECTIVE_MARKERS]) {
       assert.ok(!offOutput.includes(m), `unexpected new marker in mode-absent output: "${m}"`);
     }
   });
@@ -157,6 +166,23 @@ function main() {
     for (const m of CONFIRM_DIRECTIVE_MARKERS) {
       assert.ok(!demoOutput.includes(m), `unexpected confirm-directive marker in demo output: "${m}"`);
       assert.ok(!offOutput.includes(m), `unexpected confirm-directive marker in mode-absent output: "${m}"`);
+    }
+  });
+
+  // -- 2c. Task E2 soft conversion close (demo only) --------------------------
+  test('demo: close directive present (Task E2)', () => {
+    for (const m of CLOSE_DIRECTIVE_MARKERS) {
+      assert.ok(demoOutput.includes(m), `missing close-directive marker: "${m}"`);
+    }
+    // The banned-example list stays aligned with the harness no-sell gate.
+    assert.ok(demoOutput.includes('no "sign up", "subscribe", "upgrade", "unlock", no pricing talk'));
+    assert.ok(demoOutput.includes('answer plainly and briefly, then hand off'));
+  });
+
+  test('close directive NOT present for subscribed or absent mode', () => {
+    for (const m of CLOSE_DIRECTIVE_MARKERS) {
+      assert.ok(!subOutput.includes(m), `unexpected close-directive marker in subscribed output: "${m}"`);
+      assert.ok(!offOutput.includes(m), `unexpected close-directive marker in mode-absent output: "${m}"`);
     }
   });
 
@@ -219,7 +245,7 @@ function main() {
       'subscribed output minus framing should equal mode-absent output',
     );
     assert.equal(
-      stripFraming(demoOutput, [DEMO_MARKER, PREREQ_HINT]),
+      stripFraming(demoOutput, [DEMO_MARKER, PREREQ_HINT, 'When the session winds down']),
       offOutput,
       'demo output minus framing should equal mode-absent output',
     );

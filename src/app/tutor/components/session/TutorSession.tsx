@@ -71,6 +71,10 @@ export interface TutorSessionProps {
   /** Opener-recency (part A) — fires once when this session's own opener
    *  record is captured. Forwarded to the runtime. */
   onOpenerRecord?: VTRProps['onOpenerRecord'];
+  /** Task E1 (pedagogy) — the embed's `is_trial` signal (academy trial
+   *  flow). Forwarded to the runtime, typed from VoiceTutorRealtime to
+   *  avoid drift. Only consumed when TUTOR_PEDAGOGY_OPENER is on. */
+  isTrial?: VTRProps['isTrial'];
   /** Display label for the topic (header / hero). */
   topicDisplayName?: string;
   /** Optional partner brand lockup shown in the top bar (embed branding). */
@@ -128,7 +132,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest, lastOpener, onOpenerRecord,
+    socialMemory, progressDigest, lastOpener, onOpenerRecord, isTrial,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -332,6 +336,7 @@ export default function TutorSession(props: TutorSessionProps) {
         progressDigest={progressDigest}
         lastOpener={lastOpener}
         onOpenerRecord={onOpenerRecord}
+        isTrial={isTrial}
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}
