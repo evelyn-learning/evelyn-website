@@ -1154,6 +1154,14 @@ export function VoiceTutorRealtime({
   // key={sessionId} in page.tsx for every new session, giving this ref a
   // fresh false value for free — see page.tsx ~2224).
   const openingTurnArmedRef = useRef(false);
+  // Task C1 (flag-gated): the session mode resolved by resolveOpeningBehavior
+  // ('demo' | 'subscribed'), stashed at mount time under the SAME one-shot
+  // latch above so callBrainOnce can attach it per-turn to lessonPlanContext
+  // (plan-as-seed framing). buildInstructions runs at mount; callBrainOnce
+  // needs the value on every turn — hence the ref. Only ever written when
+  // TUTOR_PEDAGOGY_OPENER is on; flag off ⇒ stays null ⇒ the sessionMode
+  // field is never present on the wire ⇒ server output byte-identical.
+  const sessionModeRef = useRef<'demo' | 'subscribed' | null>(null);
   // Single shared stall timer (see RENDER_SYNC_STALL_MS). Reset on every
   // buffer-add + playback-progress event; fires only on a genuine stall.
   const renderStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -6719,9 +6727,18 @@ export function VoiceTutorRealtime({
         // picked up on the next call). Free-conversation sessions omit
         // this — `lessonPlanRef.current` is null.
         const plan = lessonPlanRef.current;
-        const lessonPlanContext = plan && currentSegmentIdRef.current
+        const baseLessonPlanContext = plan && currentSegmentIdRef.current
           ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
           : undefined;
+        // Task C1 (flag-gated): attach the resolved session mode so
+        // formatLessonPlanContext renders the plan-as-seed framing
+        // ('subscribed' = seed + LO coverage contract; 'demo' = raw
+        // material). Flag off ⇒ sessionModeRef stays null ⇒ the field is
+        // never present ⇒ server-side block byte-identical to pre-C1.
+        const lessonPlanContext =
+          baseLessonPlanContext && TUTOR_PEDAGOGY_OPENER && sessionModeRef.current
+            ? { ...baseLessonPlanContext, sessionMode: sessionModeRef.current }
+            : baseLessonPlanContext;
 
         // Student-problem grounding (coherence fix): if the student brought
         // their OWN concrete problem (request-framed, concrete, divergent from
@@ -11439,6 +11456,11 @@ export function VoiceTutorRealtime({
           openerFields.selfReportRouting = true;
           if (!openingTurnArmedRef.current) {
             openingTurnPendingRef.current = beh.opener !== 'none';
+            // Task C1: stash the resolved session mode for per-turn reads in
+            // callBrainOnce (plan-as-seed framing on lessonPlanContext).
+            // Same one-shot latch — a mid-session prompt rebuild must not
+            // re-resolve/flip the mode after the session started.
+            sessionModeRef.current = openerFields.sessionMode ?? null;
             // Seed the per-turn opening directive under the SAME one-shot
             // latch (a mid-session prompt rebuild must not resurrect a
             // retired directive — the exact bug pattern the B3 review

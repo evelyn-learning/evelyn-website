@@ -228,6 +228,13 @@ export interface LessonPlanContext {
    *  audible to the student. Surfacing the list lets the brain skip
    *  the call in the first place. */
   completedSegmentIds?: string[];
+  /** Task C1 (pedagogy): session mode controls how the plan is FRAMED to
+   *  the brain — 'subscribed' = seed-not-script with the LOs as a coverage
+   *  contract; 'demo' = raw material, no coverage obligation. ABSENT ⇒ no
+   *  framing clause is rendered and formatLessonPlanContext output is
+   *  byte-identical to the pre-C1 block (the flag-off guarantee: the
+   *  client only sets this when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on). */
+  sessionMode?: 'demo' | 'subscribed';
 }
 
 export interface BrainToolCall {
@@ -437,6 +444,27 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
         `PROBLEM-LOCK for this segment: render the EXACT problem / question text from the segment above on the whiteboard before asking the student. Do not paraphrase, change numbers, or substitute a different problem. The student answers against the rendered version. If you depart from the script's text — even with the same intent — the validation gate compares against what you rendered, not what you remembered.`,
       ]
     : [];
+  // Task C1 (pedagogy): plan-as-seed framing by session mode. Rendered
+  // ONLY when ctx.sessionMode is present (client sets it only under
+  // NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER) — absent ⇒ empty array ⇒ output
+  // byte-identical to the pre-C1 block. The prerequisite-seeding hint is
+  // a pedagogy-METHOD example (allowed per feedback_generic_prompts);
+  // do not add topic-specific TEACHING examples here.
+  const prerequisiteHint = `To meet a student below the topic, step down to the nearest prerequisite (use the plan's prerequisites and the taxonomy as hints) and build up — e.g. multiply two linear factors before naming it a quadratic.`;
+  const planFraming =
+    ctx.sessionMode === 'subscribed'
+      ? [
+          ``,
+          `This plan is a seed, not a script. You may reorder, compress what they already show they know, detour through a prerequisite, swap in an example themed to their interests, or explain a different way — freely. But the plan's learning objectives are your coverage contract: by the end, each core LO must be genuinely taught or demonstrated, because that is how progress is recorded. Freedom over the *path*; faithfulness to the *destination*.`,
+          prerequisiteHint,
+        ]
+      : ctx.sessionMode === 'demo'
+        ? [
+            ``,
+            `This plan is raw material only — no obligation to cover it. Spend the time on whatever teaches this student best and shows what great teaching feels like.`,
+            prerequisiteHint,
+          ]
+        : [];
   return [
     `plan: ${plan.title} — grade ${plan.grade}, ${plan.subject} (${plan.estimatedMinutes} min)`,
     `learning objectives:`,
@@ -452,6 +480,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     `Stay within the current segment until its goal is met. Move on with`,
     `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,
     `Mark progress with mark_segment_complete({ segmentId, masteryDelta? }).`,
+    ...planFraming,
     completedNote,
   ].join('\n');
 }
