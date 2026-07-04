@@ -206,7 +206,15 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
     gateTaskIds: [],
     driverOpts: { targetKind: 'diagnostic' },
     rubric: [
-      { id: 'diagnostic-no-opener', question: 'Does the session start WITHOUT a proactive opener monologue or get-to-know-you calibration — appropriate for an assessment context where the student should be presented the assessment task directly and low-pressure?' },
+      // Scores the engine's ACTUAL diagnostic promise: the opener/calibration
+      // machinery no-ops (verified via [opener] telemetry — no directive is
+      // seeded). It deliberately does NOT demand an assessment-style start:
+      // this harness run synthetically pairs targetKind=diagnostic with a
+      // lesson PLAN (production diagnostics use the assessment flow, not a
+      // plan session), so the brain still teaches the plan — that part is
+      // out of scope here. First rubric draft demanded the assessment
+      // framing and false-flagged a correct session (2026-07-04).
+      { id: 'diagnostic-no-opener', question: 'Does the session get to work immediately — WITHOUT a warm proactive opener monologue about the student, and WITHOUT get-to-know-you calibration questions (grade, what they know, why they are here)? The content it works on may be ordinary lesson material; only the ABSENCE of opener/calibration behavior is being judged.' },
     ],
   },
   // S6 — mid-lesson pickup (ravi, FRESH checkpoint variant — the driver's

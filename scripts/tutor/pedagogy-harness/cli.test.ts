@@ -216,7 +216,7 @@ test("SCENARIO_MAP: S5 runs diego's diagnostic variant judge-only with targetKin
   assert.deepEqual(gateIdsForRow(SCENARIO_MAP.S5), []);
   assert.equal(SCENARIO_MAP.S5.driverOpts?.targetKind, 'diagnostic');
   assert.deepEqual(SCENARIO_MAP.S5.rubric.map((r) => r.id), ['diagnostic-no-opener']);
-  assert.ok(/WITHOUT a proactive opener/.test(SCENARIO_MAP.S5.rubric[0].question));
+  assert.ok(/WITHOUT a warm proactive opener monologue/.test(SCENARIO_MAP.S5.rubric[0].question));
 });
 
 test("SCENARIO_MAP: S6S runs ravi's STALE-checkpoint variant judge-only (light re-orient)", () => {
