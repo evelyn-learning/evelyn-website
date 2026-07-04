@@ -35,9 +35,15 @@ import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
+import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
+
+// Caption ↔ TTS word-sync (2026-07-04): audio-locked caption reveal.
+// Default ON; 'off' restores the legacy fixed-rate typewriter. claude-brain
+// only by construction (the handle returns null on other engines).
+const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
 
 export type TutorSessionVoiceEngine = 'realtime' | 'realtime-2' | 'realtime-validated' | 'claude-brain';
 
@@ -487,6 +493,11 @@ export default function TutorSession(props: TutorSessionProps) {
   const voiceState: VoiceState =
     liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
   const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
+  // Caption word-sync: stable poll getter for the CaptionTicker. Reads the
+  // engine handle imperatively — no React state churn at poll frequency.
+  const getSpokenCaption = useCallback((): SpokenCaption | null => {
+    return realtimeHandleRef.current?.getSpokenCaption?.() ?? null;
+  }, [realtimeHandleRef]);
   const objective = (() => {
     if (!lessonProgress.plan) return undefined;
     const segId = lessonProgress.currentSegmentId || '';
@@ -540,6 +551,7 @@ export default function TutorSession(props: TutorSessionProps) {
         listeningHint={listeningHint}
         started={started}
         liveCaption={liveCaption}
+        getSpokenCaption={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined}
         boardEmpty={whiteboardCommands.length === 0}
         board={boardEl}
         boardPages={boardNav ?? undefined}

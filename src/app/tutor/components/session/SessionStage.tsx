@@ -22,6 +22,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, Eraser, Camera, Maximize2,
   MessageSquareText, X, Target, Upload, ArrowDown, ChevronUp,
 } from 'lucide-react';
+import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 
 export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
 
@@ -53,6 +54,10 @@ export interface SessionStageProps {
    *  Before this we prompt "tap the mic to start" instead of "Listening…". */
   started?: boolean;
   liveCaption?: string;
+  /** Caption word-sync: poll getter for the audio-locked reveal. Absent →
+   *  legacy typewriter. Returns null → engine unsupported → legacy typewriter.
+   *  live:false → show the full caption instantly (finalized / reload). */
+  getSpokenCaption?: () => SpokenCaption | null;
   boardEmpty: boolean;
   // slots
   board: ReactNode;              // <WhiteboardCanvas suppressEmptyState chrome="minimal"/>
@@ -91,7 +96,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
-    voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
+    voiceState, micLevelRef, listeningHint, started = false, liveCaption, getSpokenCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
   } = props;
 
@@ -402,7 +407,7 @@ export default function SessionStage(props: SessionStageProps) {
                 still flows in so re-enabling is a one-line change. */}
             <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50/70 transition-colors">
               <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
-              <CaptionTicker text={liveCaption} />
+              <CaptionTicker text={liveCaption} getSpoken={getSpokenCaption} />
               {voiceState === 'speaking'
                 ? <MicMeter level={0} speaking />
                 : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
@@ -482,24 +487,52 @@ export default function SessionStage(props: SessionStageProps) {
  *  that fit the available width, ending on a complete word (so nothing is cut
  *  mid-word and the end never slides under the waveform). */
 let _capMeasureCanvas: HTMLCanvasElement | null = null;
-function CaptionTicker({ text }: { text: string }) {
+function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: () => SpokenCaption | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const [display, setDisplay] = useState('');
-  // How many characters of `text` are "revealed" so far. A typewriter advances
-  // this toward text.length at roughly speech pace, so the caption STREAMS in
-  // word-by-word as the tutor talks instead of snapping in whole sentences.
+  // How many characters of `text` are "revealed" so far (typewriter mode). A
+  // typewriter advances this toward text.length at roughly speech pace, so the
+  // caption STREAMS in word-by-word as the tutor talks instead of snapping in
+  // whole sentences.
   const [revealed, setRevealed] = useState(0);
+  // Poll mode substitutes the revealed string wholesale (the tracker's text
+  // may differ slightly from `text` mid-turn); typewriter mode reveals a
+  // prefix of `text`. `shown` unifies the two for the width-fit effect.
+  const [polled, setPolled] = useState<string | null>(null);
   const revealedRef = useRef(0);
   const prevTextRef = useRef('');
 
+  // ── Audio-locked poll mode ────────────────────────────────────────
+  // `polling` is STATE (not a ref) so the typewriter effect below re-runs
+  // and shuts off as soon as the probe succeeds — a ref read during render
+  // would leave both reveal drivers running for a frame.
+  const [polling, setPolling] = useState(false);
   useEffect(() => {
-    const prev = prevTextRef.current;
-    prevTextRef.current = text;
+    if (!getSpoken) { setPolling(false); return; }
+    // Probe once: null = unsupported engine → typewriter path below.
+    if (getSpoken() === null) { setPolling(false); setPolled(null); return; }
+    setPolling(true);
+    const id = setInterval(() => {
+      const c = getSpoken();
+      if (c === null) return; // engine flipped mid-session — hold last
+      // live: show the tracker's reveal. Not live (finalized turn, page
+      // reload, between turns): show the full caption text instantly.
+      setPolled(c.live ? c.text : null);
+      if (!c.live) { revealedRef.current = 0; }
+    }, 100);
+    return () => clearInterval(id);
+  }, [getSpoken]);
+
+  // ── Legacy typewriter (flag off / unsupported engine) ─────────────
+  useEffect(() => {
+    if (polling) return;
     // Reset (retype from 0) ONLY on a genuinely new turn — i.e. the new text
     // shares almost no prefix with the previous one. Same-turn streaming keeps
     // a long common prefix, INCLUDING the case where markdown-stripping removes
     // a mid-string "*" (which makes the caption briefly non-monotonic) — a plain
     // startsWith check would mis-fire there and re-type the sentence repeatedly.
+    const prev = prevTextRef.current;
+    prevTextRef.current = text;
     let common = 0;
     const n = Math.min(prev.length, text.length);
     while (common < n && prev.charCodeAt(common) === text.charCodeAt(common)) common++;
@@ -520,11 +553,12 @@ function CaptionTicker({ text }: { text: string }) {
       if (next >= text.length) clearInterval(id);
     }, 85);
     return () => clearInterval(id);
-  }, [text]);
+  }, [text, polling]);
 
-  // Show the trailing words of the revealed prefix that fit one line.
+  const shown = polling ? (polled ?? text) : text.slice(0, revealed);
+
+  // ── Width-fit trailing words (UNCHANGED except reading `shown`) ────
   useEffect(() => {
-    const shown = text.slice(0, revealed);
     const el = ref.current;
     if (!el || typeof document === 'undefined') { setDisplay(shown); return; }
     const width = el.clientWidth;
@@ -545,7 +579,7 @@ function CaptionTicker({ text }: { text: string }) {
       tail = cand;
     }
     setDisplay(tail ? ell + tail : ell + (words[words.length - 1] ?? shown));
-  }, [text, revealed]);
+  }, [shown]);
 
   return (
     <div ref={ref} className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-sm text-slate-700">
