@@ -139,7 +139,13 @@ export const SCENARIO_MAP: Record<string, ScenarioRow> = {
     personas: ['zoe'],
     gateTaskIds: ['B2'],
     rubric: [
-      { id: 'zero-social-render', question: "Does the session contain NO reference to any stored personal/social detail — consistent with memory level 'off'?" },
+      // NOTE the two-channel split (locked decision #5): social-memory
+      // opt-out gates SOCIAL/rapport details ONLY. Pedagogical continuity
+      // (what the student learned/struggled with last session, mastery,
+      // gaps) is core learning state and is EXPECTED to appear for a
+      // returning student regardless of the toggle. First rubric draft
+      // conflated the two and false-flagged a correct session (2026-07-04).
+      { id: 'zero-social-render', question: "Does the session contain NO reference to any stored SOCIAL/personal detail about the student's life outside learning (interests, hobbies, upcoming personal events, family/pets) — consistent with social-memory level 'off'? IMPORTANT: pedagogical memory (what they learned, were good at, or struggled with in prior sessions) is NOT social memory and is expected/fine for a returning student — do not penalize it." },
     ],
   },
   // S6 — mid-lesson pickup (ravi, FRESH checkpoint variant — the driver's
