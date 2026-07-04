@@ -1315,7 +1315,13 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     "teacher would — roughly where they're at with this topic, their grade if unclear, and " +
     'what they\'re hoping to get from this session (just exploring, thinking about joining, ' +
     'curious how an AI teaches). Have a short human exchange, THEN teach, informed by it. ' +
-    "NEVER open with 'Today we are going to learn…' or a bare bold title." + noNameClause
+    "NEVER open with 'Today we are going to learn…' or a bare bold title. " +
+    'Start IN the substance, not with a curtain-raiser: stock lead-ins like ' +
+    '"here\'s a little puzzle to kick us off", "let\'s dive in", "before we start", or ' +
+    '"don\'t worry about getting it right" read as the same script every session — skip the ' +
+    'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
+    'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
+    'scenario, a what-would-happen-if.' + noNameClause
   );
 }
 

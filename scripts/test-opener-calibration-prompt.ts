@@ -54,6 +54,24 @@ function main() {
     assert.doesNotMatch(clause!, /what they already know/i);
   });
 
+  test('demo + button: bans the stock curtain-raiser lead-ins observed in live runs', () => {
+    // Phrasing-variety tuning (2026-07-03): every live flag-ON opener used
+    // the identical "here's a little puzzle to kick us off" framing — the
+    // judge flagged it as templated across B2/B4/B6. The clause must name
+    // the attractor phrasings as banned and push content-led openers.
+    const clause = buildOpenerClause({
+      ...baseCtx,
+      openingPhase: true,
+      sessionMode: 'demo',
+      entryMode: 'button',
+    });
+    assert.ok(clause);
+    assert.match(clause!, /curtain-raiser/);
+    assert.match(clause!, /puzzle to kick us off/);
+    assert.match(clause!, /let's dive in/);
+    assert.match(clause!, /lead with the intriguing thing ITSELF/);
+  });
+
   // ── subscribed + isReturning ──────────────────────────────────────────────
   test('subscribed + isReturning: warm-resume + no-ask + no-repeat, not the demo intent probe', () => {
     const clause = buildOpenerClause({
