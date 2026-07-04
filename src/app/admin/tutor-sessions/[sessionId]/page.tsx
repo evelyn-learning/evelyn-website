@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TutorSession } from "@/models";
 import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Target } from "lucide-react";
+import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import ReplayPlayer from "../components/ReplayPlayer";
 
 interface SessionPageProps {
@@ -50,6 +51,31 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Session Detail</h1>
               <p className="text-sm text-gray-500">{session.sessionId}</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
+                  session.source === 'embed' ? 'bg-indigo-50 text-indigo-600'
+                  : session.source === 'test' ? 'bg-purple-50 text-purple-600'
+                  : session.source === 'showcase' ? 'bg-amber-50 text-amber-600'
+                  : 'bg-blue-50 text-blue-600'
+                }`}>
+                  {session.source === 'embed' ? 'Portal' : session.source === 'test' ? 'Test' : session.source === 'showcase' ? 'Showcase' : 'Website'}
+                </span>
+                {session.sourcePartnerId && (
+                  <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600">{session.sourcePartnerId}</span>
+                )}
+                {session.sourceHost && (
+                  <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700">{String(session.sourceHost).replace(/^https?:\/\//, '')}</span>
+                )}
+                {session.voiceEngine && (
+                  <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">{session.voiceEngine}</span>
+                )}
+                {session.hasAudio && (
+                  <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-green-50 text-green-600">Audio</span>
+                )}
+                <span className="inline-flex rounded px-2 py-0.5 text-xs text-gray-500" title={new Date(session.startedAt).toLocaleString('en-US')}>
+                  {formatRelativeTime(session.startedAt)}
+                </span>
+              </div>
             </div>
             <span className={`ml-auto rounded-full px-3 py-1 text-sm font-medium ${statusColors[session.status] || 'bg-gray-100'}`}>
               {session.status}
