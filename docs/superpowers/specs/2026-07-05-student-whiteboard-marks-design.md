@@ -188,6 +188,13 @@ figure") and multi-stroke gestures fragmented into per-stroke noise; the
    OCR is async (DrawPad precedent): the mark enters the pending buffer on
    resolve; failure degrades to "wrote something (unreadable)". New
    ResolvedMark kinds: `tick`, `writing` (with `text?`).
+4. **Typing-awareness (second live-test round):** the idle-send busy
+   predicate also waits while the dock's text input is FOCUSED
+   (`studentTypingRef` via the input's existing focus/blur handlers) — a
+   mark followed by a typed message attaches to that message instead of
+   idle-sending mid-composition. Junk-OCR containment
+   (`sanitizeInkOcrText`) and an OCR-in-flight idle gate were added by
+   the same round's final review.
 
 ## Out of scope (all phases)
 
