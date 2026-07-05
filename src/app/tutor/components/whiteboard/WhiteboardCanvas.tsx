@@ -812,9 +812,14 @@ export function WhiteboardCanvas({
   }, [onStudentMark, collectRects, currentIndex, safeCurrentPage.title]);
 
   const handleMarkPointerDown = useCallback((e: React.PointerEvent) => {
+    // While the pen is active, taps are the pen overlay's business — the
+    // overlay sits above this wrapper and stops propagation on its own
+    // events, but guard here too in case a pointerdown lands outside it.
+    if (penMode) { tapStartRef.current = null; return; }
     tapStartRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
-  }, []);
+  }, [penMode]);
   const handleMarkPointerUp = useCallback((e: React.PointerEvent) => {
+    if (penMode) { tapStartRef.current = null; return; }
     const start = tapStartRef.current;
     tapStartRef.current = null;
     if (!start || !onStudentMark) return;
@@ -825,7 +830,7 @@ export function WhiteboardCanvas({
     const target = e.target as HTMLElement;
     if (target.closest('button, a, input, select, textarea, [role="button"]')) return;
     fireStudentTap(e.clientX, e.clientY);
-  }, [onStudentMark, fireStudentTap]);
+  }, [onStudentMark, fireStudentTap, penMode]);
 
   // ── Phase 2: pen mode (freehand ink) ────────────────────────────────
   // See the InkStroke doc comment above for the epoch-tagging rationale.
@@ -864,6 +869,9 @@ export function WhiteboardCanvas({
   }, [onStudentMark, collectRects, currentIndex, safeCurrentPage, inkEpoch, tutorBusy]);
 
   const handlePenDown = useCallback((e: React.PointerEvent) => {
+    // The overlay is a child of the Phase-1 tap wrapper — stop the event
+    // here so a short stroke never also bubbles into handleMarkPointerDown.
+    e.stopPropagation();
     const p = penPoint(e.clientX, e.clientY);
     if (!p) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -880,7 +888,19 @@ export function WhiteboardCanvas({
     pts.push(p);
     setLiveStroke([...pts]);
   }, [penPoint]);
-  const handlePenUp = useCallback(() => { finishStroke(); }, [finishStroke]);
+  const handlePenUp = useCallback((e: React.PointerEvent) => {
+    // See handlePenDown — same double-fire risk on the up edge.
+    e.stopPropagation();
+    finishStroke();
+  }, [finishStroke]);
+
+  // Abort an in-progress stroke on page navigation or pen-mode exit — the
+  // capture surface is gone, and finishing against the wrong page would
+  // mistag the mark. Discard silently.
+  useEffect(() => {
+    activeStrokeRef.current = null;
+    setLiveStroke(null);
+  }, [currentIndex, penMode]);
 
   // Fade — when `inkEpoch` advances past a stroke's epoch, mark it fading,
   // remove after the CSS opacity transition (1.2s + slack) completes.
@@ -1168,6 +1188,7 @@ export function WhiteboardCanvas({
             onPointerMove={handlePenMove}
             onPointerUp={handlePenUp}
             onPointerCancel={handlePenUp}
+            onLostPointerCapture={handlePenUp}
           />
         )}
         </div>
