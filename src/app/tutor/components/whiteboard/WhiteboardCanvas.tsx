@@ -238,7 +238,7 @@ interface WhiteboardCanvasProps {
 // `polyline` is NORMALIZED (0..1 of the page wrapper at capture time) — it
 // feeds mark emission/resolution, which reasons in the same normalized
 // space the brain's rects use, so it must stay untouched. `px` is the same
-// stroke captured in wrapper-relative CSS pixels at that same instant, used
+// stroke captured in outer-host-relative (pageOuterRef) CSS pixels at that same instant, used
 // ONLY for rendering: painting from px means a stroke's on-screen position
 // is anchored to where the student actually drew it, not re-derived from
 // the wrapper's CURRENT height. That matters because content append below

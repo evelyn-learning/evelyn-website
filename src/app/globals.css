@@ -171,7 +171,7 @@
 }
 
 /* Student marks (Phase 2): live/persisted freehand ink strokes drawn in
-   pen mode. Points are wrapper-relative CSS px (no viewBox scaling), so
+   pen mode. Points are outer-host-relative (pageOuterRef) CSS px (no viewBox scaling), so
    stroke-width is already in real px — vector-effect: non-scaling-stroke
    is unneeded here (kept off; nothing in this SVG scales). */
 .wb-student-ink {
