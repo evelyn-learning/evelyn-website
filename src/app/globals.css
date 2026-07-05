@@ -170,6 +170,23 @@
   100% { transform: scale(1.6); opacity: 0; }
 }
 
+/* Student marks (Phase 2): live/persisted freehand ink strokes drawn in
+   pen mode. viewBox is 0-100 (percent-scaled points); non-scaling-stroke
+   keeps the line width constant despite the percent-space scale. */
+.wb-student-ink {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.85;
+}
+.wb-student-ink-fading {
+  opacity: 0;
+  transition: opacity 1.2s ease-out;
+}
+
 /* Streaming chat — a subtle caret blink at the end of an in-progress
    tutor message so the user feels typing momentum. */
 @keyframes typing-caret {

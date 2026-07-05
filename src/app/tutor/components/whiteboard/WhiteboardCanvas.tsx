@@ -211,7 +211,23 @@ interface WhiteboardCanvasProps {
   /** Student marks (Phase 1): fires on a resolved tap on the board. When
    *  absent, no listeners mount and behavior is byte-identical. */
   onStudentMark?: (ev: StudentMarkEvent) => void;
+  /** Phase 2 pen mode: while true, the board captures freehand strokes on a
+   *  scroll-locking overlay and emits type:'stroke' events via onStudentMark. */
+  penMode?: boolean;
+  /** Bumped by the parent when a tutor turn completes; ink strokes created
+   *  at an earlier epoch fade out. */
+  inkEpoch?: number;
 }
+
+// ── Phase 2: pen mode (freehand ink) ────────────────────────────────
+// Strokes live at canvas level tagged with pageIndex + inkEpoch; they
+// render on their own page and fade once the tutor's next turn completes
+// (parent bumps inkEpoch). A stroke drawn while the tutor is mid-turn is
+// tagged one epoch ahead so the CURRENT turn's completion doesn't fade
+// it before the tutor ever saw it.
+// (Module-level, not inside the component body, so the type declaration
+// doesn't get re-evaluated on every render.)
+interface InkStroke { id: number; pageIndex: number; polyline: { x: number; y: number }[]; epoch: number; fading?: boolean; }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
  *  once at the WhiteboardCanvas level; deeply-nested renderers (like
@@ -234,6 +250,8 @@ export function WhiteboardCanvas({
   onNavChange,
   openOnLastPage = false,
   onStudentMark,
+  penMode = false,
+  inkEpoch,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -809,10 +827,80 @@ export function WhiteboardCanvas({
     fireStudentTap(e.clientX, e.clientY);
   }, [onStudentMark, fireStudentTap]);
 
+  // ── Phase 2: pen mode (freehand ink) ────────────────────────────────
+  // See the InkStroke doc comment above for the epoch-tagging rationale.
+  const [inkStrokes, setInkStrokes] = useState<InkStroke[]>([]);
+  const strokeIdRef = useRef(0);
+  const activeStrokeRef = useRef<{ x: number; y: number }[] | null>(null);
+  const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
+
+  const penPoint = useCallback((clientX: number, clientY: number) => {
+    const wrapper = pageWrapperRef.current;
+    if (!wrapper) return null;
+    const r = wrapper.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return null;
+    return { x: (clientX - r.left) / r.width, y: (clientY - r.top) / r.height };
+  }, []);
+
+  const finishStroke = useCallback(() => {
+    const pts = activeStrokeRef.current;
+    activeStrokeRef.current = null;
+    setLiveStroke(null);
+    if (!pts || pts.length < 2 || !onStudentMark) return;
+    const id = ++strokeIdRef.current;
+    setInkStrokes((s) => [...s, {
+      id,
+      pageIndex: currentIndex,
+      polyline: pts,
+      epoch: (inkEpoch ?? 0) + (tutorBusy ? 1 : 0),
+    }]);
+    onStudentMark({
+      type: 'stroke',
+      pageIndex: currentIndex,
+      pageTitle: safeCurrentPage?.title || undefined,
+      polyline: pts,
+      rects: collectRects(),
+    });
+  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage, inkEpoch, tutorBusy]);
+
+  const handlePenDown = useCallback((e: React.PointerEvent) => {
+    const p = penPoint(e.clientX, e.clientY);
+    if (!p) return;
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    activeStrokeRef.current = [p];
+    setLiveStroke([p]);
+  }, [penPoint]);
+  const handlePenMove = useCallback((e: React.PointerEvent) => {
+    if (!activeStrokeRef.current) return;
+    const p = penPoint(e.clientX, e.clientY);
+    if (!p) return;
+    const pts = activeStrokeRef.current;
+    const last = pts[pts.length - 1];
+    if (Math.hypot(p.x - last.x, p.y - last.y) < 0.004) return; // decimate
+    pts.push(p);
+    setLiveStroke([...pts]);
+  }, [penPoint]);
+  const handlePenUp = useCallback(() => { finishStroke(); }, [finishStroke]);
+
+  // Fade — when `inkEpoch` advances past a stroke's epoch, mark it fading,
+  // remove after the CSS opacity transition (1.2s + slack) completes.
+  useEffect(() => {
+    if (inkEpoch === undefined) return;
+    setInkStrokes((strokes) => {
+      if (!strokes.some((s) => !s.fading && s.epoch < inkEpoch)) return strokes;
+      return strokes.map((s) => (!s.fading && s.epoch < inkEpoch ? { ...s, fading: true } : s));
+    });
+    const t = setTimeout(() => {
+      setInkStrokes((strokes) => strokes.filter((s) => !s.fading));
+    }, 1300);
+    return () => clearTimeout(t);
+  }, [inkEpoch]);
+
   // Dev/test hook: __tutorTestTap(xFrac, yFrac) simulates a student tap at
   // a page-relative position through the REAL capture path (rect
   // collection, resolution, ping, transport). NODE_ENV-guarded like the
-  // page-level __tutorTest* hooks.
+  // page-level __tutorTest* hooks. __tutorTestStroke(points) does the same
+  // for Phase 2 freehand strokes.
   useEffect(() => {
     if (process.env.NODE_ENV === 'production' || !onStudentMark) return;
     const w = window as unknown as { __tutorTestTap?: (x: number, y: number) => boolean };
@@ -823,8 +911,16 @@ export function WhiteboardCanvas({
       fireStudentTap(r.left + xFrac * r.width, r.top + yFrac * r.height);
       return true;
     };
-    return () => { delete w.__tutorTestTap; };
-  }, [onStudentMark, fireStudentTap]);
+    const wStroke = window as unknown as { __tutorTestStroke?: (pts: [number, number][]) => boolean };
+    wStroke.__tutorTestStroke = (fracPts: [number, number][]) => {
+      const wrapper = pageWrapperRef.current;
+      if (!wrapper || fracPts.length < 2 || !onStudentMark) return false;
+      activeStrokeRef.current = fracPts.map(([x, y]) => ({ x, y }));
+      finishStroke();
+      return true;
+    };
+    return () => { delete w.__tutorTestTap; delete wStroke.__tutorTestStroke; };
+  }, [onStudentMark, fireStudentTap, finishStroke]);
 
   if (pages.length === 0) {
     return (
@@ -953,7 +1049,7 @@ export function WhiteboardCanvas({
         // maps, diagrams, tables) never trigger a horizontal scrollbar across
         // the pane; renderers that legitimately need horizontal scroll have
         // their own inner overflow-x-auto, so those still work.
-        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden'} p-4`}
+        className={`flex-1 ${penMode ? 'overflow-hidden' : (chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden')} p-4`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
@@ -1047,6 +1143,33 @@ export function WhiteboardCanvas({
             style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
           />
         ))}
+        {/* Phase 2: ink strokes for THIS page + the in-progress stroke. */}
+        {(inkStrokes.some((s) => s.pageIndex === currentIndex) || liveStroke) && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {inkStrokes.filter((s) => s.pageIndex === currentIndex).map((s) => (
+              <polyline
+                key={s.id}
+                points={s.polyline.map((p) => `${p.x * 100},${p.y * 100}`).join(' ')}
+                className={s.fading ? 'wb-student-ink wb-student-ink-fading' : 'wb-student-ink'}
+              />
+            ))}
+            {liveStroke && (
+              <polyline points={liveStroke.map((p) => `${p.x * 100},${p.y * 100}`).join(' ')} className="wb-student-ink" />
+            )}
+          </svg>
+        )}
+        {/* Phase 2: pen-mode capture overlay — blocks item interaction and
+            (with touch-action none) touch scrolling while the pen is active. */}
+        {penMode && onStudentMark && (
+          <div
+            className="absolute inset-0 z-20 cursor-crosshair"
+            style={{ touchAction: 'none' }}
+            onPointerDown={handlePenDown}
+            onPointerMove={handlePenMove}
+            onPointerUp={handlePenUp}
+            onPointerCancel={handlePenUp}
+          />
+        )}
         </div>
       </div>
       {/* Scroll-down hint: visible when multi-item page has overflow */}
