@@ -6397,6 +6397,16 @@ export function VoiceTutorRealtime({
     return formatStudentMarks(marks, lookupMarkLabels);
   }, [lookupMarkLabels]);
 
+  // Student marks: clear any armed idle-send timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (studentMarkIdleTimerRef.current) {
+        clearTimeout(studentMarkIdleTimerRef.current);
+        studentMarkIdleTimerRef.current = null;
+      }
+    };
+  }, []);
+
   // Inner brain-call worker — does the actual fetch + dispatch. Pulled out
   // so the outer wrapper can serialize calls and process queued transcripts
   // without duplicating the body.
@@ -6945,6 +6955,13 @@ export function VoiceTutorRealtime({
       // validation rejections and a valid show_function_graph was swept).
       winningAttemptRenderedRef.current = false;
 
+      // Student marks (Phase 1): drain ONCE per logical turn, BEFORE the
+      // validator-retry loop — a killed attempt 0 must not eat the marks
+      // (the retry that the student actually hears re-sends the same block;
+      // duplicating context to a rejected, invisible attempt is harmless,
+      // losing it on the surviving one is not).
+      const studentMarksForTurn = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -7043,11 +7060,6 @@ export function VoiceTutorRealtime({
           console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
         }
 
-        // Student marks (Phase 1): drain the pending tap buffer into a
-        // <student_marks> block riding THIS turn. Flag off / empty buffer ⇒
-        // field stays undefined ⇒ request byte-identical.
-        const studentMarks = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
-
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
         // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
         // undefined and JSON.stringify omits it (request byte-identical).
@@ -7117,10 +7129,10 @@ export function VoiceTutorRealtime({
             // Teacher-persona style salience: per-turn reminder, present
             // exactly when the opening directive is NOT (see block above).
             styleReminder,
-            // Student marks (Phase 1): drained tap buffer for THIS turn
-            // (undefined when the flag is off or nothing was tapped — see
-            // the block above).
-            studentMarks,
+            // Student marks (Phase 1): drained tap buffer for THIS turn,
+            // captured once above the retry loop (undefined when the flag
+            // is off or nothing was tapped — see the block above).
+            studentMarks: studentMarksForTurn,
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
