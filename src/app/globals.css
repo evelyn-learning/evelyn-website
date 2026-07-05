@@ -184,7 +184,7 @@
 }
 .wb-student-ink-fading {
   opacity: 0;
-  transition: opacity 1.2s ease-out;
+  transition: opacity 4s ease-out;
 }
 
 /* Streaming chat — a subtle caret blink at the end of an in-progress

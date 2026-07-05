@@ -855,6 +855,28 @@ export function WhiteboardCanvas({
     return { x: (clientX - r.left) / r.width, y: (clientY - r.top) / r.height };
   }, []);
 
+  // Gesture grouping: strokes within GESTURE_QUIET_MS of each other form ONE
+  // gesture (a tick = 2 strokes, handwriting = many). The group emits as a
+  // single type:'gesture' event when the quiet window elapses. Ink renders
+  // per stroke immediately — grouping never delays what the student sees.
+  const GESTURE_QUIET_MS = 1200;
+  const gestureStrokesRef = useRef<{ x: number; y: number }[][]>([]);
+  const gestureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const emitGesture = useCallback(() => {
+    gestureTimerRef.current = null;
+    const strokes = gestureStrokesRef.current;
+    gestureStrokesRef.current = [];
+    if (strokes.length === 0 || !onStudentMark) return;
+    onStudentMark({
+      type: 'gesture',
+      pageIndex: currentIndex,
+      pageTitle: safeCurrentPage?.title || undefined,
+      strokes,
+      rects: collectRects(),
+    });
+  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage]);
+
   const finishStroke = useCallback(() => {
     const pts = activeStrokeRef.current;
     activeStrokeRef.current = null;
@@ -867,14 +889,10 @@ export function WhiteboardCanvas({
       polyline: pts,
       epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
     }]);
-    onStudentMark({
-      type: 'stroke',
-      pageIndex: currentIndex,
-      pageTitle: safeCurrentPage?.title || undefined,
-      polyline: pts,
-      rects: collectRects(),
-    });
-  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage, inkEpoch, tutorBusy, tutorTurnActive]);
+    gestureStrokesRef.current.push(pts);
+    if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
+    gestureTimerRef.current = setTimeout(emitGesture, GESTURE_QUIET_MS);
+  }, [onStudentMark, currentIndex, inkEpoch, tutorBusy, tutorTurnActive, emitGesture]);
 
   const handlePenDown = useCallback((e: React.PointerEvent) => {
     // The overlay is a child of the Phase-1 tap wrapper — stop the event
@@ -904,23 +922,39 @@ export function WhiteboardCanvas({
 
   // Abort an in-progress stroke on page navigation or pen-mode exit — the
   // capture surface is gone, and finishing against the wrong page would
-  // mistag the mark. Discard silently.
+  // mistag the mark. Discard silently. Also discard any pending gesture —
+  // a group that spans a page nav is not one coherent mark, so drop it
+  // rather than emit against a stale page.
   useEffect(() => {
     activeStrokeRef.current = null;
     setLiveStroke(null);
+    if (gestureTimerRef.current) {
+      clearTimeout(gestureTimerRef.current);
+      gestureTimerRef.current = null;
+    }
+    gestureStrokesRef.current = [];
   }, [currentIndex, penMode]);
 
-  // Fade — when `inkEpoch` advances past a stroke's epoch, mark it fading,
-  // remove after the CSS opacity transition (1.2s + slack) completes.
+  // Unmount cleanup — a pending gesture timer must not fire (and touch
+  // state) after the component is gone.
+  useEffect(() => {
+    return () => {
+      if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
+    };
+  }, []);
+
+  // Fade — when `inkEpoch` advances two turns past a stroke's epoch (the
+  // amended 2-turn slow fade), mark it fading, remove after the CSS opacity
+  // transition (4s + slack) completes.
   useEffect(() => {
     if (inkEpoch === undefined) return;
     setInkStrokes((strokes) => {
-      if (!strokes.some((s) => !s.fading && s.epoch < inkEpoch)) return strokes;
-      return strokes.map((s) => (!s.fading && s.epoch < inkEpoch ? { ...s, fading: true } : s));
+      if (!strokes.some((s) => !s.fading && s.epoch + 2 <= inkEpoch)) return strokes;
+      return strokes.map((s) => (!s.fading && s.epoch + 2 <= inkEpoch ? { ...s, fading: true } : s));
     });
     const t = setTimeout(() => {
       setInkStrokes((strokes) => strokes.filter((s) => !s.fading));
-    }, 1300);
+    }, 4300);
     return () => clearTimeout(t);
   }, [inkEpoch]);
 
@@ -928,7 +962,9 @@ export function WhiteboardCanvas({
   // a page-relative position through the REAL capture path (rect
   // collection, resolution, ping, transport). NODE_ENV-guarded like the
   // page-level __tutorTest* hooks. __tutorTestStroke(points) does the same
-  // for Phase 2 freehand strokes.
+  // for Phase 2 freehand strokes (it now feeds the gesture buffer and emits
+  // after the GESTURE_QUIET_MS window — callers that need an immediate
+  // emit, or a multi-stroke gesture, should use __tutorTestGesture instead).
   useEffect(() => {
     if (process.env.NODE_ENV === 'production' || !onStudentMark) return;
     const w = window as unknown as { __tutorTestTap?: (x: number, y: number) => boolean };
@@ -947,8 +983,15 @@ export function WhiteboardCanvas({
       finishStroke();
       return true;
     };
-    return () => { delete w.__tutorTestTap; delete wStroke.__tutorTestStroke; };
-  }, [onStudentMark, fireStudentTap, finishStroke]);
+    const wGesture = window as unknown as { __tutorTestGesture?: (strokes: [number, number][][]) => boolean };
+    wGesture.__tutorTestGesture = (strokes) => {
+      if (!onStudentMark || strokes.length === 0) return false;
+      gestureStrokesRef.current = strokes.map((s) => s.map(([x, y]) => ({ x, y })));
+      emitGesture();
+      return true;
+    };
+    return () => { delete w.__tutorTestTap; delete wStroke.__tutorTestStroke; delete wGesture.__tutorTestGesture; };
+  }, [onStudentMark, fireStudentTap, finishStroke, emitGesture]);
 
   if (pages.length === 0) {
     return (
