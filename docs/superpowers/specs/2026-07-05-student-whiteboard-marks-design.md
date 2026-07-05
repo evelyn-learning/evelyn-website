@@ -165,6 +165,30 @@ selection or emphasis. Generic wording — no topic-specific examples
   tap + silence (idle-send fires after tutor finishes); tap on a Desmos
   graph (whole-item wording); mobile tap (no scroll conflict).
 
+## Amendments (2026-07-05, from the user's Phase-2 live test)
+
+Live evidence: answering by drawing (tick on an option, circle as answer,
+handwriting "x² + y² = r²") was read deictically ("you're pointing at the
+figure") and multi-stroke gestures fragmented into per-stroke noise; the
+1.2s next-turn fade read as "ink-vanish". Three amendments, user-locked:
+
+1. **Ink lifecycle (revises decision 4):** ink persists through the tutor's
+   acknowledging turn and fades slowly (~4s) after the SECOND tutor-turn
+   completion. Points keep the 2s ping.
+2. **Answer comprehension (prompt):** when the tutor has just asked a
+   question and the student's turn is marks-only, the marks ARE the answer —
+   a circle/tick on an option means "this one"; evaluate the choice instead
+   of describing what was marked.
+3. **Writing detection → vision (Phase-3 core pulled forward):** strokes
+   group into GESTURES (quiet-window ~1.2s); a 2-stroke gesture classifies
+   as tick (V-angle) or cross-out (crossing lines); ≥3 strokes (or an
+   unresolvable 2-stroke) = likely WRITING → rasterize the gesture's ink
+   (bbox crop, white bg) → existing `/api/tutor/extract-homework` OCR →
+   mark arrives as `The student wrote on the board near {target}: "…"`.
+   OCR is async (DrawPad precedent): the mark enters the pending buffer on
+   resolve; failure degrades to "wrote something (unreadable)". New
+   ResolvedMark kinds: `tick`, `writing` (with `text?`).
+
 ## Out of scope (all phases)
 
 - Marks inside Desmos/Ketcher iframes (whole-item only, accepted).
