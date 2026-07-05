@@ -784,6 +784,19 @@ export function WhiteboardCanvas({
   // movement threshold). Coordinates + candidate rects are normalized to
   // the page wrapper so downstream resolution is pure math.
   const pageWrapperRef = useRef<HTMLDivElement | null>(null);
+  // Outer host for the Phase-2 pen overlay + ink SVG — one level up from
+  // pageWrapperRef, wrapping it PLUS the surrounding p-4 padding gutter.
+  // The page wrapper's own box ends at the bottom of its last in-flow
+  // child (the AnnotationStrip, when present); the padding around it
+  // lives OUTSIDE that box on the scroll container. A pen overlay scoped
+  // to pageWrapperRef alone leaves that padding gutter (and any margin
+  // between the wrapper and the scroll container's edge) unreachable —
+  // hit live 2026-07-05: a student's stroke just past the annotation
+  // strip's text didn't register. Hosting the overlay here instead (this
+  // div owns the padding) extends coverage to the full scrollable page
+  // content while leaving point NORMALIZATION untouched (still computed
+  // against pageWrapperRef below — see penPoint).
+  const pageOuterRef = useRef<HTMLDivElement | null>(null);
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const [pings, setPings] = useState<{ id: number; x: number; y: number }[]>([]);
   const pingIdRef = useRef(0);
@@ -866,13 +879,21 @@ export function WhiteboardCanvas({
 
   const penPoint = useCallback((clientX: number, clientY: number) => {
     const wrapper = pageWrapperRef.current;
-    if (!wrapper) return null;
+    const outer = pageOuterRef.current;
+    if (!wrapper || !outer) return null;
     const r = wrapper.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return null;
+    // Normalized x/y stay WRAPPER-relative (unchanged) — a stroke landing
+    // in the padding gutter around the wrapper normalizes to a fraction
+    // outside [0,1], which resolveStudentMark already treats as page-only
+    // (no item/feature rect contains it). `px` is relative to the OUTER
+    // host instead, since that's the element the ink SVG now paints
+    // into — see the InkStroke doc comment and pageOuterRef's doc comment.
+    const outerRect = outer.getBoundingClientRect();
     return {
       x: (clientX - r.left) / r.width,
       y: (clientY - r.top) / r.height,
-      px: { x: clientX - r.left, y: clientY - r.top },
+      px: { x: clientX - outerRect.left, y: clientY - outerRect.top },
     };
   }, []);
 
@@ -1016,13 +1037,20 @@ export function WhiteboardCanvas({
     const wStroke = window as unknown as { __tutorTestStroke?: (pts: [number, number][]) => boolean };
     wStroke.__tutorTestStroke = (fracPts: [number, number][]) => {
       const wrapper = pageWrapperRef.current;
-      if (!wrapper || fracPts.length < 2 || !onStudentMark) return false;
+      const outer = pageOuterRef.current;
+      if (!wrapper || !outer || fracPts.length < 2 || !onStudentMark) return false;
       const r = wrapper.getBoundingClientRect();
+      const outerRect = outer.getBoundingClientRect();
       activeStrokeRef.current = fracPts.map(([x, y]) => ({ x, y }));
-      // Convert the injected normalized fractions to px at the wrapper's
-      // CURRENT rect so the dev hook renders ink the same way real capture
-      // does (see penPoint / the InkStroke doc comment).
-      activeStrokePxRef.current = fracPts.map(([x, y]) => ({ x: x * r.width, y: y * r.height }));
+      // Convert the injected WRAPPER-relative normalized fractions to px
+      // relative to the OUTER host (the ink SVG's actual containing
+      // element — see pageOuterRef's doc comment): offset by the
+      // wrapper's own position within the outer host, then scale by the
+      // wrapper's size, so the dev hook renders ink the same way real
+      // capture does (see penPoint / the InkStroke doc comment).
+      const offsetX = r.left - outerRect.left;
+      const offsetY = r.top - outerRect.top;
+      activeStrokePxRef.current = fracPts.map(([x, y]) => ({ x: offsetX + x * r.width, y: offsetY + y * r.height }));
       finishStroke();
       return true;
     };
@@ -1163,9 +1191,16 @@ export function WhiteboardCanvas({
         // maps, diagrams, tables) never trigger a horizontal scrollbar across
         // the pane; renderers that legitimately need horizontal scroll have
         // their own inner overflow-x-auto, so those still work.
-        className={`flex-1 ${penMode ? 'overflow-hidden' : (chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden')} p-4`}
+        className={`flex-1 ${penMode ? 'overflow-hidden' : (chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden')}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
+        {/* p-4 padding lives HERE (moved off the scroll container) so this
+            div's own box — not the page wrapper's — is the pen overlay /
+            ink SVG's containing block. See pageOuterRef's doc comment:
+            this makes the padding gutter part of the overlay's coverage
+            without changing point normalization (still wrapper-relative,
+            below) or the visible layout (same padding, one level down). */}
+        <div ref={pageOuterRef} style={{ position: 'relative' }} className="p-4">
         <div
           key={currentIndex}
           ref={pageWrapperRef}
@@ -1257,11 +1292,16 @@ export function WhiteboardCanvas({
             style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
           />
         ))}
+        </div>
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
-            No viewBox — SVG user units equal wrapper-relative CSS px, the
-            same space the stroke was captured in, so ink stays put at the
-            spot the student drew it even after the wrapper grows taller
-            (content appended below). See the InkStroke doc comment. */}
+            Hosted on pageOuterRef (not the page wrapper) so ink painted in
+            the padding gutter around the wrapper — or on the annotation
+            strip right at the wrapper's bottom edge — still renders; see
+            pageOuterRef's doc comment. No viewBox — SVG user units equal
+            OUTER-relative CSS px, the same space `penPoint` captures in
+            (see its comment), so ink stays put at the spot the student
+            drew it even after the wrapper grows taller (content appended
+            below). See also the InkStroke doc comment. */}
         {(inkStrokes.some((s) => s.pageIndex === currentIndex) || liveStrokePx) && (
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
             {inkStrokes.filter((s) => s.pageIndex === currentIndex).map((s) => (
@@ -1277,7 +1317,15 @@ export function WhiteboardCanvas({
           </svg>
         )}
         {/* Phase 2: pen-mode capture overlay — blocks item interaction and
-            (with touch-action none) touch scrolling while the pen is active. */}
+            (with touch-action none) touch scrolling while the pen is active.
+            Hosted on pageOuterRef so the capture surface spans the ENTIRE
+            scrollable page content (items, annotation strip, and the
+            padding gutter around them) — not just the page wrapper's own
+            box. Marks landing in the padding gutter normalize (via
+            penPoint, against pageWrapperRef) to a fraction outside [0,1]
+            and resolve page-level, same as any other page-only mark —
+            there are no addressable features out there, which is correct:
+            the gutter and the annotation strip aren't board content. */}
         {penMode && onStudentMark && (
           <div
             className="absolute inset-0 z-20 cursor-crosshair"
