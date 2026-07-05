@@ -267,5 +267,21 @@ function gesture(strokes: { x: number; y: number }[][], rects: CapturedRect[]): 
   check('unreadable writing wording', text === 'The student wrote something on the board (page 1), but it could not be read.');
 }
 
+// ── Teacher-note strip targets (live feedback: "circled CO2 in a note") ──
+// (i) point resolution on a label-bearing rect carries targetLabel through.
+{
+  const note: CapturedRect = { x: 0.1, y: 0.8, w: 0.5, h: 0.05, itemIndex: 0, feature: 'teacher-note', label: 'Calvin cycle → CO₂ enters here' };
+  const r = resolvePointMark(ev(0.3, 0.82, [note]));
+  check('point on a labelled note rect carries targetLabel', r.feature === 'teacher-note' && r.targetLabel === 'Calvin cycle → CO₂ enters here');
+}
+// (ii) formatter quotes the note's own text directly, bypassing the lookup.
+{
+  const text = formatStudentMarks(
+    [{ kind: 'circle', pageIndex: 0, point: { x: 0.5, y: 0.5 }, itemIndex: 0, feature: 'teacher-note', targetLabel: 'Calvin cycle' }],
+    () => null,
+  );
+  check('note wording quotes targetLabel verbatim', text === 'The student circled the note "Calvin cycle" (page 1).');
+}
+
 console.log(`\nstudent-marks: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

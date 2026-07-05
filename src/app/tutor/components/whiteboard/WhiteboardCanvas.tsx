@@ -824,6 +824,19 @@ export function WhiteboardCanvas({
         out.push({ ...norm(featEl.getBoundingClientRect()), itemIndex, itemId, feature });
       });
     });
+    // AnnotationStrip entries (teacher notes below the item) live outside
+    // any [data-wb-item-index] scope, so they're collected separately.
+    // itemIndex 0 is a synthetic page-level slot — there is no real item
+    // 0 (the loop above skips falsy itemIndex), so this can't collide
+    // with a real item's rect.
+    wrapper.querySelectorAll<HTMLElement>('[data-wb-note]').forEach((noteEl) => {
+      out.push({
+        ...norm(noteEl.getBoundingClientRect()),
+        itemIndex: 0,
+        feature: 'teacher-note',
+        label: noteEl.getAttribute('data-wb-note-text') || undefined,
+      });
+    });
     return out;
   }, []);
 
@@ -1191,7 +1204,12 @@ export function WhiteboardCanvas({
         // maps, diagrams, tables) never trigger a horizontal scrollbar across
         // the pane; renderers that legitimately need horizontal scroll have
         // their own inner overflow-x-auto, so those still work.
-        className={`flex-1 ${penMode ? 'overflow-hidden' : (chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden')}`}
+        // Pen mode does NOT toggle this to overflow-hidden: on desktop the
+        // mouse wheel doesn't conflict with drawing (drawing is pointerdown-
+        // driven), so wheel-scrolling must keep working while pen is on.
+        // Touch stays safe without a lock too — the pen overlay below sets
+        // touchAction: 'none', so a touch-drag draws instead of scrolling.
+        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* p-4 padding lives HERE (moved off the scroll container) so this
@@ -2230,8 +2248,14 @@ function StripEntry({
   }, [full]);
   const boldShown = revealed >= boldText.length ? boldText : full.slice(0, revealed);
   const tailShown = revealed > boldText.length ? full.slice(boldText.length, revealed) : '';
+  // First-class mark target: the strip's `pointerEvents: none` on its
+  // container only blocks click-through, not rect capture — collectRects
+  // (WhiteboardCanvas) queries [data-wb-note] independent of pointer
+  // events, so a circle/underline over this line resolves to the note's
+  // own text instead of falling through to the page.
+  const noteText = full.length > 80 ? `${full.slice(0, 80)}…` : full;
   return (
-    <div className="flex items-center gap-2" style={{ color }}>
+    <div className="flex items-center gap-2" style={{ color }} data-wb-note="true" data-wb-note-text={noteText}>
       <span
         aria-hidden="true"
         style={{

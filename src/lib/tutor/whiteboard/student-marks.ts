@@ -24,6 +24,11 @@ export interface CapturedRect {
   itemId?: string;
   /** data-feature name; undefined = the item wrapper itself. */
   feature?: string;
+  /** Visible text of the rect when it's a first-class labelled target
+   *  (e.g. an AnnotationStrip teacher-note line) — carried straight
+   *  through to ResolvedMark.targetLabel so formatting can quote it
+   *  verbatim instead of doing a catalog lookup. */
+  label?: string;
 }
 
 export interface PointMarkEvent {
@@ -73,6 +78,10 @@ export interface ResolvedMark {
   fromFeature?: string;
   text?: string;
   strokesBBox?: BBoxLike;
+  /** Set when the resolved target carried its own visible label (e.g. a
+   *  teacher-note strip entry) — formatStudentMarks quotes this directly
+   *  rather than looking it up in the catalog. */
+  targetLabel?: string;
 }
 
 /** Pending-buffer cap; oldest marks drop beyond this (with a debug event). */
@@ -173,7 +182,7 @@ export function classifyStroke(ev: StrokeMarkEvent): ResolvedMark {
   const diag = Math.hypot(bb.w, bb.h);
   const withTarget = (kind: ResolvedMark['kind'], t: CapturedRect | null): ResolvedMark =>
     t
-      ? { ...base, kind, itemIndex: t.itemIndex, itemId: t.itemId, feature: t.feature }
+      ? { ...base, kind, itemIndex: t.itemIndex, itemId: t.itemId, feature: t.feature, targetLabel: t.label }
       : { ...base, kind };
 
   // 1. Circle: endpoints close relative to size, with real extent.
@@ -216,6 +225,7 @@ export function classifyStroke(ev: StrokeMarkEvent): ResolvedMark {
         itemIndex: to.itemIndex,
         itemId: to.itemId,
         feature: to.feature,
+        targetLabel: to.label,
         fromItemIndex: from.itemIndex,
         fromItemId: from.itemId,
         fromFeature: from.feature,
@@ -268,7 +278,7 @@ export function classifyGesture(ev: GestureMarkEvent): ResolvedMark {
     pageTitle: ev.pageTitle,
     point: center,
     strokesBBox: bb,
-    ...(target ? { itemIndex: target.itemIndex, itemId: target.itemId, feature: target.feature } : {}),
+    ...(target ? { itemIndex: target.itemIndex, itemId: target.itemId, feature: target.feature, targetLabel: target.label } : {}),
   };
   if (strokes.length === 2) {
     const [a, b] = strokes;
@@ -298,7 +308,7 @@ export function resolvePointMark(ev: PointMarkEvent): ResolvedMark {
   const containing = features.filter((r) => contains(r, ev.point));
   if (containing.length > 0) {
     const best = containing.reduce((a, b) => (area(b) < area(a) ? b : a));
-    return { ...base, itemIndex: best.itemIndex, itemId: best.itemId, feature: best.feature };
+    return { ...base, itemIndex: best.itemIndex, itemId: best.itemId, feature: best.feature, targetLabel: best.label };
   }
   // 2. Nearest feature within the snap threshold.
   let nearest: CapturedRect | null = null;
@@ -308,13 +318,13 @@ export function resolvePointMark(ev: PointMarkEvent): ResolvedMark {
     if (d < nearestDist) { nearest = r; nearestDist = d; }
   }
   if (nearest && nearestDist <= NEAR_THRESHOLD) {
-    return { ...base, itemIndex: nearest.itemIndex, itemId: nearest.itemId, feature: nearest.feature };
+    return { ...base, itemIndex: nearest.itemIndex, itemId: nearest.itemId, feature: nearest.feature, targetLabel: nearest.label };
   }
   // 3. Containing item wrapper (whole-item).
   const item = items.filter((r) => contains(r, ev.point))
     .reduce<CapturedRect | null>((a, b) => (a === null || area(b) < area(a) ? b : a), null);
   if (item) {
-    return { ...base, itemIndex: item.itemIndex, itemId: item.itemId };
+    return { ...base, itemIndex: item.itemIndex, itemId: item.itemId, targetLabel: item.label };
   }
   // 4. Page-only.
   return base;
@@ -367,6 +377,13 @@ export function formatStudentMarks(
           ? `The student wrote on the board${near ? ` near ${near}` : ''} (${page}): "${mark.text}"`
           : `The student wrote something on the board (${page}), but it could not be read.`,
       );
+      continue;
+    }
+    // First-class labelled target (e.g. an AnnotationStrip teacher-note
+    // line) — quote its own visible text directly rather than falling
+    // through to the catalog lookup below, which knows nothing about it.
+    if (mark.targetLabel) {
+      lines.push(`The student ${verb} the note "${mark.targetLabel}" (${page}).`);
       continue;
     }
     if (mark.itemIndex === undefined) {
