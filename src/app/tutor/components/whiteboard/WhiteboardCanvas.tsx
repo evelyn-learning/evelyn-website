@@ -158,7 +158,11 @@ function dedupeSupersededCommands(cmds: WhiteboardCommand[]): WhiteboardCommand[
 // pointer input does not remove student-facing interactivity.
 function isIframeCommand(cmd: WhiteboardCommand): boolean {
   const a = (cmd as { action?: string }).action;
-  return a === 'showGraph' || a === 'showMolecule';
+  if (a === 'showGraph') return true;
+  // Interactive molecules keep live Ketcher editing — the tap catcher would
+  // swallow the student's pointer input, so those items opt out of marks.
+  if (a === 'showMolecule') return !(cmd as { interactive?: boolean }).interactive;
+  return false;
 }
 
 interface WhiteboardCanvasProps {
