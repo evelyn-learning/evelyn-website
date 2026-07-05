@@ -306,5 +306,41 @@ function gesture(strokes: { x: number; y: number }[][], rects: CapturedRect[]): 
   );
 }
 
+// ── Bugfix: branch-ordering interactions with targetLabel (note) ──────
+// (i) an arrow landing on a note must not drop its FROM endpoint.
+{
+  const text = formatStudentMarks(
+    [{
+      kind: 'arrow', pageIndex: 0, point: { x: 0.5, y: 0.5 }, itemIndex: 0, feature: 'teacher-note',
+      targetLabel: 'CO2 enters here', fromItemIndex: 1, fromItemId: 'showTable-1', fromFeature: 'row-2',
+    }],
+    () => ({ featureLabel: 'the second row', itemLabel: 'the table' }),
+  );
+  check(
+    'arrow to a note keeps the from-endpoint',
+    text === 'The student drew an arrow from the second row of the table to the note "CO2 enters here" (page 1).',
+  );
+}
+// (ii) writing near a note must surface the note's own text, not an empty
+// catalog lookup (notes have no itemId to key off).
+{
+  const text = formatStudentMarks(
+    [{ kind: 'writing', pageIndex: 0, point: { x: 0.5, y: 0.5 }, itemIndex: 0, feature: 'teacher-note', targetLabel: 'CO2 enters here', text: 'why?' }],
+    () => null,
+  );
+  check(
+    'writing near a note surfaces the note text',
+    text === 'The student wrote on the board near the note "CO2 enters here" (page 1): "why?"',
+  );
+}
+// (iii) regression: plain circle+note wording is unchanged by the restructure.
+{
+  const text = formatStudentMarks(
+    [{ kind: 'circle', pageIndex: 0, point: { x: 0.5, y: 0.5 }, itemIndex: 0, feature: 'teacher-note', targetLabel: 'Calvin cycle' }],
+    () => null,
+  );
+  check('note wording still quotes targetLabel verbatim after restructure', text === 'The student circled the note "Calvin cycle" (page 1).');
+}
+
 console.log(`\nstudent-marks: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

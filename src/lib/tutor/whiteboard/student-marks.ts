@@ -396,6 +396,17 @@ export function formatStudentMarks(
     writing: 'wrote on',
   };
 
+  // Shared with the arrow branch below: resolve the human-readable text for
+  // an arrow's FROM endpoint via a point-shaped lookup on the from-fields.
+  const arrowFromText = (mark: ResolvedMark): string => {
+    const fromLabels = lookup({ ...mark, kind: 'point', itemIndex: mark.fromItemIndex, itemId: mark.fromItemId, feature: mark.fromFeature });
+    return fromLabels
+      ? (mark.fromFeature && fromLabels.featureLabel
+          ? `${fromLabels.featureLabel}${fromLabels.itemLabel ? ` of ${fromLabels.itemLabel}` : ''}`
+          : (fromLabels.itemLabel ?? 'something'))
+      : 'something';
+  };
+
   const lines: string[] = [];
   let prev: ResolvedMark | null = null;
   for (const mark of marks) {
@@ -405,9 +416,13 @@ export function formatStudentMarks(
     const verb = VERBS[mark.kind];
     if (mark.kind === 'writing') {
       const labels = mark.itemIndex !== undefined ? lookup(mark) : null;
-      const near = labels?.featureLabel
-        ? `${labels.featureLabel}${labels.itemLabel ? ` of ${labels.itemLabel}` : ''}`
-        : labels?.itemLabel;
+      // A note target has no itemId for the catalog to key off, so its own
+      // visible text (targetLabel) takes priority over the lookup.
+      const near = mark.targetLabel
+        ? `the note "${mark.targetLabel}"`
+        : labels?.featureLabel
+          ? `${labels.featureLabel}${labels.itemLabel ? ` of ${labels.itemLabel}` : ''}`
+          : labels?.itemLabel;
       lines.push(
         mark.text
           ? `The student wrote on the board${near ? ` near ${near}` : ''} (${page}): "${mark.text}"`
@@ -419,6 +434,13 @@ export function formatStudentMarks(
     // line) — quote its own visible text directly rather than falling
     // through to the catalog lookup below, which knows nothing about it.
     if (mark.targetLabel) {
+      // An arrow landing on a note still needs its FROM endpoint named —
+      // handle it here rather than falling into the generic wording below,
+      // which would silently drop fromFeature/fromItemId.
+      if (mark.kind === 'arrow' && (mark.fromItemIndex !== undefined || mark.fromFeature)) {
+        lines.push(`The student drew an arrow from ${arrowFromText(mark)} to the note "${mark.targetLabel}" (${page}).`);
+        continue;
+      }
       lines.push(`The student ${verb} the note "${mark.targetLabel}" (${page}).`);
       continue;
     }
@@ -445,13 +467,7 @@ export function formatStudentMarks(
       ? `${labels.featureLabel}${labels.itemLabel ? ` of ${labels.itemLabel}` : ''}`
       : (labels.itemLabel ?? 'something');
     if (mark.kind === 'arrow' && (mark.fromItemIndex !== undefined || mark.fromFeature)) {
-      const fromLabels = lookup({ ...mark, kind: 'point', itemIndex: mark.fromItemIndex, itemId: mark.fromItemId, feature: mark.fromFeature });
-      const fromText = fromLabels
-        ? (mark.fromFeature && fromLabels.featureLabel
-            ? `${fromLabels.featureLabel}${fromLabels.itemLabel ? ` of ${fromLabels.itemLabel}` : ''}`
-            : (fromLabels.itemLabel ?? 'something'))
-        : 'something';
-      lines.push(`The student drew an arrow from ${fromText} to ${targetText} (${page}).`);
+      lines.push(`The student drew an arrow from ${arrowFromText(mark)} to ${targetText} (${page}).`);
       continue;
     }
     const hintSuffix = !mark.feature && labels.itemLabel && mark.positionHint
