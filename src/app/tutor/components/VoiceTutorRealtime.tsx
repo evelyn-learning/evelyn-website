@@ -27,7 +27,6 @@ import {
   assembleOpeningInput,
   detectEntryMode,
   deriveResumeSignal,
-  isPedagogyOpenerFlagValue,
   shouldRetireOpeningDirective,
   type OpeningSignals,
   type SessionMode,
@@ -96,23 +95,45 @@ import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/
 import { flushableCount } from '@/lib/tutor/whiteboard/render-sync';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
-// ─── Topic-notes orchestrator guardrails ───
-// Brain may emit expand_topic_notes_theory / add_topic_notes_method /
-// add_topic_notes_pointer at segment boundaries. The orchestrator gates
-// per the Q7+Q8 design in project_topic_notes_initiative.md:
-//   - 3-segment warmup before tools become eligible (silent-drop earlier)
-//   - per-session caps per bucket (silent-drop over-firing)
-//   - active-topic binding (baselineId = current planId; brain doesn't choose)
-//   - async fire-and-forget PATCH; failures log-only
-// Dedup against baseline + existing overlays lives in apply-overlay.ts;
-// the orchestrator just routes.
-// Lowered 3 → 1 for v1 calibration: with the 3-segment gate, short test
-// sessions never cleared warmup before ending, leaving the brain unable
-// to fire even once. 1 lets the brain start adding notes after the
-// student has shown any engagement at all (post-hook segment). Re-tune
-// from telemetry once we see real over-firing patterns.
-const TOPIC_NOTES_WARMUP_SEGMENTS = 1;
-const TOPIC_NOTES_RATE_LIMITS = { theory: 5, methods: 3, pointers: 5 } as const;
+import {
+  TUTOR_BRAIN_FAST_OPENER,
+  TUTOR_SKIP_DETERMINISTIC,
+  TUTOR_RENDER_SYNC,
+  TUTOR_STUDENT_MARKS,
+  TUTOR_BOARD_ANCHOR_ASSIST,
+  TUTOR_SKETCH,
+  TUTOR_RESUME_FROM_CLAUSE,
+  TUTOR_PEDAGOGY_OPENER,
+  TUTOR_VALIDATE_BEFORE_SPEAK,
+  TUTOR_KEEP_VALIDATED_ON_KILL,
+  TUTOR_WOLFRAM_MATH_CHECK,
+  TUTOR_STUDENT_PROBLEM_GROUNDING,
+  TOPIC_NOTES_WARMUP_SEGMENTS,
+  TOPIC_NOTES_RATE_LIMITS,
+  BOARD_RENDER_META_ACTIONS,
+  SKETCH_TIMEOUT_MS,
+  RENDER_SYNC_STALL_MS,
+  RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR,
+  VALIDATE_BEFORE_SPEAK_CAP_MS,
+} from '@/lib/tutor/orchestrator/flags';
+import {
+  WHITEBOARD_INTENT_PATTERNS,
+  MATH_CONTENT_PATTERN,
+  rendersStudentProblem,
+  detectStudentBroughtProblem,
+  isSafeOpener,
+  judgeKillContentWords,
+  isJudgeKillRestatement,
+  extractSentence1Normalized,
+  deepEqualParams,
+  isMuteMeCommand,
+} from '@/lib/tutor/orchestrator/text-heuristics';
+import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
+import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
+import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
+
+export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
+export { isMuteMeCommand } from '@/lib/tutor/orchestrator/text-heuristics';
 
 async function dispatchTopicNotesOverlay(
   studentId: string | undefined,
@@ -144,96 +165,6 @@ async function dispatchTopicNotesOverlay(
   }
 }
 
-export interface RealtimeHandle {
-  sendTextMessage: (text: string) => void;
-  /** Speak tutor-side text directly through TTS without routing
-   *  through the brain. Used by the in-session lesson picker to
-   *  voice its greeting bubble (the picker is a UI element rendered
-   *  in the transcript area, not a brain turn, so without this it
-   *  appears in the chat but isn't spoken aloud). */
-  speakText: (text: string) => void;
-  /** Cut off the current TTS bubble + drop queued sentences. Used
-   *  when a quick-answer button tap should jump straight to the
-   *  next turn instead of waiting for the prior one to finish. */
-  stopSpeaking: () => void;
-  getSessionSummary: () => {
-    topicsCovered: string[];
-    weakTopics: Array<{ topic: string; count: number }>;
-  };
-  /** Phase 3: step the session-level depth preference. Negative =
-   *  more depth / slower teaching. Positive = less depth. Clamped
-   *  -2..+2. Wired to ⋯ menu Slow down / Speed up items. Verbal
-   *  cues like "slow down" / "faster" go through the boredom-cue
-   *  regex inside callBrainOnce and call stepPaceBias internally. */
-  stepPaceBias: (delta: -1 | 1) => void;
-  /** Caption word-sync: poll the audio-locked caption reveal. Returns null
-   *  when unsupported (non-claude-brain engines) — caller falls back to the
-   *  legacy typewriter. live:false = supported but nothing being spoken
-   *  (finalized turn / reload) — caller shows the full text instantly. */
-  getSpokenCaption: () => SpokenCaption | null;
-  /** Resume first-interaction: the gesture that unlocks TTS audio AND kicks
-   *  the brain to continue a rehydrated session. Wired to the "Continue
-   *  lesson" overlay (and mirrored by the mic dock's resume tap). No-op once
-   *  the session has started or when there is no resume snapshot. */
-  resumeContinue: () => void;
-  /** Student marks (Phase 1): push a resolved-at-capture tap event from the
-   *  whiteboard. Resolution + buffering + brain transport happen inside the
-   *  engine. No-op when the flag is off or the engine is not claude-brain. */
-  pushStudentMark: (ev: StudentMarkEvent) => void;
-}
-
-// --- Multi-language whiteboard intent detection ---
-// Detects when the tutor claims to show, write, or display something visually.
-// Two layers: (1) explicit keyword patterns for major languages, (2) a universal
-// math/visual content heuristic that catches any language the patterns miss.
-const WHITEBOARD_INTENT_PATTERNS = [
-  // English
-  /\b(show|display|put|write|post|look at|on the (?:white)?board|here(?:'| i)s|let me (?:draw|write|show|put)|i(?:'ll| will) (?:draw|write|show|put)|see (?:the|this)|check (?:the|this) out|take a look|written (?:it |everything )?(?:down|out))\b/i,
-  // German
-  /\b(zeig|schau|hier (?:siehst|sieht|ist|sind)|aufschreiben|aufgeschrieben|mitschreiben|hinschreiben|anschreiben|visuell|an die Tafel|auf (?:die|dem) (?:Tafel|Whiteboard|Board)|lass (?:uns|mich) (?:das )?(?:aufschreiben|anschauen|ansehen))\b/i,
-  // Spanish
-  /\b(mira|muestra|escrib|pon(?:go|er|gamos)|en la pizarra|aqu[ií] (?:est[áa]|tienes|ves)|te (?:muestro|enseño)|voy a (?:escribir|mostrar|dibujar)|fíjate)\b/i,
-  // French
-  /\b(montr|regarde|[ée]cri[st]|affich|sur le tableau|voici|voilà|je (?:te |vous )?montre|(?:je vais|laisse[z-]moi) (?:[ée]crire|montrer|dessiner))\b/i,
-  // Italian
-  /\b(guard[ai]|mostr[oi]|scriv[oi]|sulla lavagna|ecco|qui (?:c'è|vedi)|ti (?:mostro|faccio vedere))\b/i,
-  // Portuguese
-  /\b(olh[ae]|mostr[oa]|escrev[oa]|no quadro|aqui (?:está|tens|vês)|vou (?:escrever|mostrar|desenhar))\b/i,
-  // Dutch
-  /\b(kijk|laat (?:me |ik )?(?:zien|schrijven)|schrijf|op het (?:bord|whiteboard)|hier (?:is|staat|zie je))\b/i,
-  // Russian / Cyrillic
-  /\b(смотри|показ|запиш|напиш|на доск[еу]|вот (?:так|это|формула)|покажу|давай (?:запишем|напишем))\b/i,
-  // Serbian / Croatian / Bosnian (Latin script)
-  /\b(tabli|tabla|napisat|zapisa|prikazat|prika[zž]|pogledaj|evo|ovde|napisali|napisao)\b/i,
-  // Turkish
-  /\b(bak|göster|yaz|tahtaya|burada|şimdi (?:yazıyorum|gösteriyorum))\b/i,
-  // Polish
-  /\b(patrz|poka[żz]|pisz|na tablicy|tutaj (?:jest|masz|widzisz)|napiszę|pokażę)\b/i,
-  // Czech / Slovak
-  /\b(podívej|ukaž|napiš|na tabul[ie]|tady|ukážu|napíšu)\b/i,
-  // Romanian
-  /\b(uite|arăt|scriu|pe tablă|aici|hai să)\b/i,
-  // Hungarian
-  /\b(nézd|mutato|íro[mk]|táblára|itt (?:van|látod))\b/i,
-  // Arabic (transliterated patterns that Whisper produces)
-  /\b(شوف|أكتب|على السبورة|هنا|انظر|أريك|سأكتب)\b/,
-  // Japanese (katakana/hiragana patterns)
-  /(?:見て|書く|ここに|ホワイトボード|表示|見せ)/,
-  // Korean
-  /(?:보세요|써|칠판|여기|보여줄게)/,
-  // Chinese
-  /(?:看|写|黑板|白板|这里|显示)/,
-  // Hindi (transliterated)
-  /\b(dekh|likht?|board par|yahan|dikha)\b/i,
-  // Swahili
-  /\b(angalia|andika|ubao|hapa|nionyeshe)\b/i,
-];
-
-// Universal heuristic: if the tutor text contains mathematical notation
-// (equations, variables, operators) without a tool call, it likely needs a whiteboard.
-// This catches ANY language the patterns above might miss.
-const MATH_CONTENT_PATTERN = /(?:[=+\-*/^].*[=+\-*/^]|[xy]\s*[=+\-]|\d+\s*[=<>]\s*\d+|\b(?:equation|formula|graph|diagram|table)\b)/i;
-
 // Words that Whisper commonly misrecognizes as inappropriate
 import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
@@ -248,7 +179,7 @@ import { validateManipulative } from '@/lib/tutor/diagrams/manipulative-validato
 import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
-import { CaptionSyncTracker, type SpokenCaption } from '@/lib/tutor/voice/caption-sync';
+import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -257,117 +188,6 @@ import {
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
 
-/** Rasterize a writing gesture for OCR: bbox-cropped strokes, white bg,
- *  dark ink, longest side ~640px. Returns a base64 PNG (no data: prefix). */
-function rasterizeGestureStrokes(
-  strokes: { x: number; y: number }[][],
-  bbox: { x: number; y: number; w: number; h: number },
-): string | null {
-  const pad = 0.02;
-  const bw = bbox.w + pad * 2;
-  const bh = bbox.h + pad * 2;
-  if (bw <= 0 || bh <= 0) return null;
-  const scale = 640 / Math.max(bw, bh);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(32, Math.round(bw * scale));
-  canvas.height = Math.max(32, Math.round(bh * scale));
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#1e293b';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  for (const stroke of strokes) {
-    ctx.beginPath();
-    stroke.forEach((p, i) => {
-      const x = (p.x - bbox.x + pad) * scale;
-      const y = (p.y - bbox.y + pad) * scale;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-  }
-  return canvas.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
-}
-
-/** OCR containment: extract-homework DESCRIBES unclear ink instead of
- *  transcribing ("The image appears to contain…"). A meta-description or
- *  an implausibly long "transcription" must NOT reach the brain as the
- *  student's literal words — degrade to the unreadable wording instead
- *  (observed live 2026-07-05; proper transcribe-mode endpoint is a
- *  follow-up). */
-function sanitizeInkOcrText(raw: unknown): string | undefined {
-  if (typeof raw !== 'string') return undefined;
-  const text = raw.trim();
-  if (!text || text.length > 120) return undefined;
-  if (/^th(e|is)\s+(image|photo|picture|drawing)\b/i.test(text)) return undefined;
-  if (/\b(image|photo|picture)\b.{0,40}\b(appears|seems|shows|contains|looks like)\b/i.test(text)) return undefined;
-  return text;
-}
-
-// ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
-// Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
-//
-// FIX A — fast opener. When on, the brain is prompted (system-prompt-
-// builder TURN_OPENER_RULE) to begin every turn with a short content-free
-// runway sentence, and the orchestrator voices that sentence-0 immediately
-// (bypassing the TTS gate) while keeping the gate on sentences 1+. Drops
-// first-audio latency to ~Claude-TTFT without ever voicing doomed content.
-const TUTOR_BRAIN_FAST_OPENER =
-  process.env.NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER === 'true';
-// FIX B — deterministic Skip-button advance. When on, a Skip-ahead button
-// click is resolved app-side (resolveAdvanceTarget) before the brain call;
-// the brain is handed the advance as a FACT, deleting the Skip-button-KILL
-// retry for the resolvable case.
-const TUTOR_SKIP_DETERMINISTIC =
-  process.env.NEXT_PUBLIC_TUTOR_SKIP_DETERMINISTIC === 'true';
-// Render↔speech sync (2026-06-19): defer each whiteboard render so it
-// surfaces on the board in sync with the sentence that introduces it,
-// instead of popping the instant the brain's tool-call frame is parsed
-// (TTS lags, so renders otherwise beat their narration). Default ON;
-// flip to 'off' for an instant, code-free rollback to immediate dispatch.
-// claude-brain-mode only by construction. See
-// project_tutor_render_speech_sync.
-const TUTOR_RENDER_SYNC =
-  process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
-// Student whiteboard marks (Phase 1, 2026-07-05): tap-to-point. Default
-// OFF — new student-facing input surface. See student-marks design spec.
-const TUTOR_STUDENT_MARKS =
-  process.env.NEXT_PUBLIC_TUTOR_STUDENT_MARKS === 'true';
-// Board-anchor structural assists (re-anchor a front-loaded equation/figure to
-// its introducing sentence; auto-write a transformation "A → B" arrow when the
-// tutor narrates one with no board anchor that turn). Client-side, DEFAULT OFF
-// — opt in with NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST=on. Both lean on the pure
-// board-anchor-assist helpers. See project_tutor_board_anchored_speech.
-const TUTOR_BOARD_ANCHOR_ASSIST =
-  process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'on'
-  || process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_ASSIST === 'true';
-// Tutor sketch capability (client side): gates the detectAnalogy → show_sketch
-// AUTO-FIRE. The brain-emitted show_sketch path is gated server-side by the
-// TUTOR_SKETCH tool flag instead (no tool → no call). Client default OFF — opt
-// in with NEXT_PUBLIC_TUTOR_SKETCH=on. See project_tutor_sketch_capability.
-const TUTOR_SKETCH =
-  process.env.NEXT_PUBLIC_TUTOR_SKETCH === 'on'
-  || process.env.NEXT_PUBLIC_TUTOR_SKETCH === 'true';
-// Resume-from-cut granularity (P5): on a confirmed-noise mid-sentence pause,
-// resume from the CLAUSE the cut landed in instead of re-speaking the whole
-// sentence. Client-side, DEFAULT OFF. See resume-from-cut + project_tutor_work_queue.
-const TUTOR_RESUME_FROM_CLAUSE =
-  process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'on'
-  || process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'true';
-// Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
-// When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
-// opener/self-report context fields (sessionMode/openingPhase/entryMode/
-// isReturning/selfReportRouting), computed from resolveOpeningBehavior +
-// assembleOpeningInput (opening-behavior.ts). When off, that call is passed
-// EXACTLY as before — no new fields, byte-identical prompt. See
-// project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
-const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
-// A command that paints teaching content on the board (vs meta nav like
-// newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
-// tell whether the brain drew anything this turn.
-const BOARD_RENDER_META_ACTIONS = new Set(['newPage', 'goToPage', 'openPage', 'scrollTo', 'clear']);
 const isBoardRenderCommand = (c: unknown): boolean => {
   const a = String((c as { action?: string })?.action ?? '');
   if (BOARD_RENDER_META_ACTIONS.has(a)) return false;
@@ -379,265 +199,6 @@ const isSketchRequestCommand = (c: unknown): boolean => {
   const cmd = c as { action?: string; primitives?: unknown[] };
   return cmd?.action === 'showSketch' && !(Array.isArray(cmd.primitives) && cmd.primitives.length > 0);
 };
-// Hard cap on doodler latency before fail-to-nothing. Set above the observed
-// Haiku tail (2–6s; the larger 4-shot prompt pushed it up) so the slow tail
-// renders instead of dropping — the stranding fix flushes a late/stale resolve
-// gracefully (drainAll), so a slightly-late doodle lands in context rather than
-// being lost. Past this the sketch is dropped (fail-to-nothing).
-const SKETCH_TIMEOUT_MS = 7000;
-// Render-buffer STALL window. A SINGLE shared timer, reset on every
-// playback-progress signal (sentence-start / drain) and on each buffer
-// add. It fires only when NO progress has happened for this long — a
-// genuine stall — at which point the whole buffer is released (narration
-// isn't coming). This is the key correction from the first live test
-// (2026-06-19, Console5): a short per-render cap RACED the legitimately-
-// pending anchor — TTS is slow (2-3s/sentence) so a render buffered early
-// whose introducing sentence plays 10-20s later hit the cap and popped
-// BEFORE its narration. Reset-on-progress means the cap can't fire while
-// sentences are steadily playing toward the anchor; it's now a true
-// stall-safety + thin-turn anti-pile, never a routine racer. Sized to
-// comfortably exceed one long TTS sentence (~3-5s) + slack.
-const RENDER_SYNC_STALL_MS = 6000;
-// Board-anchor re-anchor: only a render emitted at the FRONT of the turn (anchor
-// ≤ this) is a front-load candidate. The content-free turn-opener occupies
-// sentence 0, so a front-loaded equation/figure lands at anchor 1, not 0 — the
-// original anchor===0 gate never fired (observed 2026-06-22 ear-test, Console4).
-// Bounded so mid-turn step renders (anchor ≥ 2) are never held/delayed.
-const RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR = 1;
-// Validate-before-speak (Pillar 2 of the robustness track,
-// project_tutor_validate_before_speak). Rolling micro-hold: after the
-// first clean tool opens the gate, subsequent sentences stay BUFFERED
-// (not spoken) and a sentence flushes only when the NEXT tool-call
-// validates OK or a short cap elapses — so a LATER rejecting tool drops
-// the wrong sentence BEFORE its audio plays ("never spoke it" instead of
-// "spoke wrong → corrected 3-8s later"). Default OFF until live-verified;
-// claude-brain orchestrator only (this is the only path with the gate).
-const TUTOR_VALIDATE_BEFORE_SPEAK =
-  process.env.NEXT_PUBLIC_TUTOR_VALIDATE_BEFORE_SPEAK === 'on' ||
-  process.env.NEXT_PUBLIC_TUTOR_VALIDATE_BEFORE_SPEAK === 'true';
-// Per-sentence cap for the rolling hold: a buffered sentence with no
-// following tool flushes after this long (the verbal-tail flush). Must
-// exceed the typical sentence→tool gap so a wrong claim stays buffered
-// until its rejecting tool arrives. Hidden behind TTS playback for
-// multi-sentence turns; only the post-last-tool tail pays it. Tunable.
-const VALIDATE_BEFORE_SPEAK_CAP_MS = 1200;
-// Keep-validated-on-kill (robustness track, project_tutor_validate_before_speak
-// / work-queue #5+#7). On a content kill / give-up, the existing rollback
-// removes EVERY render the killed attempt(s) painted — including renders that
-// passed validation (e.g. wolfram-correct tangent equations) and were merely
-// collateral to a LATER tool's failure. Instrumentation (2026-06-20 e2e
-// give-up capture) showed two validated equations vanish for exactly this
-// reason. When ON, the rollback is NARROWED: a painted render is kept unless a
-// later same-turn render SUPERSEDES it (same figure-category + page, via
-// computeFigureCategory — the H6 grouping primitive; non-figure renders
-// coexist → always kept). This subsumes the long-deferred Tier-3 #7
-// (winningAttemptRendered all-or-nothing sweep). Default OFF until
-// live-verified; claude-brain orchestrator only. Pure decision in
-// src/lib/tutor/whiteboard/kill-keep.ts (test:kill-keep). When OFF, the
-// full-attempt rollback runs verbatim (zero behavior change).
-const TUTOR_KEEP_VALIDATED_ON_KILL =
-  process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'on' ||
-  process.env.NEXT_PUBLIC_TUTOR_KEEP_VALIDATED_ON_KILL === 'true';
-// Wolfram math/graph validation (the external PAID API). The old "check every
-// math" directive fired Wolfram on every showGraph/showEquation turn. Measured
-// 2026-06-20 (e2e, all subjects): Wolfram caught ZERO real errors — only 2
-// false-positives (0.5≈1/2, 4x≈4 x) — while costing money, risking commercial
-// terms (free tier is non-commercial only), and adding noise. The FREE local
-// validators (validateConicGraph / validateGeometryCommand / intersection +
-// the geometry solver) run independently (earlier block) and catch the real
-// structured errors. So Wolfram is SCOPED DOWN: default OFF; set
-// NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK='on' to re-enable (e.g. after a
-// commercial license). See work-queue item 11d.
-const TUTOR_WOLFRAM_MATH_CHECK =
-  process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'on' ||
-  process.env.NEXT_PUBLIC_TUTOR_WOLFRAM_MATH_CHECK === 'true';
-// Student-problem grounding (coherence fix, 2026-06-21). Measured: in a
-// plan-anchored segment the brain teaches the AUTHORED example (e.g. the
-// worked_example's problemText) and ignores the student's OWN stated problem,
-// because the segment-truth CONTRACT + divergence guard substitute the authored
-// card. When ON, the worked_example/show_problem divergence guards RELAX if the
-// rendered problem matches the STUDENT's recent message (token overlap) — i.e.
-// the brain is legitimately teaching the student's brought problem, not
-// drifting. Brain-drift (matches neither authored nor student) is still caught.
-// Default OFF until live-verified (touches the divergence machinery). See
-// project_tutor_work_queue + the cooperative-student coherence map.
-const TUTOR_STUDENT_PROBLEM_GROUNDING =
-  process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'on' ||
-  process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'true';
-/** Student-problem grounding: true when the brain's rendered numeric tokens
- *  substantially match the student's recent message — i.e. the divergence from
- *  the authored example is the student's OWN stated problem, not brain drift.
- *  Generic, token-overlap only (no subject specifics). */
-function rendersStudentProblem(brainNums: Set<string>, studentText: string): boolean {
-  if (!brainNums || brainNums.size === 0 || !studentText) return false;
-  const studentNums = new Set(studentText.match(/-?\d+(?:\.\d+)?/g) || []);
-  if (studentNums.size === 0) return false;
-  let matched = 0;
-  brainNums.forEach((n) => { if (studentNums.has(n)) matched += 1; });
-  return matched / brainNums.size >= 0.5;
-}
-
-/** Request-TO-TUTOR framing — the student is ASKING the tutor to work/show a
- *  problem, NOT narrating their own work ("let me solve", "I get…",
- *  "substituting…") or answering a Socratic question. Deliberately excludes
- *  bare work-verbs (solve/find/compute/what is) that students use while
- *  thinking aloud — those caused a false positive on a mid-derivation turn.
- *  Generic, no subject specifics. */
-const WORK_INTENT_RE = /\b(can\s+(?:we|you)\b|could\s+you\b|would\s+you\b|walk\s+me\s+through|help\s+me\b|how\s+(?:do|would|can|should)\s+(?:i|we|you)\b|work\s+(?:through|out)\b)/i;
-
-/** Detect that the student brought their OWN concrete problem to work. Returns
- *  the student's verbatim text (to anchor on) or null. Three-way gate:
- *  (1) request framing, (2) concrete content (has numbers), (3) divergence from
- *  BOTH the authored problem AND the current active problem (so answering a
- *  Socratic question about the active problem does NOT trigger). Generic. */
-function detectStudentBroughtProblem(studentText: string, authoredText: string, activeStatement: string): string | null {
-  if (!studentText || !WORK_INTENT_RE.test(studentText)) return null;
-  const sNums = studentText.match(/-?\d+(?:\.\d+)?/g) || [];
-  if (sNums.length === 0) return null;
-  const sSet = new Set(sNums);
-  const overlap = (other: string): number => {
-    const oSet = new Set((other || '').match(/-?\d+(?:\.\d+)?/g) || []);
-    if (oSet.size === 0) return 0;
-    let m = 0; sSet.forEach((n) => { if (oSet.has(n)) m += 1; });
-    return m / sSet.size;
-  };
-  if (overlap(authoredText) >= 0.5) return null;          // matches the authored example → not "brought"
-  if (activeStatement && overlap(activeStatement) >= 0.5) return null; // answering about the active problem
-  return studentText.trim();
-}
-
-/** FIX A backstop — decide whether a turn's first sentence is a genuine
- *  content-free opener, safe to voice ungated. The prompt rule is the
- *  primary guarantee; this re-gates a sentence-0 that looks substantive
- *  so a doomed-then-retried turn never lets the student hear two voices.
- *  Deliberately liberal at catching substance: a false "not safe"
- *  (re-gating a real opener) only forfeits the latency win that turn —
- *  a false "safe" (voicing real content ungated) is the failure mode. */
-function isSafeOpener(s: string): boolean {
-  if (/\d/.test(s)) return false;                  // any digit → a value/claim
-  if (/[=+×÷√^%<>≤≥*/]/.test(s)) return false;     // math operators → a claim
-  if (/\?/.test(s)) return false;                  // a question → student must act
-  if (s.split(/\s+/).filter(Boolean).length > 10) return false; // too long for an opener
-  return true;
-}
-
-// ── Judge-kill Stage 3.1 (2026-06-16) restatement detector ────────────
-// When a content-correctness kill fires mid-narration and the retry comes
-// back saying substantively the SAME thing (a re-statement, not a real
-// correction), the orchestrator replays the killed attempt's unplayed TTS
-// tail instead of letting the retry re-speak the overlap (the audible
-// self-correction symptom: "Spot on. That's the hyperbola" [KILL] "Right."
-// [KILL] "The equation has a minus sign…"). `isJudgeKillRestatement`
-// decides "same thing" via content-word overlap PLUS a numeric-token guard.
-// The numeric guard is load-bearing: validators kill on VALUE mismatches
-// and the retry corrects the value, so a changed/new number is the signal
-// of a REAL correction — replaying the old (wrong-value) tail there would
-// voice wrong content. Generic (no subject terms), per [[feedback_generic_prompts]].
-const JUDGE_KILL_STOPWORDS = new Set([
-  'the', 'a', 'an', 'and', 'or', 'but', 'so', 'to', 'of', 'in', 'on', 'at',
-  'is', 'are', 'was', 'were', 'that', 'this', 'it', 'its', 'as', 'for', 'with',
-  'i', 'you', 'we', 'your', 'my', 'me', 'here', 'there', 'let', 'lets',
-  'okay', 'ok', 'right', 'well', 'now', 'then', 'just', 'do', 'does', 'did',
-  'be', 'been', 'have', 'has', 'had', 'what', 'how', 'why', 'when', 'if',
-  'not', 'no', 'yes', 'yeah', 'great', 'good', 'nice', 'exactly', 'perfect',
-  'spot', 'sure', 'got', 'gonna', 'going', 'about', 'into', 'from', 'by',
-]);
-function judgeKillContentWords(s: string): string[] {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9./\s-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter((w) => w.length >= 2 && !JUDGE_KILL_STOPWORDS.has(w));
-}
-/** Numbers, decimals, fractions (1/2), percentages (50%) — the value
- *  tokens a correctness retry would change. */
-function judgeKillNumericTokens(s: string): string[] {
-  return s.match(/\d+(?:[./]\d+)?%?/g) ?? [];
-}
-/** True when `retry` is a re-statement of `killed`: ≥60% content-word
- *  overlap relative to the SHORTER text, ≥2 shared content words, AND no
- *  number in `retry` absent from `killed` (so a value correction is never
- *  mistaken for a restatement).
- *
- *  The min-denominator matters: the killed text is captured at kill time, so
- *  it's a truncated prefix (often a single sentence — the kill fires mid-
- *  stream), while a faithful retry re-delivers the FULL response. Dividing by
- *  the retry length systematically under-scored faithful restatements
- *  (observed 2026-06-16: an IDENTICAL retry scored 0.23 and wrongly "diverged"
- *  because the killed snippet was a 1-sentence prefix of the 3-sentence
- *  retry). Relative-to-shorter treats "killed ⊆ retry" as the strong
- *  restatement signal it is. */
-function isJudgeKillRestatement(retry: string, killed: string): boolean {
-  const rSet = new Set(judgeKillContentWords(retry));
-  const kSet = new Set(judgeKillContentWords(killed));
-  if (rSet.size === 0 || kSet.size === 0) return false;
-  let shared = 0;
-  for (const w of rSet) if (kSet.has(w)) shared++;
-  const overlap = shared / Math.min(rSet.size, kSet.size);
-  if (shared < 2 || overlap < 0.6) return false;
-  const kNums = new Set(judgeKillNumericTokens(killed));
-  if (judgeKillNumericTokens(retry).some((n) => !kNums.has(n))) return false;
-  return true;
-}
-
-/** Extract the first sentence of a brain response and normalize it for
- *  cross-turn comparison. Used by the disclaimer-verbatim-reuse guard
- *  to detect openers that repeat across consecutive generate_problem
- *  hits. Split on terminal punctuation (. ! ?) and take the first
- *  non-empty chunk; lowercase + collapse whitespace. Some brain outputs
- *  omit the post-period space ("for you.Off the top of my head…"), so
- *  the regex doesn't require a trailing space. Falls back to the full
- *  string if no terminal punctuation is found. */
-function extractSentence1Normalized(s: string): string {
-  const m = s.match(/^[^.!?]+/);
-  return (m ? m[0] : s).toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-/** Strict deep-equal for prescribedRender validator. Returns true when
- *  `a` and `b` are structurally identical (same keys + same primitive
- *  values + element-wise array equality). Types are NOT coerced: the
- *  string "5" is not equal to the number 5. Used to verify the brain's
- *  emitted tool args match the lesson-plan-authored prescribed params
- *  verbatim. */
-function deepEqualParams(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (a === null || b === null) return a === b;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((v, i) => deepEqualParams(v, b[i]));
-  }
-  if (typeof a === 'object' && typeof b === 'object') {
-    const ao = a as Record<string, unknown>;
-    const bo = b as Record<string, unknown>;
-    const ak = Object.keys(ao); const bk = Object.keys(bo);
-    if (ak.length !== bk.length) return false;
-    return ak.every((k) => Object.prototype.hasOwnProperty.call(bo, k) && deepEqualParams(ao[k], bo[k]));
-  }
-  if (typeof a === 'number' && typeof b === 'number' && Number.isNaN(a) && Number.isNaN(b)) return true;
-  return false;
-}
-
-/** Pedagogical milestones the runtime reports via `onMilestone`, fired once
- *  each as the orchestrator genuinely crosses them (skips do NOT count).
- *  Values map 1:1 to the portal contract's `SessionMilestone` enum — minus
- *  `'none'`, which the consumer uses as the default when nothing fired. */
-export type TutorMilestone = 'first_concept_complete' | 'first_try_yourself_success' | 'recap_reached';
-
-/** Prior-session state to rehydrate on a resumed session (contract v1.2.0, E3).
- *  The runtime seeds these on boot so the conversation continues where it left
- *  off — position drives the pills, transcript feeds both the chat UI and the
- *  brain's history, whiteboard restores the board. Resume never auto-opens the
- *  mic; the student speaks/clicks to resume audio. */
-export interface TutorResumeState {
-  currentSegmentId: string;
-  completedSegmentIds: string[];
-  transcript: TranscriptEntry[];
-  whiteboardCommands: WhiteboardCommand[];
-}
-
 interface VoiceTutorRealtimeProps {
   subject: string;
   topic: string;
@@ -851,22 +412,6 @@ interface VoiceTutorRealtimeProps {
   dockVariant?: 'default' | 'island';
 }
 
-/** Detect a "mute me" / "stop listening" voice command so the orchestrator can
- *  mute the mic instead of routing it to the brain as a question. Kept tight to
- *  avoid false positives: it must be a SHORT command-like utterance (a long
- *  sentence that merely mentions "mute" is not a command). The student re-opens
- *  the mic with the dock button (a muted mic can't hear an "unmute" command). */
-export function isMuteMeCommand(text: string): boolean {
-  const t = text.toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!t) return false;
-  const words = t.split(' ');
-  if (words.length > 7) return false; // a command, not a sentence about muting
-  if (/\bstop listening\b/.test(t)) return true;
-  if (/\bmute\b/.test(t) && /\b(me|mic|mike|microphone|my|myself|yourself|it|that|now|please)\b/.test(t)) return true;
-  if (/^mute$/.test(t)) return true;
-  return false;
-}
-
 // Map our voice IDs to OpenAI voices
 const VOICE_MAP: Record<string, OpenAIVoice> = {
   'female-1': 'shimmer',  // Warm, friendly
@@ -874,47 +419,6 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-1': 'echo',       // Calm
   'male-2': 'alloy',      // Energetic
 };
-
-/** Format a lesson plan + current segment into a compact context block
- *  for the realtime-2 engine. RT-2 has no brain orchestrator feeding it
- *  lessonPlanContext, so the plan is pushed straight into the session as
- *  a conversation item; this builds that item's text. Returns null when
- *  the segment id can't be resolved against the plan. */
-function formatLessonPlanForRealtime(
-  plan: import('@/lib/tutor/lesson-plan/types').LessonPlan,
-  currentSegmentId: string,
-  completedSegmentIds: ReadonlyArray<string>,
-): string | null {
-  const seg = plan.segments.find((s) => s.id === currentSegmentId);
-  if (!seg) return null;
-  const lines: string[] = ['[ACTIVE LESSON PLAN]'];
-  lines.push(`Title: ${plan.title} (grade ${plan.grade}, ~${plan.estimatedMinutes} min)`);
-  if (plan.los.length > 0) {
-    lines.push('Learning objectives:');
-    for (const lo of plan.los) lines.push(`  - ${lo.id}: ${lo.description}`);
-  }
-  lines.push('Segments in order: ' + plan.segments.map((s) => `${s.id}(${s.kind})`).join(' → '));
-  if (completedSegmentIds.length > 0) {
-    lines.push(`Already completed: ${completedSegmentIds.join(', ')}`);
-  }
-  lines.push('');
-  const segRec = seg as unknown as Record<string, unknown>;
-  lines.push(`CURRENT SEGMENT: ${seg.id} (${seg.kind})`);
-  if (typeof segRec.goal === 'string' && segRec.goal) lines.push(`Goal: ${segRec.goal}`);
-  if (Array.isArray(segRec.keyIdeas) && segRec.keyIdeas.length > 0) {
-    lines.push('Key ideas: ' + segRec.keyIdeas.map((k) => String(k)).join('; '));
-  }
-  const truth = getSegmentTruth(seg);
-  if (truth?.problemText) lines.push(`Authored problem (render verbatim): ${truth.problemText}`);
-  if (truth?.expectedAnswer) lines.push(`Expected answer: ${truth.expectedAnswer}`);
-  lines.push('');
-  lines.push(
-    'Teach the CURRENT SEGMENT now. When the student finishes it, call ' +
-      'mark_segment_complete for it and advance_lesson({to: "next"}) to move on. ' +
-      'Do not skip ahead.',
-  );
-  return lines.join('\n');
-}
 
 // Coherence pass v1 (problemSimilarity, extractConstants,
 // extractCoefficients) was retired 2026-04-29 in favor of A + B1:
