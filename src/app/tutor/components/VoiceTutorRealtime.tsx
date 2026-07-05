@@ -249,7 +249,7 @@ import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker, type SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import {
-  resolvePointMark,
+  resolveStudentMark,
   formatStudentMarks,
   MAX_PENDING_MARKS,
   type StudentMarkEvent,
@@ -11830,7 +11830,7 @@ export function VoiceTutorRealtime({
         },
         pushStudentMark: (ev: StudentMarkEvent) => {
           if (!TUTOR_STUDENT_MARKS || !claudeBrainMode) return;
-          const resolved = resolvePointMark(ev);
+          const resolved = resolveStudentMark(ev);
           const buf = pendingStudentMarksRef.current;
           buf.push(resolved);
           if (buf.length > MAX_PENDING_MARKS) {
