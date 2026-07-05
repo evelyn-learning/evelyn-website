@@ -43,10 +43,25 @@ export interface StrokeMarkEvent {
   rects: CapturedRect[];
 }
 
-export type StudentMarkEvent = PointMarkEvent | StrokeMarkEvent;
+export interface GestureMarkEvent {
+  type: 'gesture';
+  pageIndex: number;
+  pageTitle?: string;
+  strokes: { x: number; y: number }[][];
+  rects: CapturedRect[];
+}
+
+export type StudentMarkEvent = PointMarkEvent | StrokeMarkEvent | GestureMarkEvent;
+
+export interface BBoxLike {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 export interface ResolvedMark {
-  kind: 'point' | 'circle' | 'underline' | 'cross-out' | 'arrow' | 'ink';
+  kind: 'point' | 'circle' | 'underline' | 'cross-out' | 'arrow' | 'ink' | 'tick' | 'writing';
   pageIndex: number;
   pageTitle?: string;
   itemIndex?: number;
@@ -56,6 +71,8 @@ export interface ResolvedMark {
   fromItemIndex?: number;
   fromItemId?: string;
   fromFeature?: string;
+  text?: string;
+  strokesBBox?: BBoxLike;
 }
 
 /** Pending-buffer cap; oldest marks drop beyond this (with a debug event). */
@@ -210,8 +227,61 @@ export function classifyStroke(ev: StrokeMarkEvent): ResolvedMark {
   return withTarget('ink', targetForRegion(bb, ev.rects) ?? targetAtPoint(center, ev.rects));
 }
 
+/** Angle at the junction of two strokes sharing an endpoint region —
+ *  a tick is a short down-stroke meeting a longer up-stroke in a V. */
+function isTick(a: { x: number; y: number }[], b: { x: number; y: number }[]): boolean {
+  const join = dist(a[a.length - 1], b[0]) <= 0.03 || dist(a[a.length - 1], b[b.length - 1]) <= 0.03;
+  if (!join) return false;
+  const dirA = { x: a[a.length - 1].x - a[0].x, y: a[a.length - 1].y - a[0].y };
+  const dirB = { x: b[b.length - 1].x - b[0].x, y: b[b.length - 1].y - b[0].y };
+  // A tick's first leg heads DOWN (+y), second leg heads UP (−y).
+  return dirA.y > 0.01 && dirB.y < -0.01;
+}
+
+function segIntersect(p1: { x: number; y: number }, p2: { x: number; y: number }, p3: { x: number; y: number }, p4: { x: number; y: number }): boolean {
+  const d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+  if (Math.abs(d) < 1e-9) return false;
+  const t = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+  const u = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+function strokesCross(a: { x: number; y: number }[], b: { x: number; y: number }[]): boolean {
+  return segIntersect(a[0], a[a.length - 1], b[0], b[b.length - 1]);
+}
+
+function combinedBBox(strokes: { x: number; y: number }[][]): BBox {
+  return polyBBox(strokes.flat());
+}
+
+export function classifyGesture(ev: GestureMarkEvent): ResolvedMark {
+  const { strokes } = ev;
+  if (strokes.length === 1) {
+    return classifyStroke({ type: 'stroke', pageIndex: ev.pageIndex, pageTitle: ev.pageTitle, polyline: strokes[0], rects: ev.rects });
+  }
+  const bb = combinedBBox(strokes);
+  const center = { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2 };
+  const target = targetForRegion(bb, ev.rects) ?? targetAtPoint(center, ev.rects);
+  const base: ResolvedMark = {
+    kind: 'writing',
+    pageIndex: ev.pageIndex,
+    pageTitle: ev.pageTitle,
+    point: center,
+    strokesBBox: bb,
+    ...(target ? { itemIndex: target.itemIndex, itemId: target.itemId, feature: target.feature } : {}),
+  };
+  if (strokes.length === 2) {
+    const [a, b] = strokes;
+    if (target?.feature && (isTick(a, b) || isTick(b, a))) return { ...base, kind: 'tick' };
+    if (target?.feature && strokesCross(a, b)) return { ...base, kind: 'cross-out' };
+  }
+  return base; // ≥3 strokes, or unresolvable 2-stroke → writing (OCR upstream)
+}
+
 export function resolveStudentMark(ev: StudentMarkEvent): ResolvedMark {
-  return ev.type === 'point' ? resolvePointMark(ev) : classifyStroke(ev);
+  if (ev.type === 'point') return resolvePointMark(ev);
+  if (ev.type === 'stroke') return classifyStroke(ev);
+  return classifyGesture(ev);
 }
 
 export function resolvePointMark(ev: PointMarkEvent): ResolvedMark {
@@ -256,6 +326,7 @@ export interface MarkLabels {
 }
 
 function sameTarget(a: ResolvedMark, b: ResolvedMark): boolean {
+  if (a.kind === 'writing' || b.kind === 'writing') return false;
   return a.kind === b.kind && a.itemIndex === b.itemIndex && a.feature === b.feature && a.pageIndex === b.pageIndex;
 }
 
@@ -275,6 +346,8 @@ export function formatStudentMarks(
     'cross-out': 'crossed out',
     arrow: 'drew an arrow to',
     ink: 'drew near',
+    tick: 'put a tick on',
+    writing: 'wrote on',
   };
 
   const lines: string[] = [];
@@ -284,6 +357,18 @@ export function formatStudentMarks(
     prev = mark;
     const page = `page ${mark.pageIndex + 1}${mark.pageTitle ? `, "${mark.pageTitle}"` : ''}`;
     const verb = VERBS[mark.kind];
+    if (mark.kind === 'writing') {
+      const labels = mark.itemIndex !== undefined ? lookup(mark) : null;
+      const near = labels?.featureLabel
+        ? `${labels.featureLabel}${labels.itemLabel ? ` of ${labels.itemLabel}` : ''}`
+        : labels?.itemLabel;
+      lines.push(
+        mark.text
+          ? `The student wrote on the board${near ? ` near ${near}` : ''} (${page}): "${mark.text}"`
+          : `The student wrote something on the board (${page}), but it could not be read.`,
+      );
+      continue;
+    }
     if (mark.itemIndex === undefined) {
       lines.push(
         mark.kind === 'point'

@@ -6,6 +6,7 @@
 import {
   resolvePointMark,
   classifyStroke,
+  classifyGesture,
   resolveStudentMark,
   formatStudentMarks,
   MAX_PENDING_MARKS,
@@ -13,6 +14,7 @@ import {
   type PointMarkEvent,
   type StudentMarkEvent,
   type StrokeMarkEvent,
+  type GestureMarkEvent,
   type ResolvedMark,
 } from '../src/lib/tutor/whiteboard/student-marks';
 
@@ -195,6 +197,74 @@ function loopAround(cx: number, cy: number, r: number, n = 16): { x: number; y: 
     () => null,
   );
   check('unresolved ink wording', text === 'The student drew something on page 3.');
+}
+
+// ── Phase 2b: gesture classification ───────────────────────────────
+function gesture(strokes: { x: number; y: number }[][], rects: CapturedRect[]): GestureMarkEvent {
+  return { type: 'gesture', pageIndex: 1, pageTitle: 'Practice', strokes, rects };
+}
+// single-stroke gesture defers to classifyStroke
+{
+  const m = classifyGesture(gesture([loopAround(0.5, 0.225, 0.13)], [item1, row, cell]));
+  check('1-stroke gesture → classifyStroke path (circle)', m.kind === 'circle' && m.feature === 'cell-r2-c3');
+}
+// tick: short down-stroke + longer up-stroke forming a V over the cell
+{
+  const s1 = [{ x: 0.46, y: 0.21 }, { x: 0.49, y: 0.245 }];
+  const s2 = [{ x: 0.49, y: 0.245 }, { x: 0.56, y: 0.205 }];
+  const m = classifyGesture(gesture([s1, s2], [item1, row, cell]));
+  check('2-stroke V over a feature → tick', m.kind === 'tick' && m.feature === 'cell-r2-c3');
+}
+// X: two crossing lines over the cell → cross-out
+{
+  const s1 = [{ x: 0.42, y: 0.205 }, { x: 0.58, y: 0.245 }];
+  const s2 = [{ x: 0.58, y: 0.205 }, { x: 0.42, y: 0.245 }];
+  const m = classifyGesture(gesture([s1, s2], [item1, row, cell]));
+  check('2 crossing strokes over a feature → cross-out', m.kind === 'cross-out' && m.feature === 'cell-r2-c3');
+}
+// writing: 4 small strokes in a band → writing with bbox + target
+{
+  const strokes = [0, 1, 2, 3].map((i) => [
+    { x: 0.42 + i * 0.04, y: 0.31 }, { x: 0.43 + i * 0.04, y: 0.35 }, { x: 0.44 + i * 0.04, y: 0.31 },
+  ]);
+  const m = classifyGesture(gesture(strokes, [item1, row, cell]));
+  check('≥3 strokes → writing', m.kind === 'writing');
+  check('writing carries strokesBBox', !!m.strokesBBox && m.strokesBBox.w > 0.1);
+  check('writing targets the containing item', m.itemIndex === 1);
+}
+// ambiguous 2-stroke (parallel short lines, no V, no crossing) → writing
+{
+  const s1 = [{ x: 0.42, y: 0.31 }, { x: 0.5, y: 0.31 }];
+  const s2 = [{ x: 0.42, y: 0.34 }, { x: 0.5, y: 0.34 }];
+  const m = classifyGesture(gesture([s1, s2], [item1, row, cell]));
+  check('unresolvable 2-stroke → writing fallback', m.kind === 'writing');
+}
+// dispatcher
+{
+  const g = resolveStudentMark(gesture([loopAround(0.5, 0.225, 0.13)], [item1, row, cell]));
+  check('resolveStudentMark dispatches gesture', g.kind === 'circle');
+}
+// wordings
+{
+  const text = formatStudentMarks(
+    [{ kind: 'tick', pageIndex: 0, point: { x: 0.5, y: 0.2 }, itemIndex: 1, feature: 'row-2' }],
+    () => ({ featureLabel: 'the second row', itemLabel: 'the table' }),
+  );
+  check('tick wording', text === 'The student put a tick on the second row of the table (page 1).');
+}
+{
+  const text = formatStudentMarks(
+    [{ kind: 'writing', pageIndex: 0, point: { x: 0.5, y: 0.3 }, itemIndex: 1, itemId: 'showTable-1', text: 'x^2 + y^2 = r^2' }],
+    () => ({ itemLabel: 'the table' }),
+  );
+  check('writing wording carries the OCR text', text === 'The student wrote on the board near the table (page 1): "x^2 + y^2 = r^2"');
+}
+{
+  const text = formatStudentMarks(
+    [{ kind: 'writing', pageIndex: 0, point: { x: 0.5, y: 0.3 } }],
+    () => null,
+  );
+  check('unreadable writing wording', text === 'The student wrote something on the board (page 1), but it could not be read.');
 }
 
 console.log(`\nstudent-marks: ${passed} passed, ${failed} failed`);
