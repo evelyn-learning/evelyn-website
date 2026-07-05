@@ -194,6 +194,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // fade on the board.
   const [boardPenActive, setBoardPenActive] = useState(false);
   const [inkEpoch, setInkEpoch] = useState(0);
+  // Stable identity: WhiteboardCanvas's idle-timer effect keys its 45s
+  // timeout on this prop, so an inline arrow here (a new function every
+  // TutorSession render — captions/voice state re-render often) would
+  // re-arm the timer on every render and the idle-exit would rarely fire.
+  const handlePenIdle = useCallback(() => setBoardPenActive(false), []);
 
   const micLevelRef = useRef(0);
   const localHandleRef = useRef<RealtimeHandle | null>(null);
@@ -323,6 +328,7 @@ export default function TutorSession(props: TutorSessionProps) {
         openOnLastPage={!!resumeState}
         onStudentMark={studentMarksOn ? handleStudentMark : undefined}
         penMode={studentMarksOn && boardPenActive}
+        onPenIdle={handlePenIdle}
         inkEpoch={inkEpoch}
         className="h-full"
       />

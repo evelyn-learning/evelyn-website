@@ -214,6 +214,9 @@ interface WhiteboardCanvasProps {
   /** Phase 2 pen mode: while true, the board captures freehand strokes on a
    *  scroll-locking overlay and emits type:'gesture' events via onStudentMark. */
   penMode?: boolean;
+  /** Fired after ~45s of pen mode with no strokes — parent should exit pen
+   *  mode; spec'd auto-exit. Absent means no idle timer is armed. */
+  onPenIdle?: () => void;
   /** Bumped by the parent when a tutor turn completes; ink strokes created
    *  at an earlier epoch fade out. */
   inkEpoch?: number;
@@ -247,7 +250,17 @@ interface WhiteboardCanvasProps {
 // annotated. Known accepted limit: content inserted ABOVE existing items,
 // or any reflow that shifts earlier content's pixel position, still drifts
 // ink — in practice the tutor only appends below, so this is not hit.
-interface InkStroke { id: number; pageIndex: number; polyline: { x: number; y: number }[]; px: { x: number; y: number }[]; epoch: number; fading?: boolean; }
+// `captureWidth` is the outer host's (pageOuterRef) clientWidth at the
+// instant the stroke was finished. `px` points are only correct at that
+// width — a window resize / phone rotation reflows content without
+// rescaling stored ink, so rendering re-derives a scale factor from
+// captureWidth vs. the CURRENT outer width (see the render site below).
+interface InkStroke { id: number; pageIndex: number; polyline: { x: number; y: number }[]; px: { x: number; y: number }[]; epoch: number; fading?: boolean; captureWidth: number; }
+
+// Backstop cap on live ink strokes (Fix 3). Epoch fade normally clears
+// strokes within a couple of tutor turns; this only bites when the tutor
+// never turns again (student keeps drawing with no brain response).
+const MAX_INK_STROKES = 40;
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
  *  once at the WhiteboardCanvas level; deeply-nested renderers (like
@@ -271,6 +284,7 @@ export function WhiteboardCanvas({
   openOnLastPage = false,
   onStudentMark,
   penMode = false,
+  onPenIdle,
   inkEpoch,
   tutorTurnActive,
 }: WhiteboardCanvasProps) {
@@ -798,8 +812,28 @@ export function WhiteboardCanvas({
   // against pageWrapperRef below — see penPoint).
   const pageOuterRef = useRef<HTMLDivElement | null>(null);
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
-  const [pings, setPings] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [pings, setPings] = useState<{ id: number; pageIndex: number; x: number; y: number }[]>([]);
   const pingIdRef = useRef(0);
+
+  // Fix 1 (ink drift on resize/rotation): track the outer host's live
+  // CSS width so ink strokes captured at a different width can be
+  // rescaled at render time — see the InkStroke doc comment.
+  const [outerWidth, setOuterWidth] = useState(0);
+  useEffect(() => {
+    const outer = pageOuterRef.current;
+    // pageOuterRef only mounts once `pages.length > 0` (see the empty-state
+    // early return below) — re-arming on pages.length lets the observer
+    // attach once real content (and the ref) exists, instead of running
+    // once at mount against a still-null ref.
+    if (!outer) return;
+    setOuterWidth(outer.clientWidth);
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setOuterWidth(w);
+    });
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, [pages.length]);
 
   const collectRects = useCallback((): CapturedRect[] => {
     const wrapper = pageWrapperRef.current;
@@ -847,7 +881,9 @@ export function WhiteboardCanvas({
     if (wRect.width === 0 || wRect.height === 0) return;
     const point = { x: (clientX - wRect.left) / wRect.width, y: (clientY - wRect.top) / wRect.height };
     const id = ++pingIdRef.current;
-    setPings((p) => [...p, { id, x: point.x, y: point.y }]);
+    // Fix 2 (ping bleed): tag with the page it fired on so a ping still
+    // in its 2s life doesn't render at the same coords after a page nav.
+    setPings((p) => [...p, { id, pageIndex: currentIndex, x: point.x, y: point.y }]);
     setTimeout(() => setPings((p) => p.filter((q) => q.id !== id)), 2000);
     onStudentMark({
       type: 'point',
@@ -889,6 +925,10 @@ export function WhiteboardCanvas({
   // comment for why rendering uses px while emission stays normalized.
   const activeStrokePxRef = useRef<{ x: number; y: number }[] | null>(null);
   const [liveStrokePx, setLiveStrokePx] = useState<{ x: number; y: number }[] | null>(null);
+  // Fix 4 (pen-mode idle auto-exit): bumped whenever a stroke finishes, so
+  // the idle-timer effect below (keyed on this) re-arms instead of firing
+  // while the student is actively drawing.
+  const [penStrokeSeq, setPenStrokeSeq] = useState(0);
 
   const penPoint = useCallback((clientX: number, clientY: number) => {
     const wrapper = pageWrapperRef.current;
@@ -940,18 +980,28 @@ export function WhiteboardCanvas({
     setLiveStroke(null);
     setLiveStrokePx(null);
     if (!pts || pts.length < 2 || !onStudentMark) return;
+    setPenStrokeSeq((n) => n + 1);
     const id = ++strokeIdRef.current;
     // Fail safe: when px array is missing or mismatched, skip the ink-state
     // push to prevent corrupt ~1px scribbles. The mark still emits via the
     // normalized path (polyline) in the gesture event.
     if (pxPts && pxPts.length === pts.length) {
-      setInkStrokes((s) => [...s, {
-        id,
-        pageIndex: currentIndex,
-        polyline: pts,
-        px: pxPts,
-        epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
-      }]);
+      setInkStrokes((s) => {
+        const next = [...s, {
+          id,
+          pageIndex: currentIndex,
+          polyline: pts,
+          px: pxPts,
+          epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
+          captureWidth: pageOuterRef.current?.clientWidth || 0,
+        }];
+        // Fix 3 (unbounded accumulation backstop): epoch fade normally
+        // clears old strokes once the tutor's next turn or two completes,
+        // but if the tutor never turns again (student keeps drawing with
+        // no brain response) strokes would accumulate forever. Drop the
+        // oldest beyond the cap.
+        return next.length > MAX_INK_STROKES ? next.slice(next.length - MAX_INK_STROKES) : next;
+      });
     } else {
       console.warn('[student-marks] px/normalized stroke desync — ink render skipped');
     }
@@ -959,6 +1009,17 @@ export function WhiteboardCanvas({
     if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
     gestureTimerRef.current = setTimeout(emitGesture, GESTURE_QUIET_MS);
   }, [onStudentMark, currentIndex, inkEpoch, tutorBusy, tutorTurnActive, emitGesture]);
+
+  // Fix 4 (pen-mode idle auto-exit): while pen mode is on and a parent
+  // wants to know, arm a 45s timeout that fires onPenIdle. Keyed on
+  // penStrokeSeq so every finished stroke re-arms the timer (resets the
+  // idle clock) instead of letting a mid-drawing session get cut off.
+  // Cleanup covers pen-mode-off, unmount, and each re-arm.
+  useEffect(() => {
+    if (!penMode || !onPenIdle) return;
+    const t = setTimeout(() => { onPenIdle(); }, 45000);
+    return () => clearTimeout(t);
+  }, [penMode, onPenIdle, penStrokeSeq]);
 
   const handlePenDown = useCallback((e: React.PointerEvent) => {
     // The overlay is a child of the Phase-1 tap wrapper — stop the event
@@ -1303,7 +1364,10 @@ export function WhiteboardCanvas({
             reasoning entirely. Resets on page nav (each page has its
             own commands). */}
         <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />
-        {pings.map((p) => (
+        {/* Fix 2: filter by page — a ping still in its 2s life at the
+            moment of a page nav would otherwise render at the same
+            normalized coords on the newly-current page. */}
+        {pings.filter((p) => p.pageIndex === currentIndex).map((p) => (
           <span
             key={p.id}
             className="wb-student-ping"
@@ -1322,13 +1386,28 @@ export function WhiteboardCanvas({
             below). See also the InkStroke doc comment. */}
         {(inkStrokes.some((s) => s.pageIndex === currentIndex) || liveStrokePx) && (
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
-            {inkStrokes.filter((s) => s.pageIndex === currentIndex).map((s) => (
-              <polyline
-                key={s.id}
-                points={s.px.map((p) => `${p.x},${p.y}`).join(' ')}
-                className={s.fading ? 'wb-student-ink wb-student-ink-fading' : 'wb-student-ink'}
-              />
-            ))}
+            {inkStrokes.filter((s) => s.pageIndex === currentIndex).map((s) => {
+              // Fix 1 (ink drift on resize/rotation): a stroke's px points
+              // were captured relative to the outer host's width at draw
+              // time. If the host has since reflowed to a different width
+              // (window resize, phone rotation), rescale every point by
+              // currentWidth / captureWidth. This is a proportional
+              // approximation — exact for a pure width-driven reflow,
+              // where content scales roughly uniformly with width — not a
+              // general re-layout solution. Guard to 1 (no-op) when either
+              // width is missing/zero so a stroke never collapses to the
+              // origin.
+              const scale = (outerWidth && s.captureWidth) ? outerWidth / s.captureWidth : 1;
+              return (
+                <polyline
+                  key={s.id}
+                  points={s.px.map((p) => `${p.x * scale},${p.y * scale}`).join(' ')}
+                  className={s.fading ? 'wb-student-ink wb-student-ink-fading' : 'wb-student-ink'}
+                />
+              );
+            })}
+            {/* liveStrokePx needs no scaling — its capture width IS the
+                current width (the stroke is being drawn right now). */}
             {liveStrokePx && (
               <polyline points={liveStrokePx.map((p) => `${p.x},${p.y}`).join(' ')} className="wb-student-ink" />
             )}
