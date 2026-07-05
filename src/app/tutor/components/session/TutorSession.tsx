@@ -36,6 +36,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
+import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -44,6 +45,10 @@ type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['
 // Default ON; 'off' restores the legacy fixed-rate typewriter. claude-brain
 // only by construction (the handle returns null on other engines).
 const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
+
+// Student whiteboard marks (Phase 1): tap-to-point. Default OFF.
+const TUTOR_STUDENT_MARKS =
+  process.env.NEXT_PUBLIC_TUTOR_STUDENT_MARKS === 'true';
 
 export type TutorSessionVoiceEngine = 'realtime' | 'realtime-2' | 'realtime-validated' | 'claude-brain';
 
@@ -283,6 +288,10 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.sendTextMessage(text);
   }, []);
 
+  const handleStudentMark = useCallback((ev: StudentMarkEvent) => {
+    realtimeHandleRef.current?.pushStudentMark?.(ev);
+  }, [realtimeHandleRef]);
+
   // --- Composed slot elements ---
   const topicLabel = topicDisplayName || 'AI Tutor';
 
@@ -298,6 +307,7 @@ export default function TutorSession(props: TutorSessionProps) {
         chrome="minimal"
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}
+        onStudentMark={TUTOR_STUDENT_MARKS ? handleStudentMark : undefined}
         className="h-full"
       />
       {awaitingResume && (

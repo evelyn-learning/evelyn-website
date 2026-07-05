@@ -175,6 +175,10 @@ export interface RealtimeHandle {
    *  lesson" overlay (and mirrored by the mic dock's resume tap). No-op once
    *  the session has started or when there is no resume snapshot. */
   resumeContinue: () => void;
+  /** Student marks (Phase 1): push a resolved-at-capture tap event from the
+   *  whiteboard. Resolution + buffering + brain transport happen inside the
+   *  engine. No-op when the flag is off or the engine is not claude-brain. */
+  pushStudentMark: (ev: StudentMarkEvent) => void;
 }
 
 // --- Multi-language whiteboard intent detection ---
@@ -244,6 +248,13 @@ import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker, type SpokenCaption } from '@/lib/tutor/voice/caption-sync';
+import {
+  resolvePointMark,
+  formatStudentMarks,
+  MAX_PENDING_MARKS,
+  type StudentMarkEvent,
+  type ResolvedMark,
+} from '@/lib/tutor/whiteboard/student-marks';
 
 // ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
 // Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
@@ -270,6 +281,10 @@ const TUTOR_SKIP_DETERMINISTIC =
 // project_tutor_render_speech_sync.
 const TUTOR_RENDER_SYNC =
   process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
+// Student whiteboard marks (Phase 1, 2026-07-05): tap-to-point. Default
+// OFF — new student-facing input surface. See student-marks design spec.
+const TUTOR_STUDENT_MARKS =
+  process.env.NEXT_PUBLIC_TUTOR_STUDENT_MARKS === 'true';
 // Board-anchor structural assists (re-anchor a front-loaded equation/figure to
 // its introducing sentence; auto-write a transformation "A → B" arrow when the
 // tutor narrates one with no board anchor that turn). Client-side, DEFAULT OFF
@@ -1198,6 +1213,13 @@ export function VoiceTutorRealtime({
   // Fed per-attempt from the brain stream loop; read via the handle's
   // getSpokenCaption poll. See caption-sync.ts.
   const captionSyncRef = useRef(new CaptionSyncTracker());
+
+  // Student marks (Phase 1): pending tap buffer + idle-send timer. Marks
+  // NEVER interrupt anything — the buffer is read only at brain-turn start
+  // (callBrainOnce) and by the idle-send further down (armStudentMarkIdleSend,
+  // declared after `realtime` so it can read live speaking state).
+  const pendingStudentMarksRef = useRef<ResolvedMark[]>([]);
+  const studentMarkIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -6339,6 +6361,42 @@ export function VoiceTutorRealtime({
       console.log('[VoiceTutorRealtime] Realtime engine active (legacy authoring path), validateToolCalls=', validateToolCalls);
     }
   }, [claudeBrainMode, validateToolCalls]);
+  // Student marks (Phase 1): catalog-backed labels for formatStudentMarks.
+  // Feature labels come from the item's feature registry (same registry
+  // tutor_scribble resolves against, via catalogRef); item labels use the
+  // item's action name directly — getCommandTypeLabel (WhiteboardCanvas's
+  // prettifier) is not exported from this file, so the raw action string is
+  // the label (e.g. "showCoordinatePlane" rather than "coordinate plane").
+  // Null (stale id / missing item) → the formatter degrades to page-level
+  // wording. Declared ABOVE callBrainOnce (which calls drainStudentMarks
+  // below) — required declaration order, not just style.
+  const lookupMarkLabels = useCallback((mark: ResolvedMark) => {
+    if (!mark.itemId) return mark.itemIndex !== undefined ? {} : null;
+    const item = catalogRef.current.getItem(mark.itemId);
+    if (!item) return null;
+    const itemLabel = item.pageTitle
+      ? `the ${item.action} ("${item.pageTitle}")`
+      : `the ${item.action}`;
+    const feature = mark.feature;
+    if (!feature) return { itemLabel };
+    const feat = item.features.find((f) => f.canonical === feature || f.labels.includes(feature));
+    return { itemLabel, featureLabel: feat ? `"${feat.labels[0] || feat.canonical}"` : `"${feature}"` };
+  }, []);
+
+  // Format + drain the pending tap buffer. Returns undefined when empty so
+  // the brain POST body's `studentMarks` field stays undefined (flag off /
+  // no taps this turn ⇒ byte-identical request).
+  const drainStudentMarks = useCallback((): string | undefined => {
+    const marks = pendingStudentMarksRef.current;
+    if (marks.length === 0) return undefined;
+    pendingStudentMarksRef.current = [];
+    if (studentMarkIdleTimerRef.current) {
+      clearTimeout(studentMarkIdleTimerRef.current);
+      studentMarkIdleTimerRef.current = null;
+    }
+    return formatStudentMarks(marks, lookupMarkLabels);
+  }, [lookupMarkLabels]);
+
   // Inner brain-call worker — does the actual fetch + dispatch. Pulled out
   // so the outer wrapper can serialize calls and process queued transcripts
   // without duplicating the body.
@@ -6985,6 +7043,11 @@ export function VoiceTutorRealtime({
           console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
         }
 
+        // Student marks (Phase 1): drain the pending tap buffer into a
+        // <student_marks> block riding THIS turn. Flag off / empty buffer ⇒
+        // field stays undefined ⇒ request byte-identical.
+        const studentMarks = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
+
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
         // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
         // undefined and JSON.stringify omits it (request byte-identical).
@@ -7054,6 +7117,10 @@ export function VoiceTutorRealtime({
             // Teacher-persona style salience: per-turn reminder, present
             // exactly when the opening directive is NOT (see block above).
             styleReminder,
+            // Student marks (Phase 1): drained tap buffer for THIS turn
+            // (undefined when the flag is off or nothing was tapped — see
+            // the block above).
+            studentMarks,
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
@@ -10252,7 +10319,7 @@ export function VoiceTutorRealtime({
       renderSyncActiveRef.current = false;
       captionSyncRef.current.markStreamEnd();
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord, drainStudentMarks]);
 
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
@@ -10911,6 +10978,33 @@ export function VoiceTutorRealtime({
   // self-voice contamination (perception logs during state='speaking').
   const productionStateRef = useRef<RealtimeState>(realtime.state);
   productionStateRef.current = realtime.state;
+
+  // Student marks (Phase 1) idle-send: fires ~4s after the last mark, ONLY
+  // when the tutor is not speaking (productionStateRef, the existing
+  // production-WS state mirror above) and no brain call is in flight
+  // (brainBusyRef — the same "only one brain call in flight" serialization
+  // ref handleStudentTranscriptForBrain checks); otherwise re-arms and
+  // checks again. Sends through the existing bracketed context-injection
+  // path (DrawPad precedent) so it flows as a normal student turn. Declared
+  // here (after `realtime`/productionStateRef exist) rather than next to
+  // drainStudentMarks — nothing before this point in the component needs
+  // it (only the handle's pushStudentMark, populated further down, calls
+  // it), so declaration order is a non-issue.
+  const STUDENT_MARK_IDLE_MS = 4000;
+  const armStudentMarkIdleSend = useCallback(() => {
+    if (studentMarkIdleTimerRef.current) clearTimeout(studentMarkIdleTimerRef.current);
+    studentMarkIdleTimerRef.current = setTimeout(() => {
+      studentMarkIdleTimerRef.current = null;
+      if (pendingStudentMarksRef.current.length === 0) return;
+      const busy = productionStateRef.current === 'speaking' || brainBusyRef.current;
+      if (busy) { armStudentMarkIdleSend(); return; }
+      const block = drainStudentMarks();
+      if (block) {
+        onDebugEvent?.('student_mark_idle_send', block.slice(0, 90));
+        sendTextMessageRef.current?.(`[${block} Respond to what they are pointing at.]`);
+      }
+    }, STUDENT_MARK_IDLE_MS);
+  }, [drainStudentMarks, onDebugEvent]);
 
   // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
   // When the user starts speaking BEFORE the tutor TTS begins,
@@ -11713,12 +11807,27 @@ export function VoiceTutorRealtime({
           if (!claudeBrainMode) return null;
           return captionSyncRef.current.poll(realtime.getSpokenProgress());
         },
+        pushStudentMark: (ev: StudentMarkEvent) => {
+          if (!TUTOR_STUDENT_MARKS || !claudeBrainMode) return;
+          const resolved = resolvePointMark(ev);
+          const buf = pendingStudentMarksRef.current;
+          buf.push(resolved);
+          if (buf.length > MAX_PENDING_MARKS) {
+            buf.shift();
+            onDebugEvent?.('student_mark_dropped', 'buffer cap');
+          }
+          onDebugEvent?.(
+            'student_mark',
+            `${resolved.feature ?? (resolved.itemId ?? 'page')} p${resolved.pageIndex + 1}`,
+          );
+          armStudentMarkIdleSend();
+        },
       };
     }
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, claudeBrainMode]);
+  }, [handleRef, realtime, stepPaceBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds
