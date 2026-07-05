@@ -240,9 +240,10 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
 export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
   return (
     `Introduce yourself naturally as ${t.name} in your first turn — one warm line with at most ONE human ` +
-    `detail drawn from who you are (${t.intro}); a vivid personal touch — a habit, an object, a story — ` +
-    `beats any credential. Never recite years of experience, qualifications, or subject lists: it's ` +
-    `a hello, not a resume. Then get into the opener.`
+    `detail drawn from who you are (${t.intro}); a vivid personal touch beats any credential. The detail ` +
+    `must be UNIVERSALLY legible: something any student in any country understands instantly — no ` +
+    `culture-specific props, idioms, wordplay, or references that need local context to land. Never recite ` +
+    `years of experience, qualifications, or subject lists: it's a hello, not a resume. Then get into the opener.`
   );
 }
 
