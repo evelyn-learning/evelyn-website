@@ -313,6 +313,7 @@ export default function TutorSession(props: TutorSessionProps) {
       <WhiteboardCanvas
         commands={whiteboardCommands}
         tutorBusy={isProcessing && whiteboardActiveThisTurn}
+        tutorTurnActive={isProcessing}
         onClear={() => setWhiteboardCommands([])}
         onAttentionShift={() => {}}
         onTryYourselfAnswer={handleTryYourselfAnswer}

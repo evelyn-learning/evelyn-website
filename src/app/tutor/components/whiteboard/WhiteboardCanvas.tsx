@@ -217,6 +217,13 @@ interface WhiteboardCanvasProps {
   /** Bumped by the parent when a tutor turn completes; ink strokes created
    *  at an earlier epoch fade out. */
   inkEpoch?: number;
+  /** Raw tutor-turn-active signal for the student-ink epoch shield. The
+   *  existing `tutorBusy` prop is a COMPOSITE (processing && whiteboard
+   *  active this turn) used for the drawing skeleton — a stroke drawn
+   *  during a no-render composing window would be tagged with the current
+   *  epoch and fade the moment that turn ends, before the brain saw the
+   *  mark. Falls back to `tutorBusy` when absent. */
+  tutorTurnActive?: boolean;
 }
 
 // ── Phase 2: pen mode (freehand ink) ────────────────────────────────
@@ -252,6 +259,7 @@ export function WhiteboardCanvas({
   onStudentMark,
   penMode = false,
   inkEpoch,
+  tutorTurnActive,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -857,7 +865,7 @@ export function WhiteboardCanvas({
       id,
       pageIndex: currentIndex,
       polyline: pts,
-      epoch: (inkEpoch ?? 0) + (tutorBusy ? 1 : 0),
+      epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
     }]);
     onStudentMark({
       type: 'stroke',
@@ -866,7 +874,7 @@ export function WhiteboardCanvas({
       polyline: pts,
       rects: collectRects(),
     });
-  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage, inkEpoch, tutorBusy]);
+  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage, inkEpoch, tutorBusy, tutorTurnActive]);
 
   const handlePenDown = useCallback((e: React.PointerEvent) => {
     // The overlay is a child of the Phase-1 tap wrapper — stop the event
