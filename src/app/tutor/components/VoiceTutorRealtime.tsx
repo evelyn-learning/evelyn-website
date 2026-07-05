@@ -1274,6 +1274,11 @@ export function VoiceTutorRealtime({
   // while one is pending, or a tick+written-answer combo splits across two
   // brain turns (final review 2026-07-05).
   const studentMarkOcrInFlightRef = useRef(0);
+  // Student is composing in the dock's text input (focused). Marks must
+  // wait and attach to the typed message rather than idle-sending mid-
+  // composition (user-identified gap, 2026-07-05). Set by the input's
+  // existing focus/blur handlers.
+  const studentTypingRef = useRef(false);
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -11066,13 +11071,17 @@ export function VoiceTutorRealtime({
       // mid-utterance / their transcription is still landing — firing a
       // mark turn under a live student utterance gets retro-cancelled by
       // perception Stage 2 and divorces the marks from the words they
-      // disambiguate (final review, 2026-07-05). Re-arm and try again.
+      // disambiguate (final review, 2026-07-05). Also re-arm while the
+      // student is TYPING in the dock — marks should attach to the typed
+      // message, not idle-send mid-composition (user-identified gap,
+      // 2026-07-05).
       const busy =
         productionStateRef.current === 'speaking' ||
         brainBusyRef.current ||
         perceptionMidUtteranceRef.current ||
         awaitingDispatchTimerRef.current != null ||
-        studentMarkOcrInFlightRef.current > 0;
+        studentMarkOcrInFlightRef.current > 0 ||
+        studentTypingRef.current;
       if (busy) { armStudentMarkIdleSend(); return; }
       const block = drainStudentMarks();
       if (block) {
@@ -12937,12 +12946,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
           disabled={!realtime.isConnected}
           onFocus={() => {
+            studentTypingRef.current = true;
             // Mute mic while typing to prevent it picking up speech
             if (!isMicMuted && realtime.isConnected) {
               realtime.muteInput();
             }
           }}
           onBlur={() => {
+            studentTypingRef.current = false;
             // Resume mic when done typing (only if student hasn't manually muted)
             if (!isMicMuted && realtime.isConnected) {
               realtime.startListening();
