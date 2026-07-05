@@ -89,6 +89,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
@@ -278,7 +279,12 @@ interface VoiceTutorRealtimeProps {
   teacherPersona?: TeacherPersonaWire;
   voice?: OpenAIVoice;
   onTranscriptUpdate: (entries: TranscriptEntry[]) => void;
-  onWhiteboardCommand: (commands: WhiteboardCommand[]) => void;
+  /** Live turn batches carry no meta. The resume-seed replay (mount-time
+   *  rehydration of a restored board) passes `{ resumeSeed: true }` so parents
+   *  can accept it exactly once per buffer lifetime — a VTR remount re-fires
+   *  the seed, and an unguarded parent append duplicates the whole board
+   *  (see src/lib/tutor/whiteboard/resume-seed.ts). */
+  onWhiteboardCommand: (commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => void;
   onStateChange?: (state: RealtimeState) => void;
   onError?: (error: Error) => void;
   /** Voice transcription status from OpenAI Realtime. 'failed' surfaces
@@ -5666,7 +5672,13 @@ export function VoiceTutorRealtime({
     // the rendered board (onWhiteboardCommand → parent's canvas state).
     if (resumeState.whiteboardCommands.length) {
       whiteboardCommandsRef.current = [...resumeState.whiteboardCommands];
-      onWhiteboardCommand([...resumeState.whiteboardCommands]);
+      // Tagged as the resume seed: parents accept it exactly once per buffer
+      // lifetime (resume-seed.ts guard). resumeContentSeededRef above only
+      // protects THIS instance — on a VTR remount (same session, resumeState
+      // still set) the effect re-fires with a fresh ref, and an unguarded
+      // parent append would duplicate the entire restored board (observed
+      // session-1783123067235: items 0–12 ≡ 13–25).
+      onWhiteboardCommand([...resumeState.whiteboardCommands], { resumeSeed: true });
       // Seed the catalog so cross-turn dedup recognizes the RESTORED board.
       // Without this, findBySignature is empty after a reload, so the brain's
       // resume reflex ("re-render the interrupted visual") sails past the dedup

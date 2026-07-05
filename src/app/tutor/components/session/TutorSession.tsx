@@ -37,6 +37,7 @@ import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
+import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -124,7 +125,7 @@ export interface TutorSessionProps {
   // Optional integration callbacks (typed from VoiceTutorRealtime to avoid drift)
   onMilestone?: VTRProps['onMilestone'];
   onTranscriptUpdate?: (entries: TranscriptEntry[]) => void;
-  onWhiteboardCommand?: (commands: WhiteboardCommand[]) => void;
+  onWhiteboardCommand?: (commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => void;
   onUsageUpdate?: VTRProps['onUsageUpdate'];
   onDebugEvent?: VTRProps['onDebugEvent'];
   onTrackInteraction?: VTRProps['onTrackInteraction'];
@@ -221,10 +222,18 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptUpdate?.(entries);
   }, [onTranscriptUpdate]);
 
-  const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
+  // Resume-seed batches apply exactly once: `whiteboardCommands` above
+  // outlives VoiceTutorRealtime instances (VTR is keyed on sessionId and can
+  // remount within a session), so a replayed seed would append a duplicate of
+  // the whole restored board (see resume-seed.ts). Guard lifetime ==
+  // TutorSession instance == buffer lifetime; a dropped seed is not forwarded
+  // (the parent's buffers already hold it too).
+  const resumeSeedGuardRef = useRef(createSeedGuard());
+  const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
+    if (!acceptWhiteboardBatch(resumeSeedGuardRef.current, meta)) return;
     setWhiteboardActiveThisTurn(true);
     setWhiteboardCommands((prev) => [...prev, ...commands]);
-    onWhiteboardCommand?.(commands);
+    onWhiteboardCommand?.(commands, meta);
   }, [onWhiteboardCommand]);
 
   const handleTutorBusy = useCallback((busy: boolean) => {

@@ -36,6 +36,7 @@ import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { buildResumeState, type PriorSessionRead } from '@/lib/tutor/portal/resume';
+import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -332,6 +333,9 @@ function TutorPage() {
     timestamp: Date;
     sourceMessageIndex: number;
   }>>([]);
+  // Guards the buffers above against a replayed resume seed (VTR remount).
+  // Reset wherever the buffers themselves are cleared — see resume-seed.ts.
+  const resumeSeedGuardRef = useRef(createSeedGuard());
   const [isProcessing, setIsProcessing] = useState(false);
   // True only after a whiteboard command has actually landed in the
   // current brain turn. Drives the "Tutor is preparing something…"
@@ -694,6 +698,7 @@ function TutorPage() {
             // clear keeps the invariant explicit and matches the summary-resume path.
             whiteboardEventsRef.current = [];
             setWhiteboardCommands([]);
+            resumeSeedGuardRef.current = createSeedGuard();
             setResumeState(rs);
             setStage('session');
           }
@@ -1043,6 +1048,7 @@ function TutorPage() {
     setConversationHistory([]);
     setWhiteboardCommands([]);
     whiteboardEventsRef.current = [];
+    resumeSeedGuardRef.current = createSeedGuard();
     setTokenUsage([]);
     setLessonProgress({ plan: null, currentSegmentId: '' });
     setNudgeDismissed(false);
@@ -1298,7 +1304,19 @@ function TutorPage() {
   }, []);
 
   // Handle whiteboard commands from VoiceTutor
-  const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[]) => {
+  const handleVoiceWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
+    // Resume-seed batches apply exactly once per buffer lifetime. The buffers
+    // below (whiteboardEventsRef + whiteboardCommands state) outlive
+    // VoiceTutorRealtime instances, so the runtime's own instance-ref guard
+    // can't protect them: a VTR remount with resumeState still set replays
+    // the seed and an unguarded append duplicates the whole restored board —
+    // on screen AND in the persisted session (session-1783123067235: items
+    // 0–12 repeated exactly as 13–25). Guard resets pair with the buffer
+    // clears (resume boot effect + handleStartSession).
+    if (!acceptWhiteboardBatch(resumeSeedGuardRef.current, meta)) {
+      console.warn('[TutorPage] Dropped replayed resume-seed whiteboard batch (already applied):', commands.length);
+      return;
+    }
     console.log('[TutorPage] Received whiteboard commands:', commands.length, commands.map(c => c.action));
     // Capture the emission moment + nearest tutor transcript index right now,
     // before the next tutor turn lands. We don't try to be clever about which

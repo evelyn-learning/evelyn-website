@@ -23,6 +23,7 @@ import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
+import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 
@@ -229,6 +230,10 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const [sessionId] = useState(() => config.session_id || `embed-${Date.now()}`);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
+  // Guards the mirror above against a replayed resume seed (TutorSession/VTR
+  // remount while this page persists) — see resume-seed.ts. Same lifetime as
+  // the mirror: both live for this embed page instance.
+  const resumeSeedGuardRef = useRef(createSeedGuard());
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const sessionStartRef = useRef(new Date());
@@ -516,7 +521,10 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         onEndSession={handleEndSession}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
-        onWhiteboardCommand={(cmds) => setWhiteboardCommands((prev) => [...prev, ...cmds])}
+        onWhiteboardCommand={(cmds, meta) => {
+          if (!acceptWhiteboardBatch(resumeSeedGuardRef.current, meta)) return;
+          setWhiteboardCommands((prev) => [...prev, ...cmds]);
+        }}
         onLessonProgressChange={(p) => {
           planRef.current = p.plan;
           currentSegmentIdRef.current = p.currentSegmentId;
