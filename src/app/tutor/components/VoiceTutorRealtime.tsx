@@ -291,6 +291,21 @@ function rasterizeGestureStrokes(
   return canvas.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
 }
 
+/** OCR containment: extract-homework DESCRIBES unclear ink instead of
+ *  transcribing ("The image appears to contain…"). A meta-description or
+ *  an implausibly long "transcription" must NOT reach the brain as the
+ *  student's literal words — degrade to the unreadable wording instead
+ *  (observed live 2026-07-05; proper transcribe-mode endpoint is a
+ *  follow-up). */
+function sanitizeInkOcrText(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const text = raw.trim();
+  if (!text || text.length > 120) return undefined;
+  if (/^th(e|is)\s+(image|photo|picture|drawing)\b/i.test(text)) return undefined;
+  if (/\b(image|photo|picture)\b.{0,40}\b(appears|seems|shows|contains|looks like)\b/i.test(text)) return undefined;
+  return text;
+}
+
 // ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
 // Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
 //
@@ -1255,6 +1270,10 @@ export function VoiceTutorRealtime({
   // declared after `realtime` so it can read live speaking state).
   const pendingStudentMarksRef = useRef<ResolvedMark[]>([]);
   const studentMarkIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Writing-gesture OCRs currently in flight — the idle-send must not fire
+  // while one is pending, or a tick+written-answer combo splits across two
+  // brain turns (final review 2026-07-05).
+  const studentMarkOcrInFlightRef = useRef(0);
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -11052,7 +11071,8 @@ export function VoiceTutorRealtime({
         productionStateRef.current === 'speaking' ||
         brainBusyRef.current ||
         perceptionMidUtteranceRef.current ||
-        awaitingDispatchTimerRef.current != null;
+        awaitingDispatchTimerRef.current != null ||
+        studentMarkOcrInFlightRef.current > 0;
       if (busy) { armStudentMarkIdleSend(); return; }
       const block = drainStudentMarks();
       if (block) {
@@ -11882,6 +11902,7 @@ export function VoiceTutorRealtime({
               armStudentMarkIdleSend();
             };
             if (!imageData) { enqueue(resolved); return; }
+            studentMarkOcrInFlightRef.current++;
             void (async () => {
               try {
                 const resp = await fetch('/api/tutor/extract-homework', {
@@ -11890,9 +11911,11 @@ export function VoiceTutorRealtime({
                   body: JSON.stringify({ imageData, mimeType: 'image/png', subject, topic, level }),
                 });
                 const data = await resp.json();
-                enqueue({ ...resolved, text: typeof data.extractedProblem === 'string' && data.extractedProblem ? data.extractedProblem : undefined });
+                enqueue({ ...resolved, text: sanitizeInkOcrText(data.extractedProblem) });
               } catch {
                 enqueue(resolved);
+              } finally {
+                studentMarkOcrInFlightRef.current--;
               }
             })();
             return;
