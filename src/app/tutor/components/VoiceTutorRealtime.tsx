@@ -11931,7 +11931,7 @@ export function VoiceTutorRealtime({
                 const resp = await fetch('/api/tutor/extract-homework', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ imageData, mimeType: 'image/png', subject, topic, level }),
+                  body: JSON.stringify({ imageData, mimeType: 'image/png', subject, topic, level, mode: 'transcribe' }),
                   signal: ocrAbort.signal,
                 });
                 const data = await resp.json();

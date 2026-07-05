@@ -283,5 +283,28 @@ function gesture(strokes: { x: number; y: number }[][], rects: CapturedRect[]): 
   check('note wording quotes targetLabel verbatim', text === 'The student circled the note "Calvin cycle" (page 1).');
 }
 
+// ── Fix C: coarse position hints for whole-item / page-only marks ──────
+// (i) whole-item point resolution carries a positionHint (tap at item1's
+// low-left, away from the row/cell features).
+{
+  const r = resolvePointMark(ev(0.2, 0.45, [item1, row, cell, item2]));
+  check(
+    'positionHint set for a whole-item point (lower left)',
+    r.itemIndex === 1 && r.feature === undefined &&
+      !!r.positionHint && r.positionHint.includes('lower') && r.positionHint.includes('left'),
+  );
+}
+// (ii) formatter appends the hint clause for a whole-item, no-feature mark.
+{
+  const text = formatStudentMarks(
+    [{ kind: 'circle', pageIndex: 0, point: { x: 0.5, y: 0.5 }, itemIndex: 2, itemId: 'showGraph-1', positionHint: 'lower left' }],
+    () => ({ itemLabel: 'the diagram' }),
+  );
+  check(
+    'whole-item wording appends position hint',
+    text === 'The student circled the diagram, toward the lower left of it (page 1).',
+  );
+}
+
 console.log(`\nstudent-marks: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

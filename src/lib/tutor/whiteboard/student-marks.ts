@@ -82,6 +82,12 @@ export interface ResolvedMark {
    *  teacher-note strip entry) — formatStudentMarks quotes this directly
    *  rather than looking it up in the catalog. */
   targetLabel?: string;
+  /** Coarse thirds-grid position (e.g. "lower left") of the mark's point
+   *  within its resolved target's rect — set only for WHOLE-ITEM and
+   *  page-only resolutions, where no feature rect narrows the target
+   *  further. A sketch/graph exposes no addressable features, so this is
+   *  the only spatial signal the brain gets for those marks. */
+  positionHint?: string;
 }
 
 /** Pending-buffer cap; oldest marks drop beyond this (with a debug event). */
@@ -102,6 +108,21 @@ function edgeDistance(r: CapturedRect, p: { x: number; y: number }): number {
 
 function area(r: CapturedRect): number {
   return r.w * r.h;
+}
+
+/** Coarse thirds-grid position of a point within a rect: "upper left",
+ *  "center", "lower right", etc. For whole-item and page-only marks —
+ *  a sketch/graph exposes no features, so this is the only spatial
+ *  signal the brain gets. */
+export function positionHintFor(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): string {
+  const fx = r.w > 0 ? (p.x - r.x) / r.w : 0.5;
+  const fy = r.h > 0 ? (p.y - r.y) / r.h : 0.5;
+  const col = fx < 1 / 3 ? 'left' : fx > 2 / 3 ? 'right' : '';
+  const row = fy < 1 / 3 ? 'upper' : fy > 2 / 3 ? 'lower' : '';
+  if (!row && !col) return 'center';
+  if (!row) return `center ${col}`;
+  if (!col) return `${row} middle`;
+  return `${row} ${col}`;
 }
 
 // ── Phase 2: stroke classification ──────────────────────────────────
@@ -168,6 +189,17 @@ function targetAtPoint(p: { x: number; y: number }, rects: CapturedRect[]): Capt
   return null;
 }
 
+/** The page unit square, for hinting page-only marks (no rect at all). */
+const PAGE_UNIT: BBoxLike = { x: 0, y: 0, w: 1, h: 1 };
+
+/** positionHint for a mark that resolved to a whole item (t truthy, no
+ *  feature) or page-only (t null). Returns undefined when t has a feature
+ *  — a feature match is already specific enough, no hint needed. */
+function wholeItemOrPageHint(point: { x: number; y: number }, t: CapturedRect | null): string | undefined {
+  if (t) return t.feature ? undefined : positionHintFor(point, t);
+  return positionHintFor(point, PAGE_UNIT);
+}
+
 export function classifyStroke(ev: StrokeMarkEvent): ResolvedMark {
   const pts = ev.polyline;
   const bb = polyBBox(pts);
@@ -180,10 +212,12 @@ export function classifyStroke(ev: StrokeMarkEvent): ResolvedMark {
   };
   if (pts.length < 2) return base;
   const diag = Math.hypot(bb.w, bb.h);
-  const withTarget = (kind: ResolvedMark['kind'], t: CapturedRect | null): ResolvedMark =>
-    t
-      ? { ...base, kind, itemIndex: t.itemIndex, itemId: t.itemId, feature: t.feature, targetLabel: t.label }
-      : { ...base, kind };
+  const withTarget = (kind: ResolvedMark['kind'], t: CapturedRect | null): ResolvedMark => {
+    const positionHint = wholeItemOrPageHint(base.point, t);
+    return t
+      ? { ...base, kind, itemIndex: t.itemIndex, itemId: t.itemId, feature: t.feature, targetLabel: t.label, ...(positionHint ? { positionHint } : {}) }
+      : { ...base, kind, ...(positionHint ? { positionHint } : {}) };
+  };
 
   // 1. Circle: endpoints close relative to size, with real extent.
   const closed = diag > 0.03 && dist(pts[0], pts[pts.length - 1]) <= Math.max(0.03, diag * 0.25);
@@ -272,6 +306,7 @@ export function classifyGesture(ev: GestureMarkEvent): ResolvedMark {
   const bb = combinedBBox(strokes);
   const center = { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2 };
   const target = targetForRegion(bb, ev.rects) ?? targetAtPoint(center, ev.rects);
+  const positionHint = wholeItemOrPageHint(center, target);
   const base: ResolvedMark = {
     kind: 'writing',
     pageIndex: ev.pageIndex,
@@ -279,6 +314,7 @@ export function classifyGesture(ev: GestureMarkEvent): ResolvedMark {
     point: center,
     strokesBBox: bb,
     ...(target ? { itemIndex: target.itemIndex, itemId: target.itemId, feature: target.feature, targetLabel: target.label } : {}),
+    ...(positionHint ? { positionHint } : {}),
   };
   if (strokes.length === 2) {
     const [a, b] = strokes;
@@ -324,10 +360,10 @@ export function resolvePointMark(ev: PointMarkEvent): ResolvedMark {
   const item = items.filter((r) => contains(r, ev.point))
     .reduce<CapturedRect | null>((a, b) => (a === null || area(b) < area(a) ? b : a), null);
   if (item) {
-    return { ...base, itemIndex: item.itemIndex, itemId: item.itemId, targetLabel: item.label };
+    return { ...base, itemIndex: item.itemIndex, itemId: item.itemId, targetLabel: item.label, positionHint: wholeItemOrPageHint(ev.point, item) };
   }
   // 4. Page-only.
-  return base;
+  return { ...base, positionHint: wholeItemOrPageHint(ev.point, null) };
 }
 
 export interface MarkLabels {
@@ -387,6 +423,10 @@ export function formatStudentMarks(
       continue;
     }
     if (mark.itemIndex === undefined) {
+      if (mark.kind !== 'point' && mark.positionHint) {
+        lines.push(`The student drew something in the ${mark.positionHint} area of ${page}.`);
+        continue;
+      }
       lines.push(
         mark.kind === 'point'
           ? `The student pointed at empty space on ${page}.`
@@ -414,7 +454,10 @@ export function formatStudentMarks(
       lines.push(`The student drew an arrow from ${fromText} to ${targetText} (${page}).`);
       continue;
     }
-    lines.push(`The student ${verb} ${targetText} (${page}).`);
+    const hintSuffix = !mark.feature && labels.itemLabel && mark.positionHint
+      ? `, toward the ${mark.positionHint} of it`
+      : '';
+    lines.push(`The student ${verb} ${targetText}${hintSuffix} (${page}).`);
   }
   return lines.join('\n');
 }

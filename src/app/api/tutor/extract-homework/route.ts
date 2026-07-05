@@ -12,10 +12,20 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+/** Ink-OCR mode (Fix D): the caller is transcribing a student's whiteboard
+ *  strokes, not extracting a homework photo. A homework-extraction prompt
+ *  asked to describe a few pen strokes produces empty/junk "descriptions"
+ *  (observed live 2026-07-05 — sanitizeInkOcrText in VoiceTutorRealtime.tsx
+ *  is the belt-and-suspenders for whatever slips through); this dedicated
+ *  transcription prompt is the actual fix, and it also skips the second
+ *  (tutor-response) model call entirely, halving latency for that path. */
+const TRANSCRIBE_PROMPT =
+  "This image contains a student's handwritten ink strokes from a digital whiteboard. Transcribe EXACTLY what is written — words, numbers, or math notation (use plain text like x^2, sqrt(x), h=0). Reply with ONLY the transcribed text, nothing else. If the strokes are a drawing rather than writing, reply with exactly: [drawing]. If illegible, reply with exactly: [illegible].";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageData, mimeType, subject, topic, level, conversationHistory = [] } = body;
+    const { imageData, mimeType, subject, topic, level, conversationHistory = [], mode } = body;
 
     if (!imageData) {
       return NextResponse.json({ error: 'Image data is required' }, { status: 400 });
@@ -25,6 +35,40 @@ export async function POST(request: NextRequest) {
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(mimeType)) {
       return NextResponse.json({ error: 'Invalid image type' }, { status: 400 });
+    }
+
+    if (mode === 'transcribe') {
+      const transcribeResponse = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 500,
+        system: TRANSCRIBE_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mimeType,
+                  data: imageData,
+                },
+              },
+              {
+                type: 'text',
+                text: 'Transcribe the handwritten ink strokes in this image.',
+              },
+            ],
+          },
+        ],
+      });
+      const transcribeContent = transcribeResponse.content[0];
+      if (transcribeContent.type !== 'text') {
+        return NextResponse.json({ error: 'Failed to transcribe' }, { status: 500 });
+      }
+      const raw = transcribeContent.text.trim();
+      const extractedProblem = !raw || raw === '[drawing]' || raw === '[illegible]' ? null : raw;
+      return NextResponse.json({ extractedProblem });
     }
 
     // Step 1: Extract structured problem data from the image
