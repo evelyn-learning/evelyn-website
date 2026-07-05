@@ -3039,7 +3039,7 @@ function getGraphComponent(type: string) {
 /**
  * Get a human-readable label for command types
  */
-function getCommandTypeLabel(action: string): string {
+export function getCommandTypeLabel(action: string): string {
   switch (action) {
     case 'showEquation':
       return 'Equation';

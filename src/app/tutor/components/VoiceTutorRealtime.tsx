@@ -47,6 +47,7 @@ import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
 import { getSegment, type LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
+import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
@@ -6363,10 +6364,9 @@ export function VoiceTutorRealtime({
   }, [claudeBrainMode, validateToolCalls]);
   // Student marks (Phase 1): catalog-backed labels for formatStudentMarks.
   // Feature labels come from the item's feature registry (same registry
-  // tutor_scribble resolves against, via catalogRef); item labels use the
-  // item's action name directly — getCommandTypeLabel (WhiteboardCanvas's
-  // prettifier) is not exported from this file, so the raw action string is
-  // the label (e.g. "showCoordinatePlane" rather than "coordinate plane").
+  // tutor_scribble resolves against, via catalogRef); item labels use
+  // getCommandTypeLabel (WhiteboardCanvas's prettifier) so they read like
+  // "the graph" rather than the raw action string "showGraph".
   // Null (stale id / missing item) → the formatter degrades to page-level
   // wording. Declared ABOVE callBrainOnce (which calls drainStudentMarks
   // below) — required declaration order, not just style.
@@ -6374,9 +6374,10 @@ export function VoiceTutorRealtime({
     if (!mark.itemId) return mark.itemIndex !== undefined ? {} : null;
     const item = catalogRef.current.getItem(mark.itemId);
     if (!item) return null;
+    const pretty = getCommandTypeLabel(item.action).toLowerCase();
     const itemLabel = item.pageTitle
-      ? `the ${item.action} ("${item.pageTitle}")`
-      : `the ${item.action}`;
+      ? `the ${pretty} ("${item.pageTitle}")`
+      : `the ${pretty}`;
     const feature = mark.feature;
     if (!feature) return { itemLabel };
     const feat = item.features.find((f) => f.canonical === feature || f.labels.includes(feature));

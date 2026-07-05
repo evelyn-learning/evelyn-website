@@ -19,7 +19,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, Eraser, Camera, Maximize2,
+  ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2,
   MessageSquareText, X, Target, Upload, ArrowDown, ChevronUp,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
@@ -75,6 +75,9 @@ export interface SessionStageProps {
   // student tools → existing onStudentInput pipeline
   onStudentInput: (type: 'text' | 'drawing' | 'image', content: string) => void;
   onBack?: () => void;
+  // Phase 2 student marks — present only when the feature is enabled
+  boardPenActive?: boolean;
+  onToggleBoardPen?: () => void;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -98,6 +101,7 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, getSpokenCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
+    boardPenActive, onToggleBoardPen,
   } = props;
 
   const showSwitcher = !!boardPages && boardPages.count > 1;
@@ -306,6 +310,11 @@ export default function SessionStage(props: SessionStageProps) {
       <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
         <div className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => setTool(tool === 'draw' ? null : 'draw')}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
+          {onToggleBoardPen && (
+            <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={onToggleBoardPen}>
+              <PenLine className="w-[18px] h-[18px]" />
+            </ToolBtn>
+          )}
           <ToolBtn active={tool === 'text'} title="Text note" onClick={() => setTool(tool === 'text' ? null : 'text')}><span className="font-bold text-sm">Aa</span></ToolBtn>
           <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
           {/* Fullscreen — iOS Safari (iPhone) has no Fullscreen API on

@@ -188,6 +188,12 @@ export default function TutorSession(props: TutorSessionProps) {
   const [pacingMenuOpen, setPacingMenuOpen] = useState(false);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState<string | undefined>(lessonPlanId);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  // Phase 2: pen mode + ink-fade epoch. The epoch bumps when a tutor turn
+  // completes (isProcessing falling edge, tracked via the existing
+  // prevBusyRef in handleTutorBusy) — strokes older than the current epoch
+  // fade on the board.
+  const [boardPenActive, setBoardPenActive] = useState(false);
+  const [inkEpoch, setInkEpoch] = useState(0);
 
   const micLevelRef = useRef(0);
   const localHandleRef = useRef<RealtimeHandle | null>(null);
@@ -218,6 +224,9 @@ export default function TutorSession(props: TutorSessionProps) {
 
   const handleTutorBusy = useCallback((busy: boolean) => {
     if (busy && !prevBusyRef.current) setWhiteboardActiveThisTurn(false);
+    // Phase 2 ink fade: a tutor turn just completed (falling edge) — bump the
+    // epoch so older student strokes fade on the board.
+    if (!busy && prevBusyRef.current) setInkEpoch((e) => e + 1);
     prevBusyRef.current = busy;
     setIsProcessing(busy);
   }, []);
@@ -292,6 +301,10 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.pushStudentMark?.(ev);
   }, [realtimeHandleRef]);
 
+  // Student marks (tap-to-point + Phase 2 pen): flag AND claude-brain only —
+  // the Realtime-authored engines have no dispatcher for resolveStudentMark.
+  const studentMarksOn = TUTOR_STUDENT_MARKS && voiceEngine === 'claude-brain';
+
   // --- Composed slot elements ---
   const topicLabel = topicDisplayName || 'AI Tutor';
 
@@ -307,7 +320,9 @@ export default function TutorSession(props: TutorSessionProps) {
         chrome="minimal"
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}
-        onStudentMark={TUTOR_STUDENT_MARKS && voiceEngine === 'claude-brain' ? handleStudentMark : undefined}
+        onStudentMark={studentMarksOn ? handleStudentMark : undefined}
+        penMode={studentMarksOn && boardPenActive}
+        inkEpoch={inkEpoch}
         className="h-full"
       />
       {awaitingResume && (
@@ -572,6 +587,8 @@ export default function TutorSession(props: TutorSessionProps) {
         quickActions={quickActionsEl}
         onStudentInput={handleStudentInput}
         onBack={onEndSession}
+        boardPenActive={boardPenActive}
+        onToggleBoardPen={studentMarksOn ? () => setBoardPenActive((v) => !v) : undefined}
       />
       {error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">{error}</div>
