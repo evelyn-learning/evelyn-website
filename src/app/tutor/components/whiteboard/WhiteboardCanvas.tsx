@@ -907,17 +907,20 @@ export function WhiteboardCanvas({
     setLiveStrokePx(null);
     if (!pts || pts.length < 2 || !onStudentMark) return;
     const id = ++strokeIdRef.current;
-    setInkStrokes((s) => [...s, {
-      id,
-      pageIndex: currentIndex,
-      polyline: pts,
-      // Falls back to the normalized points only if px capture somehow
-      // never ran (shouldn't happen — every path that sets activeStrokeRef
-      // sets activeStrokePxRef in the same breath) — better a re-derived
-      // (and driftable) stroke than a missing one.
-      px: pxPts && pxPts.length === pts.length ? pxPts : pts,
-      epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
-    }]);
+    // Fail safe: when px array is missing or mismatched, skip the ink-state
+    // push to prevent corrupt ~1px scribbles. The mark still emits via the
+    // normalized path (polyline) in the gesture event.
+    if (pxPts && pxPts.length === pts.length) {
+      setInkStrokes((s) => [...s, {
+        id,
+        pageIndex: currentIndex,
+        polyline: pts,
+        px: pxPts,
+        epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
+      }]);
+    } else {
+      console.warn('[student-marks] px/normalized stroke desync — ink render skipped');
+    }
     gestureStrokesRef.current.push(pts);
     if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
     gestureTimerRef.current = setTimeout(emitGesture, GESTURE_QUIET_MS);

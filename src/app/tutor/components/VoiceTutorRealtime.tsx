@@ -11925,17 +11925,21 @@ export function VoiceTutorRealtime({
             if (!imageData) { enqueue(resolved); return; }
             studentMarkOcrInFlightRef.current++;
             void (async () => {
+              const ocrAbort = new AbortController();
+              const ocrTimeout = setTimeout(() => ocrAbort.abort(), 8000);
               try {
                 const resp = await fetch('/api/tutor/extract-homework', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ imageData, mimeType: 'image/png', subject, topic, level }),
+                  signal: ocrAbort.signal,
                 });
                 const data = await resp.json();
                 enqueue({ ...resolved, text: sanitizeInkOcrText(data.extractedProblem) });
               } catch {
                 enqueue(resolved);
               } finally {
+                clearTimeout(ocrTimeout);
                 studentMarkOcrInFlightRef.current--;
               }
             })();
