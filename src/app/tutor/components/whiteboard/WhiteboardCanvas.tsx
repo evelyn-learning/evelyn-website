@@ -234,7 +234,20 @@ interface WhiteboardCanvasProps {
 // it before the tutor ever saw it.
 // (Module-level, not inside the component body, so the type declaration
 // doesn't get re-evaluated on every render.)
-interface InkStroke { id: number; pageIndex: number; polyline: { x: number; y: number }[]; epoch: number; fading?: boolean; }
+//
+// `polyline` is NORMALIZED (0..1 of the page wrapper at capture time) — it
+// feeds mark emission/resolution, which reasons in the same normalized
+// space the brain's rects use, so it must stay untouched. `px` is the same
+// stroke captured in wrapper-relative CSS pixels at that same instant, used
+// ONLY for rendering: painting from px means a stroke's on-screen position
+// is anchored to where the student actually drew it, not re-derived from
+// the wrapper's CURRENT height. That matters because content append below
+// makes the wrapper taller — normalized coordinates would then re-map old
+// strokes onto a bigger canvas and visually drift them away from what they
+// annotated. Known accepted limit: content inserted ABOVE existing items,
+// or any reflow that shifts earlier content's pixel position, still drifts
+// ink — in practice the tutor only appends below, so this is not hit.
+interface InkStroke { id: number; pageIndex: number; polyline: { x: number; y: number }[]; px: { x: number; y: number }[]; epoch: number; fading?: boolean; }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
  *  once at the WhiteboardCanvas level; deeply-nested renderers (like
@@ -846,13 +859,21 @@ export function WhiteboardCanvas({
   const strokeIdRef = useRef(0);
   const activeStrokeRef = useRef<{ x: number; y: number }[] | null>(null);
   const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
+  // Pixel-space twin of activeStrokeRef/liveStroke — see the InkStroke doc
+  // comment for why rendering uses px while emission stays normalized.
+  const activeStrokePxRef = useRef<{ x: number; y: number }[] | null>(null);
+  const [liveStrokePx, setLiveStrokePx] = useState<{ x: number; y: number }[] | null>(null);
 
   const penPoint = useCallback((clientX: number, clientY: number) => {
     const wrapper = pageWrapperRef.current;
     if (!wrapper) return null;
     const r = wrapper.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return null;
-    return { x: (clientX - r.left) / r.width, y: (clientY - r.top) / r.height };
+    return {
+      x: (clientX - r.left) / r.width,
+      y: (clientY - r.top) / r.height,
+      px: { x: clientX - r.left, y: clientY - r.top },
+    };
   }, []);
 
   // Gesture grouping: strokes within GESTURE_QUIET_MS of each other form ONE
@@ -879,14 +900,22 @@ export function WhiteboardCanvas({
 
   const finishStroke = useCallback(() => {
     const pts = activeStrokeRef.current;
+    const pxPts = activeStrokePxRef.current;
     activeStrokeRef.current = null;
+    activeStrokePxRef.current = null;
     setLiveStroke(null);
+    setLiveStrokePx(null);
     if (!pts || pts.length < 2 || !onStudentMark) return;
     const id = ++strokeIdRef.current;
     setInkStrokes((s) => [...s, {
       id,
       pageIndex: currentIndex,
       polyline: pts,
+      // Falls back to the normalized points only if px capture somehow
+      // never ran (shouldn't happen — every path that sets activeStrokeRef
+      // sets activeStrokePxRef in the same breath) — better a re-derived
+      // (and driftable) stroke than a missing one.
+      px: pxPts && pxPts.length === pts.length ? pxPts : pts,
       epoch: (inkEpoch ?? 0) + ((tutorTurnActive ?? tutorBusy) ? 1 : 0),
     }]);
     gestureStrokesRef.current.push(pts);
@@ -901,8 +930,10 @@ export function WhiteboardCanvas({
     const p = penPoint(e.clientX, e.clientY);
     if (!p) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    activeStrokeRef.current = [p];
-    setLiveStroke([p]);
+    activeStrokeRef.current = [{ x: p.x, y: p.y }];
+    activeStrokePxRef.current = [p.px];
+    setLiveStroke([{ x: p.x, y: p.y }]);
+    setLiveStrokePx([p.px]);
   }, [penPoint]);
   const handlePenMove = useCallback((e: React.PointerEvent) => {
     if (!activeStrokeRef.current) return;
@@ -911,8 +942,10 @@ export function WhiteboardCanvas({
     const pts = activeStrokeRef.current;
     const last = pts[pts.length - 1];
     if (Math.hypot(p.x - last.x, p.y - last.y) < 0.004) return; // decimate
-    pts.push(p);
+    pts.push({ x: p.x, y: p.y });
+    activeStrokePxRef.current = activeStrokePxRef.current ? [...activeStrokePxRef.current, p.px] : [p.px];
     setLiveStroke([...pts]);
+    setLiveStrokePx(activeStrokePxRef.current);
   }, [penPoint]);
   const handlePenUp = useCallback((e: React.PointerEvent) => {
     // See handlePenDown — same double-fire risk on the up edge.
@@ -927,7 +960,9 @@ export function WhiteboardCanvas({
   // rather than emit against a stale page.
   useEffect(() => {
     activeStrokeRef.current = null;
+    activeStrokePxRef.current = null;
     setLiveStroke(null);
+    setLiveStrokePx(null);
     if (gestureTimerRef.current) {
       clearTimeout(gestureTimerRef.current);
       gestureTimerRef.current = null;
@@ -979,7 +1014,12 @@ export function WhiteboardCanvas({
     wStroke.__tutorTestStroke = (fracPts: [number, number][]) => {
       const wrapper = pageWrapperRef.current;
       if (!wrapper || fracPts.length < 2 || !onStudentMark) return false;
+      const r = wrapper.getBoundingClientRect();
       activeStrokeRef.current = fracPts.map(([x, y]) => ({ x, y }));
+      // Convert the injected normalized fractions to px at the wrapper's
+      // CURRENT rect so the dev hook renders ink the same way real capture
+      // does (see penPoint / the InkStroke doc comment).
+      activeStrokePxRef.current = fracPts.map(([x, y]) => ({ x: x * r.width, y: y * r.height }));
       finishStroke();
       return true;
     };
@@ -1214,18 +1254,22 @@ export function WhiteboardCanvas({
             style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
           />
         ))}
-        {/* Phase 2: ink strokes for THIS page + the in-progress stroke. */}
-        {(inkStrokes.some((s) => s.pageIndex === currentIndex) || liveStroke) && (
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
+            No viewBox — SVG user units equal wrapper-relative CSS px, the
+            same space the stroke was captured in, so ink stays put at the
+            spot the student drew it even after the wrapper grows taller
+            (content appended below). See the InkStroke doc comment. */}
+        {(inkStrokes.some((s) => s.pageIndex === currentIndex) || liveStrokePx) && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
             {inkStrokes.filter((s) => s.pageIndex === currentIndex).map((s) => (
               <polyline
                 key={s.id}
-                points={s.polyline.map((p) => `${p.x * 100},${p.y * 100}`).join(' ')}
+                points={s.px.map((p) => `${p.x},${p.y}`).join(' ')}
                 className={s.fading ? 'wb-student-ink wb-student-ink-fading' : 'wb-student-ink'}
               />
             ))}
-            {liveStroke && (
-              <polyline points={liveStroke.map((p) => `${p.x * 100},${p.y * 100}`).join(' ')} className="wb-student-ink" />
+            {liveStrokePx && (
+              <polyline points={liveStrokePx.map((p) => `${p.x},${p.y}`).join(' ')} className="wb-student-ink" />
             )}
           </svg>
         )}
