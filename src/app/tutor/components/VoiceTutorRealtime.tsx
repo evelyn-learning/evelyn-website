@@ -11008,7 +11008,16 @@ export function VoiceTutorRealtime({
     studentMarkIdleTimerRef.current = setTimeout(() => {
       studentMarkIdleTimerRef.current = null;
       if (pendingStudentMarksRef.current.length === 0) return;
-      const busy = productionStateRef.current === 'speaking' || brainBusyRef.current;
+      // Busy = tutor talking, a brain call in flight, OR the STUDENT is
+      // mid-utterance / their transcription is still landing — firing a
+      // mark turn under a live student utterance gets retro-cancelled by
+      // perception Stage 2 and divorces the marks from the words they
+      // disambiguate (final review, 2026-07-05). Re-arm and try again.
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        awaitingDispatchTimerRef.current != null;
       if (busy) { armStudentMarkIdleSend(); return; }
       const block = drainStudentMarks();
       if (block) {

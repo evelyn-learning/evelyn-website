@@ -307,7 +307,7 @@ export default function TutorSession(props: TutorSessionProps) {
         chrome="minimal"
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}
-        onStudentMark={TUTOR_STUDENT_MARKS ? handleStudentMark : undefined}
+        onStudentMark={TUTOR_STUDENT_MARKS && voiceEngine === 'claude-brain' ? handleStudentMark : undefined}
         className="h-full"
       />
       {awaitingResume && (
