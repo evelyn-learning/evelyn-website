@@ -90,6 +90,7 @@ import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
+import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
@@ -109,6 +110,7 @@ import {
   TUTOR_KEEP_VALIDATED_ON_KILL,
   TUTOR_WOLFRAM_MATH_CHECK,
   TUTOR_STUDENT_PROBLEM_GROUNDING,
+  TUTOR_NOISE_NAG,
   TOPIC_NOTES_WARMUP_SEGMENTS,
   TOPIC_NOTES_RATE_LIMITS,
   BOARD_RENDER_META_ACTIONS,
@@ -789,6 +791,18 @@ export function VoiceTutorRealtime({
   // composition (user-identified gap, 2026-07-05). Set by the input's
   // existing focus/blur handlers.
   const studentTypingRef = useRef(false);
+
+  // Tutor reactions (noise-nagging v1, fixes-queue-v2 item 2): situation
+  // counter → one-time spoken suggestion. Events are recorded in
+  // applyPerceptionVerdict's noise-family branch; on threshold the rule's
+  // directive is stashed here and delivered by the reaction idle-send
+  // (armReactionIdleSend, declared after `realtime` like the student-marks
+  // idle-send it mirrors, reached from the verdict path via ref
+  // indirection). Session-scoped by construction — VTR remounts per session.
+  const noiseReactionStateRef = useRef(createReactionState());
+  const pendingReactionDirectiveRef = useRef<string | null>(null);
+  const reactionIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armReactionIdleSendRef = useRef<() => void>(() => {});
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -5972,12 +5986,16 @@ export function VoiceTutorRealtime({
     return formatStudentMarks(marks, lookupMarkLabels);
   }, [lookupMarkLabels]);
 
-  // Student marks: clear any armed idle-send timer on unmount.
+  // Student marks + tutor reactions: clear armed idle-send timers on unmount.
   useEffect(() => {
     return () => {
       if (studentMarkIdleTimerRef.current) {
         clearTimeout(studentMarkIdleTimerRef.current);
         studentMarkIdleTimerRef.current = null;
+      }
+      if (reactionIdleTimerRef.current) {
+        clearTimeout(reactionIdleTimerRef.current);
+        reactionIdleTimerRef.current = null;
       }
     };
   }, []);
@@ -10209,6 +10227,19 @@ export function VoiceTutorRealtime({
     const stage = checkpoint.cancelledDuringState;
     const stageLabel = stage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
     if (verdict === 'noise' || verdict === 'filler' || verdict === 'drop_self_voice') {
+      // Tutor reaction (noise-nagging): every entry here means a cancel
+      // actually paused the tutor's speech or aborted its thinking on a
+      // sound that turned out to be non-substantive (environmental noise,
+      // filler pickup, or self-voice leakage — mic-pickup false positives
+      // all three, and the suggested remedies apply to each). Count it;
+      // on threshold, stash the one-time directive and let the idle-send
+      // voice it at the next quiet beat. Never interrupts the resume paths
+      // below — recording is pure bookkeeping.
+      if (TUTOR_NOISE_NAG && recordReactionEvent(noiseReactionStateRef.current, NOISE_INTERRUPTION_REACTION, Date.now())) {
+        pendingReactionDirectiveRef.current = NOISE_INTERRUPTION_REACTION.directive;
+        onDebugEvent?.('noise_nag_armed', `threshold hit (${NOISE_INTERRUPTION_REACTION.threshold} noise cancels in window)`);
+        armReactionIdleSendRef.current();
+      }
       if (verdict === 'drop_self_voice') {
         // Self-voice: the cancelled audio was the tutor's own voice
         // loop, not a real student utterance — the cancel was a false
@@ -10618,6 +10649,41 @@ export function VoiceTutorRealtime({
       }
     }, STUDENT_MARK_IDLE_MS);
   }, [drainStudentMarks, onDebugEvent]);
+
+  // Tutor-reaction idle-send (noise-nagging v1): mirrors the student-marks
+  // idle-send above — waits for a quiet beat (~4s after arming), re-arms
+  // while the tutor is talking / a brain call is in flight / the student is
+  // mid-utterance or typing, then dispatches the pending reaction directive
+  // as a silent bracketed brain turn ([start lesson] / [Session-resumed…]
+  // precedent: no student chat bubble; the tutor's spoken response lands as
+  // a normal tutor turn). One directive slot — reactions fire at most once
+  // per session per rule, so a queue is unnecessary.
+  const REACTION_IDLE_MS = 4000;
+  const armReactionIdleSend = useCallback(() => {
+    if (reactionIdleTimerRef.current) clearTimeout(reactionIdleTimerRef.current);
+    reactionIdleTimerRef.current = setTimeout(() => {
+      reactionIdleTimerRef.current = null;
+      const directive = pendingReactionDirectiveRef.current;
+      if (!directive) return;
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        awaitingDispatchTimerRef.current != null ||
+        studentTypingRef.current;
+      if (busy) { armReactionIdleSend(); return; }
+      pendingReactionDirectiveRef.current = null;
+      onDebugEvent?.('noise_nag_sent', directive.slice(0, 90));
+      // bypassPerceptionDedupe: the noise cancels that ARMED this reaction
+      // also armed the 20s production-WS suppression window, and the
+      // idle-send always fires inside it — without the bypass the directive
+      // is swallowed as a suspected duplicate mic transcript (observed in
+      // live verification 2026-07-05). Orchestrator-authored dispatches use
+      // the same escape hatch as the RESTORE/refire paths.
+      void handleStudentTranscriptForBrain(directive, { silent: true, bypassPerceptionDedupe: true });
+    }, REACTION_IDLE_MS);
+  }, [handleStudentTranscriptForBrain, onDebugEvent]);
+  armReactionIdleSendRef.current = armReactionIdleSend;
 
   // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
   // When the user starts speaking BEFORE the tutor TTS begins,

@@ -75,6 +75,13 @@ export const TUTOR_SKETCH =
 export const TUTOR_RESUME_FROM_CLAUSE =
   process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'on'
   || process.env.NEXT_PUBLIC_TUTOR_RESUME_FROM_CLAUSE === 'true';
+// Noise-nagging tutor reaction (2026-07-05, fixes-queue-v2 item 2): after
+// repeated perception noise-cancels (3 in 3 min), the tutor kindly suggests
+// reducing background noise or muting + typing, once per session. Default ON;
+// NEXT_PUBLIC_TUTOR_NOISE_NAG=off is the kill switch. Pure counter in
+// src/lib/tutor/voice/tutor-reactions.ts (test:tutor-reactions).
+export const TUTOR_NOISE_NAG =
+  process.env.NEXT_PUBLIC_TUTOR_NOISE_NAG !== 'off';
 // Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
 // When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
 // opener/self-report context fields (sessionMode/openingPhase/entryMode/
