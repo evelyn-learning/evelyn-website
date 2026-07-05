@@ -150,6 +150,26 @@
   animation: wb-skeleton-pulse 1.4s ease-in-out infinite;
 }
 
+/* Student marks (Phase 1): a brief expanding ring at the tapped point,
+   confirming the tap registered without leaving a permanent mark. */
+.wb-student-ping {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  margin-top: -11px;
+  border-radius: 9999px;
+  border: 3px solid #2563eb;
+  pointer-events: none;
+  z-index: 20;
+  animation: wb-student-ping-anim 1.8s ease-out forwards;
+}
+@keyframes wb-student-ping-anim {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  55% { transform: scale(1.15); opacity: 0.75; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
 /* Streaming chat — a subtle caret blink at the end of an in-progress
    tutor message so the user feels typing momentum. */
 @keyframes typing-caret {

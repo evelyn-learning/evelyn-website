@@ -86,6 +86,7 @@ import { InlineMathText } from './InlineMathText';
 import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel } from './choiceLabel';
 import dynamic from 'next/dynamic';
+import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -150,6 +151,16 @@ function dedupeSupersededCommands(cmds: WhiteboardCommand[]): WhiteboardCommand[
   return cmds.filter((_, i) => keep[i]);
 }
 
+// Desmos (showGraph / show_function_graph route) and Ketcher (showMolecule)
+// render third-party iframes that swallow pointer events; a transparent
+// layer above them restores tap-to-point at whole-item granularity. Their
+// viewports are locked (DesmosGraphRenderer lockViewport), so intercepting
+// pointer input does not remove student-facing interactivity.
+function isIframeCommand(cmd: WhiteboardCommand): boolean {
+  const a = (cmd as { action?: string }).action;
+  return a === 'showGraph' || a === 'showMolecule';
+}
+
 interface WhiteboardCanvasProps {
   commands: WhiteboardCommand[];
   onClear?: () => void;
@@ -193,6 +204,9 @@ interface WhiteboardCanvasProps {
    *  populate the page model (a no-op until pages exist). Subsequent tutor
    *  navigation (goToPage / scrollTo) takes over normally. */
   openOnLastPage?: boolean;
+  /** Student marks (Phase 1): fires on a resolved tap on the board. When
+   *  absent, no listeners mount and behavior is byte-identical. */
+  onStudentMark?: (ev: StudentMarkEvent) => void;
 }
 
 /** Callback fan-out for renderers nested inside CommandRenderer. Set
@@ -215,6 +229,7 @@ export function WhiteboardCanvas({
   chrome = 'full',
   onNavChange,
   openOnLastPage = false,
+  onStudentMark,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -720,6 +735,93 @@ export function WhiteboardCanvas({
   // Refs to each rendered item so scrollTo can scrollIntoView() them.
   const itemRefsRef = useRef<(HTMLDivElement | null)[]>([]);
 
+  // ── Student marks (Phase 1: tap-to-point) ──────────────────────────
+  // Pointer-based tap detection on the page wrapper (bubble phase — taps
+  // on interactive elements are filtered, scroll/drag is excluded by a
+  // movement threshold). Coordinates + candidate rects are normalized to
+  // the page wrapper so downstream resolution is pure math.
+  const pageWrapperRef = useRef<HTMLDivElement | null>(null);
+  const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const [pings, setPings] = useState<{ id: number; x: number; y: number }[]>([]);
+  const pingIdRef = useRef(0);
+
+  const collectRects = useCallback((): CapturedRect[] => {
+    const wrapper = pageWrapperRef.current;
+    if (!wrapper) return [];
+    const wRect = wrapper.getBoundingClientRect();
+    if (wRect.width === 0 || wRect.height === 0) return [];
+    const out: CapturedRect[] = [];
+    const norm = (r: DOMRect) => ({
+      x: (r.left - wRect.left) / wRect.width,
+      y: (r.top - wRect.top) / wRect.height,
+      w: r.width / wRect.width,
+      h: r.height / wRect.height,
+    });
+    wrapper.querySelectorAll<HTMLElement>('[data-wb-item-index]').forEach((itemEl) => {
+      const itemIndex = parseInt(itemEl.getAttribute('data-wb-item-index') || '0', 10);
+      if (!itemIndex) return;
+      const itemId = itemEl.getAttribute('data-wb-item-id') || undefined;
+      out.push({ ...norm(itemEl.getBoundingClientRect()), itemIndex, itemId });
+      itemEl.querySelectorAll<HTMLElement>('[data-feature]').forEach((featEl) => {
+        const feature = featEl.getAttribute('data-feature') || undefined;
+        if (!feature) return;
+        out.push({ ...norm(featEl.getBoundingClientRect()), itemIndex, itemId, feature });
+      });
+    });
+    return out;
+  }, []);
+
+  const fireStudentTap = useCallback((clientX: number, clientY: number) => {
+    const wrapper = pageWrapperRef.current;
+    if (!wrapper || !onStudentMark) return;
+    const wRect = wrapper.getBoundingClientRect();
+    if (wRect.width === 0 || wRect.height === 0) return;
+    const point = { x: (clientX - wRect.left) / wRect.width, y: (clientY - wRect.top) / wRect.height };
+    const id = ++pingIdRef.current;
+    setPings((p) => [...p, { id, x: point.x, y: point.y }]);
+    setTimeout(() => setPings((p) => p.filter((q) => q.id !== id)), 2000);
+    onStudentMark({
+      type: 'point',
+      pageIndex: currentIndex,
+      pageTitle: safeCurrentPage.title || undefined,
+      point,
+      rects: collectRects(),
+    });
+  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage.title]);
+
+  const handleMarkPointerDown = useCallback((e: React.PointerEvent) => {
+    tapStartRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+  }, []);
+  const handleMarkPointerUp = useCallback((e: React.PointerEvent) => {
+    const start = tapStartRef.current;
+    tapStartRef.current = null;
+    if (!start || !onStudentMark) return;
+    // Movement/duration thresholds: a scroll or drag is not a tap.
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
+    if (Date.now() - start.t > 600) return;
+    // Interactive elements keep their own semantics — never a mark.
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input, select, textarea, [role="button"]')) return;
+    fireStudentTap(e.clientX, e.clientY);
+  }, [onStudentMark, fireStudentTap]);
+
+  // Dev/test hook: __tutorTestTap(xFrac, yFrac) simulates a student tap at
+  // a page-relative position through the REAL capture path (rect
+  // collection, resolution, ping, transport). NODE_ENV-guarded like the
+  // page-level __tutorTest* hooks.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !onStudentMark) return;
+    const w = window as unknown as { __tutorTestTap?: (x: number, y: number) => boolean };
+    w.__tutorTestTap = (xFrac: number, yFrac: number) => {
+      const wrapper = pageWrapperRef.current;
+      if (!wrapper) return false;
+      const r = wrapper.getBoundingClientRect();
+      fireStudentTap(r.left + xFrac * r.width, r.top + yFrac * r.height);
+      return true;
+    };
+    return () => { delete w.__tutorTestTap; };
+  }, [onStudentMark, fireStudentTap]);
+
   if (pages.length === 0) {
     return (
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
@@ -852,8 +954,11 @@ export function WhiteboardCanvas({
       >
         <div
           key={currentIndex}
+          ref={pageWrapperRef}
           style={{ position: 'relative' }}
           className={pageDir === 'forward' ? 'wb-page-enter-forward' : 'wb-page-enter-backward'}
+          onPointerDown={onStudentMark ? handleMarkPointerDown : undefined}
+          onPointerUp={onStudentMark ? handleMarkPointerUp : undefined}
         >
         {renderableCommands.length === 1 ? (
           <div
@@ -866,6 +971,13 @@ export function WhiteboardCanvas({
           >
             <CommandRenderer command={renderableCommands[0]} />
             <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} />
+            {onStudentMark && isIframeCommand(renderableCommands[0]) && (
+              <div
+                className="absolute inset-0 z-10"
+                onPointerDown={handleMarkPointerDown}
+                onPointerUp={handleMarkPointerUp}
+              />
+            )}
           </div>
         ) : (
           <div className="space-y-1">
@@ -892,6 +1004,13 @@ export function WhiteboardCanvas({
                   >
                     <CommandRenderer command={cmd} />
                     <ScribbleOverlays scribbles={overlays} />
+                    {onStudentMark && isIframeCommand(cmd) && (
+                      <div
+                        className="absolute inset-0 z-10"
+                        onPointerDown={handleMarkPointerDown}
+                        onPointerUp={handleMarkPointerUp}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -917,6 +1036,13 @@ export function WhiteboardCanvas({
             reasoning entirely. Resets on page nav (each page has its
             own commands). */}
         <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />
+        {pings.map((p) => (
+          <span
+            key={p.id}
+            className="wb-student-ping"
+            style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
+          />
+        ))}
         </div>
       </div>
       {/* Scroll-down hint: visible when multi-item page has overflow */}
