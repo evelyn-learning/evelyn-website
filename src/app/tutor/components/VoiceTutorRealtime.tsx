@@ -257,6 +257,40 @@ import {
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
 
+/** Rasterize a writing gesture for OCR: bbox-cropped strokes, white bg,
+ *  dark ink, longest side ~640px. Returns a base64 PNG (no data: prefix). */
+function rasterizeGestureStrokes(
+  strokes: { x: number; y: number }[][],
+  bbox: { x: number; y: number; w: number; h: number },
+): string | null {
+  const pad = 0.02;
+  const bw = bbox.w + pad * 2;
+  const bh = bbox.h + pad * 2;
+  if (bw <= 0 || bh <= 0) return null;
+  const scale = 640 / Math.max(bw, bh);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(32, Math.round(bw * scale));
+  canvas.height = Math.max(32, Math.round(bh * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const stroke of strokes) {
+    ctx.beginPath();
+    stroke.forEach((p, i) => {
+      const x = (p.x - bbox.x + pad) * scale;
+      const y = (p.y - bbox.y + pad) * scale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+  return canvas.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
+}
+
 // ── Latency levers (2026-05-22 claude-brain first-audio session) ──────
 // Both default OFF — absent env var ⇒ false ⇒ pre-fix behavior.
 //
@@ -11832,6 +11866,37 @@ export function VoiceTutorRealtime({
         pushStudentMark: (ev: StudentMarkEvent) => {
           if (!TUTOR_STUDENT_MARKS || !claudeBrainMode) return;
           const resolved = resolveStudentMark(ev);
+          if (resolved.kind === 'writing' && ev.type === 'gesture' && resolved.strokesBBox) {
+            // Async OCR (DrawPad precedent): the mark joins the buffer only
+            // when the text resolves; failure degrades to the unreadable
+            // wording. An OCR that misses this turn rides the next one.
+            const imageData = rasterizeGestureStrokes(ev.strokes, resolved.strokesBBox);
+            const enqueue = (mark: ResolvedMark) => {
+              const buf = pendingStudentMarksRef.current;
+              buf.push(mark);
+              if (buf.length > MAX_PENDING_MARKS) {
+                buf.shift();
+                onDebugEvent?.('student_mark_dropped', 'buffer cap');
+              }
+              onDebugEvent?.('student_mark', `writing p${mark.pageIndex + 1} "${(mark.text || '').slice(0, 40)}"`);
+              armStudentMarkIdleSend();
+            };
+            if (!imageData) { enqueue(resolved); return; }
+            void (async () => {
+              try {
+                const resp = await fetch('/api/tutor/extract-homework', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ imageData, mimeType: 'image/png', subject, topic, level }),
+                });
+                const data = await resp.json();
+                enqueue({ ...resolved, text: typeof data.extractedProblem === 'string' && data.extractedProblem ? data.extractedProblem : undefined });
+              } catch {
+                enqueue(resolved);
+              }
+            })();
+            return;
+          }
           const buf = pendingStudentMarksRef.current;
           buf.push(resolved);
           if (buf.length > MAX_PENDING_MARKS) {
@@ -11849,7 +11914,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent]);
+  }, [handleRef, realtime, stepPaceBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds

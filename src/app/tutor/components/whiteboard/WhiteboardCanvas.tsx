@@ -212,7 +212,7 @@ interface WhiteboardCanvasProps {
    *  absent, no listeners mount and behavior is byte-identical. */
   onStudentMark?: (ev: StudentMarkEvent) => void;
   /** Phase 2 pen mode: while true, the board captures freehand strokes on a
-   *  scroll-locking overlay and emits type:'stroke' events via onStudentMark. */
+   *  scroll-locking overlay and emits type:'gesture' events via onStudentMark. */
   penMode?: boolean;
   /** Bumped by the parent when a tutor turn completes; ink strokes created
    *  at an earlier epoch fade out. */
