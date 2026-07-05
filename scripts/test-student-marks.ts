@@ -38,9 +38,18 @@ function ev(x: number, y: number, rects: CapturedRect[]): StudentMarkEvent {
   check('point in row but not cell resolves to row', r.feature === 'row-2');
 }
 {
-  // 0.02 to the right of the cell rect edge — inside the near threshold
-  const r = resolvePointMark(ev(0.62, 0.22, [item1, row, cell]));
-  check('near-miss within threshold snaps to nearest feature', r.feature === 'row-2' || r.feature === 'cell-r2-c3');
+  // (0.62, 0.27) is OUTSIDE every feature rect (row/cell end at y=0.25) but
+  // only 0.02 below the row's bottom edge — a true tier-2 snap. It IS inside
+  // item1's wrapper rect, which proves tier 2 (nearest feature) is checked
+  // BEFORE tier 3 (containing item).
+  const r = resolvePointMark(ev(0.62, 0.27, [item1, row, cell]));
+  check('near-miss within threshold snaps to nearest feature (beats containing item)', r.feature === 'row-2');
+}
+{
+  // (0.62, 0.30) is 0.05 below the row — beyond the 0.03 threshold — and
+  // inside item1: falls through to the whole-item tier.
+  const r = resolvePointMark(ev(0.62, 0.3, [item1, row, cell]));
+  check('beyond threshold falls through to containing item', r.itemIndex === 1 && r.feature === undefined);
 }
 {
   const r = resolvePointMark(ev(0.5, 0.45, [item1, row, cell, item2]));
