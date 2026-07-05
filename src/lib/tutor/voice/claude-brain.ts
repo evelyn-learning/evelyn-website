@@ -79,6 +79,11 @@ export interface BrainTurnInput {
    *  and retirement never invalidate the byte-stable cached prefix.
    *  Surfaces as an `<opening_directive>` block. */
   openingDirective?: string;
+  /** Student whiteboard marks (Phase 1: tap-to-point). One-per-line plain
+   *  sentences produced by formatStudentMarks. Surfaces as a
+   *  `<student_marks>` block in the turn's user content. Absent ⇒ block
+   *  omitted ⇒ request byte-identical. */
+  studentMarks?: string;
   /** Task E1 (pedagogy, flag NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): budget-aware
    *  satisfying stop for DEMO sessions only. The client sends it per-turn
    *  (never when the flag is off or the session resolved 'subscribed');
@@ -964,6 +969,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  const studentMarksBlock = input.studentMarks
+    ? `<student_marks>\n${input.studentMarks}\n</student_marks>\n\n` : '';
   // Teacher-persona mid-session style salience: '' when absent.
   const styleReminderBlock = input.styleReminder
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
@@ -995,6 +1002,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
     lessonBlock +
@@ -1131,6 +1139,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // opens/calibrates before the plan mandates kick in.
   const openingDirectiveBlock = input.openingDirective
     ? `<opening_directive>\n${input.openingDirective}\n</opening_directive>\n\n` : '';
+  const studentMarksBlock = input.studentMarks
+    ? `<student_marks>\n${input.studentMarks}\n</student_marks>\n\n` : '';
   // Teacher-persona mid-session style salience: '' when absent.
   const styleReminderBlock = input.styleReminder
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
@@ -1162,6 +1172,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const userContent =
     profileBlock +
     openingDirectiveBlock +
+    studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
     lessonBlock +

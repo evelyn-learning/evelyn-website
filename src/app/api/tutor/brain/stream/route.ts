@@ -55,6 +55,9 @@ interface BrainStreamRequestBody {
    *  phase is active. Surfaces as `<opening_directive>` in the user
    *  content. See BrainTurnInput.openingDirective. */
   openingDirective?: string;
+  /** Student whiteboard marks block body (tap-to-point). Clamped ≤2000
+   *  chars. See BrainTurnInput.studentMarks. */
+  studentMarks?: string;
   /** Teacher-persona mid-session style salience
    *  (NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact per-turn style reminder,
    *  attached only AFTER the opening directive retires. Surfaces as
@@ -441,6 +444,9 @@ export async function POST(req: NextRequest) {
       if (body.openingDirective) {
         console.log(`[opener] opening_directive attached (${String(body.openingDirective.length)} chars)`);
       }
+      if (body.studentMarks) {
+        console.log(`[student-marks] block attached (${String(body.studentMarks.length)} chars)`);
+      }
       // Teacher-persona style salience: which turns carry the reminder.
       // Must be ABSENT while the opening directive rides and PRESENT on
       // every teacher-session turn after — this line is how a live run
@@ -488,6 +494,11 @@ export async function POST(req: NextRequest) {
           openingDirective:
             typeof body.openingDirective === 'string' && body.openingDirective.length <= 2000
               ? body.openingDirective
+              : undefined,
+          // Student marks: same string-typed + bounded defense.
+          studentMarks:
+            typeof body.studentMarks === 'string' && body.studentMarks.length <= 2000
+              ? body.studentMarks
               : undefined,
           // Teacher style reminder: same string-typed + bounded defense.
           styleReminder:
