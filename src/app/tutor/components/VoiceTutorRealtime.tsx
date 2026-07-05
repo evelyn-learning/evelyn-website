@@ -7019,6 +7019,18 @@ export function VoiceTutorRealtime({
       // (the retry that the student actually hears re-sends the same block;
       // duplicating context to a rejected, invisible attempt is harmless,
       // losing it on the surviving one is not).
+      // Student marks: a writing-gesture OCR may still be in flight when the
+      // student's turn dispatches (they scribble an answer then immediately
+      // ask about it). Wait briefly so the resolved text rides THIS turn —
+      // otherwise it straggles in as a standalone message and the brain
+      // answers twice (live 2026-07-05, "am I right?" double-response).
+      // Bounded: worst case adds ~3s to turn start, only when OCR is pending.
+      if (TUTOR_STUDENT_MARKS && studentMarkOcrInFlightRef.current > 0) {
+        const ocrDeadline = Date.now() + 3000;
+        while (studentMarkOcrInFlightRef.current > 0 && Date.now() < ocrDeadline) {
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      }
       const studentMarksForTurn = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
 
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
