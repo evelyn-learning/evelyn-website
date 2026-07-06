@@ -93,6 +93,7 @@ import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solvePr
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
+import { solveClockFace, solveTenFrame, solveBaseTenBlocks } from './kinds/elementary-math';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -254,6 +255,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'enzyme_action', displayName: 'Enzyme Action (lock-and-key / induced fit)', whenToUse: 'Show how an enzyme works: substrate binding the active site → enzyme–substrate complex → products released with the enzyme unchanged, drawn as the lock-and-key or induced-fit model, plus an activation-energy reaction-coordinate inset showing the enzyme lowering Ea. Use instead of a freehand sketch for enzyme / catalysis teaching.', subjects: ['biology', 'chemistry'], grades: { from: 8, to: 12 }, paramSchema: "model?:lock_key|induced_fit (default lock_key), title?" },
   { kind: 'cell_cycle', displayName: 'Cell Cycle (G1 → S → G2 → M)', whenToUse: 'Show the cell cycle as a labeled ring — interphase (G1, S, G2) plus the M (mitotic) phase — with the G1/S, G2/M and spindle checkpoints marked and the relative phase durations. Use instead of a freehand sketch for cell-cycle / cell-division teaching. For the phases of mitosis themselves use mitosis.', subjects: ['biology'], grades: { from: 8, to: 12 }, paramSchema: "highlight?:G1|S|G2|M (emphasize one phase), title?" },
   { kind: 'gene_expression', displayName: 'Gene Regulation (lac operon)', whenToUse: 'Show prokaryotic gene regulation via the lac operon: the regulatory gene, promoter, operator and structural genes, shown OFF (no inducer → repressor bound to the operator → RNA polymerase blocked) vs ON (inducer inactivates the repressor → RNA polymerase transcribes the genes). Use instead of a freehand sketch for operon / gene-regulation teaching.', subjects: ['biology'], grades: { from: 9, to: 12 }, paramSchema: "state?:on|off (default off), title?" },
+
+  // ── Phase 25 — elementary-math manipulatives (K-3) ─────────────────────
+  { kind: 'clock_face', displayName: 'Analog Clock', whenToUse: 'Show an analog clock reading a specific time — the hour hand (short) and minute hand (long) at the correct angles, a numbered face, and the digital time below. Use for telling-time / elapsed-time teaching instead of a freehand sketch (a doodled clock has the hands at the wrong angles). The hour hand advances with the minutes automatically (e.g. 3:30 puts it halfway to 4).', subjects: ['math'], grades: { from: 'k', to: 4 }, paramSchema: 'hour:number (1-12; 0/24 read as 12), minute?:number (0-59, default 0), showMinuteTicks?:boolean (default true), title?' },
+  { kind: 'ten_frame', displayName: 'Ten-Frame', whenToUse: 'Show a ten-frame (a 2×5 grid) filled with counters — the canonical figure for number sense, subitizing, making-ten, and addition within 20. Pass a single count (0-20 auto-splits into two frames) or explicit per-frame counts. Use instead of a freehand sketch (dots must sit in exact cells).', subjects: ['math'], grades: { from: 'k', to: 2 }, paramSchema: 'count?:number (0-20, fills frames left-to-right) OR frames?:[number] (1-2 entries, each 0-10), colors?:[string] (counter color per frame), title?' },
+  { kind: 'base_ten_blocks', displayName: 'Base-Ten (Place-Value) Blocks', whenToUse: 'Show a whole number as base-ten blocks: thousands cubes, hundreds flats (10×10), tens rods (1×10), and ones units, grouped into labeled place-value columns. Use for place-value / regrouping teaching instead of a freehand sketch (the block grids must be exact).', subjects: ['math'], grades: { from: 1, to: 5 }, paramSchema: 'value:number (0-9999), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -392,6 +398,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   enzyme_action: solveEnzymeAction,
   cell_cycle: solveCellCycle,
   gene_expression: solveGeneExpression,
+  // Phase 25 — elementary-math manipulatives
+  clock_face: solveClockFace,
+  ten_frame: solveTenFrame,
+  base_ten_blocks: solveBaseTenBlocks,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

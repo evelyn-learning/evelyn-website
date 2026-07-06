@@ -447,6 +447,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'data_structure', 'graph_diagram', 'hash_table', 'recursion_tree',
             // Phase 23 — molecular / cell biology (life science, Biology, AP Bio)
             'protein_synthesis', 'enzyme_action', 'cell_cycle', 'gene_expression',
+            // Phase 25 — elementary-math manipulatives (K-3)
+            'clock_face', 'ten_frame', 'base_ten_blocks',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

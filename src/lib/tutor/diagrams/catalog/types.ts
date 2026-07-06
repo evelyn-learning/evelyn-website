@@ -147,7 +147,11 @@ export type DiagramKindId =
   | 'protein_synthesis'
   | 'enzyme_action'
   | 'cell_cycle'
-  | 'gene_expression';
+  | 'gene_expression'
+  // Phase 25 — elementary-math manipulatives (K-3)
+  | 'clock_face'
+  | 'ten_frame'
+  | 'base_ten_blocks';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

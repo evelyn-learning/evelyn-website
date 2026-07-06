@@ -279,6 +279,14 @@ import {
   buildGeneExpressionManifest,
   solveGeneExpression as solveGeneExpressionForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/molecular-biology';
+import {
+  buildClockFaceManifest,
+  solveClockFaceForManifest,
+  buildTenFrameManifest,
+  solveTenFrameForManifest,
+  buildBaseTenManifest,
+  solveBaseTenBlocksForManifest,
+} from '@/lib/tutor/diagrams/catalog/kinds/elementary-math';
 
 /**
  * Run the same solver used at render time, then feed the resulting
@@ -1580,6 +1588,19 @@ function buildDiagramManifest(cmd: {
     }
     case 'gene_expression': {
       try { return buildGeneExpressionManifest(solveGeneExpressionForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    // Phase 25 — elementary-math manipulatives
+    case 'clock_face': {
+      try { return buildClockFaceManifest(solveClockFaceForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'ten_frame': {
+      try { return buildTenFrameManifest(solveTenFrameForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'base_ten_blocks': {
+      try { return buildBaseTenManifest(solveBaseTenBlocksForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

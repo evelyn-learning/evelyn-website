@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "clock_face", "params": { "hour": 3, "minute": 15, "title": "What time is it?" } }, "label": "clock-315", "expect": "render" }

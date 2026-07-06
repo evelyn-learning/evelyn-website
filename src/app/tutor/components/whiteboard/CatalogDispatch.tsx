@@ -129,6 +129,11 @@ import {
   CatalogCellCycleRenderer,
   CatalogGeneExpressionRenderer,
 } from './CatalogMolecularBiologyRenderers';
+import {
+  CatalogClockFaceRenderer,
+  CatalogTenFrameRenderer,
+  CatalogBaseTenRenderer,
+} from './CatalogElementaryMathRenderers';
 
 interface Props {
   kind: string;
@@ -271,6 +276,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'enzyme_action':              return <CatalogEnzymeActionRenderer figure={figure} />;
     case 'cell_cycle':                 return <CatalogCellCycleRenderer figure={figure} />;
     case 'gene_expression':            return <CatalogGeneExpressionRenderer figure={figure} />;
+    // Phase 25 — elementary-math manipulatives
+    case 'clock_face':                 return <CatalogClockFaceRenderer figure={figure} />;
+    case 'ten_frame':                  return <CatalogTenFrameRenderer figure={figure} />;
+    case 'base_ten_blocks':            return <CatalogBaseTenRenderer figure={figure} />;
 
     default:
       return (

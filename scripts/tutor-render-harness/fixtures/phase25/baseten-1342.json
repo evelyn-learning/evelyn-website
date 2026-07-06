@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "base_ten_blocks", "params": { "value": 1342, "title": "Show 1,342" } }, "label": "baseten-1342", "expect": "render" }

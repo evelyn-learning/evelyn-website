@@ -364,4 +364,27 @@ check('show_diagram gene_expression state=on → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 25 — elementary-math manipulatives');
+check('show_diagram clock_face 3:15 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'clock_face', params: { hour: 3, minute: 15 } });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram clock_face bare (12:00) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'clock_face', params: { hour: 12 } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram ten_frame count=7 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ten_frame', params: { count: 7 } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram ten_frame count=14 (two frames) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ten_frame', params: { count: 14 } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram base_ten_blocks value=1342 → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'base_ten_blocks', params: { value: 1342 } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);
