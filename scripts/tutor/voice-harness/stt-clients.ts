@@ -48,10 +48,19 @@ async function drive(
      *  to 24kHz first (see openaiStt), so chunking must use 24000 too or the
      *  100ms real-time pacing drifts (see comment there). */
     sampleRate?: number;
+    /** byte length of the REAL speech within `pcm` — set when `pcm` carries a
+     *  synthetic tail (openai appends 2s of silence for server_vad). The
+     *  reported finalLatencyMs is anchored to when the last real-speech byte
+     *  was sent, not the end of the padding — otherwise openai's number would
+     *  hide the ~1500ms server_vad wait inside the silence tail and be
+     *  incomparable with ink2/deepgram (which anchor at true speech end).
+     *  Unset = the whole buffer is real speech (ink2/deepgram). */
+    realBytes?: number;
   }
 ): Promise<ClipRun> {
   const finals: string[] = [];
   let lastAudioAt = 0;
+  let realSpeechEndAt: number | null = null;
   let lastFinalAt = 0;
   let wsError: Error | null = null;
   ws.on('message', (raw) => {
@@ -66,9 +75,16 @@ async function drive(
 
   await new Promise<void>((res, rej) => { ws.once('open', () => res()); ws.once('error', rej); });
   hooks.onOpen?.();
+  let bytesSent = 0;
   for (const chunk of chunkPcm(pcm, hooks.sampleRate ?? SR, CHUNK_MS)) {
     hooks.sendChunk(chunk);
     if (opts.realtimePace) await sleep(CHUNK_MS);
+    bytesSent += chunk.length;
+    // Mark the moment the last REAL-speech byte went out (after this chunk's
+    // pacing sleep, so it reflects wall-clock send time under realtimePace).
+    if (realSpeechEndAt === null && hooks.realBytes !== undefined && bytesSent >= hooks.realBytes) {
+      realSpeechEndAt = Date.now();
+    }
   }
   lastAudioAt = Date.now();
   hooks.endOfAudio();
@@ -97,7 +113,10 @@ async function drive(
   try { ws.close(); } catch { /* already closed */ }
   return {
     transcript: finals.join(' ').replace(/\s+/g, ' ').trim(),
-    finalLatencyMs: finals.length ? Math.max(0, lastFinalAt - lastAudioAt) : -1,
+    // Anchor latency at true speech end (realSpeechEndAt) when the buffer has
+    // a synthetic silence tail; falls back to end-of-send for engines whose
+    // buffer is all real speech. Settle-loop timing above is unaffected.
+    finalLatencyMs: finals.length ? Math.max(0, lastFinalAt - (realSpeechEndAt ?? lastAudioAt)) : -1,
   };
 }
 
@@ -192,6 +211,10 @@ async function openaiStt(pcm: Buffer, opts: Opts): Promise<ClipRun> {
   const padded = Buffer.concat([pcm24, silence]);
   return drive(ws, padded, opts, {
     sampleRate: OPENAI_SR,
+    // Latency must be measured from the end of REAL speech, not the end of
+    // the appended silence — the silence exists to trip server_vad, and the
+    // ~1500ms vad wait it absorbs is part of this engine's honest latency.
+    realBytes: pcm24.length,
     onOpen: () => ws.send(JSON.stringify({
       type: 'session.update',
       session: {
