@@ -179,3 +179,11 @@ export const TUTOR_WOLFRAM_MATH_CHECK =
 export const TUTOR_STUDENT_PROBLEM_GROUNDING =
   process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_STUDENT_PROBLEM_GROUNDING === 'true';
+// Content variety (teaching-variety phase 1, 2026-07-05): on REPEAT sessions
+// of a plan, the brain gets fresh hook/worked-example/extension content
+// (same LOs/vocab/difficulty/misconception target) instead of the identical
+// authored script, driven by per-plan seen-memory. Default OFF; ships dark.
+// See project_tutor_teaching_variety + the phase-1 spec.
+export const TUTOR_CONTENT_VARIETY =
+  process.env.NEXT_PUBLIC_TUTOR_CONTENT_VARIETY === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_CONTENT_VARIETY === 'true';

@@ -5,6 +5,7 @@
  */
 import { strict as assert } from 'node:assert';
 import { recordPlanContentSeen, PLAN_CONTENT_SEEN_CAP } from '../src/lib/tutor/student-profile/store';
+import { buildContentVarietyDirective } from '../src/lib/tutor/voice/claude-brain';
 import type { StudentProfile, PlanContentFillings } from '../src/lib/tutor/student-profile/types';
 
 let passed = 0, failed = 0;
@@ -63,6 +64,36 @@ test('does not mutate the input profile', () => {
   const orig = makeProfile();
   recordPlanContentSeen(orig, 'plan-A', F({ hooks: ['x'] }));
   assert.equal(orig.planContentSeen, undefined);
+});
+
+console.log('\nbuildContentVarietyDirective:');
+
+test('undefined seen → empty string (byte-identical when absent)', () => {
+  assert.equal(buildContentVarietyDirective(undefined), '');
+});
+
+test('all-empty slots → empty string', () => {
+  assert.equal(buildContentVarietyDirective({ hooks: [], examples: [], problems: [] }), '');
+});
+
+test('non-empty → renders a content_variety block listing seen fillings', () => {
+  const out = buildContentVarietyDirective({ hooks: ['garden fence'], examples: ['5x3 rug'], problems: [] });
+  assert.match(out, /<content_variety>/);
+  assert.match(out, /<\/content_variety>/);
+  assert.match(out, /garden fence/);
+  assert.match(out, /5x3 rug/);
+});
+
+test('directive tells the brain to differ + keep LOs/difficulty/misconception', () => {
+  const out = buildContentVarietyDirective({ hooks: ['h'], examples: [], problems: [] });
+  assert.match(out, /different/i);
+  assert.match(out, /difficulty/i);
+  assert.match(out, /misconception/i);
+});
+
+test('omits an empty slot from the listing', () => {
+  const out = buildContentVarietyDirective({ hooks: ['h'], examples: [], problems: [] });
+  assert.doesNotMatch(out, /worked-example contexts/i);
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

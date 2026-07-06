@@ -18,6 +18,7 @@ import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
 import type { Segment } from '../lesson-plan/types';
+import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 
@@ -263,6 +264,11 @@ export interface LessonPlanContext {
    *  byte-identical to the pre-C1 block (the flag-off guarantee: the
    *  client only sets this when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on). */
   sessionMode?: 'demo' | 'subscribed';
+  /** Content variety (phase 1): fillings this student has already been shown
+   *  for THIS plan on prior sessions. Present only when the client's
+   *  TUTOR_CONTENT_VARIETY flag is on AND there is prior-session content to
+   *  diverge from. Absent ⇒ no <content_variety> block ⇒ byte-identical. */
+  contentVariety?: PlanContentSeen;
 }
 
 export interface BrainToolCall {
@@ -392,6 +398,31 @@ class SentenceBuffer {
  * imagining them off-circle. Without this, the brain sees only metadata
  * and has no way to keep figures consistent across turns.
  */
+/** Render the <content_variety> directive from per-plan seen-memory (content
+ *  variety phase 1). Returns '' when there's nothing seen (caller renders
+ *  nothing → byte-identical output). Generic wording only — no
+ *  subject-specific teaching content (feedback_generic_prompts). */
+export function buildContentVarietyDirective(seen: PlanContentSeen | undefined): string {
+  if (!seen) return '';
+  const slots: Array<[string, string[]]> = [
+    ['hooks / openers', seen.hooks],
+    ['worked-example contexts', seen.examples],
+    ['practice problems', seen.problems],
+  ];
+  const shown = slots.filter(([, arr]) => arr.length > 0);
+  if (shown.length === 0) return '';
+  const lines: string[] = [
+    ``,
+    `<content_variety>`,
+    `This student has worked through this plan before. Teach the SAME learning objectives, keep the vocabulary, the difficulty level, and the exact misconception each check targets — but make the HOOK, the WORKED EXAMPLE, and the EXTENSION materially different from the standard version and from what they have already seen. Fresh story, fresh objects, fresh numbers; same skill. Do NOT reuse any of these:`,
+  ];
+  for (const [label, arr] of shown) {
+    lines.push(`  already seen (${label}): ${arr.map((s) => `"${s}"`).join(', ')}`);
+  }
+  lines.push(`</content_variety>`);
+  return lines.join('\n');
+}
+
 /** Render a LessonPlanContext into a compact prompt block. The brain
  *  reads this BEFORE deciding what to do this turn, so it must be
  *  unambiguous: which segment is current, what's next, what the segment
@@ -521,6 +552,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     `advance_lesson({ to: "next" }). Branch with advance_lesson({ to: "<id>" }).`,
     `Mark progress with mark_segment_complete({ segmentId, masteryDelta? }).`,
     ...planFraming,
+    ...(ctx.contentVariety ? [buildContentVarietyDirective(ctx.contentVariety)].filter(Boolean) : []),
     completedNote,
   ].join('\n');
 }
