@@ -10,7 +10,7 @@ const RAW: Omit<Utterance, 'tts'>[] = [
   { id: 'u01', style: 'math', raw: 'So the derivative of x^2 is 2x — watch what happens when we apply the power rule to x^5.' },
   { id: 'u02', style: 'math', raw: 'Remember, sin of \\theta over cos of \\theta gives us tan of \\theta. That identity is doing all the work here.' },
   { id: 'u03', style: 'math', raw: 'Three quarters plus one half — we need a common denominator, so 3/4 becomes 6/8 and 1/2 becomes 4/8, giving 10/8.' },
-  { id: 'u04', style: 'math', raw: 'The natural log ln of e^3 is just 3, because ln and the exponential are inverse functions.' },
+  { id: 'u04', style: 'math', raw: 'So ln of e^3 is just 3, because ln and the exponential are inverse functions.' },
   { id: 'u05', style: 'alphanumeric', raw: 'Open your notes to equation 4b — the one from March 12th, 2026 — and check line 3 against problem A7.' },
   { id: 'u06', style: 'alphanumeric', raw: 'The velocity is 9.8 meters per second squared times 2.5 seconds, which is 24.5 meters per second.' },
   { id: 'u07', style: 'encouragement', raw: 'Yes! That is exactly right — you spotted the pattern before I even finished drawing it.' },
