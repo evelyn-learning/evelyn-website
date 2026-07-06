@@ -17,7 +17,7 @@ import {
   recordGap,
   applyCrossSessionPromotion,
   resolveSettledGaps,
-  appendSessionMemory,
+  upsertSessionMemory,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
@@ -147,7 +147,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
   }
 
-  profile = appendSessionMemory(profile, {
+  // upsert (not append): the orchestrator commits incrementally — debounced
+  // flushes as the session accumulates + a pagehide keepalive commit + the
+  // final End-button commit. Merge-by-sessionId keeps one entry per session.
+  profile = upsertSessionMemory(profile, {
     sessionId: body.sessionId,
     endedAt: body.endedAt ?? new Date().toISOString(),
     subject: body.subject,

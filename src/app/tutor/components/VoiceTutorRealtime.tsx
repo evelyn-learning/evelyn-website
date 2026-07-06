@@ -946,14 +946,35 @@ export function VoiceTutorRealtime({
   // gaps, recent-session memory + auto-generated notes). Fire-and-forget;
   // the user doesn't wait for notes generation. Safe to call multiple
   // times (the accumulator is reset after each commit so no double-
-  // counting). No-op when studentId is unset (demo flow).
-  const commitSessionToProfile = useCallback(async () => {
+  // counting, and the endpoint upserts SessionMemory by sessionId).
+  // No-op when studentId is unset (demo flow).
+  //
+  // Learning-gaps blending (2026-07-05): commits are now INCREMENTAL, not
+  // End-button-only. Previously the sole call site was the End/Pause click,
+  // so a tab close / mobile swipe-away / reload silently lost the whole
+  // session's mastery deltas + gap evidence — for enrolled students that
+  // starved the gaps loop of data, leaving nothing to blend into future
+  // sessions (same failure class the transcript persistence fixed 2026-04).
+  // Now: a debounced flush fires as the accumulator gains entries, a
+  // pagehide keepalive commit covers abnormal exits, and the End button
+  // stays the final commit. `final` gates the expensive parts: only the
+  // final commit sends the transcript + generates the LLM session summary;
+  // intermediate flushes send just the deltas (generateNotes: false).
+  const commitSessionToProfile = useCallback(async (opts?: { final?: boolean; keepalive?: boolean }) => {
     if (!studentId) return;
     const accum = sessionAccumRef.current;
-    if (accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0) return;
-    const transcript = transcriptRef.current
-      .filter((t) => t.role === 'student' || t.role === 'tutor')
-      .map((t) => ({ role: t.role as 'student' | 'tutor', text: t.text }));
+    const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0;
+    // Intermediate flushes with nothing new are pure no-ops. A FINAL commit
+    // with an empty accumulator still posts when prior flushes committed
+    // data this session — it carries the transcript so the summary lands on
+    // the (upserted) SessionMemory entry.
+    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0)) return;
+    const isFinal = opts?.final === true;
+    const transcript = isFinal
+      ? transcriptRef.current
+          .filter((t) => t.role === 'student' || t.role === 'tutor')
+          .map((t) => ({ role: t.role as 'student' | 'tutor', text: t.text }))
+      : undefined;
     const notesCount = accum.topicNotesCount;
     const totalNotesOverlays = notesCount.theory + notesCount.methods + notesCount.pointers;
     const body = {
@@ -966,7 +987,7 @@ export function VoiceTutorRealtime({
       losTouched: Array.from(accum.losTouched),
       masteryDeltas: accum.masteryDeltas,
       gaps: accum.gaps,
-      transcript,
+      ...(isFinal ? { transcript } : { generateNotes: false }),
       // Only stamp when at least one overlay tool fired — keeps SessionMemory
       // entries lean on sessions that didn't touch topic-notes.
       notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
@@ -977,11 +998,14 @@ export function VoiceTutorRealtime({
       gaps: [],
       topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
     };
+    profileFlushCountRef.current += 1;
     try {
       const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        // pagehide path: let the request outlive the page teardown.
+        ...(opts?.keepalive ? { keepalive: true } : {}),
       });
       if (!res.ok) {
         console.warn('[VoiceTutorRealtime] profile commit failed:', res.status);
@@ -995,6 +1019,46 @@ export function VoiceTutorRealtime({
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
     }
   }, [studentId, subject, topic, level, lessonPlanId]);
+  // Count of commits already posted this session — lets the final commit
+  // post transcript+summary even when its own accumulator increment is
+  // empty (everything already flushed incrementally).
+  const profileFlushCountRef = useRef(0);
+  // Debounced intermediate flush. Called at each accumulation site
+  // (mastery delta push, gap pushes) — 20s debounce coalesces a burst of
+  // segment completions into one commit; each commit sends only the
+  // increment since the last one.
+  const PROFILE_FLUSH_DEBOUNCE_MS = 20_000;
+  const profileFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleProfileFlush = useCallback(() => {
+    if (!studentId) return;
+    if (profileFlushTimerRef.current) clearTimeout(profileFlushTimerRef.current);
+    profileFlushTimerRef.current = setTimeout(() => {
+      profileFlushTimerRef.current = null;
+      void commitSessionToProfile();
+    }, PROFILE_FLUSH_DEBOUNCE_MS);
+  }, [studentId, commitSessionToProfile]);
+  // Abnormal-exit coverage: pagehide fires on tab close / navigation /
+  // mobile background-then-kill (more reliably than beforeunload on iOS).
+  // keepalive lets the POST complete after teardown. Cheap no-op when the
+  // accumulator is empty. Timer cleared here too — the page is going away.
+  useEffect(() => {
+    if (!studentId) return;
+    const onPageHide = () => {
+      if (profileFlushTimerRef.current) {
+        clearTimeout(profileFlushTimerRef.current);
+        profileFlushTimerRef.current = null;
+      }
+      void commitSessionToProfile({ keepalive: true });
+    };
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      if (profileFlushTimerRef.current) {
+        clearTimeout(profileFlushTimerRef.current);
+        profileFlushTimerRef.current = null;
+      }
+    };
+  }, [studentId, commitSessionToProfile]);
 
   // Active lesson plan (when lessonPlanId prop is set). Held in refs so
   // the in-flight brain call always sees the latest segment id even if
@@ -3745,6 +3809,10 @@ export function VoiceTutorRealtime({
         if (loId && outcome.recordMastery && md !== undefined) {
           sessionAccumRef.current.masteryDeltas.push({ loId, delta: md });
           sessionAccumRef.current.losTouched.add(loId);
+          // Learning-gaps blending: durably persist the increment soon —
+          // waiting for the End button lost the whole session on abnormal
+          // exits (tab close / swipe-away), starving the gaps loop.
+          scheduleProfileFlush();
         }
         continue;
       }
@@ -3848,6 +3916,7 @@ export function VoiceTutorRealtime({
             });
             sessionAccumRef.current.losTouched.add(c.loId);
             console.log(`[VoiceTutorRealtime] gap recorded: kind=lo loId="${c.loId}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
+            scheduleProfileFlush();
           }
         } else {
           if (c.conceptLabel && observation) {
@@ -3859,6 +3928,7 @@ export function VoiceTutorRealtime({
               signals,
             });
             console.log(`[VoiceTutorRealtime] gap recorded: kind=prerequisite concept="${c.conceptLabel}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
+            scheduleProfileFlush();
           }
         }
         continue;
@@ -12597,7 +12667,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               if (audioRecordEnabled) {
                 try { await audioRecorder.finalize(); } catch {}
               }
-              void commitSessionToProfile();
+              // final: carries the transcript + generates the session summary
+              // (intermediate flushes already persisted deltas incrementally).
+              void commitSessionToProfile({ final: true });
               onEndSession();
             }}
             // Ending is non-destructive now: the session checkpoint (transcript

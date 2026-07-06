@@ -19,8 +19,8 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale } from '../src/lib/tutor/student-profile/store';
-import type { StudentProfile, GapEntry, MasteryEntry } from '../src/lib/tutor/student-profile/types';
+import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale, upsertSessionMemory } from '../src/lib/tutor/student-profile/store';
+import type { StudentProfile, GapEntry, MasteryEntry, SessionMemory } from '../src/lib/tutor/student-profile/types';
 
 let passed = 0;
 let failed = 0;
@@ -388,6 +388,98 @@ test('default `now` parameter (no second arg) → uses current time', () => {
   const realDaysAgo = new Date(Date.now() - 100 * 86_400_000).toISOString();
   const gap = makeGap({ status: 'confirmed', lastSeenAt: realDaysAgo });
   assert.strictEqual(isGapStale(gap), true, 'should default to Date.now()');
+});
+
+// ---------------------------------------------------------------------------
+// upsertSessionMemory — idempotent per-sessionId merge (learning-gaps
+// blending, 2026-07-05). Makes the commit endpoint safe for incremental
+// flushes: same-session commits MERGE into one SessionMemory entry,
+// distinct sessions still append.
+// ---------------------------------------------------------------------------
+console.log('\nupsertSessionMemory:');
+
+function makeMemory(overrides: Partial<SessionMemory> = {}): SessionMemory {
+  return {
+    sessionId: 's1',
+    endedAt: '2026-07-05T10:00:00.000Z',
+    losTouched: [],
+    ...overrides,
+  };
+}
+
+test('no existing entry → appends (today\'s behavior)', () => {
+  const p = makeProfile();
+  const out = upsertSessionMemory(p, makeMemory({ losTouched: ['lo-a'] }));
+  assert.strictEqual(out.recentSessions.length, 1);
+  assert.deepStrictEqual(out.recentSessions[0].losTouched, ['lo-a']);
+});
+
+test('distinct sessionIds → both entries kept', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ sessionId: 's1' }));
+  p = upsertSessionMemory(p, makeMemory({ sessionId: 's2' }));
+  assert.strictEqual(p.recentSessions.length, 2);
+});
+
+test('same sessionId → single entry (no duplicate SessionMemory spam)', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory());
+  p = upsertSessionMemory(p, makeMemory());
+  assert.strictEqual(p.recentSessions.length, 1);
+});
+
+test('merge unions losTouched (no duplicates)', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ losTouched: ['lo-a', 'lo-b'] }));
+  p = upsertSessionMemory(p, makeMemory({ losTouched: ['lo-b', 'lo-c'] }));
+  assert.deepStrictEqual([...p.recentSessions[0].losTouched].sort(), ['lo-a', 'lo-b', 'lo-c']);
+});
+
+test('merge concats masteryDeltas (increments, never double-applied here)', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ masteryDeltas: [{ loId: 'lo-a', delta: 0.5 }] }));
+  p = upsertSessionMemory(p, makeMemory({ masteryDeltas: [{ loId: 'lo-a', delta: 0.2 }] }));
+  assert.deepStrictEqual(p.recentSessions[0].masteryDeltas, [
+    { loId: 'lo-a', delta: 0.5 },
+    { loId: 'lo-a', delta: 0.2 },
+  ]);
+});
+
+test('merge sums notesOverlays per bucket', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ notesOverlaysAddedThisSession: { theory: 1, methods: 0, pointers: 2 } }));
+  p = upsertSessionMemory(p, makeMemory({ notesOverlaysAddedThisSession: { theory: 0, methods: 1, pointers: 1 } }));
+  assert.deepStrictEqual(p.recentSessions[0].notesOverlaysAddedThisSession, { theory: 1, methods: 1, pointers: 3 });
+});
+
+test('merge takes newer endedAt; new non-empty summary wins, else keeps old', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ endedAt: '2026-07-05T10:00:00.000Z', summary: 'first' }));
+  p = upsertSessionMemory(p, makeMemory({ endedAt: '2026-07-05T10:20:00.000Z' }));
+  assert.strictEqual(p.recentSessions[0].endedAt, '2026-07-05T10:20:00.000Z');
+  assert.strictEqual(p.recentSessions[0].summary, 'first', 'absent new summary keeps old');
+  p = upsertSessionMemory(p, makeMemory({ endedAt: '2026-07-05T10:30:00.000Z', summary: 'final' }));
+  assert.strictEqual(p.recentSessions[0].summary, 'final', 'new non-empty summary wins');
+});
+
+test('merge keeps existing subject/topic/grade/lessonPlanId, fills when absent', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ subject: 'math', topic: 'fractions' }));
+  p = upsertSessionMemory(p, makeMemory({ subject: 'SHOULD-NOT-WIN', grade: '5' }));
+  assert.strictEqual(p.recentSessions[0].subject, 'math');
+  assert.strictEqual(p.recentSessions[0].topic, 'fractions');
+  assert.strictEqual(p.recentSessions[0].grade, '5', 'absent field fills from new');
+});
+
+test('merge preserves entry position (session stays in place, other sessions unaffected)', () => {
+  let p = makeProfile();
+  p = upsertSessionMemory(p, makeMemory({ sessionId: 's1' }));
+  p = upsertSessionMemory(p, makeMemory({ sessionId: 's2', losTouched: ['x'] }));
+  p = upsertSessionMemory(p, makeMemory({ sessionId: 's1', losTouched: ['y'] }));
+  assert.strictEqual(p.recentSessions.length, 2);
+  assert.strictEqual(p.recentSessions[0].sessionId, 's1');
+  assert.deepStrictEqual(p.recentSessions[0].losTouched, ['y']);
+  assert.deepStrictEqual(p.recentSessions[1].losTouched, ['x'], 'other session untouched');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

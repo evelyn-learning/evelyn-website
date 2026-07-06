@@ -479,6 +479,54 @@ export function appendSessionMemory(profile: StudentProfile, memory: SessionMemo
   return { ...profile, recentSessions: [...profile.recentSessions, memory] };
 }
 
+/** Idempotent per-sessionId session-memory write (learning-gaps blending,
+ *  2026-07-05). The commit endpoint now receives INCREMENTAL flushes — a
+ *  debounced commit whenever the orchestrator's accumulator gains entries,
+ *  a pagehide keepalive commit on abnormal exit, and the final End-button
+ *  commit. Each carries only the increment since the last flush, so the
+ *  same session commits several times; a blind append would spam one
+ *  SessionMemory entry per flush. Merge semantics per field:
+ *  losTouched union · masteryDeltas concat (each flush's deltas are new)
+ *  · notesOverlays summed per bucket · endedAt/durationMinutes newest ·
+ *  summary = new non-empty wins (final commit carries it), else keep old ·
+ *  identity fields (subject/topic/grade/lessonPlanId) keep existing, fill
+ *  when absent. Entry position is preserved so recentSessions stays in
+ *  first-commit order. */
+export function upsertSessionMemory(profile: StudentProfile, memory: SessionMemory): StudentProfile {
+  const idx = profile.recentSessions.findIndex((s) => s.sessionId === memory.sessionId);
+  if (idx === -1) {
+    return { ...profile, recentSessions: [...profile.recentSessions, memory] };
+  }
+  const prev = profile.recentSessions[idx];
+  const newerEnded = (memory.endedAt || '') >= (prev.endedAt || '');
+  const sumNotes = (a?: SessionMemory['notesOverlaysAddedThisSession'], b?: SessionMemory['notesOverlaysAddedThisSession']) => {
+    if (!a && !b) return undefined;
+    return {
+      theory: (a?.theory ?? 0) + (b?.theory ?? 0),
+      methods: (a?.methods ?? 0) + (b?.methods ?? 0),
+      pointers: (a?.pointers ?? 0) + (b?.pointers ?? 0),
+    };
+  };
+  const merged: SessionMemory = {
+    sessionId: prev.sessionId,
+    endedAt: newerEnded ? memory.endedAt : prev.endedAt,
+    subject: prev.subject ?? memory.subject,
+    topic: prev.topic ?? memory.topic,
+    grade: prev.grade ?? memory.grade,
+    lessonPlanId: prev.lessonPlanId ?? memory.lessonPlanId,
+    losTouched: [...new Set([...prev.losTouched, ...memory.losTouched])],
+    summary: memory.summary || prev.summary,
+    durationMinutes: newerEnded ? (memory.durationMinutes ?? prev.durationMinutes) : (prev.durationMinutes ?? memory.durationMinutes),
+    masteryDeltas: (prev.masteryDeltas?.length || memory.masteryDeltas?.length)
+      ? [...(prev.masteryDeltas ?? []), ...(memory.masteryDeltas ?? [])]
+      : undefined,
+    notesOverlaysAddedThisSession: sumNotes(prev.notesOverlaysAddedThisSession, memory.notesOverlaysAddedThisSession),
+  };
+  const next = [...profile.recentSessions];
+  next[idx] = merged;
+  return { ...profile, recentSessions: next };
+}
+
 /** Patch the preferences sub-object on a profile and persist. Only keys
  *  present in `patch` are written; everything else (mastery, gaps,
  *  recentSessions) is preserved. Used by the settings page and any
