@@ -273,6 +273,8 @@ import {
   solveFlowerStructure as solveFlowerForManifest,
   buildEnergyPyramidManifest,
   solveEnergyPyramid as solveEnergyPyramidForManifest,
+  buildEyeCrossSectionManifest,
+  solveEyeCrossSection as solveEyeForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 import {
   buildDataStructureManifest,
@@ -1595,6 +1597,10 @@ function buildDiagramManifest(cmd: {
     }
     case 'energy_pyramid': {
       try { return buildEnergyPyramidManifest(solveEnergyPyramidForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'eye_cross_section': {
+      try { return buildEyeCrossSectionManifest(solveEyeForManifest(params)); } catch { /* fall through */ }
       break;
     }
     case 'complex_plane': {

@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "eye_cross_section", "params": { "highlight": ["retina", "fovea", "lens"] } }, "label": "eye-hl", "expect": "render" }

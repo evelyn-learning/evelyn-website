@@ -92,7 +92,7 @@ import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from 
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
-import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid } from './kinds/bio-anatomy';
+import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 import { solveClockFace, solveTenFrame, solveBaseTenBlocks } from './kinds/elementary-math';
@@ -275,6 +275,9 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 28 — advanced math (Argand) + ELA (Freytag) ──────────────────
   { kind: 'complex_plane', displayName: 'Complex Plane (Argand diagram)', whenToUse: 'Plot one or more complex numbers a+bi on the Argand plane (real axis horizontal, imaginary axis vertical), each as a point and (by default) a position vector from the origin, with an optional modulus |z| and argument arg(z) annotation. Use for complex-number teaching instead of show_function_graph (which is for real x-y functions). Axes auto-fit unless range is given.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'points:[{re,im (or a,b), label?, color?, showVector?:boolean (default true), showModulus?:boolean, showAngle?:boolean}] (≥1), range?:number (axes span ±range; auto-fit if omitted), title?' },
   { kind: 'plot_diagram', displayName: "Plot Diagram (Freytag's pyramid)", whenToUse: "Show the five-stage dramatic-arc plot diagram (Freytag's pyramid): exposition → rising action → climax (the peak) → falling action → resolution, drawn as a rising-then-falling arc. Optional per-stage notes map a specific story onto each stage. Use for narrative-structure / story-analysis teaching instead of a freehand sketch.", subjects: ['ela'], grades: { from: 3, to: 12 }, paramSchema: 'notes?:{exposition?, rising_action?, climax?, falling_action?, resolution?} (short per-stage annotations mapping a story onto the arc; all optional), title?' },
+
+  // ── Phase 29 — biology (sense-organ cross-sections) ────────────────────
+  { kind: 'eye_cross_section', displayName: 'Human Eye (cross-section)', whenToUse: 'Show a labeled horizontal cross-section of the human eye (light enters from the left): cornea, aqueous humour, iris & pupil, lens, ciliary body & suspensory ligaments, and the three coats — sclera, choroid, retina — with the fovea, blind spot, optic nerve and vitreous humour. An optional light path shows rays converging on the retina. Use for vision / eye-anatomy teaching instead of a freehand sketch. Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — cornea, aqueous_humor, iris, pupil, lens, ciliary_body, suspensory_ligaments, sclera, choroid, retina, fovea, optic_nerve, blind_spot, vitreous_humor), showLightPath?:boolean (default true), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -427,6 +430,8 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 28 — advanced math (Argand) + ELA (Freytag)
   complex_plane: solveComplexPlane,
   plot_diagram: solvePlotDiagram,
+  // Phase 29 — biology (sense-organ cross-sections)
+  eye_cross_section: solveEyeCrossSection,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

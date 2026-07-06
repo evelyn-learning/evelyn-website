@@ -9,6 +9,7 @@ import {
   respiratoryFeatureNames,
   flowerFeatureNames,
   energyPyramidFeatureNames,
+  eyeFeatureNames,
   type LeafCrossSectionFigure,
   type LeafPart,
   type NephronFigure,
@@ -22,6 +23,8 @@ import {
   type FlowerStructureFigure,
   type FlowerPart,
   type EnergyPyramidFigure,
+  type EyeCrossSectionFigure,
+  type EyePart,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 
 const INK = '#374151';
@@ -901,3 +904,219 @@ export function CatalogFlowerStructureRenderer({ figure }: { figure: FlowerStruc
     </div>
   );
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  eye_cross_section
+// ══════════════════════════════════════════════════════════════════════════
+
+export function CatalogEyeCrossSectionRenderer({ figure }: { figure: EyeCrossSectionFigure }) {
+  const N = eyeFeatureNames;
+  const W = 860;
+  const H = 560;
+  const hi = (p: EyePart) => figure.highlight.includes(p);
+  const HLC = '#059669';
+  const sFor = (p: EyePart, base: string) => (hi(p) ? HLC : base);
+  const wFor = (p: EyePart, base: number) => (hi(p) ? base + 1.5 : base);
+
+  const Ox = 430, Oy = 280, R = 175;
+  // point on a circle of radius r at standard angle θ° (screen coords, y down)
+  const P = (r: number, deg: number): [number, number] => {
+    const t = (deg * Math.PI) / 180;
+    return [Ox + r * Math.cos(t), Oy - r * Math.sin(t)];
+  };
+
+  // sclera opening for the cornea: front window between 150° and 210°.
+  const [sxTop, syTop] = P(R, 150);
+  const [sxBot, syBot] = P(R, 210);
+  // cornea apex (bulges left, more curved than the sphere)
+  const corneaApex: [number, number] = [Ox - R - 8, Oy];
+
+  // colors
+  const SCLERA = '#f1f5f9', SCLERA_ST = '#64748b';
+  const CHOROID = '#9f1239';
+  const RETINA = '#fcd34d';
+  const CORNEA = '#bfdbfe';
+  const AQUEOUS = '#e0f2fe';
+  const VITREOUS = '#eff6ff';
+  const IRIS = '#0891b2';
+  const LENS = '#a5f3fc';
+  const NERVE = '#facc15';
+  const INK = '#374151';
+
+  // Back-lining arc as an explicitly-sampled polyline (SVG A-flags are
+  // error-prone for major arcs). Sweeps increasing angle a1→a2 (degrees),
+  // so passing a1=212, a2=508 traces the posterior ~296° and leaves the
+  // front window (148°–212°) open for the cornea / iris / lens.
+  const coatArc = (r: number, a1: number, a2: number) => {
+    const pts: string[] = [];
+    for (let a = a1; a <= a2; a += 3) {
+      const [x, y] = P(r, a);
+      pts.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    return 'M ' + pts.join(' L ');
+  };
+
+  // lens (biconvex) centred behind the pupil
+  const lensCx = 342, lensCy = Oy, lensRx = 22, lensRy = 60;
+  const lensPath =
+    `M ${lensCx} ${lensCy - lensRy} ` +
+    `Q ${lensCx + lensRx + 8} ${lensCy} ${lensCx} ${lensCy + lensRy} ` +
+    `Q ${lensCx - lensRx - 8} ${lensCy} ${lensCx} ${lensCy - lensRy} Z`;
+
+  // optic nerve exit (posterior, slightly below the axis)
+  const [onx, ony] = P(R - 6, 340);
+
+  // light path: two parallel rays from the left → cornea → pupil → lens → fovea
+  const foveaPt: [number, number] = P(R - 18, 2);
+
+  const LX = 232;   // left labels: end-anchored, text ends here
+  const RX = 632;   // right labels: start-anchored, text starts here
+  type Row = { part: EyePart; ly: number; ax: number; ay: number };
+  const leftRows: Row[] = [
+    { part: 'cornea',                ly: 150, ax: corneaApex[0] + 2, ay: 288 },
+    { part: 'aqueous_humor',         ly: 196, ax: 300, ay: 236 },
+    { part: 'iris',                  ly: 242, ax: 300, ay: 222 },
+    { part: 'pupil',                 ly: 300, ax: 300, ay: 280 },
+    { part: 'lens',                  ly: 350, ax: lensCx, ay: Oy },
+    { part: 'ciliary_body',          ly: 404, ax: 300, ay: 210 },
+    { part: 'suspensory_ligaments',  ly: 452, ax: 322, ay: 236 },
+  ];
+  const rightRows: Row[] = [
+    { part: 'sclera',          ly: 132, ax: P(R, 60)[0],  ay: P(R, 60)[1] },
+    { part: 'choroid',         ly: 180, ax: P(R - 6, 46)[0], ay: P(R - 6, 46)[1] },
+    { part: 'retina',          ly: 228, ax: P(R - 16, 30)[0], ay: P(R - 16, 30)[1] },
+    { part: 'vitreous_humor',  ly: 300, ax: 486, ay: 316 },
+    { part: 'fovea',           ly: 352, ax: foveaPt[0], ay: foveaPt[1] },
+    { part: 'blind_spot',      ly: 404, ax: P(R - 14, 344)[0], ay: P(R - 14, 344)[1] },
+    { part: 'optic_nerve',     ly: 456, ax: onx + 40, ay: ony + 26 },
+  ];
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'The human eye (cross-section)'}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[860px]"
+        data-feature={N.figure}
+        data-feature-label={figure.title || 'Eye cross-section'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* eyeball interior (vitreous humour) */}
+        <g data-feature={N.part('vitreous_humor')} data-feature-label="Vitreous humour">
+          <circle cx={Ox} cy={Oy} r={R - 3} fill={VITREOUS} />
+        </g>
+
+        {/* sclera (outer coat) — posterior wall, front window left open for the cornea */}
+        <g data-feature={N.part('sclera')} data-feature-label="Sclera">
+          <path d={coatArc(R, 212, 508)} fill="none" stroke={sFor('sclera', SCLERA_ST)} strokeWidth={wFor('sclera', 6)} strokeLinecap="round" />
+        </g>
+        {/* choroid + retina lining the back */}
+        <g data-feature={N.part('choroid')} data-feature-label="Choroid">
+          <path d={coatArc(R - 8, 214, 506)} fill="none" stroke={sFor('choroid', CHOROID)} strokeWidth={wFor('choroid', 7)} strokeLinecap="round" opacity={0.85} />
+        </g>
+        <g data-feature={N.part('retina')} data-feature-label="Retina">
+          <path d={coatArc(R - 17, 214, 506)} fill="none" stroke={sFor('retina', RETINA)} strokeWidth={wFor('retina', 8)} strokeLinecap="round" />
+        </g>
+
+        {/* aqueous humour (front chamber) */}
+        <g data-feature={N.part('aqueous_humor')} data-feature-label="Aqueous humour">
+          <path d={`M ${sxTop} ${syTop} Q ${corneaApex[0]} ${corneaApex[1]} ${sxBot} ${syBot} L 330 320 L 330 240 Z`} fill={AQUEOUS} opacity={0.7} />
+        </g>
+
+        {/* light path */}
+        {figure.showLightPath && (
+          <g opacity={0.7}>
+            {[250, 310].map((y0, i) => (
+              <polyline
+                key={i}
+                points={`92,${y0} ${corneaApex[0] + 6},${y0} 315,${Oy} ${foveaPt[0]},${foveaPt[1]}`}
+                fill="none" stroke="#f59e0b" strokeWidth={1.4} strokeDasharray="5 4"
+              />
+            ))}
+            <text x={96} y={232} fontSize={11} fill="#b45309" fontStyle="italic">light</text>
+          </g>
+        )}
+
+        {/* cornea (transparent bulging front dome) */}
+        <g data-feature={N.part('cornea')} data-feature-label="Cornea">
+          <path d={`M ${sxTop} ${syTop} Q ${corneaApex[0]} ${corneaApex[1]} ${sxBot} ${syBot}`} fill={CORNEA} fillOpacity={0.5} stroke={sFor('cornea', '#3b82f6')} strokeWidth={wFor('cornea', 2.5)} />
+        </g>
+
+        {/* iris (two segments) + pupil opening */}
+        <g data-feature={N.part('iris')} data-feature-label="Iris">
+          <path d={`M ${sxTop} ${syTop} L 316 254 L 300 250 L ${sxTop - 2} ${syTop + 10} Z`} fill={sFor('iris', IRIS)} stroke={sFor('iris', '#0e7490')} strokeWidth={wFor('iris', 1)} />
+          <path d={`M ${sxBot} ${syBot} L 316 306 L 300 310 L ${sxBot - 2} ${syBot - 10} Z`} fill={sFor('iris', IRIS)} stroke={sFor('iris', '#0e7490')} strokeWidth={wFor('iris', 1)} />
+        </g>
+        <g data-feature={N.part('pupil')} data-feature-label="Pupil">
+          <line x1={316} y1={254} x2={316} y2={306} stroke={sFor('pupil', '#111827')} strokeWidth={wFor('pupil', 4)} strokeLinecap="round" />
+        </g>
+
+        {/* ciliary body (wedges) + suspensory ligaments (zonules) */}
+        <g data-feature={N.part('ciliary_body')} data-feature-label="Ciliary body">
+          <path d={`M ${sxTop} ${syTop} l 14 8 l -14 8 Z`} fill={sFor('ciliary_body', '#7c3aed')} />
+          <path d={`M ${sxBot} ${syBot} l 14 -8 l -14 -8 Z`} fill={sFor('ciliary_body', '#7c3aed')} />
+        </g>
+        <g data-feature={N.part('suspensory_ligaments')} data-feature-label="Suspensory ligaments">
+          {[-1, 1].map((s) => (
+            <g key={s}>
+              <line x1={sxTop + 8} y1={s > 0 ? syTop + 8 : syBot - 8} x2={lensCx} y2={lensCy + s * (lensRy - 6)} stroke={sFor('suspensory_ligaments', '#94a3b8')} strokeWidth={wFor('suspensory_ligaments', 1)} />
+            </g>
+          ))}
+        </g>
+
+        {/* lens */}
+        <g data-feature={N.part('lens')} data-feature-label="Lens">
+          <path d={lensPath} fill={sFor('lens', LENS)} fillOpacity={0.85} stroke={sFor('lens', '#0891b2')} strokeWidth={wFor('lens', 1.8)} />
+        </g>
+
+        {/* fovea (notch on the retina at the back, on the axis) */}
+        <g data-feature={N.part('fovea')} data-feature-label="Fovea">
+          <circle cx={foveaPt[0]} cy={foveaPt[1]} r={4} fill={sFor('fovea', '#b45309')} />
+        </g>
+
+        {/* optic nerve + blind spot */}
+        <g data-feature={N.part('optic_nerve')} data-feature-label="Optic nerve">
+          <path d={`M ${onx - 6} ${ony - 16} Q ${onx + 60} ${ony + 4} ${onx + 76} ${ony + 30} L ${onx + 60} ${ony + 46} Q ${onx + 30} ${ony + 24} ${onx - 6} ${ony + 16} Z`} fill={sFor('optic_nerve', NERVE)} stroke={sFor('optic_nerve', '#a16207')} strokeWidth={wFor('optic_nerve', 1.5)} />
+        </g>
+        <g data-feature={N.part('blind_spot')} data-feature-label="Blind spot">
+          <circle cx={P(R - 14, 344)[0]} cy={P(R - 14, 344)[1]} r={3.5} fill={sFor('blind_spot', '#334155')} />
+        </g>
+
+        {/* labels — left column (end-anchored), leaders end just right of text */}
+        {leftRows.map((r) => (
+          <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
+            <line x1={LX + 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
+            <text x={LX} y={r.ly} fontSize={12.5} textAnchor="end" fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EYE_LABELS_R[r.part]}</text>
+          </g>
+        ))}
+        {/* right column (start-anchored), leaders end just left of text */}
+        {rightRows.map((r) => (
+          <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
+            <line x1={RX - 6} y1={r.ly - 4} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
+            <text x={RX} y={r.ly} fontSize={12.5} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EYE_LABELS_R[r.part]}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+const EYE_LABELS_R: Record<EyePart, string> = {
+  cornea: 'Cornea',
+  aqueous_humor: 'Aqueous humour',
+  iris: 'Iris',
+  pupil: 'Pupil',
+  lens: 'Lens',
+  ciliary_body: 'Ciliary body',
+  suspensory_ligaments: 'Suspensory ligaments',
+  sclera: 'Sclera',
+  choroid: 'Choroid',
+  retina: 'Retina',
+  fovea: 'Fovea (yellow spot)',
+  optic_nerve: 'Optic nerve',
+  blind_spot: 'Blind spot',
+  vitreous_humor: 'Vitreous humour',
+};

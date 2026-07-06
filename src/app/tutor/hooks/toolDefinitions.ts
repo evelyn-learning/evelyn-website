@@ -455,6 +455,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'respiratory_system', 'flower_structure', 'energy_pyramid',
             // Phase 28 — advanced math (Argand) + ELA (Freytag)
             'complex_plane', 'plot_diagram',
+            // Phase 29 — biology (sense-organ cross-sections)
+            'eye_cross_section',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

@@ -770,3 +770,123 @@ export function buildEnergyPyramidManifest(figure: EnergyPyramidFigure): Feature
   });
   return feats;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  eye_cross_section  (horizontal section of the human eye)
+// ══════════════════════════════════════════════════════════════════════════
+
+export const EYE_PARTS = [
+  'cornea',
+  'aqueous_humor',
+  'iris',
+  'pupil',
+  'lens',
+  'ciliary_body',
+  'suspensory_ligaments',
+  'sclera',
+  'choroid',
+  'retina',
+  'fovea',
+  'optic_nerve',
+  'blind_spot',
+  'vitreous_humor',
+] as const;
+export type EyePart = (typeof EYE_PARTS)[number];
+
+const EYE_ALIASES: Record<string, EyePart> = {
+  cornea: 'cornea',
+  aqueous_humor: 'aqueous_humor', aqueous_humour: 'aqueous_humor', aqueous: 'aqueous_humor',
+  iris: 'iris',
+  pupil: 'pupil',
+  lens: 'lens',
+  ciliary_body: 'ciliary_body', ciliary_muscle: 'ciliary_body', ciliary: 'ciliary_body',
+  suspensory_ligaments: 'suspensory_ligaments', suspensory_ligament: 'suspensory_ligaments', zonules: 'suspensory_ligaments',
+  sclera: 'sclera',
+  choroid: 'choroid',
+  retina: 'retina',
+  fovea: 'fovea', fovea_centralis: 'fovea', yellow_spot: 'fovea', macula: 'fovea',
+  optic_nerve: 'optic_nerve',
+  blind_spot: 'blind_spot', optic_disc: 'blind_spot', optic_disk: 'blind_spot',
+  vitreous_humor: 'vitreous_humor', vitreous_humour: 'vitreous_humor', vitreous: 'vitreous_humor',
+};
+
+export interface EyeCrossSectionFigure {
+  highlight: EyePart[];
+  showLightPath: boolean;
+  title?: string;
+}
+
+/** Horizontal section of the human eye. Light enters from the left. Structure
+ *  is fixed; `highlight` emphasises parts and `showLightPath` toggles the
+ *  incoming-ray path that converges on the retina. */
+export function solveEyeCrossSection(params: Record<string, unknown>): EyeCrossSectionFigure {
+  return {
+    highlight: resolveHighlight(params, EYE_ALIASES),
+    showLightPath: boolDefault(params.showLightPath, true),
+    title: titleOf(params),
+  };
+}
+
+const EYE_LABELS: Record<EyePart, string> = {
+  cornea: 'Cornea',
+  aqueous_humor: 'Aqueous humour',
+  iris: 'Iris',
+  pupil: 'Pupil',
+  lens: 'Lens',
+  ciliary_body: 'Ciliary body',
+  suspensory_ligaments: 'Suspensory ligaments',
+  sclera: 'Sclera',
+  choroid: 'Choroid',
+  retina: 'Retina',
+  fovea: 'Fovea',
+  optic_nerve: 'Optic nerve',
+  blind_spot: 'Blind spot',
+  vitreous_humor: 'Vitreous humour',
+};
+const EYE_DESC: Record<EyePart, string> = {
+  cornea: 'the cornea — the transparent front dome that does most of the light bending (refraction)',
+  aqueous_humor: 'the aqueous humour — the watery fluid in the front chamber, between cornea and lens',
+  iris: 'the iris — the coloured ring of muscle that adjusts the pupil size to control light',
+  pupil: 'the pupil — the central opening that light passes through',
+  lens: 'the lens — fine-focuses light onto the retina by changing shape (accommodation)',
+  ciliary_body: 'the ciliary body — the muscle that changes the lens shape',
+  suspensory_ligaments: 'the suspensory ligaments (zonules) — hold the lens and transmit ciliary-muscle tension',
+  sclera: 'the sclera — the tough white outer coat that protects and shapes the eyeball',
+  choroid: 'the choroid — the dark middle layer with blood vessels that nourishes the eye and absorbs stray light',
+  retina: 'the retina — the inner light-sensitive layer of rods and cones where the image forms',
+  fovea: 'the fovea (yellow spot) — the retina’s point of sharpest, most detailed vision',
+  optic_nerve: 'the optic nerve — carries the visual signals from the retina to the brain',
+  blind_spot: 'the blind spot (optic disc) — where the optic nerve leaves; it has no photoreceptors',
+  vitreous_humor: 'the vitreous humour — the clear jelly that fills the large chamber behind the lens',
+};
+
+export const eyeFeatureNames = {
+  figure: 'eye-cross-section',
+  part: (id: string): string => `eye-${id.replace(/_/g, '-')}`,
+};
+
+export function buildEyeCrossSectionManifest(figure: EyeCrossSectionFigure): FeatureManifestEntry[] {
+  const N = eyeFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: figure.title ? `Eye cross-section: ${figure.title}` : 'A horizontal section of the human eye',
+      labels: ['the eye', 'the eye diagram', 'the eyeball', 'the cross-section', 'the diagram', 'the figure'],
+      displayName: figure.title || 'Eye cross-section',
+      scribbleable: true,
+    },
+  ];
+  for (const part of EYE_PARTS) {
+    const isArea = part === 'sclera' || part === 'choroid' || part === 'retina' || part === 'vitreous_humor' || part === 'aqueous_humor';
+    feats.push({
+      name: N.part(part),
+      kind: isArea ? 'area' : 'point',
+      description: EYE_DESC[part],
+      labels: [EYE_LABELS[part], `the ${EYE_LABELS[part].toLowerCase()}`, part.replace(/_/g, ' ')],
+      displayName: EYE_LABELS[part],
+      scribbleable: true,
+    });
+  }
+  return feats;
+}

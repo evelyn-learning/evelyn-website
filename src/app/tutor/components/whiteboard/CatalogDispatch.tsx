@@ -109,6 +109,7 @@ import {
   CatalogRespiratorySystemRenderer,
   CatalogFlowerStructureRenderer,
   CatalogEnergyPyramidRenderer,
+  CatalogEyeCrossSectionRenderer,
 } from './CatalogBioAnatomyRenderers';
 import {
   CatalogBohrRenderer,
@@ -297,6 +298,8 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 28 — advanced math (Argand) + ELA (Freytag)
     case 'complex_plane':              return <CatalogComplexPlaneRenderer figure={figure} />;
     case 'plot_diagram':               return <CatalogPlotDiagramRenderer figure={figure} />;
+    // Phase 29 — biology (sense-organ cross-sections)
+    case 'eye_cross_section':          return <CatalogEyeCrossSectionRenderer figure={figure} />;
 
     default:
       return (

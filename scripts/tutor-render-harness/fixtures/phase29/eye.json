@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "eye_cross_section", "params": { "title": "The human eye" } }, "label": "eye", "expect": "render" }

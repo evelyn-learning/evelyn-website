@@ -161,7 +161,9 @@ export type DiagramKindId =
   | 'energy_pyramid'
   // Phase 28 — advanced math (Argand) + ELA (Freytag)
   | 'complex_plane'
-  | 'plot_diagram';
+  | 'plot_diagram'
+  // Phase 29 — biology (sense-organ cross-sections)
+  | 'eye_cross_section';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {
