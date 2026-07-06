@@ -34,6 +34,7 @@ const {
   maxMoleculeAtoms, maxMoleculeBonds, maxBars,
   minCycleStages, maxCycleStages, maxCycleRadius,
   minFlowSteps, maxFlowSteps, maxBalanceTilt, minIconSize, maxIconSize,
+  minParts, maxParts, minBranches, maxBranches, maxNodes, maxEdges, minEvents, maxEvents,
 } = SKETCH_BOUNDS;
 
 /** Trim + cap a list of short text labels (stages, steps) → clean string[]. */
@@ -537,6 +538,90 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         size: Math.min(maxIconSize, Math.max(minIconSize, size)),
         ...styled,
       };
+    }
+    case 'part_whole': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      let parts = num(p.parts);
+      if (cx === null || cy === null || r === null || parts === null) return null;
+      if (r <= 0) return null;
+      parts = Math.round(Math.min(maxParts, Math.max(minParts, parts)));
+      const filled = num(p.filled);
+      const lbl = tag(p.label);
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxCoord, r),
+        parts,
+        ...(filled !== null ? { filled: Math.round(Math.min(parts, Math.max(0, filled))) } : {}),
+        ...(lbl ? { label: lbl } : {}),
+        ...styled,
+      };
+    }
+    case 'tree_diagram': {
+      const x = coord(p.x), y = coord(p.y);
+      if (x === null || y === null) return null;
+      const root = tag(p.root);
+      if (!root) return null;
+      const branches = textList(p.branches, maxBranches);
+      if (branches.length < minBranches) return null;
+      return { type, x, y, root, branches, ...styled };
+    }
+    case 'network': {
+      if (!Array.isArray(p.nodes) || !Array.isArray(p.edges)) return null;
+      const nodes: { x: number; y: number; label?: string }[] = [];
+      for (const nd of p.nodes) {
+        const nx = coord((nd as { x?: unknown })?.x);
+        const ny = coord((nd as { y?: unknown })?.y);
+        if (nx === null || ny === null) continue;
+        const lbl = tag((nd as { label?: unknown })?.label);
+        nodes.push({ x: nx, y: ny, ...(lbl ? { label: lbl } : {}) });
+        if (nodes.length >= maxNodes) break;
+      }
+      if (nodes.length < 2) return null;
+      const edges: { a: number; b: number }[] = [];
+      for (const e of p.edges) {
+        const ai = num((e as { a?: unknown })?.a);
+        const bi = num((e as { b?: unknown })?.b);
+        if (ai === null || bi === null) continue;
+        const a2 = Math.round(ai), b2 = Math.round(bi);
+        if (a2 < 0 || b2 < 0 || a2 >= nodes.length || b2 >= nodes.length || a2 === b2) continue;
+        edges.push({ a: a2, b: b2 });
+        if (edges.length >= maxEdges) break;
+      }
+      return { type, nodes, edges, ...styled };
+    }
+    case 'speech_bubble': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      const text = typeof p.text === 'string' ? p.text.trim().slice(0, maxLabelLen) : '';
+      if (x === null || y === null || w === null || h === null || !text) return null;
+      if (w <= 0 || h <= 0) return null;
+      const tailX = coord(p.tailX);
+      const tailY = coord(p.tailY);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        text,
+        ...(tailX !== null ? { tailX } : {}),
+        ...(tailY !== null ? { tailY } : {}),
+        ...styled,
+      };
+    }
+    case 'timeline': {
+      const x1 = coord(p.x1), y1 = coord(p.y1), x2 = coord(p.x2), y2 = coord(p.y2);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+      if (x1 === x2 && y1 === y2) return null;
+      const events = Array.isArray(p.events)
+        ? p.events
+            .map((e) => ({ at: num((e as { at?: unknown })?.at), label: tag((e as { label?: unknown })?.label) }))
+            .filter((e): e is { at: number; label: string } => e.at !== null && !!e.label)
+            .map((e) => ({ at: Math.min(1, Math.max(0, e.at)), label: e.label }))
+            .slice(0, maxEvents)
+        : [];
+      if (events.length < minEvents) return null;
+      return { type, x1, y1, x2, y2, events, ...styled };
     }
     case 'rect': {
       const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);

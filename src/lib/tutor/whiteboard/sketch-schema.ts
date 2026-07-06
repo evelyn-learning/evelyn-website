@@ -115,6 +115,18 @@ export const SKETCH_BOUNDS = {
   // icon: a glyph from ICON_NAMES at the given bounding size
   minIconSize: 6,
   maxIconSize: 60,
+  // part_whole: a pie cut into `parts` equal wedges, `filled` shaded
+  minParts: 2,
+  maxParts: 12,
+  // tree_diagram: a root with `branches` child boxes
+  minBranches: 2,
+  maxBranches: 5,
+  // network: labelled nodes joined by edges
+  maxNodes: 8,
+  maxEdges: 14,
+  // timeline: events marked along a line
+  minEvents: 1,
+  maxEvents: 6,
 } as const;
 
 export interface Pt {
@@ -424,6 +436,64 @@ export type SketchPrimitive =
       y: number;
       size: number;
     } & Styled)
+  // Parametric: a PART-WHOLE pie — a circle at (cx,cy) radius r cut into `parts`
+  // equal wedges, the first `filled` of them shaded (with the `fill` colour token,
+  // else blue). Optional `label` under it (e.g. "3/4" or "75%"). For fractions,
+  // percentages, proportions, a budget share. ONE primitive draws the whole pie.
+  | ({
+      type: 'part_whole';
+      cx: number;
+      cy: number;
+      r: number;
+      parts: number;
+      filled?: number;
+      label?: string;
+    } & Styled)
+  // Parametric: a TREE DIAGRAM — a `root` box at the top with `branches` child
+  // boxes in a row below, joined by connector lines. For a hierarchy / breakdown /
+  // classification / family or decision tree / an idea splitting into parts. ONE
+  // primitive draws the root, the children and the connectors.
+  | ({
+      type: 'tree_diagram';
+      x: number;
+      y: number;
+      root: string;
+      branches: string[];
+    } & Styled)
+  // Parametric: a NETWORK / concept map — labelled `nodes` (circles at (x,y)) joined
+  // by `edges` (plain lines between node indices a,b). For a mind-map, a concept
+  // map, relationships, a small graph. ONE primitive draws every node + edge.
+  | ({
+      type: 'network';
+      nodes: { x: number; y: number; label?: string }[];
+      edges: { a: number; b: number }[];
+    } & Styled)
+  // Parametric: a SPEECH BUBBLE — a rounded box (x,y = top-left; w,h) holding
+  // `text`, with a tail pointing to (tailX,tailY) (default just below-left). For
+  // dialogue, a character "saying" something, a quote, a callout. ONE primitive
+  // draws the bubble + tail (with the text centered inside).
+  | ({
+      type: 'speech_bubble';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      text: string;
+      tailX?: number;
+      tailY?: number;
+    } & Styled)
+  // Parametric: a TIMELINE — a line (x1,y1)→(x2,y2) with `events` marked at
+  // fractional positions `at` (0..1) and labelled alternately above/below. For a
+  // sequence of dated events, a history timeline, project phases. ONE primitive
+  // draws the line, the markers and the labels.
+  | ({
+      type: 'timeline';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      events: { at: number; label: string }[];
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -466,6 +536,11 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'flow_chain',
   'balance_scale',
   'icon',
+  'part_whole',
+  'tree_diagram',
+  'network',
+  'speech_bubble',
+  'timeline',
   'label',
 ];
 
@@ -678,6 +753,32 @@ export const SKETCH_TOOL_SCHEMA = {
             description: 'icon: which glyph to draw (one of the fixed set).',
           },
           size: { type: 'number', description: 'icon: glyph bounding height in canvas units (e.g. 20).' },
+          // part_whole (a pie cut into equal wedges, some shaded)
+          parts: { type: 'number', description: 'part_whole: number of equal wedges (2..12).' },
+          filled: { type: 'number', description: 'part_whole: how many wedges are shaded (0..parts). e.g. 3 of 4.' },
+          // tree_diagram (a root box + child boxes)
+          root: { type: 'string', description: 'tree_diagram: the root/top box label.' },
+          branches: { type: 'array', items: { type: 'string' }, description: 'tree_diagram: the child box labels under the root (2..5).' },
+          // network (labelled nodes joined by edges)
+          nodes: {
+            type: 'array',
+            description: 'network: nodes as {x,y,label?} on the 0..100 canvas (label = a short word).',
+            items: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, label: { type: 'string' } }, required: ['x', 'y'] },
+          },
+          edges: {
+            type: 'array',
+            description: 'network: edges linking node indices {a,b}.',
+            items: { type: 'object', properties: { a: { type: 'number' }, b: { type: 'number' } }, required: ['a', 'b'] },
+          },
+          // speech_bubble (a bubble with a tail)
+          tailX: { type: 'number', description: 'speech_bubble: x the tail points to (default just below-left of the bubble).' },
+          tailY: { type: 'number', description: 'speech_bubble: y the tail points to (default just below the bubble).' },
+          // timeline (events marked along a line)
+          events: {
+            type: 'array',
+            description: 'timeline: events as {at, label} where at is 0..1 along the line (0 = start, 1 = end).',
+            items: { type: 'object', properties: { at: { type: 'number' }, label: { type: 'string' } }, required: ['at', 'label'] },
+          },
           points: {
             type: 'array',
             items: {

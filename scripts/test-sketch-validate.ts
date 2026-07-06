@@ -15,6 +15,7 @@ import {
   PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
   PLOT_POINT, PLANET_ORBIT, WATER_MOLECULE, BAR_HEIGHTS,
   WATER_CYCLE, FOOD_CHAIN, TRADE_OFF_SCALE, SUN_AND_TREE,
+  FRACTION_PIE, ANIMAL_TREE, CONCEPT_MAP, CELL_SAYS, HISTORY_TIMELINE,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -500,6 +501,58 @@ check('icon with unknown name dropped → null',
 check('icon missing size dropped → null',
   validateSketch({ primitives: [{ type: 'icon', name: 'sun', x: 50, y: 50 }] }) === null);
 
+// ── part_whole primitive (Wave 5) ──
+const pw = validateSketch({ primitives: [
+  { type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 3, label: '3/4' },
+] }) as any[];
+check('part_whole validates + keeps parts/filled/label', !!pw && pw[0].parts === 4 && pw[0].filled === 3 && pw[0].label === '3/4');
+check('part_whole filled clamps to parts',
+  (validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 99 }] }) as any[])[0].filled === 4);
+check('part_whole parts clamps to maxParts',
+  (validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 50 }] }) as any[])[0].parts === SKETCH_BOUNDS.maxParts);
+check('part_whole r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 0, parts: 4 }] }) === null);
+
+// ── tree_diagram primitive (Wave 5) ──
+const td = validateSketch({ primitives: [
+  { type: 'tree_diagram', x: 50, y: 20, root: 'Animals', branches: ['Mammals', 'Birds', 'Fish'] },
+] }) as any[];
+check('tree_diagram validates + keeps root/branches', !!td && td[0].root === 'Animals' && td[0].branches.length === 3);
+check('tree_diagram <2 branches dropped → null',
+  validateSketch({ primitives: [{ type: 'tree_diagram', x: 50, y: 20, root: 'X', branches: ['only'] }] }) === null);
+check('tree_diagram missing root dropped → null',
+  validateSketch({ primitives: [{ type: 'tree_diagram', x: 50, y: 20, branches: ['A', 'B'] }] }) === null);
+
+// ── network primitive (Wave 5) ──
+const nw = validateSketch({ primitives: [
+  { type: 'network', nodes: [{ x: 50, y: 24, label: 'Energy' }, { x: 24, y: 54, label: 'Heat' }, { x: 76, y: 54 }], edges: [{ a: 0, b: 1 }, { a: 0, b: 2 }] },
+] }) as any[];
+check('network validates + keeps nodes/edges', !!nw && nw[0].nodes.length === 3 && nw[0].edges.length === 2);
+check('network drops edges referencing a missing node',
+  (validateSketch({ primitives: [{ type: 'network', nodes: [{ x: 20, y: 20 }, { x: 60, y: 60 }], edges: [{ a: 0, b: 5 }, { a: 0, b: 1 }] }] }) as any[])[0].edges.length === 1);
+check('network <2 valid nodes dropped → null',
+  validateSketch({ primitives: [{ type: 'network', nodes: [{ x: 20, y: 20 }], edges: [] }] }) === null);
+
+// ── speech_bubble primitive (Wave 5) ──
+const sb = validateSketch({ primitives: [
+  { type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: 'I make energy!', tailX: 44, tailY: 58 },
+] }) as any[];
+check('speech_bubble validates + keeps text/tail', !!sb && sb[0].text === 'I make energy!' && sb[0].tailX === 44 && sb[0].tailY === 58);
+check('speech_bubble empty text dropped → null',
+  validateSketch({ primitives: [{ type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: '  ' }] }) === null);
+
+// ── timeline primitive (Wave 5) ──
+const tl = validateSketch({ primitives: [
+  { type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0, label: '1776' }, { at: 0.4, label: '1865' }, { at: 1, label: 'now' }] },
+] }) as any[];
+check('timeline validates + keeps events', !!tl && tl[0].events.length === 3 && tl[0].events[0].label === '1776');
+check('timeline event `at` clamps to 0..1',
+  (validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 9, label: 'late' }] }] }) as any[])[0].events[0].at === 1);
+check('timeline events capped at maxEvents',
+  (validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: Array.from({ length: 12 }, (_, i) => ({ at: i / 12, label: `e${i}` })) }] }) as any[])[0].events.length === SKETCH_BOUNDS.maxEvents);
+check('timeline no valid events dropped → null',
+  validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0.5 }] }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
@@ -512,6 +565,8 @@ for (const [name, prims] of [
   ['WATER_MOLECULE', WATER_MOLECULE], ['BAR_HEIGHTS', BAR_HEIGHTS],
   ['WATER_CYCLE', WATER_CYCLE], ['FOOD_CHAIN', FOOD_CHAIN],
   ['TRADE_OFF_SCALE', TRADE_OFF_SCALE], ['SUN_AND_TREE', SUN_AND_TREE],
+  ['FRACTION_PIE', FRACTION_PIE], ['ANIMAL_TREE', ANIMAL_TREE],
+  ['CONCEPT_MAP', CONCEPT_MAP], ['CELL_SAYS', CELL_SAYS], ['HISTORY_TIMELINE', HISTORY_TIMELINE],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));

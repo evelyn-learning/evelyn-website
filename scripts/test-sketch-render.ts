@@ -371,5 +371,51 @@ for (const name of ['sun', 'moon', 'cloud', 'raindrop', 'flame', 'tree', 'leaf',
   ]));
 }
 
+// ── Wave-5 primitives (part_whole, tree_diagram, network, speech_bubble, timeline) ──
+const pw = buildSketchPaths([
+  { type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 3, label: '3/4', fill: 'blue' } as SketchPrimitive,
+]);
+check('part_whole renders wedges + circle + spokes', pw.drawn[0].paths.length >= 3 + 1 + 4, `paths=${pw.drawn[0]?.paths.length}`);
+check('part_whole routes label to labels[]', pw.labels.length === 1 && pw.labels[0].text === '3/4');
+check('part_whole stays in bounds', inBounds([
+  { type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 3 } as SketchPrimitive,
+]));
+
+const td = buildSketchPaths([
+  { type: 'tree_diagram', x: 50, y: 20, root: 'Animals', branches: ['Mammals', 'Birds', 'Fish'] } as SketchPrimitive,
+]);
+check('tree_diagram renders root + children + connectors', td.drawn[0].paths.length >= 1 + 3 + 3, `paths=${td.drawn[0]?.paths.length}`);
+check('tree_diagram routes root + child labels', td.labels.length === 4 && td.labels[0].text === 'Animals');
+check('tree_diagram stays in bounds', inBounds([
+  { type: 'tree_diagram', x: 50, y: 20, root: 'Animals', branches: ['Mammals', 'Birds', 'Fish'] } as SketchPrimitive,
+]));
+
+const nw = buildSketchPaths([
+  { type: 'network', nodes: [{ x: 50, y: 24, label: 'Energy' }, { x: 24, y: 54, label: 'Heat' }, { x: 76, y: 54, label: 'Motion' }], edges: [{ a: 0, b: 1 }, { a: 0, b: 2 }] } as SketchPrimitive,
+]);
+check('network renders edges + nodes', nw.drawn[0].paths.length >= 2 + 3, `paths=${nw.drawn[0]?.paths.length}`);
+check('network routes node labels', nw.labels.length === 3 && nw.labels[0].text === 'Energy');
+check('network stays in bounds', inBounds([
+  { type: 'network', nodes: [{ x: 50, y: 24 }, { x: 24, y: 54 }, { x: 76, y: 54 }], edges: [{ a: 0, b: 1 }] } as SketchPrimitive,
+]));
+
+const sb = buildSketchPaths([
+  { type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: 'I make energy!', tailX: 44, tailY: 58 } as SketchPrimitive,
+]);
+check('speech_bubble renders bubble + tail', sb.drawn[0].paths.length >= 2, `paths=${sb.drawn[0]?.paths.length}`);
+check('speech_bubble routes text to labels[]', sb.labels.length === 1 && sb.labels[0].text === 'I make energy!');
+check('speech_bubble stays in bounds', inBounds([
+  { type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: 'hi', tailX: 44, tailY: 58 } as SketchPrimitive,
+]));
+
+const tl = buildSketchPaths([
+  { type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0, label: '1776' }, { at: 0.4, label: '1865' }, { at: 1, label: 'now' }] } as SketchPrimitive,
+]);
+check('timeline renders line + markers', tl.drawn[0].paths.length >= 3, `paths=${tl.drawn[0]?.paths.length}`);
+check('timeline routes one label per event', tl.labels.length === 3 && tl.labels[0].text === '1776');
+check('timeline stays in bounds', inBounds([
+  { type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0, label: '1776' }, { at: 0.5, label: 'mid' }, { at: 1, label: 'now' }] } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

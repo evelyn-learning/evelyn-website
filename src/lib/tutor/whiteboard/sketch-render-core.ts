@@ -161,6 +161,26 @@ function balanceGeom(p: { cx: number; cy: number; tilt?: number }): {
   };
 }
 
+/** Root + child box layout for a `tree_diagram`. Root centered at (x,y); children
+ *  in a row below, auto-sized to stay inside the canvas. Shared by the renderer
+ *  (boxes + connectors) and buildSketchPaths (the box labels). */
+function treeLayout(p: { x: number; y: number; root: string; branches: string[] }): {
+  root: { x: number; y: number; w: number; h: number };
+  children: { x: number; y: number; w: number; h: number; text: string }[];
+} {
+  const n = p.branches.length;
+  const rw = 26, rh = 12;
+  const root = { x: p.x - rw / 2, y: p.y, w: rw, h: rh };
+  let cw = 20, gap = 5;
+  const total = n * cw + (n - 1) * gap;
+  const maxW = 92;
+  if (total > maxW) { const sc = maxW / total; cw *= sc; gap *= sc; }
+  const startX = p.x - (n * cw + (n - 1) * gap) / 2;
+  const childY = p.y + 26;
+  const children = p.branches.map((text, i) => ({ x: startX + i * (cw + gap), y: childY, w: cw, h: 14, text }));
+  return { root, children };
+}
+
 /** Rough paths for one `icon` glyph — a simple, recognizable object drawn within
  *  a box of height `size` centered at (x,y). Deterministic (fixed seed) so the
  *  doodler never hand-places these strokes. */
@@ -930,6 +950,86 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       const fillHex = fillTok ? SKETCH_COLORS[fillTok] : undefined;
       return iconPaths(gen, p.name, p.x, p.y, p.size, seed, stroke, sw, fillHex);
     }
+    case 'part_whole': {
+      // A circle cut into `parts` equal wedges (spokes from the center), the first
+      // `filled` shaded. Low roughness keeps the spokes + rim crisp.
+      const { cx, cy, r, parts } = p;
+      const filled = Math.min(parts, Math.max(0, p.filled ?? 0));
+      const wedgeColor = fillTok ? SKETCH_COLORS[fillTok] : SKETCH_COLORS.blue;
+      const start = -Math.PI / 2; // first wedge starts at the top
+      const step = (2 * Math.PI) / parts;
+      const out: PathInfo[] = [];
+      for (let k = 0; k < filled; k++) {
+        const a0 = start + k * step, a1 = start + (k + 1) * step;
+        const pts: [number, number][] = [[cx, cy]];
+        const seg = 8;
+        for (let j = 0; j <= seg; j++) { const a = a0 + (a1 - a0) * (j / seg); pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+        out.push(...gen.toPaths(gen.polygon(pts, { roughness: 0.5, bowing: 0.4, seed: seed + k, stroke: wedgeColor, strokeWidth: 0.5, fill: wedgeColor, fillStyle: 'solid' })));
+      }
+      out.push(...gen.toPaths(gen.ellipse(cx, cy, r * 2, r * 2, { roughness: 0.5, bowing: 0.4, seed, stroke, strokeWidth: sw })));
+      for (let k = 0; k < parts; k++) {
+        const a = start + k * step;
+        out.push(...gen.toPaths(gen.line(cx, cy, cx + r * Math.cos(a), cy + r * Math.sin(a), { roughness: 0.5, bowing: 0.3, seed: seed + 30 + k, stroke, strokeWidth: sw * 0.8 })));
+      }
+      return out;
+    }
+    case 'tree_diagram': {
+      // Root box on top, child boxes in a row below, connectors between.
+      const { root, children } = treeLayout(p);
+      const rootBX = root.x + root.w / 2, rootBY = root.y + root.h;
+      const out: PathInfo[] = [];
+      children.forEach((c, i) => out.push(...gen.toPaths(gen.line(rootBX, rootBY, c.x + c.w / 2, c.y, { ...opts, seed: seed + 10 + i, strokeWidth: sw * 0.8 }))));
+      out.push(...gen.toPaths(gen.rectangle(root.x, root.y, root.w, root.h, { ...opts, seed })));
+      children.forEach((c, i) => out.push(...gen.toPaths(gen.rectangle(c.x, c.y, c.w, c.h, { ...opts, seed: seed + 20 + i }))));
+      return out;
+    }
+    case 'network': {
+      // Edges (rim-to-rim lines) under labelled node circles.
+      const nodeR = 7;
+      const out: PathInfo[] = [];
+      p.edges.forEach((e, ei) => {
+        const A = p.nodes[e.a], B = p.nodes[e.b];
+        if (!A || !B) return;
+        const dx = B.x - A.x, dy = B.y - A.y; const L = Math.hypot(dx, dy) || 1; const ux = dx / L, uy = dy / L;
+        out.push(...gen.toPaths(gen.line(A.x + ux * nodeR, A.y + uy * nodeR, B.x - ux * nodeR, B.y - uy * nodeR, { ...opts, seed: seed + ei })));
+      });
+      p.nodes.forEach((nd, ni) => {
+        out.push(...gen.toPaths(gen.ellipse(nd.x, nd.y, nodeR * 2, nodeR * 2, {
+          roughness: 0.5, bowing: 0.4, seed: seed + 30 + ni, stroke, strokeWidth: sw,
+          ...(fillTok ? { fill: SKETCH_COLORS[fillTok], fillStyle: 'solid' as const } : {}),
+        })));
+      });
+      return out;
+    }
+    case 'speech_bubble': {
+      // A rounded box + a triangular tail pointing at (tailX,tailY).
+      const { x, y, w, h } = p;
+      const out: PathInfo[] = [];
+      out.push(...gen.toPaths(gen.rectangle(x, y, w, h, { ...opts, seed })));
+      const tx = p.tailX ?? (x + w * 0.28);
+      const ty = p.tailY ?? (y + h + 14);
+      const baseX = Math.min(x + w * 0.72, Math.max(x + w * 0.1, tx));
+      out.push(...gen.toPaths(gen.polygon([[baseX - 4, y + h], [baseX + 5, y + h], [tx, ty]], { ...opts, seed: seed + 1 })));
+      return out;
+    }
+    case 'timeline': {
+      // A line with an arrowhead, event dots at fractional positions, and a short
+      // connector to each label (labels alternate above/below in buildSketchPaths).
+      const { x1, y1, x2, y2 } = p;
+      const dx = x2 - x1, dy = y2 - y1; const L = Math.hypot(dx, dy) || 1;
+      const ux = dx / L, uy = dy / L; const px = -uy, py = ux;
+      const out: PathInfo[] = [];
+      out.push(...gen.toPaths(gen.line(x1, y1, x2, y2, { ...opts, seed })));
+      const ang = Math.atan2(dy, dx); const AL = 4, spr = 0.5;
+      for (const sg of [ang + Math.PI - spr, ang + Math.PI + spr]) out.push(...gen.toPaths(gen.line(x2, y2, x2 + AL * Math.cos(sg), y2 + AL * Math.sin(sg), { ...opts, seed })));
+      p.events.forEach((e, ei) => {
+        const ex = x1 + dx * e.at, ey = y1 + dy * e.at;
+        const side = ei % 2 === 0 ? -1 : 1;
+        out.push(...gen.toPaths(gen.line(ex, ey, ex + px * side * 6, ey + py * side * 6, { ...opts, seed: seed + 20 + ei, strokeWidth: sw * 0.7 })));
+        out.push(...gen.toPaths(gen.ellipse(ex, ey, 3, 3, { roughness: 0.4, bowing: 0.3, seed: seed + 10 + ei, stroke, strokeWidth: sw, fill: stroke, fillStyle: 'solid' })));
+      });
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -1068,6 +1168,31 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
       const g = balanceGeom(p);
       if (p.leftLabel) pushLabel(g.lx, g.ly + g.hang + 8, p.leftLabel, i * 100, 4.5, 'middle', p.stroke);
       if (p.rightLabel) pushLabel(g.rx, g.ry + g.hang + 8, p.rightLabel, i * 100 + 1, 4.5, 'middle', p.stroke);
+    } else if (p.type === 'part_whole' && p.label) {
+      // the fraction/percent caption sits below the pie
+      pushLabel(p.cx, p.cy + p.r + 8, p.label, i, 5.5, 'middle', p.stroke);
+    } else if (p.type === 'tree_diagram') {
+      // root label + one label centered in each child box
+      const { root, children } = treeLayout(p);
+      pushLabel(root.x + root.w / 2, root.y + root.h / 2, p.root, i, 4.3, 'middle', p.stroke);
+      children.forEach((c, si) => pushLabel(c.x + c.w / 2, c.y + c.h / 2, c.text, i * 100 + si, 4.0, 'middle', p.stroke));
+    } else if (p.type === 'network') {
+      // a word label centered in each node circle
+      p.nodes.forEach((nd, ni) => {
+        if (nd.label) pushLabel(nd.x, nd.y, nd.label, i * 100 + ni, 3.6, 'middle', p.stroke);
+      });
+    } else if (p.type === 'speech_bubble') {
+      // the text centered inside the bubble
+      pushLabel(p.x + p.w / 2, p.y + p.h / 2, p.text, i, 4.2, 'middle', p.stroke);
+    } else if (p.type === 'timeline') {
+      // each event label alternates above/below, beyond its connector
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1; const L = Math.hypot(dx, dy) || 1;
+      const px = -dy / L, py = dx / L;
+      p.events.forEach((e, ei) => {
+        const ex = p.x1 + dx * e.at, ey = p.y1 + dy * e.at;
+        const side = ei % 2 === 0 ? -1 : 1;
+        pushLabel(ex + px * side * 9, ey + py * side * 9, e.label, i * 100 + ei, 4.0, 'middle', p.stroke);
+      });
     }
   });
   return { drawn, labels };

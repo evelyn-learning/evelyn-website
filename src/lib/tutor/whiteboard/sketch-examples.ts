@@ -309,6 +309,52 @@ export const SUN_AND_TREE: SketchPrimitive[] = [
   { type: 'label', x: 46, y: 40, text: 'sunlight', fontSize: 5, stroke: 'amber', anchor: 'middle' },
 ];
 
+// PART-WHOLE exemplar — teaches: use ONE `part_whole` for a fraction / percentage
+// / proportion, never hand-drawn pie slices. Three quarters shaded. (Wave-5.)
+export const FRACTION_PIE: SketchPrimitive[] = [
+  { type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 3, label: '3/4', fill: 'blue', stroke: 'ink', strokeWidth: 1.2 },
+];
+
+// TREE-DIAGRAM exemplar — teaches: use ONE `tree_diagram` for a hierarchy /
+// breakdown / classification, never hand-drawn boxes + lines. Animals split into
+// three groups. (Wave-5 tree_diagram primitive.)
+export const ANIMAL_TREE: SketchPrimitive[] = [
+  { type: 'tree_diagram', x: 50, y: 20, root: 'Animals', branches: ['Mammals', 'Birds', 'Fish'], stroke: 'ink', strokeWidth: 1.2 },
+];
+
+// NETWORK exemplar — teaches: use ONE `network` for a concept map / relationships
+// / mind-map, never hand-placed circles + lines. Energy at the center linked to
+// its forms. (Wave-5 network primitive.)
+export const CONCEPT_MAP: SketchPrimitive[] = [
+  {
+    type: 'network',
+    nodes: [
+      { x: 50, y: 24, label: 'Energy' }, { x: 24, y: 54, label: 'Heat' },
+      { x: 50, y: 72, label: 'Light' }, { x: 76, y: 54, label: 'Motion' },
+    ],
+    edges: [{ a: 0, b: 1 }, { a: 0, b: 2 }, { a: 0, b: 3 }],
+    stroke: 'ink', strokeWidth: 1.2,
+  },
+];
+
+// SPEECH-BUBBLE exemplar — teaches: use ONE `speech_bubble` for dialogue / a
+// character "saying" something / a callout, never a hand-drawn bubble. A cell
+// part introduces itself. (Wave-5 speech_bubble primitive.)
+export const CELL_SAYS: SketchPrimitive[] = [
+  { type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: 'I make energy!', tailX: 44, tailY: 58, stroke: 'blue', strokeWidth: 1.2 },
+  { type: 'label', x: 44, y: 72, text: 'mitochondrion', fontSize: 5, stroke: 'gray', anchor: 'middle' },
+];
+
+// TIMELINE exemplar — teaches: use ONE `timeline` for a sequence of dated events,
+// never hand-placed marks. Four moments in US history. (Wave-5 timeline primitive.)
+export const HISTORY_TIMELINE: SketchPrimitive[] = [
+  {
+    type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50,
+    events: [{ at: 0, label: '1776' }, { at: 0.4, label: '1865' }, { at: 0.75, label: '1969' }, { at: 1, label: 'today' }],
+    stroke: 'ink', strokeWidth: 1.3,
+  },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -451,5 +497,30 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'the sun shining down on a tree',
     labels: ['sunlight'],
     primitives: SUN_AND_TREE,
+  },
+  {
+    concept: 'three quarters of a whole shaded in — the fraction three fourths',
+    labels: ['3/4'],
+    primitives: FRACTION_PIE,
+  },
+  {
+    concept: 'animals classified into mammals, birds and fish',
+    labels: [],
+    primitives: ANIMAL_TREE,
+  },
+  {
+    concept: 'a concept map: energy at the center linked to heat, light and motion',
+    labels: [],
+    primitives: CONCEPT_MAP,
+  },
+  {
+    concept: 'the mitochondrion saying "I make energy!"',
+    labels: ['mitochondrion'],
+    primitives: CELL_SAYS,
+  },
+  {
+    concept: 'a timeline of four moments in US history',
+    labels: [],
+    primitives: HISTORY_TIMELINE,
   },
 ];
