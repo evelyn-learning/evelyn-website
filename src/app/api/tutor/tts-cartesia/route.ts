@@ -11,6 +11,17 @@
  *
  * Response body is streamed through as-is (no buffering) so first-byte
  * latency to the client matches Cartesia's own TTFA.
+ *
+ * Retry (Task 2 review follow-up, folded into Task 3): the first request
+ * after a cold start can hit an undici ConnectTimeoutError against
+ * api.cartesia.ai, which — left unguarded — silently stalls the client for
+ * ~10s before its own fetch gives up (dead air on the first post-deploy
+ * sentence). Wrap attempt 1 with AbortSignal.timeout(3000) so a slow/dead
+ * connect fails fast, then retry ONCE with a plain fetch (no timeout
+ * wrapper) — by then the connection pool has usually recovered. Only
+ * connect-level failures (thrown errors / AbortError) trigger the retry;
+ * a normal non-OK HTTP response is NOT retried and falls straight through
+ * to the existing 502 handling below.
  */
 
 import { NextRequest } from 'next/server';
@@ -48,7 +59,7 @@ export async function POST(request: NextRequest) {
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },
     };
 
-    const ttsRes = await fetch(CARTESIA_TTS_URL, {
+    const fetchOpts = {
       method: 'POST',
       headers: {
         'X-API-Key': apiKey,
@@ -56,7 +67,19 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(ttsBody),
-    });
+    } as const;
+
+    let ttsRes: Response;
+    try {
+      // Attempt 1: fail fast on a dead/slow connect (cold-start undici
+      // ConnectTimeoutError) instead of the client's own ~10s stall.
+      ttsRes = await fetch(CARTESIA_TTS_URL, { ...fetchOpts, signal: AbortSignal.timeout(3000) });
+    } catch (connectErr) {
+      console.warn('[TTS-Cartesia] attempt 1 failed (connect/timeout), retrying once:', connectErr);
+      // Attempt 2: plain fetch, no timeout wrapper — give the connection
+      // pool a real chance to complete once it's warm.
+      ttsRes = await fetch(CARTESIA_TTS_URL, fetchOpts);
+    }
 
     if (!ttsRes.ok || !ttsRes.body) {
       const errorText = await ttsRes.text();

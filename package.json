@@ -41,6 +41,7 @@
     "test:render-judge": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-render-harness/judge.ts",
     "test:board-anchor-assist": "npx tsx scripts/test-board-anchor-assist.ts",
     "test:cartesia-registry": "npx tsx scripts/test-cartesia-voice-registry.ts",
+    "test:tts-flag": "npx tsx scripts/test-tts-engine-flag.ts",
     "test:sketch-validate": "npx tsx scripts/test-sketch-validate.ts",
     "test:sketch-render": "npx tsx scripts/test-sketch-render.ts",
     "sketch-gallery": "npx tsx scripts/sketch-gallery.ts",

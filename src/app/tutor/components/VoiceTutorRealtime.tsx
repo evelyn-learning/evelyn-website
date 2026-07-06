@@ -328,8 +328,14 @@ interface VoiceTutorRealtimeProps {
   useRealtimeV2?: boolean;
   /** TTS provider for relay-mode voicing of the brain's text.
    *  - 'realtime' (default): Realtime out-of-band response. Highest quality, expensive.
-   *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper. */
-  ttsProvider?: 'realtime' | 'openai-mini';
+   *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper.
+   *  - 'cartesia': Cartesia sonic-3.5 via /api/tutor/tts-cartesia. Same
+   *    HTTP-TTS flow as 'openai-mini' (Cartesia migration Phase 2, Task 3). */
+  ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia';
+  /** Cartesia voice id for the persona-mapped teacher voice (Task 3).
+   *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
+   *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */
+  cartesiaVoiceId?: string;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -475,6 +481,7 @@ export function VoiceTutorRealtime({
   claudeBrainMode = false,
   useRealtimeV2 = false,
   ttsProvider = 'realtime',
+  cartesiaVoiceId,
   onLessonPlanProgress,
   onTutorBusy,
   onVoiceStateChange,
@@ -10623,6 +10630,7 @@ export function VoiceTutorRealtime({
           instructions: RELAY_MODE_PROMPT,
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
+          cartesiaVoiceId,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,

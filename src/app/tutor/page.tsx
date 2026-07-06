@@ -55,6 +55,8 @@ import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
+import { resolveCartesiaVoice } from '@/lib/tutor/voice/cartesia-voice-registry';
+import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 
 type InputMode = 'text' | 'voice';
 type VoiceEngine = 'classic' | 'realtime' | 'realtime-2' | 'realtime-validated' | 'claude-brain' | 'gemini-live';
@@ -63,6 +65,10 @@ type VoiceEngine = 'classic' | 'realtime' | 'realtime-2' | 'realtime-validated' 
 const ENV_VOICE_ENGINE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_ENGINE as VoiceEngine) || 'classic';
 const ENV_OPENAI_VOICE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_OPENAI as OpenAIVoice) || 'alloy';
 const ENV_CLASSIC_VOICE = (process.env.NEXT_PUBLIC_TUTOR_VOICE_CLASSIC as VoiceId) || 'male-1';
+// Cartesia migration Phase 2, Task 3. Default OFF ('realtime' unaffected
+// unless this is literally 'cartesia'). See resolveTtsProvider — the
+// existing ?tts=mini URL override still wins over this flag.
+const ENV_TTS_ENGINE = process.env.NEXT_PUBLIC_TUTOR_TTS_ENGINE;
 // Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
 // Mirrors the same flag read in VoiceTutorRealtime.tsx (single env var,
 // read independently in each module — no shared runtime state needed).
@@ -144,7 +150,12 @@ function TutorPage() {
   // /tutor?tts=mini switches relay-mode TTS to gpt-4o-mini-tts for cost
   // comparison. Default 'realtime' (out-of-band response, highest quality).
   const ttsParam = searchParams.get('tts');
-  const ttsProvider: 'realtime' | 'openai-mini' = ttsParam === 'mini' ? 'openai-mini' : 'realtime';
+  // Cartesia migration Phase 2, Task 3: ?tts=mini still wins over the env
+  // flag (unchanged precedence); NEXT_PUBLIC_TUTOR_TTS_ENGINE=cartesia only
+  // takes effect when the URL param is absent/non-'mini'. Flag unset (the
+  // shipped default) ⇒ resolveTtsProvider(ttsParam, undefined) reproduces
+  // the exact prior ternary, so flag-off markup is byte-identical.
+  const ttsProvider = resolveTtsProvider(ttsParam, ENV_TTS_ENGINE);
   // /tutor?studentId=X passes a stable identity to the realtime component
   // so cross-session memory (mastery, gaps, recent sessions) commits at
   // session-end via /api/tutor/student-profile/[id]. Without this, the
@@ -293,6 +304,17 @@ function TutorPage() {
     TUTOR_PEDAGOGY_OPENER && selectedTeacher.voice?.provider === 'openai'
       ? (selectedTeacher.voice.voiceId as OpenAIVoice)
       : selectedOpenAIVoice;
+  // Cartesia migration Phase 2, Task 3: resolved unconditionally (not
+  // gated on TUTOR_PEDAGOGY_OPENER) since it's inert unless ttsProvider
+  // === 'cartesia', which itself requires the separate
+  // NEXT_PUBLIC_TUTOR_TTS_ENGINE=cartesia flag (or ?tts= override) to be
+  // on. selectedTeacherId already reflects any __tutorTestStart
+  // cfg.teacherId override (see the hook below), and defaults to
+  // DEMO_TEACHERS[0].id (Elena) otherwise.
+  const cartesiaVoiceId = useMemo(
+    () => resolveCartesiaVoice({ teacherId: selectedTeacherId }).voiceId,
+    [selectedTeacherId],
+  );
 
   // Session state
   // Reuse the URL's sid on reload so the engine session id is stable; else mint.
@@ -1959,6 +1981,7 @@ function TutorPage() {
         voice={effectiveOpenAIVoice}
         voiceEngine={voiceEngine}
         ttsProvider={ttsProvider}
+        cartesiaVoiceId={cartesiaVoiceId}
         // Dev-hook override, default 30 — identical to the literal the page
         // always passed (production markup unchanged).
         sessionMaxMinutes={testSessionMaxMinutes}
@@ -2515,6 +2538,7 @@ function TutorPage() {
                   claudeBrainMode={voiceEngine === 'claude-brain'}
                   useRealtimeV2={voiceEngine === 'realtime-2'}
                   ttsProvider={ttsProvider}
+                  cartesiaVoiceId={cartesiaVoiceId}
                   onLessonPlanProgress={setLessonProgress}
                   onTutorBusy={setIsProcessing}
                   onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
