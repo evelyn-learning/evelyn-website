@@ -12,6 +12,7 @@ import type {
   GapEntry,
   SessionMemory,
   StudentPreferences,
+  PlanContentSeen,
 } from '@/lib/tutor/student-profile/types';
 
 export interface IStudentProfile {
@@ -29,6 +30,7 @@ export interface IStudentProfile {
   schemaVersion: number;
   partnerId?: string;
   metadata?: Record<string, unknown>;
+  planContentSeen?: Record<string, PlanContentSeen>;
 }
 
 export type IStudentProfileDoc = mongoose.Document<string, object, IStudentProfile> & IStudentProfile;
@@ -54,6 +56,8 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
     schemaVersion: { type: Number, required: true, default: 1 },
     partnerId: { type: String, index: true },
     metadata: { type: Schema.Types.Mixed, default: {} },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    planContentSeen: { type: Schema.Types.Mixed as any, default: undefined },
   },
   {
     _id: false,
@@ -92,5 +96,6 @@ export function toStudentProfile(doc: IStudentProfileDoc): StudentProfile {
     schemaVersion: obj.schemaVersion,
     partnerId: obj.partnerId,
     metadata: obj.metadata,
+    planContentSeen: obj.planContentSeen,
   };
 }

@@ -414,7 +414,7 @@ export function buildContentVarietyDirective(seen: PlanContentSeen | undefined):
   const lines: string[] = [
     ``,
     `<content_variety>`,
-    `This student has worked through this plan before. Teach the SAME learning objectives, keep the vocabulary, the difficulty level, and the exact misconception each check targets — but make the HOOK, the WORKED EXAMPLE, and the EXTENSION materially different from the standard version and from what they have already seen. Fresh story, fresh objects, fresh numbers; same skill. Do NOT reuse any of these:`,
+    `RETURNING STUDENT — this is a REPEAT of a plan they have already done. The hook script, worked-example, and extension written in the segments above are the STANDARD version they have ALREADY experienced. Do NOT deliver those authored scripts this time. Instead invent FRESH equivalents: a new hook story with different objects, a worked example with a different real-world context and different numbers, a different extension — all teaching the SAME learning objectives, at the SAME difficulty, keeping the SAME vocabulary and targeting the SAME misconception in each check. Same skill, new clothing. In particular, do NOT reuse any of these already-seen fillings:`,
   ];
   for (const [label, arr] of shown) {
     lines.push(`  already seen (${label}): ${arr.map((s) => `"${s}"`).join(', ')}`);

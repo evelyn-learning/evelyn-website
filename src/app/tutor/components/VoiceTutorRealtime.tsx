@@ -965,11 +965,17 @@ export function VoiceTutorRealtime({
     if (!studentId) return;
     const accum = sessionAccumRef.current;
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0;
+    // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
+    // fillings shown, even on a session that accumulated nothing gradeable
+    // (e.g. a hook-only session the student didn't finish) — otherwise the
+    // seen-memory never populates and the next session can't diverge. Scoped
+    // to the flag so flag-off behavior is unchanged.
+    const finalCapture = opts?.final === true && TUTOR_CONTENT_VARIETY && !!lessonPlanId;
     // Intermediate flushes with nothing new are pure no-ops. A FINAL commit
-    // with an empty accumulator still posts when prior flushes committed
-    // data this session — it carries the transcript so the summary lands on
-    // the (upserted) SessionMemory entry.
-    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0)) return;
+    // with an empty accumulator still posts when prior flushes committed data
+    // this session (transcript → summary on the upserted SessionMemory) OR
+    // when it needs to capture content fillings.
+    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0) && !finalCapture) return;
     const isFinal = opts?.final === true;
     const transcript = isFinal
       ? transcriptRef.current
