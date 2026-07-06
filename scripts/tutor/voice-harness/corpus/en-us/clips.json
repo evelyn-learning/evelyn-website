@@ -1,0 +1,9 @@
+{
+  "clips": [
+    {
+      "file": "sample1.16k.wav",
+      "reference": "So the derivative of x^2 is 2x — watch what happens when we apply the power rule to x^5.",
+      "source": "synthetic — Cartesia Katie clip (pipeline check)"
+    }
+  ]
+}

@@ -54,3 +54,8 @@ artifacts/
 sketch-review/
 .claude/worktrees/
 .superpowers/
+
+# voice-harness generated corpus audio (fetched via scripts/tutor/voice-harness/fetch-corpus.ts)
+scripts/tutor/voice-harness/corpus/**/*.wav
+scripts/tutor/voice-harness/corpus/**/*.mp3
+scripts/tutor/voice-harness/corpus/**/*.flac
