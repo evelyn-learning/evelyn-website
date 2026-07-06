@@ -15,6 +15,13 @@ if (!baseVoiceId || !['male', 'female'].includes(gender) || !label) {
 }
 
 async function main() {
+  // Check candidates.json exists BEFORE the paid Cartesia localize call —
+  // otherwise a missing file wastes a paid API call before failing anyway.
+  const candidatesPath = path.join(process.cwd(), 'artifacts', 'voice-harness', 'candidates.json');
+  if (!fs.existsSync(candidatesPath)) {
+    console.error('candidates.json not found — run `npm run voice:discover` first');
+    process.exit(1);
+  }
   const created = await cartesiaLocalize({
     voiceId: baseVoiceId,
     name: `${label} (en-${dialect})`,
@@ -22,7 +29,6 @@ async function main() {
     originalSpeakerGender: gender as 'male' | 'female',
     dialect,
   });
-  const candidatesPath = path.join(process.cwd(), 'artifacts', 'voice-harness', 'candidates.json');
   const data = JSON.parse(fs.readFileSync(candidatesPath, 'utf8')) as { voices: VoiceCandidate[] };
   data.voices.push({
     provider: 'cartesia', voiceId: created.id,

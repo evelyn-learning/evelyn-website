@@ -18,11 +18,16 @@ function arg(name: string): string | undefined {
 const flag = (name: string) => process.argv.includes(`--${name}`);
 
 async function main() {
+  const engines = arg('engine') ? [arg('engine') as SttEngine] : ENGINES;
+  const accentArg = arg('accent');
+  if (accentArg && !ACCENTS.includes(accentArg as (typeof ACCENTS)[number])) {
+    console.error(`Unknown --accent "${accentArg}". Valid accents: ${ACCENTS.join(', ')}`);
+    process.exit(1);
+  }
+  const accents = accentArg ? [accentArg] : ACCENTS;
   const runId = `run-${new Date().toISOString().replace(/[:.]/g, '-')}`;
   const runDir = path.join(process.cwd(), 'artifacts', 'voice-harness', 'stt', runId);
   fs.mkdirSync(path.join(runDir, 'events'), { recursive: true });
-  const engines = arg('engine') ? [arg('engine') as SttEngine] : ENGINES;
-  const accents = arg('accent') ? [arg('accent')!] : ACCENTS;
   const realtimePace = !flag('fast');
   const probe = flag('probe');
 

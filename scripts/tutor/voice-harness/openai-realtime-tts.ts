@@ -11,6 +11,15 @@ export function openaiRealtimeTts(opts: { voice: string; text: string }):
   Promise<{ audio: Buffer; ttfaMs: number; totalMs: number }> {
   return new Promise((resolve, reject) => {
     const started = Date.now();
+    // TTFA is anchored to when response.create is actually sent, not to
+    // WebSocket construction — the latter would bake in TLS/WS handshake +
+    // session.update round-trip time, which Cartesia's clock never pays
+    // (its TTFA starts at a bare HTTP request). This keeps the two
+    // providers' TTFA numbers comparable. `totalMs` stays anchored at
+    // `started` (the honest end-to-end wall clock including connection
+    // setup) since production holds a persistent WS and only pays that
+    // cost once per session, not once per utterance.
+    let ttfaAnchor = started;
     let ttfaMs = -1;
     const parts: Buffer[] = [];
     const ws = new WebSocket(`wss://api.openai.com/v1/realtime?model=${MODEL}`, {
@@ -33,16 +42,21 @@ export function openaiRealtimeTts(opts: { voice: string; text: string }):
             'Do not add or omit anything:\n\n' + opts.text,
         },
       }));
+      ttfaAnchor = Date.now();
     });
     ws.on('message', (raw) => {
       let msg: { type?: string; delta?: string } = {};
       try { msg = JSON.parse(raw.toString()); } catch { return; }
       if (msg.type === 'response.output_audio.delta' || msg.type === 'response.audio.delta') {
-        if (ttfaMs < 0) ttfaMs = Date.now() - started;
+        if (ttfaMs < 0) ttfaMs = Date.now() - ttfaAnchor;
         if (msg.delta) parts.push(Buffer.from(msg.delta, 'base64'));
       } else if (msg.type === 'response.done') {
         clearTimeout(timeout);
         ws.close();
+        if (parts.length === 0) {
+          reject(new Error('no audio deltas received'));
+          return;
+        }
         resolve({ audio: pcm16ToWav(Buffer.concat(parts), 24000), ttfaMs, totalMs: Date.now() - started });
       } else if (msg.type === 'error') {
         clearTimeout(timeout);

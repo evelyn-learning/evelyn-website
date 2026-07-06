@@ -25,7 +25,12 @@ async function main() {
   const runDir = path.join(base, 'tts', runId);
   fs.mkdirSync(path.join(runDir, 'clips'), { recursive: true });
 
-  const candidates = JSON.parse(fs.readFileSync(path.join(base, 'candidates.json'), 'utf8')) as { voices: VoiceCandidate[] };
+  const candidatesPath = path.join(base, 'candidates.json');
+  if (!fs.existsSync(candidatesPath)) {
+    console.error('candidates.json not found — run `npm run voice:discover` first');
+    process.exit(1);
+  }
+  const candidates = JSON.parse(fs.readFileSync(candidatesPath, 'utf8')) as { voices: VoiceCandidate[] };
   let voices = [...candidates.voices.filter((v) => v.enabled), ...CONTROL_VOICES];
   const pFilter = arg('provider'); if (pFilter) voices = voices.filter((v) => v.provider === pFilter);
   const vFilter = arg('voice'); if (vFilter) voices = voices.filter((v) => v.voiceId.includes(vFilter) || v.label.toLowerCase().includes(vFilter.toLowerCase()));

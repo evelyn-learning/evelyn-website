@@ -33,7 +33,7 @@ exist after a fresh clone).
 |---|---|---|
 | `npm run voice:discover` | — | Calls Cartesia's voice-list API for `en/hi/ar/nl/de`, writes `voices-catalog.json` (full catalog per language) and, **only if it doesn't already exist**, seeds `candidates.json` with 5 pinned native voices (Katie/Skylar/Jameson en-US, Gemma/Archie en-GB, all `enabled:true`) plus every `hi/ar/nl/de` voice as an `enabled:false` carryover candidate for `en-in`/`en-ar-gulf`/`en-nl`/`en-de`. Never overwrites an existing `candidates.json` — delete it first to regenerate from scratch. |
 | `npm run voice:localize` | `-- <baseVoiceId> <male\|female> <label> [dialect=in]` | Calls Cartesia's `/voices/localize` on a base voice to mint an accented variant (`us`/`uk`/`au`/`in`/`so` supported), appends it to `candidates.json` with `technique:'localize'`, `enabled:true`. Example: `npm run voice:localize -- f786b574-daa5-4673-aa0c-cbe3e8534c02 female Katie` (en-IN by default). |
-| `npm run voice:tts` | `[-- --run <runId>] [--provider cartesia\|openai-realtime] [--voice <substr>] [--utterance <id>]` | Full matrix: every `enabled:true` voice in `candidates.json` **plus** the 4 hardcoded OpenAI Realtime control voices (`coral`/`ash`/`sage`/`ballad`, current production `DEMO_TEACHERS` set) × the 12 authored utterances (`utterances.ts`, run through the real `rewriteForTTS`). Writes `artifacts/voice-harness/tts/<runId>/clips/*.wav` + `manifest.json` (per-clip `ttfaMs`/`totalMs`, errors inline). **Paid** — each run hits the Cartesia and OpenAI Realtime APIs for every clip. |
+| `npm run voice:tts` | `[-- --run <runId>] [--provider cartesia\|openai-realtime] [--voice <substr>] [--utterance <id>]` | Full matrix: every `enabled:true` voice in `candidates.json` **plus** the 4 hardcoded OpenAI Realtime control voices (`coral`/`ash`/`sage`/`ballad`, current production `DEMO_TEACHERS` set) × the 12 authored utterances (`utterances.ts`, run through the real `rewriteForTTS`). Writes `artifacts/voice-harness/tts/<runId>/clips/*.wav` + `manifest.json` (per-clip `ttfaMs`/`totalMs`, errors inline). **Paid** — each run hits the Cartesia and OpenAI Realtime APIs for every clip. Requires `candidates.json` (run `voice:discover` first — a friendly error tells you if it's missing). |
 | `npm run voice:corpus` | — | Reads `corpus/<accent>/clips.json`, resamples every listed source file to PCM16 mono 16kHz via ffmpeg into `<basename>.16k.wav`, validates the result. Run after adding new source clips to an accent directory. |
 | `npm run voice:stt` | `[-- --engine ink2\|deepgram\|openai] [--accent en-us\|en-gb\|en-in\|en-ar-gulf\|en-nl\|en-de] [--fast] [--probe]` | Streams every clip in the selected accent(s)' `corpus/<accent>/clips.json` at real-time pace (unless `--fast`) into the selected engine(s), computes WER against the reference transcript and finalization latency, writes `artifacts/voice-harness/stt/<runId>/results.json` + raw per-clip event logs (`events/*.jsonl`). `--probe` runs only the first clip and prints raw events — use it before trusting a new engine's message shapes. Accents with no `corpus/<accent>/clips.json` are skipped with a log line, not an error. |
 | `npm run test:voice-harness` | — | Unit gates (no network calls): `utterances.test.ts` (validates the 12 authored utterances + `rewriteForTTS` output), `wer.test.ts`, `audio-util.test.ts` (WAV/PCM helpers). Run this before any paid pipeline run. |
@@ -65,6 +65,33 @@ Curation workflow after `voice:discover`:
    accented clips are sourced for instant voice cloning, but there's no
    dedicated generation step in Phase 1 — add clone candidates by hand once
    clips exist (per the spec: "when/if sourced").
+
+### Round-1 curation picks
+
+The 8 carryover/localize voices enabled during the Task 9 pipeline run, and
+why each was picked over the alternatives in `voices-catalog.json` (adult,
+conversational/instructional, non-character voices preferred — see workflow
+above):
+
+| accent | voice | rationale |
+|---|---|---|
+| en-ar-gulf | Youssef - Clear Communicator | "Articulate delivery designed for seamless instructional content" — direct match for a tutor voice |
+| en-ar-gulf | Maryam - Friendly Voice | "warm, conversational tone and natural rhythm, ideal for approachable conversations" — teacher-plausible warmth |
+| en-nl | Stjin - Helpful Handler | "Approachable Dutch male for professional dialogue" — clean, non-character |
+| en-nl | Anneliese - Methodical Guide | "Clear, articulate Dutch female for efficient professional assistance" — clarity-forward |
+| en-de | Jan | "Clear adult male great for providing guidance and instruction" — closest to an explicit teaching descriptor |
+| en-de | Jennifer | "Approachable adult female great for conversational support" — plain, non-character |
+| en-in (carryover) | Palak - Presenter | catalog description literally says "Friendly female with a slight English accent for teaching use cases" |
+| en-in (carryover) | Amrit - Helpful Guide | "Warm, conversational Hindi male voice for customer support, guided assistance" |
+
+Skipped as not teacher-plausible: anything tagged storyteller/narrator/
+whisperer/announcer/actor (Amira "Dreamy Whisperer", Hassan "Authoritative
+Narrator", Rania "Spirited Storyteller", Klaus "Archivist", Andreas
+"Recorder", Dieter "Commercial Man", Imran "Hindi Film Actor", etc.).
+
+Plus 2 `en-in` `technique:'localize'` variants minted via `voice:localize`
+(Katie and Gemma, the shortlisted en-US/en-GB native bases) — "same voice,
+IN accent" as a direct comparison point against the carryover picks above.
 
 ## Corpus workflow (STT)
 
@@ -143,6 +170,18 @@ have to re-discover them:
   channel.alternatives[].transcript}` and
   `{type:"conversation.item.input_audio_transcription.completed",
   transcript}` respectively) — no surprises there.
+- **TTS TTFA clock parity (OpenAI Realtime vs Cartesia).** `openai-realtime-tts.ts`'s
+  `ttfaMs` is anchored to when `response.create` is actually sent, not to
+  WebSocket construction — the latter bakes in TLS/WS handshake +
+  `session.update` round-trip, which Cartesia's clock never pays (its TTFA
+  starts at a bare HTTP request). **Caveat:** the `run-2026-07-06T16-14-19-090Z`
+  TTS manifest (228/228 clips, referenced in Task 9's report) was generated
+  *before* this fix — its `openai-realtime` TTFA values (median 785ms, p90
+  1195ms) include ~200-500ms of connection setup and are overstated relative
+  to Cartesia's numbers in that same manifest. Any run generated after this
+  commit uses the request-anchored clock and is directly comparable;
+  production itself is unaffected either way since it holds a persistent WS
+  and only pays connection cost once per session, not once per utterance.
 - **Honest latency anchoring matters for cross-engine comparison.** STT
   `finalLatencyMs` must be measured from the end of *real speech* being
   sent, not from the end of any padded trailing silence — anchoring to

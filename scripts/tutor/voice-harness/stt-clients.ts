@@ -73,7 +73,18 @@ async function drive(
   });
   ws.on('error', (e) => { wsError = e as Error; });
 
-  await new Promise<void>((res, rej) => { ws.once('open', () => res()); ws.once('error', rej); });
+  // 15s connect timeout — without this, a hung TCP/TLS handshake (bad
+  // network, provider outage) leaves drive() waiting forever with no
+  // signal, since the only other listener here is 'error' (which a stalled
+  // connect never fires).
+  await new Promise<void>((res, rej) => {
+    const connectTimeout = setTimeout(() => {
+      try { ws.terminate(); } catch { /* already closed */ }
+      rej(new Error('connect timeout'));
+    }, 15000);
+    ws.once('open', () => { clearTimeout(connectTimeout); res(); });
+    ws.once('error', (e) => { clearTimeout(connectTimeout); rej(e); });
+  });
   hooks.onOpen?.();
   let bytesSent = 0;
   for (const chunk of chunkPcm(pcm, hooks.sampleRate ?? SR, CHUNK_MS)) {
@@ -188,6 +199,10 @@ async function deepgram(pcm: Buffer, opts: Opts): Promise<ClipRun> {
  *  (mirrors usePerceptionWS session.update exactly). */
 async function openaiStt(pcm: Buffer, opts: Opts): Promise<ClipRun> {
   const model = process.env.TUTOR_PERCEPTION_MODEL || 'gpt-realtime-2';
+  // Record the resolved model into the per-clip events jsonl (via the same
+  // onEvent sink stt-run.ts already streams to disk) so results.json's
+  // openai rows are traceable to a model without a schema change.
+  opts.onEvent({ harness_note: 'openai model', model });
   const ws = new WebSocket(`wss://api.openai.com/v1/realtime?model=${model}`, {
     headers: { Authorization: `Bearer ${requireKey('OPENAI_API_KEY')}` },
   });
