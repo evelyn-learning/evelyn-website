@@ -17,6 +17,7 @@ import {
   WATER_CYCLE, FOOD_CHAIN, TRADE_OFF_SCALE, SUN_AND_TREE,
   FRACTION_PIE, ANIMAL_TREE, CONCEPT_MAP, CELL_SAYS, HISTORY_TIMELINE,
   COMPARE_VENN, EARTH_LAYERS, SWOT_MATRIX,
+  MASLOW_PYRAMID, ICEBERG_METAPHOR, VENN3_TRADEOFF, ENERGY_SANKEY,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -585,6 +586,43 @@ check('matrix cells capped at rows*cols',
 check('matrix missing rows/cols dropped → null',
   validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 60, h: 60, rows: 2 }] }) === null);
 
+// ── pyramid primitive (Wave 7) ──
+const py = validateSketch({ primitives: [
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['A', 'B', 'C'], flip: true },
+] }) as any[];
+check('pyramid validates + keeps tiers/flip', !!py && py[0].tiers.length === 3 && py[0].flip === true);
+check('pyramid <2 tiers dropped → null',
+  validateSketch({ primitives: [{ type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['only'] }] }) === null);
+check('pyramid tiers capped at maxTiers',
+  (validateSketch({ primitives: [{ type: 'pyramid', x: 10, y: 10, w: 80, h: 80, tiers: Array.from({ length: 10 }, (_, i) => `T${i}`) }] }) as any[])[0].tiers.length === SKETCH_BOUNDS.maxTiers);
+
+// ── iceberg primitive (Wave 7) ──
+const ib = validateSketch({ primitives: [
+  { type: 'iceberg', cx: 50, cy: 44, size: 62, aboveLabel: 'visible', belowLabel: 'hidden' },
+] }) as any[];
+check('iceberg validates + keeps labels', !!ib && ib[0].aboveLabel === 'visible' && ib[0].belowLabel === 'hidden');
+check('iceberg bare (just cx,cy) still validates', !!validateSketch({ primitives: [{ type: 'iceberg', cx: 50, cy: 44 }] }));
+check('iceberg size clamps to maxIcebergSize',
+  (validateSketch({ primitives: [{ type: 'iceberg', cx: 50, cy: 44, size: 999 }] }) as any[])[0].size === SKETCH_BOUNDS.maxIcebergSize);
+
+// ── venn3 primitive (Wave 7) ──
+const v3 = validateSketch({ primitives: [
+  { type: 'venn3', cx: 50, cy: 46, r: 20, aLabel: 'Fast', bLabel: 'Cheap', cLabel: 'Good', allLabel: 'pick 2' },
+] }) as any[];
+check('venn3 validates + keeps 3 set labels + center', !!v3 && v3[0].aLabel === 'Fast' && v3[0].bLabel === 'Cheap' && v3[0].cLabel === 'Good' && v3[0].allLabel === 'pick 2');
+check('venn3 r clamps to maxVenn3Radius',
+  (validateSketch({ primitives: [{ type: 'venn3', cx: 50, cy: 46, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxVenn3Radius);
+
+// ── sankey primitive (Wave 7) ──
+const sk = validateSketch({ primitives: [
+  { type: 'sankey', x: 14, y: 26, w: 56, h: 44, inputLabel: 'Energy in', flows: [{ value: 30, label: 'useful' }, { value: 70, label: 'wasted' }] },
+] }) as any[];
+check('sankey validates + keeps flows', !!sk && sk[0].flows.length === 2 && sk[0].inputLabel === 'Energy in');
+check('sankey drops non-positive / unlabelled flows',
+  (validateSketch({ primitives: [{ type: 'sankey', x: 14, y: 26, w: 56, h: 44, flows: [{ value: 30, label: 'ok' }, { value: 0, label: 'zero' }, { value: 10 }, { value: 20, label: 'ok2' }] }] }) as any[])[0].flows.length === 2);
+check('sankey <2 valid flows dropped → null',
+  validateSketch({ primitives: [{ type: 'sankey', x: 14, y: 26, w: 56, h: 44, flows: [{ value: 30, label: 'only' }] }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
@@ -600,6 +638,8 @@ for (const [name, prims] of [
   ['FRACTION_PIE', FRACTION_PIE], ['ANIMAL_TREE', ANIMAL_TREE],
   ['CONCEPT_MAP', CONCEPT_MAP], ['CELL_SAYS', CELL_SAYS], ['HISTORY_TIMELINE', HISTORY_TIMELINE],
   ['COMPARE_VENN', COMPARE_VENN], ['EARTH_LAYERS', EARTH_LAYERS], ['SWOT_MATRIX', SWOT_MATRIX],
+  ['MASLOW_PYRAMID', MASLOW_PYRAMID], ['ICEBERG_METAPHOR', ICEBERG_METAPHOR],
+  ['VENN3_TRADEOFF', VENN3_TRADEOFF], ['ENERGY_SANKEY', ENERGY_SANKEY],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));

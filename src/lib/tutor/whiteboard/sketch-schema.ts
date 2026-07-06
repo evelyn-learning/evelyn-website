@@ -135,6 +135,16 @@ export const SKETCH_BOUNDS = {
   // matrix: a labelled rows×cols table
   minMatrixDim: 1,
   maxMatrixDim: 5,
+  // pyramid: horizontal tiers narrowing to the apex (flip = funnel)
+  minTiers: 2,
+  maxTiers: 6,
+  // iceberg: overall size clamp
+  maxIcebergSize: 80,
+  // venn3: three overlapping circles
+  maxVenn3Radius: 22,
+  // sankey: input splitting into proportional flows
+  minFlows: 2,
+  maxFlows: 5,
 } as const;
 
 export interface Pt {
@@ -544,6 +554,60 @@ export type SketchPrimitive =
       colLabels?: string[];
       cells?: string[];
     } & Styled)
+  // Parametric: a PYRAMID of `tiers` — a triangle split into horizontal tiers,
+  // each labelled, narrow at the top and wide at the base. `flip` inverts it into
+  // a FUNNEL (wide at top, narrowing down). For Maslow's hierarchy, an ecological
+  // / food pyramid, DIKW; flipped for a sales funnel or a filtering process. ONE
+  // primitive draws every tier + label.
+  | ({
+      type: 'pyramid';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      tiers: string[];
+      flip?: boolean;
+    } & Styled)
+  // Parametric: an ICEBERG metaphor — a waterline through (cx,cy) with a small tip
+  // ABOVE and a large mass BELOW; `aboveLabel` = what's visible, `belowLabel` =
+  // what's hidden. For "the tip of the iceberg", visible behaviour vs hidden
+  // causes, conscious vs unconscious. ONE primitive draws the water + berg + labels.
+  | ({
+      type: 'iceberg';
+      cx: number;
+      cy: number;
+      size?: number;
+      aboveLabel?: string;
+      belowLabel?: string;
+    } & Styled)
+  // Parametric: a 3-circle VENN — three circles of radius r overlapping in a
+  // triangle around (cx,cy). `aLabel` (top), `bLabel` (lower-left) and `cLabel`
+  // (lower-right) name the three sets; `allLabel` names the shared center. For
+  // comparing THREE things. ONE primitive draws all three circles + labels.
+  | ({
+      type: 'venn3';
+      cx: number;
+      cy: number;
+      r: number;
+      aLabel?: string;
+      bLabel?: string;
+      cLabel?: string;
+      allLabel?: string;
+    } & Styled)
+  // Parametric: a simplified SANKEY / flow diagram — one input on the left flowing
+  // into `flows` output branches on the right, each branch's thickness ∝ its
+  // `value`. `inputLabel` names the source; each flow has a `label`. For an energy
+  // flow (input → useful + wasted), a budget split, a mass/energy balance. ONE
+  // primitive draws the input, the branches and the connecting ribbons.
+  | ({
+      type: 'sankey';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      inputLabel?: string;
+      flows: { value: number; label: string }[];
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -594,6 +658,10 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'venn',
   'layers',
   'matrix',
+  'pyramid',
+  'iceberg',
+  'venn3',
+  'sankey',
   'label',
 ];
 
@@ -840,6 +908,24 @@ export const SKETCH_TOOL_SCHEMA = {
           rowLabels: { type: 'array', items: { type: 'string' }, description: 'matrix: labels left of each row.' },
           colLabels: { type: 'array', items: { type: 'string' }, description: 'matrix: header labels above each column.' },
           cells: { type: 'array', items: { type: 'string' }, description: 'matrix: cell text, row-major (row 0 left→right, then row 1, …).' },
+          // pyramid (`size` reused from icon is NOT used here; tiers + flip)
+          tiers: { type: 'array', items: { type: 'string' }, description: 'pyramid: tier labels top→bottom (2..6), e.g. ["Self-actualization","Esteem","Love","Safety","Physiological"].' },
+          flip: { type: 'boolean', description: 'pyramid: false = pyramid (wide base); true = funnel (wide top, narrows down).' },
+          // iceberg (`size` reused from icon)
+          aboveLabel: { type: 'string', description: 'iceberg: label for the visible tip (above the water).' },
+          belowLabel: { type: 'string', description: 'iceberg: label for the hidden mass (below the water).' },
+          // venn3 (three set names + the shared center)
+          aLabel: { type: 'string', description: 'venn3: name of the TOP circle / set.' },
+          bLabel: { type: 'string', description: 'venn3: name of the LOWER-LEFT circle / set.' },
+          cLabel: { type: 'string', description: 'venn3: name of the LOWER-RIGHT circle / set.' },
+          allLabel: { type: 'string', description: 'venn3: label for the center where all three overlap.' },
+          // sankey (one input splitting into proportional flows)
+          inputLabel: { type: 'string', description: 'sankey: name of the input/source on the left.' },
+          flows: {
+            type: 'array',
+            description: 'sankey: output branches as {value, label}; each branch thickness is proportional to value (e.g. [{value:70,label:"useful"},{value:30,label:"wasted"}]).',
+            items: { type: 'object', properties: { value: { type: 'number' }, label: { type: 'string' } }, required: ['value', 'label'] },
+          },
           points: {
             type: 'array',
             items: {

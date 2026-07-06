@@ -194,6 +194,53 @@ function matrixGeom(p: {
   return { gx, gy, cw: (p.w - headL) / p.cols, ch: (p.h - headT) / p.rows, headT, headL };
 }
 
+/** Tier trapezoids for a `pyramid` (or funnel when flipped). Width grows toward
+ *  the base (0 at the apex, w at the base); `flip` inverts it. Shared by the
+ *  renderer (trapezoids) and buildSketchPaths (tier labels). */
+function pyramidTiers(p: { x: number; y: number; w: number; h: number; tiers: string[]; flip?: boolean }): {
+  cx: number; topY: number; botY: number; topW: number; botW: number; labelCy: number; text: string;
+}[] {
+  const n = p.tiers.length;
+  const cx = p.x + p.w / 2;
+  const widthAt = (v: number) => (p.flip ? p.w * (1 - v) : p.w * v); // v: 0 top → 1 bottom
+  return p.tiers.map((text, i) => {
+    const vTop = i / n, vBot = (i + 1) / n;
+    const topY = p.y + p.h * vTop, botY = p.y + p.h * vBot;
+    return { cx, topY, botY, topW: widthAt(vTop), botW: widthAt(vBot), labelCy: (topY + botY) / 2, text };
+  });
+}
+
+/** The three circle centers of a `venn3`, arranged in a triangle around (cx,cy). */
+function venn3Centers(p: { cx: number; cy: number; r: number }): { x: number; y: number }[] {
+  const off = p.r * 0.62;
+  return [
+    { x: p.cx, y: p.cy - off },                    // top (A)
+    { x: p.cx - off * 0.87, y: p.cy + off * 0.5 }, // lower-left (B)
+    { x: p.cx + off * 0.87, y: p.cy + off * 0.5 }, // lower-right (C)
+  ];
+}
+
+/** Input bar + proportional output bands + connecting ribbons for a `sankey`. */
+function sankeyLayout(p: { x: number; y: number; w: number; h: number; flows: { value: number; label: string }[] }): {
+  barW: number; inX2: number; outX1: number;
+  bands: { label: string; inTop: number; inH: number; outTop: number; outH: number }[];
+} {
+  const total = p.flows.reduce((a, f) => a + Math.max(0, f.value), 0) || 1;
+  const barW = 8;
+  const n = p.flows.length;
+  const gap = 3;
+  const availH = Math.max(1, p.h - (n - 1) * gap);
+  let inAcc = 0, outAcc = 0;
+  const bands = p.flows.map((f) => {
+    const frac = Math.max(0, f.value) / total;
+    const inH = p.h * frac, outH = availH * frac;
+    const b = { label: f.label, inTop: p.y + inAcc, inH, outTop: p.y + outAcc, outH };
+    inAcc += inH; outAcc += outH + gap;
+    return b;
+  });
+  return { barW, inX2: p.x + barW, outX1: p.x + p.w - barW, bands };
+}
+
 /** Rough paths for one `icon` glyph — a simple, recognizable object drawn within
  *  a box of height `size` centered at (x,y). Deterministic (fixed seed) so the
  *  doodler never hand-places these strokes. */
@@ -1071,6 +1118,61 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
           out.push(...gen.toPaths(gen.rectangle(g.gx + c * g.cw, g.gy + r * g.ch, g.cw, g.ch, { ...opts, seed: seed + r * p.cols + c })));
       return out;
     }
+    case 'pyramid': {
+      // Each tier is a trapezoid (the apex tier collapses to a triangle).
+      const out: PathInfo[] = [];
+      pyramidTiers(p).forEach((t, i) => {
+        const pts: [number, number][] = [
+          [t.cx - t.topW / 2, t.topY], [t.cx + t.topW / 2, t.topY],
+          [t.cx + t.botW / 2, t.botY], [t.cx - t.botW / 2, t.botY],
+        ];
+        out.push(...gen.toPaths(gen.polygon(pts, { ...opts, seed: seed + i })));
+      });
+      return out;
+    }
+    case 'iceberg': {
+      // A wavy waterline, a small tip above it and a large jagged mass below.
+      const size = p.size ?? 60;
+      const { cx, cy } = p;
+      const halfW = size * 0.42;
+      const tipH = size * 0.26, bodyH = size * 0.74;
+      const out: PathInfo[] = [];
+      // the berg: tip above the waterline + a wider jagged mass below (one polygon)
+      const berg: [number, number][] = [
+        [cx - size * 0.14, cy], [cx, cy - tipH], [cx + size * 0.16, cy], // tip above
+        [cx + halfW, cy + bodyH * 0.35], [cx + halfW * 0.7, cy + bodyH], // right + bottom
+        [cx - halfW * 0.75, cy + bodyH], [cx - halfW, cy + bodyH * 0.4],  // bottom-left + left
+      ];
+      out.push(...gen.toPaths(gen.polygon(berg, { roughness: 0.7, bowing: 0.5, seed, stroke, strokeWidth: sw })));
+      // waterline: a gently wavy line across, drawn on top
+      const wl: [number, number][] = [];
+      for (let i = 0; i <= 10; i++) { const t = i / 10; wl.push([cx - size * 0.9 + size * 1.8 * t, cy + Math.sin(t * Math.PI * 4) * 1.4]); }
+      out.push(...gen.toPaths(gen.curve(wl, { roughness: 0.6, bowing: 0.4, seed: seed + 3, stroke: SKETCH_COLORS.blue, strokeWidth: Math.max(0.8, sw * 0.8) })));
+      return out;
+    }
+    case 'venn3': {
+      const c = venn3Centers(p);
+      const o = { roughness: 0.5, bowing: 0.4, seed, stroke, strokeWidth: sw };
+      const out: PathInfo[] = [];
+      c.forEach((ct, i) => out.push(...gen.toPaths(gen.ellipse(ct.x, ct.y, p.r * 2, p.r * 2, { ...o, seed: seed + i }))));
+      return out;
+    }
+    case 'sankey': {
+      // Input bar on the left, proportional output bars on the right, ribbons between.
+      const g = sankeyLayout(p);
+      const flowColor = fillTok ? SKETCH_COLORS[fillTok] : SKETCH_COLORS.gray;
+      const out: PathInfo[] = [];
+      // ribbons (top + bottom edges), so the taper reads as a flow
+      g.bands.forEach((b, i) => {
+        out.push(...gen.toPaths(gen.line(g.inX2, b.inTop, g.outX1, b.outTop, { roughness: 0.5, bowing: 0.5, seed: seed + 40 + i, stroke: flowColor, strokeWidth: Math.max(0.7, sw * 0.7) })));
+        out.push(...gen.toPaths(gen.line(g.inX2, b.inTop + b.inH, g.outX1, b.outTop + b.outH, { roughness: 0.5, bowing: 0.5, seed: seed + 60 + i, stroke: flowColor, strokeWidth: Math.max(0.7, sw * 0.7) })));
+      });
+      // input bar (full height) on the left
+      out.push(...gen.toPaths(gen.rectangle(p.x, p.y, g.barW, p.h, { ...opts, seed })));
+      // output bars on the right
+      g.bands.forEach((b, i) => out.push(...gen.toPaths(gen.rectangle(g.outX1, b.outTop, g.barW, b.outH, { ...opts, seed: seed + 10 + i }))));
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -1250,6 +1352,26 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
       if (p.colLabels) p.colLabels.forEach((t, c) => { if (c < p.cols) pushLabel(g.gx + (c + 0.5) * g.cw, p.y + g.headT * 0.5, t, i * 100 + c, 3.8, 'middle', p.stroke); });
       if (p.rowLabels) p.rowLabels.forEach((t, r) => { if (r < p.rows) pushLabel(p.x + g.headL * 0.5, g.gy + (r + 0.5) * g.ch, t, i * 100 + 20 + r, 3.5, 'middle', p.stroke); });
       if (p.cells) p.cells.forEach((t, k) => { const r = Math.floor(k / p.cols), c = k % p.cols; if (r < p.rows) pushLabel(g.gx + (c + 0.5) * g.cw, g.gy + (r + 0.5) * g.ch, t, i * 100 + 40 + k, 3.6, 'middle', p.stroke); });
+    } else if (p.type === 'pyramid') {
+      // each tier label centered in its band
+      pyramidTiers(p).forEach((t, ti) => pushLabel(t.cx, t.labelCy, t.text, i * 100 + ti, 3.9, 'middle', p.stroke));
+    } else if (p.type === 'iceberg') {
+      // above/below labels, placed in the visible tip and the hidden mass
+      const size = p.size ?? 60;
+      if (p.aboveLabel) pushLabel(p.cx, p.cy - size * 0.36, p.aboveLabel, i, 4.2, 'middle', p.stroke);
+      if (p.belowLabel) pushLabel(p.cx, p.cy + size * 0.42, p.belowLabel, i * 100 + 1, 4.2, 'middle', p.stroke);
+    } else if (p.type === 'venn3') {
+      // three set names in the outer regions + the shared-center label
+      const c = venn3Centers(p);
+      if (p.aLabel) pushLabel(c[0].x, c[0].y - p.r * 0.55, p.aLabel, i, 4.0, 'middle', p.stroke);
+      if (p.bLabel) pushLabel(c[1].x - p.r * 0.5, c[1].y + p.r * 0.5, p.bLabel, i * 100 + 1, 4.0, 'middle', p.stroke);
+      if (p.cLabel) pushLabel(c[2].x + p.r * 0.5, c[2].y + p.r * 0.5, p.cLabel, i * 100 + 2, 4.0, 'middle', p.stroke);
+      if (p.allLabel) pushLabel(p.cx, p.cy + p.r * 0.12, p.allLabel, i * 100 + 3, 3.6, 'middle', p.stroke);
+    } else if (p.type === 'sankey') {
+      // input label on the left bar, each flow label at its output bar
+      const g = sankeyLayout(p);
+      if (p.inputLabel) pushLabel(p.x + g.barW / 2, p.y - 4, p.inputLabel, i, 4.0, 'middle', p.stroke);
+      g.bands.forEach((b, bi) => pushLabel(g.outX1 + g.barW + 2, b.outTop + b.outH / 2, b.label, i * 100 + bi, 3.8, 'start', p.stroke));
     }
   });
   return { drawn, labels };

@@ -36,6 +36,7 @@ const {
   minFlowSteps, maxFlowSteps, maxBalanceTilt, minIconSize, maxIconSize,
   minParts, maxParts, minBranches, maxBranches, maxNodes, maxEdges, minEvents, maxEvents,
   maxVennRadius, minLayers, maxLayers, minMatrixDim, maxMatrixDim,
+  minTiers, maxTiers, maxIcebergSize, maxVenn3Radius, minFlows, maxFlows,
 } = SKETCH_BOUNDS;
 
 /** Trim + cap a list of short text labels (stages, steps) → clean string[]. */
@@ -667,6 +668,75 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         ...(rowLabels.length ? { rowLabels } : {}),
         ...(colLabels.length ? { colLabels } : {}),
         ...(cells.length ? { cells } : {}),
+        ...styled,
+      };
+    }
+    case 'pyramid': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const tiers = textList(p.tiers, maxTiers);
+      if (tiers.length < minTiers) return null;
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        tiers,
+        ...(p.flip === true ? { flip: true } : {}),
+        ...styled,
+      };
+    }
+    case 'iceberg': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      if (cx === null || cy === null) return null;
+      const size = num(p.size);
+      const aboveLabel = tag(p.aboveLabel), belowLabel = tag(p.belowLabel);
+      return {
+        type,
+        cx, cy,
+        ...(size !== null && size > 0 ? { size: Math.min(maxIcebergSize, size) } : {}),
+        ...(aboveLabel ? { aboveLabel } : {}),
+        ...(belowLabel ? { belowLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'venn3': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      if (cx === null || cy === null || r === null) return null;
+      if (r <= 0) return null;
+      const aLabel = tag(p.aLabel), bLabel = tag(p.bLabel), cLabel = tag(p.cLabel), allLabel = tag(p.allLabel);
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxVenn3Radius, r),
+        ...(aLabel ? { aLabel } : {}),
+        ...(bLabel ? { bLabel } : {}),
+        ...(cLabel ? { cLabel } : {}),
+        ...(allLabel ? { allLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'sankey': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const flows = Array.isArray(p.flows)
+        ? p.flows
+            .map((f) => ({ value: num((f as { value?: unknown })?.value), label: tag((f as { label?: unknown })?.label) }))
+            .filter((f): f is { value: number; label: string } => f.value !== null && f.value > 0 && !!f.label)
+            .slice(0, maxFlows)
+        : [];
+      if (flows.length < minFlows) return null;
+      const inputLabel = tag(p.inputLabel);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        flows,
+        ...(inputLabel ? { inputLabel } : {}),
         ...styled,
       };
     }

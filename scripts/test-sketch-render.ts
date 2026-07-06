@@ -445,5 +445,45 @@ check('matrix (with headers) stays in bounds', inBounds([
   { type: 'matrix', x: 16, y: 16, w: 70, h: 66, rows: 2, cols: 2, rowLabels: ['r1', 'r2'], colLabels: ['c1', 'c2'], cells: ['a', 'b', 'c', 'd'] } as SketchPrimitive,
 ]));
 
+// ── Wave-7 primitives (pyramid, iceberg, venn3, sankey) ──
+const py = buildSketchPaths([
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['A', 'B', 'C', 'D'] } as SketchPrimitive,
+]);
+check('pyramid renders one trapezoid per tier', py.drawn[0].paths.length >= 4, `paths=${py.drawn[0]?.paths.length}`);
+check('pyramid routes one label per tier', py.labels.length === 4 && py.labels[0].text === 'A');
+check('pyramid stays in bounds', inBounds([
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['A', 'B', 'C'] } as SketchPrimitive,
+]));
+check('pyramid (flip=funnel) stays in bounds', inBounds([
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['A', 'B', 'C'], flip: true } as SketchPrimitive,
+]));
+
+const ib = buildSketchPaths([
+  { type: 'iceberg', cx: 50, cy: 44, size: 62, aboveLabel: 'visible', belowLabel: 'hidden' } as SketchPrimitive,
+]);
+check('iceberg renders berg + waterline', ib.drawn[0].paths.length >= 2, `paths=${ib.drawn[0]?.paths.length}`);
+check('iceberg routes above/below labels', ib.labels.length === 2 && ib.labels[0].text === 'visible');
+check('iceberg stays in bounds', inBounds([
+  { type: 'iceberg', cx: 50, cy: 46, size: 60 } as SketchPrimitive,
+]));
+
+const v3 = buildSketchPaths([
+  { type: 'venn3', cx: 50, cy: 46, r: 20, aLabel: 'Fast', bLabel: 'Cheap', cLabel: 'Good', allLabel: 'pick 2' } as SketchPrimitive,
+]);
+check('venn3 renders three circles', v3.drawn[0].paths.length >= 3, `paths=${v3.drawn[0]?.paths.length}`);
+check('venn3 routes four labels', v3.labels.length === 4);
+check('venn3 stays in bounds', inBounds([
+  { type: 'venn3', cx: 50, cy: 46, r: 20 } as SketchPrimitive,
+]));
+
+const sk = buildSketchPaths([
+  { type: 'sankey', x: 14, y: 26, w: 56, h: 44, inputLabel: 'Energy in', flows: [{ value: 30, label: 'useful' }, { value: 70, label: 'wasted' }] } as SketchPrimitive,
+]);
+check('sankey renders input + outputs + ribbons', sk.drawn[0].paths.length >= 1 + 2 + 2, `paths=${sk.drawn[0]?.paths.length}`);
+check('sankey routes input + flow labels', sk.labels.length === 3);
+check('sankey stays in bounds', inBounds([
+  { type: 'sankey', x: 14, y: 26, w: 56, h: 44, flows: [{ value: 40, label: 'a' }, { value: 60, label: 'b' }] } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

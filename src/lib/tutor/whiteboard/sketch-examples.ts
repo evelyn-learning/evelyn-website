@@ -377,6 +377,33 @@ export const SWOT_MATRIX: SketchPrimitive[] = [
   { type: 'label', x: 51, y: 16, text: 'SWOT', fontSize: 5.5, stroke: 'ink', anchor: 'middle' },
 ];
 
+// PYRAMID exemplar — teaches: use ONE `pyramid` for a tiered hierarchy (Maslow, a
+// food/ecological pyramid), never hand-drawn tiers; `flip:true` gives a funnel.
+// Maslow's hierarchy of needs. (Wave-7 pyramid primitive.)
+export const MASLOW_PYRAMID: SketchPrimitive[] = [
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['Self-actualize', 'Esteem', 'Belonging', 'Safety', 'Physiological'], stroke: 'ink', strokeWidth: 1.2 },
+];
+
+// ICEBERG exemplar — teaches: use ONE `iceberg` for the tip-of-the-iceberg
+// metaphor (visible vs hidden), never a hand-drawn berg. Behaviour above the
+// waterline, beliefs below. (Wave-7 iceberg primitive.)
+export const ICEBERG_METAPHOR: SketchPrimitive[] = [
+  { type: 'iceberg', cx: 50, cy: 44, size: 62, aboveLabel: 'behavior', belowLabel: 'beliefs & values', stroke: 'ink', strokeWidth: 1.3 },
+];
+
+// VENN3 exemplar — teaches: use ONE `venn3` to compare THREE things, never three
+// hand-drawn circles. The classic "fast, cheap, good — pick two". (Wave-7.)
+export const VENN3_TRADEOFF: SketchPrimitive[] = [
+  { type: 'venn3', cx: 50, cy: 46, r: 20, aLabel: 'Fast', bLabel: 'Cheap', cLabel: 'Good', allLabel: 'pick 2', stroke: 'ink', strokeWidth: 1.2 },
+];
+
+// SANKEY exemplar — teaches: use ONE `sankey` for a proportional flow split (an
+// energy diagram, a budget), never hand-drawn ribbons. Energy in → useful +
+// wasted, thickness ∝ amount. (Wave-7 sankey primitive.)
+export const ENERGY_SANKEY: SketchPrimitive[] = [
+  { type: 'sankey', x: 14, y: 26, w: 56, h: 44, inputLabel: 'Energy in', flows: [{ value: 30, label: 'useful' }, { value: 70, label: 'wasted' }], stroke: 'ink', strokeWidth: 1.2 },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -559,5 +586,25 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a SWOT analysis: strengths, weaknesses, opportunities and threats in four quadrants',
     labels: ['SWOT'],
     primitives: SWOT_MATRIX,
+  },
+  {
+    concept: "Maslow's hierarchy of needs, from physiological at the base to self-actualization at the top",
+    labels: [],
+    primitives: MASLOW_PYRAMID,
+  },
+  {
+    concept: 'the tip of the iceberg: visible behaviour above the water, hidden beliefs and values below',
+    labels: ['behavior', 'beliefs & values'],
+    primitives: ICEBERG_METAPHOR,
+  },
+  {
+    concept: 'fast, cheap, good — you can only pick two (a three-way trade-off)',
+    labels: ['Fast', 'Cheap', 'Good', 'pick 2'],
+    primitives: VENN3_TRADEOFF,
+  },
+  {
+    concept: 'an energy flow diagram: energy in splits into a small useful part and a large wasted part',
+    labels: ['Energy in', 'useful', 'wasted'],
+    primitives: ENERGY_SANKEY,
   },
 ];
