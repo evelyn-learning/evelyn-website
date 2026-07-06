@@ -17,11 +17,12 @@
  * api.cartesia.ai, which — left unguarded — silently stalls the client for
  * ~10s before its own fetch gives up (dead air on the first post-deploy
  * sentence). Wrap attempt 1 with AbortSignal.timeout(3000) so a slow/dead
- * connect fails fast, then retry ONCE with a plain fetch (no timeout
- * wrapper) — by then the connection pool has usually recovered. Only
- * connect-level failures (thrown errors / AbortError) trigger the retry;
- * a normal non-OK HTTP response is NOT retried and falls straight through
- * to the existing 502 handling below.
+ * connect fails fast, then retry ONCE with a longer AbortSignal.timeout(10000)
+ * — by then the connection pool has usually recovered, but the retry stays
+ * bounded so a still-dead pool can't hang the request indefinitely (final-
+ * review fix). Only connect-level failures (thrown errors / AbortError)
+ * trigger the retry; a normal non-OK HTTP response is NOT retried and falls
+ * straight through to the existing 502 handling below.
  */
 
 import { NextRequest } from 'next/server';
@@ -76,9 +77,10 @@ export async function POST(request: NextRequest) {
       ttsRes = await fetch(CARTESIA_TTS_URL, { ...fetchOpts, signal: AbortSignal.timeout(3000) });
     } catch (connectErr) {
       console.warn('[TTS-Cartesia] attempt 1 failed (connect/timeout), retrying once:', connectErr);
-      // Attempt 2: plain fetch, no timeout wrapper — give the connection
-      // pool a real chance to complete once it's warm.
-      ttsRes = await fetch(CARTESIA_TTS_URL, fetchOpts);
+      // Attempt 2: give the connection pool a real chance to complete once
+      // it's warm, but still bounded — an unguarded retry can otherwise
+      // hang indefinitely if the pool never recovers.
+      ttsRes = await fetch(CARTESIA_TTS_URL, { ...fetchOpts, signal: AbortSignal.timeout(10000) });
     }
 
     if (!ttsRes.ok || !ttsRes.body) {

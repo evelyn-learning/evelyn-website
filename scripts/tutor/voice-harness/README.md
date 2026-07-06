@@ -263,6 +263,34 @@ Pure-logic, no network calls, safe to run anytime: `npm run
 test:cartesia-registry`, `npm run test:tts-flag`, `npm run
 test:ink-reconstruct` (plus the existing `npm run test:voice-harness`).
 
+### Surface blast radius
+
+`VoiceTutorRealtime` has exactly one component that mounts it —
+`TutorSession` (`src/app/tutor/components/session/TutorSession.tsx`) — but
+TWO page trees reach that mount: the main app (`src/app/tutor/page.tsx`)
+AND the white-label embed (`src/app/tutor-portal/embed/page.tsx`, used by
+partner integrations like the Algerian BAC inquiry). This matters
+differently for the two Phase 2 flags:
+
+- **STT flag (`NEXT_PUBLIC_TUTOR_STT_ENGINE=ink2`) reaches the embed.**
+  `VoiceTutorRealtime` reads `NEXT_PUBLIC_TUTOR_STT_ENGINE` directly off
+  `process.env` (via `src/lib/tutor/orchestrator/flags.ts`) — it is not a
+  prop threaded down from the page, so every mount site, including the
+  embed, picks it up identically. Ink 2 is English-only; the embed's
+  partner sessions can be multilingual, so flipping this flag in prod
+  (**rollout step 5** above) applies Ink 2 STT to embed traffic too, not
+  just `/tutor`. Confirm partner language mix before flipping step 5, or
+  gate the embed separately if a partner needs non-English STT preserved.
+- **TTS flag (`NEXT_PUBLIC_TUTOR_TTS_ENGINE=cartesia`) does NOT reach the
+  embed.** `resolveTtsProvider` is only called in `src/app/tutor/page.tsx`,
+  which passes the resolved `ttsProvider` down as a prop through
+  `TutorSession` to `VoiceTutorRealtime` (defaulting to `'realtime'` when
+  absent). `src/app/tutor-portal/embed/page.tsx` never reads the env flag,
+  never reads a `?tts=` param, and never passes a `ttsProvider` prop — so
+  embed sessions always render with OpenAI TTS regardless of this flag.
+  **Rollout step 4 is effectively `/tutor`-only**; there is nothing to
+  verify on embed traffic for that step.
+
 ### Rollout order
 
 **Every dev step below requires real-mic human verification, not just the

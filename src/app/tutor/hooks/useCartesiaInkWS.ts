@@ -41,6 +41,15 @@
  *     speech_stopped; drives the "got that — one sec…" UI). The
  *     authoritative final transcript is delivered to `onTranscript` only
  *     on `turn.end`, reconstructed via `reconstructInkFinals` (see below).
+ *     If Ink 2 decides an eager_end was premature (student kept talking in
+ *     the same turn), it sends `turn.resume` — this re-fires `onSpeechStart`
+ *     with the same payload shape as `turn.start` so barge-in/retro-cancel
+ *     timing re-arms, but does NOT touch transcript assembly.
+ *   - Stale-connection watchdog (ported from usePerceptionWS.ts): armed for
+ *     TRANSCRIPTION_WATCHDOG_MS (12s) when `turn.eager_end` fires; cleared
+ *     on `turn.end` (a final transcript arrived) or `turn.resume` (the stop
+ *     signal was rescinded). On fire, closes the WS so the existing
+ *     reconnect ladder (scheduleReconnect) recovers the connection.
  *
  * Verified live-API knowledge (Phase 1 voice-harness, do not re-discover —
  * see scripts/tutor/voice-harness/stt-clients.ts `ink2()` + its inline
@@ -130,6 +139,12 @@ export interface UseCartesiaInkWSResult {
 
 const INK_SAMPLE_RATE = 24000;
 const CARTESIA_VERSION = '2026-03-01';
+// Stale-connection watchdog (ported from usePerceptionWS.ts's
+// TRANSCRIPTION_WATCHDOG_MS): armed when a turn "probably ends"
+// (turn.eager_end); if no final transcript (turn.end) arrives within this
+// window, the connection is likely stuck — tear it down so the existing
+// reconnect ladder (scheduleReconnect) kicks in.
+const TRANSCRIPTION_WATCHDOG_MS = 12000;
 
 // env-tunable turn-detection thresholds. NEXT_PUBLIC_* must be referenced
 // via static `process.env.NEXT_PUBLIC_X` dot-access (not a computed lookup)
@@ -205,6 +220,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cachedTokenRef = useRef<string | null>(null);
   const turnBuffersRef = useRef<Map<string, TurnBuffer>>(new Map());
+  const transcriptionWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const thresholdsRef = useRef({ turnStartThreshold, turnEagerEndThreshold, turnEndThreshold, turnEndTimeoutMs });
   thresholdsRef.current = { turnStartThreshold, turnEagerEndThreshold, turnEndThreshold, turnEndTimeoutMs };
@@ -217,6 +233,13 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       return next;
     });
   }, [logPrefix]);
+
+  const clearWatchdog = useCallback(() => {
+    if (transcriptionWatchdogRef.current) {
+      clearTimeout(transcriptionWatchdogRef.current);
+      transcriptionWatchdogRef.current = null;
+    }
+  }, []);
 
   const teardownMic = useCallback(() => {
     if (processorRef.current) {
@@ -387,6 +410,42 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
               const now = Date.now();
               const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
               try { onSpeechStopRef.current?.({ tMs }); } catch {}
+              // Arm the stale-connection watchdog: speech "probably
+              // stopped" — if no final transcript (turn.end) shows up
+              // within TRANSCRIPTION_WATCHDOG_MS, close the WS so the
+              // reconnect ladder recovers (mirrors usePerceptionWS).
+              clearWatchdog();
+              transcriptionWatchdogRef.current = setTimeout(() => {
+                console.warn(`${logPrefix} transcription watchdog fired — no transcript in ${TRANSCRIPTION_WATCHDOG_MS}ms`);
+                transcriptionWatchdogRef.current = null;
+                const ws = wsRef.current;
+                if (ws && !intentionallyDisconnectedRef.current) {
+                  // Tear-down will trigger ws.onclose → scheduleReconnect.
+                  try { ws.close(); } catch {}
+                }
+              }, TRANSCRIPTION_WATCHDOG_MS);
+            }
+          }
+        }
+        break;
+      }
+      // Ink 2 signals a provisional stop (turn.eager_end) was premature —
+      // the student kept talking within the same turn. Reset the
+      // eager-end latch and re-fire onSpeechStart (same payload shape as
+      // turn.start) so barge-in/retro-cancel timing re-arms correctly; also
+      // clear the stale-connection watchdog since speech has resumed.
+      case 'turn.resume': {
+        if (data.turn_id) {
+          const buf = turnBuffersRef.current.get(data.turn_id);
+          if (buf) {
+            buf.events.push(data);
+            if (buf.eagerEndFired) {
+              buf.eagerEndFired = false;
+              clearWatchdog();
+              const now = Date.now();
+              speechStartedAtRef.current = now;
+              const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
+              try { onSpeechStartRef.current?.({ tMs }); } catch {}
             }
           }
         }
@@ -395,6 +454,9 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       case 'turn.end': {
         if (data.turn_id) {
           turnBuffersRef.current.get(data.turn_id)?.events.push(data);
+          // Final transcript has arrived (even if empty/duplicate) — the
+          // stale-connection watchdog no longer applies to this turn.
+          clearWatchdog();
           finalizeTurn(data.turn_id, typeof data.transcript === 'string' ? data.transcript : '');
         }
         break;
@@ -410,7 +472,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       default:
         break;
     }
-  }, [finalizeTurn, logPrefix, setState, startMic]);
+  }, [clearWatchdog, finalizeTurn, logPrefix, setState, startMic]);
 
   const connectRef = useRef<() => Promise<void>>(async () => {});
   const scheduleReconnectRef = useRef<() => boolean>(() => false);
@@ -492,6 +554,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       console.log(`${logPrefix} WS closed:`, e.code, e.reason);
       wsRef.current = null;
       turnBuffersRef.current.clear();
+      clearWatchdog();
       if (!intentionallyDisconnectedRef.current) {
         if (scheduleReconnectRef.current?.()) return;
       }
@@ -499,7 +562,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     };
 
     wsRef.current = ws;
-  }, [enabled, handleMessage, logPrefix, mintToken, setState]);
+  }, [clearWatchdog, enabled, handleMessage, logPrefix, mintToken, setState]);
   connectRef.current = connect;
 
   const disconnect = useCallback(() => {
@@ -510,10 +573,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     }
     reconnectAttemptsRef.current = 0;
     turnBuffersRef.current.clear();
+    clearWatchdog();
     teardownMic();
     teardownWS();
     setState('disabled');
-  }, [teardownMic, teardownWS, setState]);
+  }, [clearWatchdog, teardownMic, teardownWS, setState]);
 
   useEffect(() => {
     if (enabled) {
@@ -528,10 +592,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     return () => {
       intentionallyDisconnectedRef.current = true;
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      clearWatchdog();
       teardownMic();
       teardownWS();
     };
-  }, [teardownMic, teardownWS]);
+  }, [clearWatchdog, teardownMic, teardownWS]);
 
   // Dev-only forced-close trigger, mirrors usePerceptionWS's
   // __tutorForcePerceptionClose so reconnect scenarios can be reproduced

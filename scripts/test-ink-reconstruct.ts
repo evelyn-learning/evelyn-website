@@ -148,6 +148,25 @@ test('events with no turn_id/transcript are ignored (connected, turn.start, erro
   assert.deepStrictEqual(finals, []);
 });
 
+test('turn.resume (eager_end retracted, student kept talking) is ignored by reconstruction — confirms the P2 final-review fix (useCartesiaInkWS turn.resume handling: resets the hook\'s eagerEndFired latch and re-fires onSpeechStart) does not touch transcript assembly', () => {
+  // turn.resume carries no `transcript` handling in reconstructInkFinals's
+  // type filter (only turn.update/turn.eager_end/turn.end are matched), so
+  // interleaving one mid-stream must be a no-op for the delta sequence —
+  // same as turn.start/connected/error above.
+  const events: InkEvent[] = [
+    { type: 'turn.start', turn_id: '1' },
+    { type: 'turn.update', turn_id: '1', transcript: 'So' },
+    { type: 'turn.update', turn_id: '1', transcript: 'So the' },
+    { type: 'turn.eager_end', turn_id: '1', transcript: 'So the' },
+    { type: 'turn.resume', turn_id: '1' },
+    { type: 'turn.update', turn_id: '1', transcript: 'So the derivative' },
+    { type: 'turn.end', turn_id: '1', transcript: 'So the derivative' },
+  ];
+  const withoutResume = events.filter((e) => e.type !== 'turn.resume');
+  assert.deepStrictEqual(reconstructInkFinals(events), reconstructInkFinals(withoutResume));
+  assert.deepStrictEqual(reconstructInkFinals(events), ['So', 'the', 'derivative']);
+});
+
 test('two sequential turns (different turn_ids) each reconstruct independently', () => {
   const events: InkEvent[] = [
     { type: 'turn.start', turn_id: 'a' },

@@ -39,8 +39,10 @@
  * (first-ever fetch to api.cartesia.ai from a fresh process). Since this
  * route is hit on every STT reconnect (Task 5's ladder), it gets the same
  * fail-fast-then-retry-once treatment: attempt 1 wrapped in a 3s
- * AbortSignal.timeout, attempt 2 plain — only connect-level failures
- * retry; a real non-OK HTTP response falls straight through.
+ * AbortSignal.timeout, attempt 2 wrapped in a 10s AbortSignal.timeout
+ * (final-review fix — an unguarded retry could otherwise hang indefinitely
+ * against a still-dead pool) — only connect-level failures retry; a real
+ * non-OK HTTP response falls straight through.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -79,9 +81,9 @@ export async function POST(_request: NextRequest) {
       response = await fetch(CARTESIA_TOKEN_URL, { ...fetchOpts, signal: AbortSignal.timeout(3000) });
     } catch (connectErr) {
       console.warn('[Cartesia Token] attempt 1 failed (connect/timeout), retrying once:', connectErr);
-      // Attempt 2: plain fetch, no timeout wrapper — connection pool has
-      // usually recovered by now.
-      response = await fetch(CARTESIA_TOKEN_URL, fetchOpts);
+      // Attempt 2: connection pool has usually recovered by now, but keep
+      // a bound so a still-dead pool can't hang this request indefinitely.
+      response = await fetch(CARTESIA_TOKEN_URL, { ...fetchOpts, signal: AbortSignal.timeout(10000) });
     }
 
     if (!response.ok) {
