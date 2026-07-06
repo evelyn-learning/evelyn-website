@@ -31,7 +31,7 @@
  * custom WS headers, so the token is passed as a QUERY PARAM named
  * `access_token` (NOT `api_key`), alongside `cartesia_version` also as a
  * query param (not a header) — e.g.
- *   wss://api.cartesia.ai/stt/websocket?cartesia_version=2026-03-01&access_token=<token>
+ *   wss://api.cartesia.ai/stt/turns/websocket?cartesia_version=2026-03-01&access_token=<token>
  * Task 5's useCartesiaInkWS MUST build its URL this way.
  *
  * Live-verify (2026-07-06) reproduced the exact cold-start undici

@@ -207,3 +207,108 @@ have to re-discover them:
   format tag 3) by design (Task 3), not `pcm_s16le` — this is why Python's
   stdlib `wave` module rejects Cartesia clips as "unknown format" while
   `ffprobe`/`afplay` play them fine; not a defect.
+
+## Phase 2 shipped (Cartesia migration)
+
+Phase 2 (`docs/superpowers/plans/2026-07-06-cartesia-migration-phase2.md`)
+wires this harness's round-1 verdicts into the live tutor session behind two
+independent, default-OFF flags. Flag-off is byte-identical to pre-migration
+behavior — verified by the regression sweep below with both flags unset.
+
+### Flags
+
+- `NEXT_PUBLIC_TUTOR_TTS_ENGINE` — `realtime` (default) | `cartesia`. Routes
+  the tutor's existing HTTP-TTS path (the `openai-mini` template) to
+  Cartesia Sonic 3.5 (`/api/tutor/tts-cartesia`) instead of OpenAI TTS.
+- `NEXT_PUBLIC_TUTOR_STT_ENGINE` — `openai` (default) | `ink2`. Swaps
+  `usePerceptionWS` for `useCartesiaInkWS` (Cartesia Ink 2 turn-based STT,
+  same callback contract). English-only — `openai` remains the
+  multilingual/rollback path regardless of this harness's per-accent STT
+  verdicts.
+
+Both are `NEXT_PUBLIC_*` and therefore build-time inlined: flipping either
+one requires a **dev-server restart** (or a redeploy in prod), not just a
+page reload. Set in both `.env.local` and `.env.local.production` and keep
+the two files in sync per repo convention — see "Prod flip" below for why
+`.env.local.production` needs a manual step in this worktree.
+
+### Where the pieces live
+
+- Voice registry: `src/lib/tutor/voice/cartesia-voice-registry.ts` —
+  `resolveCartesiaVoice({ teacherId, accent })`, `CARTESIA_DEFAULT_VOICE_ID`
+  (Katie), built from the "Locked voice registry data" in the Phase 2 plan.
+- TTS route: `src/app/api/tutor/tts-cartesia/route.ts` — raw `pcm_f32le`
+  24kHz streaming pass-through from `sonic-3.5`, same response headers as
+  `tts-openai/route.ts`.
+- TTS provider decision: `src/lib/tutor/voice/resolve-tts-provider.ts` —
+  `resolveTtsProvider(urlParam, envFlag)` (`?tts=` URL param still wins over
+  the env flag, unchanged existing behavior).
+- STT token route: `src/app/api/tutor/cartesia-token/route.ts` — mints a
+  short-lived Cartesia access token (`grants:{stt:true}`) so the browser
+  never sees `CARTESIA_API_KEY`; the WS auth param is `access_token` (not
+  `api_key`) per the live-verified Cartesia docs, and the endpoint is
+  `wss://api.cartesia.ai/stt/turns/websocket`.
+- STT hook: `src/app/tutor/hooks/useCartesiaInkWS.ts` — drop-in replacement
+  for `usePerceptionWS` with an identical callback surface (`onTranscript`,
+  speech-start/stop, failure signaling, reconnect ladder). Exports
+  `reconstructInkFinals`, used only as an empty-turn/duplicate-content
+  filter — the transcript text actually delivered to the brain pipeline is
+  always `turn.end`'s own cumulative `transcript` field (Cartesia
+  reconstructs it server-side; see the hook's inline comments for why the
+  delta-join approach isn't used for delivered text).
+
+### Tests
+
+Pure-logic, no network calls, safe to run anytime: `npm run
+test:cartesia-registry`, `npm run test:tts-flag`, `npm run
+test:ink-reconstruct` (plus the existing `npm run test:voice-harness`).
+
+### Rollout order
+
+**Every dev step below requires real-mic human verification, not just the
+automated sweep.** Every "verified" claim made while building Tasks 1-6 used
+either curl/paid-clip probes or Playwright's fake-mic Chromium flags
+(`--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
+--use-file-for-fake-audio-capture=<24kHz wav>`), which prove the plumbing
+works end-to-end (WS connects, turn events map, transcript reaches the
+classifier, audio plays) but do **not** exercise real speech behavior:
+natural mid-sentence pauses, ambient noise, real turn-taking cadence, or the
+mic-permission-denied banner. Treat each "dev" step as incomplete until a
+human has actually spoken to a live session.
+
+1. **Dev, TTS-only, ≥2 sessions.** `NEXT_PUBLIC_TUTOR_TTS_ENGINE=cartesia`
+   (STT flag unset), restart, a human runs ≥2 full sessions across teachers
+   (at least Elena + Dev): correct voice, captions/render-sync timing intact,
+   clean barge-in, PDF export unaffected.
+2. **Dev, STT-only, ≥2 sessions.** Revert the TTS flag, set
+   `NEXT_PUBLIC_TUTOR_STT_ENGINE=ink2`, restart, a human speaks naturally
+   (mid-sentence pauses, an idle gap ≥3min to exercise reconnect, and a
+   deliberate mic-permission denial) across ≥2 sessions.
+3. **Dev, both flags on.** Both flags set, restart, ≥1 full real-mic session
+   exercising the combined path. (Task 6 ran a fake-mic version of this step
+   as an automated smoke test — see below — but a real-mic session is still
+   outstanding before prod.)
+4. **Prod, TTS flag.** Add `NEXT_PUBLIC_TUTOR_TTS_ENGINE=cartesia` to
+   `.env.local.production` (main checkout only — see below), deploy, watch
+   one real production session closely.
+5. **Prod, STT flag.** Add `NEXT_PUBLIC_TUTOR_STT_ENGINE=ink2` to
+   `.env.local.production`, deploy, watch one real production session
+   closely.
+
+Instant revert at any step: unset the flag (comment it back out) and
+restart/redeploy — no other code changes needed, since flag-off is
+byte-identical to pre-migration behavior by construction.
+
+### Prod flip: `.env.local.production` lives outside this worktree
+
+`.env.local.production` is gitignored and this worktree
+(`/Users/luke/Dev/evelynlearning-cartesia`) doesn't have a copy — the only
+copy lives in the main checkout at
+`/Users/luke/Dev/evelynlearning/.env.local.production`. Both Phase 2 flags
+are currently **absent** from it (not even commented). When it's time to run
+rollout steps 4/5 above, add the same two commented (then, when flipping,
+uncommented) lines there by hand, mirroring `.env.local`'s comments in this
+worktree — this repo's convention is to keep the two files in sync manually
+since one is gitignored and the other isn't tracked as a template either.
+This task does not touch `.env.local.production` — prod flips are the
+user's call, not automated by this migration.

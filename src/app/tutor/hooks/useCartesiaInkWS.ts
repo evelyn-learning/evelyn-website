@@ -317,15 +317,19 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   // Delivers the turn.end's OWN cumulative `transcript` field verbatim
   // (it's already the full, correctly-spaced final text for the turn —
   // Cartesia does the reconstruction server-side). `reconstructInkFinals`
-  // is used here only as a "is there anything NEW in this turn.end vs.
-  // what a preceding turn.eager_end already carried" guard: word-level
-  // delta-joining (see that function's doc comment) can split mid-word on
-  // a partial-word update boundary, so its `.join(' ')` output is a WER-
-  // style APPROXIMATION good enough to prove "no new content" (empty
-  // deltas) but not for the text actually handed to the brain pipeline.
-  // The `buf.finalized` guard below is what actually stops a genuine
-  // duplicate turn.end message from double-firing onTranscript; the
-  // deltas check is defense-in-depth using the same ported primitive.
+  // is used here only as an EMPTY-TURN filter: word-level delta-joining
+  // (see that function's doc comment) can split mid-word on a partial-word
+  // update boundary, so its `.join(' ')` output is a WER-style
+  // APPROXIMATION good enough to prove "this turn.end carried no new
+  // content" (empty deltas -> skip delivering a blank/no-op transcript)
+  // but not accurate enough to hand to the brain pipeline as the actual
+  // text. The actual DUPLICATE turn.end guard is the buffer deletion
+  // below (`turnBuffersRef.current.delete(turnId)`): once a turn is
+  // processed its entry is removed from the map, so a genuine repeated
+  // turn.end for the same turn_id finds `buf` undefined on the next call
+  // and returns immediately via the `!buf` check — `buf.finalized` is a
+  // belt-and-suspenders flag for the (unobserved) case where delivery
+  // re-enters before the delete has landed.
   const finalizeTurn = useCallback((turnId: string, rawTranscript: string) => {
     const buf = turnBuffersRef.current.get(turnId);
     if (!buf || buf.finalized) return; // duplicate turn.end — no double text
@@ -551,6 +555,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   }, [logPrefix, state]);
 
   const setMuted = useCallback((muted: boolean) => {
+    // Local mute only — Cartesia's Ink 2 API has no documented equivalent
+    // of OpenAI Realtime's `input_audio_buffer.clear` server-side command,
+    // so there's nothing to send over the WS here; muting just stops the
+    // processor from forwarding mic frames (see the `mutedRef` check at
+    // the audio-worklet callback above).
     mutedRef.current = muted;
     console.warn(`${logPrefix} mic ${muted ? 'muted' : 'unmuted'}`);
   }, [logPrefix]);
