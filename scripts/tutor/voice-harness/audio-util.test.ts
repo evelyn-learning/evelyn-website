@@ -7,6 +7,8 @@ const pcm = float32ToPcm16(new Float32Array([0, 0.5, -0.5, 1, -1]));
 assert.strictEqual(pcm.length, 10);
 assert.strictEqual(pcm.readInt16LE(2), 16383);   // 0.5 → ~0x3FFF
 assert.strictEqual(pcm.readInt16LE(6), 32767);   // clamp +1
+assert.strictEqual(pcm.readInt16LE(4), -16384);  // -0.5 → -0x4000
+assert.strictEqual(pcm.readInt16LE(8), -32768);  // clamp -1
 
 // wav round-trip
 const wav = pcm16ToWav(pcm, 16000);

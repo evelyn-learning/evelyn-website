@@ -3,7 +3,7 @@
 export function normalizeForWer(s: string): string[] {
   return s
     .toLowerCase()
-    .replace(/'/g, "'")
+    .replace(/’/g, "'")
     .replace(/[^a-z0-9'/ ]+/g, ' ')
     .split(/\s+/)
     .filter(Boolean);

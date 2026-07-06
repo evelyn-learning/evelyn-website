@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { normalizeForWer, wordErrorRate } from './wer';
 
-assert.deepStrictEqual(normalizeForWer('Hello, World!  it\'s 3/4.'), ['hello', 'world', "it's", '3/4']);
+assert.deepStrictEqual(normalizeForWer('Hello, World!  it’s 3/4.'), ['hello', 'world', "it's", '3/4']);
 assert.strictEqual(wordErrorRate('the cat sat', 'the cat sat').wer, 0);
 // one substitution over 3 ref words
 assert.ok(Math.abs(wordErrorRate('the cat sat', 'the bat sat').wer - 1 / 3) < 1e-9);
