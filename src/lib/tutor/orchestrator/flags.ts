@@ -187,3 +187,12 @@ export const TUTOR_STUDENT_PROBLEM_GROUNDING =
 export const TUTOR_CONTENT_VARIETY =
   process.env.NEXT_PUBLIC_TUTOR_CONTENT_VARIETY === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_CONTENT_VARIETY === 'true';
+// Cartesia migration Phase 2, Task 5 (docs/superpowers/plans/
+// 2026-07-06-cartesia-migration-phase2.md): swap the perception/STT hook
+// from usePerceptionWS (OpenAI gpt-realtime-2 transcription-only) to
+// useCartesiaInkWS (Cartesia Ink 2, English-only). Default OFF — unset
+// means 'openai', byte-identical to pre-Task-5 behavior. Independent of
+// TUTOR_TTS_ENGINE (Task 3); each flag can be flipped alone per the
+// single-variable rollout discipline.
+export const TUTOR_STT_ENGINE_INK2 =
+  process.env.NEXT_PUBLIC_TUTOR_STT_ENGINE === 'ink2';
