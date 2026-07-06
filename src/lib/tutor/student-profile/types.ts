@@ -235,7 +235,25 @@ export interface StudentProfile {
   partnerId?: string;
   /** Free-form metadata for partners. */
   metadata?: Record<string, unknown>;
+  /** Per-plan record of fillings already shown to this student (content
+   *  variety Phase 1). Keyed by lessonPlanId. Absent for students who have
+   *  never had a flagged session. */
+  planContentSeen?: Record<string, PlanContentSeen>;
 }
+
+/** Bounded record of the specific FILLINGS a student has already been shown
+ *  for a given plan, so repeat sessions can diverge from them (content-variety
+ *  Phase 1). Short descriptors for narrative slots; problem statements for
+ *  graded ones. */
+export interface PlanContentSeen {
+  hooks: string[];
+  examples: string[];
+  problems: string[];
+}
+/** Same shape, used as the per-session extraction payload written in. */
+export type PlanContentFillings = PlanContentSeen;
+/** Max prior renditions kept per slot per plan (FIFO). */
+export const PLAN_CONTENT_SEEN_CAP = 3;
 
 export const STUDENT_PROFILE_SCHEMA_VERSION = 1;
 

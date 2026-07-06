@@ -27,8 +27,11 @@ import {
   type GapEvidence,
   type GapSignalCode,
   type SessionMemory,
+  type PlanContentFillings,
+  type PlanContentSeen,
   STUDENT_PROFILE_SCHEMA_VERSION,
   RECENT_SESSIONS_CAP,
+  PLAN_CONTENT_SEEN_CAP,
 } from './types';
 
 /** Promotion threshold: candidate → confirmed when single-session
@@ -525,6 +528,37 @@ export function upsertSessionMemory(profile: StudentProfile, memory: SessionMemo
   const next = [...profile.recentSessions];
   next[idx] = merged;
   return { ...profile, recentSessions: next };
+}
+
+export { PLAN_CONTENT_SEEN_CAP } from './types';
+
+/** Merge one session's used fillings into the per-plan seen-memory (content
+ *  variety Phase 1). Pure. Per slot: append new non-empty descriptors,
+ *  case-insensitive dedup (newest position wins), FIFO-cap at
+ *  PLAN_CONTENT_SEEN_CAP. Absent slots stay absent. */
+export function recordPlanContentSeen(
+  profile: StudentProfile,
+  planId: string,
+  fillings: PlanContentFillings,
+): StudentProfile {
+  const prev: PlanContentSeen = profile.planContentSeen?.[planId] ?? { hooks: [], examples: [], problems: [] };
+  const mergeSlot = (old: string[], incoming: string[]): string[] => {
+    const out = [...old];
+    for (const raw of incoming) {
+      const v = (raw ?? '').trim();
+      if (!v) continue;
+      const i = out.findIndex((e) => e.toLowerCase() === v.toLowerCase());
+      if (i !== -1) out.splice(i, 1); // drop old occurrence; re-add at end (newest)
+      out.push(v);
+    }
+    return out.slice(-PLAN_CONTENT_SEEN_CAP);
+  };
+  const next: PlanContentSeen = {
+    hooks: mergeSlot(prev.hooks, fillings.hooks),
+    examples: mergeSlot(prev.examples, fillings.examples),
+    problems: mergeSlot(prev.problems, fillings.problems),
+  };
+  return { ...profile, planContentSeen: { ...(profile.planContentSeen ?? {}), [planId]: next } };
 }
 
 /** Patch the preferences sub-object on a profile and persist. Only keys
