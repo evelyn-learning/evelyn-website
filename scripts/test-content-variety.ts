@@ -91,6 +91,12 @@ test('directive tells the brain to differ + keep LOs/difficulty/misconception', 
   assert.match(out, /misconception/i);
 });
 
+test('directive routes practice problems through generate_problem (phase 2)', () => {
+  const out = buildContentVarietyDirective({ hooks: ['h'], examples: [], problems: [] });
+  assert.match(out, /generate_problem/);
+  assert.match(out, /verbatim/i);
+});
+
 test('omits an empty slot from the listing', () => {
   const out = buildContentVarietyDirective({ hooks: ['h'], examples: [], problems: [] });
   assert.doesNotMatch(out, /worked-example contexts/i);

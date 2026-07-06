@@ -31,6 +31,7 @@
     "test:resume-seed": "npx tsx scripts/test-resume-seed-guard.ts",
     "test:tutor-reactions": "npx tsx scripts/test-tutor-reactions.ts",
     "test:content-variety": "npx tsx scripts/test-content-variety.ts",
+    "test:problem-verify": "npx tsx scripts/test-problem-verify.ts",
     "test:conic": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-construction.ts",
     "test:graph-consistency": "npx tsx scripts/test-graph-consistency.ts",
     "test:process-tool-call": "npx tsx scripts/test-process-tool-call.ts",

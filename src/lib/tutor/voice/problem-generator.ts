@@ -24,10 +24,18 @@
  * board MUST render it via show_problem. Drift between them is a bug.
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '../../db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
+// for verification. Same model in fresh context is the design's decorrelation
+// (the verifier never sees the generator's claimed answer). Overridable.
+const BRAINGEN_MODEL = process.env.BRAINGEN_MODEL || 'claude-sonnet-5';
+const BRAINGEN_VERIFY_MODEL = process.env.BRAINGEN_VERIFY_MODEL || 'claude-sonnet-5';
 
 /** 4-point anchored-relative difficulty scale (v1 design Q6). */
 export type Difficulty = 'slightly_easier' | 'same' | 'slightly_harder' | 'much_harder';
@@ -55,6 +63,11 @@ export interface GenerateProblemInput {
    *  session, plus problem-text hashes for brain-gen-shown items. */
   excludeIds?: string[];
   excludeHashes?: string[];
+  /** Force Layer-2 brain-gen ON even when the per-topic brainGen state is
+   *  'disabled'. Set by the route when TUTOR_CONTENT_VARIETY is on so
+   *  content-variety gets fresh VERIFIED practice problems regardless of the
+   *  per-topic ramp. */
+  forceBrainGen?: boolean;
 }
 
 export interface GeneratedProblem {
@@ -123,17 +136,100 @@ async function queryBank(
   };
 }
 
+const BRAINGEN_SYSTEM = `You are an expert problem author for a tutoring engine. Given an ANCHOR practice problem, write ONE fresh problem that tests the SAME underlying skill and concept at the requested difficulty, but with a DIFFERENT real-world context and different numbers/specifics — so a returning student doesn't see the same problem twice. Keep it self-contained and unambiguous. The answer MUST be a single clean, checkable value: a number (with units if natural) or a short exact phrase / multiple-choice letter — NOT an open-ended discussion. Output ONLY a JSON object, no fences, no preamble:
+{"problemText": string, "finalAnswer": string (the bare checkable answer, e.g. "48 square inches" or "B"), "teachingAnswer": string (a one-to-three sentence worked solution the tutor can reference), "responseFormat": "numeric"|"mcq", "hints": string[] (1-3 short hints), "choices"?: string[] (for mcq only)}`;
+
+const BRAINGEN_VERIFY_SYSTEM = `You are a meticulous solver. Solve the problem and reply with ONLY the final answer — a single number (with units if natural) or a short phrase / the correct multiple-choice option. No working, no explanation, no restatement.`;
+
+/** One Anthropic text call → trimmed string. */
+async function callModel(model: string, system: string, user: string, maxTokens: number): Promise<string> {
+  const res = await anthropic.messages.create({
+    model,
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: 'user', content: user }],
+  });
+  return res.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { type: 'text'; text: string }).text)
+    .join('')
+    .trim();
+}
+
+interface GenPayload {
+  problemText: string;
+  finalAnswer: string;
+  teachingAnswer?: string;
+  responseFormat?: 'numeric' | 'mcq';
+  hints?: string[];
+  choices?: string[];
+}
+
+function parseGenPayload(raw: string): GenPayload | null {
+  try {
+    const j = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
+    if (typeof j.problemText !== 'string' || !j.problemText.trim()) return null;
+    if (typeof j.finalAnswer !== 'string' || !j.finalAnswer.trim()) return null;
+    const strArr = (v: unknown): string[] | undefined =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : undefined;
+    return {
+      problemText: j.problemText.trim(),
+      finalAnswer: j.finalAnswer.trim(),
+      teachingAnswer: typeof j.teachingAnswer === 'string' ? j.teachingAnswer.trim() : undefined,
+      responseFormat: j.responseFormat === 'mcq' ? 'mcq' : 'numeric',
+      hints: strArr(j.hints),
+      choices: strArr(j.choices),
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Layer 2 — brain-gen + Sonnet verify. Phase 2 wiring lives here.
- * v1 scaffold: returns null so the pipeline falls through to Layer 3.
+ * Layer 2 — brain-gen + independent verify (content-variety Phase 2).
+ * Generates a fresh problem testing the anchor's skill, then INDEPENDENTLY
+ * solves it in a separate call (the verifier never sees the claimed answer)
+ * and only returns the problem when the two answers agree (numeric tolerance
+ * or short-exact). 1 retry on mismatch/parse-failure (temperature gives a
+ * different problem). On exhaustion returns null → the pipeline falls through
+ * to bank / plan-authored, so an UNVERIFIED problem is never served.
  */
 async function brainGenWithVerify(
-  _input: GenerateProblemInput
+  input: GenerateProblemInput
 ): Promise<GeneratedProblem | null> {
-  // TODO Phase 2: Opus 4.7 generation + Sonnet 4.6 fresh-context
-  // independent solve + 1 retry on mismatch. Tool-call computation
-  // layer (sympy/JS) for math/science where applicable.
-  return null;
+  const los = input.plan.los.map((lo) => `- ${lo.description}`).join('\n');
+  const userPrompt =
+    `ANCHOR problem (do NOT reuse its numbers or context):\n${input.anchor.statement}\n` +
+    (input.anchor.expectedAnswer ? `ANCHOR answer (for difficulty calibration): ${input.anchor.expectedAnswer}\n` : '') +
+    `\nLearning objectives of this lesson:\n${los}\n` +
+    `\nRequested difficulty relative to the anchor: ${input.difficulty}. Write the fresh problem now.`;
+
+  const attempt = async (): Promise<GeneratedProblem | null> => {
+    const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
+    if (!gen) return null;
+    // Cross-session/session dedup: never serve a problem already shown.
+    const hash = simpleHash(gen.problemText);
+    if ((input.excludeHashes ?? []).includes(hash)) return null;
+    // Independent solve — the verifier only sees the problem text.
+    const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
+    if (!answersAgree(gen.finalAnswer, solved)) return null;
+    return {
+      canonicalText: gen.problemText,
+      // The teaching solution is what the tutor references; fall back to the
+      // bare final answer. Validation downstream compares the student's
+      // response to this, so keep the bare answer recoverable inside it.
+      expectedAnswer: gen.teachingAnswer ? `${gen.teachingAnswer} (answer: ${gen.finalAnswer})` : gen.finalAnswer,
+      hints: gen.hints,
+      responseFormat: gen.responseFormat,
+      choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
+      provenance: 'brain-gen',
+      trackingId: hash,
+    };
+  };
+
+  const first = await attempt();
+  if (first) return first;
+  return await attempt(); // 1 retry — temperature yields a different problem
 }
 
 /** Cheap content-token extraction: lowercase words ≥4 chars, no
@@ -218,6 +314,43 @@ function planAuthoredFallback(
   };
 }
 
+/** Extract a comparable number from an answer string. Handles fractions
+ *  ("3/4" → 0.75), currency ("$4.50" → 4.5), comma thousands ("300,000" →
+ *  300000), and a number embedded in prose / units ("15 square feet" → 15,
+ *  "Area = 20" → 20). Returns null when there's no digit. Used by
+ *  answersAgree to verify a brain-generated problem's answer. */
+export function extractAnswerNumber(s: string): number | null {
+  const t = (s ?? '').trim();
+  if (!t) return null;
+  const frac = t.match(/(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)/);
+  if (frac) {
+    const d = parseFloat(frac[2]);
+    if (d !== 0) return parseFloat(frac[1]) / d;
+  }
+  const m = t.replace(/[$,]/g, '').match(/-?\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[0]);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Whether a generated problem's stated answer and an INDEPENDENT solve agree
+ *  well enough to serve the problem to a student. Numeric → 1%-or-0.01
+ *  tolerance (same rule as portal assessment grading); otherwise normalized
+ *  short-exact equality (mcq letters, one-word answers). Anything that can't
+ *  be matched this way returns false → the caller falls back to the authored
+ *  problem (never serve an unverified generated problem). */
+export function answersAgree(genAnswer: string, solveAnswer: string): boolean {
+  const a = extractAnswerNumber(genAnswer);
+  const b = extractAnswerNumber(solveAnswer);
+  if (a !== null && b !== null) {
+    const tol = Math.max(0.01, Math.abs(b) * 0.01);
+    return Math.abs(a - b) <= tol;
+  }
+  const norm = (s: string) => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const na = norm(genAnswer), nb = norm(solveAnswer);
+  return !!na && na === nb;
+}
+
 /** Cheap deterministic hash for dedup. Not cryptographic. */
 export function simpleHash(s: string): string {
   let h = 5381;
@@ -288,7 +421,7 @@ export async function generateProblem(
   // (handled at the call site, not here — this layer returns the
   // generated problem regardless and lets the caller decide).
   let brainGenFailed = false;
-  if (brainGenState !== 'disabled') {
+  if (brainGenState !== 'disabled' || input.forceBrainGen) {
     try {
       const gen = await brainGenWithVerify(input);
       if (gen) {

@@ -414,7 +414,13 @@ export function buildContentVarietyDirective(seen: PlanContentSeen | undefined):
   const lines: string[] = [
     ``,
     `<content_variety>`,
-    `RETURNING STUDENT — this is a REPEAT of a plan they have already done. The hook script, worked-example, and extension written in the segments above are the STANDARD version they have ALREADY experienced. Do NOT deliver those authored scripts this time. Instead invent FRESH equivalents: a new hook story with different objects, a worked example with a different real-world context and different numbers, a different extension — all teaching the SAME learning objectives, at the SAME difficulty, keeping the SAME vocabulary and targeting the SAME misconception in each check. Same skill, new clothing. In particular, do NOT reuse any of these already-seen fillings:`,
+    `RETURNING STUDENT — this is a REPEAT of a plan they have already done. The hook script, worked-example, extension, and practice problems written in the segments above are the STANDARD version they have ALREADY experienced. Do NOT deliver those authored scripts this time. Instead invent FRESH equivalents — all teaching the SAME learning objectives, at the SAME difficulty, keeping the SAME vocabulary and targeting the SAME misconception in each check. Same skill, new clothing:`,
+    `  • HOOK: a new opening story with different objects.`,
+    `  • WORKED EXAMPLE: a different real-world context and different numbers.`,
+    `  • PRACTICE PROBLEM (try-yourself): do NOT render the authored problem. Instead call generate_problem with anchorProblem set to the authored problem and difficulty "same" — the runtime returns a fresh, verified problem; quote its canonicalText verbatim. This keeps the answer-checking correct.`,
+    `  • MISCONCEPTION CHECK: a new scenario that exposes the SAME misconception.`,
+    `  • EXTENSION: a different challenge.`,
+    `Do NOT reuse any of these already-seen fillings:`,
   ];
   for (const [label, arr] of shown) {
     lines.push(`  already seen (${label}): ${arr.map((s) => `"${s}"`).join(', ')}`);

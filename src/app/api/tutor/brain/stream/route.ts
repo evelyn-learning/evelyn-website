@@ -34,6 +34,7 @@ import {
   generateProblem,
   type Difficulty,
 } from '@/lib/tutor/voice/problem-generator';
+import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
 
 export const runtime = 'nodejs';
@@ -239,6 +240,10 @@ function makeToolResultProvider(
         anchor: { statement: anchorStatement, expectedAnswer: anchorAnswer },
         excludeIds: shownProblemIds,
         excludeHashes: shownProblemHashes,
+        // Content variety (phase 2): enable verified Layer-2 brain-gen so
+        // practice problems come out FRESH + verified regardless of the
+        // per-topic brainGen ramp. Falls back to bank/authored on failure.
+        forceBrainGen: TUTOR_CONTENT_VARIETY,
       });
       console.log('[brain.stream:generate_problem] telemetry:', JSON.stringify(telemetry));
       if (!result) {
