@@ -457,6 +457,10 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'complex_plane', 'plot_diagram',
             // Phase 29 — biology (sense-organ cross-sections)
             'eye_cross_section', 'ear_cross_section',
+            // Phase 30 — chemistry (pH scale)
+            'ph_scale',
+            // Phase 31 — microeconomics
+            'game_theory_matrix', 'elasticity', 'comparative_advantage',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

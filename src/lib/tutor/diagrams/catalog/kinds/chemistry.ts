@@ -554,3 +554,102 @@ export function buildLatticeManifest(figure: LatticeFigure): FeatureManifestEntr
   }
   return feats;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  ph_scale  (the 0–14 acidity/alkalinity scale)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface PhMarker {
+  label: string;
+  ph: number;      // 0..14
+}
+
+export interface PhScaleFigure {
+  markers: PhMarker[];        // substances placed along the scale
+  showRegions: boolean;       // acidic / neutral / basic bands + labels
+  highlightPh?: number;       // emphasise one pH value
+  title?: string;
+}
+
+const DEFAULT_PH_MARKERS: PhMarker[] = [
+  { label: 'Battery acid', ph: 0 },
+  { label: 'Lemon juice', ph: 2 },
+  { label: 'Vinegar', ph: 3 },
+  { label: 'Black coffee', ph: 5 },
+  { label: 'Pure water', ph: 7 },
+  { label: 'Baking soda', ph: 9 },
+  { label: 'Ammonia', ph: 11 },
+  { label: 'Bleach', ph: 13 },
+];
+
+function clampPh(v: unknown, fallback: number): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return Math.max(0, Math.min(14, v));
+  return fallback;
+}
+
+/** The pH scale (0–14): a coloured acidity/alkalinity bar with common
+ *  substances placed at their pH, acidic/neutral/basic regions labelled.
+ *  Pass custom `markers` or accept the default common-substance set. */
+export function solvePhScale(params: Record<string, unknown>): PhScaleFigure {
+  const markers: PhMarker[] = Array.isArray(params.markers) && params.markers.length > 0
+    ? (params.markers as Array<Record<string, unknown>>)
+        .map((m) => ({
+          label: typeof m.label === 'string' && m.label.trim() ? m.label.trim() : '?',
+          ph: clampPh(m.ph, NaN),
+        }))
+        .filter((m) => Number.isFinite(m.ph))
+        .sort((a, b) => a.ph - b.ph)
+    : DEFAULT_PH_MARKERS;
+
+  const highlightPh = typeof params.highlightPh === 'number' && Number.isFinite(params.highlightPh)
+    ? clampPh(params.highlightPh, NaN)
+    : undefined;
+
+  return {
+    markers,
+    showRegions: params.showRegions !== false,
+    highlightPh: Number.isFinite(highlightPh as number) ? highlightPh : undefined,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const phScaleFeatureNames = {
+  scale: 'ph-scale',
+  bar: 'ph-bar',
+  acidic: 'acidic-region',
+  neutral: 'neutral-region',
+  basic: 'basic-region',
+  marker: (i: number): string => `ph-marker-${i}`,
+};
+
+export function buildPhScaleManifest(figure: PhScaleFigure): FeatureManifestEntry[] {
+  const N = phScaleFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.scale,
+      kind: 'region',
+      description: 'the pH scale (0–14)',
+      labels: ['the ph scale', 'the pH scale', 'the scale', 'the diagram', 'the figure'],
+      displayName: figure.title || 'pH scale',
+      scribbleable: true,
+    },
+  ];
+  if (figure.showRegions) {
+    feats.push(
+      { name: N.acidic, kind: 'area', description: 'the acidic region (pH 0–6, more H⁺)', labels: ['acidic', 'the acidic region', 'acids', 'the acid side', 'pH 0 to 6'], displayName: 'Acidic (0–6)', scribbleable: true },
+      { name: N.neutral, kind: 'area', description: 'neutral (pH 7 — pure water)', labels: ['neutral', 'the neutral point', 'pH 7'], displayName: 'Neutral (7)', scribbleable: true },
+      { name: N.basic, kind: 'area', description: 'the basic / alkaline region (pH 8–14, more OH⁻)', labels: ['basic', 'the basic region', 'alkaline', 'the alkaline region', 'bases', 'the base side', 'pH 8 to 14'], displayName: 'Basic (8–14)', scribbleable: true },
+    );
+  }
+  figure.markers.forEach((m, i) => {
+    feats.push({
+      name: N.marker(i),
+      kind: 'point',
+      description: `${m.label} — pH ${m.ph}`,
+      labels: [m.label, `the ${m.label.toLowerCase()}`, `pH ${m.ph}`],
+      displayName: `${m.label} (pH ${m.ph})`,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}

@@ -137,6 +137,9 @@ import {
   buildForeignExchangeMarketManifest,
   buildSupplyDemandManifest,
   buildCircularFlowManifest,
+  buildGameTheoryManifest,
+  buildElasticityManifest,
+  buildComparativeAdvantageManifest,
   solveProductionPossibilities,
   solveBusinessCycle,
   solveAggregateDemandSupply,
@@ -146,6 +149,9 @@ import {
   solveForeignExchangeMarket,
   solveSupplyDemand,
   solveCircularFlow,
+  solveGameTheoryMatrix,
+  solveElasticity,
+  solveComparativeAdvantage,
 } from '@/lib/tutor/diagrams/catalog/kinds/economics';
 import {
   buildRiemannSumManifest,
@@ -247,6 +253,8 @@ import {
   solveTitrationCurve as solveTitrationForManifest,
   buildLatticeManifest,
   solveCrystalLattice as solveLatticeForManifest,
+  buildPhScaleManifest,
+  solvePhScale as solvePhScaleForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
 import {
   buildNuclearDecayManifest,
@@ -1364,6 +1372,18 @@ function buildDiagramManifest(cmd: {
       } catch { /* fall through */ }
       break;
     }
+    case 'game_theory_matrix': {
+      try { return buildGameTheoryManifest(solveGameTheoryMatrix(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'elasticity': {
+      try { return buildElasticityManifest(solveElasticity(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'comparative_advantage': {
+      try { return buildComparativeAdvantageManifest(solveComparativeAdvantage(params)); } catch { /* fall through */ }
+      break;
+    }
     // Phase 10 — calculus.
     case 'riemann_sum': {
       try {
@@ -1551,6 +1571,10 @@ function buildDiagramManifest(cmd: {
     }
     case 'titration_curve': {
       try { return buildTitrationManifest(solveTitrationForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'ph_scale': {
+      try { return buildPhScaleManifest(solvePhScaleForManifest(params)); } catch { /* fall through */ }
       break;
     }
     case 'crystal_lattice': {

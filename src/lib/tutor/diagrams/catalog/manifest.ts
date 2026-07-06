@@ -56,6 +56,9 @@ import {
   solveForeignExchangeMarket,
   solveSupplyDemand,
   solveCircularFlow,
+  solveGameTheoryMatrix,
+  solveElasticity,
+  solveComparativeAdvantage,
 } from './kinds/economics';
 
 import {
@@ -90,7 +93,7 @@ import { solveHeartDiagram } from './kinds/heart';
 import { solvePhotosynthesis, solveCellularRespiration } from './kinds/cell-energy';
 import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from './kinds/waves';
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
-import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
+import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice, solvePhScale } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection, solveEarCrossSection } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
@@ -279,6 +282,14 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 29 — biology (sense-organ cross-sections) ────────────────────
   { kind: 'eye_cross_section', displayName: 'Human Eye (cross-section)', whenToUse: 'Show a labeled horizontal cross-section of the human eye (light enters from the left): cornea, aqueous humour, iris & pupil, lens, ciliary body & suspensory ligaments, and the three coats — sclera, choroid, retina — with the fovea, blind spot, optic nerve and vitreous humour. An optional light path shows rays converging on the retina. Use for vision / eye-anatomy teaching instead of a freehand sketch. Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — cornea, aqueous_humor, iris, pupil, lens, ciliary_body, suspensory_ligaments, sclera, choroid, retina, fovea, optic_nerve, blind_spot, vitreous_humor), showLightPath?:boolean (default true), title?' },
   { kind: 'ear_cross_section', displayName: 'Human Ear (cross-section)', whenToUse: 'Show a labeled frontal section of the human ear grouped into outer / middle / inner regions: pinna and ear canal (outer); eardrum, the three ossicles malleus/incus/stapes, oval window and Eustachian tube (middle); and the cochlea, semicircular canals and auditory nerve (inner). Use for hearing / ear-anatomy teaching instead of a freehand sketch (the ossicle chain and cochlear spiral cannot be doodled legibly). Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — pinna, ear_canal, eardrum, malleus, incus, stapes, oval_window, semicircular_canals, cochlea, auditory_nerve, eustachian_tube), showRegions?:boolean (default true; outer/middle/inner bands), title?' },
+
+  // ── Phase 30 — chemistry (pH scale) ────────────────────────────────────
+  { kind: 'ph_scale', displayName: 'pH Scale (0–14)', whenToUse: 'Show the pH scale: a colour-graded 0–14 bar (universal-indicator colours) with the acidic (0–6), neutral (7) and basic/alkaline (8–14) regions labelled and common substances placed at their pH. Use for acids-and-bases teaching instead of a freehand sketch. Pass custom substances via markers or accept the default common-substance set; highlight one value with highlightPh.', subjects: ['chemistry'], grades: { from: 5, to: 12 }, paramSchema: 'markers?:[{label, ph:0..14}] (substances to place; default common set battery-acid…bleach), showRegions?:boolean (default true), highlightPh?:number 0..14 (draw a pointer at one value), title?' },
+
+  // ── Phase 31 — microeconomics ──────────────────────────────────────────
+  { kind: 'game_theory_matrix', displayName: 'Game Theory Payoff Matrix (2×2)', whenToUse: 'Show a 2×2 normal-form game payoff matrix (e.g. the prisoner\'s dilemma): two players, two strategies each, each cell holding (row-player payoff, col-player payoff) — row payoff bottom-left, col payoff top-right. Optionally highlight the Nash equilibrium cell. Use for game-theory / oligopoly / dominant-strategy teaching instead of a freehand sketch. Defaults to the classic prisoner\'s dilemma.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'rowPlayer?:string, colPlayer?:string, rowStrategies?:[s1,s2] (default Cooperate/Defect), colStrategies?:[s1,s2], payoffs?:[[[r,c],[r,c]],[[r,c],[r,c]]] ([row][col]=[rowPayoff,colPayoff]; default prisoner\'s dilemma), highlightCell?:[row,col] (0/1 — the Nash equilibrium), title?' },
+  { kind: 'elasticity', displayName: 'Price Elasticity of Demand', whenToUse: 'Show price elasticity of demand as a steep (inelastic) vs flat (elastic) demand curve through a common point on price–quantity axes, with the %ΔQ vs %ΔP relationship labelled. mode "compare" shows both; "elastic"/"inelastic" emphasise one. Use for elasticity teaching instead of a freehand sketch. For a full single-market supply & demand graph use supply_demand.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'mode?:compare|elastic|inelastic (default compare), title?' },
+  { kind: 'comparative_advantage', displayName: 'Comparative Advantage (opportunity-cost table)', whenToUse: 'Show comparative advantage as an opportunity-cost table: two producers, two goods, output per fixed resource, with the opportunity cost of each good computed and the comparative-advantage winner per good highlighted (lower opportunity cost wins). Use for trade / comparative-advantage teaching instead of a freehand sketch.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'producerA?:string (default Country A), producerB?:string, goodX?:string (default Wheat), goodY?:string (default Cloth), outputAX?:number, outputAY?:number, outputBX?:number, outputBY?:number (outputs per fixed resource; opp costs + CA winners computed), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -434,6 +445,12 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 29 — biology (sense-organ cross-sections)
   eye_cross_section: solveEyeCrossSection,
   ear_cross_section: solveEarCrossSection,
+  // Phase 30 — chemistry (pH scale)
+  ph_scale: solvePhScale,
+  // Phase 31 — microeconomics
+  game_theory_matrix: solveGameTheoryMatrix,
+  elasticity: solveElasticity,
+  comparative_advantage: solveComparativeAdvantage,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "ph_scale", "params": { "title": "The pH scale" } }, "label": "ph-default", "expect": "render" }

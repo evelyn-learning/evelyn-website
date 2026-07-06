@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "elasticity", "params": {} }, "label": "elasticity", "expect": "render" }

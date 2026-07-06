@@ -8,10 +8,12 @@ import {
   latticeFeatureNames,
   latticeName,
   eTerm,
+  phScaleFeatureNames,
   type BohrFigure,
   type GalvanicFigure,
   type TitrationFigure,
   type LatticeFigure,
+  type PhScaleFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/chemistry';
 
 const BLUE = '#2563eb';
@@ -556,6 +558,113 @@ export function CatalogLatticeRenderer({ figure }: { figure: LatticeFigure }) {
         <text x={20} y={H - 20} fontSize={12.5} fill={INK} fontWeight={600}>
           {`${figure.atomsPerCell} atom${figure.atomsPerCell === 1 ? '' : 's'} per unit cell`}
         </text>
+      </svg>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  ph_scale
+// ══════════════════════════════════════════════════════════════════════════
+
+// Universal-indicator colour at an integer pH (0..14).
+const PH_COLORS: Record<number, string> = {
+  0: '#e11d48', 1: '#ef4444', 2: '#f97316', 3: '#fb923c', 4: '#f59e0b',
+  5: '#eab308', 6: '#a3e635', 7: '#22c55e', 8: '#14b8a6', 9: '#06b6d4',
+  10: '#0ea5e9', 11: '#3b82f6', 12: '#6366f1', 13: '#7c3aed', 14: '#6b21a8',
+};
+
+export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
+  const N = phScaleFeatureNames;
+  const W = 780;
+  const H = figure.markers.length > 0 ? 400 : 240;
+  const INK = '#374151';
+  const x0 = 56, x1 = 724;         // bar horizontal extent
+  const barY = 150, barH = 42;
+  const phX = (ph: number) => x0 + (ph / 14) * (x1 - x0);
+
+  const heading = figure.title || 'The pH scale';
+
+  // Stagger markers into rows below the bar to avoid label collisions.
+  const rowCount = 3;
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[780px]"
+        data-feature={N.scale}
+        data-feature-label={heading}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        <defs>
+          <linearGradient id="ph-grad" x1="0" y1="0" x2="1" y2="0">
+            {Array.from({ length: 15 }, (_, i) => (
+              <stop key={i} offset={`${(i / 14) * 100}%`} stopColor={PH_COLORS[i]} />
+            ))}
+          </linearGradient>
+        </defs>
+
+        {/* region labels + brackets */}
+        {figure.showRegions && (
+          <>
+            <g data-feature={N.acidic} data-feature-label="Acidic region">
+              <line x1={phX(0)} y1={barY - 16} x2={phX(6.5)} y2={barY - 16} stroke="#dc2626" strokeWidth={2} />
+              <text x={phX(3.25)} y={barY - 40} textAnchor="middle" fontSize={13} fontWeight={700} fill="#dc2626">ACIDIC</text>
+              <text x={phX(3.25)} y={barY - 24} textAnchor="middle" fontSize={10} fill="#dc2626" opacity={0.9}>more H⁺</text>
+            </g>
+            <g data-feature={N.neutral} data-feature-label="Neutral">
+              <text x={phX(7)} y={barY - 40} textAnchor="middle" fontSize={12} fontWeight={700} fill="#15803d">NEUTRAL</text>
+            </g>
+            <g data-feature={N.basic} data-feature-label="Basic region">
+              <line x1={phX(7.5)} y1={barY - 16} x2={phX(14)} y2={barY - 16} stroke="#6d28d9" strokeWidth={2} />
+              <text x={phX(10.75)} y={barY - 40} textAnchor="middle" fontSize={13} fontWeight={700} fill="#6d28d9">BASIC (ALKALINE)</text>
+              <text x={phX(10.75)} y={barY - 24} textAnchor="middle" fontSize={10} fill="#6d28d9" opacity={0.9}>more OH⁻</text>
+            </g>
+          </>
+        )}
+
+        {/* the coloured bar */}
+        <g data-feature={N.bar} data-feature-label="pH bar">
+          <rect x={x0} y={barY} width={x1 - x0} height={barH} rx={4} fill="url(#ph-grad)" stroke={INK} strokeWidth={1.2} />
+        </g>
+
+        {/* integer ticks + numbers */}
+        {Array.from({ length: 15 }, (_, i) => (
+          <g key={i}>
+            <line x1={phX(i)} y1={barY + barH} x2={phX(i)} y2={barY + barH + 7} stroke={INK} strokeWidth={i === 7 ? 2 : 1} />
+            <text x={phX(i)} y={barY + barH + 22} textAnchor="middle" fontSize={12} fontWeight={i === 7 ? 700 : 500} fill={INK}>{i}</text>
+          </g>
+        ))}
+
+        {/* highlight a specific pH */}
+        {figure.highlightPh !== undefined && (
+          <g>
+            <line x1={phX(figure.highlightPh)} y1={barY - 6} x2={phX(figure.highlightPh)} y2={barY + barH + 6} stroke="#111827" strokeWidth={2.5} />
+            <polygon points={`${phX(figure.highlightPh)},${barY - 8} ${phX(figure.highlightPh) - 6},${barY - 18} ${phX(figure.highlightPh) + 6},${barY - 18}`} fill="#111827" />
+          </g>
+        )}
+
+        {/* substance markers (staggered below the numbers) */}
+        {figure.markers.map((m, i) => {
+          const row = i % rowCount;
+          const ly = barY + barH + 42 + row * 34;
+          const mx = phX(m.ph);
+          return (
+            <g key={i} data-feature={N.marker(i)} data-feature-label={m.label}>
+              <line x1={mx} y1={barY + barH + 26} x2={mx} y2={ly - 9} stroke="#94a3b8" strokeWidth={0.8} />
+              <circle cx={mx} cy={barY + barH + 26} r={3} fill={PH_COLORS[Math.round(m.ph)]} stroke="#fff" strokeWidth={1} />
+              <text x={mx} y={ly} textAnchor="middle" fontSize={11} fill={INK}>
+                <tspan fontWeight={600}>{m.label}</tspan>
+                <tspan fill="#64748b"> ({m.ph})</tspan>
+              </text>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

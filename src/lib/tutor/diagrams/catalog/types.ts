@@ -164,7 +164,13 @@ export type DiagramKindId =
   | 'plot_diagram'
   // Phase 29 — biology (sense-organ cross-sections)
   | 'eye_cross_section'
-  | 'ear_cross_section';
+  | 'ear_cross_section'
+  // Phase 30 — chemistry (pH scale)
+  | 'ph_scale'
+  // Phase 31 — microeconomics (game theory / elasticity / comparative advantage)
+  | 'game_theory_matrix'
+  | 'elasticity'
+  | 'comparative_advantage';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

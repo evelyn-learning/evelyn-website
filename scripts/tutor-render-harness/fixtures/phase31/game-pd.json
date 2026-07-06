@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "game_theory_matrix", "params": { "title": "Prisoner's Dilemma" } }, "label": "game-pd", "expect": "render" }

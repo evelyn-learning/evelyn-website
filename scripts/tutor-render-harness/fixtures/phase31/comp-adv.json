@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "comparative_advantage", "params": { "producerA": "USA", "producerB": "Brazil", "goodX": "Wheat", "goodY": "Coffee", "outputAX": 6, "outputAY": 3, "outputBX": 1, "outputBY": 5 } }, "label": "comp-adv", "expect": "render" }

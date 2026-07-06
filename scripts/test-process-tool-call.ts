@@ -472,4 +472,34 @@ check('show_diagram ear_cross_section highlight + alias → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 30 — pH scale');
+check('show_diagram ph_scale (bare, default markers) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ph_scale', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram ph_scale custom markers + highlight → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ph_scale', params: { markers: [{ label: 'Stomach acid', ph: 1.5 }, { label: 'Milk', ph: 6.5 }, { label: 'Soap', ph: 10 }], highlightPh: 7 } });
+  assert.equal(r.ok, true);
+});
+
+console.log('process-tool-call: Phase 31 — microeconomics');
+check('show_diagram game_theory_matrix (bare, prisoner\'s dilemma) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'game_theory_matrix', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram game_theory_matrix custom payoffs → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'game_theory_matrix', params: { rowPlayer: 'Firm 1', colPlayer: 'Firm 2', rowStrategies: ['High price', 'Low price'], payoffs: [[[10, 10], [2, 14]], [[14, 2], [5, 5]]], highlightCell: [1, 1] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram elasticity (compare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'elasticity', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram comparative_advantage → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'comparative_advantage', params: { producerA: 'USA', producerB: 'Brazil', goodX: 'Wheat', goodY: 'Coffee', outputAX: 6, outputAY: 3, outputBX: 1, outputBY: 5 } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

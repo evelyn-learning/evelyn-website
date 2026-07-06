@@ -117,6 +117,7 @@ import {
   CatalogGalvanicRenderer,
   CatalogTitrationRenderer,
   CatalogLatticeRenderer,
+  CatalogPhScaleRenderer,
 } from './CatalogChemistryRenderers';
 import {
   CatalogNuclearDecayRenderer,
@@ -143,6 +144,11 @@ import {
 } from './CatalogElementaryMathRenderers';
 import { SupplyDemandRenderer } from './SupplyDemandRenderer';
 import { CircularFlowRenderer } from './CircularFlowRenderer';
+import {
+  GameTheoryMatrixRenderer,
+  ElasticityRenderer,
+  ComparativeAdvantageRenderer,
+} from './EconMicroRenderers';
 
 interface Props {
   kind: string;
@@ -302,6 +308,12 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 29 — biology (sense-organ cross-sections)
     case 'eye_cross_section':          return <CatalogEyeCrossSectionRenderer figure={figure} />;
     case 'ear_cross_section':          return <CatalogEarCrossSectionRenderer figure={figure} />;
+    // Phase 30 — chemistry (pH scale)
+    case 'ph_scale':                   return <CatalogPhScaleRenderer figure={figure} />;
+    // Phase 31 — microeconomics
+    case 'game_theory_matrix':         return <GameTheoryMatrixRenderer figure={figure} />;
+    case 'elasticity':                 return <ElasticityRenderer figure={figure} />;
+    case 'comparative_advantage':      return <ComparativeAdvantageRenderer figure={figure} />;
 
     default:
       return (

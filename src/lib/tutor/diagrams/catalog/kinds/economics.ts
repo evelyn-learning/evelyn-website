@@ -1345,3 +1345,224 @@ export function buildCircularFlowManifest(figure: CircularFlowFigure): FeatureMa
   if (figure.showRealFlow) features.push({ name: N.realFlow, kind: 'label', description: 'Real flow of resources & goods (inner loop)', labels: ['real flow', 'the real flow', 'the inner loop', 'goods and resources flow'], displayName: 'real flow', scribbleable: true });
   return features;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  game_theory_matrix  (2×2 payoff matrix)
+// ══════════════════════════════════════════════════════════════════════════
+
+export type PayoffPair = [number, number]; // [rowPlayer, colPlayer]
+export type PayoffGrid = [[PayoffPair, PayoffPair], [PayoffPair, PayoffPair]]; // [row][col]
+
+export interface GameTheoryFigure {
+  rowPlayer: string;
+  colPlayer: string;
+  rowStrategies: [string, string];
+  colStrategies: [string, string];
+  payoffs: PayoffGrid;
+  highlightCell?: [number, number]; // [row, col] — e.g. the Nash equilibrium
+  title?: string;
+}
+
+const PRISONERS_DILEMMA: PayoffGrid = [
+  [[3, 3], [0, 5]],  // row cooperates: (both coop), (row coop / col defect)
+  [[5, 0], [1, 1]],  // row defects:    (row defect / col coop), (both defect)
+];
+
+function numPair(v: unknown, fb: PayoffPair): PayoffPair {
+  if (Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number') {
+    return [v[0], v[1]];
+  }
+  return fb;
+}
+
+/** A 2×2 normal-form game payoff matrix (e.g. the prisoner's dilemma). Each
+ *  cell holds [rowPlayerPayoff, colPlayerPayoff]. Optionally highlight a cell
+ *  (the Nash equilibrium). Defaults to the classic prisoner's dilemma. */
+export function solveGameTheoryMatrix(params: Record<string, unknown>): GameTheoryFigure {
+  const rowPlayer = typeof params.rowPlayer === 'string' && params.rowPlayer.trim() ? params.rowPlayer.trim() : 'Player A';
+  const colPlayer = typeof params.colPlayer === 'string' && params.colPlayer.trim() ? params.colPlayer.trim() : 'Player B';
+  const rs = Array.isArray(params.rowStrategies) ? params.rowStrategies : [];
+  const cs = Array.isArray(params.colStrategies) ? params.colStrategies : [];
+  const rowStrategies: [string, string] = [
+    typeof rs[0] === 'string' && rs[0].trim() ? rs[0] : 'Cooperate',
+    typeof rs[1] === 'string' && rs[1].trim() ? rs[1] : 'Defect',
+  ];
+  const colStrategies: [string, string] = [
+    typeof cs[0] === 'string' && cs[0].trim() ? cs[0] : 'Cooperate',
+    typeof cs[1] === 'string' && cs[1].trim() ? cs[1] : 'Defect',
+  ];
+
+  let payoffs: PayoffGrid = PRISONERS_DILEMMA;
+  if (Array.isArray(params.payoffs) && params.payoffs.length === 2) {
+    const p = params.payoffs as unknown[];
+    const r0 = Array.isArray(p[0]) ? (p[0] as unknown[]) : [];
+    const r1 = Array.isArray(p[1]) ? (p[1] as unknown[]) : [];
+    payoffs = [
+      [numPair(r0[0], PRISONERS_DILEMMA[0][0]), numPair(r0[1], PRISONERS_DILEMMA[0][1])],
+      [numPair(r1[0], PRISONERS_DILEMMA[1][0]), numPair(r1[1], PRISONERS_DILEMMA[1][1])],
+    ];
+  }
+
+  let highlightCell: [number, number] | undefined;
+  if (Array.isArray(params.highlightCell) && params.highlightCell.length === 2) {
+    const r = Number(params.highlightCell[0]), c = Number(params.highlightCell[1]);
+    if ((r === 0 || r === 1) && (c === 0 || c === 1)) highlightCell = [r, c];
+  } else if (params.payoffs === undefined) {
+    highlightCell = [1, 1]; // default PD Nash = (Defect, Defect)
+  }
+
+  return {
+    rowPlayer, colPlayer, rowStrategies, colStrategies, payoffs, highlightCell,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const gameTheoryFeatureNames = {
+  matrix: 'game-matrix',
+  cell: (r: number, c: number): string => `game-cell-${r}-${c}`,
+  nash: 'nash-equilibrium',
+};
+
+export function buildGameTheoryManifest(figure: GameTheoryFigure): FeatureManifestEntry[] {
+  const N = gameTheoryFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.matrix,
+      kind: 'region',
+      description: `${figure.rowPlayer} vs ${figure.colPlayer} payoff matrix`,
+      labels: ['the payoff matrix', 'the game', 'the matrix', 'the diagram', 'the game matrix'],
+      displayName: figure.title || 'Payoff matrix',
+      scribbleable: true,
+    },
+  ];
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+    const p = figure.payoffs[r][c];
+    feats.push({
+      name: N.cell(r, c),
+      kind: 'area',
+      description: `${figure.rowStrategies[r]} / ${figure.colStrategies[c]} → (${p[0]}, ${p[1]})`,
+      labels: [`${figure.rowStrategies[r]}, ${figure.colStrategies[c]}`, `(${p[0]}, ${p[1]})`],
+      displayName: `(${p[0]}, ${p[1]})`,
+      scribbleable: true,
+    });
+  }
+  if (figure.highlightCell) {
+    feats.push({ name: N.nash, kind: 'area', description: 'the Nash equilibrium (highlighted cell)', labels: ['nash equilibrium', 'the nash equilibrium', 'the equilibrium', 'the highlighted cell'], displayName: 'Nash equilibrium', scribbleable: true });
+  }
+  return feats;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  elasticity  (price-elasticity of demand — steep vs flat comparison)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface ElasticityFigure {
+  mode: 'compare' | 'elastic' | 'inelastic';
+  title?: string;
+}
+
+/** Price elasticity of demand as steep (inelastic) vs flat (elastic) demand
+ *  curves through a common point. mode 'compare' shows both; 'elastic' /
+ *  'inelastic' emphasise one. Structure is otherwise fixed. */
+export function solveElasticity(params: Record<string, unknown>): ElasticityFigure {
+  const m = params.mode;
+  const mode: ElasticityFigure['mode'] = m === 'elastic' || m === 'inelastic' ? m : 'compare';
+  return { mode, title: typeof params.title === 'string' ? params.title : undefined };
+}
+
+export const elasticityFeatureNames = {
+  diagram: 'elasticity',
+  elastic: 'elastic-curve',
+  inelastic: 'inelastic-curve',
+};
+
+export function buildElasticityManifest(figure: ElasticityFigure): FeatureManifestEntry[] {
+  const N = elasticityFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'price elasticity of demand (steep vs flat demand curves)',
+      labels: ['the elasticity diagram', 'the demand curves', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Elasticity of demand',
+      scribbleable: true,
+    },
+  ];
+  if (figure.mode !== 'inelastic') feats.push({ name: N.elastic, kind: 'label', description: 'the elastic (flat) demand curve — %ΔQ > %ΔP', labels: ['elastic', 'the elastic curve', 'the flat curve', 'elastic demand'], displayName: 'Elastic (flat)', scribbleable: true });
+  if (figure.mode !== 'elastic') feats.push({ name: N.inelastic, kind: 'label', description: 'the inelastic (steep) demand curve — %ΔQ < %ΔP', labels: ['inelastic', 'the inelastic curve', 'the steep curve', 'inelastic demand'], displayName: 'Inelastic (steep)', scribbleable: true });
+  return feats;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  comparative_advantage  (opportunity-cost table)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface ComparativeAdvantageFigure {
+  producerA: string;
+  producerB: string;
+  goodX: string;
+  goodY: string;
+  outputAX: number; outputAY: number; // A's output of X, Y (per fixed resource)
+  outputBX: number; outputBY: number;
+  // opportunity cost of ONE unit of a good, in terms of the other good
+  oppCostAX: number; oppCostAY: number; // A: cost of 1 X in Y, cost of 1 Y in X
+  oppCostBX: number; oppCostBY: number;
+  caX: 'A' | 'B'; // who has comparative advantage in X
+  caY: 'A' | 'B';
+  title?: string;
+}
+
+function posNum(v: unknown, fb: number): number {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : fb;
+}
+
+/** Comparative advantage as an opportunity-cost table: two producers, two
+ *  goods, outputs per fixed resource. Opportunity costs and the comparative-
+ *  advantage winner per good are computed (lower opp cost wins). */
+export function solveComparativeAdvantage(params: Record<string, unknown>): ComparativeAdvantageFigure {
+  const producerA = typeof params.producerA === 'string' && params.producerA.trim() ? params.producerA.trim() : 'Country A';
+  const producerB = typeof params.producerB === 'string' && params.producerB.trim() ? params.producerB.trim() : 'Country B';
+  const goodX = typeof params.goodX === 'string' && params.goodX.trim() ? params.goodX.trim() : 'Wheat';
+  const goodY = typeof params.goodY === 'string' && params.goodY.trim() ? params.goodY.trim() : 'Cloth';
+  const outputAX = posNum(params.outputAX, 10);
+  const outputAY = posNum(params.outputAY, 20);
+  const outputBX = posNum(params.outputBX, 8);
+  const outputBY = posNum(params.outputBY, 4);
+
+  // opp cost of 1 X (in Y) = Y-output / X-output; opp cost of 1 Y (in X) = X-output / Y-output
+  const oppCostAX = outputAY / outputAX;
+  const oppCostAY = outputAX / outputAY;
+  const oppCostBX = outputBY / outputBX;
+  const oppCostBY = outputBX / outputBY;
+
+  return {
+    producerA, producerB, goodX, goodY,
+    outputAX, outputAY, outputBX, outputBY,
+    oppCostAX, oppCostAY, oppCostBX, oppCostBY,
+    caX: oppCostAX <= oppCostBX ? 'A' : 'B',
+    caY: oppCostAY <= oppCostBY ? 'A' : 'B',
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const comparativeAdvantageFeatureNames = {
+  table: 'comparative-advantage',
+  rowA: 'producer-a-row',
+  rowB: 'producer-b-row',
+};
+
+export function buildComparativeAdvantageManifest(figure: ComparativeAdvantageFigure): FeatureManifestEntry[] {
+  const N = comparativeAdvantageFeatureNames;
+  return [
+    {
+      name: N.table,
+      kind: 'region',
+      description: `comparative advantage: ${figure.producerA} vs ${figure.producerB} in ${figure.goodX} & ${figure.goodY}`,
+      labels: ['the comparative advantage table', 'the opportunity cost table', 'the table', 'the diagram'],
+      displayName: figure.title || 'Comparative advantage',
+      scribbleable: true,
+    },
+    { name: N.rowA, kind: 'area', description: `${figure.producerA}'s outputs + opportunity costs`, labels: [figure.producerA, `the ${figure.producerA.toLowerCase()} row`], displayName: figure.producerA, scribbleable: true },
+    { name: N.rowB, kind: 'area', description: `${figure.producerB}'s outputs + opportunity costs`, labels: [figure.producerB, `the ${figure.producerB.toLowerCase()} row`], displayName: figure.producerB, scribbleable: true },
+  ];
+}

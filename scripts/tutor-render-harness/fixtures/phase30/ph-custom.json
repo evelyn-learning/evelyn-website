@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "ph_scale", "params": { "markers": [{ "label": "Stomach acid", "ph": 1.5 }, { "label": "Milk", "ph": 6.5 }, { "label": "Soap", "ph": 10 }], "highlightPh": 7 } }, "label": "ph-custom", "expect": "render" }
