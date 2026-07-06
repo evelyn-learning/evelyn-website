@@ -16,6 +16,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { GradeBand } from '@/lib/tutor/pedagogy/grade-profile';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
+import type { PlanContentFillings } from './types';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -51,6 +52,49 @@ export async function generateSessionSummary(input: SessionSummaryInput): Promis
     .join('')
     .trim();
   return text || '(no summary)';
+}
+
+const FILLINGS_SYSTEM = `You produce a JSON object with two fields describing a tutoring session. "summary": a one-paragraph plain-text recap (grade-calibrated, only what the transcript shows, no markdown). "fillings": { "hooks": string[], "examples": string[], "problems": string[] } — SHORT descriptors (≤8 words each) of the specific opening hook/story, the worked-example contexts, and the practice-problem statements ACTUALLY USED this session. Empty arrays if none. Output ONLY the JSON object, no fences, no preamble.`;
+
+/** Session recap. Default = the plain summary string wrapped in the object
+ *  (fillings null), one LLM call. With extractFillings, the SAME single call
+ *  also returns the fillings-used (content variety phase 1). Parse failures
+ *  degrade to { summary, fillings: null } — capture never breaks a commit. */
+export async function generateSessionRecap(
+  input: SessionSummaryInput,
+  opts?: { extractFillings?: boolean },
+): Promise<{ summary: string; fillings: PlanContentFillings | null }> {
+  if (!opts?.extractFillings) {
+    return { summary: await generateSessionSummary(input), fillings: null };
+  }
+  const profile = getGradeProfile(input.grade);
+  const userMessage = buildUserMessage(input, profile.band);
+  const response = await anthropic.messages.create({
+    model: SUMMARY_MODEL,
+    max_tokens: 700,
+    system: FILLINGS_SYSTEM,
+    messages: [{ role: 'user', content: userMessage }],
+  });
+  const raw = response.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { type: 'text'; text: string }).text)
+    .join('')
+    .trim();
+  try {
+    const parsed = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
+    const arr = (v: unknown): string[] =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((s) => s.slice(0, 80)) : [];
+    return {
+      summary: (typeof parsed.summary === 'string' && parsed.summary.trim()) || '(no summary)',
+      fillings: {
+        hooks: arr(parsed.fillings?.hooks),
+        examples: arr(parsed.fillings?.examples),
+        problems: arr(parsed.fillings?.problems),
+      },
+    };
+  } catch {
+    return { summary: '(no summary)', fillings: null };
+  }
 }
 
 function buildUserMessage(input: SessionSummaryInput, gradeBand: GradeBand): string {

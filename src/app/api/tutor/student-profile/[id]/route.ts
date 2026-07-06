@@ -18,11 +18,12 @@ import {
   applyCrossSessionPromotion,
   resolveSettledGaps,
   upsertSessionMemory,
+  recordPlanContentSeen,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { generateSessionSummary, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
+import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     block: renderStudentProfileBlock(profile, {
       includeInterests: isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER),
     }),
+    // Content variety (phase 1): per-plan seen-memory, read client-side at
+    // mount to inject the <content_variety> directive for the current plan.
+    planContentSeen: profile.planContentSeen ?? {},
   });
 }
 
@@ -71,6 +75,11 @@ interface CommitBody {
    *  allowed through this session. Stamped into SessionMemory for
    *  next-session profile-block priming. Per Q11d. */
   notesOverlaysAddedThisSession?: { theory: number; methods: number; pointers: number };
+  /** Content variety (phase 1): when true AND a lessonPlanId is present, the
+   *  final-commit summary pass ALSO extracts the fillings used and merges them
+   *  into planContentSeen[lessonPlanId]. Client sets it only when its
+   *  TUTOR_CONTENT_VARIETY flag is on. */
+  captureContentFillings?: boolean;
 }
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -140,7 +149,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         grade: body.grade,
         losTouched: body.losTouched,
       };
-      summary = await generateSessionSummary(summaryInput);
+      const recap = await generateSessionRecap(summaryInput, {
+        extractFillings: body.captureContentFillings === true && !!body.lessonPlanId,
+      });
+      summary = recap.summary;
+      // Content variety (phase 1): merge the fillings used this session into
+      // the per-plan seen-memory so the NEXT session on this plan diverges.
+      if (recap.fillings && body.lessonPlanId) {
+        profile = recordPlanContentSeen(profile, body.lessonPlanId, recap.fillings);
+      }
     } catch (err) {
       summaryError = (err as Error).message;
       console.error('[student-profile] summary generation failed:', err);
