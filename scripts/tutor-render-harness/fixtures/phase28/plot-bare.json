@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "plot_diagram", "params": { "title": "Freytag's pyramid" } }, "label": "plot-bare", "expect": "render" }

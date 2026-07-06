@@ -1317,3 +1317,189 @@ export function buildHierarchyPyramidManifest(figure: HierarchyPyramidFigure): F
   });
   return features;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 26 — complex_plane (Argand diagram)
+// ═══════════════════════════════════════════════════════════════════
+
+export interface ComplexPoint {
+  re: number;
+  im: number;
+  label?: string;
+  color?: string;
+  showVector?: boolean;   // draw the arrow from origin (default true)
+  showModulus?: boolean;  // annotate |z| on the vector
+  showAngle?: boolean;    // annotate arg(z)
+}
+
+export interface ComplexPlaneFigure {
+  points: ComplexPoint[];
+  range: number;          // axes span ±range
+  title?: string;
+}
+
+/** Argand (complex) plane. Plots one or more complex numbers a+bi as points
+ *  (and, by default, position vectors from the origin), with an optional
+ *  modulus and argument annotation per point. Axes auto-fit to the points
+ *  unless `range` is given. */
+export function solveComplexPlane(params: Record<string, unknown>): ComplexPlaneFigure {
+  const rawPoints = Array.isArray(params.points) ? params.points : [];
+  const points: ComplexPoint[] = rawPoints
+    .map((p) => (p && typeof p === 'object' ? (p as Record<string, unknown>) : {}))
+    .map((p) => {
+      const re = typeof p.re === 'number' ? p.re : (typeof p.a === 'number' ? p.a : NaN);
+      const im = typeof p.im === 'number' ? p.im : (typeof p.b === 'number' ? p.b : NaN);
+      return {
+        re, im,
+        label: typeof p.label === 'string' ? p.label : undefined,
+        color: typeof p.color === 'string' ? p.color : undefined,
+        showVector: p.showVector !== false,
+        showModulus: p.showModulus === true,
+        showAngle: p.showAngle === true,
+      };
+    })
+    .filter((p) => Number.isFinite(p.re) && Number.isFinite(p.im));
+
+  if (points.length === 0) {
+    throw new Error('complex_plane: at least one point with numeric re/im (or a/b) is required');
+  }
+
+  let range: number;
+  if (typeof params.range === 'number' && params.range > 0) {
+    range = params.range;
+  } else {
+    const maxAbs = Math.max(1, ...points.map((p) => Math.max(Math.abs(p.re), Math.abs(p.im))));
+    range = Math.ceil(maxAbs * 1.2);
+  }
+
+  return {
+    points,
+    range,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const complexPlaneFeatureNames = {
+  plane: 'complex-plane',
+  realAxis: 'real-axis',
+  imaginaryAxis: 'imaginary-axis',
+  point: (i: number): string => `complex-point-${i}`,
+};
+
+export function buildComplexPlaneManifest(figure: ComplexPlaneFigure): FeatureManifestEntry[] {
+  const N = complexPlaneFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.plane,
+      kind: 'region',
+      description: 'the Argand (complex) plane',
+      labels: ['the complex plane', 'the argand diagram', 'the argand plane', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Complex plane',
+      scribbleable: true,
+    },
+    { name: N.realAxis, kind: 'axis', description: 'the real axis (Re)', labels: ['real axis', 'the real axis', 'Re', 'x-axis'], displayName: 'real axis', scribbleable: true },
+    { name: N.imaginaryAxis, kind: 'axis', description: 'the imaginary axis (Im)', labels: ['imaginary axis', 'the imaginary axis', 'Im', 'y-axis'], displayName: 'imaginary axis', scribbleable: true },
+  ];
+  figure.points.forEach((p, i) => {
+    const zText = `${p.re}${p.im >= 0 ? '+' : '−'}${Math.abs(p.im)}i`;
+    const nm = p.label || zText;
+    feats.push({
+      name: N.point(i),
+      kind: 'point',
+      description: `the complex number ${nm} at (${p.re}, ${p.im}i)`,
+      labels: [nm, `the point ${nm}`, zText, `the number ${nm}`, ...(p.label ? [] : [`${p.re} plus ${p.im}i`])].filter(Boolean),
+      displayName: nm,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 26 — plot_diagram (Freytag's pyramid)
+// ═══════════════════════════════════════════════════════════════════
+
+export const PLOT_STAGES = ['exposition', 'rising_action', 'climax', 'falling_action', 'resolution'] as const;
+export type PlotStage = (typeof PLOT_STAGES)[number];
+
+export interface PlotDiagramFigure {
+  /** Optional per-stage annotation the student's story maps onto each stage. */
+  notes: Partial<Record<PlotStage, string>>;
+  title?: string;
+}
+
+const PLOT_ALIASES: Record<string, PlotStage> = {
+  exposition: 'exposition', introduction: 'exposition', intro: 'exposition', setup: 'exposition', beginning: 'exposition',
+  rising_action: 'rising_action', rising: 'rising_action', 'rising-action': 'rising_action', conflict: 'rising_action', complication: 'rising_action',
+  climax: 'climax', turning_point: 'climax', peak: 'climax',
+  falling_action: 'falling_action', falling: 'falling_action', 'falling-action': 'falling_action',
+  resolution: 'resolution', denouement: 'resolution', conclusion: 'resolution', ending: 'resolution', end: 'resolution',
+};
+
+function _plotSlug(s: string): string {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+/** Freytag's pyramid — the five-stage dramatic-arc plot diagram (exposition →
+ *  rising action → climax → falling action → resolution). Optional per-stage
+ *  notes let the brain map a specific story onto the arc. */
+export function solvePlotDiagram(params: Record<string, unknown>): PlotDiagramFigure {
+  const notes: Partial<Record<PlotStage, string>> = {};
+  const raw = params.notes;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      const stage = PLOT_ALIASES[_plotSlug(k)];
+      if (stage && typeof v === 'string' && v.trim()) notes[stage] = v.trim();
+    }
+  }
+  return {
+    notes,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const plotDiagramFeatureNames = {
+  figure: 'plot-diagram',
+  stage: (s: PlotStage): string => `plot-${s.replace(/_/g, '-')}`,
+};
+
+const PLOT_LABELS: Record<PlotStage, string> = {
+  exposition: 'Exposition',
+  rising_action: 'Rising action',
+  climax: 'Climax',
+  falling_action: 'Falling action',
+  resolution: 'Resolution',
+};
+const PLOT_DESC: Record<PlotStage, string> = {
+  exposition: 'the exposition — introduces the setting, characters and the initial situation',
+  rising_action: 'the rising action — the conflict builds through a series of complications',
+  climax: 'the climax — the turning point of greatest tension at the top of the arc',
+  falling_action: 'the falling action — events unwind as the conflict moves toward resolution',
+  resolution: 'the resolution (denouement) — the conflict is settled and the story closes',
+};
+
+export function buildPlotDiagramManifest(figure: PlotDiagramFigure): FeatureManifestEntry[] {
+  const N = plotDiagramFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: "Freytag's pyramid — the five-stage plot diagram",
+      labels: ['the plot diagram', "freytag's pyramid", 'the plot pyramid', 'the story arc', 'the dramatic arc', 'the diagram'],
+      displayName: figure.title || 'Plot diagram',
+      scribbleable: true,
+    },
+  ];
+  for (const stage of PLOT_STAGES) {
+    const note = figure.notes[stage];
+    feats.push({
+      name: N.stage(stage),
+      kind: 'label',
+      description: PLOT_DESC[stage] + (note ? ` — ${note}` : ''),
+      labels: [PLOT_LABELS[stage], `the ${PLOT_LABELS[stage].toLowerCase()}`, stage.replace(/_/g, ' '), ...(note ? [note] : [])],
+      displayName: PLOT_LABELS[stage],
+      scribbleable: true,
+    });
+  }
+  return feats;
+}

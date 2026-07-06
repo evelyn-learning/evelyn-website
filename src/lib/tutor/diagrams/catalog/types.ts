@@ -158,7 +158,10 @@ export type DiagramKindId =
   // Phase 27 — biology (respiratory / botany / ecology)
   | 'respiratory_system'
   | 'flower_structure'
-  | 'energy_pyramid';
+  | 'energy_pyramid'
+  // Phase 28 — advanced math (Argand) + ELA (Freytag)
+  | 'complex_plane'
+  | 'plot_diagram';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

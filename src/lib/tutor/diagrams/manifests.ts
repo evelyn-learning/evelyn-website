@@ -68,6 +68,11 @@ import {
   solveUnitCircle,
   solveTransformation,
   solveInequalityGraph,
+  // Phase 28 — Argand + Freytag.
+  buildComplexPlaneManifest,
+  solveComplexPlane,
+  buildPlotDiagramManifest,
+  solvePlotDiagram,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   buildCycleStagesManifest,
@@ -1590,6 +1595,14 @@ function buildDiagramManifest(cmd: {
     }
     case 'energy_pyramid': {
       try { return buildEnergyPyramidManifest(solveEnergyPyramidForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'complex_plane': {
+      try { return buildComplexPlaneManifest(solveComplexPlane(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'plot_diagram': {
+      try { return buildPlotDiagramManifest(solvePlotDiagram(params)); } catch { /* fall through */ }
       break;
     }
     case 'data_structure': {

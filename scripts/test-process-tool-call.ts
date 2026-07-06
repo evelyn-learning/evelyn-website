@@ -433,4 +433,23 @@ check('show_diagram energy_pyramid custom levels → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 28 — Argand + Freytag');
+check('show_diagram complex_plane one point → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'complex_plane', params: { points: [{ re: 3, im: 2, showModulus: true }] } });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram complex_plane a/b alias → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'complex_plane', params: { points: [{ a: -2, b: 1 }, { a: 1, b: -3 }] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram plot_diagram (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'plot_diagram', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram plot_diagram with notes → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'plot_diagram', params: { notes: { climax: 'the duel', resolution: 'peace restored' } } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

@@ -453,6 +453,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'supply_demand', 'circular_flow',
             // Phase 27 — biology (respiratory / botany / ecology)
             'respiratory_system', 'flower_structure', 'energy_pyramid',
+            // Phase 28 — advanced math (Argand) + ELA (Freytag)
+            'complex_plane', 'plot_diagram',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

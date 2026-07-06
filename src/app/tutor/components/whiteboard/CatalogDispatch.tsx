@@ -59,6 +59,8 @@ import {
   CatalogComparisonTableRenderer,
   CatalogOrganizerRenderer,
   CatalogHierarchyPyramidRenderer,
+  CatalogComplexPlaneRenderer,
+  CatalogPlotDiagramRenderer,
 } from './CatalogAdvancedRenderers';
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 import { BusinessCycleRenderer } from './BusinessCycleRenderer';
@@ -292,6 +294,9 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'respiratory_system':         return <CatalogRespiratorySystemRenderer figure={figure} />;
     case 'flower_structure':           return <CatalogFlowerStructureRenderer figure={figure} />;
     case 'energy_pyramid':             return <CatalogEnergyPyramidRenderer figure={figure} />;
+    // Phase 28 — advanced math (Argand) + ELA (Freytag)
+    case 'complex_plane':              return <CatalogComplexPlaneRenderer figure={figure} />;
+    case 'plot_diagram':               return <CatalogPlotDiagramRenderer figure={figure} />;
 
     default:
       return (

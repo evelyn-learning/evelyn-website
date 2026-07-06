@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "plot_diagram", "params": { "title": "Plot of Cinderella", "notes": { "exposition": "Cinderella lives with stepfamily", "rising_action": "invitation to the ball", "climax": "the clock strikes midnight", "falling_action": "the glass slipper search", "resolution": "married to the prince" } } }, "label": "plot-notes", "expect": "render" }

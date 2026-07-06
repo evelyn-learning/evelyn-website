@@ -43,7 +43,7 @@ import {
   solveUnitCircle, solveTransformation, solveInequalityGraph,
   solveSentenceDiagram, solveArgumentStructure, solveHistoricalTimeline,
   solveGovernmentBranches, solveComparisonTable, solveOrganizer,
-  solveHierarchyPyramid,
+  solveHierarchyPyramid, solveComplexPlane, solvePlotDiagram,
 } from './kinds/advanced-math-ela-social';
 
 import {
@@ -271,6 +271,10 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'respiratory_system', displayName: 'Respiratory System', whenToUse: 'Show the human respiratory system: nasal cavity, pharynx, larynx, trachea (windpipe), the two bronchi branching into the two lungs (right = 3 lobes, left = 2), bronchioles, an alveoli (air-sac) inset where gas exchange happens, and the diaphragm. Use for breathing / gas-exchange teaching instead of a freehand sketch. Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — nasal_cavity, pharynx, larynx, trachea, bronchi, bronchioles, left_lung, right_lung, alveoli, diaphragm), title?' },
   { kind: 'flower_structure', displayName: 'Flower Structure', whenToUse: 'Show a longitudinal section of a flower with its parts labeled: petal & sepal, the stamen (anther + filament, male), and the carpel/pistil (stigma + style + ovary + ovule, female), plus the receptacle. Use for plant-reproduction / flower-anatomy teaching instead of a freehand sketch. Emphasise parts with highlight (stamen and carpel/pistil are accepted aliases).', subjects: ['biology'], grades: { from: 4, to: 12 }, paramSchema: 'highlight?:[string] (part ids — petal, sepal, anther, filament, stamen, stigma, style, ovary, ovule, carpel/pistil, receptacle), title?' },
   { kind: 'energy_pyramid', displayName: 'Energy Pyramid (trophic levels)', whenToUse: 'Show a trophic energy pyramid: stacked tiers widest at the bottom (producers) narrowing upward (primary → secondary → tertiary consumers), with the ~10% energy transferred up each level and ~90% lost as heat. Use for ecology / food-chain / energy-flow teaching instead of a freehand sketch. Accepts custom levels or defaults to a 4-level chain.', subjects: ['biology'], grades: { from: 4, to: 12 }, paramSchema: 'levels?:[{label, organisms?}] (bottom→top, 2-6 entries; default 4 trophic levels), startEnergy?:number (default 10000), efficiency?:number 0..1 (default 0.1), units?:string (default "kcal/m²/yr"), showEnergy?:boolean (default true), title?' },
+
+  // ── Phase 28 — advanced math (Argand) + ELA (Freytag) ──────────────────
+  { kind: 'complex_plane', displayName: 'Complex Plane (Argand diagram)', whenToUse: 'Plot one or more complex numbers a+bi on the Argand plane (real axis horizontal, imaginary axis vertical), each as a point and (by default) a position vector from the origin, with an optional modulus |z| and argument arg(z) annotation. Use for complex-number teaching instead of show_function_graph (which is for real x-y functions). Axes auto-fit unless range is given.', subjects: ['math'], grades: { from: 9, to: 12 }, paramSchema: 'points:[{re,im (or a,b), label?, color?, showVector?:boolean (default true), showModulus?:boolean, showAngle?:boolean}] (≥1), range?:number (axes span ±range; auto-fit if omitted), title?' },
+  { kind: 'plot_diagram', displayName: "Plot Diagram (Freytag's pyramid)", whenToUse: "Show the five-stage dramatic-arc plot diagram (Freytag's pyramid): exposition → rising action → climax (the peak) → falling action → resolution, drawn as a rising-then-falling arc. Optional per-stage notes map a specific story onto each stage. Use for narrative-structure / story-analysis teaching instead of a freehand sketch.", subjects: ['ela'], grades: { from: 3, to: 12 }, paramSchema: 'notes?:{exposition?, rising_action?, climax?, falling_action?, resolution?} (short per-stage annotations mapping a story onto the arc; all optional), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -420,6 +424,9 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   respiratory_system: solveRespiratorySystem,
   flower_structure: solveFlowerStructure,
   energy_pyramid: solveEnergyPyramid,
+  // Phase 28 — advanced math (Argand) + ELA (Freytag)
+  complex_plane: solveComplexPlane,
+  plot_diagram: solvePlotDiagram,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

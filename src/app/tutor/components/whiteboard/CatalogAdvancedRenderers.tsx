@@ -13,6 +13,8 @@ import type {
   ComparisonTableFigure,
   OrganizerFigure,
   HierarchyPyramidFigure,
+  ComplexPlaneFigure,
+  PlotDiagramFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   comparisonTableFeatureNames,
@@ -27,6 +29,9 @@ import {
   unitCircleFeatureNames,
   transformationFeatureNames,
   inequalityGraphFeatureNames,
+  complexPlaneFeatureNames,
+  plotDiagramFeatureNames,
+  PLOT_STAGES,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 // ── Unit circle ───────────────────────────────────────────────────────────
@@ -849,6 +854,180 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
               <text x={x + w / 2} y={y + TIER_H / 2 + 4} fontSize={13} textAnchor="middle" fill="#fff" fontWeight={700}>
                 {t.label}
               </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ── Complex plane (Argand diagram) ──────────────────────────────────────────
+export function CatalogComplexPlaneRenderer({ figure }: { figure: ComplexPlaneFigure }) {
+  const N = complexPlaneFeatureNames;
+  const { points, range, title } = figure;
+  const W = 440;
+  const H = 440;
+  const pad = 34;
+  const cx = W / 2;
+  const cy = H / 2;
+  const span = W - 2 * pad;
+  const scale = (span / 2) / range;
+  const X = (re: number) => cx + re * scale;
+  const Y = (im: number) => cy - im * scale;
+
+  const COLORS = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c'];
+  const INK = '#374151';
+  const AXIS = '#475569';
+  const GRID = '#e2e8f0';
+
+  // integer gridlines + ticks
+  const ticks: number[] = [];
+  for (let v = -range; v <= range; v++) if (v !== 0) ticks.push(v);
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[440px]"
+        data-feature={N.plane}
+        data-feature-label={title || 'Complex plane'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* gridlines */}
+        {ticks.map((v) => (
+          <g key={`g${v}`}>
+            <line x1={X(v)} y1={pad} x2={X(v)} y2={H - pad} stroke={GRID} strokeWidth={1} />
+            <line x1={pad} y1={Y(v)} x2={W - pad} y2={Y(v)} stroke={GRID} strokeWidth={1} />
+          </g>
+        ))}
+        {/* axes */}
+        <g data-feature={N.realAxis} data-feature-label="Real axis">
+          <line x1={pad} y1={cy} x2={W - pad} y2={cy} stroke={AXIS} strokeWidth={1.6} />
+          <text x={W - pad + 2} y={cy + 14} fontSize={13} fontStyle="italic" fill={AXIS}>Re</text>
+        </g>
+        <g data-feature={N.imaginaryAxis} data-feature-label="Imaginary axis">
+          <line x1={cx} y1={H - pad} x2={cx} y2={pad} stroke={AXIS} strokeWidth={1.6} />
+          <text x={cx + 6} y={pad + 2} fontSize={13} fontStyle="italic" fill={AXIS}>Im</text>
+        </g>
+        {/* integer tick labels (real + imaginary), skipping origin */}
+        {ticks.map((v) => (
+          <g key={`t${v}`}>
+            <text x={X(v)} y={cy + 15} fontSize={9.5} fill="#94a3b8" textAnchor="middle">{v}</text>
+            <text x={cx - 8} y={Y(v) + 3} fontSize={9.5} fill="#94a3b8" textAnchor="end">{v}i</text>
+          </g>
+        ))}
+
+        {points.map((p, i) => {
+          const color = p.color || COLORS[i % COLORS.length];
+          const px = X(p.re), py = Y(p.im);
+          const zText = p.label || `${p.re}${p.im >= 0 ? ' + ' : ' − '}${Math.abs(p.im)}i`;
+          const modulus = Math.hypot(p.re, p.im);
+          const angleDeg = Math.atan2(p.im, p.re) * 180 / Math.PI;
+          return (
+            <g key={i} data-feature={N.point(i)} data-feature-label={zText}>
+              {p.showVector && (
+                <line x1={cx} y1={cy} x2={px} y2={py} stroke={color} strokeWidth={2} opacity={0.85} />
+              )}
+              {p.showAngle && (
+                <path
+                  d={`M ${cx + 22} ${cy} A 22 22 0 ${Math.abs(angleDeg) > 180 ? 1 : 0} ${angleDeg < 0 ? 1 : 0} ${cx + 22 * Math.cos(angleDeg * Math.PI / 180)} ${cy - 22 * Math.sin(angleDeg * Math.PI / 180)}`}
+                  fill="none" stroke={color} strokeWidth={1.2} opacity={0.7}
+                />
+              )}
+              <circle cx={px} cy={py} r={5} fill={color} stroke="#fff" strokeWidth={1.5} />
+              <text x={px + (p.re >= 0 ? 9 : -9)} y={py + (p.im >= 0 ? -8 : 16)} fontSize={12} fontWeight={700} fill={color} textAnchor={p.re >= 0 ? 'start' : 'end'}>{zText}</text>
+              {p.showModulus && (
+                <text x={(cx + px) / 2 + 6} y={(cy + py) / 2 - 4} fontSize={10.5} fontStyle="italic" fill={color}>|z|={modulus.toFixed(2)}</text>
+              )}
+              {p.showAngle && (
+                <text x={cx + 26} y={cy - 6} fontSize={10} fill={color}>{angleDeg.toFixed(0)}°</text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ── Plot diagram (Freytag's pyramid) ────────────────────────────────────────
+export function CatalogPlotDiagramRenderer({ figure }: { figure: PlotDiagramFigure }) {
+  const N = plotDiagramFeatureNames;
+  const { notes, title } = figure;
+  const W = 720;
+  const H = 440;
+  const INK = '#374151';
+  const LINE = '#2563eb';
+  const DOT = '#1d4ed8';
+
+  // Arc vertices across the pyramid: exposition (low left) → rising →
+  // climax (peak) → falling → resolution (low right).
+  const baseY = 320;
+  const peakY = 70;
+  const midY = 200;
+  const pts: Record<string, [number, number]> = {
+    exposition: [70, baseY],
+    rising_action: [250, midY],
+    climax: [360, peakY],
+    falling_action: [470, midY],
+    resolution: [650, baseY],
+  };
+  const order = PLOT_STAGES;
+  const path = order.map((s, i) => `${i === 0 ? 'M' : 'L'} ${pts[s][0]} ${pts[s][1]}`).join(' ');
+
+  const LABELS: Record<string, string> = {
+    exposition: 'Exposition',
+    rising_action: 'Rising action',
+    climax: 'Climax',
+    falling_action: 'Falling action',
+    resolution: 'Resolution',
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{title || "Plot diagram (Freytag's pyramid)"}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[720px]"
+        data-feature={N.figure}
+        data-feature-label={title || 'Plot diagram'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* baseline */}
+        <line x1={40} y1={baseY} x2={W - 40} y2={baseY} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="4 4" />
+        {/* the dramatic arc */}
+        <path d={path} fill="none" stroke={LINE} strokeWidth={2.5} strokeLinejoin="round" />
+
+        {order.map((s) => {
+          const [x, y] = pts[s];
+          const note = notes[s];
+          // Place each stage's label clear of the arc line:
+          //  - exposition / resolution: below the low endpoints
+          //  - climax: above the peak
+          //  - rising / falling: out to the side (left / right) of the slope
+          let lx = x, labelY: number, anchor: 'start' | 'middle' | 'end', noteDy: number;
+          if (s === 'climax') { labelY = y - 16; anchor = 'middle'; noteDy = -15; }
+          else if (s === 'exposition') { labelY = y + 30; anchor = 'start'; noteDy = 15; }
+          else if (s === 'resolution') { labelY = y + 30; anchor = 'end'; noteDy = 15; }
+          else if (s === 'rising_action') { lx = x - 14; labelY = y + 2; anchor = 'end'; noteDy = -15; }
+          else { lx = x + 14; labelY = y + 2; anchor = 'start'; noteDy = -15; } // falling_action
+          return (
+            <g key={s} data-feature={N.stage(s)} data-feature-label={LABELS[s]}>
+              <circle cx={x} cy={y} r={5} fill={DOT} stroke="#fff" strokeWidth={1.5} />
+              <text x={lx} y={labelY} fontSize={13} fontWeight={700} fill={INK} textAnchor={anchor}>{LABELS[s]}</text>
+              {note && (
+                <text x={lx} y={labelY + noteDy} fontSize={10.5} fill="#64748b" textAnchor={anchor}>
+                  {note.length > 42 ? note.slice(0, 39) + '…' : note}
+                </text>
+              )}
             </g>
           );
         })}

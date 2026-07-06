@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "complex_plane", "params": { "points": [{ "re": 3, "im": 2, "label": "z = 3 + 2i", "showModulus": true, "showAngle": true }], "title": "Plot z = 3 + 2i" } }, "label": "complex-single", "expect": "render" }
