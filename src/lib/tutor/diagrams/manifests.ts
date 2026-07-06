@@ -130,6 +130,8 @@ import {
   buildLoanableFundsManifest,
   buildPhillipsCurveManifest,
   buildForeignExchangeMarketManifest,
+  buildSupplyDemandManifest,
+  buildCircularFlowManifest,
   solveProductionPossibilities,
   solveBusinessCycle,
   solveAggregateDemandSupply,
@@ -137,6 +139,8 @@ import {
   solveLoanableFunds,
   solvePhillipsCurve,
   solveForeignExchangeMarket,
+  solveSupplyDemand,
+  solveCircularFlow,
 } from '@/lib/tutor/diagrams/catalog/kinds/economics';
 import {
   buildRiemannSumManifest,
@@ -1330,6 +1334,18 @@ function buildDiagramManifest(cmd: {
       try {
         const figure = solveForeignExchangeMarket(params);
         return buildForeignExchangeMarketManifest(figure);
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'supply_demand': {
+      try {
+        return buildSupplyDemandManifest(solveSupplyDemand(params));
+      } catch { /* fall through */ }
+      break;
+    }
+    case 'circular_flow': {
+      try {
+        return buildCircularFlowManifest(solveCircularFlow(params));
       } catch { /* fall through */ }
       break;
     }

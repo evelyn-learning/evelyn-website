@@ -151,7 +151,10 @@ export type DiagramKindId =
   // Phase 25 — elementary-math manipulatives (K-3)
   | 'clock_face'
   | 'ten_frame'
-  | 'base_ten_blocks';
+  | 'base_ten_blocks'
+  // Phase 26 — microeconomics (single-market + circular flow)
+  | 'supply_demand'
+  | 'circular_flow';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

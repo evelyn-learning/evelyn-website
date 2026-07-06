@@ -387,4 +387,23 @@ check('show_diagram base_ten_blocks value=1342 → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 26 — microeconomics');
+check('show_diagram supply_demand (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'supply_demand', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram supply_demand D shift right → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'supply_demand', params: { good: 'coffee', shift: { curve: 'D', direction: 'right' } } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram supply_demand price ceiling → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'supply_demand', params: { priceControl: { type: 'ceiling', level: 30 } } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram circular_flow (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'circular_flow', params: {} });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

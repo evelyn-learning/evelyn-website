@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "supply_demand", "params": { "good": "apartments", "priceControl": { "type": "ceiling", "level": 30, "label": "rent control" } } }, "label": "sd-price-ceiling", "expect": "render" }

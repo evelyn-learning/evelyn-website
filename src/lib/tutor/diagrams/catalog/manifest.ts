@@ -54,6 +54,8 @@ import {
   solveLoanableFunds,
   solvePhillipsCurve,
   solveForeignExchangeMarket,
+  solveSupplyDemand,
+  solveCircularFlow,
 } from './kinds/economics';
 
 import {
@@ -260,6 +262,10 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'clock_face', displayName: 'Analog Clock', whenToUse: 'Show an analog clock reading a specific time — the hour hand (short) and minute hand (long) at the correct angles, a numbered face, and the digital time below. Use for telling-time / elapsed-time teaching instead of a freehand sketch (a doodled clock has the hands at the wrong angles). The hour hand advances with the minutes automatically (e.g. 3:30 puts it halfway to 4).', subjects: ['math'], grades: { from: 'k', to: 4 }, paramSchema: 'hour:number (1-12; 0/24 read as 12), minute?:number (0-59, default 0), showMinuteTicks?:boolean (default true), title?' },
   { kind: 'ten_frame', displayName: 'Ten-Frame', whenToUse: 'Show a ten-frame (a 2×5 grid) filled with counters — the canonical figure for number sense, subitizing, making-ten, and addition within 20. Pass a single count (0-20 auto-splits into two frames) or explicit per-frame counts. Use instead of a freehand sketch (dots must sit in exact cells).', subjects: ['math'], grades: { from: 'k', to: 2 }, paramSchema: 'count?:number (0-20, fills frames left-to-right) OR frames?:[number] (1-2 entries, each 0-10), colors?:[string] (counter color per frame), title?' },
   { kind: 'base_ten_blocks', displayName: 'Base-Ten (Place-Value) Blocks', whenToUse: 'Show a whole number as base-ten blocks: thousands cubes, hundreds flats (10×10), tens rods (1×10), and ones units, grouped into labeled place-value columns. Use for place-value / regrouping teaching instead of a freehand sketch (the block grids must be exact).', subjects: ['math'], grades: { from: 1, to: 5 }, paramSchema: 'value:number (0-9999), title?' },
+
+  // ── Phase 26 — microeconomics ──────────────────────────────────────────
+  { kind: 'supply_demand', displayName: 'Supply & Demand (single market)', whenToUse: 'Show a single-market supply & demand graph: upward S, downward D, price on the y-axis and quantity on the x-axis, with the equilibrium marked. Supports ONE comparative-statics shift (S or D, left/right) with the new equilibrium computed, OR a binding price control (ceiling/floor) with the resulting shortage/surplus shown. This is the MICRO single-market graph — for the macro economy-wide model use aggregate_demand_supply instead. Use instead of a freehand sketch.', subjects: ['social'], grades: { from: 8, to: 12 }, paramSchema: 'good?:string (axis/label noun, e.g. "coffee"), initialQuantity?:number 0..100 (default 50), initialPrice?:number 0..100 (default 50), shift?:{curve:S|D, direction:left|right, magnitude?:number (default 12), label?}, priceControl?:{type:ceiling|floor, level:number 0..100, label?}, title?' },
+  { kind: 'circular_flow', displayName: 'Circular-Flow Model', whenToUse: 'Show the two-sector circular-flow model: Households and Firms connected through the Product Market (top) and the Resource/Factor Market (bottom), with the money flow (outer loop: spending → revenue → factor payments → income) and the real flow (inner loop: resources → goods & services) drawn as color-coded arrows. Use for intro-macro / intro-micro circular-flow teaching instead of a freehand sketch.', subjects: ['social'], grades: { from: 8, to: 12 }, paramSchema: 'showMoneyFlow?:boolean (default true), showRealFlow?:boolean (default true), title? (structure is otherwise fixed)' },
 ];
 
 /** Solver dispatch table. */
@@ -402,6 +408,9 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   clock_face: solveClockFace,
   ten_frame: solveTenFrame,
   base_ten_blocks: solveBaseTenBlocks,
+  // Phase 26 — microeconomics
+  supply_demand: solveSupplyDemand,
+  circular_flow: solveCircularFlow,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "circular_flow", "params": { "title": "The circular flow of income" } }, "label": "circular-flow", "expect": "render" }

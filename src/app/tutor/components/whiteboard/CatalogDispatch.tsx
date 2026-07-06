@@ -134,6 +134,8 @@ import {
   CatalogTenFrameRenderer,
   CatalogBaseTenRenderer,
 } from './CatalogElementaryMathRenderers';
+import { SupplyDemandRenderer } from './SupplyDemandRenderer';
+import { CircularFlowRenderer } from './CircularFlowRenderer';
 
 interface Props {
   kind: string;
@@ -280,6 +282,9 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'clock_face':                 return <CatalogClockFaceRenderer figure={figure} />;
     case 'ten_frame':                  return <CatalogTenFrameRenderer figure={figure} />;
     case 'base_ten_blocks':            return <CatalogBaseTenRenderer figure={figure} />;
+    // Phase 26 — microeconomics
+    case 'supply_demand':              return <SupplyDemandRenderer figure={figure} />;
+    case 'circular_flow':              return <CircularFlowRenderer figure={figure} />;
 
     default:
       return (

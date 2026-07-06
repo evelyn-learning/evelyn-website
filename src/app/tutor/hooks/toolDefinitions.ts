@@ -449,6 +449,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'protein_synthesis', 'enzyme_action', 'cell_cycle', 'gene_expression',
             // Phase 25 — elementary-math manipulatives (K-3)
             'clock_face', 'ten_frame', 'base_ten_blocks',
+            // Phase 26 — microeconomics
+            'supply_demand', 'circular_flow',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

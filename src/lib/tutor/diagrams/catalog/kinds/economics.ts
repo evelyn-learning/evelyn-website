@@ -1101,3 +1101,247 @@ export function buildForeignExchangeMarketManifest(figure: FxMarketFigure): Feat
   }
   return features;
 }
+
+// ── supply_demand (micro single-market) ─────────────────────────────────────
+
+export interface SupplyDemandShift {
+  curve: 'S' | 'D';
+  direction: 'left' | 'right';
+  magnitude: number;
+  label?: string;
+}
+
+export interface PriceControl {
+  type: 'ceiling' | 'floor';
+  level: number;      // 0..100 price
+  label?: string;
+  /** Quantity demanded and supplied at the control price (for shortage/surplus). */
+  qDemand: number;
+  qSupply: number;
+  binding: boolean;   // ceiling below eq, or floor above eq
+}
+
+export interface SupplyDemandFigure {
+  good: string;
+  initialQuantity: number;  // 0..100
+  initialPrice: number;     // 0..100
+  shift?: SupplyDemandShift;
+  finalQuantity?: number;
+  finalPrice?: number;
+  priceControl?: PriceControl;
+  title?: string;
+}
+
+/** Micro single-market supply & demand. S slope +1, D slope −1, both through
+ *  (Q₀, P₀). Supports one comparative-statics shift (S/D, left/right) with the
+ *  new equilibrium computed, OR a binding price control (ceiling/floor) with
+ *  the resulting shortage/surplus quantities computed. */
+export function solveSupplyDemand(params: Record<string, unknown>): SupplyDemandFigure {
+  const good = typeof params.good === 'string' && params.good.trim() ? params.good.trim() : 'the good';
+  const clamp = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(5, Math.min(95, v)) : d);
+  const Q0 = clamp(params.initialQuantity, 50);
+  const P0 = clamp(params.initialPrice, 50);
+
+  // Line intercepts (P at Q=0): S: P = (P0−Q0) + Q ; D: P = (P0+Q0) − Q.
+  const sInt = P0 - Q0;
+  const dInt = P0 + Q0;
+
+  let shift: SupplyDemandShift | undefined;
+  let finalQ: number | undefined;
+  let finalP: number | undefined;
+  if (params.shift && typeof params.shift === 'object') {
+    const s = params.shift as Record<string, unknown>;
+    if ((s.curve === 'S' || s.curve === 'D') && (s.direction === 'left' || s.direction === 'right')) {
+      shift = {
+        curve: s.curve,
+        direction: s.direction,
+        magnitude: typeof s.magnitude === 'number' && s.magnitude > 0 ? s.magnitude : 12,
+        label: typeof s.label === 'string' ? s.label : undefined,
+      };
+      const delta = shift.direction === 'right' ? shift.magnitude : -shift.magnitude;
+      if (shift.curve === 'S') {
+        // S right ⇒ Q up, P down.
+        finalQ = Q0 + delta / 2;
+        finalP = P0 - delta / 2;
+      } else {
+        // D right ⇒ Q up, P up.
+        finalQ = Q0 + delta / 2;
+        finalP = P0 + delta / 2;
+      }
+    }
+  }
+
+  let priceControl: PriceControl | undefined;
+  if (params.priceControl && typeof params.priceControl === 'object') {
+    const pc = params.priceControl as Record<string, unknown>;
+    if ((pc.type === 'ceiling' || pc.type === 'floor') && typeof pc.level === 'number' && Number.isFinite(pc.level)) {
+      const level = Math.max(0, Math.min(100, pc.level));
+      // At price = level: Qs from S (Q = P − sInt), Qd from D (Q = dInt − P).
+      const qSupply = Math.max(0, level - sInt);
+      const qDemand = Math.max(0, dInt - level);
+      const binding = pc.type === 'ceiling' ? level < P0 : level > P0;
+      priceControl = {
+        type: pc.type,
+        level,
+        label: typeof pc.label === 'string' ? pc.label : undefined,
+        qDemand,
+        qSupply,
+        binding,
+      };
+    }
+  }
+
+  return {
+    good,
+    initialQuantity: Q0,
+    initialPrice: P0,
+    shift,
+    finalQuantity: finalQ,
+    finalPrice: finalP,
+    priceControl,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const supplyDemandFeatureNames = {
+  diagram: 'supply-demand',
+  supply: 'supply-curve',
+  supplyShifted: 'supply-shifted',
+  demand: 'demand-curve',
+  demandShifted: 'demand-shifted',
+  eqInitial: 'eq-initial',
+  eqFinal: 'eq-final',
+  priceControl: 'price-control',
+  gap: 'shortage-surplus',
+};
+
+export function buildSupplyDemandManifest(figure: SupplyDemandFigure): FeatureManifestEntry[] {
+  const N = supplyDemandFeatureNames;
+  const g = figure.good;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: `supply & demand for ${g}`,
+      labels: ['supply and demand', 'supply & demand', 'the S/D diagram', `the market for ${g}`, 'the market', 'the diagram', 'the graph'],
+      displayName: figure.title || `Supply & demand — ${g}`,
+      scribbleable: true,
+    },
+    {
+      name: N.supply,
+      kind: 'label',
+      description: `supply curve (S, upward-sloping)`,
+      labels: ['S', 'supply', 'the supply', 'supply curve', 'the supply curve'],
+      displayName: 'S',
+      scribbleable: true,
+    },
+    {
+      name: N.demand,
+      kind: 'label',
+      description: `demand curve (D, downward-sloping)`,
+      labels: ['D', 'demand', 'the demand', 'demand curve', 'the demand curve'],
+      displayName: 'D',
+      scribbleable: true,
+    },
+    {
+      name: N.eqInitial,
+      kind: 'label',
+      description: 'equilibrium (Q*, P*)',
+      labels: ['equilibrium', 'the equilibrium', 'initial equilibrium', 'E0', '(Q*, P*)', 'P*', 'Q*'],
+      displayName: 'equilibrium',
+      scribbleable: true,
+    },
+  ];
+  if (figure.shift) {
+    const which = figure.shift.curve;
+    features.push({
+      name: which === 'S' ? N.supplyShifted : N.demandShifted,
+      kind: 'label',
+      description: `shifted ${which} (${figure.shift.direction})`,
+      labels: [`${which}'`, `${which} prime`, `shifted ${which}`, `new ${which}`, figure.shift.label || '', `"${figure.shift.label || ''}"`].filter(Boolean),
+      displayName: `${which}'`,
+      scribbleable: true,
+    });
+    features.push({
+      name: N.eqFinal,
+      kind: 'label',
+      description: 'new equilibrium (Q₁, P₁)',
+      labels: ['new equilibrium', 'the new equilibrium', 'final equilibrium', 'E1', '(Q₁, P₁)', 'P₁', 'Q₁'],
+      displayName: 'new equilibrium',
+      scribbleable: true,
+    });
+  }
+  if (figure.priceControl) {
+    const pc = figure.priceControl;
+    features.push({
+      name: N.priceControl,
+      kind: 'label',
+      description: `price ${pc.type} at ${pc.level}`,
+      labels: [`price ${pc.type}`, `the ${pc.type}`, pc.type, 'price control', pc.label || '', `"${pc.label || ''}"`].filter(Boolean),
+      displayName: `price ${pc.type}`,
+      scribbleable: true,
+    });
+    if (pc.binding) {
+      const kindWord = pc.type === 'ceiling' ? 'shortage' : 'surplus';
+      features.push({
+        name: N.gap,
+        kind: 'label',
+        description: `${kindWord} (Qd vs Qs at the control price)`,
+        labels: [kindWord, `the ${kindWord}`, 'shortage', 'surplus'],
+        displayName: kindWord,
+        scribbleable: true,
+      });
+    }
+  }
+  return features;
+}
+
+// ── circular_flow (two-sector model) ────────────────────────────────────────
+
+export interface CircularFlowFigure {
+  showMoneyFlow: boolean; // outer loop (payments / income / revenue / spending)
+  showRealFlow: boolean;  // inner loop (resources / goods & services)
+  title?: string;
+}
+
+/** Two-sector circular-flow model: Households ⇄ Firms through the Product
+ *  Market (top) and the Resource/Factor Market (bottom). Structure is fixed;
+ *  the money loop and the real (goods/resources) loop can each be toggled. */
+export function solveCircularFlow(params: Record<string, unknown>): CircularFlowFigure {
+  return {
+    showMoneyFlow: params.showMoneyFlow !== false,
+    showRealFlow: params.showRealFlow !== false,
+    title: typeof params.title === 'string' ? params.title : undefined,
+  };
+}
+
+export const circularFlowFeatureNames = {
+  diagram: 'circular-flow',
+  households: 'households',
+  firms: 'firms',
+  productMarket: 'product-market',
+  resourceMarket: 'resource-market',
+  moneyFlow: 'money-flow',
+  realFlow: 'real-flow',
+};
+
+export function buildCircularFlowManifest(figure: CircularFlowFigure): FeatureManifestEntry[] {
+  const N = circularFlowFeatureNames;
+  const features: FeatureManifestEntry[] = [
+    {
+      name: N.diagram,
+      kind: 'region',
+      description: 'two-sector circular-flow model',
+      labels: ['circular flow', 'the circular flow', 'the circular flow model', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Circular flow',
+      scribbleable: true,
+    },
+    { name: N.households, kind: 'shape', description: 'Households sector', labels: ['households', 'the households', 'the household sector'], displayName: 'Households', scribbleable: true },
+    { name: N.firms, kind: 'shape', description: 'Firms / businesses sector', labels: ['firms', 'the firms', 'businesses', 'the business sector'], displayName: 'Firms', scribbleable: true },
+    { name: N.productMarket, kind: 'shape', description: 'Product market (goods & services)', labels: ['product market', 'the product market', 'goods market', 'goods and services market'], displayName: 'Product Market', scribbleable: true },
+    { name: N.resourceMarket, kind: 'shape', description: 'Resource / factor market (land, labor, capital)', labels: ['resource market', 'the resource market', 'factor market', 'the factor market'], displayName: 'Resource Market', scribbleable: true },
+  ];
+  if (figure.showMoneyFlow) features.push({ name: N.moneyFlow, kind: 'label', description: 'Money flow (outer loop)', labels: ['money flow', 'the money flow', 'the outer loop', 'money loop'], displayName: 'money flow', scribbleable: true });
+  if (figure.showRealFlow) features.push({ name: N.realFlow, kind: 'label', description: 'Real flow of resources & goods (inner loop)', labels: ['real flow', 'the real flow', 'the inner loop', 'goods and resources flow'], displayName: 'real flow', scribbleable: true });
+  return features;
+}

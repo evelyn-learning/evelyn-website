@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "supply_demand", "params": { "good": "coffee", "title": "The market for coffee" } }, "label": "sd-equilibrium", "expect": "render" }
