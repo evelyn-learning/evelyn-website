@@ -890,3 +890,110 @@ export function buildEyeCrossSectionManifest(figure: EyeCrossSectionFigure): Fea
   }
   return feats;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  ear_cross_section  (frontal section of the human ear)
+// ══════════════════════════════════════════════════════════════════════════
+
+export const EAR_PARTS = [
+  'pinna',
+  'ear_canal',
+  'eardrum',
+  'malleus',
+  'incus',
+  'stapes',
+  'oval_window',
+  'semicircular_canals',
+  'cochlea',
+  'auditory_nerve',
+  'eustachian_tube',
+] as const;
+export type EarPart = (typeof EAR_PARTS)[number];
+
+const EAR_ALIASES: Record<string, EarPart> = {
+  pinna: 'pinna', auricle: 'pinna', outer_ear: 'pinna',
+  ear_canal: 'ear_canal', auditory_canal: 'ear_canal', external_auditory_meatus: 'ear_canal', ear_hole: 'ear_canal',
+  eardrum: 'eardrum', tympanic_membrane: 'eardrum', tympanum: 'eardrum',
+  malleus: 'malleus', hammer: 'malleus',
+  incus: 'incus', anvil: 'incus',
+  stapes: 'stapes', stirrup: 'stapes',
+  oval_window: 'oval_window',
+  semicircular_canals: 'semicircular_canals', semicircular_canal: 'semicircular_canals', balance_canals: 'semicircular_canals',
+  cochlea: 'cochlea',
+  auditory_nerve: 'auditory_nerve', vestibulocochlear_nerve: 'auditory_nerve', cochlear_nerve: 'auditory_nerve', eighth_nerve: 'auditory_nerve',
+  eustachian_tube: 'eustachian_tube', auditory_tube: 'eustachian_tube', pharyngotympanic_tube: 'eustachian_tube',
+};
+
+export interface EarCrossSectionFigure {
+  highlight: EarPart[];
+  showRegions: boolean; // outer / middle / inner region bands + labels
+  title?: string;
+}
+
+/** Frontal section of the human ear. Structure is fixed; `highlight`
+ *  emphasises parts and `showRegions` toggles the outer/middle/inner bands. */
+export function solveEarCrossSection(params: Record<string, unknown>): EarCrossSectionFigure {
+  return {
+    highlight: resolveHighlight(params, EAR_ALIASES),
+    showRegions: boolDefault(params.showRegions, true),
+    title: titleOf(params),
+  };
+}
+
+const EAR_LABELS: Record<EarPart, string> = {
+  pinna: 'Pinna (auricle)',
+  ear_canal: 'Ear canal',
+  eardrum: 'Eardrum',
+  malleus: 'Malleus (hammer)',
+  incus: 'Incus (anvil)',
+  stapes: 'Stapes (stirrup)',
+  oval_window: 'Oval window',
+  semicircular_canals: 'Semicircular canals',
+  cochlea: 'Cochlea',
+  auditory_nerve: 'Auditory nerve',
+  eustachian_tube: 'Eustachian tube',
+};
+const EAR_DESC: Record<EarPart, string> = {
+  pinna: 'the pinna (auricle) — the outer flap that funnels sound waves into the ear canal',
+  ear_canal: 'the ear canal — carries sound waves inward to the eardrum',
+  eardrum: 'the eardrum (tympanic membrane) — vibrates when sound waves hit it',
+  malleus: 'the malleus (hammer) — the first ossicle; attached to the eardrum',
+  incus: 'the incus (anvil) — the middle ossicle, between the malleus and stapes',
+  stapes: 'the stapes (stirrup) — the last and smallest ossicle; pushes on the oval window',
+  oval_window: 'the oval window — the membrane where the stapes passes vibrations into the cochlea',
+  semicircular_canals: 'the semicircular canals — three fluid-filled loops that sense balance and head rotation',
+  cochlea: 'the cochlea — the fluid-filled spiral that converts vibrations into nerve signals (hearing)',
+  auditory_nerve: 'the auditory nerve — carries the signals from the cochlea to the brain',
+  eustachian_tube: 'the Eustachian tube — connects the middle ear to the throat and equalises pressure',
+};
+
+export const earFeatureNames = {
+  figure: 'ear-cross-section',
+  part: (id: string): string => `ear-${id.replace(/_/g, '-')}`,
+};
+
+export function buildEarCrossSectionManifest(figure: EarCrossSectionFigure): FeatureManifestEntry[] {
+  const N = earFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: figure.title ? `Ear cross-section: ${figure.title}` : 'A frontal section of the human ear',
+      labels: ['the ear', 'the ear diagram', 'the cross-section', 'the diagram', 'the figure'],
+      displayName: figure.title || 'Ear cross-section',
+      scribbleable: true,
+    },
+  ];
+  for (const part of EAR_PARTS) {
+    const isArea = part === 'pinna' || part === 'cochlea' || part === 'semicircular_canals';
+    feats.push({
+      name: N.part(part),
+      kind: isArea ? 'area' : 'point',
+      description: EAR_DESC[part],
+      labels: [EAR_LABELS[part], `the ${EAR_LABELS[part].toLowerCase()}`, part.replace(/_/g, ' ')],
+      displayName: EAR_LABELS[part],
+      scribbleable: true,
+    });
+  }
+  return feats;
+}

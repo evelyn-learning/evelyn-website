@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "ear_cross_section", "params": { "title": "The human ear" } }, "label": "ear", "expect": "render" }

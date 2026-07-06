@@ -110,6 +110,7 @@ import {
   CatalogFlowerStructureRenderer,
   CatalogEnergyPyramidRenderer,
   CatalogEyeCrossSectionRenderer,
+  CatalogEarCrossSectionRenderer,
 } from './CatalogBioAnatomyRenderers';
 import {
   CatalogBohrRenderer,
@@ -300,6 +301,7 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'plot_diagram':               return <CatalogPlotDiagramRenderer figure={figure} />;
     // Phase 29 — biology (sense-organ cross-sections)
     case 'eye_cross_section':          return <CatalogEyeCrossSectionRenderer figure={figure} />;
+    case 'ear_cross_section':          return <CatalogEarCrossSectionRenderer figure={figure} />;
 
     default:
       return (

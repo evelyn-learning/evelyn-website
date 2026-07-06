@@ -10,6 +10,7 @@ import {
   flowerFeatureNames,
   energyPyramidFeatureNames,
   eyeFeatureNames,
+  earFeatureNames,
   type LeafCrossSectionFigure,
   type LeafPart,
   type NephronFigure,
@@ -25,6 +26,8 @@ import {
   type EnergyPyramidFigure,
   type EyeCrossSectionFigure,
   type EyePart,
+  type EarCrossSectionFigure,
+  type EarPart,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 
 const INK = '#374151';
@@ -1119,4 +1122,173 @@ const EYE_LABELS_R: Record<EyePart, string> = {
   optic_nerve: 'Optic nerve',
   blind_spot: 'Blind spot',
   vitreous_humor: 'Vitreous humour',
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+//  ear_cross_section
+// ══════════════════════════════════════════════════════════════════════════
+
+export function CatalogEarCrossSectionRenderer({ figure }: { figure: EarCrossSectionFigure }) {
+  const N = earFeatureNames;
+  const W = 880;
+  const H = 560;
+  const hi = (p: EarPart) => figure.highlight.includes(p);
+  const HLC = '#059669';
+  const sFor = (p: EarPart, base: string) => (hi(p) ? HLC : base);
+  const wFor = (p: EarPart, base: number) => (hi(p) ? base + 1.5 : base);
+
+  const SKIN = '#fed7aa', SKIN_ST = '#c2410c';
+  const BONE = '#e2e8f0', BONE_ST = '#475569';
+  const COCHLEA = '#f472b6', COCHLEA_ST = '#be185d';
+  const CANAL = '#38bdf8', CANAL_ST = '#0369a1';
+  const NERVE = '#facc15', NERVE_ST = '#a16207';
+  const INK = '#374151';
+
+  // cochlea spiral (outer radius r0 spiralling inward), as a sampled polyline
+  const spiral = (cx: number, cy: number, r0: number, rEnd: number, turns: number) => {
+    const pts: string[] = [];
+    const steps = Math.round(turns * 40);
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const ang = t * turns * 2 * Math.PI - Math.PI / 2;
+      const r = r0 + (rEnd - r0) * t;
+      pts.push(`${(cx + r * Math.cos(ang)).toFixed(1)} ${(cy + r * Math.sin(ang)).toFixed(1)}`);
+    }
+    return 'M ' + pts.join(' L ');
+  };
+
+  const cochCx = 622, cochCy = 382;
+  const vestibule: [number, number] = [548, 292];
+
+  // label rows
+  const LX = 208, RX = 660;
+  type Row = { part: EarPart; ly: number; ax: number; ay: number; side: 'l' | 'r' | 't'; lx?: number };
+  const rows: Row[] = [
+    { part: 'pinna',               side: 'l', ly: 150, ax: 96,  ay: 220 },
+    { part: 'ear_canal',           side: 'l', ly: 224, ax: 250, ay: 268 },
+    { part: 'eardrum',             side: 'l', ly: 320, ax: 372, ay: 292 },
+    { part: 'eustachian_tube',     side: 'l', ly: 430, ax: 452, ay: 430 },
+    { part: 'malleus',             side: 't', lx: 372, ly: 72, ax: 392, ay: 250 },
+    { part: 'incus',               side: 't', lx: 440, ly: 72, ax: 424, ay: 258 },
+    { part: 'stapes',              side: 't', lx: 508, ly: 72, ax: 462, ay: 272 },
+    { part: 'semicircular_canals', side: 'r', ly: 150, ax: 566, ay: 196 },
+    { part: 'oval_window',         side: 'r', ly: 224, ax: 520, ay: 288 },
+    { part: 'cochlea',             side: 'r', ly: 344, ax: cochCx + 44, ay: cochCy + 8 },
+    { part: 'auditory_nerve',      side: 'r', ly: 430, ax: 726, ay: 392 },
+  ];
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'The human ear (cross-section)'}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[880px]"
+        data-feature={N.figure}
+        data-feature-label={figure.title || 'Ear cross-section'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* region bands */}
+        {figure.showRegions && (
+          <g opacity={0.5}>
+            <rect x={0} y={100} width={345} height={430} fill="#fff7ed" />
+            <rect x={345} y={100} width={155} height={430} fill="#eff6ff" />
+            <rect x={500} y={100} width={380} height={430} fill="#fdf2f8" />
+            <text x={172} y={122} fontSize={12.5} fontWeight={700} fill="#9a3412" textAnchor="middle">OUTER EAR</text>
+            <text x={422} y={122} fontSize={12.5} fontWeight={700} fill="#1e40af" textAnchor="middle">MIDDLE EAR</text>
+            <text x={690} y={122} fontSize={12.5} fontWeight={700} fill="#9d174d" textAnchor="middle">INNER EAR</text>
+          </g>
+        )}
+
+        {/* ── outer ear ── */}
+        <g data-feature={N.part('pinna')} data-feature-label="Pinna">
+          <path d="M150 300 Q60 300 62 220 Q64 150 130 158 Q118 200 150 210 Q120 236 150 250 Q116 268 150 300 Z"
+            fill={sFor('pinna', SKIN)} stroke={sFor('pinna', SKIN_ST)} strokeWidth={wFor('pinna', 2)} strokeLinejoin="round" />
+        </g>
+        <g data-feature={N.part('ear_canal')} data-feature-label="Ear canal">
+          <path d="M150 250 L360 262 L360 300 L150 300 Z" fill={sFor('ear_canal', '#ffedd5')} stroke={sFor('ear_canal', SKIN_ST)} strokeWidth={wFor('ear_canal', 1.6)} />
+        </g>
+
+        {/* ── middle ear ── */}
+        {/* tympanic (middle-ear) air cavity — grounds the ossicles + Eustachian tube */}
+        <path d="M372 244 Q470 232 505 262 Q520 300 496 322 Q450 342 410 330 Q378 318 372 244 Z" fill="#dbeafe" opacity={0.55} />
+        <g data-feature={N.part('eardrum')} data-feature-label="Eardrum">
+          <line x1={364} y1={252} x2={376} y2={306} stroke={sFor('eardrum', '#7c3aed')} strokeWidth={wFor('eardrum', 4)} strokeLinecap="round" />
+        </g>
+        {/* ossicles: malleus → incus → stapes */}
+        <g data-feature={N.part('malleus')} data-feature-label="Malleus">
+          <line x1={370} y1={278} x2={398} y2={244} stroke={sFor('malleus', BONE_ST)} strokeWidth={wFor('malleus', 3)} strokeLinecap="round" />
+          <circle cx={400} cy={242} r={7} fill={sFor('malleus', BONE)} stroke={sFor('malleus', BONE_ST)} strokeWidth={wFor('malleus', 1.5)} />
+        </g>
+        <g data-feature={N.part('incus')} data-feature-label="Incus">
+          <path d="M400 242 L428 250 L436 272" fill="none" stroke={sFor('incus', BONE_ST)} strokeWidth={wFor('incus', 3)} strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={428} cy={250} r={6} fill={sFor('incus', BONE)} stroke={sFor('incus', BONE_ST)} strokeWidth={wFor('incus', 1.5)} />
+        </g>
+        <g data-feature={N.part('stapes')} data-feature-label="Stapes">
+          {/* two crura from the incus down to the footplate on the oval window */}
+          <path d="M436 272 L508 280 M436 272 L508 292" fill="none" stroke={sFor('stapes', BONE_ST)} strokeWidth={wFor('stapes', 2.4)} strokeLinecap="round" />
+        </g>
+        <g data-feature={N.part('oval_window')} data-feature-label="Oval window">
+          <ellipse cx={512} cy={286} rx={3.5} ry={11} fill={sFor('oval_window', '#fbbf24')} stroke={sFor('oval_window', '#a16207')} strokeWidth={wFor('oval_window', 1.3)} />
+        </g>
+        <g data-feature={N.part('eustachian_tube')} data-feature-label="Eustachian tube">
+          <path d="M448 322 Q470 400 512 476" fill="none" stroke={sFor('eustachian_tube', SKIN_ST)} strokeWidth={wFor('eustachian_tube', 10)} strokeLinecap="round" opacity={0.85} />
+          <path d="M448 322 Q470 400 512 476" fill="none" stroke="#ffedd5" strokeWidth={4.5} strokeLinecap="round" />
+        </g>
+
+        {/* ── inner ear ── */}
+        {/* auditory nerve first, so the cochlea + vestibule sit on top of it */}
+        <g data-feature={N.part('auditory_nerve')} data-feature-label="Auditory nerve">
+          <path d={`M ${cochCx} ${cochCy} Q 690 420 748 398 L 748 386 Q 694 404 ${cochCx} ${cochCy - 14} Z`}
+            fill={sFor('auditory_nerve', NERVE)} stroke={sFor('auditory_nerve', NERVE_ST)} strokeWidth={wFor('auditory_nerve', 1.5)} />
+        </g>
+        {/* semicircular canals: three loops fanning up/back from the vestibule */}
+        <g data-feature={N.part('semicircular_canals')} data-feature-label="Semicircular canals">
+          {[-46, -12, 24].map((rot, i) => (
+            <ellipse key={i} cx={vestibule[0] + 2} cy={vestibule[1] - 56} rx={15} ry={50} fill="none"
+              stroke={sFor('semicircular_canals', CANAL)} strokeWidth={wFor('semicircular_canals', 6)} strokeLinecap="round"
+              transform={`rotate(${rot} ${vestibule[0] + 2} ${vestibule[1] - 4})`} />
+          ))}
+        </g>
+        {/* vestibule connecting canals + cochlea */}
+        <circle cx={vestibule[0]} cy={vestibule[1]} r={15} fill={sFor('semicircular_canals', '#bae6fd')} stroke={CANAL_ST} strokeWidth={1.4} />
+        <g data-feature={N.part('cochlea')} data-feature-label="Cochlea">
+          {/* neck connecting vestibule down to the cochlear spiral */}
+          <path d={`M ${vestibule[0]} ${vestibule[1] + 8} Q ${vestibule[0] + 22} ${cochCy - 44} ${cochCx - 30} ${cochCy - 30}`} fill="none" stroke={sFor('cochlea', COCHLEA)} strokeWidth={wFor('cochlea', 12)} strokeLinecap="round" />
+          <path d={spiral(cochCx, cochCy, 50, 6, 2.75)} fill="none" stroke={sFor('cochlea', COCHLEA)} strokeWidth={wFor('cochlea', 12)} strokeLinecap="round" />
+          <path d={spiral(cochCx, cochCy, 50, 6, 2.75)} fill="none" stroke={COCHLEA_ST} strokeWidth={1} strokeLinecap="round" opacity={0.45} />
+        </g>
+
+        {/* ── labels ── */}
+        {rows.map((r) => {
+          const anchor = r.side === 'l' ? 'end' : r.side === 'r' ? 'start' : 'middle';
+          const tx = r.side === 'l' ? LX : r.side === 'r' ? RX : (r.lx ?? 0);
+          const x1 = r.side === 'l' ? LX + 6 : r.side === 'r' ? RX - 6 : (r.lx ?? 0);
+          const y1 = r.side === 't' ? r.ly + 6 : r.ly - 4;
+          return (
+            <g key={r.part} data-feature={N.part(r.part)} data-feature-label={String(r.part)}>
+              <line x1={x1} y1={y1} x2={r.ax} y2={r.ay} stroke={INK} strokeWidth={0.7} />
+              <text x={tx} y={r.ly} fontSize={12.5} textAnchor={anchor} fill={sFor(r.part, INK)} fontWeight={hi(r.part) ? 700 : 400}>{EAR_LABELS_R[r.part]}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+const EAR_LABELS_R: Record<EarPart, string> = {
+  pinna: 'Pinna (auricle)',
+  ear_canal: 'Ear canal',
+  eardrum: 'Eardrum',
+  malleus: 'Malleus',
+  incus: 'Incus',
+  stapes: 'Stapes',
+  oval_window: 'Oval window',
+  semicircular_canals: 'Semicircular canals',
+  cochlea: 'Cochlea',
+  auditory_nerve: 'Auditory nerve',
+  eustachian_tube: 'Eustachian tube',
 };

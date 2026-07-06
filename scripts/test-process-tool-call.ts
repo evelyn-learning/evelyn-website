@@ -462,5 +462,14 @@ check('show_diagram eye_cross_section highlight + alias → ok', () => {
   const r = processToolCall('show_diagram', { type: 'eye_cross_section', params: { highlight: ['retina', 'yellow spot', 'optic disc'], showLightPath: false } });
   assert.equal(r.ok, true);
 });
+check('show_diagram ear_cross_section (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ear_cross_section', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram ear_cross_section highlight + alias → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'ear_cross_section', params: { highlight: ['hammer', 'stirrup', 'auditory tube'], showRegions: false } });
+  assert.equal(r.ok, true);
+});
 
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

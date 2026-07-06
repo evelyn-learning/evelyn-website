@@ -163,7 +163,8 @@ export type DiagramKindId =
   | 'complex_plane'
   | 'plot_diagram'
   // Phase 29 — biology (sense-organ cross-sections)
-  | 'eye_cross_section';
+  | 'eye_cross_section'
+  | 'ear_cross_section';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

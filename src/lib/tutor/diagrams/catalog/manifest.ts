@@ -92,7 +92,7 @@ import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from 
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
-import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection } from './kinds/bio-anatomy';
+import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection, solveEarCrossSection } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 import { solveClockFace, solveTenFrame, solveBaseTenBlocks } from './kinds/elementary-math';
@@ -278,6 +278,7 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
 
   // ── Phase 29 — biology (sense-organ cross-sections) ────────────────────
   { kind: 'eye_cross_section', displayName: 'Human Eye (cross-section)', whenToUse: 'Show a labeled horizontal cross-section of the human eye (light enters from the left): cornea, aqueous humour, iris & pupil, lens, ciliary body & suspensory ligaments, and the three coats — sclera, choroid, retina — with the fovea, blind spot, optic nerve and vitreous humour. An optional light path shows rays converging on the retina. Use for vision / eye-anatomy teaching instead of a freehand sketch. Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — cornea, aqueous_humor, iris, pupil, lens, ciliary_body, suspensory_ligaments, sclera, choroid, retina, fovea, optic_nerve, blind_spot, vitreous_humor), showLightPath?:boolean (default true), title?' },
+  { kind: 'ear_cross_section', displayName: 'Human Ear (cross-section)', whenToUse: 'Show a labeled frontal section of the human ear grouped into outer / middle / inner regions: pinna and ear canal (outer); eardrum, the three ossicles malleus/incus/stapes, oval window and Eustachian tube (middle); and the cochlea, semicircular canals and auditory nerve (inner). Use for hearing / ear-anatomy teaching instead of a freehand sketch (the ossicle chain and cochlear spiral cannot be doodled legibly). Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — pinna, ear_canal, eardrum, malleus, incus, stapes, oval_window, semicircular_canals, cochlea, auditory_nerve, eustachian_tube), showRegions?:boolean (default true; outer/middle/inner bands), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -432,6 +433,7 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   plot_diagram: solvePlotDiagram,
   // Phase 29 — biology (sense-organ cross-sections)
   eye_cross_section: solveEyeCrossSection,
+  ear_cross_section: solveEarCrossSection,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {
