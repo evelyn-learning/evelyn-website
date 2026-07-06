@@ -532,3 +532,97 @@ export function buildRecursionTreeManifest(figure: RecursionTreeFigure): Feature
     },
   ];
 }
+
+// ── sorting_steps ──────────────────────────────────────────────────────────────
+// Phase 33 — a sorting algorithm shown as successive array states (one row per
+// pass), heights ∝ value, with the locked-sorted tail highlighted. Deterministic
+// bubble sort: the canonical "watch it sort" figure a freehand sketch can't keep
+// aligned across rows.
+
+export interface SortingStepRow {
+  values: number[];
+  sortedFrom: number; // indices >= sortedFrom are in their final (sorted) place
+  label: string;      // "Start", "Pass 1", …, "Sorted"
+}
+export interface SortingStepsFigure {
+  title?: string;
+  algorithm: 'bubble';
+  rows: SortingStepRow[];
+  maxValue: number;
+}
+
+/** Bubble sort shown pass-by-pass. Records the array state after each pass with
+ *  the sorted tail marked; stops early once a pass makes no swaps. Defaults to a
+ *  small unsorted array so a bare call still renders a full worked example. */
+export function solveSortingSteps(params: Record<string, unknown>): SortingStepsFigure {
+  let values = toStrings(params.values)?.map((s) => Number(s)).filter((n) => Number.isFinite(n));
+  if (!values || values.length < 2) {
+    values = Array.isArray(params.values)
+      ? (params.values as unknown[]).map((x) => numOr(x, NaN)).filter((n) => Number.isFinite(n))
+      : [];
+  }
+  if (!values || values.length < 2) values = [5, 2, 8, 1, 9, 3];
+  // Keep it legible: at most 10 bars.
+  values = values.slice(0, 10).map((n) => Math.round(n));
+
+  const n = values.length;
+  const arr = [...values];
+  const rows: SortingStepRow[] = [{ values: [...arr], sortedFrom: n, label: 'Start' }];
+
+  for (let pass = 0; pass < n - 1; pass++) {
+    let swapped = false;
+    for (let i = 0; i < n - 1 - pass; i++) {
+      if (arr[i] > arr[i + 1]) {
+        const t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t;
+        swapped = true;
+      }
+    }
+    const sortedFrom = n - 1 - pass; // the last (pass+1) elements are locked
+    rows.push({ values: [...arr], sortedFrom, label: `Pass ${pass + 1}` });
+    if (!swapped) break;
+  }
+
+  // Mark the final state as fully sorted.
+  const last = rows[rows.length - 1];
+  const isSorted = arr.every((v, i) => i === 0 || arr[i - 1] <= v);
+  if (isSorted) {
+    last.label = 'Sorted';
+    last.sortedFrom = 0;
+  }
+
+  return {
+    title: titleOf(params),
+    algorithm: 'bubble',
+    rows,
+    maxValue: Math.max(1, ...values),
+  };
+}
+
+export const sortingStepsFeatureNames = {
+  figure: 'sorting-steps',
+  result: 'sorted-result',
+} as const;
+
+export function buildSortingStepsManifest(figure: SortingStepsFigure): FeatureManifestEntry[] {
+  const finalRow = figure.rows[figure.rows.length - 1];
+  return [
+    {
+      name: sortingStepsFeatureNames.figure,
+      kind: 'region',
+      description: figure.title || 'bubble sort shown pass by pass',
+      labels: ['the sorting steps', 'the bubble sort', 'the sort', 'the passes', 'the diagram'],
+      displayName: figure.title || 'Sorting steps',
+      scribbleable: true,
+    },
+    {
+      name: sortingStepsFeatureNames.result,
+      kind: 'label',
+      description: `the sorted array [${finalRow.values.join(', ')}]`,
+      labels: ['the sorted array', 'the result', 'the sorted list', 'the final array'],
+      displayName: 'Sorted result',
+      scribbleable: true,
+    },
+  ];
+}
+
+export const solveSortingStepsForManifest = solveSortingSteps;

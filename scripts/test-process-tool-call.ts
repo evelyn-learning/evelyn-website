@@ -526,4 +526,33 @@ check('show_diagram rhetorical_triangle custom subject + highlight → ok', () =
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 33 — sorting steps + Lorenz curve + character web');
+check('show_diagram sorting_steps (bare, default array) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'sorting_steps', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram sorting_steps custom array → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'sorting_steps', params: { values: [7, 3, 9, 2, 6, 1] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram lorenz_curve (bare, default quintiles) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'lorenz_curve', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram lorenz_curve custom shares → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'lorenz_curve', params: { shares: [2, 6, 12, 22, 58] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram character_web (bare, default) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'character_web', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram character_web custom nodes → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'character_web', params: { center: 'Scout', nodes: [{ label: 'Atticus', relation: 'father', kind: 'character' }, { label: 'Jem', relation: 'brother', kind: 'character' }, { label: 'Curious', kind: 'trait' }] } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

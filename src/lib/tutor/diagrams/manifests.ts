@@ -76,6 +76,9 @@ import {
   // Phase 32 — rhetorical triangle.
   buildRhetoricalTriangleManifest,
   solveRhetoricalTriangle as solveRhetoricalTriangleForManifest,
+  // Phase 33 — character web.
+  buildCharacterWebManifest,
+  solveCharacterWeb as solveCharacterWebForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   buildCycleStagesManifest,
@@ -143,6 +146,8 @@ import {
   buildGameTheoryManifest,
   buildElasticityManifest,
   buildComparativeAdvantageManifest,
+  buildLorenzCurveManifest,
+  solveLorenzCurve as solveLorenzCurveForManifest,
   solveProductionPossibilities,
   solveBusinessCycle,
   solveAggregateDemandSupply,
@@ -298,6 +303,8 @@ import {
   solveHashTable as solveHashTableForManifest,
   buildRecursionTreeManifest,
   solveRecursionTree as solveRecursionTreeForManifest,
+  buildSortingStepsManifest,
+  solveSortingSteps as solveSortingStepsForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/cs-structures';
 import {
   buildProteinSynthesisManifest,
@@ -1698,6 +1705,19 @@ function buildDiagramManifest(cmd: {
     }
     case 'rhetorical_triangle': {
       try { return buildRhetoricalTriangleManifest(solveRhetoricalTriangleForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    // Phase 33 — sorting steps + Lorenz curve + character web
+    case 'sorting_steps': {
+      try { return buildSortingStepsManifest(solveSortingStepsForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'lorenz_curve': {
+      try { return buildLorenzCurveManifest(solveLorenzCurveForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'character_web': {
+      try { return buildCharacterWebManifest(solveCharacterWebForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

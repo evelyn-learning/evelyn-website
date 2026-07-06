@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "lorenz_curve", "params": {} }, "label": "lorenz-default", "expect": "render" }

@@ -44,7 +44,7 @@ import {
   solveSentenceDiagram, solveArgumentStructure, solveHistoricalTimeline,
   solveGovernmentBranches, solveComparisonTable, solveOrganizer,
   solveHierarchyPyramid, solveComplexPlane, solvePlotDiagram,
-  solveRhetoricalTriangle,
+  solveRhetoricalTriangle, solveCharacterWeb,
 } from './kinds/advanced-math-ela-social';
 
 import {
@@ -60,6 +60,7 @@ import {
   solveGameTheoryMatrix,
   solveElasticity,
   solveComparativeAdvantage,
+  solveLorenzCurve,
 } from './kinds/economics';
 
 import {
@@ -97,7 +98,7 @@ import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } fr
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice, solvePhScale } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection, solveEarCrossSection } from './kinds/bio-anatomy';
-import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
+import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree, solveSortingSteps } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 import { solveClockFace, solveTenFrame, solveBaseTenBlocks, solveCoordinateGrid } from './kinds/elementary-math';
 
@@ -295,6 +296,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 32 — coordinate grid (math) + rhetorical triangle (ELA) ───────
   { kind: 'coordinate_grid', displayName: 'Coordinate Grid (plot ordered pairs)', whenToUse: 'Show a Cartesian coordinate grid with labelled ordered pairs plotted on it. Auto-detects first-quadrant vs full four-quadrant plane from the data (any negative coordinate → full plane) and auto-fits the axis range. Use for plotting points, graphing ordered pairs, polygons on a grid, or an empty "plot these" grid — instead of a freehand sketch. For function curves use show_function_graph; for the complex/Argand plane use complex_plane.', subjects: ['math'], grades: { from: 4, to: 10 }, paramSchema: 'points?:[{x:number, y:number, label?:string, color?:string}] (omit for a blank grid), quadrants?:1|4 (default: auto — 4 if any negative coord), xMin?/xMax?/yMin?/yMax?:number (override auto-fit; xMin/yMin ignored in quadrant-1), connect?:boolean (join points in order — segment/polygon), title?' },
   { kind: 'rhetorical_triangle', displayName: 'Rhetorical Triangle (ethos / pathos / logos)', whenToUse: "Show Aristotle's rhetorical triangle: the three appeals — Ethos (speaker's credibility), Pathos (emotional appeal to the audience) and Logos (logic & evidence in the message) — at the corners around the subject/text at the centre. Use for rhetoric / argument / AP Lang / persuasive-writing teaching instead of a freehand sketch. Defaults to the classic triangle; each corner's role/note can be customised and one appeal highlighted.", subjects: ['ela'], grades: { from: 7, to: 12 }, paramSchema: "subject?:string (centre label — the text/message), ethos?/pathos?/logos?:{label?, role?, note?} (override any corner), highlight?:ethos|pathos|logos, title?" },
+
+  // ── Phase 33 — sorting steps (CS) + Lorenz curve (econ) + character web (ELA) ──
+  { kind: 'sorting_steps', displayName: 'Sorting Steps (bubble sort, pass by pass)', whenToUse: 'Show a bubble sort as successive array states — one row of bars per pass, bar heights ∝ value, with the locked-sorted tail highlighted green and the final row marked "Sorted". Use for teaching sorting algorithms / how a sort progresses instead of a freehand sketch (rows must stay aligned across passes). Pass the starting array via values; defaults to a small unsorted array.', subjects: ['cs'], grades: { from: 6, to: 12 }, paramSchema: 'values?:[number] (the starting array, 2..10 elements; default a small unsorted set), title?' },
+  { kind: 'lorenz_curve', displayName: 'Lorenz Curve (income inequality + Gini)', whenToUse: 'Show an income-inequality Lorenz curve: cumulative % of income (y) vs cumulative % of population (x), bowed below the 45° line of perfect equality, with the inequality gap shaded and the Gini coefficient computed. Use for inequality / income-distribution teaching instead of a freehand sketch. Provide per-group income shares (poorest first) or explicit cumulative points; defaults to a typical quintile distribution.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'shares?:[number] (income % per equal population group, poorest first; normalised to 100) OR points?:[{pop:0..100, income:0..100}] (cumulative), title?' },
+  { kind: 'character_web', displayName: 'Character Web (relationship / trait map)', whenToUse: 'Show a character web / relationship map: a central character with spokes to related characters (each edge labelled with the relationship) and/or trait words. Use for literature character analysis / relationship mapping instead of a freehand sketch. Provide the central character and the surrounding nodes; defaults to a generic protagonist web.', subjects: ['ela'], grades: { from: 4, to: 12 }, paramSchema: 'center?:string (central character), nodes?:[{label:string, relation?:string (edge label — omit for a trait), kind?:"character"|"trait"}] (2..8), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -459,6 +465,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 32 — coordinate grid + rhetorical triangle
   coordinate_grid: solveCoordinateGrid,
   rhetorical_triangle: solveRhetoricalTriangle,
+  // Phase 33 — sorting steps + Lorenz curve + character web
+  sorting_steps: solveSortingSteps,
+  lorenz_curve: solveLorenzCurve,
+  character_web: solveCharacterWeb,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

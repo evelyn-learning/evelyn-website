@@ -17,9 +17,11 @@ import type {
   PlotDiagramFigure,
   RhetoricalTriangleFigure,
   RhetoricalAppeal,
+  CharacterWebFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   rhetoricalTriangleFeatureNames,
+  characterWebFeatureNames,
   comparisonTableFeatureNames,
   tChartFeatureNames,
   kwlChartFeatureNames,
@@ -1126,6 +1128,107 @@ export function CatalogRhetoricalTriangleRenderer({ figure }: { figure: Rhetoric
             </g>
           );
         })}
+      </svg>
+    </div>
+  );
+}
+
+// ── Character web (central character + relationship / trait spokes) ─────────
+export function CatalogCharacterWebRenderer({ figure }: { figure: CharacterWebFigure }) {
+  const N = characterWebFeatureNames;
+  const heading = figure.title || `Character Web — ${figure.center}`;
+  const W = 620;
+  const H = 520;
+  const cx = W / 2;
+  const cy = H / 2 + 6;
+  const ringR = 190;
+
+  const CHAR_FILL = '#dbeafe';
+  const CHAR_STROKE = '#2563eb';
+  const TRAIT_FILL = '#dcfce7';
+  const TRAIT_STROKE = '#16a34a';
+
+  const nodes = figure.nodes;
+  // Place nodes evenly around the ring, starting from the top.
+  const placed = nodes.map((node, i) => {
+    const ang = -Math.PI / 2 + (i * 2 * Math.PI) / nodes.length;
+    return { node, x: cx + ringR * Math.cos(ang), y: cy + ringR * Math.sin(ang) };
+  });
+
+  const nodeRX = 58;
+  const nodeRY = 24;
+  const centerRX = 66;
+  const centerRY = 30;
+
+  // Trim an ellipse-to-ellipse connector so it meets the rims, not the centres.
+  const edgeEnd = (fromX: number, fromY: number, toX: number, toY: number, rx: number, ry: number) => {
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const t = 1 / Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
+    return { x: toX - dx * t, y: toY - dy * t };
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ maxWidth: W }}
+        data-feature={N.web}
+        data-feature-label={heading}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* spokes + relation labels (drawn first, under the nodes) */}
+        {placed.map(({ node, x, y }, i) => {
+          const a = edgeEnd(x, y, cx, cy, centerRX, centerRY); // point on centre rim
+          const b = edgeEnd(cx, cy, x, y, nodeRX, nodeRY);      // point on node rim
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+          return (
+            <g key={`edge${i}`}>
+              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#cbd5e1" strokeWidth={1.5} />
+              {node.relation && (
+                <>
+                  <rect x={mx - node.relation.length * 3.6 - 5} y={my - 10} width={node.relation.length * 7.2 + 10} height={18} rx={4} fill="#fff" />
+                  <text x={mx} y={my + 3} textAnchor="middle" fontSize={11} fontStyle="italic" fill="#64748b">{node.relation}</text>
+                </>
+              )}
+            </g>
+          );
+        })}
+
+        {/* centre */}
+        <g data-feature={N.center} data-feature-label={figure.center}>
+          <ellipse cx={cx} cy={cy} rx={centerRX} ry={centerRY} fill="#1e3a8a" stroke="#1e3a8a" />
+          <text x={cx} y={cy + 5} textAnchor="middle" fontSize={15} fontWeight={800} fill="#fff">
+            {figure.center.length > 16 ? figure.center.slice(0, 15) + '…' : figure.center}
+          </text>
+        </g>
+
+        {/* nodes */}
+        {placed.map(({ node, x, y }, i) => {
+          const isTrait = node.kind === 'trait';
+          return (
+            <g key={`node${i}`} data-feature={N.node(i)} data-feature-label={`${node.label}${node.relation ? ` (${node.relation})` : ''}`}>
+              <ellipse cx={x} cy={y} rx={nodeRX} ry={nodeRY} fill={isTrait ? TRAIT_FILL : CHAR_FILL} stroke={isTrait ? TRAIT_STROKE : CHAR_STROKE} strokeWidth={2} {...(isTrait ? { strokeDasharray: '5 3' } : {})} />
+              <text x={x} y={y + 5} textAnchor="middle" fontSize={13} fontWeight={700} fill={isTrait ? '#166534' : '#1e40af'}>
+                {node.label.length > 14 ? node.label.slice(0, 13) + '…' : node.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* legend */}
+        <g transform={`translate(${W / 2 - 150}, ${H - 20})`}>
+          <ellipse cx={8} cy={0} rx={9} ry={6} fill={CHAR_FILL} stroke={CHAR_STROKE} strokeWidth={1.5} />
+          <text x={22} y={4} fontSize={11.5} fill="#475569">character / relationship</text>
+          <ellipse cx={188} cy={0} rx={9} ry={6} fill={TRAIT_FILL} stroke={TRAIT_STROKE} strokeWidth={1.5} strokeDasharray="4 2" />
+          <text x={202} y={4} fontSize={11.5} fill="#475569">trait</text>
+        </g>
       </svg>
     </div>
   );

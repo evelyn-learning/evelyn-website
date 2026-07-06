@@ -463,6 +463,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'game_theory_matrix', 'elasticity', 'comparative_advantage',
             // Phase 32 — coordinate grid (math) + rhetorical triangle (ELA)
             'coordinate_grid', 'rhetorical_triangle',
+            // Phase 33 — sorting steps (CS) + Lorenz curve (econ) + character web (ELA)
+            'sorting_steps', 'lorenz_curve', 'character_web',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

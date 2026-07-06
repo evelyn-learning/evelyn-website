@@ -1566,3 +1566,104 @@ export function buildComparativeAdvantageManifest(figure: ComparativeAdvantageFi
     { name: N.rowB, kind: 'area', description: `${figure.producerB}'s outputs + opportunity costs`, labels: [figure.producerB, `the ${figure.producerB.toLowerCase()} row`], displayName: figure.producerB, scribbleable: true },
   ];
 }
+
+// ── lorenz_curve ─────────────────────────────────────────────────────────
+// Phase 33 — income-inequality Lorenz curve: cumulative % of income (y) vs
+// cumulative % of population (x), against the 45° line of perfect equality,
+// with the Gini coefficient computed. The class of figure a sketch can't place
+// accurately (the bow of the curve IS the datum).
+
+export interface LorenzPoint {
+  pop: number;    // cumulative % of population, 0..100
+  income: number; // cumulative % of income, 0..100
+}
+
+export interface LorenzCurveFigure {
+  title?: string;
+  points: LorenzPoint[]; // always starts (0,0) and ends (100,100)
+  gini: number;          // 0..1, 2 dp
+  groupCount: number;    // number of equal population groups (e.g. 5 = quintiles)
+}
+
+/** Lorenz curve from per-group income shares (poorest group first). `shares`
+ *  are income %s for equal-sized population groups; they are normalised to sum
+ *  100 and accumulated into (population%, income%) points, plus the endpoints
+ *  (0,0) and (100,100). The Gini coefficient is the trapezoidal area between the
+ *  equality line and the curve. Defaults to a typical quintile distribution. */
+export function solveLorenzCurve(params: Record<string, unknown>): LorenzCurveFigure {
+  // Accept explicit cumulative points, else per-group shares.
+  let shares: number[] | undefined;
+  if (Array.isArray(params.shares)) {
+    shares = (params.shares as unknown[]).map((x) => posNum(x, NaN)).filter((n) => Number.isFinite(n) && n >= 0);
+  }
+  let points: LorenzPoint[] | undefined;
+  if (Array.isArray(params.points)) {
+    const raw = (params.points as unknown[])
+      .map((p) => (p && typeof p === 'object' ? (p as Record<string, unknown>) : {}))
+      .map((p) => ({ pop: posNum(p.pop, NaN), income: posNum(p.income, NaN) }))
+      .filter((p) => Number.isFinite(p.pop) && Number.isFinite(p.income));
+    if (raw.length >= 1) points = raw;
+  }
+
+  if (!points) {
+    if (!shares || shares.length < 2) shares = [4, 8, 14, 22, 52]; // typical quintiles
+    const total = shares.reduce((a, b) => a + b, 0) || 1;
+    const k = shares.length;
+    points = [];
+    let cumIncome = 0;
+    for (let i = 0; i < k; i++) {
+      cumIncome += (shares[i] / total) * 100;
+      points.push({ pop: ((i + 1) / k) * 100, income: cumIncome });
+    }
+  }
+
+  // Normalise: sort by pop, clamp, ensure endpoints, force last income to 100.
+  points = points
+    .map((p) => ({ pop: Math.max(0, Math.min(100, p.pop)), income: Math.max(0, Math.min(100, p.income)) }))
+    .sort((a, b) => a.pop - b.pop);
+  if (points.length === 0 || points[0].pop > 0) points.unshift({ pop: 0, income: 0 });
+  if (points[points.length - 1].pop < 100) points.push({ pop: 100, income: 100 });
+  else points[points.length - 1] = { pop: 100, income: 100 };
+
+  // Gini = 1 - (area under Lorenz curve)/(area under equality line=0.5).
+  // Area under curve via trapezoids on the 0..1 scale.
+  let areaUnder = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = (points[i].pop - points[i - 1].pop) / 100;
+    const avgY = (points[i].income + points[i - 1].income) / 200;
+    areaUnder += dx * avgY;
+  }
+  const gini = Math.max(0, Math.min(1, Math.round((1 - 2 * areaUnder) * 100) / 100));
+
+  const groupCount = points.length - 1; // segments between (0,0) and (100,100)
+
+  return {
+    title: typeof params.title === 'string' && params.title.trim() ? params.title : undefined,
+    points,
+    gini,
+    groupCount,
+  };
+}
+
+export const lorenzCurveFeatureNames = {
+  figure: 'lorenz-curve',
+  curve: 'lorenz-line',
+  equality: 'equality-line',
+  gap: 'inequality-gap',
+} as const;
+
+export function buildLorenzCurveManifest(figure: LorenzCurveFigure): FeatureManifestEntry[] {
+  return [
+    {
+      name: lorenzCurveFeatureNames.figure,
+      kind: 'region',
+      description: figure.title || `Lorenz curve (Gini ≈ ${figure.gini.toFixed(2)})`,
+      labels: ['the lorenz curve diagram', 'the diagram', 'the graph'],
+      displayName: figure.title || 'Lorenz curve',
+      scribbleable: true,
+    },
+    { name: lorenzCurveFeatureNames.curve, kind: 'shape', description: 'the Lorenz curve', labels: ['the lorenz curve', 'the curve', 'the income curve'], displayName: 'Lorenz curve', scribbleable: true },
+    { name: lorenzCurveFeatureNames.equality, kind: 'shape', description: 'the line of perfect equality (45°)', labels: ['the equality line', 'the line of equality', 'the 45 degree line', 'the diagonal'], displayName: 'Line of equality', scribbleable: true },
+    { name: lorenzCurveFeatureNames.gap, kind: 'area', description: `the inequality gap (Gini ≈ ${figure.gini.toFixed(2)})`, labels: ['the inequality gap', 'the gini area', 'the gap', 'the shaded area'], displayName: 'Inequality gap', scribbleable: true },
+  ];
+}

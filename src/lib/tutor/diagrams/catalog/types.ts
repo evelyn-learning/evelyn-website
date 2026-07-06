@@ -173,7 +173,11 @@ export type DiagramKindId =
   | 'comparative_advantage'
   // Phase 32 — coordinate grid (elementary/math) + rhetorical triangle (ELA)
   | 'coordinate_grid'
-  | 'rhetorical_triangle';
+  | 'rhetorical_triangle'
+  // Phase 33 — sorting steps (CS) + Lorenz curve (econ) + character web (ELA)
+  | 'sorting_steps'
+  | 'lorenz_curve'
+  | 'character_web';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

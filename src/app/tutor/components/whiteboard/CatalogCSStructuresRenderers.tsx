@@ -6,10 +6,12 @@ import {
   graphFeatureNames,
   hashTableFeatureNames,
   recursionTreeFeatureNames,
+  sortingStepsFeatureNames,
   type DataStructureFigure,
   type GraphFigure,
   type HashTableFigure,
   type RecursionTreeFigure,
+  type SortingStepsFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/cs-structures';
 
 const BLUE = '#2563eb';
@@ -482,6 +484,65 @@ export function CatalogRecursionTreeRenderer({ figure }: { figure: RecursionTree
             ? 'fib(n) = fib(n−1) + fib(n−2)   ·   green = base case   ·   overlapping subproblems'
             : 'fact(n) = n × fact(n−1)   ·   green = base case fact(1) = 1'}
         </text>
+      </svg>
+    </div>
+  );
+}
+
+// ── sorting_steps ───────────────────────────────────────────────────────────────
+export function CatalogSortingStepsRenderer({ figure }: { figure: SortingStepsFigure }) {
+  const N = sortingStepsFeatureNames;
+  const { rows, maxValue } = figure;
+  const n = rows[0].values.length;
+
+  const barW = 30;
+  const barGap = 8;
+  const cellW = barW + barGap;
+  const arrayW = n * cellW;
+  const labelW = 78;
+  const barMaxH = 74;   // tallest bar
+  const rowH = barMaxH + 34; // bars + value labels + spacing
+  const padX = 18;
+  const padTop = 14;
+  const W = labelW + arrayW + padX * 2;
+  const H = padTop + rows.length * rowH + 12;
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <TitleBar title={figure.title} fallback="Bubble sort — step by step" />
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ maxWidth: W }}
+        data-feature={N.figure}
+        data-feature-label={figure.title || 'Sorting steps'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {rows.map((row, ri) => {
+          const y0 = padTop + ri * rowH;
+          const baseY = y0 + barMaxH + 4; // bar baseline
+          const isFinal = row.label === 'Sorted';
+          return (
+            <g key={ri} {...(isFinal ? { 'data-feature': N.result, 'data-feature-label': `Sorted: ${row.values.join(', ')}` } : {})}>
+              <text x={padX} y={baseY - barMaxH / 2 + 4} fontSize={13} fontWeight={700} fill={isFinal ? GREEN : INK}>{row.label}</text>
+              {row.values.map((v, i) => {
+                const h = Math.max(6, (v / maxValue) * barMaxH);
+                const x = labelW + padX + i * cellW;
+                const sorted = i >= row.sortedFrom;
+                const fill = sorted ? GREEN : BLUE;
+                return (
+                  <g key={i}>
+                    <rect x={x} y={baseY - h} width={barW} height={h} rx={3} fill={fill} fillOpacity={sorted ? 0.9 : 0.85} />
+                    <text x={x + barW / 2} y={baseY + 15} textAnchor="middle" fontSize={12} fontWeight={600} fill={sorted ? GREEN : INK}>{v}</text>
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

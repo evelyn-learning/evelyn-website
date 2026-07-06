@@ -1603,3 +1603,95 @@ export function buildRhetoricalTriangleManifest(figure: RhetoricalTriangleFigure
   });
   return feats;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 33 — character_web (a central character + labelled relationship/trait spokes)
+// ═══════════════════════════════════════════════════════════════════
+
+export type CharacterNodeKind = 'character' | 'trait';
+
+export interface CharacterWebNode {
+  label: string;
+  relation?: string;          // edge label, e.g. "helps", "brother of"
+  kind: CharacterNodeKind;    // character (relationship) vs trait (attribute)
+}
+
+export interface CharacterWebFigure {
+  title?: string;
+  center: string;             // the central character
+  nodes: CharacterWebNode[];  // spokes around the centre
+}
+
+/** Character web / relationship map: a central character with spokes to related
+ *  characters (labelled with the relationship) and/or trait words. Defaults to a
+ *  generic protagonist web so a bare call still renders a clean example; every
+ *  node/relation is caller-supplied for a specific text. */
+export function solveCharacterWeb(params: Record<string, unknown>): CharacterWebFigure {
+  const center = typeof params.center === 'string' && params.center.trim() ? params.center : 'Protagonist';
+  const rawNodes = Array.isArray(params.nodes) ? params.nodes : [];
+  let nodes: CharacterWebNode[] = rawNodes
+    .map((n) => (n && typeof n === 'object' ? (n as Record<string, unknown>) : {}))
+    .map((n) => ({
+      label: typeof n.label === 'string' ? n.label.trim() : '',
+      relation: typeof n.relation === 'string' && n.relation.trim() ? n.relation.trim() : undefined,
+      kind: n.kind === 'trait' ? 'trait' as const : 'character' as const,
+    }))
+    .filter((n) => n.label.length > 0)
+    .slice(0, 8); // legibility cap
+
+  if (nodes.length === 0) {
+    nodes = [
+      { label: 'Ally', relation: 'helps', kind: 'character' },
+      { label: 'Antagonist', relation: 'opposes', kind: 'character' },
+      { label: 'Mentor', relation: 'guides', kind: 'character' },
+      { label: 'Brave', kind: 'trait' },
+      { label: 'Loyal', kind: 'trait' },
+    ];
+  }
+
+  return {
+    title: typeof params.title === 'string' && params.title.trim() ? params.title : undefined,
+    center,
+    nodes,
+  };
+}
+
+export const characterWebFeatureNames = {
+  web: 'character-web',
+  center: 'character-center',
+  node: (i: number): string => `character-node-${i}`,
+} as const;
+
+export function buildCharacterWebManifest(figure: CharacterWebFigure): FeatureManifestEntry[] {
+  const N = characterWebFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.web,
+      kind: 'region',
+      description: figure.title || `character web for ${figure.center}`,
+      labels: ['the character web', 'the character map', 'the web', 'the relationship map', 'the diagram'],
+      displayName: figure.title || 'Character web',
+      scribbleable: true,
+    },
+    {
+      name: N.center,
+      kind: 'label',
+      description: `the central character — ${figure.center}`,
+      labels: [figure.center, `the character ${figure.center}`, 'the central character', 'the main character', 'the centre'],
+      displayName: figure.center,
+      scribbleable: true,
+    },
+  ];
+  figure.nodes.forEach((node, i) => {
+    const rel = node.relation ? ` (${node.relation})` : '';
+    feats.push({
+      name: N.node(i),
+      kind: 'label',
+      description: `${node.kind === 'trait' ? 'trait' : 'character'}: ${node.label}${rel}`,
+      labels: [node.label, `the ${node.label.toLowerCase()}`, ...(node.relation ? [node.relation] : [])],
+      displayName: node.label,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}

@@ -62,6 +62,7 @@ import {
   CatalogComplexPlaneRenderer,
   CatalogPlotDiagramRenderer,
   CatalogRhetoricalTriangleRenderer,
+  CatalogCharacterWebRenderer,
 } from './CatalogAdvancedRenderers';
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 import { BusinessCycleRenderer } from './BusinessCycleRenderer';
@@ -131,6 +132,7 @@ import {
   CatalogGraphRenderer,
   CatalogHashTableRenderer,
   CatalogRecursionTreeRenderer,
+  CatalogSortingStepsRenderer,
 } from './CatalogCSStructuresRenderers';
 import {
   CatalogProteinSynthesisRenderer,
@@ -150,6 +152,7 @@ import {
   GameTheoryMatrixRenderer,
   ElasticityRenderer,
   ComparativeAdvantageRenderer,
+  LorenzCurveRenderer,
 } from './EconMicroRenderers';
 
 interface Props {
@@ -319,6 +322,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 32 — coordinate grid (math) + rhetorical triangle (ELA)
     case 'coordinate_grid':            return <CatalogCoordinateGridRenderer figure={figure} />;
     case 'rhetorical_triangle':        return <CatalogRhetoricalTriangleRenderer figure={figure} />;
+    // Phase 33 — sorting steps (CS) + Lorenz curve (econ) + character web (ELA)
+    case 'sorting_steps':              return <CatalogSortingStepsRenderer figure={figure} />;
+    case 'lorenz_curve':               return <LorenzCurveRenderer figure={figure} />;
+    case 'character_web':              return <CatalogCharacterWebRenderer figure={figure} />;
 
     default:
       return (

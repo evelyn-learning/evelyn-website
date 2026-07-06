@@ -5,9 +5,11 @@ import {
   gameTheoryFeatureNames,
   elasticityFeatureNames,
   comparativeAdvantageFeatureNames,
+  lorenzCurveFeatureNames,
   type GameTheoryFigure,
   type ElasticityFigure,
   type ComparativeAdvantageFigure,
+  type LorenzCurveFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/economics';
 
 const INK = '#374151';
@@ -223,6 +225,83 @@ export function ComparativeAdvantageRenderer({ figure }: { figure: ComparativeAd
           <tspan fontWeight={700} fill={figure.caY === 'A' ? ROW_COLOR : COL_COLOR}>{caYWinner}</tspan>
           <tspan>{`${NB}in ${figure.goodY} (lower opportunity cost).`}</tspan>
         </text>
+      </svg>
+    </div>
+  );
+}
+
+// ── lorenz_curve ─────────────────────────────────────────────────────────────
+export function LorenzCurveRenderer({ figure }: { figure: LorenzCurveFigure }) {
+  const N = lorenzCurveFeatureNames;
+  const heading = figure.title || 'Lorenz Curve';
+  const W = 560;
+  const H = 520;
+  const M = { left: 64, right: 28, top: 24, bottom: 62 };
+  const plotW = W - M.left - M.right;
+  const plotH = H - M.top - M.bottom;
+
+  // data (0..100) → pixel
+  const px = (x: number): number => M.left + (x / 100) * plotW;
+  const py = (y: number): number => M.top + (1 - y / 100) * plotH;
+
+  const curvePts = figure.points.map((p) => `${px(p.pop)},${py(p.income)}`).join(' ');
+  // Shaded inequality gap = area between equality line and the curve.
+  const gapPts = `${figure.points.map((p) => `${px(p.pop)},${py(p.income)}`).reverse().join(' ')} ${px(100)},${py(100)} ${px(0)},${py(0)}`;
+
+  const ticks = [0, 20, 40, 60, 80, 100];
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ maxWidth: W }}
+        data-feature={N.figure}
+        data-feature-label={heading}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* gridlines */}
+        {ticks.map((t) => (
+          <g key={`g${t}`}>
+            <line x1={px(t)} y1={M.top} x2={px(t)} y2={M.top + plotH} stroke="#eef2f7" strokeWidth={1} />
+            <line x1={M.left} y1={py(t)} x2={M.left + plotW} y2={py(t)} stroke="#eef2f7" strokeWidth={1} />
+          </g>
+        ))}
+
+        {/* inequality gap shading */}
+        <polygon data-feature={N.gap} data-feature-label="Inequality gap" points={gapPts} fill="#f59e0b" fillOpacity={0.16} />
+
+        {/* line of perfect equality */}
+        <line data-feature={N.equality} data-feature-label="Line of equality" x1={px(0)} y1={py(0)} x2={px(100)} y2={py(100)} stroke="#64748b" strokeWidth={2} strokeDasharray="6 4" />
+        <text x={px(62)} y={py(70)} fontSize={12} fontStyle="italic" fill="#64748b" transform={`rotate(-33 ${px(62)} ${py(70)})`}>line of equality</text>
+
+        {/* Lorenz curve */}
+        <polyline data-feature={N.curve} data-feature-label="Lorenz curve" points={curvePts} fill="none" stroke="#2563eb" strokeWidth={3} />
+        {figure.points.slice(1, -1).map((p, i) => (
+          <circle key={i} cx={px(p.pop)} cy={py(p.income)} r={3.5} fill="#2563eb" />
+        ))}
+
+        {/* axes */}
+        <line x1={M.left} y1={M.top} x2={M.left} y2={M.top + plotH} stroke={INK} strokeWidth={2} />
+        <line x1={M.left} y1={M.top + plotH} x2={M.left + plotW} y2={M.top + plotH} stroke={INK} strokeWidth={2} />
+        {ticks.map((t) => (
+          <g key={`t${t}`}>
+            <text x={px(t)} y={M.top + plotH + 18} textAnchor="middle" fontSize={11} fill="#64748b">{t}</text>
+            <text x={M.left - 10} y={py(t) + 4} textAnchor="end" fontSize={11} fill="#64748b">{t}</text>
+          </g>
+        ))}
+        <text x={M.left + plotW / 2} y={H - 30} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK}>Cumulative % of population</text>
+        <text x={16} y={M.top + plotH / 2} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK} transform={`rotate(-90 16 ${M.top + plotH / 2})`}>Cumulative % of income</text>
+
+        {/* Gini badge */}
+        <g>
+          <rect x={M.left + 14} y={M.top + 12} width={128} height={30} rx={6} fill="#fffbeb" stroke="#f59e0b" strokeWidth={1} />
+          <text x={M.left + 14 + 64} y={M.top + 12 + 20} textAnchor="middle" fontSize={13} fontWeight={700} fill="#b45309">Gini ≈ {figure.gini.toFixed(2)}</text>
+        </g>
       </svg>
     </div>
   );
