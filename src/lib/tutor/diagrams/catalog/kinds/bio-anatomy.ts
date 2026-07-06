@@ -484,3 +484,289 @@ export function buildCirculatorySystemManifest(figure: CirculatorySystemFigure):
   }
   return feats;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  respiratory_system
+// ══════════════════════════════════════════════════════════════════════════
+
+export const RESPIRATORY_PARTS = [
+  'nasal_cavity',
+  'pharynx',
+  'larynx',
+  'trachea',
+  'bronchi',
+  'bronchioles',
+  'left_lung',
+  'right_lung',
+  'alveoli',
+  'diaphragm',
+] as const;
+export type RespiratoryPart = (typeof RESPIRATORY_PARTS)[number];
+
+const RESPIRATORY_ALIASES: Record<string, RespiratoryPart> = {
+  nasal_cavity: 'nasal_cavity', nose: 'nasal_cavity', nasal_passage: 'nasal_cavity',
+  pharynx: 'pharynx', throat: 'pharynx',
+  larynx: 'larynx', voice_box: 'larynx',
+  trachea: 'trachea', windpipe: 'trachea',
+  bronchi: 'bronchi', bronchus: 'bronchi', primary_bronchi: 'bronchi',
+  bronchioles: 'bronchioles', bronchiole: 'bronchioles',
+  left_lung: 'left_lung', right_lung: 'right_lung', lungs: 'left_lung',
+  alveoli: 'alveoli', alveolus: 'alveoli', air_sacs: 'alveoli',
+  diaphragm: 'diaphragm',
+};
+
+export interface RespiratorySystemFigure {
+  highlight: RespiratoryPart[];
+  title?: string;
+}
+
+export function solveRespiratorySystem(params: Record<string, unknown>): RespiratorySystemFigure {
+  return {
+    highlight: resolveHighlight(params, RESPIRATORY_ALIASES),
+    title: titleOf(params),
+  };
+}
+
+const RESPIRATORY_LABELS: Record<RespiratoryPart, string> = {
+  nasal_cavity: 'Nasal cavity',
+  pharynx: 'Pharynx',
+  larynx: 'Larynx',
+  trachea: 'Trachea',
+  bronchi: 'Bronchi',
+  bronchioles: 'Bronchioles',
+  left_lung: 'Left lung',
+  right_lung: 'Right lung',
+  alveoli: 'Alveoli',
+  diaphragm: 'Diaphragm',
+};
+const RESPIRATORY_DESC: Record<RespiratoryPart, string> = {
+  nasal_cavity: 'the nasal cavity — warms, moistens and filters incoming air',
+  pharynx: 'the pharynx (throat) — shared passage for air and food',
+  larynx: 'the larynx (voice box) — holds the vocal cords; the epiglottis guards it',
+  trachea: 'the trachea (windpipe) — C-shaped cartilage rings keep it open',
+  bronchi: 'the two primary bronchi — carry air from the trachea into each lung',
+  bronchioles: 'the bronchioles — the airways branch finer and finer inside the lungs',
+  left_lung: 'the left lung — two lobes (smaller, makes room for the heart)',
+  right_lung: 'the right lung — three lobes',
+  alveoli: 'the alveoli — tiny air sacs where O₂/CO₂ exchange with the blood happens',
+  diaphragm: 'the diaphragm — the dome muscle that contracts to pull air in (inhalation)',
+};
+
+export const respiratoryFeatureNames = {
+  figure: 'respiratory-system',
+  part: (id: string): string => `resp-${id.replace(/_/g, '-')}`,
+};
+
+export function buildRespiratorySystemManifest(figure: RespiratorySystemFigure): FeatureManifestEntry[] {
+  const N = respiratoryFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: figure.title ? `Respiratory system: ${figure.title}` : 'The human respiratory system',
+      labels: ['the respiratory system', 'the respiratory tract', 'the airways', 'the lungs', 'the diagram', 'the figure'],
+      displayName: figure.title || 'Respiratory system',
+      scribbleable: true,
+    },
+  ];
+  for (const part of RESPIRATORY_PARTS) {
+    const isArea = part === 'left_lung' || part === 'right_lung' || part === 'diaphragm';
+    feats.push({
+      name: N.part(part),
+      kind: isArea ? 'area' : 'point',
+      description: RESPIRATORY_DESC[part],
+      labels: [RESPIRATORY_LABELS[part], `the ${RESPIRATORY_LABELS[part].toLowerCase()}`, part.replace(/_/g, ' ')],
+      displayName: RESPIRATORY_LABELS[part],
+      scribbleable: true,
+    });
+  }
+  return feats;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  flower_structure
+// ══════════════════════════════════════════════════════════════════════════
+
+export const FLOWER_PARTS = [
+  'petal',
+  'sepal',
+  'anther',
+  'filament',
+  'stigma',
+  'style',
+  'ovary',
+  'ovule',
+  'receptacle',
+] as const;
+export type FlowerPart = (typeof FLOWER_PARTS)[number];
+
+const FLOWER_ALIASES: Record<string, FlowerPart> = {
+  petal: 'petal', petals: 'petal', corolla: 'petal',
+  sepal: 'sepal', sepals: 'sepal', calyx: 'sepal',
+  anther: 'anther',
+  filament: 'filament',
+  stamen: 'anther', // stamen = anther + filament; map to anther for emphasis
+  stigma: 'stigma',
+  style: 'style',
+  ovary: 'ovary',
+  ovule: 'ovule', ovules: 'ovule', egg: 'ovule',
+  carpel: 'ovary', pistil: 'ovary', // pistil/carpel = stigma+style+ovary; map to ovary
+  receptacle: 'receptacle', thalamus: 'receptacle',
+};
+
+export interface FlowerStructureFigure {
+  highlight: FlowerPart[];
+  title?: string;
+}
+
+export function solveFlowerStructure(params: Record<string, unknown>): FlowerStructureFigure {
+  return {
+    highlight: resolveHighlight(params, FLOWER_ALIASES),
+    title: titleOf(params),
+  };
+}
+
+const FLOWER_LABELS: Record<FlowerPart, string> = {
+  petal: 'Petal',
+  sepal: 'Sepal',
+  anther: 'Anther',
+  filament: 'Filament',
+  stigma: 'Stigma',
+  style: 'Style',
+  ovary: 'Ovary',
+  ovule: 'Ovule',
+  receptacle: 'Receptacle',
+};
+const FLOWER_DESC: Record<FlowerPart, string> = {
+  petal: 'a petal — the (often colourful) part that attracts pollinators; together the corolla',
+  sepal: 'a sepal — the leaf-like part that protected the bud; together the calyx',
+  anther: 'the anther — the top of the stamen (male part) that produces pollen',
+  filament: 'the filament — the stalk that holds up the anther (part of the stamen)',
+  stigma: 'the stigma — the sticky top of the carpel (female part) that catches pollen',
+  style: 'the style — the stalk connecting the stigma down to the ovary',
+  ovary: 'the ovary — the base of the carpel that holds the ovules and becomes the fruit',
+  ovule: 'an ovule — inside the ovary; after fertilisation it becomes a seed',
+  receptacle: 'the receptacle — the thickened tip of the stalk that bears the flower parts',
+};
+
+export const flowerFeatureNames = {
+  figure: 'flower-structure',
+  part: (id: string): string => `flower-${id.replace(/_/g, '-')}`,
+};
+
+export function buildFlowerStructureManifest(figure: FlowerStructureFigure): FeatureManifestEntry[] {
+  const N = flowerFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: figure.title ? `Flower structure: ${figure.title}` : 'The parts of a flower (longitudinal section)',
+      labels: ['the flower', 'the flower structure', 'the flower parts', 'the diagram', 'the figure'],
+      displayName: figure.title || 'Flower structure',
+      scribbleable: true,
+    },
+  ];
+  for (const part of FLOWER_PARTS) {
+    feats.push({
+      name: N.part(part),
+      kind: part === 'ovary' ? 'area' : 'point',
+      description: FLOWER_DESC[part],
+      labels: [FLOWER_LABELS[part], `the ${FLOWER_LABELS[part].toLowerCase()}`, part.replace(/_/g, ' ')],
+      displayName: FLOWER_LABELS[part],
+      scribbleable: true,
+    });
+  }
+  // stamen + carpel/pistil are composite aliases worth surfacing.
+  feats.push(
+    { name: N.part('anther'), kind: 'point', description: 'the stamen — the male part (anther + filament)', labels: ['stamen', 'the stamen', 'male part'], displayName: 'Stamen', scribbleable: true },
+    { name: N.part('ovary'), kind: 'area', description: 'the carpel / pistil — the female part (stigma + style + ovary)', labels: ['carpel', 'the carpel', 'pistil', 'the pistil', 'female part'], displayName: 'Carpel (pistil)', scribbleable: true },
+  );
+  return feats;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  energy_pyramid  (trophic levels, ~10% energy transfer)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface EnergyPyramidLevel {
+  label: string;
+  organisms?: string;
+  energy: number;   // computed energy at this level (bottom→top)
+}
+
+export interface EnergyPyramidFigure {
+  levels: EnergyPyramidLevel[]; // ordered bottom (producers) → top
+  showEnergy: boolean;
+  efficiency: number;           // fraction transferred per level (default 0.1)
+  units: string;
+  title?: string;
+}
+
+const DEFAULT_TROPHIC = [
+  { label: 'Producers', organisms: 'grasses, plants' },
+  { label: 'Primary consumers', organisms: 'herbivores' },
+  { label: 'Secondary consumers', organisms: 'carnivores' },
+  { label: 'Tertiary consumers', organisms: 'top carnivores' },
+];
+
+/** Trophic energy pyramid. Widest tier (producers) at the bottom; each level
+ *  up keeps `efficiency` (default 10%) of the energy below it, the rest lost as
+ *  heat. Pass custom `levels` or accept the default 4-level chain. */
+export function solveEnergyPyramid(params: Record<string, unknown>): EnergyPyramidFigure {
+  const efficiency = typeof params.efficiency === 'number' && params.efficiency > 0 && params.efficiency < 1
+    ? params.efficiency : 0.1;
+  const startEnergy = typeof params.startEnergy === 'number' && params.startEnergy > 0
+    ? params.startEnergy : 10000;
+  const units = typeof params.units === 'string' && params.units.trim() ? params.units.trim() : 'kcal/m²/yr';
+
+  const raw: Array<{ label: string; organisms?: string }> = Array.isArray(params.levels) && params.levels.length >= 2
+    ? (params.levels as Array<Record<string, unknown>>).map((l, i) => ({
+        label: typeof l.label === 'string' && l.label.trim() ? l.label.trim() : `Level ${i + 1}`,
+        organisms: typeof l.organisms === 'string' ? l.organisms : undefined,
+      }))
+    : DEFAULT_TROPHIC;
+
+  const levels: EnergyPyramidLevel[] = raw.slice(0, 6).map((l, i) => ({
+    label: l.label,
+    organisms: l.organisms,
+    energy: Math.round(startEnergy * Math.pow(efficiency, i)),
+  }));
+
+  return {
+    levels,
+    showEnergy: params.showEnergy !== false,
+    efficiency,
+    units,
+    title: titleOf(params),
+  };
+}
+
+export const energyPyramidFeatureNames = {
+  figure: 'energy-pyramid',
+  tier: (i: number): string => `trophic-level-${i}`,
+};
+
+export function buildEnergyPyramidManifest(figure: EnergyPyramidFigure): FeatureManifestEntry[] {
+  const N = energyPyramidFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.figure,
+      kind: 'region',
+      description: figure.title ? `Energy pyramid: ${figure.title}` : 'A trophic energy pyramid (~10% transfer between levels)',
+      labels: ['the energy pyramid', 'the trophic pyramid', 'the pyramid', 'the diagram', 'the figure'],
+      displayName: figure.title || 'Energy pyramid',
+      scribbleable: true,
+    },
+  ];
+  figure.levels.forEach((lvl, i) => {
+    feats.push({
+      name: N.tier(i),
+      kind: 'area',
+      description: `${lvl.label}${lvl.organisms ? ` (${lvl.organisms})` : ''} — ${lvl.energy} ${figure.units}`,
+      labels: [lvl.label, `the ${lvl.label.toLowerCase()}`, ...(lvl.organisms ? [lvl.organisms] : [])],
+      displayName: lvl.label,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}

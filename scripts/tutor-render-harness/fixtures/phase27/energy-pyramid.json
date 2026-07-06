@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "energy_pyramid", "params": { "title": "Energy flow in a food chain" } }, "label": "energy-pyramid", "expect": "render" }

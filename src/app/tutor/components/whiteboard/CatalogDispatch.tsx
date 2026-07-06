@@ -104,6 +104,9 @@ import {
   CatalogNephronRenderer,
   CatalogDigestiveSystemRenderer,
   CatalogCirculatorySystemRenderer,
+  CatalogRespiratorySystemRenderer,
+  CatalogFlowerStructureRenderer,
+  CatalogEnergyPyramidRenderer,
 } from './CatalogBioAnatomyRenderers';
 import {
   CatalogBohrRenderer,
@@ -285,6 +288,10 @@ export function CatalogDispatch({ kind, figure }: Props) {
     // Phase 26 — microeconomics
     case 'supply_demand':              return <SupplyDemandRenderer figure={figure} />;
     case 'circular_flow':              return <CircularFlowRenderer figure={figure} />;
+    // Phase 27 — biology (respiratory / botany / ecology)
+    case 'respiratory_system':         return <CatalogRespiratorySystemRenderer figure={figure} />;
+    case 'flower_structure':           return <CatalogFlowerStructureRenderer figure={figure} />;
+    case 'energy_pyramid':             return <CatalogEnergyPyramidRenderer figure={figure} />;
 
     default:
       return (

@@ -262,6 +262,12 @@ import {
   solveDigestiveSystem as solveDigestiveForManifest,
   buildCirculatorySystemManifest,
   solveCirculatorySystem as solveCirculatoryForManifest,
+  buildRespiratorySystemManifest,
+  solveRespiratorySystem as solveRespiratoryForManifest,
+  buildFlowerStructureManifest,
+  solveFlowerStructure as solveFlowerForManifest,
+  buildEnergyPyramidManifest,
+  solveEnergyPyramid as solveEnergyPyramidForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 import {
   buildDataStructureManifest,
@@ -1572,6 +1578,18 @@ function buildDiagramManifest(cmd: {
     }
     case 'circulatory_system': {
       try { return buildCirculatorySystemManifest(solveCirculatoryForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'respiratory_system': {
+      try { return buildRespiratorySystemManifest(solveRespiratoryForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'flower_structure': {
+      try { return buildFlowerStructureManifest(solveFlowerForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'energy_pyramid': {
+      try { return buildEnergyPyramidManifest(solveEnergyPyramidForManifest(params)); } catch { /* fall through */ }
       break;
     }
     case 'data_structure': {

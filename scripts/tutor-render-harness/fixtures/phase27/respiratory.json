@@ -1,0 +1,1 @@
+{ "tool": "show_diagram", "args": { "type": "respiratory_system", "params": { "title": "The respiratory system" } }, "label": "respiratory", "expect": "render" }

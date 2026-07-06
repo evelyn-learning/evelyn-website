@@ -451,6 +451,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'clock_face', 'ten_frame', 'base_ten_blocks',
             // Phase 26 — microeconomics
             'supply_demand', 'circular_flow',
+            // Phase 27 — biology (respiratory / botany / ecology)
+            'respiratory_system', 'flower_structure', 'energy_pyramid',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

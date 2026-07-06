@@ -154,7 +154,11 @@ export type DiagramKindId =
   | 'base_ten_blocks'
   // Phase 26 — microeconomics (single-market + circular flow)
   | 'supply_demand'
-  | 'circular_flow';
+  | 'circular_flow'
+  // Phase 27 — biology (respiratory / botany / ecology)
+  | 'respiratory_system'
+  | 'flower_structure'
+  | 'energy_pyramid';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

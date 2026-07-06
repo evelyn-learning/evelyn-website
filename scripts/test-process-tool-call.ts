@@ -406,4 +406,31 @@ check('show_diagram circular_flow (bare) → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 27 — biology (respiratory / botany / ecology)');
+check('show_diagram respiratory_system (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'respiratory_system', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram respiratory_system highlight alveoli → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'respiratory_system', params: { highlight: ['alveoli', 'diaphragm'] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram flower_structure (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'flower_structure', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram flower_structure highlight stamen alias → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'flower_structure', params: { highlight: ['stamen', 'carpel'] } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram energy_pyramid (bare) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'energy_pyramid', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram energy_pyramid custom levels → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'energy_pyramid', params: { levels: [{ label: 'Grass' }, { label: 'Rabbits' }, { label: 'Foxes' }] } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

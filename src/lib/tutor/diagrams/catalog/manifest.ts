@@ -92,7 +92,7 @@ import { solveDopplerEffect, solveStandingWave, solveInterferencePattern } from 
 import { solveMitosis, solveMeiosis, solveDnaReplication, solveCellMembrane } from './kinds/cell-biology';
 import { solveBohrModel, solveGalvanicCell, solveTitrationCurve, solveCrystalLattice } from './kinds/chemistry';
 import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solveProjectileMotion } from './kinds/em-nuclear-motion';
-import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem } from './kinds/bio-anatomy';
+import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
 import { solveClockFace, solveTenFrame, solveBaseTenBlocks } from './kinds/elementary-math';
@@ -266,6 +266,11 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   // ── Phase 26 — microeconomics ──────────────────────────────────────────
   { kind: 'supply_demand', displayName: 'Supply & Demand (single market)', whenToUse: 'Show a single-market supply & demand graph: upward S, downward D, price on the y-axis and quantity on the x-axis, with the equilibrium marked. Supports ONE comparative-statics shift (S or D, left/right) with the new equilibrium computed, OR a binding price control (ceiling/floor) with the resulting shortage/surplus shown. This is the MICRO single-market graph — for the macro economy-wide model use aggregate_demand_supply instead. Use instead of a freehand sketch.', subjects: ['social'], grades: { from: 8, to: 12 }, paramSchema: 'good?:string (axis/label noun, e.g. "coffee"), initialQuantity?:number 0..100 (default 50), initialPrice?:number 0..100 (default 50), shift?:{curve:S|D, direction:left|right, magnitude?:number (default 12), label?}, priceControl?:{type:ceiling|floor, level:number 0..100, label?}, title?' },
   { kind: 'circular_flow', displayName: 'Circular-Flow Model', whenToUse: 'Show the two-sector circular-flow model: Households and Firms connected through the Product Market (top) and the Resource/Factor Market (bottom), with the money flow (outer loop: spending → revenue → factor payments → income) and the real flow (inner loop: resources → goods & services) drawn as color-coded arrows. Use for intro-macro / intro-micro circular-flow teaching instead of a freehand sketch.', subjects: ['social'], grades: { from: 8, to: 12 }, paramSchema: 'showMoneyFlow?:boolean (default true), showRealFlow?:boolean (default true), title? (structure is otherwise fixed)' },
+
+  // ── Phase 27 — biology (respiratory / botany / ecology) ────────────────
+  { kind: 'respiratory_system', displayName: 'Respiratory System', whenToUse: 'Show the human respiratory system: nasal cavity, pharynx, larynx, trachea (windpipe), the two bronchi branching into the two lungs (right = 3 lobes, left = 2), bronchioles, an alveoli (air-sac) inset where gas exchange happens, and the diaphragm. Use for breathing / gas-exchange teaching instead of a freehand sketch. Emphasise parts with highlight.', subjects: ['biology'], grades: { from: 5, to: 12 }, paramSchema: 'highlight?:[string] (part ids — nasal_cavity, pharynx, larynx, trachea, bronchi, bronchioles, left_lung, right_lung, alveoli, diaphragm), title?' },
+  { kind: 'flower_structure', displayName: 'Flower Structure', whenToUse: 'Show a longitudinal section of a flower with its parts labeled: petal & sepal, the stamen (anther + filament, male), and the carpel/pistil (stigma + style + ovary + ovule, female), plus the receptacle. Use for plant-reproduction / flower-anatomy teaching instead of a freehand sketch. Emphasise parts with highlight (stamen and carpel/pistil are accepted aliases).', subjects: ['biology'], grades: { from: 4, to: 12 }, paramSchema: 'highlight?:[string] (part ids — petal, sepal, anther, filament, stamen, stigma, style, ovary, ovule, carpel/pistil, receptacle), title?' },
+  { kind: 'energy_pyramid', displayName: 'Energy Pyramid (trophic levels)', whenToUse: 'Show a trophic energy pyramid: stacked tiers widest at the bottom (producers) narrowing upward (primary → secondary → tertiary consumers), with the ~10% energy transferred up each level and ~90% lost as heat. Use for ecology / food-chain / energy-flow teaching instead of a freehand sketch. Accepts custom levels or defaults to a 4-level chain.', subjects: ['biology'], grades: { from: 4, to: 12 }, paramSchema: 'levels?:[{label, organisms?}] (bottom→top, 2-6 entries; default 4 trophic levels), startEnergy?:number (default 10000), efficiency?:number 0..1 (default 0.1), units?:string (default "kcal/m²/yr"), showEnergy?:boolean (default true), title?' },
 ];
 
 /** Solver dispatch table. */
@@ -411,6 +416,10 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   // Phase 26 — microeconomics
   supply_demand: solveSupplyDemand,
   circular_flow: solveCircularFlow,
+  // Phase 27 — biology (respiratory / botany / ecology)
+  respiratory_system: solveRespiratorySystem,
+  flower_structure: solveFlowerStructure,
+  energy_pyramid: solveEnergyPyramid,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

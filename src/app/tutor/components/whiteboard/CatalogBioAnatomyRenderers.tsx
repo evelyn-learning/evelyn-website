@@ -6,6 +6,9 @@ import {
   nephronFeatureNames,
   digestiveFeatureNames,
   circulatoryFeatureNames,
+  respiratoryFeatureNames,
+  flowerFeatureNames,
+  energyPyramidFeatureNames,
   type LeafCrossSectionFigure,
   type LeafPart,
   type NephronFigure,
@@ -14,6 +17,11 @@ import {
   type DigestivePart,
   type CirculatorySystemFigure,
   type CirculatoryPart,
+  type RespiratorySystemFigure,
+  type RespiratoryPart,
+  type FlowerStructureFigure,
+  type FlowerPart,
+  type EnergyPyramidFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 
 const INK = '#374151';
@@ -596,6 +604,298 @@ export function CatalogCirculatorySystemRenderer({ figure }: { figure: Circulato
           <text x={58} y={H - 34} fontSize={10.5} textAnchor="start" fill={INK}>deoxygenated</text>
           <rect x={150} y={H - 44} width={12} height={12} rx={3} fill={RED} />
           <text x={168} y={H - 34} fontSize={10.5} textAnchor="start" fill={INK}>oxygenated</text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  energy_pyramid
+// ══════════════════════════════════════════════════════════════════════════
+
+const PYRAMID_COLORS = ['#16a34a', '#65a30d', '#d97706', '#dc2626', '#9333ea', '#0891b2'];
+
+export function CatalogEnergyPyramidRenderer({ figure }: { figure: EnergyPyramidFigure }) {
+  const N = energyPyramidFeatureNames;
+  const W = 640;
+  const H = 460;
+  const cx = 300;
+  const n = figure.levels.length;
+
+  const apexY = 60;
+  const baseY = 380;
+  const Wtop = 150;   // truncated apex width (keeps top label readable)
+  const Wbase = 460;
+  const th = (baseY - apexY) / n;
+  const widthAt = (y: number) => Wtop + (Wbase - Wtop) * ((y - apexY) / (baseY - apexY));
+
+  const heading = figure.title || 'Energy pyramid';
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[640px]"
+        data-feature={N.figure}
+        data-feature-label={heading}
+        data-feature-cx={cx / W}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {figure.levels.map((lvl, iFromBottom) => {
+          // tier k from top corresponds to level (n-1-k) from bottom.
+          const k = n - 1 - iFromBottom;
+          const yTop = apexY + k * th;
+          const yBot = yTop + th;
+          const topW = widthAt(yTop);
+          const botW = widthAt(yBot);
+          const color = PYRAMID_COLORS[iFromBottom % PYRAMID_COLORS.length];
+          const midY = (yTop + yBot) / 2;
+          return (
+            <g key={iFromBottom} data-feature={N.tier(iFromBottom)} data-feature-label={lvl.label}>
+              <polygon
+                points={`${cx - topW / 2},${yTop} ${cx + topW / 2},${yTop} ${cx + botW / 2},${yBot} ${cx - botW / 2},${yBot}`}
+                fill={color}
+                fillOpacity={0.82}
+                stroke="#ffffff"
+                strokeWidth={2}
+              />
+              <text x={cx} y={midY - (lvl.organisms ? 6 : 2)} textAnchor="middle" fontSize={14} fontWeight={700} fill="#ffffff">{lvl.label}</text>
+              {lvl.organisms && (
+                <text x={cx} y={midY + 11} textAnchor="middle" fontSize={10.5} fill="#f8fafc">({lvl.organisms})</text>
+              )}
+              {figure.showEnergy && (
+                <text x={cx + botW / 2 + 8} y={midY + 4} fontSize={11.5} fontWeight={600} fill={color} textAnchor="start">
+                  {lvl.energy.toLocaleString()} {figure.units}
+                </text>
+              )}
+              {/* 10%-transfer arrow between this tier and the one above */}
+              {k > 0 && (
+                <g>
+                  <line x1={cx - botW / 2 - 14} y1={yTop} x2={cx - widthAt(yTop - th) / 2 - 14} y2={yTop - th} stroke="#475569" strokeWidth={1.5} markerEnd="url(#ep-arrow)" />
+                </g>
+              )}
+            </g>
+          );
+        })}
+        <defs>
+          <marker id="ep-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#475569" />
+          </marker>
+        </defs>
+        {figure.showEnergy && (
+          <text x={cx - Wbase / 2 - 16} y={(apexY + baseY) / 2} fontSize={11} fill="#475569" textAnchor="middle" transform={`rotate(-90 ${cx - Wbase / 2 - 16} ${(apexY + baseY) / 2})`}>
+            only ~{Math.round(figure.efficiency * 100)}% passes up · ~{Math.round((1 - figure.efficiency) * 100)}% lost as heat
+          </text>
+        )}
+        <text x={cx} y={baseY + 30} textAnchor="middle" fontSize={11.5} fill="#64748b">Energy decreases up each trophic level</text>
+      </svg>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  respiratory_system
+// ══════════════════════════════════════════════════════════════════════════
+
+export function CatalogRespiratorySystemRenderer({ figure }: { figure: RespiratorySystemFigure }) {
+  const N = respiratoryFeatureNames;
+  const W = 730;
+  const H = 500;
+  const hi = (p: RespiratoryPart) => figure.highlight.includes(p);
+  const cx = 300;
+
+  const AIR = '#93c5fd';       // airway fill
+  const AIRSTROKE = '#2563eb';
+  const LUNGL = '#fbcfe8';     // lung fill
+  const LUNGSTROKE = '#db2777';
+  const HLC = '#059669';
+  const strokeFor = (p: RespiratoryPart, base: string) => (hi(p) ? HLC : base);
+  const widthFor = (p: RespiratoryPart, base: number) => (hi(p) ? base + 1.5 : base);
+
+  const labelL = 40;   // left label column x (text flows right)
+  const labelR = 556;  // right label column x (text flows right; leaders end at labelR-6)
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'The respiratory system'}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[730px]"
+        data-feature={N.figure}
+        data-feature-label={figure.title || 'Respiratory system'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* nasal cavity + pharynx + larynx (upper tract, top center) */}
+        <g data-feature={N.part('nasal_cavity')} data-feature-label="Nasal cavity">
+          <path d="M250 40 Q300 20 340 44 L336 70 L262 70 Z" fill="#fde68a" fillOpacity={0.6} stroke={strokeFor('nasal_cavity', '#a16207')} strokeWidth={widthFor('nasal_cavity', 1.5)} />
+          <line x1={262} y1={52} x2={labelL + 60} y2={40} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={44} fontSize={12} fill={strokeFor('nasal_cavity', INK)} fontWeight={hi('nasal_cavity') ? 700 : 400}>Nasal cavity</text>
+        </g>
+        <g data-feature={N.part('pharynx')} data-feature-label="Pharynx">
+          <rect x={288} y={70} width={24} height={26} fill={AIR} fillOpacity={0.5} stroke={strokeFor('pharynx', AIRSTROKE)} strokeWidth={widthFor('pharynx', 1.2)} />
+          <line x1={312} y1={80} x2={labelR - 6} y2={62} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={66} fontSize={12} fill={strokeFor('pharynx', INK)} fontWeight={hi('pharynx') ? 700 : 400}>Pharynx (throat)</text>
+        </g>
+        <g data-feature={N.part('larynx')} data-feature-label="Larynx">
+          <rect x={286} y={96} width={28} height={22} rx={4} fill="#c7d2fe" stroke={strokeFor('larynx', '#4338ca')} strokeWidth={widthFor('larynx', 1.4)} />
+          <line x1={286} y1={107} x2={labelL + 54} y2={100} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={104} fontSize={12} fill={strokeFor('larynx', INK)} fontWeight={hi('larynx') ? 700 : 400}>Larynx</text>
+        </g>
+
+        {/* trachea (vertical tube with cartilage rings) */}
+        <g data-feature={N.part('trachea')} data-feature-label="Trachea">
+          <rect x={286} y={118} width={28} height={110} rx={6} fill={AIR} stroke={strokeFor('trachea', AIRSTROKE)} strokeWidth={widthFor('trachea', 1.8)} />
+          {[132, 148, 164, 180, 196, 212].map((y) => (
+            <line key={y} x1={288} y1={y} x2={312} y2={y} stroke={AIRSTROKE} strokeWidth={0.9} opacity={0.6} />
+          ))}
+          <line x1={314} y1={150} x2={labelR - 6} y2={132} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={136} fontSize={12} fill={strokeFor('trachea', INK)} fontWeight={hi('trachea') ? 700 : 400}>Trachea (windpipe)</text>
+        </g>
+
+        {/* bronchi (two tubes branching to each lung) */}
+        <g data-feature={N.part('bronchi')} data-feature-label="Bronchi">
+          <path d="M298 228 Q250 250 214 286" fill="none" stroke={strokeFor('bronchi', AIRSTROKE)} strokeWidth={widthFor('bronchi', 10)} strokeLinecap="round" />
+          <path d="M302 228 Q350 250 386 286" fill="none" stroke={strokeFor('bronchi', AIRSTROKE)} strokeWidth={widthFor('bronchi', 10)} strokeLinecap="round" />
+          <line x1={214} y1={286} x2={labelL + 46} y2={276} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={280} fontSize={12} fill={strokeFor('bronchi', INK)} fontWeight={hi('bronchi') ? 700 : 400}>Bronchi</text>
+        </g>
+
+        {/* lungs */}
+        <g data-feature={N.part('right_lung')} data-feature-label="Right lung">
+          <path d="M214 286 Q150 300 150 380 Q150 440 210 452 Q244 452 244 400 L232 300 Q226 288 214 286 Z" fill={LUNGL} fillOpacity={0.75} stroke={strokeFor('right_lung', LUNGSTROKE)} strokeWidth={widthFor('right_lung', 1.8)} />
+          <text x={182} y={340} fontSize={11.5} fill={strokeFor('right_lung', '#9d174d')} fontWeight={hi('right_lung') ? 700 : 500} textAnchor="middle">Right lung</text>
+          <text x={182} y={356} fontSize={9.5} fill="#9d174d" textAnchor="middle">(3 lobes)</text>
+        </g>
+        <g data-feature={N.part('left_lung')} data-feature-label="Left lung">
+          <path d="M386 286 Q450 300 450 380 Q450 440 390 452 Q356 452 356 400 L368 300 Q374 288 386 286 Z" fill={LUNGL} fillOpacity={0.75} stroke={strokeFor('left_lung', LUNGSTROKE)} strokeWidth={widthFor('left_lung', 1.8)} />
+          <text x={418} y={340} fontSize={11.5} fill={strokeFor('left_lung', '#9d174d')} fontWeight={hi('left_lung') ? 700 : 500} textAnchor="middle">Left lung</text>
+          <text x={418} y={356} fontSize={9.5} fill="#9d174d" textAnchor="middle">(2 lobes)</text>
+        </g>
+
+        {/* bronchioles (fine branching inside the right lung) */}
+        <g data-feature={N.part('bronchioles')} data-feature-label="Bronchioles">
+          <path d="M214 286 Q205 320 196 344 M196 344 Q188 360 180 372 M196 344 Q206 362 214 374" fill="none" stroke={strokeFor('bronchioles', AIRSTROKE)} strokeWidth={widthFor('bronchioles', 2)} strokeLinecap="round" opacity={0.8} />
+          <line x1={180} y1={372} x2={labelL + 56} y2={396} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={400} fontSize={12} fill={strokeFor('bronchioles', INK)} fontWeight={hi('bronchioles') ? 700 : 400}>Bronchioles</text>
+        </g>
+
+        {/* alveoli inset (zoomed grape-cluster from the left lung) */}
+        <g data-feature={N.part('alveoli')} data-feature-label="Alveoli">
+          <line x1={396} y1={360} x2={470} y2={330} stroke="#94a3b8" strokeWidth={0.8} strokeDasharray="3 3" />
+          {[[470, 320], [492, 316], [486, 338], [508, 330], [478, 340], [500, 348]].map(([ax, ay], i) => (
+            <circle key={i} cx={ax} cy={ay} r={11} fill="#fecdd3" stroke={strokeFor('alveoli', LUNGSTROKE)} strokeWidth={widthFor('alveoli', 1.3)} />
+          ))}
+          <text x={labelR} y={312} fontSize={12} fill={strokeFor('alveoli', INK)} fontWeight={hi('alveoli') ? 700 : 400}>Alveoli (air sacs)</text>
+          <text x={labelR} y={326} fontSize={9.5} fill="#64748b">gas exchange</text>
+        </g>
+
+        {/* diaphragm (dome muscle under the lungs) */}
+        <g data-feature={N.part('diaphragm')} data-feature-label="Diaphragm">
+          <path d="M150 456 Q300 500 450 456" fill="none" stroke={strokeFor('diaphragm', '#b45309')} strokeWidth={widthFor('diaphragm', 4)} />
+          <line x1={360} y1={472} x2={labelR - 6} y2={468} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={472} fontSize={12} fill={strokeFor('diaphragm', INK)} fontWeight={hi('diaphragm') ? 700 : 400}>Diaphragm</text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  flower_structure  (longitudinal section)
+// ══════════════════════════════════════════════════════════════════════════
+
+export function CatalogFlowerStructureRenderer({ figure }: { figure: FlowerStructureFigure }) {
+  const N = flowerFeatureNames;
+  const W = 700;
+  const H = 500;
+  const hi = (p: FlowerPart) => figure.highlight.includes(p);
+  const cx = 300;
+  const HLC = '#059669';
+  const strokeFor = (p: FlowerPart, base: string) => (hi(p) ? HLC : base);
+  const widthFor = (p: FlowerPart, base: number) => (hi(p) ? base + 1.5 : base);
+  const labelL = 40, labelR = 556; // both columns left-anchored; right leaders end at labelR-6
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{figure.title || 'Parts of a flower'}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[700px]"
+        data-feature={N.figure}
+        data-feature-label={figure.title || 'Flower structure'}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* petals (spreading behind, colored) */}
+        <g data-feature={N.part('petal')} data-feature-label="Petal">
+          <path d="M300 250 Q150 210 120 120 Q210 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.8} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
+          <path d="M300 250 Q450 210 480 120 Q390 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.8} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
+          <path d="M300 250 Q210 150 300 96 Q390 150 300 250 Z" fill="#f9a8d4" fillOpacity={0.65} stroke={strokeFor('petal', '#be185d')} strokeWidth={widthFor('petal', 1.5)} />
+          <line x1={140} y1={140} x2={labelL + 40} y2={130} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={134} fontSize={12} fill={strokeFor('petal', INK)} fontWeight={hi('petal') ? 700 : 400}>Petal</text>
+        </g>
+
+        {/* stamens (filament + anther) flanking the center */}
+        <g data-feature={N.part('filament')} data-feature-label="Filament">
+          <path d="M262 250 Q248 190 236 150" fill="none" stroke={strokeFor('filament', '#ca8a04')} strokeWidth={widthFor('filament', 2.5)} />
+          <path d="M338 250 Q352 190 364 150" fill="none" stroke={strokeFor('filament', '#ca8a04')} strokeWidth={widthFor('filament', 2.5)} />
+          <line x1={236} y1={190} x2={labelL + 40} y2={186} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={190} fontSize={12} fill={strokeFor('filament', INK)} fontWeight={hi('filament') ? 700 : 400}>Filament</text>
+        </g>
+        <g data-feature={N.part('anther')} data-feature-label="Anther">
+          <ellipse cx={236} cy={144} rx={12} ry={8} fill="#fbbf24" stroke={strokeFor('anther', '#b45309')} strokeWidth={widthFor('anther', 1.4)} />
+          <ellipse cx={364} cy={144} rx={12} ry={8} fill="#fbbf24" stroke={strokeFor('anther', '#b45309')} strokeWidth={widthFor('anther', 1.4)} />
+          <line x1={376} y1={144} x2={labelR - 6} y2={150} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={154} fontSize={12} fill={strokeFor('anther', INK)} fontWeight={hi('anther') ? 700 : 400}>Anther (pollen)</text>
+        </g>
+
+        {/* central carpel: ovary → style → stigma */}
+        <g data-feature={N.part('stigma')} data-feature-label="Stigma">
+          <ellipse cx={300} cy={110} rx={20} ry={11} fill="#a3e635" stroke={strokeFor('stigma', '#4d7c0f')} strokeWidth={widthFor('stigma', 1.6)} />
+          <line x1={320} y1={110} x2={labelR - 6} y2={112} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={116} fontSize={12} fill={strokeFor('stigma', INK)} fontWeight={hi('stigma') ? 700 : 400}>Stigma</text>
+        </g>
+        <g data-feature={N.part('style')} data-feature-label="Style">
+          <rect x={294} y={118} width={12} height={130} rx={6} fill="#bef264" stroke={strokeFor('style', '#4d7c0f')} strokeWidth={widthFor('style', 1.4)} />
+          <line x1={306} y1={183} x2={labelR - 6} y2={196} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={200} fontSize={12} fill={strokeFor('style', INK)} fontWeight={hi('style') ? 700 : 400}>Style</text>
+        </g>
+        <g data-feature={N.part('ovary')} data-feature-label="Ovary">
+          <path d="M300 248 Q256 250 258 320 Q262 372 300 374 Q338 372 342 320 Q344 250 300 248 Z" fill="#86efac" fillOpacity={0.85} stroke={strokeFor('ovary', '#15803d')} strokeWidth={widthFor('ovary', 1.8)} />
+          <line x1={342} y1={320} x2={labelR - 6} y2={330} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={334} fontSize={12} fill={strokeFor('ovary', INK)} fontWeight={hi('ovary') ? 700 : 400}>Ovary</text>
+        </g>
+        <g data-feature={N.part('ovule')} data-feature-label="Ovule">
+          {[[286, 312], [314, 312], [300, 338]].map(([ox, oy], i) => (
+            <circle key={i} cx={ox} cy={oy} r={8} fill="#fef9c3" stroke={strokeFor('ovule', '#15803d')} strokeWidth={widthFor('ovule', 1.2)} />
+          ))}
+          <line x1={286} y1={312} x2={labelL + 40} y2={330} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={334} fontSize={12} fill={strokeFor('ovule', INK)} fontWeight={hi('ovule') ? 700 : 400}>Ovule → seed</text>
+        </g>
+
+        {/* sepals (green, below petals) */}
+        <g data-feature={N.part('sepal')} data-feature-label="Sepal">
+          <path d="M300 250 Q240 260 214 300 Q270 286 300 250 Z" fill="#4ade80" fillOpacity={0.7} stroke={strokeFor('sepal', '#15803d')} strokeWidth={widthFor('sepal', 1.4)} />
+          <path d="M300 250 Q360 260 386 300 Q330 286 300 250 Z" fill="#4ade80" fillOpacity={0.7} stroke={strokeFor('sepal', '#15803d')} strokeWidth={widthFor('sepal', 1.4)} />
+          <line x1={214} y1={300} x2={labelL + 40} y2={282} stroke={INK} strokeWidth={0.7} />
+          <text x={labelL} y={286} fontSize={12} fill={strokeFor('sepal', INK)} fontWeight={hi('sepal') ? 700 : 400}>Sepal</text>
+        </g>
+
+        {/* receptacle + stalk */}
+        <g data-feature={N.part('receptacle')} data-feature-label="Receptacle">
+          <path d="M272 374 Q300 396 328 374 L322 396 Q300 408 278 396 Z" fill="#65a30d" stroke={strokeFor('receptacle', '#3f6212')} strokeWidth={widthFor('receptacle', 1.5)} />
+          <rect x={294} y={400} width={12} height={70} fill="#4d7c0f" />
+          <line x1={328} y1={386} x2={labelR - 6} y2={392} stroke={INK} strokeWidth={0.7} />
+          <text x={labelR} y={396} fontSize={12} fill={strokeFor('receptacle', INK)} fontWeight={hi('receptacle') ? 700 : 400}>Receptacle</text>
         </g>
       </svg>
     </div>
