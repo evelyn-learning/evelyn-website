@@ -127,6 +127,14 @@ export const SKETCH_BOUNDS = {
   // timeline: events marked along a line
   minEvents: 1,
   maxEvents: 6,
+  // venn: two overlapping circles
+  maxVennRadius: 30,
+  // layers: stacked labelled bands
+  minLayers: 2,
+  maxLayers: 6,
+  // matrix: a labelled rows×cols table
+  minMatrixDim: 1,
+  maxMatrixDim: 5,
 } as const;
 
 export interface Pt {
@@ -494,6 +502,48 @@ export type SketchPrimitive =
       y2: number;
       events: { at: number; label: string }[];
     } & Styled)
+  // Parametric: a 2-circle VENN diagram — two overlapping circles of radius r
+  // centered around (cx,cy). `leftLabel` names what is unique to the left circle,
+  // `rightLabel` what is unique to the right, and `bothLabel` what they share (in
+  // the overlap). For compare/contrast, sets, shared vs unique traits, logic. ONE
+  // primitive draws both circles + the three region labels.
+  | ({
+      type: 'venn';
+      cx: number;
+      cy: number;
+      r: number;
+      leftLabel?: string;
+      rightLabel?: string;
+      bothLabel?: string;
+    } & Styled)
+  // Parametric: stacked LAYERS — `layers` labelled horizontal bands filling the box
+  // (x,y = top-left; w,h), top band = layers[0]. For strata / a layered structure:
+  // the Earth's layers, the atmosphere, rock strata, a hierarchy of levels. ONE
+  // primitive draws every band + its label.
+  | ({
+      type: 'layers';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      layers: string[];
+    } & Styled)
+  // Parametric: a labelled MATRIX / table — a rows×cols grid filling (x,y,w,h) with
+  // optional `colLabels` (headers above the columns), `rowLabels` (left of the
+  // rows) and `cells` (row-major cell text). For a 2×2 framework (SWOT), a decision
+  // matrix, a Punnett square, a small comparison table. ONE primitive.
+  | ({
+      type: 'matrix';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      rows: number;
+      cols: number;
+      rowLabels?: string[];
+      colLabels?: string[];
+      cells?: string[];
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -541,6 +591,9 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'network',
   'speech_bubble',
   'timeline',
+  'venn',
+  'layers',
+  'matrix',
   'label',
 ];
 
@@ -743,9 +796,9 @@ export const SKETCH_TOOL_SCHEMA = {
             enum: ['right', 'down'],
             description: 'flow_chain: layout direction — right = a horizontal row, down = a vertical column. Default right.',
           },
-          // balance_scale (two-pan scale; `tilt` reused from lever)
-          leftLabel: { type: 'string', description: 'balance_scale: short label under the LEFT pan.' },
-          rightLabel: { type: 'string', description: 'balance_scale: short label under the RIGHT pan.' },
+          // balance_scale (two-pan scale; `tilt` reused from lever) / venn
+          leftLabel: { type: 'string', description: 'balance_scale: label under the LEFT pan. venn: what is unique to the left circle.' },
+          rightLabel: { type: 'string', description: 'balance_scale: label under the RIGHT pan. venn: what is unique to the right circle.' },
           // icon (a glyph from the fixed set at `size`, centered on x,y)
           name: {
             type: 'string',
@@ -779,6 +832,14 @@ export const SKETCH_TOOL_SCHEMA = {
             description: 'timeline: events as {at, label} where at is 0..1 along the line (0 = start, 1 = end).',
             items: { type: 'object', properties: { at: { type: 'number' }, label: { type: 'string' } }, required: ['at', 'label'] },
           },
+          // venn (leftLabel/rightLabel reused from balance_scale; bothLabel = the overlap)
+          bothLabel: { type: 'string', description: 'venn: label for the shared/overlap region.' },
+          // layers (stacked labelled bands, top = layers[0])
+          layers: { type: 'array', items: { type: 'string' }, description: 'layers: the band labels top→bottom (2..6), e.g. ["Crust","Mantle","Outer core","Inner core"].' },
+          // matrix (rows/cols reused from grid; header + cell text)
+          rowLabels: { type: 'array', items: { type: 'string' }, description: 'matrix: labels left of each row.' },
+          colLabels: { type: 'array', items: { type: 'string' }, description: 'matrix: header labels above each column.' },
+          cells: { type: 'array', items: { type: 'string' }, description: 'matrix: cell text, row-major (row 0 left→right, then row 1, …).' },
           points: {
             type: 'array',
             items: {

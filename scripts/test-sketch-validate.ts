@@ -16,6 +16,7 @@ import {
   PLOT_POINT, PLANET_ORBIT, WATER_MOLECULE, BAR_HEIGHTS,
   WATER_CYCLE, FOOD_CHAIN, TRADE_OFF_SCALE, SUN_AND_TREE,
   FRACTION_PIE, ANIMAL_TREE, CONCEPT_MAP, CELL_SAYS, HISTORY_TIMELINE,
+  COMPARE_VENN, EARTH_LAYERS, SWOT_MATRIX,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -553,6 +554,37 @@ check('timeline events capped at maxEvents',
 check('timeline no valid events dropped → null',
   validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0.5 }] }] }) === null);
 
+// ── venn primitive (Wave 6) ──
+const vn = validateSketch({ primitives: [
+  { type: 'venn', cx: 50, cy: 50, r: 24, leftLabel: 'gills', rightLabel: 'lungs', bothLabel: 'need O2' },
+] }) as any[];
+check('venn validates + keeps region labels', !!vn && vn[0].leftLabel === 'gills' && vn[0].rightLabel === 'lungs' && vn[0].bothLabel === 'need O2');
+check('venn r clamps to maxVennRadius',
+  (validateSketch({ primitives: [{ type: 'venn', cx: 50, cy: 50, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxVennRadius);
+check('venn bare (no labels) still validates', !!validateSketch({ primitives: [{ type: 'venn', cx: 50, cy: 50, r: 20 }] }));
+
+// ── layers primitive (Wave 6) ──
+const ly = validateSketch({ primitives: [
+  { type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['Crust', 'Mantle', 'Outer core', 'Inner core'] },
+] }) as any[];
+check('layers validates + keeps bands', !!ly && ly[0].layers.length === 4);
+check('layers <2 bands dropped → null',
+  validateSketch({ primitives: [{ type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['only'] }] }) === null);
+check('layers capped at maxLayers',
+  (validateSketch({ primitives: [{ type: 'layers', x: 10, y: 10, w: 60, h: 80, layers: Array.from({ length: 12 }, (_, i) => `L${i}`) }] }) as any[])[0].layers.length === SKETCH_BOUNDS.maxLayers);
+
+// ── matrix primitive (Wave 6) ──
+const mx = validateSketch({ primitives: [
+  { type: 'matrix', x: 20, y: 24, w: 62, h: 54, rows: 2, cols: 2, cells: ['S', 'W', 'O', 'T'] },
+] }) as any[];
+check('matrix validates + keeps dims/cells', !!mx && mx[0].rows === 2 && mx[0].cols === 2 && mx[0].cells.length === 4);
+check('matrix rows/cols clamp to maxMatrixDim',
+  (() => { const m = validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 80, h: 80, rows: 99, cols: 99 }] }) as any[]; return m[0].rows === SKETCH_BOUNDS.maxMatrixDim && m[0].cols === SKETCH_BOUNDS.maxMatrixDim; })());
+check('matrix cells capped at rows*cols',
+  (validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 60, h: 60, rows: 2, cols: 2, cells: ['a', 'b', 'c', 'd', 'e', 'f'] }] }) as any[])[0].cells.length === 4);
+check('matrix missing rows/cols dropped → null',
+  validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 60, h: 60, rows: 2 }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
@@ -567,6 +599,7 @@ for (const [name, prims] of [
   ['TRADE_OFF_SCALE', TRADE_OFF_SCALE], ['SUN_AND_TREE', SUN_AND_TREE],
   ['FRACTION_PIE', FRACTION_PIE], ['ANIMAL_TREE', ANIMAL_TREE],
   ['CONCEPT_MAP', CONCEPT_MAP], ['CELL_SAYS', CELL_SAYS], ['HISTORY_TIMELINE', HISTORY_TIMELINE],
+  ['COMPARE_VENN', COMPARE_VENN], ['EARTH_LAYERS', EARTH_LAYERS], ['SWOT_MATRIX', SWOT_MATRIX],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));

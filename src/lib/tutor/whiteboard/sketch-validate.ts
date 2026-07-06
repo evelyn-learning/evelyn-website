@@ -35,6 +35,7 @@ const {
   minCycleStages, maxCycleStages, maxCycleRadius,
   minFlowSteps, maxFlowSteps, maxBalanceTilt, minIconSize, maxIconSize,
   minParts, maxParts, minBranches, maxBranches, maxNodes, maxEdges, minEvents, maxEvents,
+  maxVennRadius, minLayers, maxLayers, minMatrixDim, maxMatrixDim,
 } = SKETCH_BOUNDS;
 
 /** Trim + cap a list of short text labels (stages, steps) → clean string[]. */
@@ -622,6 +623,52 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         : [];
       if (events.length < minEvents) return null;
       return { type, x1, y1, x2, y2, events, ...styled };
+    }
+    case 'venn': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      if (cx === null || cy === null || r === null) return null;
+      if (r <= 0) return null;
+      const leftLabel = tag(p.leftLabel), rightLabel = tag(p.rightLabel), bothLabel = tag(p.bothLabel);
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxVennRadius, r),
+        ...(leftLabel ? { leftLabel } : {}),
+        ...(rightLabel ? { rightLabel } : {}),
+        ...(bothLabel ? { bothLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'layers': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      if (x === null || y === null || w === null || h === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      const layers = textList(p.layers, maxLayers);
+      if (layers.length < minLayers) return null;
+      return { type, x, y, w: Math.min(maxCoord, w), h: Math.min(maxCoord, h), layers, ...styled };
+    }
+    case 'matrix': {
+      const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);
+      let rows = num(p.rows), cols = num(p.cols);
+      if (x === null || y === null || w === null || h === null || rows === null || cols === null) return null;
+      if (w <= 0 || h <= 0) return null;
+      rows = Math.round(Math.min(maxMatrixDim, Math.max(minMatrixDim, rows)));
+      cols = Math.round(Math.min(maxMatrixDim, Math.max(minMatrixDim, cols)));
+      const rowLabels = textList(p.rowLabels, rows);
+      const colLabels = textList(p.colLabels, cols);
+      const cells = textList(p.cells, rows * cols);
+      return {
+        type,
+        x, y,
+        w: Math.min(maxCoord, w),
+        h: Math.min(maxCoord, h),
+        rows, cols,
+        ...(rowLabels.length ? { rowLabels } : {}),
+        ...(colLabels.length ? { colLabels } : {}),
+        ...(cells.length ? { cells } : {}),
+        ...styled,
+      };
     }
     case 'rect': {
       const x = coord(p.x), y = coord(p.y), w = num(p.w), h = num(p.h);

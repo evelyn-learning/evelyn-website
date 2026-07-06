@@ -355,6 +355,28 @@ export const HISTORY_TIMELINE: SketchPrimitive[] = [
   },
 ];
 
+// VENN exemplar — teaches: use ONE `venn` for compare/contrast or sets, never
+// two hand-drawn circles. Fish vs mammals: unique traits in each circle, shared
+// in the overlap; set names labelled on top. (Wave-6 venn primitive.)
+export const COMPARE_VENN: SketchPrimitive[] = [
+  { type: 'venn', cx: 50, cy: 50, r: 24, leftLabel: 'gills', rightLabel: 'lungs', bothLabel: 'need O₂', stroke: 'ink', strokeWidth: 1.2 },
+  { type: 'label', x: 26, y: 18, text: 'Fish', fontSize: 5.5, stroke: 'blue', anchor: 'middle' },
+  { type: 'label', x: 74, y: 18, text: 'Mammals', fontSize: 5.5, stroke: 'green', anchor: 'middle' },
+];
+
+// LAYERS exemplar — teaches: use ONE `layers` for a stacked/layered structure,
+// never hand-drawn bands. The Earth's four layers, top to bottom. (Wave-6.)
+export const EARTH_LAYERS: SketchPrimitive[] = [
+  { type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['Crust', 'Mantle', 'Outer core', 'Inner core'], stroke: 'ink', strokeWidth: 1.2 },
+];
+
+// MATRIX exemplar — teaches: use ONE `matrix` for a 2×2 framework / labelled
+// table, never hand-drawn boxes. A SWOT analysis (four quadrants). (Wave-6.)
+export const SWOT_MATRIX: SketchPrimitive[] = [
+  { type: 'matrix', x: 20, y: 24, w: 62, h: 54, rows: 2, cols: 2, cells: ['Strengths', 'Weaknesses', 'Opportunities', 'Threats'], stroke: 'ink', strokeWidth: 1.2 },
+  { type: 'label', x: 51, y: 16, text: 'SWOT', fontSize: 5.5, stroke: 'ink', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -522,5 +544,20 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a timeline of four moments in US history',
     labels: [],
     primitives: HISTORY_TIMELINE,
+  },
+  {
+    concept: 'comparing fish and mammals: gills vs lungs, both need oxygen',
+    labels: ['gills', 'lungs', 'need O₂'],
+    primitives: COMPARE_VENN,
+  },
+  {
+    concept: "the Earth's layers from the crust down to the inner core",
+    labels: [],
+    primitives: EARTH_LAYERS,
+  },
+  {
+    concept: 'a SWOT analysis: strengths, weaknesses, opportunities and threats in four quadrants',
+    labels: ['SWOT'],
+    primitives: SWOT_MATRIX,
   },
 ];

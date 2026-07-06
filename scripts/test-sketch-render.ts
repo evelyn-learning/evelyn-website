@@ -417,5 +417,33 @@ check('timeline stays in bounds', inBounds([
   { type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0, label: '1776' }, { at: 0.5, label: 'mid' }, { at: 1, label: 'now' }] } as SketchPrimitive,
 ]));
 
+// ── Wave-6 primitives (venn, layers, matrix) ──
+const vn = buildSketchPaths([
+  { type: 'venn', cx: 50, cy: 50, r: 24, leftLabel: 'gills', rightLabel: 'lungs', bothLabel: 'both' } as SketchPrimitive,
+]);
+check('venn renders two circles', vn.drawn[0].paths.length >= 2, `paths=${vn.drawn[0]?.paths.length}`);
+check('venn routes three region labels', vn.labels.length === 3 && vn.labels[2].text === 'both');
+check('venn stays in bounds', inBounds([
+  { type: 'venn', cx: 50, cy: 50, r: 24 } as SketchPrimitive,
+]));
+
+const ly = buildSketchPaths([
+  { type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['Crust', 'Mantle', 'Outer core', 'Inner core'] } as SketchPrimitive,
+]);
+check('layers renders one band per layer', ly.drawn[0].paths.length >= 4, `paths=${ly.drawn[0]?.paths.length}`);
+check('layers routes one label per band', ly.labels.length === 4 && ly.labels[0].text === 'Crust');
+check('layers stays in bounds', inBounds([
+  { type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['A', 'B', 'C'] } as SketchPrimitive,
+]));
+
+const mx = buildSketchPaths([
+  { type: 'matrix', x: 20, y: 24, w: 62, h: 54, rows: 2, cols: 2, cells: ['S', 'W', 'O', 'T'] } as SketchPrimitive,
+]);
+check('matrix renders rows*cols cells', mx.drawn[0].paths.length >= 4, `paths=${mx.drawn[0]?.paths.length}`);
+check('matrix routes cell labels', mx.labels.length === 4 && mx.labels[0].text === 'S');
+check('matrix (with headers) stays in bounds', inBounds([
+  { type: 'matrix', x: 16, y: 16, w: 70, h: 66, rows: 2, cols: 2, rowLabels: ['r1', 'r2'], colLabels: ['c1', 'c2'], cells: ['a', 'b', 'c', 'd'] } as SketchPrimitive,
+]));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

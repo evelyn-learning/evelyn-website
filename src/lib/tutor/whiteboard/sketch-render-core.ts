@@ -181,6 +181,19 @@ function treeLayout(p: { x: number; y: number; root: string; branches: string[] 
   return { root, children };
 }
 
+/** Cell + header geometry for a `matrix`. Reserves a top band for column headers
+ *  and a left band for row headers when present. Shared by the renderer (cells)
+ *  and buildSketchPaths (header + cell labels). */
+function matrixGeom(p: {
+  x: number; y: number; w: number; h: number; rows: number; cols: number;
+  rowLabels?: string[]; colLabels?: string[];
+}): { gx: number; gy: number; cw: number; ch: number; headT: number; headL: number } {
+  const headT = p.colLabels && p.colLabels.length ? 10 : 0;
+  const headL = p.rowLabels && p.rowLabels.length ? 16 : 0;
+  const gx = p.x + headL, gy = p.y + headT;
+  return { gx, gy, cw: (p.w - headL) / p.cols, ch: (p.h - headT) / p.rows, headT, headL };
+}
+
 /** Rough paths for one `icon` glyph — a simple, recognizable object drawn within
  *  a box of height `size` centered at (x,y). Deterministic (fixed seed) so the
  *  doodler never hand-places these strokes. */
@@ -1030,6 +1043,34 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       });
       return out;
     }
+    case 'venn': {
+      // Two overlapping circles; region labels are placed in buildSketchPaths.
+      const { cx, cy, r } = p;
+      const off = r * 0.55;
+      const o = { roughness: 0.5, bowing: 0.4, seed, stroke, strokeWidth: sw };
+      const out: PathInfo[] = [];
+      out.push(...gen.toPaths(gen.ellipse(cx - off, cy, r * 2, r * 2, o)));
+      out.push(...gen.toPaths(gen.ellipse(cx + off, cy, r * 2, r * 2, { ...o, seed: seed + 1 })));
+      return out;
+    }
+    case 'layers': {
+      // Contiguous horizontal bands (no gaps); each band's label is centered in it.
+      const { x, y, w, h } = p;
+      const n = p.layers.length;
+      const bandH = h / n;
+      const out: PathInfo[] = [];
+      for (let i = 0; i < n; i++) out.push(...gen.toPaths(gen.rectangle(x, y + i * bandH, w, bandH, { ...opts, seed: seed + i })));
+      return out;
+    }
+    case 'matrix': {
+      // A rows×cols grid of cells; header + cell labels are placed in build.
+      const g = matrixGeom(p);
+      const out: PathInfo[] = [];
+      for (let r = 0; r < p.rows; r++)
+        for (let c = 0; c < p.cols; c++)
+          out.push(...gen.toPaths(gen.rectangle(g.gx + c * g.cw, g.gy + r * g.ch, g.cw, g.ch, { ...opts, seed: seed + r * p.cols + c })));
+      return out;
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -1193,6 +1234,22 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
         const side = ei % 2 === 0 ? -1 : 1;
         pushLabel(ex + px * side * 9, ey + py * side * 9, e.label, i * 100 + ei, 4.0, 'middle', p.stroke);
       });
+    } else if (p.type === 'venn') {
+      // left-only / shared / right-only region labels
+      const off = p.r * 0.55;
+      if (p.leftLabel) pushLabel(p.cx - off - p.r * 0.5, p.cy, p.leftLabel, i, 4.0, 'middle', p.stroke);
+      if (p.rightLabel) pushLabel(p.cx + off + p.r * 0.5, p.cy, p.rightLabel, i * 100 + 1, 4.0, 'middle', p.stroke);
+      if (p.bothLabel) pushLabel(p.cx, p.cy, p.bothLabel, i * 100 + 2, 3.8, 'middle', p.stroke);
+    } else if (p.type === 'layers') {
+      // each band label centered in its band
+      const bandH = p.h / p.layers.length;
+      p.layers.forEach((text, li) => pushLabel(p.x + p.w / 2, p.y + (li + 0.5) * bandH, text, i * 100 + li, 4.0, 'middle', p.stroke));
+    } else if (p.type === 'matrix') {
+      // column headers (top band), row headers (left band), and cell text
+      const g = matrixGeom(p);
+      if (p.colLabels) p.colLabels.forEach((t, c) => { if (c < p.cols) pushLabel(g.gx + (c + 0.5) * g.cw, p.y + g.headT * 0.5, t, i * 100 + c, 3.8, 'middle', p.stroke); });
+      if (p.rowLabels) p.rowLabels.forEach((t, r) => { if (r < p.rows) pushLabel(p.x + g.headL * 0.5, g.gy + (r + 0.5) * g.ch, t, i * 100 + 20 + r, 3.5, 'middle', p.stroke); });
+      if (p.cells) p.cells.forEach((t, k) => { const r = Math.floor(k / p.cols), c = k % p.cols; if (r < p.rows) pushLabel(g.gx + (c + 0.5) * g.cw, g.gy + (r + 0.5) * g.ch, t, i * 100 + 40 + k, 3.6, 'middle', p.stroke); });
     }
   });
   return { drawn, labels };
