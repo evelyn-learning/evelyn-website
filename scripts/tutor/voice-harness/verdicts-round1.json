@@ -1,0 +1,24 @@
+{
+  "run": "run-2026-07-06T16-14-19-090Z",
+  "verdicts": {
+    "Amrit - Helpful Guide (hi→en carryover)": "pass",
+    "Palak - Presenter (hi→en carryover)": "pass",
+    "Anneliese - Methodical Guide (nl→en carryover)": "pass",
+    "ballad (realtime-2 control)": "fail",
+    "Skylar (en-US)": "pass",
+    "Gemma (en-GB)": "pass",
+    "Archie (en-GB)": "pass",
+    "Jan (de→en carryover)": "pass",
+    "Youssef - Clear Communicator (ar→en carryover)": "pass",
+    "Maryam - Friendly Voice (ar→en carryover)": "pass",
+    "Jameson (en-US)": "pass",
+    "Jennifer (de→en carryover)": "pass",
+    "Gemma (en-in localized)": "fail",
+    "Katie (en-in localized)": "pass",
+    "sage (realtime-2 control)": "fail",
+    "Katie (en-US)": "pass",
+    "coral (realtime-2 control)": "fail",
+    "ash (realtime-2 control)": "fail",
+    "Stjin - Helpful Handler (nl→en carryover)": "fail"
+  }
+}
