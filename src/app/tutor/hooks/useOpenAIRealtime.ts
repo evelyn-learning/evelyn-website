@@ -196,8 +196,17 @@ export interface RealtimeConfig {
      *  - 'realtime' (default): use Realtime's out-of-band response. Highest
      *    voice quality; expensive (full Realtime audio output billing).
      *  - 'openai-mini': use gpt-4o-mini-tts via /api/tutor/tts-openai.
-     *    ~10× cheaper than Realtime audio; voice quality very close. */
-    ttsProvider?: 'realtime' | 'openai-mini';
+     *    ~10× cheaper than Realtime audio; voice quality very close.
+     *  - 'cartesia': use Cartesia sonic-3.5 via /api/tutor/tts-cartesia.
+     *    Reuses the exact same HTTP-TTS dispatch/queue/cancel path as
+     *    'openai-mini' (Cartesia migration Phase 2, Task 3) — only the
+     *    fetch URL/body differ. */
+    ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia';
+    /** Cartesia voice id to send with each /api/tutor/tts-cartesia request
+     *  (Task 3). Ignored unless ttsProvider === 'cartesia'. Resolved by the
+     *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
+     *  cartesia-voice-registry.ts) — this hook just carries it through. */
+    cartesiaVoiceId?: string;
   };
 }
 
@@ -770,12 +779,31 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     isRelayRef.current = isRelay;
   }, [isRelay]);
-  const ttsProviderRef = useRef<'realtime' | 'openai-mini'>(
+  const ttsProviderRef = useRef<'realtime' | 'openai-mini' | 'cartesia'>(
     relayMode?.ttsProvider ?? 'realtime',
   );
   useEffect(() => {
     ttsProviderRef.current = relayMode?.ttsProvider ?? 'realtime';
   }, [relayMode?.ttsProvider]);
+  // Cartesia migration Phase 2, Task 3: voiceId for /api/tutor/tts-cartesia
+  // requests. Session-static in practice (one teacher persona per session),
+  // but mirrored via a ref + effect like ttsProviderRef so a mid-session
+  // prop change (e.g. teacher swap) would take effect on the next dispatch.
+  const cartesiaVoiceIdRef = useRef<string | undefined>(relayMode?.cartesiaVoiceId);
+  useEffect(() => {
+    cartesiaVoiceIdRef.current = relayMode?.cartesiaVoiceId;
+  }, [relayMode?.cartesiaVoiceId]);
+  // Both HTTP-based TTS providers (openai-mini, cartesia) share the exact
+  // same dispatch/queue/cancel semantics — neither ever produces a Realtime
+  // response.created/response.done event, so every place that gates on the
+  // mini path (queue-drain in playNextAudio, dispatchSpeakText, speakText's
+  // guard, drainSpeakTextQueueRef, clearSpeechQueue's immediate-stop branch)
+  // must treat 'cartesia' identically. Centralized here so the widening is
+  // one edit instead of six scattered ones.
+  const isHttpTtsProvider = useCallback(
+    (p: 'realtime' | 'openai-mini' | 'cartesia') => p === 'openai-mini' || p === 'cartesia',
+    [],
+  );
   const ttsAbortRef = useRef<AbortController | null>(null);
 
   // Update state and notify parent
@@ -825,25 +853,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       currentSentencePlayedSecRef.current = 0;
       playedBeforeChunkSecRef.current = 0;
       currentChunkDurSecRef.current = 0;
-      // openai-mini path has no response.done event to drive the queue,
-      // so drain the next sentence here when the audio finishes. The
-      // realtime path leaves this branch alone — its drain runs from
-      // response.done in the message handler.
+      // HTTP-based TTS (openai-mini, cartesia) has no response.done event to
+      // drive the queue, so drain the next sentence here when the audio
+      // finishes. The realtime path leaves this branch alone — its drain
+      // runs from response.done in the message handler.
       if (
         isRelayRef.current &&
-        ttsProviderRef.current === 'openai-mini' &&
+        isHttpTtsProvider(ttsProviderRef.current) &&
         speakTextQueueRef.current.length > 0
       ) {
-        // Inter-sentence gap in mini-relay mode (the queue empties between
-        // each sentence's fetch) — NOT a turn-end. Shift the next sentence
-        // and keep going WITHOUT firing 'drain', so render↔speech sync
-        // doesn't mistake the gap for the turn's last sentence.
+        // Inter-sentence gap in mini/cartesia-relay mode (the queue empties
+        // between each sentence's fetch) — NOT a turn-end. Shift the next
+        // sentence and keep going WITHOUT firing 'drain', so render↔speech
+        // sync doesn't mistake the gap for the turn's last sentence.
         const next = speakTextQueueRef.current.shift()!;
         speakTextInFlightRef.current = false;
         sendOneSpeakTextViaOpenAITTSRef.current?.(next);
         return;
       }
-      if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+      if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
         speakTextInFlightRef.current = false;
       }
       // Render↔speech sync: truly nothing left to play (no queued sentence
@@ -918,7 +946,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     };
     playbackSourceRef.current = source;
     source.start();
-  }, [updateState]);
+  }, [updateState, isHttpTtsProvider]);
 
   // Queue audio for playback
   const queueAudio = useCallback((base64Audio: string) => {
@@ -2403,26 +2431,37 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Pre-fetching: while sentence N plays, we call this for sentence N+1
   // and the bytes are usually ready by the time N ends, eliminating the
   // inter-sentence HTTP round-trip gap.
+  //
+  // Cartesia migration Phase 2, Task 3: the cache key is the sentence TEXT
+  // only — not provider or voiceId. That's safe because ttsProviderRef and
+  // cartesiaVoiceIdRef are both session-static (set once from relayMode at
+  // mount/prop-change, never mid-sentence-queue), so every cached Promise
+  // in a given session was fetched under the same provider/voice anyway.
   const fetchTTSPromise = useCallback((trimmed: string): Promise<Float32Array | null> => {
     const cache = ttsPrefetchCacheRef.current;
     const cached = cache.get(trimmed);
     if (cached) return cached;
     const promise = (async (): Promise<Float32Array | null> => {
       try {
-        const res = await fetch('/api/tutor/tts-openai', {
+        const useCartesia = ttsProviderRef.current === 'cartesia';
+        const url = useCartesia ? '/api/tutor/tts-cartesia' : '/api/tutor/tts-openai';
+        const body = useCartesia
+          ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current }
+          : { text: trimmed };
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: trimmed }),
+          body: JSON.stringify(body),
         });
         if (!res.ok) {
-          console.error('[Realtime] openai-mini TTS fetch failed:', res.status);
+          console.error(`[Realtime] ${useCartesia ? 'cartesia' : 'openai-mini'} TTS fetch failed:`, res.status);
           return null;
         }
         const buf = await res.arrayBuffer();
         return new Float32Array(buf);
       } catch (err) {
         if ((err as { name?: string })?.name !== 'AbortError') {
-          console.error('[Realtime] openai-mini TTS error:', err);
+          console.error('[Realtime] TTS error:', err);
         }
         return null;
       }
@@ -2480,15 +2519,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
 
   const dispatchSpeakText = useCallback((trimmed: string) => {
-    if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+    if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
       sendOneSpeakTextViaOpenAITTS(trimmed);
     } else {
       sendOneSpeakText(trimmed);
     }
-  }, [sendOneSpeakText, sendOneSpeakTextViaOpenAITTS]);
+  }, [sendOneSpeakText, sendOneSpeakTextViaOpenAITTS, isHttpTtsProvider]);
 
   const speakText = useCallback((text: string) => {
-    const usingOpenAITTS = isRelayRef.current && ttsProviderRef.current === 'openai-mini';
+    const usingOpenAITTS = isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current);
     if (!usingOpenAITTS && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
       // Skip + warn (NOT error) when the WS isn't open. Stay fully quiet when
       // the disconnect is intentional (End tapped) OR we're mid-(re)connect —
@@ -2517,7 +2556,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // it gets set when a chunk dequeues for playback.
     pendingDispatchSentenceRef.current = trimmed;
     dispatchSpeakText(trimmed);
-  }, [dispatchSpeakText]);
+  }, [dispatchSpeakText, isHttpTtsProvider]);
 
   // Stable ref so the response.done handler (long-lived closure) can
   // drain the queue without depending on speakText's identity.
@@ -2530,7 +2569,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // mapping. Don't touch currentSpeakTextRef — that's driven by
     // chunk dequeue in playNextAudio.
     pendingDispatchSentenceRef.current = next;
-    if (isRelayRef.current && ttsProviderRef.current === 'openai-mini') {
+    if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
       sendOneSpeakTextViaOpenAITTSRef.current(next);
     } else {
       sendOneSpeakText(next);
@@ -2591,7 +2630,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     let stopped = false;
     if (
       isRelayRef.current &&
-      ttsProviderRef.current === 'openai-mini' &&
+      isHttpTtsProvider(ttsProviderRef.current) &&
       speakTextInFlightRef.current
     ) {
       try { playbackSourceRef.current?.stop(); } catch { /* may already be stopped */ }
@@ -2668,7 +2707,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       setTimeout(done, 60);
     });
-  }, []);
+  }, [isHttpTtsProvider]);
 
   // Voice Perception Stage 3.1 v2 (2026-06-16): snapshot of TTS content
   // the student would have heard if not cut. Now tracked at audio-

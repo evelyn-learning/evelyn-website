@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react'
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
+import { useCartesiaInkWS } from '../hooks/useCartesiaInkWS';
 import {
   classifyHeuristic,
   type RecentTtsScript,
@@ -112,6 +113,7 @@ import {
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
   TUTOR_CONTENT_VARIETY,
+  TUTOR_STT_ENGINE_INK2,
   TOPIC_NOTES_WARMUP_SEGMENTS,
   TOPIC_NOTES_RATE_LIMITS,
   BOARD_RENDER_META_ACTIONS,
@@ -328,8 +330,14 @@ interface VoiceTutorRealtimeProps {
   useRealtimeV2?: boolean;
   /** TTS provider for relay-mode voicing of the brain's text.
    *  - 'realtime' (default): Realtime out-of-band response. Highest quality, expensive.
-   *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper. */
-  ttsProvider?: 'realtime' | 'openai-mini';
+   *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper.
+   *  - 'cartesia': Cartesia sonic-3.5 via /api/tutor/tts-cartesia. Same
+   *    HTTP-TTS flow as 'openai-mini' (Cartesia migration Phase 2, Task 3). */
+  ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia';
+  /** Cartesia voice id for the persona-mapped teacher voice (Task 3).
+   *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
+   *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */
+  cartesiaVoiceId?: string;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -475,6 +483,7 @@ export function VoiceTutorRealtime({
   claudeBrainMode = false,
   useRealtimeV2 = false,
   ttsProvider = 'realtime',
+  cartesiaVoiceId,
   onLessonPlanProgress,
   onTutorBusy,
   onVoiceStateChange,
@@ -10623,6 +10632,7 @@ export function VoiceTutorRealtime({
           instructions: RELAY_MODE_PROMPT,
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
+          cartesiaVoiceId,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,
@@ -10898,12 +10908,18 @@ export function VoiceTutorRealtime({
     realtime.markInterrupted();
   }, [realtime, perceptionStage, onDebugEvent]);
 
-  const perception = usePerceptionWS({
-    enabled: perceptionEnabled,
-    vadThreshold,
-    vadSilenceDurationMs,
-    vadPrefixPaddingMs,
-    onTranscript: useCallback((t: PerceptionTranscript) => {
+  // ── STT engine gating (Cartesia migration Phase 2, Task 5) ─────────────
+  // TUTOR_STT_ENGINE_INK2 selects useCartesiaInkWS in place of
+  // usePerceptionWS. Both hooks are always called (React hooks rule) but
+  // only one is ever `enabled`, so exactly one owns the mic + WS at a
+  // time. The callback closures below are shared verbatim between both
+  // hooks — same onTranscript/onSpeechStart/onSpeechStop/etc. — so every
+  // downstream consumer (Haiku classifier, barge-in cancel, dedupe) is
+  // byte-identical regardless of which STT engine is live. Flag-off
+  // (TUTOR_STT_ENGINE_INK2 === false): perceptionWS gets `enabled:
+  // perceptionEnabled` exactly as before, perceptionInk2's `enabled` is
+  // always false (no-op hook — no mic, no WS) — byte-identical behavior.
+  const perceptionOnTranscript = useCallback((t: PerceptionTranscript) => {
       // Tagged log for Stage 0+ transcript-agreement review. Pair with the
       // production hook's `[Realtime] User transcript:` lines at similar
       // timestamps to compute agreement rate. warn-level so the
@@ -11234,8 +11250,8 @@ export function VoiceTutorRealtime({
             });
         }
       }
-    }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain]),
-    onSpeechStart: useCallback((e: PerceptionSpeechEvent) => {
+  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain]);
+  const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
       // "Being heard" indicator: student is speaking now. Clear any pending
@@ -11352,8 +11368,8 @@ export function VoiceTutorRealtime({
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
       }
-    }, [onDebugEvent, perceptionStage, realtime]),
-    onSpeechStop: useCallback((e: PerceptionSpeechEvent) => {
+  }, [onDebugEvent, perceptionStage, realtime]);
+  const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
@@ -11386,20 +11402,45 @@ export function VoiceTutorRealtime({
         clearTimeout(perceptionMidUtteranceWatchdogRef.current);
         perceptionMidUtteranceWatchdogRef.current = null;
       }
-    }, [onDebugEvent]),
-    // Live mic amplitude → parent "being heard" meter (no React state here;
-    // the parent stores it in a ref so it doesn't re-render the page 12×/sec).
+  }, [onDebugEvent]);
+  // Live mic amplitude → parent "being heard" meter (no React state here;
+  // the parent stores it in a ref so it doesn't re-render the page 12×/sec).
+  const perceptionOnTranscriptionFailed = useCallback((errorType: string | undefined) => {
+    console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
+  }, []);
+  const perceptionOnStateChange = useCallback((next: PerceptionState) => {
+    onDebugEvent?.('perception_state', next);
+  }, [onDebugEvent]);
+  const perceptionOnError = useCallback((err: Error) => {
+    onDebugEvent?.('perception_error', err.message);
+  }, [onDebugEvent]);
+
+  const perceptionWS = usePerceptionWS({
+    enabled: perceptionEnabled && !TUTOR_STT_ENGINE_INK2,
+    vadThreshold,
+    vadSilenceDurationMs,
+    vadPrefixPaddingMs,
+    onTranscript: perceptionOnTranscript,
+    onSpeechStart: perceptionOnSpeechStart,
+    onSpeechStop: perceptionOnSpeechStop,
     onMicLevel,
-    onTranscriptionFailed: useCallback((errorType: string | undefined) => {
-      console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
-    }, []),
-    onStateChange: useCallback((next: PerceptionState) => {
-      onDebugEvent?.('perception_state', next);
-    }, [onDebugEvent]),
-    onError: useCallback((err: Error) => {
-      onDebugEvent?.('perception_error', err.message);
-    }, [onDebugEvent]),
+    onTranscriptionFailed: perceptionOnTranscriptionFailed,
+    onStateChange: perceptionOnStateChange,
+    onError: perceptionOnError,
   });
+  // Cartesia Ink 2 STT hook (Task 5). `enabled` is the mirror-image gate of
+  // perceptionWS above, so exactly one hook ever owns the mic + WS.
+  const perceptionInk2 = useCartesiaInkWS({
+    enabled: perceptionEnabled && TUTOR_STT_ENGINE_INK2,
+    onSpeechStart: perceptionOnSpeechStart,
+    onSpeechStop: perceptionOnSpeechStop,
+    onMicLevel,
+    onTranscript: perceptionOnTranscript,
+    onTranscriptionFailed: perceptionOnTranscriptionFailed,
+    onStateChange: perceptionOnStateChange,
+    onError: perceptionOnError,
+  });
+  const perception = TUTOR_STT_ENGINE_INK2 ? perceptionInk2 : perceptionWS;
   // Reference for lint cleanliness; explicit read so a future stage that
   // surfaces a status pill / closes barge-in gaps has something to consume.
   void perception.state;
@@ -12453,6 +12494,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           <button
             onClick={handleMicClick}
             disabled={isDisabled}
+            data-testid="tutor-mic-button"
             className={`
               relative rounded-full text-white flex-shrink-0
               transition-all duration-200 flex items-center justify-center

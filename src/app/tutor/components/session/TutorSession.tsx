@@ -67,6 +67,8 @@ export interface TutorSessionProps {
   voice: OpenAIVoice;
   voiceEngine: TutorSessionVoiceEngine;
   ttsProvider?: VTRProps['ttsProvider'];
+  /** Cartesia voice id (Task 3). Only consumed when ttsProvider === 'cartesia'. */
+  cartesiaVoiceId?: VTRProps['cartesiaVoiceId'];
   sessionMaxMinutes: number;
   /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
   resumeState?: VTRProps['resumeState'];
@@ -154,7 +156,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
-    sessionGoal, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMaxMinutes,
+    sessionGoal, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -423,6 +425,7 @@ export default function TutorSession(props: TutorSessionProps) {
         claudeBrainMode={voiceEngine === 'claude-brain'}
         useRealtimeV2={voiceEngine === 'realtime-2'}
         ttsProvider={ttsProvider}
+        cartesiaVoiceId={cartesiaVoiceId}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}
