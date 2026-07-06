@@ -30,7 +30,7 @@ export default function VoiceHarnessPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/index`).then((r) => r.json()).then((d) => {
+    fetch(`${API}/index`).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then((d) => {
       setRuns(d);
       if (d.tts?.[0]) setTtsRun(d.tts[0]);
       if (d.stt?.[0]) setSttRun(d.stt[0]);
@@ -39,19 +39,19 @@ export default function VoiceHarnessPage() {
 
   useEffect(() => {
     if (!ttsRun) return;
-    fetch(`${API}/tts/${ttsRun}/manifest.json`).then((r) => r.json()).then(setManifest).catch(() => setManifest(null));
+    fetch(`${API}/tts/${ttsRun}/manifest.json`).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then(setManifest).catch(() => setManifest(null));
     try { setVerdicts(JSON.parse(localStorage.getItem(`voiceHarnessVerdicts:${ttsRun}`) ?? '{}')); } catch { setVerdicts({}); }
   }, [ttsRun]);
 
   useEffect(() => {
     if (!sttRun) return;
-    fetch(`${API}/stt/${sttRun}/results.json`).then((r) => r.json()).then(setStt).catch(() => setStt(null));
+    fetch(`${API}/stt/${sttRun}/results.json`).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then(setStt).catch(() => setStt(null));
   }, [sttRun]);
 
   const setVerdict = (voiceLabel: string, v: Verdict) => {
     const next = { ...verdicts, [voiceLabel]: v };
     setVerdicts(next);
-    localStorage.setItem(`voiceHarnessVerdicts:${ttsRun}`, JSON.stringify(next));
+    try { localStorage.setItem(`voiceHarnessVerdicts:${ttsRun}`, JSON.stringify(next)); } catch { /* quota/private mode: keep in-memory verdict */ }
   };
 
   const voices = useMemo(() => {
