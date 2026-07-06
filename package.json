@@ -79,7 +79,13 @@
     "test:pedagogy-e2": "npx tsx scripts/test-demo-cta.ts",
     "test:pedagogy-e3": "npx tsx scripts/test-demo-intent.ts",
     "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts",
-    "test:pedagogy-teacher": "npx tsx scripts/test-teacher-persona.ts"
+    "test:pedagogy-teacher": "npx tsx scripts/test-teacher-persona.ts",
+    "voice:discover": "npx tsx scripts/tutor/voice-harness/discover-voices.ts",
+    "voice:localize": "npx tsx scripts/tutor/voice-harness/localize-voices.ts",
+    "voice:tts": "npx tsx scripts/tutor/voice-harness/tts-generate.ts",
+    "voice:corpus": "npx tsx scripts/tutor/voice-harness/fetch-corpus.ts",
+    "voice:stt": "npx tsx scripts/tutor/voice-harness/stt-run.ts",
+    "test:voice-harness": "npx tsx scripts/tutor/voice-harness/utterances.test.ts && npx tsx scripts/tutor/voice-harness/wer.test.ts && npx tsx scripts/tutor/voice-harness/audio-util.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -146,6 +152,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.4.20",
     "esbuild": "^0.27.4",
     "eslint": "^9",
@@ -155,7 +162,8 @@
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "ws": "^8.21.0"
   },
   "overrides": {
     "fast-xml-parser": "^5.3.6",
