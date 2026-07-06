@@ -327,5 +327,49 @@ check('bar_compare stays in bounds', inBounds([
   { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5] } as SketchPrimitive,
 ]));
 
+// ── Tier 1/2 primitives (cycle, flow_chain, balance_scale, icon) ──
+const cyc = buildSketchPaths([
+  { type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B', 'C', 'D'], clockwise: true } as SketchPrimitive,
+]);
+check('cycle renders arcs + node dots', cyc.drawn[0].paths.length >= 8, `paths=${cyc.drawn[0]?.paths.length}`);
+check('cycle routes one label per stage to labels[]', cyc.labels.length === 4 && cyc.labels[0].text === 'A');
+check('cycle stays in bounds', inBounds([
+  { type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B', 'C', 'D'] } as SketchPrimitive,
+]));
+
+const fc = buildSketchPaths([
+  { type: 'flow_chain', x: 8, y: 44, steps: ['Sun', 'Grass', 'Rabbit', 'Fox'], direction: 'right' } as SketchPrimitive,
+]);
+check('flow_chain renders boxes + arrows', fc.drawn[0].paths.length >= 4, `paths=${fc.drawn[0]?.paths.length}`);
+check('flow_chain routes one label per step to labels[]', fc.labels.length === 4 && fc.labels[3].text === 'Fox');
+check('flow_chain (right) stays in bounds', inBounds([
+  { type: 'flow_chain', x: 8, y: 44, steps: ['Sun', 'Grass', 'Rabbit', 'Fox'], direction: 'right' } as SketchPrimitive,
+]));
+check('flow_chain (down) stays in bounds', inBounds([
+  { type: 'flow_chain', x: 34, y: 8, steps: ['Input', 'Process', 'Output'], direction: 'down' } as SketchPrimitive,
+]));
+
+const bs = buildSketchPaths([
+  { type: 'balance_scale', cx: 50, cy: 40, tilt: 0, leftLabel: 'costs', rightLabel: 'benefits' } as SketchPrimitive,
+]);
+check('balance_scale renders post/beam/pans', bs.drawn[0].paths.length >= 6, `paths=${bs.drawn[0]?.paths.length}`);
+check('balance_scale routes both pan labels', bs.labels.length === 2 && bs.labels[0].text === 'costs');
+check('balance_scale (balanced) stays in bounds', inBounds([
+  { type: 'balance_scale', cx: 50, cy: 40, tilt: 0 } as SketchPrimitive,
+]));
+check('balance_scale (tilted) stays in bounds', inBounds([
+  { type: 'balance_scale', cx: 50, cy: 40, tilt: 20 } as SketchPrimitive,
+]));
+
+const icn = buildSketchPaths([
+  { type: 'icon', name: 'sun', x: 30, y: 30, size: 26 } as SketchPrimitive,
+]);
+check('icon renders paths', icn.drawn[0].paths.length >= 2, `paths=${icn.drawn[0]?.paths.length}`);
+for (const name of ['sun', 'moon', 'cloud', 'raindrop', 'flame', 'tree', 'leaf', 'mountain', 'star', 'heart', 'house', 'book', 'lightbulb', 'gear', 'coin', 'magnet', 'bolt', 'clock'] as const) {
+  check(`icon '${name}' stays in bounds`, inBounds([
+    { type: 'icon', name, x: 50, y: 50, size: 40 } as SketchPrimitive,
+  ]));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

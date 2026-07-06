@@ -38,6 +38,19 @@ export const SKETCH_COLORS = {
 export type SketchColor = keyof typeof SKETCH_COLORS;
 export const SKETCH_COLOR_NAMES = Object.keys(SKETCH_COLORS) as SketchColor[];
 
+/**
+ * The fixed set of simple, rough-drawable glyphs the `icon` primitive can draw.
+ * Concrete everyday objects a freehand doodle otherwise garbles (especially for
+ * younger grades) — drawn deterministically so the doodler never hand-places
+ * the strokes. Keep additions SIMPLE (a few strokes, instantly recognizable).
+ */
+export const ICON_NAMES = [
+  'sun', 'moon', 'cloud', 'raindrop', 'flame', 'tree', 'leaf', 'mountain',
+  'star', 'heart', 'house', 'book', 'lightbulb', 'gear', 'coin', 'magnet',
+  'bolt', 'clock',
+] as const;
+export type IconName = (typeof ICON_NAMES)[number];
+
 /** Structural bounds — the quality gate. Shared with sketch-validate.ts. */
 export const SKETCH_BOUNDS = {
   maxPrimitives: 30,
@@ -90,6 +103,18 @@ export const SKETCH_BOUNDS = {
   maxMoleculeBonds: 16,
   // bar_compare: a mini side-by-side bar chart
   maxBars: 10,
+  // cycle: labelled stages evenly spaced around a ring, joined by curved arrows
+  minCycleStages: 2,
+  maxCycleStages: 8,
+  maxCycleRadius: 44,
+  // flow_chain: ordered labelled boxes joined by arrows
+  minFlowSteps: 2,
+  maxFlowSteps: 6,
+  // balance_scale: a two-pan scale, beam tipped by `tilt` degrees about the pivot
+  maxBalanceTilt: 26,
+  // icon: a glyph from ICON_NAMES at the given bounding size
+  minIconSize: 6,
+  maxIconSize: 60,
 } as const;
 
 export interface Pt {
@@ -350,6 +375,55 @@ export type SketchPrimitive =
       values: number[];
       labels?: string[];
     } & Styled)
+  // Parametric: a CYCLE — `stages` labels evenly spaced around a ring of radius r
+  // centered at (cx,cy), joined by curved arrows going around (clockwise by
+  // default). For a repeating process: the water / rock / carbon / nitrogen
+  // cycle, a life cycle, a feedback loop, the business cycle. ONE primitive draws
+  // the whole loop (node dots + connecting arrows + stage labels).
+  | ({
+      type: 'cycle';
+      cx: number;
+      cy: number;
+      r: number;
+      stages: string[];
+      clockwise?: boolean;
+    } & Styled)
+  // Parametric: a FLOW CHAIN — `steps` labelled boxes laid out in order and joined
+  // by arrows, flowing to the `direction` (right = a horizontal row, down = a
+  // vertical column) from the top-left anchor (x,y). For a process / sequence /
+  // pathway: a food chain, energy flow, cause→effect, digestion, a pipeline. ONE
+  // primitive draws every box + arrow + step label.
+  | ({
+      type: 'flow_chain';
+      x: number;
+      y: number;
+      steps: string[];
+      direction?: 'right' | 'down';
+    } & Styled)
+  // Parametric: a two-pan BALANCE SCALE centered at the pivot (cx,cy) — a post on
+  // a base, a beam tipped `tilt` degrees (+ = right side down, 0 = balanced) about
+  // the pivot, and a level pan hanging from each beam end. Optional pan labels.
+  // For equilibrium, a trade-off, fairness, weighing two sides (supply vs demand,
+  // costs vs benefits, a balanced equation). ONE primitive draws the whole scale.
+  | ({
+      type: 'balance_scale';
+      cx: number;
+      cy: number;
+      tilt?: number;
+      leftLabel?: string;
+      rightLabel?: string;
+    } & Styled)
+  // Parametric: a simple recognizable ICON glyph `name` (from ICON_NAMES) drawn
+  // rough at `size` (bounding height) centered at (x,y). For a concrete everyday
+  // object a freehand doodle otherwise garbles — the sun, a tree, a house, a water
+  // drop, a flame — especially for younger grades. ONE primitive draws the glyph.
+  | ({
+      type: 'icon';
+      name: IconName;
+      x: number;
+      y: number;
+      size: number;
+    } & Styled)
   | {
       type: 'label';
       x: number;
@@ -388,6 +462,10 @@ export const SKETCH_PRIMITIVE_TYPES: SketchPrimitiveType[] = [
   'orbit',
   'molecule',
   'bar_compare',
+  'cycle',
+  'flow_chain',
+  'balance_scale',
+  'icon',
   'label',
 ];
 
@@ -524,7 +602,7 @@ export const SKETCH_TOOL_SCHEMA = {
           // lever (beam of `length` centered at x,y on a fulcrum at pivotFrac)
           length: { type: 'number', description: 'lever: beam length in canvas units.' },
           pivotFrac: { type: 'number', description: 'lever: fulcrum position 0..1 along the beam (0.5 = center).' },
-          tilt: { type: 'number', description: 'lever: beam tilt in degrees, + = right side down (default 0 = level).' },
+          tilt: { type: 'number', description: 'lever / balance_scale: beam tilt in degrees, + = right side down (default 0 = level).' },
           // gauge (semicircular dial + needle at frac)
           frac: { type: 'number', description: 'gauge: needle position 0..1 across the left→right sweep (0.7 = 70%).' },
           // axis (number line from x1,y1→x2,y2 with ticks + optional labels)
@@ -572,6 +650,34 @@ export const SKETCH_TOOL_SCHEMA = {
             items: { type: 'number' },
             description: 'bar_compare: bar magnitudes, scaled to the tallest (e.g. [3, 7, 5]).',
           },
+          // cycle (labelled stages around a ring, joined by curved arrows)
+          stages: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'cycle: the stage labels in order around the loop (2..8), e.g. ["Evaporation","Condensation","Precipitation","Collection"].',
+          },
+          clockwise: { type: 'boolean', description: 'cycle: go clockwise (default true) or counter-clockwise.' },
+          // flow_chain (ordered labelled boxes joined by arrows)
+          steps: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'flow_chain: the step labels in order (2..6), e.g. ["Sun","Grass","Rabbit","Fox"].',
+          },
+          direction: {
+            type: 'string',
+            enum: ['right', 'down'],
+            description: 'flow_chain: layout direction — right = a horizontal row, down = a vertical column. Default right.',
+          },
+          // balance_scale (two-pan scale; `tilt` reused from lever)
+          leftLabel: { type: 'string', description: 'balance_scale: short label under the LEFT pan.' },
+          rightLabel: { type: 'string', description: 'balance_scale: short label under the RIGHT pan.' },
+          // icon (a glyph from the fixed set at `size`, centered on x,y)
+          name: {
+            type: 'string',
+            enum: ICON_NAMES,
+            description: 'icon: which glyph to draw (one of the fixed set).',
+          },
+          size: { type: 'number', description: 'icon: glyph bounding height in canvas units (e.g. 20).' },
           points: {
             type: 'array',
             items: {

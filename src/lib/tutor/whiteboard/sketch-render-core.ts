@@ -92,6 +92,221 @@ function vectorLabelPos(p: { x1: number; y1: number; x2: number; y2: number }): 
   return [mx + px * sign * 6, my + py * sign * 6];
 }
 
+/** Node positions (angle + point + label) around a `cycle` ring. Shared by the
+ *  renderer (node dots + arc arrows) and buildSketchPaths (stage labels). Stage 0
+ *  sits at the top; stages advance clockwise (default) or counter-clockwise. */
+function cycleNodes(p: {
+  cx: number; cy: number; r: number; stages: string[]; clockwise?: boolean;
+}): { a: number; x: number; y: number; text: string }[] {
+  const n = p.stages.length;
+  const dir = p.clockwise === false ? -1 : 1;
+  return p.stages.map((text, i) => {
+    const a = -Math.PI / 2 + dir * ((i * 2 * Math.PI) / n); // -90° = top; +y is down
+    return { a, x: p.cx + p.r * Math.cos(a), y: p.cy + p.r * Math.sin(a), text };
+  });
+}
+
+/** Box + arrow layout for a `flow_chain`. Boxes flow right (a row) or down (a
+ *  column) from the top-left anchor, auto-sized to stay inside the canvas. */
+function flowLayout(p: {
+  x: number; y: number; steps: string[]; direction?: 'right' | 'down';
+}): {
+  boxes: { x: number; y: number; w: number; h: number; text: string }[];
+  arrows: [number, number, number, number][];
+} {
+  const horiz = (p.direction ?? 'right') === 'right';
+  const n = p.steps.length;
+  const boxes: { x: number; y: number; w: number; h: number; text: string }[] = [];
+  const arrows: [number, number, number, number][] = [];
+  if (horiz) {
+    const bh = 15;
+    let gap = 7;
+    let bw = Math.min(20, (Math.max(20, 96 - p.x) - (n - 1) * gap) / n);
+    if (bw < 9) { gap = 4; bw = Math.min(20, (Math.max(20, 96 - p.x) - (n - 1) * gap) / n); }
+    bw = Math.max(7, bw);
+    for (let i = 0; i < n; i++) {
+      const bx = p.x + i * (bw + gap);
+      boxes.push({ x: bx, y: p.y, w: bw, h: bh, text: p.steps[i] });
+      if (i < n - 1) arrows.push([bx + bw, p.y + bh / 2, bx + bw + gap, p.y + bh / 2]);
+    }
+  } else {
+    const bw = 34;
+    let gap = 7;
+    let bh = Math.min(14, (Math.max(20, 96 - p.y) - (n - 1) * gap) / n);
+    if (bh < 7) { gap = 4; bh = Math.min(14, (Math.max(20, 96 - p.y) - (n - 1) * gap) / n); }
+    bh = Math.max(6, bh);
+    for (let i = 0; i < n; i++) {
+      const by = p.y + i * (bh + gap);
+      boxes.push({ x: p.x, y: by, w: bw, h: bh, text: p.steps[i] });
+      if (i < n - 1) arrows.push([p.x + bw / 2, by + bh, p.x + bw / 2, by + bh + gap]);
+    }
+  }
+  return { boxes, arrows };
+}
+
+/** Beam-end + pan geometry for a `balance_scale`. The beam tips `tilt` degrees
+ *  about the pivot (cx,cy); each pan hangs straight down from its beam end. */
+function balanceGeom(p: { cx: number; cy: number; tilt?: number }): {
+  lx: number; ly: number; rx: number; ry: number; hang: number; postBot: number;
+} {
+  const rad = ((p.tilt ?? 0) * Math.PI) / 180;
+  const half = 26;
+  return {
+    lx: p.cx - half * Math.cos(rad),
+    ly: p.cy - half * Math.sin(rad),
+    rx: p.cx + half * Math.cos(rad),
+    ry: p.cy + half * Math.sin(rad),
+    hang: 15,
+    postBot: p.cy + 30,
+  };
+}
+
+/** Rough paths for one `icon` glyph — a simple, recognizable object drawn within
+ *  a box of height `size` centered at (x,y). Deterministic (fixed seed) so the
+ *  doodler never hand-places these strokes. */
+function iconPaths(
+  gen: Gen, name: string, x: number, y: number, size: number,
+  seed: number, stroke: string, sw: number, fillHex?: string,
+): PathInfo[] {
+  const s = size / 2;
+  const out: PathInfo[] = [];
+  // Icons are small — the default rough jitter (roughness 1.1) turns a 15px glyph
+  // into a scribble, so draw them with a gentle, crisp hand-drawn wobble.
+  const ROUGH = { roughness: 0.5, bowing: 0.35 };
+  const base = { ...ROUGH, seed, stroke, strokeWidth: sw, ...(fillHex ? { fill: fillHex, fillStyle: 'solid' as const } : {}) };
+  const solid = { ...ROUGH, seed, stroke, strokeWidth: sw, fill: stroke, fillStyle: 'solid' as const };
+  const E = (cx: number, cy: number, rx: number, ry: number, o = base) => out.push(...gen.toPaths(gen.ellipse(cx, cy, rx * 2, ry * 2, o)));
+  const L = (x1: number, y1: number, x2: number, y2: number, o = base) => out.push(...gen.toPaths(gen.line(x1, y1, x2, y2, o)));
+  const P = (pts: [number, number][], o = base) => out.push(...gen.toPaths(gen.polygon(pts, o)));
+  const R = (rx: number, ry: number, rw: number, rh: number, o = base) => out.push(...gen.toPaths(gen.rectangle(rx, ry, rw, rh, o)));
+  const C = (pts: [number, number][], o = base) => out.push(...gen.toPaths(gen.curve([...pts, pts[0], pts[1], pts[2]], o))); // closed spline
+  const OC = (pts: [number, number][], o = base) => out.push(...gen.toPaths(gen.curve(pts, o))); // open curve
+
+  switch (name) {
+    case 'sun':
+      E(x, y, s * 0.46, s * 0.46);
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        L(x + Math.cos(a) * s * 0.62, y + Math.sin(a) * s * 0.62, x + Math.cos(a) * s * 0.95, y + Math.sin(a) * s * 0.95);
+      }
+      break;
+    case 'moon': {
+      const Ro = s * 0.72, Ri = s * 0.42;
+      const pts: [number, number][] = [];
+      const n = 16;
+      for (let k = 0; k <= n; k++) { const a = ((50 + 260 * (k / n)) * Math.PI) / 180; pts.push([x + Ro * Math.cos(a), y + Ro * Math.sin(a)]); }
+      for (let k = n; k >= 0; k--) { const a = ((50 + 260 * (k / n)) * Math.PI) / 180; pts.push([x + Ri * Math.cos(a), y + Ri * Math.sin(a)]); }
+      out.push(...gen.toPaths(gen.polygon(pts, base)));
+      break;
+    }
+    case 'cloud':
+      C([
+        [x - 0.70 * s, y + 0.28 * s], [x - 0.72 * s, y - 0.02 * s], [x - 0.45 * s, y - 0.28 * s],
+        [x - 0.15 * s, y - 0.12 * s], [x - 0.05 * s, y - 0.40 * s], [x + 0.28 * s, y - 0.32 * s],
+        [x + 0.40 * s, y - 0.05 * s], [x + 0.68 * s, y - 0.02 * s], [x + 0.66 * s, y + 0.28 * s],
+      ]);
+      break;
+    case 'raindrop':
+      C([
+        [x, y - 0.72 * s], [x + 0.34 * s, y - 0.10 * s], [x + 0.44 * s, y + 0.28 * s],
+        [x + 0.20 * s, y + 0.60 * s], [x - 0.20 * s, y + 0.60 * s], [x - 0.44 * s, y + 0.28 * s],
+        [x - 0.34 * s, y - 0.10 * s],
+      ]);
+      break;
+    case 'flame':
+      C([
+        [x, y - 0.75 * s], [x + 0.28 * s, y - 0.20 * s], [x + 0.42 * s, y + 0.20 * s],
+        [x + 0.22 * s, y + 0.58 * s], [x - 0.05 * s, y + 0.50 * s], [x - 0.30 * s, y + 0.55 * s],
+        [x - 0.42 * s, y + 0.15 * s], [x - 0.18 * s, y - 0.15 * s],
+      ]);
+      break;
+    case 'tree':
+      E(x, y - 0.22 * s, s * 0.5, s * 0.4); // canopy (upper), clear of the trunk
+      R(x - 0.09 * s, y + 0.16 * s, 0.18 * s, 0.52 * s); // trunk below
+      break;
+    case 'leaf':
+      C([[x, y - 0.62 * s], [x + 0.34 * s, y - 0.05 * s], [x, y + 0.55 * s], [x - 0.34 * s, y - 0.05 * s]]);
+      L(x, y - 0.62 * s, x, y + 0.55 * s);
+      L(x, y + 0.55 * s, x, y + 0.72 * s);
+      break;
+    case 'mountain':
+      P([[x - 0.72 * s, y + 0.45 * s], [x - 0.18 * s, y - 0.5 * s], [x + 0.02 * s, y - 0.12 * s], [x + 0.32 * s, y - 0.34 * s], [x + 0.72 * s, y + 0.45 * s]]);
+      break;
+    case 'star': {
+      const pts: [number, number][] = [];
+      for (let k = 0; k < 10; k++) {
+        const a = ((-90 + k * 36) * Math.PI) / 180;
+        const rr = k % 2 === 0 ? s * 0.62 : s * 0.28;
+        pts.push([x + rr * Math.cos(a), y + rr * Math.sin(a)]);
+      }
+      P(pts);
+      break;
+    }
+    case 'heart':
+      C([
+        [x, y + 0.6 * s], [x - 0.5 * s, y + 0.05 * s], [x - 0.52 * s, y - 0.28 * s], [x - 0.26 * s, y - 0.46 * s],
+        [x, y - 0.24 * s], [x + 0.26 * s, y - 0.46 * s], [x + 0.52 * s, y - 0.28 * s], [x + 0.5 * s, y + 0.05 * s],
+      ]);
+      break;
+    case 'house':
+      R(x - 0.4 * s, y - 0.08 * s, 0.8 * s, 0.56 * s);
+      P([[x - 0.5 * s, y - 0.08 * s], [x, y - 0.55 * s], [x + 0.5 * s, y - 0.08 * s]]);
+      R(x - 0.1 * s, y + 0.16 * s, 0.2 * s, 0.32 * s);
+      break;
+    case 'book':
+      R(x - 0.42 * s, y - 0.34 * s, 0.84 * s, 0.68 * s);
+      L(x - 0.26 * s, y - 0.34 * s, x - 0.26 * s, y + 0.34 * s);
+      L(x - 0.12 * s, y - 0.14 * s, x + 0.3 * s, y - 0.14 * s);
+      L(x - 0.12 * s, y + 0.04 * s, x + 0.3 * s, y + 0.04 * s);
+      break;
+    case 'lightbulb':
+      E(x, y - 0.2 * s, s * 0.4, s * 0.42); // bulb (upper), bottom near y+0.22s
+      R(x - 0.15 * s, y + 0.22 * s, 0.3 * s, 0.18 * s); // screw base just below
+      L(x - 0.13 * s, y + 0.3 * s, x + 0.13 * s, y + 0.3 * s);
+      L(x - 0.11 * s, y + 0.37 * s, x + 0.11 * s, y + 0.37 * s);
+      break;
+    case 'gear': {
+      E(x, y, s * 0.48, s * 0.48);
+      const teeth = { ...base, strokeWidth: sw + 0.6 };
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        L(x + Math.cos(a) * s * 0.48, y + Math.sin(a) * s * 0.48, x + Math.cos(a) * s * 0.66, y + Math.sin(a) * s * 0.66, teeth);
+      }
+      E(x, y, s * 0.15, s * 0.15, solid);
+      break;
+    }
+    case 'coin':
+      E(x, y, s * 0.52, s * 0.52);
+      E(x, y, s * 0.4, s * 0.4);
+      L(x, y - 0.2 * s, x, y + 0.2 * s);
+      break;
+    case 'magnet':
+      OC([
+        [x - 0.32 * s, y - 0.5 * s], [x - 0.32 * s, y + 0.1 * s], [x - 0.22 * s, y + 0.38 * s],
+        [x, y + 0.48 * s], [x + 0.22 * s, y + 0.38 * s], [x + 0.32 * s, y + 0.1 * s], [x + 0.32 * s, y - 0.5 * s],
+      ]);
+      R(x - 0.42 * s, y - 0.52 * s, 0.2 * s, 0.14 * s);
+      R(x + 0.22 * s, y - 0.52 * s, 0.2 * s, 0.14 * s);
+      break;
+    case 'bolt':
+      P([
+        [x + 0.12 * s, y - 0.62 * s], [x - 0.28 * s, y + 0.06 * s], [x - 0.02 * s, y + 0.06 * s],
+        [x - 0.14 * s, y + 0.62 * s], [x + 0.3 * s, y - 0.14 * s], [x + 0.04 * s, y - 0.14 * s],
+      ]);
+      break;
+    case 'clock':
+      E(x, y, s * 0.55, s * 0.55);
+      R(x - 0.05 * s, y - 0.64 * s, 0.1 * s, 0.1 * s);
+      L(x, y, x - 0.02 * s, y - 0.3 * s);
+      L(x, y, x + 0.34 * s, y - 0.02 * s);
+      E(x, y, s * 0.05, s * 0.05, solid);
+      break;
+    default:
+      break;
+  }
+  return out;
+}
+
 function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] {
   const stroke = hex((p as { stroke?: SketchColor }).stroke);
   const fillTok = (p as { fill?: SketchColor }).fill;
@@ -641,6 +856,80 @@ function primitivePaths(gen: Gen, p: SketchPrimitive, seed: number): PathInfo[] 
       });
       return out;
     }
+    case 'cycle': {
+      // Stage nodes evenly spaced around the ring, joined by curved arrows going
+      // around (clockwise by default). Each arc arrow leaves a small gap near the
+      // nodes so it doesn't collide with the node dot or its label.
+      const nodes = cycleNodes(p);
+      const n = nodes.length;
+      const dir = p.clockwise === false ? -1 : 1;
+      const out: PathInfo[] = [];
+      const gap = 0.34; // radians of clearance near each node
+      for (let i = 0; i < n; i++) {
+        const a0 = nodes[i].a + dir * gap;
+        const a1 = nodes[(i + 1) % n].a - dir * gap;
+        let span = (a1 - a0) * dir;
+        span = ((span % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); // positive span in `dir`
+        const steps = 12;
+        const pts: [number, number][] = [];
+        for (let k = 0; k <= steps; k++) {
+          const a = a0 + dir * span * (k / steps);
+          pts.push([p.cx + p.r * Math.cos(a), p.cy + p.r * Math.sin(a)]);
+        }
+        out.push(...gen.toPaths(gen.curve(pts, { ...opts, seed: seed + i })));
+        const end = pts[pts.length - 1], prev = pts[pts.length - 2];
+        const ang = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
+        const L = 4, spr = 0.5;
+        for (const sg of [ang + Math.PI - spr, ang + Math.PI + spr])
+          out.push(...gen.toPaths(gen.line(end[0], end[1], end[0] + L * Math.cos(sg), end[1] + L * Math.sin(sg), { ...opts, seed: seed + i })));
+      }
+      // clean, low-roughness node dots (a solid dot at full roughness reads as a blob)
+      for (let i = 0; i < n; i++)
+        out.push(...gen.toPaths(gen.ellipse(nodes[i].x, nodes[i].y, 5.4, 5.4, {
+          roughness: 0.4, bowing: 0.3, seed: seed + 40 + i, stroke, strokeWidth: sw, fill: stroke, fillStyle: 'solid',
+        })));
+      return out;
+    }
+    case 'flow_chain': {
+      // Ordered boxes joined by arrows, flowing right (a row) or down (a column).
+      const { boxes, arrows } = flowLayout(p);
+      const out: PathInfo[] = [];
+      boxes.forEach((b, i) => out.push(...gen.toPaths(gen.rectangle(b.x, b.y, b.w, b.h, { ...opts, seed: seed + i }))));
+      arrows.forEach((a, i) => {
+        out.push(...gen.toPaths(gen.line(a[0], a[1], a[2], a[3], { ...opts, seed: seed + 20 + i })));
+        const ang = Math.atan2(a[3] - a[1], a[2] - a[0]);
+        const L = 3.2, spr = 0.5;
+        for (const sg of [ang + Math.PI - spr, ang + Math.PI + spr])
+          out.push(...gen.toPaths(gen.line(a[2], a[3], a[2] + L * Math.cos(sg), a[3] + L * Math.sin(sg), { ...opts, seed: seed + 20 + i })));
+      });
+      return out;
+    }
+    case 'balance_scale': {
+      // A post on a base, a beam tipped `tilt` about the pivot (cx,cy), and a pan
+      // hanging straight down from each beam end (pans stay level as the beam tips).
+      const { cx, cy } = p;
+      const g = balanceGeom(p);
+      const out: PathInfo[] = [];
+      out.push(...gen.toPaths(gen.line(cx, cy, cx, g.postBot, { ...opts, seed })));
+      out.push(...gen.toPaths(gen.line(cx - 13, g.postBot, cx + 13, g.postBot, { ...opts, seed: seed + 1 })));
+      out.push(...gen.toPaths(gen.polygon([[cx, cy], [cx - 4, cy + 7], [cx + 4, cy + 7]], { ...opts, seed: seed + 2 }))); // fulcrum
+      out.push(...gen.toPaths(gen.line(g.lx, g.ly, g.rx, g.ry, { ...opts, seed: seed + 3, strokeWidth: sw + 0.3 }))); // beam
+      const pan = (ex: number, ey: number, k: number) => {
+        const by = ey + g.hang;
+        out.push(...gen.toPaths(gen.line(ex, ey, ex - 7, by, { ...opts, seed: seed + 10 + k })));
+        out.push(...gen.toPaths(gen.line(ex, ey, ex + 7, by, { ...opts, seed: seed + 11 + k })));
+        const pts: [number, number][] = [];
+        for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push([ex - 9 + 18 * t, by + 4 * Math.sin(Math.PI * t)]); }
+        out.push(...gen.toPaths(gen.curve(pts, { ...opts, seed: seed + 12 + k })));
+      };
+      pan(g.lx, g.ly, 0);
+      pan(g.rx, g.ry, 20);
+      return out;
+    }
+    case 'icon': {
+      const fillHex = fillTok ? SKETCH_COLORS[fillTok] : undefined;
+      return iconPaths(gen, p.name, p.x, p.y, p.size, seed, stroke, sw, fillHex);
+    }
     case 'rect':
       return gen.toPaths(gen.rectangle(p.x, p.y, p.w, p.h, opts));
     case 'label':
@@ -760,6 +1049,25 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
         const bx = p.x + gap + li * (barW + gap) + barW / 2;
         pushLabel(bx, baseY + 5, text, i * 100 + li, 4.5, 'middle', p.stroke);
       });
+    } else if (p.type === 'cycle') {
+      // each stage label just OUTSIDE the ring, anchored so it reads away from the ring.
+      cycleNodes(p).forEach((node, si) => {
+        const lr = p.r + 8;
+        const lx = p.cx + lr * Math.cos(node.a);
+        const ly = p.cy + lr * Math.sin(node.a);
+        const anchor = Math.cos(node.a) > 0.3 ? 'start' : Math.cos(node.a) < -0.3 ? 'end' : 'middle';
+        pushLabel(lx, ly, node.text, i * 100 + si, 4.2, anchor, p.stroke);
+      });
+    } else if (p.type === 'flow_chain') {
+      // each step label centered inside its box
+      flowLayout(p).boxes.forEach((b, si) => {
+        pushLabel(b.x + b.w / 2, b.y + b.h / 2, b.text, i * 100 + si, 4.2, 'middle', p.stroke);
+      });
+    } else if (p.type === 'balance_scale') {
+      // pan labels sit just below each hanging bowl
+      const g = balanceGeom(p);
+      if (p.leftLabel) pushLabel(g.lx, g.ly + g.hang + 8, p.leftLabel, i * 100, 4.5, 'middle', p.stroke);
+      if (p.rightLabel) pushLabel(g.rx, g.ry + g.hang + 8, p.rightLabel, i * 100 + 1, 4.5, 'middle', p.stroke);
     }
   });
   return { drawn, labels };

@@ -15,6 +15,8 @@ import {
   SKETCH_BOUNDS,
   SKETCH_COLOR_NAMES,
   SKETCH_PRIMITIVE_TYPES,
+  ICON_NAMES,
+  type IconName,
   type Pt,
   type SketchColor,
   type SketchPrimitive,
@@ -30,7 +32,19 @@ const {
   maxPulleyRadius, maxLeverLength, maxLeverTilt, maxGaugeRadius,
   minAxisTicks, maxAxisTicks, maxAxisLabels,
   maxMoleculeAtoms, maxMoleculeBonds, maxBars,
+  minCycleStages, maxCycleStages, maxCycleRadius,
+  minFlowSteps, maxFlowSteps, maxBalanceTilt, minIconSize, maxIconSize,
 } = SKETCH_BOUNDS;
+
+/** Trim + cap a list of short text labels (stages, steps) → clean string[]. */
+function textList(v: unknown, cap: number): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((s): s is string => typeof s === 'string')
+    .map((s) => s.trim().slice(0, maxLabelLen))
+    .filter((s) => s.length > 0)
+    .slice(0, cap);
+}
 
 const STICK_POSES = ['stand', 'walk', 'run', 'point', 'arms-up'] as const;
 const CONTAINER_SHAPES = ['beaker', 'tank', 'battery', 'thermometer'] as const;
@@ -464,6 +478,63 @@ function sanitize(raw: unknown): SketchPrimitive | null {
         h: Math.min(maxCoord, h),
         values,
         ...(labels && labels.length ? { labels } : {}),
+        ...styled,
+      };
+    }
+    case 'cycle': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      const r = num(p.r);
+      if (cx === null || cy === null || r === null) return null;
+      if (r <= 0) return null;
+      const stages = textList(p.stages, maxCycleStages);
+      if (stages.length < minCycleStages) return null;
+      return {
+        type,
+        cx, cy,
+        r: Math.min(maxCycleRadius, r),
+        stages,
+        ...(p.clockwise === false ? { clockwise: false } : {}),
+        ...styled,
+      };
+    }
+    case 'flow_chain': {
+      const x = coord(p.x), y = coord(p.y);
+      if (x === null || y === null) return null;
+      const steps = textList(p.steps, maxFlowSteps);
+      if (steps.length < minFlowSteps) return null;
+      return {
+        type,
+        x, y,
+        steps,
+        ...(p.direction === 'down' ? { direction: 'down' as const } : {}),
+        ...styled,
+      };
+    }
+    case 'balance_scale': {
+      const cx = coord(p.cx), cy = coord(p.cy);
+      if (cx === null || cy === null) return null;
+      const tilt = num(p.tilt);
+      const leftLabel = tag(p.leftLabel);
+      const rightLabel = tag(p.rightLabel);
+      return {
+        type,
+        cx, cy,
+        ...(tilt !== null ? { tilt: Math.min(maxBalanceTilt, Math.max(-maxBalanceTilt, tilt)) } : {}),
+        ...(leftLabel ? { leftLabel } : {}),
+        ...(rightLabel ? { rightLabel } : {}),
+        ...styled,
+      };
+    }
+    case 'icon': {
+      const x = coord(p.x), y = coord(p.y);
+      const size = num(p.size);
+      if (x === null || y === null || size === null) return null;
+      if (typeof p.name !== 'string' || !(ICON_NAMES as readonly string[]).includes(p.name)) return null;
+      return {
+        type,
+        name: p.name as IconName,
+        x, y,
+        size: Math.min(maxIconSize, Math.max(minIconSize, size)),
         ...styled,
       };
     }

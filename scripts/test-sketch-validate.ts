@@ -14,6 +14,7 @@ import {
   TORQUE, TEN_FRAME, WAVELENGTH_BRACE, PENDULUM, GAS_CLOUD, MOLECULES_BOX,
   PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
   PLOT_POINT, PLANET_ORBIT, WATER_MOLECULE, BAR_HEIGHTS,
+  WATER_CYCLE, FOOD_CHAIN, TRADE_OFF_SCALE, SUN_AND_TREE,
 } from '../src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
@@ -450,6 +451,55 @@ check('bar_compare empty values dropped → null',
 check('bar_compare w<=0 dropped → null',
   validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 0, h: 50, values: [3, 7] }] }) === null);
 
+// ── cycle primitive (Tier 1) ──
+const cyc = validateSketch({ primitives: [
+  { type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B', 'C', 'D'], clockwise: true },
+] }) as any[];
+check('cycle validates + keeps stages', !!cyc && cyc[0].type === 'cycle' && cyc[0].stages.length === 4);
+check('cycle r clamps to maxCycleRadius',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 999, stages: ['A', 'B'] }] }) as any[])[0].r === SKETCH_BOUNDS.maxCycleRadius);
+check('cycle stages capped at maxCycleStages',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: Array.from({ length: 20 }, (_, i) => `S${i}`) }] }) as any[])[0].stages.length === SKETCH_BOUNDS.maxCycleStages);
+check('cycle with <2 stages dropped → null',
+  validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['only'] }] }) === null);
+check('cycle clockwise:false preserved',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B'], clockwise: false }] }) as any[])[0].clockwise === false);
+
+// ── flow_chain primitive (Tier 1) ──
+const fc = validateSketch({ primitives: [
+  { type: 'flow_chain', x: 8, y: 44, steps: ['Sun', 'Grass', 'Rabbit', 'Fox'], direction: 'right' },
+] }) as any[];
+check('flow_chain validates + keeps steps', !!fc && fc[0].type === 'flow_chain' && fc[0].steps.length === 4);
+check('flow_chain default direction omitted (right)', fc[0].direction === undefined);
+check('flow_chain direction:down preserved',
+  (validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: ['A', 'B'], direction: 'down' }] }) as any[])[0].direction === 'down');
+check('flow_chain steps capped at maxFlowSteps',
+  (validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: Array.from({ length: 12 }, (_, i) => `S${i}`) }] }) as any[])[0].steps.length === SKETCH_BOUNDS.maxFlowSteps);
+check('flow_chain with <2 steps dropped → null',
+  validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: ['one'] }] }) === null);
+
+// ── balance_scale primitive (Tier 1) ──
+const bs = validateSketch({ primitives: [
+  { type: 'balance_scale', cx: 50, cy: 40, tilt: 10, leftLabel: 'costs', rightLabel: 'benefits' },
+] }) as any[];
+check('balance_scale validates + keeps labels', !!bs && bs[0].type === 'balance_scale' && bs[0].leftLabel === 'costs' && bs[0].rightLabel === 'benefits');
+check('balance_scale tilt clamps to ±maxBalanceTilt',
+  (validateSketch({ primitives: [{ type: 'balance_scale', cx: 50, cy: 40, tilt: 999 }] }) as any[])[0].tilt === SKETCH_BOUNDS.maxBalanceTilt);
+check('balance_scale bare (no labels/tilt) still validates',
+  !!validateSketch({ primitives: [{ type: 'balance_scale', cx: 50, cy: 40 }] }));
+
+// ── icon primitive (Tier 2) ──
+const ic = validateSketch({ primitives: [
+  { type: 'icon', name: 'sun', x: 22, y: 26, size: 26 },
+] }) as any[];
+check('icon validates + keeps name', !!ic && ic[0].type === 'icon' && ic[0].name === 'sun');
+check('icon size clamps into [minIconSize,maxIconSize]',
+  (validateSketch({ primitives: [{ type: 'icon', name: 'tree', x: 50, y: 50, size: 999 }] }) as any[])[0].size === SKETCH_BOUNDS.maxIconSize);
+check('icon with unknown name dropped → null',
+  validateSketch({ primitives: [{ type: 'icon', name: 'dragon', x: 50, y: 50, size: 20 }] }) === null);
+check('icon missing size dropped → null',
+  validateSketch({ primitives: [{ type: 'icon', name: 'sun', x: 50, y: 50 }] }) === null);
+
 // ── new exemplars survive validation ──
 for (const [name, prims] of [
   ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
@@ -460,6 +510,8 @@ for (const [name, prims] of [
   ['SPEEDOMETER', SPEEDOMETER], ['NUMBER_LINE', NUMBER_LINE],
   ['PLOT_POINT', PLOT_POINT], ['PLANET_ORBIT', PLANET_ORBIT],
   ['WATER_MOLECULE', WATER_MOLECULE], ['BAR_HEIGHTS', BAR_HEIGHTS],
+  ['WATER_CYCLE', WATER_CYCLE], ['FOOD_CHAIN', FOOD_CHAIN],
+  ['TRADE_OFF_SCALE', TRADE_OFF_SCALE], ['SUN_AND_TREE', SUN_AND_TREE],
 ] as const) {
   const v = validateSketch({ primitives: prims });
   check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));

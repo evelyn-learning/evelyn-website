@@ -275,6 +275,40 @@ export const BAR_HEIGHTS: SketchPrimitive[] = [
   { type: 'label', x: 50, y: 90, text: 'compare heights', fontSize: 5, stroke: 'ink', anchor: 'middle' },
 ];
 
+// CYCLE exemplar — teaches: use ONE `cycle` for a repeating process (a natural
+// cycle, a life cycle, a feedback loop), never hand-placed boxes + arrows in a
+// ring. The water cycle as four stages going around. (Tier-1 cycle primitive.)
+export const WATER_CYCLE: SketchPrimitive[] = [
+  { type: 'cycle', cx: 50, cy: 50, r: 28, stages: ['Evaporate', 'Condense', 'Rain', 'Collect'], clockwise: true, stroke: 'blue', strokeWidth: 1.2 },
+  { type: 'label', x: 50, y: 50, text: 'water cycle', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// FLOW-CHAIN exemplar — teaches: use ONE `flow_chain` for a process / sequence /
+// pathway (a food chain, energy flow, cause→effect), never hand-drawn boxes +
+// arrows. Energy flowing along a food chain. (Tier-1 flow_chain primitive.)
+export const FOOD_CHAIN: SketchPrimitive[] = [
+  { type: 'flow_chain', x: 8, y: 44, steps: ['Sun', 'Grass', 'Rabbit', 'Fox'], direction: 'right', stroke: 'green', strokeWidth: 1.2 },
+  { type: 'label', x: 50, y: 26, text: 'energy flows on', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// BALANCE-SCALE exemplar — teaches: use ONE `balance_scale` for equilibrium / a
+// trade-off / weighing two sides, never a hand-drawn beam + pans. A balanced
+// scale weighing costs against benefits. (Tier-1 balance_scale primitive.)
+export const TRADE_OFF_SCALE: SketchPrimitive[] = [
+  { type: 'balance_scale', cx: 50, cy: 38, tilt: 0, leftLabel: 'costs', rightLabel: 'benefits', stroke: 'ink', strokeWidth: 1.3 },
+  { type: 'label', x: 50, y: 90, text: 'weigh both sides', fontSize: 5, stroke: 'ink', anchor: 'middle' },
+];
+
+// ICON exemplar — teaches: use the `icon` primitive for a concrete everyday
+// object (the sun, a tree, a house, a drop) instead of hand-drawing or abstaining.
+// The sun shining on a tree. (Tier-2 icon primitive.)
+export const SUN_AND_TREE: SketchPrimitive[] = [
+  { type: 'icon', name: 'sun', x: 22, y: 26, size: 26, stroke: 'amber', strokeWidth: 1.2 },
+  { type: 'icon', name: 'tree', x: 72, y: 58, size: 34, stroke: 'green', strokeWidth: 1.2 },
+  { type: 'arrow', x1: 34, y1: 34, x2: 60, y2: 48, stroke: 'amber', strokeWidth: 1.1 },
+  { type: 'label', x: 46, y: 40, text: 'sunlight', fontSize: 5, stroke: 'amber', anchor: 'middle' },
+];
+
 export interface SketchFewshot {
   concept: string;
   labels: string[];
@@ -397,5 +431,25 @@ export const SKETCH_FEWSHOT: SketchFewshot[] = [
     concept: 'a bar chart comparing the heights of three bars',
     labels: ['compare heights'],
     primitives: BAR_HEIGHTS,
+  },
+  {
+    concept: 'the water cycle: water evaporates, condenses, rains and collects, going around',
+    labels: ['water cycle'],
+    primitives: WATER_CYCLE,
+  },
+  {
+    concept: 'a food chain: energy flowing from the sun to grass to a rabbit to a fox',
+    labels: ['energy flows on'],
+    primitives: FOOD_CHAIN,
+  },
+  {
+    concept: 'weighing a trade-off: costs on one side of a balance and benefits on the other',
+    labels: ['costs', 'benefits'],
+    primitives: TRADE_OFF_SCALE,
+  },
+  {
+    concept: 'the sun shining down on a tree',
+    labels: ['sunlight'],
+    primitives: SUN_AND_TREE,
   },
 ];
