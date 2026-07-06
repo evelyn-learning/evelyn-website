@@ -15,9 +15,11 @@ import {
   clockFeatureNames,
   tenFrameFeatureNames,
   baseTenFeatureNames,
+  coordinateGridFeatureNames,
   type ClockFaceFigure,
   type TenFrameFigure,
   type BaseTenFigure,
+  type CoordinateGridFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/elementary-math';
 
 const INK = '#374151';
@@ -286,6 +288,120 @@ export function CatalogBaseTenRenderer({ figure }: { figure: BaseTenFigure }) {
         ))}
         {columns}
         <text x={W / 2} y={H - 12} textAnchor="middle" fontSize={22} fontWeight={700} fill={INK}>{figure.value}</text>
+      </svg>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  coordinate_grid
+// ══════════════════════════════════════════════════════════════════════════
+
+const POINT_COLORS = [RED, BLUE, GREEN, PURPLE, AMBER];
+
+export function CatalogCoordinateGridRenderer({ figure }: { figure: CoordinateGridFigure }) {
+  const N = coordinateGridFeatureNames;
+  const { xMin, xMax, yMin, yMax, points, quadrants, connect } = figure;
+  const heading = figure.title || 'Coordinate grid';
+
+  // Layout: fixed plot box with margins for axis labels.
+  const M = { left: 44, right: 24, top: 20, bottom: 40 };
+  const plotW = 460;
+  const plotH = 460;
+  const W = M.left + plotW + M.right;
+  const H = M.top + plotH + M.bottom;
+
+  const spanX = xMax - xMin;
+  const spanY = yMax - yMin;
+  // data → pixel
+  const px = (x: number): number => M.left + ((x - xMin) / spanX) * plotW;
+  const py = (y: number): number => M.top + (1 - (y - yMin) / spanY) * plotH;
+
+  // Axis positions: the x-axis sits at data y=0 (clamped into view), y-axis at x=0.
+  const axisY = py(Math.min(Math.max(0, yMin), yMax));
+  const axisX = px(Math.min(Math.max(0, xMin), xMax));
+
+  // Integer tick values across each span (cap density).
+  const step = Math.max(1, Math.ceil(Math.max(spanX, spanY) / 20));
+  const xTicks: number[] = [];
+  for (let x = Math.ceil(xMin / step) * step; x <= xMax; x += step) xTicks.push(x);
+  const yTicks: number[] = [];
+  for (let y = Math.ceil(yMin / step) * step; y <= yMax; y += step) yTicks.push(y);
+
+  const polyPts = connect && points.length >= 2
+    ? points.map((p) => `${px(p.x)},${py(p.y)}`).join(' ')
+    : null;
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ maxWidth: W }}
+        data-feature={N.grid}
+        data-feature-label={heading}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {/* gridlines */}
+        {xTicks.map((x) => (
+          <line key={`gx${x}`} x1={px(x)} y1={M.top} x2={px(x)} y2={M.top + plotH} stroke={FAINT} strokeWidth={x === 0 ? 0 : 1} />
+        ))}
+        {yTicks.map((y) => (
+          <line key={`gy${y}`} x1={M.left} y1={py(y)} x2={M.left + plotW} y2={py(y)} stroke={FAINT} strokeWidth={y === 0 ? 0 : 1} />
+        ))}
+
+        {/* plot border */}
+        <rect x={M.left} y={M.top} width={plotW} height={plotH} fill="none" stroke={FAINT} strokeWidth={1} />
+
+        {/* axes */}
+        <g data-feature={N.xAxis} data-feature-label="x-axis">
+          <line x1={M.left} y1={axisY} x2={M.left + plotW} y2={axisY} stroke={SLATE} strokeWidth={2.5} />
+          <polygon points={`${M.left + plotW + 8},${axisY} ${M.left + plotW},${axisY - 5} ${M.left + plotW},${axisY + 5}`} fill={SLATE} />
+          <text x={M.left + plotW + 4} y={axisY - 9} textAnchor="middle" fontSize={15} fontStyle="italic" fill={SLATE}>x</text>
+        </g>
+        <g data-feature={N.yAxis} data-feature-label="y-axis">
+          <line x1={axisX} y1={M.top + plotH} x2={axisX} y2={M.top} stroke={SLATE} strokeWidth={2.5} />
+          <polygon points={`${axisX},${M.top - 8} ${axisX - 5},${M.top} ${axisX + 5},${M.top}`} fill={SLATE} />
+          <text x={axisX + 8} y={M.top + 4} textAnchor="start" fontSize={15} fontStyle="italic" fill={SLATE}>y</text>
+        </g>
+
+        {/* tick labels */}
+        {xTicks.filter((x) => x !== 0).map((x) => (
+          <text key={`tx${x}`} x={px(x)} y={axisY + 16} textAnchor="middle" fontSize={12} fill={SLATE}>{x}</text>
+        ))}
+        {yTicks.filter((y) => y !== 0).map((y) => (
+          <text key={`ty${y}`} x={axisX - 8} y={py(y) + 4} textAnchor="end" fontSize={12} fill={SLATE}>{y}</text>
+        ))}
+        {/* origin label */}
+        {xMin <= 0 && yMin <= 0 && (
+          <text x={axisX - 6} y={axisY + 16} textAnchor="end" fontSize={12} fill={SLATE}>{quadrants === 1 ? '0' : 'O'}</text>
+        )}
+
+        {/* connecting polyline */}
+        {polyPts && <polyline points={polyPts} fill="none" stroke={SLATE} strokeWidth={2} strokeDasharray="6 4" />}
+
+        {/* plotted points */}
+        {points.map((p, i) => {
+          const cx = px(p.x);
+          const cy = py(p.y);
+          const color = p.color || POINT_COLORS[i % POINT_COLORS.length];
+          const nm = p.label || `(${p.x}, ${p.y})`;
+          // Offset the label to the upper-right, flipping near the right/top edges.
+          const flipX = cx > M.left + plotW - 60;
+          const flipY = cy < M.top + 24;
+          const lx = flipX ? cx - 8 : cx + 8;
+          const ly = flipY ? cy + 18 : cy - 10;
+          return (
+            <g key={`p${i}`} data-feature={N.point(i)} data-feature-label={`${nm} at (${p.x}, ${p.y})`}>
+              <circle cx={cx} cy={cy} r={5.5} fill={color} stroke="#fff" strokeWidth={1.5} />
+              <text x={lx} y={ly} textAnchor={flipX ? 'end' : 'start'} fontSize={14} fontWeight={700} fill={color}>{nm}</text>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

@@ -61,6 +61,7 @@ import {
   CatalogHierarchyPyramidRenderer,
   CatalogComplexPlaneRenderer,
   CatalogPlotDiagramRenderer,
+  CatalogRhetoricalTriangleRenderer,
 } from './CatalogAdvancedRenderers';
 import { ProductionPossibilitiesRenderer } from './ProductionPossibilitiesRenderer';
 import { BusinessCycleRenderer } from './BusinessCycleRenderer';
@@ -141,6 +142,7 @@ import {
   CatalogClockFaceRenderer,
   CatalogTenFrameRenderer,
   CatalogBaseTenRenderer,
+  CatalogCoordinateGridRenderer,
 } from './CatalogElementaryMathRenderers';
 import { SupplyDemandRenderer } from './SupplyDemandRenderer';
 import { CircularFlowRenderer } from './CircularFlowRenderer';
@@ -314,6 +316,9 @@ export function CatalogDispatch({ kind, figure }: Props) {
     case 'game_theory_matrix':         return <GameTheoryMatrixRenderer figure={figure} />;
     case 'elasticity':                 return <ElasticityRenderer figure={figure} />;
     case 'comparative_advantage':      return <ComparativeAdvantageRenderer figure={figure} />;
+    // Phase 32 — coordinate grid (math) + rhetorical triangle (ELA)
+    case 'coordinate_grid':            return <CatalogCoordinateGridRenderer figure={figure} />;
+    case 'rhetorical_triangle':        return <CatalogRhetoricalTriangleRenderer figure={figure} />;
 
     default:
       return (

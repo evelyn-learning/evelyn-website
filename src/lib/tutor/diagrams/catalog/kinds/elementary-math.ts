@@ -227,8 +227,130 @@ export function buildBaseTenManifest(figure: BaseTenFigure): FeatureManifestEntr
   return out;
 }
 
+// ── coordinate_grid ─────────────────────────────────────────────────────────
+
+function toNum(v: unknown, fallback: number): number {
+  if (isFiniteNumber(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) {
+    return Number(v);
+  }
+  return fallback;
+}
+
+export interface CoordinatePoint {
+  x: number;
+  y: number;
+  label?: string;   // e.g. "A" or a custom name; falls back to "(x, y)"
+  color?: string;
+}
+
+export interface CoordinateGridFigure {
+  title?: string;
+  points: CoordinatePoint[];
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  quadrants: 1 | 4;   // 1 = first-quadrant only; 4 = full plane
+  connect: boolean;   // join the points in order with a polyline (segment/polygon)
+}
+
+/** Cartesian coordinate grid with plotted, labelled ordered pairs. Quadrant
+ *  count auto-detects (any negative coordinate → full 4-quadrant plane, else
+ *  first-quadrant only) unless `quadrants` is given. Axis bounds auto-fit to
+ *  the points (integer bounds + small padding) unless x/y bounds are passed.
+ *  Points can be joined in order with `connect` for a segment or polygon.
+ *  With no points it renders an empty labelled grid (a "plot these" worksheet). */
+export function solveCoordinateGrid(params: Record<string, unknown>): CoordinateGridFigure {
+  const rawPoints = Array.isArray(params.points) ? params.points : [];
+  const points: CoordinatePoint[] = rawPoints
+    .map((p) => (p && typeof p === 'object' ? (p as Record<string, unknown>) : {}))
+    .map((p) => ({
+      x: toNum(p.x, NaN),
+      y: toNum(p.y, NaN),
+      label: typeof p.label === 'string' ? p.label : undefined,
+      color: typeof p.color === 'string' ? p.color : undefined,
+    }))
+    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+
+  const hasNegative = points.some((p) => p.x < 0 || p.y < 0);
+  // Explicit quadrants wins; else a negative coordinate forces the full plane.
+  let quadrants: 1 | 4 =
+    params.quadrants === 4 || params.quadrants === '4' ? 4
+    : params.quadrants === 1 || params.quadrants === '1' ? 1
+    : hasNegative ? 4 : 1;
+  if (hasNegative) quadrants = 4;
+
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const dataXMax = xs.length ? Math.max(...xs) : 5;
+  const dataYMax = ys.length ? Math.max(...ys) : 5;
+  const dataXMin = xs.length ? Math.min(...xs) : 0;
+  const dataYMin = ys.length ? Math.min(...ys) : 0;
+
+  const pad = 1;
+  let xMax = isFiniteNumber(params.xMax) ? Math.round(params.xMax) : Math.max(1, Math.ceil(dataXMax + pad));
+  let yMax = isFiniteNumber(params.yMax) ? Math.round(params.yMax) : Math.max(1, Math.ceil(dataYMax + pad));
+  let xMin: number;
+  let yMin: number;
+  if (quadrants === 1) {
+    xMin = 0;
+    yMin = 0;
+  } else {
+    xMin = isFiniteNumber(params.xMin) ? Math.round(params.xMin) : Math.min(-1, Math.floor(dataXMin - pad));
+    yMin = isFiniteNumber(params.yMin) ? Math.round(params.yMin) : Math.min(-1, Math.floor(dataYMin - pad));
+    xMax = Math.max(xMax, 1);
+    yMax = Math.max(yMax, 1);
+  }
+
+  // Guard against degenerate ranges & runaway sizes.
+  if (xMax <= xMin) xMax = xMin + 1;
+  if (yMax <= yMin) yMax = yMin + 1;
+  const MAX_SPAN = 30;
+  if (xMax - xMin > MAX_SPAN) xMax = xMin + MAX_SPAN;
+  if (yMax - yMin > MAX_SPAN) yMax = yMin + MAX_SPAN;
+
+  return {
+    title: typeof params.title === 'string' ? params.title : undefined,
+    points,
+    xMin, xMax, yMin, yMax,
+    quadrants,
+    connect: params.connect === true,
+  };
+}
+
+export const coordinateGridFeatureNames = {
+  grid: 'coordinate-grid',
+  xAxis: 'x-axis',
+  yAxis: 'y-axis',
+  point: (i: number): string => `grid-point-${i}`,
+} as const;
+
+export function buildCoordinateGridManifest(figure: CoordinateGridFigure): FeatureManifestEntry[] {
+  const N = coordinateGridFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    { name: N.grid, kind: 'region', description: figure.title || 'the coordinate grid', labels: ['the coordinate grid', 'the grid', 'the plane', 'the graph'], scribbleable: true },
+    { name: N.xAxis, kind: 'axis', description: 'the x-axis', labels: ['x-axis', 'the x axis', 'horizontal axis'], scribbleable: true },
+    { name: N.yAxis, kind: 'axis', description: 'the y-axis', labels: ['y-axis', 'the y axis', 'vertical axis'], scribbleable: true },
+  ];
+  figure.points.forEach((p, i) => {
+    const coord = `(${p.x}, ${p.y})`;
+    const nm = p.label || coord;
+    feats.push({
+      name: N.point(i),
+      kind: 'point',
+      description: `point ${nm} at ${coord}`,
+      labels: [nm, `the point ${nm}`, coord, `point ${coord}`].filter(Boolean),
+      displayName: nm,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}
+
 // ── manifest-side solver aliases (mirror the ForManifest convention) ───────────
 
 export const solveClockFaceForManifest = solveClockFace;
 export const solveTenFrameForManifest = solveTenFrame;
 export const solveBaseTenBlocksForManifest = solveBaseTenBlocks;
+export const solveCoordinateGridForManifest = solveCoordinateGrid;

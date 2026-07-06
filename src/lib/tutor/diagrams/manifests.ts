@@ -73,6 +73,9 @@ import {
   solveComplexPlane,
   buildPlotDiagramManifest,
   solvePlotDiagram,
+  // Phase 32 — rhetorical triangle.
+  buildRhetoricalTriangleManifest,
+  solveRhetoricalTriangle as solveRhetoricalTriangleForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   buildCycleStagesManifest,
@@ -313,6 +316,8 @@ import {
   solveTenFrameForManifest,
   buildBaseTenManifest,
   solveBaseTenBlocksForManifest,
+  buildCoordinateGridManifest,
+  solveCoordinateGridForManifest,
 } from '@/lib/tutor/diagrams/catalog/kinds/elementary-math';
 
 /**
@@ -1684,6 +1689,15 @@ function buildDiagramManifest(cmd: {
     }
     case 'base_ten_blocks': {
       try { return buildBaseTenManifest(solveBaseTenBlocksForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    // Phase 32 — coordinate grid + rhetorical triangle
+    case 'coordinate_grid': {
+      try { return buildCoordinateGridManifest(solveCoordinateGridForManifest(params)); } catch { /* fall through */ }
+      break;
+    }
+    case 'rhetorical_triangle': {
+      try { return buildRhetoricalTriangleManifest(solveRhetoricalTriangleForManifest(params)); } catch { /* fall through */ }
       break;
     }
     default:

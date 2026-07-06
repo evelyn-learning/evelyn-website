@@ -502,4 +502,28 @@ check('show_diagram comparative_advantage → ok', () => {
   assert.equal(r.ok, true);
 });
 
+console.log('process-tool-call: Phase 32 — coordinate grid + rhetorical triangle');
+check('show_diagram coordinate_grid (first-quadrant points) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'coordinate_grid', params: { points: [{ x: 2, y: 3, label: 'A' }, { x: 5, y: 1, label: 'B' }] } });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram coordinate_grid (four-quadrant, auto from negative) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'coordinate_grid', params: { points: [{ x: -3, y: 2 }, { x: 4, y: -1 }], connect: true } });
+  assert.equal(r.ok, true);
+});
+check('show_diagram coordinate_grid (bare — empty grid) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'coordinate_grid', params: {} });
+  assert.equal(r.ok, true);
+});
+check('show_diagram rhetorical_triangle (bare, classic) → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'rhetorical_triangle', params: {} });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.command.action, 'showDiagram');
+});
+check('show_diagram rhetorical_triangle custom subject + highlight → ok', () => {
+  const r = processToolCall('show_diagram', { type: 'rhetorical_triangle', params: { subject: 'MLK "I Have a Dream"', highlight: 'pathos', ethos: { role: 'Dr. King' } } });
+  assert.equal(r.ok, true);
+});
+
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

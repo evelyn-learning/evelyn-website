@@ -461,6 +461,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             'ph_scale',
             // Phase 31 — microeconomics
             'game_theory_matrix', 'elasticity', 'comparative_advantage',
+            // Phase 32 — coordinate grid (math) + rhetorical triangle (ELA)
+            'coordinate_grid', 'rhetorical_triangle',
             // Legacy kinds (existing behavior)
             'circular-path', 'pipe-flow', 'fluid-flow', 'continuity',
           ],

@@ -44,6 +44,7 @@ import {
   solveSentenceDiagram, solveArgumentStructure, solveHistoricalTimeline,
   solveGovernmentBranches, solveComparisonTable, solveOrganizer,
   solveHierarchyPyramid, solveComplexPlane, solvePlotDiagram,
+  solveRhetoricalTriangle,
 } from './kinds/advanced-math-ela-social';
 
 import {
@@ -98,7 +99,7 @@ import { solveNuclearDecay, solveEMInduction, solveMagneticFieldCurrent, solvePr
 import { solveLeafCrossSection, solveNephron, solveDigestiveSystem, solveCirculatorySystem, solveRespiratorySystem, solveFlowerStructure, solveEnergyPyramid, solveEyeCrossSection, solveEarCrossSection } from './kinds/bio-anatomy';
 import { solveDataStructure, solveGraphDiagram, solveHashTable, solveRecursionTree } from './kinds/cs-structures';
 import { solveProteinSynthesis, solveEnzymeAction, solveCellCycle, solveGeneExpression } from './kinds/molecular-biology';
-import { solveClockFace, solveTenFrame, solveBaseTenBlocks } from './kinds/elementary-math';
+import { solveClockFace, solveTenFrame, solveBaseTenBlocks, solveCoordinateGrid } from './kinds/elementary-math';
 
 /** Per-kind metadata. Add a new kind by appending here AND adding a
  *  solver entry below. The brain sees this list (filtered by session
@@ -290,6 +291,10 @@ export const DIAGRAM_CATALOG: DiagramKindMeta[] = [
   { kind: 'game_theory_matrix', displayName: 'Game Theory Payoff Matrix (2×2)', whenToUse: 'Show a 2×2 normal-form game payoff matrix (e.g. the prisoner\'s dilemma): two players, two strategies each, each cell holding (row-player payoff, col-player payoff) — row payoff bottom-left, col payoff top-right. Optionally highlight the Nash equilibrium cell. Use for game-theory / oligopoly / dominant-strategy teaching instead of a freehand sketch. Defaults to the classic prisoner\'s dilemma.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'rowPlayer?:string, colPlayer?:string, rowStrategies?:[s1,s2] (default Cooperate/Defect), colStrategies?:[s1,s2], payoffs?:[[[r,c],[r,c]],[[r,c],[r,c]]] ([row][col]=[rowPayoff,colPayoff]; default prisoner\'s dilemma), highlightCell?:[row,col] (0/1 — the Nash equilibrium), title?' },
   { kind: 'elasticity', displayName: 'Price Elasticity of Demand', whenToUse: 'Show price elasticity of demand as a steep (inelastic) vs flat (elastic) demand curve through a common point on price–quantity axes, with the %ΔQ vs %ΔP relationship labelled. mode "compare" shows both; "elastic"/"inelastic" emphasise one. Use for elasticity teaching instead of a freehand sketch. For a full single-market supply & demand graph use supply_demand.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'mode?:compare|elastic|inelastic (default compare), title?' },
   { kind: 'comparative_advantage', displayName: 'Comparative Advantage (opportunity-cost table)', whenToUse: 'Show comparative advantage as an opportunity-cost table: two producers, two goods, output per fixed resource, with the opportunity cost of each good computed and the comparative-advantage winner per good highlighted (lower opportunity cost wins). Use for trade / comparative-advantage teaching instead of a freehand sketch.', subjects: ['social'], grades: { from: 9, to: 12 }, paramSchema: 'producerA?:string (default Country A), producerB?:string, goodX?:string (default Wheat), goodY?:string (default Cloth), outputAX?:number, outputAY?:number, outputBX?:number, outputBY?:number (outputs per fixed resource; opp costs + CA winners computed), title?' },
+
+  // ── Phase 32 — coordinate grid (math) + rhetorical triangle (ELA) ───────
+  { kind: 'coordinate_grid', displayName: 'Coordinate Grid (plot ordered pairs)', whenToUse: 'Show a Cartesian coordinate grid with labelled ordered pairs plotted on it. Auto-detects first-quadrant vs full four-quadrant plane from the data (any negative coordinate → full plane) and auto-fits the axis range. Use for plotting points, graphing ordered pairs, polygons on a grid, or an empty "plot these" grid — instead of a freehand sketch. For function curves use show_function_graph; for the complex/Argand plane use complex_plane.', subjects: ['math'], grades: { from: 4, to: 10 }, paramSchema: 'points?:[{x:number, y:number, label?:string, color?:string}] (omit for a blank grid), quadrants?:1|4 (default: auto — 4 if any negative coord), xMin?/xMax?/yMin?/yMax?:number (override auto-fit; xMin/yMin ignored in quadrant-1), connect?:boolean (join points in order — segment/polygon), title?' },
+  { kind: 'rhetorical_triangle', displayName: 'Rhetorical Triangle (ethos / pathos / logos)', whenToUse: "Show Aristotle's rhetorical triangle: the three appeals — Ethos (speaker's credibility), Pathos (emotional appeal to the audience) and Logos (logic & evidence in the message) — at the corners around the subject/text at the centre. Use for rhetoric / argument / AP Lang / persuasive-writing teaching instead of a freehand sketch. Defaults to the classic triangle; each corner's role/note can be customised and one appeal highlighted.", subjects: ['ela'], grades: { from: 7, to: 12 }, paramSchema: "subject?:string (centre label — the text/message), ethos?/pathos?/logos?:{label?, role?, note?} (override any corner), highlight?:ethos|pathos|logos, title?" },
 ];
 
 /** Solver dispatch table. */
@@ -451,6 +456,9 @@ const SOLVERS: Partial<Record<DiagramKindId, SolverFn>> = {
   game_theory_matrix: solveGameTheoryMatrix,
   elasticity: solveElasticity,
   comparative_advantage: solveComparativeAdvantage,
+  // Phase 32 — coordinate grid + rhetorical triangle
+  coordinate_grid: solveCoordinateGrid,
+  rhetorical_triangle: solveRhetoricalTriangle,
 };
 
 export function getDiagramKind(kind: string): DiagramKindMeta | undefined {

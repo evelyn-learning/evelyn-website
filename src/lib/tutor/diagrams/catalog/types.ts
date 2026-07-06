@@ -170,7 +170,10 @@ export type DiagramKindId =
   // Phase 31 — microeconomics (game theory / elasticity / comparative advantage)
   | 'game_theory_matrix'
   | 'elasticity'
-  | 'comparative_advantage';
+  | 'comparative_advantage'
+  // Phase 32 — coordinate grid (elementary/math) + rhetorical triangle (ELA)
+  | 'coordinate_grid'
+  | 'rhetorical_triangle';
 
 /** Metadata for a single kind. Drives the brain's tool surface. */
 export interface DiagramKindMeta {

@@ -15,8 +15,11 @@ import type {
   HierarchyPyramidFigure,
   ComplexPlaneFigure,
   PlotDiagramFigure,
+  RhetoricalTriangleFigure,
+  RhetoricalAppeal,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
+  rhetoricalTriangleFeatureNames,
   comparisonTableFeatureNames,
   tChartFeatureNames,
   kwlChartFeatureNames,
@@ -1028,6 +1031,98 @@ export function CatalogPlotDiagramRenderer({ figure }: { figure: PlotDiagramFigu
                   {note.length > 42 ? note.slice(0, 39) + '…' : note}
                 </text>
               )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ── Rhetorical triangle (ethos / pathos / logos) ────────────────────────────
+export function CatalogRhetoricalTriangleRenderer({ figure }: { figure: RhetoricalTriangleFigure }) {
+  const N = rhetoricalTriangleFeatureNames;
+  const heading = figure.title || 'The Rhetorical Triangle';
+  const W = 580;
+  const H = 470;
+
+  const COLORS: Record<RhetoricalAppeal, string> = {
+    ethos: '#2563eb',
+    pathos: '#dc2626',
+    logos: '#16a34a',
+  };
+
+  const apex = { x: 290, y: 78 };
+  const bl = { x: 92, y: 384 };
+  const br = { x: 488, y: 384 };
+  const centroid = { x: (apex.x + bl.x + br.x) / 3, y: (apex.y + bl.y + br.y) / 3 };
+  const mid = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+  const vertexOf: Record<RhetoricalAppeal, { x: number; y: number }> = { ethos: apex, logos: bl, pathos: br };
+
+  const corners: Array<{ appeal: RhetoricalAppeal; v: { x: number; y: number }; dir: 'above' | 'below' }> = [
+    { appeal: 'ethos', v: apex, dir: 'above' },
+    { appeal: 'logos', v: bl, dir: 'below' },
+    { appeal: 'pathos', v: br, dir: 'below' },
+  ];
+
+  const trianglePts = `${apex.x},${apex.y} ${bl.x},${bl.y} ${br.x},${br.y}`;
+
+  // Highlight wedge = the highlighted vertex's third of the triangle.
+  let wedge: string | null = null;
+  if (figure.highlight) {
+    const V = vertexOf[figure.highlight];
+    const others = [apex, bl, br].filter((p) => p !== V);
+    const m0 = mid(V, others[0]);
+    const m1 = mid(V, others[1]);
+    wedge = `${V.x},${V.y} ${m0.x},${m0.y} ${centroid.x},${centroid.y} ${m1.x},${m1.y}`;
+  }
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-base font-semibold text-gray-800 mb-2">{heading}</div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ maxWidth: W }}
+        data-feature={N.triangle}
+        data-feature-label={heading}
+        data-feature-cx={0.5}
+        data-feature-cy={0.5}
+        data-feature-w={1}
+        data-feature-h={1}
+      >
+        {wedge && <polygon points={wedge} fill={COLORS[figure.highlight!]} fillOpacity={0.14} />}
+        <polygon points={trianglePts} fill="#f8fafc" fillOpacity={wedge ? 0 : 1} stroke="#334155" strokeWidth={2.5} strokeLinejoin="round" />
+        {/* medians to the centroid */}
+        {[apex, bl, br].map((v, i) => (
+          <line key={`med${i}`} x1={v.x} y1={v.y} x2={centroid.x} y2={centroid.y} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="4 4" />
+        ))}
+
+        {/* subject at the centre */}
+        <g data-feature={N.subject} data-feature-label={`Subject: ${figure.subject}`}>
+          <text x={centroid.x} y={centroid.y - 7} textAnchor="middle" fontSize={11} fontWeight={700} fill="#94a3b8" letterSpacing={1}>SUBJECT</text>
+          <text x={centroid.x} y={centroid.y + 13} textAnchor="middle" fontSize={15} fontWeight={700} fill="#334155">
+            {figure.subject.length > 22 ? figure.subject.slice(0, 21) + '…' : figure.subject}
+          </text>
+        </g>
+
+        {/* corners */}
+        {corners.map(({ appeal, v, dir }) => {
+          const c = figure[appeal];
+          const color = COLORS[appeal];
+          const active = figure.highlight === appeal;
+          const baseY = dir === 'above' ? v.y - 58 : v.y + 22;
+          const nameY = baseY;
+          const roleY = baseY + 20;
+          const noteY = baseY + 37;
+          const clampNote = c.note.length > 30 ? c.note.slice(0, 29) + '…' : c.note;
+          return (
+            <g key={appeal} data-feature={N.corner(appeal)} data-feature-label={`${c.label}: ${c.role}`}>
+              <circle cx={v.x} cy={v.y} r={active ? 8.5 : 6.5} fill={color} stroke="#fff" strokeWidth={2} />
+              <text x={v.x} y={nameY} textAnchor="middle" fontSize={20} fontWeight={800} fill={color}>{c.label}</text>
+              <text x={v.x} y={roleY} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#475569">{c.role}</text>
+              <text x={v.x} y={noteY} textAnchor="middle" fontSize={11.5} fill="#64748b">{clampNote}</text>
             </g>
           );
         })}

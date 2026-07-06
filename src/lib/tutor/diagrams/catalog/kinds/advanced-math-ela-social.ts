@@ -1503,3 +1503,103 @@ export function buildPlotDiagramManifest(figure: PlotDiagramFigure): FeatureMani
   }
   return feats;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 32 — rhetorical_triangle (Aristotle's appeals: ethos/pathos/logos)
+// ═══════════════════════════════════════════════════════════════════
+
+export type RhetoricalAppeal = 'ethos' | 'pathos' | 'logos';
+
+export interface RhetoricalCorner {
+  label: string;   // the appeal name (Ethos / Pathos / Logos)
+  role: string;    // who/what the corner represents (speaker / audience / message)
+  note: string;    // the appeal in one phrase (credibility / emotion / logic)
+}
+
+export interface RhetoricalTriangleFigure {
+  title?: string;
+  subject: string;                 // centre label — the text / message / context
+  ethos: RhetoricalCorner;
+  pathos: RhetoricalCorner;
+  logos: RhetoricalCorner;
+  highlight?: RhetoricalAppeal;    // emphasise one appeal
+}
+
+const RHET_DEFAULTS: Record<RhetoricalAppeal, RhetoricalCorner> = {
+  ethos: { label: 'Ethos', role: 'Speaker / Writer', note: 'credibility & character' },
+  pathos: { label: 'Pathos', role: 'Audience', note: 'emotional appeal' },
+  logos: { label: 'Logos', role: 'Message / Text', note: 'logic & evidence' },
+};
+
+function rhetCorner(params: Record<string, unknown>, appeal: RhetoricalAppeal): RhetoricalCorner {
+  const raw = params[appeal];
+  const d = RHET_DEFAULTS[appeal];
+  if (raw && typeof raw === 'object') {
+    const o = raw as Record<string, unknown>;
+    return {
+      label: typeof o.label === 'string' && o.label.trim() ? o.label : d.label,
+      role: typeof o.role === 'string' && o.role.trim() ? o.role : d.role,
+      note: typeof o.note === 'string' && o.note.trim() ? o.note : d.note,
+    };
+  }
+  return { ...d };
+}
+
+/** The rhetorical triangle — Aristotle's three appeals arranged on a triangle:
+ *  Ethos (speaker's credibility), Pathos (emotional appeal to the audience) and
+ *  Logos (logic & evidence in the message), around the subject/text at the
+ *  centre. Defaults to the classic triangle; each corner's role/note can be
+ *  customised and one appeal highlighted. */
+export function solveRhetoricalTriangle(params: Record<string, unknown>): RhetoricalTriangleFigure {
+  const hl = params.highlight;
+  const highlight: RhetoricalAppeal | undefined =
+    hl === 'ethos' || hl === 'pathos' || hl === 'logos' ? hl : undefined;
+  return {
+    title: typeof params.title === 'string' ? params.title : undefined,
+    subject: typeof params.subject === 'string' && params.subject.trim() ? params.subject : 'Subject / Text',
+    ethos: rhetCorner(params, 'ethos'),
+    pathos: rhetCorner(params, 'pathos'),
+    logos: rhetCorner(params, 'logos'),
+    highlight,
+  };
+}
+
+export const rhetoricalTriangleFeatureNames = {
+  triangle: 'rhetorical-triangle',
+  subject: 'rhetorical-subject',
+  corner: (appeal: RhetoricalAppeal): string => `rhetorical-${appeal}`,
+} as const;
+
+export function buildRhetoricalTriangleManifest(figure: RhetoricalTriangleFigure): FeatureManifestEntry[] {
+  const N = rhetoricalTriangleFeatureNames;
+  const feats: FeatureManifestEntry[] = [
+    {
+      name: N.triangle,
+      kind: 'region',
+      description: 'the rhetorical triangle (ethos / pathos / logos)',
+      labels: ['the rhetorical triangle', 'the triangle', "aristotle's appeals", 'the appeals', 'the diagram'],
+      displayName: figure.title || 'Rhetorical triangle',
+      scribbleable: true,
+    },
+    {
+      name: N.subject,
+      kind: 'label',
+      description: `the subject at the centre — ${figure.subject}`,
+      labels: ['the subject', 'the text', 'the message', figure.subject],
+      displayName: figure.subject,
+      scribbleable: true,
+    },
+  ];
+  (['ethos', 'pathos', 'logos'] as RhetoricalAppeal[]).forEach((appeal) => {
+    const c = figure[appeal];
+    feats.push({
+      name: N.corner(appeal),
+      kind: 'label',
+      description: `${c.label} — ${c.role}: ${c.note}`,
+      labels: [c.label, c.label.toLowerCase(), appeal, `the ${appeal}`, c.role],
+      displayName: c.label,
+      scribbleable: true,
+    });
+  });
+  return feats;
+}
