@@ -1,0 +1,468 @@
+[
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.01",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following BEST describes an ecosystem?",
+    "choices": [
+      "All organisms of the same species living in an area",
+      "Only the nonliving physical environment of a region",
+      "All living organisms in a region together with their nonliving environment and the interactions among them",
+      "A group of different species occupying the same habitat, excluding any physical environment"
+    ],
+    "answer": "C",
+    "hints": ["Think about what makes an ecosystem different from a community."]
+  },
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.02",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which factor MOST strongly determines the type of biome found in a region?",
+    "choices": [
+      "Soil mineral and nutrient content",
+      "Distance from the nearest ocean",
+      "Historical human land-use patterns",
+      "Long-term temperature and precipitation patterns"
+    ],
+    "answer": "D",
+    "hints": ["Biomes are classified by their dominant climate, not their soils or history."]
+  },
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.03",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a characteristic unique to the tundra biome?",
+    "choices": [
+      "Receives more than 200 cm of rainfall each year",
+      "Has a layer of permanently frozen subsoil called permafrost",
+      "Supports a dense canopy of broad-leaved deciduous trees",
+      "Is found only in equatorial regions near sea level"
+    ],
+    "answer": "B",
+    "hints": ["The tundra is the coldest biome — think about what happens to subsoil that never fully thaws."]
+  },
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.04",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A biologist surveys a region that receives less than 25 cm of precipitation per year. Daytime temperatures regularly exceed 45°C, while nighttime temperatures drop near or below freezing. Which biome is the biologist MOST likely in?",
+    "choices": [
+      "Tropical rainforest",
+      "Temperate deciduous forest",
+      "Desert",
+      "Boreal forest (taiga)"
+    ],
+    "answer": "C",
+    "hints": ["Extreme temperature swings combined with very low precipitation define one particular biome."]
+  },
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.05",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Chaparral (Mediterranean shrubland) plants such as manzanita and chamise are adapted to periodic fire PRIMARILY because fire:",
+    "choices": [
+      "Increases soil salinity, which these plants tolerate better than their competitors",
+      "Clears dead woody material and releases locked-up nutrients, and these species resprout from deep roots or germinate from fire-stimulated seeds",
+      "Lowers average summer temperatures, creating favorable germination conditions",
+      "Drives away competing herbivores, reducing grazing pressure on surviving shrubs"
+    ],
+    "answer": "B",
+    "hints": ["Consider how fire affects nutrient cycling and the recovery mechanisms of fire-adapted shrubs."]
+  },
+  {
+    "id": "apenvsci.ecosystems-biomes.mcq.06",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "As you climb a tall tropical mountain, you pass through vegetation zones that closely resemble the sequence from tropical forest near the equator to tundra near the poles. This pattern is BEST explained by:",
+    "choices": [
+      "Island biogeography — isolated mountaintop habitats attract species from distant biomes",
+      "The competitive exclusion principle causing low-altitude species to displace high-altitude ones",
+      "Altitudinal zonation, in which decreasing temperature with increasing elevation produces biome-like vegetation zones analogous to latitudinal biome shifts",
+      "Ecological succession proceeding faster at higher elevations due to lower competition"
+    ],
+    "answer": "C",
+    "hints": ["Temperature drops roughly 6°C for every 1,000 m gained in elevation, mimicking the cooling at higher latitudes."]
+  },
+
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.01",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which process converts atmospheric nitrogen gas (N₂) into a form — such as ammonium (NH₄⁺) — that plants can absorb from the soil?",
+    "choices": [
+      "Nitrification",
+      "Denitrification",
+      "Assimilation",
+      "Nitrogen fixation"
+    ],
+    "answer": "D",
+    "hints": ["'Fixing' nitrogen means converting it from an atmospheric gas into a biologically usable compound."]
+  },
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.02",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the nitrogen cycle, nitrifying bacteria perform which conversion?",
+    "choices": [
+      "N₂ gas → ammonium (NH₄⁺)",
+      "Ammonium (NH₄⁺) → nitrite, then nitrate (NO₃⁻)",
+      "Nitrate (NO₃⁻) → atmospheric N₂",
+      "Organic nitrogen in dead matter → ammonium (NH₄⁺)"
+    ],
+    "answer": "B",
+    "hints": ["The prefix 'nitrify' means to form nitrate — these bacteria oxidize ammonium stepwise."]
+  },
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.03",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A key difference between the phosphorus cycle and the nitrogen cycle is that the phosphorus cycle:",
+    "choices": [
+      "Relies heavily on an atmospheric gas reservoir to store and redistribute phosphorus globally",
+      "Requires specialized decomposers to break phosphorus out of organic matter before plants can use it",
+      "Lacks a significant atmospheric component; phosphorus cycles primarily through rocks, soil, and water",
+      "Completes a full cycle much faster than the nitrogen cycle because reactions are simpler"
+    ],
+    "answer": "C",
+    "hints": ["There is no gas-phase form of phosphorus in the environment, unlike nitrogen (N₂)."]
+  },
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.04",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Denitrification is ecologically important PRIMARILY because it:",
+    "choices": [
+      "Adds plant-available ammonium to nitrogen-depleted soils",
+      "Returns reactive nitrogen to the atmosphere as N₂ gas, preventing indefinite accumulation of nitrates in soils and waterways",
+      "Transforms atmospheric N₂ into ammonium that plant roots can directly absorb",
+      "Breaks down urea and other animal waste products into usable ammonium"
+    ],
+    "answer": "B",
+    "hints": ["Denitrification is the step that closes the nitrogen cycle — it removes reactive nitrogen from the ecosystem."]
+  },
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.05",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The widespread use of synthetic nitrogen fertilizers in agriculture MOST directly disrupts the nitrogen cycle by:",
+    "choices": [
+      "Reducing populations of nitrogen-fixing bacteria in farm soils",
+      "Converting atmospheric N₂ directly into oxygen, altering air composition",
+      "Introducing large quantities of reactive nitrogen that leach into waterways and promote eutrophication",
+      "Lowering soil temperature, which slows decomposition and nutrient cycling"
+    ],
+    "answer": "C",
+    "hints": ["Think about what happens when excess fertilizer washes off fields into streams and lakes."]
+  },
+  {
+    "id": "apenvsci.nitrogen-phosphorus-cycles.mcq.06",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In most freshwater lakes, algal growth is primarily limited by the availability of which nutrient?",
+    "choices": [
+      "Phosphorus, because it is naturally scarce in freshwater relative to the amount of nitrogen available",
+      "Nitrogen, because cyanobacteria cannot fix enough N₂ to meet total algal demand",
+      "Carbon dioxide, because aquatic producers must compete for dissolved CO₂",
+      "Iron, because iron-deficient photosynthesis limits most temperate freshwater algae"
+    ],
+    "answer": "A",
+    "hints": ["Freshwater systems tend to have more dissolved nitrogen than phosphorus — so phosphorus runs short first."]
+  },
+
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.01",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which biological process is PRIMARILY responsible for removing carbon dioxide from the atmosphere and incorporating carbon into organic molecules?",
+    "choices": [
+      "Cellular respiration",
+      "Combustion",
+      "Photosynthesis",
+      "Decomposition"
+    ],
+    "answer": "C",
+    "hints": ["Producers use sunlight to convert CO₂ and water into sugars, fixing atmospheric carbon."]
+  },
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.02",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What role do decomposers (bacteria and fungi) play in the carbon cycle?",
+    "choices": [
+      "They fix atmospheric CO₂ into organic compounds, functioning as a second class of producer",
+      "They break down dead organic matter and release its stored carbon back into the atmosphere as CO₂ through respiration",
+      "They permanently lock carbon into deep soil organic matter, increasing long-term carbon storage",
+      "They transfer carbon from ocean sediments directly to terrestrial ecosystems"
+    ],
+    "answer": "B",
+    "hints": ["Decomposers are heterotrophs — they respire as they break down dead material, releasing CO₂."]
+  },
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.03",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the water cycle, transpiration specifically refers to:",
+    "choices": [
+      "Water evaporating directly from the surfaces of lakes, rivers, and oceans",
+      "The downward movement of water through soil into underground aquifers",
+      "Water vapor released through the stomata (pores) in plant leaves",
+      "Precipitation soaking into the ground rather than running off the surface"
+    ],
+    "answer": "C",
+    "hints": ["Transpiration is the plant-mediated 'T' in 'evapotranspiration.'"]
+  },
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.04",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following represents the LARGEST long-term reservoir of carbon on Earth?",
+    "choices": [
+      "Living terrestrial vegetation (plant biomass)",
+      "Fossil fuels (coal, oil, and natural gas) in Earth's crust",
+      "Soil organic matter and peat deposits",
+      "The ocean, including dissolved inorganic carbon and marine carbonate sediments"
+    ],
+    "answer": "D",
+    "hints": ["Think in geologic terms — where has carbon been accumulating for hundreds of millions of years?"]
+  },
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.05",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Widespread deforestation MOST directly affects the carbon cycle by:",
+    "choices": [
+      "Increasing the rate of nitrogen fixation in newly cleared soils",
+      "Decreasing ocean salinity as organic carbon washes into the sea",
+      "Removing a major terrestrial carbon sink and releasing stored carbon as CO₂ through burning and decomposition",
+      "Accelerating the water cycle by increasing surface runoff"
+    ],
+    "answer": "C",
+    "hints": ["Forests act as carbon sinks — removing them converts that sink into a carbon source."]
+  },
+  {
+    "id": "apenvsci.carbon-water-cycles.mcq.06",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During a prolonged drought, plants close their stomata to conserve water. Closing stomata MOST directly affects both the carbon cycle and the water cycle simultaneously by:",
+    "choices": [
+      "Increasing photosynthesis rates because CO₂ accumulates inside the leaf when stomata are sealed",
+      "Reducing transpiration AND reducing CO₂ uptake, simultaneously slowing local water recycling and carbon fixation",
+      "Increasing cellular respiration rates to compensate for reduced photosynthesis output",
+      "Stimulating greater root uptake of groundwater to maintain both turgor pressure and photosynthesis"
+    ],
+    "answer": "B",
+    "hints": ["Stomata are the gateway for both water vapor to exit and CO₂ to enter — closing them restricts both fluxes at once."]
+  },
+
+  {
+    "id": "apenvsci.productivity-energy-flow.mcq.01",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Gross Primary Productivity (GPP) in an ecosystem is BEST defined as:",
+    "choices": [
+      "The energy remaining in producers after all consumer respiration losses are subtracted",
+      "The total carbon fixed by herbivores and carnivores combined",
+      "The total rate of photosynthesis by producers — all energy captured from sunlight before any respiratory losses",
+      "The energy stored in producers and available to herbivores after plant respiration is subtracted"
+    ],
+    "answer": "C",
+    "hints": ["'Gross' means total before subtracting anything — it is the full photosynthesis output of producers."]
+  },
+  {
+    "id": "apenvsci.productivity-energy-flow.mcq.02",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A forest ecosystem has a GPP of 8,000 kcal/m²/yr. Producers use 3,200 kcal/m²/yr in cellular respiration. What is the Net Primary Productivity (NPP) of this forest?",
+    "choices": [
+      "11,200 kcal/m²/yr",
+      "8,000 kcal/m²/yr",
+      "3,200 kcal/m²/yr",
+      "4,800 kcal/m²/yr"
+    ],
+    "answer": "D",
+    "hints": ["NPP = GPP − Respiration. Subtract what the plants use for their own metabolism."]
+  },
+  {
+    "id": "apenvsci.productivity-energy-flow.numeric.01",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A grassland ecosystem has a Gross Primary Productivity (GPP) of 6,500 kcal/m²/yr. Producers use 2,100 kcal/m²/yr in cellular respiration. What is the Net Primary Productivity (NPP) of this grassland, in kcal/m²/yr?",
+    "answer": "4400",
+    "hints": ["NPP = GPP − Respiration."]
+  },
+  {
+    "id": "apenvsci.productivity-energy-flow.mcq.03",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Approximately 90% of energy is lost at each trophic level, leaving only about 10% to transfer to the next level. This loss occurs PRIMARILY because:",
+    "choices": [
+      "Predators selectively consume the least nutritious prey, wasting most available energy",
+      "Decomposers intercept the majority of energy before higher trophic levels can access it",
+      "Most energy consumed by an organism is used in cellular respiration or lost as heat, leaving only a small fraction stored as new biomass",
+      "Solar energy reaching each successive trophic level is physically reduced by 90% due to canopy shading"
+    ],
+    "answer": "C",
+    "hints": ["Think about what organisms do with most of the energy they ingest — they respire it to power life functions, generating heat."]
+  },
+  {
+    "id": "apenvsci.productivity-energy-flow.numeric.02",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A prairie ecosystem has producers (grasses) with 500,000 kcal/m²/yr of energy available. Assuming 10% trophic efficiency at each level, calculate the energy available (in kcal/m²/yr) to secondary consumers (carnivores that eat the herbivores).",
+    "answer": "5000",
+    "hints": ["Apply 10% twice: producers to herbivores, then herbivores to secondary consumers."]
+  },
+  {
+    "id": "apenvsci.productivity-energy-flow.mcq.04",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A region is deciding how to allocate its cropland. Scenario A feeds the population directly on grain (plants). Scenario B raises cattle on that same grain and then feeds the population on beef. Assuming 10% trophic efficiency, Scenario A can support how many times MORE people than Scenario B from the same grain harvest?",
+    "choices": [
+      "10 times more people",
+      "2 times more people",
+      "100 times more people",
+      "The same number of people, because caloric content is equivalent at each step"
+    ],
+    "answer": "A",
+    "hints": ["In Scenario B, only 10% of grain energy reaches humans via beef. In Scenario A, 100% of grain energy goes directly to humans."]
+  },
+
+  {
+    "id": "apenvsci.food-webs.mcq.01",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A food web differs from a simple food chain in that a food web:",
+    "choices": [
+      "Shows only one linear feeding pathway from a single producer to a single top predator",
+      "Includes only decomposers and primary producers in its diagram",
+      "Represents multiple, interconnected feeding relationships among all species in an ecosystem",
+      "Tracks the flow of water and mineral nutrients rather than energy"
+    ],
+    "answer": "C",
+    "hints": ["Most real ecosystems have many overlapping food chains — a food web captures all of them simultaneously."]
+  },
+  {
+    "id": "apenvsci.food-webs.mcq.02",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a simple food chain — grasses → rabbits → hawks — at which trophic level are the rabbits?",
+    "choices": [
+      "First trophic level (primary producer)",
+      "Second trophic level (primary consumer)",
+      "Third trophic level (secondary consumer)",
+      "Fourth trophic level (tertiary consumer)"
+    ],
+    "answer": "B",
+    "hints": ["Count steps from the producer: grasses are level 1, so the next organism in the chain is level 2."]
+  },
+  {
+    "id": "apenvsci.food-webs.mcq.03",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a food web, a plant-eating insect is eliminated by a pesticide application. Which of the following effects is MOST likely to occur first?",
+    "choices": [
+      "The plants the insect fed on immediately go extinct due to unrelated competition",
+      "Top carnivores in the food web immediately double their population size",
+      "Populations of insect-eating birds decline because their food source has been reduced",
+      "Decomposers rapidly increase activity to process the extra dead insect biomass"
+    ],
+    "answer": "C",
+    "hints": ["Follow the energy pathway upward: the insect feeds birds — remove the insect and the birds lose a key food source."]
+  },
+  {
+    "id": "apenvsci.food-webs.mcq.04",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sea otters prey on sea urchins; sea urchins consume kelp. When sea otters were hunted nearly to extinction, urchin populations exploded and kelp forests were destroyed. Sea otters are called a keystone species because:",
+    "choices": [
+      "Their removal causes a disproportionately large change in ecosystem structure relative to their own biomass or abundance",
+      "They are the most abundant organism in the kelp forest and directly support the most food chains",
+      "They are apex predators with no natural predators of their own in this system",
+      "They fix atmospheric nitrogen that fertilizes kelp and supports the entire food web"
+    ],
+    "answer": "A",
+    "hints": ["'Keystone' describes outsized impact — a relatively low-biomass species whose loss triggers major ecosystem change."]
+  },
+  {
+    "id": "apenvsci.food-webs.numeric.01",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A salt marsh food chain is: phytoplankton → zooplankton → small fish → osprey. Phytoplankton fix 200,000 kcal/m²/yr. Assuming 10% trophic efficiency at each step, how much energy (in kcal/m²/yr) is available to ospreys?",
+    "answer": "200",
+    "hints": ["Apply the 10% rule three times moving from phytoplankton up to ospreys."]
+  },
+  {
+    "id": "apenvsci.food-webs.mcq.05",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "When wolves were reintroduced to Yellowstone National Park, elk populations declined and shifted their grazing patterns. Riverbank vegetation recovered, stabilizing stream banks and altering river flow. This sequence BEST illustrates:",
+    "choices": [
+      "Primary succession initiated by the arrival of an apex predator in a previously bare habitat",
+      "A trophic cascade in which a change at one trophic level ripples through the food web and alters the physical environment",
+      "Competitive exclusion between wolves and elk competing for the same food resources",
+      "Mutualism between wolves and riparian vegetation providing each other with benefits"
+    ],
+    "answer": "B",
+    "hints": ["Wolves changed elk behavior, which changed plant growth, which changed rivers — each effect cascaded downward from the top predator."]
+  }
+]

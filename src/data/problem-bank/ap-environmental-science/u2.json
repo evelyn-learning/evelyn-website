@@ -1,0 +1,284 @@
+[
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.mcq.01",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following statements best describes the relationship between island area and species richness predicted by island biogeography theory?",
+    "choices": [
+      "Larger islands support more species because they provide greater habitat diversity and can sustain larger, less extinction-prone populations",
+      "Larger islands support fewer species because they have less edge habitat per unit area",
+      "Island area has no effect on species richness; only distance from the mainland matters",
+      "Larger islands support more species because they block immigration of competing species from the mainland"
+    ],
+    "answer": "A",
+    "hints": ["Think about habitat variety and minimum viable population size — both increase with island area."]
+  },
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.mcq.02",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the MacArthur-Wilson equilibrium model of island biogeography, which of the following changes would most directly decrease the rate at which new species immigrate to an island?",
+    "choices": [
+      "Increasing the island's land area",
+      "Decreasing the number of species already established on the island",
+      "Moving the island farther from the mainland source pool",
+      "Increasing the island's maximum elevation"
+    ],
+    "answer": "C",
+    "hints": ["Immigration rate depends on propagule dispersal — how far must seeds or animals travel to reach the island?"]
+  },
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.mcq.03",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Compared with a large island at the same distance from a mainland source pool, a small island is predicted to reach an equilibrium species richness that is:",
+    "choices": [
+      "Higher, because small islands have lower extinction rates due to reduced competition",
+      "Equal, because immigration rates are identical for both islands at the same distance",
+      "Higher, because small islands present more edge per unit area for colonizing species to exploit",
+      "Lower, because small islands have higher extinction rates as populations are smaller and more vulnerable to local extinction"
+    ],
+    "answer": "D",
+    "hints": ["In the model, extinction rate is governed by island size; immigration rate is governed by distance from the mainland."]
+  },
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.mcq.04",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A volcanic eruption completely sterilizes an oceanic island, destroying all species and soil. According to the MacArthur-Wilson equilibrium model, which outcome is most likely over the following decades?",
+    "choices": [
+      "Species richness remains near zero permanently because volcanic substrate cannot support life",
+      "Immigration from nearby source populations gradually increases species richness back toward the original equilibrium number",
+      "Species richness instantly recovers because seeds buried in lava survive the eruption",
+      "The extinction rate accelerates as new colonizers compete, preventing any recovery"
+    ],
+    "answer": "B",
+    "hints": ["The same immigration and extinction dynamics that established the original community will operate again — the equilibrium is dynamic, not fixed."]
+  },
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.numeric.01",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Island biogeography theory predicts that species richness approximately doubles when island area increases tenfold (using species-area exponent z = 0.3, which gives 10^0.3 ≈ 2). A 10 km² island currently supports 12 bird species. Using this approximation, how many bird species would a 100 km² island of the same type and at the same distance from the mainland support? (Report your answer as a whole number.)",
+    "answer": "24",
+    "hints": ["The 100 km² island is exactly 10 times the area of the 10 km² island; apply the doubling rule once."]
+  },
+  {
+    "id": "apenvsci.biodiversity-island-biogeo.mcq.05",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A conservation planner can protect either one contiguous 400-hectare forest reserve or four separate 100-hectare forest patches of the same total area, all surrounded by agricultural land that acts as a barrier to dispersal. Island biogeography theory most strongly predicts that the single contiguous reserve will sustain higher long-term species richness primarily because:",
+    "choices": [
+      "The single large reserve supports larger population sizes and a lower edge-to-interior ratio, reducing local extinction rates",
+      "The four patches would attract higher overall immigration because together they present a larger collective perimeter",
+      "Contiguous reserves have lower immigration rates, which stabilizes the community against invasive species",
+      "Each separate patch would share species with its neighbors through dispersal, effectively multiplying total species richness"
+    ],
+    "answer": "A",
+    "hints": ["Apply the SLOSS tradeoff: which design minimizes extinction rate? Edge effects increase extinction; large populations resist it."]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.01",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On a standard ecological tolerance curve for a single species, the 'zone of intolerance' refers to the:",
+    "choices": [
+      "Narrow band of conditions at the organism's physiological optimum where performance is highest",
+      "Range where the organism survives and reproduces but at below-maximum rates",
+      "Conditions where the organism's birth rate exactly equals its death rate",
+      "Conditions beyond the upper or lower limits of tolerance within which the organism cannot survive"
+    ],
+    "answer": "D",
+    "hints": ["Intolerance means the organism literally cannot persist — it is outside the survivable range entirely."]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.02",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer applies extra nitrogen fertilizer to a field, but crop yield does not increase. A soil test later reveals that phosphorus is severely deficient. This outcome is best explained by:",
+    "choices": [
+      "The competitive exclusion principle, because nitrogen and phosphorus compete for the same root uptake sites",
+      "Liebig's Law of the Minimum, because the most limiting essential resource — phosphorus — controls yield regardless of nitrogen surplus",
+      "The intermediate disturbance hypothesis, because fertilizer application counts as an anthropogenic disturbance",
+      "Island biogeography theory, because the field is isolated from natural nutrient sources"
+    ],
+    "answer": "B",
+    "hints": ["Growth is limited by whichever essential resource is most scarce relative to the organism's needs — like the shortest stave in a barrel."]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.03",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A river contains both a stenothermal fish (narrow temperature tolerance: 12°C–18°C) and a eurythermal fish (broad temperature tolerance: 5°C–30°C). When seasonal temperatures swing between 8°C in winter and 26°C in summer, which outcome does tolerance range theory predict?",
+    "choices": [
+      "The eurythermal species maintains stable populations year-round while the stenothermal species declines or is absent during extreme-temperature seasons",
+      "The stenothermal species has a competitive advantage because specialization reduces its metabolic costs",
+      "Both species respond identically because tolerance ranges apply only to salinity, not temperature",
+      "The stenothermal species out-competes the eurythermal species by monopolizing the optimal mid-range temperature niche"
+    ],
+    "answer": "A",
+    "hints": ["Steno- = narrow; eury- = wide. Check which species' tolerance range covers both 8°C and 26°C."]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.04",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a classic rocky intertidal experiment, a researcher removed all sea stars (Pisaster ochraceus) from study plots. Mussels rapidly displaced nearly all other invertebrate species, reducing overall species diversity by roughly half. When sea stars were reintroduced, diversity recovered to pre-removal levels. These sea stars are best classified as:",
+    "choices": [
+      "Foundation species, because they physically construct the substrate the way coral polyps do",
+      "Invasive species, because their predation persistently destabilizes the native community",
+      "Keystone species, because their removal caused community change disproportionate to their low biomass",
+      "Generalist predators, because their broad diet gave them the widest tolerance range of any species in the community"
+    ],
+    "answer": "C",
+    "hints": ["A keystone species is defined by outsized ecological impact relative to its abundance or biomass — removal reveals that impact."]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.05",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A freshwater fish has a pH tolerance range of 6.0 to 8.5 and grows optimally at pH 7.2. Upstream mining operations lower the river pH to 6.3. Which outcome does the tolerance curve model predict for this fish population?",
+    "choices": [
+      "Immediate population death, because 6.3 is outside the tolerance range",
+      "No detectable change, because 6.3 remains within the broad survivable range",
+      "Accelerated growth, because slightly acidic conditions reduce the prevalence of fungal pathogens",
+      "Reduced growth and reproductive rates, because 6.3 places the population in the zone of stress — survivable but suboptimal"
+    ],
+    "answer": "D",
+    "hints": ["Confirm that 6.3 is inside or outside the tolerance range, then distinguish 'survives at full capacity' from 'survives under physiological stress.'"]
+  },
+  {
+    "id": "apenvsci.tolerance-adaptations.mcq.06",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "After wolves were extirpated from a national park, elk populations grew unchecked. Elk overgrazing of riparian willows and aspens destabilized stream banks, increased erosion, and caused beaver colonies to collapse — changes that in turn degraded aquatic habitat for fish and songbirds. Wolf reintroduction gradually reversed these changes through a 'landscape of fear' that altered elk foraging behavior. This multi-level ecological chain is best described as:",
+    "choices": [
+      "An application of Liebig's Law, because wolves served as the nutrient-like limiting factor preventing elk population growth",
+      "A trophic cascade initiated by a keystone predator whose disproportionate top-down influence restructured the entire community",
+      "An example of primary succession, because loss of riparian vegetation returned streambanks to a nearly bare substrate",
+      "The intermediate disturbance hypothesis, because individual wolf predation events served as the periodic disturbances maintaining diversity"
+    ],
+    "answer": "B",
+    "hints": ["Trace the chain: wolves → elk behavior → vegetation → stream structure → aquatic and bird communities. What term describes multi-level top-down effects through a food web?"]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.01",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following most accurately describes primary ecological succession?",
+    "choices": [
+      "The recovery of a plant community in an abandoned farm field that retains its original topsoil",
+      "The sequential colonization and community development on a substrate that has never supported life, or from which all life and soil have been completely removed",
+      "The seasonal turnover of dominant species in a stable, mature forest ecosystem",
+      "The abrupt replacement of one climax community by another following a catastrophic fire"
+    ],
+    "answer": "B",
+    "hints": ["Primary means starting from scratch — no soil, no seed bank, no organic matter to build on."]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.02",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After a volcanic eruption buries a coastal area under fresh lava, which organisms would most likely be the first pioneer colonizers of the bare rock surface?",
+    "choices": [
+      "Lichens and cyanobacteria, which can fix atmospheric nitrogen, weather rock surfaces, and tolerate extreme nutrient poverty",
+      "Oak and maple trees, which require well-developed mineral soil and adequate soil moisture to germinate",
+      "Annual wildflowers, which rely on an existing organic seedbed layer to establish successfully",
+      "Large herbivores such as deer, which migrate into an area once grass cover is sufficiently established"
+    ],
+    "answer": "A",
+    "hints": ["Pioneer species in primary succession must tolerate bare rock and create the organic matter and soil that later species will need."]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.03",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An ecologist compares two disturbed sites ten years after their disturbance: an abandoned farm field and a fresh lava field produced by a volcanic eruption. The old farm field has far greater plant cover and species richness. Which explanation best accounts for this difference?",
+    "choices": [
+      "The old field receives more rainfall because cultivated soils permanently retain more moisture",
+      "The lava field is closer to the coast and inhibited by salt spray from the ocean",
+      "The old field is undergoing secondary succession, which begins with intact soil and a dormant seed bank and therefore proceeds much faster than primary succession on bare rock",
+      "The old field benefits from a more stable microclimate created by decades of agricultural land modification"
+    ],
+    "answer": "C",
+    "hints": ["Compare what each site started with: one had soil and dormant seeds; the other had bare, lifeless rock."]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.04",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The intermediate disturbance hypothesis predicts that species diversity in a community will be greatest when disturbances occur at:",
+    "choices": [
+      "Very low frequency, so that competitive dominants have enough time to fully stabilize the ecosystem",
+      "Very high frequency, so that the community is continually reset to pioneer-stage conditions that favor many early colonizers",
+      "Intermediate frequency and intensity, preventing competitive exclusion by dominant species while still allowing colonization and recovery",
+      "Exactly regular intervals determined by climate cycles, ensuring predictable community turnover"
+    ],
+    "answer": "C",
+    "hints": ["Too rare → one dominant outcompetes everything; too frequent → only disturbance-adapted pioneers survive; intermediate → coexistence of many species."]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.05",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Following a category-1 hurricane, a coral reef ecosystem returns to its pre-storm species composition within three years, while a nearby mangrove forest remains structurally altered for over twenty years. This comparison is best explained by the difference between:",
+    "choices": [
+      "High ecological resilience in the coral reef versus low ecological resilience in the mangrove forest",
+      "Primary succession occurring in the coral reef versus secondary succession occurring in the mangrove forest",
+      "High ecological resistance in the coral reef versus high ecological resilience in the mangrove forest",
+      "The intermediate disturbance hypothesis applying to coral reefs but not to mangrove forests"
+    ],
+    "answer": "A",
+    "hints": ["Resilience = speed and degree of recovery AFTER a disturbance. Both systems were disturbed; the question is how quickly each bounces back."]
+  },
+  {
+    "id": "apenvsci.disruptions-succession.mcq.06",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Decades of fire suppression in a midwestern oak savanna have allowed shade-tolerant trees to form a dense canopy, shading out the native prairie forbs and grasses that historically dominated. Species richness has declined significantly. An ecologist recommends reintroducing controlled burns on a three-to-five-year cycle. Which combination of ecological principles best justifies this recommendation?",
+    "choices": [
+      "Island biogeography theory, because the savanna is an isolated habitat patch that benefits from increased immigration of fire-adapted species from surrounding areas",
+      "Liebig's Law of the Minimum, because light is the single limiting nutrient for prairie plants and burning temporarily removes the canopy",
+      "The climax community concept, because the current dense forest represents the final stable state that should be maintained and protected",
+      "The intermediate disturbance hypothesis and secondary succession dynamics, because periodic fire prevents competitive exclusion by shade-tolerant trees and repeatedly resets the understory toward a higher-diversity savanna state"
+    ],
+    "answer": "D",
+    "hints": ["Ask: why did fire exclusion reduce diversity? Then identify which hypothesis predicts that moderate, periodic disturbance maintains higher species coexistence."]
+  }
+]

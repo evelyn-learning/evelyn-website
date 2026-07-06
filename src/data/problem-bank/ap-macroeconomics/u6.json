@@ -1,0 +1,566 @@
+[
+  {
+    "id": "apmacro.balance-of-payments.mcq.01",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following transactions is recorded in the current account of the balance of payments?",
+    "choices": [
+      "The United States exports wheat to China",
+      "A U.S. firm purchases a factory in Mexico",
+      "A foreign government purchases U.S. Treasury bonds",
+      "A U.S. investor buys shares in a German corporation"
+    ],
+    "answer": "A",
+    "hints": ["The current account records trade in goods, services, primary income, and unilateral transfers."]
+  },
+  {
+    "id": "apmacro.balance-of-payments.mcq.02",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A German automaker builds a new production plant in South Carolina. In which account of the U.S. balance of payments is this transaction recorded?",
+    "choices": [
+      "Current account; a credit for an exported service",
+      "Financial account; a credit representing an inflow of foreign direct investment",
+      "Current account; a debit for a goods import",
+      "Financial account; a debit representing a U.S. investment abroad"
+    ],
+    "answer": "B",
+    "hints": ["Foreign direct investment involves ownership of productive assets, not trade in goods or services."]
+  },
+  {
+    "id": "apmacro.balance-of-payments.mcq.03",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A country runs a current account deficit. Which statement best describes this situation?",
+    "choices": [
+      "The country exports more goods and services than it imports",
+      "The country is a net lender to the rest of the world",
+      "The country's total imports of goods, services, and net income transfers exceed its total exports and receipts",
+      "The country's financial account balance is equal to zero"
+    ],
+    "answer": "C",
+    "hints": ["A deficit means total outflows on the current account exceed total inflows."]
+  },
+  {
+    "id": "apmacro.balance-of-payments.mcq.04",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A worker living in the United States sends a portion of her wages to family members in El Salvador each month. In which sub-account of the current account is this transaction recorded?",
+    "choices": [
+      "Goods trade balance",
+      "Services trade balance",
+      "Primary income (net investment income and compensation of employees)",
+      "Secondary income (unilateral current transfers)"
+    ],
+    "answer": "D",
+    "hints": ["Remittances are one-way transfers — no good or service is received in return."]
+  },
+  {
+    "id": "apmacro.balance-of-payments.mcq.05",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Country X has a current account balance of negative 150 billion dollars. Assuming the balance of payments must sum to zero and ignoring statistical discrepancies, what is the balance of Country X's capital and financial account?",
+    "choices": [
+      "Positive 150 billion dollars",
+      "Negative 150 billion dollars",
+      "Positive 75 billion dollars",
+      "Zero"
+    ],
+    "answer": "A",
+    "hints": ["BOP identity: current account + capital and financial account = 0."]
+  },
+  {
+    "id": "apmacro.balance-of-payments.numeric.01",
+    "loId": "apmacro.balance-of-payments",
+    "cedCode": "AP-MACRO-6.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Use the following data (all figures in billions of dollars) to calculate Country A's current account balance. Goods exports: 800. Goods imports: 950. Services exports: 300. Services imports: 220. Net primary income: 40. Net secondary income: negative 30. Enter the current account balance as a number (use a negative sign if it is a deficit).",
+    "answer": "-60",
+    "hints": [
+      "Current account = (goods exports minus goods imports) + (services exports minus services imports) + net primary income + net secondary income.",
+      "Goods balance = 800 minus 950 = negative 150; services balance = 300 minus 220 = 80."
+    ]
+  },
+  {
+    "id": "apmacro.exchange-rates.mcq.01",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "One British pound exchanges for 1.40 U.S. dollars. The rate then changes so that one pound exchanges for only 1.30 U.S. dollars. Which statement correctly describes what has happened?",
+    "choices": [
+      "The pound has appreciated against the dollar",
+      "The pound has depreciated against the dollar, because each pound now buys fewer dollars",
+      "The dollar has depreciated against the pound",
+      "Neither currency has changed in value"
+    ],
+    "answer": "B",
+    "hints": ["Depreciation means each unit of a currency buys fewer units of the other currency."]
+  },
+  {
+    "id": "apmacro.exchange-rates.mcq.02",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The nominal exchange rate is 10 Mexican pesos per U.S. dollar. The U.S. price level is 100 and Mexico's price level is 200. Using the formula real exchange rate = nominal rate times (domestic price level divided by foreign price level), what is the real exchange rate expressed as units of Mexican goods per unit of U.S. goods?",
+    "choices": [
+      "20",
+      "10",
+      "2.5",
+      "5"
+    ],
+    "answer": "D",
+    "hints": ["Real ER = 10 times (100 divided by 200) = 10 times 0.5 = 5."]
+  },
+  {
+    "id": "apmacro.exchange-rates.mcq.03",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The U.S. dollar appreciates relative to the Japanese yen. Which of the following is the most direct effect on U.S. trade?",
+    "choices": [
+      "Imported Japanese goods become cheaper for U.S. buyers, as each dollar now buys more yen",
+      "U.S. exports to Japan become cheaper for Japanese buyers",
+      "Imported goods become more expensive for U.S. buyers",
+      "U.S. net exports improve, raising aggregate demand"
+    ],
+    "answer": "A",
+    "hints": ["Appreciation means each dollar stretches further in foreign currency terms, lowering the dollar cost of imports."]
+  },
+  {
+    "id": "apmacro.exchange-rates.mcq.04",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Suppose 1 U.S. dollar = 1.20 euros and 1 British pound = 1.50 euros. How many U.S. dollars is 1 British pound worth?",
+    "choices": [
+      "0.80 U.S. dollars",
+      "1.50 U.S. dollars",
+      "1.25 U.S. dollars",
+      "1.80 U.S. dollars"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert through euros: 1 pound = 1.50 euros; 1 euro = 1 divided by 1.20 dollars.",
+      "1.50 divided by 1.20 = 1.25 dollars."
+    ]
+  },
+  {
+    "id": "apmacro.exchange-rates.numeric.01",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The exchange rate is 1 euro = 1.25 U.S. dollars. How many U.S. dollars does a traveler need to purchase 400 euros? Enter a number.",
+    "answer": "500",
+    "hints": ["Multiply the number of euros by the dollar price of each euro: 400 times 1.25."]
+  },
+  {
+    "id": "apmacro.exchange-rates.numeric.02",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The exchange rate is quoted as 1 U.S. dollar = 1.25 Swiss francs. Express this rate as the number of U.S. dollars needed to buy 1 Swiss franc. Enter your answer as a decimal.",
+    "answer": "0.8",
+    "hints": ["Take the reciprocal: 1 divided by 1.25 = 0.80."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.01",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the foreign exchange market for U.S. dollars, which of the following creates DEMAND for U.S. dollars?",
+    "choices": [
+      "U.S. residents traveling abroad and converting dollars to foreign currency",
+      "U.S. investors purchasing foreign stocks and bonds",
+      "U.S. importers paying for goods manufactured in other countries",
+      "Foreigners buying U.S. goods, services, and financial assets"
+    ],
+    "answer": "D",
+    "hints": ["Demand for a currency is created by those who need to obtain that currency."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.02",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the foreign exchange market for euros, which of the following best describes the source of the SUPPLY of euros?",
+    "choices": [
+      "European residents purchasing U.S. goods, services, and financial assets",
+      "Americans wanting to purchase European goods and travel to Europe",
+      "An increase in European interest rates relative to U.S. rates",
+      "The European Central Bank expanding the European money supply"
+    ],
+    "answer": "A",
+    "hints": ["Supply of euros comes from those who hold euros and wish to exchange them for another currency."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.03",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Americans develop a strong preference for European luxury goods and increase their purchases substantially. In the market for euros, what happens to the demand for euros and the dollar price of euros?",
+    "choices": [
+      "Demand for euros decreases; the euro depreciates against the dollar",
+      "Demand for euros increases; the dollar price of euros rises (the euro appreciates)",
+      "Supply of euros increases; the euro depreciates against the dollar",
+      "The exchange rate is unchanged because the current account must always balance"
+    ],
+    "answer": "B",
+    "hints": ["Americans need euros to pay for European goods, so they demand more euros in the FX market."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.04",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "U.S. interest rates rise sharply, attracting large inflows of European financial capital into U.S. bonds and assets. In the market for euros, which outcome best describes the result?",
+    "choices": [
+      "The supply of euros decreases and the dollar price of the euro rises",
+      "The demand for euros increases and the euro appreciates",
+      "The supply of euros increases and the dollar price of the euro falls (the euro depreciates)",
+      "Both supply and demand for euros fall, leaving the price unchanged"
+    ],
+    "answer": "C",
+    "hints": ["European investors must sell euros to obtain dollars to buy U.S. assets, increasing the supply of euros on the FX market."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.05",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the foreign exchange market, the equilibrium exchange rate is the rate at which:",
+    "choices": [
+      "The government sets it equal to purchasing power parity",
+      "Net exports equal zero",
+      "The current account and financial account are each individually balanced at zero",
+      "The quantity of the currency demanded equals the quantity supplied"
+    ],
+    "answer": "D",
+    "hints": ["Markets clear at the price where supply equals demand — the same principle applies in currency markets."]
+  },
+  {
+    "id": "apmacro.fx-market.mcq.06",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "U.S. income grows faster than income in Japan, while Japanese interest rates rise significantly above U.S. rates. In the market for Japanese yen, which outcome for the dollar price of the yen is most likely?",
+    "choices": [
+      "The dollar price of the yen rises because both higher U.S. demand for Japanese goods and higher Japanese interest rates increase the demand for yen",
+      "The dollar price of the yen falls because higher Japanese interest rates discourage investment in Japan",
+      "The dollar price of the yen falls because faster U.S. income growth increases the supply of yen",
+      "The two effects exactly cancel, leaving the exchange rate unchanged"
+    ],
+    "answer": "A",
+    "hints": ["Trace each factor: rising U.S. incomes raise demand for Japanese goods (Americans need yen); higher Japanese rates attract U.S. capital (Americans need yen to buy Japanese bonds). Both effects increase demand for yen."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.01",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If the real interest rate in Country A rises significantly above real interest rates in other countries, financial investors will most likely:",
+    "choices": [
+      "Move financial capital out of Country A to seek higher returns elsewhere",
+      "Sell Country A's currency because high interest rates signal economic instability",
+      "Move financial capital into Country A, increasing demand for its currency",
+      "Be unaffected because exchange rates and interest rates are unrelated"
+    ],
+    "answer": "C",
+    "hints": ["Higher real returns attract capital; to invest in Country A's assets, investors must first acquire its currency."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.02",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Compared to its trading partners, Country B experiences a much higher rate of inflation over several years. Which best describes the most likely effect on Country B's currency?",
+    "choices": [
+      "Country B's currency depreciates because its goods are now relatively more expensive, reducing foreign demand for them",
+      "Country B's currency appreciates because higher prices attract foreign buyers seeking inflation hedges",
+      "Country B's currency is unaffected because exchange rates depend only on interest rates",
+      "Country B's currency appreciates because its current account improves"
+    ],
+    "answer": "A",
+    "hints": ["Higher relative prices make Country B's exports less competitive, reducing foreign demand for its currency."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.03",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Country C's economy grows faster than its trading partners, raising household incomes rapidly. All else equal, how does this affect the value of Country C's currency?",
+    "choices": [
+      "Country C's currency appreciates because higher growth signals economic strength to investors",
+      "Country C's currency is unaffected because imports and exports change in equal proportions",
+      "Country C's currency appreciates because foreigners want to invest in the growing economy",
+      "Country C's currency depreciates as rising incomes increase imports and the supply of its currency on foreign exchange markets"
+    ],
+    "answer": "D",
+    "hints": ["Higher incomes mean residents buy more foreign goods; to pay for them, they supply more of their own currency on the FX market."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.04",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mexico's inflation rate rises above the U.S. inflation rate, while simultaneously the Bank of Mexico raises its policy interest rate to combat that inflation. Which statement best describes the likely net effect on the peso-dollar exchange rate?",
+    "choices": [
+      "The peso unambiguously appreciates because higher interest rates dominate all other factors",
+      "The net effect on the peso is ambiguous because higher inflation tends to depreciate the currency while higher interest rates tend to appreciate it",
+      "The peso unambiguously depreciates because higher inflation always dominates interest rate changes",
+      "Both effects reinforce each other, causing the peso to appreciate strongly"
+    ],
+    "answer": "B",
+    "hints": ["Each determinant pushes in an opposite direction here — the net outcome depends on relative magnitudes."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.05",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Traders in the foreign exchange market begin to expect that Country D will run large budget deficits financed by money creation, leading to high future inflation. Which immediate effect on Country D's currency is most likely?",
+    "choices": [
+      "Country D's currency immediately appreciates as traders anticipate higher nominal returns",
+      "Country D's currency is unaffected because expectations only influence long-run exchange rates",
+      "Country D's currency immediately depreciates as traders sell it in anticipation of its future loss of value",
+      "Country D's currency first appreciates and then depreciates gradually over several years"
+    ],
+    "answer": "C",
+    "hints": ["Expectations are forward-looking; if traders foresee lower future purchasing power, they act now by selling the currency today."]
+  },
+  {
+    "id": "apmacro.fx-determinants.mcq.06",
+    "loId": "apmacro.fx-determinants",
+    "cedCode": "AP-MACRO-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country E has real interest rates well above global averages, inflation lower than its trading partners, and rapidly growing foreign demand for its technology exports. Which best describes the expected medium-term effect on Country E's currency?",
+    "choices": [
+      "Country E's currency depreciates because capital inflows are eventually offset by a current account deficit",
+      "Country E's currency depreciates because high interest rates raise domestic borrowing costs and slow growth",
+      "Country E's currency is unchanged because the three forces exactly offset each other",
+      "Country E's currency is likely to appreciate because high real interest rates, low relative inflation, and strong export demand all increase demand for it"
+    ],
+    "answer": "D",
+    "hints": ["Evaluate each determinant: high real rates attract capital inflows; low relative inflation keeps exports competitive; strong export demand means foreigners need Country E's currency. All three push toward appreciation."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.01",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If the U.S. dollar depreciates against major foreign currencies, which of the following is the most immediate effect on U.S. trade?",
+    "choices": [
+      "U.S. exports become more expensive for foreign buyers, reducing U.S. export revenue",
+      "U.S. exports become less expensive for foreign buyers, increasing foreign demand for U.S. goods",
+      "U.S. imports from abroad become cheaper for American consumers",
+      "U.S. net exports fall because Americans substitute toward more foreign goods"
+    ],
+    "answer": "B",
+    "hints": ["Depreciation lowers the foreign-currency price of domestic goods, making them more attractive to foreign buyers."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.02",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Country F's currency appreciates substantially against its trading partners. Which best describes the short-run effect on Country F's aggregate demand?",
+    "choices": [
+      "Aggregate demand decreases because net exports fall as exports become more expensive to foreigners and imports become cheaper for domestic buyers",
+      "Aggregate demand increases because consumers benefit from cheaper imported goods",
+      "Aggregate demand is unaffected because exchange rate changes only alter the price level, not real output",
+      "Aggregate demand increases because foreign direct investment rises with currency appreciation"
+    ],
+    "answer": "A",
+    "hints": ["Appreciation causes exports to fall and imports to rise, reducing net exports and therefore the NX component of aggregate demand."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.03",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When a country's currency depreciates, which of the following effects on the domestic price level is most likely?",
+    "choices": [
+      "The domestic price level falls because cheaper exports reduce domestic production costs",
+      "The domestic price level falls because firms must cut prices to remain competitive internationally",
+      "The domestic price level tends to rise because imported goods and inputs become more expensive",
+      "The domestic price level is unaffected because only domestic monetary policy determines inflation"
+    ],
+    "answer": "C",
+    "hints": ["Depreciation raises the domestic-currency price of anything imported, including consumer goods and raw material inputs."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.04",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A country has a large persistent trade deficit. A depreciation of the domestic currency is expected to do which of the following?",
+    "choices": [
+      "Worsen the trade deficit by making imports more expensive and thereby increasing consumer spending on foreign goods",
+      "Leave the trade deficit unchanged because trade volumes do not respond to price changes",
+      "Worsen the deficit further by raising export prices and driving away foreign buyers",
+      "Reduce the trade deficit by making exports more price-competitive abroad and making imports relatively more expensive at home"
+    ],
+    "answer": "D",
+    "hints": ["Depreciation lowers the foreign-currency price of exports and raises the domestic-currency price of imports — both effects work to shrink a trade deficit."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.05",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sharp depreciation of the Mexican peso causes Mexico's net exports to rise significantly. Using the AD-AS model, which best describes the short-run outcome for Mexico?",
+    "choices": [
+      "The AD curve shifts right, raising real GDP and the price level in the short run",
+      "The AS curve shifts left, raising the price level and reducing real GDP",
+      "The AD curve shifts left, lowering both the price level and real GDP",
+      "Neither the AD nor AS curve shifts, so real GDP remains unchanged"
+    ],
+    "answer": "A",
+    "hints": ["Rising net exports increase the NX component of aggregate expenditure, shifting the AD curve to the right."]
+  },
+  {
+    "id": "apmacro.fx-effects-on-economy.mcq.06",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country G's policymakers allow their currency to depreciate to boost net exports. However, Country G's economy is already operating very close to full employment. Which of the following best describes the most likely outcome?",
+    "choices": [
+      "Real GDP rises strongly with little inflation because the economy can quickly expand productive capacity",
+      "The stimulus to aggregate demand primarily causes inflation rather than lasting output growth, since the economy is near full capacity",
+      "The depreciation causes deflation because lower import demand from abroad pushes foreign prices down",
+      "Real GDP falls because higher import costs reduce aggregate supply by more than aggregate demand rises"
+    ],
+    "answer": "B",
+    "hints": ["Near full employment, the LRAS is vertical — pushing AD higher mostly raises prices rather than real output."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.01",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A country runs a current account deficit of 200 billion dollars. Ignoring statistical discrepancies, what must be true of the country's capital and financial account balance?",
+    "choices": [
+      "It is also in deficit by 200 billion dollars",
+      "It is zero because only the current account affects total borrowing",
+      "It shows a deficit of 100 billion dollars",
+      "It shows a surplus of 200 billion dollars, meaning the country is a net borrower from the rest of the world"
+    ],
+    "answer": "D",
+    "hints": ["BOP identity: current account + capital and financial account = 0, so the financial account must offset the current account deficit."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.02",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Federal Reserve raises real interest rates in the United States above those in other major economies. Which sequence of effects is most consistent with economic theory?",
+    "choices": [
+      "Capital flows out of the U.S.; the dollar depreciates; U.S. exports become cheaper",
+      "Capital flows into the U.S.; the dollar appreciates; U.S. net exports worsen",
+      "Capital flows into the U.S.; the dollar appreciates; U.S. net exports improve",
+      "Capital flows out of the U.S.; the dollar appreciates; U.S. net exports worsen"
+    ],
+    "answer": "B",
+    "hints": ["Higher U.S. rates attract foreign capital, raising demand for dollars and causing the dollar to appreciate, which then makes U.S. exports more expensive for foreign buyers."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.03",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following statements about a country that consistently imports more goods and services than it exports is most accurate?",
+    "choices": [
+      "The country necessarily runs a current account surplus",
+      "The country's balance of payments automatically goes negative",
+      "The country tends to run a current account deficit and typically must attract net capital inflows to finance it",
+      "The country's financial account balance is always zero regardless of trade flows"
+    ],
+    "answer": "C",
+    "hints": ["A persistent import surplus contributes to a current account deficit; the BOP identity requires a matching financial account surplus."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.04",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In an open economy, the identity S minus I = NX links national saving (S), domestic investment (I), and net exports (NX). If the government runs a large budget deficit that reduces national saving while domestic investment remains unchanged, which outcome is most likely?",
+    "choices": [
+      "NX falls, worsening the current account balance (the twin-deficits effect)",
+      "NX rises, improving the current account balance",
+      "Domestic investment rises automatically to restore the identity",
+      "The current account is unaffected because government spending and trade are unrelated"
+    ],
+    "answer": "A",
+    "hints": ["If S falls and I is fixed, S minus I becomes more negative, so NX must fall by the same amount."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.05",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Economists sometimes observe a 'twin deficits' relationship in which a government budget deficit is correlated with a current account deficit. Which mechanism best explains this link?",
+    "choices": [
+      "Government deficits increase the money supply, lowering interest rates and encouraging imports",
+      "Government deficits automatically increase national saving, raising investment and improving the current account",
+      "Government deficits always cause hyperinflation, which then depreciates the currency and improves the current account",
+      "Government deficits reduce national saving; as S minus I falls, net exports and the current account balance tend to worsen as well"
+    ],
+    "answer": "D",
+    "hints": ["Use S minus I = NX: a budget deficit reduces S, making S minus I smaller (more negative), which reduces NX."]
+  },
+  {
+    "id": "apmacro.trade-capital-flows.mcq.06",
+    "loId": "apmacro.trade-capital-flows",
+    "cedCode": "AP-MACRO-6.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country H adopts expansionary fiscal policy financed by large-scale government borrowing. Which of the following correctly traces the full sequence of effects on interest rates, capital flows, the exchange rate, and net exports?",
+    "choices": [
+      "Interest rates fall; capital flows out; the currency depreciates; net exports rise",
+      "Interest rates rise; capital flows in; the currency appreciates; net exports fall (exchange-rate channel of crowding out)",
+      "Interest rates rise; capital flows out; the currency depreciates; net exports rise",
+      "Interest rates fall; capital flows in; the currency appreciates; net exports fall"
+    ],
+    "answer": "B",
+    "hints": ["Government borrowing raises demand for loanable funds, pushing real interest rates up, which attracts foreign capital, appreciating the currency, which then reduces net exports."]
+  }
+]
