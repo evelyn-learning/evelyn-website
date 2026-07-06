@@ -81,8 +81,8 @@ function loadAllPlans(): LessonPlan[] {
   return plans;
 }
 
-function findPlan(planId: string): LessonPlan | null {
-  return loadAllPlans().find((p) => p.id === planId) ?? null;
+function findPlan(planId: string, plans?: LessonPlan[]): LessonPlan | null {
+  return (plans ?? loadAllPlans()).find((p) => p.id === planId) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -258,6 +258,11 @@ function emitConst(draft: BaselineDraft): string {
 
   const sourcesBlock = `[{ type: 'plan', planId: ${tsString(draft.planId)} }]`;
 
+  // Render a section as `[]` when empty, else a multiline array. Avoids the
+  // stray leading comma (`[\n,\n]` → sparse `undefined[]`) that breaks tsc when
+  // a plan lacks a segment kind (e.g. no worked_example → empty methods).
+  const section = (block: string): string => (block ? `[\n${block},\n  ]` : '[]');
+
   return `/**
  * ${draft.course} — Unit ${draft.cedUnit} CED ${draft.cedTopic}: ${draft.cedTitle}.
  *
@@ -281,15 +286,9 @@ export const ${constName}: TopicNotesBaseline = {
   baselineVersion: ${draft.baselineVersion},
   lastUpdatedAt: ${tsString(draft.lastUpdatedAt)},
   sources: ${sourcesBlock},
-  theory: [
-${theoryBlock},
-  ],
-  methods: [
-${methodsBlock},
-  ],
-  pointers: [
-${pointersBlock},
-  ],
+  theory: ${section(theoryBlock)},
+  methods: ${section(methodsBlock)},
+  pointers: ${section(pointersBlock)},
 };
 `;
 }
@@ -299,39 +298,50 @@ ${pointersBlock},
 // ---------------------------------------------------------------------------
 
 function main(): void {
-  const planId = process.argv[2];
-  if (!planId) {
-    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId>');
+  const planIds = process.argv.slice(2);
+  if (planIds.length === 0) {
+    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId> [<planId> ...]');
     console.error('Example: ... evelyn.ap.macro.loanable-funds-market.v1');
     process.exit(2);
   }
-  const plan = findPlan(planId);
-  if (!plan) {
-    console.error(`✗ plan not found: ${planId}`);
-    process.exit(1);
-  }
-  const draft = extract(plan);
-  const source = emitConst(draft);
 
+  // Load all plans once (each require of the full seed dir is expensive); reuse
+  // across every requested planId so batch extraction stays fast.
+  const allPlans = loadAllPlans();
   const outDir = path.join(__dirname, '..', 'src', 'lib', 'tutor', 'topic-notes', 'seeds');
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  const outFile = path.join(outDir, fileNameFor(plan));
 
-  if (fs.existsSync(outFile)) {
-    console.error(`✗ output file already exists: ${outFile}`);
-    console.error('  delete it first if you want to re-extract — baseline edits should be hand-made after extraction');
-    process.exit(1);
+  let wrote = 0;
+  let skipped = 0;
+  const missing: string[] = [];
+
+  for (const planId of planIds) {
+    const plan = findPlan(planId, allPlans);
+    if (!plan) {
+      console.error(`✗ plan not found: ${planId}`);
+      missing.push(planId);
+      continue;
+    }
+    const outFile = path.join(outDir, fileNameFor(plan));
+    if (fs.existsSync(outFile)) {
+      // Idempotent: never clobber a hand-edited baseline.
+      console.log(`• skip (exists): ${path.basename(outFile)}`);
+      skipped++;
+      continue;
+    }
+    const draft = extract(plan);
+    fs.writeFileSync(outFile, emitConst(draft), 'utf-8');
+    console.log(
+      `✓ ${path.basename(outFile)}  (theory ${draft.theory.length}, methods ${draft.methods.length}, pointers ${draft.pointers.length})`,
+    );
+    wrote++;
   }
 
-  fs.writeFileSync(outFile, source, 'utf-8');
-  console.log(`✓ wrote ${outFile}`);
-  console.log(`  theory entries: ${draft.theory.length}`);
-  console.log(`  method entries: ${draft.methods.length}`);
-  console.log(`  pointer seeds:  ${draft.pointers.length}`);
-  console.log('');
-  console.log('Next:');
-  console.log('  1. review and hand-edit the file (re-tag theory entries with kind, split LOs etc.)');
-  console.log(`  2. enrich pointers via Opus: scripts/gen-topic-notes-pointers.ts ${planId}`);
+  console.log(`\nDone: wrote ${wrote}, skipped ${skipped}, missing ${missing.length}.`);
+  if (missing.length) {
+    console.error('Missing planIds:\n  ' + missing.join('\n  '));
+    process.exit(1);
+  }
 }
 
 main();
