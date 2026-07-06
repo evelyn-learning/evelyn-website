@@ -111,6 +111,7 @@ import {
   TUTOR_WOLFRAM_MATH_CHECK,
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
+  TUTOR_CONTENT_VARIETY,
   TOPIC_NOTES_WARMUP_SEGMENTS,
   TOPIC_NOTES_RATE_LIMITS,
   BOARD_RENDER_META_ACTIONS,
@@ -988,6 +989,10 @@ export function VoiceTutorRealtime({
       masteryDeltas: accum.masteryDeltas,
       gaps: accum.gaps,
       ...(isFinal ? { transcript } : { generateNotes: false }),
+      // Content variety (phase 1): only the FINAL commit carries the transcript
+      // the extraction reads, so only it requests filling-capture. Flag-gated
+      // + plan-only ⇒ flag-off / demo / free-convo omit the field entirely.
+      ...(isFinal && TUTOR_CONTENT_VARIETY && lessonPlanId ? { captureContentFillings: true } : {}),
       // Only stamp when at least one overlay tool fired — keeps SessionMemory
       // entries lean on sessions that didn't touch topic-notes.
       notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
@@ -1108,6 +1113,10 @@ export function VoiceTutorRealtime({
   // collects session events (mastery deltas from mark_segment_complete,
   // gaps from record_gap, LOs touched) and commits them at session end.
   const studentProfileBlockRef = useRef<string>('');
+  // Content variety (phase 1): the current plan's seen-memory slice, read
+  // once from the profile GET at mount. null ⇒ never varied (first time on
+  // this plan, flag off, or no studentId).
+  const planContentSeenRef = useRef<{ hooks: string[]; examples: string[]; problems: string[] } | null>(null);
   // Task D1b — transient social/progress context block. Computed ONCE per
   // mount (session-scoped, immutable for the session, never persisted).
   // Flag off or props absent ⇒ stays null ⇒ the per-turn compose below is
@@ -5721,6 +5730,18 @@ export function VoiceTutorRealtime({
           studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
             && data.profile.recentSessions.length > 0;
         }
+        // Content variety (phase 1): arm the seen-memory ONLY when there's
+        // actually prior content for THIS plan to diverge from (≥1 slot
+        // non-empty). First session on a plan leaves this null → no
+        // <content_variety> block → authored content, unchanged.
+        if (TUTOR_CONTENT_VARIETY && lessonPlanId) {
+          const s = data?.profile?.planContentSeen?.[lessonPlanId];
+          if (s && (s.hooks?.length || s.examples?.length || s.problems?.length)) {
+            planContentSeenRef.current = {
+              hooks: s.hooks ?? [], examples: s.examples ?? [], problems: s.problems ?? [],
+            };
+          }
+        }
       } catch (err) {
         console.warn('[VoiceTutorRealtime] student profile fetch failed:', err);
       } finally {
@@ -6676,10 +6697,16 @@ export function VoiceTutorRealtime({
         // ('subscribed' = seed + LO coverage contract; 'demo' = raw
         // material). Flag off ⇒ sessionModeRef stays null ⇒ the field is
         // never present ⇒ server-side block byte-identical to pre-C1.
-        const lessonPlanContext =
-          baseLessonPlanContext && TUTOR_PEDAGOGY_OPENER && sessionModeRef.current
-            ? { ...baseLessonPlanContext, sessionMode: sessionModeRef.current }
-            : baseLessonPlanContext;
+        const lessonPlanContext = baseLessonPlanContext
+          ? {
+              ...baseLessonPlanContext,
+              ...(TUTOR_PEDAGOGY_OPENER && sessionModeRef.current ? { sessionMode: sessionModeRef.current } : {}),
+              // Content variety (phase 1): inject seen-memory only when armed
+              // (repeat session on this plan + flag on). Absent ⇒ no
+              // <content_variety> block ⇒ byte-identical request.
+              ...(TUTOR_CONTENT_VARIETY && planContentSeenRef.current ? { contentVariety: planContentSeenRef.current } : {}),
+            }
+          : baseLessonPlanContext;
 
         // Student-problem grounding (coherence fix): if the student brought
         // their OWN concrete problem (request-framed, concrete, divergent from
