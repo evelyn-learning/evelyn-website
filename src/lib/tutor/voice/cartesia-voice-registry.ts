@@ -58,8 +58,8 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
     nativeAccent: 'en-us',
   },
   'mr-dev-khanna': {
-    voiceId: '97303aad-1a66-4edf-870a-58e6ba545005', // Amrit
-    label: 'Amrit',
+    voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012', // Sameer (user swap 2026-07-07: Amrit too soft/sleepy in live session)
+    label: 'Sameer',
     gender: 'male',
     // hi→en carryover — Dev's base voice IS Indian English already.
     nativeAccent: 'en-in',
@@ -90,7 +90,7 @@ const ACCENT_POOLS: Record<string, AccentPool> = {
   },
   'en-in': {
     female: { voiceId: 'dc4725ab-a34f-4625-9ae3-e35296b456e2', label: 'Katie (en-in localized)' },
-    male: { voiceId: '97303aad-1a66-4edf-870a-58e6ba545005', label: 'Amrit' },
+    male: { voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012', label: 'Sameer' },
     // Palak `28ca2041-5dda-42df-8123-f58ea9c3da00` also passed (en-in,
     // female) but is not the default pick — reserved for an explicit
     // future selector, not wired into gender-preferred pick.

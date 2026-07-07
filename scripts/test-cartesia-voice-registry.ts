@@ -24,7 +24,7 @@ function check(name: string, fn: () => void) {
 
 // Locked IDs from docs/superpowers/plans/2026-07-06-cartesia-migration-phase2.md
 const KATIE = 'f786b574-daa5-4673-aa0c-cbe3e8534c02';
-const AMRIT = '97303aad-1a66-4edf-870a-58e6ba545005';
+const SAMEER = '638efaaa-4d0c-442e-b701-3fae16aad012';
 const SKYLAR = 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4';
 const GEMMA = '62ae83ad-4f6a-430b-af41-a9bede9286ca';
 const KATIE_LOCALIZED_EN_IN = 'dc4725ab-a34f-4625-9ae3-e35296b456e2';
@@ -45,8 +45,8 @@ check('elena -> Katie (persona-authentic base)', () => {
   assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).voiceId, KATIE);
 });
 
-check('dev -> Amrit (persona-authentic base, hi->en carryover)', () => {
-  assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV }).voiceId, AMRIT);
+check('dev -> Sameer (persona-authentic base, user-selected 2026-07-07)', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV }).voiceId, SAMEER);
 });
 
 check('amara -> Skylar (persona-authentic base)', () => {
@@ -64,8 +64,8 @@ check('elena + en-in -> Katie-localized (accent override on teacher base)', () =
   );
 });
 
-check('dev + en-in -> Amrit unchanged (already en-in)', () => {
-  assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV, accent: 'en-in' }).voiceId, AMRIT);
+check('dev + en-in -> Sameer unchanged (already en-in)', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV, accent: 'en-in' }).voiceId, SAMEER);
 });
 
 check('accent only en-ar-gulf (no teacher) -> Maryam (female default)', () => {
