@@ -125,3 +125,11 @@ assert.strictEqual(
 );
 
 console.log('OK — tts-pronunciation rewrites validated');
+
+// contraction guard: y'all must not become why'all
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const out = rewriteForTTS("y'all ready for this?");
+  if (out.includes('why')) { console.error('FAIL: contraction guard', out); process.exit(1); }
+  console.log('OK — contraction guard');
+}

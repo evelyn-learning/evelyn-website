@@ -137,8 +137,8 @@ const A_VARIABLE_REPLACEMENTS: Replacement[] = [
 
 const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   ...A_VARIABLE_REPLACEMENTS,
-  { pattern: /\by\b/g, replacement: 'why' },
-  { pattern: /\bb\b/g, replacement: 'bee' },
+  { pattern: /\by\b(?!['’])/g, replacement: 'why' },  // (?!') guards contractions like y'all
+  { pattern: /\bb\b(?!['’])/g, replacement: 'bee' },
   { pattern: new RegExp(`\\bY\\b(?=\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
   { pattern: new RegExp(`\\bB\\b(?=\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];
