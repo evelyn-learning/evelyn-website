@@ -96,11 +96,12 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
     voice: { provider: 'openai', voiceId: 'coral' },
   },
   {
+    // id kept stable — referenced by the voice registry and stored sessions.
     id: 'mr-dev-khanna',
-    name: 'Mr. Dev Khanna',
+    name: 'Mr. Sameer',
     intro:
-      'Ten years coaching students for the big exams, with a stopwatch in one hand and a bad pun always ready. ' +
-      "I'll keep you sharp, quick, and just loose enough to enjoy it.",
+      'Ten years helping students crack the big exams — quick reps, sharp pattern-spotting, ' +
+      'and a bad pun always ready. Expect to work fast and enjoy it.',
     subjects: ['math', 'science', 'test-prep'],
     levels: ['high-school', 'exam-prep'],
     style: {
