@@ -104,6 +104,16 @@ const EMDASH_REPLACEMENTS: Replacement[] = [
   { pattern: /\s*—\s*/g, replacement: ', ' },
 ];
 
+/** Markdown emphasis stripping — the brain emits *italic* / **bold**
+ *  spans; the client strips bold before speech but single-asterisk
+ *  italics leak through to TTS, where they block variable-anchor
+ *  matching ("*a* represents") and can be voiced as "asterisk".
+ *  Content must start with a letter so multiplication ("2*3*4")
+ *  is never touched. */
+const MD_EMPHASIS_REPLACEMENTS: Replacement[] = [
+  { pattern: /\*{1,2}([A-Za-z][^*]{0,60}?)\*{1,2}/g, replacement: '$1' },
+];
+
 /** Math-variable letter respelling.
  *
  *  Tier 1 (unconditional): standalone lowercase 'y' and 'b' are almost
@@ -120,11 +130,11 @@ const EMDASH_REPLACEMENTS: Replacement[] = [
  *  untouched). It's only rewritten to "ay" when a variable-defining
  *  phrase anchors it — kept deliberately conservative.
  */
-const MATH_ANCHOR_SRC = 'squared|cubed|equals|=|over|plus|minus|axis|coordinate|value';
+const MATH_ANCHOR_SRC = 'squared|cubed|equals|=|over|plus|minus|axis|coordinate|value|bar|hat|prime|tilde|intercept';
 
 const A_VARIABLE_REPLACEMENTS: Replacement[] = [
   // "a represents/denotes/stands for/equals/=" — 'a' as the named variable.
-  { pattern: /\ba\b(?=\s+(?:represents|denotes|stands for|equals|=))/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'ay' },
   // "substitute a" / "solve for a" / "value of a" / "values of a"
   { pattern: /(?<=\b(?:substitute|solve for|value of|values of)\s)a\b/gi, replacement: 'ay' },
   // "of a and b" — e.g. "the ratio of a and b"
@@ -139,11 +149,12 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   ...A_VARIABLE_REPLACEMENTS,
   { pattern: /\by\b(?!['’])/g, replacement: 'why' },  // (?!') guards contractions like y'all
   { pattern: /\bb\b(?!['’])/g, replacement: 'bee' },
-  { pattern: new RegExp(`\\bY\\b(?=\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
-  { pattern: new RegExp(`\\bB\\b(?=\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
+  { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
+  { pattern: new RegExp(`\\bB\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];
 
 const ALL_REPLACEMENTS: Replacement[] = [
+  ...MD_EMPHASIS_REPLACEMENTS,
   ...TRIG_REPLACEMENTS,
   ...MATH_FUNC_REPLACEMENTS,
   ...GREEK_REPLACEMENTS,

@@ -133,3 +133,19 @@ console.log('OK — tts-pronunciation rewrites validated');
   if (out.includes('why')) { console.error('FAIL: contraction guard', out); process.exit(1); }
   console.log('OK — contraction guard');
 }
+
+// Live-session regressions 2026-07-07 (session-1783398163983): italic-markdown
+// blocking anchors, verb-form gap, capital Y-bar.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('Now the intercept — what do you think *a* represents?', 'Now the intercept, what do you think ay represents?', 'italic-a-represents');
+  eq('Did you mean what does *a* represent, the y-intercept?', 'Did you mean what does ay represent, the why-intercept?', 'verb-form-represent');
+  eq('Y-bar is the actual average of your data.', 'why-bar is the actual average of your data.', 'capital-y-bar');
+  eq('2*3*4 equals 24', '2*3*4 equals 24', 'multiplication-untouched');
+  eq('a cat sat on a mat', 'a cat sat on a mat', 'article-untouched');
+  console.log('OK — live-session 2026-07-07 regressions');
+}
