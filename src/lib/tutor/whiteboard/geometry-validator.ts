@@ -900,6 +900,28 @@ function flagIncompleteShapes(cmd: GeometryCommand): void {
   const nSegments = cmd.segments?.length ?? 0;
   const nPolygons = cmd.polygons?.length ?? 0;
 
+  // Degenerate content — nothing but anonymous dots. A showGeometry with
+  // NO segments/polygons/circles/angles whose points carry no label and
+  // no coordinate readout renders as a titled card containing bare dots
+  // (observed live 2026-07-08, session portal-9549e3af: title "Two-Way
+  // Table Structure" + one unlabeled point at the origin — the brain
+  // tried to sketch a TABLE via show_geometry). Whatever the intent,
+  // there is nothing for the student to see; refuse so the brain retries
+  // with real primitives or the right tool. Title-independent on purpose:
+  // the polygon rules below only catch shapes the title names.
+  const nCircles = cmd.circles?.length ?? 0;
+  const nAngles = cmd.angles?.length ?? 0;
+  if (nSegments + nPolygons + nCircles + nAngles === 0) {
+    const anyVisibleInfo = cmd.points.some((p) => (p.label ?? '').trim() !== '' || p.showCoords === true);
+    if (!anyVisibleInfo) {
+      cmd._incomplete = true;
+      cmd._incompleteReason =
+        `The command contains only ${nPoints} unlabeled point(s) and no segments/polygons/circles/angles — it would render as a bare dot with nothing to see. ` +
+        'If you meant tabular data (a two-way / frequency / comparison table), use show_table instead; otherwise re-emit with the full figure primitives.';
+      return;
+    }
+  }
+
   const requirement: Array<{ keyword: RegExp; minPoints: number; needsFigure: boolean }> = [
     { keyword: /\btriangle\b/, minPoints: 3, needsFigure: true },
     { keyword: /\bquadrilateral\b|\brectangle\b|\bsquare\b|\bparallelogram\b|\brhombus\b|\btrapezoid\b/, minPoints: 4, needsFigure: true },

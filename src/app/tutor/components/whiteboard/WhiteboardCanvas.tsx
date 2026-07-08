@@ -617,10 +617,27 @@ export function WhiteboardCanvas({
     }
     const added = commands.slice(prevFollowCountRef.current);
     prevFollowCountRef.current = commands.length;
-    if (added.some((c) => c.action === 'goToPage' || c.action === 'scrollTo')) return;
     const META = new Set([
       'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
     ]);
+    // Explicit nav (goToPage / scrollTo) suppresses view-follow ONLY when it is
+    // the batch's FINAL visual intent. Order matters: a turn shaped
+    // [scrollTo(earlier figure) … scribble … NEW render] used to leave the view
+    // parked on the earlier page while the new render landed unseen on another
+    // page — the student watches a stale example while the tutor narrates the
+    // new content (2026-07-08 session portal-9549e3af: "I'm seeing an example
+    // of students commuting" while the tutor discussed a different figure). If
+    // a teaching render comes AFTER the last nav, the render is what the turn
+    // ends on — follow it.
+    let lastNav = -1;
+    let lastRender = -1;
+    for (let k = added.length - 1; k >= 0; k--) {
+      const a = added[k].action;
+      if (lastNav < 0 && (a === 'goToPage' || a === 'scrollTo')) lastNav = k;
+      if (lastRender < 0 && !META.has(a)) lastRender = k;
+      if (lastNav >= 0 && lastRender >= 0) break;
+    }
+    if (lastNav >= 0 && lastNav > lastRender) return;
     for (let k = added.length - 1; k >= 0; k--) {
       const c = added[k];
       if (META.has(c.action)) continue;
@@ -666,10 +683,6 @@ export function WhiteboardCanvas({
     const added = commands.slice(prevCommandCountRef.current);
     prevCommandCountRef.current = commands.length;
     if (!scrollContainerRef.current) return;
-    // Explicit navigation (goToPage / scrollTo) owns its own scroll — the
-    // dedicated effects above already position the view; don't fight them.
-    if (added.some((c) => c.action === 'goToPage' || c.action === 'scrollTo')) return;
-
     // Find the newest TEACHING render in this batch by its STABLE id. We scroll
     // by id (not by itemRefsRef position) so the scroll survives the
     // view-follow page switch: when the new render lands on a DIFFERENT page,
@@ -682,6 +695,19 @@ export function WhiteboardCanvas({
     const META = new Set([
       'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
     ]);
+    // Explicit navigation (goToPage / scrollTo) owns its own scroll ONLY when
+    // it is the batch's final visual intent — mirror the view-follow effect's
+    // order-aware rule above so both effects follow the same page on a
+    // [scrollTo … NEW render] turn.
+    let lastNav = -1;
+    let lastRender = -1;
+    for (let k = added.length - 1; k >= 0; k--) {
+      const a = added[k].action;
+      if (lastNav < 0 && (a === 'goToPage' || a === 'scrollTo')) lastNav = k;
+      if (lastRender < 0 && !META.has(a)) lastRender = k;
+      if (lastNav >= 0 && lastRender >= 0) break;
+    }
+    if (lastNav >= 0 && lastNav > lastRender) return;
     let newestId: string | undefined;
     for (let k = added.length - 1; k >= 0; k--) {
       if (META.has(added[k].action)) continue;

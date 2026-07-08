@@ -1,0 +1,1 @@
+{ "tool": "show_table", "args": { "headers": ["", "Brown Eyes", "Blue Eyes", "Green Eyes", "Total"], "rows": [["Male", "6", "4", "2", "12"], ["Female", "6", "4", "3", "13"], ["Total", "12", "8", "5", "25"]] }, "label": "prod-correct-two-way-table", "expect": "render" }

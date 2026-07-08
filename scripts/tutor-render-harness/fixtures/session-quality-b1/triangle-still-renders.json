@@ -1,0 +1,1 @@
+{ "tool": "show_geometry", "args": { "title": "Triangle ABC", "points": [{ "id": "a", "x": 0, "y": 0, "label": "A" }, { "id": "b", "x": 4, "y": 0, "label": "B" }, { "id": "c", "x": 2, "y": 3, "label": "C" }], "polygons": [{ "vertices": ["a", "b", "c"] }] }, "label": "triangle-still-renders", "expect": "render" }

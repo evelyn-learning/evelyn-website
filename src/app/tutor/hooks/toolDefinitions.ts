@@ -204,7 +204,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_geometry',
-    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry.',
+    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry. NOT for tabular content: a table structure / grid of cells (two-way table, frequency table, comparison grid) must be rendered with show_table, never sketched here — a geometry call with no real figure primitives is rejected.',
     parameters: {
       type: 'object',
       properties: {

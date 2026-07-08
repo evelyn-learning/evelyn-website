@@ -1,0 +1,1 @@
+{ "tool": "show_geometry", "args": { "title": "Plot the Point", "points": [{ "id": "p", "x": 3, "y": 4, "label": "P", "showCoords": true }] }, "label": "labeled-point-still-renders", "expect": "render" }
