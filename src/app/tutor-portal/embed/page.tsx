@@ -213,6 +213,15 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const inputMode: InputMode = config.input_mode || 'voice';
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   const openAIVoice: OpenAIVoice = (config.voice as OpenAIVoice) || 'coral';
+  // Honor the teacher persona's declared voice. A cartesia teacher voice drives
+  // Cartesia TTS with that EXACT voiceId (the marketplace teacher's cloned
+  // voice); the embed otherwise never wired a TTS provider and fell back to the
+  // OpenAI Realtime voice (`openAIVoice`). Absent/openai teacher voice keeps
+  // that prior behavior exactly — backward-compatible for existing partners.
+  const teacherVoice = config.teacher?.voice;
+  const useCartesiaVoice = teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId;
+  const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice ? 'cartesia' : 'realtime';
+  const cartesiaVoiceId = useCartesiaVoice ? teacherVoice.voiceId : undefined;
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -514,6 +523,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         lessonPlanId={config.curriculum_module || undefined}
         voice={openAIVoice}
         voiceEngine="claude-brain"
+        ttsProvider={ttsProvider}
+        cartesiaVoiceId={cartesiaVoiceId}
         sessionMaxMinutes={maxDuration}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
