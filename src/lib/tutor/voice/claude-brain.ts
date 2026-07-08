@@ -22,7 +22,13 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 
-export const BRAIN_MODEL_ID = 'claude-sonnet-4-6';
+// Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
+// Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
+// NOTE: thinking is set to 'disabled' on every call below — required, because
+// Sonnet 5 turns on adaptive thinking when the field is OMITTED (adds latency,
+// bad for a live voice brain), whereas Sonnet 4.6 runs thinking-off on omit.
+// Explicit-disabled keeps both models at the same low-latency no-thinking path.
+export const BRAIN_MODEL_ID = process.env.TUTOR_BRAIN_MODEL || 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1500;
 /**
  * Hard cap on agent-loop iterations per brain turn. Each iteration is one
@@ -1069,6 +1075,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     const response = await anthropic.messages.create({
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
+      thinking: { type: 'disabled' as const },
       system: [
         {
           type: 'text',
@@ -1248,6 +1255,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const stream = anthropic.messages.stream({
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
+      thinking: { type: 'disabled' as const },
       system: [
         {
           type: 'text',
@@ -1449,6 +1457,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       const rescueStream = anthropic.messages.stream({
         model: input.model ?? BRAIN_MODEL_ID,
         max_tokens: 250,
+        thinking: { type: 'disabled' as const },
         system: [
           {
             type: 'text',
