@@ -29,7 +29,11 @@ import { validateToolCall } from '../whiteboard/validate-tool-call';
 // bad for a live voice brain), whereas Sonnet 4.6 runs thinking-off on omit.
 // Explicit-disabled keeps both models at the same low-latency no-thinking path.
 export const BRAIN_MODEL_ID = process.env.TUTOR_BRAIN_MODEL || 'claude-sonnet-4-6';
-const DEFAULT_MAX_TOKENS = 1500;
+// 2000 (was 1500): Sonnet 5's tokenizer emits ~30-36% more tokens for the same
+// text than Sonnet 4.6, so the old 1500 cap truncated equivalent output. This
+// is a ceiling, not a target — the brain's tool-call turns rarely approach it,
+// so the headroom costs nothing until actually used.
+const DEFAULT_MAX_TOKENS = 2000;
 /**
  * Hard cap on agent-loop iterations per brain turn. Each iteration is one
  * Anthropic call. Typical multi-step plan completes in 1-3 rounds; cap
@@ -1456,7 +1460,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     try {
       const rescueStream = anthropic.messages.stream({
         model: input.model ?? BRAIN_MODEL_ID,
-        max_tokens: 250,
+        max_tokens: 350, // was 250 — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS)
         thinking: { type: 'disabled' as const },
         system: [
           {
