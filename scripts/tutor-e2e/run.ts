@@ -39,6 +39,12 @@ const PROFILE_BEHAVIORS: Record<StudentProfile, string> = {
 };
 
 const BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
+// Silent TTS by default (Crimsora v2 Phase 2E): automated runs must not
+// burn Cartesia/OpenAI credits on audio nobody hears. The zero-filled
+// silent buffers still drive sentence-start/drain, so render-sync works
+// (and headless runs stop falling back to the 6s stall timer). For live
+// ear-tests, opt back into a real engine: TUTOR_E2E_TTS=cartesia|mini.
+const TTS_PARAM = process.env.TUTOR_E2E_TTS || 'silent';
 const HEADED = process.argv.includes('--headed');
 const scenarioName = process.argv.find((a) => !a.startsWith('-') && a !== process.argv[0] && a !== process.argv[1]);
 
@@ -140,8 +146,8 @@ async function main() {
   const SETTLE_MS = 7500;
 
   try {
-    log(`navigating to ${BASE_URL}/tutor`);
-    await page.goto(`${BASE_URL}/tutor`, { waitUntil: 'domcontentloaded' });
+    log(`navigating to ${BASE_URL}/tutor?tts=${TTS_PARAM}`);
+    await page.goto(`${BASE_URL}/tutor?tts=${TTS_PARAM}`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.__tutorTestStart === 'function', { timeout: 30_000 });
 
     log(`starting session: ${JSON.stringify(scenario.start)}`);

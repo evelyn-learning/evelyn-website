@@ -19,6 +19,12 @@ import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 // OpenAI Realtime voice options
 export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse';
 
+/** 'silent' TTS test mode: synthetic per-word duration for the zero-filled
+ *  PCM buffers fetchTTSPromise fabricates. 0.15 s/word ≈ 2.5× real speech
+ *  (~0.37 s/word) — fast enough for cheap automated runs, long enough that
+ *  sentence-start/drain events and caption pacing stay plausibly timed. */
+const SILENT_TTS_SECONDS_PER_WORD = 0.15;
+
 export interface RealtimeUsage {
   totalTokens: number;
   inputTokens: number;
@@ -200,8 +206,15 @@ export interface RealtimeConfig {
      *  - 'cartesia': use Cartesia sonic-3.5 via /api/tutor/tts-cartesia.
      *    Reuses the exact same HTTP-TTS dispatch/queue/cancel path as
      *    'openai-mini' (Cartesia migration Phase 2, Task 3) — only the
-     *    fetch URL/body differ. */
-    ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia';
+     *    fetch URL/body differ.
+     *  - 'silent': test mode (Crimsora v2 Phase 2E). No TTS API is called;
+     *    fetchTTSPromise resolves a zero-filled Float32Array sized
+     *    words × SILENT_TTS_SECONDS_PER_WORD × 24kHz, so the buffer plays
+     *    as real (inaudible) WebAudio and every completion signal the
+     *    render-sync / kill-bridge / drain machinery depends on
+     *    (sentence-start, drain, AudioBufferSource 'ended') fires with
+     *    plausible timing. Automated harnesses only. */
+    ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
     /** Cartesia voice id to send with each /api/tutor/tts-cartesia request
      *  (Task 3). Ignored unless ttsProvider === 'cartesia'. Resolved by the
      *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
@@ -779,7 +792,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     isRelayRef.current = isRelay;
   }, [isRelay]);
-  const ttsProviderRef = useRef<'realtime' | 'openai-mini' | 'cartesia'>(
+  const ttsProviderRef = useRef<'realtime' | 'openai-mini' | 'cartesia' | 'silent'>(
     relayMode?.ttsProvider ?? 'realtime',
   );
   useEffect(() => {
@@ -799,9 +812,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // mini path (queue-drain in playNextAudio, dispatchSpeakText, speakText's
   // guard, drainSpeakTextQueueRef, clearSpeechQueue's immediate-stop branch)
   // must treat 'cartesia' identically. Centralized here so the widening is
-  // one edit instead of six scattered ones.
+  // one edit instead of six scattered ones. 'silent' (test mode) rides the
+  // identical path — it only short-circuits the fetch inside fetchTTSPromise,
+  // so the queue/cancel/drain semantics are byte-identical to openai-mini.
   const isHttpTtsProvider = useCallback(
-    (p: 'realtime' | 'openai-mini' | 'cartesia') => p === 'openai-mini' || p === 'cartesia',
+    (p: 'realtime' | 'openai-mini' | 'cartesia' | 'silent') =>
+      p === 'openai-mini' || p === 'cartesia' || p === 'silent',
     [],
   );
   const ttsAbortRef = useRef<AbortController | null>(null);
@@ -2441,6 +2457,24 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     const cache = ttsPrefetchCacheRef.current;
     const cached = cache.get(trimmed);
     if (cached) return cached;
+    // 'silent' test mode (Crimsora v2 Phase 2E): never touch a TTS API.
+    // Resolve a zero-filled PCM buffer sized to a plausible speech duration
+    // (words × SILENT_TTS_SECONDS_PER_WORD at the hardcoded 24kHz playback
+    // rate). The zeros play as real WebAudio silence, so AudioBufferSource
+    // 'ended' → playNextAudio recursion → sentence-start/drain events and
+    // clearSpeechQueue's drain-promise all fire exactly as with real audio.
+    // Do NOT return an empty/near-empty buffer: render-sync anchors visuals
+    // to sentence completion, and a 0-length source never fires 'ended'.
+    if (ttsProviderRef.current === 'silent') {
+      const words = trimmed.split(/\s+/).filter(Boolean).length || 1;
+      const samples = Math.max(
+        Math.round(words * SILENT_TTS_SECONDS_PER_WORD * 24000),
+        Math.round(0.1 * 24000), // ≥100ms floor so 'ended' timing stays sane
+      );
+      const promise = Promise.resolve(new Float32Array(samples));
+      cache.set(trimmed, promise);
+      return promise;
+    }
     const promise = (async (): Promise<Float32Array | null> => {
       try {
         const useCartesia = ttsProviderRef.current === 'cartesia';

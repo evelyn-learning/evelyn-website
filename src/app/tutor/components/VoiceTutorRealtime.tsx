@@ -347,8 +347,12 @@ interface VoiceTutorRealtimeProps {
    *  - 'realtime' (default): Realtime out-of-band response. Highest quality, expensive.
    *  - 'openai-mini': gpt-4o-mini-tts via /api/tutor/tts-openai. ~10× cheaper.
    *  - 'cartesia': Cartesia sonic-3.5 via /api/tutor/tts-cartesia. Same
-   *    HTTP-TTS flow as 'openai-mini' (Cartesia migration Phase 2, Task 3). */
-  ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia';
+   *    HTTP-TTS flow as 'openai-mini' (Cartesia migration Phase 2, Task 3).
+   *  - 'silent': test mode — no TTS API calls; zero-filled buffers with
+   *    plausible durations keep render-sync/drain timing intact
+   *    (Crimsora v2 Phase 2E). Select via ?tts=silent or
+   *    NEXT_PUBLIC_TUTOR_TTS_ENGINE=silent. */
+  ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
   /** Cartesia voice id for the persona-mapped teacher voice (Task 3).
    *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
    *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */

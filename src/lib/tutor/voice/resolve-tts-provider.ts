@@ -13,21 +13,27 @@
  * Pure module: zero imports from React/Next — server- and client-safe.
  */
 
-export type TtsProvider = 'realtime' | 'openai-mini' | 'cartesia';
+export type TtsProvider = 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
 
 /**
  * Resolve the effective TTS provider.
  *
- * Priority: `?tts=mini` (urlParam === 'mini') always wins → 'openai-mini',
- * regardless of the env flag. Otherwise, `envFlag === 'cartesia'` →
- * 'cartesia'. Anything else (both unset, env garbage, or a URL param other
- * than 'mini') → 'realtime', matching the pre-Cartesia default exactly.
+ * Priority: the URL param always wins over the env flag — `?tts=mini` →
+ * 'openai-mini', `?tts=silent` → 'silent' (test mode: no TTS API calls,
+ * zero-filled audio buffers client-side), `?tts=cartesia` → 'cartesia'
+ * (explicit opt-back-in for live ear-tests when the env default is
+ * 'silent'). Otherwise `envFlag === 'cartesia' | 'silent'` decides.
+ * Anything else (both unset, env garbage, or an unrecognized URL param)
+ * → 'realtime', matching the pre-Cartesia default exactly.
  */
 export function resolveTtsProvider(
   urlParam: string | null | undefined,
   envFlag: string | undefined,
 ): TtsProvider {
   if (urlParam === 'mini') return 'openai-mini';
+  if (urlParam === 'silent') return 'silent';
+  if (urlParam === 'cartesia') return 'cartesia';
   if (envFlag === 'cartesia') return 'cartesia';
+  if (envFlag === 'silent') return 'silent';
   return 'realtime';
 }

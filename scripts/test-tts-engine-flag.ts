@@ -47,4 +47,26 @@ check('url present but not mini, env unset -> realtime', () => {
   assert.strictEqual(resolveTtsProvider('xyz', undefined), 'realtime');
 });
 
+// --- silent test-mode provider (Crimsora v2 Phase 2E) ---
+
+check('url silent -> silent (wins over env cartesia)', () => {
+  assert.strictEqual(resolveTtsProvider('silent', 'cartesia'), 'silent');
+});
+
+check('url silent, env unset -> silent', () => {
+  assert.strictEqual(resolveTtsProvider('silent', undefined), 'silent');
+});
+
+check('env silent -> silent (no url param)', () => {
+  assert.strictEqual(resolveTtsProvider(null, 'silent'), 'silent');
+});
+
+check('url mini wins over env silent', () => {
+  assert.strictEqual(resolveTtsProvider('mini', 'silent'), 'openai-mini');
+});
+
+check('url cartesia opts back into real TTS over env silent', () => {
+  assert.strictEqual(resolveTtsProvider('cartesia', 'silent'), 'cartesia');
+});
+
 console.log(`\n${passed} passed`);
