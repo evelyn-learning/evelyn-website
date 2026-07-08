@@ -27,7 +27,7 @@
 
 import { NextRequest } from 'next/server';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { CARTESIA_DEFAULT_VOICE_ID } from '@/lib/tutor/voice/cartesia-voice-registry';
+import { CARTESIA_DEFAULT_VOICE_ID, substituteCartesiaVoiceId } from '@/lib/tutor/voice/cartesia-voice-registry';
 
 const CARTESIA_TTS_URL = 'https://api.cartesia.ai/tts/bytes';
 const CARTESIA_VERSION = '2026-03-01';
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const ttsBody = {
       model_id: 'sonic-3.5',
       transcript: rewriteForTTS(text),
-      voice: { mode: 'id', id: voiceId ?? CARTESIA_DEFAULT_VOICE_ID },
+      voice: { mode: 'id', id: substituteCartesiaVoiceId(voiceId ?? CARTESIA_DEFAULT_VOICE_ID) },
       language: 'en',
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },
     };

@@ -111,6 +111,26 @@ const ACCENT_POOLS: Record<string, AccentPool> = {
 
 /** Default Cartesia voice when no teacher/accent match is found — Katie. */
 export const CARTESIA_DEFAULT_VOICE_ID = TEACHER_VOICES['ms-elena-vasquez'].voiceId;
+
+/**
+ * Test-account voice substitution (2026-07-08). Shared test Cartesia keys
+ * (separate accounts, 20k credits each) don't contain our CUSTOM cloned
+ * voices — e.g. Mr. Praveen's clone lives only in the main account, so a
+ * TTS request for it under a test key 404s. `CARTESIA_VOICE_SUBSTITUTIONS`
+ * (server env, "fromId:toId[,fromId:toId…]") remaps those ids to library
+ * voices that exist in every account (Praveen → Sameer). Unset ⇒ identity —
+ * production is unaffected. Parsed per call: negligible cost at TTS
+ * request rate, and it keeps this module free of import-order env reads.
+ */
+export function substituteCartesiaVoiceId(voiceId: string): string {
+  const raw = process.env.CARTESIA_VOICE_SUBSTITUTIONS;
+  if (!raw) return voiceId;
+  for (const pair of raw.split(',')) {
+    const [from, to] = pair.split(':').map((s) => s.trim());
+    if (from && to && from === voiceId) return to;
+  }
+  return voiceId;
+}
 const DEFAULT_LABEL = 'Katie (default)';
 
 export interface ResolveCartesiaVoiceOpts {
