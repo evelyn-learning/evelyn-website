@@ -43,6 +43,7 @@
     "test:cartesia-registry": "npx tsx scripts/test-cartesia-voice-registry.ts",
     "test:tts-flag": "npx tsx scripts/test-tts-engine-flag.ts",
     "test:tts-pronunciation": "npx tsx scripts/test-tts-pronunciation.ts",
+    "test:sentence-spacing": "npx tsx scripts/test-sentence-spacing.ts",
     "test:ink-reconstruct": "npx tsx scripts/test-ink-reconstruct.ts",
     "test:sketch-validate": "npx tsx scripts/test-sketch-validate.ts",
     "test:sketch-render": "npx tsx scripts/test-sketch-render.ts",

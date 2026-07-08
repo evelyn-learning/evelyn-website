@@ -21,6 +21,7 @@ import type { Segment } from '../lesson-plan/types';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
+import { normalizeSentenceSpacing } from './sentence-spacing';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -376,6 +377,13 @@ class SentenceBuffer {
     // five four". The asterisk-only rule is safe.
     const asteriskMergeRe = /(\d)\.(\*)/g;
     this.buf += delta.replace(asteriskMergeRe, '$1. $2');
+    // C1 (2026-07-08): repair terminator-glued sentences
+    // ("independent.Let's build") so the boundary regex below can split
+    // them and TTS/captions get a real sentence break. Applied to the
+    // whole buffer (idempotent) so a terminator arriving at the end of
+    // one delta and its uppercase follower at the start of the next
+    // still get repaired. See sentence-spacing.ts for the guard rules.
+    this.buf = normalizeSentenceSpacing(this.buf);
     const out: string[] = [];
     // Lazy quantifier {25,}? + terminator + trailing whitespace.
     // Use [\s\S] instead of `.` with the `s` flag so this builds under
@@ -1158,7 +1166,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   }
 
   return {
-    text: accumulatedText.trim(),
+    // C1: transcript storage must match what the SentenceBuffer voiced —
+    // repair terminator-glued sentences here too.
+    text: normalizeSentenceSpacing(accumulatedText.trim()),
     toolCalls: accumulatedToolCalls,
     stopReason: lastStopReason,
     usage: totalUsage,
@@ -1500,7 +1510,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     type: 'done',
     stopReason: lastStopReason,
     usage: totalUsage,
-    fullText: accumulatedText.trim(),
+    // C1: keep transcript text consistent with the repaired sentences.
+    fullText: normalizeSentenceSpacing(accumulatedText.trim()),
     toolCalls: accumulatedToolCalls,
   };
 }

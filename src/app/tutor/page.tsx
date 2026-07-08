@@ -75,6 +75,31 @@ const ENV_TTS_ENGINE = process.env.NEXT_PUBLIC_TUTOR_TTS_ENGINE;
 // See project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
 const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 
+// Opener-recency for REAL direct /tutor sessions (session-quality C6,
+// 2026-07-08). The portal path round-trips the opener record through the
+// academy (session_ended opener_record → EmbedConfig.last_opener), but a
+// direct session had no carrier at all — a returning student heard the
+// same persona opener twice (observed: back-to-back direct sessions
+// reusing the identical opener verbatim). Persist the captured record in
+// localStorage per teacher persona and feed it back as lastOpener on the
+// next direct session in this browser. Test sessions (__tutorTestStart)
+// neither read nor write the store — the harness owns opener plumbing
+// via cfg.lastOpener and must stay deterministic across runs.
+const OPENER_STORE_PREFIX = 'evelyn:tutor:lastOpener:';
+function readStoredOpener(teacherId: string): LastOpenerRecord | undefined {
+  try {
+    const raw = window.localStorage.getItem(OPENER_STORE_PREFIX + teacherId);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as Partial<LastOpenerRecord>;
+    if (typeof parsed.kind === 'string' && typeof parsed.digest === 'string' && parsed.digest.trim()) {
+      return { kind: parsed.kind, digest: parsed.digest };
+    }
+  } catch {
+    // Unreadable / storage unavailable — behave as if no record exists.
+  }
+  return undefined;
+}
+
 // Token usage tracking
 interface TokenUsage {
   inputTokens: number;
@@ -197,8 +222,20 @@ function TutorPage() {
   const [testTargetKind, setTestTargetKind] = useState<SessionMode | undefined>(undefined);
   const [testCheckpointStale, setTestCheckpointStale] = useState(false);
   const testOpenerRecordRef = useRef<LastOpenerRecord | null>(null);
+  // C6: mirror of selectedTeacherId (declared below) so the stable
+  // handleOpenerRecord callback can key the localStorage write without
+  // depending on state declared later in the component.
+  const openerStoreTeacherIdRef = useRef<string>('');
   const handleOpenerRecord = useCallback((rec: LastOpenerRecord) => {
     testOpenerRecordRef.current = rec;
+    // C6: persist for the next REAL direct session in this browser.
+    // e2e sessions skip the store — the harness injects cfg.lastOpener.
+    if (testSessionRef.current || !openerStoreTeacherIdRef.current) return;
+    try {
+      window.localStorage.setItem(OPENER_STORE_PREFIX + openerStoreTeacherIdRef.current, JSON.stringify(rec));
+    } catch {
+      // Storage unavailable — opener recency degrades gracefully.
+    }
   }, []);
   const effectiveStudentId = testStudentIdOverride ?? studentIdParam;
   // /tutor?sid=<sessionId> — a stable session id carried in the URL so a
@@ -298,6 +335,19 @@ function TutorPage() {
     () => DEMO_TEACHERS.find((t) => t.id === selectedTeacherId) ?? DEMO_TEACHERS[0],
     [selectedTeacherId],
   );
+  // C6: keep the opener-store key in sync for the stable capture callback
+  // declared above (render-time ref assignment — the teacher can't change
+  // mid-session, the picker only renders on the setup stage).
+  openerStoreTeacherIdRef.current = selectedTeacherId;
+  // C6: the previous direct session's opener record for the CURRENT teacher
+  // persona. Read while on the setup screen only, so the value is stable
+  // for the whole session and a second session started without a reload
+  // still sees the record the first one just wrote.
+  const [storedLastOpener, setStoredLastOpener] = useState<LastOpenerRecord | undefined>(undefined);
+  useEffect(() => {
+    if (!TUTOR_PEDAGOGY_OPENER) return;
+    if (stage === 'setup') setStoredLastOpener(readStoredOpener(selectedTeacherId));
+  }, [selectedTeacherId, stage]);
   // When the chosen teacher maps to an OpenAI Realtime voice, the session
   // speaks in THAT voice (flag-on only).
   const effectiveOpenAIVoice: OpenAIVoice =
@@ -1991,7 +2041,7 @@ function TutorPage() {
         // undefined exactly as before.
         socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
         progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
-        lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+        lastOpener={TUTOR_PEDAGOGY_OPENER ? (testSessionRef.current ? testLastOpener : storedLastOpener) : undefined}
         targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
         checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
         teacherPersona={TUTOR_PEDAGOGY_OPENER ? selectedTeacher : undefined}
@@ -2516,7 +2566,7 @@ function TutorPage() {
                   // sessions pass undefined exactly as before.
                   socialMemory={TUTOR_PEDAGOGY_OPENER ? testSocialMemory : undefined}
                   progressDigest={TUTOR_PEDAGOGY_OPENER ? testProgressDigest : undefined}
-                  lastOpener={TUTOR_PEDAGOGY_OPENER ? testLastOpener : undefined}
+                  lastOpener={TUTOR_PEDAGOGY_OPENER ? (testSessionRef.current ? testLastOpener : storedLastOpener) : undefined}
                   targetKind={TUTOR_PEDAGOGY_OPENER ? testTargetKind : undefined}
                   checkpointStale={TUTOR_PEDAGOGY_OPENER ? testCheckpointStale : undefined}
                   teacherPersona={TUTOR_PEDAGOGY_OPENER ? selectedTeacher : undefined}
