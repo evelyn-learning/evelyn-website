@@ -108,6 +108,9 @@ export async function POST(req: NextRequest) {
     // Fields that can be updated on every upsert
     if (body.studentName !== undefined)
       updateFields.studentName = body.studentName;
+    // A2: stable partner student id (unauthenticated endpoint → clamp).
+    if (body.studentId && typeof body.studentId === 'string')
+      updateFields.studentId = body.studentId.slice(0, 200);
     if (body.voiceEngine !== undefined)
       updateFields.voiceEngine = body.voiceEngine;
     if (body.endedAt !== undefined) updateFields.endedAt = body.endedAt;

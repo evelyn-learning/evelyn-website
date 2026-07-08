@@ -133,6 +133,8 @@ export interface TutorSessionProps {
   onTranscriptUpdate?: (entries: TranscriptEntry[]) => void;
   onWhiteboardCommand?: (commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => void;
   onUsageUpdate?: VTRProps['onUsageUpdate'];
+  /** A1: per-attempt claude-brain token usage (see VoiceTutorRealtime). */
+  onBrainUsage?: VTRProps['onBrainUsage'];
   onDebugEvent?: VTRProps['onDebugEvent'];
   onTrackInteraction?: VTRProps['onTrackInteraction'];
   onTranscriptionStatus?: VTRProps['onTranscriptionStatus'];
@@ -162,7 +164,7 @@ export default function TutorSession(props: TutorSessionProps) {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
     sessionGoal, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, onMilestone, onTranscriptUpdate,
-    onWhiteboardCommand, onUsageUpdate, onDebugEvent, onTrackInteraction,
+    onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
@@ -419,6 +421,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onTranscriptUpdate={handleVoiceTranscriptUpdate}
         onWhiteboardCommand={handleVoiceWhiteboardCommand}
         onUsageUpdate={handleUsage}
+        onBrainUsage={onBrainUsage}
         onDebugEvent={onDebugEvent}
         onError={(err) => setError(err.message)}
         onTranscriptionStatus={handleTranscriptionStatus}

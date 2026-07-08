@@ -114,6 +114,18 @@ export default function ReplayPlayer({
   const lastFrameRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // A4 (2026-07-08) — single monotonic clock. The replay used to run TWO
+  // clocks: the visual position accumulated rAF frame deltas while the audio
+  // played on the AudioContext's hardware clock. rAF throttles (background
+  // tab, heavy paint) freeze the visual clock while audio keeps going, so
+  // playhead/WB drift away from what's heard, and the next pause+play SNAPS
+  // audio back to the stale visual position (the reported position jump).
+  // Fix: while audio is live, the AudioContext clock IS the master —
+  // position = anchorMs + (ctx.currentTime − anchorCtxTime)·1000·speed; rAF
+  // becomes just the render heartbeat. Without audio, frame deltas remain
+  // the fallback. Anchors re-set on every play/seek/speed-change.
+  const clockAnchorMsRef = useRef(0);
+  const clockAnchorCtxRef = useRef<number | null>(null); // null ⇒ no audio clock
 
   // Store sorted offset arrays in refs so tick doesn't depend on memoized values
   const transcriptOffsetsRef = useRef<number[]>([]);
@@ -239,7 +251,15 @@ export default function ReplayPlayer({
     const delta = now - lastFrameRef.current;
     lastFrameRef.current = now;
 
-    const newTime = Math.min(currentTimeMsRef.current + delta * speedRef.current, totalDurationMsRef.current);
+    // A4: audio clock is the master when live (survives rAF throttling);
+    // frame-delta accumulation only when there's no running audio context.
+    const ctx = audioCtxRef.current;
+    const newTime = Math.min(
+      clockAnchorCtxRef.current !== null && ctx && ctx.state === 'running'
+        ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000 * speedRef.current
+        : currentTimeMsRef.current + delta * speedRef.current,
+      totalDurationMsRef.current,
+    );
     currentTimeMsRef.current = newTime;
     setCurrentTimeMs(newTime);
     applyTime(newTime);
@@ -366,6 +386,12 @@ export default function ReplayPlayer({
 
     studentSourceRef.current = scheduleTrack(studentBufferRef.current, studentGainRef.current);
     tutorSourceRef.current = scheduleTrack(tutorBufferRef.current, tutorGainRef.current);
+
+    // A4: anchor the master clock at this exact (position, ctx-time) pair.
+    // Valid even when both tracks were past their end — ctx.currentTime is
+    // still the most reliable monotonic clock available.
+    clockAnchorMsRef.current = offsetMs;
+    clockAnchorCtxRef.current = ctx.currentTime;
   }, [studentMuted, tutorMuted]);
 
   // HOT-ATTACH (the core bug fix): if audio finishes loading while the
@@ -388,6 +414,8 @@ export default function ReplayPlayer({
     try { tutorSourceRef.current?.stop(); } catch {}
     studentSourceRef.current = null;
     tutorSourceRef.current = null;
+    // A4: no live audio ⇒ fall back to frame-delta clock.
+    clockAnchorCtxRef.current = null;
   }, []);
 
   const play = useCallback(() => {
@@ -430,6 +458,13 @@ export default function ReplayPlayer({
   }, [totalDurationMs, applyTime, stopAudioPlayback, startAudioPlayback]);
 
   const changeSpeed = useCallback((newSpeed: number) => {
+    // A4: re-anchor the audio master clock BEFORE the rate changes — the
+    // position formula is linear in speed, so a mid-flight speed change
+    // must restart the line from the current position.
+    if (clockAnchorCtxRef.current !== null && audioCtxRef.current) {
+      clockAnchorMsRef.current = currentTimeMsRef.current;
+      clockAnchorCtxRef.current = audioCtxRef.current.currentTime;
+    }
     speedRef.current = newSpeed;
     setSpeed(newSpeed);
     // Update audio playback rate if playing

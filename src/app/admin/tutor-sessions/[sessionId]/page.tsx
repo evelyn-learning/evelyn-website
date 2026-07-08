@@ -7,6 +7,7 @@ import { TutorSession } from "@/models";
 import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Target } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import ReplayPlayer from "../components/ReplayPlayer";
+import ExportSessionPDFButton from "../components/ExportSessionPDFButton";
 
 interface SessionPageProps {
   params: Promise<{ sessionId: string }>;
@@ -14,8 +15,21 @@ interface SessionPageProps {
 
 async function getSession(sessionId: string) {
   await connectDB();
-  const session = await TutorSession.findOne({ sessionId }).lean();
+  const session = await TutorSession.findOne({ sessionId })
+    .lean<{ studentName?: string; studentId?: string } & Record<string, unknown> | null>();
   if (!session) return null;
+  // A2 name fallback — same rule as the list view: resolve a missing
+  // studentName from a sibling session with the same studentId.
+  if (!session.studentName && session.studentId) {
+    const named = await TutorSession.findOne({
+      studentId: session.studentId,
+      studentName: { $nin: [null, ''] },
+    })
+      .select('studentName')
+      .sort({ startedAt: -1 })
+      .lean<{ studentName?: string } | null>();
+    if (named?.studentName) session.studentName = named.studentName;
+  }
   return JSON.parse(JSON.stringify(session));
 }
 
@@ -77,9 +91,20 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
                 </span>
               </div>
             </div>
-            <span className={`ml-auto rounded-full px-3 py-1 text-sm font-medium ${statusColors[session.status] || 'bg-gray-100'}`}>
-              {session.status}
-            </span>
+            <div className="ml-auto flex items-center gap-3">
+              <ExportSessionPDFButton
+                transcript={session.transcript || []}
+                whiteboardCommands={session.whiteboardCommands || []}
+                topic={session.topic}
+                subject={session.subject}
+                level={session.level}
+                sessionGoal={session.sessionGoal}
+                studentName={session.studentName}
+              />
+              <span className={`rounded-full px-3 py-1 text-sm font-medium ${statusColors[session.status] || 'bg-gray-100'}`}>
+                {session.status}
+              </span>
+            </div>
           </div>
         </div>
       </header>

@@ -114,13 +114,19 @@ interface TokenUsage {
   // GPT-Realtime-2: server-cached input tokens (billed ~80x cheaper than
   // uncached audio input). Captured for cost analysis.
   inputCachedTokens?: number;
+  // Claude-brain turns (operation 'brain-turn', A1): prompt-cache buckets.
+  // Anthropic's inputTokens EXCLUDES these — priced separately below.
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
 }
 
 // Pricing per 1M tokens
 const PRICING = {
-  // Claude Sonnet 4 (text chat mode)
+  // Claude Sonnet (text chat + brain turns)
   input: 3.0,   // $3 per 1M input tokens
   output: 15.0, // $15 per 1M output tokens
+  cacheRead: 0.3,   // $0.30 per 1M cache-read input tokens (A1, brain turns)
+  cacheWrite: 3.75, // $3.75 per 1M cache-creation input tokens (A1)
 };
 
 const REALTIME_PRICING = {
@@ -493,7 +499,8 @@ function TutorPage() {
     const now = new Date();
     const startTime = sessionStartTimeRef.current || now;
     const duration = Math.round((now.getTime() - startTime.getTime()) / 1000);
-    const totalIn = tokenUsage.reduce((s, u) => s + u.inputTokens, 0);
+    // Cache buckets count toward billed input volume (brain turns; zero elsewhere).
+    const totalIn = tokenUsage.reduce((s, u) => s + u.inputTokens + (u.cacheReadTokens ?? 0) + (u.cacheCreationTokens ?? 0), 0);
     const totalOut = tokenUsage.reduce((s, u) => s + u.outputTokens, 0);
 
     // Calculate cost with correct pricing per operation type
@@ -517,9 +524,12 @@ function TutorPage() {
               + (textIn / 1_000_000) * rt.textInput
               + (textOut / 1_000_000) * rt.textOutput;
       } else {
-        // Claude API: standard text token pricing
+        // Claude API: standard text token pricing + prompt-cache buckets
+        // (brain-turn entries carry them; zero elsewhere).
         cost += (u.inputTokens / 1_000_000) * PRICING.input
-              + (u.outputTokens / 1_000_000) * PRICING.output;
+              + (u.outputTokens / 1_000_000) * PRICING.output
+              + ((u.cacheReadTokens ?? 0) / 1_000_000) * PRICING.cacheRead
+              + ((u.cacheCreationTokens ?? 0) / 1_000_000) * PRICING.cacheWrite;
       }
     }
 
@@ -1649,6 +1659,22 @@ function TutorPage() {
     }]);
   }, []);
 
+  // A1 (2026-07-08): claude-brain per-attempt usage — was debug-log-only, so
+  // brain-mode sessions recorded 0 tokens / $0. One TokenUsage entry per
+  // stream attempt; the cost calc prices 'brain-turn' at Claude rates with
+  // the cache buckets separate.
+  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => {
+    if (u.inputTokens + u.outputTokens + u.cacheReadTokens + u.cacheCreationTokens === 0) return;
+    setTokenUsage((prev) => [...prev, {
+      inputTokens: u.inputTokens,
+      outputTokens: u.outputTokens,
+      cacheReadTokens: u.cacheReadTokens,
+      cacheCreationTokens: u.cacheCreationTokens,
+      operation: 'brain-turn',
+      timestamp: new Date(),
+    }]);
+  }, []);
+
   // Handle conversation history updates from VoiceTutor
   const handleVoiceConversationHistoryUpdate = useCallback((history: ConversationMessage[]) => {
     setConversationHistory(history);
@@ -2052,6 +2078,7 @@ function TutorPage() {
         onTranscriptUpdate={handleVoiceTranscriptUpdate}
         onWhiteboardCommand={handleVoiceWhiteboardCommand}
         onUsageUpdate={handleRealtimeUsage}
+        onBrainUsage={handleBrainUsage}
         onDebugEvent={addDebugEvent}
         onTrackInteraction={trackInteraction}
         onTranscriptionStatus={handleTranscriptionStatus}
@@ -2578,6 +2605,7 @@ function TutorPage() {
                   onTranscriptUpdate={handleVoiceTranscriptUpdate}
                   onWhiteboardCommand={handleVoiceWhiteboardCommand}
                   onUsageUpdate={handleRealtimeUsage}
+                  onBrainUsage={handleBrainUsage}
                   onDebugEvent={addDebugEvent}
                   onError={(err) => setError(err.message)}
                   onTranscriptionStatus={handleTranscriptionStatus}

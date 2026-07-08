@@ -307,6 +307,14 @@ interface VoiceTutorRealtimeProps {
   onEndSession?: () => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
+  /** Session-quality A1 (2026-07-08): per-attempt claude-brain token usage.
+   *  The brain stream's `done` event carried usage all along but it was only
+   *  debug-logged — never surfaced — so brain-mode sessions (all embeds)
+   *  recorded totalInputTokens=0 / estimatedCost=$0. Fires once per stream
+   *  attempt (kill+retry attempts each burn real tokens, so each reports).
+   *  Anthropic semantics: inputTokens EXCLUDES cache reads/creations —
+   *  consumers price the four buckets separately. */
+  onBrainUsage?: (usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => void;
   /** Fires once per pedagogical milestone as the orchestrator genuinely
    *  crosses it (a real concept completion / try-yourself success / reaching
    *  recap — NOT segment skips). Additive + optional; absent ⇒ no-op. The
@@ -484,6 +492,7 @@ export function VoiceTutorRealtime({
   onEndSession,
   onTrackInteraction,
   onUsageUpdate,
+  onBrainUsage,
   onMilestone,
   onDebugEvent,
   handleRef,
@@ -8680,6 +8689,16 @@ export function VoiceTutorRealtime({
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   attemptText = ((ev.fullText as string) ?? attemptText).trim();
                   lastUsage = ev.usage as typeof lastUsage;
+                  // A1: surface per-attempt usage for cost telemetry (was
+                  // debug-log-only, leaving brain sessions at $0 recorded).
+                  if (lastUsage) {
+                    onBrainUsage?.({
+                      inputTokens: lastUsage.inputTokens ?? 0,
+                      outputTokens: lastUsage.outputTokens ?? 0,
+                      cacheReadTokens: lastUsage.cacheReadTokens ?? 0,
+                      cacheCreationTokens: lastUsage.cacheCreationTokens ?? 0,
+                    });
+                  }
                 }
               }
             }

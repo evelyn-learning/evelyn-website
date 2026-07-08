@@ -19,8 +19,23 @@ function param(sp: Record<string, string | string[] | undefined>, key: string): 
   return typeof v === 'string' && v ? v : undefined;
 }
 
+/** A2: an "active" session with no messages that started this long ago is a
+ *  stranded double-start/reload artifact, not a live session — mark it
+ *  abandoned so the default view stops showing ghost actives. */
+const STALE_EMPTY_ACTIVE_MS = 30 * 60 * 1000;
+
 async function getSessions(filters: SessionFilterParams, page: number) {
   await connectDB();
+  // A2 sweep: collapse stale empty "active" sessions to abandoned before
+  // querying. Cheap indexed updateMany; idempotent.
+  await TutorSession.updateMany(
+    {
+      status: 'active',
+      startedAt: { $lt: new Date(Date.now() - STALE_EMPTY_ACTIVE_MS) },
+      $or: [{ messageCount: 0 }, { messageCount: { $exists: false } }],
+    },
+    { $set: { status: 'abandoned' } },
+  );
   const query = buildSessionFilter(filters);
   const [sessions, total, partners, hosts] = await Promise.all([
     TutorSession.find(query)
@@ -33,6 +48,28 @@ async function getSessions(filters: SessionFilterParams, page: number) {
     TutorSession.distinct('sourcePartnerId', { sourcePartnerId: { $nin: [null, ''] } }),
     TutorSession.distinct('sourceHost', { sourceHost: { $nin: [null, ''] } }),
   ]);
+  // A2 name fallback: a session whose own studentName never arrived (token
+  // minted without student_name on a double-start) resolves its display name
+  // from a sibling session with the same studentId that has one.
+  const missing = sessions.filter((s) => !s.studentName && s.studentId);
+  if (missing.length > 0) {
+    const ids = [...new Set(missing.map((s) => s.studentId as string))];
+    const named = await TutorSession.find({
+      studentId: { $in: ids },
+      studentName: { $nin: [null, ''] },
+    })
+      .select('studentId studentName')
+      .sort({ startedAt: -1 })
+      .lean();
+    const nameById = new Map<string, string>();
+    for (const n of named) {
+      if (n.studentId && !nameById.has(n.studentId)) nameById.set(n.studentId, n.studentName as string);
+    }
+    for (const s of missing) {
+      const resolved = nameById.get(s.studentId as string);
+      if (resolved) s.studentName = resolved;
+    }
+  }
   return {
     sessions: JSON.parse(JSON.stringify(sessions)),
     total,

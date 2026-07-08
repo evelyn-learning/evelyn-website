@@ -37,6 +37,8 @@ export interface IDebugEvent {
 export interface ITutorSession extends Document {
   sessionId: string;
   studentName?: string;
+  /** A2: partner's stable student id from the embed token (name fallback). */
+  studentId?: string;
   subject: string;
   topic: string;
   level: string;
@@ -184,6 +186,14 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     studentName: {
       type: String,
+    },
+    // A2 (2026-07-08): the partner's stable student id from the embed token.
+    // Lets the admin list resolve a display name when a session's own
+    // studentName never arrived (double-start minted a token without
+    // student_name → the record that actually ran showed "Anonymous").
+    studentId: {
+      type: String,
+      index: true,
     },
     subject: {
       type: String,

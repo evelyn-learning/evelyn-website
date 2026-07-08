@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
-import { type TutorMilestone, type TutorResumeState } from '@/app/tutor/components/VoiceTutorRealtime';
+import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
@@ -317,6 +317,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       sourcePartnerId: config?.partner_id || undefined,
       sourceHost: getEmbeddingHost(),
       studentName: studentName || undefined,
+      studentId: config?.student_id || undefined,
       startedAt: sessionStartRef.current.toISOString(),
       endedAt: now.toISOString(),
       duration,
@@ -335,6 +336,16 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         data: { ...cmd, action: undefined },
         timestamp: now.toISOString(),
       })),
+      // A1: token/cost telemetry + covered topics (were always 0/empty for
+      // embed sessions — this is what makes Sonnet-5 cost tracking visible).
+      ...brainUsageTotals(),
+      ...(() => {
+        const summary = sessionHandleRef.current?.getSessionSummary?.();
+        return {
+          ...(summary?.topicsCovered?.length ? { topicsCovered: summary.topicsCovered } : {}),
+          ...(summary?.weakTopics?.length ? { weakTopics: summary.weakTopics } : {}),
+        };
+      })(),
     };
     if (status === 'abandoned') {
       navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(payload));
@@ -346,6 +357,40 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       }).catch(() => {});
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands]);
+
+  // Session-quality A1 (2026-07-08): accumulate per-attempt claude-brain
+  // token usage so the TutorSession record stops reading 0 tokens / $0 for
+  // embed sessions (Vanshika's 25-min session recorded nothing — the usage
+  // was on the brain stream's done event all along, never surfaced). Cost
+  // uses Claude Sonnet rates with the cache buckets priced separately;
+  // inputTokens excludes cache reads/creations (Anthropic semantics), so
+  // totalInputTokens below reports the full billed input volume.
+  const BRAIN_PRICING = { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 }; // $/1M tok
+  const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 });
+  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => {
+    const acc = brainUsageRef.current;
+    acc.inputTokens += u.inputTokens;
+    acc.outputTokens += u.outputTokens;
+    acc.cacheReadTokens += u.cacheReadTokens;
+    acc.cacheCreationTokens += u.cacheCreationTokens;
+  }, []);
+  const brainUsageTotals = useCallback(() => {
+    const acc = brainUsageRef.current;
+    const cost =
+      (acc.inputTokens / 1_000_000) * BRAIN_PRICING.input +
+      (acc.outputTokens / 1_000_000) * BRAIN_PRICING.output +
+      (acc.cacheReadTokens / 1_000_000) * BRAIN_PRICING.cacheRead +
+      (acc.cacheCreationTokens / 1_000_000) * BRAIN_PRICING.cacheWrite;
+    return {
+      totalInputTokens: acc.inputTokens + acc.cacheReadTokens + acc.cacheCreationTokens,
+      totalOutputTokens: acc.outputTokens,
+      estimatedCost: Math.round(cost * 10000) / 10000,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // A1: local handle so saveSession can read the runtime's session summary
+  // (topicsCovered / weakTopics) — previously never consumed on the embed.
+  const sessionHandleRef = useRef<RealtimeHandle | null>(null);
 
   // Furthest pedagogical milestone reached this session (from the runtime).
   // Defaults to 'none'; reported to the portal in session_ended.
@@ -410,12 +455,16 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         sourcePartnerId: config?.partner_id || undefined,
         sourceHost: getEmbeddingHost(),
         studentName: studentName || undefined,
+        studentId: config?.student_id || undefined,
         startedAt: sessionStartRef.current.toISOString(),
         lessonProgress: {
           lessonPlanId: progress.lessonPlanId,
           currentSegmentId: progress.currentSegmentId,
           completedSegmentIds: progress.completedSegmentIds,
         },
+        // A1: flush running token totals with each checkpoint so telemetry
+        // survives an abrupt close (beforeunload doesn't always fire).
+        ...brainUsageTotals(),
       }),
     }).catch(() => {});
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName]);
@@ -531,6 +580,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         lastOpener={config.last_opener}
         readinessNote={config.readiness_note}
         onOpenerRecord={handleOpenerRecord}
+        onBrainUsage={handleBrainUsage}
+        handleRef={sessionHandleRef}
         isTrial={config.is_trial === true}
         targetKind={config.target_kind}
         checkpointStale={checkpointStale}
