@@ -260,6 +260,51 @@ function main() {
     assert.ok(!out!.includes('null'));
   });
 
+  // ── 1d: readinessNote (prerequisite-readiness token field) ────────────
+  console.log('\nrenderTransientContextBlock — readinessNote:');
+
+  const READINESS_NOTE =
+    'Prerequisite check: the student scored 62%. Shakier foundations: Trigonometry: unit circle; ' +
+    'Exponentials — shore them up before building on them. Already solid: Algebra; Functions.';
+
+  test('readinessNote alone renders the block with the prerequisite-readiness line', () => {
+    const out = renderTransientContextBlock({ readinessNote: READINESS_NOTE });
+    assert.ok(out);
+    assert.ok(out!.includes(`prerequisite readiness (from a diagnostic before this course): ${READINESS_NOTE}`));
+    // No lastOpener present ⇒ base usage instruction only, no extended sentence.
+    assert.ok(!out!.includes('Open THIS session with a DIFFERENT KIND'));
+  });
+
+  test('note absent + all other inputs absent ⇒ still returns null (unchanged)', () => {
+    assert.equal(renderTransientContextBlock({}), null);
+    assert.equal(renderTransientContextBlock({ readinessNote: undefined }), null);
+  });
+
+  test('whitespace-only note is treated as absent', () => {
+    assert.equal(renderTransientContextBlock({ readinessNote: '   ' }), null);
+    const out = renderTransientContextBlock({
+      progressDigest: DIGEST_FULL,
+      readinessNote: '  \n  ',
+    });
+    assert.ok(out && !out.includes('prerequisite readiness'));
+  });
+
+  test('readinessNote combines with other inputs after lastOpener, before the instruction', () => {
+    const out = renderTransientContextBlock({
+      socialMemory: [THREAD_FULL],
+      progressDigest: DIGEST_FULL,
+      lastOpener: LAST_OPENER,
+      readinessNote: READINESS_NOTE,
+    });
+    assert.ok(out);
+    const ls = out!.split('\n');
+    const iOpener = ls.findIndex((l) => l.startsWith("last session's opener"));
+    const iReadiness = ls.findIndex((l) => l.startsWith('prerequisite readiness'));
+    const iInstr = ls.findIndex((l) => l.startsWith('Use the above'));
+    assert.ok(iOpener >= 0 && iReadiness > iOpener && iInstr > iReadiness,
+      `order violated: opener=${iOpener} readiness=${iReadiness} instr=${iInstr}`);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

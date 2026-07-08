@@ -47,6 +47,12 @@ export interface TransientContextInput {
   socialMemory?: SocialThread[];
   progressDigest?: ProgressDigest;
   lastOpener?: LastOpenerRecord;
+  /** Prerequisite-readiness summary from the course-start diagnostic
+   *  (prose), e.g. "the student scored 62% … Shakier foundations: … Already
+   *  solid: …". Same transient carrier semantics as the other fields —
+   *  read for THIS session only, never persisted engine-side. A
+   *  whitespace-only note is treated as absent. */
+  readinessNote?: string;
 }
 
 /** `2026-06-20T10:00:00Z` → `2026-06-20`; passes through date-only strings. */
@@ -113,7 +119,8 @@ export function renderTransientContextBlock(input: TransientContextInput): strin
   const threads = input.socialMemory ?? [];
   const digest = input.progressDigest;
   const lastOpener = input.lastOpener?.digest.trim() ? input.lastOpener : undefined;
-  if (!digest && threads.length === 0 && !lastOpener) return null;
+  const readiness = input.readinessNote?.trim() ? input.readinessNote.trim() : undefined;
+  if (!digest && threads.length === 0 && !lastOpener && !readiness) return null;
 
   const lines: string[] = ['<student_context_transient>'];
   if (digest) lines.push(renderProgressLine(digest));
@@ -122,6 +129,7 @@ export function renderTransientContextBlock(input: TransientContextInput): strin
     for (const t of threads) lines.push(renderThreadLine(t));
   }
   if (lastOpener) lines.push(renderLastOpenerLine(lastOpener));
+  if (readiness) lines.push(`prerequisite readiness (from a diagnostic before this course): ${readiness}`);
   lines.push('', lastOpener ? `${USAGE_INSTRUCTION} ${LAST_OPENER_INSTRUCTION}` : USAGE_INSTRUCTION);
   lines.push('</student_context_transient>');
   return lines.join('\n');

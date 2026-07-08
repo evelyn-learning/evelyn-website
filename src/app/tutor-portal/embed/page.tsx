@@ -108,6 +108,14 @@ interface EmbedConfig {
    *  src/lib/tutor/ai/teacher-persona.ts. Passed through to the runtime;
    *  only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   teacher?: TeacherPersonaWire;
+  /** Prerequisite-readiness summary from the course-start diagnostic (prose),
+   *  e.g. "the student scored 62% … Shakier foundations: … Already solid: …".
+   *  TRANSIENT session-scoped context, same carrier semantics as
+   *  progress_digest/last_opener: read for THIS session only, never
+   *  persisted engine-side. Absent for every session minted before this
+   *  field existed. Only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is
+   *  on. */
+  readiness_note?: string;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -510,6 +518,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
+        readinessNote={config.readiness_note}
         onOpenerRecord={handleOpenerRecord}
         isTrial={config.is_trial === true}
         targetKind={config.target_kind}

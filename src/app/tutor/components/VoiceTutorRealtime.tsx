@@ -241,6 +241,13 @@ interface VoiceTutorRealtimeProps {
    *  directive so this session's opener varies in kind AND content. Only
    *  consumed when TUTOR_PEDAGOGY_OPENER is on. */
   lastOpener?: LastOpenerRecord;
+  /** Prerequisite-readiness summary from the course-start diagnostic (prose;
+   *  same transient carrier/semantics as socialMemory/progressDigest/
+   *  lastOpener). Rendered into the <student_context_transient> block as a
+   *  prerequisite-readiness line so the brain scaffolds shaky prerequisites.
+   *  NEVER persisted engine-side. Only consumed when TUTOR_PEDAGOGY_OPENER is
+   *  on. */
+  readinessNote?: string;
   /** Opener-recency (part A) — fires at most ONCE per session, when this
    *  session's OWN opener record is captured (the opener turn's finalized
    *  tutor text + the resolved opener kind). Dev/e2e consumer today (the
@@ -462,6 +469,7 @@ export function VoiceTutorRealtime({
   socialMemory,
   progressDigest,
   lastOpener,
+  readinessNote,
   onOpenerRecord,
   isTrial = false,
   targetKind,
@@ -1141,8 +1149,8 @@ export function VoiceTutorRealtime({
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
-      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener)
-        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener })
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote })
         : null;
   }
   // Opener-recency (part A) — THIS session's own opener record, captured
