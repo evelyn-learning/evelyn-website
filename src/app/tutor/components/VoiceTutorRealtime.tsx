@@ -63,6 +63,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -304,7 +305,10 @@ interface VoiceTutorRealtimeProps {
    *  the student to type instead. 'completed' fires on every successful
    *  transcription so the parent can dismiss any "voice trouble" banner. */
   onTranscriptionStatus?: (status: 'failed' | 'completed', errorType?: string) => void;
-  onEndSession?: () => void;
+  /** End the session via the graceful path. `reason` is set to 'time_limit'
+   *  only when the demo hard-stop timer fired (so the embed can tag the
+   *  session_ended postMessage); the student's End button passes nothing. */
+  onEndSession?: (reason?: 'time_limit') => void;
   onTrackInteraction?: (type: InteractionType, content?: string, metadata?: Record<string, unknown>, role?: 'student' | 'tutor') => void;
   onUsageUpdate?: (usage: RealtimeUsage) => void;
   /** Session-quality A1 (2026-07-08): per-attempt claude-brain token usage.
@@ -439,6 +443,17 @@ interface VoiceTutorRealtimeProps {
    *  OpenAI's ~60-min Realtime session cap, so for T>60 the rotation
    *  still fires before the cap. Defaults to 30 (demo). */
   sessionMaxMinutes?: number;
+  /** Demo time-box (trial): wrap-phase threshold in whole minutes. When set
+   *  AND minutesElapsed >= it, the per-turn `<demo_stop>` block switches to the
+   *  graceful-wrap directive. Passed only for a real time-boxed demo (the embed
+   *  computes it from the token's `wrap_at_minutes`); undefined ⇒ no wrap phase
+   *  (pre-existing untimed-demo behavior). */
+  sessionWrapMinutes?: number;
+  /** Whether the embed token carried an EXPLICIT `max_duration_minutes` (vs the
+   *  defaulted 30). Distinguishes a real time-boxed demo from an untimed one:
+   *  gates trial time-mode demo-stop selection AND the hard wall-clock cap.
+   *  Default false — non-embed callers and untimed embeds. */
+  maxDurationExplicit?: boolean;
   /** Visual arrangement of the dock chrome. 'default' = the legacy split-pane
    *  row (connection pill · mic · state · input · mute · End). 'island' = the
    *  new SessionStage floating dock: no redundant connection pill, a HERO mic,
@@ -520,6 +535,8 @@ export function VoiceTutorRealtime({
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
+  sessionWrapMinutes,
+  maxDurationExplicit = false,
   dockVariant = 'default',
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
@@ -1434,12 +1451,19 @@ export function VoiceTutorRealtime({
   // the student's first Start/mic tap or resume-continue (the same moments
   // that fire onSessionStarted, which drives the visible SessionControls
   // timer). sessionStartMsRef above is MOUNT time and is reset by session
-  // rotation; the demo-stop clock must count teaching time from the real
-  // start, so it gets its own ref. null until the session starts (the
-  // demo-stop computation falls back to mount time — a conservative
-  // overestimate of elapsed for the pre-start edge case). Only ever
-  // written when TUTOR_PEDAGOGY_OPENER is on.
+  // rotation; the demo-stop clock (and the demo hard-stop cap) must count
+  // teaching time from the real start, so it gets its own ref that survives
+  // rotation. null until the session starts (the demo-stop computation falls
+  // back to mount time — a conservative overestimate for the pre-start edge
+  // case; the hard-stop timer simply waits until it's non-null). Stamped
+  // UNCONDITIONALLY at first start (was flag-gated): the hard-stop cap is a
+  // product/safety timer that must work even with TUTOR_PEDAGOGY_OPENER off,
+  // and the flag-gated demo-stop read is unaffected by an always-set value.
   const voiceSessionStartedAtMsRef = useRef<number | null>(null);
+  // Demo hard-stop one-shot latch — guarantees the wall-clock cap ends the
+  // session exactly once even if the timer effect re-subscribes (onEndSession
+  // identity churns per turn via the embed's useCallback deps).
+  const hardStopFiredRef = useRef(false);
 
   // Pacing v2 — Phase 1 (inert): student-aware difficulty/depth
   // modulation signals. These refs accumulate signals from the student's
@@ -6807,21 +6831,20 @@ export function VoiceTutorRealtime({
         // concept); else 'time' with the session's minute budget and whole
         // minutes elapsed since the student actually started (mic tap /
         // resume-continue; falls back to mount time before that).
-        let demoStop:
-          | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
-          | { mode: 'milestone' }
-          | undefined;
+        let demoStop: ReturnType<typeof selectDemoStopPayload> | undefined;
         if (TUTOR_PEDAGOGY_OPENER && sessionModeRef.current === 'demo') {
-          if (isTrial) {
-            demoStop = { mode: 'milestone' };
-          } else {
-            const startedAtMs = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
-            demoStop = {
-              mode: 'time',
-              budgetMinutes: sessionMaxMinutes,
-              minutesElapsed: Math.max(0, Math.floor((Date.now() - startedAtMs) / 60000)),
-            };
-          }
+          // Milestone vs time-budget is a pure decision (is_trial × explicit
+          // time box); the wrap threshold rides along in time mode. A trial
+          // WITH an explicit max_duration_minutes (the homepage timed demo)
+          // now gets time mode + graceful wrap instead of milestone.
+          const startedAtMs = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
+          demoStop = selectDemoStopPayload({
+            isTrial,
+            maxDurationExplicit,
+            budgetMinutes: sessionMaxMinutes,
+            minutesElapsed: Math.max(0, Math.floor((Date.now() - startedAtMs) / 60000)),
+            wrapAtMinutes: sessionWrapMinutes,
+          });
         }
 
         // Stage 2 perception cancellation surface. Create an
@@ -11991,8 +12014,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
     setHasStarted(true);
-    // Task E1: stamp the actual session start for the demo-stop clock.
-    if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+    // Task E1 / demo time-box: stamp the actual session start for the demo-stop
+    // clock AND the hard-stop cap. Unconditional (not flag-gated) — the cap
+    // must work with TUTOR_PEDAGOGY_OPENER off.
+    if (voiceSessionStartedAtMsRef.current === null) {
       voiceSessionStartedAtMsRef.current = Date.now();
     }
     onSessionStarted?.();
@@ -12005,6 +12030,40 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasStarted, resumeState, onSessionStarted, realtime, handleStudentTranscriptForBrain]);
   resumeContinueRef.current = resumeContinue;
+
+  // Demo hard-stop cap (demo time-box): a wall-clock timer that ends the
+  // session when a TRIAL carrying an EXPLICIT max_duration_minutes reaches its
+  // budget. Intentionally NOT gated on TUTOR_PEDAGOGY_OPENER — this is a
+  // product/safety cap, not a pedagogy experiment. Exempt for diagnostics
+  // (Rule 1 disables demo-stop; guard here too — they never carry is_trial +
+  // timebox, but be defensive). Anchored to voiceSessionStartedAtMsRef, which
+  // is stamped once at first real start and SURVIVES rotation (only
+  // sessionStartMsRef resets on rotation), so the cap counts teaching time and
+  // rotation does not extend it. Polls because the anchor is a ref (no
+  // re-render on write); a coarse tick is plenty for a minute-granularity cap.
+  // Ends through the EXISTING graceful path (onEndSession) — the same one the
+  // student's End button uses — so the normal evelyn:session_ended postMessage
+  // fires, tagged reason='time_limit'. hardStopFiredRef guarantees one fire.
+  useEffect(() => {
+    if (!(isTrial && maxDurationExplicit)) return;
+    if (targetKind === 'diagnostic') return;
+    if (!onEndSession) return;
+    const capMs = sessionMaxMinutes * 60000;
+    const intervalId = setInterval(() => {
+      if (hardStopFiredRef.current) return;
+      const startedAtMs = voiceSessionStartedAtMsRef.current;
+      if (startedAtMs === null) return; // session hasn't really started yet
+      if (Date.now() - startedAtMs >= capMs) {
+        hardStopFiredRef.current = true;
+        clearInterval(intervalId);
+        console.log(
+          `[demo-time-box] hard stop reached ${sessionMaxMinutes}min cap — ending session (reason=time_limit)`,
+        );
+        onEndSession('time_limit');
+      }
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [isTrial, maxDurationExplicit, targetKind, sessionMaxMinutes, onEndSession]);
 
   // Toggle listening
   const handleMicClick = useCallback(() => {
@@ -12039,8 +12098,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // instructs it to open with the student's name).
       if (!hasStarted) {
         setHasStarted(true);
-        // Task E1: stamp the actual session start for the demo-stop clock.
-        if (TUTOR_PEDAGOGY_OPENER && voiceSessionStartedAtMsRef.current === null) {
+        // Task E1 / demo time-box: stamp the actual session start for the
+        // demo-stop clock AND the hard-stop cap. Unconditional (not flag-gated)
+        // — the cap must work with TUTOR_PEDAGOGY_OPENER off.
+        if (voiceSessionStartedAtMsRef.current === null) {
           voiceSessionStartedAtMsRef.current = Date.now();
         }
         // Session has truly begun now (student tapped the mic) — start the

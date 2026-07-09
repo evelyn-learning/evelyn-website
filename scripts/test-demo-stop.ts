@@ -18,6 +18,7 @@
 
 import { strict as assert } from 'node:assert';
 import { formatDemoStopBlock } from '../src/lib/tutor/voice/claude-brain';
+import { selectDemoStopPayload } from '../src/lib/tutor/voice/demo-stop-mode';
 
 let passed = 0;
 let failed = 0;
@@ -87,6 +88,65 @@ function main() {
       assert.ok(out.startsWith('<demo_stop>\n'), `starts with the opening tag: ${out.slice(0, 30)}`);
       assert.ok(out.endsWith('\n</demo_stop>\n\n'), 'ends with the closing tag + \\n\\n separator');
     }
+  });
+
+  // -- 5. graceful wrap phase (demo time-box P3) -------------------------------
+  test('time mode: below the wrap threshold keeps the pre-wrap pacing text', () => {
+    const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 15, minutesElapsed: 10, wrapAtMinutes: 13 });
+    assert.ok(out.includes('You have about 5 of 15 minutes left'), out);
+    assert.ok(!/Wrap up NOW/i.test(out), 'must not wrap before the threshold');
+  });
+
+  test('time mode: at/after the wrap threshold switches to the wrap directive', () => {
+    for (const elapsed of [13, 14, 30]) {
+      const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 15, minutesElapsed: elapsed, wrapAtMinutes: 13 });
+      assert.ok(out.includes('Wrap up NOW'), `elapsed=${elapsed}: ${out}`);
+      assert.ok(out.includes('land the "I get it" moment'), out);
+      assert.ok(out.includes('Do not start new material'), out);
+      assert.ok(!/minutes left/.test(out), 'wrap directive drops the remaining-minutes pacing line');
+    }
+  });
+
+  test('time mode: no wrapAtMinutes ⇒ never wraps (untimed-demo behavior unchanged)', () => {
+    const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 30, minutesElapsed: 29 });
+    assert.ok(out.includes('You have about 1 of 30 minutes left'), out);
+    assert.ok(!/Wrap up NOW/i.test(out));
+  });
+
+  test('wrap directive still respects the block wrapper convention', () => {
+    const out = formatDemoStopBlock({ mode: 'time', budgetMinutes: 15, minutesElapsed: 14, wrapAtMinutes: 13 });
+    assert.ok(out.startsWith('<demo_stop>\n'));
+    assert.ok(out.endsWith('\n</demo_stop>\n\n'));
+  });
+
+  // -- 6. mode selection matrix (is_trial × explicit-duration) -----------------
+  test('trial WITHOUT explicit time box ⇒ milestone (today\'s behavior)', () => {
+    const p = selectDemoStopPayload({
+      isTrial: true, maxDurationExplicit: false, budgetMinutes: 30, minutesElapsed: 5,
+    });
+    assert.deepEqual(p, { mode: 'milestone' });
+  });
+
+  test('trial WITH explicit time box ⇒ time mode + wrap (the homepage timed demo)', () => {
+    const p = selectDemoStopPayload({
+      isTrial: true, maxDurationExplicit: true, budgetMinutes: 15, minutesElapsed: 4, wrapAtMinutes: 13,
+    });
+    assert.deepEqual(p, { mode: 'time', budgetMinutes: 15, minutesElapsed: 4, wrapAtMinutes: 13 });
+  });
+
+  test('non-trial demo ⇒ time mode (unchanged); wrapAtMinutes omitted when absent', () => {
+    const p = selectDemoStopPayload({
+      isTrial: false, maxDurationExplicit: false, budgetMinutes: 30, minutesElapsed: 8,
+    });
+    assert.deepEqual(p, { mode: 'time', budgetMinutes: 30, minutesElapsed: 8 });
+    assert.ok(!('wrapAtMinutes' in p), 'no wrap key when the threshold is undefined');
+  });
+
+  test('non-trial demo WITH explicit duration + wrap ⇒ time mode carrying wrap', () => {
+    const p = selectDemoStopPayload({
+      isTrial: false, maxDurationExplicit: true, budgetMinutes: 20, minutesElapsed: 0, wrapAtMinutes: 18,
+    });
+    assert.deepEqual(p, { mode: 'time', budgetMinutes: 20, minutesElapsed: 0, wrapAtMinutes: 18 });
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

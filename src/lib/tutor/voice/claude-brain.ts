@@ -22,6 +22,7 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing } from './sentence-spacing';
+import type { DemoStopPayload } from './demo-stop-mode';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -107,9 +108,7 @@ export interface BrainTurnInput {
    *    boxed to completing the first concept, not a clock.
    *  Lives in the volatile per-turn user content (minutesElapsed changes
    *  every turn) — NEVER in the byte-stable cached system prefix. */
-  demoStop?:
-    | { mode: 'time'; budgetMinutes: number; minutesElapsed: number }
-    | { mode: 'milestone' };
+  demoStop?: DemoStopPayload;
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -928,10 +927,21 @@ function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): stri
  */
 export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
   if (!input) return '';
-  const body =
-    input.mode === 'time'
-      ? `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
-      : `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
+  let body: string;
+  if (input.mode === 'time') {
+    // Graceful wrap phase: once we cross the wrap threshold (set only for a
+    // real time-boxed demo), swap the pacing text for an explicit "land it and
+    // close" directive so the tutor doesn't open new material with the clock
+    // almost out. Below the threshold (or when it's absent) keep the
+    // pre-existing pacing text byte-for-byte.
+    const inWrap =
+      typeof input.wrapAtMinutes === 'number' && input.minutesElapsed >= input.wrapAtMinutes;
+    body = inWrap
+      ? `Wrap up NOW: land the "I get it" moment if it hasn't landed yet, then summarize what they learned in 1-2 turns and end on an encouraging note. Do not start new material or open a new example — time is almost up.`
+      : `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`;
+  } else {
+    body = `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
+  }
   return `<demo_stop>\n${body}\n</demo_stop>\n\n`;
 }
 

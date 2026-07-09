@@ -468,12 +468,25 @@ export async function POST(req: NextRequest) {
         if (!ds || typeof ds !== 'object') return undefined;
         if (ds.mode === 'milestone') return { mode: 'milestone' as const };
         if (ds.mode === 'time') {
-          const { budgetMinutes, minutesElapsed } = ds as { budgetMinutes?: unknown; minutesElapsed?: unknown };
+          const { budgetMinutes, minutesElapsed, wrapAtMinutes } = ds as {
+            budgetMinutes?: unknown;
+            minutesElapsed?: unknown;
+            wrapAtMinutes?: unknown;
+          };
           if (
             typeof budgetMinutes === 'number' && Number.isFinite(budgetMinutes) && budgetMinutes >= 0 &&
             typeof minutesElapsed === 'number' && Number.isFinite(minutesElapsed) && minutesElapsed >= 0
           ) {
-            return { mode: 'time' as const, budgetMinutes, minutesElapsed };
+            return {
+              mode: 'time' as const,
+              budgetMinutes,
+              minutesElapsed,
+              // Optional wrap threshold (real time-boxed demo only). Same
+              // finite/non-negative guard; anything else ⇒ omitted (no wrap).
+              ...(typeof wrapAtMinutes === 'number' && Number.isFinite(wrapAtMinutes) && wrapAtMinutes >= 0
+                ? { wrapAtMinutes }
+                : {}),
+            };
           }
         }
         return undefined;
@@ -481,7 +494,12 @@ export async function POST(req: NextRequest) {
       if (demoStop) {
         console.log(
           `[demo-stop] attached mode=${demoStop.mode}` +
-            (demoStop.mode === 'time' ? ` elapsed=${demoStop.minutesElapsed}/${demoStop.budgetMinutes}min` : ''),
+            (demoStop.mode === 'time'
+              ? ` elapsed=${demoStop.minutesElapsed}/${demoStop.budgetMinutes}min` +
+                (typeof demoStop.wrapAtMinutes === 'number'
+                  ? ` wrapAt=${demoStop.wrapAtMinutes}${demoStop.minutesElapsed >= demoStop.wrapAtMinutes ? ' WRAP' : ''}`
+                  : '')
+              : ''),
         );
       }
 

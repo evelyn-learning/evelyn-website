@@ -70,6 +70,13 @@ export interface TutorSessionProps {
   /** Cartesia voice id (Task 3). Only consumed when ttsProvider === 'cartesia'. */
   cartesiaVoiceId?: VTRProps['cartesiaVoiceId'];
   sessionMaxMinutes: number;
+  /** Demo time-box (trial): wrap-phase threshold in minutes. Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. */
+  sessionWrapMinutes?: VTRProps['sessionWrapMinutes'];
+  /** Whether the embed token carried an EXPLICIT max_duration_minutes (gates
+   *  trial time-mode demo-stop + the hard wall-clock cap). Forwarded to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. */
+  maxDurationExplicit?: VTRProps['maxDurationExplicit'];
   /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
   resumeState?: VTRProps['resumeState'];
   /** Task D1b — transient session-scoped social threads / progress digest
@@ -116,8 +123,9 @@ export interface TutorSessionProps {
   /** Inject the Desmos calculator script (embed needs it; default true). */
   loadDesmos?: boolean;
 
-  // Required lifecycle
-  onEndSession: () => void;
+  // Required lifecycle. `reason` is 'time_limit' only when the demo hard-stop
+  // timer fired (so the embed can tag session_ended); the End button omits it.
+  onEndSession: (reason?: 'time_limit') => void;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -169,7 +177,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
     socialMemory, progressDigest, lastOpener, readinessNote, onOpenerRecord, isTrial,
-    targetKind, checkpointStale, teacherPersona,
+    targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
   } = props;
 
   // --- Session-view state (owned here) ---
@@ -454,6 +462,8 @@ export default function TutorSession(props: TutorSessionProps) {
         onConfirmPlanLos={onConfirmPlanLos}
         onCompletedSegmentsChange={(ids) => { setCompletedSegmentIds([...ids]); onCompletedSegmentsChange?.([...ids]); }}
         sessionMaxMinutes={sessionMaxMinutes}
+        sessionWrapMinutes={sessionWrapMinutes}
+        maxDurationExplicit={maxDurationExplicit}
         dockVariant="island"
       />
     </>

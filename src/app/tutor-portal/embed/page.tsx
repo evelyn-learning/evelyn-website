@@ -65,6 +65,12 @@ interface EmbedConfig {
   voice?: string;
   curriculum_module?: string;
   max_duration_minutes?: number;
+  /** Demo time-box (P3): the graceful-wrap threshold in minutes. The portal
+   *  sets it (alongside an explicit max_duration_minutes) ONLY for the
+   *  anonymous timed homepage demo. Clamped to [1, max_duration_minutes - 1],
+   *  default max_duration_minutes - 2. Absent for every non-demo session ⇒ no
+   *  wrap phase. */
+  wrap_at_minutes?: number;
   /** Stable session id minted by the portal (= Session.engineSessionId,
    *  "portal-<uuid>"). When present the engine keys its TutorSession on THIS
    *  instead of minting "embed-<Date.now()>" — unifies the two ids (E4). */
@@ -226,12 +232,32 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
   // costs and bad pedagogy from arbitrary partner-supplied values.
+  // "Explicit" = the token actually carried max_duration_minutes (vs the
+  // defaulted 30). Only an explicit value marks a real time-boxed demo — it
+  // gates trial time-mode demo-stop AND the engine's hard wall-clock cap
+  // (see VoiceTutorRealtime). A defaulted 30 keeps every non-demo session's
+  // behavior exactly as before.
+  const maxDurationExplicit =
+    typeof config.max_duration_minutes === 'number' && Number.isFinite(config.max_duration_minutes);
   const maxDuration = Math.max(
     1,
-    Math.min(120, typeof config.max_duration_minutes === 'number' && Number.isFinite(config.max_duration_minutes)
-      ? Math.floor(config.max_duration_minutes)
-      : 30),
+    Math.min(120, maxDurationExplicit ? Math.floor(config.max_duration_minutes as number) : 30),
   );
+  // Graceful-wrap threshold — meaningful only for a real time-boxed demo, so
+  // it's computed only when max_duration_minutes was explicit. Clamp to
+  // [1, maxDuration - 1], default maxDuration - 2. Undefined otherwise ⇒ the
+  // runtime runs no wrap phase (untimed-demo behavior unchanged).
+  const wrapAtMinutes = maxDurationExplicit
+    ? Math.max(
+        1,
+        Math.min(
+          maxDuration - 1,
+          typeof config.wrap_at_minutes === 'number' && Number.isFinite(config.wrap_at_minutes)
+            ? Math.floor(config.wrap_at_minutes)
+            : maxDuration - 2,
+        ),
+      )
+    : undefined;
   const branding = config.branding;
 
   // Apply branding color as CSS variable
@@ -470,7 +496,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName]);
 
   // End session — save to DB + notify parent window
-  const handleEndSession = useCallback(() => {
+  const handleEndSession = useCallback((reason?: 'time_limit') => {
     saveSession('completed');
     setSessionEnded(true);
     const duration = Math.round((Date.now() - sessionStartRef.current.getTime()) / 1000);
@@ -482,6 +508,10 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         duration,
         message_count: transcript.length,
         whiteboard_items: whiteboardCommands.length,
+        // Demo time-box (P3): additive — present ONLY when the engine's hard
+        // wall-clock cap ended the session (not the student's End button), so
+        // the portal can distinguish a timed-out demo from a normal finish.
+        ...(reason === 'time_limit' ? { ended_reason: 'time_limit' as const } : {}),
         // Real engine milestone (value-boxed). 'none' if the student bailed
         // before completing a concept — the portal consumes this directly.
         milestone: milestoneRef.current,
@@ -575,6 +605,8 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         ttsProvider={ttsProvider}
         cartesiaVoiceId={cartesiaVoiceId}
         sessionMaxMinutes={maxDuration}
+        sessionWrapMinutes={wrapAtMinutes}
+        maxDurationExplicit={maxDurationExplicit}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
