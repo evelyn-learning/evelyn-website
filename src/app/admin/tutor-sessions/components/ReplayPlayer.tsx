@@ -40,6 +40,10 @@ interface ReplayPlayerProps {
   topic?: string;
   sessionId?: string;
   hasAudio?: boolean;
+  /** Student replay: signed replay token forwarded to the session-audio
+   *  route (which requires it for non-admin callers). Absent on the admin
+   *  pages, where the NextAuth session authorizes the fetch instead. */
+  audioToken?: string;
 }
 
 function formatTime(ms: number): string {
@@ -75,6 +79,7 @@ export default function ReplayPlayer({
   topic,
   sessionId,
   hasAudio,
+  audioToken,
 }: ReplayPlayerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -283,9 +288,10 @@ export default function ReplayPlayer({
     if (audioStateRef.current === 'loading' || audioStateRef.current === 'ready') return;
     setAudioStateBoth('loading');
     try {
+      const tokenParam = audioToken ? `&token=${encodeURIComponent(audioToken)}` : '';
       const [studentResp, tutorResp] = await Promise.all([
-        fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=student`),
-        fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=tutor`),
+        fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=student${tokenParam}`),
+        fetch(`/api/tutor/session-audio?sessionId=${sessionId}&role=tutor${tokenParam}`),
       ]);
       const intHeader = (resp: Response, name: string, fallback: number) =>
         parseInt(resp.headers.get(name) || String(fallback), 10) || fallback;
@@ -313,7 +319,7 @@ export default function ReplayPlayer({
       console.error('[ReplayPlayer] Audio load error:', err);
       setAudioStateBoth('error');
     }
-  }, [sessionId, setAudioStateBoth]);
+  }, [sessionId, audioToken, setAudioStateBoth]);
 
   // Audio: start playback from offset.
   // Async because the AudioContext may be born `suspended` (autoplay policy)

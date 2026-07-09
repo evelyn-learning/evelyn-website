@@ -11,9 +11,12 @@ interface PortalShellProps {
 export function PortalShell({ children }: PortalShellProps) {
   const pathname = usePathname();
 
-  // Embed pages render without nav/footer — they live inside partner iframes
+  // Embed + replay pages render without nav/footer — they live inside
+  // partner iframes (replay = the student past-sessions surface).
   if (pathname === '/embed' || pathname?.startsWith('/embed/') ||
-      pathname === '/tutor-portal/embed' || pathname?.startsWith('/tutor-portal/embed/')) {
+      pathname === '/tutor-portal/embed' || pathname?.startsWith('/tutor-portal/embed/') ||
+      pathname === '/replay' || pathname?.startsWith('/replay/') ||
+      pathname === '/tutor-portal/replay' || pathname?.startsWith('/tutor-portal/replay/')) {
     return <>{children}</>;
   }
 

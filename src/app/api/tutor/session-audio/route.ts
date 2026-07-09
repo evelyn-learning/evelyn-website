@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { TutorSession } from '@/models';
+import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
 
 const AUDIO_BASE_DIR = process.env.TUTOR_AUDIO_DIR || '/var/data/evelyn/audio';
 
@@ -98,7 +101,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Stream audio file for replay playback
+// GET: Stream audio file for replay playback.
+//
+// AUTH (added with the student replay surface — this route previously served
+// any sessionId to anyone): callers must be EITHER an admin (NextAuth
+// session cookie — the admin replay pages) OR present a signed replay token
+// whose session_id matches AND whose student_id owns the stored session.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get('sessionId');
@@ -106,6 +114,22 @@ export async function GET(request: NextRequest) {
 
   if (!sessionId || !role || !validateRole(role)) {
     return NextResponse.json({ error: 'Missing sessionId or role parameter' }, { status: 400 });
+  }
+
+  const adminSession = await getServerSession(authOptions);
+  if (!adminSession) {
+    const verdict = verifyReplayToken(searchParams.get('token'));
+    if (!verdict.ok) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    if (verdict.payload.session_id !== sessionId) {
+      return NextResponse.json({ error: 'token does not match session' }, { status: 403 });
+    }
+    await connectDB();
+    const owned = await TutorSession.findOne({ sessionId }).select('studentId').lean<{ studentId?: string } | null>();
+    if (!owned?.studentId || owned.studentId !== verdict.payload.student_id) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+    }
   }
 
   const safeId = sanitizeSessionId(sessionId);
