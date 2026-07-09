@@ -489,6 +489,31 @@ export function WhiteboardCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands.length, pages]);
 
+  // Scroll a descendant of the whiteboard's own scroll container into view
+  // WITHOUT using Element.scrollIntoView(). scrollIntoView() walks the full
+  // scroll-container chain up to (and through) the top-level browsing
+  // context — inside the portal-embedded tutor that chain doesn't stop at
+  // the iframe boundary, so scrolling a freshly-rendered item also scrolls
+  // the HOST page under it (2026-07-09 production bug: every new whiteboard
+  // item jumped the partner page's scroll position). Compute the target
+  // offset relative to `container` directly and set container.scrollTop /
+  // scrollTo so the scroll is fully contained to this pane.
+  const scrollElementIntoContainer = (
+    container: HTMLElement,
+    el: HTMLElement,
+    block: 'start' | 'center' = 'start',
+  ) => {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const currentOffset = elRect.top - containerRect.top; // el's position within the visible pane, pre-scroll
+    const delta = block === 'center'
+      ? currentOffset - (container.clientHeight - elRect.height) / 2
+      : currentOffset;
+    const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    const target = Math.max(0, Math.min(container.scrollTop + delta, maxScrollTop));
+    container.scrollTo({ top: target, behavior: 'smooth' });
+  };
+
   // Handle tutor_scroll_whiteboard — navigate to page/item when the tutor
   // wants to draw the student's attention to existing content. Process
   // ALL unprocessed scrollTos in arrival order, not just the latest: a
@@ -579,11 +604,11 @@ export function WhiteboardCanvas({
             const safe = targetFeature.replace(/"/g, '\\"');
             const featureEl = itemEl.querySelector(`[data-feature="${safe}"]`) as HTMLElement | null;
             if (featureEl) {
-              featureEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              scrollElementIntoContainer(container, featureEl, 'center');
               scrolled = true;
             }
           }
-          if (!scrolled) itemEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (!scrolled) scrollElementIntoContainer(container, itemEl, 'start');
         }
       }
     };
@@ -725,12 +750,12 @@ export function WhiteboardCanvas({
       if (newestId) {
         const safe = newestId.replace(/"/g, '\\"');
         const el = container.querySelector(`[data-wb-item-id="${safe}"]`) as HTMLElement | null;
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+        if (el) { scrollElementIntoContainer(container, el, 'start'); return; }
       }
       // Fallback (render carried no id): newest item by position, else bottom.
       const refs = itemRefsRef.current.filter(Boolean) as HTMLElement[];
       const last = refs[refs.length - 1];
-      if (last) last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (last) scrollElementIntoContainer(container, last, 'start');
       else container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     };
 
@@ -815,7 +840,8 @@ export function WhiteboardCanvas({
     [safeCurrentPage.commands],
   );
 
-  // Refs to each rendered item so scrollTo can scrollIntoView() them.
+  // Refs to each rendered item so scrollTo can bring them into view
+  // (via scrollElementIntoContainer — see its doc comment above).
   const itemRefsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // ── Student marks (Phase 1: tap-to-point) ──────────────────────────
