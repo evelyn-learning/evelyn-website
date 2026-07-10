@@ -45,6 +45,8 @@ const BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
 // (and headless runs stop falling back to the 6s stall timer). For live
 // ear-tests, opt back into a real engine: TUTOR_E2E_TTS=cartesia|mini.
 const TTS_PARAM = process.env.TUTOR_E2E_TTS || 'silent';
+// TUTOR_E2E_VIDEO=1 records a webm of the run into the bundle (UI-jank audits).
+const VIDEO = process.env.TUTOR_E2E_VIDEO === '1';
 const HEADED = process.argv.includes('--headed');
 const scenarioName = process.argv.find((a) => !a.startsWith('-') && a !== process.argv[0] && a !== process.argv[1]);
 
@@ -84,7 +86,48 @@ async function main() {
     headless: !HEADED,
     args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'],
   });
-  const context = await browser.newContext({ permissions: ['microphone'], acceptDownloads: true, viewport: { width: 1440, height: 900 } });
+  const context = await browser.newContext({
+    permissions: ['microphone'],
+    acceptDownloads: true,
+    viewport: { width: 1440, height: 900 },
+    ...(VIDEO ? { recordVideo: { dir: outDir, size: { width: 1440, height: 900 } } } : {}),
+  });
+  // Jank probe: buffer layout-shifts, long main-thread tasks, and scroll events
+  // (with target + position) so a UI audit can quantify "jerky" — dumped to
+  // perf.json in the bundle. Arrays are capped so a long run can't blow memory.
+  await context.addInitScript(() => {
+    const perf = { layoutShifts: [] as unknown[], longTasks: [] as unknown[], scrolls: [] as unknown[] };
+    (window as unknown as Record<string, unknown>).__wbPerf = perf;
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as unknown as Array<{ startTime: number; value: number; hadRecentInput: boolean; sources?: Array<{ node?: Node }> }>) {
+          if (perf.layoutShifts.length >= 2000) return;
+          perf.layoutShifts.push({
+            t: Math.round(e.startTime), value: e.value, input: e.hadRecentInput,
+            sources: (e.sources ?? []).map((s) => {
+              const n = s.node as (Element | null);
+              return n && n.nodeName ? `${n.nodeName}${n.className ? '.' + String(n.className).slice(0, 60) : ''}` : '?';
+            }),
+          });
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) {
+          if (perf.longTasks.length >= 2000) return;
+          perf.longTasks.push({ t: Math.round(e.startTime), dur: Math.round(e.duration) });
+        }
+      }).observe({ type: 'longtask', buffered: true });
+    } catch { /* observer types unsupported — leave arrays empty */ }
+    document.addEventListener('scroll', (ev) => {
+      if (perf.scrolls.length >= 5000) return;
+      const el = (ev.target === document ? document.scrollingElement : ev.target) as Element | null;
+      perf.scrolls.push({
+        t: Math.round(performance.now()),
+        el: el ? `${el.nodeName}${el.className ? '.' + String(el.className).slice(0, 40) : ''}` : '?',
+        top: el ? Math.round((el as HTMLElement).scrollTop) : 0,
+      });
+    }, { capture: true, passive: true });
+  });
   const page = await context.newPage();
 
   const netErrors = new Set<string>();
@@ -270,6 +313,16 @@ async function main() {
       fs.writeFileSync(path.join(outDir, 'debug-events.json'), JSON.stringify(dbg, null, 2));
       log(`saved debug-events.json (${(dbg as unknown[]).length} events)`);
     } catch (e) { anomalies.push(`debug-events dump failed: ${(e as Error).message}`); }
+
+    // Jank-probe dump (layout shifts, long tasks, scroll events) → perf.json.
+    try {
+      const perf = await page.evaluate(() => (window as unknown as Record<string, unknown>).__wbPerf ?? null);
+      if (perf) {
+        fs.writeFileSync(path.join(outDir, 'perf.json'), JSON.stringify(perf, null, 2));
+        const p = perf as { layoutShifts: unknown[]; longTasks: unknown[]; scrolls: unknown[] };
+        log(`saved perf.json (${p.layoutShifts.length} layout-shifts, ${p.longTasks.length} long-tasks, ${p.scrolls.length} scroll events)`);
+      }
+    } catch (e) { anomalies.push(`perf dump failed: ${(e as Error).message}`); }
   } catch (e) {
     anomalies.push(`FATAL: ${(e as Error).message}`);
     log(`FATAL: ${(e as Error).message}`);
