@@ -84,7 +84,10 @@ export function planSvgDrawOn(drawables: Drawable[]): DrawPlan {
 export function planHtmlWipe(rowCount: number): DrawPlan {
   const rows = Math.max(1, rowCount);
   const total = Math.max(FLOOR_MS, Math.min(CEIL_MS, rows * 200));
-  const durPer = rows === 1 ? total : Math.min(500, (total / rows) * 1.6);
+  // Floor at 120ms: with many rows sharing the fixed ceiling budget,
+  // (total / rows) * 1.6 can shrink below a legible wipe duration — a
+  // flicker instead of a wipe. Never let a row wipe faster than that.
+  const durPer = rows === 1 ? total : Math.min(500, Math.max(120, (total / rows) * 1.6));
   const lastStart = total - durPer;
   const steps: DrawStep[] = Array.from({ length: rows }, (_, i) => {
     const delayMs = rows === 1 ? 0 : Math.round((lastStart * i) / (rows - 1));

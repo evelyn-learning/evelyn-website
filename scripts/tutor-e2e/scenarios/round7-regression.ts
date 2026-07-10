@@ -9,7 +9,8 @@ import type { Scenario } from '../types';
  * Adjustment (2026-07-10): the round-7-era `evelyn.test.incoherence.v1`
  * debug seed (src/lib/tutor/lesson-plan/seeds/test-incoherence.ts) was
  * deliberately dropped in commit 47abf6c ("Drop debug-only
- * test-incoherence seed", 2026-05-05) — one day after round-7 shipped.
+ * test-incoherence seed", 2026-05-05) — two days after round-7 shipped
+ * (eda8482, 2026-05-03).
  * It no longer resolves. The nearest still-live plan matching
  * Mathematics → College Intro → Intro Statistics is the real anchor
  * plan `evelyn.college.math.intro-statistics.v1`

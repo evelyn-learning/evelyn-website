@@ -29,12 +29,32 @@ export function drawOnEnabled(): boolean {
 
 const STROKE_SELECTOR = 'path, line, polyline, polygon, circle, ellipse, rect';
 
+// Resume/reload/replay rehydration mounts a whole board in ONE React commit —
+// every item on the page becomes a fresh mount at once. Serial-queuing N
+// items (queueEndAtRef chains each item after the last) leaves later items
+// INVISIBLE for many seconds: fill:'backwards' holds an item's animate-from
+// frame until its delayed start finally fires. Beyond one budget's worth of
+// backlog it's no longer "drawing on", it's just broken — so animateItem
+// bails to instant final-state rendering rather than growing the queue
+// further.
+const MAX_QUEUE_DELAY_MS = 2000;
+
 function isStrokeDrawable(el: SVGGeometryElement): boolean {
   const cs = window.getComputedStyle(el);
   if (cs.display === 'none' || cs.visibility === 'hidden') return false;
   if (cs.stroke === 'none' || cs.stroke === '') return false;
   if (parseFloat(cs.strokeWidth || '0') <= 0) return false;
   return true;
+}
+
+// Reveal-pattern content (elements deliberately hidden via display/
+// visibility/opacity — e.g. an answer key shown later) must never be faded
+// visible by the draw-on engine; skip it entirely at collection time.
+function isHiddenForFade(el: SVGElement): boolean {
+  const cs = window.getComputedStyle(el);
+  if (cs.display === 'none' || cs.visibility === 'hidden') return true;
+  const op = parseFloat(cs.opacity || '1');
+  return Number.isFinite(op) && op === 0;
 }
 
 export function useDrawOn() {
@@ -64,9 +84,20 @@ export function useDrawOn() {
 
     const now = performance.now();
     const baseDelay = Math.max(0, queueEndAtRef.current - now);
+    if (baseDelay > MAX_QUEUE_DELAY_MS) {
+      // Bulk-mount backlog bail — see MAX_QUEUE_DELAY_MS comment above.
+      // wrapper.dataset.drawOn is already stamped; leave the element in its
+      // natural (un-animated) CSS state, i.e. instantly in final form.
+      return;
+    }
 
     const iframe = wrapper.querySelector('iframe');
-    const svg = wrapper.querySelector('svg');
+    // KaTeX emits inline <svg> for radicals/stretchy delimiters (e.g. a √
+    // sign), so a plain `querySelector('svg')` misclassifies any equation
+    // containing a square root as "SVG content": the radical fades while
+    // the equation body pops in with no wipe. Only a non-KaTeX <svg> counts
+    // as SVG content for the stroke-draw path.
+    const svg = Array.from(wrapper.querySelectorAll('svg')).find((s) => !s.closest('.katex')) ?? null;
 
     if (iframe || !svg) {
       // Iframe content (Desmos/Ketcher) or pure-HTML content (KaTeX
@@ -98,14 +129,22 @@ export function useDrawOn() {
     const drawables: Drawable[] = [];
     const domFor: SVGElement[] = [];
     for (const el of els) {
+      // defs/marker/clipPath/pattern children are never rendered directly —
+      // counting them inflates the stroke budget and burns stagger slots on
+      // geometry nobody sees.
+      if (el.closest('defs, marker, clipPath, pattern')) continue;
       if (el instanceof SVGGeometryElement && isStrokeDrawable(el)) {
         let length = 0;
         try { length = el.getTotalLength(); } catch { /* zero-size geometry */ }
         drawables.push({ kind: 'stroke', length });
+        domFor.push(el);
       } else {
+        // Reveal-pattern content must never be faded visible — skip hidden
+        // non-stroke elements entirely (push to neither array).
+        if (isHiddenForFade(el)) continue;
         drawables.push({ kind: 'fill' });
+        domFor.push(el);
       }
-      domFor.push(el);
     }
     const plan = planSvgDrawOn(drawables);
     // Fades must land on the element's OWN computed opacity, not a hardcoded
@@ -116,7 +155,10 @@ export function useDrawOn() {
     // value makes the revert a no-op.
     const fadeTargetOpacity = (el: SVGElement): number => {
       const v = parseFloat(window.getComputedStyle(el).opacity || '1');
-      return Number.isFinite(v) && v > 0 ? v : 1;
+      // Opacity-0 elements never reach here — they were skipped at
+      // collection time by isHiddenForFade, so no `v > 0 ? v : 1` coercion
+      // is needed to protect against fading a hidden element visible.
+      return Number.isFinite(v) && v > 0 && v <= 1 ? v : 1;
     };
     plan.steps.forEach((s) => {
       const el = domFor[s.index];

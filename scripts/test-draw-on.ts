@@ -92,6 +92,13 @@ const strokes = (n: number): Drawable[] =>
   check('row wipes budget scales with rows, capped', planHtmlWipe(30).totalMs === 1500);
 }
 
+// ── wipe rows keep a legible minimum duration ─────────────────
+{
+  const many = planHtmlWipe(30);
+  check('30-row wipe: every row ≥120ms', many.steps.every((s) => s.durMs >= 120));
+  check('30-row wipe still ends at totalMs', many.steps[29].delayMs + many.steps[29].durMs === many.totalMs);
+}
+
 // ── constants ─────────────────────────────────────────────────
 {
   check('iframe fade is 300ms', IFRAME_FADE_MS === 300);
