@@ -28,6 +28,7 @@ import {
   assembleOpeningInput,
   detectEntryMode,
   deriveResumeSignal,
+  shouldIntroduceTeacher,
   shouldRetireOpeningDirective,
   type OpeningSignals,
   type SessionMode,
@@ -901,6 +902,11 @@ export function VoiceTutorRealtime({
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
+  // Teacher self-intro (2026-07-09): carried SEPARATELY from the opening
+  // directive so it rides the FIRST brain turn only — the directive
+  // itself rides ≤4 turns, and the embedded intro was re-spoken on each
+  // of them (up to 4 self-intros in session-1783615226008).
+  const teacherIntroDirectiveRef = useRef<string | null>(null);
   // Teacher-persona mid-session style salience (2026-07-04): the compact
   // per-turn <teacher_style> body (renderTeacherStyleReminder output),
   // seeded once under the same one-shot latch as the opening directive.
@@ -6811,8 +6817,16 @@ export function VoiceTutorRealtime({
             })
           ) {
             openingDirectiveRef.current = null;
+            teacherIntroDirectiveRef.current = null;
           } else {
-            openingDirective = openingDirectiveRef.current;
+            // Teacher self-intro rides the FIRST opening turn only, then
+            // clears — the pedagogy directive keeps riding its ≤4 turns
+            // without re-triggering "introduce yourself".
+            const intro = teacherIntroDirectiveRef.current;
+            openingDirective = intro
+              ? `${intro} ${openingDirectiveRef.current}`
+              : openingDirectiveRef.current;
+            teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
           }
         }
@@ -11927,13 +11941,17 @@ export function VoiceTutorRealtime({
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
                 : openerClause;
-            // Teacher persona: prepend the one-sentence introduce-yourself
-            // directive — ONLY when a directive exists at all (a resolved
-            // opener of 'none', e.g. diagnostic, keeps the directive null).
-            openingDirectiveRef.current =
-              teacherPersona && baseDirective
-                ? `${renderTeacherIntroDirective(teacherPersona)} ${baseDirective}`
-                : baseDirective;
+            // Teacher persona: the one-sentence introduce-yourself directive
+            // is stashed SEPARATELY (rides the first brain turn only — see
+            // the attach site) and ONLY for first-meeting journeys. Pickups,
+            // resumes, and returning students already know this teacher; the
+            // re-intro on those journeys was the "introduced herself 3×" bug
+            // (session-1783615226008) and the enrolled-student re-intro.
+            openingDirectiveRef.current = baseDirective;
+            teacherIntroDirectiveRef.current =
+              teacherPersona && baseDirective && shouldIntroduceTeacher(beh.journey)
+                ? renderTeacherIntroDirective(teacherPersona)
+                : null;
             // Mid-session style salience: seed the session-static
             // <teacher_style> body under the same one-shot latch.
             // Diagnostic sessions stay outside the persona theatrics —
