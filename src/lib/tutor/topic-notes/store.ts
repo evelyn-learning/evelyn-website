@@ -171,6 +171,15 @@ import { BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES } from './seeds/ap-st
 import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
+// AP English Language & Composition Unit 1 (CED 1.1–1.5) — the foundational
+// rhetorical-analysis sequence (calibration unit for the AP Eng Lang
+// vertical slice). FRQ-practice plan deferred (pure practice → no theory).
+import { BASELINE_AP_ENGLANG_RHETORICAL_SITUATION } from './seeds/ap-englang-u1-rhetorical-situation';
+import { BASELINE_AP_ENGLANG_READING_FOR_CLAIM } from './seeds/ap-englang-u1-reading-for-claim';
+import { BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defensible-thesis';
+import { BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
+import { BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -288,6 +297,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES,
   BASELINE_AP_STATS_SLOPE_CI,
   BASELINE_AP_STATS_SLOPE_TEST,
+  BASELINE_AP_ENGLANG_RHETORICAL_SITUATION,
+  BASELINE_AP_ENGLANG_READING_FOR_CLAIM,
+  BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS,
+  BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY,
+  BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
