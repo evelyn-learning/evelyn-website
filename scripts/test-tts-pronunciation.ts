@@ -149,3 +149,23 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('a cat sat on a mat', 'a cat sat on a mat', 'article-untouched');
   console.log('OK — live-session 2026-07-07 regressions');
 }
+
+// Live-session regressions 2026-07-09 (portal-9549e3af / portal-abc8df2d):
+// derivative notation — "dy" voiced as the word "die", "dy/dx" as
+// "die slash dx" — and double-quoted numbers voiced as inches ("6" → "6 inch").
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('So what is dy/dx here?', 'So what is dee why over dee ex here?', 'dy/dx-fraction');
+  eq('First find dx/dt and dy/dt.', 'First find dee ex over dee tee and dee why over dee tee.', 'dx/dt-dy/dt');
+  eq('Now take dy and divide by dx.', 'Now take dee why and divide by dee ex.', 'bare-dy-dx-tokens');
+  eq('d²y/dx² is the second derivative', 'dee squared why over dee ex squared is the second derivative', 'second-derivative');
+  eq('The answer is "6" here.', 'The answer is 6 here.', 'quoted-number-no-inches');
+  eq('She said "great work" today.', 'She said great work today.', 'quoted-phrase-stripped');
+  eq("Don't touch apostrophes.", "Don't touch apostrophes.", 'apostrophe-untouched');
+  eq('dying is not a derivative', 'dying is not a derivative', 'dy-inside-word-untouched');
+  console.log('OK — live-session 2026-07-09 regressions (derivatives + quotes)');
+}

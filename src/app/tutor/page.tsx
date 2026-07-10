@@ -47,7 +47,7 @@ import {
 } from '@/lib/tutor/ai/opening-behavior';
 import { shouldShowDemoCta } from '@/lib/tutor/demo-cta';
 import { detectDemoIntent } from '@/lib/tutor/demo-intent';
-import { DEMO_TEACHERS } from '@/lib/tutor/ai/teacher-persona';
+import { DEMO_TEACHERS, resolveInitialTeacherId } from '@/lib/tutor/ai/teacher-persona';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -86,6 +86,8 @@ const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_
 // neither read nor write the store — the harness owns opener plumbing
 // via cfg.lastOpener and must stay deterministic across runs.
 const OPENER_STORE_PREFIX = 'evelyn:tutor:lastOpener:';
+// Demo teacher choice survives refreshes (see selectedTeacherId below).
+const TEACHER_STORE_KEY = 'evelyn:tutor:selectedTeacher';
 function readStoredOpener(teacherId: string): LastOpenerRecord | undefined {
   try {
     const raw = window.localStorage.getItem(OPENER_STORE_PREFIX + teacherId);
@@ -336,7 +338,25 @@ function TutorPage() {
   // selector (flag-on only) and the dev __tutorTestStart hook can pin one
   // via cfg.teacherId. Flag off ⇒ selectedTeacher is never passed anywhere
   // and effectiveOpenAIVoice === selectedOpenAIVoice (markup unchanged).
+  // Persisted across refreshes (2026-07-09): a plain useState default
+  // meant every reload reset to Elena and an anonymous student refreshing
+  // between sessions churned personas. Mount effect restores the stored
+  // choice (resolveInitialTeacherId validates; junk → default) — read in
+  // an effect, not the initializer, to avoid an SSR hydration mismatch
+  // (same pattern as the opener-recency store above).
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
+  const teacherRestoredRef = useRef(false);
+  useEffect(() => {
+    if (!teacherRestoredRef.current) {
+      teacherRestoredRef.current = true;
+      try {
+        const stored = resolveInitialTeacherId(window.localStorage.getItem(TEACHER_STORE_KEY));
+        if (stored !== DEMO_TEACHERS[0].id) setSelectedTeacherId(stored);
+        return;
+      } catch {}
+    }
+    try { window.localStorage.setItem(TEACHER_STORE_KEY, selectedTeacherId); } catch {}
+  }, [selectedTeacherId]);
   const selectedTeacher = useMemo(
     () => DEMO_TEACHERS.find((t) => t.id === selectedTeacherId) ?? DEMO_TEACHERS[0],
     [selectedTeacherId],

@@ -200,7 +200,13 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
     '<teacher_identity>',
     'This session you teach AS the specific teacher below. Speak as this person — first person, in their style — for the entire session.',
     `Name: ${t.name}`,
-    `About you (as you'd tell a student): ${t.intro}`,
+    // Spoken address (2026-07-09): honorific+name intros sounded odd
+    // ("Mr. Praveen") and the "Ms."/"Mr." period trips TTS pausing.
+    `Go by "${teacherFirstName(t.name)}" when saying your own name — never use an honorific with it.`,
+    // Ask-only (2026-07-09): the brain kept volunteering this backstory
+    // in greetings/pickups ("I keep a jar of counting beans…" on every
+    // session start). It's context for direct questions, not opener copy.
+    `About you (context if a student ASKS about you — NEVER volunteer this in greetings, openers, or resumes): ${t.intro}`,
   ];
   const style = t.style;
   if (style) {
@@ -239,13 +245,41 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
  * across personas — no teacher-specific wording here.
  */
 export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
+  const first = teacherFirstName(t.name);
   return (
-    `Introduce yourself naturally as ${t.name} in your first turn — one warm line with at most ONE human ` +
-    `detail drawn from who you are (${t.intro}); a vivid personal touch beats any credential. The detail ` +
-    `must be UNIVERSALLY legible: something any student in any country understands instantly — no ` +
-    `culture-specific props, idioms, wordplay, or references that need local context to land. Never recite ` +
-    `years of experience, qualifications, or subject lists: it's a hello, not a resume. Then get into the opener.`
+    `Introduce yourself simply as ${first} in your first turn — one warm greeting sentence, just your ` +
+    `first name (no honorific, no surname). NO biography of any kind: no credentials, years of ` +
+    `experience, subject lists, personal props, anecdotes, or history — it's a hello, not a resume. ` +
+    `Your personality shows through HOW you teach, not through facts about yourself. Then get into the opener.`
   );
+}
+
+/**
+ * Pure: the teacher's bare first name for spoken address. Strips a
+ * leading honorific ("Mr." / "Ms." / "Mrs." / "Mx." / "Dr." / "Prof.",
+ * dot optional) and any surname. "Ms. Elena Vasquez" → "Elena",
+ * "Mr. Praveen" → "Praveen", "Sofia" → "Sofia". Spoken-form fix
+ * (2026-07-09): "Mr. Praveen" reads as oddly formal next to a first
+ * name, and the honorific's period trips TTS sentence-splitting
+ * ("Ms <pause> Kiara").
+ */
+/**
+ * Pure: resolve the /tutor demo picker's initial teacher from a stored
+ * choice (localStorage). The picker used to reset to DEMO_TEACHERS[0]
+ * on every refresh, so an anonymous student refreshing between sessions
+ * met a different teacher each time (2026-07-09 LSAT sessions:
+ * Sameer → Sofia → Elena → Sameer in one evening). Unknown/absent
+ * stored ids fall back to the default.
+ */
+export function resolveInitialTeacherId(stored: string | null): string {
+  if (stored && DEMO_TEACHERS.some((t) => t.id === stored)) return stored;
+  return DEMO_TEACHERS[0].id;
+}
+
+export function teacherFirstName(name: string): string {
+  const stripped = name.trim().replace(/^(Mr|Ms|Mrs|Mx|Dr|Prof)\.?\s+/i, '');
+  const first = stripped.split(/\s+/)[0];
+  return first || name.trim();
 }
 
 /**

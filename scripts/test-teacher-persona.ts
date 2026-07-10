@@ -14,6 +14,8 @@ import {
   TEACHER_IDENTITY_BOUNDS_CLAUSE,
   renderTeacherPersonaBlock,
   renderTeacherIntroDirective,
+  teacherFirstName,
+  resolveInitialTeacherId,
   renderTeacherStyleReminder,
   type TeacherPersonaWire,
 } from '../src/lib/tutor/ai/teacher-persona';
@@ -135,23 +137,22 @@ function main() {
   });
 
   // ── renderTeacherIntroDirective ─────────────────────────────────────────
-  test('intro directive: names the teacher, grounds on the intro, moves straight into the opener', () => {
+  // 2026-07-09 spec: bare first name, ZERO biography. The earlier "one vivid
+  // human detail" nudge still produced counting-beans/twenty-years intros in
+  // production, and honorific+name ("Mr. Praveen") reads oddly + trips TTS.
+  test('intro directive: bare first name, no honorific, straight into the opener', () => {
     const d = renderTeacherIntroDirective(FULL_PERSONA);
-    assert.match(d, /Introduce yourself naturally as Dr\. Test Teacher in your first turn/);
-    assert.ok(d.includes(FULL_PERSONA.intro), 'compressed identity source = the intro text');
+    assert.match(d, /Introduce yourself simply as Test in your first turn/);
+    assert.ok(!d.includes('Dr. Test Teacher'), 'no honorific/full-name form');
     assert.match(d, /then get into the opener/i);
   });
 
-  // T1 phrasing polish (2026-07-04): the judge kept hearing "I taught for
-  // twelve years"-style credential lines ("edges toward resume territory").
-  // The directive must steer to ONE vivid human detail and explicitly ban
-  // credential recitation — pin the load-bearing phrases.
-  test('intro directive: prefers one vivid human detail and bans credential recitation', () => {
+  test('intro directive: bans all biography (credentials, props, anecdotes)', () => {
     const d = renderTeacherIntroDirective(FULL_PERSONA);
-    assert.match(d, /at most ONE human detail/i);
-    assert.match(d, /beats any credential/);
-    assert.match(d, /Never recite years of experience, qualifications, or subject lists/);
+    assert.match(d, /NO biography/i);
+    assert.match(d, /personal props, anecdotes/);
     assert.match(d, /a hello, not a resume/);
+    assert.ok(!d.includes(FULL_PERSONA.intro), 'persona intro text must not be embedded');
   });
 
   // ── renderTeacherStyleReminder (mid-session style salience, 2026-07-04) ──
@@ -321,8 +322,50 @@ function main() {
     for (const t of DEMO_TEACHERS) {
       const block = renderTeacherPersonaBlock(t);
       assert.ok(block.includes(TEACHER_IDENTITY_BOUNDS_CLAUSE.replace('{name}', t.name)), `${t.id} bounds clause`);
-      assert.ok(renderTeacherIntroDirective(t).includes(t.name), `${t.id} directive names the teacher`);
+      assert.ok(renderTeacherIntroDirective(t).includes(teacherFirstName(t.name)), `${t.id} directive names the teacher by first name`);
     }
+  });
+
+  // ── First-name address + no-backstory intro (2026-07-09). Students heard
+  //    "I'm Ms. Vasquez — I keep a jar of counting beans on my desk" on
+  //    every session start; the honorific also trips TTS ("Ms <pause>").
+  //    New spec: introduce by bare first name, zero biography.
+  test('teacherFirstName strips honorifics and surnames', () => {
+    assert.equal(teacherFirstName('Ms. Elena Vasquez'), 'Elena');
+    assert.equal(teacherFirstName('Mr. Praveen'), 'Praveen');
+    assert.equal(teacherFirstName('Dr. Amara Osei'), 'Amara');
+    assert.equal(teacherFirstName('Sofia'), 'Sofia');
+    assert.equal(teacherFirstName('Mrs Kiara'), 'Kiara');
+  });
+
+  test('intro directive: first name only, backstory never embedded', () => {
+    for (const t of DEMO_TEACHERS) {
+      const d = renderTeacherIntroDirective(t);
+      assert.ok(d.includes(teacherFirstName(t.name)), `${t.id} directive uses first name`);
+      assert.ok(!d.includes(t.intro), `${t.id} directive must not embed the persona intro/backstory`);
+      assert.doesNotMatch(d, /human detail|who you are/, `${t.id} directive must not invite a biography detail`);
+    }
+  });
+
+  test('persona block: tells the brain to go by the bare first name', () => {
+    const block = renderTeacherPersonaBlock(FULL_PERSONA);
+    assert.ok(block.includes('Go by "Test"'), 'block carries the go-by-first-name line');
+  });
+
+  test('persona block: backstory is ask-only context, never volunteered', () => {
+    const block = renderTeacherPersonaBlock(FULL_PERSONA);
+    assert.match(block, /NEVER volunteer/i, 'backstory line must forbid volunteering it');
+  });
+
+  // ── Demo teacher persistence (2026-07-09): the /tutor picker reset to
+  //    Elena on every refresh, so an anonymous student refreshing between
+  //    sessions churned personas (Sameer → Sofia → Elena → Sameer in one
+  //    evening). The stored choice must survive; junk falls back to default.
+  test('resolveInitialTeacherId: stored valid id wins, junk/null falls back to default', () => {
+    assert.equal(resolveInitialTeacherId(DEMO_TEACHERS[1].id), DEMO_TEACHERS[1].id);
+    assert.equal(resolveInitialTeacherId('no-such-teacher'), DEMO_TEACHERS[0].id);
+    assert.equal(resolveInitialTeacherId(null), DEMO_TEACHERS[0].id);
+    assert.equal(resolveInitialTeacherId(''), DEMO_TEACHERS[0].id);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

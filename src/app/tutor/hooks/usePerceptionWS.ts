@@ -22,6 +22,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { shouldForceReconnectOnWatchdog } from '@/lib/tutor/voice/perception-watchdog';
 
 export type PerceptionState =
   | 'disabled'
@@ -405,9 +406,17 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
           console.warn(`${logPrefix} transcription watchdog fired — no transcript in ${TRANSCRIPTION_WATCHDOG_MS}ms`);
           transcriptionWatchdogRef.current = null;
           const ws = wsRef.current;
-          if (ws && ws.readyState !== WebSocket.OPEN && !intentionallyDisconnectedRef.current) {
-            // Tear-down will trigger ws.onclose → scheduleReconnect.
-            try { ws.close(); } catch {}
+          // A hang on an OPEN socket is the dangerous case: Whisper
+          // swallowed the utterance with no error and the student hears
+          // nothing (27s dead gap, session-1783615559112). Close it so
+          // onclose runs the reconnect ladder; the mic processor follows
+          // wsRef to the fresh socket.
+          if (shouldForceReconnectOnWatchdog({
+            hasSocket: !!ws,
+            readyState: ws ? ws.readyState : WebSocket.CLOSED,
+            intentionallyDisconnected: intentionallyDisconnectedRef.current,
+          })) {
+            try { ws!.close(); } catch {}
           }
         }, TRANSCRIPTION_WATCHDOG_MS);
         break;

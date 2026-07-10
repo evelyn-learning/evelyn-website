@@ -28,6 +28,7 @@ import {
   assembleOpeningInput,
   detectEntryMode,
   deriveResumeSignal,
+  shouldIntroduceTeacher,
   shouldRetireOpeningDirective,
   type OpeningSignals,
   type SessionMode,
@@ -63,6 +64,8 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
+import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import {
   extractDeclarations,
@@ -788,6 +791,18 @@ export function VoiceTutorRealtime({
   // inside the gate, its first sentence is dropped — accepted cost.
   const speakTextBlockedUntilRef = useRef<number>(0);
   const SPEAK_TEXT_GATE_MS = 600;
+  // Cancel-storm governor (2026-07-09, session-1783615559112): caps
+  // stage2/3 cancels in a rolling window so a student re-speaking into
+  // silence can't livelock the tutor by aborting every nascent reply.
+  // speechKilledAtRef marks barge-in kills so the delivery-detection
+  // effect can tell a natural playback finish from a killed one.
+  const cancelStormRef = useRef<CancelStormGovernor>(new CancelStormGovernor());
+  const speechKilledAtRef = useRef<number>(0);
+  // Perception dispatch dedupe (2026-07-09, session-1783615623994): the
+  // direct-dispatch/late-fallback paths bypass the production-WS
+  // suppress window, so a perception re-emission (post-reconnect) fired
+  // the same utterance twice → two brain replies. Short exact-text window.
+  const perceptionDispatchDeduperRef = useRef<DispatchDeduper>(new DispatchDeduper());
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -893,6 +908,16 @@ export function VoiceTutorRealtime({
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
+  // Teacher self-intro (2026-07-09): carried SEPARATELY from the opening
+  // directive so it rides the FIRST brain turn only — the directive
+  // itself rides ≤4 turns, and the embedded intro was re-spoken on each
+  // of them (up to 4 self-intros in session-1783615226008).
+  const teacherIntroDirectiveRef = useRef<string | null>(null);
+  // Session-start greeting window (2026-07-09): until the student's
+  // first real turn dispatches, greeting-only utterances ("Hello.") are
+  // exempt from the noise filter — a real greeting was being dropped as
+  // a Whisper hallucination (session-1783615226008).
+  const studentHasSpokenRef = useRef<boolean>(false);
   // Teacher-persona mid-session style salience (2026-07-04): the compact
   // per-turn <teacher_style> body (renderTeacherStyleReminder output),
   // seeded once under the same one-shot latch as the opening directive.
@@ -1840,7 +1865,7 @@ export function VoiceTutorRealtime({
           currentUserTextRef.current = '';
           return;
         }
-        const classification = classifyTranscript(raw);
+        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current });
         if (classification === 'noise') {
           console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
           onDebugEvent?.('noise_filtered', `Filtered: "${raw}"`);
@@ -5831,6 +5856,9 @@ export function VoiceTutorRealtime({
     if (resumeState.transcript.length) {
       transcriptRef.current = [...resumeState.transcript];
       onTranscriptUpdate([...transcriptRef.current]);
+      // A resumed session is past the greeting window — greeting-only
+      // utterances go back to being hallucination noise.
+      studentHasSpokenRef.current = true;
     }
     // Whiteboard → restore prior figures both in the runtime's own ref (so its
     // board-awareness / dedup logic doesn't think the board is empty) and in
@@ -6803,8 +6831,16 @@ export function VoiceTutorRealtime({
             })
           ) {
             openingDirectiveRef.current = null;
+            teacherIntroDirectiveRef.current = null;
           } else {
-            openingDirective = openingDirectiveRef.current;
+            // Teacher self-intro rides the FIRST opening turn only, then
+            // clears — the pedagogy directive keeps riding its ≤4 turns
+            // without re-triggering "introduce yourself".
+            const intro = teacherIntroDirectiveRef.current;
+            openingDirective = intro
+              ? `${intro} ${openingDirectiveRef.current}`
+              : openingDirectiveRef.current;
+            teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
           }
         }
@@ -10165,6 +10201,7 @@ export function VoiceTutorRealtime({
     if (!opts?.silent) {
       resolveAwaitingDispatch();
       onListeningHintRef.current?.(null);
+      studentHasSpokenRef.current = true;
     }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
@@ -10888,6 +10925,22 @@ export function VoiceTutorRealtime({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realtime.state]);
+  // Cancel-storm delivery detection: leaving 'speaking' WITHOUT a recent
+  // barge-in kill means a tutor reply actually played out to the student
+  // — the loop is healthy, so reset the governor's cancel history. A
+  // killed queue also leaves 'speaking', hence the speechKilledAtRef
+  // window check (kills mark it at cancel time, transition follows
+  // within tens of ms; 3s is generous).
+  const wasSpeakingRef = useRef<boolean>(false);
+  useEffect(() => {
+    const speaking = realtime.state === 'speaking';
+    if (wasSpeakingRef.current && !speaking
+        && Date.now() - speechKilledAtRef.current > 3000) {
+      cancelStormRef.current.recordDelivery();
+    }
+    wasSpeakingRef.current = speaking;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtime.state]);
 
   // (or 'processing' for Stage 2) while the student is still mid-utterance,
   // fire the cancel retroactively so the eventual perception transcript
@@ -10911,6 +10964,14 @@ export function VoiceTutorRealtime({
     if (!openingTurnFullyDelivered()) {
       console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
       onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
+      return;
+    }
+    // Cancel-storm breaker: repeated cancels with no delivered reply is
+    // the "tutor is deaf" livelock — let the in-flight turn play out;
+    // the student's transcript queues behind the busy brain instead.
+    if (!cancelStormRef.current.allowCancel(Date.now())) {
+      console.warn('[PERCEPTION] retro-cancel suppressed — cancel storm (letting reply play out)');
+      onDebugEvent?.('perception_cancel_storm_suppressed', `→${toState}`);
       return;
     }
     const ctx = lastBrainCallContextRef.current;
@@ -10948,6 +11009,8 @@ export function VoiceTutorRealtime({
     // sentence drained from the in-flight orchestrator's SSE buffer
     // between this point and AbortError propagation drops silently.
     speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+    cancelStormRef.current.recordCancel(Date.now());
+    speechKilledAtRef.current = Date.now();
     // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
     // drain so the cancel doesn't flush buffered renders — the verdict
     // decides drop (abort/re-fire) vs flush-all (resume/deliver).
@@ -11030,7 +11093,7 @@ export function VoiceTutorRealtime({
       // phantom "Thanks for watching!" reached the brain and produced a
       // wasted "Sorry, could you say that again?" turn. Match production
       // WS's behaviour exactly — same filter, same drop.
-      const noiseCheck = classifyTranscript(t.text);
+      const noiseCheck = classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
@@ -11170,6 +11233,11 @@ export function VoiceTutorRealtime({
           // Production-WS transcripts that already fired BEFORE
           // late-fallback are caught by the queue-drain dedup above.
           productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+          if (!perceptionDispatchDeduperRef.current.shouldDispatch(t.text, Date.now())) {
+            console.warn(`[PERCEPTION] late-fallback duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
+            onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
+            return;
+          }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
@@ -11197,6 +11265,11 @@ export function VoiceTutorRealtime({
           console.warn(`[PERCEPTION] direct-dispatch (new_turn, prod=${prodState}): firing as student turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_direct_dispatch', `${heur.verdict} at prod=${prodState}`);
           productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+          if (!perceptionDispatchDeduperRef.current.shouldDispatch(t.text, Date.now())) {
+            console.warn(`[PERCEPTION] direct-dispatch duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
+            onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
+            return;
+          }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
@@ -11372,6 +11445,14 @@ export function VoiceTutorRealtime({
           console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (prod=${prodState})`);
           return;
         }
+        // Cancel-storm breaker: see retro-cancel site. Without this, a
+        // student re-speaking into silence aborts every nascent reply
+        // and no turn ever completes (session-1783615559112).
+        if (!cancelStormRef.current.allowCancel(Date.now())) {
+          console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, prod=${prodState})`);
+          onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${prodState}`);
+          return;
+        }
         const cancelStage: 'processing' | 'speaking' = canStage3 ? 'speaking' : 'processing';
         const stageLabel = canStage3 ? 'STAGE-3' : 'STAGE-2';
         console.warn(
@@ -11403,6 +11484,8 @@ export function VoiceTutorRealtime({
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.
         speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+        cancelStormRef.current.recordCancel(Date.now());
+        speechKilledAtRef.current = Date.now();
         // Render↔speech sync: PAUSE the buffer before the drain (see
         // retro-cancel) — verdict decides drop vs flush-all.
         renderBufferPausedRef.current = true;
@@ -11883,13 +11966,17 @@ export function VoiceTutorRealtime({
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
                 : openerClause;
-            // Teacher persona: prepend the one-sentence introduce-yourself
-            // directive — ONLY when a directive exists at all (a resolved
-            // opener of 'none', e.g. diagnostic, keeps the directive null).
-            openingDirectiveRef.current =
-              teacherPersona && baseDirective
-                ? `${renderTeacherIntroDirective(teacherPersona)} ${baseDirective}`
-                : baseDirective;
+            // Teacher persona: the one-sentence introduce-yourself directive
+            // is stashed SEPARATELY (rides the first brain turn only — see
+            // the attach site) and ONLY for first-meeting journeys. Pickups,
+            // resumes, and returning students already know this teacher; the
+            // re-intro on those journeys was the "introduced herself 3×" bug
+            // (session-1783615226008) and the enrolled-student re-intro.
+            openingDirectiveRef.current = baseDirective;
+            teacherIntroDirectiveRef.current =
+              teacherPersona && baseDirective && shouldIntroduceTeacher(beh.journey)
+                ? renderTeacherIntroDirective(teacherPersona)
+                : null;
             // Mid-session style salience: seed the session-static
             // <teacher_style> body under the same one-shot latch.
             // Diagnostic sessions stay outside the persona theatrics —

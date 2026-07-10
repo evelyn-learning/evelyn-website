@@ -335,14 +335,31 @@ function hasRepeatedSubstring(text: string): boolean {
   return REPEATED_SUBSTRING_REGEX.test(text);
 }
 
+// Greeting-only tokens. Mid-session these are classic Whisper
+// silence-hallucinations and stay in NOISE_PATTERNS — but BEFORE the
+// student's first accepted turn a "Hello." is almost always the student
+// actually greeting the tutor (dropped live 2026-07-09,
+// session-1783615226008: the student's "Hello." never reached the brain
+// and the tutor sat silent). Callers pass allowGreetings for that window.
+const GREETING_WORDS = new Set(['hello', 'hi', 'hey']);
+
+export interface NoiseFilterOpts {
+  /** Session-start window: greeting-only utterances are NOT noise. */
+  allowGreetings?: boolean;
+}
+
 /**
  * Check if a transcript is noise/hallucination that should be discarded.
  */
-export function isNoiseTranscript(text: string): boolean {
+export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean {
   const normalized = text.toLowerCase().replace(/[.,!?;:]+/g, '').trim();
   // Empty or whitespace-only — this is what VAD phantom turns produce when
   // the server committed on ambient noise that transcribed to nothing.
   if (normalized.length === 0) return true;
+  if (opts?.allowGreetings) {
+    const words = normalized.split(/\s+/);
+    if (words.length > 0 && words.every((w) => GREETING_WORDS.has(w))) return false;
+  }
   // Exact match with known noise
   if (NOISE_PATTERNS.has(normalized)) return true;
   // 2026-06-15 (JEE physics session): concatenated noise patterns
@@ -408,8 +425,8 @@ export type TranscriptClassification = 'clean' | 'uncertain' | 'noise';
  * `isNoiseTranscript` remains exported for backward compatibility and
  * returns true iff this classifier returns 'noise'.
  */
-export function classifyTranscript(text: string): TranscriptClassification {
-  if (isNoiseTranscript(text)) return 'noise';
+export function classifyTranscript(text: string, opts?: NoiseFilterOpts): TranscriptClassification {
+  if (isNoiseTranscript(text, opts)) return 'noise';
   if (hasProfanitySignal(text)) return 'uncertain';
   return 'clean';
 }

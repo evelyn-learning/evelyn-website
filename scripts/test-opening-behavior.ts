@@ -309,3 +309,25 @@ function main() {
 }
 
 main();
+
+// ── Teacher self-intro gating (2026-07-09) — the tutor introduced itself
+//    up to 4× in one session and re-introduced to returning enrolled
+//    students. Intro is for first meetings only: demo journeys and
+//    subscribed-new; every resume/returning journey skips it. ────────────
+import { shouldIntroduceTeacher } from '../src/lib/tutor/ai/opening-behavior';
+
+test('shouldIntroduceTeacher: first-contact journeys introduce', () => {
+  assert.equal(shouldIntroduceTeacher('demo-trial'), true);
+  assert.equal(shouldIntroduceTeacher('demo-logged-out'), true);
+  assert.equal(shouldIntroduceTeacher('subscribed-new'), true);
+  assert.equal(shouldIntroduceTeacher('subscribed-new-diagnosed'), true);
+});
+
+test('shouldIntroduceTeacher: resume/returning journeys never re-introduce', () => {
+  assert.equal(shouldIntroduceTeacher('resume-live'), false);
+  assert.equal(shouldIntroduceTeacher('resume-stale'), false);
+  assert.equal(shouldIntroduceTeacher('subscribed-returning'), false);
+  assert.equal(shouldIntroduceTeacher('node-revisit'), false);
+  assert.equal(shouldIntroduceTeacher('course-complete'), false);
+  assert.equal(shouldIntroduceTeacher('diagnostic'), false);
+});

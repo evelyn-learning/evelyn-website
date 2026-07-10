@@ -67,6 +67,23 @@ export interface OpeningBehavior {
  * does not change opener/calibration — freestyle only disables
  * completion-gating downstream (a Phase-C concern, not decided here).
  */
+/**
+ * Should the teacher introduce themselves this session? First meetings
+ * only: the demo journeys and a subscribed student's first session.
+ * Every resume/returning journey skips the self-intro — re-introducing
+ * a teacher the student already met (observed up to 4× in
+ * session-1783615226008, and on every enrolled follow-up session) reads
+ * as the tutor having no memory of them.
+ */
+export function shouldIntroduceTeacher(journey: Journey): boolean {
+  return (
+    journey === 'demo-trial' ||
+    journey === 'demo-logged-out' ||
+    journey === 'subscribed-new' ||
+    journey === 'subscribed-new-diagnosed'
+  );
+}
+
 export function resolveOpeningBehavior(input: OpeningInput): OpeningBehavior {
   const mode = input.targetKind;
 

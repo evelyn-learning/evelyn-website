@@ -354,9 +354,16 @@ export type BrainStreamEvent =
  * on flush; false positives (premature flush) would cause speakText to
  * fire on a fragment, which is worse — so we err toward holding back.
  */
-class SentenceBuffer {
+export class SentenceBuffer {
   private buf = '';
   private static readonly MIN_LEN = 25;
+  /** Abbreviation tails whose period must NOT end a sentence. Live
+   *  2026-07-09: "…, Ms." was emitted as a full sentence and Cartesia
+   *  voiced the "Ms. Kiara" honorific with a sentence-final pause.
+   *  Deliberately excludes "St"/"Mt" (ordinals like "1st." would
+   *  false-positive across the digit→letter word boundary). */
+  private static readonly ABBREV_TAIL_RE =
+    /(?:\b(?:Mr|Ms|Mrs|Mx|Dr|Prof|Sr|Jr|vs|etc|approx)|\be\.g|\bi\.e)\.$/i;
 
   /** Append delta, return zero or more newly-completed sentences. */
   push(delta: string): string[] {
@@ -384,12 +391,20 @@ class SentenceBuffer {
     // still get repaired. See sentence-spacing.ts for the guard rules.
     this.buf = normalizeSentenceSpacing(this.buf);
     const out: string[] = [];
-    // Lazy quantifier {25,}? + terminator + trailing whitespace.
+    // Lazy quantifier {MIN,}? + terminator + trailing whitespace.
     // Use [\s\S] instead of `.` with the `s` flag so this builds under
     // ES2017 targets (Sonnet sometimes emits multi-line text mid-response).
-    const re = /^([\s\S]{25,}?[.!?])(\s+)/;
+    // A candidate whose tail is an abbreviation ("…, Ms.") is not a
+    // boundary — re-match with the minimum pushed past it so the scan
+    // continues to the NEXT terminator instead of splitting the honorific.
     while (true) {
-      const m = this.buf.match(re);
+      let minLen = SentenceBuffer.MIN_LEN;
+      let m: RegExpMatchArray | null = null;
+      while (true) {
+        m = this.buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
+        if (!m || !SentenceBuffer.ABBREV_TAIL_RE.test(m[1])) break;
+        minLen = m[1].length + 1;
+      }
       if (!m) break;
       const sentence = m[1].trim();
       if (sentence) out.push(sentence);
