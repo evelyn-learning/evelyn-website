@@ -58,9 +58,6 @@ import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib
 import {
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
-  detectTransformation,
-  buildTransformationLatex,
-  detectAnalogy,
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
@@ -885,7 +882,6 @@ export function VoiceTutorRealtime({
   // transformation-arrow fallback) + whether ANY board render fired this turn
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
   const turnNarrationRef = useRef<string[]>([]);
-  const boardRenderFiredThisTurnRef = useRef(false);
   // Task B3 (flag-gated): whether the NEXT callBrainOnce call to complete is
   // the proactive-opener turn, and how many valid (post-validation) board
   // renders it dispatches. Only ever written/read when TUTOR_PEDAGOGY_OPENER
@@ -2392,13 +2388,6 @@ export function VoiceTutorRealtime({
   // sentences dispatched to TTS so far this turn.
   const dispatchVisualRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
   dispatchVisualRef.current = (processed: WhiteboardCommand[]) => {
-    // Assist bookkeeping: record that the brain drew teaching content this turn
-    // (any show_* / scribble / handwrite), so the transformation-arrow fallback
-    // only fires when the board stayed bare. Meta commands (newPage/scrollTo)
-    // don't count. Tracked regardless of render-sync on/off.
-    if (TUTOR_BOARD_ANCHOR_ASSIST && processed.some(isBoardRenderCommand)) {
-      boardRenderFiredThisTurnRef.current = true;
-    }
     // Task B3 (flag-gated): count valid (post-validation, about-to-render)
     // board renders this batch contributes toward the opener turn, so the
     // finally-block check can tell "opener drew nothing" from "opener drew
@@ -6233,9 +6222,8 @@ export function VoiceTutorRealtime({
     ttsPlaybackStartedCountRef.current = 0;
     renderBufferPausedRef.current = false;
     renderSyncActiveRef.current = true;
-    // Board-anchor assist: fresh per-turn narration + "brain drew nothing" flag.
+    // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
-    boardRenderFiredThisTurnRef.current = false;
     // Task B3 (flag-gated): fresh per-turn valid-render counter for the
     // opener-fallback check. openingTurnPendingRef itself is NOT reset here
     // (it's a one-shot "is this the opener turn" flag seeded once at mount
@@ -10044,64 +10032,23 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
         }
       }
-      // Board-anchor assist (stream-end fallbacks): auto-anchor content the brain
-      // narrated but DREW NOTHING for the whole turn (boardRenderFired gate). The
-      // brain now reliably sketches analogies it engages with (prompt path), so
-      // the auto-fire is the last resort for FULLY-neglected turns only — firing
-      // when the brain merely wrote an equation caused DUPLICATES (it would draw
-      // the figure itself a turn later; 2026-06-23). Transformation arrow first,
-      // else analogy → sketch. Both dispatch TERMINALLY, fail to nothing.
-      if (
-        TUTOR_BOARD_ANCHOR_ASSIST
-        && turnNarrationRef.current.length > 0
-        && !boardRenderFiredThisTurnRef.current
-      ) {
-        const narration = turnNarrationRef.current.join(' ');
-        const xform = detectTransformation(narration);
-        if (xform) {
-          onWhiteboardCommand([{
-            action: 'showEquation',
-            latex: buildTransformationLatex(xform),
-            label: 'Transformation',
-          } as WhiteboardCommand]);
-          onDebugEvent?.('board_anchor_transformation_arrow', `${xform.from} → ${xform.to}`);
-        } else if (TUTOR_SKETCH) {
-          const analogy = detectAnalogy(narration);
-          if (analogy) {
-            onDebugEvent?.('board_anchor_analogy', analogy.concept.slice(0, 60));
-            const ctrl = new AbortController();
-            sketchAbortsRef.current.add(ctrl);
-            const timer = setTimeout(() => ctrl.abort(), SKETCH_TIMEOUT_MS);
-            void fetch('/api/tutor/sketch', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ concept: analogy.concept, labels: [], sessionId: sessionIdRef.current }),
-              signal: ctrl.signal,
-            })
-              .then((r) => (r.ok ? r.json() : { primitives: null }))
-              .then((data: { primitives?: unknown[] | null }) => {
-                clearTimeout(timer);
-                sketchAbortsRef.current.delete(ctrl);
-                const prims = Array.isArray(data?.primitives) && data.primitives.length > 0 ? data.primitives : null;
-                if (prims) {
-                  onWhiteboardCommand([{
-                    action: 'showSketch',
-                    primitives: prims,
-                    title: 'Sketch',
-                    concept: analogy.concept,
-                  } as WhiteboardCommand]);
-                  onDebugEvent?.('board_anchor_analogy_rendered', `${prims.length} prims`);
-                } else {
-                  onDebugEvent?.('board_anchor_analogy_dropped', 'fail-to-nothing');
-                }
-              })
-              .catch(() => {
-                clearTimeout(timer);
-                sketchAbortsRef.current.delete(ctrl);
-              });
-          }
-        }
-      }
+      // Board-anchor auto-fire REMOVED (2026-07-10, session-1783693044096).
+      // It regex-scanned the turn's narration and drew on the brain's behalf
+      // whenever no render survived the turn. Three failure modes, all live:
+      //  • it transcribed sentence fragments verbatim — "turns them into food"
+      //    became the board equation "them → food" (pronoun and all);
+      //  • its sketches were drawn by an isolated doodler that sees only the
+      //    extracted phrase, so a Calvin-cycle lesson got an unlabelled
+      //    "kneading dough" doodle with no ATP/NADPH anywhere;
+      //  • worst, the gate misread dedup. When the brain re-showed a figure
+      //    already on the board (exactly the right move), the dedup filter
+      //    dropped the command before dispatchVisual ran, boardRenderFired
+      //    stayed false, and the assist "rescued" the turn by drawing a
+      //    redundant sketch INSTEAD of the figure the brain asked for.
+      // The brain owns show_sketch directly (TUTOR_SKETCH tool path): it has
+      // the board state, the lesson context, and a labels argument — none of
+      // which a regex over prose has. Re-anchoring (extractAnchorKeywords /
+      // sentenceIntroducesAnchor) is unaffected and still runs in render-sync.
       // Task B3 (flag-gated): fail-to-simple opener render fallback. If this
       // was the proactive-opener turn (openingTurnPendingRef, seeded once at
       // mount from beh.opener !== 'none') and it dispatched zero valid board

@@ -59,6 +59,16 @@ function main() {
     assert.ok(prompt.includes('immediately'), 'honor just-tell-me immediately missing');
   });
 
+  // 2026-07-10 (session-1783693044096): an auto-assist drew a "kneading
+  //    dough" doodle during a Calvin-cycle lesson with no ATP/NADPH labels.
+  //    The assist is retired; the brain now owns show_sketch, so the prompt
+  //    must require the analogy be MAPPED to the lesson's own entities.
+  test('analogy-sketch clause: a sketched analogy must be labelled with what it maps to', () => {
+    assert.ok(prompt.includes('An analogy on the board must be MAPPED'), 'clause header missing');
+    assert.ok(prompt.includes('labels'), 'must tell the brain to pass labels');
+    assert.ok(prompt.includes('unlabelled doodle'), 'must name the failure mode');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }
