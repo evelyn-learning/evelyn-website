@@ -179,6 +179,41 @@ import { BASELINE_AP_ENGLANG_READING_FOR_CLAIM } from './seeds/ap-englang-u1-rea
 import { BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defensible-thesis';
 import { BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
 import { BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
+// AP English Language Units 2-9 (Phase 2 fan-out) — topic-notes baselines
+import { BASELINE_AP_ENGLANG_BUILDING_AN_ARGUMENT } from './seeds/ap-englang-u2-building-an-argument';
+import { BASELINE_AP_ENGLANG_COUNTERARGUMENT_REBUTTAL } from './seeds/ap-englang-u2-counterargument-rebuttal';
+import { BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS } from './seeds/ap-englang-u2-intros-conclusions';
+import { BASELINE_AP_ENGLANG_LINE_OF_REASONING_ARGUMENT } from './seeds/ap-englang-u2-line-of-reasoning-argument';
+import { BASELINE_AP_ENGLANG_SELECTING_EVIDENCE } from './seeds/ap-englang-u2-selecting-evidence';
+import { BASELINE_AP_ENGLANG_CITING_ATTRIBUTING_SOURCES } from './seeds/ap-englang-u3-citing-attributing-sources';
+import { BASELINE_AP_ENGLANG_INTEGRATING_EVIDENCE } from './seeds/ap-englang-u3-integrating-evidence';
+import { BASELINE_AP_ENGLANG_POSITION_ACROSS_SOURCES } from './seeds/ap-englang-u3-position-across-sources';
+import { BASELINE_AP_ENGLANG_SYNTHESIS_LINE_OF_REASONING } from './seeds/ap-englang-u3-synthesis-line-of-reasoning';
+import { BASELINE_AP_ENGLANG_THE_SYNTHESIS_TASK } from './seeds/ap-englang-u3-the-synthesis-task';
+import { BASELINE_AP_ENGLANG_ANALYZING_LINE_OF_REASONING } from './seeds/ap-englang-u4-analyzing-line-of-reasoning';
+import { BASELINE_AP_ENGLANG_DICTION_AND_TONE } from './seeds/ap-englang-u4-diction-and-tone';
+import { BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS_ANALYSIS } from './seeds/ap-englang-u4-intros-conclusions-analysis';
+import { BASELINE_AP_ENGLANG_METHODS_OF_DEVELOPMENT } from './seeds/ap-englang-u4-methods-of-development';
+import { BASELINE_AP_ENGLANG_ORGANIZING_FOR_EFFECT } from './seeds/ap-englang-u5-organizing-for-effect';
+import { BASELINE_AP_ENGLANG_REASONING_AND_PARAGRAPHING } from './seeds/ap-englang-u5-reasoning-and-paragraphing';
+import { BASELINE_AP_ENGLANG_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-transitions-cohesion';
+import { BASELINE_AP_ENGLANG_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
+import { BASELINE_AP_ENGLANG_ANALYZING_STYLE } from './seeds/ap-englang-u6-analyzing-style';
+import { BASELINE_AP_ENGLANG_DICTION_CONNOTATION_TONE } from './seeds/ap-englang-u6-diction-connotation-tone';
+import { BASELINE_AP_ENGLANG_FIGURATIVE_LANGUAGE_SCHEMES } from './seeds/ap-englang-u6-figurative-language-schemes';
+import { BASELINE_AP_ENGLANG_SYNTAX_FOR_EFFECT } from './seeds/ap-englang-u6-syntax-for-effect';
+import { BASELINE_AP_ENGLANG_COMPLEX_REASONING } from './seeds/ap-englang-u7-complex-reasoning';
+import { BASELINE_AP_ENGLANG_NUANCE_QUALIFICATION_CONCESSION } from './seeds/ap-englang-u7-nuance-qualification-concession';
+import { BASELINE_AP_ENGLANG_RHETORICAL_RISK } from './seeds/ap-englang-u7-rhetorical-risk';
+import { BASELINE_AP_ENGLANG_SITUATING_IN_CONTEXT } from './seeds/ap-englang-u7-situating-in-context';
+import { BASELINE_AP_ENGLANG_COMPETING_PERSPECTIVES } from './seeds/ap-englang-u8-competing-perspectives';
+import { BASELINE_AP_ENGLANG_QUALIFYING_WITH_SOURCES } from './seeds/ap-englang-u8-qualifying-with-sources';
+import { BASELINE_AP_ENGLANG_SOPHISTICATION_IN_SYNTHESIS } from './seeds/ap-englang-u8-sophistication-in-synthesis';
+import { BASELINE_AP_ENGLANG_SOURCE_CREDIBILITY_BIAS } from './seeds/ap-englang-u8-source-credibility-bias';
+import { BASELINE_AP_ENGLANG_MCQ_READING_STRATEGY } from './seeds/ap-englang-u9-mcq-reading-strategy';
+import { BASELINE_AP_ENGLANG_MCQ_WRITING_EDITING } from './seeds/ap-englang-u9-mcq-writing-editing';
+import { BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION } from './seeds/ap-englang-u9-revision-and-sophistication';
+import { BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u9-timed-writing-strategy';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -302,6 +337,41 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS,
   BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY,
   BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT,
+  // AP English Language Units 2-9 baselines
+  BASELINE_AP_ENGLANG_BUILDING_AN_ARGUMENT,
+  BASELINE_AP_ENGLANG_COUNTERARGUMENT_REBUTTAL,
+  BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS,
+  BASELINE_AP_ENGLANG_LINE_OF_REASONING_ARGUMENT,
+  BASELINE_AP_ENGLANG_SELECTING_EVIDENCE,
+  BASELINE_AP_ENGLANG_CITING_ATTRIBUTING_SOURCES,
+  BASELINE_AP_ENGLANG_INTEGRATING_EVIDENCE,
+  BASELINE_AP_ENGLANG_POSITION_ACROSS_SOURCES,
+  BASELINE_AP_ENGLANG_SYNTHESIS_LINE_OF_REASONING,
+  BASELINE_AP_ENGLANG_THE_SYNTHESIS_TASK,
+  BASELINE_AP_ENGLANG_ANALYZING_LINE_OF_REASONING,
+  BASELINE_AP_ENGLANG_DICTION_AND_TONE,
+  BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS_ANALYSIS,
+  BASELINE_AP_ENGLANG_METHODS_OF_DEVELOPMENT,
+  BASELINE_AP_ENGLANG_ORGANIZING_FOR_EFFECT,
+  BASELINE_AP_ENGLANG_REASONING_AND_PARAGRAPHING,
+  BASELINE_AP_ENGLANG_TRANSITIONS_COHESION,
+  BASELINE_AP_ENGLANG_UNITY_AND_COHERENCE,
+  BASELINE_AP_ENGLANG_ANALYZING_STYLE,
+  BASELINE_AP_ENGLANG_DICTION_CONNOTATION_TONE,
+  BASELINE_AP_ENGLANG_FIGURATIVE_LANGUAGE_SCHEMES,
+  BASELINE_AP_ENGLANG_SYNTAX_FOR_EFFECT,
+  BASELINE_AP_ENGLANG_COMPLEX_REASONING,
+  BASELINE_AP_ENGLANG_NUANCE_QUALIFICATION_CONCESSION,
+  BASELINE_AP_ENGLANG_RHETORICAL_RISK,
+  BASELINE_AP_ENGLANG_SITUATING_IN_CONTEXT,
+  BASELINE_AP_ENGLANG_COMPETING_PERSPECTIVES,
+  BASELINE_AP_ENGLANG_QUALIFYING_WITH_SOURCES,
+  BASELINE_AP_ENGLANG_SOPHISTICATION_IN_SYNTHESIS,
+  BASELINE_AP_ENGLANG_SOURCE_CREDIBILITY_BIAS,
+  BASELINE_AP_ENGLANG_MCQ_READING_STRATEGY,
+  BASELINE_AP_ENGLANG_MCQ_WRITING_EDITING,
+  BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION,
+  BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
