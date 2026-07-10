@@ -108,14 +108,28 @@ export function useDrawOn() {
       domFor.push(el);
     }
     const plan = planSvgDrawOn(drawables);
+    // Fades must land on the element's OWN computed opacity, not a hardcoded
+    // 1: with fill:'backwards' the animation reverts to the cascaded value
+    // when its active phase ends, so animating 0→1 on a shape with a
+    // translucent design opacity (e.g. a 0.55-opacity highlight circle)
+    // would visibly snap down at the end. Ending exactly on the computed
+    // value makes the revert a no-op.
+    const fadeTargetOpacity = (el: SVGElement): number => {
+      const v = parseFloat(window.getComputedStyle(el).opacity || '1');
+      return Number.isFinite(v) && v > 0 ? v : 1;
+    };
     plan.steps.forEach((s) => {
       const el = domFor[s.index];
       if (s.mode === 'stroke') {
-        const geo = el as SVGGeometryElement;
-        let len = 0;
-        try { len = geo.getTotalLength(); } catch { /* skip */ }
+        // Reuse the length measured during collection — no second
+        // getTotalLength() call.
+        const d = drawables[s.index];
+        const len = d.kind === 'stroke' ? d.length : 0;
         if (!len || !isFinite(len)) {
-          track(el.animate([{ opacity: 0 }, { opacity: 1 }], { delay: baseDelay + s.delayMs, duration: s.durMs, fill: 'backwards' }));
+          track(el.animate(
+            [{ opacity: 0 }, { opacity: fadeTargetOpacity(el) }],
+            { delay: baseDelay + s.delayMs, duration: s.durMs, easing: 'ease-out', fill: 'backwards' },
+          ));
           return;
         }
         el.style.strokeDasharray = `${len}`;
@@ -127,7 +141,7 @@ export function useDrawOn() {
         track(a);
       } else {
         track(el.animate(
-          [{ opacity: 0 }, { opacity: 1 }],
+          [{ opacity: 0 }, { opacity: fadeTargetOpacity(el) }],
           { delay: baseDelay + s.delayMs, duration: s.durMs, easing: 'ease-out', fill: 'backwards' },
         ));
       }
