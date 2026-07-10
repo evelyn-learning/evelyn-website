@@ -37,6 +37,7 @@
     "test:conic": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-construction.ts",
     "test:graph-consistency": "npx tsx scripts/test-graph-consistency.ts",
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
+    "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:process-tool-call": "npx tsx scripts/test-process-tool-call.ts",
     "test:timeline": "npx tsx scripts/test-timeline-spacing.ts",
     "test:render-tools": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-render-harness/run.ts",
