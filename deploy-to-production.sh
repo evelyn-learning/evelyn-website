@@ -139,6 +139,20 @@ log_message "STEP" "Generating public/ manifest..."
 find public -type f | LC_ALL=C sort > .deploy-public-manifest
 log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries"
 
+# Step 1.6: Generate a .next/static/ manifest for orphan-chunk pruning.
+# `unzip -o` overwrites but never DELETES files absent from the archive,
+# so every deploy that renames content-hashed chunks leaves the old ones
+# behind. They accumulated to 1880 stale chunks / 173 MB before the first
+# manual cleanup (2026-07-10). `.next/static/` is 100% build-generated,
+# immutable, content-hashed output — nothing writes there at runtime — so
+# the freshly-built manifest is the authoritative keep-set: any static file
+# on the server NOT in it belongs to a prior build and is safe to delete.
+# Self-healing: the FIRST deploy after this change wipes all accumulated
+# orphans, and every deploy after keeps the tree clean.
+log_message "STEP" "Generating .next/static manifest (orphan-chunk prune)..."
+find .next/static -type f | LC_ALL=C sort > .deploy-static-manifest
+log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) entries"
+
 # Step 2: Create deployment package
 log_message "STEP" "Creating deployment package..."
 
@@ -164,6 +178,7 @@ zip -qr "$ZIP_FILE" \
   tailwind.config.ts \
   postcss.config.mjs \
   .deploy-public-manifest \
+  .deploy-static-manifest \
   -x "*.log" "*/.DS_Store" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
@@ -232,6 +247,7 @@ run_remote_command "cd $REMOTE_DIR && \
   STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.prev .deploy-public-manifest) && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
   rm -f /tmp/.deploy-public-manifest.prev && \
+  if [ -s .deploy-static-manifest ]; then find .next/static -type f | LC_ALL=C sort > /tmp/.static-have && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep && comm -23 /tmp/.static-have /tmp/.static-keep > /tmp/.static-orphans && if [ -s /tmp/.static-orphans ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have /tmp/.static-keep /tmp/.static-orphans; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
   npm ci --omit=dev && \
   (pm2 delete evelyn-website 2>/dev/null || true) && \
   pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \
