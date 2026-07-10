@@ -182,6 +182,25 @@ expect(
     'PDF capture removed legacy shape branches',
 );
 
+// Phase-2 hand marks: both capture sites branch on drawOnEnabled() and
+// consume the shared hand-stroke module, mirroring the live overlay.
+expect(
+    (captureSource.match(/drawOnEnabled\(\)/g) ?? []).length >= 4,
+    'both PDF capture sites gate hand marks on drawOnEnabled() (tick + highlight each)',
+);
+expect(
+    captureSource.includes("from '@/lib/tutor/whiteboard/hand-stroke'"),
+    'PDF capture imports the shared hand-stroke module',
+);
+expect(
+    wbSource.includes('tickSpine(tx, ty, tickSize)'),
+    'live overlay builds the hand tick from the shared spine',
+);
+expect(
+    wbSource.includes('seenMarkSeedsRef'),
+    'live overlay animates each mark once (seed-keyed seen set)',
+);
+
 // ── 5. Orchestrator handwrite-field stripping ──────────────────
 
 const orchSource = readFileSync(

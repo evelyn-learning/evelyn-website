@@ -31,6 +31,10 @@ export interface ScenarioTurn {
   watchFor?: string;
   /** Per-turn timeout override (ms). Brain turns can run 20-40s. */
   timeoutMs?: number;
+  /** Fire `trigger` this many ms AFTER `say` is dispatched (mid-turn
+   *  triggers, e.g. barge-in while a render is drawing on); default = fire
+   *  before `say` as today. */
+  triggerDelayMs?: number;
 }
 
 export interface Scenario {
@@ -58,4 +62,10 @@ export interface Scenario {
     turns?: number;        // student turns to drive (default 6)
     firstSay?: string;     // the opening student utterance
   };
+  /** Informational only: the harness has no mid-loop hook, so the hard-reload
+   *  (Continue overlay + immediate/3s-later screenshots, verifying resume
+   *  boards render instantly / bulk-mount cap) actually fires after ALL test
+   *  turns complete, regardless of which N is set here. Kept as a field for
+   *  when mid-loop reload support is added. */
+  reloadAfterTurn?: number;
 }

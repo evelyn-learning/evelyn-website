@@ -88,6 +88,7 @@ import { stripRedundantChoiceLabel } from './choiceLabel';
 import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
+import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -874,6 +875,15 @@ export function WhiteboardCanvas({
     }
   });
 
+  // Animate-once for scribble marks (ticks/highlights), same rationale as
+  // seenAnimIdsRef above: ScribbleOverlays lives inside the page subtree
+  // (key={currentIndex}), so it remounts on every page switch — a local
+  // ref there would replay every mark's 400ms wipe on flip-back. Declared
+  // here (survives page remounts) and threaded down as a prop, mirroring
+  // how items get their animate-once state from the parent instead of
+  // from state local to the remounting subtree.
+  const seenMarkSeedsRef = useRef<Set<string>>(new Set());
+
   // Scribble and scrollTo commands don't render as their own board items —
   // they overlay / navigate. Split them out so the main loop renders real
   // content, and the overlays attach by targetItemIndex (1-indexed).
@@ -1410,7 +1420,7 @@ export function WhiteboardCanvas({
             data-wb-item-id={(renderableCommands[0] as any).id ?? undefined}
           >
             <CommandRenderer command={renderableCommands[0]} />
-            <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} />
+            <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} seenMarkSeeds={seenMarkSeedsRef} />
             {onStudentMark && isIframeCommand(renderableCommands[0]) && (
               <div
                 className="absolute inset-0 z-10"
@@ -1449,7 +1459,7 @@ export function WhiteboardCanvas({
                     data-wb-item-id={(cmd as any).id ?? undefined}
                   >
                     <CommandRenderer command={cmd} />
-                    <ScribbleOverlays scribbles={overlays} />
+                    <ScribbleOverlays scribbles={overlays} seenMarkSeeds={seenMarkSeedsRef} />
                     {onStudentMark && isIframeCommand(cmd) && (
                       <div
                         className="absolute inset-0 z-10"
@@ -1844,8 +1854,34 @@ function scribbleMatchesItem(
   return s.targetItemIndex === idx1;
 }
 
-function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
+function ScribbleOverlays({ scribbles, seenMarkSeeds }: { scribbles: ScribbleCmd[]; seenMarkSeeds: React.MutableRefObject<Set<string>> }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // Phase 2: animate each mark on ONCE (WAAPI on the mark's <g>). Marks
+  // re-render whenever the scribbles array changes; the seen-set keys on
+  // `${shape}:${seed}` (shape + the mark's content seed) so re-renders
+  // never replay AND a tick/highlight sharing a target's seed still get
+  // independent animations. The ref itself lives in the parent
+  // WhiteboardCanvas (seenMarkSeedsRef, passed down as this prop) rather
+  // than locally, because ScribbleOverlays remounts on every page switch
+  // (page wrapper is key={currentIndex}) — a local ref would replay every
+  // mark's wipe on flip-back. Two cases can collide on the SAME key
+  // (same shape + same target): a re-emitted tick after kill-recovery
+  // re-targets the same feature — the second one is intentionally
+  // skipped (no re-animation), not replayed. A different shape on the
+  // same target (e.g. a highlight added after a tick) now gets its own
+  // key and animates normally.
+  const handMarks = drawOnEnabled();
+  const animateMark = (el: SVGGElement | null, seed: string) => {
+    if (!el || !handMarks || seenMarkSeeds.current.has(seed)) return;
+    seenMarkSeeds.current.add(seed);
+    el.animate(
+      [
+        { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+        { opacity: 1, clipPath: 'inset(0 0% 0 0)' },
+      ],
+      { duration: 400, easing: 'ease-out', fill: 'backwards' },
+    );
+  };
   // After paint, walk the parent element for data-feature-* markers the
   // target renderer exposed (e.g. <g data-feature="object"
   // data-feature-cx="0.25" data-feature-cy="0.55" data-feature-w="0.08"
@@ -2127,10 +2163,23 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         // shapes (circle/underline/box/arrow) silently render as a tick
         // so old session state + cached brain calls keep working.
         const isHighlight = s.shape === 'highlight';
+        const seed = `${s.targetFeature ?? s.target ?? 'mark'}`;
+        // Seen-set key ONLY — must stay separate from `seed` above, which
+        // feeds strokeOutline's wobble RNG and must stay stable per-target
+        // for PDF export lockstep (same target → same hand-wobble shape
+        // regardless of which mark drew it). Keying on shape too means a
+        // tick and a highlight on the same target no longer share an
+        // animate-once slot.
+        const seenKey = `${s.shape}:${seed}`;
 
         let mark: React.ReactNode;
         if (isHighlight) {
-          mark = (
+          // Hand marker swipe when the flag is on and the region is
+          // swipe-shaped; translucent rect otherwise (tall regions, flag off).
+          const band = handMarks ? highlightBand(r, seed) : null;
+          mark = band ? (
+            <path d={strokeOutline(band.spine, band.width, seed)} fill={color} fillOpacity="0.3" stroke="none" />
+          ) : (
             <rect
               x={r.x} y={r.y} width={r.w} height={r.h}
               fill={color} fillOpacity="0.25" stroke="none"
@@ -2152,41 +2201,56 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           let ty = r.y - half * 0.2;
           if (tx + half > vbW - 2) tx = r.x + r.w - half * 0.8;
           if (ty - half * 0.6 < 2) ty = r.y + half * 0.8;
-          // Two-segment ✓ path: short stroke from upper-left of the
-          // ascender down to the cusp, then long stroke up to upper-right.
-          const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
-          const inner = Math.max(3, tickSize * 0.25);
-          // White halo underneath so the colored tick reads on ANY
-          // background fill (yellow Na cell, green frayer cell, etc.).
-          // 2026-05-13 user feedback (image #62): red tick on yellow
-          // Na cell faded into the fill and covered the symbol.
-          // Dual-stroke pattern: render a slightly-fatter WHITE path
-          // first, then the colored path on top — gives the colored
-          // stroke a thin white outline that pops against anything.
-          mark = (
-            <g>
-              <path
-                d={d}
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth={inner + Math.max(2, tickSize * 0.14)}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={0.95}
-              />
-              <path
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeWidth={inner}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-          );
+          if (handMarks) {
+            // Hand-drawn ✓: same spine geometry as the stroked path below,
+            // rendered as two filled variable-width outlines (white halo
+            // underneath for any-background readability — same rationale
+            // as the dual-stroke version).
+            const spine = tickSpine(tx, ty, tickSize);
+            const inner = Math.max(3, tickSize * 0.25);
+            mark = (
+              <g>
+                <path d={strokeOutline(spine, inner + Math.max(2, tickSize * 0.14) + 2, `${seed}-halo`)} fill="#ffffff" opacity={0.95} stroke="none" />
+                <path d={strokeOutline(spine, inner + 1.5, seed)} fill={color} stroke="none" />
+              </g>
+            );
+          } else {
+            // Two-segment ✓ path: short stroke from upper-left of the
+            // ascender down to the cusp, then long stroke up to upper-right.
+            const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+            const inner = Math.max(3, tickSize * 0.25);
+            // White halo underneath so the colored tick reads on ANY
+            // background fill (yellow Na cell, green frayer cell, etc.).
+            // 2026-05-13 user feedback (image #62): red tick on yellow
+            // Na cell faded into the fill and covered the symbol.
+            // Dual-stroke pattern: render a slightly-fatter WHITE path
+            // first, then the colored path on top — gives the colored
+            // stroke a thin white outline that pops against anything.
+            mark = (
+              <g>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth={inner + Math.max(2, tickSize * 0.14)}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={0.95}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={inner}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            );
+          }
         }
 
-        return <g key={i}>{mark}</g>;
+        return <g key={i} ref={(el) => animateMark(el, seenKey)}>{mark}</g>;
       })}
     </svg>
   );
