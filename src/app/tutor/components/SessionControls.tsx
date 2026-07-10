@@ -257,7 +257,11 @@ export function SessionControls({
 
   return (
     <>
-      <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+      {/* gap-3: in the Stage header this container is content-width, so
+          justify-between collapses and the clock sat flush against the
+          Export PDF button (2026-07-10 audit); the gap keeps the groups
+          separated in both the legacy full-width and stage layouts. */}
+      <div className="flex items-center justify-between gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
         {/* Timer */}
         <div className="flex items-center gap-2">
           <Clock

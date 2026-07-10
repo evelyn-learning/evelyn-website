@@ -1488,6 +1488,11 @@ export function VoiceTutorRealtime({
   // product/safety timer that must work even with TUTOR_PEDAGOGY_OPENER off,
   // and the flag-gated demo-stop read is unaffected by an always-set value.
   const voiceSessionStartedAtMsRef = useRef<number | null>(null);
+  // Mirror of the onSessionStarted prop for stable access from the handleRef
+  // effect (same pattern as sendTextMessageRef / resumeContinueRef — the
+  // effect's dep list must not churn every render to see the latest closure).
+  const onSessionStartedRef = useRef<typeof onSessionStarted>(onSessionStarted);
+  onSessionStartedRef.current = onSessionStarted;
   // Demo hard-stop one-shot latch — guarantees the wall-clock cap ends the
   // session exactly once even if the timer effect re-subscribes (onEndSession
   // identity churns per turn via the embed's useCallback deps).
@@ -11724,7 +11729,20 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     if (handleRef) {
       handleRef.current = {
-        sendTextMessage: (text: string) => realtime.sendTextMessage(text),
+        sendTextMessage: (text: string) => {
+          // Timer + demo-cap parity for typed-first students (2026-07-10
+          // audit): the session clock was keyed to the first MIC tap only,
+          // so a "type here if you can't speak" student watched 0:00 all
+          // session — and a typed-only trial never armed the demo hard-stop
+          // cap (voiceSessionStartedAtMsRef stayed null). A real typed
+          // message starts both. Bracketed strings are synthetic (kickoff /
+          // reactions / harness) and must not start the clock.
+          if (!/^\s*\[/.test(text) && voiceSessionStartedAtMsRef.current === null) {
+            voiceSessionStartedAtMsRef.current = Date.now();
+            onSessionStartedRef.current?.();
+          }
+          realtime.sendTextMessage(text);
+        },
         speakText: (text: string) => realtime.speakText(text),
         stopSpeaking: () => {
           realtime.clearSpeechQueue();

@@ -20,6 +20,10 @@
  *   filenames, domains and mid-sentence abbreviations — leave those.
  * - Require two alphanumerics immediately before the terminator so
  *   acronyms and initials ("U.S.A", "A.M.") never split.
+ * - Colons count as terminators under the same guards ("…is:So here",
+ *   2026-07-10 coop-conics run). Clock times (3:45) are digit-after,
+ *   ratios (a:b) are lowercase-after, single-letter labels (x:Y) fail
+ *   the two-alnum guard — all naturally immune.
  * - Never touch $…$ math spans — KaTeX must reach the caption
  *   renderer verbatim.
  * - Decimals are naturally immune: the char after the period is a
@@ -34,7 +38,7 @@ export function normalizeSentenceSpacing(text: string): string {
   return text
     .split(/(\$[^$]*\$)/)
     .map((part, i) =>
-      i % 2 === 1 ? part : part.replace(/([\p{L}\p{N}]{2}[.!?])(\p{Lu})/gu, '$1 $2'),
+      i % 2 === 1 ? part : part.replace(/([\p{L}\p{N}]{2}[.!?:])(\p{Lu})/gu, '$1 $2'),
     )
     .join('');
 }

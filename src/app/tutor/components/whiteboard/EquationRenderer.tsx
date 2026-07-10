@@ -10,6 +10,7 @@
 import { useEffect, useRef } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { InlineMathText } from './InlineMathText';
 
 interface EquationRendererProps {
   latex: string;
@@ -188,7 +189,10 @@ export function EquationRenderer({
           data-feature="equation-label"
           style={{ maxWidth: '100%', overflowWrap: 'anywhere' }}
         >
-          {label}
+          {/* Labels often carry math ("Tangent at (√5, 4/3)") — render any
+              inline $…$ through KaTeX so label math matches the equation
+              body instead of unicode-vs-KaTeX mixing (2026-07-10 audit). */}
+          <InlineMathText text={label} />
         </div>
       )}
       <div

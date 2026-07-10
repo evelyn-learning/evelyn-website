@@ -228,10 +228,31 @@ export async function captureCommandRaster(
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       }
     }
-    const { default: html2canvas } = await import('html2canvas');
     // Find the smallest rendered child so we don't capture the full container
     // width when the content is narrow (keeps the PDF embed tight).
     const target = (container.firstElementChild as HTMLElement) || container;
+    // Primary: html-to-image (SVG foreignObject — the BROWSER lays out the
+    // node, so KaTeX vlist structures rasterize pixel-perfect). html2canvas
+    // re-implements CSS layout and mispositions KaTeX fraction bars (the
+    // rule strikes THROUGH the numerator) and detaches radical vinculums —
+    // every fraction/radical in the 2026-07-10 coop-conics session PDF was
+    // malformed; upstream html2canvas is unmaintained and the vlist bug is
+    // open. Kept as fallback for anything foreignObject serialization
+    // rejects (e.g. cross-origin subresources).
+    try {
+      const { toCanvas } = await import('html-to-image');
+      const canvas = await toCanvas(target, { backgroundColor: '#ffffff', pixelRatio: 2 });
+      if (canvas.width > 0 && canvas.height > 0) {
+        return {
+          dataUrl: canvas.toDataURL('image/png'),
+          widthPx: canvas.width,
+          heightPx: canvas.height,
+        };
+      }
+    } catch (err) {
+      console.warn('[whiteboard-capture] html-to-image failed, falling back to html2canvas:', err);
+    }
+    const { default: html2canvas } = await import('html2canvas');
     const canvas = await html2canvas(target, {
       backgroundColor: '#ffffff',
       scale: 2,
@@ -321,10 +342,15 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
       });
       group.appendChild(rect);
     } else {
+      // Corner-outside anchor + clamps — mirrors the live overlay's tick
+      // placement in WhiteboardCanvas.tsx (2026-07-10: the centered-right
+      // anchor struck through equation content; see comment there).
       const tickSize = Math.max(16, Math.min(vw, vh) * 0.06);
-      const tx = rx + rw - tickSize * 0.55;
-      const ty = ry + rh / 2;
       const half = tickSize / 2;
+      let tx = rx + rw + half * 0.6;
+      let ty = ry - half * 0.2;
+      if (tx + half > vw - 2) tx = rx + rw - half * 0.8;
+      if (ty - half * 0.6 < 2) ty = ry + half * 0.8;
       const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
       const inner = Math.max(3, tickSize * 0.25);
       // White halo underneath for any-background readability —
@@ -554,10 +580,14 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
         });
         group.appendChild(rect);
       } else {
+        // Corner-outside anchor + clamps — keep in lockstep with the live
+        // overlay (WhiteboardCanvas.tsx) and the capture mirror above.
         const tickSize = Math.max(16, Math.min(vw, vh) * 0.06);
-        const tx = rx + rw - tickSize * 0.55;
-        const ty = ry + rh / 2;
         const half = tickSize / 2;
+        let tx = rx + rw + half * 0.6;
+        let ty = ry - half * 0.2;
+        if (tx + half > vw - 2) tx = rx + rw - half * 0.8;
+        if (ty - half * 0.6 < 2) ty = ry + half * 0.8;
         const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
         const inner = Math.max(3, tickSize * 0.25);
         const halo = doc.createElementNS(SVG_NS, 'path');

@@ -136,12 +136,17 @@ expect(!wbSource.includes('<HandwriteOverlays'), 'HandwriteOverlays should not b
 expect(!wbSource.includes("h.margin === 'top'"), 'paddingTop heuristic for margin=top removed');
 expect(!wbSource.includes("h.margin === 'bottom'"), 'paddingBottom heuristic for margin=bottom removed');
 
-// Tick anchor formula present: right edge + vertical center + ✓ path.
+// Tick anchor formula present: corner-outside placement + ✓ path.
 // The path's first move is `M ${tx - half} ${ty}` (start at left of
 // the tick), followed by an L to the cusp and an L to the upper-right.
+// 2026-07-10: anchor moved from inside-right/vertically-centered (which
+// struck through equation content) to just outside the top-right corner,
+// with clamps back inside the viewBox at canvas edges.
 expect(wbSource.includes('M ${tx - half} ${ty}'), 'WhiteboardCanvas contains the tick SVG path generator');
-expect(wbSource.includes('r.x + r.w - tickSize'), 'tick anchor is inside the feature\'s right edge (inward placement)');
-expect(wbSource.includes('r.y + r.h / 2'), 'tick anchor is vertically centered');
+expect(wbSource.includes('r.x + r.w + half * 0.6'), 'tick anchor is outside the feature\'s top-right corner');
+expect(wbSource.includes('r.y - half * 0.2'), 'tick anchor rides the feature\'s top edge');
+expect(wbSource.includes('if (tx + half > vbW - 2)'), 'tick clamps horizontally at the canvas edge');
+expect(wbSource.includes('if (ty - half * 0.6 < 2)'), 'tick clamps vertically at the canvas top');
 
 // Highlight branch still present.
 expect(wbSource.includes("s.shape === 'highlight'"), 'highlight branch present');
@@ -155,14 +160,19 @@ const captureSource = readFileSync(
 );
 
 // PDF mirror of the tick formula — same anchor math, written in plain
-// strings since the PDF builds DOM nodes via createElementNS.
+// strings since the PDF builds DOM nodes via createElementNS. Both
+// capture sites (live-DOM capture + doc-based capture) carry it.
 expect(
-    captureSource.includes('rx + rw - tickSize * 0.55'),
-    'PDF capture tick anchor matches live (rx + rw - tickSize * 0.55)',
+    (captureSource.match(/rx \+ rw \+ half \* 0\.6/g) ?? []).length === 2,
+    'PDF capture tick anchor matches live (rx + rw + half * 0.6) in both capture sites',
 );
 expect(
-    captureSource.includes('ry + rh / 2'),
-    'PDF capture tick centered vertically (ry + rh / 2)',
+    (captureSource.match(/ry - half \* 0\.2/g) ?? []).length === 2,
+    'PDF capture tick rides the top edge (ry - half * 0.2) in both capture sites',
+);
+expect(
+    !captureSource.includes('rx + rw - tickSize * 0.55'),
+    'old inward PDF tick anchor removed',
 );
 // Legacy shape cases are removed from the dispatcher (no more circle/
 // underline/box/arrow branches in the PDF capture switch — they map

@@ -7,7 +7,7 @@
  * from the AI tutor including equations, graphs, and diagrams.
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
@@ -814,6 +814,27 @@ export function WhiteboardCanvas({
     onClear?.();
   }, [onClear]);
 
+  // Animate-once: wb-item-enter replays its 480ms entrance on EVERY page
+  // switch because the page subtree remounts (key={currentIndex}) — the
+  // whole board "twitches in" when flipping back to a page (2026-07-10
+  // perf audit). Track which item ids have already animated (marked in an
+  // effect AFTER commit, so StrictMode's dev double-render can't eat a
+  // first animation) and skip the class for them. Items without a stamped
+  // id (legacy boards) keep the old always-animate behavior.
+  const seenAnimIdsRef = useRef<Set<string>>(new Set());
+  const itemEnterClass = (cmd: WhiteboardCommand): string => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = (cmd as any).id as string | undefined;
+    return id && seenAnimIdsRef.current.has(id) ? '' : 'wb-item-enter';
+  };
+  useEffect(() => {
+    for (const c of safeCurrentPage.commands) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const id = (c as any).id as string | undefined;
+      if (id) seenAnimIdsRef.current.add(id);
+    }
+  });
+
   // Scribble and scrollTo commands don't render as their own board items —
   // they overlay / navigate. Split them out so the main loop renders real
   // content, and the overlays attach by targetItemIndex (1-indexed).
@@ -1342,7 +1363,7 @@ export function WhiteboardCanvas({
         >
         {renderableCommands.length === 1 ? (
           <div
-            className="relative wb-item-enter scroll-mt-6"
+            className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6`}
             style={reviseStyle(renderableCommands[0])}
             ref={(el) => { itemRefsRef.current[0] = el; }}
             data-wb-item-index={1}
@@ -1363,8 +1384,14 @@ export function WhiteboardCanvas({
           <div className="space-y-1">
             {renderableCommands.map((cmd, i) => {
               const overlays = scribbles.filter((s) => scribbleMatchesItem(s, cmd, i + 1));
+              // Key by the stable stamped id (fall back to index for legacy
+              // commands) — index keys made React reuse the WRONG subtree
+              // when evolve-in-place / kill-recovery removeItems shifted
+              // positions (2026-07-10 perf audit).
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const key = ((cmd as any).id as string | undefined) ?? i;
               return (
-                <div key={i} className="wb-item-enter">
+                <div key={key} className={itemEnterClass(cmd)}>
                   {i > 0 && (
                     <div className="flex items-center gap-2 py-1">
                       <div className="flex-1 border-t border-dashed border-gray-200" />
@@ -2071,17 +2098,21 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
             />
           );
         } else {
-          // Tick anchor: just INSIDE the right edge of the feature's bbox,
-          // vertically centered. A bold ✓ icon — visible without being
-          // intrusive. Size scales with the viewBox so the tick stays
-          // proportional across tiny and wide items.
-          // 2026-05-13 user feedback: outside-right and small was barely
-          // visible. Now positioned inward with ~50% larger size and
-          // thicker stroke.
+          // Tick anchor: just OUTSIDE the feature's top-right corner — a
+          // teacher's ✓ beside the answer. The previous anchor (inside the
+          // right edge, vertically centered) sat exactly on the content
+          // line: it struck through the "= 1" of an equation and covered a
+          // point's coordinate label (2026-07-10 audit). The corner clears
+          // the content; visibility is carried by SIZE + the white halo
+          // (the 2026-05-13 "barely visible" fix), not by inward placement.
+          // Clamped back inside the viewBox when the feature touches the
+          // canvas edge so the tick never clips off-canvas.
           const tickSize = Math.max(16, Math.min(vbW, vbH) * 0.06);
-          const tx = r.x + r.w - tickSize * 0.55;
-          const ty = r.y + r.h / 2;
           const half = tickSize / 2;
+          let tx = r.x + r.w + half * 0.6;
+          let ty = r.y - half * 0.2;
+          if (tx + half > vbW - 2) tx = r.x + r.w - half * 0.8;
+          if (ty - half * 0.6 < 2) ty = r.y + half * 0.8;
           // Two-segment ✓ path: short stroke from upper-left of the
           // ascender down to the cusp, then long stroke up to upper-right.
           const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
@@ -2410,7 +2441,18 @@ interface CommandRendererProps {
   command: WhiteboardCommand;
 }
 
-export function CommandRenderer({ command }: CommandRendererProps) {
+/**
+ * Memoized: `command` objects are append-only stable references, but the
+ * commands ARRAY updates once per render-sync sentence-flush (several per
+ * turn), which re-rendered every item on the current page — including
+ * re-running solveDiagram() and KaTeX for content that hadn't changed
+ * (2026-07-10 perf audit). With memo, only genuinely new/changed items
+ * render; context-fed callbacks (WhiteboardCallbackContext) still update
+ * normally since useContext bypasses memo.
+ */
+export const CommandRenderer = memo(CommandRendererInner);
+
+function CommandRendererInner({ command }: CommandRendererProps) {
   switch (command.action) {
     case 'showEquation':
       return (
@@ -2559,7 +2601,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
             </div>
           )}
           <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
-            {problem.title || 'Problem'}
+            <InlineMathText text={problem.title || 'Problem'} />
           </h4>
           <p className="text-gray-800 whitespace-pre-wrap" data-feature="statement">
             <InlineMathText text={problem.statement || ''} />
@@ -2727,9 +2769,12 @@ export function CommandRenderer({ command }: CommandRendererProps) {
           <h4 className="font-semibold text-gray-800">
             {command.example.title || 'Worked Example'}
           </h4>
+          {/* All worked-example prose runs through InlineMathText so any
+              inline $…$ math renders via KaTeX, matching the equation cards
+              around it (2026-07-10 audit: unicode-vs-KaTeX mixing). */}
           {command.example.problem && (
             <div className="p-3 bg-blue-50 rounded-lg">
-              <p>{command.example.problem.statement}</p>
+              <p><InlineMathText text={command.example.problem.statement || ''} /></p>
             </div>
           )}
           {command.example.walkthrough && command.example.walkthrough.map((step, index) => (
@@ -2738,10 +2783,10 @@ export function CommandRenderer({ command }: CommandRendererProps) {
                 {step.step}
               </div>
               <div className="flex-1">
-                <p className="text-gray-700">{step.tutorSays}</p>
+                <p className="text-gray-700"><InlineMathText text={step.tutorSays || ''} /></p>
                 {step.checkQuestion && (
                   <p className="text-sm text-blue-600 mt-1 italic">
-                    💭 {step.checkQuestion}
+                    💭 <InlineMathText text={step.checkQuestion} />
                   </p>
                 )}
               </div>
@@ -2752,7 +2797,7 @@ export function CommandRenderer({ command }: CommandRendererProps) {
               <p className="font-medium text-yellow-800">Key Takeaways:</p>
               <ul className="mt-1 list-disc ml-4 text-gray-700">
                 {command.example.keyTakeaways.map((takeaway, i) => (
-                  <li key={i}>{takeaway}</li>
+                  <li key={i}><InlineMathText text={takeaway} /></li>
                 ))}
               </ul>
             </div>
@@ -3412,7 +3457,16 @@ export function getCommandTypeLabel(action: string): string {
       return 'Reaction Coordinate';
     case 'showPunnett':
       return 'Punnett Square';
-    default:
-      return action;
+    default: {
+      // Unmapped actions must still read as human words — the raw
+      // camelCase action leaks straight into student-visible chrome
+      // (item separators render it uppercased: "SHOWGEOMETRYCONSTRUCTED",
+      // 2026-07-10 audit). Strip the tool-verb prefix and split camelCase.
+      const words = action
+        .replace(/^(show|draw)(?=[A-Z])/, '')
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .trim();
+      return words ? words.charAt(0).toUpperCase() + words.slice(1) : action;
+    }
   }
 }

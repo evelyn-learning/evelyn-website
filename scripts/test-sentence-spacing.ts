@@ -115,5 +115,30 @@ test('idempotent (safe to re-apply to a growing stream buffer)', () => {
   assert.equal(normalizeSentenceSpacing(once), once);
 });
 
+// Colon glue — observed 2026-07-10 (coop-conics run): "the tangent at
+// the point (x1, y1) is:So here, a squared is 9". Same guards as the
+// period rule: two alnums before, uppercase after.
+test('repairs colon glued to a capitalized clause', () => {
+  assert.equal(
+    normalizeSentenceSpacing('the tangent at (x1, y1) is:So here, a squared is 9'),
+    'the tangent at (x1, y1) is: So here, a squared is 9',
+  );
+});
+
+test('leaves clock times alone', () => {
+  const s = 'We meet at 3:45 today.';
+  assert.equal(normalizeSentenceSpacing(s), s);
+});
+
+test('leaves lowercase ratios alone', () => {
+  const s = 'the ratio a:b stays fixed.';
+  assert.equal(normalizeSentenceSpacing(s), s);
+});
+
+test('leaves single-letter-before-colon alone (labels like x:Y)', () => {
+  const s = 'map x:Y here';
+  assert.equal(normalizeSentenceSpacing(s), s);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
