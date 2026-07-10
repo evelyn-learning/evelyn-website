@@ -62,8 +62,10 @@ export interface Scenario {
     turns?: number;        // student turns to drive (default 6)
     firstSay?: string;     // the opening student utterance
   };
-  /** After test turn N completes (0-based), hard-reload the page, click the
-   *  Continue overlay if present, screenshot immediately and again after
-   *  3s — verifies resume boards render instantly (bulk-mount cap). */
+  /** Informational only: the harness has no mid-loop hook, so the hard-reload
+   *  (Continue overlay + immediate/3s-later screenshots, verifying resume
+   *  boards render instantly / bulk-mount cap) actually fires after ALL test
+   *  turns complete, regardless of which N is set here. Kept as a field for
+   *  when mid-loop reload support is added. */
   reloadAfterTurn?: number;
 }

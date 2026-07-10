@@ -232,8 +232,8 @@ async function main() {
         log(`${label} say: ${t.say.slice(0, 80)}`);
         await page.evaluate((text) => window.__tutorSendText(text), t.say);
         await waitForTurn(before, t.timeoutMs ?? 150_000, t.say);
-        await delayedTrigger;
       }
+      if (delayedTrigger) await delayedTrigger;
       await sleep(SETTLE_MS); // let buffered renders flush + paint
       await shot(label);
     };
